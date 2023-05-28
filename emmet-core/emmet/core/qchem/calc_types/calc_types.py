@@ -38,7 +38,7 @@ FUNCTIONAL_CLASSES = {
         # "MN12-L",
         # "MN12-L-D3(BJ)",
         "B97M-V",
-        "B97M-rV"
+        "B97M-rV",
     ],
     "hybrid-gga": [
         # "PBE0",

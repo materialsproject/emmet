@@ -38,7 +38,6 @@ class BondLengthQuery(QueryOperator):
             description="Minimum value for the mean bond length in the structure.",
         ),
     ) -> STORE_PARAMS:
-
         crit = defaultdict(dict)  # type: dict
 
         d = {
@@ -83,7 +82,6 @@ class CoordinationEnvsQuery(QueryOperator):
  list (e.g. 'A-B(6),A-B(3)')",
         ),
     ) -> STORE_PARAMS:
-
         crit = {}  # type: dict
 
         if coordination_envs:

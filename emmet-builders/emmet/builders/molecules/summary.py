@@ -46,7 +46,6 @@ class SummaryBuilder(Builder):
         settings: Optional[EmmetBuildSettings] = None,
         **kwargs,
     ):
-
         self.molecules = molecules
         self.charges = charges
         self.spins = spins
@@ -297,14 +296,30 @@ class SummaryBuilder(Builder):
 
             d = {
                 "molecules": mol,
-                "partial_charges": _group_docs(list(self.charges.query({"molecule_id": mol_id})), True),
-                "partial_spins": _group_docs(list(self.spins.query({"molecule_id": mol_id})), True),
-                "bonding": _group_docs(list(self.bonds.query({"molecule_id": mol_id})), True),
-                "metal_binding": _group_docs(list(self.metal_binding.query({"molecule_id": mol_id})), True),
-                "orbitals": _group_docs(list(self.orbitals.query({"molecule_id": mol_id})), False),
-                "redox": _group_docs(list(self.redox.query({"molecule_id": mol_id})), False),
-                "thermo": _group_docs(list(self.thermo.query({"molecule_id": mol_id})), False),
-                "vibration": _group_docs(list(self.vibes.query({"molecule_id": mol_id})), False),
+                "partial_charges": _group_docs(
+                    list(self.charges.query({"molecule_id": mol_id})), True
+                ),
+                "partial_spins": _group_docs(
+                    list(self.spins.query({"molecule_id": mol_id})), True
+                ),
+                "bonding": _group_docs(
+                    list(self.bonds.query({"molecule_id": mol_id})), True
+                ),
+                "metal_binding": _group_docs(
+                    list(self.metal_binding.query({"molecule_id": mol_id})), True
+                ),
+                "orbitals": _group_docs(
+                    list(self.orbitals.query({"molecule_id": mol_id})), False
+                ),
+                "redox": _group_docs(
+                    list(self.redox.query({"molecule_id": mol_id})), False
+                ),
+                "thermo": _group_docs(
+                    list(self.thermo.query({"molecule_id": mol_id})), False
+                ),
+                "vibration": _group_docs(
+                    list(self.vibes.query({"molecule_id": mol_id})), False
+                ),
             }
 
             to_delete = list()

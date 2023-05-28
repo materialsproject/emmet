@@ -29,7 +29,7 @@ def jcesr_resource(molecules_store):
         tags=["JCESR Electrolyte Genome"],
         sub_path="/jcesr/",
         disable_validation=True,
-        timeout=MAPISettings().TIMEOUT
+        timeout=MAPISettings().TIMEOUT,
     )
 
     return resource

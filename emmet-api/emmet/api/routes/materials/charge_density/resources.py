@@ -32,7 +32,14 @@ def charge_density_url_resource(s3_store):
     resource = ReadOnlyResource(
         s3_store,
         ChgcarDataDoc,
-        key_fields=["task_id", "fs_id", "url", "s3_url_prefix", "requested_datetime", "expiry_datetime"],
+        key_fields=[
+            "task_id",
+            "fs_id",
+            "url",
+            "s3_url_prefix",
+            "requested_datetime",
+            "expiry_datetime",
+        ],
         tags=["Materials Charge Density"],
         sub_path="/charge_density/",
         enable_default_search=False,

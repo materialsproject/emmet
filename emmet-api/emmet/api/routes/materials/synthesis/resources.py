@@ -18,7 +18,6 @@ synth_indexes = [
 
 
 def synth_resource(synth_store):
-
     resource = AggregationResource(
         synth_store,
         SynthesisSearchResultModel,
@@ -26,7 +25,7 @@ def synth_resource(synth_store):
         sub_path="/synthesis/",
         pipeline_query_operator=SynthesisSearchQuery(),
         header_processor=GlobalHeaderProcessor(),
-        timeout=MAPISettings().TIMEOUT
+        timeout=MAPISettings().TIMEOUT,
     )
 
     return resource

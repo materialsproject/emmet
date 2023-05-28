@@ -13,7 +13,6 @@ def structure():
 
 
 def test_symmetry(structure):
-
     symm_doc = SymmetryData.from_structure(structure)
 
     assert symm_doc.number == 221
@@ -26,7 +25,6 @@ def test_symmetry(structure):
 
 
 def test_structure_metadata(structure):
-
     meta_doc = StructureMetadata.from_structure(structure)
 
     assert meta_doc.nsites == 1
@@ -41,7 +39,6 @@ def test_structure_metadata(structure):
 
 
 def test_structure_metadata_fewer_fields(structure):
-
     meta_doc = StructureMetadata.from_structure(
         structure, fields=["nsites", "nelements", "volume"]
     )

@@ -38,8 +38,9 @@ def phase_diagram_store():
 
 
 def test_corrected_entries_builder(corrected_entries_store, materials_store):
-
-    builder = CorrectedEntriesBuilder(materials=materials_store, corrected_entries=corrected_entries_store)
+    builder = CorrectedEntriesBuilder(
+        materials=materials_store, corrected_entries=corrected_entries_store
+    )
     builder.run()
 
     assert corrected_entries_store.count() == 1
@@ -54,9 +55,10 @@ def test_corrected_entries_serialization(tmpdir):
 
 
 def test_thermo_builder(corrected_entries_store, thermo_store, phase_diagram_store):
-
     builder = ThermoBuilder(
-        thermo=thermo_store, corrected_entries=corrected_entries_store, phase_diagram=phase_diagram_store
+        thermo=thermo_store,
+        corrected_entries=corrected_entries_store,
+        phase_diagram=phase_diagram_store,
     )
     builder.run()
 

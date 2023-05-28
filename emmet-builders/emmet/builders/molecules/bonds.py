@@ -59,7 +59,6 @@ class BondingBuilder(Builder):
         settings: Optional[EmmetBuildSettings] = None,
         **kwargs,
     ):
-
         self.tasks = tasks
         self.molecules = molecules
         self.bonds = bonds
@@ -253,15 +252,23 @@ class BondingBuilder(Builder):
                     best_entry = relevant_entries[0]
                     task = best_entry["task_id"]
 
-                    tdoc = self.tasks.query_one({"task_id": task,
-                                                 "formula_alphabetical": formula,
-                                                 "orig": {"$exists": True}})
+                    tdoc = self.tasks.query_one(
+                        {
+                            "task_id": task,
+                            "formula_alphabetical": formula,
+                            "orig": {"$exists": True},
+                        }
+                    )
 
                     if tdoc is None:
                         try:
-                            tdoc = self.tasks.query_one({"task_id": int(task),
-                                                         "formula_alphabetical": formula,
-                                                         "orig": {"$exists": True}})
+                            tdoc = self.tasks.query_one(
+                                {
+                                    "task_id": int(task),
+                                    "formula_alphabetical": formula,
+                                    "orig": {"$exists": True},
+                                }
+                            )
                         except ValueError:
                             tdoc = None
 

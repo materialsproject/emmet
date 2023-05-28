@@ -71,7 +71,7 @@ class MaterialsBuilder(Builder):
 
     def ensure_indexes(self):
         """
-        Ensures indicies on the tasks and materials collections
+        Ensures indices on the tasks and materials collections
         """
 
         # Basic search index for tasks
@@ -117,7 +117,6 @@ class MaterialsBuilder(Builder):
         N = ceil(len(to_process_forms) / number_splits)
 
         for formula_chunk in grouper(to_process_forms, N):
-
             yield {"query": {"formula_pretty": {"$in": list(formula_chunk)}}}
 
     def get_items(self) -> Iterator[List[Dict]]:
@@ -225,7 +224,7 @@ class MaterialsBuilder(Builder):
 
         Returns:
             ([dict],list): a list of new materials docs and a list of task_ids that
-                were processsed
+                were processed
         """
 
         tasks = [TaskDocument(**task) for task in items]
@@ -331,7 +330,7 @@ class MaterialsBuilder(Builder):
             symprec=self.settings.SYMPREC,
         )
         for group in grouped_structures:
-            grouped_tasks = [filtered_tasks[struc.index] for struc in group]  # type: ignore
+            grouped_tasks = [filtered_tasks[struct.index] for struct in group]  # type: ignore
             yield grouped_tasks
 
 
@@ -350,7 +349,6 @@ def undeform_structure(structure: Structure, transmuter: Dict) -> Structure:
     for trans, params in reversed(
         list(zip(transmuter["transformations"], transmuter["transformation_params"]))
     ):
-
         # The transmuter only stores the transformation class and parameter, without
         # module info and such. Therefore, there is no general way to reconstruct it,
         # and has to do if else check.

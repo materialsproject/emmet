@@ -34,7 +34,6 @@ def get_free_energy(energy, enthalpy, entropy, temperature=298.15, convert_energ
 
 
 class MoleculeThermoDoc(PropertyDoc):
-
     property_name = "thermo"
 
     electronic_energy: float = Field(
@@ -44,7 +43,7 @@ class MoleculeThermoDoc(PropertyDoc):
     correction: bool = Field(
         False,
         description="Was a single-point calculation at higher level of "
-                    "theory used to correct the electronic energy?"
+        "theory used to correct the electronic energy?",
     )
 
     base_level_of_theory: LevelOfTheory = Field(
@@ -82,9 +81,9 @@ class MoleculeThermoDoc(PropertyDoc):
     combined_lot_solvent: str = Field(
         None,
         description="String representation of the level of theory and solvent "
-                    "environment used to generate this ThermoDoc, combining "
-                    "both the frequency calculation and (potentially) the "
-                    "single-point energy correction."
+        "environment used to generate this ThermoDoc, combining "
+        "both the frequency calculation and (potentially) the "
+        "single-point energy correction.",
     )
 
     zero_point_energy: float = Field(
@@ -92,24 +91,42 @@ class MoleculeThermoDoc(PropertyDoc):
     )
 
     rt: float = Field(
-        None, description="R*T, where R is the gas constant and T is temperature, taken " "to be 298.15K (units: eV)",
+        None,
+        description="R*T, where R is the gas constant and T is temperature, taken "
+        "to be 298.15K (units: eV)",
     )
 
-    total_enthalpy: float = Field(None, description="Total enthalpy of the molecule at 298.15K (units: eV)")
-    total_entropy: float = Field(None, description="Total entropy of the molecule at 298.15K (units: eV/K)")
+    total_enthalpy: float = Field(
+        None, description="Total enthalpy of the molecule at 298.15K (units: eV)"
+    )
+    total_entropy: float = Field(
+        None, description="Total entropy of the molecule at 298.15K (units: eV/K)"
+    )
 
     translational_enthalpy: float = Field(
-        None, description="Translational enthalpy of the molecule at 298.15K (units: eV)",
+        None,
+        description="Translational enthalpy of the molecule at 298.15K (units: eV)",
     )
     translational_entropy: float = Field(
-        None, description="Translational entropy of the molecule at 298.15K (units: eV/K)",
+        None,
+        description="Translational entropy of the molecule at 298.15K (units: eV/K)",
     )
-    rotational_enthalpy: float = Field(None, description="Rotational enthalpy of the molecule at 298.15K (units: eV)")
-    rotational_entropy: float = Field(None, description="Rotational entropy of the molecule at 298.15K (units: eV/K)")
-    vibrational_enthalpy: float = Field(None, description="Vibrational enthalpy of the molecule at 298.15K (units: eV)")
-    vibrational_entropy: float = Field(None, description="Vibrational entropy of the molecule at 298.15K (units: eV/K)")
+    rotational_enthalpy: float = Field(
+        None, description="Rotational enthalpy of the molecule at 298.15K (units: eV)"
+    )
+    rotational_entropy: float = Field(
+        None, description="Rotational entropy of the molecule at 298.15K (units: eV/K)"
+    )
+    vibrational_enthalpy: float = Field(
+        None, description="Vibrational enthalpy of the molecule at 298.15K (units: eV)"
+    )
+    vibrational_entropy: float = Field(
+        None, description="Vibrational entropy of the molecule at 298.15K (units: eV/K)"
+    )
 
-    free_energy: float = Field(None, description="Gibbs free energy of the molecule at 298.15K (units: eV)")
+    free_energy: float = Field(
+        None, description="Gibbs free energy of the molecule at 298.15K (units: eV)"
+    )
 
     @classmethod
     def from_task(
@@ -118,9 +135,8 @@ class MoleculeThermoDoc(PropertyDoc):
         molecule_id: MPculeID,
         correction_task: Optional[TaskDocument] = None,
         deprecated: bool = False,
-        **kwargs
+        **kwargs,
     ):  # type: ignore[override]
-
         """
         Construct a thermodynamics document from a task
 
@@ -164,8 +180,9 @@ class MoleculeThermoDoc(PropertyDoc):
         id_string = f"thermo-{molecule_id}-{task.task_id}-{task.lot_solvent}"
         if correction and correction_task is not None:
             origins.append(
-                PropertyOrigin(name="thermo_energy_correction",
-                               task_id=correction_task.task_id)
+                PropertyOrigin(
+                    name="thermo_energy_correction", task_id=correction_task.task_id
+                )
             )
 
             id_string += f"-{correction_task.task_id}-{correction_task.lot_solvent}"
@@ -222,7 +239,7 @@ class MoleculeThermoDoc(PropertyDoc):
                         free_energy=free_energy,
                         deprecated=deprecated,
                         origins=origins,
-                        **kwargs
+                        **kwargs,
                     )
 
         # If all thermodynamic data is not available
@@ -241,5 +258,5 @@ class MoleculeThermoDoc(PropertyDoc):
             electronic_energy=energy * 27.2114,
             deprecated=deprecated,
             origins=origins,
-            **kwargs
+            **kwargs,
         )

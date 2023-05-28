@@ -83,7 +83,7 @@ class PropertyDoc(MoleculeMetadata):
         meta_molecule: Molecule,
         property_id: str,
         molecule_id: MPculeID,
-        **kwargs
+        **kwargs,
     ) -> S:
         """
         Builds a molecule document using the minimal amount of information
@@ -93,5 +93,5 @@ class PropertyDoc(MoleculeMetadata):
             meta_molecule=meta_molecule,
             property_id=property_id,
             molecule_id=molecule_id,
-            **kwargs
+            **kwargs,
         )  # type: ignore

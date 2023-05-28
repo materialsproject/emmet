@@ -7,9 +7,7 @@ class MoleculesHintScheme(HintScheme):
     """
 
     def generate_hints(self, query):
-
         for param in query["criteria"]:
-
             if "composition" in param:
                 return {"hint": {"composition.$**": 1}}
 

@@ -132,7 +132,6 @@ def test_summary_builder(
     charge_density_index,
     summary,
 ):
-
     builder = SummaryBuilder(
         materials=materials,
         electronic_structure=electronic_structure,

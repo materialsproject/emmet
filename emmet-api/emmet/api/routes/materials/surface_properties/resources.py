@@ -4,7 +4,9 @@ from maggma.api.resource import ReadOnlyResource
 from emmet.api.core.settings import MAPISettings
 
 from emmet.api.core.global_header import GlobalHeaderProcessor
-from emmet.api.routes.materials.surface_properties.query_operators import ReconstructedQuery
+from emmet.api.routes.materials.surface_properties.query_operators import (
+    ReconstructedQuery,
+)
 from emmet.core.surface_properties import SurfacePropDoc
 
 

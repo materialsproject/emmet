@@ -65,7 +65,6 @@ class CorrectedEntriesBuilder(Builder):
         sources = [materials]
 
         if self.oxidation_states is not None:
-
             if self.oxidation_states.key != "material_id":
                 warnings.warn(
                     f"Key for the oxidation states store is incorrect and has been changed from {self.oxidation_states.key} to material_id!"  # noqa:E501
@@ -76,7 +75,9 @@ class CorrectedEntriesBuilder(Builder):
 
         targets = [corrected_entries]
 
-        super().__init__(sources=sources, targets=targets, chunk_size=chunk_size, **kwargs)
+        super().__init__(
+            sources=sources, targets=targets, chunk_size=chunk_size, **kwargs
+        )
 
     def ensure_indexes(self):
         """
@@ -97,7 +98,6 @@ class CorrectedEntriesBuilder(Builder):
         N = ceil(len(to_process_chemsys) / number_splits)
 
         for chemsys_chunk in grouper(to_process_chemsys, N):
-
             yield {"query": {"chemsys": {"$in": list(chemsys_chunk)}}}
 
     def get_items(self) -> Iterator[List[Dict]]:
@@ -112,11 +112,15 @@ class CorrectedEntriesBuilder(Builder):
 
         to_process_chemsys = self._get_chemsys_to_process()
 
-        self.logger.info(f"Processing entries in {len(to_process_chemsys)} chemical systems")
+        self.logger.info(
+            f"Processing entries in {len(to_process_chemsys)} chemical systems"
+        )
         self.total = len(to_process_chemsys)
 
         # Yield the chemical systems in order of increasing size
-        for chemsys in sorted(to_process_chemsys, key=lambda x: len(x.split("-")), reverse=False):
+        for chemsys in sorted(
+            to_process_chemsys, key=lambda x: len(x.split("-")), reverse=False
+        ):
             entries = self.get_entries(chemsys)
             yield entries
 
@@ -130,7 +134,9 @@ class CorrectedEntriesBuilder(Builder):
 
         entries = [ComputedStructureEntry.from_dict(entry) for entry in item]
         # determine chemsys
-        elements = sorted(set([el.symbol for e in entries for el in e.composition.elements]))
+        elements = sorted(
+            set([el.symbol for e in entries for el in e.composition.elements])
+        )
         chemsys = "-".join(elements)
 
         self.logger.debug(f"Processing {len(entries)} entries for {chemsys}")
@@ -141,7 +147,6 @@ class CorrectedEntriesBuilder(Builder):
 
         for compatability in self.compatibility:
             if compatability is not None:
-
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     with HiddenPrints():
@@ -149,11 +154,16 @@ class CorrectedEntriesBuilder(Builder):
                             thermo_type = ThermoType.GGA_GGA_U_R2SCAN
 
                             if "R2SCAN" in all_entry_types:
-
-                                only_scan_pd_entries = [e for e in entries if str(e.data["run_type"]) == "R2SCAN"]
+                                only_scan_pd_entries = [
+                                    e
+                                    for e in entries
+                                    if str(e.data["run_type"]) == "R2SCAN"
+                                ]
                                 corrected_entries["R2SCAN"] = only_scan_pd_entries
 
-                                pd_entries = compatability.process_entries(copy.deepcopy(entries))
+                                pd_entries = compatability.process_entries(
+                                    copy.deepcopy(entries)
+                                )
 
                             else:
                                 corrected_entries["R2SCAN"] = None
@@ -161,16 +171,22 @@ class CorrectedEntriesBuilder(Builder):
 
                         elif compatability.name == "MP2020":
                             thermo_type = ThermoType.GGA_GGA_U
-                            pd_entries = compatability.process_entries(copy.deepcopy(entries))
+                            pd_entries = compatability.process_entries(
+                                copy.deepcopy(entries)
+                            )
                         else:
                             thermo_type = ThermoType.UNKNOWN
-                            pd_entries = compatability.process_entries(copy.deepcopy(entries))
+                            pd_entries = compatability.process_entries(
+                                copy.deepcopy(entries)
+                            )
 
                         corrected_entries[str(thermo_type)] = pd_entries
 
             else:
                 if len(all_entry_types) > 1:
-                    raise ValueError("More than one functional type has been provided without a mixing scheme!")
+                    raise ValueError(
+                        "More than one functional type has been provided without a mixing scheme!"
+                    )
                 else:
                     thermo_type = all_entry_types.pop()
 
@@ -207,17 +223,27 @@ class CorrectedEntriesBuilder(Builder):
         all_chemsys = chemsys_permutations(chemsys)
         cached_chemsys = all_chemsys & set(self._entries_cache.keys())
         query_chemsys = all_chemsys - cached_chemsys
-        all_entries = list(chain.from_iterable(self._entries_cache[c] for c in cached_chemsys))
+        all_entries = list(
+            chain.from_iterable(self._entries_cache[c] for c in cached_chemsys)
+        )
 
-        self.logger.debug(f"Getting {len(cached_chemsys)} sub-chemsys from cache for {chemsys}")
-        self.logger.debug(f"Getting {len(query_chemsys)} sub-chemsys from DB for {chemsys}")
+        self.logger.debug(
+            f"Getting {len(cached_chemsys)} sub-chemsys from cache for {chemsys}"
+        )
+        self.logger.debug(
+            f"Getting {len(query_chemsys)} sub-chemsys from DB for {chemsys}"
+        )
 
         # Second grab the materials docs
         new_q = dict(self.query)
         new_q["chemsys"] = {"$in": list(query_chemsys)}
         new_q["deprecated"] = False
 
-        materials_docs = list(self.materials.query(criteria=new_q, properties=["material_id", "entries", "deprecated"]))
+        materials_docs = list(
+            self.materials.query(
+                criteria=new_q, properties=["material_id", "entries", "deprecated"]
+            )
+        )
 
         # Get Oxidation state data for each material
         oxi_states_data = {}
@@ -227,7 +253,10 @@ class CorrectedEntriesBuilder(Builder):
                 d["material_id"]: d.get("average_oxidation_states", {})
                 for d in self.oxidation_states.query(
                     properties=["material_id", "average_oxidation_states"],
-                    criteria={"material_id": {"$in": material_ids}, "state": "successful"},
+                    criteria={
+                        "material_id": {"$in": material_ids},
+                        "state": "successful",
+                    },
                 )
             }
 
@@ -238,7 +267,9 @@ class CorrectedEntriesBuilder(Builder):
         # Convert entries into ComputedEntries and store
         for doc in materials_docs:
             for r_type, entry_dict in doc.get("entries", {}).items():
-                entry_dict["data"]["oxidation_states"] = oxi_states_data.get(entry_dict["data"]["material_id"], {})
+                entry_dict["data"]["oxidation_states"] = oxi_states_data.get(
+                    entry_dict["data"]["material_id"], {}
+                )
                 entry_dict["data"]["run_type"] = r_type
                 elsyms = sorted(set([el for el in entry_dict["composition"]]))
                 self._entries_cache["-".join(elsyms)].append(entry_dict)
@@ -255,15 +286,20 @@ class CorrectedEntriesBuilder(Builder):
             {"deprecated": False, **self.query},
             properties=[self.corrected_entries.key, self.materials.last_updated_field],
         ):
-
             entry = materials_chemsys_dates.get(d[self.corrected_entries.key], None)
             if entry is None or d[self.materials.last_updated_field] > entry:
-                materials_chemsys_dates[d[self.corrected_entries.key]] = d[self.materials.last_updated_field]
+                materials_chemsys_dates[d[self.corrected_entries.key]] = d[
+                    self.materials.last_updated_field
+                ]
 
         corrected_entries_chemsys_dates = {
             d[self.corrected_entries.key]: d[self.corrected_entries.last_updated_field]
             for d in self.corrected_entries.query(
-                {}, properties=[self.corrected_entries.key, self.corrected_entries.last_updated_field]
+                {},
+                properties=[
+                    self.corrected_entries.key,
+                    self.corrected_entries.last_updated_field,
+                ],
             )
         }
 
@@ -271,7 +307,10 @@ class CorrectedEntriesBuilder(Builder):
             chemsys
             for chemsys in materials_chemsys_dates
             if (chemsys not in corrected_entries_chemsys_dates)
-            or (materials_chemsys_dates[chemsys] > corrected_entries_chemsys_dates[chemsys])
+            or (
+                materials_chemsys_dates[chemsys]
+                > corrected_entries_chemsys_dates[chemsys]
+            )
         ]
 
         return to_process_chemsys

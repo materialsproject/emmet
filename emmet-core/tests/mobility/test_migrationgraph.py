@@ -1,4 +1,3 @@
-from math import comb
 import numpy as np
 import pytest
 from monty.serialization import loadfn
@@ -26,7 +25,7 @@ def migration_graph_prop():
             "longest_hop": 4.92647,
             "shortest_hop": 2.77240,
             "min_length_sc": 7,
-            "minmax_num_atoms": (80, 160)
+            "minmax_num_atoms": (80, 160),
         }
     }
     return expected_properties
@@ -50,17 +49,21 @@ def test_from_entries_and_distance(migration_graph_prop, get_entries):
             hop_cutoff=5,
             populate_sc_fields=True,
             min_length_sc=7,
-            minmax_num_atoms=(80, 160)
+            minmax_num_atoms=(80, 160),
         )
 
         mg = mgdoc.migration_graph
         res_d = {
             "max_distance": mgdoc.hop_cutoff,
             "num_uhops": len(mg.unique_hops),
-            "longest_hop": sorted(mg.unique_hops.items(), key=lambda x: x[1]["hop_distance"])[-1][1]["hop_distance"],
-            "shortest_hop": sorted(mg.unique_hops.items(), key=lambda x: x[1]["hop_distance"])[0][1]["hop_distance"],
+            "longest_hop": sorted(
+                mg.unique_hops.items(), key=lambda x: x[1]["hop_distance"]
+            )[-1][1]["hop_distance"],
+            "shortest_hop": sorted(
+                mg.unique_hops.items(), key=lambda x: x[1]["hop_distance"]
+            )[0][1]["hop_distance"],
             "min_length_sc": mgdoc.min_length_sc,
-            "minmax_num_atoms": mgdoc.minmax_num_atoms
+            "minmax_num_atoms": mgdoc.minmax_num_atoms,
         }
         for k, v in expected.items():
             assert res_d[k] == pytest.approx(v, 0.01)
@@ -68,7 +71,14 @@ def test_from_entries_and_distance(migration_graph_prop, get_entries):
 
 def test_generate_sc_fields(mg_for_sc_fields):
     sm = StructureMatcher()
-    host_sc, sc_mat, min_length, min_max_num_atoms, coords_dict, combo = MigrationGraphDoc.generate_sc_fields(mg_for_sc_fields, 7, (80, 160), sm)
+    (
+        host_sc,
+        sc_mat,
+        min_length,
+        min_max_num_atoms,
+        coords_dict,
+        combo,
+    ) = MigrationGraphDoc.generate_sc_fields(mg_for_sc_fields, 7, (80, 160), sm)
     sc_mat_inv = np.linalg.inv(sc_mat)
     expected_sc_list = []
 
@@ -97,18 +107,24 @@ def test_get_distinct_hop_sites(get_entries):
         hop_cutoff=5,
         populate_sc_fields=True,
         min_length_sc=7,
-        minmax_num_atoms=(80, 160)
+        minmax_num_atoms=(80, 160),
     )
-    dis_sites_list, dis_combo_list, combo_mapping = MigrationGraphDoc.get_distinct_hop_sites(mgdoc.inserted_ion_coords, mgdoc.insert_coords_combo)
-    for one_test_combo in ['0+1', '0+2', '0+3', '0+4', '0+5', '0+6', '1+7', '1+2']:
+    (
+        dis_sites_list,
+        dis_combo_list,
+        combo_mapping,
+    ) = MigrationGraphDoc.get_distinct_hop_sites(
+        mgdoc.inserted_ion_coords, mgdoc.insert_coords_combo
+    )
+    for one_test_combo in ["0+1", "0+2", "0+3", "0+4", "0+5", "0+6", "1+7", "1+2"]:
         assert one_test_combo in dis_combo_list
     assert combo_mapping == {
-        '0+1': '9+4',
-        '0+2': '9+8',
-        '0+3': '9+6',
-        '0+4': '9+16',
-        '0+5': '9+17',
-        '0+6': '9+13',
-        '1+7': '4+0',
-        '1+2': '4+8'
+        "0+1": "9+4",
+        "0+2": "9+8",
+        "0+3": "9+6",
+        "0+4": "9+16",
+        "0+5": "9+17",
+        "0+6": "9+13",
+        "1+7": "4+0",
+        "1+2": "4+8",
     }

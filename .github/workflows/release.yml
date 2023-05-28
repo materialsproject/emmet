@@ -27,7 +27,7 @@ jobs:
       - name: Build packages
         run: python setup.py sdist bdist_wheel
         working-directory: ./${{ matrix.package }}/
-        
+
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@master
         with:

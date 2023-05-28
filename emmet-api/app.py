@@ -10,5 +10,10 @@ default_settings = MAPISettings()
 
 resources = {**materials_resources, **molecule_resources, **legacy_resources}
 
-api = MAPI(resources=resources, debug=default_settings.DEBUG, description=description, tags_meta=tags_meta)
+api = MAPI(
+    resources=resources,
+    debug=default_settings.DEBUG,
+    description=description,
+    tags_meta=tags_meta,
+)
 app = api.app

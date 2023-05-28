@@ -5,19 +5,17 @@ from maggma.api.query_operator import (
     NumericQuery,
     PaginationQuery,
     SortQuery,
-    SparseFieldsQuery
+    SparseFieldsQuery,
 )
 
-from emmet.api.routes.molecules.redox.query_operators import (
-    RedoxPotentialQuery
-)
+from emmet.api.routes.molecules.redox.query_operators import RedoxPotentialQuery
 from emmet.api.routes.molecules.molecules.query_operators import (
     MultiMPculeIDQuery,
     ExactCalcMethodQuery,
     FormulaQuery,
     ChemsysQuery,
     ElementsQuery,
-    ChargeSpinQuery
+    ChargeSpinQuery,
 )
 from emmet.api.routes.molecules.utils import MultiPropertyIDQuery
 from emmet.api.core.settings import MAPISettings
@@ -46,12 +44,20 @@ def redox_resource(redox_store):
                     "nelements",
                     "nelectrons",
                     "reduction_potentials",
-                    "oxidation_potentials"
-                ]
+                    "oxidation_potentials",
+                ],
             ),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(RedoxDoc, default_fields=["molecule_id", "property_id", "solvent", "last_updated"],),
+            SparseFieldsQuery(
+                RedoxDoc,
+                default_fields=[
+                    "molecule_id",
+                    "property_id",
+                    "solvent",
+                    "last_updated",
+                ],
+            ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Molecules Redox"],

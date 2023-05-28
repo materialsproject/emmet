@@ -29,7 +29,7 @@ def generic_groupby(list_in, comp=operator.eq) -> List[int]:
         if ls1 is not None:
             continue
         list_out[i1] = label_num
-        for i2, ls2 in list(enumerate(list_out))[i1 + 1:]:
+        for i2, ls2 in list(enumerate(list_out))[i1 + 1 :]:
             if comp(list_in[i1], list_in[i2]):
                 if list_out[i2] is None:
                     list_out[i2] = list_out[i1]
@@ -52,7 +52,7 @@ class StructureGroupDoc(BaseModel):
     group_id: str = Field(
         None,
         description="The combined material_id of the grouped document is given by the numerically smallest "
-                    "material_id, you can also append the followed by the ignored species at the end.",
+        "material_id, you can also append the followed by the ignored species at the end.",
     )
 
     has_distinct_compositions: bool = Field(
@@ -67,7 +67,7 @@ class StructureGroupDoc(BaseModel):
     host_material_ids: list = Field(
         None,
         description="Material id(s) that correspond(s) to the host structure(s), which has/have the lowest"
-                    "concentration of ignored specie.",
+        "concentration of ignored specie.",
     )
 
     insertion_material_ids: list = Field(
@@ -88,7 +88,7 @@ class StructureGroupDoc(BaseModel):
     chemsys: str = Field(
         None,
         description="The chemical system this group belongs to, if the atoms for the ignored species is "
-                    "present the chemsys will also include the ignored species.",
+        "present the chemsys will also include the ignored species.",
     )
 
     last_updated: datetime = Field(
@@ -146,12 +146,12 @@ class StructureGroupDoc(BaseModel):
 
     @classmethod
     def from_ungrouped_structure_entries(
-            cls,
-            entries: List[Union[ComputedEntry, ComputedStructureEntry]],
-            ignored_specie: str,
-            ltol: float = 0.2,
-            stol: float = 0.3,
-            angle_tol: float = 5.0,
+        cls,
+        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
+        ignored_specie: str,
+        ltol: float = 0.2,
+        stol: float = 0.3,
+        angle_tol: float = 5.0,
     ) -> List["StructureGroupDoc"]:
         """
         Create a list of StructureGroupDocs from a list of ungrouped entries.
@@ -176,7 +176,9 @@ class StructureGroupDoc(BaseModel):
 
         # Add a framework field to each entry's data attribute
         for ient in entries:
-            ient.data["framework"] = _get_framework(ient.composition.reduced_formula, ignored_specie)
+            ient.data["framework"] = _get_framework(
+                ient.composition.reduced_formula, ignored_specie
+            )
 
         # split into groups for each framework, must sort before grouping
         entries.sort(key=lambda x: x.data["framework"])
@@ -187,13 +189,19 @@ class StructureGroupDoc(BaseModel):
             # if you only have ignored atoms put them into one "ignored" group
             f_group_l = list(f_group)
             if framework == "ignored":
-                struct_group = cls.from_grouped_entries(f_group_l, ignored_specie=ignored_specie)
+                struct_group = cls.from_grouped_entries(
+                    f_group_l, ignored_specie=ignored_specie
+                )
                 cnt_ += len(struct_group.material_ids)
                 continue
 
-            logger.debug(f"Performing structure matching for {framework} with {len(f_group_l)} documents.")
+            logger.debug(
+                f"Performing structure matching for {framework} with {len(f_group_l)} documents."
+            )
             for g in group_entries_with_structure_matcher(f_group_l, sm):
-                struct_group = cls.from_grouped_entries(g, ignored_specie=ignored_specie)
+                struct_group = cls.from_grouped_entries(
+                    g, ignored_specie=ignored_specie
+                )
                 cnt_ += len(struct_group.material_ids)
                 results.append(struct_group)
         if cnt_ != len(entries):
@@ -260,7 +268,10 @@ def group_entries_with_structure_matcher(
     g.sort(key=get_num_sym_ops, reverse=True)
     g.sort(key=lambda x: x.composition.get_atomic_fraction(wion))
 
-    labs = generic_groupby(g, comp=lambda x, y: struct_matcher.fit(x.structure, y.structure, symmetric=True), )
+    labs = generic_groupby(
+        g,
+        comp=lambda x, y: struct_matcher.fit(x.structure, y.structure, symmetric=True),
+    )
     for ilab in set(labs):
         sub_g = [g[itr] for itr, jlab in enumerate(labs) if jlab == ilab]
         yield [el for el in sub_g]

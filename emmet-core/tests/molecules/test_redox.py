@@ -28,6 +28,7 @@ def red_thermo(test_dir):
     thermo_doc = MoleculeThermoDoc(**thermo)
     return thermo_doc
 
+
 @pytest.fixture(scope="session")
 def ox_thermo(test_dir):
     thermo = loadfn((test_dir / "redox_doc" / "ox_thermo.json").as_posix())
@@ -50,12 +51,14 @@ def ea_task(test_dir):
 
 
 def test_redox(base_mol, base_thermo, red_thermo, ox_thermo, ie_task, ea_task):
-    redox_doc = RedoxDoc.from_docs(base_molecule_doc=base_mol,
-                                   base_thermo_doc=base_thermo,
-                                   red_doc=red_thermo,
-                                   ox_doc=ox_thermo,
-                                   ea_doc=ea_task,
-                                   ie_doc=ie_task)
+    redox_doc = RedoxDoc.from_docs(
+        base_molecule_doc=base_mol,
+        base_thermo_doc=base_thermo,
+        red_doc=red_thermo,
+        ox_doc=ox_thermo,
+        ea_doc=ea_task,
+        ie_doc=ie_task,
+    )
 
     assert redox_doc.electron_affinity == pytest.approx(-3.3024638499209686)
     assert redox_doc.ionization_energy == pytest.approx(4.903294672107222)

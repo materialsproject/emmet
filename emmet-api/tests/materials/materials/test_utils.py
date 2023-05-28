@@ -1,4 +1,7 @@
-from emmet.api.routes.materials.materials.utils import formula_to_criteria, chemsys_to_criteria
+from emmet.api.routes.materials.materials.utils import (
+    formula_to_criteria,
+    chemsys_to_criteria,
+)
 import pytest
 
 

@@ -24,14 +24,15 @@ def elasticity_resource(elasticity_store):
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
-                ElasticityDoc, default_fields=["task_id", "pretty_formula"],
+                ElasticityDoc,
+                default_fields=["task_id", "pretty_formula"],
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Elasticity"],
         sub_path="/elasticity/",
         disable_validation=False,
-        timeout=MAPISettings().TIMEOUT
+        timeout=MAPISettings().TIMEOUT,
     )
 
     return resource

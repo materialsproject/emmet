@@ -9,7 +9,7 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     FormulaQuery,
     ChemsysQuery,
     ElementsQuery,
-    ChargeSpinQuery
+    ChargeSpinQuery,
 )
 from emmet.api.routes.molecules.utils import MethodQuery, MultiPropertyIDQuery
 from emmet.api.core.settings import MAPISettings
@@ -38,7 +38,7 @@ def spins_resource(spins_store):
                     "property_id",
                     "solvent",
                     "method",
-                    "last_updated"
+                    "last_updated",
                 ],
             ),
         ],

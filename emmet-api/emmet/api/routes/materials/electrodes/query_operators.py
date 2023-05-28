@@ -25,7 +25,6 @@ class ElectrodeFormulaQuery(QueryOperator):
 A comma delimited string list of anonymous formulas or regular formulas can also be provided.",
         ),
     ) -> STORE_PARAMS:
-
         crit = {}
 
         if formula:
@@ -54,7 +53,6 @@ class ElectrodesChemsysQuery(QueryOperator):
 Wildcards for unknown elements only supported for single chemsys queries",
         ),
     ) -> STORE_PARAMS:
-
         crit = {}
 
         if chemsys:
@@ -79,13 +77,14 @@ class ElectrodeElementsQuery(QueryOperator):
     def query(
         self,
         elements: Optional[str] = Query(
-            None, description="Query by elements in the material composition as a comma-separated list",
+            None,
+            description="Query by elements in the material composition as a comma-separated list",
         ),
         exclude_elements: Optional[str] = Query(
-            None, description="Query by excluded elements in the material composition as a comma-separated list",
+            None,
+            description="Query by excluded elements in the material composition as a comma-separated list",
         ),
     ) -> STORE_PARAMS:
-
         crit = {}  # type: dict
 
         if elements or exclude_elements:
@@ -96,18 +95,24 @@ class ElectrodeElementsQuery(QueryOperator):
                 element_list = [Element(e) for e in elements.strip().split(",")]
             except ValueError:
                 raise HTTPException(
-                    status_code=400, detail="Problem processing one or more provided elements.",
+                    status_code=400,
+                    detail="Problem processing one or more provided elements.",
                 )
-            crit["entries_composition_summary.all_elements"]["$all"] = [str(el) for el in element_list]
+            crit["entries_composition_summary.all_elements"]["$all"] = [
+                str(el) for el in element_list
+            ]
 
         if exclude_elements:
             try:
                 element_list = [Element(e) for e in exclude_elements.strip().split(",")]
             except ValueError:
                 raise HTTPException(
-                    status_code=400, detail="Problem processing one or more provided elements.",
+                    status_code=400,
+                    detail="Problem processing one or more provided elements.",
                 )
-            crit["entries_composition_summary.all_elements"]["$nin"] = [str(el) for el in element_list]
+            crit["entries_composition_summary.all_elements"]["$nin"] = [
+                str(el) for el in element_list
+            ]
 
         return {"criteria": crit}
 
@@ -120,67 +125,86 @@ class VoltageStepQuery(QueryOperator):
     def query(
         self,
         delta_volume_max: Optional[float] = Query(
-            None, description="Maximum value for the max volume change in percent for a particular voltage step.",
+            None,
+            description="Maximum value for the max volume change in percent for a particular voltage step.",
         ),
         delta_volume_min: Optional[float] = Query(
-            None, description="Minimum value for the max volume change in percent for a particular voltage step.",
+            None,
+            description="Minimum value for the max volume change in percent for a particular voltage step.",
         ),
         average_voltage_max: Optional[float] = Query(
-            None, description="Maximum value for the average voltage for a particular voltage step in V.",
+            None,
+            description="Maximum value for the average voltage for a particular voltage step in V.",
         ),
         average_voltage_min: Optional[float] = Query(
-            None, description="Minimum value for the average voltage for a particular voltage step in V.",
+            None,
+            description="Minimum value for the average voltage for a particular voltage step in V.",
         ),
         max_voltage_max: Optional[float] = Query(
-            None, description="Maximum value for the maximum voltage for a particular voltage step in V.",
+            None,
+            description="Maximum value for the maximum voltage for a particular voltage step in V.",
         ),
         max_voltage_min: Optional[float] = Query(
-            None, description="Minimum value for the maximum voltage for a particular voltage step in V.",
+            None,
+            description="Minimum value for the maximum voltage for a particular voltage step in V.",
         ),
         min_voltage_max: Optional[float] = Query(
-            None, description="Maximum value for the minimum voltage for a particular voltage step in V.",
+            None,
+            description="Maximum value for the minimum voltage for a particular voltage step in V.",
         ),
         min_voltage_min: Optional[float] = Query(
-            None, description="Minimum value for the minimum voltage for a particular voltage step in V.",
+            None,
+            description="Minimum value for the minimum voltage for a particular voltage step in V.",
         ),
         capacity_grav_max: Optional[float] = Query(
-            None, description="Maximum value for the gravimetric capacity in maH/g.",
+            None,
+            description="Maximum value for the gravimetric capacity in maH/g.",
         ),
         capacity_grav_min: Optional[float] = Query(
-            None, description="Minimum value for the gravimetric capacity in maH/g.",
+            None,
+            description="Minimum value for the gravimetric capacity in maH/g.",
         ),
         capacity_vol_max: Optional[float] = Query(
-            None, description="Maximum value for the volumetric capacity in maH/cc.",
+            None,
+            description="Maximum value for the volumetric capacity in maH/cc.",
         ),
         capacity_vol_min: Optional[float] = Query(
-            None, description="Minimum value for the volumetric capacity in maH/cc.",
+            None,
+            description="Minimum value for the volumetric capacity in maH/cc.",
         ),
         energy_grav_max: Optional[float] = Query(
-            None, description="Maximum value for the gravimetric energy (specific energy) in Wh/kg.",
+            None,
+            description="Maximum value for the gravimetric energy (specific energy) in Wh/kg.",
         ),
         energy_grav_min: Optional[float] = Query(
-            None, description="Minimum value for the gravimetric energy (specific energy) in Wh/kg.",
+            None,
+            description="Minimum value for the gravimetric energy (specific energy) in Wh/kg.",
         ),
         energy_vol_max: Optional[float] = Query(
-            None, description="Maximum value for the volumetric energy (energy_density) in Wh/l.",
+            None,
+            description="Maximum value for the volumetric energy (energy_density) in Wh/l.",
         ),
         energy_vol_min: Optional[float] = Query(
-            None, description="Minimum value for the volumetric energy (energy_density) in Wh/l.",
+            None,
+            description="Minimum value for the volumetric energy (energy_density) in Wh/l.",
         ),
         fracA_charge_max: Optional[float] = Query(
-            None, description="Maximum value for the atomic fraction of the working ion in the charged state.",
+            None,
+            description="Maximum value for the atomic fraction of the working ion in the charged state.",
         ),
         fracA_charge_min: Optional[float] = Query(
-            None, description="Minimum value for the atomic fraction of the working ion in the charged state.",
+            None,
+            description="Minimum value for the atomic fraction of the working ion in the charged state.",
         ),
         fracA_discharge_max: Optional[float] = Query(
-            None, description="Maximum value for the atomic fraction of the working ion in the discharged state.",
+            None,
+            description="Maximum value for the atomic fraction of the working ion in the discharged state.",
         ),
         fracA_discharge_min: Optional[float] = Query(
-            None, description="Minimum value for the atomic fraction of the working ion in the discharged state.",
+            None,
+            description="Minimum value for the atomic fraction of the working ion in the discharged state.",
         ),
     ) -> STORE_PARAMS:
-
         crit = defaultdict(dict)  # type: dict
 
         d = {
@@ -224,19 +248,22 @@ class InsertionVoltageStepQuery(QueryOperator):
     def query(
         self,
         stability_charge_max: Optional[float] = Query(
-            None, description="The maximum value of the energy above hull of the charged material.",
+            None,
+            description="The maximum value of the energy above hull of the charged material.",
         ),
         stability_charge_min: Optional[float] = Query(
-            None, description="The minimum value of the energy above hull of the charged material.",
+            None,
+            description="The minimum value of the energy above hull of the charged material.",
         ),
         stability_discharge_max: Optional[float] = Query(
-            None, description="The maximum value of the energy above hull of the discharged material.",
+            None,
+            description="The maximum value of the energy above hull of the discharged material.",
         ),
         stability_discharge_min: Optional[float] = Query(
-            None, description="The minimum value of the energy above hull of the discharged material.",
+            None,
+            description="The minimum value of the energy above hull of the discharged material.",
         ),
     ) -> STORE_PARAMS:
-
         crit = defaultdict(dict)  # type: dict
 
         d = {
@@ -272,10 +299,10 @@ class WorkingIonQuery(QueryOperator):
     def query(
         self,
         working_ion: Optional[str] = Query(
-            None, title="Element of the working ion, or comma-delimited string list of working ion elements.",
+            None,
+            title="Element of the working ion, or comma-delimited string list of working ion elements.",
         ),
     ) -> STORE_PARAMS:
-
         crit = defaultdict(dict)  # type: dict
 
         if working_ion:
@@ -298,13 +325,23 @@ class ElectrodeMultiMaterialIDQuery(QueryOperator):
 
     def query(
         self,
-        material_ids: Optional[str] = Query(None, description="Comma-separated list of material_id values to query on"),
+        material_ids: Optional[str] = Query(
+            None, description="Comma-separated list of material_id values to query on"
+        ),
     ) -> STORE_PARAMS:
-
         crit = {}  # type: dict
 
         if material_ids:
-            crit.update({"material_ids": {"$in": [material_id.strip() for material_id in material_ids.split(",")]}})
+            crit.update(
+                {
+                    "material_ids": {
+                        "$in": [
+                            material_id.strip()
+                            for material_id in material_ids.split(",")
+                        ]
+                    }
+                }
+            )
 
         return {"criteria": crit}
 
@@ -316,14 +353,16 @@ class MultiBatteryIDQuery(QueryOperator):
 
     def query(
         self,
-        battery_ids: Optional[str] = Query(None, description="Comma-separated list of battery_id values to query on"),
+        battery_ids: Optional[str] = Query(
+            None, description="Comma-separated list of battery_id values to query on"
+        ),
     ) -> STORE_PARAMS:
-
         crit = {}  # type: dict
 
         if battery_ids:
-
-            battery_id_list = [material_id.strip() for material_id in battery_ids.split(",")]
+            battery_id_list = [
+                material_id.strip() for material_id in battery_ids.split(",")
+            ]
 
             if len(battery_id_list) == 1:
                 crit.update({"battery_id": battery_id_list[0]})

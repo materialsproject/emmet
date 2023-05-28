@@ -1,11 +1,9 @@
 import json
 import datetime
-import copy
 
 import pytest
 
 from monty.io import zopen
-from monty.serialization import loadfn
 
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.vibration import VibrationDoc

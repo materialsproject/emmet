@@ -77,42 +77,36 @@ def test_conditions():
 
 
 def test_get_material_formula():
-    assert (
-        get_material_formula(
-            {
-                "material_formula": "NH4H2PO4",
-                "composition": [
-                    {
-                        "formula": "NH4H2PO4",
-                        "amount": "1",
-                        "elements": {"N": "1", "H": "6", "P": "1", "O": "4"},
-                    }
-                ],
-            }
-        )
-        == Composition("NH4H2PO4")
-    )
+    assert get_material_formula(
+        {
+            "material_formula": "NH4H2PO4",
+            "composition": [
+                {
+                    "formula": "NH4H2PO4",
+                    "amount": "1",
+                    "elements": {"N": "1", "H": "6", "P": "1", "O": "4"},
+                }
+            ],
+        }
+    ) == Composition("NH4H2PO4")
 
-    assert (
-        get_material_formula(
-            {
-                "material_formula": "TiO2-2BaCO3",
-                "composition": [
-                    {
-                        "formula": "TiO2",
-                        "amount": "1",
-                        "elements": {"Ti": "1", "O": "2"},
-                    },
-                    {
-                        "formula": "BaCO3",
-                        "amount": "2",
-                        "elements": {"Ba": "1", "C": "1", "O": "3"},
-                    },
-                ],
-            }
-        )
-        == Composition("TiBa2C2O8")
-    )
+    assert get_material_formula(
+        {
+            "material_formula": "TiO2-2BaCO3",
+            "composition": [
+                {
+                    "formula": "TiO2",
+                    "amount": "1",
+                    "elements": {"Ti": "1", "O": "2"},
+                },
+                {
+                    "formula": "BaCO3",
+                    "amount": "2",
+                    "elements": {"Ba": "1", "C": "1", "O": "3"},
+                },
+            ],
+        }
+    ) == Composition("TiBa2C2O8")
 
 
 def test_convert_one():

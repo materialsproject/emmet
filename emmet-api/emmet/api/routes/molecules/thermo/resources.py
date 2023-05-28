@@ -5,7 +5,7 @@ from maggma.api.query_operator import (
     NumericQuery,
     PaginationQuery,
     SortQuery,
-    SparseFieldsQuery
+    SparseFieldsQuery,
 )
 
 from emmet.api.routes.molecules.thermo.query_operators import (
@@ -17,7 +17,7 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     FormulaQuery,
     ChemsysQuery,
     ElementsQuery,
-    ChargeSpinQuery
+    ChargeSpinQuery,
 )
 from emmet.api.routes.molecules.utils import MultiPropertyIDQuery
 from emmet.api.core.settings import MAPISettings
@@ -45,8 +45,8 @@ def thermo_resource(thermo_store):
                     "natoms",
                     "nelements",
                     "nelectrons",
-                    "rt"
-                ]
+                    "rt",
+                ],
             ),
             SortQuery(),
             PaginationQuery(),
@@ -57,7 +57,7 @@ def thermo_resource(thermo_store):
                     "property_id",
                     "solvent",
                     "method",
-                    "last_updated"
+                    "last_updated",
                 ],
             ),
         ],

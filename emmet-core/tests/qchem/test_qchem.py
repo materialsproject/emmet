@@ -7,14 +7,13 @@ from emmet.core.qchem.calc_types import (
     level_of_theory,
     task_type,
     solvent,
-    lot_solvent_string
+    lot_solvent_string,
 )
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.mpid import MPID
 
 
 def test_task_type():
-
     task_types = [
         "Single Point",
         "Geometry Optimization",
@@ -79,28 +78,51 @@ def test_solvent():
     assert solvent({"rem": {"method": "wb97mv", "basis": "6-31g*"}}) == "NONE"
 
     # PCM - non-default
-    assert solvent({
-            "rem": {"method": "wb97xd", "basis": "def2-svpd", "solvent_method": "pcm"},
-            "pcm": {"theory": "cpcm"},
-            "solvent": {"dielectric": 20},
-        }) == "DIELECTRIC=20,00"
+    assert (
+        solvent(
+            {
+                "rem": {
+                    "method": "wb97xd",
+                    "basis": "def2-svpd",
+                    "solvent_method": "pcm",
+                },
+                "pcm": {"theory": "cpcm"},
+                "solvent": {"dielectric": 20},
+            }
+        )
+        == "DIELECTRIC=20,00"
+    )
 
     # PCM - default
-    assert solvent({
-            "rem": {"method": "wb97xd", "basis": "def2-svpd", "solvent_method": "pcm"},
-            "pcm": {"theory": "cpcm"},
-        }) == "DIELECTRIC=78,39"
+    assert (
+        solvent(
+            {
+                "rem": {
+                    "method": "wb97xd",
+                    "basis": "def2-svpd",
+                    "solvent_method": "pcm",
+                },
+                "pcm": {"theory": "cpcm"},
+            }
+        )
+        == "DIELECTRIC=78,39"
+    )
 
     # SMD - custom solvent
-    assert solvent({
-            "rem": {
-                "method": "wb97xv",
-                "basis": "def2-tzvppd",
-                "solvent_method": "smd",
+    assert (
+        solvent(
+            {
+                "rem": {
+                    "method": "wb97xv",
+                    "basis": "def2-tzvppd",
+                    "solvent_method": "smd",
+                },
+                "smx": {"solvent": "other"},
             },
-            "smx": {"solvent": "other"},
-        },
-        custom_smd="4.9,1.558,0.0,0.576,49.94,0.667,0.0") == 'DIELECTRIC=4,900;N=1,558;ALPHA=0,000;BETA=0,576;GAMMA=49,940;PHI=0,667;PSI=0,000'
+            custom_smd="4.9,1.558,0.0,0.576,49.94,0.667,0.0",
+        )
+        == "DIELECTRIC=4,900;N=1,558;ALPHA=0,000;BETA=0,576;GAMMA=49,940;PHI=0,667;PSI=0,000"
+    )
 
     # SMD - missing custom_solvent
     with pytest.raises(ValueError):
@@ -116,32 +138,42 @@ def test_solvent():
         )
 
     # SMD - existing solvent
-    assert solvent({
-            "rem": {
-                "method": "wb97xv",
-                "basis": "def2-tzvppd",
-                "solvent_method": "smd",
-            },
-            "smx": {"solvent": "ethanol"},
-        }) == 'SOLVENT=ETHANOL'
+    assert (
+        solvent(
+            {
+                "rem": {
+                    "method": "wb97xv",
+                    "basis": "def2-tzvppd",
+                    "solvent_method": "smd",
+                },
+                "smx": {"solvent": "ethanol"},
+            }
+        )
+        == "SOLVENT=ETHANOL"
+    )
 
     # SMD - unknown solvent
-    assert solvent({
-            "rem": {
-                "method": "wb97xv",
-                "basis": "def2-tzvppd",
-                "solvent_method": "smd",
-            },
-        }) == 'SOLVENT=WATER'
+    assert (
+        solvent(
+            {
+                "rem": {
+                    "method": "wb97xv",
+                    "basis": "def2-tzvppd",
+                    "solvent_method": "smd",
+                },
+            }
+        )
+        == "SOLVENT=WATER"
+    )
 
 
 def test_lot_solv():
     answer = "wB97X-D/def2-SVPD/PCM(DIELECTRIC=78,39)"
     params = {
-            "rem": {"method": "wb97xd", "basis": "def2-svpd", "solvent_method": "pcm"},
-            "pcm": {"theory": "cpcm"},
-            "solvent": {"dielectric": 78.39},
-        }
+        "rem": {"method": "wb97xd", "basis": "def2-svpd", "solvent_method": "pcm"},
+        "pcm": {"theory": "cpcm"},
+        "solvent": {"dielectric": 78.39},
+    }
     assert lot_solvent_string(params) == answer
 
 

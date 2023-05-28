@@ -235,8 +235,8 @@ tags_meta = [
     {
         "name": "Materials Alloys",
         "description": "Route for retrevial of information about which hypothetical alloy(s) a given material might "
-                       "belong to, following the methodolgy discussed by "
-                       "[Woods-Robinson, Horton and Persson](https://arxiv.org/pdf/2206.10715)."
+        "belong to, following the methodolgy discussed by "
+        "[Woods-Robinson, Horton and Persson](https://arxiv.org/pdf/2206.10715).",
     },
     {
         "name": "MPComplete",
@@ -254,7 +254,7 @@ tags_meta = [
         "description": "Route for basic task information for DFT calculations in the Materials Project \
             molecules database. Multiple calculations can ultimately be associated with a unique molecule, \
             and are the source of its reported properties. The unique identifier for a calculation is its \
-            `task_id`. See the `TaskDocument` schema for a full list of fields returned by this route."
+            `task_id`. See the `TaskDocument` schema for a full list of fields returned by this route.",
     },
     {
         "name": "Associated Molecules",
@@ -265,7 +265,7 @@ tags_meta = [
             and connectivity (based on molecular graph isomorphism) are collected, forming the 'core' molecules \
             collection. This route provides access to data for individual 'associated molecules'. The 'Core Molecules' \
             route (/molecules/molecules/) contains data for core molecules. See the `MoleculeDoc` schema for a full list \
-            of fields returned by this route."
+            of fields returned by this route.",
     },
     {
         "name": "Core Molecules",
@@ -276,22 +276,22 @@ tags_meta = [
             and connectivity (based on molecular graph isomorphism) are collected, forming the 'core' molecules \
             collection. This route provides access to data for individual 'associated molecules'. The 'Associated Molecules' \
             route (/molecules/assoc/) contains data for 'associated' molecules. See the `MoleculeDoc` schema for a full list \
-            of fields returned by this route."
+            of fields returned by this route.",
     },
     {
         "name": "Molecules Partial Charges",
         "description": "Route for molecular partial charge data. See the `PartialChargesDoc` schema for a full list \
-            of fields returned by this route."
+            of fields returned by this route.",
     },
     {
         "name": "Molecules Partial Spins",
         "description": "Route for molecular partial spin data. See the `PartialSpinsDoc` schema for a full list \
-            of fields returned by this route."
+            of fields returned by this route.",
     },
     {
         "name": "Molecules Bonds",
         "description": "Route for molecular bonding data. See the `MoleculeBondingDoc` schema for a full list \
-            of fields returned by this route."
+            of fields returned by this route.",
     },
     {
         "name": "Molecules Metal Binding",
@@ -301,27 +301,27 @@ tags_meta = [
     {
         "name": "Molecules Orbitals",
         "description": "Route for molecular orbital information obtained via Natural Bonding Orbital analysis. \
-            See the `OrbitalDoc` schema for a full list of fields returned by this route."
+            See the `OrbitalDoc` schema for a full list of fields returned by this route.",
     },
     {
         "name": "Molecules Redox",
         "description": "Route for molecular redox information (e.g. ionization energy, reduction free energy, \
-            redox potentials). See the `RedoxDoc` schema for a full list of fields returned by this route."
+            redox potentials). See the `RedoxDoc` schema for a full list of fields returned by this route.",
     },
     {
         "name": "Molecules Thermo",
         "description": "Route for molecular thermochemistry information. See the `MoleculeThermoDoc` schema for \
-            a full list of fields returned by this route."
+            a full list of fields returned by this route.",
     },
     {
         "name": "Molecules Vibrations",
         "description": "Route for molecular normal mode and IR spectroscopy data. See the `VibrationDoc` schema for \
-            a full list of fields returned by this route."
+            a full list of fields returned by this route.",
     },
     {
         "name": "Molecules Summary",
         "description": "Route for a summary of all data calculated on 'core' molecules in the Materials Project \
-            molecules database. See the `MoleculeSummaryDoc` schema for a full list of fields returned by this route."
+            molecules database. See the `MoleculeSummaryDoc` schema for a full list of fields returned by this route.",
     },
     {
         "name": "JCESR Electrolyte Genome",

@@ -25,13 +25,18 @@ class MigrationGraphDoc(EmmetBaseModel):
     a namespace package aka pymatgen-diffusion.
     """
 
-    battery_id: str = Field(..., description="The battery id for this MigrationGraphDoc")
-
-    last_updated: datetime = Field(
-        None, description="Timestamp for the most recent calculation for this MigrationGraph document.",
+    battery_id: str = Field(
+        ..., description="The battery id for this MigrationGraphDoc"
     )
 
-    warnings: Sequence[str] = Field([], description="Any warnings related to this property.")
+    last_updated: datetime = Field(
+        None,
+        description="Timestamp for the most recent calculation for this MigrationGraph document.",
+    )
+
+    warnings: Sequence[str] = Field(
+        [], description="Any warnings related to this property."
+    )
 
     deprecated: bool = Field(
         False,
@@ -39,7 +44,8 @@ class MigrationGraphDoc(EmmetBaseModel):
     )
 
     hop_cutoff: float = Field(
-        None, description="The numerical value in angstroms used to cap the maximum length of a hop.",
+        None,
+        description="The numerical value in angstroms used to cap the maximum length of a hop.",
     )
 
     entries_for_generation: List[ComputedStructureEntry] = Field(
@@ -52,19 +58,23 @@ class MigrationGraphDoc(EmmetBaseModel):
     )
 
     migration_graph: MigrationGraph = Field(
-        None, description="The MigrationGraph object as defined in pymatgen.analysis.diffusion.",
+        None,
+        description="The MigrationGraph object as defined in pymatgen.analysis.diffusion.",
     )
 
     populate_sc_fields: bool = Field(
-        True, description="Flag indicating whether this document has populated the supercell fields",
+        True,
+        description="Flag indicating whether this document has populated the supercell fields",
     )
 
     min_length_sc: float = Field(
-        None, description="The minimum length used to generate supercell using pymatgen.",
+        None,
+        description="The minimum length used to generate supercell using pymatgen.",
     )
 
     minmax_num_atoms: Tuple[int, int] = Field(
-        None, description="The min/max number of atoms used to genreate supercell using pymatgen.",
+        None,
+        description="The min/max number of atoms used to genreate supercell using pymatgen.",
     )
 
     matrix_supercell_structure: Structure = Field(
@@ -73,11 +83,13 @@ class MigrationGraphDoc(EmmetBaseModel):
     )
 
     conversion_matrix: List[List[Union[int, float]]] = Field(
-        None, description="The conversion matrix used to convert unit cell to supercell.",
+        None,
+        description="The conversion matrix used to convert unit cell to supercell.",
     )
 
     inserted_ion_coords: List[Dict[str, Union[List[float], str, int]]] = Field(
-        None, description="A dictionary containing all mobile ion fractional coordinates in terms of supercell.",
+        None,
+        description="A dictionary containing all mobile ion fractional coordinates in terms of supercell.",
     )
 
     insert_coords_combo: List[str] = Field(
@@ -128,7 +140,6 @@ class MigrationGraphDoc(EmmetBaseModel):
             )
 
         else:
-
             if all(arg in kwargs for arg in ["min_length_sc", "minmax_num_atoms"]):
                 sm = StructureMatcher(ltol, stol, angle_tol)
                 (
@@ -165,7 +176,10 @@ class MigrationGraphDoc(EmmetBaseModel):
 
     @staticmethod
     def generate_sc_fields(
-        mg: MigrationGraph, min_length_sc: float, minmax_num_atoms: Tuple[int, int], sm: StructureMatcher,
+        mg: MigrationGraph,
+        min_length_sc: float,
+        minmax_num_atoms: Tuple[int, int],
+        sm: StructureMatcher,
     ):
         min_length_sc = min_length_sc
         minmax_num_atoms = minmax_num_atoms
@@ -189,7 +203,9 @@ class MigrationGraphDoc(EmmetBaseModel):
         return host_sc, sc_mat, min_length_sc, minmax_num_atoms, coords_list, combo
 
     @staticmethod
-    def ordered_sc_site_list(uc_sites_only: Structure, sc_mat: List[List[Union[int, float]]]):
+    def ordered_sc_site_list(
+        uc_sites_only: Structure, sc_mat: List[List[Union[int, float]]]
+    ):
         uc_no_site = uc_sites_only.copy()
         uc_no_site.remove_sites(range(len(uc_sites_only)))
         working_ion = uc_sites_only[0].species_string
@@ -209,7 +225,10 @@ class MigrationGraphDoc(EmmetBaseModel):
         ordered_site_list = [
             e
             for i, e in enumerate(
-                sorted(sc_site_dict.values(), key=lambda v: float(np.linalg.norm(v["site_frac_coords"])),)
+                sorted(
+                    sc_site_dict.values(),
+                    key=lambda v: float(np.linalg.norm(v["site_frac_coords"])),
+                )
             )
         ]
         return ordered_site_list
@@ -228,8 +247,16 @@ class MigrationGraphDoc(EmmetBaseModel):
         unique_hops = {k: v for k, v in sorted(unique_hops.items())}
         for one_hop in unique_hops.values():
             added = False
-            sc_isite_set = {k: v for k, v in enumerate(ordered_sc_site_list) if v["uc_site_type"] == one_hop["iindex"]}
-            sc_esite_set = {k: v for k, v in enumerate(ordered_sc_site_list) if v["uc_site_type"] == one_hop["eindex"]}
+            sc_isite_set = {
+                k: v
+                for k, v in enumerate(ordered_sc_site_list)
+                if v["uc_site_type"] == one_hop["iindex"]
+            }
+            sc_esite_set = {
+                k: v
+                for k, v in enumerate(ordered_sc_site_list)
+                if v["uc_site_type"] == one_hop["eindex"]
+            }
             for sc_iindex, sc_isite in sc_isite_set.items():
                 for sc_eindex, sc_esite in sc_esite_set.items():
                     sc_check = host_sc.copy()
@@ -331,8 +358,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         return f"{sc_iindex}+{sc_eindex}", ordered_sc_site_list
 
     def get_distinct_hop_sites(
-        inserted_ion_coords: List[str],
-        insert_coords_combo: List
+        inserted_ion_coords: List[str], insert_coords_combo: List
     ) -> Tuple[List, List[str], Dict]:
         """
         This is a utils function that converts the site dict and combo into a site list and combo that contain only distince endpoints used the combos. # noqa: E501

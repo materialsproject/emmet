@@ -46,7 +46,7 @@ setup(
             "mkdocstrings[python]",
             "livereload",
             "jinja2",
-        ]
+        ],
     },
     python_requires=">=3.8",
     license="modified BSD",

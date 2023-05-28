@@ -12,8 +12,7 @@ class BondTypeLengthQuery(QueryOperator):
     def query(
         self,
         bond_type: Optional[str] = Query(
-            None,
-            description="Bond type of interest; e.g. C-O for carbon-oxygen bonds."
+            None, description="Bond type of interest; e.g. C-O for carbon-oxygen bonds."
         ),
         max_bond_length: Optional[float] = Query(
             None,
@@ -24,15 +23,16 @@ class BondTypeLengthQuery(QueryOperator):
             description="Minimum value for the bond lengths in the molecule.",
         ),
     ) -> STORE_PARAMS:
-
         if bond_type is None:
             return {"criteria": dict()}
 
         # Clean bond_type
         elements = bond_type.split("-")
         if len(elements) != 2:
-            raise ValueError(f"Improper bond_type given {bond_type}! Must be in form 'A-B', where A and B are element "
-                             "symbols!")
+            raise ValueError(
+                f"Improper bond_type given {bond_type}! Must be in form 'A-B', where A and B are element "
+                "symbols!"
+            )
         key = f"bond_types.{'-'.join(sorted([e.capitalize() for e in elements]))}"
 
         crit: Dict[str, Any] = {

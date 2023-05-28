@@ -56,6 +56,7 @@ FILE_FILTERS_DEFAULT = [
     for d in ["", "relax1", "relax2"]
 ]
 
+
 @click.group()
 @click.option(
     "-d",
@@ -82,9 +83,7 @@ def make_comment(ctx, txt):
     gh = ctx.grand_parent.obj["GH"]
     user = gh.me().login
     issue_number = ctx.grand_parent.params["issue"]
-    issue = gh.issue(
-        SETTINGS.tracker["org"], SETTINGS.tracker["repo"], issue_number
-    )
+    issue = gh.issue(SETTINGS.tracker["org"], SETTINGS.tracker["repo"], issue_number)
     comment = issue.create_comment("\n".join(txt))
     logger.info(comment.html_url)
 
@@ -180,8 +179,9 @@ def check_pattern(nested_allowed=False):
             f"Pattern ({pattern}) only allowed to start with one of {PREFIXES}!"
         )
 
+
 def split_vasp_dir_path(vasp_dir):
-    prefix = "block_" # TODO should use PREFIXES?
+    prefix = "block_"  # TODO should use PREFIXES?
     if prefix not in vasp_dir:
         ctx = click.get_current_context()
         offset = len(ctx.parent.params["pattern"].split(os.sep))
@@ -197,6 +197,7 @@ def split_vasp_dir_path(vasp_dir):
         return vasp_dir_split[0], block, launcher
     else:
         raise EmmetCliError(f"Failed to split vasp dir {vasp_dir}!")
+
 
 def load_block_launchers():
     # NOTE this runs within subdir (i.e. block_* directories at root of subdir)
@@ -249,7 +250,9 @@ def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
                 ts = datetime.now().strftime("%Y%m%d-%H%M%S")
                 tarfile = f"{GARDEN}/{block}.tar"
                 for suf in ["", ".idx"]:
-                    args = shlex.split(f"hsi -q mv -v {tarfile}{suf} {tarfile}{suf}.bkp_{ts}")
+                    args = shlex.split(
+                        f"hsi -q mv -v {tarfile}{suf} {tarfile}{suf}.bkp_{ts}"
+                    )
                     for line in run_command(args, []):
                         logger.info(line.strip())
                 raise HpssOSError
@@ -294,20 +297,28 @@ def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
             if clean:
                 nremove_total += nlaunchers
                 if run:
-                    with click.progressbar(filelist, label="Removing launchers ...") as bar:
+                    with click.progressbar(
+                        filelist, label="Removing launchers ..."
+                    ) as bar:
                         for fn in bar:
                             if os.path.exists(fn):
                                 shutil.rmtree(fn)
-                    logger.info(f"Removed {nlaunchers} launchers from disk for {block}.")
+                    logger.info(
+                        f"Removed {nlaunchers} launchers from disk for {block}."
+                    )
                 else:
-                    logger.info(f"Would remove {nlaunchers} launchers from disk for {block}.")
+                    logger.info(
+                        f"Would remove {nlaunchers} launchers from disk for {block}."
+                    )
 
     logger.info(f"{counter}/{len(block_launchers)} blocks newly backed up to HPSS.")
     if clean:
         if run:
             logger.info(f"Verified and removed a total of {nremove_total} launchers.")
         else:
-            logger.info(f"Would verify and remove a total of {nremove_total} launchers.")
+            logger.info(
+                f"Would verify and remove a total of {nremove_total} launchers."
+            )
     return ReturnCodes.SUCCESS
 
 
@@ -463,7 +474,9 @@ def group_strings_by_prefix(strings, prefix_length):
 @click.pass_context
 def parsers(ctx, task_ids):
     """Scan root directory and submit separate parser jobs"""
-    ctx.parent.params["nmax"] = sys.maxsize  # disable maximum launchers to determine parser jobs
+    ctx.parent.params[
+        "nmax"
+    ] = sys.maxsize  # disable maximum launchers to determine parser jobs
     run = ctx.parent.parent.params["run"]
     directory = ctx.parent.params["directory"]
     check_pattern()
@@ -575,6 +588,7 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
         )
 
     from multiprocessing_logging import install_mp_handler
+
     install_mp_handler(logger=logger)
 
     pool = multiprocessing.Pool(processes=nproc)
@@ -595,7 +609,7 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
             {"$project": {"task_id": 1, "prefix_num": {"$split": ["$task_id", "-"]}}},
             {"$project": {"num": {"$arrayElemAt": ["$prefix_num", -1]}}},
             {"$addFields": {"num_int": {"$toInt": "$num"}}},
-            {"$group": {"_id": None, "num_max": {"$max": "$num_int"}}}
+            {"$group": {"_id": None, "num_max": {"$max": "$num_int"}}},
         ]
         result = list(client.collection.aggregate(pipeline))
         next_tid = result[0]["num_max"] + 1

@@ -38,7 +38,10 @@ def spins_store():
 
 def test_charges_builder(tasks_store, mol_store, charges_store):
     builder = PartialChargesBuilder(
-        tasks_store, mol_store, charges_store, methods=["mulliken", "resp", "critic2", "nbo"]
+        tasks_store,
+        mol_store,
+        charges_store,
+        methods=["mulliken", "resp", "critic2", "nbo"],
     )
     builder.run()
 

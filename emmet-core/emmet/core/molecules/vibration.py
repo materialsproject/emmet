@@ -15,7 +15,6 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
 class VibrationDoc(PropertyDoc):
-
     property_name = "vibrations"
 
     molecule: Molecule = Field(..., description="Molecular structure")
@@ -46,7 +45,7 @@ class VibrationDoc(PropertyDoc):
         task: TaskDocument,
         molecule_id: MPculeID,
         deprecated: bool = False,
-        **kwargs
+        **kwargs,
     ):  # type: ignore[override]
         """
         Construct a vibration document from a task document
@@ -117,5 +116,5 @@ class VibrationDoc(PropertyDoc):
             warnings=warnings,
             origins=[PropertyOrigin(name="vibrations", task_id=task.task_id)],
             deprecated=deprecated,
-            **kwargs
+            **kwargs,
         )

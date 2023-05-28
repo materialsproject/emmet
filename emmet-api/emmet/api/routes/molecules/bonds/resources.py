@@ -12,7 +12,7 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     FormulaQuery,
     ChemsysQuery,
     ElementsQuery,
-    ChargeSpinQuery
+    ChargeSpinQuery,
 )
 from emmet.api.routes.molecules.utils import MethodQuery, MultiPropertyIDQuery
 from emmet.api.core.settings import MAPISettings
@@ -42,7 +42,7 @@ def bonding_resource(bonds_store):
                     "property_id",
                     "solvent",
                     "method",
-                    "last_updated"
+                    "last_updated",
                 ],
             ),
         ],
