@@ -1,6 +1,5 @@
-from monty.dev import deprecated
 import pytest
-from pymatgen.core import Structure, Composition
+from pymatgen.core import Structure
 from pymatgen.util.testing import PymatgenTest
 
 from emmet.core.chemenv import ChemEnvDoc

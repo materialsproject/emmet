@@ -39,7 +39,6 @@ class TaskValidator(MapBuilder):
         # Set up potcar cache if appropriate
         if self.settings.VASP_VALIDATE_POTCAR_HASHES:
             if not self.potcar_hashes:
-
                 from pymatgen.io.vasp.inputs import PotcarSingle
 
                 hashes = defaultdict(dict)  # type: dict

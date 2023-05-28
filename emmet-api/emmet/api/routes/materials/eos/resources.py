@@ -21,7 +21,7 @@ def eos_resource(eos_store):
         tags=["Materials EOS"],
         sub_path="/eos/",
         disable_validation=True,
-        timeout=MAPISettings().TIMEOUT
+        timeout=MAPISettings().TIMEOUT,
     )
 
     return resource

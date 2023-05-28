@@ -38,7 +38,6 @@ class BulkModulusQuery(QueryOperator):
             description="Minimum value for the Voigt-Reuss-Hill average of the bulk modulus in GPa.",
         ),
     ) -> STORE_PARAMS:
-
         crit = defaultdict(dict)  # type: dict
 
         d = {
@@ -89,7 +88,6 @@ class ShearModulusQuery(QueryOperator):
             description="Minimum value for the Voigt-Reuss-Hill average of the shear modulus in GPa.",
         ),
     ) -> STORE_PARAMS:
-
         crit = defaultdict(dict)  # type: dict
 
         d = {
@@ -117,19 +115,22 @@ class PoissonQuery(QueryOperator):
     def query(
         self,
         elastic_anisotropy_max: Optional[float] = Query(
-            None, description="Maximum value for the elastic anisotropy.",
+            None,
+            description="Maximum value for the elastic anisotropy.",
         ),
         elastic_anisotropy_min: Optional[float] = Query(
-            None, description="Maximum value for the elastic anisotropy.",
+            None,
+            description="Maximum value for the elastic anisotropy.",
         ),
         poisson_max: Optional[float] = Query(
-            None, description="Maximum value for Poisson's ratio.",
+            None,
+            description="Maximum value for Poisson's ratio.",
         ),
         poisson_min: Optional[float] = Query(
-            None, description="Minimum value for Poisson's ratio.",
+            None,
+            description="Minimum value for Poisson's ratio.",
         ),
     ) -> STORE_PARAMS:
-
         crit = defaultdict(dict)  # type: dict
 
         d = {
@@ -158,10 +159,10 @@ class ElasticityChemsysQuery(QueryOperator):
     def query(
         self,
         chemsys: Optional[str] = Query(
-            None, description="A comma delimited string list of chemical systems.",
+            None,
+            description="A comma delimited string list of chemical systems.",
         ),
     ):
-
         crit = {}  # type: dict
 
         if chemsys:

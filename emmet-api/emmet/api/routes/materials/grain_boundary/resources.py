@@ -36,7 +36,7 @@ def gb_resource(gb_store):
         sub_path="/grain_boundary/",
         enable_get_by_key=False,
         disable_validation=True,
-        timeout=MAPISettings().TIMEOUT
+        timeout=MAPISettings().TIMEOUT,
     )
 
     return resource

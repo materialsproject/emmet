@@ -1,4 +1,9 @@
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery, NumericQuery
+from maggma.api.query_operator import (
+    PaginationQuery,
+    SortQuery,
+    SparseFieldsQuery,
+    NumericQuery,
+)
 from maggma.api.resource import ReadOnlyResource
 
 from emmet.api.core.global_header import GlobalHeaderProcessor
@@ -26,7 +31,10 @@ def absorption_resource(absorption_store):
             ),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(AbsorptionDoc, default_fields=["material_id", "last_updated"],),
+            SparseFieldsQuery(
+                AbsorptionDoc,
+                default_fields=["material_id", "last_updated"],
+            ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Absorption"],

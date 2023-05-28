@@ -48,7 +48,6 @@ class VibrationBuilder(Builder):
         settings: Optional[EmmetBuildSettings] = None,
         **kwargs,
     ):
-
         self.tasks = tasks
         self.molecules = molecules
         self.vibes = vibes
@@ -198,7 +197,6 @@ class VibrationBuilder(Builder):
                 by_solvent[entry["solvent"]].append(entry)
 
             for solvent, entries in by_solvent.items():
-
                 # No documents with enthalpy and entropy
                 if len(entries) == 0:
                     continue
@@ -212,15 +210,23 @@ class VibrationBuilder(Builder):
                     )[0]
                     task = best["task_id"]
 
-                tdoc = self.tasks.query_one({"task_id": task,
-                                             "formula_alphabetical": formula,
-                                             "orig": {"$exists": True}})
+                tdoc = self.tasks.query_one(
+                    {
+                        "task_id": task,
+                        "formula_alphabetical": formula,
+                        "orig": {"$exists": True},
+                    }
+                )
 
                 if tdoc is None:
                     try:
-                        tdoc = self.tasks.query_one({"task_id": int(task),
-                                                     "formula_alphabetical": formula,
-                                                     "orig": {"$exists": True}})
+                        tdoc = self.tasks.query_one(
+                            {
+                                "task_id": int(task),
+                                "formula_alphabetical": formula,
+                                "orig": {"$exists": True},
+                            }
+                        )
                     except ValueError:
                         tdoc = None
 

@@ -9,7 +9,7 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     FormulaQuery,
     ChemsysQuery,
     ElementsQuery,
-    ChargeSpinQuery
+    ChargeSpinQuery,
 )
 from emmet.api.routes.molecules.utils import MultiPropertyIDQuery
 from emmet.api.core.settings import MAPISettings
@@ -30,7 +30,15 @@ def vibration_resource(vibes_store):
             MultiPropertyIDQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(VibrationDoc, default_fields=["molecule_id", "property_id", "solvent", "last_updated"],),
+            SparseFieldsQuery(
+                VibrationDoc,
+                default_fields=[
+                    "molecule_id",
+                    "property_id",
+                    "solvent",
+                    "last_updated",
+                ],
+            ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Molecules Vibrations"],

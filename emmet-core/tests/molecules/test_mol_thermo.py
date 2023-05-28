@@ -1,6 +1,5 @@
 import json
 import datetime
-import copy
 
 import pytest
 
@@ -36,7 +35,9 @@ def sp(test_dir):
 def test_thermo(test_tasks, sp):
     # Just energy; no free energy information
     doc = MoleculeThermoDoc.from_task(
-        task=sp, molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2", deprecated=False
+        task=sp,
+        molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2",
+        deprecated=False,
     )
 
     assert doc.property_name == "thermo"
@@ -46,7 +47,9 @@ def test_thermo(test_tasks, sp):
     # With all thermodynamic information
     task = test_tasks[0]
     doc = MoleculeThermoDoc.from_task(
-        task, molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2", deprecated=False
+        task,
+        molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2",
+        deprecated=False,
     )
 
     assert doc.electronic_energy == task.output.final_energy * 27.2114

@@ -67,12 +67,19 @@ class MagnetismDoc(PropertyDoc):
 
     @classmethod
     def from_structure(
-        cls, structure: Structure, total_magnetization: float, material_id: MPID, **kwargs
+        cls,
+        structure: Structure,
+        total_magnetization: float,
+        material_id: MPID,
+        **kwargs
     ):  # noqa: E501
-
         struct_has_magmoms = "magmom" in structure.site_properties
-        total_magnetization = abs(total_magnetization)  # not necessarily == sum(magmoms)
-        msa = CollinearMagneticStructureAnalyzer(structure, round_magmoms=True, threshold_nonmag=0.2, threshold=0)
+        total_magnetization = abs(
+            total_magnetization
+        )  # not necessarily == sum(magmoms)
+        msa = CollinearMagneticStructureAnalyzer(
+            structure, round_magmoms=True, threshold_nonmag=0.2, threshold=0
+        )
 
         magmoms = msa.magmoms.tolist()
 
@@ -85,9 +92,12 @@ class MagnetismDoc(PropertyDoc):
             "types_of_magnetic_species": [str(t) for t in msa.types_of_magnetic_specie],
             "magmoms": magmoms,
             "total_magnetization": total_magnetization,
-            "total_magnetization_normalized_vol": total_magnetization / structure.volume,
+            "total_magnetization_normalized_vol": total_magnetization
+            / structure.volume,
             "total_magnetization_normalized_formula_units": total_magnetization
             / (structure.composition.get_reduced_composition_and_factor()[1]),
         }
 
-        return super().from_structure(meta_structure=structure, material_id=material_id, **d, **kwargs)
+        return super().from_structure(
+            meta_structure=structure, material_id=material_id, **d, **kwargs
+        )

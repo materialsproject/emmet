@@ -9,7 +9,6 @@ from monty.serialization import loadfn
 
 
 def test_maximal_spanning_non_intersecting_subsets():
-
     assert maximal_spanning_non_intersecting_subsets([{"A"}, {"A", "B"}]) == {
         frozenset(d) for d in [{"A"}, {"B"}]
     }

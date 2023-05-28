@@ -18,5 +18,4 @@ class PhononImgQuery(QueryOperator):
             description="The calculation (task) ID associated with the data object",
         ),
     ) -> STORE_PARAMS:
-
         return {"criteria": {"task_id": str(task_id)}}

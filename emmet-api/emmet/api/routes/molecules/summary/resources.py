@@ -44,16 +44,17 @@ def summary_resource(summary_store):
                     "ionization_energy",
                     "electron_affinity",
                     "reduction_free_energy",
-                    "oxidation_free_energy"
-                ]
+                    "oxidation_free_energy",
+                ],
             ),
             SparseFieldsQuery(MoleculeSummaryDoc, default_fields=["molecule_id"]),
         ],
         hint_scheme=SummaryHintScheme(),
         header_processor=GlobalHeaderProcessor(),
         tags=["Molecules Summary"],
+        sub_path="/summary/",
         disable_validation=True,
-        timeout=timeout
+        timeout=timeout,
     )
 
     return resource

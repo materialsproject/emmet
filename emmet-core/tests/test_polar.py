@@ -1,7 +1,3 @@
-from datetime import datetime
-import io
-from monty.dev import deprecated
-
 import pytest
 from pymatgen.core import Lattice, Structure
 from emmet.core.polar import DielectricDoc, PiezoelectricDoc
@@ -15,7 +11,6 @@ def dielectric_structure():
 
 
 def test_dielectric(dielectric_structure):
-
     epsilon_static = [
         [10.81747665, -0.00378371, 0.0049036],
         [-0.00373185, 10.82629335, -0.00432847],
@@ -240,7 +235,6 @@ def piezoelectric_structure():
 
 
 def test_piezoelectric(piezoelectric_structure):
-
     piezo_static = [
         [0.07886, -0.07647, -0.01902, 0.0, -0.18077, 0.0],
         [0.0, 0.0, 0.0, -0.10377, 0.0, 0.18109],

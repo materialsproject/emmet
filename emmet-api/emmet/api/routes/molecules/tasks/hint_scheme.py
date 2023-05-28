@@ -7,12 +7,10 @@ class TasksHintScheme(HintScheme):
     """
 
     def generate_hints(self, query):
-
         if query["criteria"] == {}:
             return {"hint": {"_id": 1}}
 
         for param in query["criteria"]:
-
             if "composition" in param:
                 return {"hint": {"composition.$**": 1}}
 

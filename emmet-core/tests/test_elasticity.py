@@ -37,7 +37,6 @@ def reference_data(test_dir):
 
 
 def test_generate_derived_fitting_data(fitting_data, reference_data):
-
     structure, deformations, stresses, equilibrium_stress = fitting_data
     ref_d_strains, ref_d_stresses, _ = reference_data
 

@@ -123,7 +123,6 @@ class ThermoBuilder(Builder):
         settings: Optional[EmmetBuildSettings] = None,
         **kwargs,
     ):
-
         self.tasks = tasks
         self.molecules = molecules
         self.thermo = thermo
@@ -172,11 +171,19 @@ class ThermoBuilder(Builder):
         temp_query["deprecated"] = False
 
         self.logger.info("Finding documents to process")
-        all_mols = list(self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"]))
+        all_mols = list(
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
+        )
 
         processed_docs = set([e for e in self.thermo.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {d["formula_alphabetical"] for d in all_mols if d[self.molecules.key] in to_process_docs}
+        to_process_forms = {
+            d["formula_alphabetical"]
+            for d in all_mols
+            if d[self.molecules.key] in to_process_docs
+        }
 
         N = ceil(len(to_process_forms) / number_splits)
 
@@ -205,11 +212,19 @@ class ThermoBuilder(Builder):
         temp_query["deprecated"] = False
 
         self.logger.info("Finding documents to process")
-        all_mols = list(self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"]))
+        all_mols = list(
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
+        )
 
         processed_docs = set([e for e in self.thermo.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {d["formula_alphabetical"] for d in all_mols if d[self.molecules.key] in to_process_docs}
+        to_process_forms = {
+            d["formula_alphabetical"]
+            for d in all_mols
+            if d[self.molecules.key] in to_process_docs
+        }
 
         self.logger.info(f"Found {len(to_process_docs)} unprocessed documents")
         self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
@@ -235,7 +250,9 @@ class ThermoBuilder(Builder):
             [dict] : a list of new thermo docs
         """
 
-        def _add_single_atom_enthalpy_entropy(task: TaskDocument, doc: MoleculeThermoDoc):
+        def _add_single_atom_enthalpy_entropy(
+            task: TaskDocument, doc: MoleculeThermoDoc
+        ):
             initial_mol = task.output.initial_molecule
             # If single atom, try to add enthalpy and entropy
             if len(initial_mol) == 1:
@@ -314,15 +331,23 @@ class ThermoBuilder(Builder):
                 )[0]
                 task = best["task_id"]
 
-                tdoc = self.tasks.query_one({"task_id": task,
-                                             "formula_alphabetical": formula,
-                                             "orig": {"$exists": True}})
+                tdoc = self.tasks.query_one(
+                    {
+                        "task_id": task,
+                        "formula_alphabetical": formula,
+                        "orig": {"$exists": True},
+                    }
+                )
 
                 if tdoc is None:
                     try:
-                        tdoc = self.tasks.query_one({"task_id": int(task),
-                                                     "formula_alphabetical": formula,
-                                                     "orig": {"$exists": True}})
+                        tdoc = self.tasks.query_one(
+                            {
+                                "task_id": int(task),
+                                "formula_alphabetical": formula,
+                                "orig": {"$exists": True},
+                            }
+                        )
                     except ValueError:
                         tdoc = None
 
@@ -357,9 +382,10 @@ class ThermoBuilder(Builder):
                     for entry in thermo_entries:
                         mol1 = Molecule.from_dict(entry["molecule"])
                         mol2 = Molecule.from_dict(best_spec["molecule"])
-                        if ((mm.fit(mol1, mol2) or mol1 == mol2)
-                            and (sum(evaluate_lot(best_spec["level_of_theory"])) <
-                                 sum(evaluate_lot(entry["level_of_theory"])))):
+                        if (mm.fit(mol1, mol2) or mol1 == mol2) and (
+                            sum(evaluate_lot(best_spec["level_of_theory"]))
+                            < sum(evaluate_lot(entry["level_of_theory"]))
+                        ):
                             matching_structures.append(entry)
 
                     if len(matching_structures) == 0:
@@ -397,9 +423,11 @@ class ThermoBuilder(Builder):
                         task_doc_dict,
                         correction_task=task_doc_spec,
                         molecule_id=mol.molecule_id,
-                        deprecated=False
+                        deprecated=False,
                     )
-                    thermo_doc = _add_single_atom_enthalpy_entropy(task_doc_dict, thermo_doc)
+                    thermo_doc = _add_single_atom_enthalpy_entropy(
+                        task_doc_dict, thermo_doc
+                    )
                     this_thermo_docs.append(thermo_doc)
                     break
 
@@ -415,14 +443,27 @@ class ThermoBuilder(Builder):
                 with_eval_e = list()
                 for member in collection:
                     if member.correction_level_of_theory is None:
-                        with_eval_e.append((member, sum(evaluate_lot(member.level_of_theory)),
-                                            member.electronic_energy))
+                        with_eval_e.append(
+                            (
+                                member,
+                                sum(evaluate_lot(member.level_of_theory)),
+                                member.electronic_energy,
+                            )
+                        )
                     else:
                         dict_lot = sum(evaluate_lot(member.level_of_theory))
                         spec_lot = sum(evaluate_lot(member.correction_level_of_theory))
-                        with_eval_e.append((member, (dict_lot + spec_lot) / 2, member.electronic_energy))
+                        with_eval_e.append(
+                            (
+                                member,
+                                (dict_lot + spec_lot) / 2,
+                                member.electronic_energy,
+                            )
+                        )
 
-                thermo_docs.append(sorted(with_eval_e, key=lambda x: (x[1], x[2]))[0][0])
+                thermo_docs.append(
+                    sorted(with_eval_e, key=lambda x: (x[1], x[2]))[0][0]
+                )
 
         self.logger.debug(f"Produced {len(thermo_docs)} thermo docs for {formula}")
 

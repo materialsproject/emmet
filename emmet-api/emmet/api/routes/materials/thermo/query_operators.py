@@ -15,7 +15,6 @@ class IsStableQuery(QueryOperator):
             None, description="Whether the material is stable."
         ),
     ):
-
         crit = {}
 
         if is_stable is not None:
@@ -39,11 +38,9 @@ class MultiThermoIDQuery(QueryOperator):
             None, description="Comma-separated list of thermo_id values to query on"
         ),
     ) -> STORE_PARAMS:
-
         crit = {}  # type: dict
 
         if thermo_ids:
-
             thermo_id_list = [thermo_id.strip() for thermo_id in thermo_ids.split(",")]
 
             if len(thermo_id_list) == 1:
@@ -65,11 +62,9 @@ class MultiThermoTypeQuery(QueryOperator):
             None, description="Comma-separated list of thermo_type values to query on"
         ),
     ) -> STORE_PARAMS:
-
         crit = {}  # type: dict
 
         if thermo_types:
-
             thermo_type_list = [
                 thermo_type.strip() for thermo_type in thermo_types.split(",")
             ]

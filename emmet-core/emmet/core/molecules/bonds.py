@@ -355,9 +355,13 @@ class MoleculeBondingDoc(PropertyDoc):
             if mg_made:
                 break
 
-            if m == "nbo" and task.output.nbo is not None and (
+            if (
+                m == "nbo"
+                and task.output.nbo is not None
+                and (
                     task.orig["rem"].get("run_nbo6", False)
                     or task.orig["rem"].get("nbo_external", False)
+                )
             ):
                 method = "nbo"
                 mg, warnings = nbo_molecule_graph(mol, task.output.nbo)

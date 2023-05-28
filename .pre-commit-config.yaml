@@ -7,7 +7,7 @@ repos:
     rev: v0.0.261
     hooks:
       - id: ruff
-        args: [--fix, --ignore, "D,E501"]
+        args: [--fix, --ignore, "D,E501,E741", --exclude, "__init__.py,emmet-cli,*_resources.py"]
 
   - repo: https://github.com/psf/black
     rev: 23.3.0
@@ -24,11 +24,3 @@ repos:
       - id: end-of-file-fixer
       - id: mixed-line-ending
       - id: trailing-whitespace
-
-  - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.4
-    hooks:
-      - id: codespell
-        stages: [commit, commit-msg]
-        exclude_types: [json, bib, svg]
-        args: [--ignore-words-list, "mater,fwe,te,titel"]

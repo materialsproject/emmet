@@ -8,7 +8,7 @@ from emmet.api.routes.materials.materials.query_operators import (
     FormulaQuery,
     ChemsysQuery,
     DeprecationQuery,
-    MultiMaterialIDQuery
+    MultiMaterialIDQuery,
 )
 
 from emmet.api.routes.materials.electronic_structure.query_operators import (
@@ -115,7 +115,7 @@ def dos_resource(es_store):
         enable_get_by_key=False,
         sub_path="/electronic_structure/dos/",
         disable_validation=True,
-        timeout=timeout
+        timeout=timeout,
     )
 
     return resource

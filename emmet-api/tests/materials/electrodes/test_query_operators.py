@@ -40,16 +40,23 @@ def test_electrode_formula_query():
 
 def test_electrodes_chemsys_query():
     op = ElectrodesChemsysQuery()
-    assert op.query("Si-O") == {"criteria": {"entries_composition_summary.all_chemsys": "O-Si"}}
+    assert op.query("Si-O") == {
+        "criteria": {"entries_composition_summary.all_chemsys": "O-Si"}
+    }
 
     assert op.query("Si-*") == {
-        "criteria": {"nelements": {"$in": [2, 1]}, "entries_composition_summary.all_elements": {"$all": ["Si"]}}
+        "criteria": {
+            "nelements": {"$in": [2, 1]},
+            "entries_composition_summary.all_elements": {"$all": ["Si"]},
+        }
     }
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query("Si-O") == {"criteria": {"entries_composition_summary.all_chemsys": "O-Si"}}
+        assert new_op.query("Si-O") == {
+            "criteria": {"entries_composition_summary.all_chemsys": "O-Si"}
+        }
 
 
 def test_electrodes_elements_query():
@@ -58,14 +65,26 @@ def test_electrodes_elements_query():
 
     op = ElectrodeElementsQuery()
     assert op.query(elements=",".join(eles), exclude_elements=",".join(neles)) == {
-        "criteria": {"entries_composition_summary.all_elements": {"$all": ["Si", "O"], "$nin": ["N", "P"]}}
+        "criteria": {
+            "entries_composition_summary.all_elements": {
+                "$all": ["Si", "O"],
+                "$nin": ["N", "P"],
+            }
+        }
     }
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(elements=",".join(eles), exclude_elements=",".join(neles)) == {
-            "criteria": {"entries_composition_summary.all_elements": {"$all": ["Si", "O"], "$nin": ["N", "P"]}}
+        assert new_op.query(
+            elements=",".join(eles), exclude_elements=",".join(neles)
+        ) == {
+            "criteria": {
+                "entries_composition_summary.all_elements": {
+                    "$all": ["Si", "O"],
+                    "$nin": ["N", "P"],
+                }
+            }
         }
 
 
@@ -141,7 +160,12 @@ def test_voltage_step_query():
 def test_insertion_voltage_step_query():
     op = InsertionVoltageStepQuery()
 
-    q = op.query(stability_charge_min=0, stability_charge_max=5, stability_discharge_min=0, stability_discharge_max=5,)
+    q = op.query(
+        stability_charge_min=0,
+        stability_charge_max=5,
+        stability_discharge_min=0,
+        stability_discharge_max=5,
+    )
 
     fields = [
         "stability_charge",
@@ -154,7 +178,10 @@ def test_insertion_voltage_step_query():
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
         q = new_op.query(
-            stability_charge_min=0, stability_charge_max=5, stability_discharge_min=0, stability_discharge_max=5,
+            stability_charge_min=0,
+            stability_charge_max=5,
+            stability_discharge_min=0,
+            stability_discharge_max=5,
         )
         assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
 
@@ -162,21 +189,27 @@ def test_insertion_voltage_step_query():
 def test_insertion_electrode_query():
     op = WorkingIonQuery()
 
-    q = op.query(working_ion="Li",)
+    q = op.query(
+        working_ion="Li",
+    )
 
     assert q == {"criteria": {"working_ion": "Li"}}
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        q = new_op.query(working_ion="Li",)
+        q = new_op.query(
+            working_ion="Li",
+        )
 
         assert q == {"criteria": {"working_ion": "Li"}}
 
 
 def test_electrodes_multi_material_id_query():
     op = ElectrodeMultiMaterialIDQuery()
-    assert op.query(material_ids="mp-149, mp-13") == {"criteria": {"material_ids": {"$in": ["mp-149", "mp-13"]}}}
+    assert op.query(material_ids="mp-149, mp-13") == {
+        "criteria": {"material_ids": {"$in": ["mp-149", "mp-13"]}}
+    }
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
@@ -192,7 +225,9 @@ def test_multi_battery_id_query():
         "criteria": {"battery_id": {"$in": ["mp-149_Ca", "mp-13_Li"]}}
     }
 
-    assert op.query(battery_ids="mp-149_Ca") == {"criteria": {"battery_id": "mp-149_Ca"}}
+    assert op.query(battery_ids="mp-149_Ca") == {
+        "criteria": {"battery_id": "mp-149_Ca"}
+    }
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
@@ -201,4 +236,6 @@ def test_multi_battery_id_query():
             "criteria": {"battery_id": {"$in": ["mp-149_Ca", "mp-13_Li"]}}
         }
 
-        assert new_op.query(battery_ids="mp-149_Ca") == {"criteria": {"battery_id": "mp-149_Ca"}}
+        assert new_op.query(battery_ids="mp-149_Ca") == {
+            "criteria": {"battery_id": "mp-149_Ca"}
+        }

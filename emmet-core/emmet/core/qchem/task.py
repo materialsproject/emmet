@@ -118,6 +118,23 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
         None, description="Special workflow name (if applicable)"
     )
 
+    smiles: str = Field(
+        None,
+        description="Simplified molecular-input line-entry system (SMILES) string for the molecule involved "
+                    "in this calculation."
+    )
+
+    species_hash: str = Field(
+        None,
+        description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph "
+        "node attribute.",
+    )
+    coord_hash: str = Field(
+        None,
+        description="Weisfeiler Lehman (WL) graph hash using the atom coordinates as the graph "
+        "node attribute.",
+    )
+
     # TODO - type of `tags` field seems to differ among task databases
     # sometimes List, sometimes Dict
     # left as Any here to ensure tags don't cause validation to fail.
@@ -149,7 +166,6 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
 
     @property
     def entry(self) -> Dict[str, Any]:
-
         if self.output.optimized_molecule is not None:
             mol = self.output.optimized_molecule
         else:

@@ -22,6 +22,7 @@ class BatteryType(str, ValueEnum):
     """
     Enum for battery type
     """
+
     insertion = "insertion"
     conversion = "conversion"
 
@@ -44,7 +45,7 @@ class VoltagePairDoc(BaseModel):
     max_delta_volume: float = Field(
         None,
         description="Volume changes in % for a particular voltage step using: "
-                    "max(charge, discharge) / min(charge, discharge) - 1.",
+        "max(charge, discharge) / min(charge, discharge) - 1.",
     )
 
     average_voltage: float = Field(
@@ -145,7 +146,6 @@ class EntriesCompositionSummary(BaseModel):
 
     @classmethod
     def from_compositions(cls, compositions: List[Composition]):
-
         all_formulas = list({comp.reduced_formula for comp in compositions})
         all_chemsys = list({comp.chemical_system for comp in compositions})
         all_formula_anonymous = list({comp.anonymized_formula for comp in compositions})
@@ -174,12 +174,14 @@ class BaseElectrode(BaseModel):
     )
 
     battery_id: str = Field(
-        None, description="The id for this battery document is the numerically smallest material_id followed by "
-                          "the working ion."
+        None,
+        description="The id for this battery document is the numerically smallest material_id followed by "
+        "the working ion.",
     )
 
     thermo_type: str = Field(
-        None, description="The functional type used to compute the thermodynamics of this electrode document."
+        None,
+        description="The functional type used to compute the thermodynamics of this electrode document.",
     )
 
     battery_formula: str = Field(
@@ -194,7 +196,7 @@ class BaseElectrode(BaseModel):
     num_steps: int = Field(
         None,
         description="The number of distinct voltage steps in from fully charge to "
-                    "discharge based on the stable intermediate states.",
+        "discharge based on the stable intermediate states.",
     )
 
     max_voltage_step: float = Field(
@@ -261,7 +263,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
     material_ids: List[MPID] = Field(
         None,
         description="The ids of all structures that matched to the present host lattice, regardless of stability. "
-                    "The stable entries can be found in the adjacent pairs.",
+        "The stable entries can be found in the adjacent pairs.",
     )
 
     entries_composition_summary: EntriesCompositionSummary = Field(
@@ -275,11 +277,11 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
 
     @classmethod
     def from_entries(
-            cls,
-            grouped_entries: List[ComputedStructureEntry],
-            working_ion_entry: ComputedEntry,
-            battery_id: str,
-            strip_structures: bool = False,
+        cls,
+        grouped_entries: List[ComputedStructureEntry],
+        working_ion_entry: ComputedEntry,
+        battery_id: str,
+        strip_structures: bool = False,
     ) -> Union["InsertionElectrodeDoc", None]:
         try:
             ie = InsertionElectrode.from_entries(
@@ -325,9 +327,9 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
                 ]
             )
             if (
-                    dchg_comp.get_atomic_fraction(ie.working_ion)
-                    / transition_metal_fraction
-                    > 1.0
+                dchg_comp.get_atomic_fraction(ie.working_ion)
+                / transition_metal_fraction
+                > 1.0
             ):
                 warnings.append("More than one working ion per transition metal")
         else:
@@ -430,7 +432,8 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
     """
 
     initial_comp_formula: str = Field(
-        None, description="The starting composition for the ConversionElectrode represented as a string/formula."
+        None,
+        description="The starting composition for the ConversionElectrode represented as a string/formula.",
     )
 
     adj_pairs: List[ConversionVoltagePairDoc] = Field(
@@ -443,12 +446,12 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
 
     @classmethod
     def from_composition_and_entries(
-            cls,
-            composition: Composition,
-            entries: List[ComputedEntry],
-            working_ion_symbol: str,
-            battery_id: str,
-            thermo_type: str,
+        cls,
+        composition: Composition,
+        entries: List[ComputedEntry],
+        working_ion_symbol: str,
+        battery_id: str,
+        thermo_type: str,
     ):
         ce = ConversionElectrode.from_composition_and_entries(
             comp=composition,
@@ -456,32 +459,22 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
             working_ion_symbol=working_ion_symbol,
         )
         d = cls.get_conversion_elec_doc(ce)
-        return cls(
-            battery_id=battery_id,
-            thermo_type=thermo_type,
-            **d
-        )
+        return cls(battery_id=battery_id, thermo_type=thermo_type, **d)
 
     @classmethod
     def from_composition_and_pd(
-            cls,
-            comp: Composition,
-            pd: PhaseDiagram,
-            working_ion_symbol: str,
-            battery_id: str,
-            thermo_type: str
+        cls,
+        comp: Composition,
+        pd: PhaseDiagram,
+        working_ion_symbol: str,
+        battery_id: str,
+        thermo_type: str,
     ):
         ce = ConversionElectrode.from_composition_and_pd(
-            comp=comp,
-            pd=pd,
-            working_ion_symbol=working_ion_symbol
+            comp=comp, pd=pd, working_ion_symbol=working_ion_symbol
         )
         d = cls.get_conversion_elec_doc(ce)
-        return cls(
-            battery_id=battery_id,
-            thermo_type=thermo_type,
-            **d
-        )
+        return cls(battery_id=battery_id, thermo_type=thermo_type, **d)
 
     @staticmethod
     def get_conversion_elec_doc(ce: ConversionElectrode) -> dict:
@@ -497,7 +490,9 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
             fracA_charge = ce.voltage_pairs[0].frac_charge
             fracA_discharge = ce.voltage_pairs[-1].frac_discharge
             x_charge = fracA_charge * ce.framework.num_atoms / (1 - fracA_charge)
-            x_discharge = fracA_discharge * ce.framework.num_atoms / (1 - fracA_discharge)
+            x_discharge = (
+                fracA_discharge * ce.framework.num_atoms / (1 - fracA_discharge)
+            )
             comp_charge = ce.framework + {ce.working_ion.symbol: x_charge}
             comp_discharge = ce.framework + {ce.working_ion.symbol: x_discharge}
 
@@ -534,34 +529,31 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
                 "formula_charge": comp_charge.reduced_formula,
                 "formula_discharge": comp_discharge.reduced_formula,
                 "reaction": ce.voltage_pairs[0].rxn.as_dict(),
-                "last_updated": datetime.utcnow()
+                "last_updated": datetime.utcnow(),
             }
             return d
 
         d = get_dict_from_conversion_elec(ce)
 
         d["adj_pairs"] = list(
-            map(get_dict_from_conversion_elec, ce.get_sub_electrodes(adjacent_only=True))
+            map(
+                get_dict_from_conversion_elec, ce.get_sub_electrodes(adjacent_only=True)
+            )
         )
 
         return d
 
 
 def get_battery_formula(
-        charge_comp: Composition,
-        discharge_comp: Composition,
-        working_ion: Element
+    charge_comp: Composition, discharge_comp: Composition, working_ion: Element
 ):
     working_ion_subscripts = []
 
     for comp in [charge_comp, discharge_comp]:
-
         comp_dict = comp.get_el_amt_dict()
 
         working_ion_num = (
-            comp_dict.pop(working_ion.value)
-            if working_ion.value in comp_dict
-            else 0
+            comp_dict.pop(working_ion.value) if working_ion.value in comp_dict else 0
         )
         temp_comp = Composition.from_dict(comp_dict)
 
@@ -574,7 +566,7 @@ def get_battery_formula(
         working_ion_subscripts.append(new_subscript)
 
     return (
-            working_ion.value
-            + "-".join(working_ion_subscripts)
-            + temp_reduced.reduced_formula
+        working_ion.value
+        + "-".join(working_ion_subscripts)
+        + temp_reduced.reduced_formula
     )

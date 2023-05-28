@@ -20,13 +20,16 @@ class DecompositionProduct(BaseModel):
     """
 
     material_id: MPID = Field(
-        None, description="The Materials Project ID for the material this decomposition points to.",
+        None,
+        description="The Materials Project ID for the material this decomposition points to.",
     )
     formula: str = Field(
-        None, description="The formula of the decomposed material this material decomposes to.",
+        None,
+        description="The formula of the decomposed material this material decomposes to.",
     )
     amount: float = Field(
-        None, description="The amount of the decomposed material by formula units this this material decomposes to.",
+        None,
+        description="The amount of the decomposed material by formula units this this material decomposes to.",
     )
 
 
@@ -45,11 +48,13 @@ class ThermoDoc(PropertyDoc):
     property_name = "thermo"
 
     thermo_type: Union[ThermoType, RunType] = Field(
-        ..., description="Functional types of calculations involved in the energy mixing scheme.",
+        ...,
+        description="Functional types of calculations involved in the energy mixing scheme.",
     )
 
     thermo_id: str = Field(
-        ..., description="Unique document ID which is composed of the Material ID and thermo data type.",
+        ...,
+        description="Unique document ID which is composed of the Material ID and thermo data type.",
     )
 
     uncorrected_energy_per_atom: float = Field(
@@ -57,17 +62,23 @@ class ThermoDoc(PropertyDoc):
     )
 
     energy_per_atom: float = Field(
-        ..., description="The total corrected DFT energy of this material per atom in eV/atom.",
+        ...,
+        description="The total corrected DFT energy of this material per atom in eV/atom.",
     )
 
     energy_uncertainy_per_atom: float = Field(None, description="")
 
-    formation_energy_per_atom: float = Field(None, description="The formation energy per atom in eV/atom.")
+    formation_energy_per_atom: float = Field(
+        None, description="The formation energy per atom in eV/atom."
+    )
 
-    energy_above_hull: float = Field(..., description="The energy above the hull in eV/Atom.")
+    energy_above_hull: float = Field(
+        ..., description="The energy above the hull in eV/Atom."
+    )
 
     is_stable: bool = Field(
-        False, description="Flag for whether this material is on the hull and therefore stable.",
+        False,
+        description="Flag for whether this material is on the hull and therefore stable.",
     )
 
     equilibrium_reaction_energy_per_atom: float = Field(
@@ -82,11 +93,13 @@ class ThermoDoc(PropertyDoc):
     )
 
     decomposition_enthalpy: float = Field(
-        None, description="Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen.",
+        None,
+        description="Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen.",
     )
 
     decomposition_enthalpy_decomposes_to: List[DecompositionProduct] = Field(
-        None, description="List of decomposition data associated with the decomposition_enthalpy quantity.",
+        None,
+        description="List of decomposition data associated with the decomposition_enthalpy quantity.",
     )
 
     energy_type: str = Field(
@@ -94,7 +107,9 @@ class ThermoDoc(PropertyDoc):
         description="The type of calculation this energy evaluation comes from.",
     )
 
-    entry_types: List[str] = Field(description="List of available energy types computed for this material.")
+    entry_types: List[str] = Field(
+        description="List of available energy types computed for this material."
+    )
 
     entries: Dict[str, Union[ComputedEntry, ComputedStructureEntry]] = Field(
         ...,
@@ -151,8 +166,10 @@ class ThermoDoc(PropertyDoc):
             )
 
         for material_id, entry_group in entries_by_mpid.items():
-
-            if use_max_chemsys and entry_group[0].composition.chemical_system != chemsys:
+            if (
+                use_max_chemsys
+                and entry_group[0].composition.chemical_system != chemsys
+            ):
                 continue
 
             sorted_entries = sorted(entry_group, key=_energy_eval)
@@ -165,8 +182,10 @@ class ThermoDoc(PropertyDoc):
                 "thermo_id": "{}_{}".format(material_id, str(thermo_type)),
                 "material_id": material_id,
                 "thermo_type": thermo_type,
-                "uncorrected_energy_per_atom": blessed_entry.uncorrected_energy / blessed_entry.composition.num_atoms,
-                "energy_per_atom": blessed_entry.energy / blessed_entry.composition.num_atoms,
+                "uncorrected_energy_per_atom": blessed_entry.uncorrected_energy
+                / blessed_entry.composition.num_atoms,
+                "energy_per_atom": blessed_entry.energy
+                / blessed_entry.composition.num_atoms,
                 "formation_energy_per_atom": pd.get_form_energy_per_atom(blessed_entry),
                 "energy_above_hull": ehull,
                 "is_stable": blessed_entry in pd.stable_entries,
@@ -178,25 +197,39 @@ class ThermoDoc(PropertyDoc):
 
             # Store different info if stable vs decomposes
             if d["is_stable"]:
-                d["equilibrium_reaction_energy_per_atom"] = pd.get_equilibrium_reaction_energy(blessed_entry)
+                d[
+                    "equilibrium_reaction_energy_per_atom"
+                ] = pd.get_equilibrium_reaction_energy(blessed_entry)
             else:
                 d["decomposes_to"] = [
-                    {"material_id": de.data["material_id"], "formula": de.composition.formula, "amount": amt}
+                    {
+                        "material_id": de.data["material_id"],
+                        "formula": de.composition.formula,
+                        "amount": amt,
+                    }
                     for de, amt in decomp.items()
                 ]
 
             try:
-                decomp, energy = pd.get_decomp_and_phase_separation_energy(blessed_entry)
+                decomp, energy = pd.get_decomp_and_phase_separation_energy(
+                    blessed_entry
+                )
                 d["decomposition_enthalpy"] = energy
                 d["decomposition_enthalpy_decomposes_to"] = [
-                    {"material_id": de.data["material_id"], "formula": de.composition.formula, "amount": amt}
+                    {
+                        "material_id": de.data["material_id"],
+                        "formula": de.composition.formula,
+                        "amount": amt,
+                    }
                     for de, amt in decomp.items()
                 ]
             except ValueError:
                 # try/except so this quantity does not take down the builder if it fails:
                 # it includes an optimization step that can be fragile in some instances,
                 # most likely failure is ValueError, "invalid value encountered in true_divide"
-                d["warnings"] = ["Could not calculate decomposition enthalpy for this entry."]
+                d["warnings"] = [
+                    "Could not calculate decomposition enthalpy for this entry."
+                ]
 
             d["energy_type"] = blessed_entry.parameters.get("run_type", "Unknown")
             d["entry_types"] = []
@@ -204,7 +237,6 @@ class ThermoDoc(PropertyDoc):
 
             # Currently, each entry group contains a single entry due to how the compatability scheme works
             for entry in entry_group:
-
                 d["entry_types"].append(entry.parameters.get("run_type", "Unknown"))
                 d["entries"][entry.parameters.get("run_type", "Unknown")] = entry
 
@@ -216,7 +248,11 @@ class ThermoDoc(PropertyDoc):
                 )
             ]
 
-            docs.append(ThermoDoc.from_structure(meta_structure=blessed_entry.structure, **d, **kwargs))
+            docs.append(
+                ThermoDoc.from_structure(
+                    meta_structure=blessed_entry.structure, **d, **kwargs
+                )
+            )
 
         return docs
 
@@ -238,14 +274,17 @@ class ThermoDoc(PropertyDoc):
 
         # Only use lowest entry per composition to speed up QHull in Phase Diagram
         reduced_entries = [
-            sorted(comp_entries, key=lambda e: e.energy_per_atom)[0] for comp_entries in entries_by_comp.values()
+            sorted(comp_entries, key=lambda e: e.energy_per_atom)[0]
+            for comp_entries in entries_by_comp.values()
         ]
         pd = PhaseDiagram(reduced_entries)
 
         # Add back all entries, not just those on the hull
         pd_computed_data = pd.computed_data
         pd_computed_data["all_entries"] = entries
-        new_pd = PhaseDiagram(entries, elements=pd.elements, computed_data=pd_computed_data)
+        new_pd = PhaseDiagram(
+            entries, elements=pd.elements, computed_data=pd_computed_data
+        )
         return new_pd
 
 
@@ -257,7 +296,8 @@ class PhaseDiagramDoc(BaseModel):
     property_name = "phase_diagram"
 
     phase_diagram_id: str = Field(
-        ..., description="Phase diagram ID consisting of the chemical system and thermo type",
+        ...,
+        description="Phase diagram ID consisting of the chemical system and thermo type",
     )
 
     chemsys: str = Field(
@@ -266,7 +306,8 @@ class PhaseDiagramDoc(BaseModel):
     )
 
     thermo_type: Union[ThermoType, RunType] = Field(
-        ..., description="Functional types of calculations involved in the energy mixing scheme.",
+        ...,
+        description="Functional types of calculations involved in the energy mixing scheme.",
     )
 
     phase_diagram: PhaseDiagram = Field(

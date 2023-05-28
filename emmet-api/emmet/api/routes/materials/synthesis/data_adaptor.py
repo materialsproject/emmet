@@ -45,7 +45,9 @@ def convert_recipe(recipe):
         try:
             comp = string2comp(precursor["material_formula"])
         except (CompositionError, ValueError):
-            logger.info("Cannot process precursor material: " + precursor["material_formula"])
+            logger.info(
+                "Cannot process precursor material: " + precursor["material_formula"]
+            )
             continue
         recipe["precursors_formula"].append(comp.formula)
         recipe["precursors_formula_s"].append(comp.reduced_formula)
@@ -61,7 +63,9 @@ def convert_json_public_repo(src_json, dst_json):
     with open(src_json) as f:
         data = json.load(f)
         recipes = data["reactions"]
-        logger.info("Loaded %s recipes, version %s" % (len(recipes), data["release_date"]))
+        logger.info(
+            "Loaded %s recipes, version %s" % (len(recipes), data["release_date"])
+        )
 
     converted = []
     for recipe in recipes:

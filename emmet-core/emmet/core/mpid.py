@@ -25,7 +25,6 @@ class MPID(str):
     """
 
     def __init__(self, val: Union["MPID", int, str]):
-
         if isinstance(val, MPID):
             self.parts = val.parts  # type: ignore
             self.string = val.string  # type: ignore
@@ -41,7 +40,6 @@ class MPID(str):
             self.string = val
 
         else:
-
             raise ValueError(
                 "Must provide an MPID, int, or string of the format prefix-number"
             )
@@ -59,7 +57,6 @@ class MPID(str):
         return f"MPID({self})"
 
     def __lt__(self, other: Union["MPID", int, str]):
-
         other_parts = MPID(other).parts
 
         if self.parts[0] != "" and other_parts[0] != "":
@@ -95,7 +92,6 @@ class MPID(str):
 
     @classmethod
     def validate(cls, v):
-
         if isinstance(v, MPID):
             return v
         elif isinstance(v, str) and mpid_regex.fullmatch(v):
@@ -121,7 +117,6 @@ class MPculeID(str):
     """
 
     def __init__(self, val: Union["MPculeID", str]):
-
         if isinstance(val, MPculeID):
             self.parts = val.parts  # type: ignore
             self.string = val.string  # type: ignore
@@ -144,7 +139,6 @@ class MPculeID(str):
             self.string = val
 
         else:
-
             raise ValueError(
                 "Must provide an MPculeID, or string of the format prefix-hash-formula-charge-spin "
                 "or hash-formula-charge-spin"
@@ -163,7 +157,6 @@ class MPculeID(str):
         return f"MPculeID({self})"
 
     def __lt__(self, other: Union["MPculeID", str]):
-
         other_parts = MPculeID(other).parts
 
         return "-".join([str(x) for x in self.parts[-4:]]) < "-".join(
@@ -193,7 +186,6 @@ class MPculeID(str):
 
     @classmethod
     def validate(cls, v):
-
         if isinstance(v, MPculeID):
             return v
         elif isinstance(v, str) and mpculeid_regex.fullmatch(v):

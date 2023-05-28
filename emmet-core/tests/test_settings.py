@@ -46,7 +46,6 @@ def test_from_url():
 
 
 def test_seriallization():
-
     test_config = EmmetSettings()
 
     with ScratchDir("."):

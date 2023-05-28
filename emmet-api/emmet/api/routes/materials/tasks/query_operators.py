@@ -1,6 +1,9 @@
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
-from emmet.api.routes.materials.tasks.utils import calcs_reversed_to_trajectory, task_to_entry
+from emmet.api.routes.materials.tasks.utils import (
+    calcs_reversed_to_trajectory,
+    task_to_entry,
+)
 from fastapi import Query
 from typing import Optional
 from monty.json import jsanitize
@@ -17,7 +20,6 @@ class MultipleTaskIDsQuery(QueryOperator):
             None, description="Comma-separated list of task_ids to query on"
         ),
     ) -> STORE_PARAMS:
-
         crit = {}
 
         if task_ids:
@@ -55,7 +57,6 @@ class TrajectoryQuery(QueryOperator):
             None, description="Comma-separated list of task_ids to query on"
         ),
     ) -> STORE_PARAMS:
-
         crit = {}
 
         if task_ids:
@@ -98,7 +99,6 @@ class EntryQuery(QueryOperator):
             None, description="Comma-separated list of task_ids to query on"
         ),
     ) -> STORE_PARAMS:
-
         crit = {}
 
         if task_ids:
@@ -136,7 +136,6 @@ class DeprecationQuery(QueryOperator):
             ..., description="Comma-separated list of task_ids to query on"
         ),
     ) -> STORE_PARAMS:
-
         self.task_ids = [task_id.strip() for task_id in task_ids.split(",")]
 
         crit = {}

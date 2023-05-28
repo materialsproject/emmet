@@ -73,9 +73,9 @@ class MagneticBuilder(Builder):
         mat_ids = self.materials.distinct(self.materials.key, criteria=q)
         mag_ids = self.magnetism.distinct(self.magnetism.key)
 
-        mats_set = set(self.magnetism.newer_in(target=self.materials, criteria=q, exhaustive=True)) | (
-            set(mat_ids) - set(mag_ids)
-        )
+        mats_set = set(
+            self.magnetism.newer_in(target=self.materials, criteria=q, exhaustive=True)
+        ) | (set(mat_ids) - set(mag_ids))
 
         mats = [mat for mat in mats_set]
 
@@ -124,7 +124,6 @@ class MagneticBuilder(Builder):
             self.logger.info("No items to update")
 
     def _get_processed_doc(self, mat):
-
         mat_doc = self.materials.query_one(
             {self.materials.key: mat},
             [self.materials.key, "origins", "last_updated", "structure", "deprecated"],
@@ -140,7 +139,9 @@ class MagneticBuilder(Builder):
         )
 
         task_updated = task_query["last_updated"]
-        total_magnetization = task_query["calcs_reversed"][-1]["output"]["outcar"]["total_magnetization"]
+        total_magnetization = task_query["calcs_reversed"][-1]["output"]["outcar"][
+            "total_magnetization"
+        ]
 
         mat_doc.update(
             {

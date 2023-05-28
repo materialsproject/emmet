@@ -17,7 +17,6 @@ def mg_store():
 
 
 def test_migration_graph_builder(ie_store, mg_store):
-
     builder = MigrationGraphBuilder(
         insertion_electrode=ie_store, migration_graph=mg_store
     )

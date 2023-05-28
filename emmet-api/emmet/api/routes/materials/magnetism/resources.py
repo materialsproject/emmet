@@ -17,7 +17,9 @@ def magnetism_resource(magnetism_store):
             MagneticQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(MagnetismDoc, default_fields=["material_id", "last_updated"]),
+            SparseFieldsQuery(
+                MagnetismDoc, default_fields=["material_id", "last_updated"]
+            ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Magnetism"],

@@ -4,7 +4,6 @@ import datetime
 import pytest
 
 from monty.io import zopen
-from monty.serialization import loadfn
 
 from emmet.core.qchem.calc_types import TaskType
 from emmet.core.qchem.molecule import MoleculeDoc
@@ -13,6 +12,7 @@ from emmet.core.qchem.task import TaskDocument
 
 try:
     from openbabel.openbabel import OBAlign
+
     _ = OBAlign()
     has_eigen = True
 except ImportError:
@@ -33,9 +33,10 @@ def test_tasks(test_dir):
     return tasks
 
 
-@pytest.mark.skipif(not has_eigen, reason="OBAlign missing, presumably due to lack of Eigen")
+@pytest.mark.skipif(
+    not has_eigen, reason="OBAlign missing, presumably due to lack of Eigen"
+)
 def test_make_mol(test_tasks):
-
     molecule = MoleculeDoc.from_tasks(test_tasks)
     assert molecule.formula_alphabetical == "C3 H4 Li1 O3"
     assert len(molecule.task_ids) == 5
@@ -55,7 +56,9 @@ def test_make_mol(test_tasks):
         MoleculeDoc.from_tasks(bad_task_group)
 
 
-@pytest.mark.skipif(not has_eigen, reason="OBAlign missing, presumably due to lack of Eigen")
+@pytest.mark.skipif(
+    not has_eigen, reason="OBAlign missing, presumably due to lack of Eigen"
+)
 def test_make_deprecated_mol(test_tasks):
     bad_task_group = [
         task
