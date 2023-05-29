@@ -57,7 +57,7 @@ packaging==23.1
     #   plotly
 palettable==3.3.3
     # via pymatgen
-pandas==2.0.1
+pandas==2.0.2
     # via
     #   -r python/requirements.txt
     #   pymatgen
@@ -93,7 +93,7 @@ requests==2.31.0
     # via
     #   mp-api
     #   pymatgen
-ruamel-yaml==0.17.26
+ruamel-yaml==0.17.28
     # via pymatgen
 ruamel-yaml-clib==0.2.7
     # via ruamel-yaml
@@ -119,7 +119,7 @@ tenacity==8.2.2
     # via plotly
 tqdm==4.65.0
     # via pymatgen
-typing-extensions==4.6.1
+typing-extensions==4.6.2
     # via
     #   emmet-core
     #   emmet-core (emmet/emmet-core/setup.py)

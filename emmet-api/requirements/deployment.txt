@@ -6,7 +6,7 @@
 #
 aioitertools==0.11.0
     # via maggma
-anyio==3.6.2
+anyio==3.7.0
     # via starlette
 attrs==23.1.0
     # via
@@ -17,15 +17,15 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.139
+boto3==1.26.142
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.29.139
+botocore==1.29.142
     # via
     #   boto3
     #   s3transfer
-bytecode==0.14.1
+bytecode==0.14.2
     # via ddtrace
 cattrs==22.2.0
     # via ddtrace
@@ -50,9 +50,9 @@ cycler==0.11.0
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==1.13.3
+ddtrace==1.13.4
     # via emmet-api (emmet/emmet-api/setup.py)
-deprecated==1.2.13
+deprecated==1.2.14
     # via opentelemetry-api
 dnspython==2.3.0
     # via
@@ -65,7 +65,9 @@ emmet-core[all]==0.55.2
 envier==0.4.0
     # via ddtrace
 exceptiongroup==1.1.1
-    # via cattrs
+    # via
+    #   anyio
+    #   cattrs
 fastapi==0.95.2
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
@@ -110,7 +112,7 @@ kiwisolver==1.4.4
     # via matplotlib
 latexcodec==2.0.1
     # via pybtex
-maggma==0.51.1
+maggma==0.51.3
     # via emmet-api (emmet/emmet-api/setup.py)
 markupsafe==2.1.2
     # via
@@ -163,7 +165,7 @@ numpy==1.21.6
     #   spglib
 opentelemetry-api==1.18.0
     # via ddtrace
-orjson==3.8.13
+orjson==3.8.14
     # via maggma
 packaging==23.1
     # via
@@ -173,18 +175,18 @@ packaging==23.1
     #   plotly
 palettable==3.3.3
     # via pymatgen
-pandas==2.0.1
+pandas==2.0.2
     # via
     #   -r python/requirements.txt
     #   matminer
     #   pymatgen
-paramiko==3.1.0
+paramiko==3.2.0
     # via sshtunnel
 pillow==9.5.0
     # via matplotlib
 plotly==5.14.1
     # via pymatgen
-protobuf==4.23.1
+protobuf==4.23.2
     # via
     #   ddsketch
     #   ddtrace
@@ -248,7 +250,7 @@ requests==2.31.0
     #   pymatgen
 robocrys==0.2.7
     # via emmet-core
-ruamel-yaml==0.17.26
+ruamel-yaml==0.17.28
     # via
     #   pymatgen
     #   robocrys
@@ -310,7 +312,7 @@ tqdm==4.65.0
     #   maggma
     #   matminer
     #   pymatgen
-typing-extensions==4.6.1
+typing-extensions==4.6.2
     # via
     #   ddtrace
     #   emmet-core
