@@ -22,6 +22,21 @@ class FermiBuilder(Builder):
         query: Optional[Dict] = None,
         **kwargs,
     ):
+        """
+        Constructs ifermi fermi surfaces objects for materials from
+        pymatgen bandstructure objects.
+
+        Args:
+            electronic_store (Store): Store of electronic struture documents to match to
+            tasks (Store): Store of task documents for retrieving structure data
+            bandstructures (Store): Store of bandstructure data in the form of
+                pymatgen bandstructure objects
+            fermi_surfaces (Store): Store of ifermi fermi surface objects to use
+                in the construction of fermi surfaces
+            query (dict): dictionary to limit materials to be analyzed
+
+        """
+
         self.electronic_structures = electronic_structures
         self.tasks = tasks
         self.bandstructures = bandstructures
