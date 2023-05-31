@@ -110,14 +110,20 @@ class FermiBuilder(Builder):
                 pass
 
     def process_item(self, item):
-        fermi_doc = FermiDoc.from_structure(
-            material_id=item["material_id"],
-            task_id=item["task_id"],
-            bandstructure=item["bandstructure"],
-            last_updated=item["task_updated"],
-            fs_id=item["fs_id"],
-            state=item["state"],
-        )
+        try:
+            fermi_doc = FermiDoc.from_structure(
+                material_id=item["material_id"],
+                task_id=item["task_id"],
+                bandstructure=item["bandstructure"],
+                last_updated=item["last_updated"],
+                fs_id=item["fs_id"],
+                state=item["state"],
+            )
+        except Exception as error:
+            self.logger.warning(
+                f"Error in generating fermi surfaces for {item['material_id']}: {error}"
+            )
+            return None
 
         doc = jsanitize(fermi_doc.dict(), allow_bson=True)
 
@@ -138,17 +144,15 @@ class FermiBuilder(Builder):
     def _get_processed_doc(self, mat):
         mat_doc = self.electronic_structures.query_one(
             criteria={self.electronic_structures.key: mat},
-            properties=[self.electronic_structures.key, "task_id"],
+            properties=[self.electronic_structures.key, "task_id", "last_updated"],
         )
 
         task_id = mat_doc["task_id"]
 
         task_query = self.tasks.query_one(
             criteria={"task_id": task_id},
-            properties=["output", "state", "last_updated"],
+            properties=["output", "state"],
         )
-
-        task_updated = task_query["last_updated"]
 
         bs_query = self.bandstructures.query_one(
             criteria={"task_id": task_id}, properties=["fs_id", "data", "task_id"]
@@ -165,7 +169,7 @@ class FermiBuilder(Builder):
 
         mat_doc.update(
             {
-                "task_updated": task_updated,
+                "last_updated": mat_doc["last_updated"],
                 "bandstructure": bandstructure,
                 "fs_id": bs_query["fs_id"],
                 "state": task_query["state"],

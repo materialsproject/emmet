@@ -11,6 +11,9 @@ from ifermi.surface import FermiSurface
 from ifermi.interpolate import FourierInterpolator
 from ifermi.kpoints import kpoints_from_bandstructure
 
+# Used only for testing on machines with low memory
+from wrapt_timeout_decorator import *
+
 
 class FermiDoc(BaseModel):
     """
@@ -51,6 +54,7 @@ class FermiDoc(BaseModel):
     state: str = Field(None, description="")
 
     @classmethod
+    @timeout(10)  # Only for testing on low memory machines
     def from_structure(
         cls,
         material_id: MPID,
