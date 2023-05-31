@@ -1,3 +1,4 @@
+import resource
 from math import ceil
 from typing import Dict, Iterator, Optional
 
@@ -83,7 +84,7 @@ class FermiBuilder(Builder):
 
         self.total = len(mats)
 
-        self.logger.info(f"Processing {self.total} items")
+        self.logger.info(f"Processing {self.total} items for fermi surface data")
 
         for mat in mats:
             doc = self._get_processed_doc(mat)
@@ -99,7 +100,7 @@ class FermiBuilder(Builder):
             task_id=item["task_id"],
             bandstructure=item["bandstructure"],
             last_updated=item["task_updated"],
-            gridfs_id=item["gridfs_id"],
+            fs_id=item["fs_id"],
             state=item["state"],
         )
 
@@ -114,7 +115,7 @@ class FermiBuilder(Builder):
         docs = list(filter(None, items))
 
         if len(docs) > 0:
-            self.logger.info(f"Found {len(docs)} fermi_surface docs to update")
+            self.logger.info(f"Found {len(docs)} fermi surface docs to update")
             self.fermi_surfaces.update(docs)
         else:
             self.logger.info("No items to update")
@@ -151,7 +152,7 @@ class FermiBuilder(Builder):
             {
                 "task_updated": task_updated,
                 "bandstructure": bandstructure,
-                "gridfs_id": bs_query["fs_id"],
+                "fs_id": bs_query["fs_id"],
                 "state": task_query["state"],
                 self.electronic_structures.key: mat_doc[self.electronic_structures.key],
             }

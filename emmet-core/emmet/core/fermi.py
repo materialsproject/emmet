@@ -1,6 +1,3 @@
-# import sys
-# import time
-
 from typing import List
 from datetime import datetime
 from monty.json import MontyDecoder
@@ -49,7 +46,7 @@ class FermiDoc(BaseModel):
             Is either CBM or VBM for semiconductors, or fermi_surface for metals.",
     )
 
-    gridfs_id: str = Field(None, description="")
+    fs_id: str = Field(None, description="")
 
     state: str = Field(None, description="")
 
@@ -60,7 +57,7 @@ class FermiDoc(BaseModel):
         task_id: str,
         bandstructure: BandStructure,
         last_updated: datetime,
-        gridfs_id: str,
+        fs_id: str,
         state: str,
         **kwargs,
     ):
@@ -133,7 +130,7 @@ class FermiDoc(BaseModel):
             last_updated=last_updated,
             fermi_surfaces=fermi_surfaces,
             surface_types=surface_types,
-            gridfs_id=gridfs_id,
+            fs_id=fs_id,
             state=state,
         )
 
