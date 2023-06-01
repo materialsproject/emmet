@@ -14,9 +14,9 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.142
+boto3==1.26.145
     # via maggma
-botocore==1.29.142
+botocore==1.29.145
     # via
     #   boto3
     #   s3transfer
@@ -43,9 +43,9 @@ colorama==0.4.6
     # via griffe
 contourpy==1.0.7
     # via matplotlib
-coverage[toml]==7.2.6
+coverage[toml]==7.2.7
     # via pytest-cov
-cryptography==40.0.2
+cryptography==41.0.1
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -59,7 +59,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.55.2
+emmet-core==0.55.3
     # via mp-api
 fastapi==0.95.2
     # via maggma
@@ -118,7 +118,7 @@ latexcodec==2.0.1
     # via pybtex
 livereload==2.6.3
     # via emmet-core (setup.py)
-maggma==0.51.1
+maggma==0.51.3
     # via emmet-core (setup.py)
 markdown==3.3.7
     # via
@@ -219,7 +219,7 @@ numpy==1.24.3
     #   seekpath
     #   shapely
     #   spglib
-orjson==3.8.14
+orjson==3.9.0
     # via maggma
 packaging==23.1
     # via
@@ -275,7 +275,7 @@ pyflakes==3.0.1
     # via flake8
 pygments==2.15.1
     # via mkdocs-material
-pymatgen==2023.5.10
+pymatgen==2023.5.31
     # via
     #   emmet-core
     #   emmet-core (setup.py)
@@ -338,7 +338,7 @@ requests==2.31.0
     #   pymatgen
 robocrys==0.2.7
     # via emmet-core (setup.py)
-ruamel-yaml==0.17.28
+ruamel-yaml==0.17.31
     # via
     #   custodian
     #   pymatgen
