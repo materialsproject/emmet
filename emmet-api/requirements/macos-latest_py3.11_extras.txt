@@ -17,11 +17,11 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.142
+boto3==1.26.145
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.142
+botocore==1.29.145
     # via
     #   boto3
     #   s3transfer
@@ -29,7 +29,7 @@ bracex==2.3.post1
     # via wcmatch
 bytecode==0.14.2
     # via ddtrace
-cattrs==22.2.0
+cattrs==23.1.1
     # via ddtrace
 certifi==2023.5.7
     # via requests
@@ -51,9 +51,9 @@ colorama==0.4.6
     # via griffe
 contourpy==1.0.7
     # via matplotlib
-coverage[toml]==7.2.6
+coverage[toml]==7.2.7
     # via pytest-cov
-cryptography==40.0.2
+cryptography==41.0.1
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -61,7 +61,7 @@ cycler==0.11.0
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==1.13.4
+ddtrace==1.14.0
     # via emmet-api (setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -71,7 +71,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.55.2
+emmet-core[all]==0.55.3
     # via
     #   emmet-api (setup.py)
     #   mp-api
@@ -144,7 +144,7 @@ latexcodec==2.0.1
     # via pybtex
 livereload==2.6.3
     # via emmet-api (setup.py)
-maggma==0.51.1
+maggma==0.51.3
     # via emmet-api (setup.py)
 markdown==3.3.7
     # via
@@ -245,11 +245,10 @@ numpy==1.24.3
     #   spglib
 opentelemetry-api==1.18.0
     # via ddtrace
-orjson==3.8.14
+orjson==3.9.0
     # via maggma
 packaging==23.1
     # via
-    #   ddtrace
     #   matplotlib
     #   mkdocs
     #   mongomock
@@ -304,7 +303,7 @@ pyflakes==3.0.1
     # via flake8
 pygments==2.15.1
     # via mkdocs-material
-pymatgen==2023.5.10
+pymatgen==2023.5.31
     # via
     #   emmet-core
     #   matminer
@@ -366,7 +365,7 @@ requests==2.31.0
     #   pymatgen
 robocrys==0.2.7
     # via emmet-core
-ruamel-yaml==0.17.28
+ruamel-yaml==0.17.31
     # via
     #   pymatgen
     #   robocrys
