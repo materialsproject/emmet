@@ -69,7 +69,7 @@ def hill_formula(comp: Composition) -> str:
         form_elements = elements
 
     formula = [
-        "%s%s" % (el, formula_double_format(c[el]) if c[el] != 1 else "")
+        f"{el}{formula_double_format(c[el]) if c[el] != 1 else ''}"
         for el in form_elements
     ]
     return "".join(formula)
@@ -94,7 +94,7 @@ class OptimadeMaterialsDoc(StructureResourceAttributes, EmmetBaseModel):
         structure: Structure,
         last_updated_structure: datetime,
         thermo_calcs: dict,
-        **kwargs
+        **kwargs,
     ) -> StructureResourceAttributes:
         structure.remove_oxidation_states()
         return OptimadeMaterialsDoc(
@@ -128,5 +128,5 @@ class OptimadeMaterialsDoc(StructureResourceAttributes, EmmetBaseModel):
             species_at_sites=[site.species_string for site in structure],
             last_modified=last_updated_structure,
             structure_features=[],
-            **kwargs
+            **kwargs,
         )
