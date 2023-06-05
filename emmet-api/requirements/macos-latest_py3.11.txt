@@ -17,17 +17,17 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.145
+boto3==1.26.147
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.145
+botocore==1.29.147
     # via
     #   boto3
     #   s3transfer
 bytecode==0.14.2
     # via ddtrace
-cattrs==23.1.1
+cattrs==23.1.2
     # via ddtrace
 certifi==2023.5.7
     # via requests
@@ -64,7 +64,7 @@ emmet-core[all]==0.55.3
     #   mp-api
 envier==0.4.0
     # via ddtrace
-fastapi==0.95.2
+fastapi==0.96.0
     # via
     #   emmet-api (setup.py)
     #   maggma
@@ -108,9 +108,9 @@ kiwisolver==1.4.4
     # via matplotlib
 latexcodec==2.0.1
     # via pybtex
-maggma==0.51.3
+maggma==0.51.4
     # via emmet-api (setup.py)
-markupsafe==2.1.2
+markupsafe==2.1.3
     # via
     #   jinja2
     #   werkzeug
@@ -196,7 +196,7 @@ pydantic==1.10.8
     #   fastapi
     #   inflect
     #   maggma
-pydash==7.0.3
+pydash==7.0.4
     # via maggma
 pymatgen==2023.5.31
     # via
@@ -239,7 +239,7 @@ requests==2.31.0
     #   mongogrant
     #   mp-api
     #   pymatgen
-robocrys==0.2.7
+robocrys==0.2.8
     # via emmet-core
 ruamel-yaml==0.17.31
     # via
@@ -302,7 +302,7 @@ tqdm==4.65.0
     #   maggma
     #   matminer
     #   pymatgen
-typing-extensions==4.6.2
+typing-extensions==4.6.3
     # via
     #   ddtrace
     #   emmet-core
