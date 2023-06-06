@@ -23,7 +23,9 @@ class HasProps(Enum):
     thermo = "thermo"
     xas = "xas"
     grain_boundaries = "grain_boundaries"
+    chemenv = "chemenv"
     electronic_structure = "electronic_structure"
+    absorption = "absorption"
     bandstructure = "bandstructure"
     dos = "dos"
     magnetism = "magnetism"
@@ -523,8 +525,10 @@ summary_fields: Dict[str, list] = {
     HasProps.charge_density.value: [],
     HasProps.eos.value: [],
     HasProps.phonon.value: [],
+    HasProps.absorption.value: [],
     HasProps.insertion_electrodes.value: [],
     HasProps.substrates.value: [],
+    HasProps.chemenv.value: [],
 }
 
 
