@@ -17,9 +17,7 @@ class BaseTaskDocument(EmmetBaseModel):
     calc_code: str = Field(description="The calculation code used to compute this task")
     version: str = Field(None, description="The version of the calculation code")
     dir_name: str = Field(None, description="The directory for this task")
-    task_id: MPID | MPculeID = Field(
-        None, description="the Task ID For this document"
-    )
+    task_id: MPID | MPculeID = Field(None, description="the Task ID For this document")
 
     completed: bool = Field(False, description="Whether this calcuation completed")
     completed_at: datetime = Field(

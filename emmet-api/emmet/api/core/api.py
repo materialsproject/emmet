@@ -65,7 +65,7 @@ class MAPI(API):
             openapi_schema["security"] = [{"ApiKeyAuth": []}]
 
             openapi_schema["info"]["x-logo"] = {
-                "url": "https://raw.githubusercontent.com/materialsproject/emmet/master/emmet-api/emmet/api/core/assets/mp_logo_small.png"  # noqa: E501
+                "url": "https://raw.githubusercontent.com/materialsproject/emmet/master/emmet-api/emmet/api/core/assets/mp_logo_small.png"
             }
 
             app.openapi_schema = openapi_schema

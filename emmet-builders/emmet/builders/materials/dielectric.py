@@ -64,9 +64,7 @@ class DielectricBuilder(Builder):
 
         mats = list(mats_set)
 
-        self.logger.info(
-            f"Processing {len(mats)} materials for dielectric data"
-        )
+        self.logger.info(f"Processing {len(mats)} materials for dielectric data")
 
         self.total = len(mats)
 
@@ -127,7 +125,10 @@ class DielectricBuilder(Builder):
         potential_task_ids = []
 
         for task_id, task_type in task_types:
-            if task_type == "DFPT Dielectric" and task_id not in mat_doc["deprecated_tasks"]:
+            if (
+                task_type == "DFPT Dielectric"
+                and task_id not in mat_doc["deprecated_tasks"]
+            ):
                 potential_task_ids.append(task_id)
 
         final_docs = []

@@ -20,7 +20,8 @@ class ElectrodeFormulaQuery(QueryOperator):
 
     def query(
         self,
-        formula: str | None = Query(
+        formula: str
+        | None = Query(
             None,
             description="Query by formula including anonymized formula or by including wild cards. \
 A comma delimited string list of anonymous formulas or regular formulas can also be provided.",
@@ -47,7 +48,8 @@ class ElectrodesChemsysQuery(QueryOperator):
 
     def query(
         self,
-        chemsys: str | None = Query(
+        chemsys: str
+        | None = Query(
             None,
             description="A comma delimited string list of chemical systems. \
 Wildcards for unknown elements only supported for single chemsys queries",
@@ -74,11 +76,13 @@ class ElectrodeElementsQuery(QueryOperator):
 
     def query(
         self,
-        elements: str | None = Query(
+        elements: str
+        | None = Query(
             None,
             description="Query by elements in the material composition as a comma-separated list",
         ),
-        exclude_elements: str | None = Query(
+        exclude_elements: str
+        | None = Query(
             None,
             description="Query by excluded elements in the material composition as a comma-separated list",
         ),
@@ -120,83 +124,103 @@ class VoltageStepQuery(QueryOperator):
 
     def query(
         self,
-        delta_volume_max: float | None = Query(
+        delta_volume_max: float
+        | None = Query(
             None,
             description="Maximum value for the max volume change in percent for a particular voltage step.",
         ),
-        delta_volume_min: float | None = Query(
+        delta_volume_min: float
+        | None = Query(
             None,
             description="Minimum value for the max volume change in percent for a particular voltage step.",
         ),
-        average_voltage_max: float | None = Query(
+        average_voltage_max: float
+        | None = Query(
             None,
             description="Maximum value for the average voltage for a particular voltage step in V.",
         ),
-        average_voltage_min: float | None = Query(
+        average_voltage_min: float
+        | None = Query(
             None,
             description="Minimum value for the average voltage for a particular voltage step in V.",
         ),
-        max_voltage_max: float | None = Query(
+        max_voltage_max: float
+        | None = Query(
             None,
             description="Maximum value for the maximum voltage for a particular voltage step in V.",
         ),
-        max_voltage_min: float | None = Query(
+        max_voltage_min: float
+        | None = Query(
             None,
             description="Minimum value for the maximum voltage for a particular voltage step in V.",
         ),
-        min_voltage_max: float | None = Query(
+        min_voltage_max: float
+        | None = Query(
             None,
             description="Maximum value for the minimum voltage for a particular voltage step in V.",
         ),
-        min_voltage_min: float | None = Query(
+        min_voltage_min: float
+        | None = Query(
             None,
             description="Minimum value for the minimum voltage for a particular voltage step in V.",
         ),
-        capacity_grav_max: float | None = Query(
+        capacity_grav_max: float
+        | None = Query(
             None,
             description="Maximum value for the gravimetric capacity in maH/g.",
         ),
-        capacity_grav_min: float | None = Query(
+        capacity_grav_min: float
+        | None = Query(
             None,
             description="Minimum value for the gravimetric capacity in maH/g.",
         ),
-        capacity_vol_max: float | None = Query(
+        capacity_vol_max: float
+        | None = Query(
             None,
             description="Maximum value for the volumetric capacity in maH/cc.",
         ),
-        capacity_vol_min: float | None = Query(
+        capacity_vol_min: float
+        | None = Query(
             None,
             description="Minimum value for the volumetric capacity in maH/cc.",
         ),
-        energy_grav_max: float | None = Query(
+        energy_grav_max: float
+        | None = Query(
             None,
             description="Maximum value for the gravimetric energy (specific energy) in Wh/kg.",
         ),
-        energy_grav_min: float | None = Query(
+        energy_grav_min: float
+        | None = Query(
             None,
             description="Minimum value for the gravimetric energy (specific energy) in Wh/kg.",
         ),
-        energy_vol_max: float | None = Query(
+        energy_vol_max: float
+        | None = Query(
             None,
             description="Maximum value for the volumetric energy (energy_density) in Wh/l.",
         ),
-        energy_vol_min: float | None = Query(
+        energy_vol_min: float
+        | None = Query(
             None,
             description="Minimum value for the volumetric energy (energy_density) in Wh/l.",
         ),
-        fracA_charge_max: float | None = Query(
+        fracA_charge_max: float
+        | None = Query(
             None,
             description="Maximum value for the atomic fraction of the working ion in the charged state.",
         ),
-        fracA_charge_min: float | None = Query(
+        fracA_charge_min: float
+        | None = Query(
             None,
             description="Minimum value for the atomic fraction of the working ion in the charged state.",
         ),
-        fracA_discharge_max: float | None = Query(
+        fracA_discharge_max: float
+        | None = Query(
             None,
             description="Maximum value for the atomic fraction of the working ion in the discharged state.",
         ),
-        fracA_discharge_min: float | None = Query(
+        fracA_discharge_min: float
+        | None = Query(
             None,
             description="Minimum value for the atomic fraction of the working ion in the discharged state.",
         ),
@@ -241,19 +265,23 @@ class InsertionVoltageStepQuery(QueryOperator):
 
     def query(
         self,
-        stability_charge_max: float | None = Query(
+        stability_charge_max: float
+        | None = Query(
             None,
             description="The maximum value of the energy above hull of the charged material.",
         ),
-        stability_charge_min: float | None = Query(
+        stability_charge_min: float
+        | None = Query(
             None,
             description="The minimum value of the energy above hull of the charged material.",
         ),
-        stability_discharge_max: float | None = Query(
+        stability_discharge_max: float
+        | None = Query(
             None,
             description="The maximum value of the energy above hull of the discharged material.",
         ),
-        stability_discharge_min: float | None = Query(
+        stability_discharge_min: float
+        | None = Query(
             None,
             description="The minimum value of the energy above hull of the discharged material.",
         ),
@@ -290,7 +318,8 @@ class WorkingIonQuery(QueryOperator):
 
     def query(
         self,
-        working_ion: str | None = Query(
+        working_ion: str
+        | None = Query(
             None,
             title="Element of the working ion, or comma-delimited string list of working ion elements.",
         ),
@@ -315,7 +344,8 @@ class ElectrodeMultiMaterialIDQuery(QueryOperator):
 
     def query(
         self,
-        material_ids: str | None = Query(
+        material_ids: str
+        | None = Query(
             None, description="Comma-separated list of material_id values to query on"
         ),
     ) -> STORE_PARAMS:
@@ -341,7 +371,8 @@ class MultiBatteryIDQuery(QueryOperator):
 
     def query(
         self,
-        battery_ids: str | None = Query(
+        battery_ids: str
+        | None = Query(
             None, description="Comma-separated list of battery_id values to query on"
         ),
     ) -> STORE_PARAMS:

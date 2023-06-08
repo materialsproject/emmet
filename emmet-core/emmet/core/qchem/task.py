@@ -152,7 +152,11 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
 
         charge = int(mol.charge) if self.charge is None else int(self.charge)
 
-        spin = mol.spin_multiplicity if self.spin_multiplicity is None else self.spin_multiplicity
+        spin = (
+            mol.spin_multiplicity
+            if self.spin_multiplicity is None
+            else self.spin_multiplicity
+        )
 
         entry_dict = {
             "entry_id": self.task_id,

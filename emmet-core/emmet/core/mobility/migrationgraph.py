@@ -44,7 +44,7 @@ class MigrationGraphDoc(EmmetBaseModel):
 
     deprecated: bool = Field(
         False,
-        description="Indicates whether a migration graph fails to be constructed from the provided entries. Defaults to False, indicating mg can be constructed from entries.",  # noqa: E501
+        description="Indicates whether a migration graph fails to be constructed from the provided entries. Defaults to False, indicating mg can be constructed from entries.",
     )
 
     hop_cutoff: float = Field(
@@ -83,7 +83,7 @@ class MigrationGraphDoc(EmmetBaseModel):
 
     matrix_supercell_structure: Structure = Field(
         None,
-        description="The matrix suprcell structure that does not contain the mobile ions for the purpose of migration analysis.",  # noqa: E501
+        description="The matrix suprcell structure that does not contain the mobile ions for the purpose of migration analysis.",
     )
 
     conversion_matrix: list[list[int | float]] = Field(
@@ -98,7 +98,7 @@ class MigrationGraphDoc(EmmetBaseModel):
 
     insert_coords_combo: list[str] = Field(
         None,
-        description="A list of combinations 'a+b' to designate hops in the supercell. Each combo should correspond to one unique hop in MigrationGraph.",  # noqa: E501
+        description="A list of combinations 'a+b' to designate hops in the supercell. Each combo should correspond to one unique hop in MigrationGraph.",
     )
 
     @classmethod
@@ -173,7 +173,7 @@ class MigrationGraphDoc(EmmetBaseModel):
 
             else:
                 raise TypeError(
-                    "Please make sure to have kwargs min_length_sc and minmax_num_atoms if populate_sc_fields is set to True."  # noqa: E501
+                    "Please make sure to have kwargs min_length_sc and minmax_num_atoms if populate_sc_fields is set to True."
                 )
 
     @staticmethod
@@ -205,9 +205,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         return host_sc, sc_mat, min_length_sc, minmax_num_atoms, coords_list, combo
 
     @staticmethod
-    def ordered_sc_site_list(
-        uc_sites_only: Structure, sc_mat: list[list[int | float]]
-    ):
+    def ordered_sc_site_list(uc_sites_only: Structure, sc_mat: list[list[int | float]]):
         uc_no_site = uc_sites_only.copy()
         uc_no_site.remove_sites(range(len(uc_sites_only)))
         working_ion = uc_sites_only[0].species_string

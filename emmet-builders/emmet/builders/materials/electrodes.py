@@ -235,9 +235,7 @@ class StructureGroupBuilder(Builder):
                     f"The newest GROUP doc was generated at {min_target_time}."
                 )
 
-                mat_ids = {
-                    mat_doc["material_id"] for mat_doc in all_mats_in_chemsys
-                }
+                mat_ids = {mat_doc["material_id"] for mat_doc in all_mats_in_chemsys}
 
                 # If any material id is missing or if any material id has been updated
                 target_ids = set()
@@ -372,9 +370,7 @@ class InsertionElectrodeBuilder(Builder):
 
             self.logger.debug(f"Found for {len(thermo_docs)} Thermo Documents.")
             if len(thermo_docs) != len(mat_ids):
-                missing_ids = set(mat_ids) - {
-                    t_["material_id"] for t_ in thermo_docs
-                }
+                missing_ids = set(mat_ids) - {t_["material_id"] for t_ in thermo_docs}
                 self.logger.warn(
                     f"The following ids are missing from the entries in thermo {missing_ids}.\n"
                     "The is likely due to the fact that a calculation other than GGA or GGA+U was "

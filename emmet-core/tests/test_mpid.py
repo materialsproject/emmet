@@ -21,8 +21,7 @@ def test_mpid():
     ) == MPID("mp-33")
 
     assert (
-        len({MPID("mp-33"), MPID("mp-44545"), MPID("mp-33"), MPID("mp-2134234")})
-        == 3
+        len({MPID("mp-33"), MPID("mp-44545"), MPID("mp-33"), MPID("mp-2134234")}) == 3
     )
 
     MPID(3)

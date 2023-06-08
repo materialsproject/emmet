@@ -17,7 +17,7 @@ class RobocrystallographerBuilder(MapBuilder):
         oxidation_states: Store,
         robocrys: Store,
         query: dict | None = None,
-        **kwargs
+        **kwargs,
     ):
         self.oxidation_states = oxidation_states
         self.robocrys = robocrys
@@ -31,7 +31,7 @@ class RobocrystallographerBuilder(MapBuilder):
             target=robocrys,
             query=query,
             projection=["material_id", "structure", "deprecated"],
-            **kwargs
+            **kwargs,
         )
 
     def unary_function(self, item):

@@ -92,5 +92,5 @@ class RobocrystallogapherDoc(PropertyDoc):
             condensed_structure=condensed_structure,
             description=description,
             robocrys_version=__robocrys_version__,
-            **kwargs
+            **kwargs,
         )

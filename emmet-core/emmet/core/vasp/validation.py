@@ -348,7 +348,10 @@ def _magmom_check(task_doc, chemsys):
                 else:
                     output_structure = task_doc.output.structure.as_dict()
 
-                if output_structure["sites"][site_num]["label"] == ele and abs(mag["tot"]) > max_val:
+                if (
+                    output_structure["sites"][site_num]["label"] == ele
+                    and abs(mag["tot"]) > max_val
+                ):
                     return True
 
     return False

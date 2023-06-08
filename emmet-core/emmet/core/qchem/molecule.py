@@ -38,7 +38,9 @@ def evaluate_lot(
     :param solvent_scores: Scores for various implicit solvent models
     :return:
     """
-    lot_comp = lot.value.split("/") if isinstance(lot, LevelOfTheory) else lot.split("/")
+    lot_comp = (
+        lot.value.split("/") if isinstance(lot, LevelOfTheory) else lot.split("/")
+    )
 
     return (
         -1 * funct_scores.get(lot_comp[0], 0),

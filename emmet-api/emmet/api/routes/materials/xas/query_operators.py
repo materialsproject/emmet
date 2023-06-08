@@ -38,7 +38,8 @@ class XASTaskIDQuery(QueryOperator):
 
     def query(
         self,
-        material_ids: str | None = Query(
+        material_ids: str
+        | None = Query(
             None, description="Comma-separated list of material_id to query on"
         ),
     ) -> STORE_PARAMS:

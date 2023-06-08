@@ -17,7 +17,7 @@ class ChemEnvBuilder(MapBuilder):
         oxidation_states: Store,
         chemenv: Store,
         query: dict | None = None,
-        **kwargs
+        **kwargs,
     ):
         self.oxidation_states = oxidation_states
         self.chemenv = chemenv
@@ -31,7 +31,7 @@ class ChemEnvBuilder(MapBuilder):
             target=chemenv,
             query=query,
             projection=["material_id", "structure", "deprecated"],
-            **kwargs
+            **kwargs,
         )
 
     def unary_function(self, item):

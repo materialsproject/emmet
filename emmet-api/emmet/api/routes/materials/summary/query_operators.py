@@ -4,7 +4,7 @@ from collections import defaultdict
 from typing import (
     TYPE_CHECKING,
     Literal,  # type: ignore
-    )
+)
 
 import numpy as np
 from emmet.core.summary import SummaryStats
@@ -22,7 +22,8 @@ class HasPropsQuery(QueryOperator):
 
     def query(
         self,
-        has_props: str | None = Query(
+        has_props: str
+        | None = Query(
             None,
             description="Comma-delimited list of possible properties given by HasPropsEnum to search for.",
         ),
@@ -42,7 +43,8 @@ class MaterialIDsSearchQuery(QueryOperator):
 
     def query(
         self,
-        material_ids: str | None = Query(
+        material_ids: str
+        | None = Query(
             None, description="Comma-separated list of material_ids to query on"
         ),
     ) -> STORE_PARAMS:
@@ -81,9 +83,8 @@ class SearchIsStableQuery(QueryOperator):
 
     def query(
         self,
-        is_stable: bool | None = Query(
-            None, description="Whether the material is stable."
-        ),
+        is_stable: bool
+        | None = Query(None, description="Whether the material is stable."),
     ):
         crit = {}
 
@@ -101,7 +102,8 @@ class SearchHasReconstructedQuery(QueryOperator):
 
     def query(
         self,
-        has_reconstructed: bool | None = Query(
+        has_reconstructed: bool
+        | None = Query(
             None, description="Whether the material has reconstructed surfaces."
         ),
     ):
@@ -121,9 +123,8 @@ class SearchMagneticQuery(QueryOperator):
 
     def query(
         self,
-        ordering: Ordering | None = Query(
-            None, description="Magnetic ordering of the material."
-        ),
+        ordering: Ordering
+        | None = Query(None, description="Magnetic ordering of the material."),
     ) -> STORE_PARAMS:
         crit = defaultdict(dict)  # type: dict
 
@@ -141,9 +142,8 @@ class SearchIsTheoreticalQuery(QueryOperator):
 
     def query(
         self,
-        theoretical: bool | None = Query(
-            None, description="Whether the material is theoretical."
-        ),
+        theoretical: bool
+        | None = Query(None, description="Whether the material is theoretical."),
     ):
         crit = {}
 
@@ -161,12 +161,10 @@ class SearchESQuery(QueryOperator):
 
     def query(
         self,
-        is_gap_direct: bool | None = Query(
-            None, description="Whether a band gap is direct or not."
-        ),
-        is_metal: bool | None = Query(
-            None, description="Whether the material is considered a metal."
-        ),
+        is_gap_direct: bool
+        | None = Query(None, description="Whether a band gap is direct or not."),
+        is_metal: bool
+        | None = Query(None, description="Whether the material is considered a metal."),
     ) -> STORE_PARAMS:
         crit = defaultdict(dict)  # type: dict
 
@@ -198,16 +196,19 @@ class SearchStatsQuery(QueryOperator):
                 title=f"SearchDoc field to query on, must be a numerical field, "
                 f"choose from: {', '.join(valid_numeric_fields)}",
             ),
-            num_samples: int | None = Query(
+            num_samples: int
+            | None = Query(
                 None,
                 title="If specified, will only sample this number of documents.",
             ),
-            min_val: float | None = Query(
+            min_val: float
+            | None = Query(
                 None,
                 title="If specified, will only consider documents with field values "
                 "greater than or equal to this minimum value.",
             ),
-            max_val: float | None = Query(
+            max_val: float
+            | None = Query(
                 None,
                 title="If specified, will only consider documents with field values "
                 "less than or equal to this minimum value.",

@@ -242,7 +242,9 @@ class ThermoBuilder(Builder):
         ):
             initial_mol = task.output.initial_molecule
             # If single atom, try to add enthalpy and entropy
-            if len(initial_mol) == 1 and (doc.total_enthalpy is None or doc.total_entropy is None):
+            if len(initial_mol) == 1 and (
+                doc.total_enthalpy is None or doc.total_entropy is None
+            ):
                 formula = initial_mol.composition.alphabetical_formula
                 if formula in single_mol_thermo:
                     vals = single_mol_thermo[formula]
@@ -280,7 +282,11 @@ class ThermoBuilder(Builder):
 
             sp_entries = list()
             for entry in mol.entries:
-                task_type = entry["task_type"].value if isinstance(entry["task_type"], TaskType) else entry["task_type"]
+                task_type = (
+                    entry["task_type"].value
+                    if isinstance(entry["task_type"], TaskType)
+                    else entry["task_type"]
+                )
 
                 if (
                     task_type in ["Single Point", "Force"]
@@ -297,7 +303,9 @@ class ThermoBuilder(Builder):
             for entry in sp_entries:
                 by_solvent_spec[entry["solvent"]].append(entry)
 
-            without_corrections = by_solvent_spec if len(thermo_entries) == 0 else by_solvent_dict
+            without_corrections = (
+                by_solvent_spec if len(thermo_entries) == 0 else by_solvent_dict
+            )
 
             # Construct without corrections
             for _solvent, entries in without_corrections.items():

@@ -59,7 +59,7 @@ class CorrectedEntriesBuilder(Builder):
 
         if self.materials.key != "material_id":
             warnings.warn(
-                f"Key for the materials store is incorrect and has been changed from {self.materials.key} to material_id!"  # noqa: E501
+                f"Key for the materials store is incorrect and has been changed from {self.materials.key} to material_id!"
             )
             self.materials.key = "material_id"
 
@@ -68,7 +68,7 @@ class CorrectedEntriesBuilder(Builder):
         if self.oxidation_states is not None:
             if self.oxidation_states.key != "material_id":
                 warnings.warn(
-                    f"Key for the oxidation states store is incorrect and has been changed from {self.oxidation_states.key} to material_id!"  # noqa:E501
+                    f"Key for the oxidation states store is incorrect and has been changed from {self.oxidation_states.key} to material_id!"
                 )
                 self.oxidation_states.key = "material_id"
 
@@ -126,9 +126,7 @@ class CorrectedEntriesBuilder(Builder):
 
         entries = [ComputedStructureEntry.from_dict(entry) for entry in item]
         # determine chemsys
-        elements = sorted(
-            {el.symbol for e in entries for el in e.composition.elements}
-        )
+        elements = sorted({el.symbol for e in entries for el in e.composition.elements})
         chemsys = "-".join(elements)
 
         self.logger.debug(f"Processing {len(entries)} entries for {chemsys}")

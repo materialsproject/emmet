@@ -4,5 +4,3 @@ import contextlib
 
 with contextlib.suppress(ImportError):
     pass
-
-

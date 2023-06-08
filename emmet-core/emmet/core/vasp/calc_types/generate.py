@@ -41,10 +41,7 @@ _RUN_TYPES = (
 run_type_enum = get_enum_source(
     "RunType",
     "VASP calculation run types",
-    {
-            "_".join(rt.split()).replace("+", "_").replace("-", "_"): rt
-            for rt in _RUN_TYPES
-        },
+    {"_".join(rt.split()).replace("+", "_").replace("-", "_"): rt for rt in _RUN_TYPES},
 )
 task_type_enum = get_enum_source(
     "TaskType",

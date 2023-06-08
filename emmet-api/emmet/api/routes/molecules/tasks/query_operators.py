@@ -17,7 +17,8 @@ class MultipleTaskIDsQuery(QueryOperator):
 
     def query(
         self,
-        task_ids: str | None = Query(
+        task_ids: str
+        | None = Query(
             None, description="Comma-separated list of task_ids to query on"
         ),
     ) -> STORE_PARAMS:

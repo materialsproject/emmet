@@ -115,8 +115,8 @@ class SummaryBuilder(Builder):
 
             valid_static_tasks = {
                 task_id
-                    for task_id, task_type in materials_doc["task_types"].items()
-                    if task_type == "Static"
+                for task_id, task_type in materials_doc["task_types"].items()
+                if task_type == "Static"
             } - set(materials_doc["deprecated_tasks"])
 
             all_tasks = list(materials_doc["task_types"].keys())

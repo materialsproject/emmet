@@ -64,9 +64,7 @@ class AbsorptionBuilder(Builder):
 
         mats = list(mats_set)
 
-        self.logger.info(
-            f"Processing {len(mats)} materials for absorption data"
-        )
+        self.logger.info(f"Processing {len(mats)} materials for absorption data")
 
         self.total = len(mats)
 

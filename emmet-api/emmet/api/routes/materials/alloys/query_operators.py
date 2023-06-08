@@ -14,7 +14,8 @@ class MaterialIDsSearchQuery(QueryOperator):
 
     def query(
         self,
-        material_ids: str | None = Query(
+        material_ids: str
+        | None = Query(
             None, description="Comma-separated list of material_ids to query on"
         ),
     ) -> STORE_PARAMS:
@@ -45,7 +46,8 @@ class MaterialIDsSearchQuery(QueryOperator):
 class FormulaSearchQuery(QueryOperator):
     def query(
         self,
-        formulae: str | None = Query(
+        formulae: str
+        | None = Query(
             None, description="Comma-separated list of end-point formulas to query."
         ),
     ) -> STORE_PARAMS:

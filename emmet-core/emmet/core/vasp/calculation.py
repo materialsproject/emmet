@@ -444,7 +444,6 @@ class CalculationOutput(BaseModel):
         with contextlib.suppress(KeyError):
             freq_dependent_diel = FrequencyDependentDielectric.from_vasprun(vasprun)
 
-
         locpot_avg = None
         if locpot:
             locpot_avg = {

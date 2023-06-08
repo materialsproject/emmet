@@ -31,8 +31,8 @@ AVAILABLE_METHODS = {
 }
 
 
-DEFAULTSIMPLESTCHEMENVSTRATEGY = "Simplest ChemenvStrategy using fixed angle and distance parameters for the definition of neighbors in the Voronoi approach. The coordination environment is then given as the one with the lowest continuous symmetry measure. Options: distance_cutoff=1.4 angle_cutoff=0.3 additional_condition=1 continuous_symmetry_measure_cutoff=10.0"  # noqa: E501
-# SIMPLESTCHEMENVSTRATEGY_ALL_BONDS = "Simplest ChemenvStrategy using fixed angle and distance parameters for the definition of neighbors in the Voronoi approach. The coordination environment is then given as the one with the lowest continuous symmetry measure. Options: distance_cutoff=1.4 angle_cutoff=0.3 additional_condition=0 continuous_symmetry_measure_cutoff=10.0"  # noqa: E501
+DEFAULTSIMPLESTCHEMENVSTRATEGY = "Simplest ChemenvStrategy using fixed angle and distance parameters for the definition of neighbors in the Voronoi approach. The coordination environment is then given as the one with the lowest continuous symmetry measure. Options: distance_cutoff=1.4 angle_cutoff=0.3 additional_condition=1 continuous_symmetry_measure_cutoff=10.0"
+# SIMPLESTCHEMENVSTRATEGY_ALL_BONDS = "Simplest ChemenvStrategy using fixed angle and distance parameters for the definition of neighbors in the Voronoi approach. The coordination environment is then given as the one with the lowest continuous symmetry measure. Options: distance_cutoff=1.4 angle_cutoff=0.3 additional_condition=0 continuous_symmetry_measure_cutoff=10.0"
 
 
 METHODS_DESCRIPTION = {
@@ -267,7 +267,7 @@ COORDINATION_GEOMETRIES_NAMES_WITH_ALTERNATIVES = Literal[
     "Triangular cupola",
     "Bicapped square prism (adjacent faces) (also known as Bicapped cube)",
     "Cuboctahedron",
-    "Tricapped triangular prism (two square-face caps and one triangular-face cap) (also known as Triaugmented trigonal prism)",  # noqa: E501
+    "Tricapped triangular prism (two square-face caps and one triangular-face cap) (also known as Triaugmented trigonal prism)",
     "Square-face capped trigonal prism (also known as Augmented triangular prism)",
     "Tetrahedron (also known as Triangular pyramid, Trigonal pyramid)",
     "Cube (also known as Square prism, Tetragonal prism)",
@@ -283,7 +283,7 @@ COORDINATION_GEOMETRIES_NAMES_WITH_ALTERNATIVES = Literal[
     "Angular",
     "Hendecahedron (also known as Bisymmetric hendecahedron)",
     "Trigonal-face bicapped square antiprism",
-    "Pentagonal-face capped pentagonal antiprism (also known as Gyroelongated pentagonal pyramid, Diminished icosahedron, Truncated icosahedron)",  # noqa: E501
+    "Pentagonal-face capped pentagonal antiprism (also known as Gyroelongated pentagonal pyramid, Diminished icosahedron, Truncated icosahedron)",
     "Linear",
     "Pentagonal plane (also known as Pentagon)",
     "Tricapped triangular prism (three square-face caps) (also known as Triaugmented trigonal prism)",
@@ -292,8 +292,8 @@ COORDINATION_GEOMETRIES_NAMES_WITH_ALTERNATIVES = Literal[
     "T-shaped",
     "Single neighbor",
     "Trigonal plane (also known as Triangular planar)",
-    "Dodecahedron with triangular faces - p2345 plane normalized (also known as Snub disphenoid - p2345 plane normalized, Siamese dodecahedron - p2345 plane normalized)",  # noqa: E501
-    "Tricapped triangular prism (one square-face cap and two triangular-face caps) (also known as Triaugmented trigonal prism)",  # noqa: E501
+    "Dodecahedron with triangular faces - p2345 plane normalized (also known as Snub disphenoid - p2345 plane normalized, Siamese dodecahedron - p2345 plane normalized)",
+    "Tricapped triangular prism (one square-face cap and two triangular-face caps) (also known as Triaugmented trigonal prism)",
     "Truncated tetrahedron",
     "Hexagonal prism",
     "Tridiminished icosahedron",
@@ -307,7 +307,7 @@ COORDINATION_GEOMETRIES_NAMES_WITH_ALTERNATIVES = Literal[
     "End-trigonal-face capped trigonal prism (also known as Augmented triangular prism)",
     "Pentagonal bipyramid (also known as Pentagonal dipyramid)",
     "Square-face monocapped antiprism (also known as Gyroelongated square pyramid)",
-    "Square-face bicapped square antiprism (also known as Square-face bicapped square anticube, Bicapped anticube, Gyroelongated square dipyramid)",  # noqa: E501
+    "Square-face bicapped square antiprism (also known as Square-face bicapped square anticube, Bicapped anticube, Gyroelongated square dipyramid)",
 ]
 
 
@@ -349,7 +349,7 @@ class ChemEnvDoc(PropertyDoc):
     chemenv_name_with_alternatives: list[
         COORDINATION_GEOMETRIES_NAMES_WITH_ALTERNATIVES
     ] = Field(
-        description="List of text description of coordination environment including alternative descriptions for unique (cationic) species in structure."  # noqa: E501
+        description="List of text description of coordination environment including alternative descriptions for unique (cationic) species in structure."
     )
 
     csm: list[float | None] = Field(

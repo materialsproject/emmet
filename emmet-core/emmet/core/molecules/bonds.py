@@ -60,9 +60,10 @@ def fix_C_Li_bonds(critic: dict) -> dict:
 
     """
     for key in critic["bonding"]:
-        if (critic["bonding"][key]["atoms"] == ["Li", "C"] or critic["bonding"][key][
-            "atoms"
-        ] == ["C", "Li"]) and (
+        if (
+            critic["bonding"][key]["atoms"] == ["Li", "C"]
+            or critic["bonding"][key]["atoms"] == ["C", "Li"]
+        ) and (
             critic["bonding"][key]["field"] <= 0.02
             and critic["bonding"][key]["field"] > 0.012
             and critic["bonding"][key]["distance"] < 2.5
@@ -392,7 +393,11 @@ class MoleculeBondingDoc(PropertyDoc):
         for u, v in mg.graph.edges():
             species_u = str(mg.molecule.species[u])
             species_v = str(mg.molecule.species[v])
-            species = f"{species_u}-{species_v}" if species_u < species_v else f"{species_v}-{species_u}"
+            species = (
+                f"{species_u}-{species_v}"
+                if species_u < species_v
+                else f"{species_v}-{species_u}"
+            )
             dist = mg.molecule.get_distance(u, v)
             if species not in bond_types:
                 bond_types[species] = [dist]

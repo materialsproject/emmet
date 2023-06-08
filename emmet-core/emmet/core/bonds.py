@@ -50,7 +50,7 @@ class BondingDoc(PropertyDoc):
             "CrystalNN",
             "MinimumDistanceNN",
         ),
-        **kwargs
+        **kwargs,
     ):
         """Calculate.
 
@@ -105,6 +105,6 @@ class BondingDoc(PropertyDoc):
                 meta_structure=structure,
                 material_id=material_id,
                 **bonding_info,
-                **kwargs
+                **kwargs,
             )
         return None

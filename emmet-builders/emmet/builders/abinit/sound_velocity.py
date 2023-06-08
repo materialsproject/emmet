@@ -25,7 +25,7 @@ class SoundVelocityBuilder(Builder):
         sound_vel: Store,
         query: dict | None = None,
         manager: TaskManager | None = None,
-        **kwargs
+        **kwargs,
     ):
         """Creates a collection with the data of the sound velocities extracted from
         the phonon calculations.
@@ -85,9 +85,7 @@ class SoundVelocityBuilder(Builder):
         mats = self.sound_vel.newer_in(
             self.phonon_materials, exhaustive=True, criteria=q
         )
-        self.logger.info(
-            f"Found {len(mats)} new materials for sound velocity data"
-        )
+        self.logger.info(f"Found {len(mats)} new materials for sound velocity data")
 
         # list of properties queried from the results DB
         # basic informations

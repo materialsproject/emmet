@@ -326,8 +326,16 @@ class PhononBuilder(Builder):
                 symm_line_bands = self.get_pmg_bs(phbands, labels_list)  # type: ignore
 
                 # ananc
-                becs = ananc_file.becs.values.tolist() if has_bec and ananc_file.becs is not None else None
-                e_electronic = ananc_file.epsinf.tolist() if has_epsinf and ananc_file.epsinf is not None else None
+                becs = (
+                    ananc_file.becs.values.tolist()
+                    if has_bec and ananc_file.becs is not None
+                    else None
+                )
+                e_electronic = (
+                    ananc_file.epsinf.tolist()
+                    if has_epsinf and ananc_file.epsinf is not None
+                    else None
+                )
                 e_total = (
                     ananc_file.eps0.tolist() if ananc_file.eps0 is not None else None
                 )

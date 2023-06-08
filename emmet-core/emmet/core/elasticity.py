@@ -360,12 +360,7 @@ def generate_primary_fitting_data(
     stresses: list[Stress],
     task_ids: list[MPID] | None = None,
     dir_names: list[str] | None = None,
-) -> tuple[
-    list[Strain],
-    list[Stress],
-    list[MPID] | None,
-    list[str] | None,
-]:
+) -> tuple[list[Strain], list[Stress], list[MPID] | None, list[str] | None,]:
     """Get the primary fitting data, i.e. data obtained from a calculation.
 
     Args:

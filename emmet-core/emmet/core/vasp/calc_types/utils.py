@@ -36,7 +36,7 @@ def run_type(parameters: dict) -> RunType:
         for special_type, params in _RUN_TYPE_DATA[functional_class].items():
             if all(
                 _variant_equal(parameters.get(param, None), value)
-                    for param, value in params.items()
+                for param, value in params.items()
             ):
                 return RunType(f"{special_type}{is_hubbard}")
 
@@ -61,9 +61,7 @@ def task_type(
             kpt_labels = kpts.get("labels") or []
             num_kpt_labels = len(list(filter(None.__ne__, kpt_labels)))
         except Exception as e:
-            raise Exception(
-                f"Couldn't identify total number of kpt labels: {e}"
-            )
+            raise Exception(f"Couldn't identify total number of kpt labels: {e}")
 
         if num_kpt_labels > 0:
             calc_type.append("NSCF Line")

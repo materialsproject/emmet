@@ -51,7 +51,11 @@ def evaluate_molecule(
             if isinstance(opt_lot, LevelOfTheory):
                 opt_lot = opt_lot.value
 
-    opt_eval = [0] if opt_lot is None else evaluate_lot(opt_lot, funct_scores, basis_scores, solvent_scores)
+    opt_eval = (
+        [0]
+        if opt_lot is None
+        else evaluate_lot(opt_lot, funct_scores, basis_scores, solvent_scores)
+    )
 
     best = best_lot(mol_doc, funct_scores, basis_scores, solvent_scores)
 
@@ -307,7 +311,11 @@ class MoleculesAssociationBuilder(Builder):
         molecules = list()
 
         for idx, task in enumerate(filtered_tasks):
-            m = task.output.optimized_molecule if task.output.optimized_molecule else task.output.initial_molecule
+            m = (
+                task.output.optimized_molecule
+                if task.output.optimized_molecule
+                else task.output.initial_molecule
+            )
             m.ind: int = idx  # type: ignore
             molecules.append(m)
 

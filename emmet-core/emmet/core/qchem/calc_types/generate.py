@@ -26,15 +26,15 @@ lot_enum = get_enum_source(
     "LevelOfTheory",
     "Levels of theory for calculations in Q-Chem",
     {
-            "_".join(lot.split())
-            .replace("+", "_")
-            .replace("-", "_")
-            .replace("(", "_")
-            .replace(")", "_")
-            .replace("/", "_")
-            .replace("*", "_d"): lot
-            for lot in _LOTS
-        },
+        "_".join(lot.split())
+        .replace("+", "_")
+        .replace("-", "_")
+        .replace("(", "_")
+        .replace(")", "_")
+        .replace("/", "_")
+        .replace("*", "_d"): lot
+        for lot in _LOTS
+    },
 )
 
 task_type_enum = get_enum_source(
@@ -47,7 +47,7 @@ calc_type_enum = get_enum_source(
     "CalcType",
     "Calculation types (LOT + task type) for Q-Chem",
     {
-        f"{'_'.join(lot.split()).replace('+','_').replace('-','_').replace('(', '_').replace(')', '_').replace('/', '_').replace('*', '_d')}_{'_'.join(tt.split()).replace('-', '_')}": f"{lot} {tt}"  # noqa: E501
+        f"{'_'.join(lot.split()).replace('+','_').replace('-','_').replace('(', '_').replace(')', '_').replace('/', '_').replace('*', '_d')}_{'_'.join(tt.split()).replace('-', '_')}": f"{lot} {tt}"
         for lot, tt in product(_LOTS, TASK_TYPES)
     },
 )

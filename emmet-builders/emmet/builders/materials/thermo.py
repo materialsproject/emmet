@@ -68,7 +68,7 @@ class ThermoBuilder(Builder):
         if self.phase_diagram is not None:
             if self.phase_diagram.key != "phase_diagram_id":
                 warnings.warn(
-                    f"Key for the phase diagram store is incorrect and has been changed from {self.phase_diagram.key} to phase_diagram_id!"  # noqa: E501
+                    f"Key for the phase diagram store is incorrect and has been changed from {self.phase_diagram.key} to phase_diagram_id!"
                 )
                 self.phase_diagram.key = "phase_diagram_id"
 

@@ -72,7 +72,7 @@ class MagnetismDoc(PropertyDoc):
         structure: Structure,
         total_magnetization: float,
         material_id: MPID,
-        **kwargs
+        **kwargs,
     ):
         struct_has_magmoms = "magmom" in structure.site_properties
         total_magnetization = abs(

@@ -14,14 +14,17 @@ class BondTypeLengthQuery(QueryOperator):
 
     def query(
         self,
-        bond_type: str | None = Query(
+        bond_type: str
+        | None = Query(
             None, description="Bond type of interest; e.g. C-O for carbon-oxygen bonds."
         ),
-        max_bond_length: float | None = Query(
+        max_bond_length: float
+        | None = Query(
             None,
             description="Maximum value for the bond lengths in the molecule.",
         ),
-        min_bond_length: float | None = Query(
+        min_bond_length: float
+        | None = Query(
             None,
             description="Minimum value for the bond lengths in the molecule.",
         ),

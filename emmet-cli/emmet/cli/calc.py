@@ -209,8 +209,8 @@ def prep(ctx, archive, authors):
                 continue
             elements = {
                 specie["element"]
-                    for site in doc["structure"]["sites"]
-                    for specie in site["species"]
+                for site in doc["structure"]["sites"]
+                for specie in site["species"]
             }
             for l in SETTINGS.skip_labels:
                 if l in elements:

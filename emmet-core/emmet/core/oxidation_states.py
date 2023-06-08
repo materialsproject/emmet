@@ -111,5 +111,5 @@ class OxidationStateDoc(PropertyDoc):
             material_id=material_id,
             structure=structure,
             **d,
-            **kwargs
+            **kwargs,
         )

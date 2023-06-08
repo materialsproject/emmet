@@ -97,9 +97,7 @@ class ElectronicStructureBuilder(Builder):
 
         mats = list(mats_set)
 
-        self.logger.info(
-            f"Processing {len(mats)} materials for electronic structure"
-        )
+        self.logger.info(f"Processing {len(mats)} materials for electronic structure")
 
         self.total = len(mats)
 
@@ -140,9 +138,7 @@ class ElectronicStructureBuilder(Builder):
 
         if mat["dos"] and mat["dos"]["object"] is not None:
             self.logger.info("Processing density of states")
-            dos = {
-                mat["dos"]["task_id"]: CompleteDos.from_dict(mat["dos"]["object"])
-            }
+            dos = {mat["dos"]["task_id"]: CompleteDos.from_dict(mat["dos"]["object"])}
 
             structures[mat["dos"]["task_id"]] = mat["dos"]["output_structure"]
 
@@ -185,9 +181,7 @@ class ElectronicStructureBuilder(Builder):
             d["cbm"] = eig_values["cbm"]
             d["vbm"] = eig_values["vbm"]
             d["is_gap_direct"] = eig_values["is_gap_direct"]
-            d["is_metal"] = (
-                bool(np.isclose(d["band_gap"], 0.0, atol=0.01, rtol=0))
-            )
+            d["is_metal"] = bool(np.isclose(d["band_gap"], 0.0, atol=0.01, rtol=0))
 
         if dos is None:
             doc = ElectronicStructureDoc.from_structure(**d)

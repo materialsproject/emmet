@@ -26,7 +26,8 @@ class FormulaQuery(QueryOperator):
 
     def query(
         self,
-        formula: str | None = Query(
+        formula: str
+        | None = Query(
             None,
             description="Query by formula including anonymized formula or by including wild cards. \
 A comma delimited string list of anonymous formulas or regular formulas can also be provided.",
@@ -51,7 +52,8 @@ class ChemsysQuery(QueryOperator):
 
     def query(
         self,
-        chemsys: str | None = Query(
+        chemsys: str
+        | None = Query(
             None,
             description="A comma delimited string list of chemical systems. \
 Wildcards for unknown elements only supported for single chemsys queries",
@@ -74,11 +76,13 @@ class ElementsQuery(QueryOperator):
 
     def query(
         self,
-        elements: str | None = Query(
+        elements: str
+        | None = Query(
             None,
             description="Query by elements in the material composition as a comma-separated list",
         ),
-        exclude_elements: str | None = Query(
+        exclude_elements: str
+        | None = Query(
             None,
             description="Query by excluded elements in the material composition as a comma-separated list",
         ),
@@ -120,7 +124,8 @@ class DeprecationQuery(QueryOperator):
 
     def query(
         self,
-        deprecated: bool | None = Query(
+        deprecated: bool
+        | None = Query(
             False,
             description="Whether the material is marked as deprecated",
         ),
@@ -138,15 +143,18 @@ class SymmetryQuery(QueryOperator):
 
     def query(
         self,
-        crystal_system: CrystalSystem | None = Query(
+        crystal_system: CrystalSystem
+        | None = Query(
             None,
             description="Crystal system of the material",
         ),
-        spacegroup_number: int | None = Query(
+        spacegroup_number: int
+        | None = Query(
             None,
             description="Space group number of the material",
         ),
-        spacegroup_symbol: str | None = Query(
+        spacegroup_symbol: str
+        | None = Query(
             None,
             description="Space group symbol of the material",
         ),
@@ -174,7 +182,8 @@ class MultiTaskIDQuery(QueryOperator):
 
     def query(
         self,
-        task_ids: str | None = Query(
+        task_ids: str
+        | None = Query(
             None, description="Comma-separated list of task_ids to query on"
         ),
     ) -> STORE_PARAMS:
@@ -200,7 +209,8 @@ class MultiMaterialIDQuery(QueryOperator):
 
     def query(
         self,
-        material_ids: str | None = Query(
+        material_ids: str
+        | None = Query(
             None, description="Comma-separated list of material_id values to query on"
         ),
     ) -> STORE_PARAMS:

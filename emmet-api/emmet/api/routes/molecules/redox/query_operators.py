@@ -17,19 +17,23 @@ class RedoxPotentialQuery(QueryOperator):
         electrode: str = Query(
             "H", description="Reference electrode to be queried (e.g. 'H', 'Li', 'Mg')."
         ),
-        min_reduction_potential: float | None = Query(
+        min_reduction_potential: float
+        | None = Query(
             None,
             description="Minimum reduction potential using the selected reference electrode.",
         ),
-        max_reduction_potential: float | None = Query(
+        max_reduction_potential: float
+        | None = Query(
             None,
             description="Maximum reduction potential using the selected reference electrode.",
         ),
-        min_oxidation_potential: float | None = Query(
+        min_oxidation_potential: float
+        | None = Query(
             None,
             description="Minimum oxidation potential using the selected reference electrode.",
         ),
-        max_oxidation_potential: float | None = Query(
+        max_oxidation_potential: float
+        | None = Query(
             None,
             description="Maximum oxidation potential using the selected reference electrode.",
         ),

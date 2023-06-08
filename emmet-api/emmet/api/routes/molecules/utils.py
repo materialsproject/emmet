@@ -16,7 +16,8 @@ class MethodQuery(QueryOperator):
 
     def query(
         self,
-        method: str | None = Query(
+        method: str
+        | None = Query(
             None,
             description="Query by calculation method (e.g. mulliken, nbo).",
         ),
@@ -37,7 +38,8 @@ class MultiPropertyIDQuery(QueryOperator):
 
     def query(
         self,
-        property_ids: str | None = Query(
+        property_ids: str
+        | None = Query(
             None, description="Comma-separated list of property_id values to query on"
         ),
     ) -> STORE_PARAMS:

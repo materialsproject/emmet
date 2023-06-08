@@ -109,7 +109,7 @@ class EmmetSettings(BaseSettings):
 
     VASP_STRUCTURE_QUALITY_SCORES: dict[str, int] = Field(
         {"R2SCAN": 5, "SCAN": 4, "GGA+U": 3, "GGA": 2, "PBESol": 1},
-        description="Dictionary Mapping VASP calculation run types to rung level for VASP materials builder structure data",  # noqa: E501
+        description="Dictionary Mapping VASP calculation run types to rung level for VASP materials builder structure data",
     )
 
     VASP_KPTS_TOLERANCE: float = Field(

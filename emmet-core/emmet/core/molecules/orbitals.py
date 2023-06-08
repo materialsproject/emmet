@@ -164,7 +164,9 @@ class Interaction(MSONable):
 
         donor2 = int(donor_atom2_index) if isinstance(donor_atom2_index, int) else None
 
-        acceptor2 = int(acceptor_atom2_index) if isinstance(acceptor_atom2_index, int) else None
+        acceptor2 = (
+            int(acceptor_atom2_index) if isinstance(acceptor_atom2_index, int) else None
+        )
 
         self.donor_atom_indices = (int(donor_atom1_index), donor2)
         self.acceptor_atom_indices = (int(acceptor_atom1_index), acceptor2)

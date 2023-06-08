@@ -315,9 +315,7 @@ class TaskDoc(StructureMetadata):
         None, description="Final output structure from the task"
     )
 
-    task_type: CalcType | TaskType = Field(
-        None, description="The type of calculation."
-    )
+    task_type: CalcType | TaskType = Field(None, description="The type of calculation.")
 
     task_id: str = Field(
         None,

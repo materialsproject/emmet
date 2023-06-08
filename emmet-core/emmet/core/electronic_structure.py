@@ -365,13 +365,13 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                 equivalent_labels = hskp.equiv_labels
 
                 if bs_type == "latimer_munro":
-                    gen_labels = set(equivalent_labels["latimer_munro"][
-                                "setyawan_curtarolo"
-                            ])
+                    gen_labels = set(
+                        equivalent_labels["latimer_munro"]["setyawan_curtarolo"]
+                    )
                     kpath_labels = {
                         kpoint.label
-                            for kpoint in bs.kpoints
-                            if kpoint.label is not None
+                        for kpoint in bs.kpoints
+                        if kpoint.label is not None
                     }
 
                     if not gen_labels.issubset(kpath_labels):

@@ -169,16 +169,16 @@ class MoleculeThermoDoc(PropertyDoc):
             for calc in task.calcs_reversed:
                 if all(
                     calc.get(x) is not None
-                        for x in [
-                            "ZPE",
-                            "trans_enthalpy",
-                            "rot_enthalpy",
-                            "vib_enthalpy",
-                            "gas_constant",
-                            "trans_entropy",
-                            "rot_entropy",
-                            "vib_entropy",
-                        ]
+                    for x in [
+                        "ZPE",
+                        "trans_enthalpy",
+                        "rot_enthalpy",
+                        "vib_enthalpy",
+                        "gas_constant",
+                        "trans_entropy",
+                        "rot_entropy",
+                        "vib_entropy",
+                    ]
                 ):
                     return super().from_molecule(
                         meta_molecule=mol,
