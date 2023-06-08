@@ -530,6 +530,3 @@ class ChemEnvDoc(PropertyDoc):
             **d,
             **kwargs,
         )
-
-
-ChemEnvDoc.update_forward_refs()

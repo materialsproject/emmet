@@ -492,7 +492,7 @@ def parsers(ctx, task_ids):
     patterns = {}
 
     while remaining:
-        for prefix in list(remaining.keys()):
+        for prefix in remaining:
             nlaunchers = len(remaining[prefix])
             if nlaunchers <= nparse_max:
                 patterns[f"{prefix}*"] = nlaunchers

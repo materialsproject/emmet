@@ -59,7 +59,7 @@ class BasicDescriptorsBuilder(MapBuilder):
             self.sds[k] = CoordinationNumber(nn_(), use_weights="none")
             k = f"cn_wt_{nn}"
             self.sds[k] = CoordinationNumber(nn_(), use_weights="sum")
-        self.all_output_pieces = {"site_descriptors": list(self.sds.keys())}
+        self.all_output_pieces = {"site_descriptors": list(self.sds)}
         self.sds["csf"] = CrystalNNFingerprint.from_preset(
             "ops", distance_cutoffs=None, x_diff_weight=None
         )
@@ -143,7 +143,7 @@ class BasicDescriptorsBuilder(MapBuilder):
                 tmp = {}
                 for isite in range(n_site):
                     for l, v in site_descr[fp][isite].items():
-                        if l not in list(tmp.keys()):
+                        if l not in list(tmp):
                             tmp[l] = []
                         tmp[l].append(v)
                 d = []

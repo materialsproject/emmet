@@ -486,12 +486,11 @@ def best_lot(
     :return: string representation of LevelOfTheory
     """
     sorted_lots = sorted(
-        mol_doc.best_entries.keys(),
+        mol_doc.best_entries,
         key=lambda x: evaluate_lot(x, funct_scores, basis_scores, solvent_scores),
     )
 
     best = sorted_lots[0]
     if isinstance(best, LevelOfTheory):
         return best.value
-    else:
-        return best
+    return best

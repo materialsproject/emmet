@@ -244,7 +244,7 @@ class SearchStatsQuery(QueryOperator):
 
     def post_process(self, docs, query):
         if docs:
-            field = list(docs[0].keys())[0]
+            field = list(docs[0])[0]
 
             num_points = self.num_points
             min_val = self.min_val

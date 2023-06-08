@@ -110,6 +110,3 @@ class OxidationStateDoc(PropertyDoc):
             **d,
             **kwargs,
         )
-
-
-OxidationStateDoc.update_forward_refs()

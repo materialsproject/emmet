@@ -247,7 +247,7 @@ def _u_value_checks(task_doc, valid_input_set, warnings):
             )
         )
 
-        all_elements = list(set(input_set_hubbards.keys()) | set(input_hubbards.keys()))
+        all_elements = list(set(input_set_hubbards) | set(input_hubbards))
         diff_ldau_params = {
             el: (input_set_hubbards.get(el, 0), input_hubbards.get(el, 0))
             for el in all_elements

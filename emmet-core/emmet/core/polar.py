@@ -69,9 +69,6 @@ class DielectricDoc(PropertyDoc):
         )
 
 
-DielectricDoc.update_forward_refs()
-
-
 class PiezoelectricDoc(PropertyDoc):
     """A dielectric package block."""
 

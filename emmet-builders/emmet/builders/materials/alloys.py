@@ -86,7 +86,7 @@ class AlloyPairBuilder(Builder):
             )
             docs = {d["material_id"]: d for d in docs}
 
-            mpids = list(docs.keys())
+            mpids = list(docs)
 
             thermo_docs = self.thermo.query(
                 {"material_id": {"$in": mpids}, "thermo_type": self.thermo_type},
@@ -161,7 +161,7 @@ class AlloyPairBuilder(Builder):
 
     def process_item(self, item):
         pairs = []
-        for mpids in tqdm(list(combinations(item.keys(), 2))):
+        for mpids in tqdm(list(combinations(item, 2))):
             if (
                 item[mpids[0]]["symmetry"]["number"]
                 == item[mpids[1]]["symmetry"]["number"]

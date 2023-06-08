@@ -208,6 +208,3 @@ class EmmetSettings(BaseSettings):
     def as_dict(self):
         """HotPatch to enable serializing EmmetSettings via Monty."""
         return self.dict(exclude_unset=True, exclude_defaults=True)
-
-
-EmmetSettings.update_forward_refs()

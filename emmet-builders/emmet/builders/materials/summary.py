@@ -119,7 +119,7 @@ class SummaryBuilder(Builder):
                 if task_type == "Static"
             } - set(materials_doc["deprecated_tasks"])
 
-            all_tasks = list(materials_doc["task_types"].keys())
+            all_tasks = list(materials_doc["task_types"])
 
             data = {
                 HasProps.materials.value: materials_doc,

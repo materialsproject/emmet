@@ -207,7 +207,7 @@ class CorrectedEntriesBuilder(Builder):
         self.logger.info(f"Getting entries for: {chemsys}")
         # First check the cache
         all_chemsys = chemsys_permutations(chemsys)
-        cached_chemsys = all_chemsys & set(self._entries_cache.keys())
+        cached_chemsys = all_chemsys & set(self._entries_cache)
         query_chemsys = all_chemsys - cached_chemsys
         all_entries = list(
             chain.from_iterable(self._entries_cache[c] for c in cached_chemsys)

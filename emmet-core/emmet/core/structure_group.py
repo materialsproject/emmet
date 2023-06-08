@@ -114,7 +114,7 @@ class StructureGroupDoc(BaseModel):
         all_atoms = set()
         all_comps = set()
         for ient in entries:
-            all_atoms |= set(ient.composition.as_dict().keys())
+            all_atoms |= set(ient.composition.as_dict())
             all_comps.add(ient.composition.reduced_formula)
 
         common_atoms = all_atoms - {ignored_specie}
@@ -278,8 +278,7 @@ def _get_id_num(task_id) -> int | str:
         return task_id
     if isinstance(task_id, str):
         return int(task_id.split("-")[-1])
-    else:
-        raise ValueError("TaskID needs to be either a number or of the form xxx-#####")
+    raise ValueError("TaskID needs to be either a number or of the form xxx-#####")
 
 
 def _get_framework(formula, ignored_specie) -> str:
@@ -287,7 +286,7 @@ def _get_framework(formula, ignored_specie) -> str:
     Return 'ignored' if the all the atoms are ignored.
     """
     dd_ = Composition(formula).as_dict()
-    if dd_.keys() == {ignored_specie}:
+    if dd_ == {ignored_specie}:
         return "ignored"
     if ignored_specie in dd_:
         dd_.pop(ignored_specie)

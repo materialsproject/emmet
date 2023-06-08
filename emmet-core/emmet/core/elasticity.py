@@ -30,9 +30,6 @@ class ElasticTensorDoc(BaseModel):
     )
 
 
-ElasticTensorDoc.update_forward_refs()
-
-
 class ComplianceTensorDoc(BaseModel):
     raw: MatrixVoigt = Field(
         None,

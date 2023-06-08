@@ -225,12 +225,10 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         dos_task, dos_obj = list(dos.items())[0]
 
         orbitals = [OrbitalType.s, OrbitalType.p, OrbitalType.d]
-        spins = list(dos_obj.densities.keys())
+        spins = list(dos_obj.densities)
 
         ele_dos = dos_obj.get_element_dos()
         tot_orb_dos = dos_obj.get_spd_dos()
-
-        elements = ele_dos.keys()
 
         dos_efermi = dos_obj.efermi
 
@@ -246,7 +244,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
         dos_data = {
             "total": defaultdict(dict),
-            "elemental": {element: defaultdict(dict) for element in elements},
+            "elemental": {element: defaultdict(dict) for element in ele_dos},
             "orbital": defaultdict(dict),
             "magnetic_ordering": dos_mag_ordering,
         }
@@ -293,7 +291,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         for ele in ele_dos:
             orb_dos = dos_obj.get_element_spd_dos(ele)
 
-            for orbital in ["total", *list(orb_dos.keys())]:
+            for orbital in ["total", *orb_dos]:
                 if orbital == "total":
                     proj_dos = ele_dos
                     label = ele

@@ -13,7 +13,7 @@ def structure():
     return test_struc
 
 
-@pytest.mark.parametrize("target", list(WAVELENGTHS.keys()))
+@pytest.mark.parametrize("target", list(WAVELENGTHS))
 def test_target_detection(structure, target):
     doc = XRDDoc.from_structure(
         structure=structure,
@@ -28,7 +28,7 @@ def test_target_detection(structure, target):
     assert doc.edge == target_edge
 
 
-@pytest.mark.parametrize("target", list(WAVELENGTHS.keys()))
+@pytest.mark.parametrize("target", list(WAVELENGTHS))
 def test_from_target(structure, target):
     target_element = Element(target[:2])
     target_edge = Edge(target[2:])

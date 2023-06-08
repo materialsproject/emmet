@@ -518,9 +518,6 @@ class CalculationOutput(BaseModel):
         )
 
 
-CalculationOutput.update_forward_refs()
-
-
 class Calculation(BaseModel):
     """Full VASP calculation inputs and outputs."""
 

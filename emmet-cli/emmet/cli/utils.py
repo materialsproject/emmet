@@ -492,7 +492,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):
                 if docs and no_dupe_check:
                     # new_calc = task_doc["calcs_reversed"][0]
                     # existing_calc = docs[0]["calcs_reversed"][0]
-                    # print(existing_calc.keys())
+                    # print(existing_calc)
 
                     # for fs_key in fs_keys:
                     #    print(fs_key)

@@ -459,7 +459,7 @@ class TaskDoc(StructureMetadata):
         vasp_objects = all_vasp_objects[0]
         included_objects = None
         if vasp_objects:
-            included_objects = list(vasp_objects.keys())
+            included_objects = list(vasp_objects)
 
         doc = cls.from_structure(
             structure=calcs_reversed[0].output.structure,

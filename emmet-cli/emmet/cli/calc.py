@@ -556,7 +556,7 @@ def add(tag):
 #                                                    if fw['state'] == 'COMPLETED':
 #                                                        # the task is in lpad.db.tasks with different integer task_id
 #                                                        #    => find task => overwrite task_id => add_tasks will pick it up
-#                                                        full_name = list(tasks_collections.keys())[0]
+#                                                        full_name = list(tasks_collections)[0]
 #                                                        load_canonical_task_structures(formula, full_name)
 #                                                        matched_task_ids = find_matching_canonical_task_structures(formula, struct, full_name)
 #                                                        if len(matched_task_ids) == 1:

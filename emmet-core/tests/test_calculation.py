@@ -147,7 +147,7 @@ def test_calculation(test_dir, object_name, task_name):
     test_doc, objects = Calculation.from_vasp_files(dir_name, task_name, **files)
     valid_doc = test_object.task_doc["calcs_reversed"][0]
     assert_schemas_equal(test_doc, valid_doc)
-    assert set(objects.keys()) == set(test_object.objects[task_name])
+    assert set(objects) == set(test_object.objects[task_name])
 
     # test document can be jsanitized
     d = jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)

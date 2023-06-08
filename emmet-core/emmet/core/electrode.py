@@ -529,9 +529,6 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
         return d
 
 
-ConversionElectrodeDoc.update_forward_refs()
-
-
 def get_battery_formula(
     charge_comp: Composition, discharge_comp: Composition, working_ion: Element
 ):
