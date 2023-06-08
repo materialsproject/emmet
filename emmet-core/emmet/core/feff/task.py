@@ -47,7 +47,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
         ..., title="Absorption Edge", description="The interaction edge for XAS"
     )
 
-    # TEMP Stub properties for compatability with atomate drone
+    # TEMP Stub properties for compatibility with atomate drone
 
     @property
     def absorbing_element(self) -> Element:

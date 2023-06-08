@@ -131,7 +131,7 @@ def load_structure(dct):
 
 
 # a utility function to get us a slice of an iterator, as an iterator
-# when working with iterators maximum lazyness is preferred
+# when working with iterators maximum laziness is preferred
 def iterator_slice(iterator, length):
     iterator = iter(iterator)
     while True:

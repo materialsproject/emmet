@@ -19,7 +19,7 @@ class BaseTaskDocument(EmmetBaseModel):
     dir_name: str = Field(None, description="The directory for this task")
     task_id: MPID | MPculeID = Field(None, description="the Task ID For this document")
 
-    completed: bool = Field(False, description="Whether this calcuation completed")
+    completed: bool = Field(False, description="Whether this calculation completed")
     completed_at: datetime = Field(
         None, description="Timestamp for when this task was completed"
     )

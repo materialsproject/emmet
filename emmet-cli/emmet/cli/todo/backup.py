@@ -135,7 +135,7 @@
 #         "comment": "Materials Project VASP Calculations",
 #         "references": ["https://materialsproject.org"],
 #         "co_authors": [928],
-#         # these are calc specific metadata that supercede any upload metadata
+#         # these are calc specific metadata that supersede any upload metadata
 #         "calculations": calc_metadata,
 #     }
 #     nomad_client.uploads.exec_upload_operation(

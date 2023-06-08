@@ -79,7 +79,7 @@ class ThermoBuilder(Builder):
         )
 
     def ensure_indexes(self):
-        """Ensures indicies on the tasks and materials collections."""
+        """Ensures indicis on the tasks and materials collections."""
         # Search index for corrected_entries
         self.corrected_entries.ensure_index("chemsys")
         self.corrected_entries.ensure_index("last_updated")

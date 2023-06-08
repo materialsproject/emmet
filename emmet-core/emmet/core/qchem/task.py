@@ -29,7 +29,7 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 class QChemStatus(ValueEnum):
     """Q-Chem Calculation State."""
 
-    SUCESS = "successful"
+    SUCCESS = "successful"
     FAILED = "unsuccessful"
 
 

@@ -59,7 +59,7 @@ class RobocrystallogapherDoc(PropertyDoc):
     property_name = "robocrys"
 
     description: str = Field(
-        description="Decription text from robocrytallographer.",
+        description="Description text from robocrytallographer.",
     )
 
     condensed_structure: CondensedStructureData = Field(

@@ -48,7 +48,7 @@ class ProvenanceBuilder(Builder):
             sources=[materials, *source_snls], targets=[provenance], **kwargs
         )
 
-    def ensure_indicies(self):
+    def ensure_indicis(self):
         self.materials.ensure_index("material_id", unique=True)
         self.materials.ensure_index("formula_pretty")
 
@@ -60,7 +60,7 @@ class ProvenanceBuilder(Builder):
             s.ensure_index("formula_pretty")
 
     def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
-        self.ensure_indicies()
+        self.ensure_indicis()
 
         # Find all formulas for materials that have been updated since this
         # builder was last ran
@@ -109,7 +109,7 @@ class ProvenanceBuilder(Builder):
         self.logger.info("Provenance Builder Started")
 
         self.logger.info("Setting indexes")
-        self.ensure_indicies()
+        self.ensure_indicis()
 
         # Find all formulas for materials that have been updated since this
         # builder was last ran

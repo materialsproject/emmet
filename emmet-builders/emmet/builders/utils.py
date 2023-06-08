@@ -13,10 +13,10 @@ if TYPE_CHECKING:
 
 def maximal_spanning_non_intersecting_subsets(sets) -> set[set]:
     """Finds the maximal spanning non intersecting subsets of a group of sets
-    This is usefull for parsing out the sandboxes and figuring out how to group
+    This is useful for parsing out the sandboxes and figuring out how to group
     and calculate these for thermo documents.
 
-    sets (set(frozenset)): sets of keys to subsect, expected as a set of frozensets
+    sets (set(frozenset)): sets of keys to subset, expected as a set of frozensets
     """
     to_return_subsets = []
 

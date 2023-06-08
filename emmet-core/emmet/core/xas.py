@@ -221,27 +221,27 @@ class XASDoc(SpectrumDoc):
 
 
 def _is_missing_sites(spectra: list[XAS]):
-    """Determines if the collection of spectra are missing any indicies for the given element."""
+    """Determines if the collection of spectra are missing any indicis for the given element."""
     structure = spectra[0].structure
     element = spectra[0].absorbing_element
 
     # Find missing symmeterically inequivalent sites
     symm_sites = SymmSites(structure)
-    absorption_indicies = {spectrum.absorbing_index for spectrum in spectra}
+    absorption_indicis = {spectrum.absorbing_index for spectrum in spectra}
 
-    missing_site_spectra_indicies = (
-        set(structure.indices_from_symbol(element)) - absorption_indicies
+    missing_site_spectra_indicis = (
+        set(structure.indices_from_symbol(element)) - absorption_indicis
     )
-    for site_index in absorption_indicies:
-        missing_site_spectra_indicies -= set(
+    for site_index in absorption_indicis:
+        missing_site_spectra_indicis -= set(
             symm_sites.get_equivalent_site_indices(site_index)
         )
 
-    return len(missing_site_spectra_indicies) != 0
+    return len(missing_site_spectra_indicis) != 0
 
 
 class SymmSites:
-    """Wrapper to get equivalent site indicies from SpacegroupAnalyzer."""
+    """Wrapper to get equivalent site indicis from SpacegroupAnalyzer."""
 
     def __init__(self, structure):
         self.structure = structure

@@ -91,7 +91,7 @@ class PiezoelectricDoc(PropertyDoc):
         description="Miller direction for maximum piezo response"
     )
     strain_for_max: list[float] = Field(
-        description="Normalized strain direction for maximum piezo repsonse"
+        description="Normalized strain direction for maximum piezo response"
     )
 
     @classmethod

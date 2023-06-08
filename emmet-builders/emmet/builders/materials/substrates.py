@@ -142,25 +142,25 @@ class SubstratesBuilder(Builder):
         else:
             self.logger.info("No items to update")
 
-    def ensure_indicies(self):
-        """Ensures indicies on the substrates, materials, and elastic collections."""
-        # Search indicies for materials
+    def ensure_indicis(self):
+        """Ensures indicis on the substrates, materials, and elastic collections."""
+        # Search indicis for materials
         self.materials.ensure_index(self.materials.key)
         self.materials.ensure_index(self.materials.last_updated_field)
 
-        # Search indicies for elasticity
+        # Search indicis for elasticity
         self.elasticity.ensure_index(self.elasticity.key)
         self.elasticity.ensure_index(self.elasticity.last_updated_field)
 
-        # Search indicies for substrates
+        # Search indicis for substrates
         self.substrates.ensure_index(self.substrates.key)
         self.substrates.ensure_index(self.substrates.last_updated_field)
 
     def _find_to_process(self):
         self.logger.info("Substrate Builder Started")
 
-        self.logger.info("Setting up indicies")
-        self.ensure_indicies()
+        self.logger.info("Setting up indicis")
+        self.ensure_indicis()
 
         mat_keys = set(self.materials.distinct("material_id", criteria=self.query))
         updated_mats = self.materials.newer_in(self.substrates)

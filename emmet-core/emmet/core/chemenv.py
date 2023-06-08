@@ -432,7 +432,7 @@ class ChemEnvDoc(PropertyDoc):
             lgf.setup_structure(structure=structure)
             all_ce = AllCoordinationGeometries()
             if len(valences) == len(structure):
-                # Standard alorithm will only focus on cations and cation-anion bonds!
+                # Standard algorithm will only focus on cations and cation-anion bonds!
                 method_description = "DefaultSimplestChemenvStrategy"
                 method = AVAILABLE_METHODS[method_description]
                 # We will only focus on cations!

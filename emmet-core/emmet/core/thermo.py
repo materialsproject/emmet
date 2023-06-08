@@ -231,7 +231,7 @@ class ThermoDoc(PropertyDoc):
             d["entry_types"] = []
             d["entries"] = {}
 
-            # Currently, each entry group contains a single entry due to how the compatability scheme works
+            # Currently, each entry group contains a single entry due to how the compatibility scheme works
             for entry in entry_group:
                 d["entry_types"].append(entry.parameters.get("run_type", "Unknown"))
                 d["entries"][entry.parameters.get("run_type", "Unknown")] = entry
