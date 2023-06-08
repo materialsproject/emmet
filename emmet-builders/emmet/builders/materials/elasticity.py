@@ -106,7 +106,7 @@ class ElasticityBuilder(Builder):
             self.logger.debug(f"Querying tasks for material {material_id} (index {i}).")
 
             # update query with task_ids
-            query["task_id"] = {"$in": [int(i) for i in doc["task_ids"]]}
+            query["task_id"] = {"$in": [i for i in doc["task_ids"]]}
 
             projections = [
                 "output",
