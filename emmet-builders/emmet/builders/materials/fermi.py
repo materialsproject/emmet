@@ -116,8 +116,6 @@ class FermiBuilder(Builder):
                 task_id=item["task_id"],
                 bandstructure=item["bandstructure"],
                 last_updated=item["last_updated"],
-                fs_id=item["fs_id"],
-                state=item["state"],
             )
         except Exception as error:
             self.logger.warning(
@@ -125,7 +123,28 @@ class FermiBuilder(Builder):
             )
             return None
 
-        doc = jsanitize(fermi_doc.dict(), allow_bson=True)
+        # Default summary data
+        data = dict(
+            band_gap=item["band_gap"],
+            cbm=item["cbm"],
+            vbm=item["vbm"],
+            efermi=item["efermi"],
+            is_gap_direct=item["is_gap_direct"],
+            is_metal=item["is_metal"],
+            magnetic_ordering=item["magnetic_ordering"],
+            elements=item["elements"],
+            formula_pretty=item["formula_pretty"],
+            chemsys=item["chemsys"],
+            symmetry=item["symmetry"],
+            last_updated=item["last_updated"],
+            deprecated=item["deprecated"],
+            fs_id=item["fs_id"],
+            state=item["state"],
+        )
+
+        data.update(fermi_doc.dict())
+
+        doc = jsanitize(data, allow_bson=True)
 
         return doc
 
@@ -144,7 +163,23 @@ class FermiBuilder(Builder):
     def _get_processed_doc(self, mat):
         mat_doc = self.electronic_structures.query_one(
             criteria={self.electronic_structures.key: mat},
-            properties=[self.electronic_structures.key, "task_id", "last_updated"],
+            properties=[
+                self.electronic_structures.key,
+                "task_id",
+                "last_updated",
+                "band_gap",
+                "cbm",
+                "vbm",
+                "efermi",
+                "is_gap_direct",
+                "is_metal",
+                "magnetic_ordering",
+                "elements",
+                "formula_pretty",
+                "chemsys",
+                "symmetry",
+                "deprecated",
+            ],
         )
 
         task_id = mat_doc["task_id"]
@@ -155,7 +190,7 @@ class FermiBuilder(Builder):
         )
 
         bs_query = self.bandstructures.query_one(
-            criteria={"task_id": task_id}, properties=["fs_id", "data", "task_id"]
+            criteria={"task_id": task_id}, properties=["fs_id", "data"]
         )
 
         if bs_query:
@@ -169,11 +204,10 @@ class FermiBuilder(Builder):
 
         mat_doc.update(
             {
-                "last_updated": mat_doc["last_updated"],
+                self.electronic_structures.key: mat_doc[self.electronic_structures.key],
                 "bandstructure": bandstructure,
                 "fs_id": bs_query["fs_id"],
                 "state": task_query["state"],
-                self.electronic_structures.key: mat_doc[self.electronic_structures.key],
             }
         )
 
