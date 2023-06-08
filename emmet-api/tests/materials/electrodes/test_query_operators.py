@@ -61,11 +61,11 @@ def test_electrodes_chemsys_query():
 
 
 def test_electrodes_elements_query():
-    eles = ["Si", "O"]
-    neles = ["N", "P"]
+    elems = ["Si", "O"]
+    n_elems = ["N", "P"]
 
     op = ElectrodeElementsQuery()
-    assert op.query(elements=",".join(eles), exclude_elements=",".join(neles)) == {
+    assert op.query(elements=",".join(elems), exclude_elements=",".join(n_elems)) == {
         "criteria": {
             "entries_composition_summary.all_elements": {
                 "$all": ["Si", "O"],
@@ -78,7 +78,7 @@ def test_electrodes_elements_query():
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
         assert new_op.query(
-            elements=",".join(eles), exclude_elements=",".join(neles)
+            elements=",".join(elems), exclude_elements=",".join(n_elems)
         ) == {
             "criteria": {
                 "entries_composition_summary.all_elements": {

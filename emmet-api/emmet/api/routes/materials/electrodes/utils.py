@@ -136,12 +136,12 @@ def electrodes_chemsys_to_criteria(chemsys: str) -> dict:
                 status_code=400,
                 detail="Wild cards only supported for single chemsys queries.",
             )
-        eles = chemsys_list[0].split("-")
-        neles = len(eles)
+        elems = chemsys_list[0].split("-")
+        n_elems = len(elems)
 
-        crit["nelements"] = {"$in": [neles, neles - 1]}
+        crit["nelements"] = {"$in": [n_elems, n_elems - 1]}
         crit["entries_composition_summary.all_elements"] = {
-            "$all": [ele for ele in eles if ele != "*"]
+            "$all": [ele for ele in elems if ele != "*"]
         }
 
         if crit["entries_composition_summary.all_elements"]["$all"] == []:
@@ -150,8 +150,8 @@ def electrodes_chemsys_to_criteria(chemsys: str) -> dict:
             return crit
     query_vals = []
     for chemsys_val in chemsys_list:
-        eles = chemsys_val.split("-")
-        sorted_chemsys = "-".join(sorted(eles))
+        elems = chemsys_val.split("-")
+        sorted_chemsys = "-".join(sorted(elems))
         query_vals.append(sorted_chemsys)
 
     if len(query_vals) == 1:

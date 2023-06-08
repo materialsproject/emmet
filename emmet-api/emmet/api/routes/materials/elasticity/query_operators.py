@@ -184,8 +184,8 @@ class ElasticityChemsysQuery(QueryOperator):
 
             query_vals = []
             for chemsys_val in chemsys_list:
-                eles = chemsys_val.split("-")
-                sorted_chemsys = "-".join(sorted(eles))
+                elems = chemsys_val.split("-")
+                sorted_chemsys = "-".join(sorted(elems))
                 query_vals.append(sorted_chemsys)
 
             if len(query_vals) == 1:

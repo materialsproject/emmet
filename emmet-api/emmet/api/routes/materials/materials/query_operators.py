@@ -343,10 +343,10 @@ class FormulaAutoCompleteQuery(QueryOperator):
             raise HTTPException(
                 status_code=400,
                 detail="Invalid formula provided.",
-            )
+            ) from None
 
         ind_str = []
-        eles = []
+        elems = []
 
         if len(comp) == 1:
             d = comp.get_integer_formula_and_factor()
@@ -354,7 +354,7 @@ class FormulaAutoCompleteQuery(QueryOperator):
             s = d[0] + str(int(d[1])) if d[1] != 1 else d[0]
 
             ind_str.append(s)
-            eles.append(d[0])
+            elems.append(d[0])
         else:
             comp_red = comp.reduced_composition.items()
 
@@ -364,7 +364,7 @@ class FormulaAutoCompleteQuery(QueryOperator):
                 else:
                     ind_str.append(i.name)
 
-                eles.append(i.name)
+                elems.append(i.name)
 
         final_terms = ["".join(entry) for entry in permutations(ind_str)]
 
@@ -386,7 +386,7 @@ class FormulaAutoCompleteQuery(QueryOperator):
             {
                 "$match": {
                     "length": {"$gte": len(final_terms[0])},
-                    "elements": {"$all": eles},
+                    "elements": {"$all": elems},
                 }
             },
             {"$limit": limit},

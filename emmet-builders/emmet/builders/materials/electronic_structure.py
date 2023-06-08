@@ -202,7 +202,7 @@ class ElectronicStructureBuilder(Builder):
 
             except Exception:
                 d["warnings"].append(
-                    "Band structure and/or data exists but an error occured while processing."
+                    "Band structure and/or data exists but an error occurred while processing."
                 )
                 doc = ElectronicStructureDoc.from_structure(**d)
 

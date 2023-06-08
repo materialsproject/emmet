@@ -3,7 +3,7 @@
 """Core definition of Structure and Molecule metadata."""
 from __future__ import annotations
 
-from typing import Sequence, TypeVar
+from typing import List, Sequence, TypeVar
 
 from emmet.core.base import EmmetBaseModel
 from emmet.core.symmetry import PointGroupData, SymmetryData
@@ -21,7 +21,7 @@ class StructureMetadata(EmmetBaseModel):
 
     # Structure metadata
     nsites: int = Field(None, description="Total number of sites in the structure.")
-    elements: list[Element] = Field(
+    elements: List[Element] = Field(
         None, description="List of elements in the material."
     )
     nelements: int = Field(None, description="Number of elements.")
@@ -143,7 +143,7 @@ class MoleculeMetadata(EmmetBaseModel):
         None, description="Spin multiplicity of the molecule"
     )
     natoms: int = Field(None, description="Total number of atoms in the molecule")
-    elements: list[Element] = Field(
+    elements: List[Element] = Field(
         None, description="List of elements in the molecule"
     )
     nelements: int = Field(None, title="Number of Elements")

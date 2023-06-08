@@ -122,10 +122,10 @@ def chemsys_to_criteria(chemsys: str) -> dict:
                 status_code=400,
                 detail="Wild cards only supported for single chemsys queries.",
             )
-        eles = chemsys_list[0].split("-")
+        elems = chemsys_list[0].split("-")
 
-        crit["nelements"] = len(eles)
-        crit["elements"] = {"$all": [ele for ele in eles if ele != "*"]}
+        crit["nelements"] = len(elems)
+        crit["elements"] = {"$all": [ele for ele in elems if ele != "*"]}
 
         if crit["elements"]["$all"] == []:
             del crit["elements"]
@@ -133,8 +133,8 @@ def chemsys_to_criteria(chemsys: str) -> dict:
         return crit
     query_vals = []
     for chemsys_val in chemsys_list:
-        eles = chemsys_val.split("-")
-        sorted_chemsys = "-".join(sorted(eles))
+        elems = chemsys_val.split("-")
+        sorted_chemsys = "-".join(sorted(elems))
         query_vals.append(sorted_chemsys)
 
     if len(query_vals) == 1:
