@@ -1,11 +1,11 @@
+# ruff: noqa: UP006, UP007
 # mypy: ignore-errors
-
 """Settings for defaults in the core definitions of Materials Project Documents."""
 from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Dict, List, TypeVar, Union
 
 import requests
 from monty.json import MontyDecoder
@@ -64,7 +64,7 @@ class EmmetSettings(BaseSettings):
         description="Maximum miller allowed for computing strain direction for maximal piezo response",
     )
 
-    QCHEM_FUNCTIONAL_QUALITY_SCORES: dict[str, int] = Field(
+    QCHEM_FUNCTIONAL_QUALITY_SCORES: Dict[str, int] = Field(
         {
             "wB97M-V": 7,
             "wB97X-V": 6,
@@ -80,7 +80,7 @@ class EmmetSettings(BaseSettings):
         description="Dictionary mapping Q-Chem density functionals to a quality score.",
     )
 
-    QCHEM_BASIS_QUALITY_SCORES: dict[str, int] = Field(
+    QCHEM_BASIS_QUALITY_SCORES: Dict[str, int] = Field(
         {
             "6-31g*": 1,
             "def2-SVPD": 2,
@@ -93,12 +93,12 @@ class EmmetSettings(BaseSettings):
         description="Dictionary mapping Q-Chem basis sets to a quality score.",
     )
 
-    QCHEM_SOLVENT_MODEL_QUALITY_SCORES: dict[str, int] = Field(
+    QCHEM_SOLVENT_MODEL_QUALITY_SCORES: Dict[str, int] = Field(
         {"CMIRS": 7, "SMD": 5, "ISOSVP": 4, "PCM": 3, "VACUUM": 1},
         description="Dictionary mapping Q-Chem solvent models to a quality score.",
     )
 
-    QCHEM_TASK_QUALITY_SCORES: dict[str, int] = Field(
+    QCHEM_TASK_QUALITY_SCORES: Dict[str, int] = Field(
         {
             "single_point": 1,
             "geometry optimization": 2,
@@ -107,9 +107,10 @@ class EmmetSettings(BaseSettings):
         description="Dictionary mapping Q-Chem task type to a quality score",
     )
 
-    VASP_STRUCTURE_QUALITY_SCORES: dict[str, int] = Field(
+    VASP_STRUCTURE_QUALITY_SCORES: Dict[str, int] = Field(
         {"R2SCAN": 5, "SCAN": 4, "GGA+U": 3, "GGA": 2, "PBESol": 1},
-        description="Dictionary Mapping VASP calculation run types to rung level for VASP materials builder structure data",
+        description="Dictionary Mapping VASP calculation run types to rung level for "
+        "VASP materials builder structure data",
     )
 
     VASP_KPTS_TOLERANCE: float = Field(
@@ -122,7 +123,7 @@ class EmmetSettings(BaseSettings):
         description="Relative tolerance for kspacing to still be a valid task document",
     )
 
-    VASP_DEFAULT_INPUT_SETS: dict[str, PyObject] = Field(
+    VASP_DEFAULT_INPUT_SETS: Dict[str, PyObject] = Field(
         {
             "GGA Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
             "GGA+U Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
@@ -155,7 +156,7 @@ class EmmetSettings(BaseSettings):
         True, description="Whether to validate POTCAR hash values."
     )
 
-    VASP_CHECKED_LDAU_FIELDS: list[str] = Field(
+    VASP_CHECKED_LDAU_FIELDS: List[str] = Field(
         ["LDAUU", "LDAUJ", "LDAUL"], description="LDAU fields to validate for tasks"
     )
 
@@ -193,10 +194,10 @@ class EmmetSettings(BaseSettings):
         return new_values
 
     @classmethod
-    def autoload(cls: type[S], settings: None | dict | S) -> S:
+    def autoload(cls: type[S], settings: Union[None, dict, S]) -> S:
         if settings is None:
             return cls()
-        elif isinstance(settings, dict):
+        if isinstance(settings, dict):
             return cls(**settings)
         return settings
 
