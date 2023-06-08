@@ -1,5 +1,10 @@
+# ruff: noqa: UP006, UP007
+
 """Settings for defaults in the build pipelines for the Materials Project."""
+
 from __future__ import annotations
+
+from typing import List
 
 from emmet.core.provenance import Author, History
 from emmet.core.qchem.calc_types import TaskType as QChemTaskType
@@ -10,8 +15,8 @@ from pydantic.fields import Field
 
 class EmmetBuildSettings(EmmetSettings):
     """Settings for the emmet-builder module
-    The default way to modify these is to modify ~/.emmet.json or set the environment variable
-    EMMET_CONFIG_FILE to point to the json with emmet settings.
+    The default way to modify these is to modify ~/.emmet.json or set the environment
+    variable EMMET_CONFIG_FILE to point to the json with emmet settings.
     """
 
     BUILD_TAGS: list[str] = Field(
@@ -26,12 +31,12 @@ class EmmetBuildSettings(EmmetSettings):
         [], description="Tags for calculations to deprecate"
     )
 
-    VASP_ALLOWED_VASP_TYPES: list[VaspTaskType] = Field(
+    VASP_ALLOWED_VASP_TYPES: List[VaspTaskType] = Field(
         [t.value for t in VaspTaskType],
         description="Allowed task_types to build materials from",
     )
 
-    QCHEM_ALLOWED_TASK_TYPES: list[QChemTaskType] = Field(
+    QCHEM_ALLOWED_TASK_TYPES: List[QChemTaskType] = Field(
         [
             "Single Point",
             "Force",
