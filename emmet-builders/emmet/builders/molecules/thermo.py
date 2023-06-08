@@ -1,23 +1,24 @@
+from __future__ import annotations
+
 from collections import defaultdict
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Optional, Iterable, Iterator, List, Dict
+from typing import TYPE_CHECKING, Iterable, Iterator
 
-from pymatgen.core.structure import Molecule
-from pymatgen.analysis.molecule_matcher import MoleculeMatcher
-
-from maggma.builders import Builder
-from maggma.core import Store
-from maggma.utils import grouper
-
-from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
-from emmet.core.molecules.thermo import get_free_energy, MoleculeThermoDoc
-from emmet.core.qchem.calc_types import TaskType
-from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
+from emmet.core.molecules.thermo import MoleculeThermoDoc, get_free_energy
+from emmet.core.qchem.calc_types import TaskType
+from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
+from emmet.core.qchem.task import TaskDocument
+from emmet.core.utils import jsanitize
+from maggma.builders import Builder
+from maggma.utils import grouper
+from pymatgen.analysis.molecule_matcher import MoleculeMatcher
+from pymatgen.core.structure import Molecule
 
+if TYPE_CHECKING:
+    from maggma.core import Store
 
 __author__ = "Evan Spotte-Smith"
 
@@ -75,8 +76,7 @@ single_mol_thermo = {
 
 
 class ThermoBuilder(Builder):
-    """
-    The ThermoBuilder extracts the highest-quality thermodynamic data from a
+    """The ThermoBuilder extracts the highest-quality thermodynamic data from a
     MoleculeDoc (lowest electronic energy, highest level of theory for each
     solvent available).
 
@@ -119,8 +119,8 @@ class ThermoBuilder(Builder):
         tasks: Store,
         molecules: Store,
         thermo: Store,
-        query: Optional[Dict] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        query: dict | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
         self.tasks = tasks
@@ -133,10 +133,7 @@ class ThermoBuilder(Builder):
         super().__init__(sources=[tasks, molecules], targets=[thermo])
 
     def ensure_indexes(self):
-        """
-        Ensures indices on the collections needed for building
-        """
-
+        """Ensures indices on the collections needed for building."""
         # Basic search index for tasks
         self.tasks.ensure_index("task_id")
         self.tasks.ensure_index("last_updated")
@@ -158,9 +155,8 @@ class ThermoBuilder(Builder):
         self.thermo.ensure_index("last_updated")
         self.thermo.ensure_index("formula_alphabetical")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
-        """Prechunk the builder for distributed computation"""
-
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
+        """Prechunk the builder for distributed computation."""
         temp_query = dict(self.query)
         temp_query["deprecated"] = False
 
@@ -171,7 +167,7 @@ class ThermoBuilder(Builder):
             )
         )
 
-        processed_docs = set([e for e in self.thermo.distinct("molecule_id")])
+        processed_docs = set(self.thermo.distinct("molecule_id"))
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
         to_process_forms = {
             d["formula_alphabetical"]
@@ -184,16 +180,14 @@ class ThermoBuilder(Builder):
         for formula_chunk in grouper(to_process_forms, N):
             yield {"query": {"formula_alphabetical": {"$in": list(formula_chunk)}}}
 
-    def get_items(self) -> Iterator[List[Dict]]:
-        """
-        Gets all items to process into thermo documents.
+    def get_items(self) -> Iterator[list[dict]]:
+        """Gets all items to process into thermo documents.
         This does no datetime checking; relying on on whether
-        task_ids are included in the thermo Store
+        task_ids are included in the thermo Store.
 
         Returns:
             generator or list relevant tasks and molecules to process into documents
         """
-
         self.logger.info("Thermo builder started")
         self.logger.info("Setting indexes")
         self.ensure_indexes()
@@ -212,7 +206,7 @@ class ThermoBuilder(Builder):
             )
         )
 
-        processed_docs = set([e for e in self.thermo.distinct("molecule_id")])
+        processed_docs = set(self.thermo.distinct("molecule_id"))
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
         to_process_forms = {
             d["formula_alphabetical"]
@@ -233,9 +227,8 @@ class ThermoBuilder(Builder):
 
             yield molecules
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
-        """
-        Process the tasks into a MoleculeThermoDoc
+    def process_item(self, items: list[dict]) -> list[dict]:
+        """Process the tasks into a MoleculeThermoDoc.
 
         Args:
             items List[dict] : a list of MoleculeDocs in dict form
@@ -249,20 +242,19 @@ class ThermoBuilder(Builder):
         ):
             initial_mol = task.output.initial_molecule
             # If single atom, try to add enthalpy and entropy
-            if len(initial_mol) == 1:
-                if doc.total_enthalpy is None or doc.total_entropy is None:
-                    formula = initial_mol.composition.alphabetical_formula
-                    if formula in single_mol_thermo:
-                        vals = single_mol_thermo[formula]
-                        doc.total_enthalpy = vals["enthalpy"] * 0.043363
-                        doc.total_entropy = vals["entropy"] * 0.000043363
-                        doc.translational_enthalpy = vals["enthalpy"] * 0.043363
-                        doc.translational_entropy = vals["entropy"] * 0.000043363
-                        doc.free_energy = get_free_energy(
-                            doc.electronic_energy,
-                            vals["enthalpy"],
-                            vals["entropy"],
-                        )
+            if len(initial_mol) == 1 and (doc.total_enthalpy is None or doc.total_entropy is None):
+                formula = initial_mol.composition.alphabetical_formula
+                if formula in single_mol_thermo:
+                    vals = single_mol_thermo[formula]
+                    doc.total_enthalpy = vals["enthalpy"] * 0.043363
+                    doc.total_entropy = vals["entropy"] * 0.000043363
+                    doc.translational_enthalpy = vals["enthalpy"] * 0.043363
+                    doc.translational_entropy = vals["entropy"] * 0.000043363
+                    doc.free_energy = get_free_energy(
+                        doc.electronic_energy,
+                        vals["enthalpy"],
+                        vals["entropy"],
+                    )
             return doc
 
         mols = [MoleculeDoc(**item) for item in items]
@@ -288,10 +280,7 @@ class ThermoBuilder(Builder):
 
             sp_entries = list()
             for entry in mol.entries:
-                if isinstance(entry["task_type"], TaskType):
-                    task_type = entry["task_type"].value
-                else:
-                    task_type = entry["task_type"]
+                task_type = entry["task_type"].value if isinstance(entry["task_type"], TaskType) else entry["task_type"]
 
                 if (
                     task_type in ["Single Point", "Force"]
@@ -308,13 +297,10 @@ class ThermoBuilder(Builder):
             for entry in sp_entries:
                 by_solvent_spec[entry["solvent"]].append(entry)
 
-            if len(thermo_entries) == 0:
-                without_corrections = by_solvent_spec
-            else:
-                without_corrections = by_solvent_dict
+            without_corrections = by_solvent_spec if len(thermo_entries) == 0 else by_solvent_dict
 
             # Construct without corrections
-            for solvent, entries in without_corrections.items():
+            for _solvent, entries in without_corrections.items():
                 best = sorted(
                     entries,
                     key=lambda x: (
@@ -359,7 +345,7 @@ class ThermoBuilder(Builder):
                 this_thermo_docs.append(thermo_doc)
 
             # Construct with corrections
-            for solvent, entries in by_solvent_spec.items():
+            for _solvent, entries in by_solvent_spec.items():
                 spec_sorted = sorted(
                     entries,
                     key=lambda x: (
@@ -462,14 +448,12 @@ class ThermoBuilder(Builder):
 
         return jsanitize([doc.dict() for doc in thermo_docs], allow_bson=True)
 
-    def update_targets(self, items: List[List[Dict]]):
-        """
-        Inserts the new thermo docs into the thermo collection
+    def update_targets(self, items: list[list[dict]]):
+        """Inserts the new thermo docs into the thermo collection.
 
         Args:
             items [[dict]]: A list of documents to update
         """
-
         docs = list(chain.from_iterable(items))  # type: ignore
 
         # Add timestamp

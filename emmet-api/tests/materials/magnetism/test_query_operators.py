@@ -1,9 +1,9 @@
+from __future__ import annotations
+
 from emmet.api.routes.materials.magnetism.query_operators import MagneticQuery
-
-from pymatgen.analysis.magnetism import Ordering
-
+from monty.serialization import dumpfn, loadfn
 from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
+from pymatgen.analysis.magnetism import Ordering
 
 
 def test_magnetic_query():

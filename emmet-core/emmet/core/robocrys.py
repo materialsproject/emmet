@@ -1,18 +1,19 @@
-from typing import Union
+from __future__ import annotations
 
-from pydantic import BaseModel, Field
-from pymatgen.core.structure import Structure
+from typing import TYPE_CHECKING
 
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import MPID
+from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID
+    from pymatgen.core.structure import Structure
 
 
 class MineralData(BaseModel):
-    """
-    Model for mineral data in the condensed structure robocrystallographer field
-    """
+    """Model for mineral data in the condensed structure robocrystallographer field."""
 
-    type: Union[str, None] = Field(
+    type: str | None = Field(
         description="Mineral type.",
     )
 
@@ -20,9 +21,8 @@ class MineralData(BaseModel):
 
 
 class CondensedStructureData(BaseModel):
-    """
-    Model for data in the condensed structure robocrystallographer field
-    More details: https://hackingmaterials.lbl.gov/robocrystallographer/format.html
+    """Model for data in the condensed structure robocrystallographer field
+    More details: https://hackingmaterials.lbl.gov/robocrystallographer/format.html.
     """
 
     mineral: MineralData = Field(
@@ -50,8 +50,7 @@ class CondensedStructureData(BaseModel):
 
 
 class RobocrystallogapherDoc(PropertyDoc):
-    """
-    This document contains the descriptive data from robocrystallographer
+    """This document contains the descriptive data from robocrystallographer
     for a material:
         Structural features, mineral prototypes, dimensionality, ...
 

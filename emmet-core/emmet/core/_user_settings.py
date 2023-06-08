@@ -1,10 +1,10 @@
+from __future__ import annotations
+
 from pydantic import BaseModel, Field
 
 
 class UserSettingsDoc(BaseModel):
-    """
-    Defines data for user settings
-    """
+    """Defines data for user settings."""
 
     consumer_id: str = Field(
         None, title="Consumer ID", description="Consumer ID for a specific user."

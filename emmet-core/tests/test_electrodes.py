@@ -1,11 +1,6 @@
-import pytest
-from monty.serialization import loadfn
-from pymatgen.apps.battery.conversion_battery import ConversionElectrode
-from pymatgen.apps.battery.insertion_battery import InsertionElectrode
-from pymatgen.core import Composition, Element
-from pymatgen.analysis.phase_diagram import PhaseDiagram
-from pymatgen.entries.computed_entries import ComputedEntry
+from __future__ import annotations
 
+import pytest
 from emmet.core.electrode import (
     ConversionElectrodeDoc,
     ConversionVoltagePairDoc,
@@ -13,13 +8,17 @@ from emmet.core.electrode import (
     InsertionVoltagePairDoc,
     get_battery_formula,
 )
+from monty.serialization import loadfn
+from pymatgen.analysis.phase_diagram import PhaseDiagram
+from pymatgen.apps.battery.conversion_battery import ConversionElectrode
+from pymatgen.apps.battery.insertion_battery import InsertionElectrode
+from pymatgen.core import Composition, Element
+from pymatgen.entries.computed_entries import ComputedEntry
 
 
 @pytest.fixture(scope="session")
 def insertion_elec(test_dir):
-    """
-    Recycle the test cases from pymatgen
-    """
+    """Recycle the test cases from pymatgen."""
     entry_Li = ComputedEntry("Li", -1.90753119)
     # more cases can be added later if problems are found
     entries_LTO = loadfn(test_dir / "LiTiO2_batt.json")
@@ -57,12 +56,12 @@ def conversion_elec(test_dir):
 
     return {
         k: (conversion_electrodes[k], expected_properties[k])
-        for k in conversion_electrodes.keys()
+        for k in conversion_electrodes
     }
 
 
 def test_InsertionDocs(insertion_elec):
-    for k, (elec, struct, wion_entry) in insertion_elec.items():
+    for _k, (elec, _struct, wion_entry) in insertion_elec.items():
         # Make sure that main document can be created using an InsertionElectrode object
         ie = InsertionElectrodeDoc.from_entries(
             grouped_entries=elec.stable_entries,
@@ -110,7 +109,7 @@ def test_ConversionDocs_from_composition_and_pd(conversion_elec, test_dir):
 
 
 def test_ConversionDocs_from_sub_electrodes(conversion_elec):
-    for k, (elec, expected) in conversion_elec.items():
+    for _k, (elec, _expected) in conversion_elec.items():
         for sub_elec in elec["CE"].get_sub_electrodes(adjacent_only=True):
             vp = ConversionVoltagePairDoc.from_sub_electrode(sub_electrode=sub_elec)
             assert vp.average_voltage == sub_elec.get_average_voltage()

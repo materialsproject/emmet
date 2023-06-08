@@ -1,28 +1,27 @@
-""" Core definition of Structure and Molecule metadata """
+"""Core definition of Structure and Molecule metadata."""
 from __future__ import annotations
 
-from typing import List, Optional, Type, TypeVar
-
-from pydantic import Field
-from pymatgen.core.composition import Composition
-from pymatgen.core.periodic_table import Element
-from pymatgen.core.structure import Structure, Molecule
+from typing import TYPE_CHECKING, TypeVar
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.symmetry import SymmetryData, PointGroupData
+from emmet.core.symmetry import PointGroupData, SymmetryData
+from pydantic import Field
+
+if TYPE_CHECKING:
+    from pymatgen.core.composition import Composition
+    from pymatgen.core.periodic_table import Element
+    from pymatgen.core.structure import Molecule, Structure
 
 T = TypeVar("T", bound="StructureMetadata")
 S = TypeVar("S", bound="MoleculeMetadata")
 
 
 class StructureMetadata(EmmetBaseModel):
-    """
-    Mix-in class for structure metadata
-    """
+    """Mix-in class for structure metadata."""
 
     # Structure metadata
     nsites: int = Field(None, description="Total number of sites in the structure.")
-    elements: List[Element] = Field(
+    elements: list[Element] = Field(
         None, description="List of elements in the material."
     )
     nelements: int = Field(None, description="Number of elements.")
@@ -69,9 +68,9 @@ class StructureMetadata(EmmetBaseModel):
 
     @classmethod
     def from_composition(
-        cls: Type[T],
+        cls: type[T],
         composition: Composition,
-        fields: Optional[List[str]] = None,
+        fields: list[str] | None = None,
         **kwargs,
     ) -> T:
         fields = (
@@ -89,7 +88,7 @@ class StructureMetadata(EmmetBaseModel):
         )
         composition = composition.remove_charges()
 
-        elsyms = sorted(set([e.symbol for e in composition.elements]))
+        elsyms = sorted({e.symbol for e in composition.elements})
 
         data = {
             "elements": elsyms,
@@ -105,9 +104,9 @@ class StructureMetadata(EmmetBaseModel):
 
     @classmethod
     def from_structure(
-        cls: Type[T],
+        cls: type[T],
         meta_structure: Structure,
-        fields: Optional[List[str]] = None,
+        fields: list[str] | None = None,
         **kwargs,
     ) -> T:
         fields = (
@@ -129,7 +128,7 @@ class StructureMetadata(EmmetBaseModel):
             else fields
         )
         comp = meta_structure.composition.remove_charges()
-        elsyms = sorted(set([e.symbol for e in comp.elements]))
+        elsyms = sorted({e.symbol for e in comp.elements})
         symmetry = SymmetryData.from_structure(meta_structure)
 
         data = {
@@ -150,16 +149,14 @@ class StructureMetadata(EmmetBaseModel):
 
 
 class MoleculeMetadata(EmmetBaseModel):
-    """
-    Mix-in class for molecule metadata
-    """
+    """Mix-in class for molecule metadata."""
 
     charge: int = Field(None, description="Charge of the molecule")
     spin_multiplicity: int = Field(
         None, description="Spin multiplicity of the molecule"
     )
     natoms: int = Field(None, description="Total number of atoms in the molecule")
-    elements: List[Element] = Field(
+    elements: list[Element] = Field(
         None, description="List of elements in the molecule"
     )
     nelements: int = Field(None, title="Number of Elements")
@@ -202,13 +199,12 @@ class MoleculeMetadata(EmmetBaseModel):
 
     @classmethod
     def from_composition(
-        cls: Type[S],
+        cls: type[S],
         comp: Composition,
-        fields: Optional[List[str]] = None,
+        fields: list[str] | None = None,
         **kwargs,
     ) -> S:
-        """
-        Create a MoleculeMetadata model from a composition.
+        """Create a MoleculeMetadata model from a composition.
 
         Parameters
         ----------
@@ -219,7 +215,7 @@ class MoleculeMetadata(EmmetBaseModel):
         **kwargs
             Keyword arguments that are passed to the model constructor.
 
-        Returns
+        Returns:
         -------
         T
             A molecule metadata model.
@@ -255,9 +251,9 @@ class MoleculeMetadata(EmmetBaseModel):
 
     @classmethod
     def from_molecule(
-        cls: Type[S],
+        cls: type[S],
         meta_molecule: Molecule,
-        fields: Optional[List[str]] = None,
+        fields: list[str] | None = None,
         **kwargs,
     ) -> S:
         fields = (
@@ -280,7 +276,7 @@ class MoleculeMetadata(EmmetBaseModel):
             else fields
         )
         comp = meta_molecule.composition
-        elsyms = sorted(set([e.symbol for e in comp.elements]))
+        elsyms = sorted({e.symbol for e in comp.elements})
         symmetry = PointGroupData.from_molecule(meta_molecule)
 
         data = {

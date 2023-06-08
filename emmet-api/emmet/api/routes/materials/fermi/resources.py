@@ -1,7 +1,9 @@
-from maggma.api.resource import ReadOnlyResource
-from emmet.core.fermi import FermiDoc
+from __future__ import annotations
+
 from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.core.fermi import FermiDoc
 from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
+from maggma.api.resource import ReadOnlyResource
 
 
 def fermi_resource(fermi_store):

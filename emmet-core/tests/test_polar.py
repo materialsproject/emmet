@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import pytest
-from pymatgen.core import Lattice, Structure
 from emmet.core.polar import DielectricDoc, PiezoelectricDoc
+from pymatgen.core import Lattice, Structure
 
 
-@pytest.fixture
+@pytest.fixture()
 def dielectric_structure():
     test_latt = Lattice.cubic(3.0)
     test_struc = Structure(lattice=test_latt, species=["Fe"], coords=[[0, 0, 0]])
@@ -39,7 +41,7 @@ def test_dielectric(dielectric_structure):
     assert doc.e_ionic == pytest.approx(30.5498978544694)
 
 
-@pytest.fixture
+@pytest.fixture()
 def piezoelectric_structure():
     d = {
         "@module": "pymatgen.core.structure",

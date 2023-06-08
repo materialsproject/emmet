@@ -1,13 +1,15 @@
-from typing import List
+from __future__ import annotations
+
 from hashlib import blake2b
+from typing import TYPE_CHECKING
 
-from pydantic import Field
-
-from emmet.core.mpid import MPculeID
-from emmet.core.qchem.task import TaskDocument
 from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
+from pydantic import Field
 
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPculeID
+    from emmet.core.qchem.task import TaskDocument
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -16,7 +18,7 @@ SPINS_METHODS = ["nbo", "mulliken"]
 
 
 class PartialChargesDoc(PropertyDoc):
-    """Atomic partial charges of a molecule"""
+    """Atomic partial charges of a molecule."""
 
     property_name = "partial_charges"
 
@@ -24,7 +26,7 @@ class PartialChargesDoc(PropertyDoc):
         ..., description="Method used to compute atomic partial charges"
     )
 
-    partial_charges: List[float] = Field(
+    partial_charges: list[float] = Field(
         ..., description="Atomic partial charges for the molecule"
     )
 
@@ -33,12 +35,11 @@ class PartialChargesDoc(PropertyDoc):
         cls,
         task: TaskDocument,
         molecule_id: MPculeID,
-        preferred_methods: List[str],
+        preferred_methods: list[str],
         deprecated: bool = False,
         **kwargs,
     ):  # type: ignore[override]
-        """
-        Determine partial charges from a task document
+        """Determine partial charges from a task document.
 
         :param task: task document from which partial charges can be extracted
         :param molecule_id: MPculeID
@@ -46,7 +47,6 @@ class PartialChargesDoc(PropertyDoc):
         :param kwargs: to pass to PropertyDoc
         :return:
         """
-
         charges = None
         method = None
 
@@ -69,7 +69,7 @@ class PartialChargesDoc(PropertyDoc):
                 break
             elif m == "critic2" and task.critic2 is not None:
                 method = m
-                charges = list([float(i) for i in task.critic2["processed"]["charges"]])
+                charges = [float(i) for i in task.critic2["processed"]["charges"]]
                 break
             elif m == "mulliken" and task.output.mulliken is not None:
                 method = m
@@ -105,13 +105,13 @@ class PartialChargesDoc(PropertyDoc):
 
 
 class PartialSpinsDoc(PropertyDoc):
-    """Atomic partial charges of a molecule"""
+    """Atomic partial charges of a molecule."""
 
     property_name = "partial_spins"
 
     method: str = Field(..., description="Method used to compute atomic partial spins")
 
-    partial_spins: List[float] = Field(
+    partial_spins: list[float] = Field(
         ..., description="Atomic partial spins for the molecule"
     )
 
@@ -120,12 +120,11 @@ class PartialSpinsDoc(PropertyDoc):
         cls,
         task: TaskDocument,
         molecule_id: MPculeID,
-        preferred_methods: List[str],
+        preferred_methods: list[str],
         deprecated: bool = False,
         **kwargs,
     ):  # type: ignore[override]
-        """
-        Determine partial spins from a task document
+        """Determine partial spins from a task document.
 
         :param task: task document from which partial spins can be extracted
         :param molecule_id: MPculeID
@@ -133,7 +132,6 @@ class PartialSpinsDoc(PropertyDoc):
         :param kwargs: to pass to PropertyDoc
         :return:
         """
-
         spins = None
         method = None
 

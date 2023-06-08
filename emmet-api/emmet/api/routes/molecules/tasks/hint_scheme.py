@@ -1,10 +1,10 @@
+from __future__ import annotations
+
 from maggma.api.resource import HintScheme
 
 
 class TasksHintScheme(HintScheme):
-    """
-    Hint scheme for the molecules/tasks endpoint.
-    """
+    """Hint scheme for the molecules/tasks endpoint."""
 
     def generate_hints(self, query):
         if query["criteria"] == {}:

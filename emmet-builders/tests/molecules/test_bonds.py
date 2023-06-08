@@ -1,9 +1,9 @@
+from __future__ import annotations
+
 import pytest
-from maggma.stores import JSONStore, MemoryStore
-
-from emmet.builders.qchem.molecules import MoleculesAssociationBuilder, MoleculesBuilder
 from emmet.builders.molecules.bonds import BondingBuilder
-
+from emmet.builders.qchem.molecules import MoleculesAssociationBuilder, MoleculesBuilder
+from maggma.stores import JSONStore, MemoryStore
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 

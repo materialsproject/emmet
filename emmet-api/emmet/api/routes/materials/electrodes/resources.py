@@ -1,19 +1,19 @@
+from __future__ import annotations
+
+from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
+from emmet.api.routes.materials.electrodes.query_operators import (
+    ElectrodeElementsQuery,
+    ElectrodeFormulaQuery,
+    ElectrodeMultiMaterialIDQuery,
+    ElectrodesChemsysQuery,
+    MultiBatteryIDQuery,
+    WorkingIonQuery,
+)
+from emmet.core.electrode import InsertionElectrodeDoc
+from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 from maggma.api.query_operator.dynamic import NumericQuery
 from maggma.api.resource import ReadOnlyResource
-from emmet.core.electrode import InsertionElectrodeDoc
-from emmet.api.core.global_header import GlobalHeaderProcessor
-
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
-from emmet.api.routes.materials.electrodes.query_operators import (
-    ElectrodeFormulaQuery,
-    ElectrodeElementsQuery,
-    ElectrodesChemsysQuery,
-    WorkingIonQuery,
-    ElectrodeMultiMaterialIDQuery,
-    MultiBatteryIDQuery,
-)
-
-from emmet.api.core.settings import MAPISettings
 
 
 def insertion_electrodes_resource(insertion_electrodes_store):

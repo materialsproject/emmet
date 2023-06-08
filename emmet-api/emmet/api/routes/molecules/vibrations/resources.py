@@ -1,19 +1,19 @@
-from maggma.api.resource import ReadOnlyResource
-from emmet.core.molecules.vibration import VibrationDoc
+from __future__ import annotations
 
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
-
+from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.molecules.molecules.query_operators import (
-    MultiMPculeIDQuery,
-    ExactCalcMethodQuery,
-    FormulaQuery,
+    ChargeSpinQuery,
     ChemsysQuery,
     ElementsQuery,
-    ChargeSpinQuery,
+    ExactCalcMethodQuery,
+    FormulaQuery,
+    MultiMPculeIDQuery,
 )
 from emmet.api.routes.molecules.utils import MultiPropertyIDQuery
-from emmet.api.core.settings import MAPISettings
-from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.core.molecules.vibration import VibrationDoc
+from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.resource import ReadOnlyResource
 
 
 def vibration_resource(vibes_store):

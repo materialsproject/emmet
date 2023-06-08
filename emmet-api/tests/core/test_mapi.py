@@ -1,14 +1,14 @@
+from __future__ import annotations
+
 from enum import Enum
 from random import choice, randint
 
 import pytest
-from fastapi.encoders import jsonable_encoder
-from pydantic import BaseModel, Field
-
 from emmet.api.core import MAPI
-
+from fastapi.encoders import jsonable_encoder
 from maggma.api.resource import ReadOnlyResource
 from maggma.stores import MemoryStore
+from pydantic import BaseModel, Field
 
 
 class PetType(str, Enum):
@@ -44,7 +44,7 @@ pets = [
 ]
 
 
-@pytest.fixture
+@pytest.fixture()
 def owner_store():
     store = MemoryStore("owners", key="name")
     store.connect()
@@ -52,7 +52,7 @@ def owner_store():
     return store
 
 
-@pytest.fixture
+@pytest.fixture()
 def pet_store():
     store = MemoryStore("pets", key="name")
     store.connect()

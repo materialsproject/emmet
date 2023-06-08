@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 from emmet.api.routes._consumer.query_operator import (
     UserSettingsGetQuery,
     UserSettingsPostQuery,
 )
-
+from monty.serialization import dumpfn, loadfn
 from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 
 
 def test_user_settings_post_query():

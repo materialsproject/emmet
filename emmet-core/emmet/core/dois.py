@@ -1,10 +1,10 @@
+from __future__ import annotations
+
 from pydantic import BaseModel, Field
 
 
 class DOIDoc(BaseModel):
-    """
-    DOIs to reference specific materials on Materials Project.
-    """
+    """DOIs to reference specific materials on Materials Project."""
 
     doi: str = Field(
         None,

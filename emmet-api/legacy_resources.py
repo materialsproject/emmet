@@ -1,9 +1,10 @@
-import os
+from __future__ import annotations
 
-from maggma.stores import MongoURIStore
+import os
 
 from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.legacy.jcesr.resources import jcesr_resource
+from maggma.stores import MongoURIStore
 
 resources = {}
 

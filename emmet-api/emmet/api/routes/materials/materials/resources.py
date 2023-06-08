@@ -1,33 +1,31 @@
-from maggma.api.resource.read_resource import ReadOnlyResource
-from maggma.api.resource.post_resource import PostOnlyResource
-from maggma.api.resource.aggregation import AggregationResource
+from __future__ import annotations
 
-
-from emmet.core.vasp.material import MaterialsDoc
-from emmet.core.find_structure import FindStructure
-from emmet.core.formula_autocomplete import FormulaAutocomplete
-
-from maggma.api.query_operator import (
-    PaginationQuery,
-    SparseFieldsQuery,
-    SortQuery,
-    NumericQuery,
-)
-
-from emmet.api.routes.materials.materials.hint_scheme import MaterialsHintScheme
-from emmet.api.routes.materials.materials.query_operators import (
-    ElementsQuery,
-    FormulaQuery,
-    ChemsysQuery,
-    DeprecationQuery,
-    SymmetryQuery,
-    MultiTaskIDQuery,
-    FindStructureQuery,
-    FormulaAutoCompleteQuery,
-    MultiMaterialIDQuery,
-)
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
+from emmet.api.routes.materials.materials.hint_scheme import MaterialsHintScheme
+from emmet.api.routes.materials.materials.query_operators import (
+    ChemsysQuery,
+    DeprecationQuery,
+    ElementsQuery,
+    FindStructureQuery,
+    FormulaAutoCompleteQuery,
+    FormulaQuery,
+    MultiMaterialIDQuery,
+    MultiTaskIDQuery,
+    SymmetryQuery,
+)
+from emmet.core.find_structure import FindStructure
+from emmet.core.formula_autocomplete import FormulaAutocomplete
+from emmet.core.vasp.material import MaterialsDoc
+from maggma.api.query_operator import (
+    NumericQuery,
+    PaginationQuery,
+    SortQuery,
+    SparseFieldsQuery,
+)
+from maggma.api.resource.aggregation import AggregationResource
+from maggma.api.resource.post_resource import PostOnlyResource
+from maggma.api.resource.read_resource import ReadOnlyResource
 
 timeout = MAPISettings().TIMEOUT
 

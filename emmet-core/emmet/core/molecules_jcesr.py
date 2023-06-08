@@ -1,15 +1,18 @@
-from typing import List
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, Field
-from pymatgen.core.periodic_table import Element
-from pymatgen.core.structure import Molecule
+
+if TYPE_CHECKING:
+    from pymatgen.core.periodic_table import Element
+    from pymatgen.core.structure import Molecule
 
 
 class MoleculesDoc(BaseModel):
-    """
-    Molecules relevant to battery electrolytes.
-    """
+    """Molecules relevant to battery electrolytes."""
 
-    elements: List[Element] = Field(
+    elements: list[Element] = Field(
         None,
         description="List of elements in the molecule.",
     )

@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import pytest
-from monty.serialization import loadfn
 from emmet.core.molecules.summary import MoleculeSummaryDoc
+from monty.serialization import loadfn
 
 
 @pytest.fixture(scope="session")

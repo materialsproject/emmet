@@ -1,20 +1,22 @@
-from pydantic import Field
-from hashlib import blake2b
-from typing import Optional
+from __future__ import annotations
 
-from emmet.core.mpid import MPculeID
-from emmet.core.qchem.calc_types import LevelOfTheory
-from emmet.core.qchem.task import TaskDocument
+from hashlib import blake2b
+from typing import TYPE_CHECKING
+
 from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
+from pydantic import Field
 
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPculeID
+    from emmet.core.qchem.calc_types import LevelOfTheory
+    from emmet.core.qchem.task import TaskDocument
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
 def get_free_energy(energy, enthalpy, entropy, temperature=298.15):
-    """
-    Helper function to calculate Gibbs free energy from electronic energy, enthalpy, and entropy
+    """Helper function to calculate Gibbs free energy from electronic energy, enthalpy, and entropy.
 
     :param energy: Electronic energy in Ha
     :param enthalpy: Enthalpy in kcal/mol
@@ -111,12 +113,11 @@ class MoleculeThermoDoc(PropertyDoc):
         cls,
         task: TaskDocument,
         molecule_id: MPculeID,
-        correction_task: Optional[TaskDocument] = None,
+        correction_task: TaskDocument | None = None,
         deprecated: bool = False,
         **kwargs,
     ):  # type: ignore[override]
-        """
-        Construct a thermodynamics document from a task
+        """Construct a thermodynamics document from a task.
 
         :param task: document from which thermodynamic properties can be extracted
         :param molecule_id: MPculeID
@@ -124,7 +125,6 @@ class MoleculeThermoDoc(PropertyDoc):
         :param kwargs: to pass to PropertyDoc
         :return:
         """
-
         if task.output.optimized_molecule is not None:
             mol = task.output.optimized_molecule
         else:
@@ -168,8 +168,7 @@ class MoleculeThermoDoc(PropertyDoc):
 
             for calc in task.calcs_reversed:
                 if all(
-                    [
-                        calc.get(x) is not None
+                    calc.get(x) is not None
                         for x in [
                             "ZPE",
                             "trans_enthalpy",
@@ -180,7 +179,6 @@ class MoleculeThermoDoc(PropertyDoc):
                             "rot_entropy",
                             "vib_entropy",
                         ]
-                    ]
                 ):
                     return super().from_molecule(
                         meta_molecule=mol,

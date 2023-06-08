@@ -1,7 +1,8 @@
-from emmet.api.routes.materials.dielectric.query_operators import DielectricQuery
+from __future__ import annotations
 
+from emmet.api.routes.materials.dielectric.query_operators import DielectricQuery
+from monty.serialization import dumpfn, loadfn
 from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 
 
 def test_dielectric_query_operator():

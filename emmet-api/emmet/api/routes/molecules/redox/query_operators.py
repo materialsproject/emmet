@@ -1,37 +1,40 @@
-from typing import Any, Optional, Dict
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
 
 
 class RedoxPotentialQuery(QueryOperator):
-    """
-    Method to generate a query on redox potentials.
-    """
+    """Method to generate a query on redox potentials."""
 
     def query(
         self,
         electrode: str = Query(
             "H", description="Reference electrode to be queried (e.g. 'H', 'Li', 'Mg')."
         ),
-        min_reduction_potential: Optional[float] = Query(
+        min_reduction_potential: float | None = Query(
             None,
             description="Minimum reduction potential using the selected reference electrode.",
         ),
-        max_reduction_potential: Optional[float] = Query(
+        max_reduction_potential: float | None = Query(
             None,
             description="Maximum reduction potential using the selected reference electrode.",
         ),
-        min_oxidation_potential: Optional[float] = Query(
+        min_oxidation_potential: float | None = Query(
             None,
             description="Minimum oxidation potential using the selected reference electrode.",
         ),
-        max_oxidation_potential: Optional[float] = Query(
+        max_oxidation_potential: float | None = Query(
             None,
             description="Maximum oxidation potential using the selected reference electrode.",
         ),
     ) -> STORE_PARAMS:
-        crit: Dict[str, Any] = dict()  # type: ignore
+        crit: dict[str, Any] = dict()  # type: ignore
 
         d = {
             "oxidation_potentials": [min_oxidation_potential, max_oxidation_potential],

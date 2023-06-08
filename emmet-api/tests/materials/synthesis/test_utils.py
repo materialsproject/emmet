@@ -1,11 +1,14 @@
+from __future__ import annotations
+
 import os
 from json import load
+
+from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.synthesis.utils import (
     make_ellipsis,
-    mask_paragraphs,
     mask_highlights,
+    mask_paragraphs,
 )
-from emmet.api.core.settings import MAPISettings
 from emmet.core.synthesis import SynthesisSearchResultModel
 
 

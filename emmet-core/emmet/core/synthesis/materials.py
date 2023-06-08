@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional
+from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
@@ -8,21 +8,19 @@ __all__ = ["Component", "ExtractedMaterial"]
 class Component(BaseModel):
     formula: str = Field(..., description="Formula of this component.")
     amount: str = Field(..., description="Amount of this component.")
-    elements: Dict[str, str] = Field(
+    elements: dict[str, str] = Field(
         ..., description="Amount of each chemical elements in this component."
     )
 
 
 class Values(BaseModel):
-    values: List[float] = Field(None, description="List of values.")
-    min_value: Optional[float] = Field(None, description="Minimal value.")
-    max_value: Optional[float] = Field(None, description="Maximal value.")
+    values: list[float] = Field(None, description="List of values.")
+    min_value: float | None = Field(None, description="Minimal value.")
+    max_value: float | None = Field(None, description="Maximal value.")
 
 
 class ExtractedMaterial(BaseModel):
-    """
-    Model for a material extracted from the literature
-    """
+    """Model for a material extracted from the literature."""
 
     material_string: str = Field(
         ..., description="String of the material as written in paper."
@@ -32,24 +30,24 @@ class ExtractedMaterial(BaseModel):
     )
     material_name: str = Field(None, description="English name of the material.")
 
-    phase: Optional[str] = Field(
+    phase: str | None = Field(
         None, description="Phase description of material, such as anatase."
     )
     is_acronym: bool = Field(
         None, description="Whether the material is an acronym, such as LMO for LiMn2O4."
     )
 
-    composition: List[Component] = Field(
+    composition: list[Component] = Field(
         ..., description="List of components in this material."
     )
-    amounts_vars: Dict[str, Values] = Field(
+    amounts_vars: dict[str, Values] = Field(
         {}, description="Amount variables (formula subscripts)."
     )
-    elements_vars: Dict[str, List[str]] = Field(
+    elements_vars: dict[str, list[str]] = Field(
         {}, description="Chemical element variables"
     )
 
-    additives: List[str] = Field([], description="List of additives, dopants, etc.")
-    oxygen_deficiency: Optional[str] = Field(
+    additives: list[str] = Field([], description="List of additives, dopants, etc.")
+    oxygen_deficiency: str | None = Field(
         None, description="Symbol indicating whether the materials is oxygen deficient."
     )

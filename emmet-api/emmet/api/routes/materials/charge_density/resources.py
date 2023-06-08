@@ -1,8 +1,10 @@
-from maggma.api.resource import ReadOnlyResource
-from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
-from emmet.core.charge_density import ChgcarDataDoc
-from emmet.api.routes.materials.charge_density.query_operators import ChgcarTaskIDQuery
+from __future__ import annotations
+
 from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.routes.materials.charge_density.query_operators import ChgcarTaskIDQuery
+from emmet.core.charge_density import ChgcarDataDoc
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
+from maggma.api.resource import ReadOnlyResource
 
 
 def charge_density_resource(s3_store):

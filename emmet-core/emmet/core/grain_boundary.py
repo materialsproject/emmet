@@ -1,25 +1,26 @@
-from typing import List
-from pydantic import BaseModel, Field, validator
-from enum import Enum
-from datetime import datetime
-from monty.json import MontyDecoder
+from __future__ import annotations
 
-from pymatgen.analysis.gb.grain import GrainBoundary
+from enum import Enum
+from typing import TYPE_CHECKING
+
+from monty.json import MontyDecoder
+from pydantic import BaseModel, Field, validator
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from pymatgen.analysis.gb.grain import GrainBoundary
 
 
 class GBTypeEnum(Enum):
-    """
-    Grain boundary types
-    """
+    """Grain boundary types."""
 
     tilt = "tilt"
     twist = "twist"
 
 
 class GrainBoundaryDoc(BaseModel):
-    """
-    Grain boundary energies, work of separation...
-    """
+    """Grain boundary energies, work of separation..."""
 
     task_id: str = Field(
         None,
@@ -36,12 +37,12 @@ class GrainBoundaryDoc(BaseModel):
         description="Grain boundary type.",
     )
 
-    rotation_axis: List[int] = Field(
+    rotation_axis: list[int] = Field(
         None,
         description="Rotation axis.",
     )
 
-    gb_plane: List[int] = Field(
+    gb_plane: list[int] = Field(
         None,
         description="Grain boundary plane.",
     )

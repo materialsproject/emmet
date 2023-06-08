@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 import os
 
-from maggma.stores import MongoURIStore, S3Store
-
 from emmet.api.core.settings import MAPISettings
+from maggma.stores import MongoURIStore, S3Store
 
 resources = {}
 

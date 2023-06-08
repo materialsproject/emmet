@@ -1,23 +1,25 @@
-from typing import Optional
-from fastapi import Query
-from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+from __future__ import annotations
 
 from collections import defaultdict
+from typing import TYPE_CHECKING
+
+from fastapi import Query
+from maggma.api.query_operator import QueryOperator
+
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
 
 
 class SubstrateStructureQuery(QueryOperator):
-    """
-    Method to generate a query for film and substrate data.
-    """
+    """Method to generate a query for film and substrate data."""
 
     def query(
         self,
-        film_orientation: Optional[str] = Query(
+        film_orientation: str | None = Query(
             None,
             description="Comma separated integers defining the film surface orientation.",
         ),
-        substrate_orientation: Optional[str] = Query(
+        substrate_orientation: str | None = Query(
             None,
             description="Comma separated integers defining the substrate surface orientation.",
         ),
@@ -42,26 +44,25 @@ class SubstrateStructureQuery(QueryOperator):
 
 
 class EnergyAreaQuery(QueryOperator):
-    """
-    Method to generate a query for ranges of substrate
+    """Method to generate a query for ranges of substrate
     elastic energies and minimum coincident areas.
     """
 
     def query(
         self,
-        area_max: Optional[float] = Query(
+        area_max: float | None = Query(
             None,
             description="Maximum value for the minimum coincident interface area in Å².",
         ),
-        area_min: Optional[float] = Query(
+        area_min: float | None = Query(
             None,
             description="Minimum value for the minimum coincident interface area in Å².",
         ),
-        energy_max: Optional[float] = Query(
+        energy_max: float | None = Query(
             None,
             description="Maximum value for the energy in meV.",
         ),
-        energy_min: Optional[float] = Query(
+        energy_min: float | None = Query(
             None,
             description="Minimum value for the energy in meV.",
         ),

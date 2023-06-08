@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from setuptools import find_namespace_packages, setup
 
 setup(

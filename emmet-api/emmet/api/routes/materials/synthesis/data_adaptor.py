@@ -1,16 +1,16 @@
-"""
-This script converts synthesis recipes data fetched directly
+"""This script converts synthesis recipes data fetched directly
 from the public repo of synthesis recipes
 (https://github.com/CederGroupHub/text-mined-synthesis_public)
 into MP compatible formats.
 """
+from __future__ import annotations
+
 import json
-import sys
 import logging
+import sys
 
 from pymatgen.core import Composition
 from pymatgen.core.composition import CompositionError
-
 
 logger = logging.getLogger(__name__)
 
@@ -56,15 +56,14 @@ def convert_recipe(recipe):
 
 
 def convert_json_public_repo(src_json, dst_json):
-    """
-    Convert the public synthesis recipes dataset (in a json file)
+    """Convert the public synthesis recipes dataset (in a json file)
     into a format as json file which can be imported into the MP database.
     """
     with open(src_json) as f:
         data = json.load(f)
         recipes = data["reactions"]
         logger.info(
-            "Loaded %s recipes, version %s" % (len(recipes), data["release_date"])
+            "Loaded {} recipes, version {}".format(len(recipes), data["release_date"])
         )
 
     converted = []

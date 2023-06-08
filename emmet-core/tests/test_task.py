@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import pytest
+
 from tests.conftest import assert_schemas_equal, get_test_object
 
 
@@ -11,10 +14,9 @@ from tests.conftest import assert_schemas_equal, get_test_object
     ],
 )
 def test_analysis_summary(test_dir, object_name):
-    from monty.json import MontyDecoder, jsanitize
-
     from emmet.core.tasks import AnalysisDoc
     from emmet.core.vasp.calculation import Calculation
+    from monty.json import MontyDecoder, jsanitize
 
     test_object = get_test_object(object_name)
     dir_name = test_dir / "vasp" / test_object.folder
@@ -39,7 +41,7 @@ def test_analysis_summary(test_dir, object_name):
 
 
 @pytest.mark.parametrize(
-    "object_name,task_name",
+    ("object_name", "task_name"),
     [
         pytest.param("SiOptimizeDouble", "relax1", id="SiOptimizeDouble"),
         pytest.param("SiStatic", "standard", id="SiStatic"),
@@ -47,10 +49,9 @@ def test_analysis_summary(test_dir, object_name):
     ],
 )
 def test_input_summary(test_dir, object_name, task_name):
-    from monty.json import MontyDecoder, jsanitize
-
     from emmet.core.tasks import InputDoc
     from emmet.core.vasp.calculation import Calculation
+    from monty.json import MontyDecoder, jsanitize
 
     test_object = get_test_object(object_name)
     dir_name = test_dir / "vasp" / test_object.folder
@@ -70,7 +71,7 @@ def test_input_summary(test_dir, object_name, task_name):
 
 
 @pytest.mark.parametrize(
-    "object_name,task_name",
+    ("object_name", "task_name"),
     [
         pytest.param("SiOptimizeDouble", "relax2", id="SiOptimizeDouble"),
         pytest.param("SiStatic", "standard", id="SiStatic"),
@@ -78,10 +79,9 @@ def test_input_summary(test_dir, object_name, task_name):
     ],
 )
 def test_output_summary(test_dir, object_name, task_name):
-    from monty.json import MontyDecoder, jsanitize
-
     from emmet.core.tasks import OutputDoc
     from emmet.core.vasp.calculation import Calculation
+    from monty.json import MontyDecoder, jsanitize
 
     test_object = get_test_object(object_name)
     dir_name = test_dir / "vasp" / test_object.folder
@@ -109,9 +109,8 @@ def test_output_summary(test_dir, object_name, task_name):
     ],
 )
 def test_task_doc(test_dir, object_name):
-    from monty.json import MontyDecoder, jsanitize
-
     from emmet.core.tasks import TaskDoc
+    from monty.json import MontyDecoder, jsanitize
 
     test_object = get_test_object(object_name)
     dir_name = test_dir / "vasp" / test_object.folder

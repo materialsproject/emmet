@@ -1,9 +1,14 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
-from emmet.core.xas import Edge, Type
-from pymatgen.core.periodic_table import Element
-from typing import Optional
+
+if TYPE_CHECKING:
+    from emmet.core.xas import Edge, Type
+    from maggma.api.utils import STORE_PARAMS
+    from pymatgen.core.periodic_table import Element
 
 
 class XASQuery(QueryOperator):
@@ -13,9 +18,7 @@ class XASQuery(QueryOperator):
         spectrum_type: Type = Query(None, title="Spectrum Type"),
         absorbing_element: Element = Query(None, title="Absorbing Element"),
     ) -> STORE_PARAMS:
-        """
-        Query parameters unique to XAS
-        """
+        """Query parameters unique to XAS."""
         query = {
             "edge": edge.value if edge else None,
             "absorbing_element": str(absorbing_element) if absorbing_element else None,
@@ -31,13 +34,11 @@ class XASQuery(QueryOperator):
 
 
 class XASTaskIDQuery(QueryOperator):
-    """
-    Method to generate a query for XAS data given a list of task_ids
-    """
+    """Method to generate a query for XAS data given a list of task_ids."""
 
     def query(
         self,
-        material_ids: Optional[str] = Query(
+        material_ids: str | None = Query(
             None, description="Comma-separated list of material_id to query on"
         ),
     ) -> STORE_PARAMS:

@@ -1,8 +1,9 @@
-import pytest
-from maggma.stores import JSONStore, MemoryStore
+from __future__ import annotations
 
+import pytest
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.builders.vasp.task_validator import TaskValidator
+from maggma.stores import JSONStore, MemoryStore
 
 intermediate_stores = ["validation"]
 
@@ -25,4 +26,4 @@ def test_validator(tasks_store, validation_store):
     builder.run()
     assert validation_store.count() == tasks_store.count()
     assert validation_store.count({"valid": True}) == tasks_store.count()
-    assert all(list(d["run_type"] == "GGA" for d in validation_store.query()))
+    assert all(d["run_type"] == "GGA" for d in validation_store.query())

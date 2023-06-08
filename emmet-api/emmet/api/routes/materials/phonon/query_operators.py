@@ -1,15 +1,17 @@
-from emmet.core.mpid import MPID
+from __future__ import annotations
 
-from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+from typing import TYPE_CHECKING
 
 from fastapi import Path
+from maggma.api.query_operator import QueryOperator
+
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID
+    from maggma.api.utils import STORE_PARAMS
 
 
 class PhononImgQuery(QueryOperator):
-    """
-    Method to generate a query on phonon image data.
-    """
+    """Method to generate a query on phonon image data."""
 
     def query(
         self,

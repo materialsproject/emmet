@@ -1,11 +1,13 @@
+from __future__ import annotations
+
 from emmet.api.routes.molecules.orbitals.query_operators import (
-    NBOPopulationQuery,
-    NBOLonePairQuery,
     NBOBondQuery,
     NBOInteractionQuery,
+    NBOLonePairQuery,
+    NBOPopulationQuery,
 )
+from monty.serialization import dumpfn, loadfn
 from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 
 
 def test_nbo_population_query():

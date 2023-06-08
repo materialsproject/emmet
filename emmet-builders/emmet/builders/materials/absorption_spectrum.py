@@ -1,14 +1,17 @@
+from __future__ import annotations
+
 from math import ceil
-from typing import Dict, Iterator, List, Optional
+from typing import TYPE_CHECKING, Iterator
 
 import numpy as np
+from emmet.core.absorption import AbsorptionDoc
+from emmet.core.utils import jsanitize
 from maggma.builders import Builder
-from maggma.core import Store
 from maggma.utils import grouper
 from pymatgen.core.structure import Structure
 
-from emmet.core.absorption import AbsorptionDoc
-from emmet.core.utils import jsanitize
+if TYPE_CHECKING:
+    from maggma.core import Store
 
 
 class AbsorptionBuilder(Builder):
@@ -17,7 +20,7 @@ class AbsorptionBuilder(Builder):
         materials: Store,
         tasks: Store,
         absorption: Store,
-        query: Optional[Dict] = None,
+        query: dict | None = None,
         **kwargs,
     ):
         self.materials = materials
@@ -32,10 +35,8 @@ class AbsorptionBuilder(Builder):
 
         super().__init__(sources=[materials, tasks], targets=[absorption], **kwargs)
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
-        """
-        Prechunk method to perform chunking by the key field
-        """
+    def prechunk(self, number_splits: int) -> Iterator[dict]:  # pragma: no cover
+        """Prechunk method to perform chunking by the key field."""
         q = dict(self.query)
 
         keys = self.absorption.newer_in(self.materials, criteria=q, exhaustive=True)
@@ -44,14 +45,12 @@ class AbsorptionBuilder(Builder):
         for split in grouper(keys, N):
             yield {"query": {self.materials.key: {"$in": list(split)}}}
 
-    def get_items(self) -> Iterator[List[Dict]]:
-        """
-        Gets all items to process
+    def get_items(self) -> Iterator[list[dict]]:
+        """Gets all items to process.
 
         Returns:
             generator or list relevant tasks and materials to process
         """
-
         self.logger.info("Absorption Builder Started")
 
         q = dict(self.query)
@@ -63,10 +62,10 @@ class AbsorptionBuilder(Builder):
             self.absorption.newer_in(target=self.materials, criteria=q, exhaustive=True)
         ) | (set(mat_ids) - set(ab_ids))
 
-        mats = [mat for mat in mats_set]
+        mats = list(mats_set)
 
         self.logger.info(
-            "Processing {} materials for absorption data".format(len(mats))
+            f"Processing {len(mats)} materials for absorption data"
         )
 
         self.total = len(mats)
@@ -102,9 +101,7 @@ class AbsorptionBuilder(Builder):
         return jsanitize(doc.dict(), allow_bson=True)
 
     def update_targets(self, items):
-        """
-        Inserts the new absorption docs into the absorption collection
-        """
+        """Inserts the new absorption docs into the absorption collection."""
         docs = list(filter(None, items))
 
         if len(docs) > 0:

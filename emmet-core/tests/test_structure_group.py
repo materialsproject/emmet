@@ -1,15 +1,14 @@
+from __future__ import annotations
+
 import pytest
+from emmet.core.structure_group import StructureGroupDoc
 from monty.serialization import loadfn
 from pymatgen.core import Composition
-
-from emmet.core.structure_group import StructureGroupDoc
 
 
 @pytest.fixture(scope="session")
 def entries_lto(test_dir):
-    """
-    Recycle the test cases from pymatgen
-    """
+    """Recycle the test cases from pymatgen."""
     entries = loadfn(test_dir / "LiTiO2_batt.json")
     for itr, ient in enumerate(entries):
         ient.entry_id = f"mp-{itr}"
@@ -18,9 +17,7 @@ def entries_lto(test_dir):
 
 @pytest.fixture(scope="session")
 def entries_lfeo(test_dir):
-    """
-    Recycle the test cases from pymatgen
-    """
+    """Recycle the test cases from pymatgen."""
     entries = loadfn(test_dir / "Li-Fe-O.json")
     return entries
 

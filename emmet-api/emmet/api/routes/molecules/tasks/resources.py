@@ -1,6 +1,10 @@
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
-from maggma.api.resource import ReadOnlyResource
+# TODO:
+# TrajectoryQuery,
+# EntryQuery,
+from __future__ import annotations
 
+from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.molecules.molecules.query_operators import (
     ChemsysQuery,
     ElementsQuery,
@@ -10,14 +14,11 @@ from emmet.api.routes.molecules.tasks.hint_scheme import TasksHintScheme
 from emmet.api.routes.molecules.tasks.query_operators import (
     DeprecationQuery,
     MultipleTaskIDsQuery,
-    # TODO:
-    # TrajectoryQuery,
-    # EntryQuery,
 )
-from emmet.api.core.global_header import GlobalHeaderProcessor
-from emmet.api.core.settings import MAPISettings
-from emmet.core.tasks import DeprecationDoc
 from emmet.core.qchem.task import TaskDocument
+from emmet.core.tasks import DeprecationDoc
+from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.resource import ReadOnlyResource
 
 timeout = MAPISettings().TIMEOUT
 

@@ -1,17 +1,20 @@
-from typing import Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from fastapi import Query
-from maggma.api.utils import STORE_PARAMS
 from maggma.api.query_operator import QueryOperator
+
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
 
 
 class IsStableQuery(QueryOperator):
-    """
-    Method to generate a query on whether a material is stable
-    """
+    """Method to generate a query on whether a material is stable."""
 
     def query(
         self,
-        is_stable: Optional[bool] = Query(
+        is_stable: bool | None = Query(
             None, description="Whether the material is stable."
         ),
     ):
@@ -28,13 +31,11 @@ class IsStableQuery(QueryOperator):
 
 
 class MultiThermoIDQuery(QueryOperator):
-    """
-    Method to generate a query for different root-level thermo_id values
-    """
+    """Method to generate a query for different root-level thermo_id values."""
 
     def query(
         self,
-        thermo_ids: Optional[str] = Query(
+        thermo_ids: str | None = Query(
             None, description="Comma-separated list of thermo_id values to query on"
         ),
     ) -> STORE_PARAMS:
@@ -52,13 +53,11 @@ class MultiThermoIDQuery(QueryOperator):
 
 
 class MultiThermoTypeQuery(QueryOperator):
-    """
-    Method to generate a query for different root-level thermo_type values
-    """
+    """Method to generate a query for different root-level thermo_type values."""
 
     def query(
         self,
-        thermo_types: Optional[str] = Query(
+        thermo_types: str | None = Query(
             None, description="Comma-separated list of thermo_type values to query on"
         ),
     ) -> STORE_PARAMS:

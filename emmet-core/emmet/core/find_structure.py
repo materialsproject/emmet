@@ -1,11 +1,15 @@
-from emmet.core.mpid import MPID, MPculeID
-from pydantic import Field, BaseModel
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID, MPculeID
 
 
 class FindStructure(BaseModel):
-    """
-    Class defining find structure return data
-    """
+    """Class defining find structure return data."""
 
     material_id: MPID = Field(
         None,
@@ -23,9 +27,7 @@ class FindStructure(BaseModel):
 
 
 class FindMolecule(BaseModel):
-    """
-    Class defining find molecule return data
-    """
+    """Class defining find molecule return data."""
 
     molecule_id: MPculeID = Field(
         None,

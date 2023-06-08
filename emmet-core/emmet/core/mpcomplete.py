@@ -1,13 +1,17 @@
+from __future__ import annotations
+
+from enum import Enum
+from typing import TYPE_CHECKING
+
 from pydantic import Field
 from pydantic.main import BaseModel
-from pymatgen.core.structure import Structure
-from enum import Enum
+
+if TYPE_CHECKING:
+    from pymatgen.core.structure import Structure
 
 
 class MPCompleteDoc(BaseModel):
-    """
-    Defines data for MPComplete structure submissions
-    """
+    """Defines data for MPComplete structure submissions."""
 
     structure: Structure = Field(
         None,
@@ -26,9 +30,7 @@ class MPCompleteDoc(BaseModel):
 
 
 class MPCompleteDataStatus(Enum):
-    """
-    Submission status for MPComplete data
-    """
+    """Submission status for MPComplete data."""
 
     submitted = "SUBMITTED"
     pending = "PENDING"

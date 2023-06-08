@@ -1,13 +1,16 @@
-from typing import Dict, Optional
-from collections import defaultdict
+from __future__ import annotations
 
-from maggma.builders import MapBuilder
-from maggma.core import Store
+from collections import defaultdict
+from typing import TYPE_CHECKING
 
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.vasp.task_valid import TaskDocument
-from emmet.core.vasp.calc_types.enums import CalcType
 from emmet.core.vasp.validation import DeprecationMessage, ValidationDoc
+from maggma.builders import MapBuilder
+
+if TYPE_CHECKING:
+    from emmet.core.vasp.calc_types.enums import CalcType
+    from maggma.core import Store
 
 
 class TaskValidator(MapBuilder):
@@ -15,13 +18,12 @@ class TaskValidator(MapBuilder):
         self,
         tasks: Store,
         task_validation: Store,
-        potcar_hashes: Optional[Dict[CalcType, Dict[str, str]]] = None,
-        settings: Optional[EmmetBuildSettings] = None,
-        query: Optional[Dict] = None,
+        potcar_hashes: dict[CalcType, dict[str, str]] | None = None,
+        settings: EmmetBuildSettings | None = None,
+        query: dict | None = None,
         **kwargs,
     ):
-        """
-        Creates task_types from tasks and type definitions
+        """Creates task_types from tasks and type definitions.
 
         Args:
             tasks: Store of task documents
@@ -74,8 +76,7 @@ class TaskValidator(MapBuilder):
         )
 
     def unary_function(self, item):
-        """
-        Find the task_type for the item
+        """Find the task_type for the item.
 
         Args:
             item (dict): a (projection of a) task doc

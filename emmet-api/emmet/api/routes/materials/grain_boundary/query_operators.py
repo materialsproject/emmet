@@ -1,42 +1,43 @@
-from typing import Optional
-from fastapi import Query
-from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+from __future__ import annotations
 
 from collections import defaultdict
+from typing import TYPE_CHECKING
+
+from fastapi import Query
+from maggma.api.query_operator import QueryOperator
 from pymatgen.core.composition import Composition
 
-from emmet.core.grain_boundary import GBTypeEnum
+if TYPE_CHECKING:
+    from emmet.core.grain_boundary import GBTypeEnum
+    from maggma.api.utils import STORE_PARAMS
 
 
 class GBStructureQuery(QueryOperator):
-    """
-    Method to generate a query for structure related data associated with grain boundary entries
-    """
+    """Method to generate a query for structure related data associated with grain boundary entries."""
 
     def query(
         self,
-        sigma: Optional[int] = Query(
+        sigma: int | None = Query(
             None,
             description="Value of sigma.",
         ),
-        type: Optional[GBTypeEnum] = Query(
+        type: GBTypeEnum | None = Query(
             None,
             description="Grain boundary type.",
         ),
-        chemsys: Optional[str] = Query(
+        chemsys: str | None = Query(
             None,
             description="Dash-delimited string of elements in the material.",
         ),
-        pretty_formula: Optional[str] = Query(
+        pretty_formula: str | None = Query(
             None,
             description="Formula of the material.",
         ),
-        gb_plane: Optional[str] = Query(
+        gb_plane: str | None = Query(
             None,
             description="Miller index of the grain boundary plane as comma delimitd integers.",
         ),
-        rotation_axis: Optional[str] = Query(
+        rotation_axis: str | None = Query(
             None,
             description="Miller index of the rotation axis as comma delimitd integers.",
         ),
@@ -71,13 +72,11 @@ class GBStructureQuery(QueryOperator):
 
 
 class GBTaskIDQuery(QueryOperator):
-    """
-    Method to generate a query for different task_ids
-    """
+    """Method to generate a query for different task_ids."""
 
     def query(
         self,
-        task_ids: Optional[str] = Query(
+        task_ids: str | None = Query(
             None,
             description="Comma-separated list of Materials Project IDs to query on.",
         ),

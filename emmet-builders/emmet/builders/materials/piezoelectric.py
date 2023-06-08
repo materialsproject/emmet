@@ -1,14 +1,17 @@
+from __future__ import annotations
+
 from math import ceil
-from typing import Dict, Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
+from emmet.core.polar import PiezoelectricDoc
+from emmet.core.utils import jsanitize
 from maggma.builders import Builder
-from maggma.core import Store
 from maggma.utils import grouper
 from pymatgen.core.structure import Structure
 
-from emmet.core.polar import PiezoelectricDoc
-from emmet.core.utils import jsanitize
+if TYPE_CHECKING:
+    from maggma.core import Store
 
 
 class PiezoelectricBuilder(Builder):
@@ -17,7 +20,7 @@ class PiezoelectricBuilder(Builder):
         materials: Store,
         tasks: Store,
         piezoelectric: Store,
-        query: Optional[Dict] = None,
+        query: dict | None = None,
         **kwargs,
     ):
         self.materials = materials
@@ -37,9 +40,7 @@ class PiezoelectricBuilder(Builder):
         )
 
     def prechunk(self, number_splits: int):  # pragma: no cover
-        """
-        Prechunk method to perform chunking by the key field
-        """
+        """Prechunk method to perform chunking by the key field."""
         q = dict(self.query)
 
         # Ensure no centrosymmetry
@@ -70,13 +71,11 @@ class PiezoelectricBuilder(Builder):
             yield {"query": {self.materials.key: {"$in": list(split)}}}
 
     def get_items(self):
-        """
-        Gets all items to process
+        """Gets all items to process.
 
         Returns:
             generator or list relevant tasks and materials to process
         """
-
         self.logger.info("Piezoelectric Builder Started")
 
         q = dict(self.query)
@@ -111,10 +110,10 @@ class PiezoelectricBuilder(Builder):
             )
         ) | (set(mat_ids) - set(piezo_ids))
 
-        mats = [mat for mat in mats_set]
+        mats = list(mats_set)
 
         self.logger.info(
-            "Processing {} materials for piezoelectric data".format(len(mats))
+            f"Processing {len(mats)} materials for piezoelectric data"
         )
 
         self.total = len(mats)
@@ -149,9 +148,7 @@ class PiezoelectricBuilder(Builder):
         return jsanitize(doc.dict(), allow_bson=True)
 
     def update_targets(self, items):
-        """
-        Inserts the new dielectric docs into the dielectric collection
-        """
+        """Inserts the new dielectric docs into the dielectric collection."""
         docs = list(filter(None, items))
 
         if len(docs) > 0:
@@ -178,9 +175,8 @@ class PiezoelectricBuilder(Builder):
         potential_task_ids = []
 
         for task_id, task_type in task_types:
-            if task_type == "DFPT Dielectric":
-                if task_id not in mat_doc["deprecated_tasks"]:
-                    potential_task_ids.append(task_id)
+            if task_type == "DFPT Dielectric" and task_id not in mat_doc["deprecated_tasks"]:
+                potential_task_ids.append(task_id)
 
         final_docs = []
 

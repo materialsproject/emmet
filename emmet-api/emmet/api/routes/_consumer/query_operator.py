@@ -1,11 +1,16 @@
-from typing import Dict
-from fastapi import Query, Body
-from maggma.api.utils import STORE_PARAMS
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from fastapi import Body, Query
 from maggma.api.query_operator import QueryOperator
+
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
 
 
 class UserSettingsPostQuery(QueryOperator):
-    """Query operators to provide user settings information to post"""
+    """Query operators to provide user settings information to post."""
 
     def query(
         self,
@@ -13,7 +18,7 @@ class UserSettingsPostQuery(QueryOperator):
             ...,
             title="Consumer ID",
         ),
-        settings: Dict = Body(
+        settings: dict = Body(
             ...,
             title="User settings",
         ),
@@ -32,7 +37,7 @@ class UserSettingsPostQuery(QueryOperator):
 
 
 class UserSettingsGetQuery(QueryOperator):
-    """Query operators to provide user settings information"""
+    """Query operators to provide user settings information."""
 
     def query(
         self,

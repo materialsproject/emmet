@@ -1,15 +1,16 @@
-""" Module to define various calculation types as Enums for Q-Chem"""
+"""Module to define various calculation types as Enums for Q-Chem."""
+from __future__ import annotations
+
 from itertools import product
 from pathlib import Path
 
-from emmet.core.utils import get_enum_source
 from emmet.core.qchem.calc_types.calc_types import (
-    TASK_TYPES,
-    FUNCTIONALS,
     BASIS_SETS,
+    FUNCTIONALS,
     SOLVENT_MODELS,
+    TASK_TYPES,
 )
-
+from emmet.core.utils import get_enum_source
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -24,8 +25,7 @@ for funct in FUNCTIONALS:
 lot_enum = get_enum_source(
     "LevelOfTheory",
     "Levels of theory for calculations in Q-Chem",
-    dict(
-        {
+    {
             "_".join(lot.split())
             .replace("+", "_")
             .replace("-", "_")
@@ -34,8 +34,7 @@ lot_enum = get_enum_source(
             .replace("/", "_")
             .replace("*", "_d"): lot
             for lot in _LOTS
-        }
-    ),
+        },
 )
 
 task_type_enum = get_enum_source(

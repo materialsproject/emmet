@@ -1,17 +1,18 @@
+from __future__ import annotations
+
 import contextlib
 import io
 import logging
 import os
 from datetime import datetime
-from functools import update_wrapper
 from enum import Enum
+from functools import update_wrapper
 
 import click
-from slurmpy import Slurm
-from github3.gists import ShortGist
-
 from emmet.cli import SETTINGS
 from emmet.cli.utils import EmmetCliError, ReturnCodes, reconstruct_command
+from github3.gists import ShortGist
+from slurmpy import Slurm
 
 logger = logging.getLogger("emmet")
 COMMENT_TEMPLATE = """
@@ -30,7 +31,7 @@ GIST_RAW_URL = "https://gist.githubusercontent.com"
 
 
 def track(func):
-    """decorator to track command in GH issue / gists"""
+    """Decorator to track command in GH issue / gists."""
 
     def wrapper(*args, **kwargs):
         ret = func(*args, **kwargs)
@@ -49,7 +50,7 @@ def track(func):
 
             # create or retrieve gist for log files
             gist_name = f"{SETTINGS.tracker['repo']}-issue{issue_number}.md"
-            directory = ctx.parent.params["directory"]
+            ctx.parent.params["directory"]
             emmet_dir = os.path.join(os.path.expanduser("~"), ".emmet")
             if not os.path.exists(emmet_dir):
                 os.mkdir(emmet_dir)
@@ -59,7 +60,7 @@ def track(func):
             gist = None
 
             if os.path.exists(gist_id_fn):
-                with open(gist_id_fn, "r") as fd:
+                with open(gist_id_fn) as fd:
                     gist_id = fd.readline().strip()
                     # NOTE failed with KeyError 'total': gist = gh.gist(gist_id)
                     url = gh._build_url("gists", str(gist_id))
@@ -100,7 +101,7 @@ def track(func):
 
 
 def sbatch(func):
-    """decorator to enable SLURM mode on command"""
+    """Decorator to enable SLURM mode on command."""
 
     @track
     def wrapper(*args, **kwargs):

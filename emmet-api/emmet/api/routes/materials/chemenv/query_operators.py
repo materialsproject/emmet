@@ -1,44 +1,47 @@
+from __future__ import annotations
+
 from collections import defaultdict
-from typing import Optional
+from typing import TYPE_CHECKING
+
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
 
 
 class ChemEnvQuery(QueryOperator):
-    """
-    Method to generate a query on chemenv data
-    """
+    """Method to generate a query on chemenv data."""
 
     def query(
         self,
-        chemenv_iucr: Optional[str] = Query(
+        chemenv_iucr: str | None = Query(
             None,
             description="A comma delimited string list of unique (cationic) species in IUCR format.",
         ),
-        chemenv_iupac: Optional[str] = Query(
+        chemenv_iupac: str | None = Query(
             None,
             description="A comma delimited string list of unique (cationic) species in IUPAC format.",
         ),
-        chemenv_name: Optional[str] = Query(
+        chemenv_name: str | None = Query(
             None,
             description="A comma delimited string list of coordination environment descriptions for "
             "unique (cationic) species.",
         ),
-        chemenv_symbol: Optional[str] = Query(
+        chemenv_symbol: str | None = Query(
             None,
             description="A comma delimited string list of ChemEnv symbols for unique (cationic) species "
             "in the structure.",
         ),
-        species: Optional[str] = Query(
+        species: str | None = Query(
             None,
             description="A comma delimited string list of unique (cationic) species in the structure.",
         ),
-        csm_min: Optional[float] = Query(
+        csm_min: float | None = Query(
             None,
             description="Minimum value of the continous symmetry measure for any site.",
         ),
-        csm_max: Optional[float] = Query(
+        csm_max: float | None = Query(
             None,
             description="Maximum value of the continous symmetry measure for any site.",
         ),

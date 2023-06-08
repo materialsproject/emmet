@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 from pathlib import Path
 
 import pytest
-from maggma.stores import JSONStore, MemoryStore
-from monty.serialization import dumpfn, loadfn
-
 from emmet.builders.materials.electronic_structure import ElectronicStructureBuilder
 from emmet.builders.vasp.materials import MaterialsBuilder
+from maggma.stores import JSONStore, MemoryStore
+from monty.serialization import dumpfn, loadfn
 
 
 @pytest.fixture(scope="session")
@@ -23,19 +24,19 @@ def materials_store(tasks_store):
     return materials_store
 
 
-@pytest.fixture
+@pytest.fixture()
 def electronic_structure_store():
     return MemoryStore(key="material_id")
 
 
-@pytest.fixture
+@pytest.fixture()
 def bandstructure_fs(test_dir):
     return JSONStore(
         test_dir / "electronic_structure/es_bs_objs.json.gz", key="task_id"
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def dos_fs(test_dir):
     return JSONStore(
         test_dir / "electronic_structure/es_dos_objs.json.gz", key="task_id"

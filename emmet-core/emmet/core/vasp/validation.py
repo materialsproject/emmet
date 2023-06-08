@@ -1,17 +1,20 @@
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Dict, List, Union, Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
+from emmet.core.base import EmmetBaseModel
+from emmet.core.settings import EmmetSettings
+from emmet.core.utils import DocEnum
+from emmet.core.vasp.calc_types.enums import CalcType, TaskType
 from pydantic import Field, PyObject
 from pymatgen.core.structure import Structure
-from pymatgen.io.vasp.sets import VaspInputSet
 
-from emmet.core.settings import EmmetSettings
-from emmet.core.base import EmmetBaseModel
-from emmet.core.mpid import MPID
-from emmet.core.utils import DocEnum
-from emmet.core.vasp.task_valid import TaskDocument
-from emmet.core.vasp.calc_types.enums import CalcType, TaskType
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID
+    from emmet.core.vasp.task_valid import TaskDocument
+    from pymatgen.io.vasp.sets import VaspInputSet
 
 SETTINGS = EmmetSettings()
 
@@ -35,9 +38,7 @@ class DeprecationMessage(DocEnum):
 
 
 class ValidationDoc(EmmetBaseModel):
-    """
-    Validation document for a VASP calculation
-    """
+    """Validation document for a VASP calculation."""
 
     task_id: MPID = Field(..., description="The task_id for this validation document")
     valid: bool = Field(False, description="Whether this task is valid or not")
@@ -45,13 +46,13 @@ class ValidationDoc(EmmetBaseModel):
         description="Last updated date for this document",
         default_factory=datetime.utcnow,
     )
-    reasons: List[Union[DeprecationMessage, str]] = Field(
+    reasons: list[DeprecationMessage | str] = Field(
         None, description="List of deprecation tags detailing why this task isn't valid"
     )
-    warnings: List[str] = Field(
+    warnings: list[str] = Field(
         [], description="List of potential warnings about this calculation"
     )
-    data: Dict = Field(
+    data: dict = Field(
         description="Dictioary of data used to perform validation."
         " Useful for post-mortem analysis"
     )
@@ -65,13 +66,12 @@ class ValidationDoc(EmmetBaseModel):
         task_doc: TaskDocument,
         kpts_tolerance: float = SETTINGS.VASP_KPTS_TOLERANCE,
         kspacing_tolerance: float = SETTINGS.VASP_KSPACING_TOLERANCE,
-        input_sets: Dict[str, PyObject] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
-        LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
+        input_sets: dict[str, PyObject] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
+        LDAU_fields: list[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
         max_allowed_scf_gradient: float = SETTINGS.VASP_MAX_SCF_GRADIENT,
-        potcar_hashes: Optional[Dict[CalcType, Dict[str, str]]] = None,
-    ) -> "ValidationDoc":
-        """
-        Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
+        potcar_hashes: dict[CalcType, dict[str, str]] | None = None,
+    ) -> ValidationDoc:
+        """Determines if a calculation is valid based on expected input parameters from a pymatgen inputset.
 
         Args:
             task_doc: the task document to process
@@ -84,7 +84,6 @@ class ValidationDoc(EmmetBaseModel):
                 initial equillibriation period
             potcar_hashes: Dictionary of potcar hash data. Mapping is calculation type -> potcar symbol -> hash value.
         """
-
         bandgap = task_doc.output.bandgap
         calc_type = task_doc.calc_type
         task_type = task_doc.task_type
@@ -100,7 +99,7 @@ class ValidationDoc(EmmetBaseModel):
 
         reasons = []
         data = {}  # type: ignore
-        warnings: List[str] = []
+        warnings: list[str] = []
 
         if str(calc_type) in input_sets:
             try:
@@ -114,17 +113,16 @@ class ValidationDoc(EmmetBaseModel):
 
             if valid_input_set:
                 # Checking POTCAR hashes if a directory is supplied
-                if potcar_hashes:
-                    if _potcar_hash_check(task_doc, potcar_hashes):
-                        if task_type in [
-                            TaskType.NSCF_Line,
-                            TaskType.NSCF_Uniform,
-                            TaskType.DFPT_Dielectric,
-                            TaskType.Dielectric,
-                        ]:
-                            warnings.append(DeprecationMessage.POTCAR.__doc__)  # type: ignore
-                        else:
-                            reasons.append(DeprecationMessage.POTCAR)
+                if potcar_hashes and _potcar_hash_check(task_doc, potcar_hashes):
+                    if task_type in [
+                        TaskType.NSCF_Line,
+                        TaskType.NSCF_Uniform,
+                        TaskType.DFPT_Dielectric,
+                        TaskType.Dielectric,
+                    ]:
+                        warnings.append(DeprecationMessage.POTCAR.__doc__)  # type: ignore
+                    else:
+                        reasons.append(DeprecationMessage.POTCAR)
 
                 # Checking K-Points
                 # Calculations that use KSPACING will not have a .kpoints attr
@@ -230,6 +228,7 @@ def _scf_upward_check(calcs_reversed, inputs, data, max_allowed_scf_gradient, wa
         data["max_gradient"] = max_gradient
         if max_gradient > max_allowed_scf_gradient:
             return True
+        return None
     else:
         warnings.append(
             "Not enough electronic steps to compute valid gradient"
@@ -271,9 +270,7 @@ def _u_value_checks(task_doc, valid_input_set, warnings):
 
 
 def _kpoint_check(input_set, inputs, calcs_reversed, data, kpts_tolerance):
-    """
-    Checks to make sure the total number of kpoints is correct
-    """
+    """Checks to make sure the total number of kpoints is correct."""
     valid_num_kpts = input_set.kpoints.num_kpts or np.prod(input_set.kpoints.kpts[0])
 
     if calcs_reversed:
@@ -294,9 +291,7 @@ def _kpoint_check(input_set, inputs, calcs_reversed, data, kpts_tolerance):
 
 
 def _kspacing_warnings(input_set, inputs, data, warnings, kspacing_tolerance):
-    """
-    Issues warnings based on KSPACING values
-    """
+    """Issues warnings based on KSPACING values."""
     valid_kspacing = input_set.incar.get("KSPACING", 0)
     if inputs.get("incar", {}).get("KSPACING"):
         data["kspacing_delta"] = inputs["incar"].get("KSPACING") - valid_kspacing
@@ -314,11 +309,9 @@ def _kspacing_warnings(input_set, inputs, data, warnings, kspacing_tolerance):
 
 
 def _potcar_hash_check(task_doc, potcar_hashes):
-    """
-    Checks to make sure the POTCAR hash is equal to the correct value from the
+    """Checks to make sure the POTCAR hash is equal to the correct value from the
     pymatgen input set.
     """
-
     try:
         potcar_details = task_doc.calcs_reversed[0]["input"]["potcar_spec"]
 
@@ -340,8 +333,7 @@ def _potcar_hash_check(task_doc, potcar_hashes):
 
 
 def _magmom_check(task_doc, chemsys):
-    """
-    Checks for maximum magnetization values for specific elements.
+    """Checks for maximum magnetization values for specific elements.
     Returns True if the maximum absolute value outlined below is exceded for the associated element.
     """
     eles_max_vals = {"Cr": 5}
@@ -356,16 +348,14 @@ def _magmom_check(task_doc, chemsys):
                 else:
                     output_structure = task_doc.output.structure.as_dict()
 
-                if output_structure["sites"][site_num]["label"] == ele:
-                    if abs(mag["tot"]) > max_val:
-                        return True
+                if output_structure["sites"][site_num]["label"] == ele and abs(mag["tot"]) > max_val:
+                    return True
 
     return False
 
 
 def _get_unsorted_symbol_set(structure: Structure):
-    """
-    Have to build structure_symbol set manually to ensure
+    """Have to build structure_symbol set manually to ensure
     we get the right order since pymatgen sorts its symbol_set list.
     """
     return list(

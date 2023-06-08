@@ -1,16 +1,17 @@
-from emmet.api.routes.materials.electrodes.query_operators import (
-    ElectrodeFormulaQuery,
-    ElectrodesChemsysQuery,
-    ElectrodeElementsQuery,
-    VoltageStepQuery,
-    InsertionVoltageStepQuery,
-    WorkingIonQuery,
-    ElectrodeMultiMaterialIDQuery,
-    MultiBatteryIDQuery,
-)
+from __future__ import annotations
 
+from emmet.api.routes.materials.electrodes.query_operators import (
+    ElectrodeElementsQuery,
+    ElectrodeFormulaQuery,
+    ElectrodeMultiMaterialIDQuery,
+    ElectrodesChemsysQuery,
+    InsertionVoltageStepQuery,
+    MultiBatteryIDQuery,
+    VoltageStepQuery,
+    WorkingIonQuery,
+)
+from monty.serialization import dumpfn, loadfn
 from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 
 
 def test_electrode_formula_query():

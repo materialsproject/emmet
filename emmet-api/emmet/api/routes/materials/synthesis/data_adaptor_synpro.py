@@ -1,14 +1,16 @@
-"""
-This script converts synthesis recipes data fetched directly
+"""This script converts synthesis recipes data fetched directly
 from Ceder Group Synthesis Mining team MongoDB into MP compatible
 formats.
 """
+from __future__ import annotations
+
+import contextlib
 import json
+import logging
 import os
 import re
-import logging
 
-from pymatgen.core.composition import CompositionError, Composition
+from pymatgen.core.composition import Composition, CompositionError
 from pymongo import MongoClient
 
 logger = logging.getLogger(__name__)
@@ -123,10 +125,9 @@ def target_comps(doc):
     for x in doc["targets_string"]:
         if not x.strip():
             continue
-        try:
+        with contextlib.suppress(CompositionError, ValueError):
             result.append(Composition(x))
-        except (CompositionError, ValueError):
-            pass
+
     return result
 
 
@@ -134,10 +135,9 @@ def precursor_comps(doc):
     """Find all precursor material formulas and convert them into Composition."""
     result = []
     for x in doc["precursors"]:
-        try:
+        with contextlib.suppress(CompositionError, ValueError):
             result.append(get_material_formula(x))
-        except (CompositionError, ValueError):
-            pass
+
     return result
 
 
@@ -169,8 +169,7 @@ def convert_one(doc):
 
 
 def main():
-    """
-    Convert the Reactions_Solid_State/Reactions_Sol_Gel collection in
+    """Convert the Reactions_Solid_State/Reactions_Sol_Gel collection in
     Ceder Group database into a json file which can be imported into the MP database.
     """
     synpro_db = MongoClient(os.environ["SYNPRO_URI"]).SynPro

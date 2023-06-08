@@ -1,11 +1,12 @@
-from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
+from __future__ import annotations
 
 from emmet.api.routes.materials.grain_boundary.query_operators import (
     GBStructureQuery,
     GBTaskIDQuery,
 )
 from emmet.core.grain_boundary import GBTypeEnum
+from monty.serialization import dumpfn, loadfn
+from monty.tempfile import ScratchDir
 
 
 def test_grain_boundary_structure_query():

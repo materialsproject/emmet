@@ -1,19 +1,21 @@
+from __future__ import annotations
+
 import traceback
 from datetime import datetime
 from itertools import chain
-from typing import Dict, List
-
-from maggma.builders import GroupBuilder
-from maggma.core import Store
+from typing import TYPE_CHECKING
 
 from emmet.core.feff.task import TaskDocument as FEFFTaskDocument
 from emmet.core.utils import jsanitize
 from emmet.core.xas import XASDoc
+from maggma.builders import GroupBuilder
+
+if TYPE_CHECKING:
+    from maggma.core import Store
 
 
 class XASBuilder(GroupBuilder):
-    """
-    Generates XAS Docs from FEFF tasks
+    """Generates XAS Docs from FEFF tasks.
 
     # TODO: Generate MPID from materials collection rather than from task metadata
     """
@@ -27,7 +29,7 @@ class XASBuilder(GroupBuilder):
         super().__init__(source=tasks, target=xas, grouping_keys=["mp_id"])
         self._target_keys_field = "xas_ids"
 
-    def process_item(self, spectra: List[Dict]) -> Dict:
+    def process_item(self, spectra: list[dict]) -> dict:
         # TODO: Change this to do structure matching against materials collection
         mpid = spectra[0]["mp_id"]
 
@@ -47,7 +49,7 @@ class XASBuilder(GroupBuilder):
                 {
                     "error": str(e),
                     "state": "failed",
-                    "task_ids": list(d.task_id for d in tasks),
+                    "task_ids": [d.task_id for d in tasks],
                 }
             ]
 
@@ -60,9 +62,6 @@ class XASBuilder(GroupBuilder):
         return jsanitize(processed, allow_bson=True)
 
     def update_targets(self, items):
-        """
-        Group buidler isn't designed for many-to-many so we unwrap that here
-        """
-
+        """Group buidler isn't designed for many-to-many so we unwrap that here."""
         items = list(filter(None.__ne__, chain.from_iterable(items)))
         super().update_targets(items)

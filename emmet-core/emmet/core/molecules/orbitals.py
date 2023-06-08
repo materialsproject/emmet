@@ -1,15 +1,16 @@
-from typing import List, Optional, Dict, Any
-from hashlib import blake2b
+from __future__ import annotations
 
+from hashlib import blake2b
+from typing import TYPE_CHECKING, Any
+
+from emmet.core.material import PropertyOrigin
+from emmet.core.molecules.molecule_property import PropertyDoc
+from monty.json import MSONable
 from pydantic import Field
 
-from monty.json import MSONable
-
-from emmet.core.mpid import MPculeID
-from emmet.core.material import PropertyOrigin
-from emmet.core.qchem.task import TaskDocument
-from emmet.core.molecules.molecule_property import PropertyDoc
-
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPculeID
+    from emmet.core.qchem.task import TaskDocument
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -23,8 +24,7 @@ class NaturalPopulation(MSONable):
         rydberg_electrons: float,
         total_electrons: float,
     ):
-        """
-        Basic description of an atomic electron population.
+        """Basic description of an atomic electron population.
 
         :param atom_index (int):
         :param core_electrons (float): Number of core electrons on this atom
@@ -32,7 +32,6 @@ class NaturalPopulation(MSONable):
         :param rydberg_electrons (float): Number of Rydberg electrons on this atom
         :param total_electrons (float): Total number of electrons on this atom
         """
-
         self.atom_index = int(atom_index)
         self.core_electrons = float(core_electrons)
         self.valence_electrons = float(valence_electrons)
@@ -53,8 +52,7 @@ class LonePair(MSONable):
         occupancy: float,
         type_code: str,
     ):
-        """
-        Basic description of a lone pair (LP) natural bonding orbital.
+        """Basic description of a lone pair (LP) natural bonding orbital.
 
         :param index (int): Lone pair index from NBO. 1-indexed
         :param number (int): Another index, for cases where there are multiple lone
@@ -67,7 +65,6 @@ class LonePair(MSONable):
         :param occupancy (float): Total electron occupancy of this lone pair
         :param type_code (str): Description of this lone pair (ex: "LV" for "lone valence")
         """
-
         self.index = int(index)
         self.number = int(number)
         self.atom_index = int(atom_index)
@@ -101,8 +98,7 @@ class Bond(MSONable):
         occupancy: float,
         type_code: str,
     ):
-        """
-        Basic description of a bond (BD) natural bonding orbital.
+        """Basic description of a bond (BD) natural bonding orbital.
 
         :param index: Bond orbital index from NBO. 1-indexed.
         :param number: Another index, for cases where there are multiple bonds
@@ -125,7 +121,6 @@ class Bond(MSONable):
         :param type_code: Description of this bonding orbital (ex: BD for bonding,
             BD* for anti-bonding)
         """
-
         self.index = int(index)
         self.number = int(number)
         self.atom1_index = int(atom1_index)
@@ -158,8 +153,8 @@ class Interaction(MSONable):
         acceptor_type: str,
         donor_atom1_index: int,
         acceptor_atom1_index: int,
-        donor_atom2_index: Optional[int] = None,
-        acceptor_atom2_index: Optional[int] = None,
+        donor_atom2_index: int | None = None,
+        acceptor_atom2_index: int | None = None,
     ):
         self.donor_index = int(donor_index)
         self.acceptor_index = int(acceptor_index)
@@ -167,15 +162,9 @@ class Interaction(MSONable):
         self.donor_type = donor_type
         self.acceptor_type = acceptor_type
 
-        if isinstance(donor_atom2_index, int):
-            donor2 = int(donor_atom2_index)
-        else:
-            donor2 = None
+        donor2 = int(donor_atom2_index) if isinstance(donor_atom2_index, int) else None
 
-        if isinstance(acceptor_atom2_index, int):
-            acceptor2 = int(acceptor_atom2_index)
-        else:
-            acceptor2 = None
+        acceptor2 = int(acceptor_atom2_index) if isinstance(acceptor_atom2_index, int) else None
 
         self.donor_atom_indices = (int(donor_atom1_index), donor2)
         self.acceptor_atom_indices = (int(acceptor_atom1_index), acceptor2)
@@ -224,69 +213,67 @@ class OrbitalDoc(PropertyDoc):
         ..., description="Is this molecule open-shell (spin multiplicity != 1)?"
     )
 
-    nbo_population: List[NaturalPopulation] = Field(
+    nbo_population: list[NaturalPopulation] = Field(
         ..., description="Natural electron populations of the molecule"
     )
 
     # Populated for closed-shell molecules
-    nbo_lone_pairs: List[LonePair] = Field(
+    nbo_lone_pairs: list[LonePair] = Field(
         None, description="Lone pair orbitals of a closed-shell molecule"
     )
 
-    nbo_bonds: List[Bond] = Field(
+    nbo_bonds: list[Bond] = Field(
         None, description="Bond-like orbitals of a closed-shell molecule"
     )
 
-    nbo_interactions: List[Interaction] = Field(
+    nbo_interactions: list[Interaction] = Field(
         None, description="Orbital-orbital interactions of a closed-shell molecule"
     )
 
     # Populated for open-shell molecules
-    alpha_population: List[NaturalPopulation] = Field(
+    alpha_population: list[NaturalPopulation] = Field(
         None,
         description="Natural electron populations of the alpha electrons of an "
         "open-shell molecule",
     )
-    beta_population: List[NaturalPopulation] = Field(
+    beta_population: list[NaturalPopulation] = Field(
         None,
         description="Natural electron populations of the beta electrons of an "
         "open-shell molecule",
     )
 
-    alpha_lone_pairs: List[LonePair] = Field(
+    alpha_lone_pairs: list[LonePair] = Field(
         None, description="Alpha electron lone pair orbitals of an open-shell molecule"
     )
-    beta_lone_pairs: List[LonePair] = Field(
+    beta_lone_pairs: list[LonePair] = Field(
         None, description="Beta electron lone pair orbitals of an open-shell molecule"
     )
 
-    alpha_bonds: List[Bond] = Field(
+    alpha_bonds: list[Bond] = Field(
         None, description="Alpha electron bond-like orbitals of an open-shell molecule"
     )
-    beta_bonds: List[Bond] = Field(
+    beta_bonds: list[Bond] = Field(
         None, description="Beta electron bond-like orbitals of an open-shell molecule"
     )
 
-    alpha_interactions: List[Interaction] = Field(
+    alpha_interactions: list[Interaction] = Field(
         None,
         description="Alpha electron orbital-orbital interactions of an open-shell molecule",
     )
-    beta_interactions: List[Interaction] = Field(
+    beta_interactions: list[Interaction] = Field(
         None,
         description="Beta electron orbital-orbital interactions of an open-shell molecule",
     )
 
     @staticmethod
-    def get_populations(nbo: Dict[str, Any], indices: List[int]):
-        """
-        Helper function to extract natural population information
-        from NBO output
+    def get_populations(nbo: dict[str, Any], indices: list[int]):
+        """Helper function to extract natural population information
+        from NBO output.
 
         :param nbo: Dictionary of NBO output data
         :param indices: Data subsets from which to extract natural populations
         :return: population_sets (list of lists of NaturalPopulation)
         """
-
         population_sets = list()
 
         for pop_ind in indices:
@@ -307,15 +294,13 @@ class OrbitalDoc(PropertyDoc):
         return population_sets
 
     @staticmethod
-    def get_lone_pairs(nbo: Dict[str, Any], indices: List[int]):
-        """
-        Helper function to extract lone pair information from NBO output
+    def get_lone_pairs(nbo: dict[str, Any], indices: list[int]):
+        """Helper function to extract lone pair information from NBO output.
 
         :param nbo: Dictionary of NBO output data
         :param indices: Data subsets from which to extract lone pair information
         :return: lone_pairs (list of LonePairs)
         """
-
         lone_pair_sets = list()
 
         for lp_ind in indices:
@@ -339,15 +324,13 @@ class OrbitalDoc(PropertyDoc):
         return lone_pair_sets
 
     @staticmethod
-    def get_bonds(nbo: Dict[str, Any], indices: List[int]):
-        """
-        Helper function to extract bonding information from NBO output
+    def get_bonds(nbo: dict[str, Any], indices: list[int]):
+        """Helper function to extract bonding information from NBO output.
 
         :param nbo: Dictionary of NBO output data
         :param indices: Data subsets from which to extract bonds
         :return: bonds (list of Bonds)
         """
-
         bond_sets = list()
 
         for bd_ind in indices:
@@ -380,16 +363,14 @@ class OrbitalDoc(PropertyDoc):
         return bond_sets
 
     @staticmethod
-    def get_interactions(nbo: Dict[str, Any], indices: List[int]):
-        """
-        Helper function to extract orbital interaction information
-        from NBO output
+    def get_interactions(nbo: dict[str, Any], indices: list[int]):
+        """Helper function to extract orbital interaction information
+        from NBO output.
 
         :param nbo: Dictionary of NBO output data
         :param indices: Data subsets from which to extract interactions
         :return: interactions (list of Interactions)
         """
-
         interaction_sets = list()
 
         for pert_ind in indices:
@@ -435,8 +416,7 @@ class OrbitalDoc(PropertyDoc):
         deprecated: bool = False,
         **kwargs,
     ):  # type: ignore[override]
-        """
-        Construct an orbital document from a task
+        """Construct an orbital document from a task.
 
         :param task: document from which vibrational properties can be extracted
         :param molecule_id: MPculeID
@@ -444,9 +424,8 @@ class OrbitalDoc(PropertyDoc):
         :param kwargs: to pass to PropertyDoc
         :return:
         """
-
         if task.output.nbo is None:
-            raise ValueError("No NBO output in task {}!".format(task.task_id))
+            raise ValueError(f"No NBO output in task {task.task_id}!")
         elif not (
             task.orig["rem"].get("run_nbo6", False)
             or task.orig["rem"].get("nbo_external", False)
@@ -482,7 +461,7 @@ class OrbitalDoc(PropertyDoc):
             ("perturbation_energy", perts_inds),
         ]:
             if len(nbo[dset]) < inds[-1]:
-                return
+                return None
 
         population_sets = cls.get_populations(nbo, pops_inds)
         lone_pair_sets = cls.get_lone_pairs(nbo, lps_inds)

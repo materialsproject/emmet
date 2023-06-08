@@ -1,35 +1,30 @@
+from __future__ import annotations
+
 import pytest
+from emmet.core.electronic_structure import ElectronicStructureDoc
 from maggma.stores import JSONStore
 from monty.serialization import loadfn
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
 from pymatgen.electronic_structure.dos import CompleteDos
 
-from emmet.core.electronic_structure import ElectronicStructureDoc
-
 
 @pytest.fixture(scope="session")
 def structure(test_dir):
-    """
-    Fe (mp-13) structure with correct magmoms
-    """
+    """Fe (mp-13) structure with correct magmoms."""
     structure = loadfn(test_dir / "electronic_structure/Fe_structure.json")
     return structure
 
 
 @pytest.fixture(scope="session")
 def bandstructure(test_dir):
-    """
-    Fe (mp-13) line-mode band structure
-    """
+    """Fe (mp-13) line-mode band structure."""
     bs = loadfn(test_dir / "electronic_structure/Fe_bs.json")
     return bs
 
 
 @pytest.fixture(scope="session")
 def dos(test_dir):
-    """
-    Fe (mp-13) dos
-    """
+    """Fe (mp-13) dos."""
     dos = loadfn(test_dir / "electronic_structure/Fe_dos.json")
     return dos
 
@@ -60,14 +55,14 @@ def test_from_bsdos_1(bandstructure, dos, structure):
     assert es_doc.bandstructure.setyawan_curtarolo.nbands == 96.0
 
 
-@pytest.fixture
+@pytest.fixture()
 def bandstructure_fs(test_dir):
     return JSONStore(
         test_dir / "electronic_structure/es_bs_objs.json.gz", key="task_id"
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def dos_fs(test_dir):
     return JSONStore(
         test_dir / "electronic_structure/es_dos_objs.json.gz", key="task_id"

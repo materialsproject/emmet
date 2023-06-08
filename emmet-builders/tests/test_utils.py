@@ -1,11 +1,13 @@
+from __future__ import annotations
+
 from emmet.builders.utils import (
     chemsys_permutations,
-    maximal_spanning_non_intersecting_subsets,
     get_hop_cutoff,
+    maximal_spanning_non_intersecting_subsets,
 )
-from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
-from numpy.testing import assert_almost_equal
 from monty.serialization import loadfn
+from numpy.testing import assert_almost_equal
+from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
 
 
 def test_maximal_spanning_non_intersecting_subsets():

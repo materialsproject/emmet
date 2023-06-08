@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from emmet.api.routes.molecules.bonds.query_operators import BondTypeLengthQuery
+from monty.serialization import dumpfn, loadfn
 from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 
 
 def test_bond_type_length_query():

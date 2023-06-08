@@ -1,13 +1,13 @@
-import json
+from __future__ import annotations
+
 import datetime
+import json
 
 import pytest
-
+from emmet.core.molecules.thermo import MoleculeThermoDoc, get_free_energy
+from emmet.core.qchem.task import TaskDocument
 from monty.io import zopen
 from monty.serialization import loadfn
-
-from emmet.core.qchem.task import TaskDocument
-from emmet.core.molecules.thermo import MoleculeThermoDoc, get_free_energy
 
 
 @pytest.fixture(scope="session")

@@ -1,7 +1,8 @@
-from emmet.api.routes.materials.piezo.query_operators import PiezoelectricQuery
+from __future__ import annotations
 
+from emmet.api.routes.materials.piezo.query_operators import PiezoelectricQuery
+from monty.serialization import dumpfn, loadfn
 from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 
 
 def test_piezo_query():

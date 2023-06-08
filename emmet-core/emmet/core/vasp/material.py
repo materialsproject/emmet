@@ -1,17 +1,20 @@
-""" Core definition of a Materials Document """
-from typing import Dict, List, Mapping
+"""Core definition of a Materials Document."""
+from __future__ import annotations
 
-from pydantic import Field
-from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
-from pymatgen.analysis.structure_matcher import StructureMatcher
-from pymatgen.entries.computed_entries import ComputedStructureEntry
+from typing import TYPE_CHECKING, Mapping
 
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin
 from emmet.core.settings import EmmetSettings
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
-from emmet.core.vasp.task_valid import TaskDocument
+from pydantic import Field
+from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
+from pymatgen.analysis.structure_matcher import StructureMatcher
+
+if TYPE_CHECKING:
+    from emmet.core.vasp.task_valid import TaskDocument
+    from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 SETTINGS = EmmetSettings()
 
@@ -30,7 +33,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         description="Run types for all the calculations that make up this material",
     )
 
-    origins: List[PropertyOrigin] = Field(
+    origins: list[PropertyOrigin] = Field(
         None, description="Mappingionary for tracking the provenance of properties"
     )
 
@@ -41,14 +44,13 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
     @classmethod
     def from_tasks(
         cls,
-        task_group: List[TaskDocument],
-        structure_quality_scores: Dict[
+        task_group: list[TaskDocument],
+        structure_quality_scores: dict[
             str, int
         ] = SETTINGS.VASP_STRUCTURE_QUALITY_SCORES,
         use_statics: bool = SETTINGS.VASP_USE_STATICS,
-    ) -> "MaterialsDoc":
-        """
-        Converts a group of tasks into one material
+    ) -> MaterialsDoc:
+        """Converts a group of tasks into one material.
 
         Args:
             task_group: List of task document
@@ -90,14 +92,12 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         structure_task_quality_scores = {"Structure Optimization": 1, "Static": 2}
 
         def _structure_eval(task: TaskDocument):
-            """
-            Helper function to order structures optimization and statics calcs by
+            """Helper function to order structures optimization and statics calcs by
             - Functional Type
             - Spin polarization
             - Special Tags
-            - Energy
+            - Energy.
             """
-
             task_run_type = task.run_type
             _SPECIAL_TAGS = ["LASPH", "ISPIN"]
             special_tags = sum(
@@ -144,13 +144,11 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         entry_task_quality_scores = {"Structure Optimization": 1, "Static": 2}
 
         def _entry_eval(task: TaskDocument):
-            """
-            Helper function to order entries and statics calcs by
+            """Helper function to order entries and statics calcs by
             - Spin polarization
             - Special Tags
-            - Energy
+            - Energy.
             """
-
             _SPECIAL_TAGS = ["LASPH", "ISPIN"]
             special_tags = sum(
                 task.input.parameters.get(tag, False) for tag in _SPECIAL_TAGS
@@ -179,7 +177,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
                 entry = best_task_doc.structure_entry
                 entry.data["task_id"] = entry.entry_id
                 entry.data["material_id"] = material_id
-                entry.entry_id = "{}-{}".format(material_id, rt.value)
+                entry.entry_id = f"{material_id}-{rt.value}"
                 entries[rt] = entry
 
         if RunType.GGA not in entries and RunType.GGA_U not in entries:
@@ -205,10 +203,9 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
     @classmethod
     def construct_deprecated_material(
-        cls, task_group: List[TaskDocument]
-    ) -> "MaterialsDoc":
-        """
-        Converts a group of tasks into a deprecated material
+        cls, task_group: list[TaskDocument]
+    ) -> MaterialsDoc:
+        """Converts a group of tasks into a deprecated material.
 
         Args:
             task_group: List of task document

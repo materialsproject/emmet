@@ -1,37 +1,36 @@
-from emmet.core.summary import SummaryDoc
+from __future__ import annotations
 
-from maggma.api.query_operator import (
-    PaginationQuery,
-    SortQuery,
-    SparseFieldsQuery,
-    NumericQuery,
-)
-from maggma.api.resource import ReadOnlyResource, AggregationResource
+from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.materials.query_operators import (
+    ChemsysQuery,
     DeprecationQuery,
     ElementsQuery,
     FormulaQuery,
-    ChemsysQuery,
     SymmetryQuery,
 )
 from emmet.api.routes.materials.oxidation_states.query_operators import (
     PossibleOxiStateQuery,
 )
-from emmet.core.summary import SummaryStats
 from emmet.api.routes.materials.summary.hint_scheme import SummaryHintScheme
 from emmet.api.routes.materials.summary.query_operators import (
     HasPropsQuery,
     MaterialIDsSearchQuery,
+    SearchESQuery,
+    SearchHasReconstructedQuery,
     SearchIsStableQuery,
     SearchIsTheoreticalQuery,
     SearchMagneticQuery,
-    SearchHasReconstructedQuery,
     SearchStatsQuery,
-    SearchESQuery,
 )
-
-from emmet.api.core.global_header import GlobalHeaderProcessor
-from emmet.api.core.settings import MAPISettings
+from emmet.core.summary import SummaryDoc, SummaryStats
+from maggma.api.query_operator import (
+    NumericQuery,
+    PaginationQuery,
+    SortQuery,
+    SparseFieldsQuery,
+)
+from maggma.api.resource import AggregationResource, ReadOnlyResource
 
 timeout = MAPISettings().TIMEOUT
 

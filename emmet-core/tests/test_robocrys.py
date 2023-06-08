@@ -1,8 +1,13 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
-from pymatgen.core import Structure
+from emmet.core.robocrys import RobocrystallogapherDoc
 from pymatgen.util.testing import PymatgenTest
 
-from emmet.core.robocrys import RobocrystallogapherDoc
+if TYPE_CHECKING:
+    from pymatgen.core import Structure
 
 test_structures = {
     name: struc.get_reduced_structure()
@@ -29,7 +34,7 @@ test_structures = {
 
 @pytest.mark.parametrize("structure", test_structures.values())
 def test_robocrys(structure: Structure):
-    """Very simple test to make sure this actually works"""
+    """Very simple test to make sure this actually works."""
     print(f"Should work : {structure.composition}")
     doc = RobocrystallogapherDoc.from_structure(
         structure=structure, material_id=33, deprecated=False

@@ -1,12 +1,14 @@
+from __future__ import annotations
+
 from emmet.api.routes.molecules.tasks.query_operators import (
-    MultipleTaskIDsQuery,
     # TrajectoryQuery,
     DeprecationQuery,
-    # EntryQuery,
+    MultipleTaskIDsQuery,
 )
+from monty.serialization import dumpfn, loadfn
 
+# EntryQuery,
 from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 
 
 def test_multiple_task_ids_query():

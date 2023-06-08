@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import pytest
+
 from tests.conftest import assert_schemas_equal, get_test_object
 
 
@@ -24,7 +27,7 @@ def test_init():
 
 
 @pytest.mark.parametrize(
-    "object_name,task_name",
+    ("object_name", "task_name"),
     [
         pytest.param("SiOptimizeDouble", "relax1", id="SiOptimizeDouble"),
         pytest.param("SiStatic", "standard", id="SiStatic"),
@@ -32,10 +35,9 @@ def test_init():
     ],
 )
 def test_calculation_input(test_dir, object_name, task_name):
+    from emmet.core.vasp.calculation import CalculationInput
     from monty.json import MontyDecoder, jsanitize
     from pymatgen.io.vasp import Vasprun
-
-    from emmet.core.vasp.calculation import CalculationInput
 
     test_object = get_test_object(object_name)
     vasprun_file = test_dir / "vasp" / test_object.folder
@@ -52,7 +54,7 @@ def test_calculation_input(test_dir, object_name, task_name):
 
 
 @pytest.mark.parametrize(
-    "object_name,task_name",
+    ("object_name", "task_name"),
     [
         pytest.param("SiOptimizeDouble", "relax2", id="SiOptimizeDouble"),
         pytest.param("SiStatic", "standard", id="SiStatic"),
@@ -60,10 +62,9 @@ def test_calculation_input(test_dir, object_name, task_name):
     ],
 )
 def test_calculation_output(test_dir, object_name, task_name):
+    from emmet.core.vasp.calculation import CalculationOutput
     from monty.json import MontyDecoder, jsanitize
     from pymatgen.io.vasp import Outcar, Poscar, Vasprun
-
-    from emmet.core.vasp.calculation import CalculationOutput
 
     test_object = get_test_object(object_name)
     folder = test_dir / "vasp" / test_object.folder
@@ -86,9 +87,8 @@ def test_calculation_output(test_dir, object_name, task_name):
 
 
 def test_mag_calculation_output(test_dir):
-    from pymatgen.io.vasp import Outcar, Poscar, Vasprun
-
     from emmet.core.vasp.calculation import CalculationOutput
+    from pymatgen.io.vasp import Outcar, Poscar, Vasprun
 
     # Test magnetic properties
     dir_name = test_dir / "vasp" / "magnetic_run"
@@ -101,7 +101,7 @@ def test_mag_calculation_output(test_dir):
 
 
 @pytest.mark.parametrize(
-    "object_name,task_name",
+    ("object_name", "task_name"),
     [
         pytest.param("SiOptimizeDouble", "relax1", id="SiOptimizeDouble"),
         pytest.param("SiStatic", "standard", id="SiStatic"),
@@ -109,10 +109,9 @@ def test_mag_calculation_output(test_dir):
     ],
 )
 def test_run_statistics(test_dir, object_name, task_name):
+    from emmet.core.vasp.calculation import RunStatistics
     from monty.json import MontyDecoder, jsanitize
     from pymatgen.io.vasp import Outcar
-
-    from emmet.core.vasp.calculation import RunStatistics
 
     test_object = get_test_object(object_name)
     folder = test_dir / "vasp" / test_object.folder
@@ -130,7 +129,7 @@ def test_run_statistics(test_dir, object_name, task_name):
 
 
 @pytest.mark.parametrize(
-    "object_name,task_name",
+    ("object_name", "task_name"),
     [
         pytest.param("SiOptimizeDouble", "relax2", id="SiOptimizeDouble"),
         pytest.param("SiStatic", "standard", id="SiStatic"),
@@ -138,9 +137,8 @@ def test_run_statistics(test_dir, object_name, task_name):
     ],
 )
 def test_calculation(test_dir, object_name, task_name):
-    from monty.json import MontyDecoder, jsanitize
-
     from emmet.core.vasp.calculation import Calculation
+    from monty.json import MontyDecoder, jsanitize
 
     test_object = get_test_object(object_name)
     dir_name = test_dir / "vasp" / test_object.folder

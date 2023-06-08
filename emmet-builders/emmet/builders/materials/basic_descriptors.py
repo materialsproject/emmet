@@ -1,18 +1,17 @@
-import numpy as np
+from __future__ import annotations
 
-from pymatgen.core.structure import Structure
-from pymatgen.analysis import local_env
+import numpy as np
 from emmet.core.structure import StructureMetadata
-from matminer.featurizers.site import CrystalNNFingerprint, CoordinationNumber
-from matminer.featurizers.composition import ElementProperty
 
 # TODO:
 # 1) ADD DOCUMENT MODEL
 # 2) Add checking OPs present in current implementation of site fingerprints.
 # 3) Complete documentation!!!
-
-
 from maggma.builders import MapBuilder
+from matminer.featurizers.composition import ElementProperty
+from matminer.featurizers.site import CoordinationNumber, CrystalNNFingerprint
+from pymatgen.analysis import local_env
+from pymatgen.core.structure import Structure
 
 __author__ = "Nils E. R. Zimmermann <nerz@lbl.gov>"
 
@@ -32,8 +31,7 @@ nn_target_classes = [
 
 class BasicDescriptorsBuilder(MapBuilder):
     def __init__(self, materials, descriptors, **kwargs):
-        """
-        Calculates site-based descriptors (e.g., coordination numbers
+        """Calculates site-based descriptors (e.g., coordination numbers
         with different near-neighbor finding approaches) for materials and
         runs statistics analysis on selected descriptor types
         (order parameter-based site fingerprints).  The latter is
@@ -50,7 +48,6 @@ class BasicDescriptorsBuilder(MapBuilder):
                                  fraction of being 8-fold coordinated.
             mat_query (dict): dictionary to limit materials to be analyzed.
         """
-
         self.materials = materials
         self.descriptors = descriptors
 
@@ -58,11 +55,11 @@ class BasicDescriptorsBuilder(MapBuilder):
         self.sds = {}
         for nn in nn_target_classes:
             nn_ = getattr(local_env, nn)
-            k = "cn_{}".format(nn)
+            k = f"cn_{nn}"
             self.sds[k] = CoordinationNumber(nn_(), use_weights="none")
-            k = "cn_wt_{}".format(nn)
+            k = f"cn_wt_{nn}"
             self.sds[k] = CoordinationNumber(nn_(), use_weights="sum")
-        self.all_output_pieces = {"site_descriptors": [k for k in self.sds.keys()]}
+        self.all_output_pieces = {"site_descriptors": list(self.sds.keys())}
         self.sds["csf"] = CrystalNNFingerprint.from_preset(
             "ops", distance_cutoffs=None, x_diff_weight=None
         )
@@ -80,8 +77,7 @@ class BasicDescriptorsBuilder(MapBuilder):
         )
 
     def unary_function(self, item):
-        """
-        Calculates all basic descriptors for the structures
+        """Calculates all basic descriptors for the structures.
 
 
         Args:
@@ -91,7 +87,7 @@ class BasicDescriptorsBuilder(MapBuilder):
             dict: a basic-descriptors dict
         """
         self.logger.debug(
-            "Calculating basic descriptors for {}".format(item[self.materials.key])
+            f"Calculating basic descriptors for {item[self.materials.key]}"
         )
 
         struct = Structure.from_dict(item["structure"])
@@ -123,7 +119,7 @@ class BasicDescriptorsBuilder(MapBuilder):
             try:
                 d = []
                 l = sd.feature_labels()
-                for i, s in enumerate(structure.sites):
+                for i, _s in enumerate(structure.sites):
                     d.append({"site": i})
                     for j, desc in enumerate(sd.featurize(structure, i)):
                         d[i][l[j]] = desc

@@ -1,5 +1,6 @@
-from click.core import Command, Context, Group
+from __future__ import annotations
 
+from click.core import Command, Context, Group
 from emmet.cli import emmet
 
 

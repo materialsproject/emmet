@@ -1,14 +1,15 @@
+from __future__ import annotations
+
 import json
 
 import pytest
-from monty.io import zopen
-
 from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
 from emmet.core.vasp.task_valid import TaskDocument
+from monty.io import zopen
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_tasks(test_dir):
     with zopen(test_dir / "test_si_tasks.json.gz") as f:
         tasks = json.load(f)

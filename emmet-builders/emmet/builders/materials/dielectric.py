@@ -1,15 +1,17 @@
-from math import ceil
-from typing import Dict, Optional, Iterator
+from __future__ import annotations
 
+from math import ceil
+from typing import TYPE_CHECKING, Iterator
 
 import numpy as np
+from emmet.core.polar import DielectricDoc
+from emmet.core.utils import jsanitize
 from maggma.builders import Builder
-from maggma.core import Store
 from maggma.utils import grouper
 from pymatgen.core.structure import Structure
 
-from emmet.core.polar import DielectricDoc
-from emmet.core.utils import jsanitize
+if TYPE_CHECKING:
+    from maggma.core import Store
 
 
 class DielectricBuilder(Builder):
@@ -18,7 +20,7 @@ class DielectricBuilder(Builder):
         materials: Store,
         tasks: Store,
         dielectric: Store,
-        query: Optional[Dict] = None,
+        query: dict | None = None,
         **kwargs,
     ):
         self.materials = materials
@@ -33,10 +35,8 @@ class DielectricBuilder(Builder):
 
         super().__init__(sources=[materials, tasks], targets=[dielectric], **kwargs)
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
-        """
-        Prechunk method to perform chunking by the key field
-        """
+    def prechunk(self, number_splits: int) -> Iterator[dict]:  # pragma: no cover
+        """Prechunk method to perform chunking by the key field."""
         q = dict(self.query)
 
         keys = self.dielectric.newer_in(self.materials, criteria=q, exhaustive=True)
@@ -46,13 +46,11 @@ class DielectricBuilder(Builder):
             yield {"query": {self.materials.key: {"$in": list(split)}}}
 
     def get_items(self):
-        """
-        Gets all items to process
+        """Gets all items to process.
 
         Returns:
             generator or list relevant tasks and materials to process
         """
-
         self.logger.info("Dielectric Builder Started")
 
         q = dict(self.query)
@@ -64,10 +62,10 @@ class DielectricBuilder(Builder):
             self.dielectric.newer_in(target=self.materials, criteria=q, exhaustive=True)
         ) | (set(mat_ids) - set(di_ids))
 
-        mats = [mat for mat in mats_set]
+        mats = list(mats_set)
 
         self.logger.info(
-            "Processing {} materials for dielectric data".format(len(mats))
+            f"Processing {len(mats)} materials for dielectric data"
         )
 
         self.total = len(mats)
@@ -102,9 +100,7 @@ class DielectricBuilder(Builder):
         return jsanitize(doc.dict(), allow_bson=True)
 
     def update_targets(self, items):
-        """
-        Inserts the new dielectric docs into the dielectric collection
-        """
+        """Inserts the new dielectric docs into the dielectric collection."""
         docs = list(filter(None, items))
 
         if len(docs) > 0:
@@ -131,9 +127,8 @@ class DielectricBuilder(Builder):
         potential_task_ids = []
 
         for task_id, task_type in task_types:
-            if task_type == "DFPT Dielectric":
-                if task_id not in mat_doc["deprecated_tasks"]:
-                    potential_task_ids.append(task_id)
+            if task_type == "DFPT Dielectric" and task_id not in mat_doc["deprecated_tasks"]:
+                potential_task_ids.append(task_id)
 
         final_docs = []
 

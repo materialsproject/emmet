@@ -1,5 +1,5 @@
-"""Task types and level of theory components for Q-Chem calculations"""
-
+"""Task types and level of theory components for Q-Chem calculations."""
+from __future__ import annotations
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 

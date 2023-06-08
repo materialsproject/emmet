@@ -1,18 +1,20 @@
+from __future__ import annotations
+
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Any, Optional, Iterable, Iterator, List, Dict
+from typing import TYPE_CHECKING, Any, Iterable, Iterator
 
-# from monty.serialization import loadfn, dumpfn
-
-from maggma.builders import Builder
-from maggma.core import Store
-from maggma.utils import grouper
-
+from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.molecules.summary import MoleculeSummaryDoc
 from emmet.core.utils import jsanitize
-from emmet.builders.settings import EmmetBuildSettings
 
+# from monty.serialization import loadfn, dumpfn
+from maggma.builders import Builder
+from maggma.utils import grouper
+
+if TYPE_CHECKING:
+    from maggma.core import Store
 
 __author__ = "Evan Spotte-Smith"
 
@@ -20,9 +22,8 @@ SETTINGS = EmmetBuildSettings()
 
 
 class SummaryBuilder(Builder):
-    """
-    The SummaryBuilder collects all property documents and gathers their properties
-    into a single MoleculeSummaryDoc
+    """The SummaryBuilder collects all property documents and gathers their properties
+    into a single MoleculeSummaryDoc.
 
     The process is as follows:
         1. Gather MoleculeDocs by formula
@@ -41,8 +42,8 @@ class SummaryBuilder(Builder):
         thermo: Store,
         vibes: Store,
         summary: Store,
-        query: Optional[Dict] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        query: dict | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
         self.molecules = molecules
@@ -64,10 +65,7 @@ class SummaryBuilder(Builder):
         )
 
     def ensure_indexes(self):
-        """
-        Ensures indices on the collections needed for building
-        """
-
+        """Ensures indices on the collections needed for building."""
         # Search index for molecules
         self.molecules.ensure_index("molecule_id")
         self.molecules.ensure_index("last_updated")
@@ -145,9 +143,8 @@ class SummaryBuilder(Builder):
         self.summary.ensure_index("last_updated")
         self.summary.ensure_index("formula_alphabetical")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
-        """Prechunk the builder for distributed computation"""
-
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
+        """Prechunk the builder for distributed computation."""
         temp_query = dict(self.query)
         temp_query["deprecated"] = False
 
@@ -158,7 +155,7 @@ class SummaryBuilder(Builder):
             )
         )
 
-        processed_docs = set([e for e in self.summary.distinct("molecule_id")])
+        processed_docs = set(self.summary.distinct("molecule_id"))
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
         to_process_forms = {
             d["formula_alphabetical"]
@@ -171,16 +168,14 @@ class SummaryBuilder(Builder):
         for formula_chunk in grouper(to_process_forms, N):
             yield {"query": {"formula_alphabetical": {"$in": list(formula_chunk)}}}
 
-    def get_items(self) -> Iterator[List[Dict]]:
-        """
-        Gets all items to process into summary documents.
+    def get_items(self) -> Iterator[list[dict]]:
+        """Gets all items to process into summary documents.
         This does no datetime checking; relying on on whether
-        task_ids are included in the summary Store
+        task_ids are included in the summary Store.
 
         Returns:
             generator or list relevant tasks and molecules to process into documents
         """
-
         self.logger.info("Summary builder started")
         self.logger.info("Setting indexes")
         self.ensure_indexes()
@@ -199,7 +194,7 @@ class SummaryBuilder(Builder):
             )
         )
 
-        processed_docs = set([e for e in self.summary.distinct("molecule_id")])
+        processed_docs = set(self.summary.distinct("molecule_id"))
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
         to_process_forms = {
             d["formula_alphabetical"]
@@ -220,9 +215,8 @@ class SummaryBuilder(Builder):
 
             yield molecules
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
-        """
-        Process the tasks into a MoleculeSummaryDoc
+    def process_item(self, items: list[dict]) -> list[dict]:
+        """Process the tasks into a MoleculeSummaryDoc.
 
         Args:
             tasks List[Dict] : a list of MoleculeDocs in dict form
@@ -231,9 +225,9 @@ class SummaryBuilder(Builder):
             [dict] : a list of new orbital docs
         """
 
-        def _group_docs(docs: List[Dict[str, Any]], by_method: bool = False):
-            """Helper function to group docs by solvent"""
-            grouped: Dict[str, Any] = dict()
+        def _group_docs(docs: list[dict[str, Any]], by_method: bool = False):
+            """Helper function to group docs by solvent."""
+            grouped: dict[str, Any] = dict()
 
             for doc in docs:
                 solvent = doc.get("solvent")
@@ -310,14 +304,12 @@ class SummaryBuilder(Builder):
 
         return jsanitize([doc.dict() for doc in summary_docs], allow_bson=True)
 
-    def update_targets(self, items: List[List[Dict]]):
-        """
-        Inserts the new documents into the summary collection
+    def update_targets(self, items: list[list[dict]]):
+        """Inserts the new documents into the summary collection.
 
         Args:
             items [[dict]]: A list of documents to update
         """
-
         docs = list(chain.from_iterable(items))  # type: ignore
 
         # Add timestamp

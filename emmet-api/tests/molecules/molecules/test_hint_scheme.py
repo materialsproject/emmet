@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from emmet.api.routes.molecules.molecules.hint_scheme import MoleculesHintScheme
 
 

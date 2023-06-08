@@ -1,20 +1,21 @@
+from __future__ import annotations
+
 from datetime import datetime
 
 import pytest
+from emmet.core.provenance import Database, ProvenanceDoc, SNLDict
 from pymatgen.core import Lattice, Structure
 from pymatgen.util.provenance import Author, HistoryNode, StructureNL
 
-from emmet.core.provenance import Database, ProvenanceDoc, SNLDict
 
-
-@pytest.fixture
+@pytest.fixture()
 def structure():
     test_latt = Lattice.cubic(3.0)
     test_struc = Structure(lattice=test_latt, species=["Fe"], coords=[[0, 0, 0]])
     return test_struc
 
 
-@pytest.fixture
+@pytest.fixture()
 def snls(structure):
     docs = [
         StructureNL(

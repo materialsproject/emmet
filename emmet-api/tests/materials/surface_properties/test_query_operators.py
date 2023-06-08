@@ -1,10 +1,10 @@
+from __future__ import annotations
+
 from emmet.api.routes.materials.surface_properties.query_operators import (
     ReconstructedQuery,
 )
-
-
+from monty.serialization import dumpfn, loadfn
 from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 
 
 def test_reconstructed_operator():

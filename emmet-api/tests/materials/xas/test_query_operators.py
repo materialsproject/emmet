@@ -1,9 +1,9 @@
+from __future__ import annotations
+
 from emmet.api.routes.materials.xas.query_operators import XASQuery, XASTaskIDQuery
-
-from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
-
 from emmet.core.xas import Edge, Type
+from monty.serialization import dumpfn, loadfn
+from monty.tempfile import ScratchDir
 from pymatgen.core.periodic_table import Element
 
 

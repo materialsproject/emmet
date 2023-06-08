@@ -1,20 +1,22 @@
-from typing import Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from fastapi import Query
-
 from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
 
 
 class MethodQuery(QueryOperator):
-    """
-    Factory method to generate a dependency for querying by
-        calculation method.
+    """Factory method to generate a dependency for querying by
+    calculation method.
     """
 
     def query(
         self,
-        method: Optional[str] = Query(
+        method: str | None = Query(
             None,
             description="Query by calculation method (e.g. mulliken, nbo).",
         ),
@@ -31,13 +33,11 @@ class MethodQuery(QueryOperator):
 
 
 class MultiPropertyIDQuery(QueryOperator):
-    """
-    Method to generate a query for different property ID values
-    """
+    """Method to generate a query for different property ID values."""
 
     def query(
         self,
-        property_ids: Optional[str] = Query(
+        property_ids: str | None = Query(
             None, description="Comma-separated list of property_id values to query on"
         ),
     ) -> STORE_PARAMS:

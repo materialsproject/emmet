@@ -1,18 +1,21 @@
-from typing import Dict
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import numpy as np
+from emmet.core.spectrum import SpectrumDoc
+from emmet.core.utils import ValueEnum
 from pydantic import Field, root_validator
 from pymatgen.analysis.diffraction.xrd import (
     WAVELENGTHS,
     DiffractionPattern,
     XRDCalculator,
 )
-from pymatgen.core import Structure
-from pymatgen.core.periodic_table import Element
 
-from emmet.core.mpid import MPID
-from emmet.core.spectrum import SpectrumDoc
-from emmet.core.utils import ValueEnum
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID
+    from pymatgen.core import Structure
+    from pymatgen.core.periodic_table import Element
 
 
 class Edge(ValueEnum):
@@ -25,9 +28,7 @@ class Edge(ValueEnum):
 
 
 class XRDDoc(SpectrumDoc):
-    """
-    Document describing a XRD Diffraction Pattern
-    """
+    """Document describing a XRD Diffraction Pattern."""
 
     spectrum_name = "XRD"
 
@@ -41,7 +42,7 @@ class XRDDoc(SpectrumDoc):
     edge: Edge = Field(None, description="Atomic edge for the diffraction source.")
 
     @root_validator(pre=True)
-    def get_target_and_edge(cls, values: Dict):
+    def get_target_and_edge(cls, values: dict):
         print("Validations")
         # Only do this if neither target not edge is defined
         if "target" not in values and "edge" not in values:
@@ -69,7 +70,7 @@ class XRDDoc(SpectrumDoc):
         max_two_theta=180,
         symprec=0.1,
         **kwargs,
-    ) -> "XRDDoc":
+    ) -> XRDDoc:
         calc = XRDCalculator(wavelength=wavelength, symprec=symprec)
         pattern = calc.get_pattern(
             structure, two_theta_range=(min_two_theta, max_two_theta)
@@ -97,7 +98,7 @@ class XRDDoc(SpectrumDoc):
         max_two_theta=180,
         symprec=0.1,
         **kwargs,
-    ) -> "XRDDoc":
+    ) -> XRDDoc:
         if f"{target}{edge}" not in WAVELENGTHS:
             raise ValueError(f"{target}{edge} not in pymatgen wavelenghts dictionarty")
 

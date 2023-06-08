@@ -1,25 +1,26 @@
+from __future__ import annotations
+
 from datetime import datetime
 from itertools import chain, groupby
 from math import ceil
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Union
+from typing import TYPE_CHECKING, Any, Iterable, Iterator
 
 import networkx as nx
-
-from maggma.builders import Builder
-from maggma.stores import Store
-from maggma.utils import grouper
-
 from emmet.builders.settings import EmmetBuildSettings
-from emmet.core.utils import get_molecule_id, group_molecules, jsanitize, make_mol_graph
+from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.qchem.molecule import (
+    MoleculeDoc,
     best_lot,
     evaluate_lot,
     evaluate_task_entry,
-    MoleculeDoc,
 )
 from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.calc_types import LevelOfTheory, CalcType, TaskType
+from emmet.core.utils import get_molecule_id, group_molecules, jsanitize, make_mol_graph
+from maggma.builders import Builder
+from maggma.utils import grouper
 
+if TYPE_CHECKING:
+    from maggma.stores import Store
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -29,14 +30,13 @@ SETTINGS = EmmetBuildSettings()
 
 def evaluate_molecule(
     mol_doc: MoleculeDoc,
-    funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
-    basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
-    solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
+    funct_scores: dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
+    basis_scores: dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
+    solvent_scores: dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
 ):
-    """
-    Helper function to order optimization calcs by
+    """Helper function to order optimization calcs by
     - Level of theory
-    - Electronic energy
+    - Electronic energy.
 
     :param mol_doc: Molecule to be evaluated
     :param funct_scores: Scores for various density functionals
@@ -44,7 +44,6 @@ def evaluate_molecule(
     :param solvent_scores: Scores for various implicit solvent models
     :return:
     """
-
     opt_lot = None
     for origin in mol_doc.origins:
         if origin.name == "molecule":
@@ -52,10 +51,7 @@ def evaluate_molecule(
             if isinstance(opt_lot, LevelOfTheory):
                 opt_lot = opt_lot.value
 
-    if opt_lot is None:
-        opt_eval = [0]
-    else:
-        opt_eval = evaluate_lot(opt_lot, funct_scores, basis_scores, solvent_scores)
+    opt_eval = [0] if opt_lot is None else evaluate_lot(opt_lot, funct_scores, basis_scores, solvent_scores)
 
     best = best_lot(mol_doc, funct_scores, basis_scores, solvent_scores)
 
@@ -70,8 +66,7 @@ def evaluate_molecule(
 
 
 def _optimizing_solvent(mol_doc):
-    """
-    Returns which solvent was used to optimize this (associated) MoleculeDoc.
+    """Returns which solvent was used to optimize this (associated) MoleculeDoc.
 
     Args:
         mol_doc: MoleculeDoc
@@ -80,16 +75,15 @@ def _optimizing_solvent(mol_doc):
         solvent (str)
 
     """
-
     for origin in mol_doc.origins:
         if origin.name.startswith("molecule"):
             solvent = mol_doc.solvents[origin.task_id]
             return solvent
+    return None
 
 
 class MoleculesAssociationBuilder(Builder):
-    """
-    The MoleculesAssociationBuilder matches Q-Chem task documents by composition
+    """The MoleculesAssociationBuilder matches Q-Chem task documents by composition
     and collects tasks associated with identical structures.
     The purpose of this builder is to group calculations in preparation for the
     MoleculesBuilder.
@@ -106,18 +100,16 @@ class MoleculesAssociationBuilder(Builder):
         self,
         tasks: Store,
         assoc: Store,
-        query: Optional[Dict] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        query: dict | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
+        """Args:
+        tasks:  Store of task documents
+        assoc: Store of associated molecules documents to prepare
+        query: dictionary to limit tasks to be analyzed
+        settings: EmmetSettings to use in the build process.
         """
-        Args:
-            tasks:  Store of task documents
-            assoc: Store of associated molecules documents to prepare
-            query: dictionary to limit tasks to be analyzed
-            settings: EmmetSettings to use in the build process
-        """
-
         self.tasks = tasks
         self.assoc = assoc
         self.query = query if query else dict()
@@ -127,10 +119,7 @@ class MoleculesAssociationBuilder(Builder):
         super().__init__(sources=[tasks], targets=[assoc])
 
     def ensure_indexes(self):
-        """
-        Ensures indices on the collections needed for building
-        """
-
+        """Ensures indices on the collections needed for building."""
         # Basic search index for tasks
         self.tasks.ensure_index("task_id")
         self.tasks.ensure_index("last_updated")
@@ -143,9 +132,8 @@ class MoleculesAssociationBuilder(Builder):
         self.assoc.ensure_index("task_ids")
         self.tasks.ensure_index("formula_alphabetical")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
-        """Prechunk the molecule builder for distributed computation"""
-
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
+        """Prechunk the molecule builder for distributed computation."""
         temp_query = dict(self.query)
         temp_query["state"] = "successful"
 
@@ -167,16 +155,14 @@ class MoleculesAssociationBuilder(Builder):
         for formula_chunk in grouper(to_process_forms, N):
             yield {"query": {"formula_alphabetical": {"$in": list(formula_chunk)}}}
 
-    def get_items(self) -> Iterator[List[Dict]]:
-        """
-        Gets all items to process into molecules (and other) documents.
+    def get_items(self) -> Iterator[list[dict]]:
+        """Gets all items to process into molecules (and other) documents.
         This does no datetime checking; relying on on whether
-        task_ids are included in the molecules Store
+        task_ids are included in the molecules Store.
 
         Returns:
             generator or list relevant tasks and molecules to process into documents
         """
-
         self.logger.info("Molecule association builder started")
         self.logger.info(
             f"Allowed task types: {[task_type.value for task_type in self.settings.QCHEM_ALLOWED_TASK_TYPES]}"
@@ -247,9 +233,8 @@ class MoleculesAssociationBuilder(Builder):
 
             yield tasks
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
-        """
-        Process the tasks into a MoleculeDoc
+    def process_item(self, items: list[dict]) -> list[dict]:
+        """Process the tasks into a MoleculeDoc.
 
         Args:
             tasks [dict] : a list of task docs
@@ -257,7 +242,6 @@ class MoleculesAssociationBuilder(Builder):
         Returns:
             [dict] : a list of new molecule docs
         """
-
         tasks = [TaskDocument(**task) for task in items if task["is_valid"]]
         if len(tasks) == 0:
             return list()
@@ -284,14 +268,12 @@ class MoleculesAssociationBuilder(Builder):
 
         return jsanitize([mol.dict() for mol in molecules], allow_bson=True)
 
-    def update_targets(self, items: List[List[Dict]]):
-        """
-        Inserts the new molecules into the molecules collection
+    def update_targets(self, items: list[list[dict]]):
+        """Inserts the new molecules into the molecules collection.
 
         Args:
             items [[dict]]: A list of molecules to update
         """
-
         docs = list(chain.from_iterable(items))  # type: ignore
 
         for item in docs:
@@ -310,12 +292,9 @@ class MoleculesAssociationBuilder(Builder):
             self.logger.info("No items to update")
 
     def filter_and_group_tasks(
-        self, tasks: List[TaskDocument]
-    ) -> Iterator[List[TaskDocument]]:
-        """
-        Groups tasks by identical structure
-        """
-
+        self, tasks: list[TaskDocument]
+    ) -> Iterator[list[TaskDocument]]:
+        """Groups tasks by identical structure."""
         filtered_tasks = [
             task
             for task in tasks
@@ -328,10 +307,7 @@ class MoleculesAssociationBuilder(Builder):
         molecules = list()
 
         for idx, task in enumerate(filtered_tasks):
-            if task.output.optimized_molecule:
-                m = task.output.optimized_molecule
-            else:
-                m = task.output.initial_molecule
+            m = task.output.optimized_molecule if task.output.optimized_molecule else task.output.initial_molecule
             m.ind: int = idx  # type: ignore
             molecules.append(m)
 
@@ -342,8 +318,7 @@ class MoleculesAssociationBuilder(Builder):
 
 
 class MoleculesBuilder(Builder):
-    """
-    The MoleculesBuilder collects MoleculeDocs from the MoleculesAssociationBuilder
+    """The MoleculesBuilder collects MoleculeDocs from the MoleculesAssociationBuilder
     and groups them by key properties (charge, spin multiplicity, bonding).
     Then, the best molecular structure is identified (based on electronic energy),
     and this document becomes the representative MoleculeDoc.
@@ -359,18 +334,16 @@ class MoleculesBuilder(Builder):
         self,
         assoc: Store,
         molecules: Store,
-        query: Optional[Dict] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        query: dict | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
+        """Args:
+        assoc:  Store of associated molecules documents, created by MoleculesAssociationBuilder
+        molecules: Store of processed molecules documents
+        query: dictionary to limit tasks to be analyzed
+        settings: EmmetSettings to use in the build process.
         """
-        Args:
-            assoc:  Store of associated molecules documents, created by MoleculesAssociationBuilder
-            molecules: Store of processed molecules documents
-            query: dictionary to limit tasks to be analyzed
-            settings: EmmetSettings to use in the build process
-        """
-
         self.assoc = assoc
         self.molecules = molecules
         self.query = query if query else dict()
@@ -380,10 +353,7 @@ class MoleculesBuilder(Builder):
         super().__init__(sources=[assoc], targets=[molecules])
 
     def ensure_indexes(self):
-        """
-        Ensures indices on the collections needed for building
-        """
-
+        """Ensures indices on the collections needed for building."""
         # Search index for associated molecules
         self.assoc.ensure_index("molecule_id")
         self.assoc.ensure_index("last_updated")
@@ -396,9 +366,8 @@ class MoleculesBuilder(Builder):
         self.molecules.ensure_index("task_ids")
         self.molecules.ensure_index("formula_alphabetical")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
-        """Prechunk the molecule builder for distributed computation"""
-
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
+        """Prechunk the molecule builder for distributed computation."""
         temp_query = dict(self.query)
         temp_query["deprecated"] = False
 
@@ -417,7 +386,7 @@ class MoleculesBuilder(Builder):
         )
 
         # Should be using species hash, rather than coord hash, at this point
-        processed_docs = set(list(self.molecules.distinct("molecule_id")))
+        processed_docs = set(self.molecules.distinct("molecule_id"))
         assoc_ids = set()
 
         xyz_species_id_map = dict()
@@ -443,16 +412,14 @@ class MoleculesBuilder(Builder):
         for formula_chunk in grouper(to_process_forms, N):
             yield {"query": {"formula_alphabetical": {"$in": list(formula_chunk)}}}
 
-    def get_items(self) -> Iterator[List[Dict]]:
-        """
-        Gets all items to process into molecules (and other) documents.
+    def get_items(self) -> Iterator[list[dict]]:
+        """Gets all items to process into molecules (and other) documents.
         This does no datetime checking; relying on on whether
-        task_ids are included in the molecules Store
+        task_ids are included in the molecules Store.
 
         Returns:
             generator or list relevant tasks and molecules to process into documents
         """
-
         self.logger.info("Molecules builder started")
         self.logger.info("Setting indexes")
         self.ensure_indexes()
@@ -479,7 +446,7 @@ class MoleculesBuilder(Builder):
         )
 
         # Should be using species hash, rather than coord hash, at this point
-        processed_docs = set(list(self.molecules.distinct("molecule_id")))
+        processed_docs = set(self.molecules.distinct("molecule_id"))
         assoc_ids = set()
 
         xyz_species_id_map = dict()
@@ -513,9 +480,8 @@ class MoleculesBuilder(Builder):
 
             yield assoc
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
-        """
-        Process the tasks into a MoleculeDoc
+    def process_item(self, items: list[dict]) -> list[dict]:
+        """Process the tasks into a MoleculeDoc.
 
         Args:
             tasks List[Dict] : a list of task docs
@@ -523,7 +489,6 @@ class MoleculesBuilder(Builder):
         Returns:
             [dict] : a list of new molecule docs
         """
-
         assoc = [MoleculeDoc(**item) for item in items]
         formula = assoc[0].formula_alphabetical
         mol_ids = [a.molecule_id for a in assoc]
@@ -549,18 +514,18 @@ class MoleculesBuilder(Builder):
             levels_of_theory = dict()
             solvents = dict()
             lot_solvents = dict()
-            unique_calc_types: Set[Union[str, CalcType]] = set()
-            unique_task_types: Set[Union[str, TaskType]] = set()
-            unique_levels_of_theory: Set[Union[str, LevelOfTheory]] = set()
-            unique_solvents: Set[str] = set()
-            unique_lot_solvents: Set[str] = set()
+            unique_calc_types: set[str | CalcType] = set()
+            unique_task_types: set[str | TaskType] = set()
+            unique_levels_of_theory: set[str | LevelOfTheory] = set()
+            unique_solvents: set[str] = set()
+            unique_lot_solvents: set[str] = set()
             origins = list()
             entries = list()
-            best_entries: Dict[str, Any] = dict()
+            best_entries: dict[str, Any] = dict()
             constituent_molecules = list()
             similar_molecules = list()
 
-            base_doc: Optional[MoleculeDoc] = None
+            base_doc: MoleculeDoc | None = None
 
             # Grab best doc for each solvent
             # A doc is given a solvent based on how the molecule was optimized
@@ -649,14 +614,12 @@ class MoleculesBuilder(Builder):
 
         return jsanitize([mol.dict() for mol in complete_mol_docs], allow_bson=True)
 
-    def update_targets(self, items: List[List[Dict]]):
-        """
-        Inserts the new molecules into the molecules collection
+    def update_targets(self, items: list[list[dict]]):
+        """Inserts the new molecules into the molecules collection.
 
         Args:
             items [[dict]]: A list of molecules to update
         """
-
         self.logger.debug(f"Updating {len(items)} molecules")
 
         docs = list(chain.from_iterable(items))  # type: ignore
@@ -682,16 +645,14 @@ class MoleculesBuilder(Builder):
         else:
             self.logger.info("No items to update")
 
-    def group_mol_docs(self, assoc: List[MoleculeDoc]) -> Iterator[List[MoleculeDoc]]:
+    def group_mol_docs(self, assoc: list[MoleculeDoc]) -> Iterator[list[MoleculeDoc]]:
+        """Groups molecules by:
+        - highest level of theory
+        - charge
+        - spin multiplicity
+        - bonding (molecule graph isomorphism)
+        - solvent environment used for the structure.
         """
-        Groups molecules by:
-            - highest level of theory
-            - charge
-            - spin multiplicity
-            - bonding (molecule graph isomorphism)
-            - solvent environment used for the structure
-        """
-
         # Molecules are already grouped by formula
 
         # First, group by charge, spin multiplicity
@@ -701,8 +662,8 @@ class MoleculesBuilder(Builder):
             return (mol_doc.charge, mol_doc.spin_multiplicity)
 
         # Group by charge and spin
-        for c_s, group in groupby(sorted(assoc, key=charge_spin), key=charge_spin):
-            subgroups: List[Dict[str, Any]] = list()
+        for _c_s, group in groupby(sorted(assoc, key=charge_spin), key=charge_spin):
+            subgroups: list[dict[str, Any]] = list()
             for mol_doc in group:
                 mol_graph = make_mol_graph(mol_doc.molecule)
                 mol_hash = mol_doc.species_hash

@@ -1,20 +1,20 @@
-from typing import Any, Dict, Optional
+from __future__ import annotations
 
-from fastapi import Body, HTTPException, Query
-
-from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+from typing import TYPE_CHECKING, Any
 
 from emmet.api.routes.materials.materials.utils import chemsys_to_criteria
-
+from fastapi import Body, HTTPException, Query
+from maggma.api.query_operator import QueryOperator
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Molecule
 
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
+
 
 class FormulaQuery(QueryOperator):
-    """
-    Factory method to generate a dependency for querying by
+    """Factory method to generate a dependency for querying by
         formula.
 
     NOTE: wildcards are not currently supported. It's unclear, at present,
@@ -26,13 +26,13 @@ class FormulaQuery(QueryOperator):
 
     def query(
         self,
-        formula: Optional[str] = Query(
+        formula: str | None = Query(
             None,
             description="Query by alphabetical formula. \
 A comma delimited string list of alphabetical formulas can also be provided.",
         ),
     ) -> STORE_PARAMS:
-        crit: Dict[str, Any] = {}  # type: ignore
+        crit: dict[str, Any] = {}  # type: ignore
 
         if formula:
             # Do we need to handle wildcards? For now, don't worry about it.
@@ -49,14 +49,13 @@ A comma delimited string list of alphabetical formulas can also be provided.",
 
 
 class ChemsysQuery(QueryOperator):
-    """
-    Factory method to generate a dependency for querying by
-        chemical system with wild cards.
+    """Factory method to generate a dependency for querying by
+    chemical system with wild cards.
     """
 
     def query(
         self,
-        chemsys: Optional[str] = Query(
+        chemsys: str | None = Query(
             None,
             description="A comma delimited string list of chemical systems. \
 Wildcards for unknown elements only supported for single chemsys queries",
@@ -75,17 +74,15 @@ Wildcards for unknown elements only supported for single chemsys queries",
 
 
 class ElementsQuery(QueryOperator):
-    """
-    Factory method to generate a dependency for querying by element data
-    """
+    """Factory method to generate a dependency for querying by element data."""
 
     def query(
         self,
-        elements: Optional[str] = Query(
+        elements: str | None = Query(
             None,
             description="Query by elements in the material composition as a comma-separated list",
         ),
-        exclude_elements: Optional[str] = Query(
+        exclude_elements: str | None = Query(
             None,
             description="Query by excluded elements in the material composition as a comma-separated list",
         ),
@@ -125,18 +122,17 @@ class ElementsQuery(QueryOperator):
 
 
 class ChargeSpinQuery(QueryOperator):
-    """
-    Factory method to generate a dependency for querying by
-        charge and spin multiplicity.
+    """Factory method to generate a dependency for querying by
+    charge and spin multiplicity.
     """
 
     def query(
         self,
-        charge: Optional[int] = Query(
+        charge: int | None = Query(
             None,
             description="Query by molecular charge",
         ),
-        spin_multiplicity: Optional[int] = Query(
+        spin_multiplicity: int | None = Query(
             None, description="Query by molecular spin multiplicity."
         ),
     ) -> STORE_PARAMS:
@@ -154,13 +150,11 @@ class ChargeSpinQuery(QueryOperator):
 
 
 class DeprecationQuery(QueryOperator):
-    """
-    Method to generate a deprecation state query
-    """
+    """Method to generate a deprecation state query."""
 
     def query(
         self,
-        deprecated: Optional[bool] = Query(
+        deprecated: bool | None = Query(
             False,
             description="Whether the material is marked as deprecated",
         ),
@@ -174,13 +168,11 @@ class DeprecationQuery(QueryOperator):
 
 
 class MultiTaskIDQuery(QueryOperator):
-    """
-    Method to generate a query for different task_ids
-    """
+    """Method to generate a query for different task_ids."""
 
     def query(
         self,
-        task_ids: Optional[str] = Query(
+        task_ids: str | None = Query(
             None, description="Comma-separated list of task_ids to query on"
         ),
     ) -> STORE_PARAMS:
@@ -203,13 +195,11 @@ class MultiTaskIDQuery(QueryOperator):
 
 
 class MultiMPculeIDQuery(QueryOperator):
-    """
-    Method to generate a query for different root-level mpcule_id values
-    """
+    """Method to generate a query for different root-level mpcule_id values."""
 
     def query(
         self,
-        molecule_ids: Optional[str] = Query(
+        molecule_ids: str | None = Query(
             None, description="Comma-separated list of MPculeIDs to query on"
         ),
     ) -> STORE_PARAMS:
@@ -229,9 +219,7 @@ class MultiMPculeIDQuery(QueryOperator):
 
 
 class FindMoleculeQuery(QueryOperator):
-    """
-    Method to generate a find molecule query
-    """
+    """Method to generate a find molecule query."""
 
     def query(
         self,
@@ -243,11 +231,11 @@ class FindMoleculeQuery(QueryOperator):
             0.01,
             description="RMSD difference threshold. Default is 0.01.",
         ),
-        charge: Optional[int] = Query(
+        charge: int | None = Query(
             None,
             description="Molecule charge. If None (default), don't limit by charge.",
         ),
-        spin_multiplicity: Optional[int] = Query(
+        spin_multiplicity: int | None = Query(
             None,
             description="Molecule spin_multiplicity. If None (default), don't limit by spin multiplicity.",
         ),
@@ -260,7 +248,7 @@ class FindMoleculeQuery(QueryOperator):
         self._limit = _limit
         self.molecule = molecule
 
-        crit: Dict[str, Any] = dict()
+        crit: dict[str, Any] = dict()
 
         if charge is not None:
             crit.update({"charge": charge})
@@ -321,8 +309,7 @@ class FindMoleculeQuery(QueryOperator):
 
 
 class CalcMethodQuery(QueryOperator):
-    """
-    Method to generate a query based on level of theory and solvent.
+    """Method to generate a query based on level of theory and solvent.
 
     This query differs from ExactCalcMethodQuery in that CalcMethodQuery will check
     that the desired level of theory and/or solvent was used for some calculations
@@ -333,17 +320,17 @@ class CalcMethodQuery(QueryOperator):
 
     def query(
         self,
-        level_of_theory: Optional[str] = Query(
+        level_of_theory: str | None = Query(
             None,
             description="Level of theory used for calculation. Default is None, meaning that level of theory"
             "will not be queried.",
         ),
-        solvent: Optional[str] = Query(
+        solvent: str | None = Query(
             None,
             description="Solvent data used for calculation. Default is None, meaning that solvent will not be"
             "queried.",
         ),
-        lot_solvent: Optional[str] = Query(
+        lot_solvent: str | None = Query(
             None,
             description="String representing the combination of level of theory and solvent. Default is None,"
             "meaning lot_solvent will not be queried.",
@@ -383,8 +370,7 @@ class CalcMethodQuery(QueryOperator):
 
 
 class ExactCalcMethodQuery(QueryOperator):
-    """
-    Method to generate a query based on level of theory and solvent
+    """Method to generate a query based on level of theory and solvent.
 
     This query differs from CalcMethodQuery in that CalcMethodQuery will check
     that the desired level of theory and/or solvent was used for some calculations
@@ -395,17 +381,17 @@ class ExactCalcMethodQuery(QueryOperator):
 
     def query(
         self,
-        level_of_theory: Optional[str] = Query(
+        level_of_theory: str | None = Query(
             None,
             description="Level of theory used for calculation. Default is None, meaning that level of theory"
             "will not be queried.",
         ),
-        solvent: Optional[str] = Query(
+        solvent: str | None = Query(
             None,
             description="Solvent data used for calculation. Default is None, meaning that solvent will not be"
             "queried.",
         ),
-        lot_solvent: Optional[str] = Query(
+        lot_solvent: str | None = Query(
             None,
             description="String representing the combination of level of theory and solvent. Default is None,"
             "meaning lot_solvent will not be queried.",
@@ -441,16 +427,14 @@ class ExactCalcMethodQuery(QueryOperator):
 
 
 class HashQuery(QueryOperator):
-    """
-    Method to generate a query based on the augmented graph hashes of the molecule
-    """
+    """Method to generate a query based on the augmented graph hashes of the molecule."""
 
     def query(
         self,
-        species_hash: Optional[str] = Query(
+        species_hash: str | None = Query(
             None, description="Graph hash augmented with node species"
         ),
-        coord_hash: Optional[str] = Query(
+        coord_hash: str | None = Query(
             None, description="Graph hash augmented with node XYZ coordinates"
         ),
     ):

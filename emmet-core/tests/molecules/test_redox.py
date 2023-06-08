@@ -1,11 +1,11 @@
+from __future__ import annotations
+
 import pytest
-
-from monty.serialization import loadfn
-
-from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.molecule import MoleculeDoc
-from emmet.core.molecules.thermo import MoleculeThermoDoc
 from emmet.core.molecules.redox import RedoxDoc
+from emmet.core.molecules.thermo import MoleculeThermoDoc
+from emmet.core.qchem.molecule import MoleculeDoc
+from emmet.core.qchem.task import TaskDocument
+from monty.serialization import loadfn
 
 
 @pytest.fixture(scope="session")

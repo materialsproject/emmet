@@ -1,14 +1,15 @@
+from __future__ import annotations
+
 import os
+
+from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.mpcomplete.query_operator import (
     MPCompleteGetQuery,
     MPCompletePostQuery,
 )
-from emmet.api.core.settings import MAPISettings
-
-from pymatgen.core.structure import Structure
-
+from monty.serialization import dumpfn, loadfn
 from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
+from pymatgen.core.structure import Structure
 
 
 def test_mpcomplete_post_query():

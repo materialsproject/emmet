@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 import copy
 import datetime
 from enum import Enum
 from itertools import groupby
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, Iterator
 
 import numpy as np
+from emmet.core.graph_hashing import weisfeiler_lehman_graph_hash
+from emmet.core.mpid import MPculeID
+from emmet.core.settings import EmmetSettings
 from monty.json import MSONable
 from pydantic import BaseModel
 from pymatgen.analysis.graphs import MoleculeGraph
@@ -17,10 +22,6 @@ from pymatgen.analysis.structure_matcher import (
 )
 from pymatgen.core.structure import Molecule, Structure
 
-from emmet.core.graph_hashing import weisfeiler_lehman_graph_hash
-from emmet.core.mpid import MPculeID
-from emmet.core.settings import EmmetSettings
-
 try:
     import bson
 except ImportError:
@@ -30,7 +31,7 @@ SETTINGS = EmmetSettings()
 
 
 def get_sg(struc, symprec=SETTINGS.SYMPREC) -> int:
-    """helper function to get spacegroup with a loose tolerance"""
+    """Helper function to get spacegroup with a loose tolerance."""
     try:
         return struc.get_space_group_info(symprec=symprec)[1]
     except Exception:
@@ -38,15 +39,14 @@ def get_sg(struc, symprec=SETTINGS.SYMPREC) -> int:
 
 
 def group_structures(
-    structures: List[Structure],
+    structures: list[Structure],
     ltol: float = SETTINGS.LTOL,
     stol: float = SETTINGS.STOL,
     angle_tol: float = SETTINGS.ANGLE_TOL,
     symprec: float = SETTINGS.SYMPREC,
     comparator: AbstractComparator = ElementComparator(),
-) -> Iterator[List[Structure]]:
-    """
-    Groups structures according to space group and structure matching
+) -> Iterator[list[Structure]]:
+    """Groups structures according to space group and structure matching.
 
     Args:
         structures ([Structure]): list of structures to group
@@ -55,7 +55,6 @@ def group_structures(
         angle_tol (float): StructureMatcher tuning parameter for matching tasks to materials
         symprec (float): symmetry tolerance for space group finding
     """
-
     sm = StructureMatcher(
         ltol=ltol,
         stol=stol,
@@ -76,9 +75,8 @@ def group_structures(
             yield group
 
 
-def group_molecules(molecules: List[Molecule]):
-    """
-    Groups molecules according to composition, charge, and equality
+def group_molecules(molecules: list[Molecule]):
+    """Groups molecules according to composition, charge, and equality.
 
     Note: this function is (currently) only used in the MoleculesAssociationBuilder.
         At that stage, we want to link calculations that are performed on
@@ -102,8 +100,8 @@ def group_molecules(molecules: List[Molecule]):
 
     # First, group by formula
     # Hopefully this step is unnecessary - builders should already be doing this
-    for mol_key, pregroup in groupby(sorted(molecules, key=_mol_form), key=_mol_form):
-        groups: List[Dict[str, Any]] = list()
+    for _mol_key, pregroup in groupby(sorted(molecules, key=_mol_form), key=_mol_form):
+        groups: list[dict[str, Any]] = list()
         for mol in pregroup:
             mol_copy = copy.deepcopy(mol)
 
@@ -132,15 +130,13 @@ def group_molecules(molecules: List[Molecule]):
             yield group["mol_list"]
 
 
-def confirm_molecule(mol: Union[Molecule, Dict]):
-    """
-    Check that something that we expect to be a molecule is actually a Molecule
+def confirm_molecule(mol: Molecule | dict):
+    """Check that something that we expect to be a molecule is actually a Molecule
     object, and not a dictionary representation.
 
     :param mol (Molecule):
     :return:
     """
-
     if isinstance(mol, Dict):
         return Molecule.from_dict(mol)
     else:
@@ -148,10 +144,9 @@ def confirm_molecule(mol: Union[Molecule, Dict]):
 
 
 def make_mol_graph(
-    mol: Molecule, critic_bonds: Optional[List[List[int]]] = None
+    mol: Molecule, critic_bonds: list[list[int]] | None = None
 ) -> MoleculeGraph:
-    """
-    Construct a MoleculeGraph using OpenBabelNN with metal_edge_extender and
+    """Construct a MoleculeGraph using OpenBabelNN with metal_edge_extender and
     (optionally) Critic2 bonding information.
 
     This bonding scheme was used to define bonding for the Lithium-Ion Battery
@@ -176,24 +171,21 @@ def make_mol_graph(
     return mol_graph
 
 
-def get_graph_hash(mol: Molecule, node_attr: Optional[str] = None):
-    """
-    Return the Weisfeiler Lehman (WL) graph hash of the MoleculeGraph described
+def get_graph_hash(mol: Molecule, node_attr: str | None = None):
+    """Return the Weisfeiler Lehman (WL) graph hash of the MoleculeGraph described
     by this molecule, using the OpenBabelNN strategy with extension for
-    metal coordinate bonds
+    metal coordinate bonds.
 
     :param mol: Molecule
     :param node_attr: Node attribute to be used to compute the WL hash
     :return: string of the WL graph hash
     """
-
     mg = make_mol_graph(mol)
     return weisfeiler_lehman_graph_hash(mg.graph, node_attr=node_attr)
 
 
-def get_molecule_id(mol: Molecule, node_attr: Optional[str] = None):
-    """
-    Return an MPculeID for a molecule, with the hash component
+def get_molecule_id(mol: Molecule, node_attr: str | None = None):
+    """Return an MPculeID for a molecule, with the hash component
     based on a particular attribute of the molecule graph representation.
 
     :param mol: Molecule
@@ -201,7 +193,6 @@ def get_molecule_id(mol: Molecule, node_attr: Optional[str] = None):
 
     :return: MPculeID
     """
-
     graph_hash = get_graph_hash(mol, node_attr=node_attr)
     return MPculeID(
         "{}-{}-{}-{}".format(
@@ -214,11 +205,11 @@ def get_molecule_id(mol: Molecule, node_attr: Optional[str] = None):
 
 
 def jsanitize(obj, strict=False, allow_bson=False):
-    """
-    This method cleans an input json-like object, either a list or a dict or
+    """This method cleans an input json-like object, either a list or a dict or
     some sequence, nested or otherwise, by converting all non-string
     dictionary keys (such as int and float) to strings, and also recursively
     encodes all objects using Monty's as_dict() protocol.
+
     Args:
         obj: input json-like object.
         strict (bool): This parameters sets the behavior when jsanitize
@@ -231,6 +222,7 @@ def jsanitize(obj, strict=False, allow_bson=False):
             encounters an bson supported type such as objectid and datetime. If
             True, such bson types will be ignored, allowing for proper
             insertion into MongoDb databases.
+
     Returns:
         Sanitized dict that can be json serialized.
     """
@@ -282,15 +274,13 @@ def jsanitize(obj, strict=False, allow_bson=False):
 
 
 class ValueEnum(Enum):
-    """
-    Enum that serializes to string as the value
-    """
+    """Enum that serializes to string as the value."""
 
     def __str__(self):
         return str(self.value)
 
     def __eq__(self, o: object) -> bool:
-        """Special Equals to enable converting strings back to the enum"""
+        """Special Equals to enable converting strings back to the enum."""
         if isinstance(o, str):
             return super().__eq__(self.__class__(o))
         elif isinstance(o, self.__class__):
@@ -307,13 +297,12 @@ class ValueEnum(Enum):
 
 
 class DocEnum(ValueEnum):
-    """
-    Enum with docstrings support
-    from: https://stackoverflow.com/a/50473952
+    """Enum with docstrings support
+    from: https://stackoverflow.com/a/50473952.
     """
 
     def __new__(cls, value, doc=None):
-        """add docstring to the member of Enum if exists
+        """Add docstring to the member of Enum if exists.
 
         Args:
             value: Enum member value

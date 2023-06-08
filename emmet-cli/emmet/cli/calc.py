@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import gzip
 import logging
 import os
@@ -9,10 +11,6 @@ from zipfile import ZipFile
 
 import bson
 import click
-from pymatgen.alchemy.materials import TransformedStructure
-from pymatgen.core import Structure
-from pymatgen.util.provenance import Author, StructureNL
-
 from emmet.cli import SETTINGS
 from emmet.cli.utils import (
     EmmetCliError,
@@ -23,6 +21,9 @@ from emmet.cli.utils import (
     structures_match,
 )
 from emmet.core.utils import get_sg, group_structures
+from pymatgen.alchemy.materials import TransformedStructure
+from pymatgen.core import Structure
+from pymatgen.util.provenance import Author, StructureNL
 
 _UNPACK_INT = struct.Struct("<i").unpack
 logger = logging.getLogger("emmet")
@@ -102,7 +103,7 @@ def insert_snls(ctx, snls):
 
 # https://stackoverflow.com/a/39279826
 def count_file_documents(file_obj):
-    """Counts how many documents provided BSON file contains"""
+    """Counts how many documents provided BSON file contains."""
     cnt = 0
     while True:
         # Read size of next object.
@@ -137,7 +138,7 @@ def count_file_documents(file_obj):
 )
 @click.pass_context
 def calc(ctx, specs, nmax, skip):
-    """Set up calculations to optimize structures using VASP"""
+    """Set up calculations to optimize structures using VASP."""
     if "CLIENT" not in ctx.obj:
         raise EmmetCliError("--spec option required with calc sub-command!")
 
@@ -173,8 +174,8 @@ def calc(ctx, specs, nmax, skip):
     help="Author to assign to all structures.",
 )
 @click.pass_context
-def prep(ctx, archive, authors):  # noqa: C901
-    """prep structures from an archive for submission"""
+def prep(ctx, archive, authors):
+    """Prep structures from an archive for submission."""
     run = ctx.obj["RUN"]
     collections = ctx.obj["COLLECTIONS"]
     snl_collection = ctx.obj["CLIENT"].db.snls
@@ -187,7 +188,7 @@ def prep(ctx, archive, authors):  # noqa: C901
     tag, sec_ext = fname.rsplit(".", 1) if "." in fname else [fname, ""]
     logger.info(click.style(f"tag: {tag}", fg="cyan"))
     if sec_ext:
-        ext = "".join([sec_ext, ext])
+        ext = f"{sec_ext}{ext}"
     exts = ["tar.gz", ".tgz", "bson.gz", ".zip"]
     if ext not in exts:
         raise EmmetCliError(f"{ext} not supported (yet)! Please use one of {exts}.")
@@ -206,13 +207,11 @@ def prep(ctx, archive, authors):  # noqa: C901
                 break
             if skip and doc["db_id"] in source_ids_scanned:
                 continue
-            elements = set(
-                [
-                    specie["element"]
+            elements = {
+                specie["element"]
                     for site in doc["structure"]["sites"]
                     for specie in site["species"]
-                ]
-            )
+            }
             for l in SETTINGS.skip_labels:
                 if l in elements:
                     logger.log(
@@ -296,7 +295,7 @@ def prep(ctx, archive, authors):  # noqa: C901
             )
             continue
 
-        for full_name, coll in collections.items():
+        for full_name, _coll in collections.items():
             # load canonical structures in collection for current formula and
             # duplicate-check them against current structure
             load_canonical_structures(ctx, full_name, formula)
@@ -330,7 +329,7 @@ def prep(ctx, archive, authors):  # noqa: C901
                 index = max([int(snl_id[len(prefix) + 1 :]) for snl_id in snl_ids])
 
             index += 1
-            snl_id = "{}-{}".format(prefix, index)
+            snl_id = f"{prefix}-{index}"
             kwargs = {"references": references, "projects": [tag]}
             if isinstance(istruct, TransformedStructure):
                 snl = istruct.to_snl(meta["authors"], **kwargs)
@@ -360,8 +359,7 @@ def prep(ctx, archive, authors):  # noqa: C901
 @calc.command()
 @click.argument("tag")
 def add(tag):
-    """Add workflows for structures with tag in SNL collection"""
-    pass
+    """Add workflows for structures with tag in SNL collection."""
 
 
 #

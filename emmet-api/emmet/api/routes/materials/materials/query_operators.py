@@ -1,29 +1,32 @@
-from itertools import permutations
-from typing import Optional
+from __future__ import annotations
 
-from emmet.core.symmetry import CrystalSystem
+from itertools import permutations
+from typing import TYPE_CHECKING
+
+from emmet.api.routes.materials.materials.utils import (
+    chemsys_to_criteria,
+    formula_to_criteria,
+)
 from fastapi import Body, HTTPException, Query
 from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
-from emmet.api.routes.materials.materials.utils import (
-    formula_to_criteria,
-    chemsys_to_criteria,
-)
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 from pymatgen.core.composition import Composition, CompositionError
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Structure
 
+if TYPE_CHECKING:
+    from emmet.core.symmetry import CrystalSystem
+    from maggma.api.utils import STORE_PARAMS
+
 
 class FormulaQuery(QueryOperator):
-    """
-    Factory method to generate a dependency for querying by
-        formula or chemical system with wild cards.
+    """Factory method to generate a dependency for querying by
+    formula or chemical system with wild cards.
     """
 
     def query(
         self,
-        formula: Optional[str] = Query(
+        formula: str | None = Query(
             None,
             description="Query by formula including anonymized formula or by including wild cards. \
 A comma delimited string list of anonymous formulas or regular formulas can also be provided.",
@@ -42,14 +45,13 @@ A comma delimited string list of anonymous formulas or regular formulas can also
 
 
 class ChemsysQuery(QueryOperator):
-    """
-    Factory method to generate a dependency for querying by
-        chemical system with wild cards.
+    """Factory method to generate a dependency for querying by
+    chemical system with wild cards.
     """
 
     def query(
         self,
-        chemsys: Optional[str] = Query(
+        chemsys: str | None = Query(
             None,
             description="A comma delimited string list of chemical systems. \
 Wildcards for unknown elements only supported for single chemsys queries",
@@ -68,17 +70,15 @@ Wildcards for unknown elements only supported for single chemsys queries",
 
 
 class ElementsQuery(QueryOperator):
-    """
-    Factory method to generate a dependency for querying by element data
-    """
+    """Factory method to generate a dependency for querying by element data."""
 
     def query(
         self,
-        elements: Optional[str] = Query(
+        elements: str | None = Query(
             None,
             description="Query by elements in the material composition as a comma-separated list",
         ),
-        exclude_elements: Optional[str] = Query(
+        exclude_elements: str | None = Query(
             None,
             description="Query by excluded elements in the material composition as a comma-separated list",
         ),
@@ -116,13 +116,11 @@ class ElementsQuery(QueryOperator):
 
 
 class DeprecationQuery(QueryOperator):
-    """
-    Method to generate a deprecation state query
-    """
+    """Method to generate a deprecation state query."""
 
     def query(
         self,
-        deprecated: Optional[bool] = Query(
+        deprecated: bool | None = Query(
             False,
             description="Whether the material is marked as deprecated",
         ),
@@ -136,21 +134,19 @@ class DeprecationQuery(QueryOperator):
 
 
 class SymmetryQuery(QueryOperator):
-    """
-    Method to generate a query on symmetry information
-    """
+    """Method to generate a query on symmetry information."""
 
     def query(
         self,
-        crystal_system: Optional[CrystalSystem] = Query(
+        crystal_system: CrystalSystem | None = Query(
             None,
             description="Crystal system of the material",
         ),
-        spacegroup_number: Optional[int] = Query(
+        spacegroup_number: int | None = Query(
             None,
             description="Space group number of the material",
         ),
-        spacegroup_symbol: Optional[str] = Query(
+        spacegroup_symbol: str | None = Query(
             None,
             description="Space group symbol of the material",
         ),
@@ -174,13 +170,11 @@ class SymmetryQuery(QueryOperator):
 
 
 class MultiTaskIDQuery(QueryOperator):
-    """
-    Method to generate a query for different task_ids
-    """
+    """Method to generate a query for different task_ids."""
 
     def query(
         self,
-        task_ids: Optional[str] = Query(
+        task_ids: str | None = Query(
             None, description="Comma-separated list of task_ids to query on"
         ),
     ) -> STORE_PARAMS:
@@ -202,13 +196,11 @@ class MultiTaskIDQuery(QueryOperator):
 
 
 class MultiMaterialIDQuery(QueryOperator):
-    """
-    Method to generate a query for different root-level material_id values
-    """
+    """Method to generate a query for different root-level material_id values."""
 
     def query(
         self,
-        material_ids: Optional[str] = Query(
+        material_ids: str | None = Query(
             None, description="Comma-separated list of material_id values to query on"
         ),
     ) -> STORE_PARAMS:
@@ -228,9 +220,7 @@ class MultiMaterialIDQuery(QueryOperator):
 
 
 class FindStructureQuery(QueryOperator):
-    """
-    Method to generate a find structure query
-    """
+    """Method to generate a find structure query."""
 
     def query(
         self,
@@ -321,9 +311,7 @@ class FindStructureQuery(QueryOperator):
 
 
 class FormulaAutoCompleteQuery(QueryOperator):
-    """
-    Method to generate a formula autocomplete query
-    """
+    """Method to generate a formula autocomplete query."""
 
     def query(
         self,

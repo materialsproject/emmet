@@ -1,10 +1,10 @@
+from __future__ import annotations
+
 from pydantic import BaseModel, Field
 
 
 class SubstratesDoc(BaseModel):
-    """
-    Possible growth substrates for a given material.
-    """
+    """Possible growth substrates for a given material."""
 
     sub_form: str = Field(
         None,

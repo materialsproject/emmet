@@ -1,11 +1,17 @@
-from fastapi import Query, Body
-from pymatgen.core.structure import Structure
-from maggma.api.utils import STORE_PARAMS
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from fastapi import Body, Query
 from maggma.api.query_operator import QueryOperator
+
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
+    from pymatgen.core.structure import Structure
 
 
 class MPCompletePostQuery(QueryOperator):
-    """Query operators to provide MPComplete data to post"""
+    """Query operators to provide MPComplete data to post."""
 
     def query(
         self,
@@ -38,7 +44,7 @@ class MPCompletePostQuery(QueryOperator):
 
 
 class MPCompleteGetQuery(QueryOperator):
-    """Query operators for querying on MPComplete data"""
+    """Query operators for querying on MPComplete data."""
 
     def query(
         self,

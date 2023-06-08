@@ -1,17 +1,20 @@
+from __future__ import annotations
+
 import tempfile
 import traceback
 from math import ceil
-from maggma.utils import grouper
-from typing import Optional, Dict, List, Iterator
+from typing import TYPE_CHECKING, Iterator
 
-from abipy.dfpt.vsound import SoundVelocity as AbiSoundVelocity
 from abipy.dfpt.ddb import DdbFile
-from maggma.builders import Builder
-from maggma.core import Store
+from abipy.dfpt.vsound import SoundVelocity as AbiSoundVelocity
 from abipy.flowtk.tasks import TaskManager
-
 from emmet.core.phonon import SoundVelocity
 from emmet.core.utils import jsanitize
+from maggma.builders import Builder
+from maggma.utils import grouper
+
+if TYPE_CHECKING:
+    from maggma.core import Store
 
 
 class SoundVelocityBuilder(Builder):
@@ -20,12 +23,11 @@ class SoundVelocityBuilder(Builder):
         phonon_materials: Store,
         ddb_source: Store,
         sound_vel: Store,
-        query: Optional[dict] = None,
-        manager: Optional[TaskManager] = None,
+        query: dict | None = None,
+        manager: TaskManager | None = None,
         **kwargs
     ):
-        """
-        Creates a collection with the data of the sound velocities extracted from
+        """Creates a collection with the data of the sound velocities extracted from
         the phonon calculations.
 
         Args:
@@ -37,7 +39,6 @@ class SoundVelocityBuilder(Builder):
             manager (TaskManager): an instance of the abipy TaskManager. If None it will be
                 generated from user configuration.
         """
-
         self.phonon_materials = phonon_materials
         self.ddb_source = ddb_source
         self.sound_vel = sound_vel
@@ -53,13 +54,11 @@ class SoundVelocityBuilder(Builder):
         )
 
     def prechunk(self, number_splits: int):  # pragma: no cover
-        """
-        Gets all materials that need sound velocity
+        """Gets all materials that need sound velocity.
 
         Returns:
             generator of materials to extract phonon sound velocity
         """
-
         # All relevant materials that have been updated since phonon props were last calculated
         q = dict(self.query)
 
@@ -70,14 +69,12 @@ class SoundVelocityBuilder(Builder):
         for mpid_chunk in grouper(mats, N):
             yield {"query": {self.phonon_materials.key: {"$in": list(mpid_chunk)}}}
 
-    def get_items(self) -> Iterator[Dict]:
-        """
-        Gets all materials that need sound velocity.
+    def get_items(self) -> Iterator[dict]:
+        """Gets all materials that need sound velocity.
 
         Returns:
             generator of materials to extract the sound velocity
         """
-
         self.logger.info("Sound Velocity Builder Started")
 
         self.logger.info("Setting indexes")
@@ -89,7 +86,7 @@ class SoundVelocityBuilder(Builder):
             self.phonon_materials, exhaustive=True, criteria=q
         )
         self.logger.info(
-            "Found {} new materials for sound velocity data".format(len(mats))
+            f"Found {len(mats)} new materials for sound velocity data"
         )
 
         # list of properties queried from the results DB
@@ -115,9 +112,8 @@ class SoundVelocityBuilder(Builder):
 
             yield item
 
-    def process_item(self, item: Dict) -> Optional[Dict]:
-        """
-        Generates the sound velocity document from an item
+    def process_item(self, item: dict) -> dict | None:
+        """Generates the sound velocity document from an item.
 
         Args:
             item (dict): a dict extracted from the phonon calculations results.
@@ -151,9 +147,8 @@ class SoundVelocityBuilder(Builder):
             return None
 
     @staticmethod
-    def get_sound_vel(item: Dict) -> Dict:
-        """
-        Runs anaddb and return the extracted data for the speed of sound.
+    def get_sound_vel(item: dict) -> dict:
+        """Runs anaddb and return the extracted data for the speed of sound.
 
         Args:
             item (dict): the item to process
@@ -185,9 +180,8 @@ class SoundVelocityBuilder(Builder):
 
             return sv_data
 
-    def update_targets(self, items: List[Dict]):
-        """
-        Inserts the new task_types into the task_types collection
+    def update_targets(self, items: list[dict]):
+        """Inserts the new task_types into the task_types collection.
 
         Args:
             items ([dict]): a list of dictionaries with sound velocities
@@ -197,15 +191,12 @@ class SoundVelocityBuilder(Builder):
         items = list(filter(None, items))
 
         if len(items) > 0:
-            self.logger.info("Updating {} sound velocity docs".format(len(items)))
+            self.logger.info(f"Updating {len(items)} sound velocity docs")
             self.sound_vel.update(docs=items)
         else:
             self.logger.info("No items to update")
 
     def ensure_indexes(self):
-        """
-        Ensures indexes on the sound_vel collection.
-        """
-
+        """Ensures indexes on the sound_vel collection."""
         # Search index for sound velocity
         self.sound_vel.ensure_index(self.sound_vel.key, unique=True)

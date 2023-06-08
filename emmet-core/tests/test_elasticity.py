@@ -1,21 +1,20 @@
-from typing import List
+from __future__ import annotations
 
 import numpy as np
 import pytest
-from monty.serialization import loadfn
-from pymatgen.analysis.elasticity import Deformation, Strain, Stress
-from pymatgen.core.tensors import Tensor, TensorMapping
-
 from emmet.core.elasticity import (
     ElasticityDoc,
     generate_derived_fitting_data,
     generate_primary_fitting_data,
 )
+from monty.serialization import loadfn
+from pymatgen.analysis.elasticity import Deformation, Strain, Stress
+from pymatgen.core.tensors import Tensor, TensorMapping
 
 
 @pytest.fixture(scope="session")
 def fitting_data(test_dir):
-    """Primary fitting data"""
+    """Primary fitting data."""
     data = loadfn(test_dir / "elasticity/SiC_fitting_data.json")
     structure = data["structure"]
     deformations = [Deformation(x) for x in data["deformations"]]
@@ -27,7 +26,7 @@ def fitting_data(test_dir):
 
 @pytest.fixture(scope="session")
 def reference_data(test_dir):
-    """Reference data"""
+    """Reference data."""
     data = loadfn(test_dir / "elasticity/SiC_reference_data.json")
     derived_strains = [Strain(x) for x in data["derived_strains"]]
     derived_stresses = [Stress(x) for x in data["derived_stresses"]]
@@ -45,7 +44,7 @@ def test_generate_derived_fitting_data(fitting_data, reference_data):
         structure, strains, stresses
     )
 
-    def sequence_of_tensors_equal(a: List[Tensor], b: List[Tensor]):
+    def sequence_of_tensors_equal(a: list[Tensor], b: list[Tensor]):
         mapping = TensorMapping(
             tensors=a, values=[None for _ in range(len(a))], tol=1e-5
         )

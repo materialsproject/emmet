@@ -1,27 +1,25 @@
-from maggma.api.resource import ReadOnlyResource
-from emmet.core.molecules.thermo import MoleculeThermoDoc
+from __future__ import annotations
 
+from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
+from emmet.api.routes.molecules.molecules.query_operators import (
+    ChargeSpinQuery,
+    ChemsysQuery,
+    ElementsQuery,
+    ExactCalcMethodQuery,
+    FormulaQuery,
+    MultiMPculeIDQuery,
+)
+from emmet.api.routes.molecules.thermo.query_operators import ThermoCorrectionQuery
+from emmet.api.routes.molecules.utils import MultiPropertyIDQuery
+from emmet.core.molecules.thermo import MoleculeThermoDoc
 from maggma.api.query_operator import (
     NumericQuery,
     PaginationQuery,
     SortQuery,
     SparseFieldsQuery,
 )
-
-from emmet.api.routes.molecules.thermo.query_operators import (
-    ThermoCorrectionQuery,
-)
-from emmet.api.routes.molecules.molecules.query_operators import (
-    MultiMPculeIDQuery,
-    ExactCalcMethodQuery,
-    FormulaQuery,
-    ChemsysQuery,
-    ElementsQuery,
-    ChargeSpinQuery,
-)
-from emmet.api.routes.molecules.utils import MultiPropertyIDQuery
-from emmet.api.core.settings import MAPISettings
-from emmet.api.core.global_header import GlobalHeaderProcessor
+from maggma.api.resource import ReadOnlyResource
 
 
 def thermo_resource(thermo_store):

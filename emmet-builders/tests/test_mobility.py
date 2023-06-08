@@ -1,7 +1,8 @@
-import pytest
-from maggma.stores import JSONStore, MemoryStore
+from __future__ import annotations
 
+import pytest
 from emmet.builders.mobility.migration_graph import MigrationGraphBuilder
+from maggma.stores import JSONStore, MemoryStore
 
 
 @pytest.fixture(scope="session")
@@ -11,7 +12,7 @@ def ie_store(test_dir):
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def mg_store():
     return MemoryStore()
 

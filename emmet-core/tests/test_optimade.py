@@ -1,8 +1,13 @@
+from __future__ import annotations
+
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import pytest
-from pymatgen.core.structure import Structure
 from pymatgen.util.testing import PymatgenTest
+
+if TYPE_CHECKING:
+    from pymatgen.core.structure import Structure
 
 try:
     from emmet.core.optimade import OptimadeMaterialsDoc
@@ -38,7 +43,7 @@ test_structures = {
 @pytest.mark.xfail(reason="Optimade + fastapi issues.")
 @pytest.mark.parametrize("structure", test_structures.values())
 def test_oxidation_state(structure: Structure):
-    """Very simple test to make sure this actually works"""
+    """Very simple test to make sure this actually works."""
     print(f"Should work : {structure.composition}")
     doc = OptimadeMaterialsDoc.from_structure(
         structure, material_id=33, last_updated=datetime.utcnow()

@@ -1,8 +1,10 @@
-from maggma.api.resource import AggregationResource
+from __future__ import annotations
+
+from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.synthesis.query_operators import SynthesisSearchQuery
-from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.core.synthesis.core import SynthesisSearchResultModel
+from maggma.api.resource import AggregationResource
 
 synth_indexes = [
     ("synthesis_type", False),

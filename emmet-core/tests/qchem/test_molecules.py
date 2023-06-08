@@ -1,14 +1,13 @@
-import json
+from __future__ import annotations
+
 import datetime
+import json
 
 import pytest
-
-from monty.io import zopen
-
 from emmet.core.qchem.calc_types import TaskType
 from emmet.core.qchem.molecule import MoleculeDoc
 from emmet.core.qchem.task import TaskDocument
-
+from monty.io import zopen
 
 try:
     from openbabel.openbabel import OBAlign

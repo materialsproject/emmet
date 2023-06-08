@@ -1,12 +1,13 @@
+from __future__ import annotations
+
 from math import ceil
 
+from emmet.core.mpid import MPID
+from emmet.core.summary import HasProps, SummaryDoc
+from emmet.core.thermo import ThermoType
+from emmet.core.utils import jsanitize
 from maggma.builders import Builder
 from maggma.utils import grouper
-
-from emmet.core.mpid import MPID
-from emmet.core.summary import SummaryDoc, HasProps
-from emmet.core.utils import jsanitize
-from emmet.core.thermo import ThermoType
 
 
 class SummaryBuilder(Builder):
@@ -91,13 +92,11 @@ class SummaryBuilder(Builder):
         )
 
     def get_items(self):
-        """
-        Gets all items to process
+        """Gets all items to process.
 
         Returns:
             list of relevant materials and data
         """
-
         self.logger.info("Summary Builder Started")
 
         q = dict(self.query)
@@ -109,18 +108,16 @@ class SummaryBuilder(Builder):
 
         self.total = len(summary_set)
 
-        self.logger.debug("Processing {} materials.".format(self.total))
+        self.logger.debug(f"Processing {self.total} materials.")
 
         for entry in summary_set:
             materials_doc = self.materials.query_one({self.materials.key: entry})
 
-            valid_static_tasks = set(
-                [
-                    task_id
+            valid_static_tasks = {
+                task_id
                     for task_id, task_type in materials_doc["task_types"].items()
                     if task_type == "Static"
-                ]
-            ) - set(materials_doc["deprecated_tasks"])
+            } - set(materials_doc["deprecated_tasks"])
 
             all_tasks = list(materials_doc["task_types"].keys())
 
@@ -204,9 +201,7 @@ class SummaryBuilder(Builder):
             yield data
 
     def prechunk(self, number_splits: int):  # pragma: no cover
-        """
-        Prechunk method to perform chunking by the key field
-        """
+        """Prechunk method to perform chunking by the key field."""
         q = dict(self.query)
 
         keys = self.summary.newer_in(self.materials, criteria=q, exhaustive=True)
@@ -221,8 +216,7 @@ class SummaryBuilder(Builder):
         return jsanitize(doc.dict(exclude_none=False), allow_bson=True)
 
     def update_targets(self, items):
-        """
-        Copy each summary doc to the store
+        """Copy each summary doc to the store.
 
         Args:
             items ([dict]): A list of dictionaries of mpid document pairs to update
@@ -230,7 +224,7 @@ class SummaryBuilder(Builder):
         items = list(filter(None, items))
 
         if len(items) > 0:
-            self.logger.info("Inserting {} summary docs".format(len(items)))
+            self.logger.info(f"Inserting {len(items)} summary docs")
             self.summary.update(docs=items)
         else:
             self.logger.info("No summary entries to update")

@@ -1,10 +1,11 @@
-from material_resources import resources as materials_resources
-from molecule_resources import resources as molecule_resources
-from legacy_resources import resources as legacy_resources
+from __future__ import annotations
 
 from emmet.api.core.api import MAPI
 from emmet.api.core.documentation import description, tags_meta
 from emmet.api.core.settings import MAPISettings
+from legacy_resources import resources as legacy_resources
+from material_resources import resources as materials_resources
+from molecule_resources import resources as molecule_resources
 
 default_settings = MAPISettings()
 

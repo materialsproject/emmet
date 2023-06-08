@@ -1,17 +1,19 @@
 # mypy: ignore-errors
 
-"""
-Settings for defaults in the core definitions of Materials Project Documents
-"""
+"""Settings for defaults in the core definitions of Materials Project Documents."""
+from __future__ import annotations
+
 import json
 from pathlib import Path
-from typing import Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, TypeVar
 
 import requests
 from monty.json import MontyDecoder
 from pydantic import BaseSettings, Field, root_validator
 from pydantic.class_validators import validator
-from pydantic.types import PyObject
+
+if TYPE_CHECKING:
+    from pydantic.types import PyObject
 
 DEFAULT_CONFIG_FILE_PATH = str(Path.home().joinpath(".emmet.json"))
 
@@ -20,11 +22,10 @@ S = TypeVar("S", bound="EmmetSettings")
 
 
 class EmmetSettings(BaseSettings):
-    """
-    Settings for the emmet- packages
+    """Settings for the emmet- packages
     Non-core packages should subclass this to get settings specific to their needs
     The default way to modify these is to modify ~/.emmet.json or set the environment variable
-    EMMET_CONFIG_FILE to point to the json with emmet settings
+    EMMET_CONFIG_FILE to point to the json with emmet settings.
     """
 
     config_file: str = Field(
@@ -63,7 +64,7 @@ class EmmetSettings(BaseSettings):
         description="Maximum miller allowed for computing strain direction for maximal piezo response",
     )
 
-    QCHEM_FUNCTIONAL_QUALITY_SCORES: Dict[str, int] = Field(
+    QCHEM_FUNCTIONAL_QUALITY_SCORES: dict[str, int] = Field(
         {
             "wB97M-V": 7,
             "wB97X-V": 6,
@@ -79,7 +80,7 @@ class EmmetSettings(BaseSettings):
         description="Dictionary mapping Q-Chem density functionals to a quality score.",
     )
 
-    QCHEM_BASIS_QUALITY_SCORES: Dict[str, int] = Field(
+    QCHEM_BASIS_QUALITY_SCORES: dict[str, int] = Field(
         {
             "6-31g*": 1,
             "def2-SVPD": 2,
@@ -92,12 +93,12 @@ class EmmetSettings(BaseSettings):
         description="Dictionary mapping Q-Chem basis sets to a quality score.",
     )
 
-    QCHEM_SOLVENT_MODEL_QUALITY_SCORES: Dict[str, int] = Field(
+    QCHEM_SOLVENT_MODEL_QUALITY_SCORES: dict[str, int] = Field(
         {"CMIRS": 7, "SMD": 5, "ISOSVP": 4, "PCM": 3, "VACUUM": 1},
         description="Dictionary mapping Q-Chem solvent models to a quality score.",
     )
 
-    QCHEM_TASK_QUALITY_SCORES: Dict[str, int] = Field(
+    QCHEM_TASK_QUALITY_SCORES: dict[str, int] = Field(
         {
             "single_point": 1,
             "geometry optimization": 2,
@@ -106,7 +107,7 @@ class EmmetSettings(BaseSettings):
         description="Dictionary mapping Q-Chem task type to a quality score",
     )
 
-    VASP_STRUCTURE_QUALITY_SCORES: Dict[str, int] = Field(
+    VASP_STRUCTURE_QUALITY_SCORES: dict[str, int] = Field(
         {"R2SCAN": 5, "SCAN": 4, "GGA+U": 3, "GGA": 2, "PBESol": 1},
         description="Dictionary Mapping VASP calculation run types to rung level for VASP materials builder structure data",  # noqa: E501
     )
@@ -121,7 +122,7 @@ class EmmetSettings(BaseSettings):
         description="Relative tolerance for kspacing to still be a valid task document",
     )
 
-    VASP_DEFAULT_INPUT_SETS: Dict[str, PyObject] = Field(
+    VASP_DEFAULT_INPUT_SETS: dict[str, PyObject] = Field(
         {
             "GGA Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
             "GGA+U Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
@@ -154,7 +155,7 @@ class EmmetSettings(BaseSettings):
         True, description="Whether to validate POTCAR hash values."
     )
 
-    VASP_CHECKED_LDAU_FIELDS: List[str] = Field(
+    VASP_CHECKED_LDAU_FIELDS: list[str] = Field(
         ["LDAUU", "LDAUJ", "LDAUL"], description="LDAU fields to validate for tasks"
     )
 
@@ -174,9 +175,8 @@ class EmmetSettings(BaseSettings):
 
     @root_validator(pre=True)
     def load_default_settings(cls, values):
-        """
-        Loads settings from a root file if available and uses that as defaults in
-        place of built in defaults
+        """Loads settings from a root file if available and uses that as defaults in
+        place of built in defaults.
         """
         config_file_path: str = values.get("config_file", DEFAULT_CONFIG_FILE_PATH)
 
@@ -193,7 +193,7 @@ class EmmetSettings(BaseSettings):
         return new_values
 
     @classmethod
-    def autoload(cls: Type[S], settings: Union[None, dict, S]) -> S:
+    def autoload(cls: type[S], settings: None | dict | S) -> S:
         if settings is None:
             return cls()
         elif isinstance(settings, dict):
@@ -207,7 +207,5 @@ class EmmetSettings(BaseSettings):
         return value
 
     def as_dict(self):
-        """
-        HotPatch to enable serializing EmmetSettings via Monty
-        """
+        """HotPatch to enable serializing EmmetSettings via Monty."""
         return self.dict(exclude_unset=True, exclude_defaults=True)

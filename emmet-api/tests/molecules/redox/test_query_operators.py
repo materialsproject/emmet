@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from emmet.api.routes.molecules.redox.query_operators import RedoxPotentialQuery
+from monty.serialization import dumpfn, loadfn
 from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 
 
 def test_redox_potential_query():

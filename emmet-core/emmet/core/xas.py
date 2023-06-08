@@ -1,27 +1,29 @@
+from __future__ import annotations
+
 import warnings
 from itertools import groupby
-from typing import List
+from typing import TYPE_CHECKING
 
 import numpy as np
-from pydantic import Field
-from pymatgen.analysis.xas.spectrum import XAS, site_weighted_spectrum
-from pymatgen.core.periodic_table import Element
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-
-from emmet.core.feff.task import TaskDocument
-from emmet.core.mpid import MPID
 from emmet.core.spectrum import SpectrumDoc
 from emmet.core.utils import ValueEnum
+from pydantic import Field
+from pymatgen.analysis.xas.spectrum import XAS, site_weighted_spectrum
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+
+if TYPE_CHECKING:
+    from emmet.core.feff.task import TaskDocument
+    from emmet.core.mpid import MPID
+    from pymatgen.core.periodic_table import Element
 
 
 class Edge(ValueEnum):
-    """
-    The interaction edge for XAS
+    """The interaction edge for XAS
     There are 2n-1 sub-components to each edge where
     K: n=1
     L: n=2
     M: n=3
-    N: n=4
+    N: n=4.
     """
 
     K = "K"
@@ -31,11 +33,10 @@ class Edge(ValueEnum):
 
 
 class Type(ValueEnum):
-    """
-    The type of XAS Spectrum
+    """The type of XAS Spectrum
     XANES - Just the near-edge region
     EXAFS - Just the extended region
-    XAFS - Fully stitched XANES + EXAFS
+    XAFS - Fully stitched XANES + EXAFS.
     """
 
     XANES = "XANES"
@@ -44,15 +45,13 @@ class Type(ValueEnum):
 
 
 class XASDoc(SpectrumDoc):
-    """
-    Document describing a XAS Spectrum.
-    """
+    """Document describing a XAS Spectrum."""
 
     spectrum_name = "XAS"
 
     spectrum: XAS
 
-    task_ids: List[str] = Field(
+    task_ids: list[str] = Field(
         ...,
         title="Calculation IDs",
         description="List of Calculations IDs used to make this XAS spectrum.",
@@ -92,20 +91,18 @@ class XASDoc(SpectrumDoc):
 
     @classmethod
     def from_task_docs(
-        cls, all_tasks: List[TaskDocument], material_id: MPID, num_samples: int = 200
-    ) -> List["XASDoc"]:
-        """
-        Converts a set of FEFF Task Documents into XASDocs by merging XANES + EXAFS into XAFS spectra first
-        and then merging along equivalent elements to get element averaged spectra
+        cls, all_tasks: list[TaskDocument], material_id: MPID, num_samples: int = 200
+    ) -> list[XASDoc]:
+        """Converts a set of FEFF Task Documents into XASDocs by merging XANES + EXAFS into XAFS spectra first
+        and then merging along equivalent elements to get element averaged spectra.
 
         Args:
             all_tasks: FEFF Task documents that have matching structure
             material_id: The material ID for the generated XASDocs
             num_samples: number of sampled points for site-weighted averaging
         """
-
-        all_spectra: List[XAS] = []
-        averaged_spectra: List[XAS] = []
+        all_spectra: list[XAS] = []
+        averaged_spectra: list[XAS] = []
 
         # This is a hack using extra attributes within this function to carry some extra information
         # without generating new objects
@@ -223,10 +220,8 @@ class XASDoc(SpectrumDoc):
         return spectra_docs
 
 
-def _is_missing_sites(spectra: List[XAS]):
-    """
-    Determines if the collection of spectra are missing any indicies for the given element
-    """
+def _is_missing_sites(spectra: list[XAS]):
+    """Determines if the collection of spectra are missing any indicies for the given element."""
     structure = spectra[0].structure
     element = spectra[0].absorbing_element
 
@@ -246,9 +241,7 @@ def _is_missing_sites(spectra: List[XAS]):
 
 
 class SymmSites:
-    """
-    Wrapper to get equivalent site indicies from SpacegroupAnalyzer
-    """
+    """Wrapper to get equivalent site indicies from SpacegroupAnalyzer."""
 
     def __init__(self, structure):
         self.structure = structure
@@ -259,9 +252,7 @@ class SymmSites:
         self.eq_atoms = symm_data["equivalent_atoms"]
 
     def get_equivalent_site_indices(self, i):
-        """
-        Site indices in the structure that are equivalent to the given site i.
-        """
+        """Site indices in the structure that are equivalent to the given site i."""
         rv = np.argwhere(self.eq_atoms == self.eq_atoms[i]).squeeze().tolist()
         if isinstance(rv, int):
             rv = [rv]

@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from emmet.api.routes.molecules.thermo.query_operators import ThermoCorrectionQuery
+from monty.serialization import dumpfn, loadfn
 from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 
 
 def test_thermo_correction_query():

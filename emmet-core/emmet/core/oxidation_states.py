@@ -1,19 +1,22 @@
+from __future__ import annotations
+
 import logging
 from collections import defaultdict
-from typing import Dict, List
+from typing import TYPE_CHECKING
 
 import numpy as np
+from emmet.core.material_property import PropertyDoc
 from pydantic import Field
 from pymatgen.analysis.bond_valence import BVAnalyzer
-from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Specie
 
-from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import MPID
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID
+    from pymatgen.core import Structure
 
 
 class OxidationStateDoc(PropertyDoc):
-    """Oxidation states computed from the structure"""
+    """Oxidation states computed from the structure."""
 
     property_name = "oxidation"
 
@@ -21,13 +24,13 @@ class OxidationStateDoc(PropertyDoc):
         ...,
         description="The structure used in the generation of the oxidation state data.",
     )
-    possible_species: List[str] = Field(
+    possible_species: list[str] = Field(
         description="Possible charged species in this material."
     )
-    possible_valences: List[float] = Field(
+    possible_valences: list[float] = Field(
         description="List of valences for each site in this material."
     )
-    average_oxidation_states: Dict[str, float] = Field(
+    average_oxidation_states: dict[str, float] = Field(
         description="Average oxidation states for each unique species."
     )
     method: str = Field(None, description="Method used to compute oxidation states.")
@@ -75,7 +78,7 @@ class OxidationStateDoc(PropertyDoc):
             }
 
         except Exception as e:
-            logging.error("BVAnalyzer failed with: {}".format(e))
+            logging.error(f"BVAnalyzer failed with: {e}")
 
             try:
                 first_oxi_state_guess = structure.composition.oxi_state_guesses(
@@ -99,7 +102,7 @@ class OxidationStateDoc(PropertyDoc):
                 }
 
             except Exception as e:
-                logging.error("Oxidation state guess failed with: {}".format(e))
+                logging.error(f"Oxidation state guess failed with: {e}")
                 d["warnings"] = ["Oxidation state guessing failed."]
                 d["state"] = "unsuccessful"
 

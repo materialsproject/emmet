@@ -1,4 +1,5 @@
-# noqa: E501
+from __future__ import annotations
+
 description = """
 The Materials Project API allows anyone to have direct access to current, up-to-date information from the Materials Project database in a structured way.
 

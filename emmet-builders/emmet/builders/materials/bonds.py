@@ -1,10 +1,15 @@
-from maggma.builders.map_builder import MapBuilder
-from maggma.core import Store
-from pymatgen.core import Structure
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from emmet.core.bonds import BondingDoc
 from emmet.core.utils import jsanitize
+from maggma.builders.map_builder import MapBuilder
+from pymatgen.core import Structure
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+
+if TYPE_CHECKING:
+    from maggma.core import Store
 
 
 class BondingBuilder(MapBuilder):
@@ -14,8 +19,7 @@ class BondingBuilder(MapBuilder):
         bonding: Store,
         **kwargs,
     ):
-        """
-        Creates Bonding documents from structures, ideally with
+        """Creates Bonding documents from structures, ideally with
         oxidation states already annotated but will also work from any
         collection with structure and mp-id.
 

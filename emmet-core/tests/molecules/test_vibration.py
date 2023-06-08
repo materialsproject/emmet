@@ -1,12 +1,12 @@
-import json
+from __future__ import annotations
+
 import datetime
+import json
 
 import pytest
-
-from monty.io import zopen
-
-from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.vibration import VibrationDoc
+from emmet.core.qchem.task import TaskDocument
+from monty.io import zopen
 
 
 @pytest.fixture(scope="session")

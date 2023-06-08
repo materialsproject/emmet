@@ -1,14 +1,18 @@
-from typing import Optional, Dict, Iterable
-from emmet.core.mpid import MPID
-from maggma.core.store import Store
-from maggma.core.builder import Builder
-from pymatgen.core.structure import Structure
-from pymatgen.analysis.elasticity.elastic import ElasticTensor
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from __future__ import annotations
 
+from typing import TYPE_CHECKING, Iterable
+
+from emmet.core.mpid import MPID
 from emmet.core.substrates import SubstratesDoc
 from emmet.core.utils import jsanitize
+from maggma.core.builder import Builder
 from maggma.utils import grouper
+from pymatgen.analysis.elasticity.elastic import ElasticTensor
+from pymatgen.core.structure import Structure
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+
+if TYPE_CHECKING:
+    from maggma.core.store import Store
 
 
 class SubstratesBuilder(Builder):
@@ -17,11 +21,10 @@ class SubstratesBuilder(Builder):
         materials: Store,
         substrates: Store,
         elasticity: Store,
-        query: Optional[Dict] = None,
+        query: dict | None = None,
         **kwargs,
     ):
-        """
-        Calculates matching substrates
+        """Calculates matching substrates.
 
         Args:
             materials (Store): Store of materials documents
@@ -47,7 +50,7 @@ class SubstratesBuilder(Builder):
             **kwargs,
         )
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
         to_process_mat_ids = self._find_to_process()
 
         return [
@@ -56,13 +59,11 @@ class SubstratesBuilder(Builder):
         ]
 
     def get_items(self):
-        """
-        Gets all materials that need new substrates
+        """Gets all materials that need new substrates.
 
         Returns:
             generator of materials to calculate substrates
         """
-
         to_process_mat_ids = self._find_to_process()
 
         self.logger.info(
@@ -97,8 +98,7 @@ class SubstratesBuilder(Builder):
             }
 
     def process_item(self, item):
-        """
-        Calculates substrate matches for all given substrates
+        """Calculates substrate matches for all given substrates.
 
         Args:
             item (dict): a dict with a material_id and a structure
@@ -106,7 +106,6 @@ class SubstratesBuilder(Builder):
         Returns:
             dict: a diffraction dict
         """
-
         mpid = MPID(item["material_id"])
         elastic_tensor = item.get("elastic_tensor", None)
         elastic_tensor = (
@@ -130,25 +129,21 @@ class SubstratesBuilder(Builder):
         return jsanitize(substrate_doc.dict(), allow_bson=True)
 
     def update_targets(self, items):
-        """
-        Inserts the new substrate matches into the substrates collection
+        """Inserts the new substrate matches into the substrates collection.
 
         Args:
             items ([[dict]]): a list of list of thermo dictionaries to update
         """
-
         items = list(filter(None, items))
 
         if len(items) > 0:
-            self.logger.info("Updating {} substrate matches".format(len(items)))
+            self.logger.info(f"Updating {len(items)} substrate matches")
             self.substrates.update(docs=items)
         else:
             self.logger.info("No items to update")
 
     def ensure_indicies(self):
-        """
-        Ensures indicies on the substrates, materials, and elastic collections
-        """
+        """Ensures indicies on the substrates, materials, and elastic collections."""
         # Search indicies for materials
         self.materials.ensure_index(self.materials.key)
         self.materials.ensure_index(self.materials.last_updated_field)

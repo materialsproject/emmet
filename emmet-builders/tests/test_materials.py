@@ -1,12 +1,13 @@
+from __future__ import annotations
+
 from pathlib import Path
-from emmet.builders.settings import EmmetBuildSettings
 
 import pytest
-from maggma.stores import JSONStore, MemoryStore
-from monty.serialization import dumpfn, loadfn
-
+from emmet.builders.settings import EmmetBuildSettings
 from emmet.builders.vasp.materials import MaterialsBuilder
 from emmet.builders.vasp.task_validator import TaskValidator
+from maggma.stores import JSONStore, MemoryStore
+from monty.serialization import dumpfn, loadfn
 
 
 @pytest.fixture(scope="session")
@@ -25,7 +26,7 @@ def validation_store(tasks_store):
     return validation_store
 
 
-@pytest.fixture
+@pytest.fixture()
 def materials_store():
     return MemoryStore()
 

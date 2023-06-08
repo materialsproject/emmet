@@ -1,5 +1,6 @@
-import numpy as np
+from __future__ import annotations
 
+import numpy as np
 from maggma.builders import Builder
 
 __author__ = "Nils E. R. Zimmermann <nerz@lbl.gov>"
@@ -11,8 +12,7 @@ __author__ = "Nils E. R. Zimmermann <nerz@lbl.gov>"
 
 class StructureSimilarityBuilder(Builder):
     def __init__(self, site_descriptors, structure_similarity, fp_type="csf", **kwargs):
-        """
-        Calculates similarity metrics between structures on the basis
+        """Calculates similarity metrics between structures on the basis
         of site descriptors.
 
         Args:
@@ -28,7 +28,6 @@ class StructureSimilarityBuilder(Builder):
                            or "opsf" (based on matminer's
                            OPSiteFingerprint class)).
         """
-
         self.site_descriptors = site_descriptors
         self.structure_similarity = structure_similarity
         self.fp_type = fp_type
@@ -38,13 +37,11 @@ class StructureSimilarityBuilder(Builder):
         )
 
     def get_items(self):
-        """
-        Gets all materials that need new site descriptors.
+        """Gets all materials that need new site descriptors.
 
         Returns:
             generator of materials to calculate site descriptors.
         """
-
         self.logger.info("Structure Similarity Builder Started")
 
         self.logger.info("Setting indexes")
@@ -62,11 +59,10 @@ class StructureSimilarityBuilder(Builder):
                     properties=[self.site_descriptors.key, "statistics"],
                     criteria={self.site_descriptors.key: task_ids[j]},
                 )
-                yield list([d1, d2])
+                yield [d1, d2]
 
     def process_item(self, item):
-        """
-        Calculates site descriptors for the structures
+        """Calculates site descriptors for the structures.
 
         Args:
             item (list): a list (length 2) with each one document that
@@ -94,14 +90,13 @@ class StructureSimilarityBuilder(Builder):
         return sim_doc
 
     def update_targets(self, items):
-        """
-        Inserts the new task_types into the task_types collection.
+        """Inserts the new task_types into the task_types collection.
 
         Args:
             items ([[dict]]): a list of list of site-descriptors dictionaries to update.
         """
         if len(items) > 0:
-            self.logger.info("Updating {} structure-similarity docs".format(len(items)))
+            self.logger.info(f"Updating {len(items)} structure-similarity docs")
             self.structure_similarity.update(docs=items)
         else:
             self.logger.info("No items to update")

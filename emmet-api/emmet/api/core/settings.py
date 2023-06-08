@@ -1,13 +1,15 @@
-from typing import Literal
-from pydantic import BaseSettings, Field
-from emmet.api import __file__ as root_dir
+from __future__ import annotations
+
 import os
+from typing import Literal
+
+from emmet.api import __file__ as root_dir
+from pydantic import BaseSettings, Field
 
 
 class MAPISettings(BaseSettings):
-    """
-    Special class to store settings for MAPI
-    python module
+    """Special class to store settings for MAPI
+    python module.
     """
 
     DEBUG: bool = Field(False, description="Turns on debug mode for MAPI")

@@ -1,7 +1,8 @@
-from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
+from __future__ import annotations
 
 from emmet.api.routes.molecules.summary.query_operators import MPculeIDsSearchQuery
+from monty.serialization import dumpfn, loadfn
+from monty.tempfile import ScratchDir
 
 
 def test_mpcules_ids_query():

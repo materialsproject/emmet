@@ -1,20 +1,20 @@
-""" Core definition of a CorrectedEntriesDoc Document """
+"""Core definition of a CorrectedEntriesDoc Document."""
+from __future__ import annotations
 
-from typing import Dict, Union, List, Optional
 from datetime import datetime
-
-from pydantic import Field
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from typing import TYPE_CHECKING
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.thermo import ThermoType
-from emmet.core.vasp.calc_types.enums import RunType
+from pydantic import Field
+
+if TYPE_CHECKING:
+    from emmet.core.thermo import ThermoType
+    from emmet.core.vasp.calc_types.enums import RunType
+    from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 
 class CorrectedEntriesDoc(EmmetBaseModel):
-    """
-    A corrected entries document
-    """
+    """A corrected entries document."""
 
     property_name = "corrected_entries"
 
@@ -24,9 +24,9 @@ class CorrectedEntriesDoc(EmmetBaseModel):
         description="Dash-delimited string of elements in the material.",
     )
 
-    entries: Dict[
-        Union[ThermoType, RunType],
-        Optional[List[Union[ComputedEntry, ComputedStructureEntry]]],
+    entries: dict[
+        ThermoType | RunType,
+        list[ComputedEntry | ComputedStructureEntry] | None,
     ] = Field(
         ...,
         description="List of all corrected entries that are valid for the specified thermo type.",

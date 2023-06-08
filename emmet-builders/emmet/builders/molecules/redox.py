@@ -1,22 +1,24 @@
-from collections import defaultdict
+from __future__ import annotations
+
 import copy
+from collections import defaultdict
 from datetime import datetime
 from itertools import chain, groupby
 from math import ceil
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Iterable, Iterator
 
+from emmet.builders.settings import EmmetBuildSettings
+from emmet.core.molecules.bonds import metals
+from emmet.core.molecules.redox import RedoxDoc
+from emmet.core.molecules.thermo import MoleculeThermoDoc
+from emmet.core.qchem.molecule import MoleculeDoc
+from emmet.core.qchem.task import TaskDocument
+from emmet.core.utils import confirm_molecule, get_graph_hash, jsanitize
 from maggma.builders import Builder
-from maggma.core import Store
 from maggma.utils import grouper
 
-from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.molecule import MoleculeDoc
-from emmet.core.molecules.bonds import metals
-from emmet.core.molecules.thermo import MoleculeThermoDoc
-from emmet.core.molecules.redox import RedoxDoc
-from emmet.core.utils import confirm_molecule, get_graph_hash, jsanitize
-from emmet.builders.settings import EmmetBuildSettings
-
+if TYPE_CHECKING:
+    from maggma.core import Store
 
 __author__ = "Evan Spotte-Smith"
 
@@ -24,8 +26,7 @@ SETTINGS = EmmetBuildSettings()
 
 
 class RedoxBuilder(Builder):
-    """
-    The RedoxBuilder extracts the highest-quality redox data (vertical and
+    """The RedoxBuilder extracts the highest-quality redox data (vertical and
     adiabatic reduction and oxidation potentials, etc.)
     from a MoleculeDoc (lowest electronic energy, highest level of theory).
 
@@ -51,8 +52,8 @@ class RedoxBuilder(Builder):
         molecules: Store,
         thermo: Store,
         redox: Store,
-        query: Optional[Dict] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        query: dict | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
         self.tasks = tasks
@@ -66,10 +67,7 @@ class RedoxBuilder(Builder):
         super().__init__(sources=[tasks, molecules, thermo], targets=[redox])
 
     def ensure_indexes(self):
-        """
-        Ensures indices on the collections needed for building
-        """
-
+        """Ensures indices on the collections needed for building."""
         # Basic search index for tasks
         self.tasks.ensure_index("task_id")
         self.tasks.ensure_index("last_updated")
@@ -100,9 +98,8 @@ class RedoxBuilder(Builder):
         self.redox.ensure_index("last_updated")
         self.redox.ensure_index("formula_alphabetical")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
-        """Prechunk the builder for distributed computation"""
-
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
+        """Prechunk the builder for distributed computation."""
         temp_query = dict(self.query)
         temp_query["deprecated"] = False
 
@@ -113,7 +110,7 @@ class RedoxBuilder(Builder):
             )
         )
 
-        processed_docs = set([e for e in self.redox.distinct("molecule_id")])
+        processed_docs = set(self.redox.distinct("molecule_id"))
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
         to_process_forms = {
             d["formula_alphabetical"]
@@ -126,16 +123,14 @@ class RedoxBuilder(Builder):
         for formula_chunk in grouper(to_process_forms, N):
             yield {"query": {"formula_alphabetical": {"$in": list(formula_chunk)}}}
 
-    def get_items(self) -> Iterator[List[Dict]]:
-        """
-        Gets all items to process into redox documents.
+    def get_items(self) -> Iterator[list[dict]]:
+        """Gets all items to process into redox documents.
         This does no datetime checking; relying on on whether
-        task_ids are included in the orbitals Store
+        task_ids are included in the orbitals Store.
 
         Returns:
             generator or list relevant tasks and molecules to process into documents
         """
-
         self.logger.info("Redox builder started")
         self.logger.info("Setting indexes")
         self.ensure_indexes()
@@ -154,7 +149,7 @@ class RedoxBuilder(Builder):
             )
         )
 
-        processed_docs = set([e for e in self.redox.distinct("molecule_id")])
+        processed_docs = set(self.redox.distinct("molecule_id"))
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
         to_process_forms = {
             d["formula_alphabetical"]
@@ -175,9 +170,8 @@ class RedoxBuilder(Builder):
 
             yield molecules
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
-        """
-        Process the tasks into a RedoxDoc
+    def process_item(self, items: list[dict]) -> list[dict]:
+        """Process the tasks into a RedoxDoc.
 
         Args:
             tasks List[Dict] : a list of MoleculeDocs in dict form
@@ -185,7 +179,6 @@ class RedoxBuilder(Builder):
         Returns:
             [dict] : a list of new redox docs
         """
-
         mols = [MoleculeDoc(**item) for item in items]
         formula = mols[0].formula_alphabetical
         mol_ids = [m.molecule_id for m in mols]
@@ -198,7 +191,7 @@ class RedoxBuilder(Builder):
 
         for graph_group in group_by_graph.values():
             # Molecule docs will be grouped by charge
-            charges: Dict[int, Any] = dict()
+            charges: dict[int, Any] = dict()
 
             for gg in graph_group:
                 # First, grab relevant MoleculeThermoDocs and identify possible IE/EA single-points
@@ -302,21 +295,19 @@ class RedoxBuilder(Builder):
                         relevant_red = list()
                         relevant_ox = list()
 
-                        for rmol, rdocs in red_coll:
-                            if lot_solv in rdocs:
-                                if (
-                                    rdocs[lot_solv]["thermo_doc"].combined_lot_solvent
-                                    == combined
-                                ):
-                                    relevant_red.append(rdocs[lot_solv])
+                        for _rmol, rdocs in red_coll:
+                            if lot_solv in rdocs and (
+                                rdocs[lot_solv]["thermo_doc"].combined_lot_solvent
+                                == combined
+                            ):
+                                relevant_red.append(rdocs[lot_solv])
 
-                        for omol, odocs in ox_coll:
-                            if lot_solv in odocs:
-                                if (
-                                    odocs[lot_solv]["thermo_doc"].combined_lot_solvent
-                                    == combined
-                                ):
-                                    relevant_ox.append(odocs[lot_solv])
+                        for _omol, odocs in ox_coll:
+                            if lot_solv in odocs and (
+                                odocs[lot_solv]["thermo_doc"].combined_lot_solvent
+                                == combined
+                            ):
+                                relevant_ox.append(odocs[lot_solv])
 
                         # Take best options (based on electronic energy), where available
                         if len(relevant_red) == 0:
@@ -355,14 +346,12 @@ class RedoxBuilder(Builder):
             [doc.dict() for doc in redox_docs if doc is not None], allow_bson=True
         )
 
-    def update_targets(self, items: List[List[Dict]]):
-        """
-        Inserts the new documents into the orbitals collection
+    def update_targets(self, items: list[list[dict]]):
+        """Inserts the new documents into the orbitals collection.
 
         Args:
             items [[dict]]: A list of documents to update
         """
-
         docs = list(chain.from_iterable(items))  # type: ignore
 
         # Add timestamp
@@ -386,15 +375,13 @@ class RedoxBuilder(Builder):
             self.logger.info("No items to update")
 
     @staticmethod
-    def _group_by_graph(mol_docs: List[MoleculeDoc]) -> Dict[int, List[MoleculeDoc]]:
-        """
-        Group molecule docs by molecular graph connectivity
+    def _group_by_graph(mol_docs: list[MoleculeDoc]) -> dict[int, list[MoleculeDoc]]:
+        """Group molecule docs by molecular graph connectivity.
 
         :param entries: List of entries (dicts derived from TaskDocuments)
         :return: Grouped molecule entries
         """
-
-        graph_hashes_nometal: List[str] = list()
+        graph_hashes_nometal: list[str] = list()
         results = defaultdict(list)
 
         # Within each group, group by the covalent molecular graph
@@ -425,12 +412,11 @@ class RedoxBuilder(Builder):
 
     @staticmethod
     def _collect_by_lot_solvent(
-        thermo_docs: List[MoleculeThermoDoc],
-        ie_docs: List[TaskDocument],
-        ea_docs: List[TaskDocument],
-    ) -> Dict[str, Any]:
-        """
-        For a given MoleculeDoc, group potential MoleculeThermoDocs and TaskDocs for
+        thermo_docs: list[MoleculeThermoDoc],
+        ie_docs: list[TaskDocument],
+        ea_docs: list[TaskDocument],
+    ) -> dict[str, Any]:
+        """For a given MoleculeDoc, group potential MoleculeThermoDocs and TaskDocs for
         IE/EA calculations based on level of theory and solvent.
 
         Args:
@@ -447,10 +433,9 @@ class RedoxBuilder(Builder):
                  }
         """
 
-        def _lot_solv(doc: Union[MoleculeThermoDoc, TaskDocument]):
-            if isinstance(doc, MoleculeThermoDoc):
-                if doc.correction:
-                    return doc.correction_lot_solvent
+        def _lot_solv(doc: MoleculeThermoDoc | TaskDocument):
+            if isinstance(doc, MoleculeThermoDoc) and doc.correction:
+                return doc.correction_lot_solvent
             return doc.lot_solvent
 
         thermo_grouped = groupby(sorted(thermo_docs, key=_lot_solv), key=_lot_solv)
@@ -477,7 +462,7 @@ class RedoxBuilder(Builder):
             if k not in groups:
                 continue
 
-            this_ie_doc = sorted(list(g), key=lambda x: x.output.final_energy)[0]
+            this_ie_doc = sorted(g, key=lambda x: x.output.final_energy)[0]
             groups[k]["ie_doc"] = this_ie_doc
 
         for k, g in ea_grouped:
@@ -485,7 +470,7 @@ class RedoxBuilder(Builder):
             if k not in groups:
                 continue
 
-            this_ea_doc = sorted(list(g), key=lambda x: x.output.final_energy)[0]
+            this_ea_doc = sorted(g, key=lambda x: x.output.final_energy)[0]
             groups[k]["ea_doc"] = this_ea_doc
 
         return groups

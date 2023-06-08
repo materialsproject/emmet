@@ -1,12 +1,10 @@
-from typing import List
+from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
 
 class SimilarityEntry(BaseModel):
-    """
-    Find similar materials to a specified material based on crystal geometry.
-    """
+    """Find similar materials to a specified material based on crystal geometry."""
 
     task_id: str = Field(
         None,
@@ -30,11 +28,9 @@ class SimilarityEntry(BaseModel):
 
 
 class SimilarityDoc(BaseModel):
-    """
-    Model for a document containing structure similarity data
-    """
+    """Model for a document containing structure similarity data."""
 
-    sim: List[SimilarityEntry] = Field(
+    sim: list[SimilarityEntry] = Field(
         None,
         description="List containing similar structure data for a given material.",
     )

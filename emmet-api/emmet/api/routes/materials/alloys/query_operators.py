@@ -1,17 +1,20 @@
-from typing import Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
 
 
 class MaterialIDsSearchQuery(QueryOperator):
-    """
-    Method to generate a query on search docs using multiple material_id values
-    """
+    """Method to generate a query on search docs using multiple material_id values."""
 
     def query(
         self,
-        material_ids: Optional[str] = Query(
+        material_ids: str | None = Query(
             None, description="Comma-separated list of material_ids to query on"
         ),
     ) -> STORE_PARAMS:
@@ -42,7 +45,7 @@ class MaterialIDsSearchQuery(QueryOperator):
 class FormulaSearchQuery(QueryOperator):
     def query(
         self,
-        formulae: Optional[str] = Query(
+        formulae: str | None = Query(
             None, description="Comma-separated list of end-point formulas to query."
         ),
     ) -> STORE_PARAMS:

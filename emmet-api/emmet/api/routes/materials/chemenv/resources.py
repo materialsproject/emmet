@@ -1,19 +1,20 @@
-from maggma.api.query_operator import (
-    PaginationQuery,
-    SortQuery,
-    SparseFieldsQuery,
-    NumericQuery,
-)
-from maggma.api.resource import ReadOnlyResource
+from __future__ import annotations
 
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
-from emmet.api.routes.materials.materials.query_operators import (
-    MultiMaterialIDQuery,
-    ElementsQuery,
-)
 from emmet.api.routes.materials.chemenv.query_operators import ChemEnvQuery
+from emmet.api.routes.materials.materials.query_operators import (
+    ElementsQuery,
+    MultiMaterialIDQuery,
+)
 from emmet.core.chemenv import ChemEnvDoc
+from maggma.api.query_operator import (
+    NumericQuery,
+    PaginationQuery,
+    SortQuery,
+    SparseFieldsQuery,
+)
+from maggma.api.resource import ReadOnlyResource
 
 
 def chemenv_resource(chemenv_store):

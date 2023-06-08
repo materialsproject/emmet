@@ -1,42 +1,43 @@
-import tempfile
+from __future__ import annotations
+
 import os
+import tempfile
 from math import ceil
-from emmet.builders.settings import EmmetBuildSettings
+from typing import TYPE_CHECKING, Iterator
+
 import numpy as np
-from typing import Optional, Dict, List, Iterator, Tuple
-from maggma.utils import grouper
-
-from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
-from pymatgen.phonon.dos import CompletePhononDos
-from pymatgen.phonon.ir_spectra import IRDielectricTensor
-from pymatgen.core.structure import Structure
-from pymatgen.io.abinit.abiobjects import KSampling
-from pymatgen.symmetry.bandstructure import HighSymmKpath
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from abipy.dfpt.anaddbnc import AnaddbNcFile
 from abipy.abio.inputs import AnaddbInput
-from abipy.flowtk.tasks import AnaddbTask, TaskManager
-from abipy.dfpt.ddb import AnaddbError, DielectricTensorGenerator, DdbFile
-from abipy.dfpt.phonons import PhononBands
 from abipy.core.abinit_units import eV_to_THz
-from maggma.builders import Builder
-from maggma.core import Store
-
+from abipy.dfpt.anaddbnc import AnaddbNcFile
+from abipy.dfpt.ddb import AnaddbError, DdbFile, DielectricTensorGenerator
+from abipy.flowtk.tasks import AnaddbTask, TaskManager
+from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.phonon import (
-    PhononWarnings,
-    ThermodynamicProperties,
     AbinitPhonon,
+    Ddb,
+    PhononBandStructure,
+    PhononDos,
+    PhononWarnings,
+    PhononWebsiteBS,
+    ThermalDisplacement,
+    ThermodynamicProperties,
     VibrationalEnergy,
 )
-from emmet.core.phonon import (
-    PhononDos,
-    PhononBandStructure,
-    PhononWebsiteBS,
-    Ddb,
-    ThermalDisplacement,
-)
-from emmet.core.polar import DielectricDoc, BornEffectiveCharges, IRDielectric
+from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
 from emmet.core.utils import jsanitize
+from maggma.builders import Builder
+from maggma.utils import grouper
+from pymatgen.core.structure import Structure
+from pymatgen.io.abinit.abiobjects import KSampling
+from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
+from pymatgen.phonon.ir_spectra import IRDielectricTensor
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pymatgen.symmetry.bandstructure import HighSymmKpath
+
+if TYPE_CHECKING:
+    from abipy.dfpt.phonons import PhononBands
+    from maggma.core import Store
+    from pymatgen.phonon.dos import CompletePhononDos
 
 SETTINGS = EmmetBuildSettings()
 
@@ -52,15 +53,14 @@ class PhononBuilder(Builder):
         ddb_files: Store,
         th_disp: Store,
         phonon_website: Store,
-        query: Optional[Dict] = None,
-        manager: Optional[TaskManager] = None,
+        query: dict | None = None,
+        manager: TaskManager | None = None,
         symprec: float = SETTINGS.SYMPREC,
         angle_tolerance: float = SETTINGS.ANGLE_TOL,
         chunk_size=100,
         **kwargs,
     ):
-        """
-        Creates a set of collections for materials generating different kind of data
+        """Creates a set of collections for materials generating different kind of data
         from the phonon calculations.
         The builder requires the execution of the anaddb tool available in abinit.
         The parts that may contain large amount of data are split from the main
@@ -92,7 +92,6 @@ class PhononBuilder(Builder):
             angle_tolerance (float): angle tolerance for symmetry finding when
                 determining the band structure path.
         """
-
         self.phonon_materials = phonon_materials
         self.phonon = phonon
         self.ddb_source = ddb_source
@@ -119,13 +118,11 @@ class PhononBuilder(Builder):
         )
 
     def prechunk(self, number_splits: int):  # pragma: no cover
-        """
-        Gets all materials that need phonons
+        """Gets all materials that need phonons.
 
         Returns:
             generator of materials to extract phonon properties
         """
-
         # All relevant materials that have been updated since phonon props were last calculated
         q = dict(self.query)
 
@@ -136,14 +133,12 @@ class PhononBuilder(Builder):
         for mpid_chunk in grouper(mats, N):
             yield {"query": {self.phonon_materials.key: {"$in": list(mpid_chunk)}}}
 
-    def get_items(self) -> Iterator[Dict]:
-        """
-        Gets all materials that need phonons
+    def get_items(self) -> Iterator[dict]:
+        """Gets all materials that need phonons.
 
         Returns:
             generator of materials to extract phonon properties
         """
-
         self.logger.info("Phonon Builder Started")
 
         self.logger.info("Setting indexes")
@@ -153,7 +148,7 @@ class PhononBuilder(Builder):
         q = dict(self.query)
 
         mats = self.phonon.newer_in(self.phonon_materials, exhaustive=True, criteria=q)
-        self.logger.info("Found {} new materials for phonon data".format(len(mats)))
+        self.logger.info(f"Found {len(mats)} new materials for phonon data")
 
         # list of properties queried from the results DB
         # basic information
@@ -190,9 +185,8 @@ class PhononBuilder(Builder):
 
             yield item
 
-    def process_item(self, item: Dict) -> Optional[Dict]:
-        """
-        Generates the full phonon document from an item
+    def process_item(self, item: dict) -> dict | None:
+        """Generates the full phonon document from an item.
 
         Args:
             item (dict): a dict extracted from the phonon calculations results.
@@ -295,19 +289,16 @@ class PhononBuilder(Builder):
             )
             return None
 
-    def get_phonon_properties(self, item: Dict) -> Dict:
-        """
-        Extracts the phonon properties from the item
-        """
-
+    def get_phonon_properties(self, item: dict) -> dict:
+        """Extracts the phonon properties from the item."""
         # the temp dir should still exist when using the objects as some readings are done lazily
         with tempfile.TemporaryDirectory() as workdir:
             structure = Structure.from_dict(item["abinit_input"]["structure"])
 
-            self.logger.debug("Running anaddb in {}".format(workdir))
+            self.logger.debug(f"Running anaddb in {workdir}")
 
             ddb_path = os.path.join(workdir, "{}_DDB".format(item["mp_id"]))
-            with open(ddb_path, "wt") as ddb_file:
+            with open(ddb_path, "w") as ddb_file:
                 ddb_file.write(item["ddb_str"])
 
             ddb = DdbFile.from_string(item["ddb_str"])
@@ -335,14 +326,8 @@ class PhononBuilder(Builder):
                 symm_line_bands = self.get_pmg_bs(phbands, labels_list)  # type: ignore
 
                 # ananc
-                if has_bec and ananc_file.becs is not None:
-                    becs = ananc_file.becs.values.tolist()
-                else:
-                    becs = None
-                if has_epsinf and ananc_file.epsinf is not None:
-                    e_electronic = ananc_file.epsinf.tolist()
-                else:
-                    e_electronic = None
+                becs = ananc_file.becs.values.tolist() if has_bec and ananc_file.becs is not None else None
+                e_electronic = ananc_file.epsinf.tolist() if has_epsinf and ananc_file.epsinf is not None else None
                 e_total = (
                     ananc_file.eps0.tolist() if ananc_file.eps0 is not None else None
                 )
@@ -425,8 +410,7 @@ class PhononBuilder(Builder):
             return data
 
     def get_sum_rule_breakings(self, item: dict) -> dict:
-        """
-        Extracts the breaking of the acoustic and charge neutrality sum rules.
+        """Extracts the breaking of the acoustic and charge neutrality sum rules.
         Runs anaddb to get the values.
         """
         structure = Structure.from_dict(item["abinit_input"]["structure"])
@@ -436,7 +420,7 @@ class PhononBuilder(Builder):
 
         with tempfile.TemporaryDirectory() as workdir:
             ddb_path = os.path.join(workdir, "{}_DDB".format(item["mp_id"]))
-            with open(ddb_path, "wt") as ddb_file:
+            with open(ddb_path, "w") as ddb_file:
                 ddb_file.write(item["ddb_str"])
 
             ddb = DdbFile.from_string(item["ddb_str"])
@@ -478,8 +462,7 @@ class PhononBuilder(Builder):
     def run_anaddb(
         self, ddb_path: str, anaddb_input: AnaddbInput, workdir: str
     ) -> AnaddbTask:
-        """
-        Runs anaddb. Raise AnaddbError if the calculation couldn't complete
+        """Runs anaddb. Raise AnaddbError if the calculation couldn't complete.
 
         Args:
             ddb_path (str): path to the DDB file
@@ -488,21 +471,20 @@ class PhononBuilder(Builder):
         Returns:
             An abipy AnaddbTask instance.
         """
-
         task = AnaddbTask.temp_shell_task(
             anaddb_input, ddb_node=ddb_path, workdir=workdir, manager=self.manager
         )
 
         # Run the task here.
-        self.logger.debug("Start anaddb for {}".format(ddb_path))
+        self.logger.debug(f"Start anaddb for {ddb_path}")
         task.start_and_wait(autoparal=False)
-        self.logger.debug("Finished anaddb for {}".format(ddb_path))
+        self.logger.debug(f"Finished anaddb for {ddb_path}")
 
         report = task.get_event_report()
         if not report.run_completed:
             raise AnaddbError(task=task, report=report)
 
-        self.logger.debug("anaddb succesful for {}".format(ddb_path))
+        self.logger.debug(f"anaddb succesful for {ddb_path}")
 
         return task
 
@@ -513,9 +495,8 @@ class PhononBuilder(Builder):
         dos: str = "tetra",
         lo_to_splitting: bool = True,
         use_dieflag: bool = True,
-    ) -> Tuple[AnaddbInput, Optional[List]]:
-        """
-        creates the AnaddbInput object to calculate the phonon properties.
+    ) -> tuple[AnaddbInput, list | None]:
+        """Creates the AnaddbInput object to calculate the phonon properties.
         It also returns the list of qpoints labels for generating the PhononBandStructureSymmLine.
 
         Args:
@@ -527,7 +508,6 @@ class PhononBuilder(Builder):
                 BS will be calculated.
             use_dieflag (bool): the dielectric tensor will be calculated.
         """
-
         ngqpt = item["abinit_input"]["ngqpt"]
         q1shft = [(0, 0, 0)]
 
@@ -639,10 +619,9 @@ class PhononBuilder(Builder):
 
     @staticmethod
     def get_pmg_bs(
-        phbands: PhononBands, labels_list: List
+        phbands: PhononBands, labels_list: list
     ) -> PhononBandStructureSymmLine:
-        """
-        Generates a PhononBandStructureSymmLine starting from a abipy PhononBands object
+        """Generates a PhononBandStructureSymmLine starting from a abipy PhononBands object.
 
         Args:
             phbands (PhononBands): the phonon band structures
@@ -650,7 +629,6 @@ class PhononBuilder(Builder):
         Returns:
             An instance of PhononBandStructureSymmLine
         """
-
         structure = phbands.structure
 
         n_at = len(structure)
@@ -694,17 +672,14 @@ class PhononBuilder(Builder):
 
     @staticmethod
     def abinit_input_vars(item: dict) -> dict:
-        """
-        Extracts the useful abinit input parameters from an item.
-        """
-
+        """Extracts the useful abinit input parameters from an item."""
         i = item["abinit_input"]
 
         data = {}
 
         def get_vars(label):
             if label in i and i[label]:
-                return {k: v for (k, v) in i[label]["abi_args"]}
+                return dict(i[label]["abi_args"])
             else:
                 return {}
 
@@ -728,9 +703,8 @@ class PhononBuilder(Builder):
 
         return data
 
-    def update_targets(self, items: List[Dict]):
-        """
-        Inserts the new task_types into the task_types collection
+    def update_targets(self, items: list[dict]):
+        """Inserts the new task_types into the task_types collection.
 
         Args:
             items ([dict]): a list of phonon dictionaries to update
@@ -744,7 +718,7 @@ class PhononBuilder(Builder):
         items_ph_web = [i["phws"] for i in items]
 
         if len(items) > 0:
-            self.logger.info("Updating {} phonon docs".format(len(items)))
+            self.logger.info(f"Updating {len(items)} phonon docs")
             self.phonon.update(docs=items_ph)
             self.phonon_bs.update(docs=items_ph_band)
             self.phonon_dos.update(docs=items_ph_dos)
@@ -756,9 +730,7 @@ class PhononBuilder(Builder):
             self.logger.info("No items to update")
 
     def ensure_indexes(self):
-        """
-        Ensures indexes on the tasks and materials collections
-        """
+        """Ensures indexes on the tasks and materials collections."""
         self.phonon_materials.ensure_index(self.phonon_materials.key, unique=True)
 
         self.phonon.ensure_index(self.phonon.key, unique=True)
@@ -771,18 +743,15 @@ class PhononBuilder(Builder):
 
 def get_warnings(
     asr_break: float, cnsr_break: float, ph_bs: PhononBandStructureSymmLine
-) -> List[PhononWarnings]:
-    """
-
-    Args:
+) -> list[PhononWarnings]:
+    """Args:
         asr_break (float): the largest breaking of the acoustic sum rule in cm^-1
         cnsr_break (float): the largest breaking of the charge neutrality sum rule
-        ph_bs (PhononBandStructureSymmLine): the phonon band structure
+        ph_bs (PhononBandStructureSymmLine): the phonon band structure.
 
     Returns:
         PhononWarnings: the model containing the data of the warnings.
     """
-
     warnings = []
 
     if asr_break and asr_break > 30:
@@ -812,9 +781,8 @@ def get_warnings(
 
 def get_thermodynamic_properties(
     ph_dos: CompletePhononDos,
-) -> Tuple[ThermodynamicProperties, VibrationalEnergy]:
-    """
-    Calculates the thermodynamic properties from a phonon DOS
+) -> tuple[ThermodynamicProperties, VibrationalEnergy]:
+    """Calculates the thermodynamic properties from a phonon DOS.
 
     Args:
         ph_dos (CompletePhononDos): The DOS used to calculate the properties.
@@ -823,7 +791,6 @@ def get_thermodynamic_properties(
         ThermodynamicProperties and VibrationalEnergy: the models containing the calculated thermodynamic
             properties and vibrational contribution to the total energy.
     """
-
     tstart, tstop, nt = 0, 800, 161
     temp = np.linspace(tstart, tstop, nt)
 

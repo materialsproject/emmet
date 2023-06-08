@@ -1,20 +1,25 @@
-import string
-from datetime import datetime
+from __future__ import annotations
 
+import string
+from typing import TYPE_CHECKING
+
+from emmet.core.base import EmmetBaseModel
 from monty.fractions import gcd
 from optimade.models import Species, StructureResourceAttributes
 from pymatgen.core.composition import Composition, formula_double_format
-from pymatgen.core.structure import Structure
 
-from emmet.core.base import EmmetBaseModel
-from emmet.core.mpid import MPID
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from emmet.core.mpid import MPID
+    from pymatgen.core.structure import Structure
 
 letters = "ABCDEFGHIJKLMNOPQRSTUVXYZ"
 
 
 def optimade_form(comp: Composition):
-    symbols = sorted([str(e) for e in comp.keys()])
-    numbers = set([comp[s] for s in symbols if comp[s]])
+    symbols = sorted([str(e) for e in comp])
+    numbers = {comp[s] for s in symbols if comp[s]}
 
     reduced_form = []
     for s in symbols:
@@ -45,8 +50,7 @@ def optimade_anonymous_form(comp: Composition):
 
 
 def hill_formula(comp: Composition) -> str:
-    """
-    :return: Hill formula. The Hill system (or Hill notation) is a system
+    """:return: Hill formula. The Hill system (or Hill notation) is a system
     of writing empirical chemical formulas, molecular chemical formulas and
     components of a condensed formula such that the number of carbon atoms
     in a molecule is indicated first, the number of hydrogen atoms next,
@@ -56,7 +60,7 @@ def hill_formula(comp: Composition) -> str:
     alphabetically.
     """
     c = comp.element_composition
-    elements = sorted([el.symbol for el in c.keys()])
+    elements = sorted([el.symbol for el in c])
 
     form_elements = []
     if "C" in elements:
@@ -76,8 +80,7 @@ def hill_formula(comp: Composition) -> str:
 
 
 class OptimadeMaterialsDoc(StructureResourceAttributes, EmmetBaseModel):
-    """
-    Optimade Structure resource with a few extra MP specific fields for materials
+    """Optimade Structure resource with a few extra MP specific fields for materials.
 
     Thermo calculations are stored as a nested dict, with keys corresponding to the functional
     used to perform stability calc, i.e., R2SCAN, GGA_GGA+U_R2SCAN, or GGA_GGA+U
@@ -101,7 +104,7 @@ class OptimadeMaterialsDoc(StructureResourceAttributes, EmmetBaseModel):
             material_id=material_id,
             chemical_system=structure.composition.chemical_system,
             stability=thermo_calcs,
-            elements=sorted(set([e.symbol for e in structure.composition.elements])),
+            elements=sorted({e.symbol for e in structure.composition.elements}),
             nelements=len(structure.composition.elements),
             elements_ratios=list(structure.composition.fractional_composition.values()),
             chemical_formula_descriptive=optimade_form(structure.composition),

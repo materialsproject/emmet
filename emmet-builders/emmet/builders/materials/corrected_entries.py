@@ -1,19 +1,22 @@
+from __future__ import annotations
+
+import copy
 import warnings
 from collections import defaultdict
 from itertools import chain
-from typing import Dict, Iterable, Iterator, List, Optional
 from math import ceil
-import copy
+from typing import TYPE_CHECKING, Iterable, Iterator
 
+from emmet.builders.utils import HiddenPrints, chemsys_permutations
+from emmet.core.corrected_entries import CorrectedEntriesDoc
+from emmet.core.thermo import ThermoType
+from emmet.core.utils import jsanitize
 from maggma.core import Builder, Store
 from maggma.utils import grouper
 from pymatgen.entries.computed_entries import ComputedStructureEntry
-from pymatgen.entries.compatibility import Compatibility
 
-from emmet.core.utils import jsanitize
-from emmet.builders.utils import chemsys_permutations, HiddenPrints
-from emmet.core.thermo import ThermoType
-from emmet.core.corrected_entries import CorrectedEntriesDoc
+if TYPE_CHECKING:
+    from pymatgen.entries.compatibility import Compatibility
 
 
 class CorrectedEntriesBuilder(Builder):
@@ -21,14 +24,13 @@ class CorrectedEntriesBuilder(Builder):
         self,
         materials: Store,
         corrected_entries: Store,
-        oxidation_states: Optional[Store] = None,
-        query: Optional[Dict] = None,
-        compatibility: Optional[List[Compatibility]] = None,
+        oxidation_states: Store | None = None,
+        query: dict | None = None,
+        compatibility: list[Compatibility] | None = None,
         chunk_size: int = 1000,
         **kwargs,
     ):
-        """
-        Produces corrected thermo entry data from uncorrected materials entries.
+        """Produces corrected thermo entry data from uncorrected materials entries.
         This is meant to be an intermediate builder for the main thermo builder.
 
         Args:
@@ -40,14 +42,13 @@ class CorrectedEntriesBuilder(Builder):
                 to ensure energies are compatible
             chunk_size (int): Size of chemsys chunks to process at any one time.
         """
-
         self.materials = materials
         self.query = query if query else {}
         self.corrected_entries = corrected_entries
         self.compatibility = compatibility or [None]
         self.oxidation_states = oxidation_states
         self.chunk_size = chunk_size
-        self._entries_cache: Dict[str, List[ComputedStructureEntry]] = defaultdict(list)
+        self._entries_cache: dict[str, list[ComputedStructureEntry]] = defaultdict(list)
 
         if self.corrected_entries.key != "chemsys":
             warnings.warn(
@@ -80,10 +81,7 @@ class CorrectedEntriesBuilder(Builder):
         )
 
     def ensure_indexes(self):
-        """
-        Ensures indicies on the tasks and materials collections
-        """
-
+        """Ensures indicies on the tasks and materials collections."""
         # Search index for materials
         self.materials.ensure_index("material_id")
         self.materials.ensure_index("chemsys")
@@ -92,7 +90,7 @@ class CorrectedEntriesBuilder(Builder):
         # Search index for corrected_entries
         self.corrected_entries.ensure_index("chemsys")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
         to_process_chemsys = self._get_chemsys_to_process()
 
         N = ceil(len(to_process_chemsys) / number_splits)
@@ -100,11 +98,8 @@ class CorrectedEntriesBuilder(Builder):
         for chemsys_chunk in grouper(to_process_chemsys, N):
             yield {"query": {"chemsys": {"$in": list(chemsys_chunk)}}}
 
-    def get_items(self) -> Iterator[List[Dict]]:
-        """
-        Gets whole chemical systems of entries to process
-        """
-
+    def get_items(self) -> Iterator[list[dict]]:
+        """Gets whole chemical systems of entries to process."""
         self.logger.info("Corrected Entries Builder Started")
 
         self.logger.info("Setting indexes")
@@ -125,17 +120,14 @@ class CorrectedEntriesBuilder(Builder):
             yield entries
 
     def process_item(self, item):
-        """
-        Applies correction schemes to entries and constructs CorrectedEntriesDoc objects
-        """
-
+        """Applies correction schemes to entries and constructs CorrectedEntriesDoc objects."""
         if not item:
             return None
 
         entries = [ComputedStructureEntry.from_dict(entry) for entry in item]
         # determine chemsys
         elements = sorted(
-            set([el.symbol for e in entries for el in e.composition.elements])
+            {el.symbol for e in entries for el in e.composition.elements}
         )
         chemsys = "-".join(elements)
 
@@ -197,10 +189,7 @@ class CorrectedEntriesBuilder(Builder):
         return jsanitize(doc.dict(), allow_bson=True)
 
     def update_targets(self, items):
-        """
-        Inserts the new corrected entry docs into the corrected entries collection
-        """
-
+        """Inserts the new corrected entry docs into the corrected entries collection."""
         docs = list(filter(None, items))
 
         if len(docs) > 0:
@@ -209,15 +198,14 @@ class CorrectedEntriesBuilder(Builder):
         else:
             self.logger.info("No corrected entry items to update")
 
-    def get_entries(self, chemsys: str) -> List[Dict]:
-        """
-        Gets entries from the materials collection for the corresponding chemical systems
+    def get_entries(self, chemsys: str) -> list[dict]:
+        """Gets entries from the materials collection for the corresponding chemical systems
         Args:
-            chemsys (str): a chemical system represented by string elements seperated by a dash (-)
+            chemsys (str): a chemical system represented by string elements seperated by a dash (-).
+
         Returns:
             set (ComputedEntry): a set of entries for this system
         """
-
         self.logger.info(f"Getting entries for: {chemsys}")
         # First check the cache
         all_chemsys = chemsys_permutations(chemsys)
@@ -271,7 +259,7 @@ class CorrectedEntriesBuilder(Builder):
                     entry_dict["data"]["material_id"], {}
                 )
                 entry_dict["data"]["run_type"] = r_type
-                elsyms = sorted(set([el for el in entry_dict["composition"]]))
+                elsyms = sorted(set(entry_dict["composition"]))
                 self._entries_cache["-".join(elsyms)].append(entry_dict)
                 all_entries.append(entry_dict)
 

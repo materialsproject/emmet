@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import pytest
-from monty.serialization import MontyDecoder
-from monty.serialization import loadfn
 from emmet.core.thermo import ThermoDoc
+from monty.serialization import MontyDecoder, loadfn
 
 
 @pytest.fixture(scope="session")
@@ -34,7 +35,7 @@ def O_structure(test_dir):
     return structure
 
 
-@pytest.fixture
+@pytest.fixture()
 def entries(
     Fe3O4_structure, Fe2O3a_structure, Fe2O3b_structure, Fe_structure, O_structure
 ):
@@ -134,7 +135,7 @@ def test_from_entries(entries):
 
     assert len(docs) == len(entries)
 
-    assert all([d.energy_type == "Unknown" for d in docs])
+    assert all(d.energy_type == "Unknown" for d in docs)
     unstable_doc = next(d for d in docs if d.material_id == "mp-5")
     assert unstable_doc.is_stable is False
-    assert all([d.is_stable for d in docs if d != unstable_doc])
+    assert all(d.is_stable for d in docs if d != unstable_doc)

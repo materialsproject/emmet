@@ -1,15 +1,17 @@
+from __future__ import annotations
+
 from hashlib import blake2b
-from typing import Any, Dict, Optional, Type, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
-from pydantic import Field
-
-from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.molecule import MoleculeDoc
 from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
-from emmet.core.molecules.thermo import get_free_energy, MoleculeThermoDoc
-from emmet.core.mpid import MPID, MPculeID
+from emmet.core.molecules.thermo import MoleculeThermoDoc, get_free_energy
+from pydantic import Field
 
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID, MPculeID
+    from emmet.core.qchem.molecule import MoleculeDoc
+    from emmet.core.qchem.task import TaskDocument
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -21,10 +23,9 @@ T = TypeVar("T", bound="RedoxDoc")
 
 
 class RedoxDoc(PropertyDoc):
-    """
-    Molecular properties related to reduction and oxidation, including
+    """Molecular properties related to reduction and oxidation, including
     vertical ionization energies and electron affinities, as well as reduction
-    and oxidation potentials
+    and oxidation potentials.
     """
 
     property_name = "redox"
@@ -84,20 +85,19 @@ class RedoxDoc(PropertyDoc):
         "oxidized molecule",
     )
 
-    reduction_potentials: Dict[str, float] = Field(
+    reduction_potentials: dict[str, float] = Field(
         None,
         description="Reduction potentials with various reference electrodes (units: V)",
     )
 
-    oxidation_potentials: Dict[str, float] = Field(
+    oxidation_potentials: dict[str, float] = Field(
         None,
         description="Oxidation potentials with various reference electrodes (units: V)",
     )
 
     @classmethod
-    def _g_or_e(cls: Type[T], entry: Dict[str, Any]) -> float:
-        """
-        Single atoms may not have free energies like more complex molecules do.
+    def _g_or_e(cls: type[T], entry: dict[str, Any]) -> float:
+        """Single atoms may not have free energies like more complex molecules do.
         This function returns the free energy of a TaskDocument entry if
         possible, and otherwise returns the electronic energy.
 
@@ -118,21 +118,20 @@ class RedoxDoc(PropertyDoc):
 
     @classmethod
     def from_docs(
-        cls: Type[T],
+        cls: type[T],
         base_molecule_doc: MoleculeDoc,
         base_thermo_doc: MoleculeThermoDoc,
-        red_doc: Optional[MoleculeThermoDoc] = None,
-        ox_doc: Optional[MoleculeThermoDoc] = None,
-        ea_doc: Optional[TaskDocument] = None,
-        ie_doc: Optional[TaskDocument] = None,
+        red_doc: MoleculeThermoDoc | None = None,
+        ox_doc: MoleculeThermoDoc | None = None,
+        ea_doc: TaskDocument | None = None,
+        ie_doc: TaskDocument | None = None,
         deprecated: bool = False,
         **kwargs,
     ):  # type: ignore[override]
-        """
-        Construct a document describing molecular redox properties from
+        """Construct a document describing molecular redox properties from
             MoleculeThermoDocs (for adiabatic redox potentials and thermodynamics)
             and TaskDocs (for vertical ionization energies and electron
-            affinities)
+            affinities).
 
         :param base_molecule_doc: MoleculeDoc of interest
         :param base_thermo_doc: MoleculeThermoDoc for the molecule of interest. All properties
@@ -153,8 +152,7 @@ class RedoxDoc(PropertyDoc):
         :param kwargs: To be passed to PropertyDoc
         :return:
         """
-
-        if all([x is None for x in [red_doc, ox_doc, ea_doc, ie_doc]]):
+        if all(x is None for x in [red_doc, ox_doc, ea_doc, ie_doc]):
             # No redox properties can be extracted
             return None
 

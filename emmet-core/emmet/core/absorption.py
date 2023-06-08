@@ -1,9 +1,14 @@
-from typing import List
-from pydantic import Field
-from emmet.core.material_property import PropertyDoc
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
-from emmet.core.mpid import MPID
-from pymatgen.core import Structure
+from emmet.core.material_property import PropertyDoc
+from pydantic import Field
+
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID
+    from pymatgen.core import Structure
 
 
 class AbsorptionDoc(PropertyDoc):
@@ -13,23 +18,23 @@ class AbsorptionDoc(PropertyDoc):
 
     task_id: str = Field(..., description="Calculation id")
 
-    energies: List[float] = Field(
+    energies: list[float] = Field(
         ..., description="Absorption energy in eV starting from 0"
     )
 
     energy_max: float = Field(..., description="Maximum energy")
 
-    absorption_coefficient: List[float] = Field(
+    absorption_coefficient: list[float] = Field(
         ..., description="Absorption coefficient in cm^-1"
     )
 
-    average_imaginary_dielectric: List[float] = Field(
+    average_imaginary_dielectric: list[float] = Field(
         ...,
         description="Imaginary part of the dielectric function corresponding to the "
         "energies",
     )
 
-    average_real_dielectric: List[float] = Field(
+    average_real_dielectric: list[float] = Field(
         ...,
         description="Real part of the dielectric function corresponding to the energies",
     )
@@ -50,11 +55,11 @@ class AbsorptionDoc(PropertyDoc):
     def from_structure(
         cls,
         material_id: MPID,
-        energies: List,
+        energies: list,
         task_id: str,
-        real_d: List[np.ndarray],
-        imag_d: List[np.ndarray],
-        absorption_co: List,
+        real_d: list[np.ndarray],
+        imag_d: list[np.ndarray],
+        absorption_co: list,
         bandgap: float,
         structure: Structure,
         nkpoints: float,

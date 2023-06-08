@@ -1,20 +1,21 @@
-from typing import Any, Dict
+from __future__ import annotations
 
-from pydantic import BaseModel, Field
-from pymatgen.core import Structure
-from pymatgen.core.structure import Molecule
-from pymatgen.symmetry.analyzer import PointGroupAnalyzer, SpacegroupAnalyzer, spglib
+from typing import TYPE_CHECKING, Any
 
 from emmet.core.settings import EmmetSettings
 from emmet.core.utils import ValueEnum
+from pydantic import BaseModel, Field
+from pymatgen.symmetry.analyzer import PointGroupAnalyzer, SpacegroupAnalyzer, spglib
+
+if TYPE_CHECKING:
+    from pymatgen.core import Structure
+    from pymatgen.core.structure import Molecule
 
 SETTINGS = EmmetSettings()
 
 
 class CrystalSystem(ValueEnum):
-    """
-    The crystal system of the lattice
-    """
+    """The crystal system of the lattice."""
 
     tri = "Triclinic"
     mono = "Monoclinic"
@@ -26,9 +27,7 @@ class CrystalSystem(ValueEnum):
 
 
 class PointGroupData(BaseModel):
-    """
-    Defines symmetry for a molecule document
-    """
+    """Defines symmetry for a molecule document."""
 
     point_group: str = Field(
         None, title="Point Group Symbol", description="The point group for the lattice"
@@ -63,7 +62,7 @@ class PointGroupData(BaseModel):
     )
 
     @classmethod
-    def from_molecule(cls, molecule: Molecule) -> "PointGroupData":
+    def from_molecule(cls, molecule: Molecule) -> PointGroupData:
         tol = SETTINGS.PGATOL
         eigentol = SETTINGS.PGAEIGENTOL
         matrixtol = SETTINGS.PGAMATRIXTOL
@@ -73,7 +72,7 @@ class PointGroupData(BaseModel):
             eigen_tolerance=eigentol,
             matrix_tolerance=matrixtol,
         )
-        symmetry: Dict[str, Any] = {
+        symmetry: dict[str, Any] = {
             "tolerance": tol,
             "eigen_tolerance": eigentol,
             "matrix_tolerance": matrixtol,
@@ -100,10 +99,7 @@ class PointGroupData(BaseModel):
             if symmetry["point_group"] in point_groups:
                 r = rot_num
                 break
-        if symmetry["point_group"] in ["C*v", "D*h"]:
-            linear = True
-        else:
-            linear = False
+        linear = symmetry["point_group"] in ["C*v", "D*h"]
 
         symmetry["rotation_number"] = float(r)
         symmetry["linear"] = linear
@@ -112,9 +108,7 @@ class PointGroupData(BaseModel):
 
 
 class SymmetryData(BaseModel):
-    """
-    Defines a symmetry data set for materials documents
-    """
+    """Defines a symmetry data set for materials documents."""
 
     crystal_system: CrystalSystem = Field(
         None, title="Crystal System", description="The crystal system for this lattice."
@@ -145,10 +139,10 @@ class SymmetryData(BaseModel):
     version: str = Field(None, title="SPGLib version")
 
     @classmethod
-    def from_structure(cls, structure: Structure) -> "SymmetryData":
+    def from_structure(cls, structure: Structure) -> SymmetryData:
         symprec = SETTINGS.SYMPREC
         sg = SpacegroupAnalyzer(structure, symprec=symprec)
-        symmetry: Dict[str, Any] = {"symprec": symprec}
+        symmetry: dict[str, Any] = {"symprec": symprec}
         if not sg.get_symmetry_dataset():
             sg = SpacegroupAnalyzer(structure, 1e-3, 1)
             symmetry["symprec"] = 1e-3

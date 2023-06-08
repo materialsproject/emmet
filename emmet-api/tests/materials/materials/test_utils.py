@@ -1,8 +1,10 @@
-from emmet.api.routes.materials.materials.utils import (
-    formula_to_criteria,
-    chemsys_to_criteria,
-)
+from __future__ import annotations
+
 import pytest
+from emmet.api.routes.materials.materials.utils import (
+    chemsys_to_criteria,
+    formula_to_criteria,
+)
 
 
 def test_formula_to_criteria():

@@ -1,5 +1,8 @@
-from typing import Literal, List, Union
+from __future__ import annotations
 
+from typing import TYPE_CHECKING, Literal
+
+from emmet.core.material_property import PropertyDoc
 from pydantic import Field
 from pymatgen.analysis.chemenv.coordination_environments.chemenv_strategies import (
     SimplestChemenvStrategy,
@@ -14,11 +17,10 @@ from pymatgen.analysis.chemenv.coordination_environments.structure_environments 
     LightStructureEnvironments,
 )
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
-from pymatgen.core.structure import Molecule
-from pymatgen.core.structure import Structure
+from pymatgen.core.structure import Molecule, Structure
 
-from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import MPID
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID
 
 DEFAULT_DISTANCE_CUTOFF = 1.4
 DEFAULT_ANGLE_CUTOFF = 0.3
@@ -310,8 +312,7 @@ COORDINATION_GEOMETRIES_NAMES_WITH_ALTERNATIVES = Literal[
 
 
 class ChemEnvDoc(PropertyDoc):
-    """
-    Coordination environments based on cation-anion bonds computed for all unique cations in this structure.
+    """Coordination environments based on cation-anion bonds computed for all unique cations in this structure.
     If no oxidation states are available, all bonds will be considered as a fall-back.
     """
 
@@ -322,44 +323,44 @@ class ChemEnvDoc(PropertyDoc):
         description="The structure used in the generation of the chemical environment data",
     )
 
-    valences: List[int] = Field(
+    valences: list[int] = Field(
         description="List of valences for each site in this material to determine cations"
     )
 
-    species: List[str] = Field(
+    species: list[str] = Field(
         description="List of unique (cationic) species in structure."
     )
 
-    chemenv_symbol: List[COORDINATION_GEOMETRIES] = Field(
+    chemenv_symbol: list[COORDINATION_GEOMETRIES] = Field(
         description="List of ChemEnv symbols for unique (cationic) species in structure"
     )
 
-    chemenv_iupac: List[COORDINATION_GEOMETRIES_IUPAC] = Field(
+    chemenv_iupac: list[COORDINATION_GEOMETRIES_IUPAC] = Field(
         description="List of symbols for unique (cationic) species in structure in IUPAC format"
     )
 
-    chemenv_iucr: List[COORDINATION_GEOMETRIES_IUCR] = Field(
+    chemenv_iucr: list[COORDINATION_GEOMETRIES_IUCR] = Field(
         description="List of symbols for unique (cationic) species in structure in IUCR format"
     )
 
-    chemenv_name: List[COORDINATION_GEOMETRIES_NAMES] = Field(
+    chemenv_name: list[COORDINATION_GEOMETRIES_NAMES] = Field(
         description="List of text description of coordination environment for unique (cationic) species in structure."
     )
-    chemenv_name_with_alternatives: List[
+    chemenv_name_with_alternatives: list[
         COORDINATION_GEOMETRIES_NAMES_WITH_ALTERNATIVES
     ] = Field(
         description="List of text description of coordination environment including alternative descriptions for unique (cationic) species in structure."  # noqa: E501
     )
 
-    csm: List[Union[float, None]] = Field(
+    csm: list[float | None] = Field(
         description="Saves the continous symmetry measures for unique (cationic) species in structure"
     )
 
-    method: Union[str, None] = Field(
+    method: str | None = Field(
         description="Method used to compute chemical environments"
     )
 
-    mol_from_site_environments: List[Union[Molecule, None]] = Field(
+    mol_from_site_environments: list[Molecule | None] = Field(
         description="List of Molecule Objects describing the detected environment."
     )
 
@@ -367,11 +368,11 @@ class ChemEnvDoc(PropertyDoc):
     #     description="Structure environment object"
     # )
 
-    wyckoff_positions: List[str] = Field(
+    wyckoff_positions: list[str] = Field(
         description="List of Wyckoff positions for unique (cationic) species in structure."
     )
 
-    warnings: Union[str, None] = Field(None, description="Warning")
+    warnings: str | None = Field(None, description="Warning")
 
     @classmethod
     def from_structure(
@@ -380,9 +381,7 @@ class ChemEnvDoc(PropertyDoc):
         material_id: MPID,
         **kwargs,
     ):  # type: ignore[override]
-        """
-
-        Args:
+        """Args:
             structure: structure including oxidation states
             material_id: mpid
             **kwargs:
@@ -485,7 +484,7 @@ class ChemEnvDoc(PropertyDoc):
                 if index in inequivalent_indices_cations:
                     # Coordinaton environment will be saved as a molecule!
                     mol = Molecule.from_sites(
-                        [structure[index]] + lse.neighbors_sets[index][0].neighb_sites
+                        [structure[index], *lse.neighbors_sets[index][0].neighb_sites]
                     )
                     mol = mol.get_centered_molecule()
                     env = lse.coordination_environments[index]

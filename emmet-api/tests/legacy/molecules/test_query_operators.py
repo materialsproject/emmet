@@ -1,11 +1,12 @@
-from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
+from __future__ import annotations
 
 from emmet.api.routes.legacy.jcesr.query_operators import (
     MoleculeBaseQuery,
     MoleculeElementsQuery,
     MoleculeFormulaQuery,
 )
+from monty.serialization import dumpfn, loadfn
+from monty.tempfile import ScratchDir
 
 
 def test_molecule_elements_query():

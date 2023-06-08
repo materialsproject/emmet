@@ -1,14 +1,13 @@
-from maggma.api.resource import ReadOnlyResource
-
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
-
-from emmet.core.alloys import AlloyPairDoc
+from __future__ import annotations
 
 from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.alloys.query_operators import (
-    MaterialIDsSearchQuery,
     FormulaSearchQuery,
+    MaterialIDsSearchQuery,
 )
+from emmet.core.alloys import AlloyPairDoc
+from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.resource import ReadOnlyResource
 
 
 def alloy_pairs_resource(alloy_pairs_store):

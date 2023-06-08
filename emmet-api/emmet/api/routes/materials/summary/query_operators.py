@@ -1,32 +1,28 @@
-from sys import version_info
-from typing import Optional
-from fastapi import Query
-
-from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
-from emmet.core.summary import SummaryStats
-
-from pymatgen.analysis.magnetism import Ordering
-
-from scipy.stats import gaussian_kde
-import numpy as np
+from __future__ import annotations
 
 from collections import defaultdict
+from typing import (
+    TYPE_CHECKING,
+    Literal,  # type: ignore
+    )
 
-if version_info >= (3, 8):
-    from typing import Literal  # type: ignore
-else:
-    from typing_extensions import Literal  # type: ignore
+import numpy as np
+from emmet.core.summary import SummaryStats
+from fastapi import Query
+from maggma.api.query_operator import QueryOperator
+from scipy.stats import gaussian_kde
+
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
+    from pymatgen.analysis.magnetism import Ordering
 
 
 class HasPropsQuery(QueryOperator):
-    """
-    Method to generate a query on whether a material has a certain property
-    """
+    """Method to generate a query on whether a material has a certain property."""
 
     def query(
         self,
-        has_props: Optional[str] = Query(
+        has_props: str | None = Query(
             None,
             description="Comma-delimited list of possible properties given by HasPropsEnum to search for.",
         ),
@@ -42,13 +38,11 @@ class HasPropsQuery(QueryOperator):
 
 
 class MaterialIDsSearchQuery(QueryOperator):
-    """
-    Method to generate a query on search docs using multiple material_id values
-    """
+    """Method to generate a query on search docs using multiple material_id values."""
 
     def query(
         self,
-        material_ids: Optional[str] = Query(
+        material_ids: str | None = Query(
             None, description="Comma-separated list of material_ids to query on"
         ),
     ) -> STORE_PARAMS:
@@ -83,13 +77,11 @@ class MaterialIDsSearchQuery(QueryOperator):
 
 
 class SearchIsStableQuery(QueryOperator):
-    """
-    Method to generate a query on whether a material is stable
-    """
+    """Method to generate a query on whether a material is stable."""
 
     def query(
         self,
-        is_stable: Optional[bool] = Query(
+        is_stable: bool | None = Query(
             None, description="Whether the material is stable."
         ),
     ):
@@ -105,13 +97,11 @@ class SearchIsStableQuery(QueryOperator):
 
 
 class SearchHasReconstructedQuery(QueryOperator):
-    """
-    Method to generate a query on whether a material has any reconstructed surfaces
-    """
+    """Method to generate a query on whether a material has any reconstructed surfaces."""
 
     def query(
         self,
-        has_reconstructed: Optional[bool] = Query(
+        has_reconstructed: bool | None = Query(
             None, description="Whether the material has reconstructed surfaces."
         ),
     ):
@@ -127,13 +117,11 @@ class SearchHasReconstructedQuery(QueryOperator):
 
 
 class SearchMagneticQuery(QueryOperator):
-    """
-    Method to generate a query for magnetic data in search docs.
-    """
+    """Method to generate a query for magnetic data in search docs."""
 
     def query(
         self,
-        ordering: Optional[Ordering] = Query(
+        ordering: Ordering | None = Query(
             None, description="Magnetic ordering of the material."
         ),
     ) -> STORE_PARAMS:
@@ -149,13 +137,11 @@ class SearchMagneticQuery(QueryOperator):
 
 
 class SearchIsTheoreticalQuery(QueryOperator):
-    """
-    Method to generate a query on whether a material is theoretical
-    """
+    """Method to generate a query on whether a material is theoretical."""
 
     def query(
         self,
-        theoretical: Optional[bool] = Query(
+        theoretical: bool | None = Query(
             None, description="Whether the material is theoretical."
         ),
     ):
@@ -171,16 +157,14 @@ class SearchIsTheoreticalQuery(QueryOperator):
 
 
 class SearchESQuery(QueryOperator):
-    """
-    Method to generate a query on search electronic structure data.
-    """
+    """Method to generate a query on search electronic structure data."""
 
     def query(
         self,
-        is_gap_direct: Optional[bool] = Query(
+        is_gap_direct: bool | None = Query(
             None, description="Whether a band gap is direct or not."
         ),
-        is_metal: Optional[bool] = Query(
+        is_metal: bool | None = Query(
             None, description="Whether the material is considered a metal."
         ),
     ) -> STORE_PARAMS:
@@ -201,9 +185,7 @@ class SearchESQuery(QueryOperator):
 
 
 class SearchStatsQuery(QueryOperator):
-    """
-    Method to generate a query on search stats data
-    """
+    """Method to generate a query on search stats data."""
 
     def __init__(self, search_doc):
         valid_numeric_fields = tuple(
@@ -216,16 +198,16 @@ class SearchStatsQuery(QueryOperator):
                 title=f"SearchDoc field to query on, must be a numerical field, "
                 f"choose from: {', '.join(valid_numeric_fields)}",
             ),
-            num_samples: Optional[int] = Query(
+            num_samples: int | None = Query(
                 None,
                 title="If specified, will only sample this number of documents.",
             ),
-            min_val: Optional[float] = Query(
+            min_val: float | None = Query(
                 None,
                 title="If specified, will only consider documents with field values "
                 "greater than or equal to this minimum value.",
             ),
-            max_val: Optional[float] = Query(
+            max_val: float | None = Query(
                 None,
                 title="If specified, will only consider documents with field values "
                 "less than or equal to this minimum value.",
@@ -257,8 +239,7 @@ class SearchStatsQuery(QueryOperator):
         self.query = query
 
     def query(self):
-        "Stub query function for abstract class"
-        pass
+        "Stub query function for abstract class."
 
     def post_process(self, docs, query):
         if docs:

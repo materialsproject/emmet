@@ -1,22 +1,24 @@
+from __future__ import annotations
+
+import itertools
 from collections import defaultdict
 from math import ceil
-import itertools
+
 import numpy as np
+from emmet.core.electronic_structure import ElectronicStructureDoc
+from emmet.core.settings import EmmetSettings
+from emmet.core.utils import jsanitize
 from maggma.builders import Builder
 from maggma.utils import grouper
 from pymatgen.analysis.magnetism.analyzer import CollinearMagneticStructureAnalyzer
-from pymatgen.core import Structure
-from pymatgen.electronic_structure.core import Spin
-from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
-from pymatgen.electronic_structure.dos import CompleteDos
-from pymatgen.symmetry.bandstructure import HighSymmKpath
 from pymatgen.analysis.structure_matcher import StructureMatcher
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pymatgen.core import Structure
+from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
+from pymatgen.electronic_structure.core import Spin
+from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.io.vasp.sets import MPStaticSet
-
-from emmet.core.settings import EmmetSettings
-from emmet.core.electronic_structure import ElectronicStructureDoc
-from emmet.core.utils import jsanitize
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pymatgen.symmetry.bandstructure import HighSymmKpath
 
 SETTINGS = EmmetSettings()
 
@@ -33,8 +35,7 @@ class ElectronicStructureBuilder(Builder):
         query=None,
         **kwargs,
     ):
-        """
-        Creates an electronic structure collection from a tasks collection,
+        """Creates an electronic structure collection from a tasks collection,
         the associated band structures and density of states file store collections,
         and the materials collection.
 
@@ -48,7 +49,6 @@ class ElectronicStructureBuilder(Builder):
         chunk_size (int): Chunk size to use for processing. Defaults to 10.
         query (dict): Dictionary to limit materials to be analyzed
         """
-
         self.tasks = tasks
         self.materials = materials
         self.electronic_structure = electronic_structure
@@ -65,9 +65,7 @@ class ElectronicStructureBuilder(Builder):
         )
 
     def prechunk(self, number_splits: int):  # pragma: no cover
-        """
-        Prechunk method to perform chunking by the key field
-        """
+        """Prechunk method to perform chunking by the key field."""
         q = dict(self.query)
 
         keys = self.electronic_structure.newer_in(
@@ -79,13 +77,11 @@ class ElectronicStructureBuilder(Builder):
             yield {"query": {self.materials.key: {"$in": list(split)}}}
 
     def get_items(self):
-        """
-        Gets all items to process
+        """Gets all items to process.
 
         Returns:
             generator or list relevant tasks and materials to process
         """
-
         self.logger.info("Electronic Structure Builder Started")
 
         q = dict(self.query)
@@ -99,10 +95,10 @@ class ElectronicStructureBuilder(Builder):
             )
         ) | (set(mat_ids) - set(es_ids))
 
-        mats = [mat for mat in mats_set]
+        mats = list(mats_set)
 
         self.logger.info(
-            "Processing {} materials for electronic structure".format(len(mats))
+            f"Processing {len(mats)} materials for electronic structure"
         )
 
         self.total = len(mats)
@@ -112,8 +108,7 @@ class ElectronicStructureBuilder(Builder):
             yield mat
 
     def process_item(self, mat):
-        """
-        Process the band structures and dos data.
+        """Process the band structures and dos data.
 
         Args:
             mat (dict): material document
@@ -121,10 +116,9 @@ class ElectronicStructureBuilder(Builder):
         Returns:
             (dict): electronic_structure document
         """
-
         structure = Structure.from_dict(mat["structure"])
 
-        self.logger.info("Processing: {}".format(mat[self.materials.key]))
+        self.logger.info(f"Processing: {mat[self.materials.key]}")
 
         dos = None
         bs = {}
@@ -144,14 +138,13 @@ class ElectronicStructureBuilder(Builder):
 
                 structures[bs_entry["task_id"]] = bs_entry["output_structure"]
 
-        if mat["dos"]:
-            if mat["dos"]["object"] is not None:
-                self.logger.info("Processing density of states")
-                dos = {
-                    mat["dos"]["task_id"]: CompleteDos.from_dict(mat["dos"]["object"])
-                }
+        if mat["dos"] and mat["dos"]["object"] is not None:
+            self.logger.info("Processing density of states")
+            dos = {
+                mat["dos"]["task_id"]: CompleteDos.from_dict(mat["dos"]["object"])
+            }
 
-                structures[mat["dos"]["task_id"]] = mat["dos"]["output_structure"]
+            structures[mat["dos"]["task_id"]] = mat["dos"]["output_structure"]
 
         if bs:
             self.logger.info(
@@ -180,22 +173,21 @@ class ElectronicStructureBuilder(Builder):
         # Eigenvalue band property checks
         eig_values = mat["other"].get("eigenvalue_band_properties", None)
 
-        if eig_values is not None:
-            if not np.isclose(
-                mat["other"]["band_gap"], eig_values["bandgap"], atol=0.2, rtol=0.0
-            ):
-                d["warnings"].append(
-                    "Regular parsed band gap and band gap from eigenvalue_band_properties do not agree. "
-                    "Using data from eigenvalue_band_properties where appropriate."
-                )
+        if eig_values is not None and not np.isclose(
+            mat["other"]["band_gap"], eig_values["bandgap"], atol=0.2, rtol=0.0
+        ):
+            d["warnings"].append(
+                "Regular parsed band gap and band gap from eigenvalue_band_properties do not agree. "
+                "Using data from eigenvalue_band_properties where appropriate."
+            )
 
-                d["band_gap"] = eig_values["bandgap"]
-                d["cbm"] = eig_values["cbm"]
-                d["vbm"] = eig_values["vbm"]
-                d["is_gap_direct"] = eig_values["is_gap_direct"]
-                d["is_metal"] = (
-                    True if np.isclose(d["band_gap"], 0.0, atol=0.01, rtol=0) else False
-                )
+            d["band_gap"] = eig_values["bandgap"]
+            d["cbm"] = eig_values["cbm"]
+            d["vbm"] = eig_values["vbm"]
+            d["is_gap_direct"] = eig_values["is_gap_direct"]
+            d["is_metal"] = (
+                bool(np.isclose(d["band_gap"], 0.0, atol=0.01, rtol=0))
+            )
 
         if dos is None:
             doc = ElectronicStructureDoc.from_structure(**d)
@@ -263,17 +255,15 @@ class ElectronicStructureBuilder(Builder):
         return doc.dict()
 
     def update_targets(self, items):
-        """
-        Inserts electronic structure documents into the electronic_structure collection
+        """Inserts electronic structure documents into the electronic_structure collection.
 
         Args:
             items ([Dict]): A list of ElectronicStructureDoc dictionaries to update
         """
-
         items = list(filter(None, items))
 
         if len(items) > 0:
-            self.logger.info("Updating {} electronic structure docs".format(len(items)))
+            self.logger.info(f"Updating {len(items)} electronic structure docs")
             self.electronic_structure.update(docs=jsanitize(items, allow_bson=True))
         else:
             self.logger.info("No electronic structure docs to update")
@@ -281,7 +271,7 @@ class ElectronicStructureBuilder(Builder):
     def _bsdos_checks(self, doc, dos, structures):
         # Band gap difference check for uniform and line-mode calculations
         bgap_diff = []
-        for bs_type, bs_summary in doc.bandstructure:
+        for _bs_type, bs_summary in doc.bandstructure:
             if bs_summary is not None:
                 bgap_diff.append(doc.band_gap - bs_summary.band_gap)
 
@@ -359,7 +349,7 @@ class ElectronicStructureBuilder(Builder):
         dos_calcs = []
         other_calcs = []
 
-        for task_id in mat["task_types"].keys():
+        for task_id in mat["task_types"]:
             # Handle all line-mode tasks
             if "NSCF Line" in mat["task_types"][task_id]:
                 bs_type = None
@@ -484,7 +474,7 @@ class ElectronicStructureBuilder(Builder):
                     )
 
             # Handle static and structure opt tasks
-            if "Static" or "Structure Optimization" in mat["task_types"][task_id]:
+            if True:
                 task_query = self.tasks.query_one(
                     properties=[
                         "last_updated",
@@ -520,9 +510,7 @@ class ElectronicStructureBuilder(Builder):
 
                 other_calcs.append(
                     {
-                        "is_static": True
-                        if "Static" in mat["task_types"][task_id]
-                        else False,
+                        "is_static": "Static" in mat["task_types"][task_id],
                         "task_id": task_id,
                         "is_hubbard": int(is_hubbard),
                         "nkpoints": int(nkpoints),
@@ -682,7 +670,7 @@ class ElectronicStructureBuilder(Builder):
     ):
         bs_type = None
 
-        if any([label.islower() for label in labels_dict]):
+        if any(label.islower() for label in labels_dict):
             bs_type = "latimer_munro"
         else:
             for ptype in ["setyawan_curtarolo", "hinuma"]:
@@ -696,9 +684,9 @@ class ElectronicStructureBuilder(Builder):
                     atol=atol,
                 )
                 hs_labels_full = hskp.kpath["kpoints"]
-                hs_path_uniq = set(
-                    [label for segment in hskp.kpath["path"] for label in segment]
-                )
+                hs_path_uniq = {
+                    label for segment in hskp.kpath["path"] for label in segment
+                }
 
                 hs_labels = {
                     k: hs_labels_full[k] for k in hs_path_uniq if k in hs_path_uniq

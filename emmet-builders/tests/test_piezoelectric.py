@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 from pathlib import Path
 
 import pytest
-from maggma.stores import JSONStore, MemoryStore
-from monty.serialization import dumpfn, loadfn
-
 from emmet.builders.materials.piezoelectric import PiezoelectricBuilder
 from emmet.builders.vasp.materials import MaterialsBuilder
+from maggma.stores import JSONStore, MemoryStore
+from monty.serialization import dumpfn, loadfn
 
 
 @pytest.fixture(scope="session")
@@ -21,7 +22,7 @@ def materials_store(tasks_store):
     return materials_store
 
 
-@pytest.fixture
+@pytest.fixture()
 def piezoelectric_store():
     return MemoryStore(key="material_id")
 

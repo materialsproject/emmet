@@ -1,8 +1,10 @@
+from __future__ import annotations
+
+import pytest
 from emmet.api.routes.materials.electrodes.utils import (
     electrodes_chemsys_to_criteria,
     electrodes_formula_to_criteria,
 )
-import pytest
 
 
 def test_electrodes_formula_to_criteria():

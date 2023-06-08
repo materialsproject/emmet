@@ -1,22 +1,25 @@
+from __future__ import annotations
+
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Dict, Iterable, Iterator, List, Optional, Union
-
-from maggma.builders import Builder
-from maggma.stores import Store
-from maggma.utils import grouper
-from pymatgen.analysis.elasticity.strain import Deformation
-from pymatgen.core.structure import Structure
-from pymatgen.transformations.standard_transformations import (
-    DeformStructureTransformation,
-)
+from typing import TYPE_CHECKING, Iterable, Iterator
 
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.utils import group_structures, jsanitize
 from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
 from emmet.core.vasp.task_valid import TaskDocument
+from maggma.builders import Builder
+from maggma.utils import grouper
+from pymatgen.analysis.elasticity.strain import Deformation
+from pymatgen.transformations.standard_transformations import (
+    DeformStructureTransformation,
+)
+
+if TYPE_CHECKING:
+    from maggma.stores import Store
+    from pymatgen.core.structure import Structure
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -24,8 +27,7 @@ SETTINGS = EmmetBuildSettings()
 
 
 class MaterialsBuilder(Builder):
-    """
-    The Materials Builder matches VASP task documents by structure similarity into
+    """The Materials Builder matches VASP task documents by structure similarity into
     materials document. The purpose of this builder is group calculations and determine
     the best structure. All other properties are derived from other builders.
 
@@ -43,20 +45,18 @@ class MaterialsBuilder(Builder):
         self,
         tasks: Store,
         materials: Store,
-        task_validation: Optional[Store] = None,
-        query: Optional[Dict] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        task_validation: Store | None = None,
+        query: dict | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
+        """Args:
+        tasks: Store of task documents
+        materials: Store of materials documents to generate
+        task_validation: Store for storing task validation results
+        query: dictionary to limit tasks to be analyzed
+        settings: EmmetSettings to use in the build process.
         """
-        Args:
-            tasks: Store of task documents
-            materials: Store of materials documents to generate
-            task_validation: Store for storing task validation results
-            query: dictionary to limit tasks to be analyzed
-            settings: EmmetSettings to use in the build process
-        """
-
         self.tasks = tasks
         self.materials = materials
         self.task_validation = task_validation
@@ -70,10 +70,7 @@ class MaterialsBuilder(Builder):
         super().__init__(sources=sources, targets=[materials], **kwargs)
 
     def ensure_indexes(self):
-        """
-        Ensures indices on the tasks and materials collections
-        """
-
+        """Ensures indices on the tasks and materials collections."""
         # Basic search index for tasks
         self.tasks.ensure_index("task_id")
         self.tasks.ensure_index("last_updated")
@@ -89,8 +86,8 @@ class MaterialsBuilder(Builder):
             self.task_validation.ensure_index("task_id")
             self.task_validation.ensure_index("valid")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
-        """Prechunk the materials builder for distributed computation"""
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
+        """Prechunk the materials builder for distributed computation."""
         temp_query = dict(self.query)
         temp_query["state"] = "successful"
         if len(self.settings.BUILD_TAGS) > 0 and len(self.settings.EXCLUDED_TAGS) > 0:
@@ -119,17 +116,15 @@ class MaterialsBuilder(Builder):
         for formula_chunk in grouper(to_process_forms, N):
             yield {"query": {"formula_pretty": {"$in": list(formula_chunk)}}}
 
-    def get_items(self) -> Iterator[List[Dict]]:
-        """
-        Gets all items to process into materials documents.
+    def get_items(self) -> Iterator[list[dict]]:
+        """Gets all items to process into materials documents.
         This does no datetime checking; relying on whether
-        task_ids are included in the Materials Collection
+        task_ids are included in the Materials Collection.
 
         Returns:
             generator or list relevant tasks and materials to process into materials
             documents
         """
-
         task_types = [t.value for t in self.settings.VASP_ALLOWED_VASP_TYPES]
         self.logger.info("Materials builder started")
         self.logger.info(f"Allowed task types: {task_types}")
@@ -215,9 +210,8 @@ class MaterialsBuilder(Builder):
 
             yield tasks
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
-        """
-        Process the tasks into a list of materials
+    def process_item(self, items: list[dict]) -> list[dict]:
+        """Process the tasks into a list of materials.
 
         Args:
             tasks [dict]: a list of task docs
@@ -226,7 +220,6 @@ class MaterialsBuilder(Builder):
             ([dict],list): a list of new materials docs and a list of task_ids that
                 were processed
         """
-
         tasks = [TaskDocument(**task) for task in items]
         formula = tasks[0].formula_pretty
         task_ids = [task.task_id for task in tasks]
@@ -261,15 +254,13 @@ class MaterialsBuilder(Builder):
 
         return jsanitize([mat.dict() for mat in materials], allow_bson=True)
 
-    def update_targets(self, items: List[List[Dict]]):
-        """
-        Inserts the new task_types into the task_types collection
+    def update_targets(self, items: list[list[dict]]):
+        """Inserts the new task_types into the task_types collection.
 
         Args:
             items ([([dict],[int])]): A list of tuples of materials to update and the
                 corresponding processed task_ids
         """
-
         docs = list(chain.from_iterable(items))  # type: ignore
 
         for item in docs:
@@ -285,12 +276,9 @@ class MaterialsBuilder(Builder):
             self.logger.info("No items to update")
 
     def filter_and_group_tasks(
-        self, tasks: List[TaskDocument], transmuters: List[Union[Dict, None]]
-    ) -> Iterator[List[TaskDocument]]:
-        """
-        Groups tasks by structure matching
-        """
-
+        self, tasks: list[TaskDocument], transmuters: list[dict | None]
+    ) -> Iterator[list[TaskDocument]]:
+        """Groups tasks by structure matching."""
         filtered_tasks = []
         filtered_transmuters = []
         for task, transmuter in zip(tasks, transmuters):
@@ -334,9 +322,8 @@ class MaterialsBuilder(Builder):
             yield grouped_tasks
 
 
-def undeform_structure(structure: Structure, transmuter: Dict) -> Structure:
-    """
-    Get the undeformed structure by applying the transformations in a reverse order.
+def undeform_structure(structure: Structure, transmuter: dict) -> Structure:
+    """Get the undeformed structure by applying the transformations in a reverse order.
 
     Args:
         structure: deformed structure
@@ -345,7 +332,6 @@ def undeform_structure(structure: Structure, transmuter: Dict) -> Structure:
     Returns:
         undeformed structure
     """
-
     for trans, params in reversed(
         list(zip(transmuter["transformations"], transmuter["transformation_params"]))
     ):

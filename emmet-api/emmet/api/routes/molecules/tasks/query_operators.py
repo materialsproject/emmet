@@ -1,21 +1,23 @@
-from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
-from fastapi import Query
-from typing import Optional
+from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+from fastapi import Query
+from maggma.api.query_operator import QueryOperator
+
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
 
 # TODO: might need these utils once pmg changes are in place (see below)
 # from emmet.api.routes.tasks.utils import calcs_reversed_to_trajectory, task_to_entry
 
 
 class MultipleTaskIDsQuery(QueryOperator):
-    """
-    Method to generate a query on search docs using multiple task_id values
-    """
+    """Method to generate a query on search docs using multiple task_id values."""
 
     def query(
         self,
-        task_ids: Optional[str] = Query(
+        task_ids: str | None = Query(
             None, description="Comma-separated list of task_ids to query on"
         ),
     ) -> STORE_PARAMS:
@@ -34,10 +36,7 @@ class MultipleTaskIDsQuery(QueryOperator):
         return {"criteria": crit}
 
     def post_process(self, docs, query):
-        """
-        Post processing to remove unwanted fields from all task queries
-        """
-
+        """Post processing to remove unwanted fields from all task queries."""
         for doc in docs:
             doc.pop("tags", None)
             doc.pop("custodian", None)
@@ -47,9 +46,7 @@ class MultipleTaskIDsQuery(QueryOperator):
 
 
 class DeprecationQuery(QueryOperator):
-    """
-    Method to generate a query on deprecated task documents
-    """
+    """Method to generate a query on deprecated task documents."""
 
     def query(
         self,
@@ -67,10 +64,7 @@ class DeprecationQuery(QueryOperator):
         return {"criteria": crit}
 
     def post_process(self, docs, query):
-        """
-        Post processing to generate deprecation data
-        """
-
+        """Post processing to generate deprecation data."""
         d = []
 
         for task_id in self.task_ids:

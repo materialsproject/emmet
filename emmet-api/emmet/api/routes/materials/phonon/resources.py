@@ -1,9 +1,10 @@
-from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
-from maggma.api.resource import ReadOnlyResource
+from __future__ import annotations
 
-from emmet.core.phonon import PhononBSDOSDoc
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
+from emmet.core.phonon import PhononBSDOSDoc
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
+from maggma.api.resource import ReadOnlyResource
 
 
 def phonon_bsdos_resource(phonon_bs_store):

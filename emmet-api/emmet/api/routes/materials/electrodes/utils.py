@@ -1,13 +1,13 @@
+from __future__ import annotations
+
+from fastapi import HTTPException
 from pymatgen.core import Composition
 from pymatgen.core.periodic_table import DummySpecies
-from typing import Dict
-from fastapi import HTTPException
 
 
-def electrodes_formula_to_criteria(formulas: str) -> Dict:
-    """
-    Santizes formula into a dictionary to search with wild cards
-    over electrodes data
+def electrodes_formula_to_criteria(formulas: str) -> dict:
+    """Santizes formula into a dictionary to search with wild cards
+    over electrodes data.
 
     Arguments:
         formula: formula with wildcards in it for unknown elements
@@ -115,10 +115,9 @@ def electrodes_formula_to_criteria(formulas: str) -> Dict:
             )
 
 
-def electrodes_chemsys_to_criteria(chemsys: str) -> Dict:
-    """
-    Santizes chemsys into a dictionary to search with wild cards
-    over electrodes data
+def electrodes_chemsys_to_criteria(chemsys: str) -> dict:
+    """Santizes chemsys into a dictionary to search with wild cards
+    over electrodes data.
 
     Arguments:
         chemsys: A comma delimited string list ofchemical systems
@@ -127,7 +126,6 @@ def electrodes_chemsys_to_criteria(chemsys: str) -> Dict:
     Returns:
         Mongo style search criteria for this formula
     """
-
     crit = {}  # type: dict
 
     chemsys_list = [chemsys_val.strip() for chemsys_val in chemsys.split(",")]

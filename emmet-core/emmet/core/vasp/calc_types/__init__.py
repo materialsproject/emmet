@@ -1,9 +1,8 @@
-from pathlib import Path
+from __future__ import annotations
 
-try:
-    import emmet.core.vasp.calc_types.enums
-except ImportError:
-    import emmet.core.vasp.calc_types.generate
+import contextlib
 
-from emmet.core.vasp.calc_types.enums import CalcType, RunType, TaskType
-from emmet.core.vasp.calc_types.utils import calc_type, run_type, task_type
+with contextlib.suppress(ImportError):
+    pass
+
+

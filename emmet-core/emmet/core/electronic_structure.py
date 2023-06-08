@@ -1,30 +1,32 @@
-""" Core definition of an Electronic Structure """
+"""Core definition of an Electronic Structure."""
 from __future__ import annotations
 
 from collections import defaultdict
 from datetime import datetime
+from enum import Enum
 from math import isnan
-from typing import Dict, Optional, Type, TypeVar, Union, List
+from typing import TYPE_CHECKING, TypeVar
 
 import numpy as np
+from emmet.core.material_property import PropertyDoc
+from emmet.core.mpid import MPID
+from emmet.core.settings import EmmetSettings
 from pydantic import BaseModel, Field
 from pymatgen.analysis.magnetism.analyzer import (
     CollinearMagneticStructureAnalyzer,
     Ordering,
 )
-from pymatgen.core import Structure
-from pymatgen.core.periodic_table import Element
-from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
 from pymatgen.electronic_structure.core import OrbitalType, Spin
-from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.symmetry.bandstructure import HighSymmKpath
-from typing_extensions import Literal
-from enum import Enum
 
-from emmet.core.settings import EmmetSettings
-from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import MPID
+if TYPE_CHECKING:
+    from typing import Literal
+
+    from pymatgen.core import Structure
+    from pymatgen.core.periodic_table import Element
+    from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
+    from pymatgen.electronic_structure.dos import CompleteDos
 
 SETTINGS = EmmetSettings()
 
@@ -42,9 +44,7 @@ class DOSProjectionType(Enum):
 
 
 class BSObjectDoc(BaseModel):
-    """
-    Band object document.
-    """
+    """Band object document."""
 
     task_id: MPID = Field(
         None,
@@ -57,15 +57,13 @@ class BSObjectDoc(BaseModel):
         default_factory=datetime.utcnow,
     )
 
-    data: Union[Dict, BandStructureSymmLine] = Field(
+    data: dict | BandStructureSymmLine = Field(
         None, description="The band structure object for the given calculation ID"
     )
 
 
 class DOSObjectDoc(BaseModel):
-    """
-    DOS object document.
-    """
+    """DOS object document."""
 
     task_id: MPID = Field(
         None,
@@ -92,9 +90,9 @@ class ElectronicStructureBaseData(BaseModel):
 
     band_gap: float = Field(..., description="Band gap energy in eV.")
 
-    cbm: Union[float, Dict] = Field(None, description="Conduction band minimum data.")
+    cbm: float | dict = Field(None, description="Conduction band minimum data.")
 
-    vbm: Union[float, Dict] = Field(None, description="Valence band maximum data.")
+    vbm: float | dict = Field(None, description="Valence band maximum data.")
 
     efermi: float = Field(None, description="Fermi energy in eV.")
 
@@ -104,7 +102,7 @@ class ElectronicStructureSummary(ElectronicStructureBaseData):
 
     is_metal: bool = Field(..., description="Whether the material is a metal.")
 
-    magnetic_ordering: Union[str, Ordering] = Field(
+    magnetic_ordering: str | Ordering = Field(
         ..., description="Magnetic ordering of the calculation."
     )
 
@@ -112,7 +110,7 @@ class ElectronicStructureSummary(ElectronicStructureBaseData):
 class BandStructureSummaryData(ElectronicStructureSummary):
     nbands: float = Field(..., description="Number of bands.")
 
-    equivalent_labels: Dict = Field(
+    equivalent_labels: dict = Field(
         ..., description="Equivalent k-point labels in other k-path conventions."
     )
 
@@ -143,30 +141,30 @@ class BandstructureData(BaseModel):
 
 
 class DosData(BaseModel):
-    total: Dict[Union[Spin, str], DosSummaryData] = Field(
+    total: dict[Spin | str, DosSummaryData] = Field(
         None, description="Total DOS summary data."
     )
 
-    elemental: Dict[
+    elemental: dict[
         Element,
-        Dict[
-            Union[Literal["total", "s", "p", "d", "f"], OrbitalType],
-            Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
+        dict[
+            Literal["total", "s", "p", "d", "f"] | OrbitalType,
+            dict[Literal["1", "-1"] | Spin, DosSummaryData],
         ],
     ] = Field(
         None,
         description="Band structure summary data using the Hinuma et al. path convention.",
     )
 
-    orbital: Dict[
-        Union[Literal["total", "s", "p", "d", "f"], OrbitalType],
-        Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
+    orbital: dict[
+        Literal["total", "s", "p", "d", "f"] | OrbitalType,
+        dict[Literal["1", "-1"] | Spin, DosSummaryData],
     ] = Field(
         None,
         description="Band structure summary data using the Latimer-Munro path convention.",
     )
 
-    magnetic_ordering: Union[str, Ordering] = Field(
+    magnetic_ordering: str | Ordering = Field(
         None, description="Magnetic ordering of the calculation."
     )
 
@@ -175,9 +173,7 @@ T = TypeVar("T", bound="ElectronicStructureDoc")
 
 
 class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
-    """
-    Definition for a core Electronic Structure Document
-    """
+    """Definition for a core Electronic Structure Document."""
 
     property_name = "electronic_structure"
 
@@ -194,20 +190,19 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
     @classmethod
     def from_bsdos(  # type: ignore[override]
-        cls: Type[T],
+        cls: type[T],
         material_id: MPID,
-        dos: Dict[MPID, CompleteDos],
+        dos: dict[MPID, CompleteDos],
         is_gap_direct: bool,
         is_metal: bool,
-        origins: List[dict] = [],
-        structures: Optional[Dict[MPID, Structure]] = None,
-        setyawan_curtarolo: Optional[Dict[MPID, BandStructureSymmLine]] = None,
-        hinuma: Optional[Dict[MPID, BandStructureSymmLine]] = None,
-        latimer_munro: Optional[Dict[MPID, BandStructureSymmLine]] = None,
+        origins: list[dict] = [],
+        structures: dict[MPID, Structure] | None = None,
+        setyawan_curtarolo: dict[MPID, BandStructureSymmLine] | None = None,
+        hinuma: dict[MPID, BandStructureSymmLine] | None = None,
+        latimer_munro: dict[MPID, BandStructureSymmLine] | None = None,
         **kwargs,
     ) -> T:
-        """
-        Builds a electronic structure document using band structure and density of states data.
+        """Builds a electronic structure document using band structure and density of states data.
 
         Args:
             material_id (MPID): A material ID.
@@ -225,7 +220,6 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             origins (List[dict]): Optional origins information for final doc
 
         """
-
         # -- Process density of states data
 
         dos_task, dos_obj = list(dos.items())[0]
@@ -299,7 +293,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         for ele in ele_dos:
             orb_dos = dos_obj.get_element_spd_dos(ele)
 
-            for orbital in ["total"] + list(orb_dos.keys()):
+            for orbital in ["total", *list(orb_dos.keys())]:
                 if orbital == "total":
                     proj_dos = ele_dos
                     label = ele
@@ -371,21 +365,14 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                 equivalent_labels = hskp.equiv_labels
 
                 if bs_type == "latimer_munro":
-                    gen_labels = set(
-                        [
-                            label
-                            for label in equivalent_labels["latimer_munro"][
+                    gen_labels = set(equivalent_labels["latimer_munro"][
                                 "setyawan_curtarolo"
-                            ]
-                        ]
-                    )
-                    kpath_labels = set(
-                        [
-                            kpoint.label
+                            ])
+                    kpath_labels = {
+                        kpoint.label
                             for kpoint in bs.kpoints
                             if kpoint.label is not None
-                        ]
-                    )
+                    }
 
                     if not gen_labels.issubset(kpath_labels):
                         new_structure = SpacegroupAnalyzer(
@@ -463,7 +450,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             summary_vbm = dos_vbm
             summary_efermi = dos_efermi
             summary_magnetic_ordering = dos_mag_ordering
-            is_metal = True if np.isclose(dos_gap, 0.0, atol=0.01, rtol=0) else False
+            is_metal = bool(np.isclose(dos_gap, 0.0, atol=0.01, rtol=0))
 
             for origin in origins:
                 if origin["name"] == "dos":

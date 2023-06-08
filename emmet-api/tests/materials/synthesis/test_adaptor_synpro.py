@@ -1,15 +1,16 @@
+from __future__ import annotations
+
 import os
 from json import load
 
-from pymatgen.core import Composition
-
 from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.synthesis.data_adaptor_synpro import (
-    convert_value,
     convert_conditions,
     convert_one,
+    convert_value,
     get_material_formula,
 )
+from pymatgen.core import Composition
 
 
 def test_convert_value():

@@ -1,5 +1,4 @@
-"""
-Copyright (C) 2004-2022, NetworkX Developers
+"""Copyright (C) 2004-2022, NetworkX Developers
 Aric Hagberg <hagberg@lanl.gov>
 Dan Schult <dschult@colgate.edu>
 Pieter Swart <swart@lanl.gov>
@@ -33,7 +32,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-
+from __future__ import annotations
 
 import networkx as nx
 from emmet.core.graph_hashing import (

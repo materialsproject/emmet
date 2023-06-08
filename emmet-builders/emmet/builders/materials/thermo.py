@@ -1,8 +1,13 @@
-from math import ceil
+from __future__ import annotations
+
 import warnings
 from itertools import chain
-from typing import Dict, Iterator, List, Optional, Set
+from math import ceil
+from typing import Iterator
 
+from emmet.builders.utils import HiddenPrints
+from emmet.core.thermo import PhaseDiagramDoc, ThermoDoc
+from emmet.core.utils import jsanitize
 from maggma.core import Builder, Store
 from maggma.stores import S3Store
 from maggma.utils import grouper
@@ -10,25 +15,20 @@ from monty.json import MontyDecoder
 from pymatgen.analysis.phase_diagram import PhaseDiagramError
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
-from emmet.builders.utils import HiddenPrints
-from emmet.core.thermo import ThermoDoc, PhaseDiagramDoc
-from emmet.core.utils import jsanitize
-
 
 class ThermoBuilder(Builder):
     def __init__(
         self,
         thermo: Store,
         corrected_entries: Store,
-        phase_diagram: Optional[Store] = None,
-        query: Optional[Dict] = None,
-        num_phase_diagram_eles: Optional[int] = None,
+        phase_diagram: Store | None = None,
+        query: dict | None = None,
+        num_phase_diagram_eles: int | None = None,
         chunk_size: int = 1000,
         **kwargs,
     ):
-        """
-        Calculates thermodynamic quantities for materials from phase
-        diagram constructions
+        """Calculates thermodynamic quantities for materials from phase
+        diagram constructions.
 
         Args:
             thermo (Store): Store of thermodynamic data such as formation
@@ -41,14 +41,13 @@ class ThermoBuilder(Builder):
                 for data within the separate phase_diagram collection
             chunk_size (int): Size of chemsys chunks to process at any one time.
         """
-
         self.thermo = thermo
         self.query = query if query else {}
         self.corrected_entries = corrected_entries
         self.phase_diagram = phase_diagram
         self.num_phase_diagram_eles = num_phase_diagram_eles
         self.chunk_size = chunk_size
-        self._completed_tasks: Set[str] = set()
+        self._completed_tasks: set[str] = set()
 
         if self.thermo.key != "thermo_id":
             warnings.warn(
@@ -80,10 +79,7 @@ class ThermoBuilder(Builder):
         )
 
     def ensure_indexes(self):
-        """
-        Ensures indicies on the tasks and materials collections
-        """
-
+        """Ensures indicies on the tasks and materials collections."""
         # Search index for corrected_entries
         self.corrected_entries.ensure_index("chemsys")
         self.corrected_entries.ensure_index("last_updated")
@@ -110,7 +106,7 @@ class ThermoBuilder(Builder):
             coll.ensure_index("chemsys")
             coll.ensure_index("phase_diagram_id")
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterator[dict]:  # pragma: no cover
         to_process_chemsys = self._get_chemsys_to_process()
 
         N = ceil(len(to_process_chemsys) / number_splits)
@@ -118,11 +114,8 @@ class ThermoBuilder(Builder):
         for chemsys_chunk in grouper(to_process_chemsys, N):
             yield {"query": {"chemsys": {"$in": list(chemsys_chunk)}}}
 
-    def get_items(self) -> Iterator[List[Dict]]:
-        """
-        Gets whole chemical systems of entries to process
-        """
-
+    def get_items(self) -> Iterator[list[dict]]:
+        """Gets whole chemical systems of entries to process."""
         self.logger.info("Thermo Builder Started")
 
         self.logger.info("Setting indexes")
@@ -184,23 +177,22 @@ class ThermoBuilder(Builder):
 
             pd_docs = [None]
 
-            if self.phase_diagram:
-                if (
-                    self.num_phase_diagram_eles is None
-                    or len(elements) <= self.num_phase_diagram_eles
-                ):
-                    chemsys = "-".join(sorted(set([e.symbol for e in pd.elements])))
-                    pd_id = "{}_{}".format(chemsys, str(thermo_type))
-                    pd_doc = PhaseDiagramDoc(
-                        phase_diagram_id=pd_id,
-                        chemsys=chemsys,
-                        phase_diagram=pd,
-                        thermo_type=thermo_type,
-                    )
+            if self.phase_diagram and (
+                self.num_phase_diagram_eles is None
+                or len(elements) <= self.num_phase_diagram_eles
+            ):
+                chemsys = "-".join(sorted({e.symbol for e in pd.elements}))
+                pd_id = f"{chemsys}_{thermo_type!s}"
+                pd_doc = PhaseDiagramDoc(
+                    phase_diagram_id=pd_id,
+                    chemsys=chemsys,
+                    phase_diagram=pd,
+                    thermo_type=thermo_type,
+                )
 
-                    pd_data = jsanitize(pd_doc.dict(), allow_bson=True)
+                pd_data = jsanitize(pd_doc.dict(), allow_bson=True)
 
-                    pd_docs = [pd_data]
+                pd_docs = [pd_data]
 
             docs_pd_pair = (
                 jsanitize([d.dict() for d in docs], allow_bson=True),
@@ -220,12 +212,10 @@ class ThermoBuilder(Builder):
             return (None, None)
 
     def update_targets(self, items):
-        """
-        Inserts the thermo and phase diagram docs into the thermo collection
+        """Inserts the thermo and phase diagram docs into the thermo collection
         Args:
-            items ([[tuple(List[dict],List[dict])]]): a list of a list of thermo and phase diagram dict pairs to update
+            items ([[tuple(List[dict],List[dict])]]): a list of a list of thermo and phase diagram dict pairs to update.
         """
-
         thermo_docs = [pair[0] for pair_list in items for pair in pair_list]
         phase_diagram_docs = [pair[1] for pair_list in items for pair in pair_list]
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 
 import pytest
@@ -9,8 +11,7 @@ def test_dir():
 
 
 def assert_schemas_equal(test_schema, valid_schema):
-    """
-    Recursively test all items in valid_schema are present and equal in test_schema.
+    """Recursively test all items in valid_schema are present and equal in test_schema.
 
     While test_schema can be a pydantic schema or dictionary, the valid schema must
     be a (nested) dictionary. This function automatically handles accessing the
@@ -32,15 +33,19 @@ def assert_schemas_equal(test_schema, valid_schema):
             else:
                 raise ValueError(f"{type(test_schema)} does not have field: {key}")
             return assert_schemas_equal(sub_test_schema, sub_valid_schema)
+        return None
 
     elif isinstance(valid_schema, list):
         for i, sub_valid_schema in enumerate(valid_schema):
             return assert_schemas_equal(test_schema[i], sub_valid_schema)
+        return None
 
     elif isinstance(valid_schema, float):
         assert test_schema == pytest.approx(valid_schema)
+        return None
     else:
         assert test_schema == valid_schema
+        return None
 
 
 class SchemaTestData:

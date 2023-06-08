@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import itertools
 import logging
 import multiprocessing
@@ -13,21 +15,20 @@ from pathlib import Path
 
 import click
 import mgzip
-from botocore.exceptions import EndpointConnectionError
 from atomate.vasp.database import VaspCalcDb
 from atomate.vasp.drones import VaspDrone
+from botocore.exceptions import EndpointConnectionError
 from dotty_dict import dotty
+from emmet.cli import SETTINGS
+from emmet.core.utils import group_structures
+from emmet.core.vasp.task_valid import TaskDocument
+from emmet.core.vasp.validation import ValidationDoc
 from fireworks.fw_config import FW_BLOCK_FORMAT
 from mongogrant.client import Client
 from pymatgen.core import Structure
+from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 from pymatgen.util.provenance import StructureNL
 from pymongo.errors import DocumentTooLarge
-from emmet.core.vasp.task_valid import TaskDocument
-from emmet.core.vasp.validation import ValidationDoc
-from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
-
-from emmet.cli import SETTINGS
-from emmet.core.utils import group_structures
 
 logger = logging.getLogger("emmet")
 perms = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP
@@ -38,7 +39,7 @@ class EmmetCliError(Exception):
 
 
 class ReturnCodes(Enum):
-    """codes to print command exit message in github issue comments"""
+    """codes to print command exit message in github issue comments."""
 
     SUCCESS = "COMPLETED"
     ERROR = "encountered ERROR"
@@ -53,7 +54,7 @@ def ensure_indexes(indexes, colls):
     created = defaultdict(list)
     for index in indexes:
         for coll in colls:
-            keys = [k.rsplit("_", 1)[0] for k in coll.index_information().keys()]
+            keys = [k.rsplit("_", 1)[0] for k in coll.index_information()]
             if index not in keys:
                 coll.ensure_index(index)
                 created[coll.full_name].append(index)
@@ -150,7 +151,7 @@ def get_subdir(dn):
 
 def get_timestamp_dir(prefix="launcher"):
     time_now = datetime.utcnow().strftime(FW_BLOCK_FORMAT)
-    return "_".join([prefix, time_now])
+    return f"{prefix}_{time_now}"
 
 
 def get_dir_type(list_of_files):
@@ -176,7 +177,7 @@ def make_block(base_path):
 
 
 def get_symlinked_path(root, base_path_index):
-    """organize directory in block_*/launcher_*"""
+    """Organize directory in block_*/launcher_*."""
     ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
     root_split = root.split(os.sep)
@@ -353,7 +354,7 @@ def reconstruct_command(sbatch=False):
                         command.append(f"--{k}")
                 elif isinstance(v, str):
                     command.append(f'--{k}="{v}"')
-                elif isinstance(v, tuple) or isinstance(v, list):
+                elif isinstance(v, (tuple, list)):
                     for x in v:
                         command.append(f'--{k}="{x}"')
                         command.append("\\\n")
@@ -365,7 +366,7 @@ def reconstruct_command(sbatch=False):
     return " ".join(command).strip().strip("\\")
 
 
-def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
+def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):
     process = multiprocessing.current_process()
     name = process.name
     chunk_idx = int(name.rsplit("-")[1]) - 1
@@ -460,7 +461,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
             logger.warn(validation_doc.warnings)
 
         try:
-            entry = MaterialsProject2020Compatibility().process_entry(
+            MaterialsProject2020Compatibility().process_entry(
                 task_document.structure_entry
             )
         except Exception as exc:

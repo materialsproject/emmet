@@ -1,20 +1,23 @@
-from typing import List
-from datetime import datetime
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
 
+if TYPE_CHECKING:
+    from datetime import datetime
+
 
 class FermiDoc(BaseModel):
-    """
-    Fermi surfaces.
-    """
+    """Fermi surfaces."""
 
-    fermi_surfaces: List[dict] = Field(
+    fermi_surfaces: list[dict] = Field(
         None,
         description="List of IFermi FermiSurface objects.",
     )
 
-    surface_types: List[str] = Field(
+    surface_types: list[str] = Field(
         None,
         description="Type of each fermi surface in the fermi_surfaces list.\
             Is either CBM or VBM for semiconductors, or fermi_surface for metals.",

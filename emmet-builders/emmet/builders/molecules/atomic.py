@@ -1,24 +1,26 @@
+from __future__ import annotations
+
 from collections import defaultdict
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Optional, Iterable, Iterator, List, Dict
+from typing import TYPE_CHECKING, Iterable, Iterator
 
-from maggma.builders import Builder
-from maggma.core import Store
-from maggma.utils import grouper
-
-from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
+from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.molecules.atomic import (
-    PartialChargesDoc,
-    PartialSpinsDoc,
     CHARGES_METHODS,
     SPINS_METHODS,
+    PartialChargesDoc,
+    PartialSpinsDoc,
 )
+from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
+from emmet.core.qchem.task import TaskDocument
 from emmet.core.utils import jsanitize
-from emmet.builders.settings import EmmetBuildSettings
+from maggma.builders import Builder
+from maggma.utils import grouper
 
+if TYPE_CHECKING:
+    from maggma.core import Store
 
 __author__ = "Evan Spotte-Smith"
 
@@ -26,8 +28,7 @@ SETTINGS = EmmetBuildSettings()
 
 
 class PartialChargesBuilder(Builder):
-    """
-    The PartialChargesBuilder extracts partial charges data from a MoleculeDoc.
+    """The PartialChargesBuilder extracts partial charges data from a MoleculeDoc.
 
     Various methods can be used to define partial charges, including:
         - Mulliken
@@ -55,9 +56,9 @@ class PartialChargesBuilder(Builder):
         tasks: Store,
         molecules: Store,
         charges: Store,
-        query: Optional[Dict] = None,
-        methods: Optional[List] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        query: dict | None = None,
+        methods: list | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
         self.tasks = tasks
@@ -71,10 +72,7 @@ class PartialChargesBuilder(Builder):
         super().__init__(sources=[tasks, molecules], targets=[charges])
 
     def ensure_indexes(self):
-        """
-        Ensures indices on the collections needed for building
-        """
-
+        """Ensures indices on the collections needed for building."""
         # Basic search index for tasks
         self.tasks.ensure_index("task_id")
         self.tasks.ensure_index("last_updated")
@@ -97,9 +95,8 @@ class PartialChargesBuilder(Builder):
         self.charges.ensure_index("last_updated")
         self.charges.ensure_index("formula_alphabetical")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
-        """Prechunk the builder for distributed computation"""
-
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
+        """Prechunk the builder for distributed computation."""
         temp_query = dict(self.query)
         temp_query["deprecated"] = False
 
@@ -110,7 +107,7 @@ class PartialChargesBuilder(Builder):
             )
         )
 
-        processed_docs = set([e for e in self.charges.distinct("molecule_id")])
+        processed_docs = set(self.charges.distinct("molecule_id"))
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
         to_process_forms = {
             d["formula_alphabetical"]
@@ -123,16 +120,14 @@ class PartialChargesBuilder(Builder):
         for formula_chunk in grouper(to_process_forms, N):
             yield {"query": {"formula_alphabetical": {"$in": list(formula_chunk)}}}
 
-    def get_items(self) -> Iterator[List[Dict]]:
-        """
-        Gets all items to process into partial charges documents.
+    def get_items(self) -> Iterator[list[dict]]:
+        """Gets all items to process into partial charges documents.
         This does no datetime checking; relying on on whether
-        task_ids are included in the charges Store
+        task_ids are included in the charges Store.
 
         Returns:
             generator or list relevant tasks and molecules to process into documents
         """
-
         self.logger.info("Partial charges builder started")
         self.logger.info("Setting indexes")
         self.ensure_indexes()
@@ -151,7 +146,7 @@ class PartialChargesBuilder(Builder):
             )
         )
 
-        processed_docs = set([e for e in self.charges.distinct("molecule_id")])
+        processed_docs = set(self.charges.distinct("molecule_id"))
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
         to_process_forms = {
             d["formula_alphabetical"]
@@ -172,9 +167,8 @@ class PartialChargesBuilder(Builder):
 
             yield molecules
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
-        """
-        Process the tasks into PartialChargesDocs
+    def process_item(self, items: list[dict]) -> list[dict]:
+        """Process the tasks into PartialChargesDocs.
 
         Args:
             tasks List[Dict] : a list of MoleculeDocs in dict form
@@ -182,7 +176,6 @@ class PartialChargesBuilder(Builder):
         Returns:
             [dict] : a list of new partial charges docs
         """
-
         mols = [MoleculeDoc(**item) for item in items]
         formula = mols[0].formula_alphabetical
         mol_ids = [m.molecule_id for m in mols]
@@ -203,7 +196,7 @@ class PartialChargesBuilder(Builder):
             for entry in correct_charge_spin:
                 by_solvent[entry["solvent"]].append(entry)
 
-            for solvent, entries in by_solvent.items():
+            for _solvent, entries in by_solvent.items():
                 sorted_entries = sorted(
                     entries,
                     key=lambda x: (
@@ -269,14 +262,12 @@ class PartialChargesBuilder(Builder):
 
         return jsanitize([doc.dict() for doc in charges_docs], allow_bson=True)
 
-    def update_targets(self, items: List[List[Dict]]):
-        """
-        Inserts the new documents into the charges collection
+    def update_targets(self, items: list[list[dict]]):
+        """Inserts the new documents into the charges collection.
 
         Args:
             items [[dict]]: A list of documents to update
         """
-
         docs = list(chain.from_iterable(items))  # type: ignore
 
         # Add timestamp
@@ -302,8 +293,7 @@ class PartialChargesBuilder(Builder):
 
 
 class PartialSpinsBuilder(Builder):
-    """
-    The PartialSpinsBuilder extracts partial spin data from a MoleculeDoc.
+    """The PartialSpinsBuilder extracts partial spin data from a MoleculeDoc.
 
     Various methods can be used to define partial atomic spins, including:
         - Mulliken
@@ -328,9 +318,9 @@ class PartialSpinsBuilder(Builder):
         tasks: Store,
         molecules: Store,
         spins: Store,
-        query: Optional[Dict] = None,
-        methods: Optional[List] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        query: dict | None = None,
+        methods: list | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
         self.tasks = tasks
@@ -344,10 +334,7 @@ class PartialSpinsBuilder(Builder):
         super().__init__(sources=[tasks, molecules], targets=[spins])
 
     def ensure_indexes(self):
-        """
-        Ensures indices on the collections needed for building
-        """
-
+        """Ensures indices on the collections needed for building."""
         # Basic search index for tasks
         self.tasks.ensure_index("task_id")
         self.tasks.ensure_index("last_updated")
@@ -370,9 +357,8 @@ class PartialSpinsBuilder(Builder):
         self.spins.ensure_index("last_updated")
         self.spins.ensure_index("formula_alphabetical")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
-        """Prechunk the builder for distributed computation"""
-
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
+        """Prechunk the builder for distributed computation."""
         temp_query = dict(self.query)
         temp_query["deprecated"] = False
 
@@ -383,7 +369,7 @@ class PartialSpinsBuilder(Builder):
             )
         )
 
-        processed_docs = set([e for e in self.spins.distinct("molecule_id")])
+        processed_docs = set(self.spins.distinct("molecule_id"))
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
         to_process_forms = {
             d["formula_alphabetical"]
@@ -396,16 +382,14 @@ class PartialSpinsBuilder(Builder):
         for formula_chunk in grouper(to_process_forms, N):
             yield {"query": {"formula_alphabetical": {"$in": list(formula_chunk)}}}
 
-    def get_items(self) -> Iterator[List[Dict]]:
-        """
-        Gets all items to process into partial spins documents.
+    def get_items(self) -> Iterator[list[dict]]:
+        """Gets all items to process into partial spins documents.
         This does no datetime checking; relying on on whether
-        task_ids are included in the spins Store
+        task_ids are included in the spins Store.
 
         Returns:
             generator or list relevant tasks and molecules to process into documents
         """
-
         self.logger.info("Partial spins builder started")
         self.logger.info("Setting indexes")
         self.ensure_indexes()
@@ -424,7 +408,7 @@ class PartialSpinsBuilder(Builder):
             )
         )
 
-        processed_docs = set([e for e in self.spins.distinct("molecule_id")])
+        processed_docs = set(self.spins.distinct("molecule_id"))
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
         to_process_forms = {
             d["formula_alphabetical"]
@@ -445,9 +429,8 @@ class PartialSpinsBuilder(Builder):
 
             yield molecules
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
-        """
-        Process the tasks into PartialSpinsDocs
+    def process_item(self, items: list[dict]) -> list[dict]:
+        """Process the tasks into PartialSpinsDocs.
 
         Args:
             tasks List[Dict] : a list of MoleculeDocs in dict form
@@ -455,7 +438,6 @@ class PartialSpinsBuilder(Builder):
         Returns:
             [dict] : a list of new partial spins docs
         """
-
         mols = [MoleculeDoc(**item) for item in items]
         formula = mols[0].formula_alphabetical
         mol_ids = [m.molecule_id for m in mols]
@@ -480,7 +462,7 @@ class PartialSpinsBuilder(Builder):
             for entry in correct_charge_spin:
                 by_solvent[entry["solvent"]].append(entry)
 
-            for solvent, entries in by_solvent.items():
+            for _solvent, entries in by_solvent.items():
                 sorted_entries = sorted(
                     entries,
                     key=lambda x: (
@@ -545,14 +527,12 @@ class PartialSpinsBuilder(Builder):
 
         return jsanitize([doc.dict() for doc in spins_docs], allow_bson=True)
 
-    def update_targets(self, items: List[List[Dict]]):
-        """
-        Inserts the new documents into the spins collection
+    def update_targets(self, items: list[list[dict]]):
+        """Inserts the new documents into the spins collection.
 
         Args:
             items [[dict]]: A list of documents to update
         """
-
         docs = list(chain.from_iterable(items))  # type: ignore
 
         # Add timestamp

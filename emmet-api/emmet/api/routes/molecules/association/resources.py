@@ -1,32 +1,30 @@
-from maggma.api.resource.read_resource import ReadOnlyResource
-from maggma.api.resource.post_resource import PostOnlyResource
-
-from emmet.core.find_structure import FindMolecule
-from emmet.core.qchem.molecule import MoleculeDoc
-
-from maggma.api.query_operator import (
-    PaginationQuery,
-    SparseFieldsQuery,
-    SortQuery,
-    NumericQuery,
-)
-
-from emmet.api.routes.molecules.molecules.hint_scheme import MoleculesHintScheme
-from emmet.api.routes.molecules.molecules.query_operators import (
-    FormulaQuery,
-    ChemsysQuery,
-    ElementsQuery,
-    ChargeSpinQuery,
-    DeprecationQuery,
-    MultiTaskIDQuery,
-    MultiMPculeIDQuery,
-    FindMoleculeQuery,
-    CalcMethodQuery,
-    HashQuery,
-)
+from __future__ import annotations
 
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
+from emmet.api.routes.molecules.molecules.hint_scheme import MoleculesHintScheme
+from emmet.api.routes.molecules.molecules.query_operators import (
+    CalcMethodQuery,
+    ChargeSpinQuery,
+    ChemsysQuery,
+    DeprecationQuery,
+    ElementsQuery,
+    FindMoleculeQuery,
+    FormulaQuery,
+    HashQuery,
+    MultiMPculeIDQuery,
+    MultiTaskIDQuery,
+)
+from emmet.core.find_structure import FindMolecule
+from emmet.core.qchem.molecule import MoleculeDoc
+from maggma.api.query_operator import (
+    NumericQuery,
+    PaginationQuery,
+    SortQuery,
+    SparseFieldsQuery,
+)
+from maggma.api.resource.post_resource import PostOnlyResource
+from maggma.api.resource.read_resource import ReadOnlyResource
 
 timeout = MAPISettings().TIMEOUT
 

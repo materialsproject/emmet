@@ -1,13 +1,16 @@
-from math import ceil
-from typing import Dict, Iterator, Optional
+from __future__ import annotations
 
-from maggma.builders import Builder
-from maggma.stores import Store
-from maggma.utils import grouper
-from pymatgen.core.structure import Structure
+from math import ceil
+from typing import TYPE_CHECKING, Iterator
 
 from emmet.core.magnetism import MagnetismDoc
 from emmet.core.utils import jsanitize
+from maggma.builders import Builder
+from maggma.utils import grouper
+from pymatgen.core.structure import Structure
+
+if TYPE_CHECKING:
+    from maggma.stores import Store
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>, Matthew Horton <mkhorton@lbl.gov>"
 
@@ -18,18 +21,16 @@ class MagneticBuilder(Builder):
         materials: Store,
         magnetism: Store,
         tasks: Store,
-        query: Optional[Dict] = None,
+        query: dict | None = None,
         **kwargs,
     ):
-        """
-        Creates a magnetism collection for materials
+        """Creates a magnetism collection for materials.
 
         Args:
             materials (Store): Store of materials documents to match to
             magnetism (Store): Store of magnetism properties
 
         """
-
         self.materials = materials
         self.magnetism = magnetism
         self.tasks = tasks
@@ -42,10 +43,8 @@ class MagneticBuilder(Builder):
 
         super().__init__(sources=[materials, tasks], targets=[magnetism], **kwargs)
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
-        """
-        Prechunk method to perform chunking by the key field
-        """
+    def prechunk(self, number_splits: int) -> Iterator[dict]:  # pragma: no cover
+        """Prechunk method to perform chunking by the key field."""
         q = dict(self.query)
 
         q.update({"deprecated": False})
@@ -57,13 +56,11 @@ class MagneticBuilder(Builder):
             yield {"query": {self.materials.key: {"$in": list(split)}}}
 
     def get_items(self):
-        """
-        Gets all items to process
+        """Gets all items to process.
 
         Returns:
             Generator or list relevant tasks and materials to process
         """
-
         self.logger.info("Magnetism Builder Started")
 
         q = dict(self.query)
@@ -77,9 +74,9 @@ class MagneticBuilder(Builder):
             self.magnetism.newer_in(target=self.materials, criteria=q, exhaustive=True)
         ) | (set(mat_ids) - set(mag_ids))
 
-        mats = [mat for mat in mats_set]
+        mats = list(mats_set)
 
-        self.logger.info("Processing {} materials for magnetism data".format(len(mats)))
+        self.logger.info(f"Processing {len(mats)} materials for magnetism data")
 
         self.total = len(mats)
 
@@ -112,9 +109,7 @@ class MagneticBuilder(Builder):
         return jsanitize(doc.dict(), allow_bson=True)
 
     def update_targets(self, items):
-        """
-        Inserts the new magnetism docs into the magnetism collection
-        """
+        """Inserts the new magnetism docs into the magnetism collection."""
         docs = list(filter(None, items))
 
         if len(docs) > 0:

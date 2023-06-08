@@ -1,8 +1,10 @@
-from maggma.api.resource import ReadOnlyResource
-from emmet.core.dois import DOIDoc
+from __future__ import annotations
+
 from emmet.api.core.global_header import GlobalHeaderProcessor
-from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 from emmet.api.core.settings import MAPISettings
+from emmet.core.dois import DOIDoc
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
+from maggma.api.resource import ReadOnlyResource
 
 
 def dois_resource(dois_store):

@@ -1,5 +1,4 @@
-"""
-Copyright (C) 2004-2022, NetworkX Developers
+"""Copyright (C) 2004-2022, NetworkX Developers
 Aric Hagberg <hagberg@lanl.gov>
 Dan Schult <dschult@colgate.edu>
 Pieter Swart <swart@lanl.gov>
@@ -40,6 +39,7 @@ Isomorphic graphs should be assigned identical hashes.
 For now, only Weisfeiler-Lehman hashing is implemented.
 
 """
+from __future__ import annotations
 
 from collections import Counter, defaultdict
 from hashlib import blake2b
@@ -59,8 +59,7 @@ def _init_node_labels(G, edge_attr, node_attr):
 
 
 def _neighborhood_aggregate(G, node, node_labels, edge_attr=None):
-    """
-    Compute new labels for given node by aggregating
+    """Compute new labels for given node by aggregating
     the labels of each node's neighbors.
     """
     label_list = []
@@ -103,33 +102,32 @@ def weisfeiler_lehman_graph_hash(
     digest_size: int, default=16
         Size (in bits) of blake2b hash digest to use for hashing node labels.
 
-    Returns
+    Returns:
     -------
     h : string
         Hexadecimal string corresponding to hash of the input graph.
 
-    Notes
+    Notes:
     -----
     To return the WL hashes of each subgraph of a graph, use
     `weisfeiler_lehman_subgraph_hashes`
 
     Similarity between hashes does not imply similarity between graphs.
 
-    References
+    References:
     ----------
     .. [1] Shervashidze, Nino, Pascal Schweitzer, Erik Jan Van Leeuwen,
        Kurt Mehlhorn, and Karsten M. Borgwardt. Weisfeiler Lehman
        Graph Kernels. Journal of Machine Learning Research. 2011.
        http://www.jmlr.org/papers/volume12/shervashidze11a/shervashidze11a.pdf
 
-    See also
+    See Also:
     --------
     weisfeiler_lehman_subgraph_hashes
     """
 
     def weisfeiler_lehman_step(G, labels, edge_attr=None):
-        """
-        Apply neighborhood aggregation to each node
+        """Apply neighborhood aggregation to each node
         in the graph.
         Computes a dictionary with labels for each node.
         """
@@ -156,8 +154,7 @@ def weisfeiler_lehman_graph_hash(
 def weisfeiler_lehman_subgraph_hashes(
     G, edge_attr=None, node_attr=None, iterations=3, digest_size=16
 ):
-    """
-    Return a dictionary of subgraph hashes by node.
+    """Return a dictionary of subgraph hashes by node.
 
     The dictionary is keyed by node to a list of hashes in increasingly
     sized induced subgraphs containing the nodes within 2*k edges
@@ -210,20 +207,20 @@ def weisfeiler_lehman_subgraph_hashes(
         Size (in bits) of blake2b hash digest to use for hashing node labels.
         The default size is 16 bits
 
-    Returns
+    Returns:
     -------
     node_subgraph_hashes : dict
         A dictionary with each key given by a node in G, and each value given
         by the subgraph hashes in order of depth from the key node.
 
-    Notes
+    Notes:
     -----
     To hash the full graph when subgraph hashes are not needed, use
     `weisfeiler_lehman_graph_hash` for efficiency.
 
     Similarity between hashes does not imply similarity between graphs.
 
-    References
+    References:
     ----------
     .. [1] Shervashidze, Nino, Pascal Schweitzer, Erik Jan Van Leeuwen,
        Kurt Mehlhorn, and Karsten M. Borgwardt. Weisfeiler Lehman
@@ -234,18 +231,17 @@ def weisfeiler_lehman_subgraph_hashes(
        Distributed Representations of Graphs. arXiv. 2017
        https://arxiv.org/pdf/1707.05005.pdf
 
-    See also
+    See Also:
     --------
     weisfeiler_lehman_graph_hash
     """
 
     def weisfeiler_lehman_step(G, labels, node_subgraph_hashes, edge_attr=None):
-        """
-        Apply neighborhood aggregation to each node
+        """Apply neighborhood aggregation to each node
         in the graph.
         Computes a dictionary with labels for each node.
         Appends the new hashed label to the dictionary of subgraph hashes
-        originating from and indexed by each node in G
+        originating from and indexed by each node in G.
         """
         new_labels = {}
         for node in G.nodes():

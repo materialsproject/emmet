@@ -1,22 +1,23 @@
-""" Core definition of a Provenance Document """
+"""Core definition of a Provenance Document."""
+from __future__ import annotations
+
 import warnings
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING
 
+from emmet.core.material_property import PropertyDoc
+from emmet.core.utils import ValueEnum
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
 from pydantic import BaseModel, Field, root_validator, validator
 
-from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import MPID
-from emmet.core.utils import ValueEnum
-from pymatgen.core.structure import Structure
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID
+    from pymatgen.core.structure import Structure
 
 
 class Database(ValueEnum):
-    """
-    Database identifiers for provenance IDs
-    """
+    """Database identifiers for provenance IDs."""
 
     ICSD = "icsd"
     Pauling_Files = "pf"
@@ -24,22 +25,18 @@ class Database(ValueEnum):
 
 
 class Author(BaseModel):
-    """
-    Author information
-    """
+    """Author information."""
 
     name: str = Field(None)
     email: str = Field(None)
 
 
 class History(BaseModel):
-    """
-    History of the material provenance
-    """
+    """History of the material provenance."""
 
     name: str
     url: str
-    description: Optional[Dict] = Field(
+    description: dict | None = Field(
         None, description="Dictionary of exra data for this history node."
     )
 
@@ -51,25 +48,25 @@ class History(BaseModel):
 
 
 class SNLAbout(BaseModel):
-    """A data dictionary definining extra fields in a SNL"""
+    """A data dictionary definining extra fields in a SNL."""
 
     references: str = Field(
         "", description="Bibtex reference strings for this material."
     )
 
-    authors: List[Author] = Field([], description="List of authors for this material.")
+    authors: list[Author] = Field([], description="List of authors for this material.")
 
-    remarks: List[str] = Field(
+    remarks: list[str] = Field(
         [], description="List of remarks for the provenance of this material."
     )
 
-    tags: List[str] = Field([])
+    tags: list[str] = Field([])
 
-    database_IDs: Dict[Database, List[str]] = Field(
+    database_IDs: dict[Database, list[str]] = Field(
         dict(), description="Database IDs corresponding to this material."
     )
 
-    history: List[History] = Field(
+    history: list[History] = Field(
         [],
         description="List of history nodes specifying the transformations or orignation"
         " of this material for the entry closest matching the material input.",
@@ -89,7 +86,7 @@ class SNLAbout(BaseModel):
 
 
 class SNLDict(BaseModel):
-    """Pydantic validated dictionary for SNL"""
+    """Pydantic validated dictionary for SNL."""
 
     about: SNLAbout
 
@@ -97,9 +94,7 @@ class SNLDict(BaseModel):
 
 
 class ProvenanceDoc(PropertyDoc):
-    """
-    A provenance property block
-    """
+    """A provenance property block."""
 
     property_name = "provenance"
 
@@ -108,27 +103,27 @@ class ProvenanceDoc(PropertyDoc):
         description="creation date for the first structure corresponding to this material",
     )
 
-    references: List[str] = Field(
+    references: list[str] = Field(
         [], description="Bibtex reference strings for this material"
     )
 
-    authors: List[Author] = Field([], description="List of authors for this material")
+    authors: list[Author] = Field([], description="List of authors for this material")
 
-    remarks: List[str] = Field(
+    remarks: list[str] = Field(
         [], description="List of remarks for the provenance of this material"
     )
 
-    tags: List[str] = Field([])
+    tags: list[str] = Field([])
 
     theoretical: bool = Field(
         True, description="If this material has any experimental provenance or not"
     )
 
-    database_IDs: Dict[Database, List[str]] = Field(
+    database_IDs: dict[Database, list[str]] = Field(
         dict(), description="Database IDs corresponding to this material"
     )
 
-    history: List[History] = Field(
+    history: list[History] = Field(
         [],
         description="List of history nodes specifying the transformations or orignation"
         " of this material for the entry closest matching the material input",
@@ -141,12 +136,9 @@ class ProvenanceDoc(PropertyDoc):
 
     @classmethod
     def from_SNLs(
-        cls, material_id: MPID, structure: Structure, snls: List[SNLDict], **kwargs
-    ) -> "ProvenanceDoc":
-        """
-        Converts legacy Pymatgen SNLs into a single provenance document
-        """
-
+        cls, material_id: MPID, structure: Structure, snls: list[SNLDict], **kwargs
+    ) -> ProvenanceDoc:
+        """Converts legacy Pymatgen SNLs into a single provenance document."""
         assert (
             len(snls) > 0
         ), "Error must provide a non-zero list of SNLs to convert from SNLs"
@@ -176,7 +168,7 @@ class ProvenanceDoc(PropertyDoc):
 
         # TODO: Maybe we should combine this robocrystallographer?
         # TODO: Refine these tags / remarks
-        remarks = list(set([remark for snl in snls for remark in snl.about.remarks]))
+        remarks = list({remark for snl in snls for remark in snl.about.remarks})
         tags = [r for r in remarks if len(r) < 140]
 
         authors = [entry for snl in snls for entry in snl.about.authors]

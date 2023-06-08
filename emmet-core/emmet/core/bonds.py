@@ -1,19 +1,21 @@
+from __future__ import annotations
+
 import logging
-from typing import Dict, List, Any
+from typing import Any
 
 import numpy as np
+from emmet.core.material_property import PropertyDoc
 from pydantic import Field
 from pymatgen.analysis.graphs import StructureGraph
 from pymatgen.analysis.local_env import NearNeighbors
-
-from emmet.core.material_property import PropertyDoc
 
 AVAILABLE_METHODS = {nn.__name__: nn for nn in NearNeighbors.__subclasses__()}
 
 
 class BondingDoc(PropertyDoc):
     """Structure graphs representing chemical bonds calculated from structure
-    using near neighbor strategies as defined in pymatgen."""
+    using near neighbor strategies as defined in pymatgen.
+    """
 
     property_name = "bonding"
 
@@ -23,18 +25,18 @@ class BondingDoc(PropertyDoc):
 
     method: str = Field(description="Method used to compute structure graph.")
 
-    bond_types: Dict[str, List[float]] = Field(
+    bond_types: dict[str, list[float]] = Field(
         description="Dictionary of bond types to their length, e.g. a Fe-O to "
         "a list of the lengths of Fe-O bonds in Angstrom."
     )
-    bond_length_stats: Dict[str, Any] = Field(
+    bond_length_stats: dict[str, Any] = Field(
         description="Dictionary of statistics of bonds in structure "
         "with keys all_weights, min, max, mean and variance."
     )
-    coordination_envs: List[str] = Field(
+    coordination_envs: list[str] = Field(
         description="List of co-ordination environments, e.g. ['Mo-S(6)', 'S-Mo(3)']."
     )
-    coordination_envs_anonymous: List[str] = Field(
+    coordination_envs_anonymous: list[str] = Field(
         description="List of co-ordination environments without elements "
         "present, e.g. ['A-B(6)', 'A-B(3)']."
     )
@@ -50,8 +52,7 @@ class BondingDoc(PropertyDoc):
         ),
         **kwargs
     ):
-        """
-        Calculate
+        """Calculate.
 
         :param structure: ideally an oxidation state-decorated structure
         :param material_id: mpid
@@ -60,7 +61,6 @@ class BondingDoc(PropertyDoc):
         :param kwargs: to pass to PropertyDoc
         :return:
         """
-
         bonding_info = None
         preferred_methods = [  # type: ignore
             AVAILABLE_METHODS[method]() if isinstance(method, str) else method
@@ -107,3 +107,4 @@ class BondingDoc(PropertyDoc):
                 **bonding_info,
                 **kwargs
             )
+        return None

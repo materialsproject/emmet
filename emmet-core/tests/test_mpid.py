@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from emmet.core.mpid import MPID, MPculeID
 
 
@@ -6,9 +8,9 @@ def test_mpid():
     assert MPID("mp-3") < 3
     assert MPID("mp-3") < MPID("np-3")
     assert MPID("mp-3") > MPID("mp-2")
-    assert 3 > MPID("mp-3")
+    assert MPID("mp-3") < 3
     assert MPID(MPID("mp-1234")) < MPID(1234)
-    assert "mp-1234" < MPID(1234)
+    assert MPID(1234) > "mp-1234"
     assert MPID("1234") > MPID("mp-1234")
     assert MPID("1234") == MPID(1234)
     assert MPID("1234") == "1234"
@@ -19,7 +21,7 @@ def test_mpid():
     ) == MPID("mp-33")
 
     assert (
-        len(set([MPID("mp-33"), MPID("mp-44545"), MPID("mp-33"), MPID("mp-2134234")]))
+        len({MPID("mp-33"), MPID("mp-44545"), MPID("mp-33"), MPID("mp-2134234")})
         == 3
     )
 

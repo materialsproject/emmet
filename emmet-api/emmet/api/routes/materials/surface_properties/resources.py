@@ -1,13 +1,14 @@
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
-from maggma.api.query_operator.dynamic import NumericQuery
-from maggma.api.resource import ReadOnlyResource
-from emmet.api.core.settings import MAPISettings
+from __future__ import annotations
 
 from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.surface_properties.query_operators import (
     ReconstructedQuery,
 )
 from emmet.core.surface_properties import SurfacePropDoc
+from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.query_operator.dynamic import NumericQuery
+from maggma.api.resource import ReadOnlyResource
 
 
 def surface_props_resource(surface_prop_store):

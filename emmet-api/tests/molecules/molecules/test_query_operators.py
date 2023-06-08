@@ -1,21 +1,22 @@
+from __future__ import annotations
+
 import os
 
 from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.molecules.molecules.query_operators import (
-    FormulaQuery,
-    ChemsysQuery,
-    ElementsQuery,
-    ChargeSpinQuery,
-    DeprecationQuery,
-    MultiTaskIDQuery,
-    MultiMPculeIDQuery,
-    FindMoleculeQuery,
     CalcMethodQuery,
+    ChargeSpinQuery,
+    ChemsysQuery,
+    DeprecationQuery,
+    ElementsQuery,
+    FindMoleculeQuery,
+    FormulaQuery,
     HashQuery,
+    MultiMPculeIDQuery,
+    MultiTaskIDQuery,
 )
+from monty.serialization import dumpfn, loadfn
 from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
-
 from pymatgen.core.structure import Molecule
 
 

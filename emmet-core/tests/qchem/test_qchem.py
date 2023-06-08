@@ -1,16 +1,17 @@
-import pytest
-from monty.serialization import loadfn
+from __future__ import annotations
 
+import pytest
+from emmet.core.mpid import MPID
 from emmet.core.qchem.calc_types import (
     LevelOfTheory,
     TaskType,
     level_of_theory,
-    task_type,
-    solvent,
     lot_solvent_string,
+    solvent,
+    task_type,
 )
 from emmet.core.qchem.task import TaskDocument
-from emmet.core.mpid import MPID
+from monty.serialization import loadfn
 
 
 def test_task_type():

@@ -1,17 +1,22 @@
-from typing import Dict
-from fastapi import Query, Body
-from maggma.api.utils import STORE_PARAMS
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from fastapi import Body, Query
 from maggma.api.query_operator import QueryOperator
+
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
 
 
 class GeneralStorePostQuery(QueryOperator):
-    """Query operators to provide general store information to post"""
+    """Query operators to provide general store information to post."""
 
     def query(
         self,
         kind: str = Query(..., title="Data type"),
         markdown: str = Query(None, title="Markdown data"),
-        meta: Dict = Body(None, title="Metadata"),
+        meta: dict = Body(None, title="Metadata"),
     ) -> STORE_PARAMS:
         crit = {"kind": kind, "markdown": markdown, "meta": meta}
 
@@ -30,7 +35,7 @@ class GeneralStorePostQuery(QueryOperator):
 
 
 class GeneralStoreGetQuery(QueryOperator):
-    """Query operators to obtain general store information"""
+    """Query operators to obtain general store information."""
 
     def query(self, kind: str = Query(..., title="Data type")) -> STORE_PARAMS:
         crit = {"kind": kind}

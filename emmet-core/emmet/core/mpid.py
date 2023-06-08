@@ -1,6 +1,6 @@
-import re
-from typing import Union
+from __future__ import annotations
 
+import re
 
 mpid_regex = re.compile(r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$")
 mpculeid_regex = re.compile(
@@ -9,11 +9,10 @@ mpculeid_regex = re.compile(
 
 
 class MPID(str):
-    """
-    A Materials Project type ID with a prefix and an integer
+    """A Materials Project type ID with a prefix and an integer
     This class enables seemlessly mixing MPIDs and regular integer IDs
     Prefixed IDs are considered less than non-prefixed IDs to enable proper
-    mixing with the Materials Project
+    mixing with the Materials Project.
 
     Args:
         val: Either 1) a prefixed string e.g. "mp-1234"
@@ -24,7 +23,7 @@ class MPID(str):
             Numbers stored as strings are coerced to ints
     """
 
-    def __init__(self, val: Union["MPID", int, str]):
+    def __init__(self, val: MPID | int | str):
         if isinstance(val, MPID):
             self.parts = val.parts  # type: ignore
             self.string = val.string  # type: ignore
@@ -49,6 +48,7 @@ class MPID(str):
             return self.string == other.string
         elif isinstance(other, (int, str)):
             return self.string == MPID(other).string
+        return None
 
     def __str__(self):
         return self.string
@@ -56,7 +56,7 @@ class MPID(str):
     def __repr__(self):
         return f"MPID({self})"
 
-    def __lt__(self, other: Union["MPID", int, str]):
+    def __lt__(self, other: MPID | int | str):
         other_parts = MPID(other).parts
 
         if self.parts[0] != "" and other_parts[0] != "":
@@ -73,7 +73,7 @@ class MPID(str):
             # both are pure ints; normal comparison
             return self.parts[1] < other_parts[1]
 
-    def __gt__(self, other: Union["MPID", int, str]):
+    def __gt__(self, other: MPID | int | str):
         return not self.__lt__(other)
 
     def __hash__(self):
@@ -103,10 +103,9 @@ class MPID(str):
 
 
 class MPculeID(str):
-    """
-    A Materials Project Molecule ID with a prefix, hash, and two integer values
+    """A Materials Project Molecule ID with a prefix, hash, and two integer values
         representing the charge and spin of the molecule
-    Unlike the MPID, you cannot compare raw hashes or raw integers to MPculeIDs
+    Unlike the MPID, you cannot compare raw hashes or raw integers to MPculeIDs.
 
     Args:
         val: Either 1) an MPculeID
@@ -116,7 +115,7 @@ class MPculeID(str):
             Numbers stored as strings are coerced to ints
     """
 
-    def __init__(self, val: Union["MPculeID", str]):
+    def __init__(self, val: MPculeID | str):
         if isinstance(val, MPculeID):
             self.parts = val.parts  # type: ignore
             self.string = val.string  # type: ignore
@@ -149,6 +148,7 @@ class MPculeID(str):
             return self.string == other.string
         elif isinstance(other, str):
             return self.string == MPculeID(other).string
+        return None
 
     def __str__(self):
         return self.string
@@ -156,14 +156,14 @@ class MPculeID(str):
     def __repr__(self):
         return f"MPculeID({self})"
 
-    def __lt__(self, other: Union["MPculeID", str]):
+    def __lt__(self, other: MPculeID | str):
         other_parts = MPculeID(other).parts
 
         return "-".join([str(x) for x in self.parts[-4:]]) < "-".join(
             [str(x) for x in other_parts[-4:]]
         )
 
-    def __gt__(self, other: Union["MPculeID", str]):
+    def __gt__(self, other: MPculeID | str):
         return not self.__lt__(other)
 
     def __hash__(self):

@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 import pytest
+from emmet.core.xrd import Edge, XRDDoc
 from pymatgen.analysis.diffraction.xrd import WAVELENGTHS
 from pymatgen.core import Element, Lattice, Structure
 
-from emmet.core.xrd import Edge, XRDDoc
 
-
-@pytest.fixture
+@pytest.fixture()
 def structure():
     test_latt = Lattice.cubic(3.0)
     test_struc = Structure(lattice=test_latt, species=["Fe"], coords=[[0, 0, 0]])

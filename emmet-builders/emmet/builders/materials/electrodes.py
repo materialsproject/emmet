@@ -1,22 +1,25 @@
+from __future__ import annotations
+
 import operator
+from collections import defaultdict
 from datetime import datetime
 from functools import lru_cache
 from itertools import chain
 from math import ceil
-from typing import Any, Iterator, Dict, List, Optional
-from collections import defaultdict
+from typing import TYPE_CHECKING, Any, Iterator
 
-from maggma.builders import Builder
-from maggma.stores import MongoStore
-from maggma.utils import grouper
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
-from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
-from pymatgen.analysis.phase_diagram import PhaseDiagram, Composition
-
-from emmet.core.electrode import InsertionElectrodeDoc, ConversionElectrodeDoc
+from emmet.builders.settings import EmmetBuildSettings
+from emmet.core.electrode import ConversionElectrodeDoc, InsertionElectrodeDoc
 from emmet.core.structure_group import StructureGroupDoc, _get_id_num
 from emmet.core.utils import jsanitize
-from emmet.builders.settings import EmmetBuildSettings
+from maggma.builders import Builder
+from maggma.utils import grouper
+from pymatgen.analysis.phase_diagram import Composition, PhaseDiagram
+from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
+from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+
+if TYPE_CHECKING:
+    from maggma.stores import MongoStore
 
 
 def s_hash(el):
@@ -51,13 +54,12 @@ sg_fields = ["number", "hall_number", "international", "hall", "choice"]
 
 
 def generic_groupby(list_in, comp=operator.eq):
-    """
-    Group a list of unsortable objects
+    """Group a list of unsortable objects
     Args:
         list_in: A list of generic objects
         comp: (Default value = operator.eq) The comparator
     Returns:
-        [int] list of labels for the input list
+        [int] list of labels for the input list.
     """
     list_out = [None] * len(list_in)
     label_num = 0
@@ -65,7 +67,7 @@ def generic_groupby(list_in, comp=operator.eq):
         if ls1 is not None:
             continue
         list_out[i1] = label_num
-        for i2, ls2 in list(enumerate(list_out))[i1 + 1 :]:
+        for i2, _ls2 in list(enumerate(list_out))[i1 + 1 :]:
             if comp(list_in[i1], list_in[i2]):
                 if list_out[i2] is None:
                     list_out[i2] = list_out[i1]
@@ -85,7 +87,7 @@ class StructureGroupBuilder(Builder):
         materials: MongoStore,
         sgroups: MongoStore,
         working_ion: str,
-        query: Optional[dict] = None,
+        query: dict | None = None,
         ltol: float = default_build_settings.LTOL,
         stol: float = default_build_settings.STOL,
         angle_tol: float = default_build_settings.ANGLE_TOL,
@@ -93,8 +95,7 @@ class StructureGroupBuilder(Builder):
         chunk_size: int = 1000,
         **kwargs,
     ):
-        """
-        Aggregate materials entries into sgroups that are topotactically similar to each other.
+        """Aggregate materials entries into sgroups that are topotactically similar to each other.
         This is an incremental builder that makes ensures that each materials id belongs to one StructureGroupDoc
         document
         Args:
@@ -123,10 +124,8 @@ class StructureGroupBuilder(Builder):
             sources=[materials], targets=[sgroups], chunk_size=chunk_size, **kwargs
         )
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
-        """
-        Prechunk method to perform chunking by the key field
-        """
+    def prechunk(self, number_splits: int) -> Iterator[dict]:  # pragma: no cover
+        """Prechunk method to perform chunking by the key field."""
         q = dict(self.query)
 
         all_chemsys = self.materials.distinct("chemsys", criteria=q)
@@ -145,24 +144,21 @@ class StructureGroupBuilder(Builder):
         for split in grouper(new_chemsys_list, N):
             new_split_add = []
             for chemsys in split:
-                elements = [element for element in chemsys.split("-")] + [
-                    self.working_ion
-                ]
+                elements = [*list(chemsys.split("-")), self.working_ion]
                 new_chemsys = "-".join(sorted(elements))
                 new_split_add.append(new_chemsys)
 
             yield {"query": {"chemsys": {"$in": new_split_add + split}}}
 
     def get_items(self):
-        """
-        Summary of the steps:
+        """Summary of the steps:
         - query the materials database for different chemical systems that satisfies the base query
           "contains redox element and working ion"
         - Get the full chemsys list of interest
         - The main loop is over all these chemsys.  within the main loop:
             - get newest timestamp for the material documents (max_mat_time)
             - get the oldest timestamp for the target documents (min_target_time)
-            - if min_target_time is < max_mat_time then nuke all the target documents
+            - if min_target_time is < max_mat_time then nuke all the target documents.
         """
         # All potentially interesting chemsys must contain the working ion
         base_query = {
@@ -200,7 +196,7 @@ class StructureGroupBuilder(Builder):
             all_mats_in_chemsys = list(
                 self.materials.query(
                     criteria=chemsys_query,
-                    properties=MAT_PROPS + [self.materials.last_updated_field],
+                    properties=[*MAT_PROPS, self.materials.last_updated_field],
                 )
             )
             self.logger.debug(
@@ -239,9 +235,9 @@ class StructureGroupBuilder(Builder):
                     f"The newest GROUP doc was generated at {min_target_time}."
                 )
 
-                mat_ids = set(
-                    [mat_doc["material_id"] for mat_doc in all_mats_in_chemsys]
-                )
+                mat_ids = {
+                    mat_doc["material_id"] for mat_doc in all_mats_in_chemsys
+                }
 
                 # If any material id is missing or if any material id has been updated
                 target_ids = set()
@@ -268,10 +264,10 @@ class StructureGroupBuilder(Builder):
             else:
                 yield {"chemsys": chemsys, "materials": all_mats_in_chemsys}
 
-    def update_targets(self, items: List):
+    def update_targets(self, items: list):
         items = list(filter(None, chain.from_iterable(items)))
         if len(items) > 0:
-            self.logger.info("Updating {} sgroups documents".format(len(items)))
+            self.logger.info(f"Updating {len(items)} sgroups documents")
             for struct_group_dict in items:
                 struct_group_dict[self.sgroups.last_updated_field] = datetime.utcnow()
             self.sgroups.update(docs=items, key=["group_id"])
@@ -287,9 +283,9 @@ class StructureGroupBuilder(Builder):
         if len(entries) == 1:
             return entries[0]
         else:
-            if "GGA+U" in mdoc["entries"].keys():
+            if "GGA+U" in mdoc["entries"]:
                 return ComputedStructureEntry.from_dict(mdoc["entries"]["GGA+U"])
-            elif "GGA" in mdoc["entries"].keys():
+            elif "GGA" in mdoc["entries"]:
                 return ComputedStructureEntry.from_dict(mdoc["entries"]["GGA"])
             else:
                 return None
@@ -319,7 +315,7 @@ class InsertionElectrodeBuilder(Builder):
         grouped_materials: MongoStore,
         thermo: MongoStore,
         insertion_electrode: MongoStore,
-        query: Optional[Dict] = None,
+        query: dict | None = None,
         strip_structures: bool = False,
         **kwargs,
     ):
@@ -335,10 +331,8 @@ class InsertionElectrodeBuilder(Builder):
             **kwargs,
         )
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:
-        """
-        Prechunk method to perform chunking by the key field
-        """
+    def prechunk(self, number_splits: int) -> Iterator[dict]:
+        """Prechunk method to perform chunking by the key field."""
         q = dict(self.query)
 
         keys = self.grouped_materials.distinct(self.grouped_materials.key, criteria=q)
@@ -348,9 +342,7 @@ class InsertionElectrodeBuilder(Builder):
             yield {"query": {self.grouped_materials.key: {"$in": list(split)}}}
 
     def get_items(self):
-        """
-        Get items
-        """
+        """Get items."""
 
         @lru_cache(1000)
         def get_working_ion_entry(working_ion):
@@ -380,9 +372,9 @@ class InsertionElectrodeBuilder(Builder):
 
             self.logger.debug(f"Found for {len(thermo_docs)} Thermo Documents.")
             if len(thermo_docs) != len(mat_ids):
-                missing_ids = set(mat_ids) - set(
-                    [t_["material_id"] for t_ in thermo_docs]
-                )
+                missing_ids = set(mat_ids) - {
+                    t_["material_id"] for t_ in thermo_docs
+                }
                 self.logger.warn(
                     f"The following ids are missing from the entries in thermo {missing_ids}.\n"
                     "The is likely due to the fact that a calculation other than GGA or GGA+U was "
@@ -418,10 +410,9 @@ class InsertionElectrodeBuilder(Builder):
             else:
                 yield None
 
-    def process_item(self, item) -> Dict:
-        """
-        - Add volume information to each entry to create the insertion electrode document
-        - Add the host structure
+    def process_item(self, item) -> dict:
+        """- Add volume information to each entry to create the insertion electrode document
+        - Add the host structure.
         """
         if item is None:
             return None  # type: ignore
@@ -460,10 +451,10 @@ class InsertionElectrodeBuilder(Builder):
             # {"failed_reason": "unable to create InsertionElectrode document"}
         return jsanitize(ie.dict())
 
-    def update_targets(self, items: List):
+    def update_targets(self, items: list):
         items = list(filter(None, items))
         if len(items) > 0:
-            self.logger.info("Updating {} battery documents".format(len(items)))
+            self.logger.info(f"Updating {len(items)} battery documents")
             for struct_group_dict in items:
                 struct_group_dict[
                     self.grouped_materials.last_updated_field
@@ -480,7 +471,7 @@ class ConversionElectrodeBuilder(Builder):
         conversion_electrode_store: MongoStore,
         working_ion: str,
         thermo_type: str,
-        query: Optional[dict] = None,
+        query: dict | None = None,
         **kwargs,
     ):
         self.phase_diagram_store = phase_diagram_store
@@ -499,10 +490,8 @@ class ConversionElectrodeBuilder(Builder):
             **kwargs,
         )
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:
-        """
-        Prechunk method to perform chunking by the key field
-        """
+    def prechunk(self, number_splits: int) -> Iterator[dict]:
+        """Prechunk method to perform chunking by the key field."""
         q = dict(self.query)
         keys = self.phase_diagram_store.distinct(
             self.phase_diagram_store.key, criteria=q
@@ -512,18 +501,13 @@ class ConversionElectrodeBuilder(Builder):
             yield {"query": {self.phase_diagram_store.key: {"$in": list(split)}}}
 
     def get_items(self):
-        """
-        Get items. The phase diagrams are prefiltered by "thermo_type" or the functional.
-        """
+        """Get items. The phase diagrams are prefiltered by "thermo_type" or the functional."""
         q = dict(self.query)
         q.update({"thermo_type": self.thermo_type})
-        for phase_diagram_doc in self.phase_diagram_store.query(q):
-            yield phase_diagram_doc
+        yield from self.phase_diagram_store.query(q)
 
-    def process_item(self, item) -> Dict:
-        """
-        - For each phase diagram doc, find all possible conversion electrodes and create conversion electrode docs
-        """
+    def process_item(self, item) -> dict:
+        """- For each phase diagram doc, find all possible conversion electrodes and create conversion electrode docs."""
         # To work around "el_refs" serialization issue (#576)
         _pd = PhaseDiagram.from_dict(item["phase_diagram"])
         _entries = _pd.all_entries
@@ -547,7 +531,7 @@ class ConversionElectrodeBuilder(Builder):
         new_docs = []
         unique_reaction_compositions = set()
         reaction_compositions = []
-        for k, v in most_wi.items():
+        for _k, v in most_wi.items():
             if v[1] is not None:
                 # Get lowest material_id with matching composition
                 material_ids = [
@@ -571,10 +555,10 @@ class ConversionElectrodeBuilder(Builder):
                 )
                 # Get reaction entry_ids
                 comps = set()
-                for c in conversion_electrode_doc.reaction["reactants"].keys():
+                for c in conversion_electrode_doc.reaction["reactants"]:
                     comps.add(c)
                     unique_reaction_compositions.add(c)
-                for c in conversion_electrode_doc.reaction["products"].keys():
+                for c in conversion_electrode_doc.reaction["products"]:
                     comps.add(c)
                     unique_reaction_compositions.add(c)
                 reaction_compositions.append(comps)
@@ -597,7 +581,7 @@ class ConversionElectrodeBuilder(Builder):
 
         return new_docs  # type: ignore
 
-    def update_targets(self, items: List):
+    def update_targets(self, items: list):
         combined_items = []
         for _items in items:
             _items = list(filter(None, _items))
@@ -605,7 +589,7 @@ class ConversionElectrodeBuilder(Builder):
 
         if len(combined_items) > 0:
             self.logger.info(
-                "Updating {} conversion battery documents".format(len(combined_items))
+                f"Updating {len(combined_items)} conversion battery documents"
             )
             self.conversion_electrode_store.update(
                 docs=combined_items, key=["battery_id", "thermo_type"]

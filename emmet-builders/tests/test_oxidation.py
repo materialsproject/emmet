@@ -1,7 +1,8 @@
-import pytest
-from maggma.stores import JSONStore, MemoryStore
+from __future__ import annotations
 
+import pytest
 from emmet.builders.materials.oxidation_states import OxidationStatesBuilder
+from maggma.stores import JSONStore, MemoryStore
 
 
 @pytest.fixture(scope="session")
@@ -31,4 +32,4 @@ def test_oxidation_store(fake_materials):
     builder.run()
 
     assert oxi_store.count() == 6
-    assert all([isinstance(d["composition"], dict) for d in oxi_store.query()])
+    assert all(isinstance(d["composition"], dict) for d in oxi_store.query())

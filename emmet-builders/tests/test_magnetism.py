@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 from pathlib import Path
 
 import pytest
-from maggma.stores import JSONStore, MemoryStore
-from monty.serialization import dumpfn, loadfn
-
 from emmet.builders.materials.magnetism import MagneticBuilder
 from emmet.builders.vasp.materials import MaterialsBuilder
+from maggma.stores import JSONStore, MemoryStore
+from monty.serialization import dumpfn, loadfn
 
 
 @pytest.fixture(scope="session")
@@ -21,7 +22,7 @@ def materials_store(tasks_store):
     return materials_store
 
 
-@pytest.fixture
+@pytest.fixture()
 def magnetism_store():
     return MemoryStore(key="material_id")
 
@@ -42,7 +43,7 @@ def test_magnetism_builder(tasks_store, magnetism_store, materials_store):
         "mp-1867075": "FM",
     }
 
-    print(list([doc["material_id"] for doc in magnetism_store.query({})]))
+    print([doc["material_id"] for doc in magnetism_store.query({})])
 
     for mpid in test_mpids:
         doc = magnetism_store.query_one({"material_id": mpid})

@@ -1,12 +1,16 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from fastapi import HTTPException, Query
 from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
 
 
 class RoboTextSearchQuery(QueryOperator):
-    """
-    Method to generate a robocrystallographer text search query
-    """
+    """Method to generate a robocrystallographer text search query."""
 
     def query(
         self,

@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 from emmet.api.routes.materials.bonds.query_operators import (
     BondLengthQuery,
     CoordinationEnvsQuery,
 )
-
+from monty.serialization import dumpfn, loadfn
 from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 
 
 def test_bond_length_query_operator():

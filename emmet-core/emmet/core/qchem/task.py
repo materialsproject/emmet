@@ -1,42 +1,40 @@
 # mypy: ignore-errors
 
-""" Core definition of a Q-Chem Task Document """
-from typing import Any, Dict, List, Optional, Callable
+"""Core definition of a Q-Chem Task Document."""
+from __future__ import annotations
 
-from pydantic import BaseModel, Field
-from pymatgen.core.structure import Molecule
+from typing import TYPE_CHECKING, Any, Callable
 
-from emmet.core.structure import MoleculeMetadata
-from emmet.core.task import BaseTaskDocument
-from emmet.core.utils import ValueEnum
 from emmet.core.qchem.calc_types import (
-    LevelOfTheory,
     CalcType,
+    LevelOfTheory,
     TaskType,
     calc_type,
     level_of_theory,
-    task_type,
-    solvent,
     lot_solvent_string,
+    solvent,
+    task_type,
 )
+from emmet.core.structure import MoleculeMetadata
+from emmet.core.task import BaseTaskDocument
+from emmet.core.utils import ValueEnum
+from pydantic import BaseModel, Field
 
+if TYPE_CHECKING:
+    from pymatgen.core.structure import Molecule
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
 class QChemStatus(ValueEnum):
-    """
-    Q-Chem Calculation State
-    """
+    """Q-Chem Calculation State."""
 
     SUCESS = "successful"
     FAILED = "unsuccessful"
 
 
 class OutputSummary(BaseModel):
-    """
-    Summary of an output for a Q-Chem calculation
-    """
+    """Summary of an output for a Q-Chem calculation."""
 
     initial_molecule: Molecule = Field(None, description="Input Molecule object")
     optimized_molecule: Molecule = Field(None, description="Optimized Molecule object")
@@ -51,22 +49,22 @@ class OutputSummary(BaseModel):
         None, description="Total entropy of the molecule (units: cal/mol-K"
     )
 
-    mulliken: List[Any] = Field(
+    mulliken: list[Any] = Field(
         None, description="Mulliken atomic partial charges and partial spins"
     )
-    resp: List[float] = Field(
+    resp: list[float] = Field(
         None,
         description="Restrained Electrostatic Potential (RESP) atomic partial charges",
     )
-    nbo: Dict[str, Any] = Field(
+    nbo: dict[str, Any] = Field(
         None, description="Natural Bonding Orbital (NBO) output"
     )
 
-    frequencies: List[float] = Field(
+    frequencies: list[float] = Field(
         None, description="Vibrational frequencies of the molecule (units: cm^-1)"
     )
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         return {
             "@module": self.__class__.__module__,
             "@class": self.__class__.__name__,
@@ -83,9 +81,7 @@ class OutputSummary(BaseModel):
 
 
 class TaskDocument(BaseTaskDocument, MoleculeMetadata):
-    """
-    Definition of a Q-Chem task document
-    """
+    """Definition of a Q-Chem task document."""
 
     calc_code = "Q-Chem"
     completed = True
@@ -98,16 +94,16 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     cputime: float = Field(None, description="The system CPU time in seconds")
     walltime: float = Field(None, description="The real elapsed time in seconds")
 
-    calcs_reversed: List[Dict] = Field(
+    calcs_reversed: list[dict] = Field(
         [], description="The 'raw' calculation docs used to assembled this task"
     )
 
-    orig: Dict[str, Any] = Field(
+    orig: dict[str, Any] = Field(
         {}, description="Summary of the original Q-Chem inputs"
     )
     output = Field(OutputSummary())
 
-    critic2: Dict[str, Any] = Field(
+    critic2: dict[str, Any] = Field(
         None, description="Output from Critic2 critical point analysis code"
     )
     custom_smd: str = Field(
@@ -123,7 +119,7 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     # left as Any here to ensure tags don't cause validation to fail.
     tags: Any = Field(None, description="Metadata tags")
 
-    warnings: Dict[str, bool] = Field(
+    warnings: dict[str, bool] = Field(
         None, description="Any warnings related to this task document"
     )
 
@@ -148,21 +144,15 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
         return calc_type(self.special_run_type, self.orig)
 
     @property
-    def entry(self) -> Dict[str, Any]:
+    def entry(self) -> dict[str, Any]:
         if self.output.optimized_molecule is not None:
             mol = self.output.optimized_molecule
         else:
             mol = self.output.initial_molecule
 
-        if self.charge is None:
-            charge = int(mol.charge)
-        else:
-            charge = int(self.charge)
+        charge = int(mol.charge) if self.charge is None else int(self.charge)
 
-        if self.spin_multiplicity is None:
-            spin = mol.spin_multiplicity
-        else:
-            spin = self.spin_multiplicity
+        spin = mol.spin_multiplicity if self.spin_multiplicity is None else self.spin_multiplicity
 
         entry_dict = {
             "entry_id": self.task_id,
@@ -190,19 +180,17 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
 
 
 def filter_task_type(
-    entries: List[Dict[str, Any]],
+    entries: list[dict[str, Any]],
     task_type: TaskType,
-    sort_by: Optional[Callable] = None,
-) -> List[Dict[str, Any]]:
-    """
-    Filter (and sort) TaskDocument entries based on task type
+    sort_by: Callable | None = None,
+) -> list[dict[str, Any]]:
+    """Filter (and sort) TaskDocument entries based on task type.
 
     :param entries: List of TaskDocument entry dicts
     :param TaskType: TaskType to accept
     :param sort_by: Function used to sort (default None)
     :return: Filtered (sorted) list of entries
     """
-
     filtered = [f for f in entries if f["task_type"] == task_type]
 
     if sort_by is not None:

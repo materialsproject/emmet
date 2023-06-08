@@ -1,19 +1,18 @@
-""" Module to define various calculation types as Enums for VASP """
-from pathlib import Path
-from typing import Dict
+"""Module to define various calculation types as Enums for VASP."""
+from __future__ import annotations
 
-from monty.serialization import loadfn
-from typing_extensions import Literal
+from pathlib import Path
+from typing import Literal
 
 from emmet.core.vasp.calc_types.enums import CalcType, RunType, TaskType
+from monty.serialization import loadfn
 
 _RUN_TYPE_DATA = loadfn(str(Path(__file__).parent.joinpath("run_types.yaml").resolve()))
 
 
-def run_type(parameters: Dict) -> RunType:
-    """
-    Determines the run_type from the VASP parameters dict
-    This is adapted from pymatgen to be far less unstable
+def run_type(parameters: dict) -> RunType:
+    """Determines the run_type from the VASP parameters dict
+    This is adapted from pymatgen to be far less unstable.
 
     Args:
         parameters: Dictionary of VASP parameters from Vasprun.xml
@@ -23,16 +22,10 @@ def run_type(parameters: Dict) -> RunType:
         If you're not using the TaskDocument.run_type, copy over
         LDAU* fields from the incar rather than trust parameters
     """
-
-    if parameters.get("LDAU", False):
-        is_hubbard = "+U"
-    else:
-        is_hubbard = ""
+    is_hubbard = "+U" if parameters.get("LDAU", False) else ""
 
     def _variant_equal(v1, v2) -> bool:
-        """
-        helper function to deal with strings
-        """
+        """Helper function to deal with strings."""
         if isinstance(v1, str) and isinstance(v2, str):
             return v1.strip().upper() == v2.strip().upper()
         else:
@@ -42,10 +35,8 @@ def run_type(parameters: Dict) -> RunType:
     for functional_class in ["HF", "VDW", "METAGGA", "GGA"]:
         for special_type, params in _RUN_TYPE_DATA[functional_class].items():
             if all(
-                [
-                    _variant_equal(parameters.get(param, None), value)
+                _variant_equal(parameters.get(param, None), value)
                     for param, value in params.items()
-                ]
             ):
                 return RunType(f"{special_type}{is_hubbard}")
 
@@ -53,15 +44,13 @@ def run_type(parameters: Dict) -> RunType:
 
 
 def task_type(
-    inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict]
+    inputs: dict[Literal["incar", "poscar", "kpoints", "potcar"], dict]
 ) -> TaskType:
-    """
-    Determines the task type
+    """Determines the task type.
 
     Args:
         inputs: inputs dict with an incar, kpoints, potcar, and poscar dictionaries
     """
-
     calc_type = []
 
     incar = inputs.get("incar", {})
@@ -73,7 +62,7 @@ def task_type(
             num_kpt_labels = len(list(filter(None.__ne__, kpt_labels)))
         except Exception as e:
             raise Exception(
-                "Couldn't identify total number of kpt labels: {}".format(e)
+                f"Couldn't identify total number of kpt labels: {e}"
             )
 
         if num_kpt_labels > 0:
@@ -119,11 +108,10 @@ def task_type(
 
 
 def calc_type(
-    inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict],
-    parameters: Dict,
+    inputs: dict[Literal["incar", "poscar", "kpoints", "potcar"], dict],
+    parameters: dict,
 ) -> CalcType:
-    """
-    Determines the calc type
+    """Determines the calc type.
 
     Args:
         inputs: inputs dict with an incar, kpoints, potcar, and poscar dictionaries

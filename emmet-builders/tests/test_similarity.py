@@ -1,9 +1,10 @@
-import pytest
-from maggma.stores import JSONStore, MemoryStore
+from __future__ import annotations
 
+import pytest
 from emmet.builders.materials.basic_descriptors import BasicDescriptorsBuilder
-from emmet.builders.vasp.materials import MaterialsBuilder
 from emmet.builders.materials.similarity import StructureSimilarityBuilder
+from emmet.builders.vasp.materials import MaterialsBuilder
+from maggma.stores import JSONStore, MemoryStore
 
 
 @pytest.fixture(scope="session")

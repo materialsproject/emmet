@@ -1,17 +1,19 @@
-""" Core definition of Spectrum document """
-from datetime import datetime
-from typing import List
+"""Core definition of Spectrum document."""
+from __future__ import annotations
 
+from datetime import datetime
+from typing import TYPE_CHECKING
+
+from emmet.core.structure import StructureMetadata
 from pydantic import Field
 
-from emmet.core.mpid import MPID
-from emmet.core.structure import StructureMetadata
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID
 
 
 class SpectrumDoc(StructureMetadata):
-    """
-    Base model definition for any spectra document. This should contain
-    metadata on the structure the spectra pertains to
+    """Base model definition for any spectra document. This should contain
+    metadata on the structure the spectra pertains to.
     """
 
     spectrum_name: str
@@ -33,6 +35,6 @@ class SpectrumDoc(StructureMetadata):
         default_factory=datetime.utcnow,
     )
 
-    warnings: List[str] = Field(
+    warnings: list[str] = Field(
         [], description="Any warnings related to this property."
     )

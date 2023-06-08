@@ -1,17 +1,18 @@
-from typing import List
+from __future__ import annotations
 
-from pydantic import Field
-from pymatgen.core import Structure
-from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
+from typing import TYPE_CHECKING
 
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import MPID
+from pydantic import Field
+from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
+
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID
+    from pymatgen.core import Structure
 
 
 class MagnetismDoc(PropertyDoc):
-    """
-    Magnetic data obtain from the calculated structure
-    """
+    """Magnetic data obtain from the calculated structure."""
 
     property_name = "magnetism"
 
@@ -40,12 +41,12 @@ class MagnetismDoc(PropertyDoc):
         description="The number of unique magnetic sites.",
     )
 
-    types_of_magnetic_species: List[str] = Field(
+    types_of_magnetic_species: list[str] = Field(
         None,
         description="Magnetic specie elements.",
     )
 
-    magmoms: List[float] = Field(
+    magmoms: list[float] = Field(
         None,
         description="Magnetic moments for each site.",
     )
@@ -72,7 +73,7 @@ class MagnetismDoc(PropertyDoc):
         total_magnetization: float,
         material_id: MPID,
         **kwargs
-    ):  # noqa: E501
+    ):
         struct_has_magmoms = "magmom" in structure.site_properties
         total_magnetization = abs(
             total_magnetization

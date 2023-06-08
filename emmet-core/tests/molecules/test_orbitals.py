@@ -1,20 +1,20 @@
+from __future__ import annotations
+
 import pytest
-
-from monty.serialization import loadfn
-
-from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.orbitals import OrbitalDoc
+from emmet.core.qchem.task import TaskDocument
+from monty.serialization import loadfn
 
 
 @pytest.fixture(scope="session")
 def closed_shell(test_dir):
-    task = TaskDocument(**loadfn((test_dir / "closed_shell_nbo_task.json.gz")))
+    task = TaskDocument(**loadfn(test_dir / "closed_shell_nbo_task.json.gz"))
     return task
 
 
 @pytest.fixture(scope="session")
 def open_shell(test_dir):
-    task = TaskDocument(**loadfn((test_dir / "open_shell_nbo_task.json.gz")))
+    task = TaskDocument(**loadfn(test_dir / "open_shell_nbo_task.json.gz"))
     return task
 
 

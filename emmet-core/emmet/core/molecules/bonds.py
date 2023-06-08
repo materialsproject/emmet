@@ -1,19 +1,20 @@
-from typing import Dict, List, Any, Optional, Tuple
+from __future__ import annotations
+
 import copy
 from hashlib import blake2b
+from typing import TYPE_CHECKING, Any
 
-from pydantic import Field
 import networkx as nx
-
-from pymatgen.core.structure import Molecule
-from pymatgen.analysis.graphs import MoleculeGraph
-
-from emmet.core.mpid import MPculeID
-from emmet.core.utils import make_mol_graph
-from emmet.core.qchem.task import TaskDocument
 from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
+from emmet.core.utils import make_mol_graph
+from pydantic import Field
+from pymatgen.analysis.graphs import MoleculeGraph
 
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPculeID
+    from emmet.core.qchem.task import TaskDocument
+    from pymatgen.core.structure import Molecule
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -49,9 +50,8 @@ metals = [
 BOND_METHODS = ["nbo", "critic2", "OpenBabelNN + metal_edge_extender"]
 
 
-def fix_C_Li_bonds(critic: Dict) -> Dict:
-    """
-    Adjust C-Li coordinate bonding for Critic2 calculations.
+def fix_C_Li_bonds(critic: dict) -> dict:
+    """Adjust C-Li coordinate bonding for Critic2 calculations.
 
     :param critic: Critic2 output dictionary
 
@@ -60,25 +60,21 @@ def fix_C_Li_bonds(critic: Dict) -> Dict:
 
     """
     for key in critic["bonding"]:
-        if critic["bonding"][key]["atoms"] == ["Li", "C"] or critic["bonding"][key][
+        if (critic["bonding"][key]["atoms"] == ["Li", "C"] or critic["bonding"][key][
             "atoms"
-        ] == ["C", "Li"]:
-            if (
-                critic["bonding"][key]["field"] <= 0.02
-                and critic["bonding"][key]["field"] > 0.012
-                and critic["bonding"][key]["distance"] < 2.5
-            ):
-                critic["processed"]["bonds"].append(
-                    [int(entry) - 1 for entry in critic["bonding"][key]["atom_ids"]]
-                )
+        ] == ["C", "Li"]) and (
+            critic["bonding"][key]["field"] <= 0.02
+            and critic["bonding"][key]["field"] > 0.012
+            and critic["bonding"][key]["distance"] < 2.5
+        ):
+            critic["processed"]["bonds"].append(
+                [int(entry) - 1 for entry in critic["bonding"][key]["atom_ids"]]
+            )
     return critic
 
 
-def _bonds_hybridization(nbo: Dict[str, Any], index: int):
-    """
-    Extract bonds from "hybridization_character" NBO output
-    """
-
+def _bonds_hybridization(nbo: dict[str, Any], index: int):
+    """Extract bonds from "hybridization_character" NBO output."""
     bonds = set()
     warnings = set()
 
@@ -129,16 +125,13 @@ def _bonds_hybridization(nbo: Dict[str, Any], index: int):
 
 
 def _bonds_peturbation(
-    nbo: Dict[str, Any],
+    nbo: dict[str, Any],
     index: int,
-    poss_coord: Dict[Optional[int], List[Optional[int]]],
+    poss_coord: dict[int | None, list[int | None]],
     energy_cutoff: float,
-    metal_indices: List[int],
+    metal_indices: list[int],
 ):
-    """
-    Extract bonds from "perturbation_energy" NBO output
-    """
-
+    """Extract bonds from "perturbation_energy" NBO output."""
     bonds = set()  # type: ignore
 
     # No metals, so don't need to use perturbation analysis to get bonds
@@ -148,8 +141,8 @@ def _bonds_peturbation(
     if len(nbo["perturbation_energy"]) > index:
         for inter_ind in nbo["perturbation_energy"][index].get("donor type", list()):
             coord = False
-            m_ind: Optional[int] = None
-            x_ind: Optional[int] = None
+            m_ind: int | None = None
+            x_ind: int | None = None
             if (
                 int(
                     nbo["perturbation_energy"][index]["acceptor atom 1 number"][
@@ -206,29 +199,28 @@ def _bonds_peturbation(
             elif (
                 nbo["perturbation_energy"][index]["donor atom 1 number"][inter_ind] - 1
                 in metal_indices
+            ) and (
+                nbo["perturbation_energy"][index]["donor type"][inter_ind] == "LP"
+                and nbo["perturbation_energy"][index]["acceptor type"][inter_ind]
+                == "LV"
             ):
-                if (
-                    nbo["perturbation_energy"][index]["donor type"][inter_ind] == "LP"
-                    and nbo["perturbation_energy"][index]["acceptor type"][inter_ind]
-                    == "LV"
-                ):
-                    coord = True
-                    m_ind = (
-                        int(
-                            nbo["perturbation_energy"][index]["donor atom 1 number"][
-                                inter_ind
-                            ]
-                        )
-                        - 1
+                coord = True
+                m_ind = (
+                    int(
+                        nbo["perturbation_energy"][index]["donor atom 1 number"][
+                            inter_ind
+                        ]
                     )
-                    x_ind = (
-                        int(
-                            nbo["perturbation_energy"][index]["acceptor atom 1 number"][
-                                inter_ind
-                            ]
-                        )
-                        - 1
+                    - 1
+                )
+                x_ind = (
+                    int(
+                        nbo["perturbation_energy"][index]["acceptor atom 1 number"][
+                            inter_ind
+                        ]
                     )
+                    - 1
+                )
 
             if not coord:
                 continue
@@ -243,15 +235,13 @@ def _bonds_peturbation(
     return bonds
 
 
-def nbo_molecule_graph(mol: Molecule, nbo: Dict[str, Any]):
-    """
-    Construct a molecule graph from NBO data.
+def nbo_molecule_graph(mol: Molecule, nbo: dict[str, Any]):
+    """Construct a molecule graph from NBO data.
 
     :param mol: molecule to be analyzed
     :param nbo: Output from NBO7
     :return:
     """
-
     mg = MoleculeGraph.with_empty_graph(mol)
 
     alpha_bonds, warnings = _bonds_hybridization(nbo, 1)
@@ -262,7 +252,7 @@ def nbo_molecule_graph(mol: Molecule, nbo: Dict[str, Any]):
     energy_cutoff = 3.0
     metal_indices = [i for i, e in enumerate(mol.species) if e in metals]
 
-    poss_coord: Dict[Optional[int], List[Optional[int]]] = dict()
+    poss_coord: dict[int | None, list[int | None]] = dict()
     dist_mat = mol.distance_matrix
     for i in metal_indices:
         poss_coord[i] = list()
@@ -282,8 +272,8 @@ def nbo_molecule_graph(mol: Molecule, nbo: Dict[str, Any]):
         )
         beta_bonds = beta_bonds.union(new_beta_bonds)
 
-    sorted_alpha = set([tuple(sorted([a[0], a[1]])) for a in alpha_bonds])
-    sorted_beta = set([tuple(sorted([b[0], b[1]])) for b in beta_bonds])
+    sorted_alpha = {tuple(sorted([a[0], a[1]])) for a in alpha_bonds}
+    sorted_beta = {tuple(sorted([b[0], b[1]])) for b in beta_bonds}
 
     if sorted_alpha != sorted_beta:
         warnings.add("Difference in bonding between alpha and beta electrons")
@@ -316,18 +306,18 @@ class MoleculeBondingDoc(PropertyDoc):
 
     method: str = Field(..., description="Method used to compute molecule graph")
 
-    bond_types: Dict[str, List[float]] = Field(
+    bond_types: dict[str, list[float]] = Field(
         dict(),
         description="Dictionary of bond types to their length, e.g. C-O to "
         "a list of the lengths of C-O bonds in Angstrom.",
     )
 
-    bonds: List[Tuple[int, int]] = Field(
+    bonds: list[tuple[int, int]] = Field(
         [],
         description="List of bonds in the form (a, b), where a and b are 0-indexed atom indices",
     )
 
-    bonds_nometal: List[Tuple[int, int]] = Field(
+    bonds_nometal: list[tuple[int, int]] = Field(
         [],
         description="List of bonds in the form (a, b), where a and b are 0-indexed atom indices, "
         "with all metal ions removed",
@@ -338,12 +328,11 @@ class MoleculeBondingDoc(PropertyDoc):
         cls,
         task: TaskDocument,
         molecule_id: MPculeID,
-        preferred_methods: List[str],
+        preferred_methods: list[str],
         deprecated: bool = False,
         **kwargs,
     ):  # type: ignore[override]
-        """
-        Determine bonding from a task document
+        """Determine bonding from a task document.
 
         Method preferences are as follows:
         - NBO7
@@ -357,7 +346,6 @@ class MoleculeBondingDoc(PropertyDoc):
         :param kwargs: to pass to PropertyDoc
         :return:
         """
-
         mg_made = False
         method = None
         warnings = list()
@@ -404,10 +392,7 @@ class MoleculeBondingDoc(PropertyDoc):
         for u, v in mg.graph.edges():
             species_u = str(mg.molecule.species[u])
             species_v = str(mg.molecule.species[v])
-            if species_u < species_v:
-                species = f"{species_u}-{species_v}"
-            else:
-                species = f"{species_v}-{species_u}"
+            species = f"{species_u}-{species_v}" if species_u < species_v else f"{species_v}-{species_u}"
             dist = mg.molecule.get_distance(u, v)
             if species not in bond_types:
                 bond_types[species] = [dist]
@@ -418,7 +403,7 @@ class MoleculeBondingDoc(PropertyDoc):
 
         bonds_nometal = list()
         for bond in bonds:
-            if not any([m in bond for m in m_inds]):
+            if not any(m in bond for m in m_inds):
                 bonds_nometal.append(bond)
 
         id_string = f"bonding-{molecule_id}-{task.task_id}-{task.lot_solvent}-{method}"

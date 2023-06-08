@@ -1,3 +1,11 @@
+from __future__ import annotations
+
+from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
+from emmet.api.routes.materials.substrates.query_operators import (
+    SubstrateStructureQuery,
+)
+from emmet.core.substrates import SubstratesDoc
 from maggma.api.query_operator import (
     NumericQuery,
     PaginationQuery,
@@ -6,13 +14,6 @@ from maggma.api.query_operator import (
     StringQueryOperator,
 )
 from maggma.api.resource import ReadOnlyResource
-
-from emmet.api.routes.materials.substrates.query_operators import (
-    SubstrateStructureQuery,
-)
-from emmet.api.core.global_header import GlobalHeaderProcessor
-from emmet.core.substrates import SubstratesDoc
-from emmet.api.core.settings import MAPISettings
 
 
 def substrates_resource(substrates_store):

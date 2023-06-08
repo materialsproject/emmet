@@ -1,15 +1,15 @@
+from __future__ import annotations
+
 import pytest
-
-from maggma.stores import JSONStore, MemoryStore
-
-from emmet.builders.qchem.molecules import MoleculesAssociationBuilder, MoleculesBuilder
 from emmet.builders.molecules.atomic import PartialChargesBuilder, PartialSpinsBuilder
 from emmet.builders.molecules.bonds import BondingBuilder
 from emmet.builders.molecules.orbitals import OrbitalBuilder
 from emmet.builders.molecules.redox import RedoxBuilder
+from emmet.builders.molecules.summary import SummaryBuilder
 from emmet.builders.molecules.thermo import ThermoBuilder
 from emmet.builders.molecules.vibration import VibrationBuilder
-from emmet.builders.molecules.summary import SummaryBuilder
+from emmet.builders.qchem.molecules import MoleculesAssociationBuilder, MoleculesBuilder
+from maggma.stores import JSONStore, MemoryStore
 
 
 @pytest.fixture(scope="session")

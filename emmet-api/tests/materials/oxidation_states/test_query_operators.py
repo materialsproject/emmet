@@ -1,9 +1,10 @@
+from __future__ import annotations
+
 from emmet.api.routes.materials.oxidation_states.query_operators import (
     PossibleOxiStateQuery,
 )
-
+from monty.serialization import dumpfn, loadfn
 from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 
 
 def test_possible_oxi_state_query():

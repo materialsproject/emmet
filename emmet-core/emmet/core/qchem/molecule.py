@@ -1,20 +1,21 @@
-""" Core definition of a Molecule Document """
-from typing import Any, Dict, List, Mapping, Union
+"""Core definition of a Molecule Document."""
+from __future__ import annotations
 
-from pydantic import Field
+from typing import TYPE_CHECKING, Any, Mapping
 
-from pymatgen.core.structure import Molecule
-from pymatgen.analysis.molecule_matcher import MoleculeMatcher
-
-from emmet.core.mpid import MPculeID
-from emmet.core.utils import get_graph_hash, get_molecule_id
-from emmet.core.settings import EmmetSettings
 from emmet.core.material import CoreMoleculeDoc, PropertyOrigin
 
 # from emmet.core.structure import MoleculeMetadata
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
-from emmet.core.qchem.task import TaskDocument
+from emmet.core.settings import EmmetSettings
+from emmet.core.utils import get_graph_hash, get_molecule_id
+from pydantic import Field
+from pymatgen.analysis.molecule_matcher import MoleculeMatcher
+from pymatgen.core.structure import Molecule
 
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPculeID
+    from emmet.core.qchem.task import TaskDocument
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -23,13 +24,12 @@ SETTINGS = EmmetSettings()
 
 
 def evaluate_lot(
-    lot: Union[LevelOfTheory, str],
-    funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
-    basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
-    solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
+    lot: LevelOfTheory | str,
+    funct_scores: dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
+    basis_scores: dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
+    solvent_scores: dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
 ):
-    """
-    Score the various components of a level of theory (functional, basis set,
+    """Score the various components of a level of theory (functional, basis set,
     and solvent model), where a lower score is better than a higher score.
 
     :param lot: Level of theory to be evaluated
@@ -38,11 +38,7 @@ def evaluate_lot(
     :param solvent_scores: Scores for various implicit solvent models
     :return:
     """
-
-    if isinstance(lot, LevelOfTheory):
-        lot_comp = lot.value.split("/")
-    else:
-        lot_comp = lot.split("/")
+    lot_comp = lot.value.split("/") if isinstance(lot, LevelOfTheory) else lot.split("/")
 
     return (
         -1 * funct_scores.get(lot_comp[0], 0),
@@ -53,15 +49,14 @@ def evaluate_lot(
 
 def evaluate_task(
     task: TaskDocument,
-    funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
-    basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
-    solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
-    task_quality_scores: Dict[str, int] = SETTINGS.QCHEM_TASK_QUALITY_SCORES,
+    funct_scores: dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
+    basis_scores: dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
+    solvent_scores: dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
+    task_quality_scores: dict[str, int] = SETTINGS.QCHEM_TASK_QUALITY_SCORES,
 ):
-    """
-    Helper function to order optimization calcs by
+    """Helper function to order optimization calcs by
     - Level of theory
-    - Electronic energy
+    - Electronic energy.
 
     Note that lower scores indicate a higher quality.
 
@@ -76,7 +71,6 @@ def evaluate_task(
         - Task score
         - Electronic energy
     """
-
     lot = task.level_of_theory
 
     lot_eval = evaluate_lot(
@@ -95,16 +89,15 @@ def evaluate_task(
 
 
 def evaluate_task_entry(
-    entry: Dict[str, Any],
-    funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
-    basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
-    solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
-    task_quality_scores: Dict[str, int] = SETTINGS.QCHEM_TASK_QUALITY_SCORES,
+    entry: dict[str, Any],
+    funct_scores: dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
+    basis_scores: dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
+    solvent_scores: dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
+    task_quality_scores: dict[str, int] = SETTINGS.QCHEM_TASK_QUALITY_SCORES,
 ):
-    """
-    Helper function to order optimization calcs by
+    """Helper function to order optimization calcs by
     - Level of theory
-    - Electronic energy
+    - Electronic energy.
 
     Note that lower scores indicate a higher quality.
 
@@ -118,7 +111,6 @@ def evaluate_task_entry(
         - Task score
         - Electronic energy
     """
-
     lot = entry["level_of_theory"]
 
     lot_eval = evaluate_lot(
@@ -136,16 +128,16 @@ def evaluate_task_entry(
 
 
 class MoleculeDoc(CoreMoleculeDoc):
-    species: List[str] = Field(
+    species: list[str] = Field(
         None, description="Ordered list of elements/species in this Molecule."
     )
 
-    molecules: Dict[str, Molecule] = Field(
+    molecules: dict[str, Molecule] = Field(
         None,
         description="The lowest energy optimized structures for this molecule for each solvent.",
     )
 
-    molecule_levels_of_theory: Dict[str, str] = Field(
+    molecule_levels_of_theory: dict[str, str] = Field(
         None,
         description="Level of theory used to optimize the best molecular structure for each solvent.",
     )
@@ -182,53 +174,53 @@ class MoleculeDoc(CoreMoleculeDoc):
         description="Combinations of level of theory and solvent for all calculations that make up this molecule",
     )
 
-    unique_calc_types: List[CalcType] = Field(
+    unique_calc_types: list[CalcType] = Field(
         None,
         description="Collection of all unique calculation types used for this molecule",
     )
 
-    unique_task_types: List[TaskType] = Field(
+    unique_task_types: list[TaskType] = Field(
         None,
         description="Collection of all unique task types used for this molecule",
     )
 
-    unique_levels_of_theory: List[LevelOfTheory] = Field(
+    unique_levels_of_theory: list[LevelOfTheory] = Field(
         None,
         description="Collection of all unique levels of theory used for this molecule",
     )
 
-    unique_solvents: List[str] = Field(
+    unique_solvents: list[str] = Field(
         None,
         description="Collection of all unique solvents (solvent parameters) used for this molecule",
     )
 
-    unique_lot_solvents: List[str] = Field(
+    unique_lot_solvents: list[str] = Field(
         None,
         description="Collection of all unique combinations of level of theory and solvent used for this molecule",
     )
 
-    origins: List[PropertyOrigin] = Field(
+    origins: list[PropertyOrigin] = Field(
         None,
         description="List of property origins for tracking the provenance of properties",
     )
 
-    entries: List[Dict[str, Any]] = Field(
+    entries: list[dict[str, Any]] = Field(
         None,
         description="Dictionary representations of all task documents for this molecule",
     )
 
-    best_entries: Mapping[str, Dict[str, Any]] = Field(
+    best_entries: Mapping[str, dict[str, Any]] = Field(
         None,
         description="Mapping for tracking the best entries at each level of theory (+ solvent) for Q-Chem calculations",
     )
 
-    constituent_molecules: List[MPculeID] = Field(
+    constituent_molecules: list[MPculeID] = Field(
         None,
         description="For cases where data from multiple MoleculeDocs have been compiled, a list of "
         "MPculeIDs of documents used to construct this document",
     )
 
-    similar_molecules: List[MPculeID] = Field(
+    similar_molecules: list[MPculeID] = Field(
         None,
         description="List of MPculeIDs with of molecules similar (by e.g. structure) to this one",
     )
@@ -236,10 +228,9 @@ class MoleculeDoc(CoreMoleculeDoc):
     @classmethod
     def from_tasks(
         cls,
-        task_group: List[TaskDocument],
-    ) -> "MoleculeDoc":
-        """
-        Converts a group of tasks into one molecule document
+        task_group: list[TaskDocument],
+    ) -> MoleculeDoc:
+        """Converts a group of tasks into one molecule document.
 
         Args:
             task_group: List of task document
@@ -270,7 +261,7 @@ class MoleculeDoc(CoreMoleculeDoc):
         mols = [task.output.initial_molecule for task in task_group]
 
         # If we're dealing with single-atoms, process is much different
-        if all([len(m) == 1 for m in mols]):
+        if all(len(m) == 1 for m in mols):
             sorted_tasks = sorted(task_group, key=evaluate_task)
 
             molecule = sorted_tasks[0].output.initial_molecule
@@ -320,7 +311,7 @@ class MoleculeDoc(CoreMoleculeDoc):
                     TaskType.Frequency_Flattening_Geometry_Optimization,
                     "Geometry Optimization",
                     "Frequency Flattening Geometry Optimization",
-                ]  # noqa: E501
+                ]
             ]
 
             try:
@@ -415,10 +406,9 @@ class MoleculeDoc(CoreMoleculeDoc):
     @classmethod
     def construct_deprecated_molecule(
         cls,
-        task_group: List[TaskDocument],
-    ) -> "MoleculeDoc":
-        """
-        Converts a group of tasks into a deprecated molecule document
+        task_group: list[TaskDocument],
+    ) -> MoleculeDoc:
+        """Converts a group of tasks into a deprecated molecule document.
 
         Args:
             task_group: List of task document
@@ -482,13 +472,11 @@ class MoleculeDoc(CoreMoleculeDoc):
 
 def best_lot(
     mol_doc: MoleculeDoc,
-    funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
-    basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
-    solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
+    funct_scores: dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
+    basis_scores: dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
+    solvent_scores: dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
 ) -> str:
-    """
-
-    Return the best level of theory used within a MoleculeDoc
+    """Return the best level of theory used within a MoleculeDoc.
 
     :param mol_doc: MoleculeDoc
     :param funct_scores: Scores for various density functionals
@@ -497,7 +485,6 @@ def best_lot(
 
     :return: string representation of LevelOfTheory
     """
-
     sorted_lots = sorted(
         mol_doc.best_entries.keys(),
         key=lambda x: evaluate_lot(x, funct_scores, basis_scores, solvent_scores),

@@ -1,12 +1,10 @@
-""" Utilities to determine level of theory, task type, and calculation type for Q-Chem calculations"""
-from typing import Any, Dict, Optional
+"""Utilities to determine level of theory, task type, and calculation type for Q-Chem calculations."""
+from __future__ import annotations
 
-from emmet.core.qchem.calc_types import LevelOfTheory, CalcType, TaskType
-from emmet.core.qchem.calc_types.calc_types import (
-    FUNCTIONALS,
-    BASIS_SETS,
-)
+from typing import Any
 
+from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
+from emmet.core.qchem.calc_types.calc_types import BASIS_SETS, FUNCTIONALS
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -28,17 +26,14 @@ smd_synonyms = {
 }
 
 
-def level_of_theory(parameters: Dict[str, Any]) -> LevelOfTheory:
-    """
-
-    Returns the level of theory for a calculation,
-    based on the input parameters given to Q-Chem
+def level_of_theory(parameters: dict[str, Any]) -> LevelOfTheory:
+    """Returns the level of theory for a calculation,
+    based on the input parameters given to Q-Chem.
 
     Args:
         parameters: Dict of Q-Chem input parameters
 
     """
-
     funct_raw = parameters.get("rem", dict()).get("method")
     basis_raw = parameters.get("rem", dict()).get("basis")
 
@@ -92,16 +87,14 @@ def level_of_theory(parameters: Dict[str, Any]) -> LevelOfTheory:
     return LevelOfTheory(lot)
 
 
-def solvent(parameters: Dict[str, Any], custom_smd: Optional[str] = None) -> str:
-    """
-    Returns the solvent used for this calculation.
+def solvent(parameters: dict[str, Any], custom_smd: str | None = None) -> str:
+    """Returns the solvent used for this calculation.
 
     Args:
         parameters: Dict of Q-Chem input parameters
         custom_smd: (Optional) string representing SMD parameters for a
         non-standard solvent
     """
-
     lot = level_of_theory(parameters)
     solvation = lot.value.split("/")[-1]
 
@@ -155,23 +148,21 @@ def solvent(parameters: Dict[str, Any], custom_smd: Optional[str] = None) -> str
 
 
 def lot_solvent_string(
-    parameters: Dict[str, Any], custom_smd: Optional[str] = None
+    parameters: dict[str, Any], custom_smd: str | None = None
 ) -> str:
-    """
-    Returns a string representation of the level of theory and solvent used for this calculation.
+    """Returns a string representation of the level of theory and solvent used for this calculation.
 
     Args:
         parameters: Dict of Q-Chem input parameters
         custom_smd: (Optional) string representing SMD parameters for a
         non-standard solvent
     """
-
     lot = level_of_theory(parameters).value
     solv = solvent(parameters, custom_smd=custom_smd)
     return f"{lot}({solv})"
 
 
-def task_type(orig: Dict[str, Any], special_run_type: Optional[str] = None) -> TaskType:
+def task_type(orig: dict[str, Any], special_run_type: str | None = None) -> TaskType:
     if special_run_type == "frequency_flattener":
         return TaskType("Frequency Flattening Geometry Optimization")
     elif special_run_type == "ts_frequency_flattener":
@@ -191,9 +182,8 @@ def task_type(orig: Dict[str, Any], special_run_type: Optional[str] = None) -> T
     return TaskType("Unknown")
 
 
-def calc_type(special_run_type: str, orig: Dict[str, Any]) -> CalcType:
-    """
-    Determines the calc type
+def calc_type(special_run_type: str, orig: dict[str, Any]) -> CalcType:
+    """Determines the calc type.
 
     Args:
         inputs: inputs dict with an incar, kpoints, potcar, and poscar dictionaries

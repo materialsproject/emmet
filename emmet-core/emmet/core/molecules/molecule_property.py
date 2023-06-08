@@ -1,17 +1,17 @@
-""" Core definition of a Materials Document """
+"""Core definition of a Materials Document."""
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Sequence, Type, TypeVar, List
+from typing import TYPE_CHECKING, Sequence, TypeVar
 
-from pydantic import Field
-from pymatgen.core.structure import Molecule
-
-from emmet.core.qchem.calc_types import LevelOfTheory
-from emmet.core.material import PropertyOrigin
-from emmet.core.mpid import MPculeID
 from emmet.core.structure import MoleculeMetadata
+from pydantic import Field
 
+if TYPE_CHECKING:
+    from emmet.core.material import PropertyOrigin
+    from emmet.core.mpid import MPculeID
+    from emmet.core.qchem.calc_types import LevelOfTheory
+    from pymatgen.core.structure import Molecule
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -20,10 +20,9 @@ S = TypeVar("S", bound="PropertyDoc")
 
 
 class PropertyDoc(MoleculeMetadata):
-    """
-    Base model definition for any singular molecule property. This may contain any amount
+    """Base model definition for any singular molecule property. This may contain any amount
     of molecule metadata for the purpose of search
-    This is intended to be inherited and extended not used directly
+    This is intended to be inherited and extended not used directly.
     """
 
     property_name: str
@@ -43,7 +42,7 @@ class PropertyDoc(MoleculeMetadata):
         description="Whether this property document is deprecated.",
     )
 
-    deprecation_reasons: List[str] = Field(
+    deprecation_reasons: list[str] = Field(
         None,
         description="List of deprecation tags detailing why this document isn't valid",
     )
@@ -79,16 +78,13 @@ class PropertyDoc(MoleculeMetadata):
 
     @classmethod
     def from_molecule(  # type: ignore[override]
-        cls: Type[S],
+        cls: type[S],
         meta_molecule: Molecule,
         property_id: str,
         molecule_id: MPculeID,
         **kwargs,
     ) -> S:
-        """
-        Builds a molecule document using the minimal amount of information
-        """
-
+        """Builds a molecule document using the minimal amount of information."""
         return super().from_molecule(
             meta_molecule=meta_molecule,
             property_id=property_id,

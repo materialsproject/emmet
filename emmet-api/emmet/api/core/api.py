@@ -1,20 +1,23 @@
-from typing import Dict, List
-from maggma.api.resource.core import Resource
-from pymatgen.core import __version__ as pmg_version  # type: ignore
-from emmet.api.core.settings import MAPISettings
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from emmet.api import __version__ as api_version
+from emmet.api.core.settings import MAPISettings
 from fastapi.openapi.utils import get_openapi
 from maggma.api.API import API
+from pymatgen.core import __version__ as pmg_version  # type: ignore
+
+if TYPE_CHECKING:
+    from maggma.api.resource.core import Resource
 
 
 class MAPI(API):
-    """
-    Core Materials API that orchestrates resources together
-    """
+    """Core Materials API that orchestrates resources together."""
 
     def __init__(
         self,
-        resources: Dict[str, List[Resource]],
+        resources: dict[str, list[Resource]],
         title="Materials Project API",
         version=api_version,
         debug=False,
@@ -38,9 +41,7 @@ class MAPI(API):
 
     @property
     def app(self):
-        """
-        App server for the cluster manager
-        """
+        """App server for the cluster manager."""
         app = super().app
 
         def custom_openapi():

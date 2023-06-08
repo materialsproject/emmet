@@ -1,18 +1,17 @@
+from __future__ import annotations
+
 import datetime
 import json
 
 import numpy as np
 import pytest
 from bson.objectid import ObjectId
-from monty.json import MSONable
-
 from emmet.core.utils import DocEnum, ValueEnum, jsanitize
+from monty.json import MSONable
 
 
 def test_jsanitize():
-    """
-    Tests emmet Jsanitize which converts MSONable classes into dicts
-    """
+    """Tests emmet Jsanitize which converts MSONable classes into dicts."""
     # clean_json should have no effect on None types.
     d = {"hello": 1, "world": None}
     clean = jsanitize(d)

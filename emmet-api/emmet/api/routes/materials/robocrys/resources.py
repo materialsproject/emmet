@@ -1,12 +1,13 @@
-from maggma.api.resource import ReadOnlyResource
-from maggma.api.resource.aggregation import AggregationResource
-from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
+from __future__ import annotations
 
-from emmet.api.routes.materials.robocrys.query_operators import RoboTextSearchQuery
-from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery
-from emmet.core.robocrys import RobocrystallogapherDoc
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
+from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery
+from emmet.api.routes.materials.robocrys.query_operators import RoboTextSearchQuery
+from emmet.core.robocrys import RobocrystallogapherDoc
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
+from maggma.api.resource import ReadOnlyResource
+from maggma.api.resource.aggregation import AggregationResource
 
 timeout = MAPISettings().TIMEOUT
 

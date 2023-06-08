@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from emmet.api.routes.materials.charge_density.query_operators import ChgcarTaskIDQuery
+from monty.serialization import dumpfn, loadfn
 from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 
 
 def test_chgcar_test_id_query():

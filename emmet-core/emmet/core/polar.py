@@ -1,16 +1,19 @@
-""" Core definition for Polar property Document """
-from typing import List
-from emmet.core.mpid import MPID
+"""Core definition for Polar property Document."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, List
 
 import numpy as np
+from emmet.core.material_property import PropertyDoc
+from emmet.core.settings import EmmetSettings
 from pydantic import BaseModel, Field
 from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
-
-from emmet.core.settings import EmmetSettings
-from emmet.core.material_property import PropertyDoc
-from emmet.core.math import Matrix3D
-from pymatgen.core.structure import Structure
 from pymatgen.core.tensors import Tensor
+
+if TYPE_CHECKING:
+    from emmet.core.math import Matrix3D
+    from emmet.core.mpid import MPID
+    from pymatgen.core.structure import Structure
 
 SETTINGS = EmmetSettings()
 
@@ -20,9 +23,7 @@ PiezoTensor.__doc__ = "Rank 3 real space tensor in Voigt notation"  # type: igno
 
 
 class DielectricDoc(PropertyDoc):
-    """
-    A dielectric property block
-    """
+    """A dielectric property block."""
 
     property_name = "dielectric"
 
@@ -73,9 +74,7 @@ class DielectricDoc(PropertyDoc):
 
 
 class PiezoelectricDoc(PropertyDoc):
-    """
-    A dielectric package block
-    """
+    """A dielectric package block."""
 
     property_name = "piezoelectric"
 
@@ -88,10 +87,10 @@ class PiezoelectricDoc(PropertyDoc):
     )
 
     e_ij_max: float = Field(description="Piezoelectric modulus")
-    max_direction: List[int] = Field(
+    max_direction: list[int] = Field(
         description="Miller direction for maximum piezo response"
     )
-    strain_for_max: List[float] = Field(
+    strain_for_max: list[float] = Field(
         description="Normalized strain direction for maximum piezo repsonse"
     )
 
@@ -139,15 +138,13 @@ class PiezoelectricDoc(PropertyDoc):
 
 
 class BornEffectiveCharges(BaseModel):
-    """
-    A block for the Born effective charges
-    """
+    """A block for the Born effective charges."""
 
-    value: List[Matrix3D] = Field(
+    value: list[Matrix3D] = Field(
         None, description="Value of the Born effective charges."
     )
 
-    symmetrized_value: List[Matrix3D] = Field(
+    symmetrized_value: list[Matrix3D] = Field(
         None,
         description="Value of the Born effective charges after symmetrization to obey the"
         "charge neutrality sum rule.",
@@ -161,9 +158,7 @@ class BornEffectiveCharges(BaseModel):
 
 
 class IRDielectric(BaseModel):
-    """
-    A block for the pymatgen IRDielectricTensor object
-    """
+    """A block for the pymatgen IRDielectricTensor object."""
 
     ir_dielectric_tensor: dict = Field(
         None, description="Serialized version of a pymatgen IRDielectricTensor object."

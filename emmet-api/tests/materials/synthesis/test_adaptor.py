@@ -1,13 +1,14 @@
+from __future__ import annotations
+
 import os
 from json import load
 
-from pymatgen.core import Composition
-
 from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.synthesis.data_adaptor import (
-    string2comp,
     convert_recipe,
+    string2comp,
 )
+from pymatgen.core import Composition
 
 
 def test_string2comp():

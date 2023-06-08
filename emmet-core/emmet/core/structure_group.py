@@ -1,27 +1,31 @@
+from __future__ import annotations
+
 import logging
 import operator
-from datetime import datetime
 from itertools import groupby
-from typing import Iterable, List, Optional, Union
+from typing import TYPE_CHECKING, Iterable
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 from pymatgen.core.composition import Composition
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 logger = logging.getLogger(__name__)
 
 
-def generic_groupby(list_in, comp=operator.eq) -> List[int]:
-    """
-    Group a list of unsortable objects
+def generic_groupby(list_in, comp=operator.eq) -> list[int]:
+    """Group a list of unsortable objects
     Args:
         list_in: A list of generic objects
         comp: (Default value = operator.eq) The comparator
     Returns:
-        [int] list of labels for the input list
+        [int] list of labels for the input list.
     """
     list_out = [None] * len(list_in)  # type: List[Union[int, None]]
     label_num = 0
@@ -29,7 +33,7 @@ def generic_groupby(list_in, comp=operator.eq) -> List[int]:
         if ls1 is not None:
             continue
         list_out[i1] = label_num
-        for i2, ls2 in list(enumerate(list_out))[i1 + 1 :]:
+        for i2, _ls2 in list(enumerate(list_out))[i1 + 1 :]:
             if comp(list_in[i1], list_in[i2]):
                 if list_out[i2] is None:
                     list_out[i2] = list_out[i1]
@@ -45,9 +49,7 @@ def s_hash(el):
 
 
 class StructureGroupDoc(BaseModel):
-    """
-    Group of structure
-    """
+    """Group of structure."""
 
     group_id: str = Field(
         None,
@@ -103,14 +105,14 @@ class StructureGroupDoc(BaseModel):
     @classmethod
     def from_grouped_entries(
         cls,
-        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
+        entries: list[ComputedEntry | ComputedStructureEntry],
         ignored_specie: str,
-    ) -> "StructureGroupDoc":
+    ) -> StructureGroupDoc:
         """ "
         Assuming a list of entries are already grouped together, create a StructureGroupDoc
         Args:
             entries: A list of entries that is already grouped together.
-            ignored_specie: The specie that is ignored during structure matching
+            ignored_specie: The specie that is ignored during structure matching.
         """
         all_atoms = set()
         all_comps = set()
@@ -118,7 +120,7 @@ class StructureGroupDoc(BaseModel):
             all_atoms |= set(ient.composition.as_dict().keys())
             all_comps.add(ient.composition.reduced_formula)
 
-        common_atoms = all_atoms - set([ignored_specie])
+        common_atoms = all_atoms - {ignored_specie}
         if len(common_atoms) == 0:
             framework_str = "ignored"
         else:
@@ -127,7 +129,7 @@ class StructureGroupDoc(BaseModel):
             framework_str = framework_comp.reduced_formula
         ids = [ient.data["material_id"] for ient in entries]
         lowest_id = min(ids, key=_get_id_num)
-        sub_script = "_".join([ignored_specie])
+        sub_script = f"{ignored_specie}"
         host_and_insertion_ids = StructureGroupDoc.get_host_and_insertion_ids(
             entries=entries, ignored_specie=ignored_specie
         )
@@ -138,7 +140,7 @@ class StructureGroupDoc(BaseModel):
             "insertion_material_ids": host_and_insertion_ids["insertion_ids"],
             "framework_formula": framework_str,
             "ignored_specie": ignored_specie,
-            "chemsys": "-".join(sorted(all_atoms | set([ignored_specie]))),
+            "chemsys": "-".join(sorted(all_atoms | {ignored_specie})),
             "has_distinct_compositions": len(all_comps) > 1,
         }
 
@@ -147,14 +149,13 @@ class StructureGroupDoc(BaseModel):
     @classmethod
     def from_ungrouped_structure_entries(
         cls,
-        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
+        entries: list[ComputedEntry | ComputedStructureEntry],
         ignored_specie: str,
         ltol: float = 0.2,
         stol: float = 0.3,
         angle_tol: float = 5.0,
-    ) -> List["StructureGroupDoc"]:
-        """
-        Create a list of StructureGroupDocs from a list of ungrouped entries.
+    ) -> list[StructureGroupDoc]:
+        """Create a list of StructureGroupDocs from a list of ungrouped entries.
 
         Args:
             entries: the list of ComputedStructureEntries to process.
@@ -163,7 +164,6 @@ class StructureGroupDoc(BaseModel):
             stol: site position tolerance for the structure matcher
             angle_tol: angel tolerance for the structure matcher
         """
-
         results = []
         sm = StructureMatcher(
             comparator=ElementComparator(),
@@ -213,7 +213,7 @@ class StructureGroupDoc(BaseModel):
 
     @staticmethod
     def get_host_and_insertion_ids(
-        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
+        entries: list[ComputedEntry | ComputedStructureEntry],
         ignored_specie: str,
     ) -> dict:
         host_and_insertion_ids = {
@@ -245,17 +245,16 @@ class StructureGroupDoc(BaseModel):
 def group_entries_with_structure_matcher(
     g,
     struct_matcher: StructureMatcher,
-    working_ion: Optional[str] = None,
-) -> Iterable[List[Union[ComputedStructureEntry]]]:
-    """
-    Group the entries together based on similarity of the  primitive cells
+    working_ion: str | None = None,
+) -> Iterable[list[ComputedStructureEntry]]:
+    """Group the entries together based on similarity of the  primitive cells
     Args:
         g: a list of entries
         struct_matcher: the StructureMatcher object used to aggregate structures
         working_ion: the name of the working ion, if none use the first ignored species
             from the structure_matcher
     Returns:
-        subgroups: subgroups that are grouped together based on structure similarity
+        subgroups: subgroups that are grouped together based on structure similarity.
     """
     if working_ion is None:
         wion: str = struct_matcher.as_dict()["ignored_species"][0]
@@ -274,10 +273,10 @@ def group_entries_with_structure_matcher(
     )
     for ilab in set(labs):
         sub_g = [g[itr] for itr, jlab in enumerate(labs) if jlab == ilab]
-        yield [el for el in sub_g]
+        yield list(sub_g)
 
 
-def _get_id_num(task_id) -> Union[int, str]:
+def _get_id_num(task_id) -> int | str:
     if isinstance(task_id, int):
         return task_id
     if isinstance(task_id, str):
@@ -287,12 +286,11 @@ def _get_id_num(task_id) -> Union[int, str]:
 
 
 def _get_framework(formula, ignored_specie) -> str:
-    """
-    Return the reduced formula of the entry without any of the ignored species
-    Return 'ignored' if the all the atoms are ignored
+    """Return the reduced formula of the entry without any of the ignored species
+    Return 'ignored' if the all the atoms are ignored.
     """
     dd_ = Composition(formula).as_dict()
-    if dd_.keys() == set([ignored_specie]):
+    if dd_.keys() == {ignored_specie}:
         return "ignored"
     if ignored_specie in dd_:
         dd_.pop(ignored_specie)

@@ -1,37 +1,36 @@
+from __future__ import annotations
+
 import re
-from datetime import datetime
-from typing import List, Union, Dict
 from collections import defaultdict
+from datetime import datetime
+from typing import TYPE_CHECKING
 
 from emmet.core.utils import ValueEnum
-
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
-from pymatgen.apps.battery.battery_abc import AbstractElectrode
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
-from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.core import Composition, Structure
-from pymatgen.core.periodic_table import Element
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
-from emmet.core.mpid import MPID
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID
+    from pymatgen.analysis.phase_diagram import PhaseDiagram
+    from pymatgen.apps.battery.battery_abc import AbstractElectrode
+    from pymatgen.core.periodic_table import Element
+    from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 
 class BatteryType(str, ValueEnum):
-    """
-    Enum for battery type
-    """
+    """Enum for battery type."""
 
     insertion = "insertion"
     conversion = "conversion"
 
 
 class VoltagePairDoc(BaseModel):
-    """
-    Data for individual voltage steps.
+    """Data for individual voltage steps.
     Note: Each voltage step is represented as a sub_electrode (ConversionElectrode/InsertionElectrode)
-        object to gain access to some basic statistics about the voltage step
+        object to gain access to some basic statistics about the voltage step.
     """
 
     formula_charge: str = Field(
@@ -74,16 +73,12 @@ class VoltagePairDoc(BaseModel):
 
     @classmethod
     def from_sub_electrode(cls, sub_electrode: AbstractElectrode, **kwargs):
-        """
-        Convert a pymatgen electrode object to a document
-        """
+        """Convert a pymatgen electrode object to a document."""
         return cls(**sub_electrode.get_summary_dict(), **kwargs)
 
 
 class InsertionVoltagePairDoc(VoltagePairDoc):
-    """
-    Features specific to insertion electrode
-    """
+    """Features specific to insertion electrode."""
 
     stability_charge: float = Field(
         None, description="The energy above hull of the charged material in eV/atom."
@@ -93,19 +88,17 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
         None, description="The energy above hull of the discharged material in eV/atom."
     )
 
-    id_charge: Union[MPID, int, None] = Field(
+    id_charge: MPID | int | None = Field(
         None, description="The Materials Project ID of the charged structure."
     )
 
-    id_discharge: Union[MPID, int, None] = Field(
+    id_discharge: MPID | int | None = Field(
         None, description="The Materials Project ID of the discharged structure."
     )
 
 
 class ConversionVoltagePairDoc(VoltagePairDoc):
-    """
-    Features specific to conversion electrode
-    """
+    """Features specific to conversion electrode."""
 
     reaction: dict = Field(
         None,
@@ -114,38 +107,37 @@ class ConversionVoltagePairDoc(VoltagePairDoc):
 
 
 class EntriesCompositionSummary(BaseModel):
-    """
-    Composition summary data for all material entries associated with this electrode.
+    """Composition summary data for all material entries associated with this electrode.
     Included to enable better searching via the API.
     """
 
-    all_formulas: List[str] = Field(
+    all_formulas: list[str] = Field(
         None,
         description="Reduced formulas for material entries across all voltage pairs.",
     )
 
-    all_chemsys: List[str] = Field(
+    all_chemsys: list[str] = Field(
         None,
         description="Chemical systems for material entries across all voltage pairs.",
     )
 
-    all_formula_anonymous: List[str] = Field(
+    all_formula_anonymous: list[str] = Field(
         None,
         description="Anonymous formulas for material entries across all voltage pairs.",
     )
 
-    all_elements: List[Element] = Field(
+    all_elements: list[Element] = Field(
         None,
         description="Elements in material entries across all voltage pairs.",
     )
 
-    all_composition_reduced: Dict = Field(
+    all_composition_reduced: dict = Field(
         None,
         description="Composition reduced data for entries across all voltage pairs.",
     )
 
     @classmethod
-    def from_compositions(cls, compositions: List[Composition]):
+    def from_compositions(cls, compositions: list[Composition]):
         all_formulas = list({comp.reduced_formula for comp in compositions})
         all_chemsys = list({comp.chemical_system for comp in compositions})
         all_formula_anonymous = list({comp.anonymized_formula for comp in compositions})
@@ -216,7 +208,7 @@ class BaseElectrode(BaseModel):
         None, description="The id for this battery document."
     )
 
-    elements: List[Element] = Field(
+    elements: list[Element] = Field(
         None,
         description="The atomic species contained in this electrode (not including the working ion).",
     )
@@ -237,7 +229,7 @@ class BaseElectrode(BaseModel):
         description="Anonymized representation of the formula (not including the working ion).",
     )
 
-    warnings: List[str] = Field(
+    warnings: list[str] = Field(
         [], description="Any warnings related to this electrode data."
     )
 
@@ -248,19 +240,17 @@ class BaseElectrode(BaseModel):
 
 
 class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
-    """
-    Insertion electrode
-    """
+    """Insertion electrode."""
 
     host_structure: Structure = Field(
         None, description="Host structure (structure without the working ion)."
     )
 
-    adj_pairs: List[InsertionVoltagePairDoc] = Field(
+    adj_pairs: list[InsertionVoltagePairDoc] = Field(
         None, description="Returns all of the voltage steps material pairs."
     )
 
-    material_ids: List[MPID] = Field(
+    material_ids: list[MPID] = Field(
         None,
         description="The ids of all structures that matched to the present host lattice, regardless of stability. "
         "The stable entries can be found in the adjacent pairs.",
@@ -278,11 +268,11 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
     @classmethod
     def from_entries(
         cls,
-        grouped_entries: List[ComputedStructureEntry],
+        grouped_entries: list[ComputedStructureEntry],
         working_ion_entry: ComputedEntry,
         battery_id: str,
         strip_structures: bool = False,
-    ) -> Union["InsertionElectrodeDoc", None]:
+    ) -> InsertionElectrodeDoc | None:
         try:
             ie = InsertionElectrode.from_entries(
                 entries=grouped_entries,
@@ -318,7 +308,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
 
         # Check if more than one working ion per transition metal and warn
         warnings = []
-        if any([element.is_transition_metal for element in dchg_comp]):
+        if any(element.is_transition_metal for element in dchg_comp):
             transition_metal_fraction = sum(
                 [
                     dchg_comp.get_atomic_fraction(elem)
@@ -353,10 +343,10 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
 
     @staticmethod
     def get_elec_doc(ie: InsertionElectrode) -> dict:
-        """
-        Gets a summary doc for an InsertionElectrode object.
+        """Gets a summary doc for an InsertionElectrode object.
         Similar to InsertionElectrode.get_summary_dict() with modifications specific
         to the Materials Project.
+
         Args:
             ie (pymatgen InsertionElectrode): electrode_object
         Returns:
@@ -427,16 +417,14 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
 
 
 class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
-    """
-    Conversion electrode
-    """
+    """Conversion electrode."""
 
     initial_comp_formula: str = Field(
         None,
         description="The starting composition for the ConversionElectrode represented as a string/formula.",
     )
 
-    adj_pairs: List[ConversionVoltagePairDoc] = Field(
+    adj_pairs: list[ConversionVoltagePairDoc] = Field(
         None, description="Returns all of the voltage steps material pairs."
     )
 
@@ -448,7 +436,7 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
     def from_composition_and_entries(
         cls,
         composition: Composition,
-        entries: List[ComputedEntry],
+        entries: list[ComputedEntry],
         working_ion_symbol: str,
         battery_id: str,
         thermo_type: str,
@@ -478,8 +466,8 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
 
     @staticmethod
     def get_conversion_elec_doc(ce: ConversionElectrode) -> dict:
-        """
-        Gets a summary doc for a ConversionElectrode object.
+        """Gets a summary doc for a ConversionElectrode object.
+
         Args:
             ie (pymatgen ConversionElectrode): electrode_object
         Returns:
@@ -559,7 +547,7 @@ def get_battery_formula(
 
         (temp_reduced, n) = temp_comp.get_reduced_composition_and_factor()
 
-        new_subscript = re.sub(".00$", "", "{:.2f}".format(working_ion_num / n))
+        new_subscript = re.sub(".00$", "", f"{working_ion_num / n:.2f}")
         if new_subscript != "0":
             new_subscript = new_subscript.rstrip("0")
 

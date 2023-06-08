@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from emmet.api.routes.materials.summary.hint_scheme import SummaryHintScheme
 
 

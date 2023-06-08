@@ -1,10 +1,14 @@
-from typing import Dict, Optional
-from maggma.builders.map_builder import MapBuilder
-from maggma.core import Store
+from __future__ import annotations
 
-from pymatgen.core.structure import Structure
+from typing import TYPE_CHECKING
+
 from emmet.core.chemenv import ChemEnvDoc
 from emmet.core.utils import jsanitize
+from maggma.builders.map_builder import MapBuilder
+from pymatgen.core.structure import Structure
+
+if TYPE_CHECKING:
+    from maggma.core import Store
 
 
 class ChemEnvBuilder(MapBuilder):
@@ -12,7 +16,7 @@ class ChemEnvBuilder(MapBuilder):
         self,
         oxidation_states: Store,
         chemenv: Store,
-        query: Optional[Dict] = None,
+        query: dict | None = None,
         **kwargs
     ):
         self.oxidation_states = oxidation_states

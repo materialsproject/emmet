@@ -1,9 +1,11 @@
+from __future__ import annotations
+
+import numpy as np
 import pytest
-from pymatgen.core import Structure
-from monty.serialization import loadfn
 from emmet.core.absorption import AbsorptionDoc
 from emmet.core.utils import jsanitize
-import numpy as np
+from monty.serialization import loadfn
+from pymatgen.core import Structure
 
 
 @pytest.fixture(scope="session")
@@ -49,7 +51,7 @@ def test_absorption_doc(absorption_test_data):
 
     doc = AbsorptionDoc.from_structure(
         structure=structure,
-        material_id="mp-{}".format(task_id),
+        material_id=f"mp-{task_id}",
         task_id=task_id,
         deprecated=False,
         energies=data["output"]["dielectric"]["energy"],

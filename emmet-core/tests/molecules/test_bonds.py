@@ -1,13 +1,13 @@
-import json
+from __future__ import annotations
+
 import datetime
+import json
 
 import pytest
-
+from emmet.core.molecules.bonds import MoleculeBondingDoc
+from emmet.core.qchem.task import TaskDocument
 from monty.io import zopen
 from monty.serialization import loadfn
-
-from emmet.core.qchem.task import TaskDocument
-from emmet.core.molecules.bonds import MoleculeBondingDoc
 
 
 @pytest.fixture(scope="session")

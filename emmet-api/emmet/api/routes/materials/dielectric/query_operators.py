@@ -1,47 +1,49 @@
-from typing import Optional
-from fastapi import Query
-from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+from __future__ import annotations
 
 from collections import defaultdict
+from typing import TYPE_CHECKING
+
+from fastapi import Query
+from maggma.api.query_operator import QueryOperator
+
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
 
 
 class DielectricQuery(QueryOperator):
-    """
-    Method to generate a query for ranges of dielectric constant data
-    """
+    """Method to generate a query for ranges of dielectric constant data."""
 
     def query(
         self,
-        e_total_max: Optional[float] = Query(
+        e_total_max: float | None = Query(
             None,
             description="Maximum value for the total dielectric constant.",
         ),
-        e_total_min: Optional[float] = Query(
+        e_total_min: float | None = Query(
             None,
             description="Minimum value for the total dielectric constant.",
         ),
-        e_ionic_max: Optional[float] = Query(
+        e_ionic_max: float | None = Query(
             None,
             description="Maximum value for the ionic dielectric constant.",
         ),
-        e_ionic_min: Optional[float] = Query(
+        e_ionic_min: float | None = Query(
             None,
             description="Minimum value for the ionic dielectric constant.",
         ),
-        e_electronic_max: Optional[float] = Query(
+        e_electronic_max: float | None = Query(
             None,
             description="Maximum value for the electronic dielectric constant.",
         ),
-        e_electronic_min: Optional[float] = Query(
+        e_electronic_min: float | None = Query(
             None,
             description="Minimum value for the electronic dielectric constant.",
         ),
-        n_max: Optional[float] = Query(
+        n_max: float | None = Query(
             None,
             description="Maximum value for the refractive index.",
         ),
-        n_min: Optional[float] = Query(
+        n_min: float | None = Query(
             None,
             description="Minimum value for the refractive index.",
         ),

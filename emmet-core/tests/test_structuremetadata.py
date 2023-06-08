@@ -1,11 +1,12 @@
-import pytest
-from pymatgen.core import Element, Lattice, Structure
+from __future__ import annotations
 
+import pytest
 from emmet.core.structure import StructureMetadata
 from emmet.core.symmetry import CrystalSystem, SymmetryData
+from pymatgen.core import Element, Lattice, Structure
 
 
-@pytest.fixture
+@pytest.fixture()
 def structure():
     test_latt = Lattice.cubic(3.0)
     test_struc = Structure(lattice=test_latt, species=["Fe"], coords=[[0, 0, 0]])

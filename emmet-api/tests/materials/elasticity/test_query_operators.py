@@ -1,12 +1,13 @@
+from __future__ import annotations
+
 from emmet.api.routes.materials.elasticity.query_operators import (
     BulkModulusQuery,
-    ShearModulusQuery,
-    PoissonQuery,
     ElasticityChemsysQuery,
+    PoissonQuery,
+    ShearModulusQuery,
 )
-
+from monty.serialization import dumpfn, loadfn
 from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 
 
 def test_bulk_modulus_query():

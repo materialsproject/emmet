@@ -1,15 +1,17 @@
+from __future__ import annotations
+
 import os
+from json import load
+
+from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.tasks.query_operators import (
-    MultipleTaskIDsQuery,
-    TrajectoryQuery,
     DeprecationQuery,
     EntryQuery,
+    MultipleTaskIDsQuery,
+    TrajectoryQuery,
 )
-from emmet.api.core.settings import MAPISettings
-
+from monty.serialization import dumpfn, loadfn
 from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
-from json import load
 
 
 def test_multiple_task_ids_query():

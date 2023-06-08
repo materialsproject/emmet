@@ -1,13 +1,16 @@
-from math import ceil
-from typing import Dict, Iterator, Optional
+from __future__ import annotations
 
-from maggma.builders import Builder
-from maggma.core import Store
-from maggma.utils import grouper
-from pymatgen.core.structure import Structure
+from math import ceil
+from typing import TYPE_CHECKING, Iterator
 
 from emmet.core.optimade import OptimadeMaterialsDoc
 from emmet.core.utils import jsanitize
+from maggma.builders import Builder
+from maggma.utils import grouper
+from pymatgen.core.structure import Structure
+
+if TYPE_CHECKING:
+    from maggma.core import Store
 
 
 class OptimadeMaterialsBuilder(Builder):
@@ -16,11 +19,10 @@ class OptimadeMaterialsBuilder(Builder):
         materials: Store,
         thermo: Store,
         optimade: Store,
-        query: Optional[Dict] = None,
+        query: dict | None = None,
         **kwargs,
     ):
-        """
-        Creates Optimade compatible docs containing structure and thermo data for materials
+        """Creates Optimade compatible docs containing structure and thermo data for materials.
 
         Args:
             materials: Store of materials docs
@@ -28,7 +30,6 @@ class OptimadeMaterialsBuilder(Builder):
             optimade: Store to update with optimade document
             query : query on materials to limit search
         """
-
         self.materials = materials
         self.thermo = thermo
         self.optimade = optimade
@@ -42,10 +43,8 @@ class OptimadeMaterialsBuilder(Builder):
 
         super().__init__(sources=[materials, thermo], targets=optimade, **kwargs)
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
-        """
-        Prechunk method to perform chunking by the key field
-        """
+    def prechunk(self, number_splits: int) -> Iterator[dict]:  # pragma: no cover
+        """Prechunk method to perform chunking by the key field."""
         q = dict(self.query)
 
         keys = self.optimade.newer_in(self.materials, criteria=q, exhaustive=True)
@@ -55,13 +54,11 @@ class OptimadeMaterialsBuilder(Builder):
             yield {"query": {self.materials.key: {"$in": list(split)}}}
 
     def get_items(self) -> Iterator:
-        """
-        Gets all items to process
+        """Gets all items to process.
 
         Returns:
             Generator or list of relevant materials
         """
-
         self.logger.info("Optimade Builder Started")
 
         q = dict(self.query)
@@ -75,7 +72,7 @@ class OptimadeMaterialsBuilder(Builder):
             self.optimade.newer_in(target=self.materials, criteria=q, exhaustive=True)
         ) | (set(mat_ids) - set(opti_ids))
 
-        mats = [mat for mat in mats_set]
+        mats = list(mats_set)
 
         self.total = len(mats)
 
@@ -117,9 +114,7 @@ class OptimadeMaterialsBuilder(Builder):
         return doc
 
     def update_targets(self, items):
-        """
-        Inserts the new optimade docs into the optimade collection
-        """
+        """Inserts the new optimade docs into the optimade collection."""
         docs = list(filter(None, items))
 
         if len(docs) > 0:
@@ -153,7 +148,7 @@ class OptimadeMaterialsBuilder(Builder):
             ],
         )
 
-        thermo_list = [doc for doc in thermo_docs]
+        thermo_list = list(thermo_docs)
 
         if thermo_list:
             for doc in thermo_list:
@@ -161,7 +156,7 @@ class OptimadeMaterialsBuilder(Builder):
 
         combined_doc = {
             "mat_doc": mat_doc,
-            "thermo_doc": None if not thermo_list else thermo_list,
+            "thermo_doc": thermo_list if thermo_list else None,
         }
 
         return combined_doc

@@ -1,14 +1,17 @@
-from fastapi import Query
-from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+from __future__ import annotations
 
 from collections import defaultdict
+from typing import TYPE_CHECKING
+
+from fastapi import Query
+from maggma.api.query_operator import QueryOperator
+
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
 
 
 class PossibleOxiStateQuery(QueryOperator):
-    """
-    Method to generate a query for possible oxidation state data.
-    """
+    """Method to generate a query for possible oxidation state data."""
 
     def query(
         self,

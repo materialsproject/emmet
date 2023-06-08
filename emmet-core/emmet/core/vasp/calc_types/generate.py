@@ -1,10 +1,11 @@
-""" Module to define various calculation types as Enums for VASP """
+"""Module to define various calculation types as Enums for VASP."""
+from __future__ import annotations
+
 from itertools import product
 from pathlib import Path
 
-from monty.serialization import loadfn
-
 from emmet.core.utils import get_enum_source
+from monty.serialization import loadfn
 
 _RUN_TYPE_DATA = loadfn(str(Path(__file__).parent.joinpath("run_types.yaml").resolve()))
 _TASK_TYPES = [
@@ -40,12 +41,10 @@ _RUN_TYPES = (
 run_type_enum = get_enum_source(
     "RunType",
     "VASP calculation run types",
-    dict(
-        {
+    {
             "_".join(rt.split()).replace("+", "_").replace("-", "_"): rt
             for rt in _RUN_TYPES
-        }
-    ),
+        },
 )
 task_type_enum = get_enum_source(
     "TaskType",

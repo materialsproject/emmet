@@ -1,18 +1,19 @@
-from maggma.api.resource import ReadOnlyResource
-from emmet.core.grain_boundary import GrainBoundaryDoc
+from __future__ import annotations
 
+from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.grain_boundary.query_operators import (
     GBStructureQuery,
     GBTaskIDQuery,
 )
+from emmet.core.grain_boundary import GrainBoundaryDoc
 from maggma.api.query_operator import (
+    NumericQuery,
     PaginationQuery,
     SortQuery,
     SparseFieldsQuery,
-    NumericQuery,
 )
-from emmet.api.core.global_header import GlobalHeaderProcessor
-from emmet.api.core.settings import MAPISettings
+from maggma.api.resource import ReadOnlyResource
 
 
 def gb_resource(gb_store):

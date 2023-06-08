@@ -1,24 +1,27 @@
-from typing import Any, Dict, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
 
 
 class BondTypeLengthQuery(QueryOperator):
-    """
-    Method to generate a query on bond type and length data.
-    """
+    """Method to generate a query on bond type and length data."""
 
     def query(
         self,
-        bond_type: Optional[str] = Query(
+        bond_type: str | None = Query(
             None, description="Bond type of interest; e.g. C-O for carbon-oxygen bonds."
         ),
-        max_bond_length: Optional[float] = Query(
+        max_bond_length: float | None = Query(
             None,
             description="Maximum value for the bond lengths in the molecule.",
         ),
-        min_bond_length: Optional[float] = Query(
+        min_bond_length: float | None = Query(
             None,
             description="Minimum value for the bond lengths in the molecule.",
         ),
@@ -35,7 +38,7 @@ class BondTypeLengthQuery(QueryOperator):
             )
         key = f"bond_types.{'-'.join(sorted([e.capitalize() for e in elements]))}"
 
-        crit: Dict[str, Any] = {
+        crit: dict[str, Any] = {
             key: dict()  # type: ignore
         }  # type: ignore
 

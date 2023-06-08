@@ -1,13 +1,15 @@
 # isort: off
+"""This module stubs some pymatgen classes that implement custom behavior
+outside the standard MSONable model.
 """
-This module stubs some pymatgen classes that implement custom behavior
-outside the standard MSONable model
-"""
-from typing import Dict
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
 import pymatgen.core.composition
 from pydantic import BaseModel
-from pymatgen.core.periodic_table import Element
+
+if TYPE_CHECKING:
+    from pymatgen.core.periodic_table import Element
 
 """
 The stub names are kept in sync with the actual classes so they
@@ -17,9 +19,9 @@ in as Stubbed classes to prevent name clashing
 
 
 class StubComposition(BaseModel):
-    """A dictionary mapping element to total quantity"""
+    """A dictionary mapping element to total quantity."""
 
-    __root__: Dict[Element, float]
+    __root__: dict[Element, float]
 
 
 @classmethod  # type: ignore

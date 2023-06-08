@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import logging
 import math
@@ -8,16 +10,12 @@ import shutil
 import subprocess
 import sys
 import time
-
 from collections import defaultdict, deque
+from datetime import datetime
 from fnmatch import fnmatch
 from pathlib import Path
-from datetime import datetime
 
 import click
-from hpsspy import HpssOSError
-from hpsspy.os.path import isfile
-
 from emmet.cli import SETTINGS
 from emmet.cli.decorators import sbatch
 from emmet.cli.utils import (
@@ -26,10 +24,12 @@ from emmet.cli.utils import (
     VaspDirsGenerator,
     chunks,
     ensure_indexes,
+    get_symlinked_path,
     iterator_slice,
     parse_vasp_dirs,
-    get_symlinked_path,
 )
+from hpsspy import HpssOSError
+from hpsspy.os.path import isfile
 
 logger = logging.getLogger("emmet")
 GARDEN = "/home/m/matcomp/garden"
@@ -76,12 +76,11 @@ FILE_FILTERS_DEFAULT = [
 )
 def tasks(directory, nmax, pattern):
     """Backup, restore, and parse VASP calculations."""
-    pass
 
 
 def make_comment(ctx, txt):
     gh = ctx.grand_parent.obj["GH"]
-    user = gh.me().login
+    gh.me().login
     issue_number = ctx.grand_parent.params["issue"]
     issue = gh.issue(SETTINGS.tracker["org"], SETTINGS.tracker["repo"], issue_number)
     comment = issue.create_comment("\n".join(txt))
@@ -93,7 +92,7 @@ def make_comment(ctx, txt):
 @click.option("--clean", is_flag=True, help="Remove original launchers.")
 @click.pass_context
 def backups(ctx, clean):
-    """Scan root directory and submit separate backup jobs for subdirectories containing blocks"""
+    """Scan root directory and submit separate backup jobs for subdirectories containing blocks."""
     ctx.parent.params["nmax"] = sys.maxsize  # disable maximum launchers for backup
     subdir_block_launchers = defaultdict(lambda: defaultdict(list))
     gen = VaspDirsGenerator()
@@ -151,8 +150,7 @@ def run_command(args, filelist):
         stderr=subprocess.STDOUT,
         universal_newlines=True,
     )
-    for stdout_line in iter(popen.stdout.readline, ""):
-        yield stdout_line
+    yield from iter(popen.stdout.readline, "")
     popen.stdout.close()
     return_code = popen.wait()
     if return_code:
@@ -160,7 +158,7 @@ def run_command(args, filelist):
 
 
 def recursive_chown(path, group):
-    for dirpath, dirnames, filenames in os.walk(path):
+    for dirpath, _dirnames, filenames in os.walk(path):
         if Path(dirpath).group() != group:
             shutil.chown(dirpath, group=group)
         for filename in filenames:
@@ -222,8 +220,8 @@ def extract_filename(line):
 @click.option("--check", is_flag=True, help="Check backup consistency.")
 @click.option("--force-new", is_flag=True, help="Generate new backup.")
 @click.pass_context
-def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
-    """Backup directory to HPSS"""
+def backup(ctx, reorg, clean, check, force_new):
+    """Backup directory to HPSS."""
     run = ctx.parent.parent.params["run"]
     ctx.params["nmax"] = sys.maxsize  # disable maximum launchers for backup
     logger.warning("--nmax ignored for HPSS backup!")
@@ -339,8 +337,8 @@ def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
     default=FILE_FILTERS_DEFAULT,
     help="Set the file filter(s) to match files against in each launcher.",
 )
-def restore(inputfile, file_filter):  # noqa: C901
-    """Restore launchers from HPSS"""
+def restore(inputfile, file_filter):
+    """Restore launchers from HPSS."""
     ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
     nmax = ctx.parent.params["nmax"]
@@ -355,7 +353,7 @@ def restore(inputfile, file_filter):  # noqa: C901
 
     block_launchers = defaultdict(list)
     nlaunchers = 0
-    with open(inputfile, "r") as infile:
+    with open(inputfile) as infile:
         os.chdir(directory)
         with click.progressbar(infile, label="Load blocks") as bar:
             for line in bar:
@@ -455,7 +453,7 @@ def restore(inputfile, file_filter):  # noqa: C901
 
 
 def group_strings_by_prefix(strings, prefix_length):
-    """group a list of strings by prefix based on a given prefix length"""
+    """Group a list of strings by prefix based on a given prefix length."""
     groups = defaultdict(list)
     for s in strings:
         prefix = s[:prefix_length]
@@ -473,7 +471,7 @@ def group_strings_by_prefix(strings, prefix_length):
 )
 @click.pass_context
 def parsers(ctx, task_ids):
-    """Scan root directory and submit separate parser jobs"""
+    """Scan root directory and submit separate parser jobs."""
     ctx.parent.params[
         "nmax"
     ] = sys.maxsize  # disable maximum launchers to determine parser jobs
@@ -560,8 +558,8 @@ def parsers(ctx, task_ids):
     default=["precondition", "relax1", "relax2", "static"],
     help="Naming scheme for multiple calculations in one folder - subfolder or extension.",
 )
-def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C901
-    """Parse VASP launchers into tasks"""
+def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):
+    """Parse VASP launchers into tasks."""
     ctx = click.get_current_context()
     if "CLIENT" not in ctx.obj:
         raise EmmetCliError("Use --spec to set target DB for tasks!")
@@ -599,7 +597,7 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
 
     sep_tid = None
     if task_ids:
-        with open(task_ids, "r") as f:
+        with open(task_ids) as f:
             task_ids = json.load(f)
     else:
         # reserve list of task_ids to avoid collisions during multiprocessing
@@ -626,7 +624,7 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
 
     sep_snlid = None
     if snl_metas:
-        with open(snl_metas, "r") as f:
+        with open(snl_metas) as f:
             snl_metas = json.load(f)
 
         # reserve list of snl_ids to avoid collisions during multiprocessing

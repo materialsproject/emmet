@@ -1,5 +1,4 @@
-"""
-Builder to generate elasticity docs.
+"""Builder to generate elasticity docs.
 
 The build proceeds in the below steps:
 1. Use materials builder to group tasks according the formula, space group, and
@@ -16,11 +15,15 @@ The build proceeds in the below steps:
    the most deformation tasks as the final data for fitting the elastic tensor.
 7. Fit the elastic tensor.
 """
+from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Dict, Generator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Generator
 
 import numpy as np
+from emmet.core.elasticity import ElasticityDoc
+from emmet.core.utils import jsanitize
+from emmet.core.vasp.calc_types import CalcType
 from maggma.core import Builder, Store
 from pydash.objects import get
 from pymatgen.analysis.elasticity.strain import Deformation
@@ -28,10 +31,8 @@ from pymatgen.analysis.elasticity.stress import Stress
 from pymatgen.core import Structure
 from pymatgen.core.tensors import TensorMapping
 
-from emmet.core.elasticity import ElasticityDoc
-from emmet.core.mpid import MPID
-from emmet.core.utils import jsanitize
-from emmet.core.vasp.calc_types import CalcType
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID
 
 
 class ElasticityBuilder(Builder):
@@ -40,12 +41,11 @@ class ElasticityBuilder(Builder):
         tasks: Store,
         materials: Store,
         elasticity: Store,
-        query: Optional[Dict] = None,
+        query: dict | None = None,
         fitting_method: str = "finite_difference",
         **kwargs,
     ):
-        """
-        Creates an elastic collection for materials.
+        """Creates an elastic collection for materials.
 
         Args:
             tasks: Store of tasks
@@ -55,7 +55,6 @@ class ElasticityBuilder(Builder):
             fitting_method: method to fit the elastic tensor: {`finite_difference`,
                 `pseudoinverse`, `independent`}
         """
-
         self.tasks = tasks
         self.materials = materials
         self.elasticity = elasticity
@@ -78,16 +77,14 @@ class ElasticityBuilder(Builder):
 
     def get_items(
         self,
-    ) -> Generator[Tuple[str, Dict[str, str], List[Dict]], None, None]:
-        """
-        Gets all items to process into elasticity docs.
+    ) -> Generator[tuple[str, dict[str, str], list[dict]], None, None]:
+        """Gets all items to process into elasticity docs.
 
         Returns:
             material_id: material id for the tasks
             calc_types: calculation types of the tasks
             tasks: task docs belong to the same material
         """
-
         self.logger.info("Elastic Builder Started")
 
         self.ensure_index()
@@ -123,10 +120,9 @@ class ElasticityBuilder(Builder):
             yield material_id, calc_types, tasks
 
     def process_item(
-        self, item: Tuple[MPID, Dict[str, str], List[Dict]]
-    ) -> Union[Dict, None]:
-        """
-        Process all tasks belong to the same material into an elasticity doc.
+        self, item: tuple[MPID, dict[str, str], list[dict]]
+    ) -> dict | None:
+        """Process all tasks belong to the same material into an elasticity doc.
 
         Args:
             item:
@@ -138,7 +134,6 @@ class ElasticityBuilder(Builder):
             Elasticity doc obtained from the list of tasks. `None` if failed to
             obtain the elasticity doc from the tasks.
         """
-
         material_id, calc_types, tasks = item
 
         if len(tasks) != len(calc_types):
@@ -216,9 +211,8 @@ class ElasticityBuilder(Builder):
 
         return elasticity_doc
 
-    def update_targets(self, items: List[Dict]):
-        """
-        Insert the new elasticity docs into the elasticity collection.
+    def update_targets(self, items: list[dict]):
+        """Insert the new elasticity docs into the elasticity collection.
 
         Args:
             items: elasticity docs
@@ -229,13 +223,12 @@ class ElasticityBuilder(Builder):
 
 
 def filter_opt_tasks(
-    tasks: List[Dict],
-    calc_types: Dict[str, str],
+    tasks: list[dict],
+    calc_types: dict[str, str],
     target_calc_type: str = CalcType.GGA_Structure_Optimization,
-) -> List[Dict]:
-    """
-    Filter optimization tasks, by
-        - calculation type
+) -> list[dict]:
+    """Filter optimization tasks, by
+    - calculation type.
     """
     opt_tasks = [t for t in tasks if calc_types[str(t["task_id"])] == target_calc_type]
 
@@ -243,15 +236,14 @@ def filter_opt_tasks(
 
 
 def filter_deform_tasks(
-    tasks: List[Dict],
-    calc_types: Dict[str, str],
+    tasks: list[dict],
+    calc_types: dict[str, str],
     target_calc_type: str = CalcType.GGA_Deformation,
-) -> List[Dict]:
-    """
-    Filter deformation tasks, by
-        - calculation type
-        - number of transformations
-        - transformation class
+) -> list[dict]:
+    """Filter deformation tasks, by
+    - calculation type
+    - number of transformations
+    - transformation class.
     """
     deform_tasks = []
     for t in tasks:
@@ -267,12 +259,9 @@ def filter_deform_tasks(
 
 
 def filter_by_incar_settings(
-    tasks: List[Dict], incar_settings: Optional[Dict[str, Any]] = None
-) -> List[Dict]:
-    """
-    Filter tasks by incar parameters.
-    """
-
+    tasks: list[dict], incar_settings: dict[str, Any] | None = None
+) -> list[dict]:
+    """Filter tasks by incar parameters."""
     if incar_settings is None:
         incar_settings = {
             "LREAL": False,
@@ -311,9 +300,8 @@ def filter_by_incar_settings(
     return selected
 
 
-def filter_opt_tasks_by_time(tasks: List[Dict], logger) -> Dict:
-    """
-    Filter a set of tasks to select the latest completed one.
+def filter_opt_tasks_by_time(tasks: list[dict], logger) -> dict:
+    """Filter a set of tasks to select the latest completed one.
 
     Args:
         tasks: the set of tasks to filter
@@ -326,10 +314,9 @@ def filter_opt_tasks_by_time(tasks: List[Dict], logger) -> Dict:
 
 
 def filter_deform_tasks_by_time(
-    tasks: List[Dict], deform_comp_tol: float = 1e-5, logger=None
-) -> List[Dict]:
-    """
-    For deformation tasks with the same deformation, select the latest completed one.
+    tasks: list[dict], deform_comp_tol: float = 1e-5, logger=None
+) -> list[dict]:
+    """For deformation tasks with the same deformation, select the latest completed one.
 
     Args:
         tasks: the deformation tasks
@@ -338,7 +325,6 @@ def filter_deform_tasks_by_time(
     Returns:
         filtered deformation tasks
     """
-
     mapping = TensorMapping(tol=deform_comp_tol)
 
     # group tasks by deformation
@@ -360,10 +346,8 @@ def filter_deform_tasks_by_time(
     return selected
 
 
-def _filter_tasks_by_time(tasks: List[Dict], mode: str, logger) -> Dict:
-    """
-    Helper function to filter a set of tasks to select the latest completed one.
-    """
+def _filter_tasks_by_time(tasks: list[dict], mode: str, logger) -> dict:
+    """Helper function to filter a set of tasks to select the latest completed one."""
     if len(tasks) == 0:
         raise RuntimeError(f"Cannot filter {mode} task from 0 input tasks")
     elif len(tasks) == 1:
@@ -384,13 +368,12 @@ def _filter_tasks_by_time(tasks: List[Dict], mode: str, logger) -> Dict:
 
 
 def select_final_opt_deform_tasks(
-    opt_tasks: List[Tuple[np.ndarray, Dict]],
-    deform_tasks: List[Tuple[np.ndarray, List[Dict]]],
+    opt_tasks: list[tuple[np.ndarray, dict]],
+    deform_tasks: list[tuple[np.ndarray, list[dict]]],
     logger,
     lattice_comp_tol: float = 1e-5,
-) -> Tuple[Union[Dict, None], Union[List[Dict], None]]:
-    """
-    Select the final opt task and deform tasks for fitting.
+) -> tuple[dict | None, list[dict] | None]:
+    """Select the final opt task and deform tasks for fitting.
 
     This is achieved by selecting the opt--deform pairs with the same lattice,
     and also with the most deform tasks.
@@ -399,7 +382,6 @@ def select_final_opt_deform_tasks(
         final_opt_task: selected opt task
         final_deform_tasks: selected deform tasks
     """
-
     # group opt and deform tasks by lattice
     mapping = TensorMapping(tol=lattice_comp_tol)
     for lat, opt_t in opt_tasks:
@@ -441,10 +423,9 @@ def select_final_opt_deform_tasks(
 
 
 def group_by_parent_lattice(
-    tasks: List[Dict], mode: str, lattice_comp_tol: float = 1e-5
-) -> List[Tuple[np.ndarray, List[Dict]]]:
-    """
-    Groups a set of task docs by parent lattice equivalence.
+    tasks: list[dict], mode: str, lattice_comp_tol: float = 1e-5
+) -> list[tuple[np.ndarray, list[dict]]]:
+    """Groups a set of task docs by parent lattice equivalence.
 
     Args:
         tasks: task docs
@@ -459,7 +440,7 @@ def group_by_parent_lattice(
             list of the structures before deformation (if any), and the list tasks
             from which the structures are taken.
     """
-    docs_by_lattice: List[Tuple[np.ndarray, List[Dict]]] = []
+    docs_by_lattice: list[tuple[np.ndarray, list[dict]]] = []
 
     for doc in tasks:
         sim_lattice = get(doc, "output.structure.lattice.matrix")

@@ -1,7 +1,8 @@
+"""Core module exposes the document interfaces
+These will be ingested via Drones, built by Builders, and served via the API.
 """
-Core module exposes the document interfaces
-These will be ingested via Drones, built by Builders, and served via the API
-"""
+from __future__ import annotations
+
 from pkg_resources import DistributionNotFound, get_distribution
 
 try:

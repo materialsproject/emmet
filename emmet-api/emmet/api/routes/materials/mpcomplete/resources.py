@@ -1,11 +1,13 @@
-from maggma.api.resource import SubmissionResource
-from maggma.api.query_operator import PaginationQuery
-from emmet.core.mpcomplete import MPCompleteDoc, MPCompleteDataStatus
-from emmet.api.routes.materials.mpcomplete.query_operator import (
-    MPCompletePostQuery,
-    MPCompleteGetQuery,
-)
+from __future__ import annotations
+
 from emmet.api.core.settings import MAPISettings
+from emmet.api.routes.materials.mpcomplete.query_operator import (
+    MPCompleteGetQuery,
+    MPCompletePostQuery,
+)
+from emmet.core.mpcomplete import MPCompleteDataStatus, MPCompleteDoc
+from maggma.api.query_operator import PaginationQuery
+from maggma.api.resource import SubmissionResource
 
 
 def mpcomplete_resource(mpcomplete_store):

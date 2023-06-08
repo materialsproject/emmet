@@ -1,18 +1,22 @@
-from typing import Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
 
 
 class ReconstructedQuery(QueryOperator):
-    """
-    Method to generate a query on whether the entry
+    """Method to generate a query on whether the entry
     contains a reconstructed surface.
     """
 
     def query(
         self,
-        has_reconstructed: Optional[bool] = Query(
+        has_reconstructed: bool | None = Query(
             None,
             description="Whether the entry has a reconstructed surface.",
         ),

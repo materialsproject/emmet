@@ -1,19 +1,21 @@
+from __future__ import annotations
+
 from collections import defaultdict
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Optional, Iterable, Iterator, List, Dict
+from typing import TYPE_CHECKING, Iterable, Iterator
 
+from emmet.builders.settings import EmmetBuildSettings
+from emmet.core.molecules.bonds import BOND_METHODS, MoleculeBondingDoc
+from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
+from emmet.core.qchem.task import TaskDocument
+from emmet.core.utils import jsanitize
 from maggma.builders import Builder
-from maggma.core import Store
 from maggma.utils import grouper
 
-from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
-from emmet.core.molecules.bonds import MoleculeBondingDoc, BOND_METHODS
-from emmet.core.utils import jsanitize
-from emmet.builders.settings import EmmetBuildSettings
-
+if TYPE_CHECKING:
+    from maggma.core import Store
 
 __author__ = "Evan Spotte-Smith"
 
@@ -21,8 +23,7 @@ SETTINGS = EmmetBuildSettings()
 
 
 class BondingBuilder(Builder):
-    """
-    The BondingBuilder defines the bonds in a MoleculeDoc.
+    """The BondingBuilder defines the bonds in a MoleculeDoc.
 
     Various methods can be used to define bonding, including:
         - OpenBabelNN + metal_edge_extender: Combining the bond detection algorithms in OpenBabel (OpenBabelNN in
@@ -54,9 +55,9 @@ class BondingBuilder(Builder):
         tasks: Store,
         molecules: Store,
         bonds: Store,
-        query: Optional[Dict] = None,
-        methods: Optional[List] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        query: dict | None = None,
+        methods: list | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
         self.tasks = tasks
@@ -70,10 +71,7 @@ class BondingBuilder(Builder):
         super().__init__(sources=[tasks, molecules], targets=[bonds])
 
     def ensure_indexes(self):
-        """
-        Ensures indices on the collections needed for building
-        """
-
+        """Ensures indices on the collections needed for building."""
         # Basic search index for tasks
         self.tasks.ensure_index("task_id")
         self.tasks.ensure_index("last_updated")
@@ -96,9 +94,8 @@ class BondingBuilder(Builder):
         self.bonds.ensure_index("last_updated")
         self.bonds.ensure_index("formula_alphabetical")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
-        """Prechunk the builder for distributed computation"""
-
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
+        """Prechunk the builder for distributed computation."""
         temp_query = dict(self.query)
         temp_query["deprecated"] = False
 
@@ -109,7 +106,7 @@ class BondingBuilder(Builder):
             )
         )
 
-        processed_docs = set([e for e in self.bonds.distinct("molecule_id")])
+        processed_docs = set(self.bonds.distinct("molecule_id"))
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
         to_process_forms = {
             d["formula_alphabetical"]
@@ -122,16 +119,14 @@ class BondingBuilder(Builder):
         for formula_chunk in grouper(to_process_forms, N):
             yield {"query": {"formula_alphabetical": {"$in": list(formula_chunk)}}}
 
-    def get_items(self) -> Iterator[List[Dict]]:
-        """
-        Gets all items to process into bonding documents.
+    def get_items(self) -> Iterator[list[dict]]:
+        """Gets all items to process into bonding documents.
         This does no datetime checking; relying on on whether
-        task_ids are included in the bonds Store
+        task_ids are included in the bonds Store.
 
         Returns:
             generator or list relevant tasks and molecules to process into documents
         """
-
         self.logger.info("Bonding builder started")
         self.logger.info("Setting indexes")
         self.ensure_indexes()
@@ -150,7 +145,7 @@ class BondingBuilder(Builder):
             )
         )
 
-        processed_docs = set([e for e in self.bonds.distinct("molecule_id")])
+        processed_docs = set(self.bonds.distinct("molecule_id"))
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
         to_process_forms = {
             d["formula_alphabetical"]
@@ -171,9 +166,8 @@ class BondingBuilder(Builder):
 
             yield molecules
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
-        """
-        Process the tasks into MoleculeBondingDocs
+    def process_item(self, items: list[dict]) -> list[dict]:
+        """Process the tasks into MoleculeBondingDocs.
 
         Args:
             tasks List[Dict] : a list of MoleculeDocs in dict form
@@ -181,7 +175,6 @@ class BondingBuilder(Builder):
         Returns:
             [dict] : a list of new bonding docs
         """
-
         mols = [MoleculeDoc(**item) for item in items]
         formula = mols[0].formula_alphabetical
         mol_ids = [m.molecule_id for m in mols]
@@ -202,7 +195,7 @@ class BondingBuilder(Builder):
             for entry in correct_charge_spin:
                 by_solvent[entry["solvent"]].append(entry)
 
-            for solvent, entries in by_solvent.items():
+            for _solvent, entries in by_solvent.items():
                 sorted_entries = sorted(
                     entries,
                     key=lambda x: (
@@ -286,14 +279,12 @@ class BondingBuilder(Builder):
 
         return jsanitize([doc.dict() for doc in bonding_docs], allow_bson=True)
 
-    def update_targets(self, items: List[List[Dict]]):
-        """
-        Inserts the new documents into the charges collection
+    def update_targets(self, items: list[list[dict]]):
+        """Inserts the new documents into the charges collection.
 
         Args:
             items [[dict]]: A list of documents to update
         """
-
         docs = list(chain.from_iterable(items))  # type: ignore
 
         # Add timestamp

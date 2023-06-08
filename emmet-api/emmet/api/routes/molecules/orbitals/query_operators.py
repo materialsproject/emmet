@@ -1,52 +1,55 @@
-from typing import Any, Optional, Dict
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
 
 
 class NBOPopulationQuery(QueryOperator):
-    """
-    Method to generate a query on NBO natural population data.
-    """
+    """Method to generate a query on NBO natural population data."""
 
     def query(
         self,
-        electron_type_population: Optional[str] = Query(
+        electron_type_population: str | None = Query(
             None,
             description="Should alpha ('alpha'), beta ('beta'), or all electrons be considered (None; default)?",
         ),
-        min_core_electrons: Optional[float] = Query(
+        min_core_electrons: float | None = Query(
             None,
             description="Minimum number of core electrons in an atom in this molecule.",
         ),
-        max_core_electrons: Optional[float] = Query(
+        max_core_electrons: float | None = Query(
             None,
             description="Maximum number of core electrons in an atom in this molecule.",
         ),
-        min_valence_electrons: Optional[float] = Query(
+        min_valence_electrons: float | None = Query(
             None,
             description="Minimum number of valence electrons in an atom in this molecule.",
         ),
-        max_valence_electrons: Optional[float] = Query(
+        max_valence_electrons: float | None = Query(
             None,
             description="Maximum number of valence electrons in an atom in this molecule.",
         ),
-        min_rydberg_electrons: Optional[float] = Query(
+        min_rydberg_electrons: float | None = Query(
             None,
             description="Minimum number of Rydberg electrons in an atom in this molecule.",
         ),
-        max_rydberg_electrons: Optional[float] = Query(
+        max_rydberg_electrons: float | None = Query(
             None,
             description="Maximum number of Rydberg electrons in an atom in this molecule.",
         ),
-        min_total_electrons: Optional[float] = Query(
+        min_total_electrons: float | None = Query(
             None, description="Minimum number of electrons in an atom in this molecule."
         ),
-        max_total_electrons: Optional[float] = Query(
+        max_total_electrons: float | None = Query(
             None, description="Maximum number of electrons in an atom in this molecule."
         ),
     ) -> STORE_PARAMS:
-        crit: Dict[str, Any] = dict()  # type: ignore
+        crit: dict[str, Any] = dict()  # type: ignore
 
         d = {
             "core_electrons": [min_core_electrons, max_core_electrons],
@@ -104,60 +107,58 @@ class NBOPopulationQuery(QueryOperator):
 
 
 class NBOLonePairQuery(QueryOperator):
-    """
-    Method to generate a query on NBO lone pair data.
-    """
+    """Method to generate a query on NBO lone pair data."""
 
     def query(
         self,
-        electron_type_lp: Optional[str] = Query(
+        electron_type_lp: str | None = Query(
             None,
             description="Should alpha ('alpha'), beta ('beta'), or all electrons be considered (None; default)?",
         ),
-        lp_type: Optional[str] = Query(
+        lp_type: str | None = Query(
             None,
             description="Type of orbital - 'LP' for 'lone pair' or 'LV' for 'lone vacant'",
         ),
-        min_s_character: Optional[float] = Query(
+        min_s_character: float | None = Query(
             None,
             description="Minimum percentage of the lone pair constituted by s atomic orbitals.",
         ),
-        max_s_character: Optional[float] = Query(
+        max_s_character: float | None = Query(
             None,
             description="Maximum percentage of the lone pair constituted by s atomic orbitals.",
         ),
-        min_p_character: Optional[float] = Query(
+        min_p_character: float | None = Query(
             None,
             description="Minimum percentage of the lone pair constituted by p atomic orbitals.",
         ),
-        max_p_character: Optional[float] = Query(
+        max_p_character: float | None = Query(
             None,
             description="Maximum percentage of the lone pair constituted by p atomic orbitals.",
         ),
-        min_d_character: Optional[float] = Query(
+        min_d_character: float | None = Query(
             None,
             description="Minimum percentage of the lone pair constituted by d atomic orbitals.",
         ),
-        max_d_character: Optional[float] = Query(
+        max_d_character: float | None = Query(
             None,
             description="Maximum percentage of the lone pair constituted by d atomic orbitals.",
         ),
-        min_f_character: Optional[float] = Query(
+        min_f_character: float | None = Query(
             None,
             description="Minimum percentage of the lone pair constituted by f atomic orbitals.",
         ),
-        max_f_character: Optional[float] = Query(
+        max_f_character: float | None = Query(
             None,
             description="Maximum percentage of the lone pair constituted by f atomic orbitals.",
         ),
-        min_lp_occupancy: Optional[float] = Query(
+        min_lp_occupancy: float | None = Query(
             None, description="Minimum number of electrons in the lone pair."
         ),
-        max_lp_occupancy: Optional[float] = Query(
+        max_lp_occupancy: float | None = Query(
             None, description="Maximum number of electrons in the lone pair."
         ),
     ) -> STORE_PARAMS:
-        crit: Dict[str, Any] = dict()  # type: ignore
+        crit: dict[str, Any] = dict()  # type: ignore
 
         d = {
             "s_character": [min_s_character, max_s_character],
@@ -218,108 +219,106 @@ class NBOLonePairQuery(QueryOperator):
 
 
 class NBOBondQuery(QueryOperator):
-    """
-    Method to generate a query on NBO bond data.
-    """
+    """Method to generate a query on NBO bond data."""
 
     def query(
         self,
-        electron_type_bond: Optional[str] = Query(
+        electron_type_bond: str | None = Query(
             None,
             description="Should alpha ('alpha'), beta ('beta'), or all electrons be considered (None; default)?",
         ),
-        bond_type: Optional[str] = Query(
+        bond_type: str | None = Query(
             None,
             description="Type of orbital, e.g. 'BD' for bonding or 'BD*' for antibonding",
         ),
-        min_s_character_atom1: Optional[float] = Query(
+        min_s_character_atom1: float | None = Query(
             None,
             description="Minimum percentage of the bond constituted by s atomic orbitals on the first atom.",
         ),
-        max_s_character_atom1: Optional[float] = Query(
+        max_s_character_atom1: float | None = Query(
             None,
             description="Maximum percentage of the bond constituted by s atomic orbitals on the first atom.",
         ),
-        min_s_character_atom2: Optional[float] = Query(
+        min_s_character_atom2: float | None = Query(
             None,
             description="Minimum percentage of the bond constituted by s atomic orbitals on the second atom.",
         ),
-        max_s_character_atom2: Optional[float] = Query(
+        max_s_character_atom2: float | None = Query(
             None,
             description="Maximum percentage of the bond constituted by s atomic orbitals on the second atom.",
         ),
-        min_p_character_atom1: Optional[float] = Query(
+        min_p_character_atom1: float | None = Query(
             None,
             description="Minimum percentage of the bond constituted by p atomic orbitals on the first atom.",
         ),
-        max_p_character_atom1: Optional[float] = Query(
+        max_p_character_atom1: float | None = Query(
             None,
             description="Maximum percentage of the bond constituted by p atomic orbitals on the first atom.",
         ),
-        min_p_character_atom2: Optional[float] = Query(
+        min_p_character_atom2: float | None = Query(
             None,
             description="Minimum percentage of the bond constituted by p atomic orbitals on the second atom.",
         ),
-        max_p_character_atom2: Optional[float] = Query(
+        max_p_character_atom2: float | None = Query(
             None,
             description="Maximum percentage of the bond constituted by p atomic orbitals on the second atom.",
         ),
-        min_d_character_atom1: Optional[float] = Query(
+        min_d_character_atom1: float | None = Query(
             None,
             description="Minimum percentage of the bond constituted by d atomic orbitals on the first atom.",
         ),
-        max_d_character_atom1: Optional[float] = Query(
+        max_d_character_atom1: float | None = Query(
             None,
             description="Maximum percentage of the bond constituted by d atomic orbitals on the first atom.",
         ),
-        min_d_character_atom2: Optional[float] = Query(
+        min_d_character_atom2: float | None = Query(
             None,
             description="Minimum percentage of the bond constituted by d atomic orbitals on the second atom.",
         ),
-        max_d_character_atom2: Optional[float] = Query(
+        max_d_character_atom2: float | None = Query(
             None,
             description="Maximum percentage of the bond constituted by d atomic orbitals on the second atom.",
         ),
-        min_f_character_atom1: Optional[float] = Query(
+        min_f_character_atom1: float | None = Query(
             None,
             description="Minimum percentage of the bond constituted by f atomic orbitals on the first atom.",
         ),
-        max_f_character_atom1: Optional[float] = Query(
+        max_f_character_atom1: float | None = Query(
             None,
             description="Maximum percentage of the bond constituted by f atomic orbitals on the first atom.",
         ),
-        min_f_character_atom2: Optional[float] = Query(
+        min_f_character_atom2: float | None = Query(
             None,
             description="Minimum percentage of the bond constituted by f atomic orbitals on the second atom.",
         ),
-        max_f_character_atom2: Optional[float] = Query(
+        max_f_character_atom2: float | None = Query(
             None,
             description="Maximum percentage of the bond constituted by f atomic orbitals on the second atom.",
         ),
-        min_polarization_atom1: Optional[float] = Query(
+        min_polarization_atom1: float | None = Query(
             None,
             description="Minimum fraction of electrons in the bond donated by the first atom.",
         ),
-        max_polarization_atom1: Optional[float] = Query(
+        max_polarization_atom1: float | None = Query(
             None,
             description="Maximum fraction of electrons in the bond donated by the first atom.",
         ),
-        min_polarization_atom2: Optional[float] = Query(
+        min_polarization_atom2: float | None = Query(
             None,
             description="Minimum fraction of electrons in the bond donated by the second atom.",
         ),
-        max_polarization_atom2: Optional[float] = Query(
+        max_polarization_atom2: float | None = Query(
             None,
             description="Maximum fraction of electrons in the bond donated by the second atom.",
         ),
-        min_bond_occupancy: Optional[float] = Query(
+        min_bond_occupancy: float | None = Query(
             None, description="Minimum number of electrons in the bond."
         ),
-        max_bond_occupancy: Optional[float] = Query(
+        max_bond_occupancy: float | None = Query(
             None, description="Maximum number of electrons in the bond."
         ),
     ) -> STORE_PARAMS:
-        crit: Dict[str, Any] = dict()  # type: ignore
+        crit: dict[str, Any] = dict()  # type: ignore
 
         d = {
             "atom1_s_character": [min_s_character_atom1, max_s_character_atom1],
@@ -392,42 +391,42 @@ class NBOBondQuery(QueryOperator):
 
 
 class NBOInteractionQuery(QueryOperator):
-    """Method to generate a query on NBO orbital-orbital interaction data"""
+    """Method to generate a query on NBO orbital-orbital interaction data."""
 
     def query(
         self,
-        electron_type_interaction: Optional[str] = Query(
+        electron_type_interaction: str | None = Query(
             None,
             description="Should alpha ('alpha'), beta ('beta'), or all electrons be considered (None; default)?",
         ),
-        donor_type: Optional[str] = Query(
+        donor_type: str | None = Query(
             None,
             description="Type of donor orbital, e.g. 'BD' for bonding or 'RY*' for anti-Rydberg",
         ),
-        acceptor_type: Optional[str] = Query(
+        acceptor_type: str | None = Query(
             None,
             description="Type of acceptor orbital, e.g. 'BD' for bonding or 'RY*' for anti-Rydberg",
         ),
-        min_perturbation_energy: Optional[float] = Query(
+        min_perturbation_energy: float | None = Query(
             None, description="Minimum perturbation energy of the interaction"
         ),
-        max_perturbation_energy: Optional[float] = Query(
+        max_perturbation_energy: float | None = Query(
             None, description="Maximum perturbation energy of the interaction"
         ),
-        min_energy_difference: Optional[float] = Query(
+        min_energy_difference: float | None = Query(
             None, description="Minimum energy difference between interacting orbitals"
         ),
-        max_energy_difference: Optional[float] = Query(
+        max_energy_difference: float | None = Query(
             None, description="Minimum energy difference between interacting orbitals"
         ),
-        min_fock_element: Optional[float] = Query(
+        min_fock_element: float | None = Query(
             None, description="Minimum interaction Fock matrix element"
         ),
-        max_fock_element: Optional[float] = Query(
+        max_fock_element: float | None = Query(
             None, description="Maximum interaction Fock matrix element"
         ),
     ) -> STORE_PARAMS:
-        crit: Dict[str, Any] = dict()  # type: ignore
+        crit: dict[str, Any] = dict()  # type: ignore
 
         d = {
             "perturbation_energy": [min_perturbation_energy, max_perturbation_energy],

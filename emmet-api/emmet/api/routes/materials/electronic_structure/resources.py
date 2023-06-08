@@ -1,25 +1,28 @@
-from maggma.api.query_operator.dynamic import NumericQuery
-from maggma.api.resource import ReadOnlyResource
-from emmet.core.electronic_structure import ElectronicStructureDoc
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from __future__ import annotations
 
-from emmet.api.routes.materials.materials.query_operators import (
-    ElementsQuery,
-    FormulaQuery,
-    ChemsysQuery,
-    DeprecationQuery,
-    MultiMaterialIDQuery,
-)
-
-from emmet.api.routes.materials.electronic_structure.query_operators import (
-    ESSummaryDataQuery,
-    BSDataQuery,
-    DOSDataQuery,
-    ObjectQuery,
-)
-from emmet.core.electronic_structure import BSObjectDoc, DOSObjectDoc
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
+from emmet.api.routes.materials.electronic_structure.query_operators import (
+    BSDataQuery,
+    DOSDataQuery,
+    ESSummaryDataQuery,
+    ObjectQuery,
+)
+from emmet.api.routes.materials.materials.query_operators import (
+    ChemsysQuery,
+    DeprecationQuery,
+    ElementsQuery,
+    FormulaQuery,
+    MultiMaterialIDQuery,
+)
+from emmet.core.electronic_structure import (
+    BSObjectDoc,
+    DOSObjectDoc,
+    ElectronicStructureDoc,
+)
+from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.query_operator.dynamic import NumericQuery
+from maggma.api.resource import ReadOnlyResource
 
 timeout = MAPISettings().TIMEOUT
 

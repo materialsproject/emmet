@@ -1,21 +1,19 @@
-from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
+from __future__ import annotations
 
 from emmet.api.routes.materials.summary.query_operators import (
     HasPropsQuery,
     MaterialIDsSearchQuery,
+    SearchESQuery,
     SearchHasReconstructedQuery,
     SearchIsStableQuery,
-    SearchMagneticQuery,
     SearchIsTheoreticalQuery,
+    SearchMagneticQuery,
     SearchStatsQuery,
-    SearchESQuery,
 )
-
-from emmet.core.summary import SummaryStats
-
+from emmet.core.summary import SummaryDoc, SummaryStats
+from monty.serialization import dumpfn, loadfn
+from monty.tempfile import ScratchDir
 from pymatgen.analysis.magnetism import Ordering
-from emmet.core.summary import SummaryDoc
 
 
 def test_has_props_query():

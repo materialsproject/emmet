@@ -1,9 +1,14 @@
-from maggma.builders.map_builder import MapBuilder
-from maggma.core import Store
-from pymatgen.core import Structure
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from emmet.core.oxidation_states import OxidationStateDoc
 from emmet.core.utils import jsanitize
+from maggma.builders.map_builder import MapBuilder
+from pymatgen.core import Structure
+
+if TYPE_CHECKING:
+    from maggma.core import Store
 
 
 class OxidationStatesBuilder(MapBuilder):
@@ -14,8 +19,7 @@ class OxidationStatesBuilder(MapBuilder):
         query=None,
         **kwargs,
     ):
-        """
-        Creates Oxidation State documents from materials
+        """Creates Oxidation State documents from materials.
 
         Args:
             materials: Store of materials docs

@@ -1,23 +1,25 @@
-from typing import Optional
-from fastapi import Query
-from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+from __future__ import annotations
 
 from collections import defaultdict
+from typing import TYPE_CHECKING
+
+from fastapi import Query
+from maggma.api.query_operator import QueryOperator
+
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
 
 
 class PiezoelectricQuery(QueryOperator):
-    """
-    Method to generate a query for ranges of piezoelectric data
-    """
+    """Method to generate a query for ranges of piezoelectric data."""
 
     def query(
         self,
-        piezo_modulus_max: Optional[float] = Query(
+        piezo_modulus_max: float | None = Query(
             None,
             description="Maximum value for the piezoelectric modulus in C/m².",
         ),
-        piezo_modulus_min: Optional[float] = Query(
+        piezo_modulus_min: float | None = Query(
             None,
             description="Minimum value for the piezoelectric modulus in C/m².",
         ),

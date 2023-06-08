@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 from pathlib import Path
 
 import pytest
-from maggma.stores import JSONStore, MemoryStore
-from monty.serialization import dumpfn, loadfn
-
 from emmet.builders.materials.summary import SummaryBuilder
 from emmet.builders.vasp.materials import MaterialsBuilder
+from maggma.stores import JSONStore, MemoryStore
+from monty.serialization import dumpfn, loadfn
 
 
 @pytest.fixture(scope="session")
@@ -21,97 +22,97 @@ def materials(tasks_store):
     return materials_store
 
 
-@pytest.fixture
+@pytest.fixture()
 def electronic_structure():
     return MemoryStore(key="material_id")
 
 
-@pytest.fixture
+@pytest.fixture()
 def thermo():
     return MemoryStore(key="material_id")
 
 
-@pytest.fixture
+@pytest.fixture()
 def grain_boundaries():
     return MemoryStore()
 
 
-@pytest.fixture
+@pytest.fixture()
 def chemenv():
     return MemoryStore()
 
 
-@pytest.fixture
+@pytest.fixture()
 def absorption():
     return MemoryStore()
 
 
-@pytest.fixture
+@pytest.fixture()
 def magnetism():
     return MemoryStore()
 
 
-@pytest.fixture
+@pytest.fixture()
 def elasticity():
     return MemoryStore()
 
 
-@pytest.fixture
+@pytest.fixture()
 def dielectric():
     return MemoryStore()
 
 
-@pytest.fixture
+@pytest.fixture()
 def piezoelectric():
     return MemoryStore()
 
 
-@pytest.fixture
+@pytest.fixture()
 def phonon():
     return MemoryStore()
 
 
-@pytest.fixture
+@pytest.fixture()
 def insertion_electrodes():
     return MemoryStore()
 
 
-@pytest.fixture
+@pytest.fixture()
 def substrates():
     return MemoryStore()
 
 
-@pytest.fixture
+@pytest.fixture()
 def oxi_states():
     return MemoryStore()
 
 
-@pytest.fixture
+@pytest.fixture()
 def surfaces():
     return MemoryStore()
 
 
-@pytest.fixture
+@pytest.fixture()
 def eos():
     return MemoryStore()
 
 
-@pytest.fixture
+@pytest.fixture()
 def xas():
     return MemoryStore()
 
 
-@pytest.fixture
+@pytest.fixture()
 def provenance():
     return MemoryStore()
 
 
-@pytest.fixture
+@pytest.fixture()
 def charge_density_index():
     return MemoryStore()
 
 
-@pytest.fixture
+@pytest.fixture()
 def summary():
     return MemoryStore(key="material_id")
 

@@ -1,15 +1,17 @@
-from typing import List
-from pymatgen.core.structure import Structure
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
+if TYPE_CHECKING:
+    from pymatgen.core.structure import Structure
+
 
 class SurfaceEntry(BaseModel):
-    """
-    Surface energies, miller indicies, ...
-    """
+    """Surface energies, miller indicies, ..."""
 
-    miller_index: List[int] = Field(
+    miller_index: list[int] = Field(
         None,
         description="Miller index of surface.",
     )
@@ -56,11 +58,9 @@ class SurfaceEntry(BaseModel):
 
 
 class SurfacePropDoc(BaseModel):
-    """
-    Model for a document containing surface properties data
-    """
+    """Model for a document containing surface properties data."""
 
-    surfaces: List[SurfaceEntry] = Field(
+    surfaces: list[SurfaceEntry] = Field(
         None,
         description="List of individual surface data.",
     )

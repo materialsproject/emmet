@@ -1,12 +1,13 @@
+from __future__ import annotations
+
 import pytest
+from emmet.core.structure import MoleculeMetadata
 from pymatgen.core import Molecule
 from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
 
-from emmet.core.structure import MoleculeMetadata
 
-
-@pytest.fixture
+@pytest.fixture()
 def molecule():
     test_mol = Molecule(
         species=["Mg", "O"],

@@ -1,9 +1,10 @@
-import pytest
-from pymatgen.core import Structure
-from monty.serialization import loadfn
+from __future__ import annotations
 
+import pytest
 from emmet.core.magnetism import MagnetismDoc
 from emmet.core.utils import jsanitize
+from monty.serialization import loadfn
+from pymatgen.core import Structure
 
 
 @pytest.fixture(scope="session")

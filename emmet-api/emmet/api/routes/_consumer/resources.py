@@ -1,9 +1,11 @@
-from maggma.api.resource import SubmissionResource
+from __future__ import annotations
+
 from emmet.api.routes._consumer.query_operator import (
-    UserSettingsPostQuery,
     UserSettingsGetQuery,
+    UserSettingsPostQuery,
 )
 from emmet.core._user_settings import UserSettingsDoc
+from maggma.api.resource import SubmissionResource
 
 
 def settings_resource(consumer_settings_store):

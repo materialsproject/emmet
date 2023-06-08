@@ -1,22 +1,24 @@
-""" Core definition of a VASP Task Document """
-from typing import Any, Dict, List
+"""Core definition of a VASP Task Document."""
+from __future__ import annotations
 
-from pydantic import Field
-from pymatgen.analysis.xas.spectrum import XAS
-from pymatgen.core import Structure
-from pymatgen.core.periodic_table import Element
+from typing import TYPE_CHECKING, Any
 
 from emmet.core.structure import StructureMetadata
-from emmet.core.vasp.task_valid import TaskDocument as BaseTaskDocument
 from emmet.core.utils import ValueEnum
+from emmet.core.vasp.task_valid import TaskDocument as BaseTaskDocument
+from pydantic import Field
+from pymatgen.analysis.xas.spectrum import XAS
+from pymatgen.core.periodic_table import Element
+
+if TYPE_CHECKING:
+    from pymatgen.core import Structure
 
 
 class CalcType(ValueEnum):
-    """
-    The type of FEFF Calculation
+    """The type of FEFF Calculation
     XANES - Just the near-edge region
     EXAFS - Just the extended region
-    XAFS - Fully stitchted XANES + EXAFS
+    XAFS - Fully stitchted XANES + EXAFS.
     """
 
     XANES = "XANES"
@@ -25,15 +27,15 @@ class CalcType(ValueEnum):
 
 
 class TaskDocument(BaseTaskDocument, StructureMetadata):
-    """Task Document for a FEFF XAS Calculation. Doesn't support EELS for now"""
+    """Task Document for a FEFF XAS Calculation. Doesn't support EELS for now."""
 
     calc_code = "FEFF"
 
     structure: Structure
-    input_parameters: Dict[str, Any] = Field(
+    input_parameters: dict[str, Any] = Field(
         {}, description="Input parameters for the FEFF calculation"
     )
-    spectrum: List[List[float]] = Field(
+    spectrum: list[list[float]] = Field(
         [[]], description="Raw spectrum data from FEFF xmu.dat or eels.dat"
     )
 
@@ -56,7 +58,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
     @property
     def xas_spectrum(self) -> XAS:
         if not hasattr(self, "_xas_spectrum"):
-            if not all([len(p) == 6 for p in self.spectrum]):
+            if not all(len(p) == 6 for p in self.spectrum):
                 raise ValueError(
                     "Spectrum data doesn't appear to be from xmu.dat which holds XAS data"
                 )

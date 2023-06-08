@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import numpy as np
 import pytest
+from emmet.core.mobility.migrationgraph import MigrationGraphDoc
 from monty.serialization import loadfn
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedEntry
-from emmet.core.mobility.migrationgraph import MigrationGraphDoc
 
 
 @pytest.fixture(scope="session")
@@ -15,9 +17,7 @@ def get_entries(test_dir):
 
 @pytest.fixture(scope="session")
 def migration_graph_prop():
-    """
-    set the expected parameters for the migrationgraph
-    """
+    """Set the expected parameters for the migrationgraph."""
     expected_properties = {
         "LiMnP2O7": {
             "max_distance": 5,
@@ -33,9 +33,7 @@ def migration_graph_prop():
 
 @pytest.fixture(scope="session")
 def mg_for_sc_fields(test_dir):
-    """
-    get MigrationGraph object generated with methods from pymatgen.analysis.diffusion for testing generate_sc_fields
-    """
+    """Get MigrationGraph object generated with methods from pymatgen.analysis.diffusion for testing generate_sc_fields."""
     mg_for_sc = loadfn(test_dir / "mobility/mg_for_sc.json")
     return mg_for_sc
 

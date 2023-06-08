@@ -1,9 +1,10 @@
-from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
-from maggma.api.resource import ReadOnlyResource
+from __future__ import annotations
+
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
-
 from emmet.core.similarity import SimilarityDoc
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
+from maggma.api.resource import ReadOnlyResource
 
 
 def similarity_resource(similarity_store):

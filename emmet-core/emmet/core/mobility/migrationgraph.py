@@ -1,12 +1,17 @@
-from datetime import datetime
-from typing import List, Union, Dict, Tuple, Sequence
+from __future__ import annotations
 
-from pydantic import Field
+from typing import TYPE_CHECKING, Sequence
+
 import numpy as np
 from emmet.core.base import EmmetBaseModel
-from pymatgen.core import Structure
+from pydantic import Field
 from pymatgen.analysis.structure_matcher import StructureMatcher
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from pymatgen.core import Structure
+    from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 try:
     from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
@@ -16,8 +21,7 @@ except ImportError:
 
 
 class MigrationGraphDoc(EmmetBaseModel):
-    """
-    MigrationGraph Doc.
+    """MigrationGraph Doc.
     Stores MigrationGraph and info such as ComputedStructureEntries (ComputedEntry can be used for working ion)
     and cutoff distance that are used to generated the object.
 
@@ -48,12 +52,12 @@ class MigrationGraphDoc(EmmetBaseModel):
         description="The numerical value in angstroms used to cap the maximum length of a hop.",
     )
 
-    entries_for_generation: List[ComputedStructureEntry] = Field(
+    entries_for_generation: list[ComputedStructureEntry] = Field(
         None,
         description="A list of ComputedStructureEntries used to generate the structure with all working ion sites.",
     )
 
-    working_ion_entry: Union[ComputedEntry, ComputedStructureEntry] = Field(
+    working_ion_entry: ComputedEntry | ComputedStructureEntry = Field(
         None, description="The ComputedStructureEntry of the working ion."
     )
 
@@ -72,7 +76,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         description="The minimum length used to generate supercell using pymatgen.",
     )
 
-    minmax_num_atoms: Tuple[int, int] = Field(
+    minmax_num_atoms: tuple[int, int] = Field(
         None,
         description="The min/max number of atoms used to genreate supercell using pymatgen.",
     )
@@ -82,17 +86,17 @@ class MigrationGraphDoc(EmmetBaseModel):
         description="The matrix suprcell structure that does not contain the mobile ions for the purpose of migration analysis.",  # noqa: E501
     )
 
-    conversion_matrix: List[List[Union[int, float]]] = Field(
+    conversion_matrix: list[list[int | float]] = Field(
         None,
         description="The conversion matrix used to convert unit cell to supercell.",
     )
 
-    inserted_ion_coords: List[Dict[str, Union[List[float], str, int]]] = Field(
+    inserted_ion_coords: list[dict[str, list[float] | str | int]] = Field(
         None,
         description="A dictionary containing all mobile ion fractional coordinates in terms of supercell.",
     )
 
-    insert_coords_combo: List[str] = Field(
+    insert_coords_combo: list[str] = Field(
         None,
         description="A list of combinations 'a+b' to designate hops in the supercell. Each combo should correspond to one unique hop in MigrationGraph.",  # noqa: E501
     )
@@ -101,23 +105,21 @@ class MigrationGraphDoc(EmmetBaseModel):
     def from_entries_and_distance(
         cls,
         battery_id: str,
-        grouped_entries: List[ComputedStructureEntry],
-        working_ion_entry: Union[ComputedEntry, ComputedStructureEntry],
+        grouped_entries: list[ComputedStructureEntry],
+        working_ion_entry: ComputedEntry | ComputedStructureEntry,
         hop_cutoff: float,
         populate_sc_fields: bool = True,
         ltol: float = 0.2,
         stol: float = 0.3,
         angle_tol: float = 5,
         **kwargs,
-    ) -> Union["MigrationGraphDoc", None]:
-        """
-        This classmethod takes a group of ComputedStructureEntries (can also use ComputedEntry for wi) and generates
+    ) -> MigrationGraphDoc | None:
+        """This classmethod takes a group of ComputedStructureEntries (can also use ComputedEntry for wi) and generates
         a full sites structure.
         Then a MigrationGraph object is generated with with_distance() method with a designated cutoff.
         If populate_sc_fields set to True, this method will populate the supercell related fields. Required kwargs are
         min_length_sc and minmax_num_atoms.
         """
-
         ranked_structures = MigrationGraph.get_structure_from_entries(
             entries=grouped_entries, migrating_ion_entry=working_ion_entry
         )
@@ -178,7 +180,7 @@ class MigrationGraphDoc(EmmetBaseModel):
     def generate_sc_fields(
         mg: MigrationGraph,
         min_length_sc: float,
-        minmax_num_atoms: Tuple[int, int],
+        minmax_num_atoms: tuple[int, int],
         sm: StructureMatcher,
     ):
         min_length_sc = min_length_sc
@@ -204,7 +206,7 @@ class MigrationGraphDoc(EmmetBaseModel):
 
     @staticmethod
     def ordered_sc_site_list(
-        uc_sites_only: Structure, sc_mat: List[List[Union[int, float]]]
+        uc_sites_only: Structure, sc_mat: list[list[int | float]]
     ):
         uc_no_site = uc_sites_only.copy()
         uc_no_site.remove_sites(range(len(uc_sites_only)))
@@ -235,8 +237,8 @@ class MigrationGraphDoc(EmmetBaseModel):
 
     @staticmethod
     def get_hop_sc_combo(
-        unique_hops: Dict,
-        sc_mat: List[List[Union[int, float]]],
+        unique_hops: dict,
+        sc_mat: list[list[int | float]],
         sm: StructureMatcher,
         host_sc: Structure,
         working_ion: str,
@@ -244,7 +246,7 @@ class MigrationGraphDoc(EmmetBaseModel):
     ):
         combo = []
 
-        unique_hops = {k: v for k, v in sorted(unique_hops.items())}
+        unique_hops = dict(sorted(unique_hops.items()))
         for one_hop in unique_hops.values():
             added = False
             sc_isite_set = {
@@ -287,13 +289,13 @@ class MigrationGraphDoc(EmmetBaseModel):
 
     @staticmethod
     def compare_sc_one_hop(
-        one_hop: Dict,
-        sc_mat: List,
+        one_hop: dict,
+        sc_mat: list,
         sm: StructureMatcher,
         host_sc: Structure,
         sc_check: Structure,
         working_ion: str,
-        uc_site_types: Tuple[int, int],
+        uc_site_types: tuple[int, int],
     ):
         sc_mat_inv = np.linalg.inv(sc_mat)
         convert_sc_icoords = np.dot(one_hop["ipos"], sc_mat_inv)
@@ -305,12 +307,11 @@ class MigrationGraphDoc(EmmetBaseModel):
         if sm.fit(convert_sc, sc_check):
             one_hop_dis = one_hop["hop"].length
             sc_check_hop_dis = np.linalg.norm(sc_check[0].coords - sc_check[1].coords)
-            if np.isclose(one_hop_dis, sc_check_hop_dis, atol=1e-5):
-                if (
-                    one_hop["iindex"] == uc_site_types[0]
-                    and one_hop["eindex"] == uc_site_types[1]
-                ):
-                    return True
+            if np.isclose(one_hop_dis, sc_check_hop_dis, atol=1e-5) and (
+                one_hop["iindex"] == uc_site_types[0]
+                and one_hop["eindex"] == uc_site_types[1]
+            ):
+                return True
 
         return False
 
@@ -318,8 +319,8 @@ class MigrationGraphDoc(EmmetBaseModel):
     def append_new_site(
         host_sc: Structure,
         ordered_sc_site_list: list,
-        one_hop: Dict,
-        sc_mat: List[List[Union[int, float]]],
+        one_hop: dict,
+        sc_mat: list[list[int | float]],
         working_ion: str,
     ):
         sc_mat_inv = np.linalg.inv(sc_mat)
@@ -358,11 +359,9 @@ class MigrationGraphDoc(EmmetBaseModel):
         return f"{sc_iindex}+{sc_eindex}", ordered_sc_site_list
 
     def get_distinct_hop_sites(
-        inserted_ion_coords: List[str], insert_coords_combo: List
-    ) -> Tuple[List, List[str], Dict]:
-        """
-        This is a utils function that converts the site dict and combo into a site list and combo that contain only distince endpoints used the combos. # noqa: E501
-        """
+        inserted_ion_coords: list[str], insert_coords_combo: list
+    ) -> tuple[list, list[str], dict]:
+        """This is a utils function that converts the site dict and combo into a site list and combo that contain only distince endpoints used the combos. # noqa: E501."""
         dis_sites_list = []
         dis_combo_list = []
         mgdoc_sites_mapping = {}  # type: dict
@@ -371,7 +370,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         for one_combo in insert_coords_combo:
             ini, end = list(map(int, one_combo.split("+")))
 
-            if ini in mgdoc_sites_mapping.keys():
+            if ini in mgdoc_sites_mapping:
                 dis_ini = mgdoc_sites_mapping[ini]
             else:
                 dis_sites_list.append(
@@ -379,7 +378,7 @@ class MigrationGraphDoc(EmmetBaseModel):
                 )
                 dis_ini = len(dis_sites_list) - 1
                 mgdoc_sites_mapping[ini] = dis_ini
-            if end in mgdoc_sites_mapping.keys():
+            if end in mgdoc_sites_mapping:
                 dis_end = mgdoc_sites_mapping[end]
             else:
                 dis_sites_list.append(

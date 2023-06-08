@@ -1,16 +1,17 @@
-from collections import defaultdict
-from typing import Dict, Iterable, List, Optional, Tuple
-from math import ceil
-from datetime import datetime
+from __future__ import annotations
 
-from maggma.core import Builder, Store
-from maggma.utils import grouper
-from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
-from pymatgen.core.structure import Structure
+from collections import defaultdict
+from datetime import datetime
+from math import ceil
+from typing import Iterable
 
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.provenance import ProvenanceDoc, SNLDict
 from emmet.core.utils import get_sg, jsanitize
+from maggma.core import Builder, Store
+from maggma.utils import grouper
+from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
+from pymatgen.core.structure import Structure
 
 
 class ProvenanceBuilder(Builder):
@@ -18,13 +19,12 @@ class ProvenanceBuilder(Builder):
         self,
         materials: Store,
         provenance: Store,
-        source_snls: List[Store],
-        settings: Optional[EmmetBuildSettings] = None,
-        query: Optional[Dict] = None,
+        source_snls: list[Store],
+        settings: EmmetBuildSettings | None = None,
+        query: dict | None = None,
         **kwargs,
     ):
-        """
-        Creates provenance from source SNLs and materials
+        """Creates provenance from source SNLs and materials.
 
         Args:
             materials: Store of materials docs to tag with SNLs
@@ -59,7 +59,7 @@ class ProvenanceBuilder(Builder):
             s.ensure_index("snl_id")
             s.ensure_index("formula_pretty")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
         self.ensure_indicies()
 
         # Find all formulas for materials that have been updated since this
@@ -101,11 +101,10 @@ class ProvenanceBuilder(Builder):
         for chunk in grouper(mat_ids, N):
             yield {"query": {"material_id": {"$in": chunk}}}
 
-    def get_items(self) -> Tuple[List[Dict], List[Dict]]:  # type: ignore
-        """
-        Gets all materials to assocaite with SNLs
+    def get_items(self) -> tuple[list[dict], list[dict]]:  # type: ignore
+        """Gets all materials to assocaite with SNLs
         Returns:
-            generator of materials and SNLs that could match
+            generator of materials and SNLs that could match.
         """
         self.logger.info("Provenance Builder Started")
 
@@ -178,13 +177,12 @@ class ProvenanceBuilder(Builder):
             self.logger.debug(f"Found {len(snl_structs)} potential snls for {mat_id}")
             yield mat, snl_structs
 
-    def process_item(self, item) -> Dict:
-        """
-        Matches SNLS and Materials
+    def process_item(self, item) -> dict:
+        """Matches SNLS and Materials
         Args:
             item (tuple): a tuple of materials and snls
         Returns:
-            list(dict): a list of collected snls with material ids
+            list(dict): a list of collected snls with material ids.
         """
         mat, snl_structs = item
         formula_pretty = mat["formula_pretty"]
@@ -219,15 +217,13 @@ class ProvenanceBuilder(Builder):
         return snl_doc
 
     def match(self, snl_structs, mat):
-        """
-        Finds a material doc that matches with the given snl
+        """Finds a material doc that matches with the given snl
         Args:
             snl_structs ([dict]): the snls struct list
             mat (dict): a materials doc
         Returns:
-            generator of materials doc keys
+            generator of materials doc keys.
         """
-
         m_strucs = [Structure.from_dict(mat["structure"])] + [
             Structure.from_dict(init_struc) for init_struc in mat["initial_structures"]
         ]
@@ -247,17 +243,14 @@ class ProvenanceBuilder(Builder):
 
         for s in m_strucs:
             for snl_struc in snl_structs:
-                if sm.fit(s, snl_struc):
-                    if snl_struc.snl not in snls:
-                        snls.append(snl_struc.snl)
+                if sm.fit(s, snl_struc) and snl_struc.snl not in snls:
+                    snls.append(snl_struc.snl)
 
         self.logger.debug(f"Found {len(snls)} SNLs for {mat['material_id']}")
         return snls
 
     def update_targets(self, items):
-        """
-        Inserts the new SNL docs into the SNL collection
-        """
+        """Inserts the new SNL docs into the SNL collection."""
         snls = list(filter(None, items))
 
         if len(snls) > 0:

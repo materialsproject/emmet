@@ -1,25 +1,25 @@
-from maggma.api.resource import ReadOnlyResource
-from emmet.core.molecules.redox import RedoxDoc
+from __future__ import annotations
 
+from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
+from emmet.api.routes.molecules.molecules.query_operators import (
+    ChargeSpinQuery,
+    ChemsysQuery,
+    ElementsQuery,
+    ExactCalcMethodQuery,
+    FormulaQuery,
+    MultiMPculeIDQuery,
+)
+from emmet.api.routes.molecules.redox.query_operators import RedoxPotentialQuery
+from emmet.api.routes.molecules.utils import MultiPropertyIDQuery
+from emmet.core.molecules.redox import RedoxDoc
 from maggma.api.query_operator import (
     NumericQuery,
     PaginationQuery,
     SortQuery,
     SparseFieldsQuery,
 )
-
-from emmet.api.routes.molecules.redox.query_operators import RedoxPotentialQuery
-from emmet.api.routes.molecules.molecules.query_operators import (
-    MultiMPculeIDQuery,
-    ExactCalcMethodQuery,
-    FormulaQuery,
-    ChemsysQuery,
-    ElementsQuery,
-    ChargeSpinQuery,
-)
-from emmet.api.routes.molecules.utils import MultiPropertyIDQuery
-from emmet.api.core.settings import MAPISettings
-from emmet.api.core.global_header import GlobalHeaderProcessor
+from maggma.api.resource import ReadOnlyResource
 
 
 def redox_resource(redox_store):

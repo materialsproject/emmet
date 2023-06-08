@@ -1,12 +1,13 @@
+from __future__ import annotations
+
 from pathlib import Path
 
 import pytest
-from maggma.stores import JSONStore, MemoryStore
-from monty.serialization import dumpfn, loadfn
-
 from emmet.builders.materials.corrected_entries import CorrectedEntriesBuilder
 from emmet.builders.materials.thermo import ThermoBuilder
 from emmet.builders.vasp.materials import MaterialsBuilder
+from maggma.stores import JSONStore, MemoryStore
+from monty.serialization import dumpfn, loadfn
 
 
 @pytest.fixture(scope="session")
@@ -27,12 +28,12 @@ def corrected_entries_store():
     return MemoryStore(key="chemsys")
 
 
-@pytest.fixture
+@pytest.fixture()
 def thermo_store():
     return MemoryStore(key="thermo_id")
 
 
-@pytest.fixture
+@pytest.fixture()
 def phase_diagram_store():
     return MemoryStore(key="chemsys")
 

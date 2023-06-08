@@ -1,16 +1,20 @@
-from typing import Set, Union
-import sys
+from __future__ import annotations
+
 import os
+import sys
 from itertools import chain, combinations
-from pymatgen.core import Structure
+from typing import TYPE_CHECKING
+
 from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
 
+if TYPE_CHECKING:
+    from pymatgen.core import Structure
 
-def maximal_spanning_non_intersecting_subsets(sets) -> Set[Set]:
-    """
-    Finds the maximal spanning non intersecting subsets of a group of sets
+
+def maximal_spanning_non_intersecting_subsets(sets) -> set[set]:
+    """Finds the maximal spanning non intersecting subsets of a group of sets
     This is usefull for parsing out the sandboxes and figuring out how to group
-    and calculate these for thermo documents
+    and calculate these for thermo documents.
 
     sets (set(frozenset)): sets of keys to subsect, expected as a set of frozensets
     """
@@ -34,7 +38,7 @@ def maximal_spanning_non_intersecting_subsets(sets) -> Set[Set]:
     return set(to_return_subsets)
 
 
-def chemsys_permutations(chemsys) -> Set:
+def chemsys_permutations(chemsys) -> set:
     # Function to get all relevant chemical subsystems
     # e.g. for Li-Mn-O returns Li, Li-Mn, Li-Mn-O, Li-O, Mn, Mn-O, O
     elements = chemsys.split("-")
@@ -52,10 +56,9 @@ def get_hop_cutoff(
     algorithm: str = "min_distance",
     min_hop_distance: float = 1,
     max_hop_distance: float = 7,
-) -> Union[float, None]:
-    """
-    A function to get an appropriate hop distance cutoff for a given migration
-    graph structure which can be used for MigrationGraph.with_distance()
+) -> float | None:
+    """A function to get an appropriate hop distance cutoff for a given migration
+    graph structure which can be used for MigrationGraph.with_distance().
 
     migration_graph_struct (Structure): the host structure with all working ion
         sites for consideration filled.

@@ -1,15 +1,16 @@
+from __future__ import annotations
+
 import logging
 import os
-import click
-
 from io import StringIO
-from github3 import GitHub
-from github3.session import GitHubSession
 
+import click
 from emmet.cli.admin import admin
 from emmet.cli.calc import calc
 from emmet.cli.tasks import tasks
 from emmet.cli.utils import EmmetCliError, calcdb_from_mgrant
+from github3 import GitHub
+from github3.session import GitHubSession
 
 logger = logging.getLogger("")
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
@@ -40,7 +41,7 @@ def opt_prompt():
 @click.option("--verbose", is_flag=True, help="Show debug messages.")
 @click.version_option()
 def emmet(spec_or_dbfile, run, issue, sbatch, ntries, bb, yes, no_dupe_check, verbose):
-    """Command line interface for emmet"""
+    """Command line interface for emmet."""
     logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     logging.getLogger("github3").setLevel(logging.WARNING)
     ctx = click.get_current_context()
@@ -95,7 +96,7 @@ def emmet(spec_or_dbfile, run, issue, sbatch, ntries, bb, yes, no_dupe_check, ve
             with open(CREDENTIALS, "w") as fd:
                 fd.write(auth.token)
 
-        with open(CREDENTIALS, "r") as fd:
+        with open(CREDENTIALS) as fd:
             token = fd.readline().strip()
             ctx.obj["GH"] = gh = GitHub(session=GitHubSession(default_read_timeout=30))
             gh.login(token=token)

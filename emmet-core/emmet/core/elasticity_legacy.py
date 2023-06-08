@@ -1,11 +1,10 @@
-from typing import List
+from __future__ import annotations
+
 from pydantic import BaseModel, Field
 
 
 class ElasticityData(BaseModel):
-    """
-    Elastic tensors and associated information.
-    """
+    """Elastic tensors and associated information."""
 
     k_voigt: float = Field(
         None,
@@ -47,21 +46,19 @@ class ElasticityData(BaseModel):
         description="Poisson's ratio.",
     )
 
-    elastic_tensor: List[List[float]] = Field(
+    elastic_tensor: list[list[float]] = Field(
         None,
         description="Stiffness tensor in GPa.",
     )
 
-    compliance_tensor: List[List[float]] = Field(
+    compliance_tensor: list[list[float]] = Field(
         None,
         description="Compliance tensor in 10^(-12)/Pa.",
     )
 
 
 class ElasticityDoc(BaseModel):
-    """
-    Model for a document containing elasticity data
-    """
+    """Model for a document containing elasticity data."""
 
     pretty_formula: str = Field(
         None,

@@ -1,12 +1,16 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from fastapi import Query
 from maggma.api.query_operator.core import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
 
 
 class ChgcarTaskIDQuery(QueryOperator):
-    """
-    Method to generate a query on CHGCAR metadata with calculation (task) ID
-    """
+    """Method to generate a query on CHGCAR metadata with calculation (task) ID."""
 
     def query(
         self,

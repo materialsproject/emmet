@@ -1,5 +1,11 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from maggma.api.resource.core import HeaderProcessor
-from fastapi import Response, Request
+
+if TYPE_CHECKING:
+    from fastapi import Request, Response
 
 
 class GlobalHeaderProcessor(HeaderProcessor):

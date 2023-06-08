@@ -1,19 +1,22 @@
-from typing import Any, Dict, List, Optional, Tuple, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
+from emmet.core.common import Status
+from emmet.core.material_property import PropertyDoc
+from emmet.core.settings import EmmetSettings
 from pydantic import BaseModel, Field
 from pymatgen.analysis.elasticity.elastic import ElasticTensor, ElasticTensorExpansion
-from pymatgen.analysis.elasticity.strain import Deformation, Strain
 from pymatgen.analysis.elasticity.stress import Stress
-from pymatgen.core.structure import Structure
 from pymatgen.core.tensors import TensorMapping
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
-from emmet.core.common import Status
-from emmet.core.material_property import PropertyDoc
-from emmet.core.math import Matrix3D, MatrixVoigt
-from emmet.core.mpid import MPID
-from emmet.core.settings import EmmetSettings
+if TYPE_CHECKING:
+    from emmet.core.math import Matrix3D, MatrixVoigt
+    from emmet.core.mpid import MPID
+    from pymatgen.analysis.elasticity.strain import Deformation, Strain
+    from pymatgen.core.structure import Structure
 
 SETTINGS = EmmetSettings()
 
@@ -74,8 +77,7 @@ class ThermalConductivity(BaseModel):
 
 
 class FittingData(BaseModel):
-    """
-    Data used to fit the elastic tensor.
+    """Data used to fit the elastic tensor.
 
     Note, this only consists of the explicitly calculated primary data.
     With the data here, one can redo the fitting to regenerate the elastic data,
@@ -83,23 +85,23 @@ class FittingData(BaseModel):
     """
 
     # data of strained structures
-    deformations: List[Matrix3D] = Field(
+    deformations: list[Matrix3D] = Field(
         description="Deformations corresponding to the strained structures"
     )
-    strains: List[Matrix3D] = Field(
+    strains: list[Matrix3D] = Field(
         description="Lagrangian strain tensors applied to structures"
     )
-    cauchy_stresses: List[Matrix3D] = Field(
+    cauchy_stresses: list[Matrix3D] = Field(
         description="Cauchy stress tensors on strained structures"
     )
-    second_pk_stresses: List[Matrix3D] = Field(
-        description="Second Piola–Kirchhoff stress tensors on structures"
+    second_pk_stresses: list[Matrix3D] = Field(
+        description="Second Piola-Kirchhoff stress tensors on structures"
     )
-    deformation_tasks: List[MPID] = Field(
+    deformation_tasks: list[MPID] = Field(
         None,
         description="Deformation task ids corresponding to the strained structures",
     )
-    deformation_dir_names: List[str] = Field(
+    deformation_dir_names: list[str] = Field(
         None, description="Paths to the running directories of deformation tasks"
     )
 
@@ -202,18 +204,17 @@ class ElasticityDoc(PropertyDoc):
         cls,
         structure: Structure,
         material_id: MPID,
-        deformations: List[Deformation],
-        stresses: List[Stress],
-        deformation_task_ids: Optional[List[MPID]] = None,
-        deformation_dir_names: Optional[List[str]] = None,
-        equilibrium_stress: Optional[Stress] = None,
-        optimization_task_id: Optional[MPID] = None,
-        optimization_dir_name: Optional[str] = None,
+        deformations: list[Deformation],
+        stresses: list[Stress],
+        deformation_task_ids: list[MPID] | None = None,
+        deformation_dir_names: list[str] | None = None,
+        equilibrium_stress: Stress | None = None,
+        optimization_task_id: MPID | None = None,
+        optimization_dir_name: str | None = None,
         fitting_method: str = "finite_difference",
         **kwargs,
     ):
-        """
-        Fitting the elastic tensor from deformation and stresses.
+        """Fitting the elastic tensor from deformation and stresses.
 
         Note, the elastic tensor are obtained by fitting to the Lagrangian strains
         and second Piola-Kirchhoff stresses. In continuum mechanics nomenclature,
@@ -236,7 +237,6 @@ class ElasticityDoc(PropertyDoc):
             fitting_method: method used to fit the elastic tensor:
                 {`finite_difference`, `pseudoinverse`, `independent`}.
         """
-
         CM = CriticalMessage()
 
         # primary fitting data
@@ -356,18 +356,17 @@ class ElasticityDoc(PropertyDoc):
 
 
 def generate_primary_fitting_data(
-    deforms: List[Deformation],
-    stresses: List[Stress],
-    task_ids: Optional[List[MPID]] = None,
-    dir_names: Optional[List[str]] = None,
-) -> Tuple[
-    List[Strain],
-    List[Stress],
-    Union[List[MPID], None],
-    Union[List[str], None],
+    deforms: list[Deformation],
+    stresses: list[Stress],
+    task_ids: list[MPID] | None = None,
+    dir_names: list[str] | None = None,
+) -> tuple[
+    list[Strain],
+    list[Stress],
+    list[MPID] | None,
+    list[str] | None,
 ]:
-    """
-    Get the primary fitting data, i.e. data obtained from a calculation.
+    """Get the primary fitting data, i.e. data obtained from a calculation.
 
     Args:
         deforms: primary deformations
@@ -396,13 +395,12 @@ def generate_primary_fitting_data(
 
 def generate_derived_fitting_data(
     structure: Structure,
-    strains: List[Strain],
-    stresses: List[Stress],
+    strains: list[Strain],
+    stresses: list[Stress],
     symprec=SETTINGS.SYMPREC,
     tol: float = 0.002,
-) -> Tuple[List[Deformation], List[Strain], List[Stress], List[Stress]]:
-    """
-    Get the derived fitting data from symmetry operations on the primary fitting data.
+) -> tuple[list[Deformation], list[Strain], list[Stress], list[Stress]]:
+    """Get the derived fitting data from symmetry operations on the primary fitting data.
 
     It can happen that multiple primary deformations can be mapped to the same derived
     deformation from different symmetry operations. In such cases, the stress for a
@@ -428,7 +426,6 @@ def generate_derived_fitting_data(
         derived_stresses: derived Cauchy stresses
         derived_2nd_pk_stresses: derived second Piola-Kirchhoff stresses
     """
-
     sga = SpacegroupAnalyzer(structure, symprec=symprec)
     symmops = sga.get_symmetry_operations(cartesian=True)
 
@@ -492,14 +489,13 @@ def generate_derived_fitting_data(
 
 
 def symmetrize_stresses(
-    stresses: List[Stress],
-    strains: List[Strain],
+    stresses: list[Stress],
+    strains: list[Strain],
     structure: Structure,
     symprec=SETTINGS.SYMPREC,
     tol: float = 0.002,
-) -> List[Stress]:
-    """
-    Symmetrize stresses by averaging over all symmetry operations.
+) -> list[Stress]:
+    """Symmetrize stresses by averaging over all symmetry operations.
 
     Args:
         stresses: stresses to be symmetrized
@@ -518,7 +514,7 @@ def symmetrize_stresses(
 
     # for each strain, get the stresses from other strain states related by symmetry
     symmmetrized_stresses = []  # type: List[Stress]
-    for strain, stress in zip(strains, stresses):
+    for strain, _stress in zip(strains, stresses):
         mapping = TensorMapping([strain], [[]], tol=tol)
         for strain2, stress2 in zip(strains, stresses):
             for op in symmops:
@@ -531,14 +527,13 @@ def symmetrize_stresses(
 
 
 def fit_elastic_tensor(
-    strains: List[Strain],
-    stresses: List[Stress],
+    strains: list[Strain],
+    stresses: list[Stress],
     eq_stress: Stress,
     fitting_method: str = "finite_difference",
     order: int = 2,
 ) -> ElasticTensor:
-    """
-    Fitting the elastic tensor.
+    """Fitting the elastic tensor.
 
     Args:
         strains: strains (primary and derived) to fit the elastic tensor
@@ -551,7 +546,6 @@ def fit_elastic_tensor(
     Returns:
         fitted elastic tensor
     """
-
     if order > 2 or fitting_method == "finite_difference":
         # force finite diff if order > 2
         result = ElasticTensorExpansion.from_diff_fit(
@@ -573,9 +567,8 @@ def fit_elastic_tensor(
 
 def get_derived_properties(
     structure: Structure, tensor: ElasticTensor
-) -> Dict[str, Any]:
-    """
-    Get derived elasticity properties.
+) -> dict[str, Any]:
+    """Get derived elasticity properties.
 
     Args:
         structure: relaxed structure
@@ -584,7 +577,6 @@ def get_derived_properties(
     Returns:
         a dict of derived elasticity properties
     """
-
     try:
         prop_dict = tensor.get_structure_property_dict(structure)
         prop_dict.pop("structure")
@@ -635,11 +627,10 @@ def get_derived_properties(
 def sanity_check(
     structure: Structure,
     elastic_doc: ElasticTensorDoc,
-    strains: List[Strain],
-    derived_props: Dict[str, Any],
-) -> Tuple[Status, List[str]]:
-    """
-    Post analysis to generate warnings if any.
+    strains: list[Strain],
+    derived_props: dict[str, Any],
+) -> tuple[Status, list[str]]:
+    """Post analysis to generate warnings if any.
 
     Returns:
         state: state of the calculation
@@ -693,9 +684,6 @@ def sanity_check(
     if v > high:
         warnings.append(WM.LARGE_YOUNG_MODULUS.format(v, high))
 
-    if failed:
-        state = Status("failed")
-    else:
-        state = Status("successful")
+    state = Status("failed") if failed else Status("successful")
 
     return state, warnings

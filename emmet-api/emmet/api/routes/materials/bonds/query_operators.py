@@ -1,39 +1,41 @@
-from typing import Optional
-from fastapi import Query
-from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+from __future__ import annotations
 
 from collections import defaultdict
+from typing import TYPE_CHECKING
+
+from fastapi import Query
+from maggma.api.query_operator import QueryOperator
+
+if TYPE_CHECKING:
+    from maggma.api.utils import STORE_PARAMS
 
 
 class BondLengthQuery(QueryOperator):
-    """
-    Method to generate a query on bond length data.
-    """
+    """Method to generate a query on bond length data."""
 
     def query(
         self,
-        max_bond_length_max: Optional[float] = Query(
+        max_bond_length_max: float | None = Query(
             None,
             description="Maximum value for the maximum bond length in the structure.",
         ),
-        max_bond_length_min: Optional[float] = Query(
+        max_bond_length_min: float | None = Query(
             None,
             description="Minimum value for the maximum bond length in the structure.",
         ),
-        min_bond_length_max: Optional[float] = Query(
+        min_bond_length_max: float | None = Query(
             None,
             description="Maximum value for the minimum bond length in the structure.",
         ),
-        min_bond_length_min: Optional[float] = Query(
+        min_bond_length_min: float | None = Query(
             None,
             description="Minimum value for the minimum bond length in the structure.",
         ),
-        mean_bond_length_max: Optional[float] = Query(
+        mean_bond_length_max: float | None = Query(
             None,
             description="Maximum value for the mean bond length in the structure.",
         ),
-        mean_bond_length_min: Optional[float] = Query(
+        mean_bond_length_min: float | None = Query(
             None,
             description="Minimum value for the mean bond length in the structure.",
         ),
@@ -65,18 +67,16 @@ class BondLengthQuery(QueryOperator):
 
 
 class CoordinationEnvsQuery(QueryOperator):
-    """
-    Method to generate a query on coordination environment data.
-    """
+    """Method to generate a query on coordination environment data."""
 
     def query(
         self,
-        coordination_envs: Optional[str] = Query(
+        coordination_envs: str | None = Query(
             None,
             description="Query by coordination environments in the material composition as a comma-separated list\
  (e.g. 'Mo-S(6),S-Mo(3)')",
         ),
-        coordination_envs_anonymous: Optional[str] = Query(
+        coordination_envs_anonymous: str | None = Query(
             None,
             description="Query by anonymous coordination environments in the material composition as a comma-separated\
  list (e.g. 'A-B(6),A-B(3)')",

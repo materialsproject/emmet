@@ -1,25 +1,25 @@
-from maggma.api.resource import ReadOnlyResource
-from emmet.core.molecules.orbitals import OrbitalDoc
+from __future__ import annotations
 
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
-
-from emmet.api.routes.molecules.orbitals.query_operators import (
-    NBOPopulationQuery,
-    NBOLonePairQuery,
-    NBOBondQuery,
-    NBOInteractionQuery,
-)
+from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.molecules.molecules.query_operators import (
-    MultiMPculeIDQuery,
-    ExactCalcMethodQuery,
-    FormulaQuery,
+    ChargeSpinQuery,
     ChemsysQuery,
     ElementsQuery,
-    ChargeSpinQuery,
+    ExactCalcMethodQuery,
+    FormulaQuery,
+    MultiMPculeIDQuery,
+)
+from emmet.api.routes.molecules.orbitals.query_operators import (
+    NBOBondQuery,
+    NBOInteractionQuery,
+    NBOLonePairQuery,
+    NBOPopulationQuery,
 )
 from emmet.api.routes.molecules.utils import MultiPropertyIDQuery
-from emmet.api.core.settings import MAPISettings
-from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.core.molecules.orbitals import OrbitalDoc
+from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.resource import ReadOnlyResource
 
 
 def orbitals_resource(orbital_store):

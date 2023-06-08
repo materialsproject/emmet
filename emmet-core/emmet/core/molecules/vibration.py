@@ -1,15 +1,16 @@
-from typing import List
-from hashlib import blake2b
+from __future__ import annotations
 
+from hashlib import blake2b
+from typing import TYPE_CHECKING
+
+from emmet.core.material import PropertyOrigin
+from emmet.core.molecules.molecule_property import PropertyDoc
 from pydantic import Field
 
-from pymatgen.core.structure import Molecule
-
-from emmet.core.mpid import MPculeID
-from emmet.core.material import PropertyOrigin
-from emmet.core.qchem.task import TaskDocument
-from emmet.core.molecules.molecule_property import PropertyDoc
-
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPculeID
+    from emmet.core.qchem.task import TaskDocument
+    from pymatgen.core.structure import Molecule
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -19,21 +20,21 @@ class VibrationDoc(PropertyDoc):
 
     molecule: Molecule = Field(..., description="Molecular structure")
 
-    frequencies: List[float] = Field(
+    frequencies: list[float] = Field(
         ..., description="List of molecular vibrational frequencies"
     )
 
-    frequency_modes: List[List[List[float]]] = Field(
+    frequency_modes: list[list[list[float]]] = Field(
         ..., description="Vibrational frequency modes of the molecule"
     )
 
-    ir_intensities: List[float] = Field(
+    ir_intensities: list[float] = Field(
         ...,
         title="IR intensities",
         description="Intensities for IR vibrational spectrum peaks",
     )
 
-    ir_activities: List = Field(
+    ir_activities: list = Field(
         ...,
         title="IR activities",
         description="List indicating if frequency-modes are IR-active",
@@ -47,8 +48,7 @@ class VibrationDoc(PropertyDoc):
         deprecated: bool = False,
         **kwargs,
     ):  # type: ignore[override]
-        """
-        Construct a vibration document from a task document
+        """Construct a vibration document from a task document.
 
         :param task: document from which vibrational properties can be extracted
         :param molecule_id: MPculeID
@@ -56,7 +56,6 @@ class VibrationDoc(PropertyDoc):
         :param kwargs: to pass to PropertyDoc
         :return:
         """
-
         if task.output.frequencies is None:
             raise Exception("No frequencies in task!")
 
@@ -82,7 +81,7 @@ class VibrationDoc(PropertyDoc):
             if calc.get("IR_active", None) is not None and active is None:
                 active = calc.get("IR_active")
 
-            if all([x is not None for x in [frequency_modes, intensities, active]]):
+            if all(x is not None for x in [frequency_modes, intensities, active]):
                 break
 
         if frequency_modes is None:

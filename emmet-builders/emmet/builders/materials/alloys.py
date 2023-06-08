@@ -1,19 +1,19 @@
-from itertools import combinations, chain
-from typing import Tuple, List, Dict, Union
+from __future__ import annotations
 
-from tqdm import tqdm
-from maggma.builders import Builder
-from pymatgen.core.structure import Structure
-from matminer.datasets import load_dataset
+from itertools import chain, combinations
+
 from emmet.core.thermo import ThermoType
-
+from maggma.builders import Builder
+from matminer.datasets import load_dataset
 from pymatgen.analysis.alloys.core import (
-    AlloyPair,
-    InvalidAlloy,
     KNOWN_ANON_FORMULAS,
     AlloyMember,
+    AlloyPair,
     AlloySystem,
+    InvalidAlloy,
 )
+from pymatgen.core.structure import Structure
+from tqdm import tqdm
 
 # rough sort of ANON_FORMULAS by "complexity"
 ANON_FORMULAS = sorted(KNOWN_ANON_FORMULAS, key=lambda af: len(af))
@@ -27,8 +27,7 @@ BOLTZTRAP_DF = load_dataset("boltztrap_mp")
 
 
 class AlloyPairBuilder(Builder):
-    """
-    This builder iterates over anonymous_formula and builds AlloyPair.
+    """This builder iterates over anonymous_formula and builds AlloyPair.
     It does not look for members of an AlloyPair.
     """
 
@@ -40,7 +39,7 @@ class AlloyPairBuilder(Builder):
         provenance,
         oxi_states,
         alloy_pairs,
-        thermo_type: Union[ThermoType, str] = ThermoType.GGA_GGA_U_R2SCAN,
+        thermo_type: ThermoType | str = ThermoType.GGA_GGA_U_R2SCAN,
     ):
         self.materials = materials
         self.thermo = thermo
@@ -211,8 +210,7 @@ class AlloyPairBuilder(Builder):
 
 
 class AlloyPairMemberBuilder(Builder):
-    """
-    This builder iterates over available AlloyPairs by chemical system
+    """This builder iterates over available AlloyPairs by chemical system
     and searches for possible members of those AlloyPairs.
     """
 
@@ -246,7 +244,7 @@ class AlloyPairMemberBuilder(Builder):
             f"{len(possible_chemsys)} may have members."
         )
 
-        for idx, chemsys in enumerate(possible_chemsys):
+        for _idx, chemsys in enumerate(possible_chemsys):
             pairs = self.alloy_pairs.query(criteria={"alloy_pair.chemsys": chemsys})
             pairs = [AlloyPair.from_dict(d["alloy_pair"]) for d in pairs]
 
@@ -267,7 +265,7 @@ class AlloyPairMemberBuilder(Builder):
             if structures:
                 yield (pairs, structures)
 
-    def process_item(self, item: Tuple[List[AlloyPair], Dict[str, Structure]]):
+    def process_item(self, item: tuple[list[AlloyPair], dict[str, Structure]]):
         pairs, structures = item
 
         all_pair_members = []
@@ -299,8 +297,7 @@ class AlloyPairMemberBuilder(Builder):
 
 
 class AlloySystemBuilder(Builder):
-    """
-    This builder stitches together the results of
+    """This builder stitches together the results of
     AlloyPairBuilder and AlloyPairMemberBuilder. The output
     of this collection is the one served by the AlloyPair API.
     It also builds AlloySystem.
@@ -321,7 +318,7 @@ class AlloySystemBuilder(Builder):
         )
 
     def get_items(self):
-        for idx, af in enumerate(ANON_FORMULAS):
+        for _idx, af in enumerate(ANON_FORMULAS):
             # comment out to only calculate a single anonymous formula for debugging
             # if af != "AB":
             #     continue
