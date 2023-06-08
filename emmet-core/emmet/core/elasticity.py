@@ -508,7 +508,7 @@ def symmetrize_stresses(
     symmops = sga.get_symmetry_operations(cartesian=True)
 
     # for each strain, get the stresses from other strain states related by symmetry
-    symmmetrized_stresses = []  # type: List[Stress]
+    symmmetrized_stresses: list[Stress] = []
     for strain, _stress in zip(strains, stresses):
         mapping = TensorMapping([strain], [[]], tol=tol)
         for strain2, stress2 in zip(strains, stresses):
