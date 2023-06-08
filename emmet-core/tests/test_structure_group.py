@@ -18,8 +18,7 @@ def entries_lto(test_dir):
 @pytest.fixture(scope="session")
 def entries_lfeo(test_dir):
     """Recycle the test cases from pymatgen."""
-    entries = loadfn(test_dir / "Li-Fe-O.json")
-    return entries
+    return loadfn(test_dir / "Li-Fe-O.json")
 
 
 def test_StructureGroupDoc_from_grouped_entries(entries_lto):

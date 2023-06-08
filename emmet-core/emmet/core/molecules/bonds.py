@@ -157,25 +157,7 @@ def _bonds_peturbation(
                     nbo["perturbation_energy"][index]["donor type"][inter_ind] == "LP"
                     and nbo["perturbation_energy"][index]["acceptor type"][inter_ind]
                     == "LV"
-                ):
-                    coord = True
-                    m_ind = (
-                        int(
-                            nbo["perturbation_energy"][index]["acceptor atom 1 number"][
-                                inter_ind
-                            ]
-                        )
-                        - 1
-                    )
-                    x_ind = (
-                        int(
-                            nbo["perturbation_energy"][index]["donor atom 1 number"][
-                                inter_ind
-                            ]
-                        )
-                        - 1
-                    )
-                elif (
+                ) or (
                     nbo["perturbation_energy"][index]["donor type"][inter_ind] == "LP"
                     and nbo["perturbation_energy"][index]["acceptor type"][inter_ind]
                     == "RY*"
@@ -223,9 +205,7 @@ def _bonds_peturbation(
                     - 1
                 )
 
-            if not coord:
-                continue
-            elif x_ind not in poss_coord[m_ind]:
+            if not coord or x_ind not in poss_coord[m_ind]:
                 continue
 
             energy = float(

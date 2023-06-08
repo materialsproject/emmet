@@ -83,9 +83,11 @@ def task_type(
         calc_type.append("NMR Electric Field Gradient")
 
     elif incar.get("NSW", 1) == 0:
-        if incar.get("LOPTICS", False) is True and incar.get("ALGO", None) == "Exact":
-            calc_type.append("Optic")
-        elif incar.get("ALGO", None) == "CHI":
+        if (
+            incar.get("LOPTICS") is True
+            and incar.get("ALGO", None) == "Exact"
+            or incar.get("ALGO", None) == "CHI"
+        ):
             calc_type.append("Optic")
         else:
             calc_type.append("Static")

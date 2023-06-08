@@ -433,13 +433,12 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):
         task_doc["task_id"] = task_id
         logger.info(f"Using {task_id} for {launcher}.")
 
-        if docs:
-            # make sure that task gets the same tags as the previously parsed task
-            # (run through set to implicitly remove duplicate tags)
-            if docs[0]["tags"]:
-                existing_tags = list(set(docs[0]["tags"]))
-                task_doc["tags"] += existing_tags
-                logger.info(f"Adding existing tags {existing_tags} to {tags}.")
+        # make sure that task gets the same tags as the previously parsed task
+        # (run through set to implicitly remove duplicate tags)
+        if docs and docs[0]["tags"]:
+            existing_tags = list(set(docs[0]["tags"]))
+            task_doc["tags"] += existing_tags
+            logger.info(f"Adding existing tags {existing_tags} to {tags}.")
 
         try:
             task_document = TaskDocument(**task_doc)

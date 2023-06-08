@@ -3,10 +3,10 @@ These will be ingested via Drones, built by Builders, and served via the API.
 """
 from __future__ import annotations
 
-from pkg_resources import DistributionNotFound, get_distribution
+from importlib.metadata import PackageNotFoundError, version
 
 try:
-    __version__ = get_distribution("emmet-core").version
-except DistributionNotFound:  # pragma: no cover
+    __version__ = version("emmet-core")
+except PackageNotFoundError:  # pragma: no cover
     # package is not installed
     pass

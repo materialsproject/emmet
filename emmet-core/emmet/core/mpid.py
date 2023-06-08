@@ -94,9 +94,7 @@ class MPID(str):
     def validate(cls, v):
         if isinstance(v, MPID):
             return v
-        elif isinstance(v, str) and mpid_regex.fullmatch(v):
-            return MPID(v)
-        elif isinstance(v, int):
+        if isinstance(v, str) and mpid_regex.fullmatch(v) or isinstance(v, int):
             return MPID(v)
 
         raise ValueError("Invalid MPID Format")
