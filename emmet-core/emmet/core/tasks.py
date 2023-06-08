@@ -7,10 +7,11 @@ import re
 from collections import OrderedDict
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import Any, TypeVar
 
 import numpy as np
 from emmet.core.structure import StructureMetadata
+from emmet.core.vasp.calc_types import CalcType, TaskType
 from emmet.core.vasp.calculation import (
     Calculation,
     PotcarSpec,
@@ -22,14 +23,11 @@ from monty.json import MontyDecoder
 from monty.serialization import loadfn
 from pydantic import BaseModel, Field, validator
 from pymatgen.analysis.structure_analyzer import oxide_type
+from pymatgen.core.structure import Structure
+from pymatgen.core.trajectory import Trajectory
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.io.vasp import Incar, Kpoints, Poscar
 from pymatgen.io.vasp import Potcar as VaspPotcar
-
-if TYPE_CHECKING:
-    from emmet.core.vasp.calc_types import CalcType, TaskType
-    from pymatgen.core.structure import Structure
-    from pymatgen.core.trajectory import Trajectory
 
 monty_decoder = MontyDecoder()
 logger = logging.getLogger(__name__)

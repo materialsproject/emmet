@@ -47,11 +47,11 @@ def test_chemsys_query():
 
 
 def test_elements_query():
-    eles = ["C", "O"]
+    elems = ["C", "O"]
     neles = ["N ", "P"]
 
     op = ElementsQuery()
-    assert op.query(elements=",".join(eles), exclude_elements=",".join(neles)) == {
+    assert op.query(elements=",".join(elems), exclude_elements=",".join(neles)) == {
         "criteria": {"elements": {"$all": ["C", "O"], "$nin": ["N", "P"]}}
     }
 
@@ -59,7 +59,7 @@ def test_elements_query():
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
         assert new_op.query(
-            elements=",".join(eles), exclude_elements=",".join(neles)
+            elements=",".join(elems), exclude_elements=",".join(neles)
         ) == {"criteria": {"elements": {"$all": ["C", "O"], "$nin": ["N", "P"]}}}
 
 

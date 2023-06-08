@@ -34,7 +34,7 @@ class History(BaseModel):
     name: str
     url: str
     description: dict | None = Field(
-        None, description="Dictionary of exra data for this history node."
+        None, description="Dictionary of extra data for this history node."
     )
 
     @root_validator(pre=True)
@@ -45,7 +45,7 @@ class History(BaseModel):
 
 
 class SNLAbout(BaseModel):
-    """A data dictionary definining extra fields in a SNL."""
+    """A data dictionary defining extra fields in a SNL."""
 
     references: str = Field(
         "", description="Bibtex reference strings for this material."
@@ -65,7 +65,7 @@ class SNLAbout(BaseModel):
 
     history: list[History] = Field(
         [],
-        description="List of history nodes specifying the transformations or orignation"
+        description="List of history nodes specifying the transformations or origination"
         " of this material for the entry closest matching the material input.",
     )
 

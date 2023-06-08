@@ -6,7 +6,7 @@ from pymatgen.core.periodic_table import DummySpecies
 
 
 def electrodes_formula_to_criteria(formulas: str) -> dict:
-    """Santizes formula into a dictionary to search with wild cards
+    """Sanitizes formula into a dictionary to search with wild cards
     over electrodes data.
 
     Arguments:
@@ -116,7 +116,7 @@ def electrodes_formula_to_criteria(formulas: str) -> dict:
 
 
 def electrodes_chemsys_to_criteria(chemsys: str) -> dict:
-    """Santizes chemsys into a dictionary to search with wild cards
+    """Sanitizes chemsys into a dictionary to search with wild cards
     over electrodes data.
 
     Arguments:

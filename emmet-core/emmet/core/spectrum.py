@@ -17,7 +17,7 @@ class SpectrumDoc(StructureMetadata):
 
     material_id: MPID = Field(
         ...,
-        description="The ID of the material, used as a universal reference across proeprty documents."
+        description="The ID of the material, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
     )
 

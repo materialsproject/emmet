@@ -75,7 +75,7 @@ class MigrationGraphDoc(EmmetBaseModel):
 
     minmax_num_atoms: tuple[int, int] = Field(
         None,
-        description="The min/max number of atoms used to genreate supercell using pymatgen.",
+        description="The min/max number of atoms used to generate supercell using pymatgen.",
     )
 
     matrix_supercell_structure: Structure = Field(

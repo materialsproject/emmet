@@ -29,3 +29,9 @@ repos:
       - id: end-of-file-fixer
       - id: mixed-line-ending
       - id: trailing-whitespace
+
+  # - repo: https://github.com/codespell-project/codespell
+  #   rev: v2.2.4
+  #   hooks:
+  #     - id: codespell
+  #       stages: [commit, commit-msg]

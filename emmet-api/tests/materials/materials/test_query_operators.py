@@ -177,7 +177,7 @@ def test_find_structure_query():
 def test_formula_auto_complete_query():
     op = FormulaAutoCompleteQuery()
 
-    eles = ["Si", "O"]
+    elems = ["Si", "O"]
 
     pipeline = [
         {
@@ -194,15 +194,15 @@ def test_formula_auto_complete_query():
                 "length": {"$strLenCP": "$formula_pretty"},
             }
         },
-        {"$match": {"elements": {"$all": eles}, "length": {"$gte": 3}}},
+        {"$match": {"elements": {"$all": elems}, "length": {"$gte": 3}}},
         {"$limit": 10},
         {"$sort": {"length": 1}},
         {"$project": {"elements": 0, "length": 0}},
     ]
 
-    assert op.query(formula="".join(eles), limit=10) == {"pipeline": pipeline}
+    assert op.query(formula="".join(elems), limit=10) == {"pipeline": pipeline}
 
-    eles = ["Si"]
+    elems = ["Si"]
 
     pipeline = [
         {
@@ -219,15 +219,15 @@ def test_formula_auto_complete_query():
                 "length": {"$strLenCP": "$formula_pretty"},
             }
         },
-        {"$match": {"elements": {"$all": eles}, "length": {"$gte": 2}}},
+        {"$match": {"elements": {"$all": elems}, "length": {"$gte": 2}}},
         {"$limit": 10},
         {"$sort": {"length": 1}},
         {"$project": {"elements": 0, "length": 0}},
     ]
 
-    assert op.query(formula="".join(eles), limit=10) == {"pipeline": pipeline}
+    assert op.query(formula="".join(elems), limit=10) == {"pipeline": pipeline}
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(formula="".join(eles), limit=10) == {"pipeline": pipeline}
+        assert new_op.query(formula="".join(elems), limit=10) == {"pipeline": pipeline}

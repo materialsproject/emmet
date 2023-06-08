@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import numpy as np
+from emmet.core.mpid import MPID
 from emmet.core.spectrum import SpectrumDoc
 from emmet.core.utils import ValueEnum
 from pydantic import Field, root_validator
@@ -11,11 +10,8 @@ from pymatgen.analysis.diffraction.xrd import (
     DiffractionPattern,
     XRDCalculator,
 )
-
-if TYPE_CHECKING:
-    from emmet.core.mpid import MPID
-    from pymatgen.core import Structure
-    from pymatgen.core.periodic_table import Element
+from pymatgen.core import Structure
+from pymatgen.core.periodic_table import Element
 
 
 class Edge(ValueEnum):

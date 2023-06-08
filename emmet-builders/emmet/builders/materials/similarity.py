@@ -106,7 +106,7 @@ class StructureSimilarityBuilder(Builder):
 
         # Compute similarty metrics.
         try:
-            dout = {}
+            dict_out = {}
             l = {}
             v = {}
             for i, li in enumerate(
@@ -134,9 +134,9 @@ class StructureSimilarityBuilder(Builder):
                     )
             v1 = np.array([v[0][k] for k in range(len(l[0]))])
             v2 = np.array([v[1][l[1].index(k)] for k in l[0]])
-            dout["cos"] = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
-            dout["dist"] = np.linalg.norm(v1 - v2)
-            doc = dout
+            dict_out["cos"] = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+            dict_out["dist"] = np.linalg.norm(v1 - v2)
+            doc = dict_out
 
         except Exception as e:
             self.logger.error(

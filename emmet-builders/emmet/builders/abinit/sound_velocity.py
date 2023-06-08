@@ -88,7 +88,7 @@ class SoundVelocityBuilder(Builder):
         self.logger.info(f"Found {len(mats)} new materials for sound velocity data")
 
         # list of properties queried from the results DB
-        # basic informations
+        # basic information
         projection = {"mp_id": 1}
         # input data
         projection["abinit_input"] = 1
