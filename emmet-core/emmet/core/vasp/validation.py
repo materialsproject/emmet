@@ -1,20 +1,17 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 import numpy as np
 from emmet.core.base import EmmetBaseModel
+from emmet.core.mpid import MPID
 from emmet.core.settings import EmmetSettings
 from emmet.core.utils import DocEnum
 from emmet.core.vasp.calc_types.enums import CalcType, TaskType
+from emmet.core.vasp.task_valid import TaskDocument
 from pydantic import Field, PyObject
 from pymatgen.core.structure import Structure
-
-if TYPE_CHECKING:
-    from emmet.core.mpid import MPID
-    from emmet.core.vasp.task_valid import TaskDocument
-    from pymatgen.io.vasp.sets import VaspInputSet
+from pymatgen.io.vasp.sets import VaspInputSet
 
 SETTINGS = EmmetSettings()
 

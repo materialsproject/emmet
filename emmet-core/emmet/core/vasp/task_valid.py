@@ -3,19 +3,17 @@
 """Core definition of a VASP Task Document."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.structure import StructureMetadata
 from emmet.core.task import BaseTaskDocument
 from emmet.core.utils import ValueEnum
 from emmet.core.vasp.calc_types import RunType, calc_type, run_type, task_type
 from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_analyzer import oxide_type
+from pymatgen.core.structure import Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
-
-if TYPE_CHECKING:
-    from emmet.core.math import Matrix3D, Vector3D
-    from pymatgen.core.structure import Structure
 
 
 class TaskState(ValueEnum):

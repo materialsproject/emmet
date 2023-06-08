@@ -1,19 +1,17 @@
 """Core definition for Polar property Document."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List
+from typing import List
 
 import numpy as np
 from emmet.core.material_property import PropertyDoc
+from emmet.core.math import Matrix3D
+from emmet.core.mpid import MPID
 from emmet.core.settings import EmmetSettings
 from pydantic import BaseModel, Field
 from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
+from pymatgen.core.structure import Structure
 from pymatgen.core.tensors import Tensor
-
-if TYPE_CHECKING:
-    from emmet.core.math import Matrix3D
-    from emmet.core.mpid import MPID
-    from pymatgen.core.structure import Structure
 
 SETTINGS = EmmetSettings()
 
@@ -60,17 +58,18 @@ class DielectricDoc(PropertyDoc):
         return super().from_structure(
             meta_structure=structure,
             material_id=material_id,
-            **{
-                "total": total.tolist(),
-                "ionic": ionic_tensor.tolist(),
-                "electronic": electronic_tensor.tolist(),
-                "e_total": np.average(np.diagonal(total)),
-                "e_ionic": np.average(np.diagonal(ionic_tensor)),
-                "e_electronic": np.average(np.diagonal(electronic_tensor)),
-                "n": np.sqrt(np.average(np.diagonal(electronic_tensor))),
-            },
+            total=total.tolist(),
+            ionic=ionic_tensor.tolist(),
+            electronic=electronic_tensor.tolist(),
+            e_total=np.average(np.diagonal(total)),
+            e_ionic=np.average(np.diagonal(ionic_tensor)),
+            e_electronic=np.average(np.diagonal(electronic_tensor)),
+            n=np.sqrt(np.average(np.diagonal(electronic_tensor))),
             **kwargs,
         )
+
+
+DielectricDoc.update_forward_refs()
 
 
 class PiezoelectricDoc(PropertyDoc):

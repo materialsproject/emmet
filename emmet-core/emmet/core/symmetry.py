@@ -1,15 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from emmet.core.settings import EmmetSettings
 from emmet.core.utils import ValueEnum
 from pydantic import BaseModel, Field
+from pymatgen.core import Structure
+from pymatgen.core.structure import Molecule
 from pymatgen.symmetry.analyzer import PointGroupAnalyzer, SpacegroupAnalyzer, spglib
-
-if TYPE_CHECKING:
-    from pymatgen.core import Structure
-    from pymatgen.core.structure import Molecule
 
 SETTINGS = EmmetSettings()
 

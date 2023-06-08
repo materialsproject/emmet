@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 from pymatgen.core.structure import Structure
 
 

@@ -1,20 +1,18 @@
 """Core definition of a Materials Document."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Mapping
+from typing import Mapping
 
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin
 from emmet.core.settings import EmmetSettings
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
+from emmet.core.vasp.task_valid import TaskDocument
 from pydantic import Field
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.analysis.structure_matcher import StructureMatcher
-
-if TYPE_CHECKING:
-    from emmet.core.vasp.task_valid import TaskDocument
-    from pymatgen.entries.computed_entries import ComputedStructureEntry
+from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 SETTINGS = EmmetSettings()
 

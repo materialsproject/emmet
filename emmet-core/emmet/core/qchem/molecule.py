@@ -1,21 +1,19 @@
 """Core definition of a Molecule Document."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Mapping
+from typing import Any, Mapping
 
 from emmet.core.material import CoreMoleculeDoc, PropertyOrigin
+from emmet.core.mpid import MPculeID
 
 # from emmet.core.structure import MoleculeMetadata
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
+from emmet.core.qchem.task import TaskDocument
 from emmet.core.settings import EmmetSettings
 from emmet.core.utils import get_graph_hash, get_molecule_id
 from pydantic import Field
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 from pymatgen.core.structure import Molecule
-
-if TYPE_CHECKING:
-    from emmet.core.mpid import MPculeID
-    from emmet.core.qchem.task import TaskDocument
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 

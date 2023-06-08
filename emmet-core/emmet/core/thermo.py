@@ -3,18 +3,15 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 from emmet.core.material import PropertyOrigin
 from emmet.core.material_property import PropertyDoc
+from emmet.core.mpid import MPID
 from emmet.core.utils import ValueEnum
+from emmet.core.vasp.calc_types.enums import RunType
 from pydantic import BaseModel, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
-
-if TYPE_CHECKING:
-    from emmet.core.mpid import MPID
-    from emmet.core.vasp.calc_types.enums import RunType
-    from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 
 class DecompositionProduct(BaseModel):

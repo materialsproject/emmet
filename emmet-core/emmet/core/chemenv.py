@@ -353,7 +353,7 @@ class ChemEnvDoc(PropertyDoc):
     )
 
     csm: list[float | None] = Field(
-        description="Saves the continous symmetry measures for unique (cationic) species in structure"
+        description="Saves the continuous symmetry measures for unique (cationic) species in structure"
     )
 
     method: str | None = Field(

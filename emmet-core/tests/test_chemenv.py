@@ -6,8 +6,8 @@ from pymatgen.core import Structure
 from pymatgen.util.testing import PymatgenTest
 
 test_structures = {
-    name: struc.get_reduced_structure()
-    for name, struc in PymatgenTest.TEST_STRUCTURES.items()
+    name: struct.get_reduced_structure()
+    for name, struct in PymatgenTest.TEST_STRUCTURES.items()
     if name
     in [
         "SiO2",

@@ -2,19 +2,16 @@ from __future__ import annotations
 
 import logging
 import operator
+from datetime import datetime
 from itertools import groupby
-from typing import TYPE_CHECKING, Iterable
+from typing import Iterable
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 from pymatgen.core.composition import Composition
+from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-
-if TYPE_CHECKING:
-    from datetime import datetime
-
-    from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 logger = logging.getLogger(__name__)
 

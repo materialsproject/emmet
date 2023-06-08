@@ -2,19 +2,16 @@ from __future__ import annotations
 
 import warnings
 from itertools import groupby
-from typing import TYPE_CHECKING
 
 import numpy as np
+from emmet.core.feff.task import TaskDocument
+from emmet.core.mpid import MPID
 from emmet.core.spectrum import SpectrumDoc
 from emmet.core.utils import ValueEnum
 from pydantic import Field
 from pymatgen.analysis.xas.spectrum import XAS, site_weighted_spectrum
+from pymatgen.core.periodic_table import Element
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-
-if TYPE_CHECKING:
-    from emmet.core.feff.task import TaskDocument
-    from emmet.core.mpid import MPID
-    from pymatgen.core.periodic_table import Element
 
 
 class Edge(ValueEnum):

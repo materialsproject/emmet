@@ -2,19 +2,17 @@ from __future__ import annotations
 
 import copy
 from hashlib import blake2b
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import networkx as nx
 from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
+from emmet.core.mpid import MPculeID
+from emmet.core.qchem.task import TaskDocument
 from emmet.core.utils import make_mol_graph
 from pydantic import Field
 from pymatgen.analysis.graphs import MoleculeGraph
-
-if TYPE_CHECKING:
-    from emmet.core.mpid import MPculeID
-    from emmet.core.qchem.task import TaskDocument
-    from pymatgen.core.structure import Molecule
+from pymatgen.core.structure import Molecule
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 

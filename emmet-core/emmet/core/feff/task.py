@@ -1,17 +1,15 @@
 """Core definition of a VASP Task Document."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import ValueEnum
 from emmet.core.vasp.task_valid import TaskDocument as BaseTaskDocument
 from pydantic import Field
 from pymatgen.analysis.xas.spectrum import XAS
+from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
-
-if TYPE_CHECKING:
-    from pymatgen.core import Structure
 
 
 class CalcType(ValueEnum):

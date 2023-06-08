@@ -1,17 +1,14 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence
+from datetime import datetime
+from typing import Sequence
 
 import numpy as np
 from emmet.core.base import EmmetBaseModel
 from pydantic import Field
 from pymatgen.analysis.structure_matcher import StructureMatcher
-
-if TYPE_CHECKING:
-    from datetime import datetime
-
-    from pymatgen.core import Structure
-    from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from pymatgen.core import Structure
+from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 try:
     from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
