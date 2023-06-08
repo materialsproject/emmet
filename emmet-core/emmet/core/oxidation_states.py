@@ -2,17 +2,14 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from typing import TYPE_CHECKING
 
 import numpy as np
 from emmet.core.material_property import PropertyDoc
+from emmet.core.mpid import MPID
 from pydantic import Field
 from pymatgen.analysis.bond_valence import BVAnalyzer
+from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Specie
-
-if TYPE_CHECKING:
-    from emmet.core.mpid import MPID
-    from pymatgen.core import Structure
 
 
 class OxidationStateDoc(PropertyDoc):
@@ -113,3 +110,6 @@ class OxidationStateDoc(PropertyDoc):
             **d,
             **kwargs,
         )
+
+
+OxidationStateDoc.update_forward_refs()

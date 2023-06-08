@@ -1,22 +1,20 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import numpy as np
 from emmet.core.common import Status
 from emmet.core.material_property import PropertyDoc
+from emmet.core.math import Matrix3D, MatrixVoigt
+from emmet.core.mpid import MPID
 from emmet.core.settings import EmmetSettings
 from pydantic import BaseModel, Field
 from pymatgen.analysis.elasticity.elastic import ElasticTensor, ElasticTensorExpansion
+from pymatgen.analysis.elasticity.strain import Deformation, Strain
 from pymatgen.analysis.elasticity.stress import Stress
+from pymatgen.core.structure import Structure
 from pymatgen.core.tensors import TensorMapping
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-
-if TYPE_CHECKING:
-    from emmet.core.math import Matrix3D, MatrixVoigt
-    from emmet.core.mpid import MPID
-    from pymatgen.analysis.elasticity.strain import Deformation, Strain
-    from pymatgen.core.structure import Structure
 
 SETTINGS = EmmetSettings()
 
@@ -30,6 +28,9 @@ class ElasticTensorDoc(BaseModel):
         None,
         description="Elastic tensor corresponding to IEEE orientation (GPa)",
     )
+
+
+ElasticTensorDoc.update_forward_refs()
 
 
 class ComplianceTensorDoc(BaseModel):
