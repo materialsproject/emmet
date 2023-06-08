@@ -1,18 +1,16 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING, TypeVar
+from typing import TypeVar
 
+from emmet.core.electronic_structure import BandstructureData, DosData
 from emmet.core.material_property import PropertyDoc
+from emmet.core.mpid import MPID
+from emmet.core.thermo import DecompositionProduct
+from emmet.core.xas import Edge, Type
 from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    from emmet.core.electronic_structure import BandstructureData, DosData
-    from emmet.core.mpid import MPID
-    from emmet.core.thermo import DecompositionProduct
-    from emmet.core.xas import Edge, Type
-    from pymatgen.core.periodic_table import Element
-    from pymatgen.core.structure import Structure
+from pymatgen.core.periodic_table import Element
+from pymatgen.core.structure import Structure
 
 T = TypeVar("T", bound="SummaryDoc")
 

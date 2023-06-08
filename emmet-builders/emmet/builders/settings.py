@@ -1,15 +1,11 @@
 """Settings for defaults in the build pipelines for the Materials Project."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from emmet.core.provenance import Author, History
+from emmet.core.qchem.calc_types import TaskType as QChemTaskType
 from emmet.core.settings import EmmetSettings
 from emmet.core.vasp.calc_types import TaskType as VaspTaskType
 from pydantic.fields import Field
-
-if TYPE_CHECKING:
-    from emmet.core.qchem.calc_types import TaskType as QChemTaskType
 
 
 class EmmetBuildSettings(EmmetSettings):

@@ -1,16 +1,14 @@
 from __future__ import annotations
 
 from hashlib import blake2b
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
+from emmet.core.mpid import MPculeID
+from emmet.core.qchem.task import TaskDocument
 from monty.json import MSONable
 from pydantic import Field
-
-if TYPE_CHECKING:
-    from emmet.core.mpid import MPculeID
-    from emmet.core.qchem.task import TaskDocument
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 

@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from datetime import datetime
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
-
-if TYPE_CHECKING:
-    from datetime import datetime
 
 
 class FermiDoc(BaseModel):

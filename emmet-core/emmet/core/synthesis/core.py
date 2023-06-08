@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+from emmet.core.synthesis.materials import ExtractedMaterial
+from emmet.core.synthesis.operations import Operation
+from emmet.core.synthesis.reaction import ReactionFormula
 from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    from emmet.core.synthesis.materials import ExtractedMaterial
-    from emmet.core.synthesis.operations import Operation
-    from emmet.core.synthesis.reaction import ReactionFormula
 
 
 class SynthesisTypeEnum(str, Enum):

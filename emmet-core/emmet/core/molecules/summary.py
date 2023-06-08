@@ -2,22 +2,20 @@ from __future__ import annotations
 
 from enum import Enum
 from hashlib import blake2b
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import Any, TypeVar
 
 from emmet.core.molecules.molecule_property import PropertyDoc
+from emmet.core.molecules.orbitals import (
+    Bond,
+    Interaction,
+    LonePair,
+    NaturalPopulation,
+)
+from emmet.core.mpid import MPID, MPculeID
+from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from pydantic import Field
-
-if TYPE_CHECKING:
-    from emmet.core.molecules.orbitals import (
-        Bond,
-        Interaction,
-        LonePair,
-        NaturalPopulation,
-    )
-    from emmet.core.mpid import MPID, MPculeID
-    from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
-    from pymatgen.analysis.graphs import MoleculeGraph
-    from pymatgen.core.structure import Molecule
+from pymatgen.analysis.graphs import MoleculeGraph
+from pymatgen.core.structure import Molecule
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 

@@ -2,16 +2,14 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Sequence, TypeVar
+from typing import Sequence, TypeVar
 
+from emmet.core.material import PropertyOrigin
+from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
+from emmet.core.vasp.validation import DeprecationMessage
 from pydantic import Field
-
-if TYPE_CHECKING:
-    from emmet.core.material import PropertyOrigin
-    from emmet.core.mpid import MPID
-    from emmet.core.vasp.validation import DeprecationMessage
-    from pymatgen.core import Structure
+from pymatgen.core import Structure
 
 S = TypeVar("S", bound="PropertyDoc")
 

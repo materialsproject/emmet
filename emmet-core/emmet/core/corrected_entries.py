@@ -2,15 +2,12 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 from emmet.core.base import EmmetBaseModel
+from emmet.core.thermo import ThermoType
+from emmet.core.vasp.calc_types.enums import RunType
 from pydantic import Field
-
-if TYPE_CHECKING:
-    from emmet.core.thermo import ThermoType
-    from emmet.core.vasp.calc_types.enums import RunType
-    from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 
 class CorrectedEntriesDoc(EmmetBaseModel):

@@ -3,17 +3,14 @@ from __future__ import annotations
 
 import warnings
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 from emmet.core.material_property import PropertyDoc
+from emmet.core.mpid import MPID
 from emmet.core.utils import ValueEnum
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
 from pydantic import BaseModel, Field, root_validator, validator
-
-if TYPE_CHECKING:
-    from emmet.core.mpid import MPID
-    from pymatgen.core.structure import Structure
+from pymatgen.core.structure import Structure
 
 
 class Database(ValueEnum):

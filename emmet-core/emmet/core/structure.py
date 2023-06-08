@@ -1,16 +1,14 @@
 """Core definition of Structure and Molecule metadata."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVar
+from typing import TypeVar
 
 from emmet.core.base import EmmetBaseModel
 from emmet.core.symmetry import PointGroupData, SymmetryData
 from pydantic import Field
-
-if TYPE_CHECKING:
-    from pymatgen.core.composition import Composition
-    from pymatgen.core.periodic_table import Element
-    from pymatgen.core.structure import Molecule, Structure
+from pymatgen.core.composition import Composition
+from pymatgen.core.periodic_table import Element
+from pymatgen.core.structure import Molecule, Structure
 
 T = TypeVar("T", bound="StructureMetadata")
 S = TypeVar("S", bound="MoleculeMetadata")

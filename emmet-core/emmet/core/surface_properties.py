@@ -1,11 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    from pymatgen.core.structure import Structure
+from pymatgen.core.structure import Structure
 
 
 class SurfaceEntry(BaseModel):

@@ -1,20 +1,18 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
+from emmet.core.math import Tensor4R, Vector3D
+from emmet.core.mpid import MPID
+from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import DocEnum
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
-
-if TYPE_CHECKING:
-    from emmet.core.math import Tensor4R, Vector3D
-    from emmet.core.mpid import MPID
-    from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
-    from pymatgen.core import Structure
-    from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
-    from pymatgen.phonon.dos import PhononDos as PhononDosObject
+from pymatgen.core import Structure
+from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
+from pymatgen.phonon.dos import PhononDos as PhononDosObject
 
 
 class PhononBSDOSDoc(BaseModel):

@@ -2,16 +2,14 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Mapping, TypeVar
+from typing import Mapping, TypeVar
 
+from emmet.core.mpid import MPID, MPculeID
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
+from emmet.core.vasp.validation import DeprecationMessage
 from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    from emmet.core.mpid import MPID, MPculeID
-    from emmet.core.vasp.validation import DeprecationMessage
-    from pymatgen.core import Structure
-    from pymatgen.core.structure import Molecule
+from pymatgen.core import Structure
+from pymatgen.core.structure import Molecule
 
 
 class PropertyOrigin(BaseModel):

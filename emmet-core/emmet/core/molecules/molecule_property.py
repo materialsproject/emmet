@@ -2,16 +2,14 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Sequence, TypeVar
+from typing import Sequence, TypeVar
 
+from emmet.core.material import PropertyOrigin
+from emmet.core.mpid import MPculeID
+from emmet.core.qchem.calc_types import LevelOfTheory
 from emmet.core.structure import MoleculeMetadata
 from pydantic import Field
-
-if TYPE_CHECKING:
-    from emmet.core.material import PropertyOrigin
-    from emmet.core.mpid import MPculeID
-    from emmet.core.qchem.calc_types import LevelOfTheory
-    from pymatgen.core.structure import Molecule
+from pymatgen.core.structure import Molecule
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 

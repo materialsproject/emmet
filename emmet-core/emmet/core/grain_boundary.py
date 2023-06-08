@@ -1,15 +1,11 @@
 from __future__ import annotations
 
+from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
-
-if TYPE_CHECKING:
-    from datetime import datetime
-
-    from pymatgen.analysis.gb.grain import GrainBoundary
+from pymatgen.analysis.gb.grain import GrainBoundary
 
 
 class GBTypeEnum(Enum):

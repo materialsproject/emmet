@@ -3,7 +3,7 @@
 """Core definition of a Q-Chem Task Document."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable
+from typing import Any, Callable
 
 from emmet.core.qchem.calc_types import (
     CalcType,
@@ -19,9 +19,7 @@ from emmet.core.structure import MoleculeMetadata
 from emmet.core.task import BaseTaskDocument
 from emmet.core.utils import ValueEnum
 from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    from pymatgen.core.structure import Molecule
+from pymatgen.core.structure import Molecule
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 

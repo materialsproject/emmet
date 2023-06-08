@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Sequence  # noqa: F401
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
+from emmet.core.vasp.validation import DeprecationMessage, ValidationDoc  # noqa: F401
 from pydantic import Field
 from pymatgen.analysis.chemenv.coordination_environments.chemenv_strategies import (
     SimplestChemenvStrategy,
@@ -18,6 +19,7 @@ from pymatgen.analysis.chemenv.coordination_environments.structure_environments 
     LightStructureEnvironments,
 )
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
+from pymatgen.core import Composition, Element  # noqa: F401
 from pymatgen.core.structure import Molecule, Structure
 
 DEFAULT_DISTANCE_CUTOFF = 1.4
@@ -379,13 +381,15 @@ class ChemEnvDoc(PropertyDoc):
         material_id: MPID,
         **kwargs,
     ):  # type: ignore[override]
-        """Args:
+        """Generate ChemEnvDoc from a Pymatgen Structure.
+
+        Args:
             structure: structure including oxidation states
             material_id: mpid
             **kwargs:
 
         Returns:
-
+            ChemEnvDoc
         """
         d = {
             "valences": [],
@@ -453,11 +457,8 @@ class ChemEnvDoc(PropertyDoc):
                 )
                 warnings = None
             else:
-                d.update(
-                    {
-                        "warnings": "No oxidation states available. Cation-anion bonds cannot be identified."
-                    }
-                )
+                warning = "No oxidation states available. Cation-anion bonds cannot be identified."
+                d.update({"warnings": warning})
                 return super().from_structure(
                     meta_structure=structure,
                     material_id=material_id,

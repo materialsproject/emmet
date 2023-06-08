@@ -3,13 +3,11 @@
 outside the standard MSONable model.
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 import pymatgen.core.composition
 from pydantic import BaseModel
 
-if TYPE_CHECKING:
-    from pymatgen.core.periodic_table import Element
+from pymatgen.core.periodic_table import Element
 
 """
 The stub names are kept in sync with the actual classes so they

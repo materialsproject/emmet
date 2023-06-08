@@ -2,13 +2,10 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 from emmet.core.base import EmmetBaseModel
+from emmet.core.mpid import MPID, MPculeID
 from pydantic import Field
-
-if TYPE_CHECKING:
-    from emmet.core.mpid import MPID, MPculeID
 
 
 class BaseTaskDocument(EmmetBaseModel):

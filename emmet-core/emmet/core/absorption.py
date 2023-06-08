@@ -1,14 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import numpy as np
 from emmet.core.material_property import PropertyDoc
+from emmet.core.mpid import MPID
 from pydantic import Field
-
-if TYPE_CHECKING:
-    from emmet.core.mpid import MPID
-    from pymatgen.core import Structure
+from pymatgen.core import Structure
 
 
 class AbsorptionDoc(PropertyDoc):

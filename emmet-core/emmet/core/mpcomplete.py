@@ -1,13 +1,9 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING
 
 from pydantic import Field
-from pydantic.main import BaseModel
-
-if TYPE_CHECKING:
-    from pymatgen.core.structure import Structure
+from pymatgen.core.structure import Structure
 
 
 class MPCompleteDoc(BaseModel):
