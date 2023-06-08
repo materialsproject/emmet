@@ -91,7 +91,7 @@ def formula_to_criteria(formulas: str) -> dict:
                     raise HTTPException(
                         status_code=400,
                         detail="Problem processing one or more provided formulas.",
-                    )
+                    ) from None
 
                 return crit
             else:
@@ -122,26 +122,24 @@ def chemsys_to_criteria(chemsys: str) -> dict:
                 status_code=400,
                 detail="Wild cards only supported for single chemsys queries.",
             )
-        else:
-            eles = chemsys_list[0].split("-")
+        eles = chemsys_list[0].split("-")
 
-            crit["nelements"] = len(eles)
-            crit["elements"] = {"$all": [ele for ele in eles if ele != "*"]}
+        crit["nelements"] = len(eles)
+        crit["elements"] = {"$all": [ele for ele in eles if ele != "*"]}
 
-            if crit["elements"]["$all"] == []:
-                del crit["elements"]
-
-            return crit
-    else:
-        query_vals = []
-        for chemsys_val in chemsys_list:
-            eles = chemsys_val.split("-")
-            sorted_chemsys = "-".join(sorted(eles))
-            query_vals.append(sorted_chemsys)
-
-        if len(query_vals) == 1:
-            crit["chemsys"] = query_vals[0]
-        else:
-            crit["chemsys"] = {"$in": query_vals}
+        if crit["elements"]["$all"] == []:
+            del crit["elements"]
 
         return crit
+    query_vals = []
+    for chemsys_val in chemsys_list:
+        eles = chemsys_val.split("-")
+        sorted_chemsys = "-".join(sorted(eles))
+        query_vals.append(sorted_chemsys)
+
+    if len(query_vals) == 1:
+        crit["chemsys"] = query_vals[0]
+    else:
+        crit["chemsys"] = {"$in": query_vals}
+
+    return crit

@@ -136,29 +136,27 @@ def electrodes_chemsys_to_criteria(chemsys: str) -> dict:
                 status_code=400,
                 detail="Wild cards only supported for single chemsys queries.",
             )
-        else:
-            eles = chemsys_list[0].split("-")
-            neles = len(eles)
+        eles = chemsys_list[0].split("-")
+        neles = len(eles)
 
-            crit["nelements"] = {"$in": [neles, neles - 1]}
-            crit["entries_composition_summary.all_elements"] = {
-                "$all": [ele for ele in eles if ele != "*"]
-            }
+        crit["nelements"] = {"$in": [neles, neles - 1]}
+        crit["entries_composition_summary.all_elements"] = {
+            "$all": [ele for ele in eles if ele != "*"]
+        }
 
-            if crit["entries_composition_summary.all_elements"]["$all"] == []:
-                del crit["entries_composition_summary.all_elements"]
+        if crit["entries_composition_summary.all_elements"]["$all"] == []:
+            del crit["entries_composition_summary.all_elements"]
 
             return crit
+    query_vals = []
+    for chemsys_val in chemsys_list:
+        eles = chemsys_val.split("-")
+        sorted_chemsys = "-".join(sorted(eles))
+        query_vals.append(sorted_chemsys)
+
+    if len(query_vals) == 1:
+        crit["entries_composition_summary.all_chemsys"] = query_vals[0]
     else:
-        query_vals = []
-        for chemsys_val in chemsys_list:
-            eles = chemsys_val.split("-")
-            sorted_chemsys = "-".join(sorted(eles))
-            query_vals.append(sorted_chemsys)
+        crit["entries_composition_summary.all_chemsys"] = {"$in": query_vals}
 
-        if len(query_vals) == 1:
-            crit["entries_composition_summary.all_chemsys"] = query_vals[0]
-        else:
-            crit["entries_composition_summary.all_chemsys"] = {"$in": query_vals}
-
-        return crit
+    return crit

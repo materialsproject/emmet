@@ -1,8 +1,11 @@
+# ruff: noqa: UP006, UP007
+
 """Core definition of a Provenance Document."""
 from __future__ import annotations
 
 import warnings
 from datetime import datetime
+from typing import Union
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
@@ -33,7 +36,7 @@ class History(BaseModel):
 
     name: str
     url: str
-    description: dict | None = Field(
+    description: Union[dict, None] = Field(
         None, description="Dictionary of extra data for this history node."
     )
 
