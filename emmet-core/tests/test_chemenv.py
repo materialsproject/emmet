@@ -1,13 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import pytest
 from emmet.core.chemenv import ChemEnvDoc
+from pymatgen.core import Structure
 from pymatgen.util.testing import PymatgenTest
-
-if TYPE_CHECKING:
-    from pymatgen.core import Structure
 
 test_structures = {
     name: struc.get_reduced_structure()

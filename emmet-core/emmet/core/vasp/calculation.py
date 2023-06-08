@@ -6,9 +6,10 @@ import contextlib
 # mypy: ignore-errors
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import numpy as np
+from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
 from emmet.core.utils import ValueEnum
 from emmet.core.vasp.calc_types import (
     CalcType,
@@ -22,8 +23,10 @@ from emmet.core.vasp.task_valid import TaskState
 from pydantic import BaseModel, Extra, Field
 from pydantic.datetime_parse import datetime
 from pymatgen.command_line.bader_caller import bader_analysis_from_path
+from pymatgen.core.lattice import Lattice
 from pymatgen.core.structure import Structure
 from pymatgen.core.trajectory import Trajectory
+from pymatgen.electronic_structure.bandstructure import BandStructure
 from pymatgen.electronic_structure.core import OrbitalType
 from pymatgen.electronic_structure.dos import CompleteDos, Dos
 from pymatgen.io.vasp import (
@@ -37,11 +40,6 @@ from pymatgen.io.vasp import (
     Vasprun,
     VolumetricData,
 )
-
-if TYPE_CHECKING:
-    from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
-    from pymatgen.core.lattice import Lattice
-    from pymatgen.electronic_structure.bandstructure import BandStructure
 
 logger = logging.getLogger(__name__)
 
@@ -518,6 +516,9 @@ class CalculationOutput(BaseModel):
             **electronic_output,
             **phonon_output,
         )
+
+
+CalculationOutput.update_forward_refs()
 
 
 class Calculation(BaseModel):

@@ -81,7 +81,7 @@ class ValidationDoc(EmmetBaseModel):
             pseudo_dir: directory of pseudopotential directory to ensure correct hashes
             LDAU_fields: LDAU fields to check for consistency
             max_allowed_scf_gradient: maximum uphill gradient allowed for SCF steps after the
-                initial equillibriation period
+                initial equilibration period
             potcar_hashes: Dictionary of potcar hash data. Mapping is calculation type -> potcar symbol -> hash value.
         """
         bandgap = task_doc.output.bandgap
@@ -172,8 +172,8 @@ class ValidationDoc(EmmetBaseModel):
                 ):
                     reasons.append(DeprecationMessage.MAX_SCF)
 
-                # Check for Am and Po elements. These currently do not have proper elemental entries
-                # and will not get treated properly by the thermo builder.
+                # Check for Am and Po elements. These currently do not have proper
+                # elemental entries and will not get treated properly by the thermo builder.
                 if ("Am" in chemsys) or ("Po" in chemsys):
                     reasons.append(DeprecationMessage.MANUAL)
 
@@ -200,7 +200,7 @@ class ValidationDoc(EmmetBaseModel):
 
 
 def _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandgap):
-    # Ensure inputsets get proper additional input values
+    # Ensure input sets get proper additional input values
     if "SCAN" in run_type.value:
         valid_input_set: VaspInputSet = input_sets[str(calc_type)](structure, bandgap=bandgap)  # type: ignore
     elif task_type == TaskType.NSCF_Uniform or task_type == TaskType.NSCF_Line:
@@ -334,7 +334,7 @@ def _potcar_hash_check(task_doc, potcar_hashes):
 
 def _magmom_check(task_doc, chemsys):
     """Checks for maximum magnetization values for specific elements.
-    Returns True if the maximum absolute value outlined below is exceded for the associated element.
+    Returns True if the maximum absolute value outlined below is exceeded for the associated element.
     """
     eles_max_vals = {"Cr": 5}
 
@@ -361,8 +361,4 @@ def _get_unsorted_symbol_set(structure: Structure):
     """Have to build structure_symbol set manually to ensure
     we get the right order since pymatgen sorts its symbol_set list.
     """
-    return list(
-        {
-            str(sp): 1 for site in structure for sp, v in site.species.items() if v != 0
-        }.keys()
-    )
+    return [str(sp) for site in structure for sp, v in site.species.items() if v != 0]

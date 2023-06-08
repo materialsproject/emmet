@@ -44,3 +44,6 @@ ignore = [
   "PT013",   # pytest-incorrect-pytest-import
 ]
 pydocstyle.convention = "google"
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401"]

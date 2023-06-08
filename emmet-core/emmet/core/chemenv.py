@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 from emmet.core.material_property import PropertyDoc
+from emmet.core.mpid import MPID
 from pydantic import Field
 from pymatgen.analysis.chemenv.coordination_environments.chemenv_strategies import (
     SimplestChemenvStrategy,
@@ -18,9 +19,6 @@ from pymatgen.analysis.chemenv.coordination_environments.structure_environments 
 )
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.core.structure import Molecule, Structure
-
-if TYPE_CHECKING:
-    from emmet.core.mpid import MPID
 
 DEFAULT_DISTANCE_CUTOFF = 1.4
 DEFAULT_ANGLE_CUTOFF = 0.3
@@ -531,3 +529,6 @@ class ChemEnvDoc(PropertyDoc):
             **d,
             **kwargs,
         )
+
+
+ChemEnvDoc.update_forward_refs()

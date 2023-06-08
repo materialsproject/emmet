@@ -3,21 +3,18 @@ from __future__ import annotations
 import re
 from collections import defaultdict
 from datetime import datetime
-from typing import TYPE_CHECKING
 
+from emmet.core.mpid import MPID
 from emmet.core.utils import ValueEnum
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
+from pymatgen.analysis.phase_diagram import PhaseDiagram
+from pymatgen.apps.battery.battery_abc import AbstractElectrode
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 from pymatgen.core import Composition, Structure
-
-if TYPE_CHECKING:
-    from emmet.core.mpid import MPID
-    from pymatgen.analysis.phase_diagram import PhaseDiagram
-    from pymatgen.apps.battery.battery_abc import AbstractElectrode
-    from pymatgen.core.periodic_table import Element
-    from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from pymatgen.core.periodic_table import Element
+from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 
 class BatteryType(str, ValueEnum):
@@ -530,6 +527,9 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
         )
 
         return d
+
+
+ConversionElectrodeDoc.update_forward_refs()
 
 
 def get_battery_formula(

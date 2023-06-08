@@ -5,15 +5,13 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, TypeVar, Union
+from typing import Dict, List, TypeVar, Union
 
 import requests
 from monty.json import MontyDecoder
 from pydantic import BaseSettings, Field, root_validator
 from pydantic.class_validators import validator
-
-if TYPE_CHECKING:
-    from pydantic.types import PyObject
+from pydantic.types import PyObject
 
 DEFAULT_CONFIG_FILE_PATH = str(Path.home().joinpath(".emmet.json"))
 
@@ -210,3 +208,6 @@ class EmmetSettings(BaseSettings):
     def as_dict(self):
         """HotPatch to enable serializing EmmetSettings via Monty."""
         return self.dict(exclude_unset=True, exclude_defaults=True)
+
+
+EmmetSettings.update_forward_refs()

@@ -1,6 +1,15 @@
-from __future__ import annotations
+from pathlib import Path
 
-import contextlib
+try:
+    import emmet.core.qchem.calc_types.enums
+except ImportError:
+    import emmet.core.qchem.calc_types.generate
 
-with contextlib.suppress(ImportError):
-    pass
+from emmet.core.qchem.calc_types.enums import CalcType, LevelOfTheory, TaskType
+from emmet.core.qchem.calc_types.utils import (
+    calc_type,
+    level_of_theory,
+    lot_solvent_string,
+    solvent,
+    task_type,
+)
