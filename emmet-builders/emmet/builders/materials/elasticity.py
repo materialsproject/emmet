@@ -110,7 +110,7 @@ class ElasticityBuilder(Builder):
                 ids_list = [int(i) for i in doc["task_ids"]]
             except ValueError:
                 ids_list = [i for i in doc["task_ids"]]
-              
+
             query["task_id"] = {"$in": ids_list}
 
             projections = [
