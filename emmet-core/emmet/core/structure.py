@@ -1,7 +1,9 @@
+# ruff: noqa: UP006, UP007
+
 """Core definition of Structure and Molecule metadata."""
 from __future__ import annotations
 
-from typing import TypeVar
+from typing import Sequence, TypeVar
 
 from emmet.core.base import EmmetBaseModel
 from emmet.core.symmetry import PointGroupData, SymmetryData
@@ -68,22 +70,18 @@ class StructureMetadata(EmmetBaseModel):
     def from_composition(
         cls: type[T],
         composition: Composition,
-        fields: list[str] | None = None,
+        fields: Sequence[str] = (
+            "elements",
+            "nelements",
+            "composition",
+            "composition_reduced",
+            "formula_alphabetical",
+            "formula_pretty",
+            "formula_anonymous",
+            "chemsys",
+        ),
         **kwargs,
     ) -> T:
-        fields = (
-            [
-                "elements",
-                "nelements",
-                "composition",
-                "composition_reduced",
-                "formula_pretty",
-                "formula_anonymous",
-                "chemsys",
-            ]
-            if fields is None
-            else fields
-        )
         composition = composition.remove_charges()
 
         elsyms = sorted({e.symbol for e in composition.elements})
@@ -104,27 +102,18 @@ class StructureMetadata(EmmetBaseModel):
     def from_structure(
         cls: type[T],
         meta_structure: Structure,
-        fields: list[str] | None = None,
+        fields: Sequence[str] = (
+            "elements",
+            "nelements",
+            "composition",
+            "composition_reduced",
+            "formula_alphabetical",
+            "formula_pretty",
+            "formula_anonymous",
+            "chemsys",
+        ),
         **kwargs,
     ) -> T:
-        fields = (
-            [
-                "nsites",
-                "elements",
-                "nelements",
-                "composition",
-                "composition_reduced",
-                "formula_pretty",
-                "formula_anonymous",
-                "chemsys",
-                "volume",
-                "density",
-                "density_atomic",
-                "symmetry",
-            ]
-            if fields is None
-            else fields
-        )
         comp = meta_structure.composition.remove_charges()
         elsyms = sorted({e.symbol for e in comp.elements})
         symmetry = SymmetryData.from_structure(meta_structure)
@@ -199,7 +188,16 @@ class MoleculeMetadata(EmmetBaseModel):
     def from_composition(
         cls: type[S],
         comp: Composition,
-        fields: list[str] | None = None,
+        fields: Sequence[str] = (
+            "elements",
+            "nelements",
+            "composition",
+            "composition_reduced",
+            "formula_alphabetical",
+            "formula_pretty",
+            "formula_anonymous",
+            "chemsys",
+        ),
         **kwargs,
     ) -> S:
         """Create a MoleculeMetadata model from a composition.
@@ -218,20 +216,6 @@ class MoleculeMetadata(EmmetBaseModel):
         T
             A molecule metadata model.
         """
-        fields = (
-            [
-                "elements",
-                "nelements",
-                "composition",
-                "composition_reduced",
-                "formula_alphabetical",
-                "formula_pretty",
-                "formula_anonymous",
-                "chemsys",
-            ]
-            if fields is None
-            else fields
-        )
         elsyms = sorted({e.symbol for e in comp.elements})
 
         data = {
@@ -251,28 +235,18 @@ class MoleculeMetadata(EmmetBaseModel):
     def from_molecule(
         cls: type[S],
         meta_molecule: Molecule,
-        fields: list[str] | None = None,
+        fields: Sequence[str] = (
+            "elements",
+            "nelements",
+            "composition",
+            "composition_reduced",
+            "formula_alphabetical",
+            "formula_pretty",
+            "formula_anonymous",
+            "chemsys",
+        ),
         **kwargs,
     ) -> S:
-        fields = (
-            [
-                "charge",
-                "spin_multiplicity",
-                "natoms",
-                "elements",
-                "nelements",
-                "nelectrons",
-                "composition",
-                "composition_reduced",
-                "formula_alphabetical",
-                "formula_pretty",
-                "formula_anonymous",
-                "chemsys",
-                "symmetry",
-            ]
-            if fields is None
-            else fields
-        )
         comp = meta_molecule.composition
         elsyms = sorted({e.symbol for e in comp.elements})
         symmetry = PointGroupData.from_molecule(meta_molecule)
