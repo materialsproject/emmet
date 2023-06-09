@@ -25,6 +25,7 @@ class HasProps(Enum):
 
     molecules = "molecules"
     bonding = "bonding"
+    metal_binding = "metal_binding"
     orbitals = "orbitals"
     partial_charges = "partial_charges"
     partial_spins = "partial_spins"
