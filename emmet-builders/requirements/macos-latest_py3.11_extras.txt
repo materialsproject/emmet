@@ -6,7 +6,7 @@
 #
 aioitertools==0.11.0
     # via maggma
-anyio==3.6.2
+anyio==3.7.0
     # via starlette
 attrs==23.1.0
     # via jsonschema
@@ -14,9 +14,9 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.139
+boto3==1.26.147
     # via maggma
-botocore==1.29.139
+botocore==1.29.147
     # via
     #   boto3
     #   s3transfer
@@ -41,9 +41,9 @@ colorama==0.4.6
     # via griffe
 contourpy==1.0.7
     # via matplotlib
-coverage[toml]==7.2.5
+coverage[toml]==7.2.7
     # via pytest-cov
-cryptography==40.0.2
+cryptography==41.0.1
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -55,11 +55,11 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.55.2
+emmet-core[all]==0.55.3
     # via
     #   emmet-builders (setup.py)
     #   mp-api
-fastapi==0.95.2
+fastapi==0.96.0
     # via maggma
 filelock==3.12.0
     # via virtualenv
@@ -75,7 +75,7 @@ future==0.18.3
     #   uncertainties
 ghp-import==2.1.0
     # via mkdocs
-griffe==0.28.1
+griffe==0.29.0
     # via mkdocstrings-python
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
@@ -116,7 +116,7 @@ latexcodec==2.0.1
     # via pybtex
 livereload==2.6.3
     # via emmet-builders (setup.py)
-maggma==0.51.1
+maggma==0.51.4
     # via emmet-builders (setup.py)
 markdown==3.3.7
     # via
@@ -125,7 +125,7 @@ markdown==3.3.7
     #   mkdocs-material
     #   mkdocstrings
     #   pymdown-extensions
-markupsafe==2.1.2
+markupsafe==2.1.3
     # via
     #   jinja2
     #   mkdocstrings
@@ -163,11 +163,11 @@ mkdocs-material-extensions==1.1.1
     #   mkdocs-material
 mkdocs-minify-plugin==0.6.4
     # via emmet-builders (setup.py)
-mkdocstrings[python]==0.21.2
+mkdocstrings[python]==0.22.0
     # via
     #   emmet-builders (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.0.0
+mkdocstrings-python==1.1.2
     # via mkdocstrings
 mongogrant==0.3.3
     # via maggma
@@ -217,7 +217,7 @@ numpy==1.24.3
     #   seekpath
     #   shapely
     #   spglib
-orjson==3.8.13
+orjson==3.9.0
     # via maggma
 packaging==23.1
     # via
@@ -228,11 +228,11 @@ packaging==23.1
     #   pytest
 palettable==3.3.3
     # via pymatgen
-pandas==2.0.1
+pandas==2.0.2
     # via
     #   matminer
     #   pymatgen
-paramiko==3.1.0
+paramiko==3.2.0
     # via sshtunnel
 pillow==9.5.0
     # via matplotlib
@@ -263,7 +263,7 @@ pydantic==1.10.8
     #   fastapi
     #   inflect
     #   maggma
-pydash==7.0.3
+pydash==7.0.4
     # via maggma
 pydocstyle==6.3.0
     # via emmet-builders (setup.py)
@@ -271,7 +271,7 @@ pyflakes==3.0.1
     # via flake8
 pygments==2.15.1
     # via mkdocs-material
-pymatgen==2023.5.10
+pymatgen==2023.5.31
     # via
     #   emmet-core
     #   matminer
@@ -302,7 +302,7 @@ pytest==7.3.1
     # via
     #   emmet-builders (setup.py)
     #   pytest-cov
-pytest-cov==4.0.0
+pytest-cov==4.1.0
     # via emmet-builders (setup.py)
 python-dateutil==2.8.2
     # via
@@ -331,9 +331,9 @@ requests==2.31.0
     #   mongogrant
     #   mp-api
     #   pymatgen
-robocrys==0.2.7
+robocrys==0.2.8
     # via emmet-core
-ruamel-yaml==0.17.26
+ruamel-yaml==0.17.31
     # via
     #   pymatgen
     #   robocrys
@@ -391,13 +391,13 @@ tqdm==4.65.0
     #   maggma
     #   matminer
     #   pymatgen
-types-requests==2.31.0.0
+types-requests==2.31.0.1
     # via emmet-builders (setup.py)
 types-setuptools==67.8.0.0
     # via emmet-builders (setup.py)
 types-urllib3==1.26.25.13
     # via types-requests
-typing-extensions==4.6.0
+typing-extensions==4.6.3
     # via
     #   emmet-core
     #   mp-api

@@ -6,7 +6,7 @@
 #
 aioitertools==0.11.0
     # via maggma
-anyio==3.6.2
+anyio==3.7.0
     # via starlette
 attrs==23.1.0
     # via
@@ -17,19 +17,19 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.139
+boto3==1.26.147
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.139
+botocore==1.29.147
     # via
     #   boto3
     #   s3transfer
 bracex==2.3.post1
     # via wcmatch
-bytecode==0.14.1
+bytecode==0.14.2
     # via ddtrace
-cattrs==22.2.0
+cattrs==23.1.2
     # via ddtrace
 certifi==2023.5.7
     # via requests
@@ -51,9 +51,9 @@ colorama==0.4.6
     # via griffe
 contourpy==1.0.7
     # via matplotlib
-coverage[toml]==7.2.5
+coverage[toml]==7.2.7
     # via pytest-cov
-cryptography==40.0.2
+cryptography==41.0.1
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -61,9 +61,9 @@ cycler==0.11.0
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==1.13.3
+ddtrace==1.14.0
     # via emmet-api (setup.py)
-deprecated==1.2.13
+deprecated==1.2.14
     # via opentelemetry-api
 distlib==0.3.6
     # via virtualenv
@@ -71,7 +71,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.55.2
+emmet-core[all]==0.55.3
     # via
     #   emmet-api (setup.py)
     #   mp-api
@@ -79,9 +79,10 @@ envier==0.4.0
     # via ddtrace
 exceptiongroup==1.1.1
     # via
+    #   anyio
     #   cattrs
     #   pytest
-fastapi==0.95.2
+fastapi==0.96.0
     # via
     #   emmet-api (setup.py)
     #   maggma
@@ -99,7 +100,7 @@ future==0.18.3
     #   uncertainties
 ghp-import==2.1.0
     # via mkdocs
-griffe==0.28.1
+griffe==0.29.0
     # via mkdocstrings-python
 gunicorn==20.1.0
     # via emmet-api (setup.py)
@@ -148,7 +149,7 @@ latexcodec==2.0.1
     # via pybtex
 livereload==2.6.3
     # via emmet-api (setup.py)
-maggma==0.51.1
+maggma==0.51.4
     # via emmet-api (setup.py)
 markdown==3.3.7
     # via
@@ -157,7 +158,7 @@ markdown==3.3.7
     #   mkdocs-material
     #   mkdocstrings
     #   pymdown-extensions
-markupsafe==2.1.2
+markupsafe==2.1.3
     # via
     #   jinja2
     #   mkdocstrings
@@ -193,11 +194,11 @@ mkdocs-material-extensions==1.1.1
     #   mkdocs-material
 mkdocs-minify-plugin==0.6.4
     # via emmet-api (setup.py)
-mkdocstrings[python]==0.21.2
+mkdocstrings[python]==0.22.0
     # via
     #   emmet-api (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.0.0
+mkdocstrings-python==1.1.2
     # via mkdocstrings
 mongogrant==0.3.3
     # via maggma
@@ -249,11 +250,10 @@ numpy==1.24.3
     #   spglib
 opentelemetry-api==1.18.0
     # via ddtrace
-orjson==3.8.13
+orjson==3.9.0
     # via maggma
 packaging==23.1
     # via
-    #   ddtrace
     #   matplotlib
     #   mkdocs
     #   mongomock
@@ -261,11 +261,11 @@ packaging==23.1
     #   pytest
 palettable==3.3.3
     # via pymatgen
-pandas==2.0.1
+pandas==2.0.2
     # via
     #   matminer
     #   pymatgen
-paramiko==3.1.0
+paramiko==3.2.0
     # via sshtunnel
 pillow==9.5.0
     # via matplotlib
@@ -277,7 +277,7 @@ pluggy==1.0.0
     # via pytest
 pre-commit==3.3.2
     # via emmet-api (setup.py)
-protobuf==4.23.1
+protobuf==4.23.2
     # via
     #   ddsketch
     #   ddtrace
@@ -300,7 +300,7 @@ pydantic==1.10.8
     #   fastapi
     #   inflect
     #   maggma
-pydash==7.0.3
+pydash==7.0.4
     # via maggma
 pydocstyle==6.3.0
     # via emmet-api (setup.py)
@@ -308,7 +308,7 @@ pyflakes==3.0.1
     # via flake8
 pygments==2.15.1
     # via mkdocs-material
-pymatgen==2023.5.10
+pymatgen==2023.5.31
     # via
     #   emmet-core
     #   matminer
@@ -339,7 +339,7 @@ pytest==7.3.1
     # via
     #   emmet-api (setup.py)
     #   pytest-cov
-pytest-cov==4.0.0
+pytest-cov==4.1.0
     # via emmet-api (setup.py)
 python-dateutil==2.8.2
     # via
@@ -368,9 +368,9 @@ requests==2.31.0
     #   mongogrant
     #   mp-api
     #   pymatgen
-robocrys==0.2.7
+robocrys==0.2.8
     # via emmet-core
-ruamel-yaml==0.17.26
+ruamel-yaml==0.17.31
     # via
     #   pymatgen
     #   robocrys
@@ -441,14 +441,15 @@ tqdm==4.65.0
     #   maggma
     #   matminer
     #   pymatgen
-types-requests==2.31.0.0
+types-requests==2.31.0.1
     # via emmet-api (setup.py)
 types-setuptools==67.8.0.0
     # via emmet-api (setup.py)
 types-urllib3==1.26.25.13
     # via types-requests
-typing-extensions==4.6.0
+typing-extensions==4.6.3
     # via
+    #   cattrs
     #   ddtrace
     #   emmet-core
     #   mp-api

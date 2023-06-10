@@ -5,9 +5,11 @@
 
 ## What is Emmet
 
-Emmet is a toolkit of packages designed to build the Materials API. The Materials API is the specification of the Materials Project for defining and dissemenating "materials documents". The core document definitions live in `emmet-core`. The data pipelines that build these documents live in `emmet-builders`. A specialized multi-functional CLI to manage the orchestration of calculation ingestion, backup, and parsing is in `emmet-cli`. Emmet has been developed by the Materials Project (MP) team at Lawrence Berkeley Labs.
+Emmet is a toolkit of packages designed to build the Materials API. The Materials API is the specification of the Materials Project (MP) for defining and dissemenating "materials documents". The core document definitions live in `emmet-core`. The data pipelines that build these documents live in `emmet-builders`. A specialized multi-functional CLI to manage the orchestration of calculation ingestion, backup, and parsing is in `emmet-cli`. Emmet has been developed by the Materials Project team at Lawrence Berkeley Labs.
 
 Emmet is written in [Python](http://docs.python-guide.org/en/latest/) and supports Python 3.6+.
+
+Emmet fully supports [Optimade API](https://optimade.org) and allows your MP infrastructure data to be exposed under the Optimade spec. It is also internally used to serve the MP [public Optimade endpoint](https://optimade.materialsproject.org).
 
 ## Installation from PyPI
 
@@ -26,7 +28,7 @@ pip install --upgrade emmet-core
 You can install Maggma directly from a clone of the [Git repository](https://github.com/materialsproject/maggma). This can be done either by cloning the repo and installing from the local clone, or simply installing directly via **git**.
 
 ```shell tab="Local Clone"
-git clone https://github.com//materialsproject/emmet
+git clone https://github.com/materialsproject/emmet
 cd emmet
 pip install -e emmet-core/
 ```

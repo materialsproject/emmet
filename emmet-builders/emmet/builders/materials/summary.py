@@ -15,6 +15,8 @@ class SummaryBuilder(Builder):
         materials,
         thermo,
         xas,
+        chemenv,
+        absorption,
         grain_boundaries,
         electronic_structure,
         magnetism,
@@ -30,7 +32,7 @@ class SummaryBuilder(Builder):
         provenance,
         charge_density_index,
         summary,
-        thermo_type=ThermoType.GGA_GGA_U.value,
+        thermo_type=ThermoType.GGA_GGA_U_R2SCAN.value,
         chunk_size=100,
         query=None,
         **kwargs,
@@ -38,6 +40,8 @@ class SummaryBuilder(Builder):
         self.materials = materials
         self.thermo = thermo
         self.xas = xas
+        self.chemenv = chemenv
+        self.absorption = absorption
         self.grain_boundaries = grain_boundaries
         self.electronic_structure = electronic_structure
         self.magnetism = magnetism
@@ -64,6 +68,8 @@ class SummaryBuilder(Builder):
                 materials,
                 thermo,
                 xas,
+                chemenv,
+                absorption,
                 grain_boundaries,
                 electronic_structure,
                 magnetism,
@@ -167,6 +173,12 @@ class SummaryBuilder(Builder):
                 ),
                 HasProps.eos.value: self.eos.query_one(
                     {self.eos.key: {"$in": all_tasks}}, [self.eos.key]
+                ),
+                HasProps.chemenv.value: self.chemenv.query_one(
+                    {self.chemenv.key: entry}
+                ),
+                HasProps.absorption.value: self.absorption.query_one(
+                    {self.absorption.key: entry}
                 ),
                 HasProps.provenance.value: self.provenance.query_one(
                     {self.provenance.key: entry}
