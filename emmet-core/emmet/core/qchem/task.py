@@ -1,6 +1,7 @@
 # mypy: ignore-errors
 
 """ Core definition of a Q-Chem Task Document """
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Callable
 
 from pydantic import BaseModel, Field
@@ -201,6 +202,8 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
             "orig": self.orig,
             "tags": self.tags,
             "last_updated": self.last_updated,
+            "species_hash": self.species_hash,
+            "coord_hash": self.coord_hash,
         }
 
         return entry_dict

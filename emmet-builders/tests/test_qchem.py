@@ -9,7 +9,7 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 @pytest.fixture(scope="session")
 def tasks_store(test_dir):
-    return JSONStore(test_dir / "C2H4.json.gz")
+    return JSONStore(test_dir / "C2H4_new.json.gz")
 
 
 @pytest.fixture(scope="session")
