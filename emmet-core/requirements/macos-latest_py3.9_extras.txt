@@ -14,9 +14,9 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.151
+boto3==1.26.152
     # via maggma
-botocore==1.29.151
+botocore==1.29.152
     # via
     #   boto3
     #   s3transfer
@@ -67,13 +67,13 @@ exceptiongroup==1.1.1
     #   pytest
 fastapi==0.97.0
     # via maggma
-filelock==3.12.1
+filelock==3.12.2
     # via virtualenv
 flake8==6.0.0
     # via emmet-core (setup.py)
 flask==2.3.2
     # via mongogrant
-fonttools==4.39.4
+fonttools==4.40.0
     # via matplotlib
 future==0.18.3
     # via
@@ -130,7 +130,7 @@ latexcodec==2.0.1
     # via pybtex
 livereload==2.6.3
     # via emmet-core (setup.py)
-maggma==0.51.6
+maggma==0.51.7
     # via emmet-core (setup.py)
 markdown==3.3.7
     # via
