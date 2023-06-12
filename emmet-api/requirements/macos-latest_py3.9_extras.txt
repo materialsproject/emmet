@@ -17,11 +17,11 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.147
+boto3==1.26.151
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.147
+botocore==1.29.151
     # via
     #   boto3
     #   s3transfer
@@ -71,7 +71,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.55.3
+emmet-core[all]==0.55.5
     # via
     #   emmet-api (setup.py)
     #   mp-api
@@ -82,11 +82,11 @@ exceptiongroup==1.1.1
     #   anyio
     #   cattrs
     #   pytest
-fastapi==0.96.0
+fastapi==0.97.0
     # via
     #   emmet-api (setup.py)
     #   maggma
-filelock==3.12.0
+filelock==3.12.1
     # via virtualenv
 flake8==6.0.0
     # via emmet-api (setup.py)
@@ -156,7 +156,7 @@ latexcodec==2.0.1
     # via pybtex
 livereload==2.6.3
     # via emmet-api (setup.py)
-maggma==0.51.4
+maggma==0.51.6
     # via emmet-api (setup.py)
 markdown==3.3.7
     # via
@@ -257,7 +257,7 @@ numpy==1.24.3
     #   spglib
 opentelemetry-api==1.18.0
     # via ddtrace
-orjson==3.9.0
+orjson==3.9.1
     # via maggma
 packaging==23.1
     # via
@@ -276,9 +276,9 @@ paramiko==3.2.0
     # via sshtunnel
 pillow==9.5.0
     # via matplotlib
-platformdirs==3.5.1
+platformdirs==3.5.3
     # via virtualenv
-plotly==5.14.1
+plotly==5.15.0
     # via pymatgen
 pluggy==1.0.0
     # via pytest
@@ -301,7 +301,7 @@ pycodestyle==2.10.0
     #   flake8
 pycparser==2.21
     # via cffi
-pydantic==1.10.8
+pydantic==1.10.9
     # via
     #   emmet-core
     #   fastapi
@@ -342,7 +342,7 @@ pyparsing==3.0.9
     # via matplotlib
 pyrsistent==0.19.3
     # via jsonschema
-pytest==7.3.1
+pytest==7.3.2
     # via
     #   emmet-api (setup.py)
     #   pytest-cov
@@ -483,7 +483,7 @@ watchdog==3.0.0
     # via mkdocs
 wcmatch==8.4.1
     # via mkdocs-awesome-pages-plugin
-werkzeug==2.3.4
+werkzeug==2.3.6
     # via flask
 wincertstore==0.2
     # via emmet-api (setup.py)
