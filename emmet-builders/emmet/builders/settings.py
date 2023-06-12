@@ -9,6 +9,7 @@ from emmet.core.provenance import Author, History
 from emmet.core.settings import EmmetSettings
 from emmet.core.vasp.calc_types import TaskType as VaspTaskType
 from emmet.core.qchem.calc_types import TaskType as QChemTaskType
+from emmet.core.cp2k.calc_types import TaskType as Cp2kTaskType
 
 
 class EmmetBuildSettings(EmmetSettings):
@@ -30,7 +31,12 @@ class EmmetBuildSettings(EmmetSettings):
         [], description="Tags for calculations to deprecate"
     )
 
-    VASP_ALLOWED_VASP_TYPES: List[VaspTaskType] = Field(
+    ALLOWED_CALC_CODES: List[str] = Field(
+        ['VASP', 'CP2K'],
+        description="Calculation codes to allow in the build pipeline"
+    )
+
+    VASP_ALLOWED_TASK_TYPES: List[VaspTaskType] = Field(
         [t.value for t in VaspTaskType],
         description="Allowed task_types to build materials from",
     )
@@ -44,6 +50,11 @@ class EmmetBuildSettings(EmmetSettings):
             "Frequency Flattening Geometry Optimization",
         ],
         description="Allowed task_types to build molecules from",
+    )
+
+    CP2K_ALLOWED_TASK_TYPES: List[Cp2kTaskType] = Field(
+        [t.value for t in Cp2kTaskType],
+        description="Allowed CP2K task_types to build materials from",
     )
 
     DEFAULT_REFERENCE: str = Field(

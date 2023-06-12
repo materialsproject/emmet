@@ -1,0 +1,63 @@
+from typing import Dict, Optional
+
+from maggma.builders import MapBuilder
+from maggma.core import Store
+
+from emmet.builders.settings import EmmetBuildSettings
+from emmet.core.cp2k.task import TaskDocument
+from emmet.core.cp2k.validation import DeprecationMessage, ValidationDoc
+
+
+class TaskValidator(MapBuilder):
+    def __init__(
+        self,
+        tasks: Store,
+        task_validation: Store,
+        settings: Optional[EmmetBuildSettings] = None,
+        query: Optional[Dict] = None,
+        **kwargs,
+    ):
+        """
+        Creates task_types from tasks and type definitions
+
+        Args:
+            tasks: Store of task documents
+            task_validation: Store of task_types for tasks
+        """
+        self.tasks = tasks
+        self.task_validation = task_validation
+        self.settings = EmmetBuildSettings.autoload(settings)
+        self.query = query
+        self.kwargs = kwargs
+
+        super().__init__(
+            source=tasks,
+            target=task_validation,
+            projection=[
+                "input",
+                "output.forces",
+                "tags",
+            ],
+            query=query,
+            **kwargs,
+        )
+
+    def unary_function(self, item):
+        """
+        Find the task_type for the item
+
+        Args:
+            item (dict): a (projection of a) task doc
+        """
+        task_doc = TaskDocument(**item)
+        validation_doc = ValidationDoc.from_task_doc(
+            task_doc=task_doc,
+        )
+
+        bad_tags = list(set(task_doc.tags).intersection(self.settings.DEPRECATED_TAGS))
+        if len(bad_tags) > 0:
+            validation_doc.warnings.append(f"Manual Deprecation by tags: {bad_tags}")
+            validation_doc.valid = False
+            validation_doc.reasons.append(DeprecationMessage.MANUAL)
+
+        return validation_doc
