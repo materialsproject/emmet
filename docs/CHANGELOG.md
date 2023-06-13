@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.56.1](https://github.com/materialsproject/emmet/tree/v0.56.1) (2023-06-13)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.56.0...v0.56.1)
+
+**Merged pull requests:**
+
+- Fix messages endpoint params [\#754](https://github.com/materialsproject/emmet/pull/754) ([munrojm](https://github.com/munrojm))
+
 ## [v0.56.0](https://github.com/materialsproject/emmet/tree/v0.56.0) (2023-06-13)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.55.5...v0.56.0)
@@ -67,7 +75,7 @@
 
 ## [v0.55.0](https://github.com/materialsproject/emmet/tree/v0.55.0) (2023-05-12)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.54.6...v0.55.0)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.54.5...v0.55.0)
 
 **Closed issues:**
 
@@ -79,13 +87,13 @@
 - Optimade builder [\#722](https://github.com/materialsproject/emmet/pull/722) ([tsmathis](https://github.com/tsmathis))
 - Elastic builder  [\#721](https://github.com/materialsproject/emmet/pull/721) ([mjwen](https://github.com/mjwen))
 
-## [v0.54.6](https://github.com/materialsproject/emmet/tree/v0.54.6) (2023-05-10)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.54.5...v0.54.6)
-
 ## [v0.54.5](https://github.com/materialsproject/emmet/tree/v0.54.5) (2023-05-10)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.54.4...v0.54.5)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.54.6...v0.54.5)
+
+## [v0.54.6](https://github.com/materialsproject/emmet/tree/v0.54.6) (2023-05-10)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.54.4...v0.54.6)
 
 **Merged pull requests:**
 
@@ -199,19 +207,19 @@
 
 ## [v0.51.10](https://github.com/materialsproject/emmet/tree/v0.51.10) (2023-04-07)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.51.9...v0.51.10)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.51.8...v0.51.10)
 
 **Merged pull requests:**
 
 - Add ddb source to sound velocity builder [\#690](https://github.com/materialsproject/emmet/pull/690) ([munrojm](https://github.com/munrojm))
 
-## [v0.51.9](https://github.com/materialsproject/emmet/tree/v0.51.9) (2023-04-07)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.51.8...v0.51.9)
-
 ## [v0.51.8](https://github.com/materialsproject/emmet/tree/v0.51.8) (2023-04-07)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.51.7...v0.51.8)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.51.9...v0.51.8)
+
+## [v0.51.9](https://github.com/materialsproject/emmet/tree/v0.51.9) (2023-04-07)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.51.7...v0.51.9)
 
 **Merged pull requests:**
 
