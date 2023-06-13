@@ -270,6 +270,13 @@ if db_uri:
         key="submission_id",
         collection_name="general_store",
     )
+
+    messages_store = MongoURIStore(
+        uri=db_uri,
+        database="mp_consumers",
+        key="title",
+        collection_name="messages",
+    )
 else:
     raise RuntimeError("Must specify MongoDB URI containing inputs.")
 
@@ -485,6 +492,11 @@ resources.update({"doi": [dois_resource(doi_store)]})
 from emmet.api.routes._consumer.resources import settings_resource
 
 resources.update({"_user_settings": [settings_resource(consumer_settings_store)]})
+
+# Messages
+from emmet.api.routes._messages.resources import messages_resource
+
+resources.update({"_messages": [messages_resource(messages_store)]})
 
 # General Store
 from emmet.api.routes._general_store.resources import general_store_resource
