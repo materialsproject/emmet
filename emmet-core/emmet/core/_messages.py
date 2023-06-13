@@ -9,7 +9,7 @@ class MessageType(Enum):
     warning = "warning"
 
 
-class UserSettingsDoc(BaseModel):
+class MessagesDoc(BaseModel):
     """
     Defines data for user messages
     """
