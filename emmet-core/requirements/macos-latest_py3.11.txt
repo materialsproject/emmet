@@ -8,11 +8,11 @@ certifi==2023.5.7
     # via requests
 charset-normalizer==3.1.0
     # via requests
-contourpy==1.0.7
+contourpy==1.1.0
     # via matplotlib
 cycler==0.11.0
     # via matplotlib
-emmet-core==0.55.5
+emmet-core==0.56.1
     # via mp-api
 fonttools==4.40.0
     # via matplotlib
