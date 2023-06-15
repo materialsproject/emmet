@@ -1,6 +1,9 @@
-from typing import Set, Union
+from typing import Set, Union, Any
 import sys
 import os
+import gzip
+import orjson
+from monty.serialization import MontyDecoder
 from itertools import chain, combinations
 from pymatgen.core import Structure
 from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
@@ -144,6 +147,32 @@ def get_hop_cutoff(
 
     else:
         return None
+
+
+def query_open_data(self, bucket: str, prefix: str, key: str, monty_decode: bool = True, s3_resource: Any = None) -> dict:
+    """Query a Materials Project AWS S3 Open Data bucket directly with boto3
+
+    Args:
+        bucket (str): Materials project bucket name
+        prefix (str): Full set of file prefixes
+        key (str): Key for file
+        monty_decode (bool): Whether to monty decode or keep as dictionary. Defaults to True.
+        s3_resource (Optional[Any]): S3 resource. One will be instantiated if none are provided
+
+    Returns:
+        dict: MontyDecoded data
+    """
+    ref = s3_resource.Object(bucket, f"{prefix}/{key}.json.gz")  # type: ignore
+    bytes = ref.get()["Body"]  # type: ignore
+
+    with gzip.GzipFile(fileobj=bytes) as gzipfile:
+        content = gzipfile.read()
+        if monty_decode:
+            result = MontyDecoder().decode(content)
+        else:
+            result = orjson.loads(content)
+
+    return result
 
 
 # From: https://stackoverflow.com/a/45669280
