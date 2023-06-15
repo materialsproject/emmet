@@ -1,6 +1,8 @@
 from collections import defaultdict
 from math import ceil
 import itertools
+import re
+import boto3
 import numpy as np
 from maggma.builders import Builder
 from maggma.utils import grouper
@@ -17,6 +19,8 @@ from pymatgen.io.vasp.sets import MPStaticSet
 from emmet.core.settings import EmmetSettings
 from emmet.core.electronic_structure import ElectronicStructureDoc
 from emmet.core.utils import jsanitize
+
+from emmet.builders.utils import query_open_data
 
 SETTINGS = EmmetSettings()
 
@@ -43,8 +47,10 @@ class ElectronicStructureBuilder(Builder):
         tasks (Store): Store of task documents
         materials (Store): Store of materials documents
         electronic_structure (Store): Store of electronic structure summary data documents
-        bandstructure_fs (Store): Store of bandstructures
-        dos_fs (Store): Store of DOS
+        bandstructure_fs (Store, str): Store of bandstructures, or S3 URL string with prefix
+            (e.g. s3://materialsproject-parsed/bandstructures). 
+        dos_fs (Store, str): Store of DOS, or S3 URL string with bucket and prefix 
+            (e.g. s3://materialsproject-parsed/dos).
         chunk_size (int): Chunk size to use for processing. Defaults to 10.
         query (dict): Dictionary to limit materials to be analyzed
         """
@@ -56,6 +62,24 @@ class ElectronicStructureBuilder(Builder):
         self.dos_fs = dos_fs
         self.chunk_size = chunk_size
         self.query = query if query else {}
+
+        self._s3_resource = None
+
+        sources = [tasks, materials]
+
+        fs_stores = [bandstructure_fs, dos_fs]
+
+        for store in fs_stores:
+
+            if isinstance(store, str):
+                if not re.match("^s3://.*", store):
+                    raise ValueError("Please provide an S3 URL "
+                                     "in the format s3://{bucket_name}/{prefix}")
+
+                if self._s3_resource is None:
+                    self._s3_resource = boto3.resource("s3")
+            else:
+                sources.append(store)
 
         super().__init__(
             sources=[tasks, materials, bandstructure_fs, dos_fs],
@@ -397,9 +421,13 @@ class ElectronicStructureBuilder(Builder):
                         bs_type = None
 
                     if bs_type is None:
-                        bs_dict = self.bandstructure_fs.query_one(
-                            {self.bandstructure_fs.key: str(task_id)}
-                        )
+                        if isinstance(self.bandstructure_fs, str):
+                            _, _, bucket, prefix = self.bandstructure_fs.strip("/").split("/")
+                            bs_dict = query_open_data(bucket, prefix, task_id, monty_decode=False, s3_resource=self._s3_resource)
+                        else:
+                            bs_dict = self.bandstructure_fs.query_one(
+                                {self.bandstructure_fs.key: str(task_id)}
+                            )
 
                         if bs_dict is not None:
                             bs = BandStructureSymmLine.from_dict(bs_dict["data"])
@@ -565,10 +593,13 @@ class ElectronicStructureBuilder(Builder):
                 materials_doc["bandstructure"][bs_type]["lmaxmix"] = sorted_bs_data[0][
                     "lmaxmix"
                 ]
-
-                bs_obj = self.bandstructure_fs.query_one(
-                    criteria={"fs_id": sorted_bs_data[0]["fs_id"]}
-                )
+                if isinstance(self.bandstructure_fs, str):
+                    _, _, bucket, prefix = self.bandstructure_fs.strip("/").split("/")
+                    bs_obj = query_open_data(bucket, prefix, sorted_bs_data[0]["task_id"], monty_decode=False, s3_resource=self._s3_resource).get("data", None)
+                else:
+                    bs_obj = self.bandstructure_fs.query_one(
+                        criteria={"fs_id": sorted_bs_data[0]["fs_id"]}
+                    )
 
                 materials_doc["bandstructure"][bs_type]["object"] = (
                     bs_obj["data"] if bs_obj is not None else None
@@ -602,9 +633,14 @@ class ElectronicStructureBuilder(Builder):
 
             materials_doc["dos"]["lmaxmix"] = sorted_dos_data[0]["lmaxmix"]
 
-            dos_obj = self.dos_fs.query_one(
-                criteria={"fs_id": sorted_dos_data[0]["fs_id"]}
-            )
+            if isinstance(self.bandstructure_fs, str):
+                _, _, bucket, prefix = self.dos_fs.strip("/").split("/")
+                dos_obj = query_open_data(bucket, prefix, sorted_dos_data[0]["task_id"], monty_decode=False, s3_resource=self._s3_resource).get("data", None)
+            else:
+                dos_obj = self.dos_fs.query_one(
+                    criteria={"fs_id": sorted_dos_data[0]["fs_id"]}
+                )
+
             materials_doc["dos"]["object"] = (
                 dos_obj["data"] if dos_obj is not None else None
             )
