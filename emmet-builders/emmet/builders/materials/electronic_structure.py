@@ -610,7 +610,7 @@ class ElectronicStructureBuilder(Builder):
                         sorted_bs_data[0]["task_id"],
                         monty_decode=False,
                         s3_resource=self._s3_resource,
-                    ).get("data", None)
+                    )
                 else:
                     bs_obj = self.bandstructure_fs.query_one(
                         criteria={"fs_id": sorted_bs_data[0]["fs_id"]}
@@ -656,7 +656,7 @@ class ElectronicStructureBuilder(Builder):
                     sorted_dos_data[0]["task_id"],
                     monty_decode=False,
                     s3_resource=self._s3_resource,
-                ).get("data", None)
+                )
             else:
                 dos_obj = self.dos_fs.query_one(
                     criteria={"fs_id": sorted_dos_data[0]["fs_id"]}
