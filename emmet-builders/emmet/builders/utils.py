@@ -150,7 +150,6 @@ def get_hop_cutoff(
 
 
 def query_open_data(
-    self,
     bucket: str,
     prefix: str,
     key: str,
