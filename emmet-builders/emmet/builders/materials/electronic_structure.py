@@ -48,8 +48,8 @@ class ElectronicStructureBuilder(Builder):
         materials (Store): Store of materials documents
         electronic_structure (Store): Store of electronic structure summary data documents
         bandstructure_fs (Store, str): Store of bandstructures, or S3 URL string with prefix
-            (e.g. s3://materialsproject-parsed/bandstructures). 
-        dos_fs (Store, str): Store of DOS, or S3 URL string with bucket and prefix 
+            (e.g. s3://materialsproject-parsed/bandstructures).
+        dos_fs (Store, str): Store of DOS, or S3 URL string with bucket and prefix
             (e.g. s3://materialsproject-parsed/dos).
         chunk_size (int): Chunk size to use for processing. Defaults to 10.
         query (dict): Dictionary to limit materials to be analyzed
@@ -70,11 +70,12 @@ class ElectronicStructureBuilder(Builder):
         fs_stores = [bandstructure_fs, dos_fs]
 
         for store in fs_stores:
-
             if isinstance(store, str):
                 if not re.match("^s3://.*", store):
-                    raise ValueError("Please provide an S3 URL "
-                                     "in the format s3://{bucket_name}/{prefix}")
+                    raise ValueError(
+                        "Please provide an S3 URL "
+                        "in the format s3://{bucket_name}/{prefix}"
+                    )
 
                 if self._s3_resource is None:
                     self._s3_resource = boto3.resource("s3")
@@ -422,8 +423,16 @@ class ElectronicStructureBuilder(Builder):
 
                     if bs_type is None:
                         if isinstance(self.bandstructure_fs, str):
-                            _, _, bucket, prefix = self.bandstructure_fs.strip("/").split("/")
-                            bs_dict = query_open_data(bucket, prefix, task_id, monty_decode=False, s3_resource=self._s3_resource)
+                            _, _, bucket, prefix = self.bandstructure_fs.strip(
+                                "/"
+                            ).split("/")
+                            bs_dict = query_open_data(
+                                bucket,
+                                prefix,
+                                task_id,
+                                monty_decode=False,
+                                s3_resource=self._s3_resource,
+                            )
                         else:
                             bs_dict = self.bandstructure_fs.query_one(
                                 {self.bandstructure_fs.key: str(task_id)}
@@ -595,7 +604,13 @@ class ElectronicStructureBuilder(Builder):
                 ]
                 if isinstance(self.bandstructure_fs, str):
                     _, _, bucket, prefix = self.bandstructure_fs.strip("/").split("/")
-                    bs_obj = query_open_data(bucket, prefix, sorted_bs_data[0]["task_id"], monty_decode=False, s3_resource=self._s3_resource).get("data", None)
+                    bs_obj = query_open_data(
+                        bucket,
+                        prefix,
+                        sorted_bs_data[0]["task_id"],
+                        monty_decode=False,
+                        s3_resource=self._s3_resource,
+                    ).get("data", None)
                 else:
                     bs_obj = self.bandstructure_fs.query_one(
                         criteria={"fs_id": sorted_bs_data[0]["fs_id"]}
@@ -635,7 +650,13 @@ class ElectronicStructureBuilder(Builder):
 
             if isinstance(self.bandstructure_fs, str):
                 _, _, bucket, prefix = self.dos_fs.strip("/").split("/")
-                dos_obj = query_open_data(bucket, prefix, sorted_dos_data[0]["task_id"], monty_decode=False, s3_resource=self._s3_resource).get("data", None)
+                dos_obj = query_open_data(
+                    bucket,
+                    prefix,
+                    sorted_dos_data[0]["task_id"],
+                    monty_decode=False,
+                    s3_resource=self._s3_resource,
+                ).get("data", None)
             else:
                 dos_obj = self.dos_fs.query_one(
                     criteria={"fs_id": sorted_dos_data[0]["fs_id"]}

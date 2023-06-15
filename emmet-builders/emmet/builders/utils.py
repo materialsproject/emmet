@@ -149,7 +149,14 @@ def get_hop_cutoff(
         return None
 
 
-def query_open_data(self, bucket: str, prefix: str, key: str, monty_decode: bool = True, s3_resource: Any = None) -> dict:
+def query_open_data(
+    self,
+    bucket: str,
+    prefix: str,
+    key: str,
+    monty_decode: bool = True,
+    s3_resource: Any = None,
+) -> dict:
     """Query a Materials Project AWS S3 Open Data bucket directly with boto3
 
     Args:
