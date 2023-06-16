@@ -67,7 +67,13 @@ class BondingBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[tasks, molecules], targets=[bonds])
+        super().__init__(sources=[tasks, molecules], targets=[bonds], **kwargs)
+        # Uncomment in case of issue with mrun not connecting automatically to collections
+        # for i in [self.tasks, self.molecules, self.bonds]:
+        #     try:
+        #         i.connect()
+        #     except Exception as e:
+        #         print("Could not connect,", e)
 
     def ensure_indexes(self):
         """
@@ -86,7 +92,7 @@ class BondingBuilder(Builder):
         self.molecules.ensure_index("task_ids")
         self.molecules.ensure_index("formula_alphabetical")
 
-        # Search index for charges
+        # Search index for bonds
         self.bonds.ensure_index("molecule_id")
         self.bonds.ensure_index("method")
         self.bonds.ensure_index("task_id")

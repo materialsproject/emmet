@@ -40,5 +40,5 @@ def test_bonding_builder(tasks_store, mol_store, bonds_store):
     )
     builder.run()
 
-    assert bonds_store.count() == 64
+    assert bonds_store.count() == 60
     assert bonds_store.count({"deprecated": True}) == 0

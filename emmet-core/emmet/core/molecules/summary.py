@@ -10,6 +10,7 @@ from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPID, MPculeID
 from emmet.core.molecules.orbitals import NaturalPopulation, LonePair, Bond, Interaction
+from emmet.core.molecules.metal_binding import MetalBindingData
 
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
@@ -25,6 +26,7 @@ class HasProps(Enum):
 
     molecules = "molecules"
     bonding = "bonding"
+    metal_binding = "metal_binding"
     orbitals = "orbitals"
     partial_charges = "partial_charges"
     partial_spins = "partial_spins"
@@ -49,6 +51,24 @@ class MoleculeSummaryDoc(PropertyDoc):
     molecule_levels_of_theory: Dict[str, str] = Field(
         None,
         description="Level of theory used to optimize the best molecular structure for each solvent.",
+    )
+
+    species_hash: str = Field(
+        None,
+        description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph "
+        "node attribute.",
+    )
+    coord_hash: str = Field(
+        None,
+        description="Weisfeiler Lehman (WL) graph hash using the atom coordinates as the graph "
+        "node attribute.",
+    )
+
+    inchi: str = Field(
+        None, description="International Chemical Identifier (InChI) for this molecule"
+    )
+    inchi_key: str = Field(
+        None, description="Standardized hash of the InChI for this molecule"
     )
 
     task_ids: List[MPID] = Field(
@@ -352,12 +372,80 @@ class MoleculeSummaryDoc(PropertyDoc):
         None, description="Molecule ID for adiabatic oxidation"
     )
 
-    reduction_potentials: Dict[str, Dict[str, float]] = Field(
-        None, description="Reduction potentials with various " "reference electrodes"
+    reduction_potential: Dict[str, float] = Field(
+        None,
+        description="Reduction potential referenced to the standard hydrogen electrode (SHE) (units: V)",
     )
 
-    oxidation_potentials: Dict[str, Dict[str, float]] = Field(
-        None, description="Oxidation potentials with various " "reference electrodes"
+    oxidation_potential: Dict[str, float] = Field(
+        None,
+        description="Oxidation potential referenced to the standard hydrogen electrode (SHE) (units: V)",
+    )
+
+    # metal binding properties
+    binding_partial_charges_property_id: Dict[str, Dict[str, str]] = Field(
+        None,
+        description="ID of PartialChargesDoc used to estimate metal charge",
+    )
+
+    binding_partial_spins_property_id: Dict[str, Dict[str, str]] = Field(
+        None,
+        description="ID of PartialSpinsDoc used to estimate metal spin",
+    )
+
+    binding_partial_charges_lot_solvent: Dict[str, Dict[str, str]] = Field(
+        None,
+        description="Combination of level of theory and solvent used to calculate atomic partial charges",
+    )
+
+    binding_partial_spins_lot_solvent: Dict[str, Dict[str, str]] = Field(
+        None,
+        description="Combination of level of theory and solvent used to calculate atomic partial spins",
+    )
+
+    binding_charge_spin_method: Dict[str, Dict[str, str]] = Field(
+        None,
+        description="The method used for partial charges and spins (must be the same).",
+    )
+
+    binding_bonding_property_id: Dict[str, Dict[str, str]] = Field(
+        None,
+        description="ID of MoleculeBondingDoc used to detect bonding in this molecule",
+    )
+
+    binding_bonding_lot_solvent: Dict[str, Dict[str, str]] = Field(
+        None,
+        description="Combination of level of theory and solvent used to determine the coordination environment "
+        "of the metal atom or ion",
+    )
+
+    binding_bonding_method: Dict[str, Dict[str, str]] = Field(
+        None, description="The method used for to define bonding."
+    )
+
+    binding_thermo_property_id: Dict[str, Dict[str, str]] = Field(
+        None,
+        description="ID of MoleculeThermoDoc used to obtain this molecule's thermochemistry",
+    )
+
+    binding_thermo_lot_solvent: Dict[str, Dict[str, str]] = Field(
+        None,
+        description="Combination of level of theory and solvent used for uncorrected thermochemistry",
+    )
+
+    binding_thermo_correction_lot_solvent: Dict[str, Dict[str, str]] = Field(
+        None,
+        description="Combination of level of theory and solvent used to correct the electronic energy",
+    )
+
+    binding_thermo_combined_lot_solvent: Dict[str, Dict[str, str]] = Field(
+        None,
+        descrption="Combination of level of theory and solvent used for molecular thermochemistry, combining "
+        "both the frequency calculation and (potentially) the single-point energy correction.",
+    )
+
+    binding_data: Dict[str, Dict[str, List[MetalBindingData]]] = Field(
+        None, description="Binding data for each metal atom or ion in the molecule"
     )
 
     # has props
@@ -400,6 +488,10 @@ summary_fields: Dict[str, list] = {
         "molecules",
         "deprecated",
         "task_ids",
+        "species_hash",
+        "coord_hash",
+        "inchi",
+        "inchi_key",
         "unique_calc_types",
         "unique_task_types",
         "unique_levels_of_theory",
@@ -456,8 +548,23 @@ summary_fields: Dict[str, list] = {
         "red_molecule_id",
         "oxidation_free_energy",
         "ox_molecule_id",
-        "reduction_potentials",
-        "oxidation_potentials",
+        "reduction_potential",
+        "oxidation_potential",
+    ],
+    HasProps.metal_binding.value: [
+        "binding_partial_charges_property_id",
+        "binding_partial_spins_property_id",
+        "binding_partial_charges_lot_solvent",
+        "binding_partial_spins_lot_solvent",
+        "binding_charge_spin_method",
+        "binding_bonding_property_id",
+        "binding_bonding_lot_solvent",
+        "binding_bonding_method",
+        "binding_thermo_property_id",
+        "binding_thermo_lot_solvent",
+        "binding_thermo_correction_lot_solvent",
+        "binding_thermo_combined_lot_solvent",
+        "binding_data",
     ],
 }
 
@@ -486,6 +593,11 @@ def _copy_from_doc(doc: Dict[str, Any]):
             for copy_key in summary_fields[doc_key]:
                 d[copy_key] = sub_doc[copy_key]
         else:
+            # No information for this particular set of properties
+            # Shouldn't happen, but can
+            if sub_doc is None:
+                continue
+
             sd, by_method = sub_doc
 
             if isinstance(sd, dict) and len(sd) > 0:

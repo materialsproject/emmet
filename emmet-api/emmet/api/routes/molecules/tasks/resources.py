@@ -10,13 +10,12 @@ from emmet.api.routes.molecules.tasks.hint_scheme import TasksHintScheme
 from emmet.api.routes.molecules.tasks.query_operators import (
     DeprecationQuery,
     MultipleTaskIDsQuery,
-    # TODO:
-    # TrajectoryQuery,
+    TrajectoryQuery,
     # EntryQuery,
 )
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
-from emmet.core.tasks import DeprecationDoc
+from emmet.core.tasks import DeprecationDoc, TrajectoryDoc
 from emmet.core.qchem.task import TaskDocument
 
 timeout = MAPISettings().TIMEOUT
@@ -65,5 +64,17 @@ def task_deprecation_resource(task_store):
     return resource
 
 
-# TODO: def trajectory_resource(task_store):
-# TODO: def entries_resource(task_store):
+def trajectory_resource(task_store):
+    resource = ReadOnlyResource(
+        task_store,
+        TrajectoryDoc,
+        query_operators=[TrajectoryQuery(), PaginationQuery()],
+        key_fields=["task_id", "calcs_reversed"],
+        tags=["Molecules Tasks"],
+        sub_path="/tasks/trajectory/",
+        header_processor=GlobalHeaderProcessor(),
+        timeout=timeout,
+        disable_validation=True,
+    )
+
+    return resource

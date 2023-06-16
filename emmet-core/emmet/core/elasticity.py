@@ -308,9 +308,7 @@ class ElasticityDoc(PropertyDoc):
                 derived_props = get_derived_properties(structure, elastic_tensor)
 
                 # check all
-                state, warnings = sanity_check(
-                    structure, et_doc, fitting_strains, derived_props  # type: ignore
-                )
+                state, warnings = sanity_check(structure, et_doc, fitting_strains, derived_props)  # type: ignore
 
             except np.linalg.LinAlgError as e:
                 ct_doc = None

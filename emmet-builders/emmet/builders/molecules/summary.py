@@ -36,6 +36,7 @@ class SummaryBuilder(Builder):
         charges: Store,
         spins: Store,
         bonds: Store,
+        metal_binding: Store,
         orbitals: Store,
         redox: Store,
         thermo: Store,
@@ -49,6 +50,7 @@ class SummaryBuilder(Builder):
         self.charges = charges
         self.spins = spins
         self.bonds = bonds
+        self.metal_binding = metal_binding
         self.orbitals = orbitals
         self.redox = redox
         self.thermo = thermo
@@ -59,9 +61,37 @@ class SummaryBuilder(Builder):
         self.kwargs = kwargs
 
         super().__init__(
-            sources=[molecules, charges, spins, bonds, orbitals, redox, thermo, vibes],
+            sources=[
+                molecules,
+                charges,
+                spins,
+                bonds,
+                metal_binding,
+                orbitals,
+                redox,
+                thermo,
+                vibes,
+            ],
             targets=[summary],
+            **kwargs,
         )
+        # Uncomment in case of issue with mrun not connecting automatically to collections
+        # for i in [
+        #     self.molecules,
+        #     self.charges,
+        #     self.spins,
+        #     self.bonds,
+        #     self.metal_binding,
+        #     self.orbitals,
+        #     self.redox,
+        #     self.thermo,
+        #     self.vibes,
+        #     self.summary
+        # ]:
+        #     try:
+        #         i.connect()
+        #     except Exception as e:
+        #         print("Could not connect,", e)
 
     def ensure_indexes(self):
         """
@@ -103,6 +133,15 @@ class SummaryBuilder(Builder):
         self.bonds.ensure_index("property_id")
         self.bonds.ensure_index("last_updated")
         self.bonds.ensure_index("formula_alphabetical")
+
+        # Search index for metal_binding
+        self.metal_binding.ensure_index("molecule_id")
+        self.metal_binding.ensure_index("solvent")
+        self.metal_binding.ensure_index("lot_solvent")
+        self.metal_binding.ensure_index("property_id")
+        self.metal_binding.ensure_index("last_updated")
+        self.metal_binding.ensure_index("formula_alphabetical")
+        self.metal_binding.ensure_index("method")
 
         # Search index for orbitals
         self.orbitals.ensure_index("molecule_id")
@@ -275,6 +314,9 @@ class SummaryBuilder(Builder):
                 ),
                 "bonding": _group_docs(
                     list(self.bonds.query({"molecule_id": mol_id})), True
+                ),
+                "metal_binding": _group_docs(
+                    list(self.metal_binding.query({"molecule_id": mol_id})), True
                 ),
                 "orbitals": _group_docs(
                     list(self.orbitals.query({"molecule_id": mol_id})), False

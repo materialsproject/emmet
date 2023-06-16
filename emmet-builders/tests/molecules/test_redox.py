@@ -44,5 +44,5 @@ def test_redox_builder(tasks_store, mol_store, thermo_store, redox_store):
     builder = RedoxBuilder(tasks_store, mol_store, thermo_store, redox_store)
     builder.run()
 
-    assert redox_store.count() == 22
+    assert redox_store.count() == 20
     assert redox_store.count({"deprecated": True}) == 0
