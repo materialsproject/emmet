@@ -17,11 +17,11 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.155
+boto3==1.26.158
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.29.155
+botocore==1.29.158
     # via
     #   boto3
     #   s3transfer
@@ -218,7 +218,7 @@ pymatgen-analysis-alloys==0.0.6
     # via emmet-core
 pymatgen-analysis-diffusion==2022.7.21
     # via emmet-core
-pymongo==4.3.3
+pymongo==4.4.0
     # via
     #   maggma
     #   matminer
