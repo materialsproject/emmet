@@ -42,11 +42,11 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.57.1
+emmet-core[all]==0.57.2
     # via
     #   emmet-builders (setup.py)
     #   mp-api
-fastapi==0.97.0
+fastapi==0.98.0
     # via maggma
 flask==2.3.2
     # via mongogrant

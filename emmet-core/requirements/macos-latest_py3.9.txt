@@ -12,7 +12,7 @@ contourpy==1.1.0
     # via matplotlib
 cycler==0.11.0
     # via matplotlib
-emmet-core==0.57.1
+emmet-core==0.57.2
     # via mp-api
 fonttools==4.40.0
     # via matplotlib

@@ -55,7 +55,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.57.1
+emmet-core[all]==0.57.2
     # via
     #   emmet-builders (setup.py)
     #   mp-api
@@ -63,7 +63,7 @@ exceptiongroup==1.1.1
     # via
     #   anyio
     #   pytest
-fastapi==0.97.0
+fastapi==0.98.0
     # via maggma
 filelock==3.12.2
     # via virtualenv

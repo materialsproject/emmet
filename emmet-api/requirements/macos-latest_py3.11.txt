@@ -58,13 +58,13 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.57.1
+emmet-core[all]==0.57.2
     # via
     #   emmet-api (setup.py)
     #   mp-api
 envier==0.4.0
     # via ddtrace
-fastapi==0.97.0
+fastapi==0.98.0
     # via
     #   emmet-api (setup.py)
     #   maggma
