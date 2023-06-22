@@ -3,8 +3,6 @@ from typing import Any, Dict, List, Mapping, Union
 
 from pydantic import Field
 
-from openbabel import openbabel as ob
-
 from pymatgen.core.structure import Molecule
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 from pymatgen.io.babel import BabelMolAdaptor
@@ -15,6 +13,11 @@ from emmet.core.settings import EmmetSettings
 from emmet.core.material import CoreMoleculeDoc, PropertyOrigin
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.qchem.task import TaskDocument
+
+try:
+    import openbabel
+except ImportError:
+    openbabel = None
 
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
@@ -252,6 +255,12 @@ class MoleculeDoc(CoreMoleculeDoc):
         Args:
             task_group: List of task document
         """
+
+        if openbabel is None:
+            raise ModuleNotFoundError(
+                "openbabel must be installed to instantiate a MoleculeDoc from tasks"
+            )
+
         if len(task_group) == 0:
             raise Exception("Must have more than one task in the group.")
 
@@ -394,7 +403,7 @@ class MoleculeDoc(CoreMoleculeDoc):
         coord_hash = get_graph_hash(molecule, "coords")
 
         ad = BabelMolAdaptor(molecule)
-        ob.StereoFrom3D(ad.openbabel_mol)
+        openbabel.StereoFrom3D(ad.openbabel_mol)
 
         inchi = ad.pybel_mol.write("inchi").strip()
         inchikey = ad.pybel_mol.write("inchikey").strip()
@@ -473,7 +482,7 @@ class MoleculeDoc(CoreMoleculeDoc):
         coord_hash = get_graph_hash(molecule, "coords")
 
         ad = BabelMolAdaptor(molecule)
-        ob.StereoFrom3D(ad.openbabel_mol)
+        openbabel.StereoFrom3D(ad.openbabel_mol)
 
         inchi = ad.pybel_mol.write("inchi").strip()
         inchikey = ad.pybel_mol.write("inchikey").strip()
