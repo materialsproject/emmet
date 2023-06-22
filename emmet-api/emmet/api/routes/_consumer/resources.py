@@ -2,7 +2,7 @@ from maggma.api.resource import SubmissionResource
 from emmet.api.routes._consumer.query_operator import (
     UserSettingsPostQuery,
     UserSettingsGetQuery,
-    UserSettingsPatchQuery
+    UserSettingsPatchQuery,
 )
 from emmet.core._user_settings import UserSettingsDoc
 
