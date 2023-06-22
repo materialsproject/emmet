@@ -36,27 +36,3 @@ class GeneralStoreGetQuery(QueryOperator):
         crit = {"kind": kind}
 
         return {"criteria": crit}
-
-class GeneralStorePatchQuery(QueryOperator):
-    """Query operators to provide general store information to patch"""
-
-    def query(
-        self,
-        kind: str = Query(..., title="Data type"),
-        markdown: str = Query(None, title="Markdown data"),
-        meta: Dict = Body(None, title="Metadata"),
-    ) -> STORE_PARAMS:
-        crit = {"kind": kind, "markdown": markdown, "meta": meta}
-
-        return {"criteria": crit}
-
-    def post_process(self, docs, query):
-        d = [
-            {
-                "kind": query["criteria"]["kind"],
-                "markdown": query["criteria"].get("markdown", None),
-                "meta": query["criteria"].get("meta", None),
-            }
-        ]
-
-        return d
