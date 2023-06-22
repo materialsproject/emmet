@@ -51,7 +51,7 @@ class FermiDoc(BaseModel):
     )
 
     @classmethod
-    @timeout(10)  # Only for testing on low memory machines
+    # @timeout(10)  # Only for testing on low memory machines
     def from_structure(
         cls,
         material_id: MPID,
