@@ -83,7 +83,7 @@ class ElectronicStructureBuilder(Builder):
                 sources.append(store)
 
         super().__init__(
-            sources=[tasks, materials, bandstructure_fs, dos_fs],
+            sources=[tasks, materials],
             targets=[electronic_structure],
             chunk_size=chunk_size,
             **kwargs,
