@@ -1,4 +1,5 @@
-from typing import Dict
+from datetime import datetime
+from typing import Dict, Optional
 from fastapi import Query, Body
 from maggma.api.utils import STORE_PARAMS
 from maggma.api.query_operator import QueryOperator
@@ -29,6 +30,35 @@ class UserSettingsPostQuery(QueryOperator):
         d = [{"consumer_id": cid, "settings": settings}]
 
         return d
+
+
+class UserSettingsPatchQuery(QueryOperator):
+    """Query operators to provide user settings information to potch"""
+
+    def query(
+        self,
+        consumer_id: str = Query(
+            ...,
+            title="Consumer ID",
+        ),
+        fields_to_update: Optional[Dict] = Body(
+            None, title="Field name and value to update in user settings"
+        ),
+    ) -> STORE_PARAMS:
+        crit = {"consumer_id": consumer_id}
+
+        if fields_to_update and "settings.message_last_read" in fields_to_update:
+            # Parse the ISO-formatted timestamp string into a datetime object
+            time = datetime.fromisoformat(
+                fields_to_update["settings.message_last_read"]
+            )
+            fields_to_update["settings.message_last_read"] = time
+
+        return (
+            dict(criteria=crit, update=fields_to_update)
+            if fields_to_update
+            else dict(criteria=crit)
+        )
 
 
 class UserSettingsGetQuery(QueryOperator):
