@@ -16,6 +16,8 @@ emmet-core==0.57.2
     # via mp-api
 fonttools==4.40.0
     # via matplotlib
+frozendict==2.3.8
+    # via pymatgen
 future==0.18.3
     # via uncertainties
 idna==3.4
@@ -69,7 +71,7 @@ pydantic==1.10.9
     # via
     #   emmet-core
     #   emmet-core (setup.py)
-pymatgen==2023.5.31
+pymatgen==2023.6.23
     # via
     #   emmet-core
     #   emmet-core (setup.py)
@@ -92,7 +94,7 @@ ruamel-yaml==0.17.32
     # via pymatgen
 ruamel-yaml-clib==0.2.7
     # via ruamel-yaml
-scipy==1.10.1
+scipy==1.11.0
     # via pymatgen
 six==1.16.0
     # via
