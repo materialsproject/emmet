@@ -111,7 +111,6 @@ def backups(ctx, clean):
     rootdir_pattern = os.path.join(rootdir, ctx.parent.params["pattern"])
     comment_txt = [f"Backup {gen.value} launchers in `{rootdir_pattern}`:\n"]
     ctx.parent.parent.params["sbatch"] = True
-    ctx.parent.parent.params["yes"] = True
     run = ctx.parent.parent.params["run"]
     prefix = ctx.parent.params["pattern"] = "block_*"
 
@@ -505,7 +504,6 @@ def parsers(ctx, task_ids):
         remaining = group_strings_by_prefix(remaining_vaspdirs, len_prefix)
 
     ctx.parent.parent.params["sbatch"] = True
-    ctx.parent.parent.params["yes"] = True
     rootdir_pattern = os.path.join(directory, ctx.parent.params["pattern"])
     comment_txt = [f"Parse {gen.value} launchers in `{rootdir_pattern}`:\n"]
 
