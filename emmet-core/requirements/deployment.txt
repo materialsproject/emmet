@@ -8,14 +8,16 @@ certifi==2023.5.7
     # via requests
 charset-normalizer==3.1.0
     # via requests
-contourpy==1.0.7
+contourpy==1.1.0
     # via matplotlib
 cycler==0.11.0
     # via matplotlib
-emmet-core==0.55.5
+emmet-core==0.57.2
     # via mp-api
 fonttools==4.40.0
     # via matplotlib
+frozendict==2.3.8
+    # via pymatgen
 future==0.18.3
     # via uncertainties
 idna==3.4
@@ -74,12 +76,12 @@ pydantic==1.10.9
     # via
     #   emmet-core
     #   emmet-core (emmet/emmet-core/setup.py)
-pymatgen==2023.5.31
+pymatgen==2023.6.23
     # via
     #   emmet-core
     #   emmet-core (emmet/emmet-core/setup.py)
     #   mp-api
-pyparsing==3.0.9
+pyparsing==3.1.0
     # via matplotlib
 python-dateutil==2.8.2
     # via
@@ -93,11 +95,11 @@ requests==2.31.0
     # via
     #   mp-api
     #   pymatgen
-ruamel-yaml==0.17.31
+ruamel-yaml==0.17.32
     # via pymatgen
 ruamel-yaml-clib==0.2.7
     # via ruamel-yaml
-scipy==1.10.1
+scipy==1.11.0
     # via
     #   -r python/requirements.txt
     #   pymatgen

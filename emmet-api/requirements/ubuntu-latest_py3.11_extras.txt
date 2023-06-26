@@ -17,11 +17,11 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.152
+boto3==1.26.158
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.152
+botocore==1.29.158
     # via
     #   boto3
     #   s3transfer
@@ -49,7 +49,7 @@ click==8.1.3
     #   uvicorn-tschaume
 colorama==0.4.6
     # via griffe
-contourpy==1.0.7
+contourpy==1.1.0
     # via matplotlib
 coverage[toml]==7.2.7
     # via pytest-cov
@@ -61,7 +61,7 @@ cycler==0.11.0
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==1.14.0
+ddtrace==1.15.0
     # via emmet-api (setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -71,13 +71,13 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.55.5
+emmet-core[all]==0.57.2
     # via
     #   emmet-api (setup.py)
     #   mp-api
 envier==0.4.0
     # via ddtrace
-fastapi==0.97.0
+fastapi==0.98.0
     # via
     #   emmet-api (setup.py)
     #   maggma
@@ -95,7 +95,7 @@ future==0.18.3
     #   uncertainties
 ghp-import==2.1.0
     # via mkdocs
-griffe==0.29.0
+griffe==0.29.1
     # via mkdocstrings-python
 gunicorn==20.1.0
     # via emmet-api (setup.py)
@@ -144,7 +144,7 @@ latexcodec==2.0.1
     # via pybtex
 livereload==2.6.3
     # via emmet-api (setup.py)
-maggma==0.51.7
+maggma==0.51.8
     # via emmet-api (setup.py)
 markdown==3.3.7
     # via
@@ -215,13 +215,13 @@ msgpack==1.0.5
     # via
     #   maggma
     #   mp-api
-mypy==1.3.0
+mypy==1.4.0
     # via emmet-api (setup.py)
 mypy-extensions==1.0.0
     # via
     #   emmet-api (setup.py)
     #   mypy
-natsort==8.3.1
+natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
 networkx==3.1
     # via
@@ -229,7 +229,7 @@ networkx==3.1
     #   robocrys
 nodeenv==1.8.0
     # via pre-commit
-numpy==1.24.3
+numpy==1.25.0
     # via
     #   contourpy
     #   maggma
@@ -264,15 +264,15 @@ paramiko==3.2.0
     # via sshtunnel
 pillow==9.5.0
     # via matplotlib
-platformdirs==3.5.3
+platformdirs==3.7.0
     # via virtualenv
 plotly==5.15.0
     # via pymatgen
-pluggy==1.0.0
+pluggy==1.2.0
     # via pytest
-pre-commit==3.3.2
+pre-commit==3.3.3
     # via emmet-api (setup.py)
-protobuf==4.23.2
+protobuf==4.23.3
     # via
     #   ddsketch
     #   ddtrace
@@ -319,14 +319,14 @@ pymdown-extensions==10.0.1
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.3.3
+pymongo==4.4.0
     # via
     #   maggma
     #   matminer
     #   mongogrant
 pynacl==1.5.0
     # via paramiko
-pyparsing==3.0.9
+pyparsing==3.1.0
     # via matplotlib
 pyrsistent==0.19.3
     # via jsonschema
@@ -365,7 +365,7 @@ requests==2.31.0
     #   pymatgen
 robocrys==0.2.8
     # via emmet-core
-ruamel-yaml==0.17.31
+ruamel-yaml==0.17.32
     # via
     #   pymatgen
     #   robocrys
@@ -419,9 +419,7 @@ sympy==1.12
 tabulate==0.9.0
     # via pymatgen
 tenacity==8.2.2
-    # via
-    #   ddtrace
-    #   plotly
+    # via plotly
 threadpoolctl==3.1.0
     # via scikit-learn
 tornado==6.3.2
@@ -433,7 +431,7 @@ tqdm==4.65.0
     #   pymatgen
 types-requests==2.31.0.1
     # via emmet-api (setup.py)
-types-setuptools==67.8.0.0
+types-setuptools==68.0.0.0
     # via emmet-api (setup.py)
 types-urllib3==1.26.25.13
     # via types-requests
@@ -455,7 +453,7 @@ urllib3==1.26.16
     #   requests
 uvicorn-tschaume==0.19.1
     # via emmet-api (setup.py)
-virtualenv==20.23.0
+virtualenv==20.23.1
     # via pre-commit
 watchdog==3.0.0
     # via mkdocs

@@ -45,7 +45,7 @@ def test_charges_builder(tasks_store, mol_store, charges_store):
     )
     builder.run()
 
-    assert charges_store.count() == 86
+    assert charges_store.count() == 80
     assert charges_store.count({"deprecated": True}) == 0
 
 
@@ -55,5 +55,5 @@ def test_spins_builder(tasks_store, mol_store, spins_store):
     )
     builder.run()
 
-    assert spins_store.count() == 19
+    assert spins_store.count() == 18
     assert spins_store.count({"deprecated": True}) == 0

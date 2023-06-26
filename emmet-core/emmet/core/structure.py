@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import List, Optional, Type, TypeVar
 
 from pydantic import Field
+
 from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Structure, Molecule

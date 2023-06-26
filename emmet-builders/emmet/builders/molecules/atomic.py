@@ -68,7 +68,13 @@ class PartialChargesBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[tasks, molecules], targets=[charges])
+        super().__init__(sources=[tasks, molecules], targets=[charges], **kwargs)
+        # Uncomment in case of issue with mrun not connecting automatically to collections
+        # for i in [self.tasks, self.molecules, self.charges]:
+        #     try:
+        #         i.connect()
+        #     except Exception as e:
+        #         print("Could not connect,", e)
 
     def ensure_indexes(self):
         """
@@ -341,7 +347,13 @@ class PartialSpinsBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[tasks, molecules], targets=[spins])
+        super().__init__(sources=[tasks, molecules], targets=[spins], **kwargs)
+        # Uncomment in case of issue with mrun not connecting automatically to collections
+        # for i in [self.tasks, self.molecules, self.spins]:
+        #     try:
+        #         i.connect()
+        #     except Exception as e:
+        #         print("Could not connect,", e)
 
     def ensure_indexes(self):
         """
@@ -360,7 +372,7 @@ class PartialSpinsBuilder(Builder):
         self.molecules.ensure_index("task_ids")
         self.molecules.ensure_index("formula_alphabetical")
 
-        # Search index for charges
+        # Search index for spins
         self.spins.ensure_index("molecule_id")
         self.spins.ensure_index("task_id")
         self.spins.ensure_index("method")

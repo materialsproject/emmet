@@ -35,5 +35,5 @@ def test_vibe_builder(tasks_store, mol_store, vibe_store):
     builder = VibrationBuilder(tasks_store, mol_store, vibe_store)
     builder.run()
 
-    assert vibe_store.count() == 22
+    assert vibe_store.count() == 20
     assert vibe_store.count({"frequencies": None}) == 0

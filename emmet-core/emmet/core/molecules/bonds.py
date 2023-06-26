@@ -19,31 +19,52 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
 metals = [
-    "Zn",
-    "Tl",
-    "Ti",
-    "Te",
-    "Sr",
-    "Sn",
-    "Pt",
-    "Rb",
-    "Po",
-    "Pb",
+    "Li",
+    "Be",
     "Na",
     "Mg",
-    "Li",
-    "K",
-    "In",
-    "Ga",
-    "Cu",
-    "Ca",
-    "Bi",
-    "Be",
-    "Ba",
-    "Au",
-    "At",
     "Al",
+    "K",
+    "Ca",
+    "Sc",
+    "Ti",
+    "V",
+    "Cr",
+    "Mn",
+    "Fe",
+    "Co",
+    "Ni",
+    "Cu",
+    "Zn",
+    "Ga",
+    "Rb",
+    "Sr",
+    "Y",
+    "Zr",
+    "Nb",
+    "Mo",
+    "Tc",
+    "Ru",
+    "Rh",
+    "Pd",
     "Ag",
+    "Cd",
+    "In",
+    "Sn",
+    "Cs",
+    "Ba",
+    "Hf",
+    "Ta",
+    "W",
+    "Re",
+    "Os",
+    "Ir",
+    "Pt",
+    "Au",
+    "Hg",
+    "Tl",
+    "Pb",
+    "Bi",
 ]
 
 BOND_METHODS = ["nbo", "critic2", "OpenBabelNN + metal_edge_extender"]
@@ -117,7 +138,9 @@ def _bonds_hybridization(nbo: Dict[str, Any], index: int):
             else:
                 m_contrib = None
 
-            if m_contrib is None or m_contrib >= 30.0:
+            if m_contrib is None:
+                bond_type = "covalent"
+            elif m_contrib >= 30.0:
                 bond_type = "covalent"
                 warnings.add("Contains covalent bond with metal atom")
             else:
@@ -260,7 +283,7 @@ def nbo_molecule_graph(mol: Molecule, nbo: Dict[str, Any]):
 
     distance_cutoff = 3.0
     energy_cutoff = 3.0
-    metal_indices = [i for i, e in enumerate(mol.species) if e in metals]
+    metal_indices = [i for i, e in enumerate(mol.species) if str(e) in metals]
 
     poss_coord: Dict[Optional[int], List[Optional[int]]] = dict()
     dist_mat = mol.distance_matrix
@@ -301,8 +324,12 @@ def nbo_molecule_graph(mol: Molecule, nbo: Dict[str, Any]):
     mg_copy = copy.deepcopy(mg)
     mg_copy.remove_nodes(metal_indices)
 
-    if not nx.is_connected(mg_copy.graph.to_undirected()):
-        warnings.add("Metal-centered complex")
+    try:
+        if not nx.is_connected(mg_copy.graph.to_undirected()):
+            warnings.add("Metal-centered complex")
+    except nx.exception.NetworkXPointlessConcept:
+        if len(mg.molecule) == 1:
+            warnings.add("Single-atom; no bonds")
 
     return (mg, list(warnings))
 

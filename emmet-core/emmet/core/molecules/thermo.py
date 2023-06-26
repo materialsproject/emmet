@@ -12,7 +12,7 @@ from emmet.core.molecules.molecule_property import PropertyDoc
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
-def get_free_energy(energy, enthalpy, entropy, temperature=298.15):
+def get_free_energy(energy, enthalpy, entropy, temperature=298.15, convert_energy=True):
     """
     Helper function to calculate Gibbs free energy from electronic energy, enthalpy, and entropy
 
@@ -24,7 +24,13 @@ def get_free_energy(energy, enthalpy, entropy, temperature=298.15):
     returns: Free energy in eV
 
     """
-    return energy * 27.2114 + enthalpy * 0.043363 - temperature * entropy * 0.000043363
+
+    if convert_energy:
+        e = energy * 27.2114
+    else:
+        e = energy
+
+    return e + enthalpy * 0.043363 - temperature * entropy * 0.000043363
 
 
 class MoleculeThermoDoc(PropertyDoc):
@@ -38,6 +44,22 @@ class MoleculeThermoDoc(PropertyDoc):
         False,
         description="Was a single-point calculation at higher level of "
         "theory used to correct the electronic energy?",
+    )
+
+    base_level_of_theory: LevelOfTheory = Field(
+        None, description="Level of theory used for uncorrected thermochemistry."
+    )
+
+    base_solvent: str = Field(
+        None,
+        description="String representation of the solvent "
+        "environment used for uncorrected thermochemistry.",
+    )
+
+    base_lot_solvent: str = Field(
+        None,
+        description="String representation of the level of theory and solvent "
+        "environment used for uncorrected thermochemistry.",
     )
 
     correction_level_of_theory: LevelOfTheory = Field(
@@ -136,6 +158,9 @@ class MoleculeThermoDoc(PropertyDoc):
             correction_lot = None
             correction_solvent = None
             correction_lot_solvent = None
+            level_of_theory = task.level_of_theory
+            solvent = task.solvent
+            lot_solvent = task.lot_solvent
             combined_lot_solvent = task.lot_solvent
         else:
             energy = correction_task.output.final_energy
@@ -144,6 +169,9 @@ class MoleculeThermoDoc(PropertyDoc):
             correction_solvent = correction_task.solvent
             correction_lot_solvent = correction_task.lot_solvent
             combined_lot_solvent = f"{task.lot_solvent}//{correction_lot_solvent}"
+            level_of_theory = correction_lot
+            solvent = correction_solvent
+            lot_solvent = combined_lot_solvent
 
         total_enthalpy = task.output.enthalpy
         total_entropy = task.output.entropy
@@ -186,10 +214,13 @@ class MoleculeThermoDoc(PropertyDoc):
                         meta_molecule=mol,
                         property_id=property_id,
                         molecule_id=molecule_id,
-                        level_of_theory=task.level_of_theory,
-                        solvent=task.solvent,
-                        lot_solvent=task.lot_solvent,
+                        level_of_theory=level_of_theory,
+                        solvent=solvent,
+                        lot_solvent=lot_solvent,
                         correction=correction,
+                        base_level_of_theory=task.level_of_theory,
+                        base_solvent=task.solvent,
+                        base_lot_solvent=task.lot_solvent,
                         correction_level_of_theory=correction_lot,
                         correction_solvent=correction_solvent,
                         correction_lot_solvent=correction_lot_solvent,

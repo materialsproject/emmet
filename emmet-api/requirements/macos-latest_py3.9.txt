@@ -17,11 +17,11 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.152
+boto3==1.26.158
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.152
+botocore==1.29.158
     # via
     #   boto3
     #   s3transfer
@@ -42,7 +42,7 @@ click==8.1.3
     #   flask
     #   mongogrant
     #   uvicorn-tschaume
-contourpy==1.0.7
+contourpy==1.1.0
     # via matplotlib
 cryptography==41.0.1
     # via paramiko
@@ -50,7 +50,7 @@ cycler==0.11.0
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==1.14.0
+ddtrace==1.15.0
     # via emmet-api (setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -58,7 +58,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.55.5
+emmet-core[all]==0.57.2
     # via
     #   emmet-api (setup.py)
     #   mp-api
@@ -68,7 +68,7 @@ exceptiongroup==1.1.1
     # via
     #   anyio
     #   cattrs
-fastapi==0.97.0
+fastapi==0.98.0
     # via
     #   emmet-api (setup.py)
     #   maggma
@@ -116,7 +116,7 @@ kiwisolver==1.4.4
     # via matplotlib
 latexcodec==2.0.1
     # via pybtex
-maggma==0.51.7
+maggma==0.51.8
     # via emmet-api (setup.py)
 markupsafe==2.1.3
     # via
@@ -150,7 +150,7 @@ networkx==3.1
     # via
     #   pymatgen
     #   robocrys
-numpy==1.24.3
+numpy==1.25.0
     # via
     #   contourpy
     #   maggma
@@ -185,7 +185,7 @@ pillow==9.5.0
     # via matplotlib
 plotly==5.15.0
     # via pymatgen
-protobuf==4.23.2
+protobuf==4.23.3
     # via
     #   ddsketch
     #   ddtrace
@@ -218,14 +218,14 @@ pymatgen-analysis-alloys==0.0.6
     # via emmet-core
 pymatgen-analysis-diffusion==2022.7.21
     # via emmet-core
-pymongo==4.3.3
+pymongo==4.4.0
     # via
     #   maggma
     #   matminer
     #   mongogrant
 pynacl==1.5.0
     # via paramiko
-pyparsing==3.0.9
+pyparsing==3.1.0
     # via matplotlib
 pyrsistent==0.19.3
     # via jsonschema
@@ -249,7 +249,7 @@ requests==2.31.0
     #   pymatgen
 robocrys==0.2.8
     # via emmet-core
-ruamel-yaml==0.17.31
+ruamel-yaml==0.17.32
     # via
     #   pymatgen
     #   robocrys
@@ -300,9 +300,7 @@ sympy==1.12
 tabulate==0.9.0
     # via pymatgen
 tenacity==8.2.2
-    # via
-    #   ddtrace
-    #   plotly
+    # via plotly
 threadpoolctl==3.1.0
     # via scikit-learn
 tqdm==4.65.0
