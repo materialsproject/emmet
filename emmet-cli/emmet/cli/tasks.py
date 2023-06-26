@@ -231,7 +231,8 @@ def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
         logger.error("Not running --clean without --check enabled.")
         return ReturnCodes.ERROR
 
-    check_pattern()
+    if not reorg:
+        check_pattern()
 
     logger.info("Discover launch directories ...")
     block_launchers = load_block_launchers()
