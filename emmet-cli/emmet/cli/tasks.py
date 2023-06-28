@@ -611,7 +611,8 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
             {"$group": {"_id": None, "num_max": {"$max": "$num_int"}}},
         ]
         result = list(target.collection.aggregate(pipeline))
-        next_tid = result[0]["num_max"] + 1
+        # Manually set next_tid when parsing into an empty task collection for testing
+        next_tid = result[0]["num_max"] + 1 if result else 1000001
         lst = [f"mp-{next_tid + n}" for n in range(nmax)]
         task_ids = chunks(lst, chunk_size)
 
