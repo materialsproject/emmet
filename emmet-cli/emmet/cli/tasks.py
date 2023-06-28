@@ -613,7 +613,7 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
         result = list(target.collection.aggregate(pipeline))
 
         if not result:
-            next_tid = 1 # Only occurs when inserting into an empty task collection for testing
+            next_tid = 1000001 # Only occurs when inserting into an empty task collection for testing
         else:
             next_tid = result[0]["num_max"] + 1
 
