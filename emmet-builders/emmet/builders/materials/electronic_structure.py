@@ -617,7 +617,7 @@ class ElectronicStructureBuilder(Builder):
                     )
 
                 materials_doc["bandstructure"][bs_type]["object"] = (
-                    bs_obj["data"] if bs_obj is not None else None
+                    bs_obj if bs_obj is not None else None
                 )
 
                 materials_doc["bandstructure"][bs_type][
@@ -662,9 +662,7 @@ class ElectronicStructureBuilder(Builder):
                     criteria={"fs_id": sorted_dos_data[0]["fs_id"]}
                 )
 
-            materials_doc["dos"]["object"] = (
-                dos_obj["data"] if dos_obj is not None else None
-            )
+            materials_doc["dos"]["object"] = dos_obj if dos_obj is not None else None
 
             materials_doc["dos"]["output_structure"] = sorted_dos_data[0][
                 "output_structure"
