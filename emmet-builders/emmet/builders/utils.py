@@ -1,9 +1,12 @@
 from typing import Set, Union, Any
 import sys
 import os
-import gzip
+from gzip import GzipFile
 import orjson
+import json
+from io import BytesIO
 from monty.serialization import MontyDecoder
+from botocore.exceptions import ClientError
 from itertools import chain, combinations
 from pymatgen.core import Structure
 from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
@@ -155,7 +158,7 @@ def query_open_data(
     key: str,
     monty_decode: bool = True,
     s3_resource: Any = None,
-) -> dict:
+) -> Union[dict, None]:
     """Query a Materials Project AWS S3 Open Data bucket directly with boto3
 
     Args:
@@ -166,17 +169,35 @@ def query_open_data(
         s3_resource (Optional[Any]): S3 resource. One will be instantiated if none are provided
 
     Returns:
-        dict: MontyDecoded data
+        dict: MontyDecoded data or None
     """
-    ref = s3_resource.Object(bucket, f"{prefix}/{key}.json.gz")  # type: ignore
-    bytes = ref.get()["Body"]  # type: ignore
-
-    with gzip.GzipFile(fileobj=bytes) as gzipfile:
-        content = gzipfile.read()
+    
+    def decode(content, monty_decode):
         if monty_decode:
             result = MontyDecoder().decode(content)
         else:
             result = orjson.loads(content)
+        return result
+            
+    try:
+        file_key = f"{prefix}/{key}.json.gz"
+        ref = s3_resource.Object(bucket, file_key)  # type: ignore
+        bytes = ref.get()["Body"]  # type: ignore
+
+        with GzipFile(fileobj=bytes, mode='r') as gzipfile:
+            content = gzipfile.read()
+            
+        try:
+            result = decode(content, monty_decode)
+        except (orjson.JSONDecodeError, json.JSONDecodeError):
+            try:
+                with GzipFile(fileobj=BytesIO(content), mode='r') as gzipfile_nested:
+                    result = decode(gzipfile_nested.read(), monty_decode)
+            except Exception:
+                print(f"Issue decoding {file_key} from bucket {bucket}")
+                return None
+    except ClientError:
+        return None
 
     return result
 

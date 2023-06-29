@@ -157,6 +157,7 @@ class ElectronicStructureBuilder(Builder):
 
         for bs_type, bs_entry in mat["bandstructure"].items():
             if bs_entry.get("object", None) is not None:
+                
                 bs[bs_type] = (
                     {
                         bs_entry["task_id"]: BandStructureSymmLine.from_dict(
@@ -410,6 +411,7 @@ class ElectronicStructureBuilder(Builder):
                     structure = Structure.from_dict(task_query["output"]["structure"])
 
                     kpoints = task_query["orig_inputs"]["kpoints"]
+
                     labels_dict = {
                         label: point
                         for label, point in zip(kpoints["labels"], kpoints["kpoints"])
@@ -426,6 +428,7 @@ class ElectronicStructureBuilder(Builder):
                             _, _, bucket, prefix = self.bandstructure_fs.strip(
                                 "/"
                             ).split("/")
+
                             bs_dict = query_open_data(
                                 bucket,
                                 prefix,
@@ -440,9 +443,11 @@ class ElectronicStructureBuilder(Builder):
 
                         if bs_dict is not None:
                             bs = BandStructureSymmLine.from_dict(bs_dict["data"])
-
+                            
+                            labels_dict = {label: kpoint.frac_coords for label, kpoint in bs.labels_dict.items()}
+                            
                             bs_type = self._obtain_path_type(
-                                bs.labels_dict, bs.structure
+                                labels_dict, bs.structure
                             )
 
                     is_hubbard = task_query["input"]["is_hubbard"]
@@ -462,6 +467,7 @@ class ElectronicStructureBuilder(Builder):
                                 "nkpoints": int(nkpoints),
                                 "updated_on": lu_dt,
                                 "output_structure": structure,
+                                "labels_dict": labels_dict
                             }
                         )
 
@@ -617,7 +623,7 @@ class ElectronicStructureBuilder(Builder):
                     )
 
                 materials_doc["bandstructure"][bs_type]["object"] = (
-                    bs_obj if bs_obj is not None else None
+                    bs_obj["data"] if bs_obj is not None else None
                 )
 
                 materials_doc["bandstructure"][bs_type][
@@ -662,7 +668,7 @@ class ElectronicStructureBuilder(Builder):
                     criteria={"fs_id": sorted_dos_data[0]["fs_id"]}
                 )
 
-            materials_doc["dos"]["object"] = dos_obj if dos_obj is not None else None
+            materials_doc["dos"]["object"] = dos_obj["data"] if dos_obj is not None else None
 
             materials_doc["dos"]["output_structure"] = sorted_dos_data[0][
                 "output_structure"
