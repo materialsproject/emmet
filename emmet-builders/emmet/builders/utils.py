@@ -1,6 +1,12 @@
-from typing import Set, Union
+from typing import Set, Union, Any
 import sys
 import os
+from gzip import GzipFile
+import orjson
+import json
+from io import BytesIO
+from monty.serialization import MontyDecoder
+from botocore.exceptions import ClientError
 from itertools import chain, combinations
 from pymatgen.core import Structure
 from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
@@ -144,6 +150,56 @@ def get_hop_cutoff(
 
     else:
         return None
+
+
+def query_open_data(
+    bucket: str,
+    prefix: str,
+    key: str,
+    monty_decode: bool = True,
+    s3_resource: Any = None,
+) -> Union[dict, None]:
+    """Query a Materials Project AWS S3 Open Data bucket directly with boto3
+
+    Args:
+        bucket (str): Materials project bucket name
+        prefix (str): Full set of file prefixes
+        key (str): Key for file
+        monty_decode (bool): Whether to monty decode or keep as dictionary. Defaults to True.
+        s3_resource (Optional[Any]): S3 resource. One will be instantiated if none are provided
+
+    Returns:
+        dict: MontyDecoded data or None
+    """
+
+    def decode(content, monty_decode):
+        if monty_decode:
+            result = MontyDecoder().decode(content)
+        else:
+            result = orjson.loads(content)
+        return result
+
+    try:
+        file_key = f"{prefix}/{key}.json.gz"
+        ref = s3_resource.Object(bucket, file_key)  # type: ignore
+        bytes = ref.get()["Body"]  # type: ignore
+
+        with GzipFile(fileobj=bytes, mode="r") as gzipfile:
+            content = gzipfile.read()
+
+        try:
+            result = decode(content, monty_decode)
+        except (orjson.JSONDecodeError, json.JSONDecodeError):
+            try:
+                with GzipFile(fileobj=BytesIO(content), mode="r") as gzipfile_nested:
+                    result = decode(gzipfile_nested.read(), monty_decode)
+            except Exception:
+                print(f"Issue decoding {file_key} from bucket {bucket}")
+                return None
+    except ClientError:
+        return None
+
+    return result
 
 
 # From: https://stackoverflow.com/a/45669280
