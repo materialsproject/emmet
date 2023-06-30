@@ -171,27 +171,27 @@ def query_open_data(
     Returns:
         dict: MontyDecoded data or None
     """
-    
+
     def decode(content, monty_decode):
         if monty_decode:
             result = MontyDecoder().decode(content)
         else:
             result = orjson.loads(content)
         return result
-            
+
     try:
         file_key = f"{prefix}/{key}.json.gz"
         ref = s3_resource.Object(bucket, file_key)  # type: ignore
         bytes = ref.get()["Body"]  # type: ignore
 
-        with GzipFile(fileobj=bytes, mode='r') as gzipfile:
+        with GzipFile(fileobj=bytes, mode="r") as gzipfile:
             content = gzipfile.read()
-            
+
         try:
             result = decode(content, monty_decode)
         except (orjson.JSONDecodeError, json.JSONDecodeError):
             try:
-                with GzipFile(fileobj=BytesIO(content), mode='r') as gzipfile_nested:
+                with GzipFile(fileobj=BytesIO(content), mode="r") as gzipfile_nested:
                     result = decode(gzipfile_nested.read(), monty_decode)
             except Exception:
                 print(f"Issue decoding {file_key} from bucket {bucket}")

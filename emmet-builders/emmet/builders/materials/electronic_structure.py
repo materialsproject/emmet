@@ -157,7 +157,6 @@ class ElectronicStructureBuilder(Builder):
 
         for bs_type, bs_entry in mat["bandstructure"].items():
             if bs_entry.get("object", None) is not None:
-                
                 bs[bs_type] = (
                     {
                         bs_entry["task_id"]: BandStructureSymmLine.from_dict(
@@ -443,12 +442,13 @@ class ElectronicStructureBuilder(Builder):
 
                         if bs_dict is not None:
                             bs = BandStructureSymmLine.from_dict(bs_dict["data"])
-                            
-                            labels_dict = {label: kpoint.frac_coords for label, kpoint in bs.labels_dict.items()}
-                            
-                            bs_type = self._obtain_path_type(
-                                labels_dict, bs.structure
-                            )
+
+                            labels_dict = {
+                                label: kpoint.frac_coords
+                                for label, kpoint in bs.labels_dict.items()
+                            }
+
+                            bs_type = self._obtain_path_type(labels_dict, bs.structure)
 
                     is_hubbard = task_query["input"]["is_hubbard"]
                     lmaxmix = task_query["input"]["incar"].get(
@@ -467,7 +467,7 @@ class ElectronicStructureBuilder(Builder):
                                 "nkpoints": int(nkpoints),
                                 "updated_on": lu_dt,
                                 "output_structure": structure,
-                                "labels_dict": labels_dict
+                                "labels_dict": labels_dict,
                             }
                         )
 
@@ -668,7 +668,9 @@ class ElectronicStructureBuilder(Builder):
                     criteria={"fs_id": sorted_dos_data[0]["fs_id"]}
                 )
 
-            materials_doc["dos"]["object"] = dos_obj["data"] if dos_obj is not None else None
+            materials_doc["dos"]["object"] = (
+                dos_obj["data"] if dos_obj is not None else None
+            )
 
             materials_doc["dos"]["output_structure"] = sorted_dos_data[0][
                 "output_structure"
