@@ -19,7 +19,7 @@ _TASK_TYPES = [
     "Structure Optimization",
     "Deformation",
     "Optic",
-    "MD",
+    "Molecular Dynamics",
     "Unrecognized",
 ]
 

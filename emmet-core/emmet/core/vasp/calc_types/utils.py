@@ -112,7 +112,7 @@ def task_type(
         calc_type.append("Deformation")
 
     elif incar.get("IBRION", 1) == 0:
-        calc_type.append("MD")
+        calc_type.append("Molecular Dynamics")
 
     if len(calc_type) == 0:
         return TaskType("Unrecognized")
