@@ -4,6 +4,8 @@
 #
 #    pip-compile --output-file=emmet/emmet-core/requirements/deployment.txt --resolver=backtracking emmet/emmet-core/setup.py python/requirements.txt
 #
+annotated-types==0.5.0
+    # via pydantic
 certifi==2023.5.7
     # via requests
 charset-normalizer==3.1.0
@@ -12,7 +14,7 @@ contourpy==1.1.0
     # via matplotlib
 cycler==0.11.0
     # via matplotlib
-emmet-core==0.57.2
+emmet-core==0.58.0
     # via mp-api
 fonttools==4.40.0
     # via matplotlib
@@ -59,7 +61,7 @@ packaging==23.1
     #   plotly
 palettable==3.3.3
     # via pymatgen
-pandas==2.0.2
+pandas==1.5.3
     # via
     #   -r python/requirements.txt
     #   pymatgen
@@ -72,11 +74,13 @@ pybtex==0.24.0
     #   emmet-core
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pymatgen
-pydantic==1.10.9
+pydantic==2.0
     # via
     #   emmet-core
     #   emmet-core (emmet/emmet-core/setup.py)
-pymatgen==2023.6.23
+pydantic-core==2.0.1
+    # via pydantic
+pymatgen==2023.6.28
     # via
     #   emmet-core
     #   emmet-core (emmet/emmet-core/setup.py)
@@ -99,7 +103,7 @@ ruamel-yaml==0.17.32
     # via pymatgen
 ruamel-yaml-clib==0.2.7
     # via ruamel-yaml
-scipy==1.11.0
+scipy==1.11.1
     # via
     #   -r python/requirements.txt
     #   pymatgen
@@ -121,14 +125,13 @@ tenacity==8.2.2
     # via plotly
 tqdm==4.65.0
     # via pymatgen
-typing-extensions==4.6.3
+typing-extensions==4.7.0
     # via
     #   emmet-core
     #   emmet-core (emmet/emmet-core/setup.py)
     #   mp-api
     #   pydantic
-tzdata==2023.3
-    # via pandas
+    #   pydantic-core
 uncertainties==3.1.7
     # via pymatgen
 urllib3==2.0.3
