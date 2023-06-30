@@ -58,7 +58,7 @@ packaging==23.1
     #   plotly
 palettable==3.3.3
     # via pymatgen
-pandas==2.0.2
+pandas==2.0.3
     # via pymatgen
 pillow==9.5.0
     # via matplotlib
@@ -73,7 +73,7 @@ pydantic==1.10.9
     # via
     #   emmet-core
     #   emmet-core (setup.py)
-pymatgen==2023.6.23
+pymatgen==2023.6.28
     # via
     #   emmet-core
     #   emmet-core (setup.py)
@@ -96,7 +96,7 @@ ruamel-yaml==0.17.32
     # via pymatgen
 ruamel-yaml-clib==0.2.7
     # via ruamel-yaml
-scipy==1.11.0
+scipy==1.11.1
     # via pymatgen
 six==1.16.0
     # via
@@ -116,7 +116,7 @@ tenacity==8.2.2
     # via plotly
 tqdm==4.65.0
     # via pymatgen
-typing-extensions==4.6.3
+typing-extensions==4.7.0
     # via
     #   emmet-core
     #   emmet-core (setup.py)
