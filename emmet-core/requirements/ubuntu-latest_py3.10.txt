@@ -12,7 +12,7 @@ contourpy==1.1.0
     # via matplotlib
 cycler==0.11.0
     # via matplotlib
-emmet-core==0.57.2
+emmet-core==0.58.0
     # via mp-api
 fonttools==4.40.0
     # via matplotlib
@@ -58,7 +58,7 @@ palettable==3.3.3
     # via pymatgen
 pandas==2.0.3
     # via pymatgen
-pillow==9.5.0
+pillow==10.0.0
     # via matplotlib
 plotly==5.15.0
     # via pymatgen
@@ -67,7 +67,7 @@ pybtex==0.24.0
     #   emmet-core
     #   emmet-core (setup.py)
     #   pymatgen
-pydantic==1.10.9
+pydantic==1.10.10
     # via
     #   emmet-core
     #   emmet-core (setup.py)
@@ -114,7 +114,7 @@ tenacity==8.2.2
     # via plotly
 tqdm==4.65.0
     # via pymatgen
-typing-extensions==4.7.0
+typing-extensions==4.7.1
     # via
     #   emmet-core
     #   emmet-core (setup.py)
