@@ -14,9 +14,9 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.164
+boto3==1.26.165
     # via maggma
-botocore==1.29.164
+botocore==1.29.165
     # via
     #   boto3
     #   s3transfer
@@ -42,11 +42,11 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.57.2
+emmet-core[all]==0.58.0
     # via
     #   emmet-builders (setup.py)
     #   mp-api
-fastapi==0.98.0
+fastapi==0.99.1
     # via maggma
 flask==2.3.2
     # via mongogrant
@@ -62,7 +62,7 @@ idna==3.4
     # via
     #   anyio
     #   requests
-inflect==6.0.4
+inflect==6.1.0
     # via robocrys
 itsdangerous==2.1.2
     # via flask
@@ -147,7 +147,7 @@ pandas==1.5.3
     #   pymatgen
 paramiko==3.2.0
     # via sshtunnel
-pillow==9.5.0
+pillow==10.0.0
     # via matplotlib
 plotly==5.15.0
     # via pymatgen
@@ -160,7 +160,7 @@ pybtex==0.24.0
     #   robocrys
 pycparser==2.21
     # via cffi
-pydantic==1.10.9
+pydantic==1.10.10
     # via
     #   emmet-core
     #   fastapi
@@ -219,7 +219,7 @@ ruamel-yaml-clib==0.2.7
     # via ruamel-yaml
 s3transfer==0.6.1
     # via boto3
-scikit-learn==1.2.2
+scikit-learn==1.3.0
     # via matminer
 scipy==1.11.1
     # via
@@ -264,9 +264,10 @@ tqdm==4.65.0
     #   maggma
     #   matminer
     #   pymatgen
-typing-extensions==4.7.0
+typing-extensions==4.7.1
     # via
     #   emmet-core
+    #   fastapi
     #   mp-api
     #   pydantic
     #   pydash
