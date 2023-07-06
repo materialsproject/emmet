@@ -6,22 +6,23 @@
 #
 aioitertools==0.11.0
     # via maggma
-anyio==3.7.0
+anyio==3.7.1
     # via starlette
 attrs==23.1.0
     # via
     #   cattrs
     #   ddtrace
     #   jsonschema
+    #   referencing
 bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.165
+boto3==1.28.0
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.165
+botocore==1.31.0
     # via
     #   boto3
     #   s3transfer
@@ -41,7 +42,7 @@ cfgv==3.3.1
     # via pre-commit
 charset-normalizer==3.1.0
     # via requests
-click==8.1.3
+click==8.1.4
     # via
     #   flask
     #   mkdocs
@@ -71,7 +72,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.58.0
+emmet-core[all]==0.58.1
     # via
     #   emmet-api (setup.py)
     #   mp-api
@@ -102,7 +103,7 @@ future==0.18.3
     #   uncertainties
 ghp-import==2.1.0
     # via mkdocs
-griffe==0.30.1
+griffe==0.31.0
     # via mkdocstrings-python
 gunicorn==20.1.0
     # via emmet-api (setup.py)
@@ -126,8 +127,9 @@ importlib-metadata==6.0.1
 importlib-resources==5.12.0
     # via
     #   jsonschema
+    #   jsonschema-specifications
     #   matplotlib
-inflect==6.1.1
+inflect==7.0.0
     # via robocrys
 iniconfig==2.0.0
     # via pytest
@@ -150,17 +152,19 @@ joblib==1.3.1
     #   scikit-learn
 jsmin==3.0.1
     # via mkdocs-minify-plugin
-jsonschema==4.17.3
+jsonschema==4.18.0
     # via
     #   ddtrace
     #   maggma
+jsonschema-specifications==2023.6.1
+    # via jsonschema
 kiwisolver==1.4.4
     # via matplotlib
 latexcodec==2.0.1
     # via pybtex
 livereload==2.6.3
     # via emmet-api (setup.py)
-maggma==0.51.12
+maggma==0.51.14
     # via emmet-api (setup.py)
 markdown==3.3.7
     # via
@@ -176,7 +180,7 @@ markupsafe==2.1.3
     #   werkzeug
 matminer==0.9.0
     # via robocrys
-matplotlib==3.7.1
+matplotlib==3.7.2
     # via pymatgen
 mccabe==0.7.0
     # via flake8
@@ -307,13 +311,13 @@ pycodestyle==2.10.0
     #   flake8
 pycparser==2.21
     # via cffi
-pydantic==1.10.10
+pydantic==1.10.11
     # via
     #   emmet-core
     #   fastapi
     #   inflect
     #   maggma
-pydash==7.0.4
+pydash==7.0.5
     # via maggma
 pydocstyle==6.3.0
     # via emmet-api (setup.py)
@@ -344,10 +348,8 @@ pymongo==4.4.0
     #   mongogrant
 pynacl==1.5.0
     # via paramiko
-pyparsing==3.1.0
+pyparsing==3.0.9
     # via matplotlib
-pyrsistent==0.19.3
-    # via jsonschema
 pytest==7.4.0
     # via
     #   emmet-api (setup.py)
@@ -375,6 +377,10 @@ pyyaml-env-tag==0.1
     # via mkdocs
 pyzmq==24.0.1
     # via maggma
+referencing==0.29.1
+    # via
+    #   jsonschema
+    #   jsonschema-specifications
 requests==2.31.0
     # via
     #   matminer
@@ -383,6 +389,10 @@ requests==2.31.0
     #   pymatgen
 robocrys==0.2.8
     # via emmet-core
+rpds-py==0.8.8
+    # via
+    #   jsonschema
+    #   referencing
 ruamel-yaml==0.17.32
     # via
     #   pymatgen
@@ -454,7 +464,7 @@ tqdm==4.65.0
     #   pymatgen
 types-requests==2.31.0.1
     # via emmet-api (setup.py)
-types-setuptools==68.0.0.0
+types-setuptools==68.0.0.1
     # via emmet-api (setup.py)
 types-urllib3==1.26.25.13
     # via types-requests
@@ -466,6 +476,7 @@ typing-extensions==4.7.1
     #   ddtrace
     #   emmet-core
     #   fastapi
+    #   inflect
     #   mkdocstrings
     #   mp-api
     #   mypy
