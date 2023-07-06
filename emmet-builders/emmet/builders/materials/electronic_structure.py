@@ -448,7 +448,12 @@ class ElectronicStructureBuilder(Builder):
                                 for label, kpoint in bs.labels_dict.items()
                             }
 
-                            bs_type = self._obtain_path_type(labels_dict, bs.structure)
+                            try:
+                                bs_type = self._obtain_path_type(
+                                    labels_dict, bs.structure
+                                )
+                            except Exception:
+                                bs_type = None
 
                     is_hubbard = task_query["input"]["is_hubbard"]
                     lmaxmix = task_query["input"]["incar"].get(
