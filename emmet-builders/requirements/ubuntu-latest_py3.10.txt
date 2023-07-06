@@ -6,17 +6,19 @@
 #
 aioitertools==0.11.0
     # via maggma
-anyio==3.7.0
+anyio==3.7.1
     # via starlette
 attrs==23.1.0
-    # via jsonschema
+    # via
+    #   jsonschema
+    #   referencing
 bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.165
+boto3==1.28.0
     # via maggma
-botocore==1.29.165
+botocore==1.31.0
     # via
     #   boto3
     #   s3transfer
@@ -28,7 +30,7 @@ cffi==1.15.1
     #   pynacl
 charset-normalizer==3.1.0
     # via requests
-click==8.1.3
+click==8.1.4
     # via
     #   flask
     #   mongogrant
@@ -42,7 +44,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.58.0
+emmet-core[all]==0.58.1
     # via
     #   emmet-builders (setup.py)
     #   mp-api
@@ -64,7 +66,7 @@ idna==3.4
     # via
     #   anyio
     #   requests
-inflect==6.1.1
+inflect==7.0.0
     # via robocrys
 itsdangerous==2.1.2
     # via flask
@@ -78,13 +80,15 @@ joblib==1.3.1
     # via
     #   pymatgen-analysis-diffusion
     #   scikit-learn
-jsonschema==4.17.3
+jsonschema==4.18.0
     # via maggma
+jsonschema-specifications==2023.6.1
+    # via jsonschema
 kiwisolver==1.4.4
     # via matplotlib
 latexcodec==2.0.1
     # via pybtex
-maggma==0.51.12
+maggma==0.51.14
     # via emmet-builders (setup.py)
 markupsafe==2.1.3
     # via
@@ -94,7 +98,7 @@ matminer==0.9.0
     # via
     #   emmet-builders (setup.py)
     #   robocrys
-matplotlib==3.7.1
+matplotlib==3.7.2
     # via pymatgen
 mongogrant==0.3.3
     # via maggma
@@ -162,13 +166,13 @@ pybtex==0.24.0
     #   robocrys
 pycparser==2.21
     # via cffi
-pydantic==1.10.10
+pydantic==1.10.11
     # via
     #   emmet-core
     #   fastapi
     #   inflect
     #   maggma
-pydash==7.0.4
+pydash==7.0.5
     # via maggma
 pymatgen==2023.6.28
     # via
@@ -189,10 +193,8 @@ pymongo==4.4.0
     #   mongogrant
 pynacl==1.5.0
     # via paramiko
-pyparsing==3.1.0
+pyparsing==3.0.9
     # via matplotlib
-pyrsistent==0.19.3
-    # via jsonschema
 python-dateutil==2.8.2
     # via
     #   botocore
@@ -205,6 +207,10 @@ pyyaml==6.0
     # via pybtex
 pyzmq==24.0.1
     # via maggma
+referencing==0.29.1
+    # via
+    #   jsonschema
+    #   jsonschema-specifications
 requests==2.31.0
     # via
     #   matminer
@@ -213,6 +219,10 @@ requests==2.31.0
     #   pymatgen
 robocrys==0.2.8
     # via emmet-core
+rpds-py==0.8.8
+    # via
+    #   jsonschema
+    #   referencing
 ruamel-yaml==0.17.32
     # via
     #   pymatgen
@@ -270,6 +280,7 @@ typing-extensions==4.7.1
     # via
     #   emmet-core
     #   fastapi
+    #   inflect
     #   mp-api
     #   pydantic
     #   pydash
