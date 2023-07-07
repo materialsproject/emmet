@@ -16,9 +16,9 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.28.0
+boto3==1.28.1
     # via maggma
-botocore==1.31.0
+botocore==1.31.1
     # via
     #   boto3
     #   s3transfer
@@ -32,7 +32,7 @@ cffi==1.15.1
     #   pynacl
 cfgv==3.3.1
     # via pre-commit
-charset-normalizer==3.1.0
+charset-normalizer==3.2.0
     # via requests
 click==8.1.4
     # via
@@ -57,7 +57,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.58.1
+emmet-core[all]==0.58.2
     # via
     #   emmet-builders (setup.py)
     #   mp-api
@@ -65,7 +65,7 @@ exceptiongroup==1.1.2
     # via
     #   anyio
     #   pytest
-fastapi==0.99.1
+fastapi==0.100.0
     # via maggma
 filelock==3.12.2
     # via virtualenv
@@ -93,13 +93,13 @@ idna==3.4
     # via
     #   anyio
     #   requests
-importlib-metadata==6.7.0
+importlib-metadata==6.8.0
     # via
     #   flask
     #   markdown
     #   mkdocs
     #   mkdocstrings
-importlib-resources==5.12.0
+importlib-resources==6.0.0
     # via matplotlib
 inflect==7.0.0
     # via robocrys
@@ -134,7 +134,7 @@ latexcodec==2.0.1
     # via pybtex
 livereload==2.6.3
     # via emmet-builders (setup.py)
-maggma==0.51.14
+maggma==0.51.17
     # via emmet-builders (setup.py)
 markdown==3.3.7
     # via
@@ -235,7 +235,7 @@ numpy==1.25.0
     #   seekpath
     #   shapely
     #   spglib
-orjson==3.9.1
+orjson==3.9.2
     # via maggma
 packaging==23.1
     # via
@@ -254,7 +254,7 @@ paramiko==3.2.0
     # via sshtunnel
 pillow==10.0.0
     # via matplotlib
-platformdirs==3.8.0
+platformdirs==3.8.1
     # via virtualenv
 plotly==5.15.0
     # via pymatgen
