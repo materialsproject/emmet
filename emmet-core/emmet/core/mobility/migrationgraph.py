@@ -374,17 +374,13 @@ class MigrationGraphDoc(EmmetBaseModel):
             if ini in mgdoc_sites_mapping.keys():
                 dis_ini = mgdoc_sites_mapping[ini]
             else:
-                dis_sites_list.append(
-                    list(inserted_ion_coords[ini]["site_frac_coords"])  # type: ignore
-                )
+                dis_sites_list.append(list(inserted_ion_coords[ini]["site_frac_coords"]))  # type: ignore
                 dis_ini = len(dis_sites_list) - 1
                 mgdoc_sites_mapping[ini] = dis_ini
             if end in mgdoc_sites_mapping.keys():
                 dis_end = mgdoc_sites_mapping[end]
             else:
-                dis_sites_list.append(
-                    list(inserted_ion_coords[end]["site_frac_coords"])  # type: ignore
-                )
+                dis_sites_list.append(list(inserted_ion_coords[end]["site_frac_coords"]))  # type: ignore
                 dis_end = len(dis_sites_list) - 1
                 mgdoc_sites_mapping[end] = dis_end
 

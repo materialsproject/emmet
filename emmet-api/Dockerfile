@@ -1,4 +1,4 @@
-FROM materialsproject/devops:python-3.1010.4 as base
+FROM materialsproject/devops:python-3.1010.7 as base
 RUN apt-get update && apt-get install -y --no-install-recommends libopenblas-dev libjpeg62 && apt-get clean
 
 FROM base as builder
@@ -31,8 +31,8 @@ ENV PATH=/root/.local/bin:$PATH \
     PORT=10001 \
     NUM_WORKERS=4 \
     RELOAD="" \
-    MAX_REQUESTS=200000 \
-    MAX_REQUESTS_JITTER=20000 \
+    MAX_REQUESTS=0 \
+    MAX_REQUESTS_JITTER=0 \
     DD_TRACE_HOST=localhost:8126 \
     DD_SERVICE=next-gen-api \
     DD_ENV=prod \

@@ -11,48 +11,40 @@ class RedoxPotentialQuery(QueryOperator):
 
     def query(
         self,
-        electrode: str = Query(
-            "H", description="Reference electrode to be queried (e.g. 'H', 'Li', 'Mg')."
-        ),
         min_reduction_potential: Optional[float] = Query(
-            None,
-            description="Minimum reduction potential using the selected reference electrode.",
+            None, description="Minimum reduction potential."
         ),
         max_reduction_potential: Optional[float] = Query(
-            None,
-            description="Maximum reduction potential using the selected reference electrode.",
+            None, description="Maximum reduction potential."
         ),
         min_oxidation_potential: Optional[float] = Query(
-            None,
-            description="Minimum oxidation potential using the selected reference electrode.",
+            None, description="Minimum oxidation potential."
         ),
         max_oxidation_potential: Optional[float] = Query(
-            None,
-            description="Maximum oxidation potential using the selected reference electrode.",
+            None, description="Maximum oxidation potential."
         ),
     ) -> STORE_PARAMS:
         crit: Dict[str, Any] = dict()  # type: ignore
 
         d = {
-            "oxidation_potentials": [min_oxidation_potential, max_oxidation_potential],
-            "reduction_potentials": [min_reduction_potential, max_reduction_potential],
+            "oxidation_potential": [min_oxidation_potential, max_oxidation_potential],
+            "reduction_potential": [min_reduction_potential, max_reduction_potential],
         }
 
-        for entry in d:
-            key = entry + "." + electrode
-            if d[entry][0] is not None or d[entry][1] is not None:
+        for key in d:
+            if d[key][0] is not None or d[key][1] is not None:
                 crit[key] = dict()
 
-            if d[entry][0] is not None:
-                crit[key]["$gte"] = d[entry][0]
+            if d[key][0] is not None:
+                crit[key]["$gte"] = d[key][0]
 
-            if d[entry][1] is not None:
-                crit[key]["$lte"] = d[entry][1]
+            if d[key][1] is not None:
+                crit[key]["$lte"] = d[key][1]
 
         return {"criteria": crit}
 
     def ensure_indexes(self):  # pragma: no cover
         return [
-            ("oxidation_potentials", False),
-            ("reduction_potentials", False),
+            ("oxidation_potential", False),
+            ("reduction_potential", False),
         ]

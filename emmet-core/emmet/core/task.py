@@ -26,5 +26,5 @@ class BaseTaskDocument(EmmetBaseModel):
     )
     last_updated: datetime = Field(
         default_factory=datetime.utcnow,
-        description="Timestamp for this task document was last updated",
+        description="Timestamp for when this task document was last updated",
     )

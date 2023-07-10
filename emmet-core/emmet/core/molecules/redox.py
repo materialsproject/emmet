@@ -14,7 +14,7 @@ from emmet.core.mpid import MPID, MPculeID
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
-reference_potentials = {"H": 4.44, "Li": 1.40, "Mg": 2.06, "Ca": 1.60}
+reference_potential = 4.44
 
 
 T = TypeVar("T", bound="RedoxDoc")
@@ -84,14 +84,14 @@ class RedoxDoc(PropertyDoc):
         "oxidized molecule",
     )
 
-    reduction_potentials: Dict[str, float] = Field(
+    reduction_potential: float = Field(
         None,
-        description="Reduction potentials with various reference electrodes (units: V)",
+        description="Reduction potential referenced to the standard hydrogen electrode (SHE) (units: V)",
     )
 
-    oxidation_potentials: Dict[str, float] = Field(
+    oxidation_potential: float = Field(
         None,
-        description="Oxidation potentials with various reference electrodes (units: V)",
+        description="Oxidation potential referenced to the standard hydrogen electrode (SHE) (units: V)",
     )
 
     @classmethod
@@ -165,12 +165,12 @@ class RedoxDoc(PropertyDoc):
         red_property_id = None
         reduction_energy = None
         reduction_free_energy = None
-        reduction_potentials = None
+        reduction_potential = None
         ox_molecule_id = None
         ox_property_id = None
         oxidation_energy = None
         oxidation_free_energy = None
-        oxidation_potentials = None
+        oxidation_potential = None
         ea_task_id = None
         electron_affinity = None
         ie_task_id = None
@@ -200,12 +200,8 @@ class RedoxDoc(PropertyDoc):
             else:
                 reduction_free_energy = None
 
-            reduction_potentials = dict()
-            for ref, pot in reference_potentials.items():
-                # Try to use free energy for redox potentials
-                # But if free energy is not available, settle for electronic energy
-                red = reduction_free_energy or reduction_energy
-                reduction_potentials[ref] = -1 * red - pot
+            red = reduction_free_energy or reduction_energy
+            reduction_potential = -1 * red - reference_potential
 
         # Adiabatic oxidation properties
         if ox_doc is not None:
@@ -223,12 +219,8 @@ class RedoxDoc(PropertyDoc):
             else:
                 oxidation_free_energy = None
 
-            oxidation_potentials = dict()
-            for ref, pot in reference_potentials.items():
-                # Try to use free energy for redox potentials
-                # But if free energy is not available, settle for electronic energy
-                ox = oxidation_free_energy or oxidation_energy
-                oxidation_potentials[ref] = ox - pot
+            ox = oxidation_free_energy or oxidation_energy
+            oxidation_potential = ox - reference_potential
 
         # Electron affinity
         if ea_doc is not None:
@@ -264,12 +256,12 @@ class RedoxDoc(PropertyDoc):
             red_property_id=red_property_id,
             reduction_energy=reduction_energy,
             reduction_free_energy=reduction_free_energy,
-            reduction_potentials=reduction_potentials,
+            reduction_potential=reduction_potential,
             ox_molecule_id=ox_molecule_id,
             ox_property_id=ox_property_id,
             oxidation_energy=oxidation_energy,
             oxidation_free_energy=oxidation_free_energy,
-            oxidation_potentials=oxidation_potentials,
+            oxidation_potential=oxidation_potential,
             ea_task_id=ea_task_id,
             electron_affinity=electron_affinity,
             ie_task_id=ie_task_id,

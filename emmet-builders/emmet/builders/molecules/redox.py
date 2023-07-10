@@ -63,7 +63,13 @@ class RedoxBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[tasks, molecules, thermo], targets=[redox])
+        super().__init__(sources=[tasks, molecules, thermo], targets=[redox], **kwargs)
+        # Uncomment in case of issue with mrun not connecting automatically to collections
+        # for i in [self.tasks, self.molecules, self.thermo, self.redox]:
+        #     try:
+        #         i.connect()
+        #     except Exception as e:
+        #         print("Could not connect,", e)
 
     def ensure_indexes(self):
         """
@@ -91,9 +97,8 @@ class RedoxBuilder(Builder):
         self.thermo.ensure_index("last_updated")
         self.thermo.ensure_index("formula_alphabetical")
 
-        # Search index for orbitals
+        # Search index for redox
         self.redox.ensure_index("molecule_id")
-        self.redox.ensure_index("task_id")
         self.redox.ensure_index("solvent")
         self.redox.ensure_index("lot_solvent")
         self.redox.ensure_index("property_id")

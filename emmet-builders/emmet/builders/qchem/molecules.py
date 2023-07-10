@@ -124,7 +124,7 @@ class MoleculesAssociationBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[tasks], targets=[assoc])
+        super().__init__(sources=[tasks], targets=[assoc], **kwargs)
 
     def ensure_indexes(self):
         """
@@ -136,12 +136,14 @@ class MoleculesAssociationBuilder(Builder):
         self.tasks.ensure_index("last_updated")
         self.tasks.ensure_index("state")
         self.tasks.ensure_index("formula_alphabetical")
+        self.tasks.ensure_index("smiles")
+        self.tasks.ensure_index("species_hash")
 
         # Search index for molecules
         self.assoc.ensure_index("molecule_id")
         self.assoc.ensure_index("last_updated")
         self.assoc.ensure_index("task_ids")
-        self.tasks.ensure_index("formula_alphabetical")
+        self.assoc.ensure_index("formula_alphabetical")
 
     def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
         """Prechunk the molecule builder for distributed computation"""
@@ -150,24 +152,22 @@ class MoleculesAssociationBuilder(Builder):
         temp_query["state"] = "successful"
 
         self.logger.info("Finding tasks to process")
-        all_tasks = list(
-            self.tasks.query(temp_query, [self.tasks.key, "formula_alphabetical"])
-        )
+        all_tasks = list(self.tasks.query(temp_query, [self.tasks.key, "species_hash"]))
 
         processed_tasks = set(self.assoc.distinct("task_ids"))
         to_process_tasks = {d[self.tasks.key] for d in all_tasks} - processed_tasks
-        to_process_forms = {
-            d["formula_alphabetical"]
+        to_process_hashes = {
+            d["species_hash"]
             for d in all_tasks
             if d[self.tasks.key] in to_process_tasks
         }
 
-        N = ceil(len(to_process_forms) / number_splits)
+        N = ceil(len(to_process_hashes) / number_splits)
 
-        for formula_chunk in grouper(to_process_forms, N):
-            yield {"query": {"formula_alphabetical": {"$in": list(formula_chunk)}}}
+        for hash_chunk in grouper(to_process_hashes, N):
+            yield {"query": {"species_hash": {"$in": list(hash_chunk)}}}
 
-    def get_items(self) -> Iterator[List[Dict]]:
+    def get_items(self) -> Iterator[List[TaskDocument]]:
         """
         Gets all items to process into molecules (and other) documents.
         This does no datetime checking; relying on on whether
@@ -193,28 +193,29 @@ class MoleculesAssociationBuilder(Builder):
         temp_query["state"] = "successful"
 
         self.logger.info("Finding tasks to process")
-        all_tasks = list(
-            self.tasks.query(temp_query, [self.tasks.key, "formula_alphabetical"])
-        )
+        all_tasks = list(self.tasks.query(temp_query, [self.tasks.key, "species_hash"]))
 
         processed_tasks = set(self.assoc.distinct("task_ids"))
         to_process_tasks = {d[self.tasks.key] for d in all_tasks} - processed_tasks
-        to_process_forms = {
-            d["formula_alphabetical"]
+        to_process_hashes = {
+            d["species_hash"]
             for d in all_tasks
             if d[self.tasks.key] in to_process_tasks
         }
 
         self.logger.info(f"Found {len(to_process_tasks)} unprocessed tasks")
-        self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
+        self.logger.info(f"Found {len(to_process_hashes)} unprocessed hashes")
 
         # Set total for builder bars to have a total
-        self.total = len(to_process_forms)
+        self.total = len(to_process_hashes)
 
         projected_fields = [
             "last_updated",
             "task_id",
             "formula_alphabetical",
+            "species_hash",
+            "coord_hash",
+            "smiles",
             "orig",
             "tags",
             "walltime",
@@ -226,44 +227,44 @@ class MoleculesAssociationBuilder(Builder):
             "critic2",
         ]
 
-        for formula in to_process_forms:
+        for shash in to_process_hashes:
             tasks_query = dict(temp_query)
-            tasks_query["formula_alphabetical"] = formula
+            tasks_query["species_hash"] = shash
             tasks = list(
                 self.tasks.query(criteria=tasks_query, properties=projected_fields)
             )
+            to_yield = list()
             for t in tasks:
                 # TODO: Validation
                 # basic validation here ensures that tasks with invalid levels of
                 # theory don't halt the build pipeline
                 try:
-                    _ = TaskDocument(**t).level_of_theory
-                    t["is_valid"] = True
+                    task = TaskDocument(**t)
+                    to_yield.append(task)
                 except Exception as e:
                     self.logger.info(
                         f"Processing task {t['task_id']} failed with Exception - {e}"
                     )
-                    t["is_valid"] = False
+                    continue
 
-            yield tasks
+            yield to_yield
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
+    def process_item(self, tasks: List[TaskDocument]) -> List[Dict]:
         """
         Process the tasks into a MoleculeDoc
 
         Args:
-            tasks [dict] : a list of task docs
+            tasks [TaskDocument] : a list of task docs
 
         Returns:
             [dict] : a list of new molecule docs
         """
 
-        tasks = [TaskDocument(**task) for task in items if task["is_valid"]]
         if len(tasks) == 0:
             return list()
-        formula = tasks[0].formula_alphabetical
+        shash = tasks[0].species_hash
         task_ids = [task.task_id for task in tasks]
-        self.logger.debug(f"Processing {formula} : {task_ids}")
+        self.logger.debug(f"Processing {shash} : {task_ids}")
         molecules = list()
 
         for group in self.filter_and_group_tasks(tasks):
@@ -280,7 +281,7 @@ class MoleculesAssociationBuilder(Builder):
                     f" Inserted as deprecated molecule: {doc.molecule_id}"
                 )
 
-        self.logger.debug(f"Produced {len(molecules)} molecules for {formula}")
+        self.logger.debug(f"Produced {len(molecules)} molecules for {shash}")
 
         return jsanitize([mol.dict() for mol in molecules], allow_bson=True)
 
@@ -377,7 +378,7 @@ class MoleculesBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[assoc], targets=[molecules])
+        super().__init__(sources=[assoc], targets=[molecules], **kwargs)
 
     def ensure_indexes(self):
         """

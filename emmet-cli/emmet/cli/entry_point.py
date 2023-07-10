@@ -35,11 +35,10 @@ def opt_prompt():
     help="Number of jobs (for walltime > 48h).",
 )
 @click.option("--bb", is_flag=True, help="Use burst buffer.")
-@click.option("--yes", is_flag=True, help="Automatic yes to all prompts.")
 @click.option("--no-dupe-check", is_flag=True, help="Skip duplicate check(s).")
 @click.option("--verbose", is_flag=True, help="Show debug messages.")
 @click.version_option()
-def emmet(spec_or_dbfile, run, issue, sbatch, ntries, bb, yes, no_dupe_check, verbose):
+def emmet(spec_or_dbfile, run, issue, sbatch, ntries, bb, no_dupe_check, verbose):
     """Command line interface for emmet"""
     logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     logging.getLogger("github3").setLevel(logging.WARNING)

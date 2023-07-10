@@ -111,7 +111,6 @@ def backups(ctx, clean):
     rootdir_pattern = os.path.join(rootdir, ctx.parent.params["pattern"])
     comment_txt = [f"Backup {gen.value} launchers in `{rootdir_pattern}`:\n"]
     ctx.parent.parent.params["sbatch"] = True
-    ctx.parent.parent.params["yes"] = True
     run = ctx.parent.parent.params["run"]
     prefix = ctx.parent.params["pattern"] = "block_*"
 
@@ -232,7 +231,8 @@ def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
         logger.error("Not running --clean without --check enabled.")
         return ReturnCodes.ERROR
 
-    check_pattern()
+    if not reorg:
+        check_pattern()
 
     logger.info("Discover launch directories ...")
     block_launchers = load_block_launchers()
@@ -505,7 +505,6 @@ def parsers(ctx, task_ids):
         remaining = group_strings_by_prefix(remaining_vaspdirs, len_prefix)
 
     ctx.parent.parent.params["sbatch"] = True
-    ctx.parent.parent.params["yes"] = True
     rootdir_pattern = os.path.join(directory, ctx.parent.params["pattern"])
     comment_txt = [f"Parse {gen.value} launchers in `{rootdir_pattern}`:\n"]
 
@@ -611,8 +610,9 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
             {"$addFields": {"num_int": {"$toInt": "$num"}}},
             {"$group": {"_id": None, "num_max": {"$max": "$num_int"}}},
         ]
-        result = list(client.collection.aggregate(pipeline))
-        next_tid = result[0]["num_max"] + 1
+        result = list(target.collection.aggregate(pipeline))
+        # Manually set next_tid when parsing into an empty task collection for testing
+        next_tid = result[0]["num_max"] + 1 if result else 1000001
         lst = [f"mp-{next_tid + n}" for n in range(nmax)]
         task_ids = chunks(lst, chunk_size)
 

@@ -5,15 +5,19 @@ from pydantic import Field
 
 from pymatgen.core.structure import Molecule
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
+from pymatgen.io.babel import BabelMolAdaptor
 
 from emmet.core.mpid import MPculeID
 from emmet.core.utils import get_graph_hash, get_molecule_id
 from emmet.core.settings import EmmetSettings
 from emmet.core.material import CoreMoleculeDoc, PropertyOrigin
-
-# from emmet.core.structure import MoleculeMetadata
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.qchem.task import TaskDocument
+
+try:
+    import openbabel
+except ImportError:
+    openbabel = None
 
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
@@ -161,6 +165,13 @@ class MoleculeDoc(CoreMoleculeDoc):
         "node attribute.",
     )
 
+    inchi: str = Field(
+        None, description="International Chemical Identifier (InChI) for this molecule"
+    )
+    inchi_key: str = Field(
+        None, description="Standardized hash of the InChI for this molecule"
+    )
+
     calc_types: Mapping[str, CalcType] = Field(  # type: ignore
         None,
         description="Calculation types for all the calculations that make up this molecule",
@@ -244,6 +255,12 @@ class MoleculeDoc(CoreMoleculeDoc):
         Args:
             task_group: List of task document
         """
+
+        if openbabel is None:
+            raise ModuleNotFoundError(
+                "openbabel must be installed to instantiate a MoleculeDoc from tasks"
+            )
+
         if len(task_group) == 0:
             raise Exception("Must have more than one task in the group.")
 
@@ -385,12 +402,20 @@ class MoleculeDoc(CoreMoleculeDoc):
         species_hash = get_graph_hash(molecule, "specie")
         coord_hash = get_graph_hash(molecule, "coords")
 
+        ad = BabelMolAdaptor(molecule)
+        openbabel.StereoFrom3D(ad.openbabel_mol)
+
+        inchi = ad.pybel_mol.write("inchi").strip()
+        inchikey = ad.pybel_mol.write("inchikey").strip()
+
         return cls.from_molecule(
             molecule=molecule,
             molecule_id=molecule_id,
             species=species,
             species_hash=species_hash,
             coord_hash=coord_hash,
+            inchi=inchi,
+            inchi_key=inchikey,
             initial_molecules=initial_molecules,
             last_updated=last_updated,
             created_at=created_at,
@@ -456,12 +481,20 @@ class MoleculeDoc(CoreMoleculeDoc):
         species_hash = get_graph_hash(molecule, "specie")
         coord_hash = get_graph_hash(molecule, "coords")
 
+        ad = BabelMolAdaptor(molecule)
+        openbabel.StereoFrom3D(ad.openbabel_mol)
+
+        inchi = ad.pybel_mol.write("inchi").strip()
+        inchikey = ad.pybel_mol.write("inchikey").strip()
+
         return cls.from_molecule(
             molecule=molecule,
             molecule_id=molecule_id,
             species=species,
             species_hash=species_hash,
             coord_hash=coord_hash,
+            inchi=inchi,
+            inchi_key=inchikey,
             last_updated=last_updated,
             created_at=created_at,
             task_ids=task_ids,

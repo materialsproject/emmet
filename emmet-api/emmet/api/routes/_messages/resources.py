@@ -3,7 +3,7 @@ from emmet.api.routes._messages.query_operator import (
     MessagesPostQuery,
     MessagesGetQuery,
 )
-from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery, SortQuery
 from emmet.core._messages import MessagesDoc
 
 
@@ -15,6 +15,7 @@ def messages_resource(messages_store):
         get_query_operators=[
             MessagesGetQuery(),
             PaginationQuery(),
+            SortQuery(),
             SparseFieldsQuery(
                 model=MessagesDoc, default_fields=["title", "body", "last_updated"]
             ),

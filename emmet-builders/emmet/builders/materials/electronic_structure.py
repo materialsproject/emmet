@@ -411,6 +411,7 @@ class ElectronicStructureBuilder(Builder):
 
                     kpoints = task_query["orig_inputs"]["kpoints"]
 
+
                     labels_dict = {
                         label: point
                         for label, point in zip(kpoints["labels"], kpoints["kpoints"])
