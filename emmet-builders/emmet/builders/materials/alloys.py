@@ -119,7 +119,9 @@ class AlloyPairBuilder(Builder):
             )
             oxi_states_docs = {d["material_id"]: d for d in oxi_states_docs}
 
-            for material_id, d in docs.items():
+            for material_id in thermo_docs:
+                d = docs[material_id]
+
                 d["structure"] = Structure.from_dict(d["structure"])
 
                 if material_id in oxi_states_docs:
