@@ -115,89 +115,85 @@ class SummaryBuilder(Builder):
             materials_doc = self.materials.query_one({self.materials.key: entry})
 
             valid_static_tasks = set(
-                [
-                    task_id
-                    for task_id, task_type in materials_doc["task_types"].items()
-                    if task_type == "Static"
-                ]
+                [task_id for task_id, task_type in materials_doc["task_types"].items() if task_type == "Static"]
             ) - set(materials_doc["deprecated_tasks"])
 
             all_tasks = list(materials_doc["task_types"].keys())
 
-            data = {
-                HasProps.materials.value: materials_doc,
-                HasProps.thermo.value: self.thermo.query_one(
-                    {self.materials.key: entry, "thermo_type": str(self.thermo_type)}
-                ),
-                HasProps.xas.value: list(
-                    self.xas.query({self.xas.key: {"$in": all_tasks}})
-                ),
-                HasProps.grain_boundaries.value: list(
-                    self.grain_boundaries.query({self.grain_boundaries.key: entry})
-                ),
-                HasProps.electronic_structure.value: self.electronic_structure.query_one(
-                    {self.electronic_structure.key: entry}
-                ),
-                HasProps.magnetism.value: self.magnetism.query_one(
-                    {self.magnetism.key: entry}
-                ),
-                HasProps.elasticity.value: self.elasticity.query_one(
-                    {self.elasticity.key: {"$in": all_tasks}}
-                ),
-                HasProps.dielectric.value: self.dielectric.query_one(
-                    {self.dielectric.key: entry}
-                ),
-                HasProps.piezoelectric.value: self.piezoelectric.query_one(
-                    {self.piezoelectric.key: entry}
-                ),
-                HasProps.phonon.value: self.phonon.query_one(
+            # HasProps-store mapping
+            store_map = {
+                HasProps.thermo.value: self.thermo,
+                HasProps.xas.value: self.xas,
+                HasProps.chemenv.value: self.chemenv,
+                HasProps.absorption.value: self.absorption,
+                HasProps.grain_boundaries.value: self.grain_boundaries,
+                HasProps.electronic_structure.value: self.electronic_structure,
+                HasProps.magnetism.value: self.magnetism,
+                HasProps.elasticity.value: self.elasticity,
+                HasProps.dielectric.value: self.dielectric,
+                HasProps.piezoelectric.value: self.piezoelectric,
+                HasProps.phonon.value: self.phonon,
+                HasProps.insertion_electrodes.value: self.insertion_electrodes,
+                HasProps.surface_properties.value: self.surfaces,
+                HasProps.substrates.value: self.substrates,
+                HasProps.oxi_states.value: self.oxi_states,
+                HasProps.eos.value: self.eos,
+                HasProps.provenance.value: self.provenance,
+                HasProps.charge_density.value: self.charge_density_index,
+            }
+
+            data = {HasProps.materials.value: materials_doc}
+
+            list_query_colls = [
+                HasProps.xas.value,
+                HasProps.grain_boundaries.value,
+                HasProps.insertion_electrodes.value,
+                HasProps.substrates.value,
+            ]
+
+            custom_args = {
+                HasProps.thermo.value: ({self.materials.key: entry, "thermo_type": str(self.thermo_type)},),
+                HasProps.phonon.value: (
                     {self.phonon.key: {"$in": all_tasks}},
                     [self.phonon.key],
                 ),
-                HasProps.insertion_electrodes.value: list(
-                    self.insertion_electrodes.query(
-                        {"material_ids": entry},
-                        [self.insertion_electrodes.key],
-                    )
+                HasProps.insertion_electrodes.value: (
+                    {"material_ids": entry},
+                    [self.insertion_electrodes.key],
                 ),
-                HasProps.surface_properties.value: self.surfaces.query_one(
-                    {self.surfaces.key: {"$in": all_tasks}}
+                HasProps.surface_properties.value: ({self.surfaces.key: {"$in": all_tasks}},),
+                HasProps.elasticity.value: ({self.elasticity.key: {"$in": all_tasks}},),
+                HasProps.eos.value: (
+                    {self.eos.key: {"$in": all_tasks}},
+                    [self.eos.key],
                 ),
-                HasProps.substrates.value: list(
-                    self.substrates.query(
-                        {self.substrates.key: {"$in": all_tasks}}, [self.substrates.key]
-                    )
-                ),
-                HasProps.oxi_states.value: self.oxi_states.query_one(
-                    {self.oxi_states.key: entry}
-                ),
-                HasProps.eos.value: self.eos.query_one(
-                    {self.eos.key: {"$in": all_tasks}}, [self.eos.key]
-                ),
-                HasProps.chemenv.value: self.chemenv.query_one(
-                    {self.chemenv.key: entry}
-                ),
-                HasProps.absorption.value: self.absorption.query_one(
-                    {self.absorption.key: entry}
-                ),
-                HasProps.provenance.value: self.provenance.query_one(
-                    {self.provenance.key: entry}
-                ),
-                HasProps.charge_density.value: self.charge_density_index.query_one(
-                    {"task_id": {"$in": list(valid_static_tasks)}}, ["task_id"]
+                HasProps.charge_density.value: (
+                    {"task_id": {"$in": list(valid_static_tasks)}},
+                    ["task_id"],
                 ),
             }
 
-            sub_fields = {
-                HasProps.elasticity.value: "elasticity",
-            }
+            # Obtain docs or lists of docs used in SummaryDoc construction method
+            for collection in store_map:
+                custom_args_vals = custom_args.get(collection, None)
+
+                if collection in list_query_colls:
+                    args = custom_args_vals or ({store_map[collection].key: {"$in": all_tasks}},)
+
+                    data[collection] = list(store_map[collection].query(*args))
+                else:
+                    args = custom_args_vals or ({store_map[collection].key: entry},)
+
+                    data[collection] = store_map[collection].query_one(*args)
+
+            # Handle subfields
+            sub_fields = {HasProps.elasticity.value: "elasticity"}
 
             for collection, sub_field in sub_fields.items():
                 if data[collection] is not None:
                     data[collection] = (
                         data[collection][sub_field]
-                        if (sub_field in data[collection])
-                        and (data[collection][sub_field] != {})
+                        if (sub_field in data[collection]) and (data[collection][sub_field] != {},)
                         else None
                     )
 
