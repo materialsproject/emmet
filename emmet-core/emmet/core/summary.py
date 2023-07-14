@@ -109,16 +109,7 @@ class GBSearchData(BaseModel):
     rotation_angle: float = Field(None, description="Rotation angle in degrees.", source="grain_boundary")
 
 
-class SummaryDoc(PropertyDoc):
-    """
-    Summary information about materials and their properties, useful for materials
-    screening studies and searching.
-    """
-
-    property_name = "summary"
-
-    # Materials
-
+class MaterialsSearchData(BaseModel):
     structure: Structure = Field(
         ...,
         description="The lowest energy structure for this material.",
@@ -132,8 +123,8 @@ class SummaryDoc(PropertyDoc):
         source="materials",
     )
 
-    # Thermo
 
+class ThermoSearchData(BaseModel):
     uncorrected_energy_per_atom: float = Field(
         None,
         description="The total DFT energy of this material per atom in eV/atom.",
@@ -177,20 +168,8 @@ class SummaryDoc(PropertyDoc):
         source="thermo",
     )
 
-    # XAS
 
-    xas: List[XASSearchData] = Field(None, description="List of xas documents.", source="xas")
-
-    # GB
-
-    grain_boundaries: List[GBSearchData] = Field(
-        None,
-        description="List of grain boundary documents.",
-        source="grain_boundary",
-    )
-
-    # Electronic Structure
-
+class ElectronicStructureSearchData(BaseModel):
     band_gap: float = Field(None, description="Band gap energy in eV.", source="electronic_structure")
 
     cbm: Union[float, Dict] = Field(None, description="Conduction band minimum data.", source="electronic_structure")
@@ -235,8 +214,8 @@ class SummaryDoc(PropertyDoc):
 
     dos_energy_down: float = Field(None, description="Spin-down DOS band gap in eV.", source="electronic_structure")
 
-    # Magnetism
 
+class MagnetismSearchDoc(BaseModel):
     is_magnetic: bool = Field(None, description="Whether the material is magnetic.", source="magnetism")
 
     ordering: str = Field(None, description="Type of magnetic ordering.", source="magnetism")
@@ -261,8 +240,8 @@ class SummaryDoc(PropertyDoc):
 
     types_of_magnetic_species: List[Element] = Field(None, description="Magnetic specie elements.", source="magnetism")
 
-    # Elasticity
 
+class ElasticitySearchDoc(BaseModel):
     k_voigt: float = Field(None, description="Voigt average of the bulk modulus.")
 
     k_reuss: float = Field(None, description="Reuss average of the bulk modulus in GPa.")
@@ -279,8 +258,8 @@ class SummaryDoc(PropertyDoc):
 
     homogeneous_poisson: float = Field(None, description="Poisson's ratio.")
 
-    # Dielectric and Piezo
 
+class DielectricSearchDoc(BaseModel):
     e_total: float = Field(None, description="Total dielectric constant.", source="dielectric")
 
     e_ionic: float = Field(
@@ -297,10 +276,12 @@ class SummaryDoc(PropertyDoc):
 
     n: float = Field(None, description="Refractive index.", source="dielectric")
 
+
+class PiezoelectricSearchDoc(BaseModel):
     e_ij_max: float = Field(None, description="Piezoelectric modulus.", source="piezoelectric")
 
-    # Surface Properties
 
+class SurfacePropertiesSearchDoc(BaseModel):
     weighted_surface_energy_EV_PER_ANG2: float = Field(
         None,
         description="Weighted surface energy in eV/Å².",
@@ -327,13 +308,88 @@ class SummaryDoc(PropertyDoc):
         source="surface_properties",
     )
 
-    # Oxi States
 
+class OxidationStatesSearchDoc(BaseModel):
     possible_species: List[str] = Field(
         None,
         description="Possible charged species in this material.",
         source="oxidation_states",
     )
+
+
+class ProvenanceSearchDoc(BaseModel):
+    # Theoretical
+
+    theoretical: bool = Field(True, description="Whether the material is theoretical.", source="provenance")
+
+    # External Database IDs
+
+    database_IDs: Dict[str, List[str]] = Field({}, description="External database IDs corresponding to this material.")
+
+
+class SummaryDoc(PropertyDoc):
+    """
+    Summary information about materials and their properties, useful for materials
+    screening studies and searching.
+    """
+
+    property_name = "summary"
+
+    # Materials
+
+    materials: MaterialsSearchData = Field(..., description="Core materials data", source="materials")
+
+    # Thermo
+
+    thermo: ThermoSearchData = Field(..., description="Thermodynamic data", source="thermo")
+
+    # XAS
+
+    xas: List[XASSearchData] = Field(None, description="List of xas documents.", source="xas")
+
+    # GB
+
+    grain_boundaries: List[GBSearchData] = Field(
+        None,
+        description="List of grain boundary documents.",
+        source="grain_boundary",
+    )
+
+    # Electronic Structure
+
+    electronic_structure: ElectronicStructureSearchData = Field(
+        None, description="Electronic structure data", source="electronic_structure"
+    )
+
+    # Magnetism
+
+    magentism: MagnetismSearchDoc = Field(None, description="Magnetism data", source="magnetism")
+
+    # Elasticity
+
+    elasticity: ElasticitySearchDoc = Field(None, description="Elasticity data", source="elasticity")
+
+    # Dielectric and Piezo
+
+    dielectric: DielectricSearchDoc = Field(None, description="Dielectric data", source="dielectric")
+
+    piezoelectric: PiezoelectricSearchDoc = Field(None, description="Piezoelectric data", source="piezoelectric")
+
+    # Surface Properties
+
+    surface_properties: SurfacePropertiesSearchDoc = Field(
+        None, description="Surface properties data", source="surface_properties"
+    )
+
+    # Oxi States
+
+    oxidation_states: OxidationStatesSearchDoc = Field(
+        None, description="Oxidation states data", source="oxidation_states"
+    )
+
+    # Provenance
+
+    provenance: ProvenanceSearchDoc = Field(None, description="Provenance search data", source="provenance")
 
     # Has Props
 
@@ -343,13 +399,17 @@ class SummaryDoc(PropertyDoc):
         source="summary",
     )
 
+    # Deprecated
+
+    deprecated: bool = Field(
+        ...,
+        description="Whether the material is deprecated.",
+        source="materials",
+    )
+
     # Theoretical
 
     theoretical: bool = Field(True, description="Whether the material is theoretical.", source="provenance")
-
-    # External Database IDs
-
-    database_IDs: Dict[str, List[str]] = Field({}, description="External database IDs corresponding to this material.")
 
     @classmethod
     def from_docs(cls, material_id: MPID, **docs: Dict[str, Dict]):
@@ -375,7 +435,12 @@ class SummaryDoc(PropertyDoc):
 
         doc["has_props"] = list(set(doc["has_props"]))
 
-        return SummaryDoc(material_id=material_id, **doc)
+        base_property_data = PropertyDoc(property_name="summary", material_id=material_id, **doc["materials"]).dict()
+        base_property_data.pop("origins")
+
+        doc.update(base_property_data)
+
+        return SummaryDoc(**doc)
 
 
 # Key mapping
@@ -485,8 +550,12 @@ def _copy_from_doc(doc):
                 d[doc_key].append(temp_doc)
         elif isinstance(sub_doc, dict):
             d["has_props"].append(doc_key)
+
             if sub_doc.get("origins", None):
                 d["origins"].extend(sub_doc["origins"])
+
+            if doc_key == "provenance":
+                d["theoretical"] = sub_doc["theoretical"]
 
             d[doc_key] = {copy_key: sub_doc[copy_key] for copy_key in summary_fields[doc_key] if copy_key in sub_doc}
 

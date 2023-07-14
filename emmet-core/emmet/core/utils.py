@@ -2,13 +2,15 @@ import copy
 import datetime
 from enum import Enum
 from itertools import groupby
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, Iterator, List, Optional, Union, Type
 
 import numpy as np
 
 from monty.json import MSONable
 
 from pydantic import BaseModel
+from pydantic.schema import get_flat_models_from_model
+from pydantic.utils import lenient_issubclass
 
 from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
@@ -150,9 +152,7 @@ def confirm_molecule(mol: Union[Molecule, Dict]):
         return mol
 
 
-def make_mol_graph(
-    mol: Molecule, critic_bonds: Optional[List[List[int]]] = None
-) -> MoleculeGraph:
+def make_mol_graph(mol: Molecule, critic_bonds: Optional[List[List[int]]] = None) -> MoleculeGraph:
     """
     Construct a MoleculeGraph using OpenBabelNN with metal_edge_extender and
     (optionally) Critic2 bonding information.
@@ -219,6 +219,39 @@ def get_molecule_id(mol: Molecule, node_attr: Optional[str] = None):
     )
 
 
+def model_sanitize(
+    pydantic_model: Type[BaseModel],
+    fields_to_leave: Optional[List[str]] = None,
+):
+    """Function to clean up pydantic models by making fields optional
+
+    WARNING: This works in place, so it mutates the model and all sub-models
+
+    Args:
+        fields_to_leave: list of strings for model fields as "model__name__.field"
+    """
+    models = [
+        model for model in get_flat_models_from_model(pydantic_model) if issubclass(model, BaseModel)
+    ]  # type: List[Type[BaseModel]]
+
+    fields_to_leave = fields_to_leave or []
+    fields_tuples = [f.split(".") for f in fields_to_leave]
+    assert all(len(f) == 2 for f in fields_tuples)
+
+    for model in models:
+        model_fields_to_leave = {f[1] for f in fields_tuples if model.__name__ == f[0]}
+        for name, field in model.__fields__.items():
+            if name not in model_fields_to_leave:
+                field.required = False
+                field.default = None
+                field.default_factory = None
+                field.allow_none = True
+                field.field_info.default = None
+                field.field_info.default_factory = None
+
+    return pydantic_model
+
+
 def jsanitize(obj, strict=False, allow_bson=False):
     """
     This method cleans an input json-like object, either a list or a dict or
@@ -241,35 +274,23 @@ def jsanitize(obj, strict=False, allow_bson=False):
         Sanitized dict that can be json serialized.
     """
     if allow_bson and (
-        isinstance(obj, (datetime.datetime, bytes))
-        or (bson is not None and isinstance(obj, bson.objectid.ObjectId))
+        isinstance(obj, (datetime.datetime, bytes)) or (bson is not None and isinstance(obj, bson.objectid.ObjectId))
     ):
         return obj
 
     if isinstance(obj, (list, tuple, set)):
         return [jsanitize(i, strict=strict, allow_bson=allow_bson) for i in obj]
     if np is not None and isinstance(obj, np.ndarray):
-        return [
-            jsanitize(i, strict=strict, allow_bson=allow_bson) for i in obj.tolist()
-        ]
+        return [jsanitize(i, strict=strict, allow_bson=allow_bson) for i in obj.tolist()]
     if isinstance(obj, Enum):
         return obj.value
     if isinstance(obj, dict):
-        return {
-            k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson)
-            for k, v in obj.items()
-        }
+        return {k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson) for k, v in obj.items()}
     if isinstance(obj, MSONable):
-        return {
-            k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson)
-            for k, v in obj.as_dict().items()
-        }
+        return {k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson) for k, v in obj.as_dict().items()}
 
     if isinstance(obj, BaseModel):
-        return {
-            k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson)
-            for k, v in obj.dict().items()
-        }
+        return {k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson) for k, v in obj.dict().items()}
     if isinstance(obj, (int, float)):
         if np.isnan(obj):
             return 0
