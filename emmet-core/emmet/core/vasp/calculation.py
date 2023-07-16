@@ -491,11 +491,12 @@ class CalculationOutput(BaseModel):
             structure.add_site_property("magmom", magmoms)
 
         # Parse DOS properties
-        dosprop_dict = (
-            _get_band_props(vasprun.complete_dos, structure)
-            if hasattr(vasprun, "complete_dos")
-            else {}
-        )
+        if vasprun.parameters["LORBIT"] >= 11:
+            dosprop_dict = (
+                _get_band_props(vasprun.complete_dos, structure)
+                if hasattr(vasprun, "complete_dos")
+                else {}
+            )
 
         elph_structures: Dict[str, List[Any]] = {}
         if elph_poscars is not None:
