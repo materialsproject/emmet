@@ -493,8 +493,7 @@ class CalculationOutput(BaseModel):
         # Parse DOS properties
         dosprop_dict = (
             _get_band_props(vasprun.complete_dos, structure)
-            if hasattr(vasprun, "complete_dos")
-            and vasprun.parameters["LORBIT"] >= 11
+            if hasattr(vasprun, "complete_dos") and vasprun.parameters["LORBIT"] >= 11
             else {}
         )
 
