@@ -64,12 +64,10 @@ class OrigInputs(BaseModel):
         description="Pymatgen object representing the POTCAR file.",
     )
 
-    # Make sure that the datetime field is properly formatted
     @validator("potcar", pre=True)
     def potcar_ok(cls, v):
         if isinstance(v, list):
             return [i for i in v]
-
         return v
 
     class Config:
@@ -83,7 +81,7 @@ class OutputDoc(BaseModel):
         description="Output Structure from the VASP calculation.",
     )
 
-    density: float = Field(..., description="Density of in units of g/cc.")
+    density: float = Field(None, description="Density of in units of g/cc.")
     energy: float = Field(..., description="Total Energy in units of eV.")
     forces: List[List[float]] = Field(
         None, description="The force on each atom in units of eV/A^2."
@@ -95,6 +93,13 @@ class OutputDoc(BaseModel):
         None, description="The final DFT energy per atom for the last calculation"
     )
     bandgap: float = Field(None, description="The DFT bandgap for the last calculation")
+
+    @validator("density", pre=True, always=True)
+    def set_density_from_structure(cls, v, values, **kwargs):
+        # Validator to automatically set density from structure if not already 
+        # specified. This might happen when importing an older atomate2-format 
+        # TaskDocument.
+        return v or values["structure"].density
 
     @classmethod
     def from_vasp_calc_doc(
@@ -131,7 +136,6 @@ class OutputDoc(BaseModel):
 
         return cls(
             structure=calc_doc.output.structure,
-            density=calc_doc.output.structure.density,
             energy=calc_doc.output.energy,
             energy_per_atom=calc_doc.output.energy_per_atom,
             bandgap=calc_doc.output.bandgap,
@@ -355,7 +359,7 @@ class TaskDoc(StructureMetadata):
     task_label: str = Field(None, description="A description of the task")
     author: str = Field(None, description="Author extracted from transformations")
     icsd_id: str = Field(
-        None, description="International crystal structure database id of the structure"
+        None, description="Inorganic Crystal Structure Database id of the structure"
     )
     transformations: Dict[str, Any] = Field(
         None,
@@ -384,9 +388,14 @@ class TaskDoc(StructureMetadata):
     )
 
     # Make sure that the datetime field is properly formatted
+    # (Unclear when this is not the case, please leave comment if observed)
     @validator("last_updated", pre=True)
-    def last_updated_dict_ok(cls, v):
-        return monty_decoder.process_decoded(v)
+    def last_updated_dict_ok(cls, v) -> datetime:
+        return v if isinstance(v, datetime) else monty_decoder.process_decoded(v)
+    
+    @validator("entry", pre=True)
+    def set_entry(cls, v, values) -> datetime:
+        return v or cls.get_entry(values["calcs_reversed"], values["task_id"])
 
     @classmethod
     def from_directory(
@@ -487,7 +496,6 @@ class TaskDoc(StructureMetadata):
                 vasp_objects.get(VaspObject.TRAJECTORY),  # type: ignore
             ),
             state=_get_state(calcs_reversed, analysis),
-            entry=cls.get_entry(calcs_reversed),
             run_stats=_get_run_stats(calcs_reversed),
             vasp_objects=vasp_objects,
             included_objects=included_objects,
@@ -498,7 +506,7 @@ class TaskDoc(StructureMetadata):
 
     @staticmethod
     def get_entry(
-        calcs_reversed: List[Calculation], job_id: Optional[str] = None
+        calcs_reversed: List[Calculation], task_id: Optional[str] = None
     ) -> ComputedEntry:
         """
         Get a computed entry from a list of VASP calculation documents.
@@ -507,7 +515,7 @@ class TaskDoc(StructureMetadata):
         ----------
         calcs_reversed
             A list of VASP calculation documents in a reverse order.
-        job_id
+        task_id
             The job identifier.
 
         Returns
@@ -517,11 +525,12 @@ class TaskDoc(StructureMetadata):
         """
         entry_dict = {
             "correction": 0.0,
-            "entry_id": job_id,
+            "entry_id": task_id,
             "composition": calcs_reversed[0].output.structure.composition,
             "energy": calcs_reversed[0].output.energy,
             "parameters": {
-                "potcar_spec": calcs_reversed[0].input.potcar_spec,
+                # Cannot be PotcarSpec document, pymatgen expects a dict
+                "potcar_spec": [dict(d) for d in calcs_reversed[0].input.potcar_spec],
                 # Required to be compatible with MontyEncoder for the ComputedEntry
                 "run_type": str(calcs_reversed[0].run_type),
             },
@@ -532,6 +541,27 @@ class TaskDoc(StructureMetadata):
             },
         }
         return ComputedEntry.from_dict(entry_dict)
+    
+    @property
+    def structure_entry(self) -> ComputedStructureEntry:
+        """
+        Retrieve a ComputedStructureEntry for this TaskDoc.
+
+        Returns
+        -------
+        ComputedStructureEntry
+            The TaskDoc.entry with corresponding TaskDoc.structure added.
+        """
+        return ComputedStructureEntry(
+            structure=self.structure,
+            energy=self.entry.energy,
+            correction=self.entry.correction,
+            composition=self.entry.composition,
+            energy_adjustments=self.entry.energy_adjustments,
+            parameters=self.entry.parameters,
+            data=self.entry.data,
+            entry_id=self.entry.entry_id
+        )
 
 
 class TrajectoryDoc(BaseModel):
