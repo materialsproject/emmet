@@ -96,8 +96,8 @@ class OutputDoc(BaseModel):
 
     @validator("density", pre=True, always=True)
     def set_density_from_structure(cls, v, values, **kwargs):
-        # Validator to automatically set density from structure if not already 
-        # specified. This might happen when importing an older atomate2-format 
+        # Validator to automatically set density from structure if not already
+        # specified. This might happen when importing an older atomate2-format
         # TaskDocument.
         return v or values["structure"].density
 
@@ -392,7 +392,7 @@ class TaskDoc(StructureMetadata):
     @validator("last_updated", pre=True)
     def last_updated_dict_ok(cls, v) -> datetime:
         return v if isinstance(v, datetime) else monty_decoder.process_decoded(v)
-    
+
     @validator("entry", pre=True)
     def set_entry(cls, v, values) -> datetime:
         return v or cls.get_entry(values["calcs_reversed"], values["task_id"])
@@ -541,7 +541,7 @@ class TaskDoc(StructureMetadata):
             },
         }
         return ComputedEntry.from_dict(entry_dict)
-    
+
     @property
     def structure_entry(self) -> ComputedStructureEntry:
         """
@@ -560,7 +560,7 @@ class TaskDoc(StructureMetadata):
             energy_adjustments=self.entry.energy_adjustments,
             parameters=self.entry.parameters,
             data=self.entry.data,
-            entry_id=self.entry.entry_id
+            entry_id=self.entry.entry_id,
         )
 
 
