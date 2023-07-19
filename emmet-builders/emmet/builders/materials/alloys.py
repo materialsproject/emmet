@@ -52,9 +52,7 @@ class AlloyPairBuilder(Builder):
         t_type = thermo_type if isinstance(thermo_type, str) else thermo_type.value
         valid_types = {*map(str, ThermoType.__members__.values())}
         if invalid_types := {t_type} - valid_types:
-            raise ValueError(
-                f"Invalid thermo type(s) passed: {invalid_types}, valid types are: {valid_types}"
-            )
+            raise ValueError(f"Invalid thermo type(s) passed: {invalid_types}, valid types are: {valid_types}")
 
         self.thermo_type = t_type
 
@@ -78,34 +76,33 @@ class AlloyPairBuilder(Builder):
             # if af != "AB":
             #     continue
 
-            docs = self.materials.query(
-                criteria={
-                    "formula_anonymous": af,
-                    "deprecated": False,
-                },  # , "material_id": {"$in": ["mp-804", "mp-661"]}},
-                properties=["structure", "material_id", "symmetry.number"],
-            )
-            docs = {d["material_id"]: d for d in docs}
-
-            mpids = list(docs.keys())
-
             thermo_docs = self.thermo.query(
-                {"material_id": {"$in": mpids}, "thermo_type": self.thermo_type},
+                criteria={"formula_anonymous": af, "deprecated": False, "thermo_type": self.thermo_type},
                 properties=[
                     "material_id",
                     "energy_above_hull",
                     "formation_energy_per_atom",
                 ],
             )
+
             thermo_docs = {d["material_id"]: d for d in thermo_docs}
+
+            mpids = list(thermo_docs.keys())
+
+            docs = self.materials.query(
+                criteria={
+                    "material_id": {"$in": mpids},
+                    "deprecated": False,
+                },  # , "material_id": {"$in": ["mp-804", "mp-661"]}},
+                properties=["structure", "material_id", "symmetry.number"],
+            )
+            docs = {d["material_id"]: d for d in docs}
 
             electronic_structure_docs = self.electronic_structure.query(
                 {"material_id": {"$in": mpids}},
                 properties=["material_id", "band_gap", "is_gap_direct"],
             )
-            electronic_structure_docs = {
-                d["material_id"]: d for d in electronic_structure_docs
-            }
+            electronic_structure_docs = {d["material_id"]: d for d in electronic_structure_docs}
 
             provenance_docs = self.provenance.query(
                 {"material_id": {"$in": mpids}},
@@ -119,22 +116,18 @@ class AlloyPairBuilder(Builder):
             )
             oxi_states_docs = {d["material_id"]: d for d in oxi_states_docs}
 
-            for material_id in thermo_docs:
+            for material_id in mpids:
                 d = docs[material_id]
 
                 d["structure"] = Structure.from_dict(d["structure"])
 
                 if material_id in oxi_states_docs:
-                    d["structure_oxi"] = Structure.from_dict(
-                        oxi_states_docs[material_id]["structure"]
-                    )
+                    d["structure_oxi"] = Structure.from_dict(oxi_states_docs[material_id]["structure"])
                 else:
                     d["structure_oxi"] = d["structure"]
 
                 # calculate loose space group
-                d["spacegroup_loose"] = d["structure"].get_space_group_info(
-                    LOOSE_SPACEGROUP_SYMPREC
-                )[1]
+                d["spacegroup_loose"] = d["structure"].get_space_group_info(LOOSE_SPACEGROUP_SYMPREC)[1]
 
                 d["properties"] = {}
                 # patch in BoltzTraP data if present
@@ -145,9 +138,7 @@ class AlloyPairBuilder(Builder):
 
                 if material_id in electronic_structure_docs:
                     for key in ("band_gap", "is_gap_direct"):
-                        d["properties"][key] = electronic_structure_docs[material_id][
-                            key
-                        ]
+                        d["properties"][key] = electronic_structure_docs[material_id][key]
 
                 for key in ("energy_above_hull", "formation_energy_per_atom"):
                     d["properties"][key] = thermo_docs[material_id][key]
@@ -156,19 +147,14 @@ class AlloyPairBuilder(Builder):
                     for key in ("theoretical",):
                         d["properties"][key] = provenance_docs[material_id][key]
 
-            print(
-                f"Starting {af} with {len(docs)} materials, anonymous formula {idx} of {len(ANON_FORMULAS)}"
-            )
+            print(f"Starting {af} with {len(docs)} materials, anonymous formula {idx} of {len(ANON_FORMULAS)}")
 
             yield docs
 
     def process_item(self, item):
         pairs = []
         for mpids in tqdm(list(combinations(item.keys(), 2))):
-            if (
-                item[mpids[0]]["symmetry"]["number"]
-                == item[mpids[1]]["symmetry"]["number"]
-            ) or (
+            if (item[mpids[0]]["symmetry"]["number"] == item[mpids[1]]["symmetry"]["number"]) or (
                 item[mpids[0]]["spacegroup_loose"] == item[mpids[1]]["spacegroup_loose"]
             ):
                 # optionally, could restrict based on band gap too (e.g. at least one end-point semiconducting)
@@ -224,9 +210,7 @@ class AlloyPairMemberBuilder(Builder):
         self.snls = snls
         self.alloy_pair_members = alloy_pair_members
 
-        super().__init__(
-            sources=[alloy_pairs, materials, snls], targets=[alloy_pair_members]
-        )
+        super().__init__(sources=[alloy_pairs, materials, snls], targets=[alloy_pair_members])
 
     def ensure_indexes(self):
         self.alloy_pairs.ensure_index("pair_id")
@@ -238,9 +222,7 @@ class AlloyPairMemberBuilder(Builder):
 
     def get_items(self):
         all_alloy_chemsys = set(self.alloy_pairs.distinct("alloy_pair.chemsys"))
-        all_known_chemsys = set(self.materials.distinct("chemsys")) | set(
-            self.snls.distinct("chemsys")
-        )
+        all_known_chemsys = set(self.materials.distinct("chemsys")) | set(self.snls.distinct("chemsys"))
         possible_chemsys = all_known_chemsys.intersection(all_alloy_chemsys)
 
         print(
@@ -256,9 +238,7 @@ class AlloyPairMemberBuilder(Builder):
                 criteria={"chemsys": chemsys, "deprecated": False},
                 properties=["structure", "material_id"],
             )
-            mp_structures = {
-                d["material_id"]: Structure.from_dict(d["structure"]) for d in mp_docs
-            }
+            mp_structures = {d["material_id"]: Structure.from_dict(d["structure"]) for d in mp_docs}
 
             snl_docs = self.snls.query({"chemsys": chemsys})
             snl_structures = {d["snl_id"]: Structure.from_dict(d) for d in snl_docs}
@@ -308,9 +288,7 @@ class AlloySystemBuilder(Builder):
     It also builds AlloySystem.
     """
 
-    def __init__(
-        self, alloy_pairs, alloy_pair_members, alloy_pairs_merged, alloy_systems
-    ):
+    def __init__(self, alloy_pairs, alloy_pair_members, alloy_pairs_merged, alloy_systems):
         self.alloy_pairs = alloy_pairs
         self.alloy_pair_members = alloy_pair_members
         self.alloy_pairs_merged = alloy_pairs_merged
@@ -330,10 +308,7 @@ class AlloySystemBuilder(Builder):
 
             docs = list(self.alloy_pairs.query({"alloy_pair.anonymous_formula": af}))
             pair_ids = [d["pair_id"] for d in docs]
-            members = {
-                d["pair_id"]: d
-                for d in self.alloy_pair_members.query({"pair_id": {"$in": pair_ids}})
-            }
+            members = {d["pair_id"]: d for d in self.alloy_pair_members.query({"pair_id": {"$in": pair_ids}})}
 
             if docs:
                 yield docs, members
@@ -344,9 +319,7 @@ class AlloySystemBuilder(Builder):
         for doc in pair_docs:
             if doc["pair_id"] in members:
                 doc["alloy_pair"]["members"] = members[doc["pair_id"]]["members"]
-                doc["_search"]["member_ids"] = [
-                    m["id_"] for m in members[doc["pair_id"]]["members"]
-                ]
+                doc["_search"]["member_ids"] = [m["id_"] for m in members[doc["pair_id"]]["members"]]
             else:
                 doc["alloy_pair"]["members"] = []
                 doc["_search"]["member_ids"] = []
