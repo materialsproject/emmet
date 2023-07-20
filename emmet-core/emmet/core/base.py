@@ -4,7 +4,7 @@
 from datetime import datetime
 from typing import TypeVar
 
-from pydantic import BaseModel, Field, validator
+from pydantic import field_validator, BaseModel, Field
 from pymatgen.core import __version__ as pmg_version
 from monty.json import MontyDecoder
 
@@ -41,7 +41,8 @@ class EmmetMeta(BaseModel):
     )
 
     # Make sure that the datetime field is properly formatted
-    @validator("build_date", pre=True)
+    @field_validator("build_date", mode="before")
+    @classmethod
     def build_date_dict_ok(cls, v):
         return monty_decoder.process_decoded(v)
 

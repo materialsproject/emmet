@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 import numpy as np
 from monty.json import MontyDecoder
 from monty.serialization import loadfn
-from pydantic import BaseModel, Field, validator
+from pydantic import field_validator, ConfigDict, BaseModel, Field, validator
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core.structure import Structure
 from pymatgen.core.trajectory import Trajectory
@@ -64,14 +64,14 @@ class OrigInputs(BaseModel):
         description="Pymatgen object representing the POTCAR file.",
     )
 
-    @validator("potcar", pre=True)
+    @field_validator("potcar", mode="before")
+    @classmethod
     def potcar_ok(cls, v):
         if isinstance(v, list):
             return [i for i in v]
         return v
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class OutputDoc(BaseModel):
@@ -94,6 +94,8 @@ class OutputDoc(BaseModel):
     )
     bandgap: float = Field(None, description="The DFT bandgap for the last calculation")
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
     @validator("density", pre=True, always=True)
     def set_density_from_structure(cls, v, values, **kwargs):
         # Validator to automatically set density from structure if not already
@@ -389,10 +391,13 @@ class TaskDoc(StructureMetadata):
 
     # Make sure that the datetime field is properly formatted
     # (Unclear when this is not the case, please leave comment if observed)
-    @validator("last_updated", pre=True)
+    @field_validator("last_updated", mode="before")
+    @classmethod
     def last_updated_dict_ok(cls, v) -> datetime:
         return v if isinstance(v, datetime) else monty_decoder.process_decoded(v)
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
     @validator("entry", pre=True)
     def set_entry(cls, v, values) -> datetime:
         return v or cls.get_entry(values["calcs_reversed"], values["task_id"])

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 from datetime import datetime
 
 
@@ -21,6 +21,4 @@ class ChgcarDataDoc(BaseModel):
         description="The Materials Project ID of the calculation producing the charge density data. "
         "This comes in the form: mp-******.",
     )
-
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")

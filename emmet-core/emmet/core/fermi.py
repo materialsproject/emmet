@@ -1,7 +1,7 @@
 from typing import List
 from datetime import datetime
 from monty.json import MontyDecoder
-from pydantic import BaseModel, Field, validator
+from pydantic import field_validator, BaseModel, Field
 
 
 class FermiDoc(BaseModel):
@@ -31,6 +31,7 @@ class FermiDoc(BaseModel):
     )
 
     # Make sure that the datetime field is properly formatted
-    @validator("last_updated", pre=True)
+    @field_validator("last_updated", mode="before")
+    @classmethod
     def last_updated_dict_ok(cls, v):
         return MontyDecoder().process_decoded(v)
