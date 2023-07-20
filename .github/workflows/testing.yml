@@ -99,6 +99,7 @@ jobs:
         run: python${{ matrix.python-version }} -m mypy --namespace-package ${{ matrix.package }}/emmet
 
       - name: Test with pytest
+        if: always()
         shell: bash -l {0}
         run: python${{ matrix.python-version }} -m pytest --cov=emmet --cov-report=xml ${{ matrix.package }}/tests
 
