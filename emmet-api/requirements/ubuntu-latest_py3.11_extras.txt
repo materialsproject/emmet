@@ -20,11 +20,11 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.28.5
+boto3==1.28.8
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.31.5
+botocore==1.31.8
     # via
     #   boto3
     #   s3transfer
@@ -52,6 +52,8 @@ click==8.1.6
     #   mkdocs
     #   mongogrant
     #   uvicorn-tschaume
+cmake==3.27.0
+    # via ddtrace
 colorama==0.4.6
     # via griffe
 contourpy==1.1.0
@@ -66,7 +68,7 @@ cycler==0.11.0
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==1.16.1
+ddtrace==1.17.0
     # via emmet-api (setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -102,7 +104,7 @@ ghp-import==2.1.0
     # via mkdocs
 griffe==0.32.3
     # via mkdocstrings-python
-gunicorn==21.1.0
+gunicorn==21.2.0
     # via emmet-api (setup.py)
 h11==0.14.0
     # via
@@ -112,7 +114,7 @@ htmlmin2==0.1.13
     # via mkdocs-minify-plugin
 httpcore==0.17.3
     # via dnspython
-identify==2.5.24
+identify==2.5.25
     # via pre-commit
 idna==3.4
     # via
@@ -203,7 +205,7 @@ mkdocstrings[python]==0.22.0
     # via
     #   emmet-api (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.2.0
+mkdocstrings-python==1.2.1
     # via mkdocstrings
 mongogrant==0.3.3
     # via maggma
@@ -315,7 +317,7 @@ pyflakes==3.0.1
     # via flake8
 pygments==2.15.1
     # via mkdocs-material
-pymatgen==2023.7.17
+pymatgen==2023.7.20
     # via
     #   emmet-core
     #   matminer
@@ -450,11 +452,11 @@ tqdm==4.65.0
     #   maggma
     #   matminer
     #   pymatgen
-types-requests==2.31.0.1
+types-requests==2.31.0.2
     # via emmet-api (setup.py)
-types-setuptools==68.0.0.2
+types-setuptools==68.0.0.3
     # via emmet-api (setup.py)
-types-urllib3==1.26.25.13
+types-urllib3==1.26.25.14
     # via types-requests
 typing-extensions==4.7.1
     # via
@@ -474,7 +476,7 @@ urllib3==1.26.16
     #   requests
 uvicorn-tschaume==0.19.1
     # via emmet-api (setup.py)
-virtualenv==20.24.0
+virtualenv==20.24.1
     # via pre-commit
 watchdog==3.0.0
     # via mkdocs
