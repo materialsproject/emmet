@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from setuptools import find_namespace_packages, setup
 
-
 setup(
     name="emmet-core",
     use_scm_version={"root": "..", "relative_to": __file__},
@@ -19,7 +18,7 @@ setup(
     install_requires=[
         "pymatgen>=2023.7.20",
         "monty>=2021.3",
-        "pydantic>=1.10.2,<2.0",
+        "pydantic>=1.10.2",
         "pybtex~=0.24",
         "typing-extensions>=3.7,<5.0",
         "spglib>=2.0.1",
