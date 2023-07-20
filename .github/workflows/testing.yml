@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ['ubuntu-latest']#  # TODO openbabel for windows and mac
+        os: ["ubuntu-latest"] # TODO openbabel for windows and mac
         package: ["emmet-core", "emmet-builders", "emmet-api"]
         python-version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
@@ -23,12 +23,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup conda
-        uses: s-weigand/setup-conda@v1
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v2
         with:
-          update-conda: true
+          auto-update-conda: true
           python-version: ${{ matrix.python-version }}
-          conda-channels: anaconda, conda-forge
+          channels: anaconda, conda-forge
 
       - name: Install OpenBabel
         shell: bash -l {0}
@@ -99,6 +99,7 @@ jobs:
         run: python${{ matrix.python-version }} -m mypy --namespace-package ${{ matrix.package }}/emmet
 
       - name: Test with pytest
+        if: always() # run tests even if linting failed
         shell: bash -l {0}
         run: python${{ matrix.python-version }} -m pytest --cov=emmet --cov-report=xml ${{ matrix.package }}/tests
 
