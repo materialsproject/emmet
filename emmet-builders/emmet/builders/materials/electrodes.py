@@ -519,7 +519,7 @@ class ConversionElectrodeBuilder(Builder):
 
         all_chemsys = self.phase_diagram_store.distinct("chemsys")
 
-        chemsys_w_wion = [c for c in all_chemsys if self.working_ion in c.split("-")]
+        chemsys_w_wion = [c for c in all_chemsys if self.working_ion in c]
 
         q = {
             "$and": [
