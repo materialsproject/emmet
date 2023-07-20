@@ -1,7 +1,8 @@
 from typing import Literal
-from pydantic import BaseSettings, Field
+from pydantic import Field
 from emmet.api import __file__ as root_dir
 import os
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class MAPISettings(BaseSettings):
@@ -27,6 +28,4 @@ class MAPISettings(BaseSettings):
         20,
         description="Number of seconds to wait for pymongo operations before raising a timeout error.",
     )
-
-    class Config:
-        env_prefix = "MAPI_"
+    model_config = SettingsConfigDict(env_prefix="MAPI_")
