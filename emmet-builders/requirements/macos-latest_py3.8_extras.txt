@@ -61,7 +61,7 @@ dnspython==2.4.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.60.2
+emmet-core[all]==0.63.0
     # via
     #   emmet-builders (setup.py)
     #   mp-api
