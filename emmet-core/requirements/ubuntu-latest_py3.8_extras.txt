@@ -64,7 +64,7 @@ dnspython==2.4.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.60.2
+emmet-core==0.63.0
     # via mp-api
 exceptiongroup==1.1.2
     # via
