@@ -20,11 +20,11 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.28.5
+boto3==1.28.8
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.31.5
+botocore==1.31.8
     # via
     #   boto3
     #   s3transfer
@@ -47,6 +47,8 @@ click==8.1.6
     #   flask
     #   mongogrant
     #   uvicorn-tschaume
+cmake==3.27.0
+    # via ddtrace
 contourpy==1.1.0
     # via matplotlib
 cryptography==41.0.2
@@ -55,7 +57,7 @@ cycler==0.11.0
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==1.16.1
+ddtrace==1.17.0
     # via emmet-api (setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -85,7 +87,7 @@ future==0.18.3
     # via
     #   matminer
     #   uncertainties
-gunicorn==21.1.0
+gunicorn==21.2.0
     # via emmet-api (setup.py)
 h11==0.14.0
     # via
@@ -218,7 +220,7 @@ pydantic==1.10.11
     #   pymatgen
 pydash==7.0.5
     # via maggma
-pymatgen==2023.7.17
+pymatgen==2023.7.20
     # via
     #   emmet-core
     #   matminer
