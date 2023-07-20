@@ -513,11 +513,23 @@ class ConversionElectrodeBuilder(Builder):
 
     def get_items(self):
         """
-        Get items. The phase diagrams are prefiltered by "thermo_type" or the functional.
+        Get items. Phase diagrams are filtered such that only PDs with chemical systems containing
+        the working ion and the specified "thermo_type", or functional, are chosen.
         """
-        q = dict(self.query)
-        q.update({"thermo_type": self.thermo_type})
-        for phase_diagram_doc in self.phase_diagram_store.query(q):
+
+        all_chemsys = self.phase_diagram_store.distinct("chemsys")
+
+        chemsys_w_wion = [c for c in all_chemsys if self.working_ion in c]
+
+        q = {
+            "$and": [
+                dict(self.query),
+                {"thermo_type": self.thermo_type},
+                {"chemsys": {"$in": chemsys_w_wion}},
+            ]
+        }
+
+        for phase_diagram_doc in self.phase_diagram_store.query(criteria=q):
             yield phase_diagram_doc
 
     def process_item(self, item) -> Dict:
