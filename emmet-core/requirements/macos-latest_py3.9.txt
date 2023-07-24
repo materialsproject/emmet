@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements/macos-latest_py3.9.txt
 #
-certifi==2023.5.7
+certifi==2023.7.22
     # via requests
 charset-normalizer==3.2.0
     # via requests
@@ -14,7 +14,7 @@ cycler==0.11.0
     # via matplotlib
 emmet-core==0.63.0
     # via mp-api
-fonttools==4.41.0
+fonttools==4.41.1
     # via matplotlib
 future==0.18.3
     # via uncertainties
