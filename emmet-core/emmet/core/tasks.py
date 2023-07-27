@@ -429,7 +429,7 @@ class TaskDoc(StructureMetadata):
 
         Returns
         -------
-        VaspTaskDoc
+        TaskDoc
             A task document for the calculation.
         """
         logger.info(f"Getting task doc in: {dir_name}")
@@ -504,6 +504,80 @@ class TaskDoc(StructureMetadata):
         doc = doc.copy(update=additional_fields)
         return doc
 
+    @classmethod
+    def from_vasprun(
+        cls: Type[_T],
+        path: Union[str, Path],
+        additional_fields: Dict[str, Any] = None,
+        volume_change_warning_tol: float = 0.2,
+        **vasp_calculation_kwargs,
+    ) -> _T:
+        """
+        Create a task document from a vasprun.xml file.
+
+        This is not recommended and will raise warnings, since some necessary
+        information is absent from the vasprun.xml file, such as per-atom
+        magnetic moments. However, the majority of the TaskDoc will
+        be complete.
+
+        Parameters
+        ----------
+        path
+            The path to the vasprun.xml.
+        additional_fields: Dict[str, Any] = None,
+        volume_change_warning_tol
+            Maximum volume change allowed in VASP relaxations before the calculation is
+            tagged with a warning.
+        **vasp_calculation_kwargs
+            Additional parsing options that will be passed to the
+            :obj:`.Calculation.from_vasp_files` function.
+
+        Returns
+        -------
+        TaskDoc
+            A task document for the calculation.
+        """
+        logger.info(f"Getting vasprun.xml at: {path}")
+
+        path = Path(path)
+        dir_name = path.resolve().parent
+
+        calc = Calculation.from_vasprun(path, **vasp_calculation_kwargs)
+        calcs_reversed = [calc]
+
+        analysis = AnalysisDoc.from_vasp_calc_docs(
+            calcs_reversed, volume_change_warning_tol=volume_change_warning_tol
+        )
+
+        # assume orig_inputs are those stated in vasprun.xml
+        orig_inputs = OrigInputs(
+            incar=calc.input.incar,
+            poscar=Poscar(calc.input.structure),
+            kpoints=calc.input.kpoints,
+            potcar=calc.input.potcar,
+        )
+
+        doc = cls.from_structure(
+            structure=calcs_reversed[0].output.structure,
+            meta_structure=calcs_reversed[0].output.structure,
+            include_structure=True,
+            dir_name=get_uri(dir_name),
+            calcs_reversed=calcs_reversed,
+            analysis=analysis,
+            orig_inputs=orig_inputs,
+            completed_at=calcs_reversed[0].completed_at,
+            input=InputDoc.from_vasp_calc_doc(calcs_reversed[-1]),
+            output=OutputDoc.from_vasp_calc_doc(calcs_reversed[0]),
+            state=_get_state(calcs_reversed, analysis),
+            run_stats=None,
+            vasp_objects={},
+            included_objects=[],
+            task_type=calcs_reversed[0].task_type,
+        )
+        if additional_fields:
+            doc = doc.copy(update=additional_fields)
+        return doc
+
     @staticmethod
     def get_entry(
         calcs_reversed: List[Calculation], task_id: Optional[str] = None
@@ -533,9 +607,6 @@ class TaskDoc(StructureMetadata):
                 "potcar_spec": [dict(d) for d in calcs_reversed[0].input.potcar_spec],
                 # Required to be compatible with MontyEncoder for the ComputedEntry
                 "run_type": str(calcs_reversed[0].run_type),
-                # Hubbard terms
-                "is_hubbard": calcs_reversed[0].input.is_hubbard,
-                "hubbards": calcs_reversed[0].input.hubbards,
             },
             "data": {
                 "oxide_type": oxide_type(calcs_reversed[0].output.structure),
