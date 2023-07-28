@@ -77,7 +77,6 @@ def task_type(
             calc_type.append("NSCF Line")
         else:
             calc_type.append("NSCF Uniform")
-    # TODO, what does the below line from atomate2 do? Why using []? -mjwen
     elif len([x for x in kpts.get("labels") or [] if x is not None]) > 0:
         calc_type.append("SCF Line")
     elif incar.get("LEPSILON", False):
