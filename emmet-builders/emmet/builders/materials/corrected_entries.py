@@ -49,10 +49,10 @@ class CorrectedEntriesBuilder(Builder):
         self.chunk_size = chunk_size
         self._entries_cache: Dict[str, List[ComputedStructureEntry]] = defaultdict(list)
 
-        if self.corrected_entries.key != "chemsys":
+        if self.corrected_entries.key != "thermo_id":
             warnings.warn(
                 "Key for the corrected_entries store is incorrect and has been changed "
-                f"from {self.corrected_entries.key} to chemsys!"
+                f"from {self.corrected_entries.key} to thermo_id!"
             )
             self.corrected_entries.key = "thermo_id"
 
