@@ -7,9 +7,7 @@
 aioitertools==0.11.0
     # via maggma
 anyio==3.7.1
-    # via
-    #   httpcore
-    #   starlette
+    # via starlette
 attrs==23.1.0
     # via
     #   cattrs
@@ -20,11 +18,11 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.28.9
+boto3==1.28.17
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.31.9
+botocore==1.31.17
     # via
     #   boto3
     #   s3transfer
@@ -33,9 +31,7 @@ bytecode==0.14.2
 cattrs==23.1.2
     # via ddtrace
 certifi==2023.7.22
-    # via
-    #   httpcore
-    #   requests
+    # via requests
 cffi==1.15.1
     # via
     #   cryptography
@@ -47,25 +43,23 @@ click==8.1.6
     #   flask
     #   mongogrant
     #   uvicorn-tschaume
-cmake==3.27.0
-    # via ddtrace
 contourpy==1.1.0
     # via matplotlib
-cryptography==41.0.2
+cryptography==41.0.3
     # via paramiko
 cycler==0.11.0
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==1.17.1
+ddtrace==1.17.3
     # via emmet-api (setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
-dnspython==2.4.0
+dnspython==2.4.1
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.63.0
+emmet-core[all]==0.63.1
     # via
     #   emmet-api (setup.py)
     #   mp-api
@@ -75,13 +69,13 @@ exceptiongroup==1.1.2
     # via
     #   anyio
     #   cattrs
-fastapi==0.100.0
+fastapi==0.100.1
     # via
     #   emmet-api (setup.py)
     #   maggma
 flask==2.3.2
     # via mongogrant
-fonttools==4.41.1
+fonttools==4.42.0
     # via matplotlib
 future==0.18.3
     # via
@@ -90,11 +84,7 @@ future==0.18.3
 gunicorn==21.2.0
     # via emmet-api (setup.py)
 h11==0.14.0
-    # via
-    #   httpcore
-    #   uvicorn-tschaume
-httpcore==0.17.3
-    # via dnspython
+    # via uvicorn-tschaume
 idna==3.4
     # via
     #   anyio
@@ -120,7 +110,7 @@ joblib==1.3.1
     #   pymatgen
     #   pymatgen-analysis-diffusion
     #   scikit-learn
-jsonschema==4.18.4
+jsonschema==4.18.5
     # via maggma
 jsonschema-specifications==2023.7.1
     # via jsonschema
@@ -128,7 +118,7 @@ kiwisolver==1.4.4
     # via matplotlib
 latexcodec==2.0.1
     # via pybtex
-maggma==0.51.24
+maggma==0.53.0
     # via emmet-api (setup.py)
 markupsafe==2.1.3
     # via
@@ -162,7 +152,7 @@ networkx==3.1
     # via
     #   pymatgen
     #   robocrys
-numpy==1.25.1
+numpy==1.25.2
     # via
     #   contourpy
     #   maggma
@@ -192,7 +182,7 @@ pandas==1.5.3
     # via
     #   matminer
     #   pymatgen
-paramiko==3.2.0
+paramiko==3.3.1
     # via sshtunnel
 pillow==10.0.0
     # via matplotlib
@@ -211,14 +201,14 @@ pybtex==0.24.0
     #   robocrys
 pycparser==2.21
     # via cffi
-pydantic==1.10.11
+pydantic==1.10.12
     # via
     #   emmet-core
     #   fastapi
     #   inflect
     #   maggma
     #   pymatgen
-pydash==7.0.5
+pydash==7.0.6
     # via maggma
 pymatgen==2023.7.20
     # via
@@ -303,10 +293,7 @@ six==1.16.0
     #   pybtex
     #   python-dateutil
 sniffio==1.3.0
-    # via
-    #   anyio
-    #   dnspython
-    #   httpcore
+    # via anyio
 spglib==2.0.2
     # via
     #   emmet-core
