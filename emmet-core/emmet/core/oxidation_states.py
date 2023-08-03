@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
 from pydantic import Field
@@ -24,7 +24,7 @@ class OxidationStateDoc(PropertyDoc):
     possible_species: List[str] = Field(description="Possible charged species in this material.")
     possible_valences: List[float] = Field(description="List of valences for each site in this material.")
     average_oxidation_states: Dict[str, float] = Field(description="Average oxidation states for each unique species.")
-    method: str = Field(None, description="Method used to compute oxidation states.")
+    method: Optional[str] = Field(None, description="Method used to compute oxidation states.")
 
     @classmethod
     def from_structure(cls, structure: Structure, material_id: MPID, **kwargs):  # type: ignore[override]

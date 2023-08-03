@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field
 from pymatgen.core import Structure
@@ -30,9 +30,7 @@ class PointGroupData(BaseModel):
     Defines symmetry for a molecule document
     """
 
-    point_group: str = Field(
-        None, title="Point Group Symbol", description="The point group for the lattice"
-    )
+    point_group: str = Field(None, title="Point Group Symbol", description="The point group for the lattice")
 
     rotation_number: float = Field(
         None,
@@ -40,9 +38,7 @@ class PointGroupData(BaseModel):
         description="Rotational symmetry number for the molecule",
     )
 
-    linear: bool = Field(
-        None, title="Molecule Linearity", description="Is the molecule linear?"
-    )
+    linear: Optional[bool] = Field(None, title="Molecule Linearity", description="Is the molecule linear?")
 
     tolerance: float = Field(
         None,
@@ -132,9 +128,7 @@ class SymmetryData(BaseModel):
         description="The spacegroup number for the lattice.",
     )
 
-    point_group: str = Field(
-        None, title="Point Group Symbol", description="The point group for the lattice."
-    )
+    point_group: str = Field(None, title="Point Group Symbol", description="The point group for the lattice.")
 
     symprec: float = Field(
         None,
@@ -142,7 +136,7 @@ class SymmetryData(BaseModel):
         description="The precision given to spglib to determine the symmetry of this lattice.",
     )
 
-    version: str = Field(None, title="SPGLib version")
+    version: Optional[str] = Field(None, title="SPGLib version")
 
     @classmethod
     def from_structure(cls, structure: Structure) -> "SymmetryData":

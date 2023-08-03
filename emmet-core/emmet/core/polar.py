@@ -1,5 +1,5 @@
 """ Core definition for Polar property Document """
-from typing import List
+from typing import List, Optional
 from emmet.core.mpid import MPID
 
 import numpy as np
@@ -148,4 +148,6 @@ class IRDielectric(BaseModel):
     A block for the pymatgen IRDielectricTensor object
     """
 
-    ir_dielectric_tensor: dict = Field(None, description="Serialized version of a pymatgen IRDielectricTensor object.")
+    ir_dielectric_tensor: Optional[dict] = Field(
+        None, description="Serialized version of a pymatgen IRDielectricTensor object."
+    )

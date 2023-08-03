@@ -1,4 +1,4 @@
-from typing import Literal, List, Union
+from typing import Literal, List, Union, Optional
 
 from pydantic import Field
 from pymatgen.analysis.chemenv.coordination_environments.chemenv_strategies import (
@@ -363,7 +363,7 @@ class ChemEnvDoc(PropertyDoc):
         description="List of Wyckoff positions for unique (cationic) species in structure."
     )
 
-    warnings: Union[str, None] = Field(None, description="Warning")
+    warnings: Optional[str] = Field(None, description="Warning")
 
     @classmethod
     def from_structure(

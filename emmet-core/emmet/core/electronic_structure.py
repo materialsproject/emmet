@@ -94,7 +94,7 @@ class ElectronicStructureBaseData(BaseModel):
 
     vbm: Union[float, Dict] = Field(None, description="Valence band maximum data.")
 
-    efermi: float = Field(None, description="Fermi energy in eV.")
+    efermi: Optional[float] = Field(None, description="Fermi energy in eV.")
 
 
 class ElectronicStructureSummary(ElectronicStructureBaseData):
@@ -114,7 +114,7 @@ class BandStructureSummaryData(ElectronicStructureSummary):
 
 
 class DosSummaryData(ElectronicStructureBaseData):
-    spin_polarization: float = Field(None, description="Spin polarization at the fermi level.")
+    spin_polarization: Optional[float] = Field(None, description="Spin polarization at the fermi level.")
 
 
 class BandstructureData(BaseModel):

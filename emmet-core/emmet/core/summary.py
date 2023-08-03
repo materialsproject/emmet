@@ -68,8 +68,8 @@ class SummaryStats(BaseModel):
         title="Maximum",
         description="The maximum value " "of the specified field used to " "generate statistics.",
     )
-    median: float = Field(None, title="Median", description="The median of the field values.")
-    mean: float = Field(None, title="Mean", description="The mean of the field values.")
+    median: Optional[float] = Field(None, title="Median", description="The median of the field values.")
+    mean: Optional[float] = Field(None, title="Mean", description="The mean of the field values.")
     distribution: List[float] = Field(
         None,
         title="Distribution",
@@ -100,13 +100,13 @@ class GBSearchData(BaseModel):
     Fields in grain boundary sub docs in summary
     """
 
-    sigma: int = Field(None, description="Sigma value of the boundary.", source="grain_boundary")
+    sigma: Optional[int] = Field(None, description="Sigma value of the boundary.", source="grain_boundary")
 
-    type: str = Field(None, description="Grain boundary type.", source="grain_boundary")
+    type: Optional[str] = Field(None, description="Grain boundary type.", source="grain_boundary")
 
-    gb_energy: float = Field(None, description="Grain boundary energy in J/m^2.", source="grain_boundary")
+    gb_energy: Optional[float] = Field(None, description="Grain boundary energy in J/m^2.", source="grain_boundary")
 
-    rotation_angle: float = Field(None, description="Rotation angle in degrees.", source="grain_boundary")
+    rotation_angle: Optional[float] = Field(None, description="Rotation angle in degrees.", source="grain_boundary")
 
 
 class SummaryDoc(PropertyDoc):
@@ -191,13 +191,13 @@ class SummaryDoc(PropertyDoc):
 
     # Electronic Structure
 
-    band_gap: float = Field(None, description="Band gap energy in eV.", source="electronic_structure")
+    band_gap: Optional[float] = Field(None, description="Band gap energy in eV.", source="electronic_structure")
 
     cbm: Union[float, Dict] = Field(None, description="Conduction band minimum data.", source="electronic_structure")
 
     vbm: Union[float, Dict] = Field(None, description="Valence band maximum data.", source="electronic_structure")
 
-    efermi: float = Field(None, description="Fermi energy in eV.", source="electronic_structure")
+    efermi: Optional[float] = Field(None, description="Fermi energy in eV.", source="electronic_structure")
 
     is_gap_direct: bool = Field(
         None,
@@ -231,17 +231,21 @@ class SummaryDoc(PropertyDoc):
 
     # DOS
 
-    dos_energy_up: float = Field(None, description="Spin-up DOS band gap in eV.", source="electronic_structure")
+    dos_energy_up: Optional[float] = Field(
+        None, description="Spin-up DOS band gap in eV.", source="electronic_structure"
+    )
 
-    dos_energy_down: float = Field(None, description="Spin-down DOS band gap in eV.", source="electronic_structure")
+    dos_energy_down: Optional[float] = Field(
+        None, description="Spin-down DOS band gap in eV.", source="electronic_structure"
+    )
 
     # Magnetism
 
-    is_magnetic: bool = Field(None, description="Whether the material is magnetic.", source="magnetism")
+    is_magnetic: Optional[bool] = Field(None, description="Whether the material is magnetic.", source="magnetism")
 
-    ordering: str = Field(None, description="Type of magnetic ordering.", source="magnetism")
+    ordering: Optional[str] = Field(None, description="Type of magnetic ordering.", source="magnetism")
 
-    total_magnetization: float = Field(None, description="Total magnetization in μB.", source="magnetism")
+    total_magnetization: Optional[float] = Field(None, description="Total magnetization in μB.", source="magnetism")
 
     total_magnetization_normalized_vol: float = Field(
         None,
@@ -255,33 +259,35 @@ class SummaryDoc(PropertyDoc):
         source="magnetism",
     )
 
-    num_magnetic_sites: int = Field(None, description="The number of magnetic sites.", source="magnetism")
+    num_magnetic_sites: Optional[int] = Field(None, description="The number of magnetic sites.", source="magnetism")
 
-    num_unique_magnetic_sites: int = Field(None, description="The number of unique magnetic sites.", source="magnetism")
+    num_unique_magnetic_sites: Optional[int] = Field(
+        None, description="The number of unique magnetic sites.", source="magnetism"
+    )
 
     types_of_magnetic_species: List[Element] = Field(None, description="Magnetic specie elements.", source="magnetism")
 
     # Elasticity
 
-    k_voigt: float = Field(None, description="Voigt average of the bulk modulus.")
+    k_voigt: Optional[float] = Field(None, description="Voigt average of the bulk modulus.")
 
-    k_reuss: float = Field(None, description="Reuss average of the bulk modulus in GPa.")
+    k_reuss: Optional[float] = Field(None, description="Reuss average of the bulk modulus in GPa.")
 
-    k_vrh: float = Field(None, description="Voigt-Reuss-Hill average of the bulk modulus in GPa.")
+    k_vrh: Optional[float] = Field(None, description="Voigt-Reuss-Hill average of the bulk modulus in GPa.")
 
-    g_voigt: float = Field(None, description="Voigt average of the shear modulus in GPa.")
+    g_voigt: Optional[float] = Field(None, description="Voigt average of the shear modulus in GPa.")
 
-    g_reuss: float = Field(None, description="Reuss average of the shear modulus in GPa.")
+    g_reuss: Optional[float] = Field(None, description="Reuss average of the shear modulus in GPa.")
 
-    g_vrh: float = Field(None, description="Voigt-Reuss-Hill average of the shear modulus in GPa.")
+    g_vrh: Optional[float] = Field(None, description="Voigt-Reuss-Hill average of the shear modulus in GPa.")
 
-    universal_anisotropy: float = Field(None, description="Elastic anisotropy.")
+    universal_anisotropy: Optional[float] = Field(None, description="Elastic anisotropy.")
 
-    homogeneous_poisson: float = Field(None, description="Poisson's ratio.")
+    homogeneous_poisson: Optional[float] = Field(None, description="Poisson's ratio.")
 
     # Dielectric and Piezo
 
-    e_total: float = Field(None, description="Total dielectric constant.", source="dielectric")
+    e_total: Optional[float] = Field(None, description="Total dielectric constant.", source="dielectric")
 
     e_ionic: float = Field(
         None,
@@ -295,9 +301,9 @@ class SummaryDoc(PropertyDoc):
         source="dielectric",
     )
 
-    n: float = Field(None, description="Refractive index.", source="dielectric")
+    n: Optional[float] = Field(None, description="Refractive index.", source="dielectric")
 
-    e_ij_max: float = Field(None, description="Piezoelectric modulus.", source="piezoelectric")
+    e_ij_max: Optional[float] = Field(None, description="Piezoelectric modulus.", source="piezoelectric")
 
     # Surface Properties
 
@@ -317,9 +323,11 @@ class SummaryDoc(PropertyDoc):
         None, description="Weighted work function in eV.", source="surface_properties"
     )
 
-    surface_anisotropy: float = Field(None, description="Surface energy anisotropy.", source="surface_properties")
+    surface_anisotropy: Optional[float] = Field(
+        None, description="Surface energy anisotropy.", source="surface_properties"
+    )
 
-    shape_factor: float = Field(None, description="Shape factor.", source="surface_properties")
+    shape_factor: Optional[float] = Field(None, description="Shape factor.", source="surface_properties")
 
     has_reconstructed: bool = Field(
         None,

@@ -66,9 +66,9 @@ class ThermoDoc(PropertyDoc):
         description="The total corrected DFT energy of this material per atom in eV/atom.",
     )
 
-    energy_uncertainy_per_atom: float = Field(None, description="")
+    energy_uncertainy_per_atom: Optional[float] = Field(None, description="")
 
-    formation_energy_per_atom: float = Field(None, description="The formation energy per atom in eV/atom.")
+    formation_energy_per_atom: Optional[float] = Field(None, description="The formation energy per atom in eV/atom.")
 
     energy_above_hull: float = Field(..., description="The energy above the hull in eV/Atom.")
 

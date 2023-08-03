@@ -41,28 +41,28 @@ class ComplianceTensorDoc(BaseModel):
 
 
 class BulkModulus(BaseModel):
-    voigt: float = Field(None, description="Bulk modulus Voigt average (GPa)")
-    reuss: float = Field(None, description="Bulk modulus Reuss average (Gpa)")
-    vrh: float = Field(None, description="Bulk modulus Voigt-Reuss-Hill average (GPa)")
+    voigt: Optional[float] = Field(None, description="Bulk modulus Voigt average (GPa)")
+    reuss: Optional[float] = Field(None, description="Bulk modulus Reuss average (Gpa)")
+    vrh: Optional[float] = Field(None, description="Bulk modulus Voigt-Reuss-Hill average (GPa)")
 
 
 class ShearModulus(BaseModel):
-    voigt: float = Field(None, description="Shear modulus Voigt average (GPa)")
-    reuss: float = Field(None, description="Shear modulus Reuss average (GPa)")
-    vrh: float = Field(None, description="Shear modulus Voigt-Reuss-Hill average (GPa)")
+    voigt: Optional[float] = Field(None, description="Shear modulus Voigt average (GPa)")
+    reuss: Optional[float] = Field(None, description="Shear modulus Reuss average (GPa)")
+    vrh: Optional[float] = Field(None, description="Shear modulus Voigt-Reuss-Hill average (GPa)")
 
 
 class SoundVelocity(BaseModel):
-    transverse: float = Field(None, description="Transverse sound velocity (SI units)")
-    longitudinal: float = Field(None, description="Longitudinal sound velocity (SI units)")
-    snyder_acoustic: float = Field(None, description="Snyder's acoustic sound velocity (SI units)")
-    snyder_optical: float = Field(None, description="Snyder's optical sound velocity (SI units)")
-    snyder_total: float = Field(None, description="Snyder's total sound velocity (SI units)")
+    transverse: Optional[float] = Field(None, description="Transverse sound velocity (SI units)")
+    longitudinal: Optional[float] = Field(None, description="Longitudinal sound velocity (SI units)")
+    snyder_acoustic: Optional[float] = Field(None, description="Snyder's acoustic sound velocity (SI units)")
+    snyder_optical: Optional[float] = Field(None, description="Snyder's optical sound velocity (SI units)")
+    snyder_total: Optional[float] = Field(None, description="Snyder's total sound velocity (SI units)")
 
 
 class ThermalConductivity(BaseModel):
-    clarke: float = Field(None, description="Clarke's thermal conductivity (SI units)")
-    cahill: float = Field(None, description="Cahill's thermal conductivity (SI units)")
+    clarke: Optional[float] = Field(None, description="Clarke's thermal conductivity (SI units)")
+    cahill: Optional[float] = Field(None, description="Cahill's thermal conductivity (SI units)")
 
 
 class FittingData(BaseModel):
@@ -83,15 +83,23 @@ class FittingData(BaseModel):
         None,
         description="Deformation task ids corresponding to the strained structures",
     )
-    deformation_dir_names: List[str] = Field(None, description="Paths to the running directories of deformation tasks")
+    deformation_dir_names: Optional[List[str]] = Field(
+        None, description="Paths to the running directories of deformation tasks"
+    )
 
     # data of equilibrium structure
-    equilibrium_cauchy_stress: Matrix3D = Field(None, description="Cauchy stress tensor of the relaxed structure")
-    optimization_task: MPID = Field(None, description="Optimization task corresponding to the relaxed structure")
-    optimization_dir_name: str = Field(None, description="Path to the running directory of the optimization task")
+    equilibrium_cauchy_stress: Optional[Matrix3D] = Field(
+        None, description="Cauchy stress tensor of the relaxed structure"
+    )
+    optimization_task: Optional[MPID] = Field(
+        None, description="Optimization task corresponding to the relaxed structure"
+    )
+    optimization_dir_name: Optional[str] = Field(
+        None, description="Path to the running directory of the optimization task"
+    )
 
     # derived strains stresses
-    num_total_strain_stress_states: int = Field(
+    num_total_strain_stress_states: Optional[int] = Field(
         None,
         description="Number of total strain--stress states used for fitting, i.e. the "
         "sum of explicitly calculated deformations and derived deformations from "
@@ -123,7 +131,7 @@ class WarningMessage(BaseModel):
 class ElasticityDoc(PropertyDoc):
     property_name: str = "elasticity"
 
-    structure: Structure = Field(None, description="Structure to compute the elasticity")
+    structure: Optional[Structure] = Field(None, description="Structure to compute the elasticity")
 
     order: int = Field(default=2, description="Order of the expansion of the elastic tensor")
 
@@ -136,14 +144,14 @@ class ElasticityDoc(PropertyDoc):
     shear_modulus: ShearModulus = Field(None, description="Shear modulus")
     sound_velocity: SoundVelocity = Field(None, description="Sound velocity")
     thermal_conductivity: ThermalConductivity = Field(None, description="Thermal conductivity")
-    young_modulus: float = Field(None, description="Young's modulus (SI units)")
-    universal_anisotropy: float = Field(None, description="Universal elastic anisotropy")
-    homogeneous_poisson: float = Field(None, description="Homogeneous Poisson ratio")
-    debye_temperature: float = Field(None, description="Debye temperature (SI units)")
+    young_modulus: Optional[float] = Field(None, description="Young's modulus (SI units)")
+    universal_anisotropy: Optional[float] = Field(None, description="Universal elastic anisotropy")
+    homogeneous_poisson: Optional[float] = Field(None, description="Homogeneous Poisson ratio")
+    debye_temperature: Optional[float] = Field(None, description="Debye temperature (SI units)")
 
     fitting_data: FittingData = Field(None, description="Data used to fit the elastic tensor")
 
-    fitting_method: str = Field(None, description="Method used to fit the elastic tensor")
+    fitting_method: Optional[str] = Field(None, description="Method used to fit the elastic tensor")
 
     state: Status = Field(
         None,

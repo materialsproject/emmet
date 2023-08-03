@@ -41,9 +41,11 @@ class OutputSummary(BaseModel):
     initial_molecule: Molecule = Field(None, description="Input Molecule object")
     optimized_molecule: Molecule = Field(None, description="Optimized Molecule object")
 
-    final_energy: float = Field(None, description="Final electronic energy for the calculation (units: Hartree)")
-    enthalpy: float = Field(None, description="Total enthalpy of the molecule (units: kcal/mol)")
-    entropy: float = Field(None, description="Total entropy of the molecule (units: cal/mol-K")
+    final_energy: Optional[float] = Field(
+        None, description="Final electronic energy for the calculation (units: Hartree)"
+    )
+    enthalpy: Optional[float] = Field(None, description="Total enthalpy of the molecule (units: kcal/mol)")
+    entropy: Optional[float] = Field(None, description="Total entropy of the molecule (units: cal/mol-K")
 
     mulliken: List[Any] = Field(None, description="Mulliken atomic partial charges and partial spins")
     resp: List[float] = Field(
@@ -81,8 +83,8 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     is_valid: bool = Field(True, description="Whether this task document passed validation or not")
     state: QChemStatus = Field(None, description="State of this calculation")
 
-    cputime: float = Field(None, description="The system CPU time in seconds")
-    walltime: float = Field(None, description="The real elapsed time in seconds")
+    cputime: Optional[float] = Field(None, description="The system CPU time in seconds")
+    walltime: Optional[float] = Field(None, description="The real elapsed time in seconds")
 
     calcs_reversed: List[Dict] = Field([], description="The 'raw' calculation docs used to assembled this task")
 
@@ -90,9 +92,9 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     output: OutputSummary = Field(OutputSummary())
 
     critic2: Dict[str, Any] = Field(None, description="Output from Critic2 critical point analysis code")
-    custom_smd: str = Field(None, description="Parameter string for SMD implicit solvent model")
+    custom_smd: Optional[str] = Field(None, description="Parameter string for SMD implicit solvent model")
 
-    special_run_type: str = Field(None, description="Special workflow name (if applicable)")
+    special_run_type: Optional[str] = Field(None, description="Special workflow name (if applicable)")
 
     smiles: str = Field(
         None,

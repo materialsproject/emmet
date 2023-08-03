@@ -62,8 +62,8 @@ class MoleculeSummaryDoc(PropertyDoc):
         description="Weisfeiler Lehman (WL) graph hash using the atom coordinates as the graph " "node attribute.",
     )
 
-    inchi: str = Field(None, description="International Chemical Identifier (InChI) for this molecule")
-    inchi_key: str = Field(None, description="Standardized hash of the InChI for this molecule")
+    inchi: Optional[str] = Field(None, description="International Chemical Identifier (InChI) for this molecule")
+    inchi_key: Optional[str] = Field(None, description="Standardized hash of the InChI for this molecule")
 
     task_ids: List[MPID] = Field(
         [],

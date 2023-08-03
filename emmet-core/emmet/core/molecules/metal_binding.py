@@ -40,9 +40,9 @@ class MetalBindingData(BaseModel):
 
     metal_element: Union[str, Species, Element] = Field(None, description="The metal bound to the molecule")
 
-    metal_partial_charge: float = Field(None, description="The exact calculated partial charge of the metal")
+    metal_partial_charge: Optional[float] = Field(None, description="The exact calculated partial charge of the metal")
 
-    metal_partial_spin: float = Field(None, description="The exact calculated partial spin on the metal")
+    metal_partial_spin: Optional[float] = Field(None, description="The exact calculated partial spin on the metal")
 
     metal_assigned_charge: float = Field(
         None,
@@ -144,7 +144,7 @@ class MetalBindingDoc(PropertyDoc):
         "of the metal atom or ion",
     )
 
-    binding_bonding_method: str = Field(None, description="The method used for to define bonding.")
+    binding_bonding_method: Optional[str] = Field(None, description="The method used for to define bonding.")
 
     binding_thermo_property_id: str = Field(
         None,

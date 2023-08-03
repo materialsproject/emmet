@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic import field_validator, BaseModel, Field
 from enum import Enum
 from datetime import datetime
@@ -56,23 +56,17 @@ class GrainBoundaryDoc(BaseModel):
         description="Grain boundary energy in J/m^2.",
     )
 
-    initial_structure: GrainBoundary = Field(
-        None, description="Initial grain boundary structure."
-    )
+    initial_structure: GrainBoundary = Field(None, description="Initial grain boundary structure.")
 
-    final_structure: GrainBoundary = Field(
-        None, description="Final grain boundary structure."
-    )
+    final_structure: GrainBoundary = Field(None, description="Final grain boundary structure.")
 
-    pretty_formula: str = Field(None, description="Reduced formula of the material.")
+    pretty_formula: Optional[str] = Field(None, description="Reduced formula of the material.")
 
-    w_sep: float = Field(None, description="Work of separation in J/m^2.")
+    w_sep: Optional[float] = Field(None, description="Work of separation in J/m^2.")
 
-    cif: str = Field(None, description="CIF file of the structure.")
+    cif: Optional[str] = Field(None, description="CIF file of the structure.")
 
-    chemsys: str = Field(
-        None, description="Dash-delimited string of elements in the material."
-    )
+    chemsys: str = Field(None, description="Dash-delimited string of elements in the material.")
 
     last_updated: datetime = Field(
         None,

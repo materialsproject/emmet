@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Optional
 
 from pydantic import BaseModel, Field
 from pymatgen.core.structure import Structure
@@ -16,7 +16,7 @@ class MineralData(BaseModel):
         description="Mineral type.",
     )
 
-    name: str = Field(None, description="The mineral name if found.")
+    name: Optional[str] = Field(None, description="The mineral name if found.")
 
 
 class CondensedStructureData(BaseModel):

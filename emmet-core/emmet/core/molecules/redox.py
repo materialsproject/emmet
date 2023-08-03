@@ -31,17 +31,17 @@ class RedoxDoc(PropertyDoc):
 
     base_property_id: str = Field(description="Property ID for the thermodynamic data of the " "base molecule")
 
-    electron_affinity: float = Field(None, description="Vertical electron affinity (units: eV)")
+    electron_affinity: Optional[float] = Field(None, description="Vertical electron affinity (units: eV)")
 
     ea_task_id: MPID = Field(None, description="Task ID for the electron affinity calculation")
 
-    ionization_energy: float = Field(None, description="Vertical ionization energy (units: eV)")
+    ionization_energy: Optional[float] = Field(None, description="Vertical ionization energy (units: eV)")
 
     ie_task_id: MPID = Field(None, description="Task ID for the ionization energy calculation")
 
-    reduction_energy: float = Field(None, description="Adiabatic electronic energy of reduction (units: eV)")
+    reduction_energy: Optional[float] = Field(None, description="Adiabatic electronic energy of reduction (units: eV)")
 
-    reduction_free_energy: float = Field(None, description="Adiabatic free energy of reduction (units: eV)")
+    reduction_free_energy: Optional[float] = Field(None, description="Adiabatic free energy of reduction (units: eV)")
 
     red_molecule_id: MPculeID = Field(None, description="Molecule ID for adiabatic reduction")
 
@@ -50,9 +50,9 @@ class RedoxDoc(PropertyDoc):
         description="Property ID for the thermodynamic data of the " "reduced molecule",
     )
 
-    oxidation_energy: float = Field(None, description="Adiabatic electronic energy of oxidation (units: eV)")
+    oxidation_energy: Optional[float] = Field(None, description="Adiabatic electronic energy of oxidation (units: eV)")
 
-    oxidation_free_energy: float = Field(None, description="Adiabatic free energy of oxidation (units: eV)")
+    oxidation_free_energy: Optional[float] = Field(None, description="Adiabatic free energy of oxidation (units: eV)")
 
     ox_molecule_id: MPculeID = Field(None, description="Molecule ID for adiabatic oxidation")
 
