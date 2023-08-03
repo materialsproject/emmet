@@ -136,7 +136,7 @@ class CalculationInput(BaseModel):
         kpoints_dict["actual_kpoints"] = [
             {"abc": list(k), "weight": w} for k, w in zip(vasprun.actual_kpoints, vasprun.actual_kpoints_weights)
         ]
-        print(vasprun.potcar_spec)
+
         return cls(
             structure=vasprun.initial_structure,
             incar=dict(vasprun.incar),
@@ -303,12 +303,12 @@ class CalculationOutput(BaseModel):
         None,
         description="The magnetization density, defined as total_mag/volume " "(units of A^-3)",
     )
-    epsilon_static: ListMatrix3D = Field(None, description="The high-frequency dielectric constant")
-    epsilon_static_wolfe: ListMatrix3D = Field(
+    epsilon_static: Optional[ListMatrix3D] = Field(None, description="The high-frequency dielectric constant")
+    epsilon_static_wolfe: Optional[ListMatrix3D] = Field(
         None,
         description="The high-frequency dielectric constant w/o local field effects",
     )
-    epsilon_ionic: ListMatrix3D = Field(None, description="The ionic part of the dielectric constant")
+    epsilon_ionic: Optional[ListMatrix3D] = Field(None, description="The ionic part of the dielectric constant")
     frequency_dependent_dielectric: FrequencyDependentDielectric = Field(
         None,
         description="Frequency-dependent dielectric information from an LOPTICS " "calculation",
