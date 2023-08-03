@@ -34,11 +34,9 @@ def get_free_energy(energy, enthalpy, entropy, temperature=298.15, convert_energ
 
 
 class MoleculeThermoDoc(PropertyDoc):
-    property_name = "thermo"
+    property_name: str = "thermo"
 
-    electronic_energy: float = Field(
-        ..., description="Electronic energy of the molecule (units: eV)"
-    )
+    electronic_energy: float = Field(..., description="Electronic energy of the molecule (units: eV)")
 
     correction: bool = Field(
         False,
@@ -52,8 +50,7 @@ class MoleculeThermoDoc(PropertyDoc):
 
     base_solvent: str = Field(
         None,
-        description="String representation of the solvent "
-        "environment used for uncorrected thermochemistry.",
+        description="String representation of the solvent " "environment used for uncorrected thermochemistry.",
     )
 
     base_lot_solvent: str = Field(
@@ -68,8 +65,7 @@ class MoleculeThermoDoc(PropertyDoc):
 
     correction_solvent: str = Field(
         None,
-        description="String representation of the solvent "
-        "environment used to correct the electronic energy.",
+        description="String representation of the solvent " "environment used to correct the electronic energy.",
     )
 
     correction_lot_solvent: str = Field(
@@ -86,22 +82,15 @@ class MoleculeThermoDoc(PropertyDoc):
         "single-point energy correction.",
     )
 
-    zero_point_energy: float = Field(
-        None, description="Zero-point energy of the molecule (units: eV)"
-    )
+    zero_point_energy: float = Field(None, description="Zero-point energy of the molecule (units: eV)")
 
     rt: float = Field(
         None,
-        description="R*T, where R is the gas constant and T is temperature, taken "
-        "to be 298.15K (units: eV)",
+        description="R*T, where R is the gas constant and T is temperature, taken " "to be 298.15K (units: eV)",
     )
 
-    total_enthalpy: float = Field(
-        None, description="Total enthalpy of the molecule at 298.15K (units: eV)"
-    )
-    total_entropy: float = Field(
-        None, description="Total entropy of the molecule at 298.15K (units: eV/K)"
-    )
+    total_enthalpy: float = Field(None, description="Total enthalpy of the molecule at 298.15K (units: eV)")
+    total_entropy: float = Field(None, description="Total entropy of the molecule at 298.15K (units: eV/K)")
 
     translational_enthalpy: float = Field(
         None,
@@ -111,22 +100,12 @@ class MoleculeThermoDoc(PropertyDoc):
         None,
         description="Translational entropy of the molecule at 298.15K (units: eV/K)",
     )
-    rotational_enthalpy: float = Field(
-        None, description="Rotational enthalpy of the molecule at 298.15K (units: eV)"
-    )
-    rotational_entropy: float = Field(
-        None, description="Rotational entropy of the molecule at 298.15K (units: eV/K)"
-    )
-    vibrational_enthalpy: float = Field(
-        None, description="Vibrational enthalpy of the molecule at 298.15K (units: eV)"
-    )
-    vibrational_entropy: float = Field(
-        None, description="Vibrational entropy of the molecule at 298.15K (units: eV/K)"
-    )
+    rotational_enthalpy: float = Field(None, description="Rotational enthalpy of the molecule at 298.15K (units: eV)")
+    rotational_entropy: float = Field(None, description="Rotational entropy of the molecule at 298.15K (units: eV/K)")
+    vibrational_enthalpy: float = Field(None, description="Vibrational enthalpy of the molecule at 298.15K (units: eV)")
+    vibrational_entropy: float = Field(None, description="Vibrational entropy of the molecule at 298.15K (units: eV/K)")
 
-    free_energy: float = Field(
-        None, description="Gibbs free energy of the molecule at 298.15K (units: eV)"
-    )
+    free_energy: float = Field(None, description="Gibbs free energy of the molecule at 298.15K (units: eV)")
 
     @classmethod
     def from_task(
@@ -179,11 +158,7 @@ class MoleculeThermoDoc(PropertyDoc):
         origins = [PropertyOrigin(name="thermo", task_id=task.task_id)]
         id_string = f"thermo-{molecule_id}-{task.task_id}-{task.lot_solvent}"
         if correction and correction_task is not None:
-            origins.append(
-                PropertyOrigin(
-                    name="thermo_energy_correction", task_id=correction_task.task_id
-                )
-            )
+            origins.append(PropertyOrigin(name="thermo_energy_correction", task_id=correction_task.task_id))
 
             id_string += f"-{correction_task.task_id}-{correction_task.lot_solvent}"
 

@@ -45,7 +45,7 @@ class ThermoDoc(PropertyDoc):
     A thermo entry document
     """
 
-    property_name = "thermo"
+    property_name: str = "thermo"
 
     thermo_type: Union[ThermoType, RunType] = Field(
         ...,
@@ -68,13 +68,9 @@ class ThermoDoc(PropertyDoc):
 
     energy_uncertainy_per_atom: float = Field(None, description="")
 
-    formation_energy_per_atom: float = Field(
-        None, description="The formation energy per atom in eV/atom."
-    )
+    formation_energy_per_atom: float = Field(None, description="The formation energy per atom in eV/atom.")
 
-    energy_above_hull: float = Field(
-        ..., description="The energy above the hull in eV/Atom."
-    )
+    energy_above_hull: float = Field(..., description="The energy above the hull in eV/Atom.")
 
     is_stable: bool = Field(
         False,
@@ -107,9 +103,7 @@ class ThermoDoc(PropertyDoc):
         description="The type of calculation this energy evaluation comes from.",
     )
 
-    entry_types: List[str] = Field(
-        description="List of available energy types computed for this material."
-    )
+    entry_types: List[str] = Field(description="List of available energy types computed for this material.")
 
     entries: Dict[str, Union[ComputedEntry, ComputedStructureEntry]] = Field(
         ...,
@@ -166,10 +160,7 @@ class ThermoDoc(PropertyDoc):
             )
 
         for material_id, entry_group in entries_by_mpid.items():
-            if (
-                use_max_chemsys
-                and entry_group[0].composition.chemical_system != chemsys
-            ):
+            if use_max_chemsys and entry_group[0].composition.chemical_system != chemsys:
                 continue
 
             sorted_entries = sorted(entry_group, key=_energy_eval)
@@ -182,10 +173,8 @@ class ThermoDoc(PropertyDoc):
                 "thermo_id": "{}_{}".format(material_id, str(thermo_type)),
                 "material_id": material_id,
                 "thermo_type": thermo_type,
-                "uncorrected_energy_per_atom": blessed_entry.uncorrected_energy
-                / blessed_entry.composition.num_atoms,
-                "energy_per_atom": blessed_entry.energy
-                / blessed_entry.composition.num_atoms,
+                "uncorrected_energy_per_atom": blessed_entry.uncorrected_energy / blessed_entry.composition.num_atoms,
+                "energy_per_atom": blessed_entry.energy / blessed_entry.composition.num_atoms,
                 "formation_energy_per_atom": pd.get_form_energy_per_atom(blessed_entry),
                 "energy_above_hull": ehull,
                 "is_stable": blessed_entry in pd.stable_entries,
@@ -197,9 +186,7 @@ class ThermoDoc(PropertyDoc):
 
             # Store different info if stable vs decomposes
             if d["is_stable"]:
-                d[
-                    "equilibrium_reaction_energy_per_atom"
-                ] = pd.get_equilibrium_reaction_energy(blessed_entry)
+                d["equilibrium_reaction_energy_per_atom"] = pd.get_equilibrium_reaction_energy(blessed_entry)
             else:
                 d["decomposes_to"] = [
                     {
@@ -211,9 +198,7 @@ class ThermoDoc(PropertyDoc):
                 ]
 
             try:
-                decomp, energy = pd.get_decomp_and_phase_separation_energy(
-                    blessed_entry
-                )
+                decomp, energy = pd.get_decomp_and_phase_separation_energy(blessed_entry)
                 d["decomposition_enthalpy"] = energy
                 d["decomposition_enthalpy_decomposes_to"] = [
                     {
@@ -227,9 +212,7 @@ class ThermoDoc(PropertyDoc):
                 # try/except so this quantity does not take down the builder if it fails:
                 # it includes an optimization step that can be fragile in some instances,
                 # most likely failure is ValueError, "invalid value encountered in true_divide"
-                d["warnings"] = [
-                    "Could not calculate decomposition enthalpy for this entry."
-                ]
+                d["warnings"] = ["Could not calculate decomposition enthalpy for this entry."]
 
             d["energy_type"] = blessed_entry.parameters.get("run_type", "Unknown")
             d["entry_types"] = []
@@ -248,11 +231,7 @@ class ThermoDoc(PropertyDoc):
                 )
             ]
 
-            docs.append(
-                ThermoDoc.from_structure(
-                    meta_structure=blessed_entry.structure, **d, **kwargs
-                )
-            )
+            docs.append(ThermoDoc.from_structure(meta_structure=blessed_entry.structure, **d, **kwargs))
 
         return docs
 
@@ -274,17 +253,14 @@ class ThermoDoc(PropertyDoc):
 
         # Only use lowest entry per composition to speed up QHull in Phase Diagram
         reduced_entries = [
-            sorted(comp_entries, key=lambda e: e.energy_per_atom)[0]
-            for comp_entries in entries_by_comp.values()
+            sorted(comp_entries, key=lambda e: e.energy_per_atom)[0] for comp_entries in entries_by_comp.values()
         ]
         pd = PhaseDiagram(reduced_entries)
 
         # Add back all entries, not just those on the hull
         pd_computed_data = pd.computed_data
         pd_computed_data["all_entries"] = entries
-        new_pd = PhaseDiagram(
-            entries, elements=pd.elements, computed_data=pd_computed_data
-        )
+        new_pd = PhaseDiagram(entries, elements=pd.elements, computed_data=pd_computed_data)
         return new_pd
 
 
@@ -293,7 +269,7 @@ class PhaseDiagramDoc(BaseModel):
     A phase diagram document
     """
 
-    property_name = "phase_diagram"
+    property_name: str = "phase_diagram"
 
     phase_diagram_id: str = Field(
         ...,

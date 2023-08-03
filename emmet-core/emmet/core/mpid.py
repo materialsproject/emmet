@@ -1,11 +1,14 @@
 import re
-from typing import Union
+from typing import Union, Any, Callable
+
+from pydantic_core import CoreSchema, core_schema
+
+from pydantic import GetJsonSchemaHandler
+from pydantic.json_schema import JsonSchemaValue
 
 
 mpid_regex = re.compile(r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$")
-mpculeid_regex = re.compile(
-    r"^([A-Za-z]+-)?([A-Fa-f0-9]+)-([A-Za-z0-9]+)-(m?[0-9]+)-([0-9]+)$"
-)
+mpculeid_regex = re.compile(r"^([A-Za-z]+-)?([A-Fa-f0-9]+)-([A-Za-z0-9]+)-(m?[0-9]+)-([0-9]+)$")
 
 
 class MPID(str):
@@ -40,9 +43,7 @@ class MPID(str):
             self.string = val
 
         else:
-            raise ValueError(
-                "Must provide an MPID, int, or string of the format prefix-number"
-            )
+            raise ValueError("Must provide an MPID, int, or string of the format prefix-number")
 
     def __eq__(self, other: object):
         if isinstance(other, MPID):
@@ -80,24 +81,28 @@ class MPID(str):
         return hash(self.string)
 
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+    def __get_pydantic_core_schema__(
+        cls, source: type[Any], handler: Callable[[Any], core_schema.CoreSchema]
+    ) -> core_schema.CoreSchema:
+        return core_schema.general_plain_validator_function(cls.validate)
 
     @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(
+    def __get_pydantic_json_schema__(cls, core_schema: CoreSchema, handler: GetJsonSchemaHandler) -> JsonSchemaValue:
+        json_schema = handler(core_schema)
+        json_schema.update(
             pattern=r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$",
             examples=["mp-3534", "3453", "mp-834-Ag"],
         )
+        return json_schema
 
     @classmethod
-    def validate(cls, v):
-        if isinstance(v, MPID):
-            return v
-        elif isinstance(v, str) and mpid_regex.fullmatch(v):
-            return MPID(v)
-        elif isinstance(v, int):
-            return MPID(v)
+    def validate(cls, __input_value: Any, _: core_schema.ValidationInfo):
+        if isinstance(__input_value, MPID):
+            return __input_value
+        elif isinstance(__input_value, str) and mpid_regex.fullmatch(__input_value):
+            return MPID(__input_value)
+        elif isinstance(__input_value, int):
+            return MPID(__input_value)
 
         raise ValueError("Invalid MPID Format")
 
@@ -159,9 +164,7 @@ class MPculeID(str):
     def __lt__(self, other: Union["MPculeID", str]):
         other_parts = MPculeID(other).parts
 
-        return "-".join([str(x) for x in self.parts[-4:]]) < "-".join(
-            [str(x) for x in other_parts[-4:]]
-        )
+        return "-".join([str(x) for x in self.parts[-4:]]) < "-".join([str(x) for x in other_parts[-4:]])
 
     def __gt__(self, other: Union["MPculeID", str]):
         return not self.__lt__(other)
@@ -170,25 +173,29 @@ class MPculeID(str):
         return hash(self.string)
 
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+    def __get_pydantic_core_schema__(
+        cls, source: type[Any], handler: Callable[[Any], core_schema.CoreSchema]
+    ) -> core_schema.CoreSchema:
+        return core_schema.general_plain_validator_function(cls.validate)
 
     @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(
+    def __get_pydantic_json_schema__(cls, core_schema: CoreSchema, handler: GetJsonSchemaHandler) -> JsonSchemaValue:
+        json_schema = handler(core_schema)
+        json_schema.update(
             pattern=r"^^([A-Za-z]+-)?([A-Fa-f0-9]+)-([A-Za-z0-9]+)-(m?[0-9]+)-([0-9]+)$",
             examples=[
                 "1a525231bdac3f13e2fac0962fe8d053-Mg1-0-1",
-                "22b40b99719ac570fc7e6225e855ec6e-F5Li1P1-m1-2"
+                "22b40b99719ac570fc7e6225e855ec6e-F5Li1P1-m1-2",
                 "mpcule-b9ba54febc77d2a9177accf4605767db-C1H41-2",
             ],
         )
+        return json_schema
 
     @classmethod
-    def validate(cls, v):
-        if isinstance(v, MPculeID):
-            return v
-        elif isinstance(v, str) and mpculeid_regex.fullmatch(v):
-            return MPculeID(v)
+    def validate(cls, __input_value: Any, _: core_schema.ValidationInfo):
+        if isinstance(__input_value, MPculeID):
+            return __input_value
+        elif isinstance(__input_value, str) and mpculeid_regex.fullmatch(__input_value):
+            return MPculeID(__input_value)
 
         raise ValueError("Invalid MPculeID Format")

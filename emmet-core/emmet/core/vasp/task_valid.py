@@ -35,13 +35,9 @@ class InputSummary(BaseModel):
         {},
         description="Input parameters from VASPRUN for the last calculation in the series",
     )
-    pseudo_potentials: Dict = Field(
-        {}, description="Summary of the pseudopotentials used in this calculation"
-    )
+    pseudo_potentials: Dict = Field({}, description="Summary of the pseudopotentials used in this calculation")
 
-    potcar_spec: List[Dict] = Field(
-        [], description="Potcar specification as a title and hash"
-    )
+    potcar_spec: List[Dict] = Field([], description="Potcar specification as a title and hash")
 
     is_hubbard: bool = Field(False, description="Is this a Hubbard +U calculation.")
 
@@ -54,19 +50,11 @@ class OutputSummary(BaseModel):
     """
 
     structure: Structure = Field(None, description="The output structure object")
-    energy: float = Field(
-        None, description="The final total DFT energy for the last calculation"
-    )
-    energy_per_atom: float = Field(
-        None, description="The final DFT energy per atom for the last calculation"
-    )
+    energy: float = Field(None, description="The final total DFT energy for the last calculation")
+    energy_per_atom: float = Field(None, description="The final DFT energy per atom for the last calculation")
     bandgap: float = Field(None, description="The DFT bandgap for the last calculation")
-    forces: List[Vector3D] = Field(
-        [], description="Forces on atoms from the last calculation"
-    )
-    stress: Matrix3D = Field(
-        [], description="Stress on the unitcell from the last calculation"
-    )
+    forces: List[Vector3D] = Field([], description="Forces on atoms from the last calculation")
+    stress: Matrix3D = Field([], description="Stress on the unitcell from the last calculation")
 
 
 class RunStatistics(BaseModel):
@@ -78,12 +66,8 @@ class RunStatistics(BaseModel):
     max_memory: float = Field(None, description="The maximum memory used in kb")
     elapsed_time: float = Field(None, description="The real time elapsed in seconds")
     system_time: float = Field(None, description="The system CPU time in seconds")
-    user_time: float = Field(
-        None, description="The user CPU time spent by VASP in seconds"
-    )
-    total_time: float = Field(
-        None, description="The total CPU time for this calculation"
-    )
+    user_time: float = Field(None, description="The user CPU time spent by VASP in seconds")
+    total_time: float = Field(None, description="The total CPU time for this calculation")
     cores: Union[int, str] = Field(
         None,
         description="The number of cores used by VASP (some clusters print `mpi-ranks` here)",
@@ -95,36 +79,26 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
     Definition of VASP Task Document
     """
 
-    calc_code = "VASP"
+    calc_code: str = "VASP"
     run_stats: Dict[str, RunStatistics] = Field(
         {},
         description="Summary of runtime statistics for each calculation in this task",
     )
 
-    is_valid: bool = Field(
-        True, description="Whether this task document passed validation or not"
-    )
+    is_valid: bool = Field(True, description="Whether this task document passed validation or not")
 
     input: InputSummary = Field(InputSummary())
     output: OutputSummary = Field(OutputSummary())
 
     state: TaskState = Field(None, description="State of this calculation")
 
-    orig_inputs: Dict[str, Any] = Field(
-        {}, description="Summary of the original VASP inputs"
-    )
+    orig_inputs: Dict[str, Any] = Field({}, description="Summary of the original VASP inputs")
 
-    calcs_reversed: List[Dict] = Field(
-        [], description="The 'raw' calculation docs used to assembled this task"
-    )
+    calcs_reversed: List[Dict] = Field([], description="The 'raw' calculation docs used to assembled this task")
 
-    tags: Union[List[str], None] = Field(
-        [], description="Metadata tags for this task document"
-    )
+    tags: Union[List[str], None] = Field([], description="Metadata tags for this task document")
 
-    warnings: List[str] = Field(
-        None, description="Any warnings related to this property"
-    )
+    warnings: List[str] = Field(None, description="Any warnings related to this property")
 
     @property
     def run_type(self) -> RunType:
@@ -139,11 +113,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
 
     @property
     def calc_type(self):
-        inputs = (
-            self.calcs_reversed[0].get("input", {})
-            if len(self.calcs_reversed) > 0
-            else self.orig_inputs
-        )
+        inputs = self.calcs_reversed[0].get("input", {}) if len(self.calcs_reversed) > 0 else self.orig_inputs
         params = self.calcs_reversed[0].get("input", {}).get("parameters", {})
         incar = self.calcs_reversed[0].get("input", {}).get("incar", {})
 

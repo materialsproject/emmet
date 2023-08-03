@@ -29,15 +29,13 @@ class XRDDoc(SpectrumDoc):
     Document describing a XRD Diffraction Pattern
     """
 
-    spectrum_name = "XRD"
+    spectrum_name: str = "XRD"
 
     spectrum: DiffractionPattern
     min_two_theta: float
     max_two_theta: float
     wavelength: float = Field(..., description="Wavelength for the diffraction source.")
-    target: Element = Field(
-        None, description="Target element for the diffraction source."
-    )
+    target: Element = Field(None, description="Target element for the diffraction source.")
     edge: Edge = Field(None, description="Atomic edge for the diffraction source.")
 
     @model_validator(mode="before")
@@ -47,11 +45,7 @@ class XRDDoc(SpectrumDoc):
         # Only do this if neither target not edge is defined
         if "target" not in values and "edge" not in values:
             try:
-                pymatgen_wavelength = next(
-                    k
-                    for k, v in WAVELENGTHS.items()
-                    if np.allclose(values["wavelength"], v)
-                )
+                pymatgen_wavelength = next(k for k, v in WAVELENGTHS.items() if np.allclose(values["wavelength"], v))
                 values["target"] = pymatgen_wavelength[:2]
                 values["edge"] = pymatgen_wavelength[2:]
 
@@ -72,9 +66,7 @@ class XRDDoc(SpectrumDoc):
         **kwargs,
     ) -> "XRDDoc":
         calc = XRDCalculator(wavelength=wavelength, symprec=symprec)
-        pattern = calc.get_pattern(
-            structure, two_theta_range=(min_two_theta, max_two_theta)
-        )
+        pattern = calc.get_pattern(structure, two_theta_range=(min_two_theta, max_two_theta))
 
         return super().from_structure(
             material_id=material_id,

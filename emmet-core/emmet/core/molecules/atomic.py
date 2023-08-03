@@ -18,15 +18,11 @@ SPINS_METHODS = ["nbo", "mulliken"]
 class PartialChargesDoc(PropertyDoc):
     """Atomic partial charges of a molecule"""
 
-    property_name = "partial_charges"
+    property_name: str = "partial_charges"
 
-    method: str = Field(
-        ..., description="Method used to compute atomic partial charges"
-    )
+    method: str = Field(..., description="Method used to compute atomic partial charges")
 
-    partial_charges: List[float] = Field(
-        ..., description="Atomic partial charges for the molecule"
-    )
+    partial_charges: List[float] = Field(..., description="Atomic partial charges for the molecule")
 
     @classmethod
     def from_task(
@@ -58,10 +54,7 @@ class PartialChargesDoc(PropertyDoc):
         for m in preferred_methods:
             if m == "nbo" and task.output.nbo is not None:
                 method = m
-                charges = [
-                    float(task.output.nbo["natural_populations"][0]["Charge"][str(i)])
-                    for i in range(len(mol))
-                ]
+                charges = [float(task.output.nbo["natural_populations"][0]["Charge"][str(i)]) for i in range(len(mol))]
                 break
             elif m == "resp" and task.output.resp is not None:
                 method = m
@@ -79,9 +72,7 @@ class PartialChargesDoc(PropertyDoc):
                     charges = [float(i) for i in task.output.mulliken]
                 break
 
-        id_string = (
-            f"partial_charges-{molecule_id}-{task.task_id}-{task.lot_solvent}-{method}"
-        )
+        id_string = f"partial_charges-{molecule_id}-{task.task_id}-{task.lot_solvent}-{method}"
         h = blake2b()
         h.update(id_string.encode("utf-8"))
         property_id = h.hexdigest()
@@ -107,13 +98,11 @@ class PartialChargesDoc(PropertyDoc):
 class PartialSpinsDoc(PropertyDoc):
     """Atomic partial charges of a molecule"""
 
-    property_name = "partial_spins"
+    property_name: str = "partial_spins"
 
     method: str = Field(..., description="Method used to compute atomic partial spins")
 
-    partial_spins: List[float] = Field(
-        ..., description="Atomic partial spins for the molecule"
-    )
+    partial_spins: List[float] = Field(..., description="Atomic partial spins for the molecule")
 
     @classmethod
     def from_task(
@@ -148,19 +137,14 @@ class PartialSpinsDoc(PropertyDoc):
         for m in preferred_methods:
             if m == "nbo" and task.output.nbo is not None:
                 method = m
-                spins = [
-                    float(task.output.nbo["natural_populations"][0]["Density"][str(i)])
-                    for i in range(len(mol))
-                ]
+                spins = [float(task.output.nbo["natural_populations"][0]["Density"][str(i)]) for i in range(len(mol))]
                 break
             elif m == "mulliken" and task.output.mulliken is not None:
                 method = m
                 spins = [float(mull[1]) for mull in task.output.mulliken]
                 break
 
-        id_string = (
-            f"partial_spins-{molecule_id}-{task.task_id}-{task.lot_solvent}-{method}"
-        )
+        id_string = f"partial_spins-{molecule_id}-{task.task_id}-{task.lot_solvent}-{method}"
         h = blake2b()
         h.update(id_string.encode("utf-8"))
         property_id = h.hexdigest()

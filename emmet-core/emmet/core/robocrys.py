@@ -57,7 +57,7 @@ class RobocrystallogapherDoc(PropertyDoc):
 
     """
 
-    property_name = "robocrys"
+    property_name: str = "robocrys"
 
     description: str = Field(
         description="Decription text from robocrytallographer.",
@@ -78,14 +78,12 @@ class RobocrystallogapherDoc(PropertyDoc):
             from robocrys import StructureCondenser, StructureDescriber
             from robocrys import __version__ as __robocrys_version__
         except ImportError:
-            raise ImportError(
-                "robocrys needs to be installed to generate RobocrystallographerDoc"
-            )
+            raise ImportError("robocrys needs to be installed to generate RobocrystallographerDoc")
 
         condensed_structure = StructureCondenser().condense_structure(structure)
-        description = StructureDescriber(
-            describe_symmetry_labels=False, fmt="unicode", return_parts=False
-        ).describe(condensed_structure=condensed_structure)
+        description = StructureDescriber(describe_symmetry_labels=False, fmt="unicode", return_parts=False).describe(
+            condensed_structure=condensed_structure
+        )
 
         return super().from_structure(
             meta_structure=structure,

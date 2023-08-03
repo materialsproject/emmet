@@ -18,7 +18,8 @@ setup(
     install_requires=[
         "pymatgen>=2023.7.20",
         "monty>=2021.3",
-        "pydantic>=1.10.2",
+        "pydantic>=2.0",
+        "pydantic_settings>=2.0",
         "pybtex~=0.24",
         "typing-extensions>=3.7,<5.0",
         "spglib>=2.0.1",

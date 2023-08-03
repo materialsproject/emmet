@@ -24,21 +24,15 @@ class DielectricDoc(PropertyDoc):
     A dielectric property block
     """
 
-    property_name = "dielectric"
+    property_name: str = "dielectric"
 
     total: Matrix3D = Field(description="Total dielectric tensor.")
     ionic: Matrix3D = Field(description="Ionic contribution to dielectric tensor.")
-    electronic: Matrix3D = Field(
-        description="Electronic contribution to dielectric tensor."
-    )
+    electronic: Matrix3D = Field(description="Electronic contribution to dielectric tensor.")
 
     e_total: float = Field(description="Total electric permittivity.")
-    e_ionic: float = Field(
-        description="Electric permittivity from atomic rearrangement."
-    )
-    e_electronic: float = Field(
-        description="Electric permittivity due to electrons rearrangement."
-    )
+    e_ionic: float = Field(description="Electric permittivity from atomic rearrangement.")
+    e_electronic: float = Field(description="Electric permittivity due to electrons rearrangement.")
 
     n: float = Field(description="Refractive index.")
 
@@ -77,23 +71,15 @@ class PiezoelectricDoc(PropertyDoc):
     A dielectric package block
     """
 
-    property_name = "piezoelectric"
+    property_name: str = "piezoelectric"
 
     total: PiezoTensor = Field(description="Total piezoelectric tensor in C/m²")
-    ionic: PiezoTensor = Field(
-        description="Ionic contribution to piezoelectric tensor in C/m²"
-    )
-    electronic: PiezoTensor = Field(
-        description="Electronic contribution to piezoelectric tensor in C/m²"
-    )
+    ionic: PiezoTensor = Field(description="Ionic contribution to piezoelectric tensor in C/m²")
+    electronic: PiezoTensor = Field(description="Electronic contribution to piezoelectric tensor in C/m²")
 
     e_ij_max: float = Field(description="Piezoelectric modulus")
-    max_direction: List[int] = Field(
-        description="Miller direction for maximum piezo response"
-    )
-    strain_for_max: List[float] = Field(
-        description="Normalized strain direction for maximum piezo repsonse"
-    )
+    max_direction: List[int] = Field(description="Miller direction for maximum piezo response")
+    strain_for_max: List[float] = Field(description="Normalized strain direction for maximum piezo repsonse")
 
     @classmethod
     def from_ionic_and_electronic(
@@ -143,9 +129,7 @@ class BornEffectiveCharges(BaseModel):
     A block for the Born effective charges
     """
 
-    value: List[Matrix3D] = Field(
-        None, description="Value of the Born effective charges."
-    )
+    value: List[Matrix3D] = Field(None, description="Value of the Born effective charges.")
 
     symmetrized_value: List[Matrix3D] = Field(
         None,
@@ -155,8 +139,7 @@ class BornEffectiveCharges(BaseModel):
 
     cnsr_break: float = Field(
         None,
-        description="The maximum breaking of the charge neutrality sum "
-        "rule (CNSR) in the Born effective charges.",
+        description="The maximum breaking of the charge neutrality sum " "rule (CNSR) in the Born effective charges.",
     )
 
 
@@ -165,6 +148,4 @@ class IRDielectric(BaseModel):
     A block for the pymatgen IRDielectricTensor object
     """
 
-    ir_dielectric_tensor: dict = Field(
-        None, description="Serialized version of a pymatgen IRDielectricTensor object."
-    )
+    ir_dielectric_tensor: dict = Field(None, description="Serialized version of a pymatgen IRDielectricTensor object.")

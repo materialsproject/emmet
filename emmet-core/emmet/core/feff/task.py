@@ -27,23 +27,15 @@ class CalcType(ValueEnum):
 class TaskDocument(BaseTaskDocument, StructureMetadata):
     """Task Document for a FEFF XAS Calculation. Doesn't support EELS for now"""
 
-    calc_code = "FEFF"
+    calc_code: str = "FEFF"
 
     structure: Structure
-    input_parameters: Dict[str, Any] = Field(
-        {}, description="Input parameters for the FEFF calculation"
-    )
-    spectrum: List[List[float]] = Field(
-        [[]], description="Raw spectrum data from FEFF xmu.dat or eels.dat"
-    )
+    input_parameters: Dict[str, Any] = Field({}, description="Input parameters for the FEFF calculation")
+    spectrum: List[List[float]] = Field([[]], description="Raw spectrum data from FEFF xmu.dat or eels.dat")
 
-    absorbing_atom: int = Field(
-        ..., description="Index in the cluster or structure for the absorbing atom"
-    )
+    absorbing_atom: int = Field(..., description="Index in the cluster or structure for the absorbing atom")
     spectrum_type: CalcType = Field(..., title="XAS Spectrum Type")
-    edge: str = Field(
-        ..., title="Absorption Edge", description="The interaction edge for XAS"
-    )
+    edge: str = Field(..., title="Absorption Edge", description="The interaction edge for XAS")
 
     # TEMP Stub properties for compatability with atomate drone
 
@@ -57,9 +49,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
     def xas_spectrum(self) -> XAS:
         if not hasattr(self, "_xas_spectrum"):
             if not all([len(p) == 6 for p in self.spectrum]):
-                raise ValueError(
-                    "Spectrum data doesn't appear to be from xmu.dat which holds XAS data"
-                )
+                raise ValueError("Spectrum data doesn't appear to be from xmu.dat which holds XAS data")
 
             energy = [point[0] for point in self.spectrum]  # (eV)
             intensity = [point[3] for point in self.spectrum]  # (mu)

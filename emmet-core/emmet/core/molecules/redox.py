@@ -27,61 +27,38 @@ class RedoxDoc(PropertyDoc):
     and oxidation potentials
     """
 
-    property_name = "redox"
+    property_name: str = "redox"
 
-    base_property_id: str = Field(
-        description="Property ID for the thermodynamic data of the " "base molecule"
-    )
+    base_property_id: str = Field(description="Property ID for the thermodynamic data of the " "base molecule")
 
-    electron_affinity: float = Field(
-        None, description="Vertical electron affinity (units: eV)"
-    )
+    electron_affinity: float = Field(None, description="Vertical electron affinity (units: eV)")
 
-    ea_task_id: MPID = Field(
-        None, description="Task ID for the electron affinity calculation"
-    )
+    ea_task_id: MPID = Field(None, description="Task ID for the electron affinity calculation")
 
-    ionization_energy: float = Field(
-        None, description="Vertical ionization energy (units: eV)"
-    )
+    ionization_energy: float = Field(None, description="Vertical ionization energy (units: eV)")
 
-    ie_task_id: MPID = Field(
-        None, description="Task ID for the ionization energy calculation"
-    )
+    ie_task_id: MPID = Field(None, description="Task ID for the ionization energy calculation")
 
-    reduction_energy: float = Field(
-        None, description="Adiabatic electronic energy of reduction (units: eV)"
-    )
+    reduction_energy: float = Field(None, description="Adiabatic electronic energy of reduction (units: eV)")
 
-    reduction_free_energy: float = Field(
-        None, description="Adiabatic free energy of reduction (units: eV)"
-    )
+    reduction_free_energy: float = Field(None, description="Adiabatic free energy of reduction (units: eV)")
 
-    red_molecule_id: MPculeID = Field(
-        None, description="Molecule ID for adiabatic reduction"
-    )
+    red_molecule_id: MPculeID = Field(None, description="Molecule ID for adiabatic reduction")
 
     red_property_id: str = Field(
         None,
         description="Property ID for the thermodynamic data of the " "reduced molecule",
     )
 
-    oxidation_energy: float = Field(
-        None, description="Adiabatic electronic energy of oxidation (units: eV)"
-    )
+    oxidation_energy: float = Field(None, description="Adiabatic electronic energy of oxidation (units: eV)")
 
-    oxidation_free_energy: float = Field(
-        None, description="Adiabatic free energy of oxidation (units: eV)"
-    )
+    oxidation_free_energy: float = Field(None, description="Adiabatic free energy of oxidation (units: eV)")
 
-    ox_molecule_id: MPculeID = Field(
-        None, description="Molecule ID for adiabatic oxidation"
-    )
+    ox_molecule_id: MPculeID = Field(None, description="Molecule ID for adiabatic oxidation")
 
     ox_property_id: str = Field(
         None,
-        description="Property ID for the thermodynamic data of the "
-        "oxidized molecule",
+        description="Property ID for the thermodynamic data of the " "oxidized molecule",
     )
 
     reduction_potential: float = Field(
@@ -177,8 +154,7 @@ class RedoxDoc(PropertyDoc):
         ionization_energy = None
 
         id_string = (
-            f"redox-{base_molecule_doc.molecule_id}-{base_thermo_doc.lot_solvent}-"
-            f"{base_thermo_doc.property_id}"
+            f"redox-{base_molecule_doc.molecule_id}-{base_thermo_doc.lot_solvent}-" f"{base_thermo_doc.property_id}"
         )
         origins = list()
 
@@ -189,14 +165,10 @@ class RedoxDoc(PropertyDoc):
 
             id_string += f"-{red_doc.property_id}"
 
-            reduction_energy = (
-                red_doc.electronic_energy - base_thermo_doc.electronic_energy
-            )
+            reduction_energy = red_doc.electronic_energy - base_thermo_doc.electronic_energy
 
             if base_has_g and red_doc.free_energy is not None:
-                reduction_free_energy = (
-                    red_doc.free_energy - base_thermo_doc.free_energy
-                )
+                reduction_free_energy = red_doc.free_energy - base_thermo_doc.free_energy
             else:
                 reduction_free_energy = None
 
@@ -210,9 +182,7 @@ class RedoxDoc(PropertyDoc):
 
             id_string += f"-{ox_doc.property_id}"
 
-            oxidation_energy = (
-                ox_doc.electronic_energy - base_thermo_doc.electronic_energy
-            )
+            oxidation_energy = ox_doc.electronic_energy - base_thermo_doc.electronic_energy
 
             if base_has_g and ox_doc.free_energy is not None:
                 oxidation_free_energy = ox_doc.free_energy - base_thermo_doc.free_energy
@@ -227,18 +197,14 @@ class RedoxDoc(PropertyDoc):
             ea_task_id = ea_doc.task_id
             id_string += f"-{ea_task_id}"
             origins.append(PropertyOrigin(name="electron_affinity", task_id=ea_task_id))
-            electron_affinity = (
-                ea_doc.output.final_energy * 27.2114 - base_thermo_doc.electronic_energy
-            )
+            electron_affinity = ea_doc.output.final_energy * 27.2114 - base_thermo_doc.electronic_energy
 
         # Ionization energy
         if ie_doc is not None:
             ie_task_id = ie_doc.task_id
             id_string += f"-{ie_task_id}"
             origins.append(PropertyOrigin(name="ionization_energy", task_id=ie_task_id))
-            ionization_energy = (
-                ie_doc.output.final_energy * 27.2114 - base_thermo_doc.electronic_energy
-            )
+            ionization_energy = ie_doc.output.final_energy * 27.2114 - base_thermo_doc.electronic_energy
 
         h = blake2b()
         h.update(id_string.encode("utf-8"))
