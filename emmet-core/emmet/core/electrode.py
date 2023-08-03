@@ -34,29 +34,33 @@ class VoltagePairDoc(BaseModel):
         object to gain access to some basic statistics about the voltage step
     """
 
-    formula_charge: str = Field(None, description="The chemical formula of the charged material.")
+    formula_charge: Optional[str] = Field(None, description="The chemical formula of the charged material.")
 
-    formula_discharge: str = Field(None, description="The chemical formula of the discharged material.")
+    formula_discharge: Optional[str] = Field(None, description="The chemical formula of the discharged material.")
 
-    max_delta_volume: float = Field(
+    max_delta_volume: Optional[float] = Field(
         None,
         description="Volume changes in % for a particular voltage step using: "
         "max(charge, discharge) / min(charge, discharge) - 1.",
     )
 
-    average_voltage: float = Field(None, description="The average voltage in V for a particular voltage step.")
+    average_voltage: Optional[float] = Field(
+        None, description="The average voltage in V for a particular voltage step."
+    )
 
     capacity_grav: Optional[float] = Field(None, description="Gravimetric capacity in mAh/g.")
 
     capacity_vol: Optional[float] = Field(None, description="Volumetric capacity in mAh/cc.")
 
-    energy_grav: float = Field(None, description="Gravimetric energy (Specific energy) in Wh/kg.")
+    energy_grav: Optional[float] = Field(None, description="Gravimetric energy (Specific energy) in Wh/kg.")
 
-    energy_vol: float = Field(None, description="Volumetric energy (Energy Density) in Wh/l.")
+    energy_vol: Optional[float] = Field(None, description="Volumetric energy (Energy Density) in Wh/l.")
 
-    fracA_charge: float = Field(None, description="Atomic fraction of the working ion in the charged state.")
+    fracA_charge: Optional[float] = Field(None, description="Atomic fraction of the working ion in the charged state.")
 
-    fracA_discharge: float = Field(None, description="Atomic fraction of the working ion in the discharged state.")
+    fracA_discharge: Optional[float] = Field(
+        None, description="Atomic fraction of the working ion in the discharged state."
+    )
 
     @classmethod
     def from_sub_electrode(cls, sub_electrode: AbstractElectrode, **kwargs):
@@ -71,9 +75,13 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
     Features specific to insertion electrode
     """
 
-    stability_charge: float = Field(None, description="The energy above hull of the charged material in eV/atom.")
+    stability_charge: Optional[float] = Field(
+        None, description="The energy above hull of the charged material in eV/atom."
+    )
 
-    stability_discharge: float = Field(None, description="The energy above hull of the discharged material in eV/atom.")
+    stability_discharge: Optional[float] = Field(
+        None, description="The energy above hull of the discharged material in eV/atom."
+    )
 
     id_charge: Union[MPID, int, None] = Field(None, description="The Materials Project ID of the charged structure.")
 
@@ -175,7 +183,9 @@ class BaseElectrode(BaseModel):
         "discharge based on the stable intermediate states.",
     )
 
-    max_voltage_step: float = Field(None, description="Maximum absolute difference in adjacent voltage steps.")
+    max_voltage_step: Optional[float] = Field(
+        None, description="Maximum absolute difference in adjacent voltage steps."
+    )
 
     last_updated: datetime = Field(
         None,
