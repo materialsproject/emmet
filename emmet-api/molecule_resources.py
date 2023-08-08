@@ -124,7 +124,7 @@ if db_uri:
         key="molecule_id",
         collection_name="molecules_summary",
     )
-    
+
     jcesr_store = MongoURIStore(
         uri=db_uri, database="mp_core", key="task_id", collection_name="molecules"
     )
