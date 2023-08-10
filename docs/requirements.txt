@@ -70,7 +70,7 @@ natsort==8.2.0
     # via mkdocs-awesome-pages-plugin
 packaging==21.3
     # via mkdocs
-pygments==2.13.0
+pygments==2.15.0
     # via mkdocs-material
 pymdown-extensions==9.7
     # via
