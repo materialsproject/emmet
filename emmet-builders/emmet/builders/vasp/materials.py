@@ -249,7 +249,7 @@ class MaterialsBuilder(Builder):
                 )
             except Exception as e:
                 failed_ids = list({t_.task_id for t_ in group})
-                doc = MaterialsDoc.construct_deprecated_material(failed_ids)
+                doc = MaterialsDoc.construct_deprecated_material(group)
                 doc.warnings.append(str(e))
                 materials.append(doc)
                 self.logger.warn(
