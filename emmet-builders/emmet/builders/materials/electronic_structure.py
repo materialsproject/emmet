@@ -80,7 +80,9 @@ class ElectronicStructureBuilder(Builder):
 
                 if self._s3_resource is None:
                     self._s3_resource = boto3.resource("s3")
-                    self._s3_resource.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
+                    self._s3_resource.meta.client.meta.events.register(
+                        "choose-signer.s3.*", disable_signing
+                    )
 
             else:
                 sources.append(store)
