@@ -24,7 +24,7 @@ class MAPISettings(BaseSettings):
     )
 
     TIMEOUT: int = Field(
-        20,
+        30,
         description="Number of seconds to wait for pymongo operations before raising a timeout error.",
     )
 
