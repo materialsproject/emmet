@@ -1,0 +1,32 @@
+import pytest
+from emmet.builders.materials.ml_potential import MLIPBuilder
+from maggma.stores import MemoryStore
+from pymatgen.core import Lattice, Structure
+
+
+@pytest.fixture
+def fake_materials():
+    materials_store = MemoryStore(key="material_id")
+    materials_store.connect()
+    # Add fake data to materials store
+    materials_store.update(
+        {
+            "material_id": "example_id",
+            "structure": Structure.from_spacegroup(
+                "Pm-3m", Lattice.cubic(4.2), ["Cs", "Cl"], [[0, 0, 0], [0.5, 0.5, 0.5]]
+            ).as_dict(),
+            "deprecated": False,
+        }
+    )
+    return materials_store
+
+
+def test_ml_ip_builder(fake_materials):
+    ml_potential_store = MemoryStore(key="material_id")
+    builder = MLIPBuilder(materials=fake_materials, ml_potential=ml_potential_store)
+    item = fake_materials.query_one(criteria={"material_id": "example_id"})
+
+    result_doc = builder.unary_function(item)
+
+    # Add specific assertions for the expected structure of result_doc
+    assert isinstance(result_doc, dict)
