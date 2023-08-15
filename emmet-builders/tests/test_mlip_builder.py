@@ -23,8 +23,11 @@ def fake_materials():
 
 def test_ml_ip_builder(fake_materials):
     ml_potential_store = MemoryStore(key="material_id")
-    builder = MLIPBuilder(materials=fake_materials, ml_potential=ml_potential_store)
-    item = fake_materials.query_one(criteria={"material_id": "example_id"})
+    for model in ("chgnet", "m3gnet"):
+        builder = MLIPBuilder(
+            materials=fake_materials, ml_potential=ml_potential_store, model=model
+        )
+        item = fake_materials.query_one(criteria={"material_id": "example_id"})
 
     result_doc = builder.unary_function(item)
 
