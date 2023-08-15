@@ -1,30 +1,44 @@
-from emmet.core.ml_potential import (
-    MLIPElasticityDoc,
-    MLIPEosDoc,
-    MLIPPhononDoc,
-    MLIPRelaxationDoc,
-)
+from typing import TYPE_CHECKING, Union
+
+from emmet.core.ml_potential import MLIPDoc
 from emmet.core.utils import jsanitize
 from maggma.builders.map_builder import MapBuilder
 from maggma.core import Store
 from matcalc.util import get_universal_calculator
 from pymatgen.core import Structure
 
+if TYPE_CHECKING:
+    from ase.calculators.calculator import Calculator
+
 
 class MLIPBuilder(MapBuilder):
     def __init__(
-        self, materials: Store, ml_potential: Store, calc_kwargs: dict = None, **kwargs
+        self,
+        materials: Store,
+        ml_potential: Store,
+        model: Union[str, "Calculator"],
+        calc_kwargs: dict = None,
+        prop_kwargs: dict = None,
+        **kwargs
     ):
         """Machine learning interatomic potential builder.
 
         Args:
-            materials: Store of oxidation states
-            ml_potential: Store to update with bonding documents
-            query : query on materials to limit search
+            materials (Store): Materials to use as input structures.
+            ml_potential (Store): Where to save MLIPDoc documents to.
+            model (str | Calculator): ASE calculator or name of model to use as ML
+                potential. See matcalc.util.UNIVERSAL_CALCULATORS for recognized names.
+            calc_kwargs (dict, optional): Additional kwargs to pass to the calculator.
+                Defaults to None.
+            prop_kwargs (dict, optional): One key for each matcalc PropCalc class.
+                Recognized keys are RelaxCalc, ElasticityCalc, PhononCalc, EOSCalc.
+                Defaults to None.
         """
         self.materials = materials
         self.ml_potential = ml_potential
         self.kwargs = kwargs
+        self.model = get_universal_calculator(model, **(calc_kwargs or {}))
+        self.prop_kwargs = prop_kwargs or {}
 
         # Enforce that we key on material_id
         self.materials.key = "material_id"
