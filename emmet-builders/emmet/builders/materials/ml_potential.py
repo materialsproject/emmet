@@ -1,3 +1,4 @@
+from importlib.metadata import version
 from typing import TYPE_CHECKING, Union
 
 from emmet.core.ml_potential import MLIPDoc
@@ -39,6 +40,8 @@ class MLIPBuilder(MapBuilder):
         self.kwargs = kwargs
         self.model = get_universal_calculator(model, **(calc_kwargs or {}))
         self.prop_kwargs = prop_kwargs or {}
+        pkg_name = {"m3gnet": "matgl"}.get(model.lower(), model)
+        self.provenance = dict(model=model, version=version(pkg_name))
 
         # Enforce that we key on material_id
         self.materials.key = "material_id"
@@ -54,17 +57,13 @@ class MLIPBuilder(MapBuilder):
         struct = Structure.from_dict(item["structure"])
         mp_id, deprecated = item["material_id"], item["deprecated"]
 
-        doc = {}
-        doc_classes = (MLIPElasticityDoc, MLIPPhononDoc, MLIPRelaxationDoc, MLIPEosDoc)
-        for model in ("CHGNet", "MEGNet"):
-            calc = get_universal_calculator(model)
-            for doc_cls in doc_classes:
-                dct = doc_cls.from_structure(
-                    structure=struct,
-                    material_id=mp_id,
-                    calc_kwargs={"calculator": calc},
-                    deprecated=deprecated,
-                )
-                doc[model][doc_cls.property_name] = dct
+        doc = MLIPDoc(
+            structure=struct,
+            material_id=mp_id,
+            calculator=self.model,
+            prop_kwargs=self.prop_kwargs,
+            deprecated=deprecated,
+        )
+        doc.update(self.provenance)
 
         return jsanitize(doc, allow_bson=True)
