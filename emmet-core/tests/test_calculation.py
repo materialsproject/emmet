@@ -10,17 +10,17 @@ def test_init():
         RunStatistics,
     )
 
-    c = CalculationInput()
-    assert c is not None
+    calc_input = CalculationInput()
+    assert calc_input is not None
 
-    c = CalculationOutput()
-    assert c is not None
+    calc_input = CalculationOutput()
+    assert calc_input is not None
 
-    c = RunStatistics()
-    assert c is not None
+    calc_input = RunStatistics()
+    assert calc_input is not None
 
-    c = Calculation()
-    assert c is not None
+    calc_input = Calculation()
+    assert calc_input is not None
 
 
 @pytest.mark.parametrize(
