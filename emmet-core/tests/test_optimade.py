@@ -8,10 +8,7 @@ from . import test_structures
 try:
     from emmet.core.optimade import OptimadeMaterialsDoc
 except Exception:
-    pytest.skip(
-        "could not import 'optimade': No module named 'optimade'",
-        allow_module_level=True,
-    )
+    pytest.skip("could not import 'optimade' ", allow_module_level=True)
 
 
 @pytest.mark.xfail(reason="Optimade + fastapi issues.")
