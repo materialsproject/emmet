@@ -16,9 +16,9 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.28.25
+boto3==1.28.27
     # via maggma
-botocore==1.31.25
+botocore==1.31.27
     # via
     #   boto3
     #   s3transfer
@@ -204,7 +204,7 @@ monty==2023.8.8
     #   mp-api
     #   pymatgen
     #   robocrys
-mp-api==0.33.3
+mp-api==0.34.0
     # via pymatgen
 mpmath==1.3.0
     # via sympy
@@ -382,7 +382,7 @@ ruamel-yaml==0.17.32
     #   robocrys
 ruamel-yaml-clib==0.2.7
     # via ruamel-yaml
-s3transfer==0.6.1
+s3transfer==0.6.2
     # via boto3
 scikit-learn==1.3.0
     # via matminer
