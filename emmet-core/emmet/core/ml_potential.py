@@ -106,7 +106,6 @@ class MLIPDoc(PropertyDoc):
         relax = RelaxCalc(calculator, **prop_kwargs.get("RelaxCalc", {})).calc(
             structure
         )
-        relax["ml_volume"] = relax.pop("volume")
         elasticity = ElasticityCalc(
             calculator, **prop_kwargs.get("ElasticityCalc", {})
         ).calc(structure)
@@ -117,7 +116,6 @@ class MLIPDoc(PropertyDoc):
 
         results = {**relax, **elasticity, **phonon, **eos}
         super().from_structure(
-            structure=structure,
             meta_structure=structure,
             material_id=material_id,
             calculator=calculator,
