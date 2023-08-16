@@ -12,8 +12,7 @@ setup(
     install_requires=[
         "emmet-core[all]",
         "maggma>=0.51.16",
-        "matminer>=0.7.3",
-        "pymatgen<2023.8.10",
+        "matminer>=0.7.3"
     ],
     extras_require={
         "test": [
