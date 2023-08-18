@@ -59,21 +59,20 @@ class OutputDoc(BaseModel):
     initial_molecule: Molecule = Field(None, description="Input Molecule object")
     optimized_molecule: Molecule = Field(None, description="Optimized Molecule object")
 
-    species_hash: str = Field(
-        None,
-        description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph "
-        "node attribute.",
-    )
-    coord_hash: str = Field(
-        None,
-        description="Weisfeiler Lehman (WL) graph hash using the atom coordinates as the graph "
-        "node attribute.",
-    )
+    #TODO: Discuss with Evan if these go here
+    # species_hash: str = Field(
+    #     None,
+    #     description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph node attribute.",
+    # )
+    # coord_hash: str = Field(
+    #     None,
+    #     description="Weisfeiler Lehman (WL) graph hash using the atom coordinates as the graph node attribute.",
+    # )
 
-    last_updated: datetime = Field(
-        None,
-        description = "Timestamp for the most recent calculation for this QChem task document",
-    )
+    # last_updated: datetime = Field(
+    #     None,
+    #     description = "Timestamp for the most recent calculation for this QChem task document",
+    # )
 
     final_energy: float = Field(
         None, description="Final electronic energy for the calculation (units: Hartree)"
@@ -94,10 +93,6 @@ class OutputDoc(BaseModel):
     )
     nbo: Dict[str, Any] = Field(
         None, description="Natural Bonding Orbital (NBO) output"
-    )
-
-    critic2: Dict[str, Any] = Field(
-        None, description="Output from Critic2 critical point analysis code"
     )
 
     frequencies: List[float] = Field(
@@ -127,16 +122,15 @@ class OutputDoc(BaseModel):
         return cls(
             initial_molecule = calc_doc.input.initial_molecule,
             optimized_molecule = calc_doc.output.optimized_molecule,
-            species_hash = self.species_hash, #The three entries post this needs to be checked again
-            coord_hash = self.coord_hash,
-            last_updated = self.last_updated,
+            # species_hash = self.species_hash, #The three entries post this needs to be checked again
+            # coord_hash = self.coord_hash,
+            # last_updated = self.last_updated,
             final_energy = calc_doc.output.final_energy,
             enthalpy = calc_doc.output.enthalpy,
             entropy = calc_doc.output.entropy,
             mulliken = calc_doc.output.mulliken,
             resp = calc_doc.output.resp,
             nbo = calc_doc.output.nbo_data,
-            critic2 = calc_doc.output.critic2,
             frequencies = calc_doc.output.frequencies,
         )
     
@@ -147,7 +141,7 @@ class InputDoc(BaseModel):
         description = "Input molecule and calc details for the QChem calculation"
     )
 
-    parameters: Dict = Field(
+    prev_rem_params: Dict = Field(
         None,
         description = "Parameters from a previous qchem calculation in the series",
     )
@@ -156,7 +150,7 @@ class InputDoc(BaseModel):
         None, description="Level of theory used in the qchem calculation"
     )
 
-    task_spec: TaskType = Field(
+    task_type: TaskType = Field(
         None, description="The type of the QChem calculation : optimization, single point ... etc."
     )
 
@@ -164,11 +158,11 @@ class InputDoc(BaseModel):
         [], title="tag", description="Metadata tagged to a given task."
     )
 
-    solv_spec: Dict = Field(
+    solvent: Dict = Field(
         None, description="Dictionary with the implicit solvent model and respective parameters"
     )
 
-    lot_solv_comb: str = Field(
+    lot_solvent: str = Field(
         None, description="A string representation with the combined information of the solvemt used and the level of theory"
     )
 
@@ -186,7 +180,7 @@ class InputDoc(BaseModel):
         "in this calculation.",
     )
 
-    calc_spec: CalcType = Field(
+    calc_type: CalcType = Field(
         None, description="A combined dictionary representation of the task type along with the level of theory used"
     )
 
@@ -209,15 +203,15 @@ class InputDoc(BaseModel):
         return cls(
             initial_molecule = calc_doc.input.initial_molecule,
             rem = calc_doc.input.rem,
-            lev_theory = level_of_theory(calc_doc.input.rem),
-            task_spec = calc_doc.task_type,
+            #lev_theory = level_of_theory(calc_doc.input.rem),
+            task_type = calc_doc.task_type,
             tags = calc_doc.input.tags,
-            solv_spec = calc_doc.input.solvent,
-            lot_solv_combo = calc_doc.input.lot_solvent_string,
-            custom_smd = calc_doc.input.custom_smd,
-            special_run_type = calc_doc.input.special_run_type,
-            smiles = calc_doc.input.smiles,
-            calc_spec = calc_doc.input.calc_type,
+            solvent = calc_doc.input.solvent,
+            # lot_solvent_string = calc_doc.input.lot_solvent_string,
+            # custom_smd = calc_doc.input.custom_smd,
+            # special_run_type = calc_doc.input.special_run_type,
+            # smiles = calc_doc.input.smiles,
+            calc_spec = calc_doc.calc_type,
         )
         
     
@@ -281,6 +275,14 @@ class TaskDoc(MoleculeMetadata):
         description = "Detailed custodian data for each QChem calculation contributing to the task document.",
     )
 
+    critic2: Dict[str, Any] = Field(
+        None, description="Outputs from the critic2 calculation if performed"
+    )
+
+    custom_smd: Union(str, Dict[str, Any]) = Field(
+        None, description = "The seven solvent parameters necessary to define a custom_smd model"
+    )
+
     #TODO some sort of @validator s if necessary
 
     @classmethod
@@ -319,7 +321,7 @@ class TaskDoc(MoleculeMetadata):
 
         if len(task_files) == 0:
             raise FileNotFoundError("No QChem files found!")
-        
+        critic2 = {}
         calcs_reversed = []
         all_qchem_objects = []
         for task_name, files in task_files.items():
@@ -336,6 +338,19 @@ class TaskDoc(MoleculeMetadata):
         additional_json = None
         if store_additional_json:
             additional_json = _parse_additional_json(dir_name)
+            for key, _ in additional_json.items():
+                if key == 'processed_critic2':
+                    critic2['processed'] = additional_json['processed_critic2']
+                elif key == 'cpreport':
+                    critic2['cp'] = additional_json['cpreport']
+                elif key == 'YT':
+                    critic2['yt'] = additional_json['yt']
+                elif key == 'bonding':
+                    critic2['bonding'] = additional_json['bonding']
+                elif key == 'solvent_data':
+                    custom_smd = additional_json['solvent_data']
+                
+
         orig_inputs = _parse_orig_inputs(dir_name)
 
         dir_name = get_uri(dir_name) # convert to full path
@@ -364,6 +379,8 @@ class TaskDoc(MoleculeMetadata):
             state = _get_state(calcs_reversed),
             qchem_objects = qchem_objects,
             included_objects = included_objects,
+            critic2 = critic2,
+            custom_smd = custom_smd,
             task_type = calcs_reversed[0].task_type,
         )
         doc = doc.copy(update=additional_fields)
@@ -406,7 +423,7 @@ class TaskDoc(MoleculeMetadata):
             "formula": calcs_reversed[0].output.formula.composition.aplhabetical_formula,
             "energy": calcs_reversed[0].output.final_energy,
             "output": calcs_reversed[0].output.as_dict(),
-            "critic2": calcs_reversed[0].output.critic2, #TODO: Unclear about orig_inputs
+            "critic2": calcs_reversed[0].output.critic, #TODO: Unclear about orig_inputs
             "last_updated": calcs_reversed[0].output.last_updated,
         }
 
@@ -492,7 +509,8 @@ def _parse_additional_json(dir_name: Path) -> Dict[str, Any]:
     for filename in dir_name.glob("*.json*"):
         key = filename.name.split(".")[0]
         if key not in ("custodian", "transformations"):
-            additional_json[key] = loadfn(filename, cls = None)
+            if key not in additional_json:
+                additional_json[key] = loadfn(filename, cls = None)
     return additional_json
 
 def _get_state(calcs_reversed: List[Calculation]) -> QChemStatus:
@@ -548,19 +566,31 @@ def _find_qchem_files(
     """
     path = Path(path)
     task_files = OrderedDict()
+    print(Path)
 
-    file_pattern = re.compile(r"^(?P<task_name>mol\.qout(?:\/[^.]+)?)(?:_\d+)?\.gz$")
+    in_file_pattern = re.compile(r"^(?P<in_task_name>mol\.qin(?:\..+)?)\.gz$")
+    print(in_file_pattern)
     
     for file in path.iterdir():
         if file.is_file():
-            match = file_pattern.match(file.name)
-            if match:
-                task_name = match.group('task_name')
-                task_files[task_name] = {"qchem_out_file": file}
-
-
-    if len(task_files) == 1:
-        task_files = {"standard": task_files.popitem()[1]}
+            print(file.name)
+            in_match = in_file_pattern.match(file.name)
+            print(in_match)
+            #out_match = out_file_pattern.match(file.name)
+            if in_match:
+                #print(in_task_name)
+                in_task_name = in_match.group('in_task_name').replace("mol.qin.", "")
+                print(in_task_name)
+                #out_task_name = out_match.group('out_task_name').replace("mol.qout", "") #Remove mol.qout
+                if in_task_name == 'orig':
+                    task_files[in_task_name] = {"orig_input_file": file}
+                elif (in_task_name == 'mol.qin'):
+                    task_files['standard'] = {"qchem_in_file": file, "qchem_out_file": Path("mol.qout.gz")}
+                else:
+                    try:
+                        task_files[in_task_name] = {"qchem_in_file": file, "qchem_out_file": Path("mol.qout." + in_task_name + ".gz")}
+                    except:
+                        task_files[in_task_name] = {"qchem_in_file": file, "qchem_out_file": "No qout files exist for this in file"}
 
     return task_files
 

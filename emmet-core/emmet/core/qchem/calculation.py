@@ -30,6 +30,7 @@ from emmet.core.qchem.calc_types import (
 
 from emmet.core.qchem.task import QChemStatus
 
+__author__ = "Rishabh D. Guha <rdguha@lbl.gov>"
 logger = logging.getLogger(__name__)
 
 # class QChemObject(ValueEnum):
@@ -316,7 +317,7 @@ class Calculation(BaseModel):
         output_doc = CalculationOutput.from_qcoutput(qcoutput)
 
         has_qchem_completed = (
-            QChemStatus.SUCESS if qcoutput.data.get("completion", []) else QChemStatus.FAILED
+            QChemStatus.SUCCESS if qcoutput.data.get("completion", []) else QChemStatus.FAILED
         )
 
         if store_energy_trajectory:
@@ -371,19 +372,31 @@ def _find_qchem_files(
     """
     path = Path(path)
     task_files = OrderedDict()
+    print(Path)
 
-    file_pattern = re.compile(r"^(?P<task_name>mol\.qout(?:\/[^.]+)?)(?:_\d+)?\.gz$")
+    in_file_pattern = re.compile(r"^(?P<in_task_name>mol\.qin(?:\..+)?)\.gz$")
+    print(in_file_pattern)
     
     for file in path.iterdir():
         if file.is_file():
-            match = file_pattern.match(file.name)
-            if match:
-                task_name = match.group('task_name')
-                task_files[task_name] = {"qchem_out_file": file}
-
-
-    if len(task_files) == 1:
-        task_files = {"standard": task_files.popitem()[1]}
+            print(file.name)
+            in_match = in_file_pattern.match(file.name)
+            print(in_match)
+            #out_match = out_file_pattern.match(file.name)
+            if in_match:
+                #print(in_task_name)
+                in_task_name = in_match.group('in_task_name').replace("mol.qin.", "")
+                print(in_task_name)
+                #out_task_name = out_match.group('out_task_name').replace("mol.qout", "") #Remove mol.qout
+                if in_task_name == 'orig':
+                    task_files[in_task_name] = {"orig_input_file": file}
+                elif (in_task_name == 'mol.qin'):
+                    task_files['standard'] = {"qchem_in_file": file, "qchem_out_file": Path("mol.qout.gz")}
+                else:
+                    try:
+                        task_files[in_task_name] = {"qchem_in_file": file, "qchem_out_file": Path("mol.qout." + in_task_name + ".gz")}
+                    except:
+                        task_files[in_task_name] = {"qchem_in_file": file, "qchem_out_file": "No qout files exist for this in file"}
 
     return task_files
         
