@@ -7,9 +7,7 @@
 aioitertools==0.11.0
     # via maggma
 anyio==3.7.1
-    # via
-    #   httpcore
-    #   starlette
+    # via starlette
 attrs==23.1.0
     # via
     #   jsonschema
@@ -18,16 +16,14 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.28.9
+boto3==1.28.27
     # via maggma
-botocore==1.31.9
+botocore==1.31.27
     # via
     #   boto3
     #   s3transfer
 certifi==2023.7.22
-    # via
-    #   httpcore
-    #   requests
+    # via requests
 cffi==1.15.1
     # via
     #   cryptography
@@ -40,41 +36,37 @@ click==8.1.6
     #   mongogrant
 contourpy==1.1.0
     # via matplotlib
-cryptography==41.0.2
+cryptography==41.0.3
     # via paramiko
 cycler==0.11.0
     # via matplotlib
-dnspython==2.4.0
+dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.63.0
+emmet-core[all]==0.64.4
     # via
     #   emmet-builders (setup.py)
     #   mp-api
-exceptiongroup==1.1.2
+exceptiongroup==1.1.3
     # via anyio
-fastapi==0.100.0
+fastapi==0.101.1
     # via maggma
 flask==2.3.2
     # via mongogrant
-fonttools==4.41.1
+fonttools==4.42.0
     # via matplotlib
 future==0.18.3
     # via
     #   matminer
     #   uncertainties
-h11==0.14.0
-    # via httpcore
-httpcore==0.17.3
-    # via dnspython
 idna==3.4
     # via
     #   anyio
     #   requests
 importlib-metadata==6.8.0
     # via flask
-importlib-resources==6.0.0
+importlib-resources==6.0.1
     # via matplotlib
 inflect==7.0.0
     # via robocrys
@@ -86,12 +78,12 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-joblib==1.3.1
+joblib==1.3.2
     # via
     #   pymatgen
     #   pymatgen-analysis-diffusion
     #   scikit-learn
-jsonschema==4.18.4
+jsonschema==4.19.0
     # via maggma
 jsonschema-specifications==2023.7.1
     # via jsonschema
@@ -99,7 +91,7 @@ kiwisolver==1.4.4
     # via matplotlib
 latexcodec==2.0.1
     # via pybtex
-maggma==0.51.24
+maggma==0.53.1
     # via emmet-builders (setup.py)
 markupsafe==2.1.3
     # via
@@ -115,7 +107,7 @@ mongogrant==0.3.3
     # via maggma
 mongomock==4.1.2
     # via maggma
-monty==2023.5.8
+monty==2023.8.8
     # via
     #   emmet-core
     #   maggma
@@ -123,7 +115,7 @@ monty==2023.5.8
     #   mp-api
     #   pymatgen
     #   robocrys
-mp-api==0.33.3
+mp-api==0.34.2
     # via pymatgen
 mpmath==1.3.0
     # via sympy
@@ -135,7 +127,7 @@ networkx==3.1
     # via
     #   pymatgen
     #   robocrys
-numpy==1.25.1
+numpy==1.25.2
     # via
     #   contourpy
     #   maggma
@@ -149,7 +141,7 @@ numpy==1.25.1
     #   seekpath
     #   shapely
     #   spglib
-orjson==3.9.2
+orjson==3.9.5
     # via maggma
 packaging==23.1
     # via
@@ -162,11 +154,11 @@ pandas==1.5.3
     # via
     #   matminer
     #   pymatgen
-paramiko==3.2.0
+paramiko==3.3.1
     # via sshtunnel
 pillow==10.0.0
     # via matplotlib
-plotly==5.15.0
+plotly==5.16.0
     # via pymatgen
 pubchempy==1.0.4
     # via robocrys
@@ -177,17 +169,18 @@ pybtex==0.24.0
     #   robocrys
 pycparser==2.21
     # via cffi
-pydantic==1.10.11
+pydantic==1.10.12
     # via
     #   emmet-core
     #   fastapi
     #   inflect
     #   maggma
     #   pymatgen
-pydash==7.0.5
+pydash==7.0.6
     # via maggma
 pymatgen==2023.7.20
     # via
+    #   emmet-builders (setup.py)
     #   emmet-core
     #   matminer
     #   mp-api
@@ -196,7 +189,7 @@ pymatgen==2023.7.20
     #   robocrys
 pymatgen-analysis-alloys==0.0.6
     # via emmet-core
-pymatgen-analysis-diffusion==2022.7.21
+pymatgen-analysis-diffusion==2023.8.15
     # via emmet-core
 pymongo==4.4.1
     # via
@@ -219,7 +212,7 @@ pyyaml==6.0.1
     # via pybtex
 pyzmq==24.0.1
     # via maggma
-referencing==0.30.0
+referencing==0.30.2
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -242,7 +235,7 @@ ruamel-yaml==0.17.32
     #   robocrys
 ruamel-yaml-clib==0.2.7
     # via ruamel-yaml
-s3transfer==0.6.1
+s3transfer==0.6.2
     # via boto3
 scikit-learn==1.3.0
     # via matminer
@@ -263,10 +256,7 @@ six==1.16.0
     #   pybtex
     #   python-dateutil
 sniffio==1.3.0
-    # via
-    #   anyio
-    #   dnspython
-    #   httpcore
+    # via anyio
 spglib==2.0.2
     # via
     #   emmet-core
@@ -283,11 +273,11 @@ sympy==1.12
     #   pymatgen
 tabulate==0.9.0
     # via pymatgen
-tenacity==8.2.2
+tenacity==8.2.3
     # via plotly
 threadpoolctl==3.2.0
     # via scikit-learn
-tqdm==4.65.0
+tqdm==4.66.1
     # via
     #   maggma
     #   matminer
@@ -308,7 +298,7 @@ urllib3==1.26.16
     # via
     #   botocore
     #   requests
-werkzeug==2.3.6
+werkzeug==2.3.7
     # via flask
 zipp==3.16.2
     # via
