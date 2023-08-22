@@ -24,7 +24,7 @@ def test_mlip_doc(structure: Structure):
         "alpha": float,
         "beta": float,
         "gamma": float,
-        "EOS": dict,
+        "eos": dict,
         "bulk_modulus": float,
         "temperature": ElasticTensor,
         "free_energy": float,

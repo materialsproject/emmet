@@ -18,21 +18,21 @@ class MLIPDoc(PropertyDoc):
     """Document model for matcalc-generated material properties from machine learning
     interatomic potential predictions.
 
-    Includes
-    - relaxation properties
+    Properties:
+    - relaxation
         - final structure: relaxed pymatgen Structure object
         - energy (float): final energy in eV
         - volume (float): final volume in Angstrom^3
         - lattice parameters: a, b, c, alpha, beta, gamma
-    - equation of state properties
-        - EOS (dict[str, list[float]]): with keys energies and volumes
+    - equation of state
+        - eos (dict[str, list[float]]): with keys energies and volumes
         - bulk modulus (float): Birch-Murnaghan bulk modulus in GPa
-    - phonon properties
+    - phonon
         - temperature (list[float]): temperatures in K
         - free energy (list[float]): Helmholtz energies at those temperatures in eV
         - entropy (list[float]): entropies at those temperatures in eV/K
         - heat capacities (list[float]): heat capacities at constant volume in eV/K
-    - elasticity properties
+    - elasticity
         - elastic tensor (ElasticTensor): pymatgen ElasticTensor object
         - shear modulus (float): Voigt-Reuss-Hill shear modulus
         - bulk modulus (float): Voigt-Reuss-Hill bulk modulus
@@ -53,7 +53,7 @@ class MLIPDoc(PropertyDoc):
     gamma: float = Field(description="Lattice angle gamma in degrees")
 
     # equation of state attributes
-    EOS: Dict[str, List[float]] = Field(
+    eos: Dict[str, List[float]] = Field(
         description="dict with keys energies and volumes"
     )
     bulk_modulus: float = Field(description="bm.b0_GPa")
