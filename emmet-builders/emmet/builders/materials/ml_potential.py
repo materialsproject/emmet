@@ -18,7 +18,7 @@ class MLIPBuilder(MapBuilder):
         materials: Store,
         ml_potential: Store,
         model: Union[str, "Calculator"],
-        calc_kwargs: dict = None,
+        model_kwargs: dict = None,
         prop_kwargs: dict = None,
         **kwargs
     ):
@@ -29,7 +29,7 @@ class MLIPBuilder(MapBuilder):
             ml_potential (Store): Where to save MLIPDoc documents to.
             model (str | Calculator): ASE calculator or name of model to use as ML
                 potential. See matcalc.util.UNIVERSAL_CALCULATORS for recognized names.
-            calc_kwargs (dict, optional): Additional kwargs to pass to the calculator.
+            model_kwargs (dict, optional): Additional kwargs to pass to the calculator.
                 Defaults to None.
             prop_kwargs (dict, optional): One key for each matcalc PropCalc class.
                 Recognized keys are RelaxCalc, ElasticityCalc, PhononCalc, EOSCalc.
@@ -38,7 +38,7 @@ class MLIPBuilder(MapBuilder):
         self.materials = materials
         self.ml_potential = ml_potential
         self.kwargs = kwargs
-        self.model = get_universal_calculator(model, **(calc_kwargs or {}))
+        self.model = get_universal_calculator(model, **(model_kwargs or {}))
         self.prop_kwargs = prop_kwargs or {}
         pkg_name = {"m3gnet": "matgl"}.get(model.lower(), model)
         self.provenance = dict(model=model, version=version(pkg_name))
