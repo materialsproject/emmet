@@ -28,7 +28,7 @@ class MLIPDoc(PropertyDoc):
         - eos (dict[str, list[float]]): with keys energies and volumes
         - bulk modulus (float): Birch-Murnaghan bulk modulus in GPa
     - phonon
-        - temperature (list[float]): temperatures in K
+        - temperatures (list[float]): temperatures in K
         - free energy (list[float]): Helmholtz energies at those temperatures in eV
         - entropy (list[float]): entropies at those temperatures in eV/K
         - heat capacities (list[float]): heat capacities at constant volume in eV/K
@@ -56,17 +56,17 @@ class MLIPDoc(PropertyDoc):
     eos: Dict[str, List[float]] = Field(
         description="dict with keys energies and volumes"
     )
-    bulk_modulus: float = Field(description="bm.b0_GPa")
+    bulk_modulus_bm: float = Field(description="bm.b0_GPa")
 
     # phonons attributes
-    temperature: ElasticTensor = Field(description="list of temperatures")
-    free_energy: float = Field(
+    temperatures: List[float] = Field(description="list of temperatures")
+    free_energy: List[float] = Field(
         description="list of Helmholtz free energies at corresponding temperatures"
     )
-    entropy: float = Field(
+    entropy: List[float] = Field(
         description="list of entropies at corresponding temperatures in eV/K"
     )
-    heat_capacities: float = Field(
+    heat_capacity: List[float] = Field(
         description="list of heat capacities at constant volume at corresponding "
         "temperatures in eV/K"
     )
@@ -95,6 +95,8 @@ class MLIPDoc(PropertyDoc):
         Args:
             structure (Structure): Pymatgen Structure object.
             material_id (str): MP ID.
+            calculator (str | Calculator): ASE calculator or name of model to use as ML
+                potential. See matcalc.util.UNIVERSAL_CALCULATORS for recognized names.
             prop_kwargs (dict): Keyword arguments for each matcalc PropCalc class.
                 Recognized keys are RelaxCalc, ElasticityCalc, PhononCalc, EOSCalc.
             **kwargs: Passed to the PropertyDoc constructor.
@@ -102,15 +104,19 @@ class MLIPDoc(PropertyDoc):
         Returns:
             MLIPRelaxationDoc
         """
-        prop_kwargs = prop_kwargs or {}
         calculator = get_universal_calculator(calculator)
 
         results = {}
-        for prop_cls in (RelaxCalc, ElasticityCalc, PhononCalc, EOSCalc):
-            kwds = prop_kwargs.get(prop_cls.__name__, {})
+        for prop_cls in (RelaxCalc, PhononCalc, EOSCalc, ElasticityCalc):
+            kwds = (prop_kwargs or {}).get(prop_cls.__name__, {})
             results.update(prop_cls(calculator, **kwds).calc(structure))
 
-        super().from_structure(
+        # convert all arrays to lists
+        for key, val in results.items():
+            if hasattr(val, "tolist"):
+                results[key] = val.tolist()
+
+        super().__init__(
             meta_structure=structure,
             material_id=material_id,
             calculator=calculator,

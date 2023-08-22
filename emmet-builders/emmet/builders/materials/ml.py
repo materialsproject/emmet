@@ -1,7 +1,7 @@
 from importlib.metadata import version
 from typing import TYPE_CHECKING, Union
 
-from emmet.core.ml_potential import MLIPDoc
+from emmet.core.ml import MLIPDoc
 from emmet.core.utils import jsanitize
 from maggma.builders.map_builder import MapBuilder
 from maggma.core import Store
