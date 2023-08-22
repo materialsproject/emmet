@@ -53,7 +53,9 @@ if db_uri:
         collection_name="formula_autocomplete",
     )
 
-    task_store = MongoURIStore(uri=db_uri, database="mp_core", key="task_id", collection_name="tasks")
+    task_store = MongoURIStore(
+        uri=db_uri, database="mp_core", key="task_id", collection_name="tasks"
+    )
 
     thermo_store = MongoURIStore(
         uri=db_uri,
@@ -99,13 +101,21 @@ if db_uri:
         collection_name="magnetism",
     )
 
-    phonon_bs_store = MongoURIStore(uri=db_uri, database="mp_core", key="material_id", collection_name="pmg_ph_bs")
+    phonon_bs_store = MongoURIStore(
+        uri=db_uri, database="mp_core", key="material_id", collection_name="pmg_ph_bs"
+    )
 
-    eos_store = MongoURIStore(uri=db_uri, database="mp_core", key="task_id", collection_name="eos")
+    eos_store = MongoURIStore(
+        uri=db_uri, database="mp_core", key="task_id", collection_name="eos"
+    )
 
-    similarity_store = MongoURIStore(uri=db_uri, database="mp_core", key="material_id", collection_name="similarity")
+    similarity_store = MongoURIStore(
+        uri=db_uri, database="mp_core", key="material_id", collection_name="similarity"
+    )
 
-    xas_store = MongoURIStore(uri=db_uri, database="mp_core", key="spectrum_id", collection_name="xas")
+    xas_store = MongoURIStore(
+        uri=db_uri, database="mp_core", key="spectrum_id", collection_name="xas"
+    )
 
     gb_store = MongoURIStore(
         uri=db_uri,
@@ -114,13 +124,21 @@ if db_uri:
         collection_name="grain_boundaries",
     )
 
-    fermi_store = MongoURIStore(uri=db_uri, database="mp_core", key="task_id", collection_name="fermi_surface")
+    fermi_store = MongoURIStore(
+        uri=db_uri, database="mp_core", key="task_id", collection_name="fermi_surface"
+    )
 
-    elasticity_store = MongoURIStore(uri=db_uri, database="mp_core", key="task_id", collection_name="elasticity")
+    elasticity_store = MongoURIStore(
+        uri=db_uri, database="mp_core", key="task_id", collection_name="elasticity"
+    )
 
-    doi_store = MongoURIStore(uri=db_uri, database="mp_core", key="task_id", collection_name="dois")
+    doi_store = MongoURIStore(
+        uri=db_uri, database="mp_core", key="task_id", collection_name="dois"
+    )
 
-    substrates_store = MongoURIStore(uri=db_uri, database="mp_core", key="film_id", collection_name="substrates")
+    substrates_store = MongoURIStore(
+        uri=db_uri, database="mp_core", key="film_id", collection_name="substrates"
+    )
 
     surface_props_store = MongoURIStore(
         uri=db_uri,
@@ -136,7 +154,9 @@ if db_uri:
         collection_name="robocrys",
     )
 
-    synth_store = MongoURIStore(uri=db_uri, database="mp_core", key="_id", collection_name="synth_descriptions")
+    synth_store = MongoURIStore(
+        uri=db_uri, database="mp_core", key="_id", collection_name="synth_descriptions"
+    )
 
     insertion_electrodes_store = MongoURIStore(
         uri=db_uri,
@@ -194,7 +214,9 @@ if db_uri:
         collection_name="s3_bandstructure_index",
     )
 
-    s3_dos_index = MongoURIStore(uri=db_uri, database="mp_core", key="fs_id", collection_name="s3_dos_index")
+    s3_dos_index = MongoURIStore(
+        uri=db_uri, database="mp_core", key="fs_id", collection_name="s3_dos_index"
+    )
 
     s3_bs = S3Store(
         index=s3_bs_index,
@@ -231,7 +253,9 @@ if db_uri:
         searchable_fields=["task_id", "fs_id"],
     )
 
-    chgcar_url = MongoURIStore(uri=db_uri, database="mp_core", key="fs_id", collection_name="chgcar_s3_urls")
+    chgcar_url = MongoURIStore(
+        uri=db_uri, database="mp_core", key="fs_id", collection_name="chgcar_s3_urls"
+    )
 
     mpcomplete_store = MongoURIStore(
         uri=db_uri,
@@ -318,7 +342,9 @@ from emmet.api.routes.materials.thermo.resources import (
     thermo_resource,
 )
 
-materials_resources.extend([phase_diagram_resource(phase_diagram_store), thermo_resource(thermo_store)])
+materials_resources.extend(
+    [phase_diagram_resource(phase_diagram_store), thermo_resource(thermo_store)]
+)
 
 # Dielectric
 from emmet.api.routes.materials.dielectric.resources import dielectric_resource
@@ -389,7 +415,9 @@ from emmet.api.routes.materials.robocrys.resources import (
     robo_search_resource,
 )
 
-materials_resources.extend([robo_search_resource(robo_store), robo_resource(robo_store)])
+materials_resources.extend(
+    [robo_search_resource(robo_store), robo_resource(robo_store)]
+)
 
 # Synthesis
 from emmet.api.routes.materials.synthesis.resources import synth_resource
@@ -408,7 +436,9 @@ from emmet.api.routes.materials.conversion_electrodes.resources import (
     conversion_electrodes_resource,
 )
 
-materials_resources.extend([conversion_electrodes_resource(conversion_electrodes_store)])
+materials_resources.extend(
+    [conversion_electrodes_resource(conversion_electrodes_store)]
+)
 
 # Oxidation States
 from emmet.api.routes.materials.oxidation_states.resources import oxi_states_resource
@@ -431,7 +461,9 @@ from emmet.api.routes.materials.charge_density.resources import (
     charge_density_url_resource,
 )
 
-materials_resources.extend([charge_density_resource(s3_chgcar), charge_density_url_resource(chgcar_url)])
+materials_resources.extend(
+    [charge_density_resource(s3_chgcar), charge_density_url_resource(chgcar_url)]
+)
 
 # Summary
 from emmet.api.routes.materials.summary.resources import (
@@ -439,7 +471,9 @@ from emmet.api.routes.materials.summary.resources import (
     summary_stats_resource,
 )
 
-materials_resources.extend([summary_stats_resource(summary_store), summary_resource(summary_store)])
+materials_resources.extend(
+    [summary_stats_resource(summary_store), summary_resource(summary_store)]
+)
 
 # Electronic Structure
 from emmet.api.routes.materials.electronic_structure.resources import (
