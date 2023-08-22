@@ -1,4 +1,4 @@
-from emmet.api.routes.materials.electrodes.utils import (
+from emmet.api.routes.materials.insertion_electrodes.utils import (
     electrodes_chemsys_to_criteria,
     electrodes_formula_to_criteria,
 )
