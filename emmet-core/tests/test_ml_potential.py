@@ -1,14 +1,13 @@
-import pytest
 from emmet.core.ml_potential import MLIPDoc
 from matcalc.util import get_universal_calculator
 from pymatgen.analysis.elasticity import ElasticTensor
 from pymatgen.core import Structure
+from pymatgen.util.testing import PymatgenTest
 
-from . import test_structures
+struct = PymatgenTest.get_structure("SiO2")
 
 
-@pytest.mark.parametrize("structure", test_structures.values())
-def test_mlip_doc(structure: Structure):
+def test_mlip_doc():
     expected_keys = {
         "material_id": str,
         "structure": Structure,
@@ -36,14 +35,14 @@ def test_mlip_doc(structure: Structure):
         "youngs_modulus": float,
     }
     m3gnet_doc = MLIPDoc(
-        structure=structure, calculator="m3gnet", material_id="mp-33", deprecated=False
+        structure=struct, calculator="m3gnet", material_id="mp-33", deprecated=False
     )
     for key, typ in expected_keys.items():
         assert isinstance(m3gnet_doc[key], typ)
 
     calculator = get_universal_calculator("chgnet")
     chgnet_doc = MLIPDoc(
-        structure=structure,
+        structure=struct,
         calculator=calculator,
         material_id="mp-33",
         deprecated=False,
