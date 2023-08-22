@@ -5,6 +5,7 @@ from matcalc.elasticity import ElasticityCalc
 from matcalc.eos import EOSCalc
 from matcalc.phonon import PhononCalc
 from matcalc.relaxation import RelaxCalc
+from matcalc.util import get_universal_calculator
 from pydantic import Field
 from pymatgen.analysis.elasticity import ElasticTensor
 from pymatgen.core import Structure
@@ -102,19 +103,13 @@ class MLIPDoc(PropertyDoc):
             MLIPRelaxationDoc
         """
         prop_kwargs = prop_kwargs or {}
+        calculator = get_universal_calculator(calculator)
 
-        relax = RelaxCalc(calculator, **prop_kwargs.get("RelaxCalc", {})).calc(
-            structure
-        )
-        elasticity = ElasticityCalc(
-            calculator, **prop_kwargs.get("ElasticityCalc", {})
-        ).calc(structure)
-        phonon = PhononCalc(calculator, **prop_kwargs.get("PhononCalc", {})).calc(
-            structure
-        )
-        eos = EOSCalc(calculator, **prop_kwargs.get("EOSCalc", {})).calc(structure)
+        results = {}
+        for prop_cls in (RelaxCalc, ElasticityCalc, PhononCalc, EOSCalc):
+            kwds = prop_kwargs.get(prop_cls.__name__, {})
+            results.update(prop_cls(calculator, **kwds).calc(structure))
 
-        results = {**relax, **elasticity, **phonon, **eos}
         super().from_structure(
             meta_structure=structure,
             material_id=material_id,
