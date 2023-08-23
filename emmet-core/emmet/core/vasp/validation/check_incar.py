@@ -1,5 +1,7 @@
 import numpy as np
 from pymatgen.core.periodic_table import Element
+from emmet.core.vasp.calc_types.enums import TaskType
+
 
 
 def _get_default_fft_grid_params(structure, prec, encut, enaug):
