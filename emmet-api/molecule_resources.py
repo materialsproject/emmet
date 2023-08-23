@@ -24,6 +24,7 @@ from emmet.api.routes.molecules.redox.resources import redox_resource
 from emmet.api.routes.molecules.thermo.resources import thermo_resource
 from emmet.api.routes.molecules.vibrations.resources import vibration_resource
 from emmet.api.routes.molecules.summary.resources import summary_resource
+from emmet.api.routes.legacy.jcesr.resources import jcesr_resource
 
 
 resources = {}
@@ -124,6 +125,10 @@ if db_uri:
         collection_name="molecules_summary",
     )
 
+    jcesr_store = MongoURIStore(
+        uri=db_uri, database="mp_core", key="task_id", collection_name="molecules"
+    )
+
 else:
     raise RuntimeError("Must specify MongoDB URI containing inputs.")
 
@@ -178,5 +183,8 @@ mp_molecules_resources.extend([vibration_resource(vibes_store)])
 
 # Summary
 mp_molecules_resources.extend([summary_resource(summary_store)])
+
+# Legacy JCESR
+mp_molecules_resources.extend([jcesr_resource(jcesr_store)])
 
 resources.update({"molecules": mp_molecules_resources})

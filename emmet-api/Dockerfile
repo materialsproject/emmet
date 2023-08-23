@@ -1,4 +1,4 @@
-FROM materialsproject/devops:python-3.1010.7 as base
+FROM materialsproject/devops:python-3.1010.8 as base
 RUN apt-get update && apt-get install -y --no-install-recommends libopenblas-dev libjpeg62 && apt-get clean
 
 FROM base as builder
@@ -41,7 +41,6 @@ ENV PATH=/root/.local/bin:$PATH \
 COPY app.py .
 COPY material_resources.py .
 COPY molecule_resources.py .
-COPY legacy_resources.py .
 COPY start.sh .
 RUN chmod +x start.sh
 
