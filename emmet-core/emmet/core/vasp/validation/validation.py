@@ -167,9 +167,7 @@ class ValidationDoc(EmmetBaseModel):
         
         if run_type not in ["GGA", "GGA+U", "PBE", "PBE+U", "R2SCAN"]:
             reasons.append(f"FUNCTIONAL --> Functional {run_type} not currently accepted.")
-        
-        reasons = _check_vasp_version(reasons, vasp_version, vasp_major_version, vasp_minor_version, vasp_patch_version, parameters)    
-        
+                
         try:
             valid_input_set = _get_input_set(
                 run_type, task_type, calc_type, structure, input_sets, bandgap
@@ -181,12 +179,22 @@ class ValidationDoc(EmmetBaseModel):
             
             
             
-        if parameters == {}:
+        if parameters == {} or parameters == None:
             reasons.append("CAN NOT PROPERLY PARSE CALCULATION --> Issue parsing input parameters from the vasprun.xml file.")
         elif valid_input_set:
             
             
             ## TODO: check for surface/slab calculations!!!!!!
+
+            reasons = _check_vasp_version(
+                reasons, 
+                vasp_version, 
+                vasp_major_version, 
+                vasp_minor_version, 
+                vasp_patch_version, 
+                parameters,
+                )    
+
                 
             reasons = _check_common_errors(
                 reasons, 

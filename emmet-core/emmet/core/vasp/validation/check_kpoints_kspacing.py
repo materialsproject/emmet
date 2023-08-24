@@ -39,7 +39,7 @@ def _check_kpoints_kspacing(
     is_face_centered = (structure.get_space_group_info()[0][0] == "F")
     monkhorst_mesh_is_invalid = (is_hexagonal or is_face_centered)
     if cur_kpoint_style == "monkhorst" and monkhorst_mesh_is_invalid:
-        if all([x%2 == 1 for x in cur_kpoints_obj.get("kpoints")]): # allow monkhorst with all odd number of subdivs.
+        if all([x%2 == 1 for x in cur_kpoints_obj.get("kpoints")[0]]): # allow monkhorst with all odd number of subdivs.
             pass
         else:
             reasons.append(f"INPUT SETTINGS --> KPOINTS or KGAMMA: monkhorst-pack kpoint mesh was used with only even subdivisions, but the structure has symmetry that is incompatible with monkhorst-pack meshes.")
