@@ -243,7 +243,7 @@ class ValidationDoc(EmmetBaseModel):
             run_type=run_type,
             valid=len(reasons) == 0,
             reasons=reasons,
-            data=data,
+            # data=data,
             warnings=warnings,
         )
 

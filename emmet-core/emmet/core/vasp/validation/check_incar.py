@@ -328,7 +328,7 @@ def _check_hybrid_functional_params(reasons, parameters, valid_input_set):
     _check_required_params(reasons, parameters, "LHFCALC", False, valid_lhfcalc)
     
 
-def _check_ionic_params(reasons, parameters, valid_input_set, task_doc, calcs_reversed, nionic_steps, ionic_steps, structure):
+def _check_ionic_params(reasons, warnings, parameters, valid_input_set, task_doc, calcs_reversed, nionic_steps, ionic_steps, structure):
     # IBRION.
     default_ibrion = 0
     if valid_input_set.incar.get("IBRION", default_ibrion) not in [-1, 1, 2]:
@@ -386,11 +386,8 @@ def _check_ionic_params(reasons, parameters, valid_input_set, task_doc, calcs_re
         valid_ediffg_force = ediffg_in_input_set
 
     if task_doc.output.forces == None:
-        print('ahhhh forces are not contained in the task_doc!!!')
-        print('ahhhh forces are not contained in the task_doc!!!')
-        print('ahhhh forces are not contained in the task_doc!!!')
-        print('ahhhh forces are not contained in the task_doc!!!')
         is_force_converged = False
+        warnings.append("TaskDoc does not contain output forces!")
     else:
         is_force_converged = all([(np.linalg.norm(force_on_atom) <= abs(valid_ediffg_force)) for force_on_atom in task_doc.output.forces])
 
@@ -833,7 +830,7 @@ def _check_incar(
     _check_electronic_projector_params(reasons, parameters, incar, valid_input_set)
     _check_fft_params(reasons, parameters, incar, valid_input_set, structure)
     _check_hybrid_functional_params(reasons, parameters, valid_input_set)
-    _check_ionic_params(reasons, parameters, valid_input_set, task_doc, calcs_reversed, nionic_steps, ionic_steps, structure)
+    _check_ionic_params(reasons, warnings, parameters, valid_input_set, task_doc, calcs_reversed, nionic_steps, ionic_steps, structure)
     _check_ismear_and_sigma(reasons, warnings, parameters, task_doc, ionic_steps, nionic_steps, structure)
     _check_lmaxmix_and_lmaxtau(reasons, warnings, parameters, incar, valid_input_set, structure, task_type)
     _check_magnetism_params(reasons, parameters, valid_input_set)
