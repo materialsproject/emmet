@@ -36,24 +36,26 @@ class ValidationDoc(EmmetBaseModel):
     """
 
     task_id: MPID = Field(..., description="The task_id for this validation document")
+
     valid: bool = Field(False, description="Whether this task is valid or not")
+
     last_updated: datetime = Field(
         description="Last updated date for this document",
         default_factory=datetime.utcnow,
     )
+
     # reasons: List[Union[DeprecationMessage, str]] = Field(
     reasons: List[str] = Field(
         None, description="List of deprecation tags detailing why this task isn't valid"
     )
     
-    
     warnings: List[str] = Field(
-        [], description="List of potential warnings about this calculation"
-    )
-    data: Dict = Field(
-        description="Dictioary of data used to perform validation."
-        " Useful for post-mortem analysis"
-    )
+        [], description="List of potential warnings about this calculation")
+
+    # data: Dict = Field(
+    #     description="Dictionary of data used to perform validation."
+    #     " Useful for post-mortem analysis"
+    # )
 
     class Config:
         extra = "allow"
@@ -159,7 +161,7 @@ class ValidationDoc(EmmetBaseModel):
             
 
         reasons = []
-        data = {}  # type: ignore
+        # data = {}  # type: ignore
         warnings: List[str] = []
         
         
@@ -257,15 +259,14 @@ def _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandga
         CalcType.PBE_U_Structure_Optimization,
     ]
     
-    
     # Ensure inputsets get proper additional input values
     if "SCAN" in run_type.value:
         valid_input_set: VaspInputSet = input_sets[str(calc_type)](structure, bandgap=bandgap)  # type: ignore
+
     # elif task_type == TaskType.NSCF_Uniform or task_type == TaskType.NSCF_Line:
     #     # Constructing the k-path for line-mode calculations is too costly, so
     #     # the uniform input set is used instead and k-points are not checked.
     #     valid_input_set = input_sets[str(calc_type)](structure, mode="uniform")
-    
     elif task_type == TaskType.NSCF_Uniform:
         valid_input_set = input_sets[str(calc_type)](structure, mode="uniform")
     elif task_type == TaskType.NSCF_Line:
@@ -275,15 +276,12 @@ def _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandga
         valid_input_set = input_sets[str(calc_type)](structure, mode="efg")
     elif task_type == TaskType.NMR_Nuclear_Shielding: #########################################################################
         valid_input_set = input_sets[str(calc_type)](structure, mode="cs")
-    
-    
-    
+
     elif calc_type in gga_pbe_structure_opt_calc_types:
         if bandgap == 0:
             valid_input_set = MPMetalRelaxSet(structure)
         else:
             valid_input_set = input_sets[str(calc_type)](structure)
-        
     else:
         valid_input_set = input_sets[str(calc_type)](structure)
         
@@ -333,15 +331,15 @@ def _check_vasp_version(reasons, vasp_version, vasp_major_version, vasp_minor_ve
     return reasons
 
 
-
-
 def _get_run_type(calcs_reversed) -> RunType:
     params = calcs_reversed[0].get("input", {}).get("parameters", {})
     incar = calcs_reversed[0].get("input", {}).get("incar", {})
     return run_type({**params, **incar})
 
+
 def _get_task_type(orig_inputs):
     return task_type(orig_inputs)
+
 
 def _get_calc_type(calcs_reversed, orig_inputs):
     inputs = (
