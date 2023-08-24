@@ -24,9 +24,6 @@ def _check_kpoints_kspacing(
     )
     
     
-    if cur_num_kpts == 729:
-        print(cur_kpoints_obj)
-    
     # has_gamma_point = False
     # if [0,0,0] in cur_kpoints_obj.get("kpoints"):
     #     has_gamma_point = True
