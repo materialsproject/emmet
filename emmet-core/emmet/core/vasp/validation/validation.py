@@ -94,10 +94,13 @@ class ValidationDoc(EmmetBaseModel):
         
         parameters = task_doc.input.parameters # used for most INCAR checks 
         incar = calcs_reversed[0]['input']['incar']
-        orig_inputs = task_doc.orig_inputs.dict()
-        if orig_inputs["kpoints"] != None:
-            orig_inputs["kpoints"] = orig_inputs["kpoints"].as_dict()
-        
+        if task_doc.orig_inputs == None:
+            orig_inputs = {}
+        else:
+            orig_inputs = task_doc.orig_inputs.dict()
+            if orig_inputs["kpoints"] != None:
+                orig_inputs["kpoints"] = orig_inputs["kpoints"].as_dict()
+            
         
         ionic_steps = calcs_reversed[0]['output']['ionic_steps']
         nionic_steps = len(ionic_steps)
