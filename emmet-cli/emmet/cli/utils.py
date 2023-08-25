@@ -420,13 +420,14 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
             logger.error(f"Failed to assimilate {vaspdir}: {ex}")
 
             assimilation_error = str(ex)
+
             quarantine_dir = (
                 AssimilationErrors.from_value(assimilation_error)
                 if assimilation_error in AssimilationErrors
                 else "unknown_error"
             )
 
-            shutil.move(vaspdir, f".quarantine/{quarantine_dir}/")
+            shutil.move(vaspdir, f".quarantine/{quarantine_dir}/{launcher}/")
 
             logger.warning(f"Moved {vaspdir} to .quarantine/{quarantine_dir}/ !")
 
