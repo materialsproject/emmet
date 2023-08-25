@@ -435,7 +435,7 @@ def _check_ismear_and_sigma(reasons, warnings, parameters, task_doc, ionic_steps
     if cur_max_eentropy_per_atom > valid_max_eentropy_per_atom:
         reasons.append(f"INPUT SETTINGS --> SIGMA: The entropy term (T*S) in the energy was {round(1000 * cur_max_eentropy_per_atom, 3)} meV/atom, which is "\
                        f"greater than the {round(1000 * valid_max_eentropy_per_atom, 1)} meV/atom maximum suggested in the VASP wiki. "\
-                       f"Thus, per the VASP wiki, SIGMA should be decreased.")
+                       f"Thus, SIGMA should be decreased.")
 
 
 def _check_lmaxmix_and_lmaxtau(reasons, warnings, parameters, incar, valid_input_set, structure, task_type):

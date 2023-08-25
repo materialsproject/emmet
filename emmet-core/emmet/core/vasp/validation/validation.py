@@ -185,7 +185,19 @@ class ValidationDoc(EmmetBaseModel):
         if parameters == {} or parameters == None:
             reasons.append("CAN NOT PROPERLY PARSE CALCULATION --> Issue parsing input parameters from the vasprun.xml file.")
         elif valid_input_set:
-            
+
+            if potcar_hashes:
+                _potcar_hash_check(reasons, warnings, calcs_reversed, calc_type, potcar_hashes)
+                    # if task_type in [
+                    #     TaskType.NSCF_Line,
+                    #     TaskType.NSCF_Uniform,
+                    #     TaskType.DFPT_Dielectric,
+                    #     TaskType.Dielectric,
+                    # ]:
+                    #     warnings.append(DeprecationMessage.POTCAR.__doc__)  # type: ignore
+                    # else:
+                        # reasons.append(DeprecationMessage.POTCAR)
+        
             
             ## TODO: check for surface/slab calculations!!!!!!
 
@@ -196,7 +208,7 @@ class ValidationDoc(EmmetBaseModel):
                 vasp_minor_version, 
                 vasp_patch_version, 
                 parameters,
-                )    
+            )    
 
                 
             reasons = _check_common_errors(
@@ -299,8 +311,7 @@ def _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandga
     return valid_input_set
 
 
-
-def _potcar_hash_check(task_doc, potcar_hashes):
+def _potcar_hash_check(reasons, warnings, calcs_reversed, calc_type, valid_potcar_hashes):
     """
     Checks to make sure the POTCAR hash is equal to the correct value from the
     pymatgen input set.
@@ -309,23 +320,38 @@ def _potcar_hash_check(task_doc, potcar_hashes):
     ### TODO: Update potcar checks. Whether using hashing or not!
 
     try:
-        potcar_details = task_doc.calcs_reversed[0]["input"]["potcar_spec"]
+        potcar_details = calcs_reversed[0]["input"]["potcar_spec"]
 
         all_match = True
-
+        incorrect_potcars = []
         for entry in potcar_details:
             symbol = entry["titel"].split(" ")[1]
-            hash = potcar_hashes[str(task_doc.calc_type)].get(symbol, None)
+            hash = valid_potcar_hashes[str(calc_type)].get(symbol, None)
 
             if not hash or hash != entry["hash"]:
                 all_match = False
-                break
+                incorrect_potcars.append(symbol)
 
-        return not all_match
+        # format error string, if necessary
+        if len(incorrect_potcars) > 0:
+            incorrect_potcars = [potcar.split("_")[0] for potcar in incorrect_potcars]
+
+
+            if len(incorrect_potcars) == 2:
+                incorrect_potcars = ", ".join(incorrect_potcars[:-1]) + f" and {incorrect_potcars[-1]}"
+            elif len(incorrect_potcars) >= 3:
+                incorrect_potcars = ", ".join(incorrect_potcars[:-1]) + "," + f" and {incorrect_potcars[-1]}"
+
+        if len(incorrect_potcars) > 0:
+            reasons.append(f"PSEUDOPOTENTIALS --> Incorrect POTCAR files were used for {incorrect_potcars}. "
+                "Alternatively, our potcar checker may have an issue--please create a GitHub issue if you "
+                "believe the POTCARs used are correct."
+            )
+        # return not all_match
 
     except KeyError:
         # Assume it is an old calculation without potcar_spec data and treat it as passing POTCAR hash check
-        return False
+        reasons.append("Old version of Emmet --> potcar_spec is not saved in TaskDoc and cannot be validated.")
 
 
 def _check_vasp_version(reasons, vasp_version, vasp_major_version, vasp_minor_version, vasp_patch_version, parameters):
