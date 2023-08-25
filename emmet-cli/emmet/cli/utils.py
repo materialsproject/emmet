@@ -27,6 +27,7 @@ from emmet.core.vasp.validation import ValidationDoc
 from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 
 from emmet.cli import SETTINGS
+from emmet.cli.enums import AssimilationErrors
 from emmet.core.utils import group_structures
 
 logger = logging.getLogger("emmet")
@@ -417,6 +418,22 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
             task_doc = drone.assimilate(vaspdir)
         except Exception as ex:
             logger.error(f"Failed to assimilate {vaspdir}: {ex}")
+
+            quarantine_dir = (
+                AssimilationErrors.from_value(ex)
+                if ex in AssimilationErrors
+                else "unknown_error"
+            )
+
+            shutil.move(vaspdir, f".quarantine/{quarantine_dir}/")
+
+            logger.warning(f"Moved {vaspdir} to .quarantine/{quarantine_dir}/ !")
+
+            if quarantine_dir == "unknown_err":
+                logger.warning(
+                    f"{ex} is not in the known VASP drone assimilation errors, consider adding it to the AssimilationErrors enum to aid in future debugging."
+                )
+
             continue
 
         task_doc["sbxn"] = sbxn
