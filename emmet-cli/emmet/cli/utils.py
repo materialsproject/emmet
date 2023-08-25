@@ -419,9 +419,10 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
         except Exception as ex:
             logger.error(f"Failed to assimilate {vaspdir}: {ex}")
 
+            assimilation_error = str(ex)
             quarantine_dir = (
-                AssimilationErrors.from_value(ex)
-                if ex in AssimilationErrors
+                AssimilationErrors.from_value(assimilation_error)
+                if assimilation_error in AssimilationErrors
                 else "unknown_error"
             )
 
