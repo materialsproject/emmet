@@ -429,7 +429,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
 
             logger.warning(f"Moved {vaspdir} to .quarantine/{quarantine_dir}/ !")
 
-            if quarantine_dir == "unknown_err":
+            if quarantine_dir == "unknown_error":
                 logger.warning(
                     f"{ex} is not in the known VASP drone assimilation errors, consider adding it to the AssimilationErrors enum to aid in future debugging."
                 )
