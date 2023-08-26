@@ -473,6 +473,18 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
 
         if not validation_doc.valid:
             logger.error(f"Not valid: {validation_doc.reasons}")
+
+            if len(validation_doc.reasons) > 1:
+                validation_dir = "_".join(
+                    sorted([reason.value for reason in validation_doc.reasons])
+                )
+            else:
+                validation_dir = validation_doc.reasons[0].value
+
+            shutil.move(vaspdir, f".quarantine/{validation_dir}/{launcher}/")
+
+            logger.warning(f"Moved {vaspdir} to .quarantine/{validation_dir}/ !")
+
             continue
 
         if validation_doc.warnings:
