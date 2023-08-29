@@ -3,8 +3,8 @@ import itertools
 from math import ceil
 from typing import Dict, List, Iterator, Optional
 
-from maggma.builders import Builder
-from maggma.core import S3Store, MongoURIStore, MongoStore
+from maggma.core import Builder
+from maggma.stores import S3Store, MongoURIStore, MongoStore
 from maggma.utils import grouper
 from pymatgen.core import Composition, Element
 
