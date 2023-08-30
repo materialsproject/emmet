@@ -99,7 +99,14 @@ class MissingCompositionsBuilder(Builder):
                     all_entries = [
                         i["composition"] for i in item["phase_diagram"]["all_entries"]
                     ]
-                doc = {"chemsys": sys, "all_compositions": all_entries}
+
+                # Find missing compositions
+                matscholar_entries = self._get_entries_in_chemsys(sys)
+                doc = {
+                    "chemsys": sys,
+                    "all_compositions": all_entries,
+                    "matscholar_entries": matscholar_entries,
+                }
                 yield doc
             except Exception as ex:
                 self.logger.error(f"Erro looking for phase diagram for {sys}: {ex}")
@@ -116,6 +123,7 @@ class MissingCompositionsBuilder(Builder):
         """
         compositions = set()
         chemsys = item["chemsys"]
+        matscholar_entries = item["matscholar_entries"]
         self.logger.info(
             "Querying entries in MPContribs matscholar"
             f"project for the chemical system {chemsys}"
@@ -124,8 +132,6 @@ class MissingCompositionsBuilder(Builder):
             "chemical_system": chemsys,
             "missing_composition_entries": {},
         }
-        # Find missing compositions
-        matscholar_entries = self._get_entries_in_chemsys(chemsys)
 
         if len(item["all_compositions"]) > 0:
             # Get the compositions from retrieved entries,
