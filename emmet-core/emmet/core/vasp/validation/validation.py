@@ -181,7 +181,6 @@ class ValidationDoc(EmmetBaseModel):
             print(e)
             
             
-            
         if parameters == {} or parameters == None:
             reasons.append("CAN NOT PROPERLY PARSE CALCULATION --> Issue parsing input parameters from the vasprun.xml file.")
         elif valid_input_set:
@@ -322,32 +321,30 @@ def _potcar_hash_check(reasons, warnings, calcs_reversed, calc_type, valid_potca
     try:
         potcar_details = calcs_reversed[0]["input"]["potcar_spec"]
 
-        all_match = True
         incorrect_potcars = []
         for entry in potcar_details:
             symbol = entry["titel"].split(" ")[1]
             hash = valid_potcar_hashes[str(calc_type)].get(symbol, None)
 
+            # print(entry["hash"])
+            # print(hash)
+
             if not hash or hash != entry["hash"]:
-                all_match = False
                 incorrect_potcars.append(symbol)
 
-        # format error string, if necessary
+
         if len(incorrect_potcars) > 0:
+            # format error string
             incorrect_potcars = [potcar.split("_")[0] for potcar in incorrect_potcars]
-
-
             if len(incorrect_potcars) == 2:
                 incorrect_potcars = ", ".join(incorrect_potcars[:-1]) + f" and {incorrect_potcars[-1]}"
             elif len(incorrect_potcars) >= 3:
                 incorrect_potcars = ", ".join(incorrect_potcars[:-1]) + "," + f" and {incorrect_potcars[-1]}"
 
-        if len(incorrect_potcars) > 0:
             reasons.append(f"PSEUDOPOTENTIALS --> Incorrect POTCAR files were used for {incorrect_potcars}. "
                 "Alternatively, our potcar checker may have an issue--please create a GitHub issue if you "
                 "believe the POTCARs used are correct."
             )
-        # return not all_match
 
     except KeyError:
         # Assume it is an old calculation without potcar_spec data and treat it as passing POTCAR hash check

@@ -14,7 +14,20 @@ def _check_common_errors(
     ionic_steps, 
     num_ionic_steps_to_avg_drift_over
 ):
-        
+    
+    # Check for cases where both GGA and METAGGA are set. This should *not* be allowed, as it can erroneously increase
+    # the outputted energy by an order of magnitude. See https://github.com/materialsproject/atomate2/issues/453#issuecomment-1699605867
+    # for more details.
+    if incar.get("GGA", "--") != "--" and "METAGGA" in incar.keys():
+        reasons.append(
+            "BUG --> GGA and METAGGA should never be specified together, as this can cause major errors in the "
+            "outputted energy. See https://github.com/materialsproject/atomate2/issues/453#issuecomment-1699605867 "
+            "for more information."
+        )
+
+
+
+
     # check if structure electronically converged
     final_esteps = ionic_steps[-1]["electronic_steps"] if incar.get("ALGO", "Normal").lower() != "chi" else 0
     # In a response function run there is no ionic steps, there is no scf step
