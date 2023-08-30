@@ -88,7 +88,7 @@ class MissingCompositionsBuilder(Builder):
             "chemsys": 1,
             "phase_diagram.all_entries.composition": 1,
         }
-        for sys in chemical_systems[:2000]:
+        for sys in chemical_systems:
             q.update({"chemsys": sys})
             self.logger.info(f"Querying phase diagram for {sys}")
             try:
