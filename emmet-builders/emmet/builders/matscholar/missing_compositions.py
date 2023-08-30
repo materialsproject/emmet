@@ -51,7 +51,7 @@ class MissingCompositionsBuilder(Builder):
         """
         Prechunk method to perform chunking by the key field
         """
-        q = dict(self.query)  # type: ignore
+        q = self.query or {}  # type: ignore
 
         keys = self.missing_compositions.newer_in(
             self.phase_diagram, criteria=q, exhaustive=True
