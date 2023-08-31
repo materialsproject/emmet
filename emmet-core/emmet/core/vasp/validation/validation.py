@@ -176,7 +176,7 @@ class ValidationDoc(EmmetBaseModel):
                 run_type, task_type, calc_type, structure, input_sets, bandgap
             )
         except Exception as e:
-            reasons.append("MP INPUT SET --> There is no matching MP input set for this calculation.")
+            reasons.append("NO MATCHING MP INPUT SET --> no matching MP input set was found. If you believe this to be a mistake, please create a GitHub issue.")
             valid_input_set = None
             print(e)
             
@@ -252,9 +252,7 @@ class ValidationDoc(EmmetBaseModel):
                 vasp_patch_version,
                 task_type,
             )
-            
-        else:
-            reasons.append("NO MATCHING MP INPUT SET --> no matching MP input set was found. If you believe this to be a mistake, please create a GitHub issue.")
+
             
         # Unsure about what might be a better way to do this...
         task_id = task_doc.task_id if task_doc.task_id != None else -1
