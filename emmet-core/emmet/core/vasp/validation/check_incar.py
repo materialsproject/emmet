@@ -118,34 +118,6 @@ def _get_valid_ismears_and_sigma(parameters, bandgap, nionic_steps):
     return valid_ismears, valid_sigma, extra_comments_for_ismear_and_sigma
 
 
-# def _get_valid_lmaxmix_and_lmaxtau(structure):
-#     has_s_electrons = []
-#     has_p_electrons = []
-#     has_d_electrons = []
-#     has_f_electrons = []
-#     for ele_symbol in structure.symbol_set:
-#         cur_ele_electronic_structure = Element(ele_symbol).full_electronic_structure
-#         has_s_electrons.append(any("s" in shell for shell in cur_ele_electronic_structure))
-#         has_p_electrons.append(any("p" in shell for shell in cur_ele_electronic_structure))
-#         has_d_electrons.append(any("d" in shell for shell in cur_ele_electronic_structure))
-#         has_f_electrons.append(any("f" in shell for shell in cur_ele_electronic_structure))
-    
-#     if any(has_f_electrons):
-#         valid_lmaxmix = 6
-#         valid_lmaxtau = 6
-#     elif any(has_d_electrons):
-#         valid_lmaxmix = 4
-#         valid_lmaxtau = 6
-#     elif any(has_p_electrons):
-#         valid_lmaxmix = 2
-#         valid_lmaxtau = 4
-#     else:
-#         valid_lmaxmix = 0
-#         valid_lmaxtau = 2
-    
-#     return valid_lmaxmix, valid_lmaxtau
-
-
 def _check_chemical_shift_params(reasons, parameters, valid_input_set):
     # LCHIMAG.
     default_lchimag = False
@@ -445,8 +417,7 @@ def _check_lmaxmix_and_lmaxtau(reasons, warnings, parameters, incar, valid_input
     """
     
     valid_lmaxmix = valid_input_set.incar.get("LMAXMIX", 2)
-    valid_lmaxtau = min(valid_lmaxmix, 6)
-    # valid_lmaxmix, valid_lmaxtau = _get_valid_lmaxmix_and_lmaxtau(structure)
+    valid_lmaxtau = min(valid_lmaxmix + 2, 6)
     lmaxmix_or_lmaxtau_too_high_msg = "From empirical testing, using LMAXMIX and / or LMAXTAU > 6 appears to introduce computational instabilities, " \
         "and is currently inadvisable according to the VASP development team."
     
@@ -472,7 +443,8 @@ def _check_lmaxmix_and_lmaxtau(reasons, warnings, parameters, incar, valid_input
     
     
     # LMAXTAU. Only check for METAGGA calculations
-    if parameters.get("METAGGA", None) not in ["--", None]:        
+    if incar.get("METAGGA", None) not in ["--", None, "None"]:
+
         # cannot check LMAXTAU in the `Vasprun.parameters` object, as LMAXTAU is not printed to the parameters. Rather, we must check the INCAR.
         cur_lmaxtau = incar.get("LMAXTAU", 6)
         if (cur_lmaxtau < valid_lmaxtau) or (cur_lmaxtau > 6):

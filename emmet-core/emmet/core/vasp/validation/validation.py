@@ -26,7 +26,6 @@ from emmet.core.vasp.validation.check_kpoints_kspacing import _check_kpoints_ksp
 SETTINGS = EmmetSettings()
 
 
-## TODO: Update potcar checks. Whether using hashing or not!
 ## TODO: check for surface/slab calculations. Especially necessary for external calcs.
 
 
@@ -44,7 +43,6 @@ class ValidationDoc(EmmetBaseModel):
         default_factory=datetime.utcnow,
     )
 
-    # reasons: List[Union[DeprecationMessage, str]] = Field(
     reasons: List[str] = Field(
         None, description="List of deprecation tags detailing why this task isn't valid"
     )
@@ -207,6 +205,7 @@ class ValidationDoc(EmmetBaseModel):
                 vasp_minor_version, 
                 vasp_patch_version, 
                 parameters,
+                incar
             )    
 
                 
@@ -349,10 +348,10 @@ def _potcar_hash_check(reasons, warnings, calcs_reversed, calc_type, valid_potca
         reasons.append("Old version of Emmet --> potcar_spec is not saved in TaskDoc and cannot be validated.")
 
 
-def _check_vasp_version(reasons, vasp_version, vasp_major_version, vasp_minor_version, vasp_patch_version, parameters):
+def _check_vasp_version(reasons, vasp_version, vasp_major_version, vasp_minor_version, vasp_patch_version, parameters, incar):
     if vasp_major_version == 6:
         pass
-    elif (vasp_major_version == 5) and ("METAGGA" in parameters.keys()) and (parameters.get("ISPIN", 1) == 2):
+    elif (vasp_major_version == 5) and ("METAGGA" in incar.keys()) and (parameters.get("ISPIN", 1) == 2):
         reasons.append("POTENTIAL BUG --> We believe that there may be a bug with spin-polarized calculations for METAGGAs " \
                        "in some versions of VASP 5. Please create a new GitHub issue if you believe this " \
                        "is not the case and we will consider changing this check!")
