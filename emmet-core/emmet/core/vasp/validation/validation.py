@@ -130,7 +130,8 @@ class ValidationDoc(EmmetBaseModel):
 #         run_type = task_doc.run_type #####################################
         
         
-        
+        num_ionic_steps_to_avg_drift_over = 3
+
         allow_kpoint_shifts = False #############################################################################################
         allow_explicit_kpoint_mesh = "auto" # or True or False #############################################################################################
         if allow_explicit_kpoint_mesh == "auto":
@@ -138,11 +139,6 @@ class ValidationDoc(EmmetBaseModel):
                 allow_explicit_kpoint_mesh = True
             else:
                 allow_explicit_kpoint_mesh = False
-        num_ionic_steps_to_avg_drift_over = 3
-        
-        
-        
-        
         
         chemsys = task_doc.chemsys
         
@@ -290,17 +286,21 @@ def _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandga
         valid_input_set = input_sets[str(calc_type)](structure, mode="uniform")
     elif task_type == TaskType.NSCF_Line:
         valid_input_set = input_sets[str(calc_type)](structure, mode="line")
+    
+    elif "dielectric" in str(task_type).lower():
+        valid_input_set = input_sets[str(calc_type)](structure, lepsilon = True)
 
     elif task_type == TaskType.NMR_Electric_Field_Gradient:
         valid_input_set = input_sets[str(calc_type)](structure, mode="efg")
     elif task_type == TaskType.NMR_Nuclear_Shielding: #########################################################################
-        valid_input_set = input_sets[str(calc_type)](structure, mode="cs")
+        valid_input_set = input_sets[str(calc_type)](structure, mode="cs") # Is this correct? Someone more knowledgeable either fix this or remove this comment if it is correct please!
 
     elif calc_type in gga_pbe_structure_opt_calc_types:
         if bandgap == 0:
             valid_input_set = MPMetalRelaxSet(structure)
         else:
             valid_input_set = input_sets[str(calc_type)](structure)
+
     else:
         valid_input_set = input_sets[str(calc_type)](structure)
         

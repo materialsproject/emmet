@@ -388,7 +388,7 @@ def _check_ismear_and_sigma(reasons, warnings, parameters, task_doc, ionic_steps
     if cur_ismear not in [-5, -4, -2]: # SIGMA is not used by the tetrahedron method.
         _check_relative_params(reasons, parameters, "SIGMA", 0.2, valid_sigma, "less than or equal to", extra_comments_upon_failure=extra_comments_for_ismear_and_sigma)
     else:
-        warnings.append(f"SIGMA is not being directly checked, as an ISMEAR of {cur_ismear} is being used. However, given the bandgap of {round(bandgap,3)}, the maximum SIGMA used should be {valid_sigma} *if* using an ISMEAR not in [-5, -4, -2].")
+        warnings.append(f"SIGMA is not being directly checked, as an ISMEAR of {cur_ismear} is being used. However, given the bandgap of {round(bandgap,3)}, the maximum SIGMA used should be {valid_sigma} if using an ISMEAR *not* in [-5, -4, -2].")
     
     # Also check if SIGMA is too large according to the VASP wiki,
     # which occurs when the entropy term in the energy is greater than 1 meV/atom.
@@ -436,7 +436,7 @@ def _check_lmaxmix_and_lmaxtau(reasons, warnings, parameters, incar, valid_input
         # Either add to reasons or warnings depending on task type (as this affects NSCF calcs the most)
         # @ Andrew Rosen, is this an adequate check? Or should we somehow also be checking for cases where
         # a previous SCF calc used the wrong LMAXMIX too?
-        if task_type == TaskType.NSCF_Uniform or task_type == TaskType.NSCF_Line:
+        if task_type == TaskType.NSCF_Uniform or task_type == TaskType.NSCF_Line or parameters.get("ICHARG", 2) >= 10:
             reasons.append(lmaxmix_msg)
         else:
             warnings.append(lmaxmix_msg)
@@ -459,7 +459,7 @@ def _check_lmaxmix_and_lmaxtau(reasons, warnings, parameters, incar, valid_input
             # Either add to reasons or warnings depending on task type (as this affects NSCF calcs the most)
             # @ Andrew Rosen, is this an adequate check? Or should we somehow also be checking for cases where
             # a previous SCF calc used the wrong LMAXMIX too?
-            if task_type == TaskType.NSCF_Uniform or task_type == TaskType.NSCF_Line:
+            if task_type == TaskType.NSCF_Uniform or task_type == TaskType.NSCF_Line or parameters.get("ICHARG", 2) >= 10:
                 reasons.append(lmaxtau_msg)
             else:
                 warnings.append(lmaxmix_msg)
