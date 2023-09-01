@@ -80,18 +80,17 @@ class ValidationDoc(EmmetBaseModel):
             pseudo_dir: directory of pseudopotential directory to ensure correct hashes
             LDAU_fields: LDAU fields to check for consistency
             max_allowed_scf_gradient: maximum uphill gradient allowed for SCF steps after the
-                initial equillibriation period
+                initial equillibriation period. Note this is in eV per atom.
             potcar_hashes: Dictionary of potcar hash data. Mapping is calculation type -> potcar symbol -> hash value.
         """        
         
         
         bandgap = task_doc.output.bandgap
-        # bandgap = task_doc.bandgap
         calcs_reversed = task_doc.calcs_reversed
         calcs_reversed = [calc.dict() for calc in calcs_reversed] # convert to dictionary to use built-in `.get()` method       
         
-        parameters = task_doc.input.parameters # used for most INCAR checks 
-        incar = calcs_reversed[0]['input']['incar']
+        parameters = task_doc.input.parameters # used for most INCAR tag checks 
+        incar = calcs_reversed[0]['input']['incar'] # used for INCAR tag checks where you need to look at the actual INCAR (semi-rare)
         if task_doc.orig_inputs == None:
             orig_inputs = {}
         else:
@@ -151,7 +150,6 @@ class ValidationDoc(EmmetBaseModel):
 
         
         if calcs_reversed[0].get("input", {}).get("structure", None):
-            # structure = Structure.from_dict(calcs_reversed[0]["input"]["structure"])
             structure = calcs_reversed[0]["input"]["structure"]
         else:
             structure = task_doc.input.structure or task_doc.output.structure
@@ -172,7 +170,9 @@ class ValidationDoc(EmmetBaseModel):
         except Exception as e:
             reasons.append("NO MATCHING MP INPUT SET --> no matching MP input set was found. If you believe this to be a mistake, please create a GitHub issue.")
             valid_input_set = None
-            print(e)
+
+            print(f"Error while finding MP input set: {e}.")
+
             
             
         if parameters == {} or parameters == None:
@@ -180,7 +180,7 @@ class ValidationDoc(EmmetBaseModel):
         elif valid_input_set:
 
             if potcar_hashes:
-                _potcar_hash_check(reasons, warnings, calcs_reversed, calc_type, potcar_hashes)
+                _check_potcars(reasons, warnings, calcs_reversed, calc_type, potcar_hashes)
                     # if task_type in [
                     #     TaskType.NSCF_Line,
                     #     TaskType.NSCF_Uniform,
@@ -256,6 +256,7 @@ class ValidationDoc(EmmetBaseModel):
             task_id=task_id,
             calc_type=calc_type,
             run_type=run_type,
+            task_type=task_type,
             valid=len(reasons) == 0,
             reasons=reasons,
             # data=data,
@@ -267,6 +268,9 @@ class ValidationDoc(EmmetBaseModel):
 
 def _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandgap):
     
+    ## TODO: For every input set key in emmet.core.settings.VASP_DEFAULT_INPUT_SETS,
+    ##       with "GGA" in it, create an equivalent dictionary item with "PBE" instead.
+
     gga_pbe_structure_opt_calc_types = [
         CalcType.GGA_Structure_Optimization, 
         CalcType.GGA_U_Structure_Optimization, 
@@ -292,7 +296,7 @@ def _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandga
 
     elif task_type == TaskType.NMR_Electric_Field_Gradient:
         valid_input_set = input_sets[str(calc_type)](structure, mode="efg")
-    elif task_type == TaskType.NMR_Nuclear_Shielding: #########################################################################
+    elif task_type == TaskType.NMR_Nuclear_Shielding:
         valid_input_set = input_sets[str(calc_type)](structure, mode="cs") # Is this correct? Someone more knowledgeable either fix this or remove this comment if it is correct please!
 
     elif calc_type in gga_pbe_structure_opt_calc_types:
@@ -307,9 +311,9 @@ def _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandga
     return valid_input_set
 
 
-def _potcar_hash_check(reasons, warnings, calcs_reversed, calc_type, valid_potcar_hashes):
+def _check_potcars(reasons, warnings, calcs_reversed, calc_type, valid_potcar_hashes):
     """
-    Checks to make sure the POTCAR hash is equal to the correct value from the
+    Checks to make sure the POTCAR is equivalent to the correct POTCAR from the
     pymatgen input set.
     """
     
@@ -322,9 +326,6 @@ def _potcar_hash_check(reasons, warnings, calcs_reversed, calc_type, valid_potca
         for entry in potcar_details:
             symbol = entry["titel"].split(" ")[1]
             hash = valid_potcar_hashes[str(calc_type)].get(symbol, None)
-
-            # print(entry["hash"])
-            # print(hash)
 
             if not hash or hash != entry["hash"]:
                 incorrect_potcars.append(symbol)
@@ -344,7 +345,7 @@ def _potcar_hash_check(reasons, warnings, calcs_reversed, calc_type, valid_potca
             )
 
     except KeyError:
-        # Assume it is an old calculation without potcar_spec data and treat it as passing POTCAR hash check
+        # Assume it is an old calculation without potcar_spec data and treat it as failing the POTCAR check
         reasons.append("Old version of Emmet --> potcar_spec is not saved in TaskDoc and cannot be validated.")
 
 

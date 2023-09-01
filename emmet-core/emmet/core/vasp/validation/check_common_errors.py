@@ -102,8 +102,9 @@ def _check_common_errors(
     ]
     if len(energies) > skip:
         cur_max_gradient = np.max(np.gradient(energies)[skip:])
-        if cur_max_gradient > valid_max_allowed_scf_gradient:
-            reasons.append(f"STABILITY --> The max SCF gradient is {round(cur_max_gradient,4)} eV, which is larger than the allowed value of {valid_max_allowed_scf_gradient} eV. "\
+        cur_max_gradient_per_atom = cur_max_gradient / structure.num_sites
+        if cur_max_gradient_per_atom > valid_max_allowed_scf_gradient:
+            reasons.append(f"STABILITY --> The max SCF gradient is {round(cur_max_gradient_per_atom,4)} eV/atom, which is larger than the allowed value of {valid_max_allowed_scf_gradient} eV/atom. "\
                            f"This typically indicates an unstable calculation.")
             # print(structure.num_sites)
             # print(skip)
