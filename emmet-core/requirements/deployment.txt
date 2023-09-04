@@ -77,7 +77,7 @@ pydantic==1.10.12
     #   emmet-core
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pymatgen
-pymatgen==2023.8.10
+pymatgen==2023.9.2
     # via
     #   emmet-core
     #   emmet-core (emmet/emmet-core/setup.py)
