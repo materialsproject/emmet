@@ -121,7 +121,7 @@ def _check_electronic_params(reasons, parameters, valid_input_set, structure, po
     valid_encut = valid_input_set.incar.get("ENCUT", np.inf)
     _check_relative_params(reasons, parameters, "ENMAX", 0, valid_encut, "greater than or equal to")
     
-    # ENINI.
+    # ENINI. Only check for IALGO = 48 / ALGO = VeryFast, as this is the only algo that uses this tag.
     if parameters.get("IALGO", 38) == 48:
         _check_relative_params(reasons, parameters, "ENINI", 0, valid_encut, "greater than or equal to")
         
@@ -141,7 +141,7 @@ def _check_electronic_params(reasons, parameters, valid_input_set, structure, po
     _check_required_params(reasons, parameters, "NELECT", default_nelect, default_nelect)
     
     # NBANDS.
-    min_nbands = np.ceil(default_nelect/2) + 1
+    min_nbands = int(np.ceil(default_nelect/2) + 1)
     default_nbands = _get_default_nbands(structure, parameters, default_nelect)
     # check for too many bands (can lead to unphysical electronic structures, see https://github.com/materialsproject/custodian/issues/224 for more context
     too_many_bands_msg = "Too many bands can lead to unphysical electronic structure (see https://github.com/materialsproject/custodian/issues/224 for more context.)"
@@ -345,6 +345,8 @@ def _check_ismear_and_sigma(reasons, warnings, parameters, task_doc, ionic_steps
     _check_allowed_params(reasons, parameters, "ISMEAR", 1, valid_ismears, extra_comments_upon_failure=extra_comments_for_ismear_and_sigma)
     
     # SIGMA.
+    ### TODO: improve logic SIGMA reasons given in the case where you have a material that should have been relaxed with ISMEAR in [-5, 0], but used ISMEAR in [1,2].
+    ###       Because in such cases, the user wouldn't need to update the SIGMA if they use tetrahedron smearing.
     cur_ismear = parameters.get("ISMEAR", 1)
     if cur_ismear not in [-5, -4, -2]: # SIGMA is not used by the tetrahedron method.
         _check_relative_params(reasons, parameters, "SIGMA", 0.2, valid_sigma, "less than or equal to", extra_comments_upon_failure=extra_comments_for_ismear_and_sigma)
@@ -723,7 +725,7 @@ def _check_relative_params(reasons, parameters, input_tag, default_val, valid_va
     cur_val = parameters.get(input_tag, default_val)
 
     if input_tag == "ENMAX": # change output message for ENMAX / ENCUT to be more clear to users (as they set ENCUT, but this is stored as ENMAX)
-        input_tag == "ENCUT"
+        input_tag = "ENCUT"
 
     if should_be == "less than or equal to":
         if cur_val > valid_val: # check for greater than (opposite of <=)
