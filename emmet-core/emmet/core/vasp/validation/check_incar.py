@@ -3,55 +3,6 @@ from pymatgen.core.periodic_table import Element
 from emmet.core.vasp.calc_types.enums import TaskType
 
 
-
-def _get_default_fft_grid_params(structure, prec, encut, enaug):
-    """
-    All of the code for this method is transcribed from `main.F` in the VASP source code.
-    Note:   This is *different* than the formula for NGX/Y/Z and NGXF/YF/ZF on the VASP wiki (as of July 2023),
-            as that formula is actually incorrect (see https://www.vasp.at/forum/viewtopic.php?f=4&t=19057).
-            
-    PS:     This method is not 100% accurate. There is something in the source code I cannot figure out.
-            I think it may have to do with fftw. Regardless, this method (which is a decent approximation) 
-            will have to do.
-    """
-    rytoev = 13.605826 # constant defined in `constants.inc` from VASP source code
-    autoa = 0.529177249 # constant defined in `constants.inc` from VASP source code
-    pi = 3.141592653589793238 # constant defined in `constants.inc` from VASP source code
-    # assumes `structure.lattice.abc` from pymatgen is equivalent to `LATT_CUR%ANORM` from `main.F`.
-    latt_cur_anorm = structure.lattice.abc
-
-    # calculate NGX/Y/Z
-    xcutof = np.sqrt(encut / rytoev) / ((2*pi) / (latt_cur_anorm[0]/autoa))
-    ycutof = np.sqrt(encut / rytoev) / ((2*pi) / (latt_cur_anorm[1]/autoa))
-    zcutof = np.sqrt(encut / rytoev) / ((2*pi) / (latt_cur_anorm[2]/autoa))
-
-    if prec == "NORMAL":
-        wfact = 3
-    elif prec in ["ACCURATE", "ACCURA", "HIGH"]:
-        wfact = 4
-    ngx = int(np.floor(xcutof * wfact + 0.5))
-    ngy = int(np.floor(ycutof * wfact + 0.5))
-    ngz = int(np.floor(zcutof * wfact + 0.5))
-
-    # calculate NGXF/YF/ZF
-    if prec in ["NORMAL", "ACCURATE", "ACCURA"]:
-        ngxf = 2 * ngx
-        ngyf = 2 * ngy
-        ngzf = 2 * ngz
-    elif prec == "HIGH":
-        if enaug == 0:
-            enaug = 1.5 * encut
-        xcutof_fine = np.sqrt(enaug / rytoev) / ((2*pi) / (latt_cur_anorm[0]/autoa))
-        ycutof_fine = np.sqrt(enaug / rytoev) / ((2*pi) / (latt_cur_anorm[1]/autoa))
-        zcutof_fine = np.sqrt(enaug / rytoev) / ((2*pi) / (latt_cur_anorm[2]/autoa))
-        wfact_fine = 16/3
-        ngxf = int(np.floor(xcutof_fine * wfact_fine))
-        ngyf = int(np.floor(ycutof_fine * wfact_fine))
-        ngzf = int(np.floor(zcutof_fine * wfact_fine))
-    
-    return ngx, ngy, ngz, ngxf, ngyf, ngzf
-
-
 def _get_default_nbands(structure, parameters, nelect):
     """
     This method is copied from the `estimate_nbands` function in pymatgen.io.vasp.sets.py.
@@ -238,13 +189,16 @@ def _check_electronic_projector_params(reasons, parameters, incar, valid_input_s
     
 
 def _check_fft_params(reasons, parameters, incar, valid_input_set, structure):
+
     # NGX/Y/Z and NGXF/YF/ZF.
     if any(i for i in ["NGX", "NGY", "NGZ", "NGXF", "NGYF", "NGZF"] if i in incar.keys()):
+
         cur_prec = parameters.get("PREC", "NORMAL").upper()
         cur_encut = parameters.get("ENMAX", np.inf)
         cur_enaug = parameters.get("ENAUG", np.inf)
         
-        valid_ngx, valid_ngy, valid_ngz, valid_ngxf, valid_ngyf, valid_ngzf = _get_default_fft_grid_params(structure, cur_prec, cur_encut, cur_enaug)
+        valid_encut_for_fft_grid_params = max(cur_encut, valid_input_set.incar.get("ENCUT"))
+        ([valid_ngx, valid_ngy, valid_ngz], [valid_ngxf, valid_ngyf, valid_ngzf]) = valid_input_set.calculate_ng(custom_encut = valid_encut_for_fft_grid_params)
         extra_comments_for_FFT_grid = "This likely means the number FFT grid points was modified by the user. If not, please create a GitHub issue."
         
         _check_relative_params(reasons, parameters, "NGX", np.inf, valid_ngx, "greater than or equal to", extra_comments_upon_failure = extra_comments_for_FFT_grid)
