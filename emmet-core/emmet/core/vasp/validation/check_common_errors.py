@@ -19,7 +19,7 @@ def _check_common_errors(
     # for more details.
     if incar.get("GGA", "--") != "--" and "METAGGA" in incar.keys():
         reasons.append(
-            "BUG --> GGA and METAGGA should never be specified together, as this can cause major errors in the "
+            "KNOWN BUG --> GGA and METAGGA should never be specified together, as this can cause major errors in the "
             "outputted energy. See https://github.com/materialsproject/atomate2/issues/453#issuecomment-1699605867 "
             "for more information."
         )

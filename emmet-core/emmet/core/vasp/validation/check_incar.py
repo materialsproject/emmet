@@ -188,7 +188,7 @@ def _check_electronic_projector_params(reasons, parameters, incar, valid_input_s
     _check_required_params(reasons, parameters, "NLSPLINE", default_nlspline, valid_nlspline)
     
 
-def _check_fft_params(reasons, parameters, incar, valid_input_set, structure):
+def _check_fft_params(reasons, parameters, incar, valid_input_set, structure, fft_grid_tolerance,):
 
     # NGX/Y/Z and NGXF/YF/ZF.
     if any(i for i in ["NGX", "NGY", "NGZ", "NGXF", "NGYF", "NGZF"] if i in incar.keys()):
@@ -199,6 +199,13 @@ def _check_fft_params(reasons, parameters, incar, valid_input_set, structure):
         
         valid_encut_for_fft_grid_params = max(cur_encut, valid_input_set.incar.get("ENCUT"))
         ([valid_ngx, valid_ngy, valid_ngz], [valid_ngxf, valid_ngyf, valid_ngzf]) = valid_input_set.calculate_ng(custom_encut = valid_encut_for_fft_grid_params)
+        valid_ngx = int(valid_ngx * fft_grid_tolerance)
+        valid_ngy = int(valid_ngy * fft_grid_tolerance)
+        valid_ngz = int(valid_ngz * fft_grid_tolerance)
+        valid_ngxf = int(valid_ngxf * fft_grid_tolerance)
+        valid_ngyf = int(valid_ngyf * fft_grid_tolerance)
+        valid_ngzf = int(valid_ngzf * fft_grid_tolerance)
+
         extra_comments_for_FFT_grid = "This likely means the number FFT grid points was modified by the user. If not, please create a GitHub issue."
         
         _check_relative_params(reasons, parameters, "NGX", np.inf, valid_ngx, "greater than or equal to", extra_comments_upon_failure = extra_comments_for_FFT_grid)
@@ -410,7 +417,7 @@ def _check_lmaxmix_and_lmaxtau(reasons, warnings, parameters, incar, valid_input
             if cur_lmaxtau > 6:
                 lmaxtau_msg += lmaxmix_or_lmaxtau_too_high_msg
                 
-            # Either add to reasons or warnings depending on task type (as this affects NSCF calcs the most)
+            # Either add to reasons or warnings depending on task type (as this affects NSCF calcs the most).
             # @ Andrew Rosen, is this an adequate check? Or should we somehow also be checking for cases where
             # a previous SCF calc used the wrong LMAXMIX too?
             if task_type == TaskType.NSCF_Uniform or task_type == TaskType.NSCF_Line or parameters.get("ICHARG", 2) >= 10:
@@ -636,7 +643,6 @@ def _check_symmetry_params(reasons, parameters, valid_input_set):
     
     # SYMPREC. 
     default_symprec = 1e-5
-    # valid_symprec = valid_input_set.incar.get("SYMPREC", default_symprec)
     valid_symprec = 1e-3 # custodian will set SYMPREC to a maximum of 1e-3 (as of August 2023)
     extra_comments_for_symprec = "If you believe that this SYMPREC value is necessary (perhaps this calculation has a very large cell), please create a GitHub issue and we will consider to admit your calculations."
     _check_relative_params(reasons, parameters, "SYMPREC", default_symprec, valid_symprec, "less than or equal to", extra_comments_upon_failure=extra_comments_for_symprec)
@@ -716,6 +722,9 @@ def _check_allowed_params(reasons, parameters, input_tag, default_val, allowed_v
 def _check_relative_params(reasons, parameters, input_tag, default_val, valid_val, should_be, extra_comments_upon_failure=""):
     cur_val = parameters.get(input_tag, default_val)
 
+    if input_tag == "ENMAX": # change output message for ENMAX / ENCUT to be more clear to users (as they set ENCUT, but this is stored as ENMAX)
+        input_tag == "ENCUT"
+
     if should_be == "less than or equal to":
         if cur_val > valid_val: # check for greater than (opposite of <=)
             msg = f"INPUT SETTINGS --> {input_tag}: set to {cur_val}, but should be less than or equal to {valid_val}."
@@ -748,13 +757,14 @@ def _check_incar(
     vasp_minor_version,
     vasp_patch_version,
     task_type,
+    fft_grid_tolerance,
 ):
         
     _check_chemical_shift_params(reasons, parameters, valid_input_set)
     _check_dipol_correction_params(reasons, parameters, valid_input_set)
     _check_electronic_params(reasons, parameters, valid_input_set, structure, potcar)
     _check_electronic_projector_params(reasons, parameters, incar, valid_input_set)
-    _check_fft_params(reasons, parameters, incar, valid_input_set, structure)
+    _check_fft_params(reasons, parameters, incar, valid_input_set, structure, fft_grid_tolerance)
     _check_hybrid_functional_params(reasons, parameters, valid_input_set)
     _check_ionic_params(reasons, warnings, parameters, valid_input_set, task_doc, calcs_reversed, nionic_steps, ionic_steps, structure)
     _check_ismear_and_sigma(reasons, warnings, parameters, task_doc, ionic_steps, nionic_steps, structure)

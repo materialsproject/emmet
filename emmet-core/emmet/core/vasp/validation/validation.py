@@ -110,29 +110,24 @@ class ValidationDoc(EmmetBaseModel):
         
         calc_type = _get_calc_type(calcs_reversed, orig_inputs)
         task_type = _get_task_type(orig_inputs)
-        run_type = _get_run_type(calcs_reversed)
-        
-        
-        
+        run_type = _get_run_type(calcs_reversed)        
         
         
 #         calc_type = task_doc.calc_type
-                
 #         # ### get relevant valid (i.e. MP-compliant) input set
 #         # if parameters.get("NSW",0) == 0 or nionic_steps <= 1:
 #         #     task_type = TaskType("Static")
 #         # else:
 #         #     task_type = TaskType("Structure Optimization")
 #         # run_type = calc_type + task_type
-        
 #         task_type = task_doc.task_type # be careful, as task_type function from Emmet not adequately broad for external calcs
 #         run_type = task_doc.run_type #####################################
         
         
-        num_ionic_steps_to_avg_drift_over = 3
-
-        allow_kpoint_shifts = False #############################################################################################
-        allow_explicit_kpoint_mesh = "auto" # or True or False #############################################################################################
+        num_ionic_steps_to_avg_drift_over = 3 ######################################################################################## maybe move to settings
+        fft_grid_tolerance = 0.9 ######################################################################################## maybe move to settings
+        allow_kpoint_shifts = False ############################################################################################# maybe move to settings
+        allow_explicit_kpoint_mesh = "auto" # or True or False ############################################################################################# maybe move to settings
         if allow_explicit_kpoint_mesh == "auto":
             if "NSCF" in calc_type.name:
                 allow_explicit_kpoint_mesh = True
@@ -246,6 +241,7 @@ class ValidationDoc(EmmetBaseModel):
                 vasp_minor_version, 
                 vasp_patch_version,
                 task_type,
+                fft_grid_tolerance,
             )
 
             
@@ -318,6 +314,7 @@ def _check_potcars(reasons, warnings, calcs_reversed, calc_type, valid_potcar_ha
     """
     
     ### TODO: Update potcar checks. Whether using hashing or not!
+    ##################################### TODO: Only create a warning for NSCF / dielectric / DFPT / any other NSCF calc types
 
     try:
         potcar_details = calcs_reversed[0]["input"]["potcar_spec"]
