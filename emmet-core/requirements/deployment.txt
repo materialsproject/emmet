@@ -30,7 +30,7 @@ matplotlib==3.7.2
     # via
     #   -r python/requirements.txt
     #   pymatgen
-monty==2023.8.8
+monty==2023.9.5
     # via
     #   emmet-core
     #   emmet-core (emmet/emmet-core/setup.py)
@@ -76,8 +76,7 @@ pydantic==1.10.12
     # via
     #   emmet-core
     #   emmet-core (emmet/emmet-core/setup.py)
-    #   pymatgen
-pymatgen==2023.9.2
+pymatgen==2023.9.10
     # via
     #   emmet-core
     #   emmet-core (emmet/emmet-core/setup.py)
@@ -88,7 +87,7 @@ python-dateutil==2.8.2
     # via
     #   matplotlib
     #   pandas
-pytz==2023.3
+pytz==2023.3.post1
     # via pandas
 pyyaml==6.0.1
     # via pybtex
@@ -109,7 +108,7 @@ six==1.16.0
     #   latexcodec
     #   pybtex
     #   python-dateutil
-spglib==2.0.2
+spglib==2.1.0
     # via
     #   emmet-core
     #   emmet-core (emmet/emmet-core/setup.py)
