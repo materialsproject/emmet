@@ -607,6 +607,8 @@ class TaskDoc(StructureMetadata):
                 "potcar_spec": [dict(d) for d in calcs_reversed[0].input.potcar_spec],
                 # Required to be compatible with MontyEncoder for the ComputedEntry
                 "run_type": str(calcs_reversed[0].run_type),
+                "is_hubbard": calcs_reversed[0].input.is_hubbard,
+                "hubbards": calcs_reversed[0].input.hubbards,
             },
             "data": {
                 "oxide_type": oxide_type(calcs_reversed[0].output.structure),
