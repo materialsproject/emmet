@@ -493,7 +493,9 @@ class CalculationOutput(BaseModel):
                 magmoms = [m["tot"] for m in outcar.magnetization]
                 structure.add_site_property("magmom", magmoms)
         else:
-            logger.warning("No OUTCAR/CONTCAR available, some information will be missing from TaskDoc.")
+            logger.warning(
+                "No OUTCAR/CONTCAR available, some information will be missing from TaskDoc."
+            )
             outcar_dict = {}
             structure = vasprun.final_structure
             mag_density = None
