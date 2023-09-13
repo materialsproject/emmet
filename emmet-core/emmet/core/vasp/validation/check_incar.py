@@ -573,16 +573,14 @@ def _check_misc_params(reasons, warnings, parameters, incar, valid_input_set, ca
 def _check_precision_params(reasons, parameters, valid_input_set):
     # PREC.
     default_prec = "NORMAL"
-    
     if valid_input_set.incar.get("PREC", default_prec).upper() in ["ACCURATE", "HIGH"]:
         valid_precs = ["ACCURATE", "ACCURA", "HIGH"]
     else:
         raise ValueError("Validation code check for PREC tag needs to be updated to account for a new input set!")
-    
     _check_allowed_params(reasons, parameters, "PREC", default_prec, valid_precs)
     
-    # ROPT. Should be better than or equal to default for the PREC level. Only matters if projectors are done in real-space.
-    # note that if the user sets LREAL = Auto in their Incar, it will show up as "True" in the `parameter` object.
+    # ROPT. Should be better than or equal to default for the PREC level. But, this only matters if projectors are done in real-space.
+    # Note that if the user sets LREAL = Auto in their Incar, it will show up as "True" in the `parameters` object (hence we use the `parameters` object)
     if str(parameters.get("LREAL", "FALSE")).upper() == "TRUE":
         cur_prec = parameters.get("PREC", "Normal").upper()
         if cur_prec == "NORMAL":
@@ -664,8 +662,8 @@ def _check_u_params(reasons, incar, parameters, valid_input_set):
         if cur_ldaul != valid_ldaul:
             reasons.append(f"INPUT SETTINGS --> LDAUL: set to {cur_ldaul}, but should be set to {valid_ldaul}")
 
-        valid_ldautype = valid_input_set.incar.get("LDAUTYPE", 2)
-        cur_ldautype = parameters.get("LDAUTYPE", 2)[0]
+        valid_ldautype = valid_input_set.incar.get("LDAUTYPE", [2])
+        cur_ldautype = parameters.get("LDAUTYPE", [2])[0]
         if cur_ldautype != valid_ldautype:
             reasons.append(f"INPUT SETTINGS --> LDAUTYPE: set to {cur_ldautype}, but should be set to {valid_ldautype}")
 
