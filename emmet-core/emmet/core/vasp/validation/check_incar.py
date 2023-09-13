@@ -663,6 +663,8 @@ def _check_u_params(reasons, incar, parameters, valid_input_set):
             reasons.append(f"INPUT SETTINGS --> LDAUL: set to {cur_ldaul}, but should be set to {valid_ldaul}")
 
         valid_ldautype = valid_input_set.incar.get("LDAUTYPE", [2])
+        if isinstance(valid_ldautype, list):
+            valid_ldautype = valid_ldautype[0]
         cur_ldautype = parameters.get("LDAUTYPE", [2])[0]
         if cur_ldautype != valid_ldautype:
             reasons.append(f"INPUT SETTINGS --> LDAUTYPE: set to {cur_ldautype}, but should be set to {valid_ldautype}")
