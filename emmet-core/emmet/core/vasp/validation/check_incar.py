@@ -440,7 +440,7 @@ def _check_magnetism_params(reasons, parameters, valid_input_set):
     _check_required_params(reasons, parameters, "LSORBIT", default_lsorbit, valid_lsorbit)
     
 
-def _check_misc_params(reasons, warnings, parameters, incar, valid_input_set, calcs_reversed, vasp_major_version, vasp_minor_version):
+def _check_misc_params(reasons, warnings, parameters, incar, valid_input_set, calcs_reversed, vasp_major_version, vasp_minor_version, structure):
     
     # DEPER.
     valid_deper = valid_input_set.incar.get("DEPER", 0.3)
@@ -551,12 +551,9 @@ def _check_misc_params(reasons, warnings, parameters, incar, valid_input_set, ca
     
     # LORBIT.
     cur_ispin = parameters.get("ISPIN", 1)
-    if "LORBIT" in incar.keys():
-        cur_lorbit = incar.get("LORBIT")
-    else:
-        cur_lorbit = parameters.get("LORBIT", None)
-    if (cur_ispin == 2) and ((cur_lorbit == None) or (len(calcs_reversed[0]["output"]["outcar"]["magnetization"]) == 0)):
-        reasons.append(f"INPUT SETTINGS --> LORBIT: should *not* be None for calculations with ISPIN=2, as this prevents the magnetizations from being written to the OUTCAR.")
+    # cur_lorbit = incar.get("LORBIT") if "LORBIT" in incar.keys() else parameters.get("LORBIT", None)
+    if (cur_ispin == 2) and (len(calcs_reversed[0]["output"]["outcar"]["magnetization"]) != structure.num_sites):
+        reasons.append(f"INPUT SETTINGS --> LORBIT: magnetization values were not written to the OUTCAR. This is usually due to LORBIT being set to None or False for calculations with ISPIN=2.")
 
     if parameters.get("LORBIT", -np.inf) >= 11 and parameters.get("ISYM", 2) and (vasp_major_version < 6):
         warnings.append("For LORBIT >= 11 and ISYM = 2 the partial charge densities are not correctly symmetrized and can result "\
@@ -772,7 +769,7 @@ def _check_incar(
     _check_ismear_and_sigma(reasons, warnings, parameters, task_doc, ionic_steps, nionic_steps, structure)
     _check_lmaxmix_and_lmaxtau(reasons, warnings, parameters, incar, valid_input_set, structure, task_type)
     _check_magnetism_params(reasons, parameters, valid_input_set)
-    _check_misc_params(reasons, warnings, parameters, incar, valid_input_set, calcs_reversed, vasp_major_version, vasp_minor_version)
+    _check_misc_params(reasons, warnings, parameters, incar, valid_input_set, calcs_reversed, vasp_major_version, vasp_minor_version, structure)
     _check_precision_params(reasons, parameters, valid_input_set)
     _check_startup_params(reasons, parameters, incar, valid_input_set)
     _check_symmetry_params(reasons, parameters, valid_input_set)

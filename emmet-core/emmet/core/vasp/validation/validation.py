@@ -87,9 +87,9 @@ class ValidationDoc(EmmetBaseModel):
         
         bandgap = task_doc.output.bandgap
         calcs_reversed = task_doc.calcs_reversed
-        calcs_reversed = [calc.dict() for calc in calcs_reversed] # convert to dictionary to use built-in `.get()` method       
+        calcs_reversed = [calc.dict() for calc in calcs_reversed] # convert to dictionary to use built-in `.get()` method       ###################################################
         
-        parameters = task_doc.input.parameters # used for most INCAR tag checks 
+        parameters = task_doc.input.parameters # used for most input tag checks (as this is more reliable than examining the INCAR file directly in most cases)
         incar = calcs_reversed[0]['input']['incar'] # used for INCAR tag checks where you need to look at the actual INCAR (semi-rare)
         if task_doc.orig_inputs == None:
             orig_inputs = {}
