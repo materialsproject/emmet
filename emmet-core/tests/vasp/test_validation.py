@@ -416,6 +416,7 @@ def test_incar_common(test_dir, object_name):
     assert not any(["LCORR" in reason for reason in temp_validation_doc.reasons])
 
     # LORBIT check (should have magnetization values for ISPIN=2)
+    # Should be valid for this case, as no magmoms are expected for ISPIN = 1
     temp_task_doc = copy.deepcopy(test_doc)
     temp_task_doc.input.parameters["ISPIN"] = 1
     temp_task_doc.calcs_reversed[0].output.outcar["magnetization"] = []
@@ -423,11 +424,102 @@ def test_incar_common(test_dir, object_name):
     assert not any(["LORBIT" in reason for reason in temp_validation_doc.reasons])
 
     # LORBIT check (should have magnetization values for ISPIN=2)
+    # Should be valid in this case, as magmoms are present for ISPIN = 2
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["ISPIN"] = 2
+    temp_task_doc.calcs_reversed[0].output.outcar["magnetization"] = (
+        {'s': -0.0, 'p': 0.0, 'd': 0.0, 'tot': 0.0}, 
+        {'s': -0.0, 'p': 0.0, 'd': 0.0, 'tot': -0.0}
+    )
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert not any(["LORBIT" in reason for reason in temp_validation_doc.reasons])
+
+    # LORBIT check (should have magnetization values for ISPIN=2)
+    # Should be invalid in this case, as no magmoms are present for ISPIN = 2
     temp_task_doc = copy.deepcopy(test_doc)
     temp_task_doc.input.parameters["ISPIN"] = 2
     temp_task_doc.calcs_reversed[0].output.outcar["magnetization"] = []
     temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
     assert any(["LORBIT" in reason for reason in temp_validation_doc.reasons])
+
+    # RWIGS check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["RWIGS"] = [1]
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["RWIGS" in reason for reason in temp_validation_doc.reasons])
+
+    # VCA check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["VCA"] = [0.5]
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["VCA" in reason for reason in temp_validation_doc.reasons])
+
+    # PREC check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["PREC"] = "NORMAL"
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["PREC" in reason for reason in temp_validation_doc.reasons])
+
+    # ROPT check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["ROPT"] = [-0.001]
+    temp_task_doc.input.parameters["LREAL"] = True
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["ROPT" in reason for reason in temp_validation_doc.reasons])
+
+    # ICHARG check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["ICHARG"] = 11
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["ICHARG" in reason for reason in temp_validation_doc.reasons])
+
+    # INIWAV check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["INIWAV"] = 0
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["INIWAV" in reason for reason in temp_validation_doc.reasons])
+
+    # ISTART check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["ISTART"] = 3
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["ISTART" in reason for reason in temp_validation_doc.reasons])
+
+    # ISYM check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["ISYM"] = 3
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["ISYM" in reason for reason in temp_validation_doc.reasons])
+
+    # SYMPREC check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["SYMPREC"] = 1e-2
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["SYMPREC" in reason for reason in temp_validation_doc.reasons])
+
+    # LDAUU check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["LDAU"] = True
+    temp_task_doc.input.parameters["LDAUU"] = [5, 5]
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["LDAUU" in reason for reason in temp_validation_doc.reasons])
+
+    # LDAUJ check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["LDAU"] = True
+    temp_task_doc.input.parameters["LDAUJ"] = [5, 5]
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["LDAUJ" in reason for reason in temp_validation_doc.reasons])
+
+    # LDAUL check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["LDAU"] = True
+    temp_task_doc.input.parameters["LDAUL"] = [5, 5]
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["LDAUL" in reason for reason in temp_validation_doc.reasons])
+
+    # print(temp_task_doc.calcs_reversed[0].input.incar.get("LDAUU"))
+    # blah
 
 
     # print(temp_validation_doc.reasons)
