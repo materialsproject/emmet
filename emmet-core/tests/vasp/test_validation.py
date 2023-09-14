@@ -4,52 +4,69 @@ from tests.conftest import assert_schemas_equal, get_test_object
 from emmet.core.vasp.validation.validation import ValidationDoc
 from emmet.core.tasks import TaskDoc
 
+
+
+### TODO: add POTCAR checks to each of the `ValidationDoc.from_task_doc` calls
+### TODO: add tests for many other MP input sets (e.g. MPNSCFSet, MPNMRSet, MPScanRelaxSet, Hybrid sets, etc.)
+    ### TODO: add ENAUG check for SCAN workflows
+    ### TODO: add check for wrong ismear (e.g. -5) for metal relaxation
+    ### TODO: add check for an MP input set that uses an IBRION other than [-1, 1, 2]
+    ### TODO: add in second check for POTIM that checks for large energy changes between ionic steps
+    ### TODO: add in energy-based EDIFFG check
+    ### TODO: add in an LMAXTAU check for SCF and NSCF calcs (need METAGGA calcs)
+    ### TODO: add in check for MP set where LEFG = True
+    ### TODO: add in check for MP set where LOPTICS = True
+
+
+
 @pytest.mark.parametrize(
     "object_name",
     [
         pytest.param("SiOptimizeDouble", id="SiOptimizeDouble"),
-        # pytest.param("SiStatic", id="SiStatic"),
-        # pytest.param("SiNonSCFUniform", id="SiNonSCFUniform"),
+        pytest.param("SiStatic", id="SiStatic"),
     ],
 )
-def test_incar_common(test_dir, object_name):
+def test_common_incar_checks(test_dir, object_name):
 
     test_object = get_test_object(object_name)
     dir_name = test_dir / "vasp" / test_object.folder
     test_doc = TaskDoc.from_directory(dir_name)
 
-    # sanitize with monty or something here????? #######################################
-
-
-    # ISMEAR wrong for nonmetal check
+    # LCHIMAG check
     temp_task_doc = copy.deepcopy(test_doc)
-    temp_task_doc.input.parameters["ISMEAR"] = 1
+    temp_task_doc.input.parameters["LCHIMAG"] = True
     temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
-    assert any(["ISMEAR" in reason for reason in temp_validation_doc.reasons])
+    assert any(["LCHIMAG" in reason for reason in temp_validation_doc.reasons])
 
-    # SIGMA too high for nonmetal with ISMEAR = 0 check
+    # LNMR_SYM_RED check
     temp_task_doc = copy.deepcopy(test_doc)
-    temp_task_doc.input.parameters["ISMEAR"] = 0
-    temp_task_doc.input.parameters["SIGMA"] = 0.2
-    temp_task_doc.output.bandgap = 1
+    temp_task_doc.input.parameters["LNMR_SYM_RED"] = True
     temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
-    assert any(["SIGMA" in reason for reason in temp_validation_doc.reasons])
+    assert any(["LNMR_SYM_RED" in reason for reason in temp_validation_doc.reasons])
 
-    # SIGMA too high for nonmetal with ISMEAR = -5 check (should not error)
+    # LDIPOL check
     temp_task_doc = copy.deepcopy(test_doc)
-    temp_task_doc.input.parameters["ISMEAR"] = -5
-    temp_task_doc.input.parameters["SIGMA"] = 1000 # should not matter
-    temp_task_doc.output.bandgap = 1
+    temp_task_doc.input.parameters["LDIPOL"] = True
     temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
-    assert not any(["SIGMA" in reason for reason in temp_validation_doc.reasons])
+    assert any(["LDIPOL" in reason for reason in temp_validation_doc.reasons])
 
-    # SIGMA too high for metal check
+    # IDIPOL check
     temp_task_doc = copy.deepcopy(test_doc)
-    temp_task_doc.input.parameters["ISMEAR"] = 1
-    temp_task_doc.input.parameters["SIGMA"] = 0.5
-    temp_task_doc.output.bandgap = 0
+    temp_task_doc.input.parameters["IDIPOL"] = 2
     temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
-    assert any(["SIGMA" in reason for reason in temp_validation_doc.reasons])
+    assert any(["IDIPOL" in reason for reason in temp_validation_doc.reasons])
+
+    # EPSILON check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["EPSILON"] = 1.5
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["EPSILON" in reason for reason in temp_validation_doc.reasons])
+
+    # EFIELD check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["EFIELD"] = 1
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["EFIELD" in reason for reason in temp_validation_doc.reasons])
 
     # ENCUT / ENMAX check
     temp_task_doc = copy.deepcopy(test_doc)
@@ -107,12 +124,28 @@ def test_incar_common(test_dir, object_name):
     temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
     assert any(["NLSPLINE" in reason for reason in temp_validation_doc.reasons])
 
-    # FFT grid check
+    # FFT grid check (NGX, NGY, NGZ, NGXF, NGYF, NGZF)
+    # Must change `incar` *and* `parameters` for NG_ checks!
     temp_task_doc = copy.deepcopy(test_doc)
-    temp_task_doc.calcs_reversed[0].input.incar["NGX"] = 1 # must change `incar` *and* `parameters` for NG_ checks!
-    temp_task_doc.input.parameters["NGX"] = 1 # must change `incar` *and* `parameters` for NG_ checks!
+    temp_task_doc.calcs_reversed[0].input.incar["NGX"] = 1
+    temp_task_doc.input.parameters["NGX"] = 1
+    temp_task_doc.calcs_reversed[0].input.incar["NGY"] = 1
+    temp_task_doc.input.parameters["NGY"] = 1
+    temp_task_doc.calcs_reversed[0].input.incar["NGZ"] = 1
+    temp_task_doc.input.parameters["NGZ"] = 1
+    temp_task_doc.calcs_reversed[0].input.incar["NGXF"] = 1
+    temp_task_doc.input.parameters["NGXF"] = 1
+    temp_task_doc.calcs_reversed[0].input.incar["NGYF"] = 1
+    temp_task_doc.input.parameters["NGYF"] = 1
+    temp_task_doc.calcs_reversed[0].input.incar["NGZF"] = 1
+    temp_task_doc.input.parameters["NGZF"] = 1
     temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
     assert any(["NGX" in reason for reason in temp_validation_doc.reasons])
+    assert any(["NGY" in reason for reason in temp_validation_doc.reasons])
+    assert any(["NGZ" in reason for reason in temp_validation_doc.reasons])
+    assert any(["NGXF" in reason for reason in temp_validation_doc.reasons])
+    assert any(["NGYF" in reason for reason in temp_validation_doc.reasons])
+    assert any(["NGZF" in reason for reason in temp_validation_doc.reasons])
 
     # ADDGRID check
     temp_task_doc = copy.deepcopy(test_doc)
@@ -212,7 +245,37 @@ def test_incar_common(test_dir, object_name):
     temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
     assert not any(["CONVERGENCE" in reason for reason in temp_validation_doc.reasons])
 
-    # SIGMA too large check
+    # ISMEAR wrong for nonmetal check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["ISMEAR"] = 1
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["ISMEAR" in reason for reason in temp_validation_doc.reasons])
+
+    # SIGMA too high for nonmetal with ISMEAR = 0 check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["ISMEAR"] = 0
+    temp_task_doc.input.parameters["SIGMA"] = 0.2
+    temp_task_doc.output.bandgap = 1
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["SIGMA" in reason for reason in temp_validation_doc.reasons])
+
+    # SIGMA too high for nonmetal with ISMEAR = -5 check (should not error)
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["ISMEAR"] = -5
+    temp_task_doc.input.parameters["SIGMA"] = 1000 # should not matter
+    temp_task_doc.output.bandgap = 1
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert not any(["SIGMA" in reason for reason in temp_validation_doc.reasons])
+
+    # SIGMA too high for metal check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["ISMEAR"] = 1
+    temp_task_doc.input.parameters["SIGMA"] = 0.5
+    temp_task_doc.output.bandgap = 0
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["SIGMA" in reason for reason in temp_validation_doc.reasons])
+
+    # SIGMA too large check (i.e. eentropy term is > 1 meV/atom)
     temp_task_doc = copy.deepcopy(test_doc)
     temp_task_doc.calcs_reversed[0].output.ionic_steps[0].electronic_steps[-1].eentropy = 1
     temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
@@ -500,50 +563,84 @@ def test_incar_common(test_dir, object_name):
     # LDAUU check
     temp_task_doc = copy.deepcopy(test_doc)
     temp_task_doc.input.parameters["LDAU"] = True
-    temp_task_doc.input.parameters["LDAUU"] = [5, 5]
+    temp_task_doc.calcs_reversed[0].input.incar["LDAUU"] = [5,5]
     temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
     assert any(["LDAUU" in reason for reason in temp_validation_doc.reasons])
 
     # LDAUJ check
     temp_task_doc = copy.deepcopy(test_doc)
     temp_task_doc.input.parameters["LDAU"] = True
-    temp_task_doc.input.parameters["LDAUJ"] = [5, 5]
+    temp_task_doc.calcs_reversed[0].input.incar["LDAUJ"] = [5,5]
     temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
     assert any(["LDAUJ" in reason for reason in temp_validation_doc.reasons])
 
     # LDAUL check
     temp_task_doc = copy.deepcopy(test_doc)
     temp_task_doc.input.parameters["LDAU"] = True
-    temp_task_doc.input.parameters["LDAUL"] = [5, 5]
+    temp_task_doc.calcs_reversed[0].input.incar["LDAUL"] = [5,5]
     temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
     assert any(["LDAUL" in reason for reason in temp_validation_doc.reasons])
 
-    # print(temp_task_doc.calcs_reversed[0].input.incar.get("LDAUU"))
-    # blah
+    # LDAUTYPE check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["LDAU"] = True
+    temp_task_doc.input.parameters["LDAUTYPE"] = [1]
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["LDAUTYPE" in reason for reason in temp_validation_doc.reasons])
+
+    # NWRITE check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["NWRITE"] = 1
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["NWRITE" in reason for reason in temp_validation_doc.reasons])
+
+    # LEFG check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["LEFG"] = True
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["LEFG" in reason for reason in temp_validation_doc.reasons])
+
+    # LOPTICS check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["LOPTICS"] = True
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["LOPTICS" in reason for reason in temp_validation_doc.reasons])
+
+
+
+
+@pytest.mark.parametrize(
+    "object_name",
+    [
+        pytest.param("SiNonSCFUniform", id="SiNonSCFUniform"),
+        # add METAGGA NSCF calc here
+    ],
+)
+def test_NSCF_incar_checks(test_dir, object_name):
+    test_object = get_test_object(object_name)
+    dir_name = test_dir / "vasp" / test_object.folder
+    test_doc = TaskDoc.from_directory(dir_name)
+
+    # ICHARG check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["ICHARG"] = 11
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert not any(["ICHARG" in reason for reason in temp_validation_doc.reasons])
+
+    # LMAXMIX check for NSCF calc
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["LMAXMIX"] = 0
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    # should invalidate NSCF calcs based on LMAXMIX
+    assert any(["LMAXMIX" in reason for reason in temp_validation_doc.reasons])
+    # and should *not* create a warning for NSCF calcs
+    assert not any(["LMAXMIX" in warning for warning in temp_validation_doc.warnings])
+
+
 
 
     # print(temp_validation_doc.reasons)
     # # print(temp_validation_doc.warnings)
-    # blah_error_please
-
-
-
-
-
-
-
-
-
-
-
-### TODO: add tests for many other MP input sets (e.g. MPNSCFSet, MPNMRSet, MPScanRelaxSet, Hybrid sets, etc.)
-    ### TODO: add ENAUG check for SCAN workflows
-    ### TODO: add check for wrong ismear (e.g. -5) for metal relaxation
-    ### TODO: add check for an MP input set that uses an IBRION other than [-1, 1, 2]
-    ### TODO: add in second check for POTIM that checks for large energy changes between ionic steps
-    ### TODO: add in energy-based EDIFFG check
-    ### TODO: add in an LMAXMIX check for NSCF calcs
-    ### TODO: add in an LMAXTAU check for SCF and NSCF calcs (need METAGGA calcs)
-
+    # this_should_cause_an_error_because_it_is_undefined
 
 
