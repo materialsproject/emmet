@@ -25,7 +25,7 @@ from emmet.core.tasks import TaskDoc
         pytest.param("SiStatic", id="SiStatic"),
     ],
 )
-def test_from_directory(test_dir, object_name):
+def test_validation_doc_from_directory(test_dir, object_name):
 
     test_object = get_test_object(object_name)
     dir_name = test_dir / "vasp" / test_object.folder

@@ -159,7 +159,7 @@ class EmmetSettings(BaseSettings):
     )
 
     VASP_MAX_SCF_GRADIENT: float = Field(
-        100,
+        1000,
         description="Maximum upward gradient in the last SCF for any VASP calculation",
     )
 
