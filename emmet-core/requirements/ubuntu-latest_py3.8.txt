@@ -8,11 +8,11 @@ certifi==2023.7.22
     # via requests
 charset-normalizer==3.2.0
     # via requests
-contourpy==1.1.0
+contourpy==1.1.1
     # via matplotlib
 cycler==0.11.0
     # via matplotlib
-emmet-core==0.67.5
+emmet-core==0.68.0
     # via mp-api
 fonttools==4.42.1
     # via matplotlib
@@ -28,7 +28,7 @@ kiwisolver==1.4.5
     # via matplotlib
 latexcodec==2.0.1
     # via pybtex
-matplotlib==3.7.2
+matplotlib==3.7.3
     # via pymatgen
 monty==2023.9.5
     # via
@@ -60,9 +60,9 @@ palettable==3.3.3
     # via pymatgen
 pandas==2.0.3
     # via pymatgen
-pillow==10.0.0
+pillow==10.0.1
     # via matplotlib
-plotly==5.16.1
+plotly==5.17.0
     # via pymatgen
 pybtex==0.24.0
     # via
@@ -79,7 +79,7 @@ pymatgen==2023.8.10
     #   emmet-core
     #   emmet-core (setup.py)
     #   mp-api
-pyparsing==3.0.9
+pyparsing==3.1.1
     # via matplotlib
 python-dateutil==2.8.2
     # via
@@ -117,7 +117,7 @@ tenacity==8.2.3
     # via plotly
 tqdm==4.66.1
     # via pymatgen
-typing-extensions==4.7.1
+typing-extensions==4.8.0
     # via
     #   emmet-core
     #   emmet-core (setup.py)
