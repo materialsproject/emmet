@@ -22,6 +22,28 @@ from emmet.core.tasks import TaskDoc
 @pytest.mark.parametrize(
     "object_name",
     [
+        pytest.param("SiStatic", id="SiStatic"),
+    ],
+)
+def test_from_directory(test_dir, object_name):
+
+    test_object = get_test_object(object_name)
+    dir_name = test_dir / "vasp" / test_object.folder
+    test_validation_doc = ValidationDoc.from_directory(dir_name = dir_name)
+
+    task_doc = TaskDoc.from_directory(dir_name)
+    valid_validation_doc = ValidationDoc.from_task_doc(task_doc)
+
+    assert type(test_validation_doc) == type(valid_validation_doc)
+    # TODO: use `assert_schemas_equal` method, which I cannot figure out how to implement properly here
+    # assert_schemas_equal(test_validation_doc, valid_validation_doc)
+
+
+
+
+@pytest.mark.parametrize(
+    "object_name",
+    [
         pytest.param("SiOptimizeDouble", id="SiOptimizeDouble"),
         pytest.param("SiStatic", id="SiStatic"),
     ],
@@ -613,7 +635,7 @@ def test_common_incar_checks(test_dir, object_name):
     "object_name",
     [
         pytest.param("SiNonSCFUniform", id="SiNonSCFUniform"),
-        # add METAGGA NSCF calc here
+        # TODO: add METAGGA NSCF calc here too
     ],
 )
 def test_NSCF_incar_checks(test_dir, object_name):

@@ -1,12 +1,18 @@
 from datetime import datetime
 from typing import Dict, List, Union, Optional
-
 import numpy as np
 from pydantic import Field, PyObject
+from pathlib import Path
+from monty.os.path import zpath
+
 from pymatgen.core.structure import Structure
 from pymatgen.io.vasp.sets import VaspInputSet
+from pymatgen.io.vasp.sets import MPMetalRelaxSet ########################################################
 from pymatgen.io.vasp.inputs import Potcar
 
+from atomate.vasp.drones import VaspDrone
+
+from emmet.core.tasks import TaskDoc
 from emmet.core.settings import EmmetSettings
 from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
@@ -15,13 +21,11 @@ from emmet.core.vasp.task_valid import TaskDocument
 from emmet.core.vasp.calc_types.enums import CalcType, TaskType
 from emmet.core.vasp.calc_types import RunType, calc_type, run_type, task_type
 
-from pymatgen.io.vasp.sets import MPMetalRelaxSet ########################################################
-
-from monty.os.path import zpath
-
 from emmet.core.vasp.validation.check_incar import _check_incar
 from emmet.core.vasp.validation.check_common_errors import _check_common_errors
 from emmet.core.vasp.validation.check_kpoints_kspacing import _check_kpoints_kspacing
+
+
 
 SETTINGS = EmmetSettings()
 
@@ -65,7 +69,7 @@ class ValidationDoc(EmmetBaseModel):
         kpts_tolerance: float = SETTINGS.VASP_KPTS_TOLERANCE,
         kspacing_tolerance: float = SETTINGS.VASP_KSPACING_TOLERANCE,
         input_sets: Dict[str, PyObject] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
-        LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
+        LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS, ### Unused
         max_allowed_scf_gradient: float = SETTINGS.VASP_MAX_SCF_GRADIENT,
         potcar_hashes: Optional[Dict[CalcType, Dict[str, str]]] = None,
     ) -> "ValidationDoc":
@@ -109,9 +113,8 @@ class ValidationDoc(EmmetBaseModel):
         
         
         calc_type = _get_calc_type(calcs_reversed, orig_inputs)
-        task_type = _get_task_type(orig_inputs)
+        task_type = _get_task_type(calcs_reversed, orig_inputs)
         run_type = _get_run_type(calcs_reversed)        
-        
         
 #         calc_type = task_doc.calc_type
 #         # ### get relevant valid (i.e. MP-compliant) input set
@@ -248,7 +251,7 @@ class ValidationDoc(EmmetBaseModel):
         # Unsure about what might be a better way to do this...
         task_id = task_doc.task_id if task_doc.task_id != None else -1
     
-        doc = ValidationDoc(
+        validation_doc = ValidationDoc(
             task_id=task_id,
             calc_type=calc_type,
             run_type=run_type,
@@ -259,7 +262,69 @@ class ValidationDoc(EmmetBaseModel):
             warnings=warnings,
         )
 
-        return doc
+        return validation_doc
+
+    @classmethod
+    def from_directory(
+        cls,
+        dir_name: Union[Path, str],
+        kpts_tolerance: float = SETTINGS.VASP_KPTS_TOLERANCE,
+        kspacing_tolerance: float = SETTINGS.VASP_KSPACING_TOLERANCE,
+        input_sets: Dict[str, PyObject] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
+        LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS, ### Unused
+        max_allowed_scf_gradient: float = SETTINGS.VASP_MAX_SCF_GRADIENT,
+        potcar_hashes: Optional[Dict[CalcType, Dict[str, str]]] = None,
+    ) -> "ValidationDoc":
+        """
+        Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
+
+        Args:
+            dir_name: the directory containing the calculation files to process
+            kpts_tolerance: the tolerance to allow kpts to lag behind the input set settings
+            kspacing_tolerance:  the tolerance to allow kspacing to lag behind the input set settings
+            input_sets: a dictionary of task_types -> pymatgen input set for validation
+            pseudo_dir: directory of pseudopotential directory to ensure correct hashes
+            LDAU_fields: LDAU fields to check for consistency
+            max_allowed_scf_gradient: maximum uphill gradient allowed for SCF steps after the
+                initial equillibriation period. Note this is in eV per atom.
+            potcar_hashes: Dictionary of potcar hash data. Mapping is calculation type -> potcar symbol -> hash value.
+        """
+
+        vasp_drone = VaspDrone(
+            parse_aeccar=False, 
+            parse_bader=False,
+            parse_chgcar=False,
+            parse_dos=False, 
+            parse_locpot=False, 
+            store_additional_json=False,
+            store_volumetric_data=[]
+        )
+
+        vasprun_files = vasp_drone.filter_files(dir_name, file_pattern="vasprun.xml")
+        outcar_files = vasp_drone.filter_files(dir_name, file_pattern="OUTCAR")
+        task_doc = None
+        if len(vasprun_files) > 0 and len(outcar_files) > 0:
+            try:
+                task_doc = vasp_drone.generate_doc(dir_name, vasprun_files, outcar_files)
+            except:
+                pass
+
+        if task_doc == None:
+            raise Exception("CAN NOT PARSE CALCULATION --> Issue parsing results. This often means your calculation did not complete.") # what type of error type is correct here? Unfamiliar with this
+        else:
+            task_doc = TaskDoc(**task_doc)
+            validation_doc = ValidationDoc.from_task_doc(
+                task_doc = task_doc,
+                kpts_tolerance = kpts_tolerance,
+                kspacing_tolerance = kspacing_tolerance,
+                input_sets = input_sets,
+                LDAU_fields = LDAU_fields, ### Unused
+                max_allowed_scf_gradient = max_allowed_scf_gradient,
+                potcar_hashes = potcar_hashes,
+            )
+
+            return validation_doc
+
 
 
 def _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandgap):
@@ -366,8 +431,13 @@ def _get_run_type(calcs_reversed) -> RunType:
     return run_type({**params, **incar})
 
 
-def _get_task_type(orig_inputs):
-    return task_type(orig_inputs)
+def _get_task_type(calcs_reversed, orig_inputs):
+    inputs = (
+        calcs_reversed[0].get("input", {})
+        if len(calcs_reversed) > 0
+        else orig_inputs
+    )
+    return task_type(inputs)
 
 
 def _get_calc_type(calcs_reversed, orig_inputs):

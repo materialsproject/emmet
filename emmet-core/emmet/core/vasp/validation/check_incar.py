@@ -59,7 +59,7 @@ def _get_valid_ismears_and_sigma(parameters, bandgap, nionic_steps):
         valid_ismears = [0,1,2]
         cur_nsw = parameters.get("NSW", 0)
         if cur_nsw == 0 or nionic_steps <= 1:
-            valid_ismears.append(-5) # ISMEAR = -5 is valid for metals *only* when doing static run
+            valid_ismears.append(-5) # ISMEAR = -5 is valid for metals *only* when doing static calc
             extra_comments_for_ismear_and_sigma += " and is a static calculation"
         else:
             extra_comments_for_ismear_and_sigma += " and is a non-static calculation"
