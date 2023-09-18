@@ -20,11 +20,11 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.28.45
+boto3==1.28.49
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.31.45
+botocore==1.31.49
     # via
     #   boto3
     #   s3transfer
@@ -53,7 +53,7 @@ click==8.1.7
     #   uvicorn-tschaume
 colorama==0.4.6
     # via griffe
-contourpy==1.1.0
+contourpy==1.1.1
     # via matplotlib
 coverage[toml]==7.3.1
     # via pytest-cov
@@ -65,7 +65,7 @@ cycler==0.11.0
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==1.18.4
+ddtrace==1.18.5
     # via emmet-api (setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -75,7 +75,7 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.67.5
+emmet-core[all]==0.68.0
     # via
     #   emmet-api (setup.py)
     #   mp-api
@@ -90,7 +90,7 @@ fastapi==0.103.1
     # via
     #   emmet-api (setup.py)
     #   maggma
-filelock==3.12.3
+filelock==3.12.4
     # via virtualenv
 flake8==6.1.0
     # via emmet-api (setup.py)
@@ -114,7 +114,7 @@ h11==0.14.0
     #   uvicorn-tschaume
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
-identify==2.5.27
+identify==2.5.29
     # via pre-commit
 idna==3.4
     # via
@@ -180,7 +180,7 @@ markupsafe==2.1.3
     #   werkzeug
 matminer==0.9.0
     # via robocrys
-matplotlib==3.7.2
+matplotlib==3.8.0
     # via pymatgen
 mccabe==0.7.0
     # via flake8
@@ -213,7 +213,7 @@ mkdocstrings[python]==0.23.0
     # via
     #   emmet-api (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.6.3
+mkdocstrings-python==1.7.0
     # via mkdocstrings
 mongogrant==0.3.3
     # via maggma
@@ -227,7 +227,7 @@ monty==2023.9.5
     #   mp-api
     #   pymatgen
     #   robocrys
-mp-api==0.36.0
+mp-api==0.36.1
     # via pymatgen
 mpmath==1.3.0
     # via sympy
@@ -249,7 +249,7 @@ networkx==3.1
     #   robocrys
 nodeenv==1.8.0
     # via pre-commit
-numpy==1.25.2
+numpy==1.26.0
     # via
     #   contourpy
     #   maggma
@@ -285,13 +285,13 @@ paramiko==3.3.1
     # via sshtunnel
 pathspec==0.11.2
     # via mkdocs
-pillow==10.0.0
+pillow==10.0.1
     # via matplotlib
 platformdirs==3.10.0
     # via
     #   mkdocs
     #   virtualenv
-plotly==5.16.1
+plotly==5.17.0
     # via pymatgen
 pluggy==1.3.0
     # via pytest
@@ -351,7 +351,7 @@ pymongo==4.5.0
     #   mongogrant
 pynacl==1.5.0
     # via paramiko
-pyparsing==3.0.9
+pyparsing==3.1.1
     # via matplotlib
 pytest==7.4.2
     # via
@@ -392,7 +392,7 @@ requests==2.31.0
     #   pymatgen
 robocrys==0.2.8
     # via emmet-core
-rpds-py==0.10.2
+rpds-py==0.10.3
     # via
     #   jsonschema
     #   referencing
@@ -472,7 +472,7 @@ types-setuptools==68.2.0.0
     # via emmet-api (setup.py)
 types-urllib3==1.26.25.14
     # via types-requests
-typing-extensions==4.7.1
+typing-extensions==4.8.0
     # via
     #   aioitertools
     #   bytecode
@@ -480,7 +480,6 @@ typing-extensions==4.7.1
     #   ddtrace
     #   emmet-core
     #   fastapi
-    #   filelock
     #   inflect
     #   mkdocstrings
     #   mp-api
