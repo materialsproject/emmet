@@ -147,7 +147,8 @@ class StructureMetadata(EmmetBaseModel):
             "density_atomic": meta_structure.volume / meta_structure.num_sites,
             "symmetry": symmetry,
         }
-        return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)
+        kwargs.update({k: v for k, v in data.items() if k in fields})
+        return cls(**kwargs)
 
 
 class MoleculeMetadata(EmmetBaseModel):
