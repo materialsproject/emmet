@@ -1,17 +1,18 @@
-from emmet.core.ml import MLIPDoc
 from matcalc.util import get_universal_calculator
 from pymatgen.analysis.elasticity import ElasticTensor
 from pymatgen.core import Structure
 from pymatgen.util.testing import PymatgenTest
 
-struct = PymatgenTest.get_structure("SiO2")
+from emmet.core.ml import MLIPDoc
+
+struct = PymatgenTest.get_structure("Si")
 
 
 expected_keys = {
     "material_id": str,
     "structure": Structure,
     "deprecated": bool,
-    "model": str,
+    "calculator": str,
     "version": str,
     "final_structure": Structure,
     "energy": float,
@@ -23,11 +24,11 @@ expected_keys = {
     "beta": float,
     "gamma": float,
     "eos": dict,
-    "bulk_modulus": float,
-    "temperature": ElasticTensor,
-    "free_energy": float,
-    "entropy": float,
-    "heat_capacities": float,
+    "bulk_modulus_bm": float,
+    "temperatures": list,
+    "free_energy": list,
+    "entropy": list,
+    "heat_capacity": list,
     "elastic_tensor": ElasticTensor,
     "shear_modulus_vrh": float,
     "bulk_modulus_vrh": float,
@@ -35,15 +36,18 @@ expected_keys = {
 }
 
 
-def test_mlip_doc_calc_as_str() -> None:
+def test_mlip_doc_with_calc_as_str() -> None:
     doc = MLIPDoc(
         structure=struct, calculator="m3gnet", material_id="mp-33", deprecated=False
     )
     for key, typ in expected_keys.items():
-        assert isinstance(doc[key], typ)
+        actual = getattr(doc, key)
+        assert isinstance(
+            actual, typ
+        ), f"{key=} expected type={typ.__name__}, got {type(actual).__name__}"
 
 
-def test_mlip_doc_calc_as_model() -> None:
+def test_mlip_doc_with_calc_as_model() -> None:
     # %%
     calculator = get_universal_calculator("chgnet")
     doc = MLIPDoc(
@@ -52,4 +56,6 @@ def test_mlip_doc_calc_as_model() -> None:
         material_id="mp-33",
         deprecated=False,
     )
-    assert {*doc} >= {*expected_keys}
+    actual = {*doc.__dict__}
+    missing = sorted({*expected_keys} - actual)
+    assert not missing, f"keys {missing=}"
