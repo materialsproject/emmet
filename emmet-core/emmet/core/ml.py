@@ -1,4 +1,3 @@
-from importlib.metadata import PackageNotFoundError, version
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 from matcalc.elasticity import ElasticityCalc
@@ -51,11 +50,15 @@ class MLIPDoc(PropertyDoc):
 
     # metadata
     structure: Structure = Field(description="Original structure")
-    calculator: str = Field(
-        description="Name of model used as ML potential. See matcalc.util.UNIVERSAL_CALCULATORS for recognized names."
-    )
     version: str = Field(
-        description="Version of matcalc used to generate this document"
+        None, description="Version of matcalc used to generate this document"
+    )
+    model_name: str = Field(
+        None,
+        description="Name of model used as ML potential. See matcalc.util.UNIVERSAL_CALCULATORS for recognized names.",
+    )
+    model_version: str = Field(
+        None, description="Version of model used as ML potential"
     )
 
     # relaxation attributes
@@ -145,19 +148,6 @@ class MLIPDoc(PropertyDoc):
             if hasattr(val, "tolist") and not isinstance(val, ElasticTensor):
                 results[key] = val.tolist()
 
-        model_name = (
-            calculator if isinstance(calculator, str) else type(calculator).__name__
-        )
-        try:
-            model_version = version(model_name)
-        except PackageNotFoundError:
-            model_version = "unknown"
-
         super().__init__(
-            structure=structure,
-            material_id=material_id,
-            calculator=model_name,
-            version=model_version,
-            **results,
-            **kwargs,
+            structure=structure, material_id=material_id, **results, **kwargs
         )

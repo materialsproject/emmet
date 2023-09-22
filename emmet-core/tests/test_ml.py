@@ -13,8 +13,9 @@ expected_keys = {
     "material_id": str,
     "structure": Structure,
     "deprecated": bool,
-    "calculator": str,
-    "version": str,
+    "version": type(None),  # str,
+    "model_name": type(None),  # str,
+    "model_version": type(None),  # str,
     # -- relaxation --
     "final_structure": Structure,
     "energy": float,

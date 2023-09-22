@@ -1,12 +1,13 @@
 from importlib.metadata import version
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Optional, Union
 
-from emmet.core.ml import MLIPDoc
-from emmet.core.utils import jsanitize
 from maggma.builders.map_builder import MapBuilder
 from maggma.core import Store
 from matcalc.util import get_universal_calculator
 from pymatgen.core import Structure
+
+from emmet.core.ml import MLIPDoc
+from emmet.core.utils import jsanitize
 
 if TYPE_CHECKING:
     from ase.calculators.calculator import Calculator
@@ -18,8 +19,8 @@ class MLIPBuilder(MapBuilder):
         materials: Store,
         ml_potential: Store,
         model: Union[str, "Calculator"],
-        model_kwargs: dict = None,
-        prop_kwargs: dict = None,
+        model_kwargs: Optional[dict] = None,
+        prop_kwargs: Optional[dict] = None,
         **kwargs
     ):
         """Machine learning interatomic potential builder.
@@ -41,7 +42,9 @@ class MLIPBuilder(MapBuilder):
         self.model = get_universal_calculator(model, **(model_kwargs or {}))
         self.prop_kwargs = prop_kwargs or {}
         pkg_name = {"m3gnet": "matgl"}.get(model.lower(), model)
-        self.provenance = dict(model=model, version=version(pkg_name))
+        self.provenance = dict(
+            model=model, model_version=version(pkg_name), version=version("matcalc")
+        )
 
         # Enforce that we key on material_id
         self.materials.key = "material_id"
@@ -63,7 +66,7 @@ class MLIPBuilder(MapBuilder):
             calculator=self.model,
             prop_kwargs=self.prop_kwargs,
             deprecated=deprecated,
+            **self.provenance,
         )
-        doc.update(self.provenance)
 
         return jsanitize(doc, allow_bson=True)
