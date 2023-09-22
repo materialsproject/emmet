@@ -90,9 +90,9 @@ class ElectronicStructureBaseData(BaseModel):
 
     band_gap: float = Field(..., description="Band gap energy in eV.")
 
-    cbm: Union[float, Dict] = Field(None, description="Conduction band minimum data.")
+    cbm: Optional[Union[float, Dict]] = Field(None, description="Conduction band minimum data.")
 
-    vbm: Union[float, Dict] = Field(None, description="Valence band maximum data.")
+    vbm: Optional[Union[float, Dict]] = Field(None, description="Valence band maximum data.")
 
     efermi: Optional[float] = Field(None, description="Fermi energy in eV.")
 
@@ -118,45 +118,45 @@ class DosSummaryData(ElectronicStructureBaseData):
 
 
 class BandstructureData(BaseModel):
-    setyawan_curtarolo: BandStructureSummaryData = Field(
+    setyawan_curtarolo: Optional[BandStructureSummaryData] = Field(
         None,
         description="Band structure summary data using the Setyawan-Curtarolo path convention.",
     )
 
-    hinuma: BandStructureSummaryData = Field(
+    hinuma: Optional[BandStructureSummaryData] = Field(
         None,
         description="Band structure summary data using the Hinuma et al. path convention.",
     )
 
-    latimer_munro: BandStructureSummaryData = Field(
+    latimer_munro: Optional[BandStructureSummaryData] = Field(
         None,
         description="Band structure summary data using the Latimer-Munro path convention.",
     )
 
 
 class DosData(BaseModel):
-    total: Dict[Union[Spin, str], DosSummaryData] = Field(None, description="Total DOS summary data.")
+    total: Optional[Dict[Union[Spin, str], DosSummaryData]] = Field(None, description="Total DOS summary data.")
 
-    elemental: Dict[
+    elemental: Optional[Dict[
         Element,
         Dict[
             Union[Literal["total", "s", "p", "d", "f"], OrbitalType],
             Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
         ],
-    ] = Field(
+    ]] = Field(
         None,
         description="Band structure summary data using the Hinuma et al. path convention.",
     )
 
-    orbital: Dict[
+    orbital: Optional[Dict[
         Union[Literal["total", "s", "p", "d", "f"], OrbitalType],
         Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
-    ] = Field(
+    ]] = Field(
         None,
         description="Band structure summary data using the Latimer-Munro path convention.",
     )
 
-    magnetic_ordering: Union[str, Ordering] = Field(None, description="Magnetic ordering of the calculation.")
+    magnetic_ordering: Optional[Union[str, Ordering]] = Field(None, description="Magnetic ordering of the calculation.")
 
 
 T = TypeVar("T", bound="ElectronicStructureDoc")

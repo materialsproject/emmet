@@ -79,7 +79,7 @@ class FittingData(BaseModel):
     strains: List[Matrix3D] = Field(description="Lagrangian strain tensors applied to structures")
     cauchy_stresses: List[Matrix3D] = Field(description="Cauchy stress tensors on strained structures")
     second_pk_stresses: List[Matrix3D] = Field(description="Second Piola–Kirchhoff stress tensors on structures")
-    deformation_tasks: List[MPID] = Field(
+    deformation_tasks: Optional[List[MPID]] = Field(
         None,
         description="Deformation task ids corresponding to the strained structures",
     )

@@ -149,7 +149,7 @@ class InputDoc(BaseModel):
     )
     pseudo_potentials: Potcar = Field(None, description="Summary of the pseudo-potentials used in this calculation")
     potcar_spec: List[PotcarSpec] = Field(None, description="Title and hash of POTCAR files used in the calculation")
-    xc_override: str = Field(None, description="Exchange-correlation functional used if not the default")
+    xc_override: Optional[str] = Field(None, description="Exchange-correlation functional used if not the default")
     is_lasph: Optional[bool] = Field(None, description="Whether the calculation was run with aspherical corrections")
     is_hubbard: bool = Field(False, description="Is this a Hubbard +U calculation")
     hubbards: Optional[dict] = Field(None, description="The hubbard parameters used")
@@ -324,15 +324,15 @@ class TaskDoc(StructureMetadata):
         description="The exact set of output parameters used to generate the current task document.",
     )
 
-    included_objects: List[VaspObject] = Field(
+    included_objects: Optional[List[VaspObject]] = Field(
         None, description="List of VASP objects included with this task document"
     )
-    vasp_objects: Dict[VaspObject, Any] = Field(None, description="Vasp objects associated with this task")
+    vasp_objects: Optional[Dict[VaspObject, Any]] = Field(None, description="Vasp objects associated with this task")
     entry: ComputedEntry = Field(None, description="The ComputedEntry from the task doc")
 
     task_label: Optional[str] = Field(None, description="A description of the task")
     author: Optional[str] = Field(None, description="Author extracted from transformations")
-    icsd_id: str = Field(None, description="Inorganic Crystal Structure Database id of the structure")
+    icsd_id: Optional[str] = Field(None, description="Inorganic Crystal Structure Database id of the structure")
     transformations: Dict[str, Any] = Field(
         None,
         description="Information on the structural transformations, parsed from a " "transformations.json file",
