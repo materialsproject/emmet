@@ -1,14 +1,16 @@
-from typing import TYPE_CHECKING, Dict, List, Union
+from importlib.metadata import PackageNotFoundError, version
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
-from emmet.core.material_property import PropertyDoc
 from matcalc.elasticity import ElasticityCalc
 from matcalc.eos import EOSCalc
 from matcalc.phonon import PhononCalc
 from matcalc.relaxation import RelaxCalc
 from matcalc.util import get_universal_calculator
-from pydantic import Field
+from pydantic import Field, validator
 from pymatgen.analysis.elasticity import ElasticTensor
 from pymatgen.core import Structure
+
+from emmet.core.material_property import PropertyDoc
 
 if TYPE_CHECKING:
     from ase.calculators.calculator import Calculator
@@ -19,6 +21,12 @@ class MLIPDoc(PropertyDoc):
     interatomic potential predictions.
 
     Properties:
+    - metadata
+        - material_id (str): MP ID
+        - structure (Structure): pymatgen Structure object
+        - deprecated (bool): whether this material is deprecated in MP
+        - calculator (str): name of model used as ML potential.
+        - version (str): version of matcalc used to generate this document
     - relaxation
         - final structure: relaxed pymatgen Structure object
         - energy (float): final energy in eV
@@ -40,6 +48,15 @@ class MLIPDoc(PropertyDoc):
     """
 
     property_name = "mlip"
+
+    # metadata
+    structure: Structure = Field(description="Original structure")
+    calculator: str = Field(
+        description="Name of model used as ML potential. See matcalc.util.UNIVERSAL_CALCULATORS for recognized names."
+    )
+    version: str = Field(
+        description="Version of matcalc used to generate this document"
+    )
 
     # relaxation attributes
     final_structure: Structure = Field(description="ML-potential-relaxed structure")
@@ -73,7 +90,7 @@ class MLIPDoc(PropertyDoc):
 
     # elasticity attributes
     elastic_tensor: ElasticTensor = Field(
-        description="Elastic tensor as a pymatgen ElasticTensor object"
+        description="pymatgen ElasticTensor in Voigt notation (GPa)"
     )
     shear_modulus_vrh: float = Field(
         description="Voigt-Reuss-Hill shear modulus based on elastic tensor"
@@ -83,13 +100,24 @@ class MLIPDoc(PropertyDoc):
     )
     youngs_modulus: float = Field(description="Young's modulus based on elastic tensor")
 
+    # this custom validator is not strictly necessary but
+    # allows elastic_tensors to be passed as MSONable dict, list (specifying
+    # the Voigt array) or the class itself
+    @validator("elastic_tensor", pre=True)
+    def make_elastic_tensor(cls, val):
+        if isinstance(val, dict):
+            return ElasticTensor.from_dict(val)
+        if isinstance(val, (list, tuple)):
+            return ElasticTensor(val)
+        return val
+
     def __init__(
         cls,
         structure,
         material_id,
         calculator: Union[str, "Calculator"],
-        prop_kwargs: dict = None,
-        **kwargs
+        prop_kwargs: Optional[dict] = None,
+        **kwargs,
     ) -> None:
         """
         Args:
@@ -111,15 +139,24 @@ class MLIPDoc(PropertyDoc):
             kwds = (prop_kwargs or {}).get(prop_cls.__name__, {})
             results.update(prop_cls(calculator, **kwds).calc(structure))
 
-        # convert all arrays to lists
         for key, val in results.items():
-            if hasattr(val, "tolist"):
+            # convert arrays to lists
+            if hasattr(val, "tolist") and not isinstance(val, ElasticTensor):
                 results[key] = val.tolist()
 
+        model_name = (
+            calculator if isinstance(calculator, str) else type(calculator).__name__
+        )
+        try:
+            model_version = version(model_name)
+        except PackageNotFoundError:
+            model_version = "unknown"
+
         super().__init__(
-            meta_structure=structure,
+            structure=structure,
             material_id=material_id,
-            calculator=calculator,
+            calculator=model_name,
+            version=model_version,
             **results,
-            **kwargs
+            **kwargs,
         )
