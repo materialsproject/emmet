@@ -9,11 +9,13 @@ struct = PymatgenTest.get_structure("Si")
 
 
 expected_keys = {
+    # -- metadata --
     "material_id": str,
     "structure": Structure,
     "deprecated": bool,
     "calculator": str,
     "version": str,
+    # -- relaxation --
     "final_structure": Structure,
     "energy": float,
     "volume": float,
@@ -23,12 +25,15 @@ expected_keys = {
     "alpha": float,
     "beta": float,
     "gamma": float,
+    # -- eos --
     "eos": dict,
     "bulk_modulus_bm": float,
+    # -- phonon --
     "temperatures": list,
     "free_energy": list,
     "entropy": list,
     "heat_capacity": list,
+    # -- elasticity --
     "elastic_tensor": ElasticTensor,
     "shear_modulus_vrh": float,
     "bulk_modulus_vrh": float,

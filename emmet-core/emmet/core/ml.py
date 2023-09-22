@@ -20,7 +20,7 @@ class MLIPDoc(PropertyDoc):
     """Document model for matcalc-generated material properties from machine learning
     interatomic potential predictions.
 
-    Properties:
+    Attributes:
     - metadata
         - material_id (str): MP ID
         - structure (Structure): pymatgen Structure object
@@ -28,23 +28,23 @@ class MLIPDoc(PropertyDoc):
         - calculator (str): name of model used as ML potential.
         - version (str): version of matcalc used to generate this document
     - relaxation
-        - final structure: relaxed pymatgen Structure object
+        - final_structure: relaxed pymatgen Structure object
         - energy (float): final energy in eV
         - volume (float): final volume in Angstrom^3
-        - lattice parameters: a, b, c, alpha, beta, gamma
+        - lattice parameters (float): a, b, c, alpha, beta, gamma
     - equation of state
         - eos (dict[str, list[float]]): with keys energies and volumes
-        - bulk modulus (float): Birch-Murnaghan bulk modulus in GPa
+        - bulk_modulus_bm (float): Birch-Murnaghan bulk modulus in GPa
     - phonon
         - temperatures (list[float]): temperatures in K
-        - free energy (list[float]): Helmholtz energies at those temperatures in eV
+        - free_energy (list[float]): Helmholtz energies at those temperatures in eV
         - entropy (list[float]): entropies at those temperatures in eV/K
-        - heat capacities (list[float]): heat capacities at constant volume in eV/K
+        - heat_capacities (list[float]): heat capacities at constant volume in eV/K
     - elasticity
-        - elastic tensor (ElasticTensor): pymatgen ElasticTensor object
-        - shear modulus (float): Voigt-Reuss-Hill shear modulus
-        - bulk modulus (float): Voigt-Reuss-Hill bulk modulus
-        - Young's modulus (float): Young's modulus
+        - elastic_tensor (ElasticTensor): pymatgen ElasticTensor object
+        - shear_modulus_vrh (float): Voigt-Reuss-Hill shear modulus
+        - bulk_modulus_vrh (float): Voigt-Reuss-Hill bulk modulus
+        - youngs_modulus (float): Young's modulus
     """
 
     property_name = "mlip"
@@ -100,11 +100,12 @@ class MLIPDoc(PropertyDoc):
     )
     youngs_modulus: float = Field(description="Young's modulus based on elastic tensor")
 
-    # this custom validator is not strictly necessary but
-    # allows elastic_tensors to be passed as MSONable dict, list (specifying
-    # the Voigt array) or the class itself
     @validator("elastic_tensor", pre=True)
-    def make_elastic_tensor(cls, val):
+    def make_elastic_tensor(cls, val) -> ElasticTensor:
+        """This custom validator is not strictly necessary but allows elastic_tensor
+        to be passed as either MSONable dict, list (specifying the Voigt array)
+        or the ElasticTensor class itself.
+        """
         if isinstance(val, dict):
             return ElasticTensor.from_dict(val)
         if isinstance(val, (list, tuple)):
