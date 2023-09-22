@@ -1,3 +1,5 @@
+import pytest
+from ase.calculators.calculator import Calculator
 from matcalc.util import get_universal_calculator
 from pymatgen.analysis.elasticity import ElasticTensor
 from pymatgen.core import Structure
@@ -42,26 +44,19 @@ expected_keys = {
 }
 
 
-def test_mlip_doc_with_calc_as_str() -> None:
+@pytest.mark.parametrize("calculator", [get_universal_calculator("chgnet"), "m3gnet"])
+def test_mlip_doc(calculator: str | Calculator) -> None:
     doc = MLIPDoc(
-        structure=struct, calculator="m3gnet", material_id="mp-33", deprecated=False
+        structure=struct, calculator=calculator, material_id="mp-33", deprecated=False
     )
+
+    # check that all expected keys are present
+    missing = sorted({*expected_keys} - {*doc.__dict__})
+    assert not missing, f"keys {missing=}"
+
+    # check that all keys have expected type
     for key, typ in expected_keys.items():
         actual = getattr(doc, key)
         assert isinstance(
             actual, typ
         ), f"{key=} expected type={typ.__name__}, got {type(actual).__name__}"
-
-
-def test_mlip_doc_with_calc_as_model() -> None:
-    # %%
-    calculator = get_universal_calculator("chgnet")
-    doc = MLIPDoc(
-        structure=struct,
-        calculator=calculator,
-        material_id="mp-33",
-        deprecated=False,
-    )
-    actual = {*doc.__dict__}
-    missing = sorted({*expected_keys} - actual)
-    assert not missing, f"keys {missing=}"
