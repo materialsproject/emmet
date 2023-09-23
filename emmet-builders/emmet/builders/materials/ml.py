@@ -32,8 +32,8 @@ class MLIPBuilder(MapBuilder):
                 potential. See matcalc.util.UNIVERSAL_CALCULATORS for recognized names.
             model_kwargs (dict, optional): Additional kwargs to pass to the calculator.
                 Defaults to None.
-            prop_kwargs (dict, optional): One key for each matcalc PropCalc class.
-                Recognized keys are RelaxCalc, ElasticityCalc, PhononCalc, EOSCalc.
+            prop_kwargs (dict[str, dict], optional): Separate kwargs passed to each matcalc
+                PropCalc class. Recognized keys are RelaxCalc, ElasticityCalc, PhononCalc, EOSCalc.
                 Defaults to None.
         """
         self.materials = materials
@@ -43,7 +43,9 @@ class MLIPBuilder(MapBuilder):
         self.prop_kwargs = prop_kwargs or {}
         pkg_name = {"m3gnet": "matgl"}.get(model.lower(), model)
         self.provenance = dict(
-            model=model, model_version=version(pkg_name), version=version("matcalc")
+            model_name=model,
+            model_version=version(pkg_name),
+            version=version("matcalc"),
         )
 
         # Enforce that we key on material_id

@@ -1,11 +1,15 @@
+from typing import TYPE_CHECKING
+
 import pytest
-from ase.calculators.calculator import Calculator
 from matcalc.util import get_universal_calculator
 from pymatgen.analysis.elasticity import ElasticTensor
 from pymatgen.core import Structure
 from pymatgen.util.testing import PymatgenTest
 
 from emmet.core.ml import MLIPDoc
+
+if TYPE_CHECKING:
+    from ase.calculators.calculator import Calculator
 
 struct = PymatgenTest.get_structure("Si")
 
@@ -15,7 +19,7 @@ expected_keys = {
     "material_id": str,
     "structure": Structure,
     "deprecated": bool,
-    "version": type(None),  # str,
+    "matcalc_version": type(None),  # str,
     "model_name": type(None),  # str,
     "model_version": type(None),  # str,
     # -- relaxation --

@@ -50,7 +50,7 @@ class MLIPDoc(PropertyDoc):
 
     # metadata
     structure: Structure = Field(description="Original structure")
-    version: str = Field(
+    matcalc_version: str = Field(
         None, description="Version of matcalc used to generate this document"
     )
     model_name: str = Field(
