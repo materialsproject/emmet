@@ -21,6 +21,7 @@ class MLIPBuilder(MapBuilder):
         model: Union[str, "Calculator"],
         model_kwargs: Optional[dict] = None,
         prop_kwargs: Optional[dict] = None,
+        provenance: Optional[dict] = None,
         **kwargs
     ):
         """Machine learning interatomic potential builder.
@@ -35,18 +36,30 @@ class MLIPBuilder(MapBuilder):
             prop_kwargs (dict[str, dict], optional): Separate kwargs passed to each matcalc
                 PropCalc class. Recognized keys are RelaxCalc, ElasticityCalc, PhononCalc, EOSCalc.
                 Defaults to None.
+            provenance (dict, optional): Additional provenance information to include in
+                MLIPDocs. Will be saved in each document so use sparingly. Defaults to None.
+                Set to {} to disable default provenance model_name, model_version, matcalc_version.
         """
         self.materials = materials
         self.ml_potential = ml_potential
         self.kwargs = kwargs
         self.model = get_universal_calculator(model, **(model_kwargs or {}))
         self.prop_kwargs = prop_kwargs or {}
-        pkg_name = {"m3gnet": "matgl"}.get(model.lower(), model)
-        self.provenance = dict(
-            model_name=model,
-            model_version=version(pkg_name),
-            version=version("matcalc"),
-        )
+
+        if provenance == {}:
+            self.provenance = {}
+        else:
+            model_name = (
+                model if isinstance(model, str) else type(model).__name__
+            ).lower()
+            model_name = {"chgnetcalculator": "chgnet"}.get(model_name, model_name)
+            pkg_name = {"m3gnet": "matgl"}.get(model_name, model_name)
+            self.provenance = dict(
+                model_name=model_name,
+                model_version=version(pkg_name),
+                matcalc_version=version("matcalc"),
+                **(provenance or {}),
+            )
 
         # Enforce that we key on material_id
         self.materials.key = "material_id"
