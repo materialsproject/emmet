@@ -194,24 +194,24 @@ class BaseElectrode(BaseModel):
 
     framework: Optional[Composition] = Field(None, description="The chemical compositions of the host framework.")
 
-    framework_formula: str = Field(None, description="The id for this battery document.")
+    framework_formula: Optional[str] = Field(None, description="The id for this battery document.")
 
-    elements: List[Element] = Field(
+    elements: Optional[List[Element]] = Field(
         None,
         description="The atomic species contained in this electrode (not including the working ion).",
     )
 
-    nelements: int = Field(
+    nelements: Optional[int] = Field(
         None,
         description="The number of elements in the material (not including the working ion).",
     )
 
-    chemsys: str = Field(
+    chemsys: Optional[str] = Field(
         None,
         description="The chemical system this electrode belongs to (not including the working ion).",
     )
 
-    formula_anonymous: str = Field(
+    formula_anonymous: Optional[str] = Field(
         None,
         title="Anonymous Formula",
         description="Anonymized representation of the formula (not including the working ion).",
@@ -231,13 +231,13 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
     Insertion electrode
     """
 
-    host_structure: Structure = Field(None, description="Host structure (structure without the working ion).")
+    host_structure: Optional[Structure] = Field(None, description="Host structure (structure without the working ion).")
 
-    adj_pairs: List[InsertionVoltagePairDoc] = Field(
+    adj_pairs: Optional[List[InsertionVoltagePairDoc]] = Field(
         None, description="Returns all of the voltage steps material pairs."
     )
 
-    material_ids: List[MPID] = Field(
+    material_ids: Optional[List[MPID]] = Field(
         None,
         description="The ids of all structures that matched to the present host lattice, regardless of stability. "
         "The stable entries can be found in the adjacent pairs.",

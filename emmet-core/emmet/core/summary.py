@@ -195,35 +195,35 @@ class SummaryDoc(PropertyDoc):
 
     cbm: Optional[Union[float, Dict]] = Field(None, description="Conduction band minimum data.", source="electronic_structure")
 
-    vbm: Union[float, Dict] = Field(None, description="Valence band maximum data.", source="electronic_structure")
+    vbm: Optional[Union[float, Dict]] = Field(None, description="Valence band maximum data.", source="electronic_structure")
 
     efermi: Optional[float] = Field(None, description="Fermi energy in eV.", source="electronic_structure")
 
-    is_gap_direct: bool = Field(
+    is_gap_direct: Optional[bool] = Field(
         None,
         description="Whether the band gap is direct.",
         source="electronic_structure",
     )
 
-    is_metal: bool = Field(
+    is_metal: Optional[bool] = Field(
         None,
         description="Whether the material is a metal.",
         source="electronic_structure",
     )
 
-    es_source_calc_id: Union[MPID, int] = Field(
+    es_source_calc_id: Optional[Union[MPID, int]] = Field(
         None,
         description="The source calculation ID for the electronic structure data.",
         source="electronic_structure",
     )
 
-    bandstructure: BandstructureData = Field(
+    bandstructure: Optional[BandstructureData] = Field(
         None,
         description="Band structure data for the material.",
         source="electronic_structure",
     )
 
-    dos: DosData = Field(
+    dos: Optional[DosData] = Field(
         None,
         description="Density of states data for the material.",
         source="electronic_structure",
@@ -247,13 +247,13 @@ class SummaryDoc(PropertyDoc):
 
     total_magnetization: Optional[float] = Field(None, description="Total magnetization in μB.", source="magnetism")
 
-    total_magnetization_normalized_vol: float = Field(
+    total_magnetization_normalized_vol: Optional[float] = Field(
         None,
         description="Total magnetization normalized by volume in μB/Å³.",
         source="magnetism",
     )
 
-    total_magnetization_normalized_formula_units: float = Field(
+    total_magnetization_normalized_formula_units: Optional[float] = Field(
         None,
         description="Total magnetization normalized by formula unit in μB/f.u. .",
         source="magnetism",

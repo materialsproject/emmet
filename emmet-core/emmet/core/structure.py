@@ -175,17 +175,17 @@ class MoleculeMetadata(EmmetBaseModel):
         title="Pretty Formula",
         description="Cleaned representation of the formula.",
     )
-    formula_anonymous: str = Field(
+    formula_anonymous: Optional[str] = Field(
         None,
         title="Anonymous Formula",
         description="Anonymized representation of the formula",
     )
-    chemsys: str = Field(
+    chemsys: Optional[str] = Field(
         None,
         title="Chemical System",
         description="dash-delimited string of elements in the molecule",
     )
-    symmetry: PointGroupData = Field(None, description="Symmetry data for this molecule")
+    symmetry: Optional[PointGroupData] = Field(None, description="Symmetry data for this molecule")
 
     @classmethod
     def from_composition(

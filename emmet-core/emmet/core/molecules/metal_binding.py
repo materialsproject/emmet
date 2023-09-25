@@ -146,28 +146,28 @@ class MetalBindingDoc(PropertyDoc):
 
     binding_bonding_method: Optional[str] = Field(None, description="The method used for to define bonding.")
 
-    binding_thermo_property_id: str = Field(
+    binding_thermo_property_id: Optional[str] = Field(
         None,
         description="ID of MoleculeThermoDoc used to obtain this molecule's thermochemistry",
     )
 
-    binding_thermo_lot_solvent: str = Field(
+    binding_thermo_lot_solvent: Optional[str] = Field(
         None,
         description="Combination of level of theory and solvent used for uncorrected thermochemistry",
     )
 
-    binding_thermo_correction_lot_solvent: str = Field(
+    binding_thermo_correction_lot_solvent: Optional[str] = Field(
         None,
         description="Combination of level of theory and solvent used to correct the electronic energy",
     )
 
-    binding_thermo_combined_lot_solvent: str = Field(
+    binding_thermo_combined_lot_solvent: Optional[str] = Field(
         None,
         descrption="Combination of level of theory and solvent used for molecular thermochemistry, combining "
         "both the frequency calculation and (potentially) the single-point energy correction.",
     )
 
-    binding_data: List[MetalBindingData] = Field(
+    binding_data: Optional[List[MetalBindingData]] = Field(
         None, description="Binding data for each metal atom or ion in the molecule"
     )
 

@@ -181,24 +181,24 @@ class MoleculeSummaryDoc(PropertyDoc):
         description="Intensities for infrared vibrational spectrum peaks",
     )
 
-    ir_activities: Dict[str, List] = Field(
+    ir_activities: Optional[Dict[str, List]] = Field(
         None,
         title="IR activities",
         description="List indicating if frequency-modes are IR-active",
     )
 
     # natural bonding orbitals
-    orbitals_property_ids: Dict[str, str] = Field(
+    orbitals_property_ids: Optional[Dict[str, str]] = Field(
         None,
         description="Solvent:property ID map for each OrbitalDoc for this molecule.",
     )
 
-    orbitals_levels_of_theory: Dict[str, str] = Field(
+    orbitals_levels_of_theory: Optional[Dict[str, str]] = Field(
         None,
         description="Solvent:level of theory map for each OrbitalDoc for this molecule.",
     )
 
-    open_shell: Dict[str, bool] = Field(None, description="Is this molecule open-shell (spin multiplicity != 1)?")
+    open_shell: Optional[Dict[str, bool]] = Field(None, description="Is this molecule open-shell (spin multiplicity != 1)?")
 
     nbo_population: Dict[str, Optional[List[NaturalPopulation]]] = Field(
         None, description="Natural electron populations of the molecule"
@@ -243,24 +243,24 @@ class MoleculeSummaryDoc(PropertyDoc):
     )
 
     # partial charges
-    partial_charges_property_ids: Dict[str, Dict[str, str]] = Field(
+    partial_charges_property_ids: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="Solvent:method:property ID map for each PartialChargesDoc for this molecule.",
     )
 
-    partial_charges_levels_of_theory: Dict[str, Dict[str, str]] = Field(
+    partial_charges_levels_of_theory: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="Solvent:method:level of theory map for each PartialChargesDoc for this molecule.",
     )
 
-    partial_charges: Dict[str, Dict[str, List[float]]] = Field(
+    partial_charges: Optional[Dict[str, Dict[str, List[float]]]] = Field(
         None,
         description="Atomic partial charges for the molecule using different partitioning schemes "
         "(Mulliken, Restrained Electrostatic Potential, Natural Bonding Orbitals, etc.)",
     )
 
     # partial spins
-    partial_spins_property_ids: Dict[str, Dict[str, str]] = Field(
+    partial_spins_property_ids: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="Solvent:method:property ID map for each PartialSpinsDoc for this molecule.",
     )

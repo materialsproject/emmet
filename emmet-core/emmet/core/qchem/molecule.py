@@ -218,28 +218,28 @@ class MoleculeDoc(CoreMoleculeDoc):
         description="Collection of all unique combinations of level of theory and solvent used for this molecule",
     )
 
-    origins: List[PropertyOrigin] = Field(
+    origins: Optional[List[PropertyOrigin]] = Field(
         None,
         description="List of property origins for tracking the provenance of properties",
     )
 
-    entries: List[Dict[str, Any]] = Field(
+    entries: Optional[List[Dict[str, Any]]] = Field(
         None,
         description="Dictionary representations of all task documents for this molecule",
     )
 
-    best_entries: Mapping[str, Dict[str, Any]] = Field(
+    best_entries: Optional[Mapping[str, Dict[str, Any]]] = Field(
         None,
         description="Mapping for tracking the best entries at each level of theory (+ solvent) for Q-Chem calculations",
     )
 
-    constituent_molecules: List[MPculeID] = Field(
+    constituent_molecules: Optional[List[MPculeID]] = Field(
         None,
         description="For cases where data from multiple MoleculeDocs have been compiled, a list of "
         "MPculeIDs of documents used to construct this document",
     )
 
-    similar_molecules: List[MPculeID] = Field(
+    similar_molecules: Optional[List[MPculeID]] = Field(
         None,
         description="List of MPculeIDs with of molecules similar (by e.g. structure) to this one",
     )

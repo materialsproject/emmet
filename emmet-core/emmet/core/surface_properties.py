@@ -95,17 +95,17 @@ class SurfacePropDoc(BaseModel):
         description="Weighted work function in eV.",
     )
 
-    has_reconstructed: bool = Field(
+    has_reconstructed: Optional[bool] = Field(
         None,
         description="Whether the entry has any reconstructed surfaces.",
     )
 
-    task_id: str = Field(
+    task_id: Optional[str] = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )
 
-    structure: Structure = Field(
+    structure: Optional[Structure] = Field(
         None,
         description="The conventional crystal structure of the material.",
     )

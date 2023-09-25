@@ -544,7 +544,7 @@ class TrajectoryDoc(BaseModel):
         "This comes in the form: mp-******.",
     )
 
-    trajectories: List[Trajectory] = Field(
+    trajectories: Optional[List[Trajectory]] = Field(
         None,
         description="Trajectory data for calculations associated with a task doc.",
     )
@@ -555,13 +555,13 @@ class EntryDoc(BaseModel):
     Model for task entry data
     """
 
-    task_id: str = Field(
+    task_id: Optional[str] = Field(
         None,
         description="The (task) ID of this calculation, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
     )
 
-    entry: ComputedStructureEntry = Field(
+    entry: Optional[ComputedStructureEntry] = Field(
         None,
         description="Computed structure entry for the calculation associated with the task doc.",
     )
@@ -572,18 +572,18 @@ class DeprecationDoc(BaseModel):
     Model for task deprecation data
     """
 
-    task_id: str = Field(
+    task_id: Optional[str] = Field(
         None,
         description="The (task) ID of this calculation, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
     )
 
-    deprecated: bool = Field(
+    deprecated: Optional[bool] = Field(
         None,
         description="Whether the ID corresponds to a deprecated calculation.",
     )
 
-    deprecation_reason: str = Field(
+    deprecation_reason: Optional[str] = Field(
         None,
         description="Reason for deprecation.",
     )
