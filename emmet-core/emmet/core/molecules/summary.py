@@ -265,47 +265,47 @@ class MoleculeSummaryDoc(PropertyDoc):
         description="Solvent:method:property ID map for each PartialSpinsDoc for this molecule.",
     )
 
-    partial_spins_levels_of_theory: Dict[str, Dict[str, str]] = Field(
+    partial_spins_levels_of_theory: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="Solvent:method:level of theory map for each PartialSpinsDoc for this molecule.",
     )
 
-    partial_spins: Dict[str, Dict[str, List[float]]] = Field(
+    partial_spins: Optional[Dict[str, Dict[str, List[float]]]] = Field(
         None,
         description="Atomic partial spins for the molecule using different partitioning schemes "
         "(Mulliken, Natural Bonding Orbitals, etc.)",
     )
 
     # bonding
-    bonding_property_ids: Dict[str, Dict[str, str]] = Field(
+    bonding_property_ids: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="Solvent:method:property ID map for each MoleculeBondingDoc for this molecule.",
     )
 
-    bonding_levels_of_theory: Dict[str, Dict[str, str]] = Field(
+    bonding_levels_of_theory: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="Solvent:method:level of theory map for each MoleculeBondingDoc for this molecule.",
     )
 
-    molecule_graph: Dict[str, Dict[str, MoleculeGraph]] = Field(
+    molecule_graph: Optional[Dict[str, Dict[str, MoleculeGraph]]] = Field(
         None,
         description="Molecular graph representations of the molecule using different " "definitions of bonding.",
     )
 
-    bond_types: Dict[str, Dict[str, Dict[str, List[float]]]] = Field(
+    bond_types: Optional[Dict[str, Dict[str, Dict[str, List[float]]]]] = Field(
         None,
         description="Dictionaries of bond types to their length under different "
         "definitions of bonding, e.g. C-O to a list of the lengths of "
         "C-O bonds in Angstrom.",
     )
 
-    bonds: Dict[str, Dict[str, List[Tuple[int, int]]]] = Field(
+    bonds: Optional[Dict[str, Dict[str, List[Tuple[int, int]]]]] = Field(
         None,
         description="List of bonds under different definitions of bonding. Each bond takes "
         "the form (a, b), where a and b are 0-indexed atom indices",
     )
 
-    bonds_nometal: Dict[str, Dict[str, List[Tuple[int, int]]]] = Field(
+    bonds_nometal: Optional[Dict[str, Dict[str, List[Tuple[int, int]]]]] = Field(
         None,
         description="List of bonds under different definitions of bonding with all metal ions "
         "removed. Each bond takes the form in the form (a, b), where a and b are "

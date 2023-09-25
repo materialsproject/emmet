@@ -243,12 +243,12 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
         "The stable entries can be found in the adjacent pairs.",
     )
 
-    entries_composition_summary: EntriesCompositionSummary = Field(
+    entries_composition_summary: Optional[EntriesCompositionSummary] = Field(
         None,
         description="Composition summary data for all material in entries across all voltage pairs.",
     )
 
-    electrode_object: InsertionElectrode = Field(None, description="The Pymatgen electrode object.")
+    electrode_object: Optional[InsertionElectrode] = Field(None, description="The Pymatgen electrode object.")
 
     @classmethod
     def from_entries(
@@ -384,16 +384,16 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
     Conversion electrode
     """
 
-    initial_comp_formula: str = Field(
+    initial_comp_formula: Optional[str] = Field(
         None,
         description="The starting composition for the ConversionElectrode represented as a string/formula.",
     )
 
-    adj_pairs: List[ConversionVoltagePairDoc] = Field(
+    adj_pairs: Optional[List[ConversionVoltagePairDoc]] = Field(
         None, description="Returns all of the voltage steps material pairs."
     )
 
-    electrode_object: ConversionElectrode = Field(None, description="The Pymatgen conversion electrode object.")
+    electrode_object: Optional[ConversionElectrode] = Field(None, description="The Pymatgen conversion electrode object.")
 
     @classmethod
     def from_composition_and_entries(

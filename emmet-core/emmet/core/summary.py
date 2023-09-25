@@ -265,7 +265,7 @@ class SummaryDoc(PropertyDoc):
         None, description="The number of unique magnetic sites.", source="magnetism"
     )
 
-    types_of_magnetic_species: List[Element] = Field(None, description="Magnetic specie elements.", source="magnetism")
+    types_of_magnetic_species: Optional[List[Element]] = Field(None, description="Magnetic specie elements.", source="magnetism")
 
     # Elasticity
 
@@ -289,13 +289,13 @@ class SummaryDoc(PropertyDoc):
 
     e_total: Optional[float] = Field(None, description="Total dielectric constant.", source="dielectric")
 
-    e_ionic: float = Field(
+    e_ionic: Optional[float] = Field(
         None,
         description="Ionic contribution to dielectric constant.",
         source="dielectric",
     )
 
-    e_electronic: float = Field(
+    e_electronic: Optional[float] = Field(
         None,
         description="Electronic contribution to dielectric constant.",
         source="dielectric",
@@ -307,19 +307,19 @@ class SummaryDoc(PropertyDoc):
 
     # Surface Properties
 
-    weighted_surface_energy_EV_PER_ANG2: float = Field(
+    weighted_surface_energy_EV_PER_ANG2: Optional[float] = Field(
         None,
         description="Weighted surface energy in eV/Å².",
         source="surface_properties",
     )
 
-    weighted_surface_energy: float = Field(
+    weighted_surface_energy: Optional[float] = Field(
         None,
         description="Weighted surface energy in J/m².",
         source="surface_properties",
     )
 
-    weighted_work_function: float = Field(
+    weighted_work_function: Optional[float] = Field(
         None, description="Weighted work function in eV.", source="surface_properties"
     )
 
@@ -329,7 +329,7 @@ class SummaryDoc(PropertyDoc):
 
     shape_factor: Optional[float] = Field(None, description="Shape factor.", source="surface_properties")
 
-    has_reconstructed: bool = Field(
+    has_reconstructed: Optional[bool] = Field(
         None,
         description="Whether the material has any reconstructed surfaces.",
         source="surface_properties",
@@ -337,7 +337,7 @@ class SummaryDoc(PropertyDoc):
 
     # Oxi States
 
-    possible_species: List[str] = Field(
+    possible_species: Optional[List[str]] = Field(
         None,
         description="Possible charged species in this material.",
         source="oxidation_states",
