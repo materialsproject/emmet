@@ -369,42 +369,42 @@ class MoleculeSummaryDoc(PropertyDoc):
         description="Combination of level of theory and solvent used to calculate atomic partial spins",
     )
 
-    binding_charge_spin_method: Dict[str, Dict[str, str]] = Field(
+    binding_charge_spin_method: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="The method used for partial charges and spins (must be the same).",
     )
 
-    binding_bonding_property_id: Dict[str, Dict[str, str]] = Field(
+    binding_bonding_property_id: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="ID of MoleculeBondingDoc used to detect bonding in this molecule",
     )
 
-    binding_bonding_lot_solvent: Dict[str, Dict[str, str]] = Field(
+    binding_bonding_lot_solvent: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="Combination of level of theory and solvent used to determine the coordination environment "
         "of the metal atom or ion",
     )
 
-    binding_bonding_method: Dict[str, Dict[str, str]] = Field(
+    binding_bonding_method: Optional[Dict[str, Dict[str, str]]] = Field(
         None, description="The method used for to define bonding."
     )
 
-    binding_thermo_property_id: Dict[str, Dict[str, str]] = Field(
+    binding_thermo_property_id: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="ID of MoleculeThermoDoc used to obtain this molecule's thermochemistry",
     )
 
-    binding_thermo_lot_solvent: Dict[str, Dict[str, str]] = Field(
+    binding_thermo_lot_solvent: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="Combination of level of theory and solvent used for uncorrected thermochemistry",
     )
 
-    binding_thermo_correction_lot_solvent: Dict[str, Dict[str, str]] = Field(
+    binding_thermo_correction_lot_solvent: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="Combination of level of theory and solvent used to correct the electronic energy",
     )
 
-    binding_thermo_combined_lot_solvent: Dict[str, Dict[str, str]] = Field(
+    binding_thermo_combined_lot_solvent: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         descrption="Combination of level of theory and solvent used for molecular thermochemistry, combining "
         "both the frequency calculation and (potentially) the single-point energy correction.",
