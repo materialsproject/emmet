@@ -334,37 +334,37 @@ class MoleculeSummaryDoc(PropertyDoc):
 
     red_molecule_id: Optional[Dict[str, MPculeID]] = Field(None, description="Molecule ID for adiabatic reduction")
 
-    oxidation_free_energy: Dict[str, float] = Field(None, description="Adiabatic free energy of oxidation")
+    oxidation_free_energy: Optional[Dict[str, float]] = Field(None, description="Adiabatic free energy of oxidation")
 
-    ox_molecule_id: Dict[str, MPculeID] = Field(None, description="Molecule ID for adiabatic oxidation")
+    ox_molecule_id: Optional[Dict[str, MPculeID]] = Field(None, description="Molecule ID for adiabatic oxidation")
 
-    reduction_potential: Dict[str, float] = Field(
+    reduction_potential: Optional[Dict[str, float]] = Field(
         None,
         description="Reduction potential referenced to the standard hydrogen electrode (SHE) (units: V)",
     )
 
-    oxidation_potential: Dict[str, float] = Field(
+    oxidation_potential: Optional[Dict[str, float]] = Field(
         None,
         description="Oxidation potential referenced to the standard hydrogen electrode (SHE) (units: V)",
     )
 
     # metal binding properties
-    binding_partial_charges_property_id: Dict[str, Dict[str, str]] = Field(
+    binding_partial_charges_property_id: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="ID of PartialChargesDoc used to estimate metal charge",
     )
 
-    binding_partial_spins_property_id: Dict[str, Dict[str, str]] = Field(
+    binding_partial_spins_property_id: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="ID of PartialSpinsDoc used to estimate metal spin",
     )
 
-    binding_partial_charges_lot_solvent: Dict[str, Dict[str, str]] = Field(
+    binding_partial_charges_lot_solvent: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="Combination of level of theory and solvent used to calculate atomic partial charges",
     )
 
-    binding_partial_spins_lot_solvent: Dict[str, Dict[str, str]] = Field(
+    binding_partial_spins_lot_solvent: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="Combination of level of theory and solvent used to calculate atomic partial spins",
     )
