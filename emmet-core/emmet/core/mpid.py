@@ -84,16 +84,16 @@ class MPID(str):
     def __get_pydantic_core_schema__(
         cls, source: type[Any], handler: Callable[[Any], core_schema.CoreSchema]
     ) -> core_schema.CoreSchema:
-        return core_schema.general_plain_validator_function(cls.validate)
+        return core_schema.with_info_plain_validator_function(cls.validate)
 
     @classmethod
     def __get_pydantic_json_schema__(cls, core_schema: CoreSchema, handler: GetJsonSchemaHandler) -> JsonSchemaValue:
-        json_schema = handler(core_schema)
-        json_schema.update(
+
+        return dict(
             pattern=r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$",
             examples=["mp-3534", "3453", "mp-834-Ag"],
+            type="string"
         )
-        return json_schema
 
     @classmethod
     def validate(cls, __input_value: Any, _: core_schema.ValidationInfo):
@@ -176,20 +176,21 @@ class MPculeID(str):
     def __get_pydantic_core_schema__(
         cls, source: type[Any], handler: Callable[[Any], core_schema.CoreSchema]
     ) -> core_schema.CoreSchema:
-        return core_schema.general_plain_validator_function(cls.validate)
+        return core_schema.with_info_plain_validator_function(cls.validate)
 
     @classmethod
     def __get_pydantic_json_schema__(cls, core_schema: CoreSchema, handler: GetJsonSchemaHandler) -> JsonSchemaValue:
-        json_schema = handler(core_schema)
-        json_schema.update(
+
+        return dict(
             pattern=r"^^([A-Za-z]+-)?([A-Fa-f0-9]+)-([A-Za-z0-9]+)-(m?[0-9]+)-([0-9]+)$",
             examples=[
                 "1a525231bdac3f13e2fac0962fe8d053-Mg1-0-1",
                 "22b40b99719ac570fc7e6225e855ec6e-F5Li1P1-m1-2",
                 "mpcule-b9ba54febc77d2a9177accf4605767db-C1H41-2",
             ],
+            type="string"
         )
-        return json_schema
+
 
     @classmethod
     def validate(cls, __input_value: Any, _: core_schema.ValidationInfo):
