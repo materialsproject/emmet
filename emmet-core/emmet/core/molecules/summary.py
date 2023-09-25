@@ -410,12 +410,12 @@ class MoleculeSummaryDoc(PropertyDoc):
         "both the frequency calculation and (potentially) the single-point energy correction.",
     )
 
-    binding_data: Dict[str, Dict[str, List[MetalBindingData]]] = Field(
+    binding_data: Optional[Dict[str, Dict[str, List[MetalBindingData]]]] = Field(
         None, description="Binding data for each metal atom or ion in the molecule"
     )
 
     # has props
-    has_props: List[HasProps] = Field(None, description="List of properties that are available for a given material.")
+    has_props: Optional[List[HasProps]] = Field(None, description="List of properties that are available for a given material.")
 
     @classmethod
     def from_docs(cls, molecule_id: MPculeID, docs: Dict[str, Any]):
