@@ -8,7 +8,9 @@ from pydantic.json_schema import JsonSchemaValue
 
 
 mpid_regex = re.compile(r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$")
-mpculeid_regex = re.compile(r"^([A-Za-z]+-)?([A-Fa-f0-9]+)-([A-Za-z0-9]+)-(m?[0-9]+)-([0-9]+)$")
+mpculeid_regex = re.compile(
+    r"^([A-Za-z]+-)?([A-Fa-f0-9]+)-([A-Za-z0-9]+)-(m?[0-9]+)-([0-9]+)$"
+)
 
 
 class MPID(str):
@@ -43,7 +45,9 @@ class MPID(str):
             self.string = val
 
         else:
-            raise ValueError("Must provide an MPID, int, or string of the format prefix-number")
+            raise ValueError(
+                "Must provide an MPID, int, or string of the format prefix-number"
+            )
 
     def __eq__(self, other: object):
         if isinstance(other, MPID):
@@ -87,12 +91,13 @@ class MPID(str):
         return core_schema.with_info_plain_validator_function(cls.validate)
 
     @classmethod
-    def __get_pydantic_json_schema__(cls, core_schema: CoreSchema, handler: GetJsonSchemaHandler) -> JsonSchemaValue:
-
+    def __get_pydantic_json_schema__(
+        cls, core_schema: CoreSchema, handler: GetJsonSchemaHandler
+    ) -> JsonSchemaValue:
         return dict(
             pattern=r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$",
             examples=["mp-3534", "3453", "mp-834-Ag"],
-            type="string"
+            type="string",
         )
 
     @classmethod
@@ -164,7 +169,9 @@ class MPculeID(str):
     def __lt__(self, other: Union["MPculeID", str]):
         other_parts = MPculeID(other).parts
 
-        return "-".join([str(x) for x in self.parts[-4:]]) < "-".join([str(x) for x in other_parts[-4:]])
+        return "-".join([str(x) for x in self.parts[-4:]]) < "-".join(
+            [str(x) for x in other_parts[-4:]]
+        )
 
     def __gt__(self, other: Union["MPculeID", str]):
         return not self.__lt__(other)
@@ -179,8 +186,9 @@ class MPculeID(str):
         return core_schema.with_info_plain_validator_function(cls.validate)
 
     @classmethod
-    def __get_pydantic_json_schema__(cls, core_schema: CoreSchema, handler: GetJsonSchemaHandler) -> JsonSchemaValue:
-
+    def __get_pydantic_json_schema__(
+        cls, core_schema: CoreSchema, handler: GetJsonSchemaHandler
+    ) -> JsonSchemaValue:
         return dict(
             pattern=r"^^([A-Za-z]+-)?([A-Fa-f0-9]+)-([A-Za-z0-9]+)-(m?[0-9]+)-([0-9]+)$",
             examples=[
@@ -188,9 +196,8 @@ class MPculeID(str):
                 "22b40b99719ac570fc7e6225e855ec6e-F5Li1P1-m1-2",
                 "mpcule-b9ba54febc77d2a9177accf4605767db-C1H41-2",
             ],
-            type="string"
+            type="string",
         )
-
 
     @classmethod
     def validate(cls, __input_value: Any, _: core_schema.ValidationInfo):

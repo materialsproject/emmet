@@ -19,9 +19,13 @@ class VibrationDoc(PropertyDoc):
 
     molecule: Molecule = Field(..., description="Molecular structure")
 
-    frequencies: List[float] = Field(..., description="List of molecular vibrational frequencies")
+    frequencies: List[float] = Field(
+        ..., description="List of molecular vibrational frequencies"
+    )
 
-    frequency_modes: List[List[List[float]]] = Field(..., description="Vibrational frequency modes of the molecule")
+    frequency_modes: List[List[List[float]]] = Field(
+        ..., description="Vibrational frequency modes of the molecule"
+    )
 
     ir_intensities: List[float] = Field(
         ...,
@@ -66,7 +70,10 @@ class VibrationDoc(PropertyDoc):
         intensities = None
         active = None
         for calc in task.calcs_reversed:
-            if calc.get("frequency_mode_vectors", None) is not None and frequency_modes is None:
+            if (
+                calc.get("frequency_mode_vectors", None) is not None
+                and frequency_modes is None
+            ):
                 frequency_modes = calc.get("frequency_mode_vectors")
 
             if calc.get("IR_intens", None) is not None and intensities is None:

@@ -207,7 +207,11 @@ class SearchStatsQuery(QueryOperator):
 
     def __init__(self, search_doc):
         valid_numeric_fields = tuple(
-            sorted(k for k, v in search_doc.model_fields.items() if float in get_args(v.annotation))
+            sorted(
+                k
+                for k, v in search_doc.model_fields.items()
+                if float in get_args(v.annotation)
+            )
         )
 
         def query(

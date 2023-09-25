@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
+
 class DOIDoc(BaseModel):
     """
     DOIs to reference specific materials on Materials Project.

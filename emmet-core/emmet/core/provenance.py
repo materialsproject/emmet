@@ -39,7 +39,9 @@ class History(BaseModel):
 
     name: str
     url: str
-    description: Optional[Dict] = Field(None, description="Dictionary of exra data for this history node.")
+    description: Optional[Dict] = Field(
+        None, description="Dictionary of exra data for this history node."
+    )
 
     @model_validator(mode="before")
     @classmethod
@@ -52,15 +54,21 @@ class History(BaseModel):
 class SNLAbout(BaseModel):
     """A data dictionary definining extra fields in a SNL"""
 
-    references: str = Field("", description="Bibtex reference strings for this material.")
+    references: str = Field(
+        "", description="Bibtex reference strings for this material."
+    )
 
     authors: List[Author] = Field([], description="List of authors for this material.")
 
-    remarks: List[str] = Field([], description="List of remarks for the provenance of this material.")
+    remarks: List[str] = Field(
+        [], description="List of remarks for the provenance of this material."
+    )
 
     tags: List[str] = Field([])
 
-    database_IDs: Dict[Database, List[str]] = Field(dict(), description="Database IDs corresponding to this material.")
+    database_IDs: Dict[Database, List[str]] = Field(
+        dict(), description="Database IDs corresponding to this material."
+    )
 
     history: List[History] = Field(
         [],
@@ -68,7 +76,9 @@ class SNLAbout(BaseModel):
         " of this material for the entry closest matching the material input.",
     )
 
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="The creation date for this SNL.")
+    created_at: datetime = Field(
+        default_factory=datetime.utcnow, description="The creation date for this SNL."
+    )
 
     @field_validator("created_at", mode="before")
     @classmethod
@@ -100,17 +110,25 @@ class ProvenanceDoc(PropertyDoc):
         description="creation date for the first structure corresponding to this material",
     )
 
-    references: List[str] = Field([], description="Bibtex reference strings for this material")
+    references: List[str] = Field(
+        [], description="Bibtex reference strings for this material"
+    )
 
     authors: List[Author] = Field([], description="List of authors for this material")
 
-    remarks: List[str] = Field([], description="List of remarks for the provenance of this material")
+    remarks: List[str] = Field(
+        [], description="List of remarks for the provenance of this material"
+    )
 
     tags: List[str] = Field([])
 
-    theoretical: bool = Field(True, description="If this material has any experimental provenance or not")
+    theoretical: bool = Field(
+        True, description="If this material has any experimental provenance or not"
+    )
 
-    database_IDs: Dict[Database, List[str]] = Field(dict(), description="Database IDs corresponding to this material")
+    database_IDs: Dict[Database, List[str]] = Field(
+        dict(), description="Database IDs corresponding to this material"
+    )
 
     history: List[History] = Field(
         [],
@@ -125,12 +143,16 @@ class ProvenanceDoc(PropertyDoc):
         return list(authors_dict.values())
 
     @classmethod
-    def from_SNLs(cls, material_id: MPID, structure: Structure, snls: List[SNLDict], **kwargs) -> "ProvenanceDoc":
+    def from_SNLs(
+        cls, material_id: MPID, structure: Structure, snls: List[SNLDict], **kwargs
+    ) -> "ProvenanceDoc":
         """
         Converts legacy Pymatgen SNLs into a single provenance document
         """
 
-        assert len(snls) > 0, "Error must provide a non-zero list of SNLs to convert from SNLs"
+        assert (
+            len(snls) > 0
+        ), "Error must provide a non-zero list of SNLs to convert from SNLs"
 
         # Choose earliest created_at
         created_at = min([snl.about.created_at for snl in snls])
@@ -147,7 +169,9 @@ class ProvenanceDoc(PropertyDoc):
                 entries = parse_string(snl.about.references, bib_format="bibtex")
                 refs.update(entries.entries)
             except Exception as e:
-                warnings.warn(f"Failed parsing bibtex: {snl.about.references} due to {e}")
+                warnings.warn(
+                    f"Failed parsing bibtex: {snl.about.references} due to {e}"
+                )
 
         bib_data = BibliographyData(entries=refs)
 
@@ -191,4 +215,6 @@ class ProvenanceDoc(PropertyDoc):
             "history": history,
         }
 
-        return super().from_structure(material_id=material_id, meta_structure=structure, **fields, **kwargs)
+        return super().from_structure(
+            material_id=material_id, meta_structure=structure, **fields, **kwargs
+        )

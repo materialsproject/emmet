@@ -21,10 +21,18 @@ class OxidationStateDoc(PropertyDoc):
         ...,
         description="The structure used in the generation of the oxidation state data.",
     )
-    possible_species: List[str] = Field(description="Possible charged species in this material.")
-    possible_valences: List[float] = Field(description="List of valences for each site in this material.")
-    average_oxidation_states: Dict[str, float] = Field(description="Average oxidation states for each unique species.")
-    method: Optional[str] = Field(None, description="Method used to compute oxidation states.")
+    possible_species: List[str] = Field(
+        description="Possible charged species in this material."
+    )
+    possible_valences: List[float] = Field(
+        description="List of valences for each site in this material."
+    )
+    average_oxidation_states: Dict[str, float] = Field(
+        description="Average oxidation states for each unique species."
+    )
+    method: Optional[str] = Field(
+        None, description="Method used to compute oxidation states."
+    )
 
     @classmethod
     def from_structure(cls, structure: Structure, material_id: MPID, **kwargs):  # type: ignore[override]
@@ -42,7 +50,8 @@ class OxidationStateDoc(PropertyDoc):
             bva = BVAnalyzer()
             valences = bva.get_valences(structure)
             possible_species = {
-                str(Specie(structure[idx].specie, oxidation_state=valence)) for idx, valence in enumerate(valences)
+                str(Specie(structure[idx].specie, oxidation_state=valence))
+                for idx, valence in enumerate(valences)
             }
 
             structure.add_oxidation_state_by_site(valences)
@@ -71,10 +80,15 @@ class OxidationStateDoc(PropertyDoc):
             logging.error("BVAnalyzer failed with: {}".format(e))
 
             try:
-                first_oxi_state_guess = structure.composition.oxi_state_guesses(max_sites=-50)[0]
-                valences = [first_oxi_state_guess[site.species_string] for site in structure]
+                first_oxi_state_guess = structure.composition.oxi_state_guesses(
+                    max_sites=-50
+                )[0]
+                valences = [
+                    first_oxi_state_guess[site.species_string] for site in structure
+                ]
                 possible_species = {
-                    str(Specie(el, oxidation_state=valence)) for el, valence in first_oxi_state_guess.items()
+                    str(Specie(el, oxidation_state=valence))
+                    for el, valence in first_oxi_state_guess.items()
                 }
 
                 structure.add_oxidation_state_by_site(valences)
@@ -92,5 +106,9 @@ class OxidationStateDoc(PropertyDoc):
                 d["state"] = "unsuccessful"
 
         return super().from_structure(
-            meta_structure=structure, material_id=material_id, structure=structure, **d, **kwargs
+            meta_structure=structure,
+            material_id=material_id,
+            structure=structure,
+            **d,
+            **kwargs
         )

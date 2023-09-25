@@ -322,9 +322,13 @@ class ChemEnvDoc(PropertyDoc):
         description="The structure used in the generation of the chemical environment data",
     )
 
-    valences: List[int] = Field(description="List of valences for each site in this material to determine cations")
+    valences: List[int] = Field(
+        description="List of valences for each site in this material to determine cations"
+    )
 
-    species: List[str] = Field(description="List of unique (cationic) species in structure.")
+    species: List[str] = Field(
+        description="List of unique (cationic) species in structure."
+    )
 
     chemenv_symbol: List[COORDINATION_GEOMETRIES] = Field(
         description="List of ChemEnv symbols for unique (cationic) species in structure"
@@ -341,7 +345,9 @@ class ChemEnvDoc(PropertyDoc):
     chemenv_name: List[COORDINATION_GEOMETRIES_NAMES] = Field(
         description="List of text description of coordination environment for unique (cationic) species in structure."
     )
-    chemenv_name_with_alternatives: List[COORDINATION_GEOMETRIES_NAMES_WITH_ALTERNATIVES] = Field(
+    chemenv_name_with_alternatives: List[
+        COORDINATION_GEOMETRIES_NAMES_WITH_ALTERNATIVES
+    ] = Field(
         description="List of text description of coordination environment including alternative descriptions for unique (cationic) species in structure."  # noqa: E501
     )
 
@@ -349,7 +355,9 @@ class ChemEnvDoc(PropertyDoc):
         description="Saves the continous symmetry measures for unique (cationic) species in structure"
     )
 
-    method: Union[str, None] = Field(description="Method used to compute chemical environments")
+    method: Union[str, None] = Field(
+        description="Method used to compute chemical environments"
+    )
 
     mol_from_site_environments: List[Union[Molecule, None]] = Field(
         description="List of Molecule Objects describing the detected environment."
@@ -414,7 +422,9 @@ class ChemEnvDoc(PropertyDoc):
         sga = SpacegroupAnalyzer(structure)
         symm_struct = sga.get_symmetrized_structure()
         # We still need the whole list of indices
-        inequivalent_indices = [indices[0] for indices in symm_struct.equivalent_indices]
+        inequivalent_indices = [
+            indices[0] for indices in symm_struct.equivalent_indices
+        ]
         # if len(inequivalent_indices)>5:
         #    print("Too many sites")
         #    raise Exception
@@ -430,7 +440,9 @@ class ChemEnvDoc(PropertyDoc):
             method = AVAILABLE_METHODS[method_description]
             # We will only focus on cations!
             inequivalent_indices_cations = [
-                indices[0] for indices in symm_struct.equivalent_indices if valences[indices[0]] > 0.0
+                indices[0]
+                for indices in symm_struct.equivalent_indices
+                if valences[indices[0]] > 0.0
             ]
 
             se = lgf.compute_structure_environments(
@@ -439,10 +451,16 @@ class ChemEnvDoc(PropertyDoc):
                 maximum_distance_factor=DEFAULT_DISTANCE_CUTOFF,
                 minimum_angle_factor=DEFAULT_ANGLE_CUTOFF,
             )
-            lse = LightStructureEnvironments.from_structure_environments(strategy=method, structure_environments=se)
+            lse = LightStructureEnvironments.from_structure_environments(
+                strategy=method, structure_environments=se
+            )
             warnings = None
         else:
-            d.update({"warnings": "No oxidation states available. Cation-anion bonds cannot be identified."})
+            d.update(
+                {
+                    "warnings": "No oxidation states available. Cation-anion bonds cannot be identified."
+                }
+            )
             return super().from_structure(
                 meta_structure=structure,
                 material_id=material_id,
@@ -466,7 +484,9 @@ class ChemEnvDoc(PropertyDoc):
             # ONLY CATIONS
             if index in inequivalent_indices_cations:
                 # Coordinaton environment will be saved as a molecule!
-                mol = Molecule.from_sites([structure[index]] + lse.neighbors_sets[index][0].neighb_sites)
+                mol = Molecule.from_sites(
+                    [structure[index]] + lse.neighbors_sets[index][0].neighb_sites
+                )
                 mol = mol.get_centered_molecule()
                 env = lse.coordination_environments[index]
                 co = all_ce.get_geometry_from_mp_symbol(env[0]["ce_symbol"])

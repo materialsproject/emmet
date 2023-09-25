@@ -13,7 +13,9 @@ class GeneralStoreDoc(BaseModel):
     Defines general store data
     """
 
-    kind: Optional[Literal["newsfeed", "seminar", "banner"]] = Field(None, description="Type of the data.")
+    kind: Optional[Literal["newsfeed", "seminar", "banner"]] = Field(
+        None, description="Type of the data."
+    )
 
     markdown: Optional[str] = Field(None, description="Markdown data.")
 

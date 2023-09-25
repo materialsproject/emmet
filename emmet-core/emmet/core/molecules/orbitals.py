@@ -220,14 +220,22 @@ class OrbitalDoc(PropertyDoc):
     property_name: str = "natural bonding orbitals"
 
     # Always populated - closed-shell and open-shell
-    open_shell: bool = Field(..., description="Is this molecule open-shell (spin multiplicity != 1)?")
+    open_shell: bool = Field(
+        ..., description="Is this molecule open-shell (spin multiplicity != 1)?"
+    )
 
-    nbo_population: List[NaturalPopulation] = Field(..., description="Natural electron populations of the molecule")
+    nbo_population: List[NaturalPopulation] = Field(
+        ..., description="Natural electron populations of the molecule"
+    )
 
     # Populated for closed-shell molecules
-    nbo_lone_pairs: Optional[List[LonePair]] = Field(None, description="Lone pair orbitals of a closed-shell molecule")
+    nbo_lone_pairs: Optional[List[LonePair]] = Field(
+        None, description="Lone pair orbitals of a closed-shell molecule"
+    )
 
-    nbo_bonds: Optional[List[Bond]] = Field(None, description="Bond-like orbitals of a closed-shell molecule")
+    nbo_bonds: Optional[List[Bond]] = Field(
+        None, description="Bond-like orbitals of a closed-shell molecule"
+    )
 
     nbo_interactions: Optional[List[Interaction]] = Field(
         None, description="Orbital-orbital interactions of a closed-shell molecule"
@@ -236,11 +244,13 @@ class OrbitalDoc(PropertyDoc):
     # Populated for open-shell molecules
     alpha_population: Optional[List[NaturalPopulation]] = Field(
         None,
-        description="Natural electron populations of the alpha electrons of an " "open-shell molecule",
+        description="Natural electron populations of the alpha electrons of an "
+        "open-shell molecule",
     )
     beta_population: Optional[List[NaturalPopulation]] = Field(
         None,
-        description="Natural electron populations of the beta electrons of an " "open-shell molecule",
+        description="Natural electron populations of the beta electrons of an "
+        "open-shell molecule",
     )
 
     alpha_lone_pairs: Optional[List[LonePair]] = Field(
@@ -250,8 +260,12 @@ class OrbitalDoc(PropertyDoc):
         None, description="Beta electron lone pair orbitals of an open-shell molecule"
     )
 
-    alpha_bonds: Optional[List[Bond]] = Field(None, description="Alpha electron bond-like orbitals of an open-shell molecule")
-    beta_bonds: Optional[List[Bond]] = Field(None, description="Beta electron bond-like orbitals of an open-shell molecule")
+    alpha_bonds: Optional[List[Bond]] = Field(
+        None, description="Alpha electron bond-like orbitals of an open-shell molecule"
+    )
+    beta_bonds: Optional[List[Bond]] = Field(
+        None, description="Beta electron bond-like orbitals of an open-shell molecule"
+    )
 
     alpha_interactions: Optional[List[Interaction]] = Field(
         None,
@@ -390,7 +404,9 @@ class OrbitalDoc(PropertyDoc):
                 if perts["acceptor atom 2 number"].get(ind) is None:
                     acceptor_atom2_number = None
                 else:
-                    acceptor_atom2_number = int(perts["acceptor atom 2 number"][ind]) - 1
+                    acceptor_atom2_number = (
+                        int(perts["acceptor atom 2 number"][ind]) - 1
+                    )
 
                 this_inter = Interaction(
                     perts["perturbation energy"][ind],
@@ -431,7 +447,10 @@ class OrbitalDoc(PropertyDoc):
 
         if task.output.nbo is None:
             raise ValueError("No NBO output in task {}!".format(task.task_id))
-        elif not (task.orig["rem"].get("run_nbo6", False) or task.orig["rem"].get("nbo_external", False)):
+        elif not (
+            task.orig["rem"].get("run_nbo6", False)
+            or task.orig["rem"].get("nbo_external", False)
+        ):
             raise ValueError("Only NBO7 is allowed!")
 
         nbo = task.output.nbo
@@ -470,12 +489,17 @@ class OrbitalDoc(PropertyDoc):
         bond_sets = cls.get_bonds(nbo, bds_inds)
         interaction_sets = cls.get_interactions(nbo, perts_inds)
 
-        if not (task.orig["rem"].get("run_nbo6") or task.orig["rem"].get("nbo_external", False)):
+        if not (
+            task.orig["rem"].get("run_nbo6")
+            or task.orig["rem"].get("nbo_external", False)
+        ):
             warnings = ["Using NBO5"]
         else:
             warnings = list()
 
-        id_string = f"natural_bonding_orbitals-{molecule_id}-{task.task_id}-{task.lot_solvent}"
+        id_string = (
+            f"natural_bonding_orbitals-{molecule_id}-{task.task_id}-{task.lot_solvent}"
+        )
         h = blake2b()
         h.update(id_string.encode("utf-8"))
         property_id = h.hexdigest()
@@ -493,7 +517,11 @@ class OrbitalDoc(PropertyDoc):
                 nbo_lone_pairs=lone_pair_sets[0],
                 nbo_bonds=bond_sets[0],
                 nbo_interactions=interaction_sets[0],
-                origins=[PropertyOrigin(name="natural_bonding_orbitals", task_id=task.task_id)],
+                origins=[
+                    PropertyOrigin(
+                        name="natural_bonding_orbitals", task_id=task.task_id
+                    )
+                ],
                 warnings=warnings,
                 deprecated=deprecated,
                 **kwargs,
@@ -517,7 +545,11 @@ class OrbitalDoc(PropertyDoc):
                 beta_bonds=bond_sets[1],
                 alpha_interactions=interaction_sets[0],
                 beta_interactions=interaction_sets[1],
-                origins=[PropertyOrigin(name="natural bonding orbitals", task_id=task.task_id)],
+                origins=[
+                    PropertyOrigin(
+                        name="natural bonding orbitals", task_id=task.task_id
+                    )
+                ],
                 warnings=warnings,
                 deprecated=deprecated,
                 **kwargs,

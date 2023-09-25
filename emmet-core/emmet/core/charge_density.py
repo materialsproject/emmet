@@ -2,6 +2,7 @@ from pydantic import ConfigDict, BaseModel, Field
 from datetime import datetime
 from typing import Optional
 
+
 class ChgcarDataDoc(BaseModel):
     """
     Electron charge density metadata for selected materials.

@@ -26,7 +26,9 @@ class MetalBindingData(BaseModel):
     Metal binding information for one metal or ion in a molecule
     """
 
-    metal_molecule_id: MPculeID = Field(..., description="The MPculeID of the metal atom or ion being bound")
+    metal_molecule_id: MPculeID = Field(
+        ..., description="The MPculeID of the metal atom or ion being bound"
+    )
 
     nometal_molecule_id: MPculeID = Field(
         ..., description="The MPculeID of the molecule with the metal atom/ion removed"
@@ -38,11 +40,17 @@ class MetalBindingData(BaseModel):
         "metal atoms/ions)",
     )
 
-    metal_element: Optional[Union[str, Species, Element]] = Field(None, description="The metal bound to the molecule")
+    metal_element: Optional[Union[str, Species, Element]] = Field(
+        None, description="The metal bound to the molecule"
+    )
 
-    metal_partial_charge: Optional[float] = Field(None, description="The exact calculated partial charge of the metal")
+    metal_partial_charge: Optional[float] = Field(
+        None, description="The exact calculated partial charge of the metal"
+    )
 
-    metal_partial_spin: Optional[float] = Field(None, description="The exact calculated partial spin on the metal")
+    metal_partial_spin: Optional[float] = Field(
+        None, description="The exact calculated partial spin on the metal"
+    )
 
     metal_assigned_charge: Optional[float] = Field(
         None,
@@ -63,7 +71,9 @@ class MetalBindingData(BaseModel):
         None, description="The elements/species coordinating the metal."
     )
 
-    coordinate_bond_lengths: Optional[Dict[str, Dict[str, Union[float, List[float]]]]] = Field(
+    coordinate_bond_lengths: Optional[
+        Dict[str, Dict[str, Union[float, List[float]]]]
+    ] = Field(
         None,
         description="Bond lengths and statistics broken down by the coordinating atoms",
     )
@@ -72,11 +82,17 @@ class MetalBindingData(BaseModel):
         None, description="The electronic energy change (∆E) of binding (units: eV)"
     )
 
-    binding_enthalpy: Optional[float] = Field(None, description="The enthalpy change (∆H) of binding (units: eV)")
+    binding_enthalpy: Optional[float] = Field(
+        None, description="The enthalpy change (∆H) of binding (units: eV)"
+    )
 
-    binding_entropy: Optional[float] = Field(None, description="The entropy change (∆S) of binding (units: eV/K)")
+    binding_entropy: Optional[float] = Field(
+        None, description="The entropy change (∆S) of binding (units: eV/K)"
+    )
 
-    binding_free_energy: Optional[float] = Field(None, description="The free energy change (∆G) of binding (units: eV)")
+    binding_free_energy: Optional[float] = Field(
+        None, description="The free energy change (∆G) of binding (units: eV)"
+    )
 
     metal_thermo_property_id: Optional[str] = Field(
         None,
@@ -144,7 +160,9 @@ class MetalBindingDoc(PropertyDoc):
         "of the metal atom or ion",
     )
 
-    binding_bonding_method: Optional[str] = Field(None, description="The method used for to define bonding.")
+    binding_bonding_method: Optional[str] = Field(
+        None, description="The method used for to define bonding."
+    )
 
     binding_thermo_property_id: Optional[str] = Field(
         None,
@@ -215,19 +233,28 @@ class MetalBindingDoc(PropertyDoc):
         # Sanity checks
         for i, doc in metal_thermo.items():
             if not doc.lot_solvent == base_thermo.lot_solvent:
-                raise ValueError("All MoleculeThermoDocs must use the same lot_solvent!")
+                raise ValueError(
+                    "All MoleculeThermoDocs must use the same lot_solvent!"
+                )
         for i, doc in nometal_thermo.items():
             if not doc.lot_solvent == base_thermo.lot_solvent:
-                raise ValueError("All MoleculeThermoDocs must use the same lot_solvent!")
+                raise ValueError(
+                    "All MoleculeThermoDocs must use the same lot_solvent!"
+                )
 
         if partial_spins is not None:
             if not (
                 partial_charges.method == partial_spins.method
                 and partial_charges.lot_solvent == partial_spins.lot_solvent
             ):
-                raise ValueError("Partial charges and partial spins must use the same method and lot_solvent!")
+                raise ValueError(
+                    "Partial charges and partial spins must use the same method and lot_solvent!"
+                )
 
-        if not (base_thermo.solvent == partial_charges.solvent and base_thermo.solvent == bonding.solvent):
+        if not (
+            base_thermo.solvent == partial_charges.solvent
+            and base_thermo.solvent == bonding.solvent
+        ):
             raise ValueError("All documents must use the same solvent!")
 
         partial_charges_property_id = partial_charges.property_id
@@ -319,16 +346,24 @@ class MetalBindingDoc(PropertyDoc):
             if this_metal_thermo is not None and this_nometal_thermo is not None:
                 thermos = [base_thermo, this_metal_thermo, this_nometal_thermo]
 
-                binding_e = (thermos[1].electronic_energy + thermos[2].electronic_energy) - thermos[0].electronic_energy
+                binding_e = (
+                    thermos[1].electronic_energy + thermos[2].electronic_energy
+                ) - thermos[0].electronic_energy
 
                 if all([x.total_enthalpy is not None for x in thermos]):
-                    binding_h = (thermos[1].total_enthalpy + thermos[2].total_enthalpy) - thermos[0].total_enthalpy
+                    binding_h = (
+                        thermos[1].total_enthalpy + thermos[2].total_enthalpy
+                    ) - thermos[0].total_enthalpy
 
                 if all([x.total_entropy is not None for x in thermos]):
-                    binding_s = (thermos[1].total_entropy + thermos[2].total_entropy) - thermos[0].total_entropy
+                    binding_s = (
+                        thermos[1].total_entropy + thermos[2].total_entropy
+                    ) - thermos[0].total_entropy
 
                 if all([x.free_energy is not None for x in thermos]):
-                    binding_g = (thermos[1].free_energy + thermos[2].free_energy) - thermos[0].free_energy
+                    binding_g = (
+                        thermos[1].free_energy + thermos[2].free_energy
+                    ) - thermos[0].free_energy
 
             binding_data.append(
                 MetalBindingData(

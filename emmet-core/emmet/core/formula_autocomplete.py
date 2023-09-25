@@ -1,6 +1,7 @@
 from pydantic import Field, BaseModel
 from typing import Optional
 
+
 class FormulaAutocomplete(BaseModel):
     """
     Class defining formula autocomplete return data

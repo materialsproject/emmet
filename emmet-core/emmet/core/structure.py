@@ -22,10 +22,16 @@ class StructureMetadata(EmmetBaseModel):
     """
 
     # Structure metadata
-    nsites: Optional[int] = Field(None, description="Total number of sites in the structure.")
-    elements: Optional[List[Element]] = Field(None, description="List of elements in the material.")
+    nsites: Optional[int] = Field(
+        None, description="Total number of sites in the structure."
+    )
+    elements: Optional[List[Element]] = Field(
+        None, description="List of elements in the material."
+    )
     nelements: Optional[int] = Field(None, description="Number of elements.")
-    composition: Optional[Composition] = Field(None, description="Full composition for the material.")
+    composition: Optional[Composition] = Field(
+        None, description="Full composition for the material."
+    )
     composition_reduced: Optional[Composition] = Field(
         None,
         title="Reduced Composition",
@@ -52,7 +58,9 @@ class StructureMetadata(EmmetBaseModel):
         description="Total volume for this structure in Angstroms^3.",
     )
 
-    density: Optional[float] = Field(None, title="Density", description="Density in grams per cm^3.")
+    density: Optional[float] = Field(
+        None, title="Density", description="Density in grams per cm^3."
+    )
 
     density_atomic: Optional[float] = Field(
         None,
@@ -60,7 +68,9 @@ class StructureMetadata(EmmetBaseModel):
         description="The atomic packing density in atoms per cm^3.",
     )
 
-    symmetry: Optional[SymmetryData] = Field(None, description="Symmetry data for this material.")
+    symmetry: Optional[SymmetryData] = Field(
+        None, description="Symmetry data for this material."
+    )
 
     @classmethod
     def from_composition(
@@ -150,16 +160,24 @@ class MoleculeMetadata(EmmetBaseModel):
     """
 
     charge: Optional[int] = Field(None, description="Charge of the molecule")
-    spin_multiplicity: Optional[int] = Field(None, description="Spin multiplicity of the molecule")
-    natoms: Optional[int] = Field(None, description="Total number of atoms in the molecule")
-    elements: Optional[List[Element]] = Field(None, description="List of elements in the molecule")
+    spin_multiplicity: Optional[int] = Field(
+        None, description="Spin multiplicity of the molecule"
+    )
+    natoms: Optional[int] = Field(
+        None, description="Total number of atoms in the molecule"
+    )
+    elements: Optional[List[Element]] = Field(
+        None, description="List of elements in the molecule"
+    )
     nelements: Optional[int] = Field(None, title="Number of Elements")
     nelectrons: Optional[int] = Field(
         None,
         title="Number of electrons",
         description="The total number of electrons for the molecule",
     )
-    composition: Optional[Composition] = Field(None, description="Full composition for the molecule")
+    composition: Optional[Composition] = Field(
+        None, description="Full composition for the molecule"
+    )
     composition_reduced: Optional[Composition] = Field(
         None,
         title="Reduced Composition",
@@ -185,7 +203,9 @@ class MoleculeMetadata(EmmetBaseModel):
         title="Chemical System",
         description="dash-delimited string of elements in the molecule",
     )
-    symmetry: Optional[PointGroupData] = Field(None, description="Symmetry data for this molecule")
+    symmetry: Optional[PointGroupData] = Field(
+        None, description="Symmetry data for this molecule"
+    )
 
     @classmethod
     def from_composition(

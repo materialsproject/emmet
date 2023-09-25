@@ -14,12 +14,18 @@ class BaseTaskDocument(EmmetBaseModel):
     """
 
     calc_code: str = Field(description="The calculation code used to compute this task")
-    version: Optional[str] = Field(None, description="The version of the calculation code")
+    version: Optional[str] = Field(
+        None, description="The version of the calculation code"
+    )
     dir_name: Optional[str] = Field(None, description="The directory for this task")
-    task_id: Optional[Union[MPID, MPculeID]] = Field(None, description="the Task ID For this document")
+    task_id: Optional[Union[MPID, MPculeID]] = Field(
+        None, description="the Task ID For this document"
+    )
 
     completed: bool = Field(False, description="Whether this calcuation completed")
-    completed_at: Optional[datetime] = Field(None, description="Timestamp for when this task was completed")
+    completed_at: Optional[datetime] = Field(
+        None, description="Timestamp for when this task was completed"
+    )
     last_updated: datetime = Field(
         default_factory=datetime.utcnow,
         description="Timestamp for when this task document was last updated",

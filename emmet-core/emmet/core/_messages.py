@@ -20,7 +20,9 @@ class MessagesDoc(BaseModel):
         description="Generic title or short summary for the message.",
     )
 
-    body: Optional[str] = Field(None, title="Body", description="Main text body of message.")
+    body: Optional[str] = Field(
+        None, title="Body", description="Main text body of message."
+    )
 
     authors: Optional[List[str]] = Field(
         None,
