@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 import numpy as np
 from monty.json import MontyDecoder
 from monty.serialization import loadfn
-from pydantic import field_validator, ConfigDict, BaseModel, Field, validator
+from pydantic import field_validator, ConfigDict, BaseModel, Field, model_validator
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core.structure import Structure
 from pymatgen.core.trajectory import Trajectory
@@ -42,22 +42,22 @@ class Potcar(BaseModel):
 
 
 class OrigInputs(BaseModel):
-    incar: Union[Incar, Dict] = Field(
+    incar: Optional[Union[Incar, Dict]] = Field(
         None,
         description="Pymatgen object representing the INCAR file.",
     )
 
-    poscar: Poscar = Field(
+    poscar: Optional[Poscar] = Field(
         None,
         description="Pymatgen object representing the POSCAR file.",
     )
 
-    kpoints: Kpoints = Field(
+    kpoints: Optional[Kpoints] = Field(
         None,
         description="Pymatgen object representing the KPOINTS file.",
     )
 
-    potcar: Union[Potcar, VaspPotcar, List[Any]] = Field(
+    potcar: Optional[Union[Potcar, VaspPotcar, List[Any]]] = Field(
         None,
         description="Pymatgen object representing the POTCAR file.",
     )
@@ -86,14 +86,14 @@ class OutputDoc(BaseModel):
     energy_per_atom: Optional[float] = Field(None, description="The final DFT energy per atom for the last calculation")
     bandgap: Optional[float] = Field(None, description="The DFT bandgap for the last calculation")
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
-    @validator("density", pre=True, always=True)
-    def set_density_from_structure(cls, v, values, **kwargs):
+    @model_validator(mode="before")
+    def set_density_from_structure(cls, values):
         # Validator to automatically set density from structure if not already
         # specified. This might happen when importing an older atomate2-format
         # TaskDocument.
-        return v or values["structure"].density
+        if not values.get("density", None):
+            values["density"] = values["structure"].density
+        return values
 
     @classmethod
     def from_vasp_calc_doc(cls, calc_doc: Calculation, trajectory: Optional[Trajectory] = None) -> "OutputDoc":
@@ -283,7 +283,7 @@ class AnalysisDoc(BaseModel):
         )
 
 
-class TaskDoc(StructureMetadata):
+class TaskDoc(StructureMetadata, extra='allow'):
     """
     Calculation-level details about VASP calculations that power Materials Project.
     """
@@ -291,35 +291,35 @@ class TaskDoc(StructureMetadata):
     tags: Union[List[str], None] = Field([], title="tag", description="Metadata tagged to a given task.")
     dir_name: Optional[str] = Field(None, description="The directory for this VASP task")
 
-    state: TaskState = Field(None, description="State of this calculation")
+    state: Optional[TaskState] = Field(None, description="State of this calculation")
 
-    calcs_reversed: List[Calculation] = Field(
+    calcs_reversed: Optional[List[Calculation]] = Field(
         None,
         title="Calcs reversed data",
         description="Detailed data for each VASP calculation contributing to the task document.",
     )
 
-    structure: Structure = Field(None, description="Final output structure from the task")
+    structure: Optional[Structure] = Field(None, description="Final output structure from the task")
 
-    task_type: Union[CalcType, TaskType] = Field(None, description="The type of calculation.")
+    task_type: Optional[Union[CalcType, TaskType]] = Field(None, description="The type of calculation.")
 
-    task_id: str = Field(
+    task_id: Optional[str] = Field(
         None,
         description="The (task) ID of this calculation, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
     )
 
-    orig_inputs: OrigInputs = Field(
+    orig_inputs: Optional[OrigInputs] = Field(
         None,
         description="The exact set of input parameters used to generate the current task document.",
     )
 
-    input: InputDoc = Field(
+    input: Optional[InputDoc] = Field(
         None,
         description="The input structure used to generate the current task document.",
     )
 
-    output: OutputDoc = Field(
+    output: Optional[OutputDoc] = Field(
         None,
         description="The exact set of output parameters used to generate the current task document.",
     )
@@ -328,30 +328,30 @@ class TaskDoc(StructureMetadata):
         None, description="List of VASP objects included with this task document"
     )
     vasp_objects: Optional[Dict[VaspObject, Any]] = Field(None, description="Vasp objects associated with this task")
-    entry: ComputedEntry = Field(None, description="The ComputedEntry from the task doc")
+    entry: Optional[ComputedEntry] = Field(None, description="The ComputedEntry from the task doc")
 
     task_label: Optional[str] = Field(None, description="A description of the task")
     author: Optional[str] = Field(None, description="Author extracted from transformations")
     icsd_id: Optional[str] = Field(None, description="Inorganic Crystal Structure Database id of the structure")
-    transformations: Dict[str, Any] = Field(
+    transformations: Optional[Dict[str, Any]] = Field(
         None,
         description="Information on the structural transformations, parsed from a " "transformations.json file",
     )
-    additional_json: Dict[str, Any] = Field(None, description="Additional json loaded from the calculation directory")
+    additional_json: Optional[Dict[str, Any]] = Field(None, description="Additional json loaded from the calculation directory")
 
-    custodian: List[CustodianDoc] = Field(
+    custodian: Optional[List[CustodianDoc]] = Field(
         None,
         title="Calcs reversed data",
         description="Detailed custodian data for each VASP calculation contributing to the task document.",
     )
 
-    analysis: AnalysisDoc = Field(
+    analysis: Optional[AnalysisDoc] = Field(
         None,
         title="Calculation Analysis",
         description="Some analysis of calculation data after collection.",
     )
 
-    last_updated: datetime = Field(
+    last_updated: Optional[datetime] = Field(
         None,
         description="Timestamp for the most recent calculation for this task document",
     )
@@ -363,12 +363,13 @@ class TaskDoc(StructureMetadata):
     def last_updated_dict_ok(cls, v) -> datetime:
         return v if isinstance(v, datetime) else monty_decoder.process_decoded(v)
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
-    @validator("entry", pre=True)
-    def set_entry(cls, v, values) -> datetime:
-        return v or cls.get_entry(values["calcs_reversed"], values["task_id"])
-
+    @model_validator(mode="before")
+    @classmethod
+    def set_entry(cls, values) -> datetime:
+        if not values.get("entry", None) and (values.get("calcs_reversed", None) and values.get("task_id")):
+            values["entry"] = cls.get_entry(values["calcs_reversed"], values["task_id"])
+        return values
+    
     @classmethod
     def from_directory(
         cls: Type[_T],
@@ -471,7 +472,7 @@ class TaskDoc(StructureMetadata):
             included_objects=included_objects,
             task_type=calcs_reversed[0].task_type,
         )
-        doc = doc.copy(update=additional_fields)
+        doc = doc.model_copy(update=additional_fields)
         return doc
 
     @staticmethod
