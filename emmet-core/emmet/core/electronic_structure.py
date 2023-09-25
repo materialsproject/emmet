@@ -156,7 +156,7 @@ class DosData(BaseModel):
         description="Band structure summary data using the Latimer-Munro path convention.",
     )
 
-    magnetic_ordering: Optional[Union[str, Ordering]] = Field(None, description="Magnetic ordering of the calculation.")
+    magnetic_ordering: Optional[str] = Field(None, description="Magnetic ordering of the calculation.")
 
 
 T = TypeVar("T", bound="ElectronicStructureDoc")

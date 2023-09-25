@@ -1,5 +1,5 @@
 from sys import version_info
-from typing import Optional
+from typing import Optional, get_args
 from fastapi import Query
 
 from maggma.api.query_operator import QueryOperator
@@ -207,7 +207,7 @@ class SearchStatsQuery(QueryOperator):
 
     def __init__(self, search_doc):
         valid_numeric_fields = tuple(
-            sorted(k for k, v in search_doc.__fields__.items() if v.type_ == float)
+            sorted(k for k, v in search_doc.model_fields.items() if float in get_args(v.annotation))
         )
 
         def query(
