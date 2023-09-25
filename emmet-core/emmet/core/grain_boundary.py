@@ -21,42 +21,42 @@ class GrainBoundaryDoc(BaseModel):
     Grain boundary energies, work of separation...
     """
 
-    task_id: str = Field(
+    task_id: Optional[str] = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )
 
-    sigma: int = Field(
+    sigma: Optional[int] = Field(
         None,
         description="Sigma value of the boundary.",
     )
 
-    type: GBTypeEnum = Field(
+    type: Optional[GBTypeEnum] = Field(
         None,
         description="Grain boundary type.",
     )
 
-    rotation_axis: List[int] = Field(
+    rotation_axis: Optional[List[int]] = Field(
         None,
         description="Rotation axis.",
     )
 
-    gb_plane: List[int] = Field(
+    gb_plane: Optional[List[int]] = Field(
         None,
         description="Grain boundary plane.",
     )
 
-    rotation_angle: float = Field(
+    rotation_angle: Optional[float] = Field(
         None,
         description="Rotation angle in degrees.",
     )
 
-    gb_energy: float = Field(
+    gb_energy: Optional[float] = Field(
         None,
         description="Grain boundary energy in J/m^2.",
     )
 
-    initial_structure: GrainBoundary = Field(None, description="Initial grain boundary structure.")
+    initial_structure: Optional[GrainBoundary] = Field(None, description="Initial grain boundary structure.")
 
     final_structure: GrainBoundary = Field(None, description="Final grain boundary structure.")
 

@@ -33,17 +33,17 @@ class CondensedStructureData(BaseModel):
         description="Dimensionality of the material.",
     )
 
-    formula: str = Field(
+    formula: Optional[str] = Field(
         None,
         description="Formula for the material.",
     )
 
-    spg_symbol: str = Field(
+    spg_symbol: Optional[str] = Field(
         None,
         description="Space group symbol of the material.",
     )
 
-    crystal_system: str = Field(
+    crystal_system: Optional[str] = Field(
         None,
         description="Crystal system of the material.",
     )

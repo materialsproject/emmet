@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pymatgen.core.structure import Structure
 
 from pydantic import BaseModel, Field
@@ -9,42 +9,42 @@ class SurfaceEntry(BaseModel):
     Surface energies, miller indicies, ...
     """
 
-    miller_index: List[int] = Field(
+    miller_index: Optional[List[int]] = Field(
         None,
         description="Miller index of surface.",
     )
 
-    surface_energy_EV_PER_ANG2: float = Field(
+    surface_energy_EV_PER_ANG2: Optional[float] = Field(
         None,
         description="Surface energy in eV/Å².",
     )
 
-    surface_energy: float = Field(
+    surface_energy: Optional[float] = Field(
         None,
         description="Surface energy in J/m².",
     )
 
-    is_reconstructed: bool = Field(
+    is_reconstructed: Optional[bool] = Field(
         None,
         description="Whether it is a reconstructed surface.",
     )
 
-    structure: str = Field(
+    structure: Optional[str] = Field(
         None,
         description="CIF of slab structure.",
     )
 
-    work_function: float = Field(
+    work_function: Optional[float] = Field(
         None,
         description="Work function in eV.",
     )
 
-    efermi: float = Field(
+    efermi: Optional[float] = Field(
         None,
         description="Fermi energy in eV.",
     )
 
-    area_fraction: float = Field(
+    area_fraction: Optional[float] = Field(
         None,
         description="Area fraction.",
     )

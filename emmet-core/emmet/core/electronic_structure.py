@@ -46,7 +46,7 @@ class BSObjectDoc(BaseModel):
     Band object document.
     """
 
-    task_id: MPID = Field(
+    task_id: Optional[MPID] = Field(
         None,
         description="The source calculation (task) ID that this band structure comes from. "
         "This has the same form as a Materials Project ID.",
@@ -57,7 +57,7 @@ class BSObjectDoc(BaseModel):
         default_factory=datetime.utcnow,
     )
 
-    data: Union[Dict, BandStructureSymmLine] = Field(
+    data: Optional[Union[Dict, BandStructureSymmLine]] = Field(
         None, description="The band structure object for the given calculation ID"
     )
 
@@ -67,7 +67,7 @@ class DOSObjectDoc(BaseModel):
     DOS object document.
     """
 
-    task_id: MPID = Field(
+    task_id: Optional[MPID] = Field(
         None,
         description="The source calculation (task) ID that this density of states comes from. "
         "This has the same form as a Materials Project ID.",
@@ -78,7 +78,7 @@ class DOSObjectDoc(BaseModel):
         default_factory=datetime.utcnow,
     )
 
-    data: CompleteDos = Field(None, description="The density of states object for the given calculation ID.")
+    data: Optional[CompleteDos] = Field(None, description="The density of states object for the given calculation ID.")
 
 
 class ElectronicStructureBaseData(BaseModel):
@@ -169,9 +169,9 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
     property_name: str = "electronic_structure"
 
-    bandstructure: BandstructureData = Field(None, description="Band structure data for the material.")
+    bandstructure: Optional[BandstructureData] = Field(None, description="Band structure data for the material.")
 
-    dos: DosData = Field(None, description="Density of states data for the material.")
+    dos: Optional[DosData] = Field(None, description="Density of states data for the material.")
 
     last_updated: datetime = Field(
         description="Timestamp for when this document was last updated.",

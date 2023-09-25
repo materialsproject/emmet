@@ -47,7 +47,7 @@ class SummaryStats(BaseModel):
     Statistics about a specified SummaryDoc field.
     """
 
-    field: str = Field(
+    field: Optional[str] = Field(
         None,
         title="Field",
         description="Field name corresponding to a field in SummaryDoc.",
@@ -58,19 +58,19 @@ class SummaryStats(BaseModel):
         description="The number of documents sampled to generate statistics. "
         "If unspecified, statistics will be from entire database.",
     )
-    min: float = Field(
+    min: Optional[float] = Field(
         None,
         title="Minimum",
         description="The minimum value " "of the specified field used to " "generate statistics.",
     )
-    max: float = Field(
+    max: Optional[float] = Field(
         None,
         title="Maximum",
         description="The maximum value " "of the specified field used to " "generate statistics.",
     )
     median: Optional[float] = Field(None, title="Median", description="The median of the field values.")
     mean: Optional[float] = Field(None, title="Mean", description="The mean of the field values.")
-    distribution: List[float] = Field(
+    distribution: Optional[List[float]] = Field(
         None,
         title="Distribution",
         description="List of floats specifying a kernel density "
@@ -84,15 +84,15 @@ class XASSearchData(BaseModel):
     Fields in XAS sub docs in summary
     """
 
-    edge: Edge = Field(
+    edge: Optional[Edge] = Field(
         None,
         title="Absorption Edge",
         description="The interaction edge for XAS",
         source="xas",
     )
-    absorbing_element: Element = Field(None, description="Absorbing element.", source="xas")
+    absorbing_element: Optional[Element] = Field(None, description="Absorbing element.", source="xas")
 
-    spectrum_type: Type = Field(None, description="Type of XAS spectrum.", source="xas")
+    spectrum_type: Optional[Type] = Field(None, description="Type of XAS spectrum.", source="xas")
 
 
 class GBSearchData(BaseModel):
@@ -134,7 +134,7 @@ class SummaryDoc(PropertyDoc):
 
     # Thermo
 
-    uncorrected_energy_per_atom: float = Field(
+    uncorrected_energy_per_atom: Optional[float] = Field(
         None,
         description="The total DFT energy of this material per atom in eV/atom.",
         source="thermo",

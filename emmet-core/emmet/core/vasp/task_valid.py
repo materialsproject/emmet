@@ -30,7 +30,7 @@ class InputSummary(BaseModel):
     Summary of inputs for a VASP calculation
     """
 
-    structure: Structure = Field(None, description="The input structure object")
+    structure: Optional[Structure] = Field(None, description="The input structure object")
     parameters: Dict = Field(
         {},
         description="Input parameters from VASPRUN for the last calculation in the series",
@@ -49,7 +49,7 @@ class OutputSummary(BaseModel):
     Summary of the outputs for a VASP calculation
     """
 
-    structure: Structure = Field(None, description="The output structure object")
+    structure: Optional[Structure] = Field(None, description="The output structure object")
     energy: Optional[float] = Field(None, description="The final total DFT energy for the last calculation")
     energy_per_atom: Optional[float] = Field(None, description="The final DFT energy per atom for the last calculation")
     bandgap: Optional[float] = Field(None, description="The DFT bandgap for the last calculation")
@@ -68,7 +68,7 @@ class RunStatistics(BaseModel):
     system_time: Optional[float] = Field(None, description="The system CPU time in seconds")
     user_time: Optional[float] = Field(None, description="The user CPU time spent by VASP in seconds")
     total_time: Optional[float] = Field(None, description="The total CPU time for this calculation")
-    cores: Union[int, str] = Field(
+    cores: Optional[Union[int, str]] = Field(
         None,
         description="The number of cores used by VASP (some clusters print `mpi-ranks` here)",
     )
@@ -90,7 +90,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
     input: InputSummary = Field(InputSummary())
     output: OutputSummary = Field(OutputSummary())
 
-    state: TaskState = Field(None, description="State of this calculation")
+    state: Optional[TaskState] = Field(None, description="State of this calculation")
 
     orig_inputs: Dict[str, Any] = Field({}, description="Summary of the original VASP inputs")
 
@@ -98,7 +98,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
 
     tags: Union[List[str], None] = Field([], description="Metadata tags for this task document")
 
-    warnings: List[str] = Field(None, description="Any warnings related to this property")
+    warnings: Optional[List[str]] = Field(None, description="Any warnings related to this property")
 
     @property
     def run_type(self) -> RunType:

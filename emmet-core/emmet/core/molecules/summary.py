@@ -48,16 +48,16 @@ class MoleculeSummaryDoc(PropertyDoc):
         description="The lowest energy optimized structures for this molecule for each solvent.",
     )
 
-    molecule_levels_of_theory: Dict[str, str] = Field(
+    molecule_levels_of_theory: Optional[Dict[str, str]] = Field(
         None,
         description="Level of theory used to optimize the best molecular structure for each solvent.",
     )
 
-    species_hash: str = Field(
+    species_hash: Optional[str] = Field(
         None,
         description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph " "node attribute.",
     )
-    coord_hash: str = Field(
+    coord_hash: Optional[str] = Field(
         None,
         description="Weisfeiler Lehman (WL) graph hash using the atom coordinates as the graph " "node attribute.",
     )
@@ -78,27 +78,27 @@ class MoleculeSummaryDoc(PropertyDoc):
         description="IDs of associated MoleculeDocs used to construct this molecule.",
     )
 
-    unique_calc_types: List[CalcType] = Field(
+    unique_calc_types: Optional[List[CalcType]] = Field(
         None,
         description="Collection of all unique calculation types used for this molecule",
     )
 
-    unique_task_types: List[TaskType] = Field(
+    unique_task_types: Optional[List[TaskType]] = Field(
         None,
         description="Collection of all unique task types used for this molecule",
     )
 
-    unique_levels_of_theory: List[LevelOfTheory] = Field(
+    unique_levels_of_theory: Optional[List[LevelOfTheory]] = Field(
         None,
         description="Collection of all unique levels of theory used for this molecule",
     )
 
-    unique_solvents: List[str] = Field(
+    unique_solvents: Optional[List[str]] = Field(
         None,
         description="Collection of all unique solvents (solvent parameters) used for this molecule",
     )
 
-    unique_lot_solvents: List[str] = Field(
+    unique_lot_solvents: Optional[List[str]] = Field(
         None,
         description="Collection of all unique combinations of level of theory and solvent used for this molecule",
     )

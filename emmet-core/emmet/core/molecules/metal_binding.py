@@ -32,38 +32,38 @@ class MetalBindingData(BaseModel):
         ..., description="The MPculeID of the molecule with the metal atom/ion removed"
     )
 
-    metal_index: int = Field(
+    metal_index: Optional[int] = Field(
         None,
         description="Index of the metal in this Molecule (in case of a molecule with multiple identical "
         "metal atoms/ions)",
     )
 
-    metal_element: Union[str, Species, Element] = Field(None, description="The metal bound to the molecule")
+    metal_element: Optional[Union[str, Species, Element]] = Field(None, description="The metal bound to the molecule")
 
     metal_partial_charge: Optional[float] = Field(None, description="The exact calculated partial charge of the metal")
 
     metal_partial_spin: Optional[float] = Field(None, description="The exact calculated partial spin on the metal")
 
-    metal_assigned_charge: float = Field(
+    metal_assigned_charge: Optional[float] = Field(
         None,
         description="The integral charge assigned to this metal based on partial charge/spin data",
     )
 
-    metal_assigned_spin: float = Field(
+    metal_assigned_spin: Optional[float] = Field(
         None,
         description="The integral spin multiplicity assigned to this metal based on partial spin data",
     )
 
-    number_coordinate_bonds: int = Field(
+    number_coordinate_bonds: Optional[int] = Field(
         None,
         description="The number of atoms neighboring the metal atom or ion of interest",
     )
 
-    coordinating_atoms: List[Union[str, Species]] = Field(
+    coordinating_atoms: Optional[List[Union[str, Species]]] = Field(
         None, description="The elements/species coordinating the metal."
     )
 
-    coordinate_bond_lengths: Dict[str, Dict[str, Union[float, List[float]]]] = Field(
+    coordinate_bond_lengths: Optional[Dict[str, Dict[str, Union[float, List[float]]]]] = Field(
         None,
         description="Bond lengths and statistics broken down by the coordinating atoms",
     )
@@ -78,7 +78,7 @@ class MetalBindingData(BaseModel):
 
     binding_free_energy: Optional[float] = Field(None, description="The free energy change (∆G) of binding (units: eV)")
 
-    metal_thermo_property_id: str = Field(
+    metal_thermo_property_id: Optional[str] = Field(
         None,
         description="ID of MoleculeThermoDoc used to obtain the thermochemistry of the metal atom/ion",
     )

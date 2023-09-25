@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import Field
 from pymatgen.core import Structure
@@ -15,42 +15,42 @@ class MagnetismDoc(PropertyDoc):
 
     property_name: str = "magnetism"
 
-    ordering: str = Field(
+    ordering: Optional[str] = Field(
         None,
         description="Magnetic ordering.",
     )
 
-    is_magnetic: bool = Field(
+    is_magnetic: Optional[bool] = Field(
         None,
         description="Whether the material is magnetic.",
     )
 
-    exchange_symmetry: int = Field(
+    exchange_symmetry: Optional[int] = Field(
         None,
         description="Exchange symmetry.",
     )
 
-    num_magnetic_sites: int = Field(
+    num_magnetic_sites: Optional[int] = Field(
         None,
         description="The number of magnetic sites.",
     )
 
-    num_unique_magnetic_sites: int = Field(
+    num_unique_magnetic_sites: Optional[int] = Field(
         None,
         description="The number of unique magnetic sites.",
     )
 
-    types_of_magnetic_species: List[str] = Field(
+    types_of_magnetic_species: Optional[List[str]] = Field(
         None,
         description="Magnetic specie elements.",
     )
 
-    magmoms: List[float] = Field(
+    magmoms: Optional[List[float]] = Field(
         None,
         description="Magnetic moments for each site.",
     )
 
-    total_magnetization: float = Field(
+    total_magnetization: Optional[float] = Field(
         None,
         description="Total magnetization in μB.",
     )

@@ -19,15 +19,15 @@ class DecompositionProduct(BaseModel):
     Entry metadata for a decomposition process
     """
 
-    material_id: MPID = Field(
+    material_id: Optional[MPID] = Field(
         None,
         description="The Materials Project ID for the material this decomposition points to.",
     )
-    formula: str = Field(
+    formula: Optional[str] = Field(
         None,
         description="The formula of the decomposed material this material decomposes to.",
     )
-    amount: float = Field(
+    amount: Optional[float] = Field(
         None,
         description="The amount of the decomposed material by formula units this this material decomposes to.",
     )
@@ -77,23 +77,23 @@ class ThermoDoc(PropertyDoc):
         description="Flag for whether this material is on the hull and therefore stable.",
     )
 
-    equilibrium_reaction_energy_per_atom: float = Field(
+    equilibrium_reaction_energy_per_atom: Optional[float] = Field(
         None,
         description="The reaction energy of a stable entry from the neighboring equilibrium stable materials in eV."
         " Also known as the inverse distance to hull.",
     )
 
-    decomposes_to: List[DecompositionProduct] = Field(
+    decomposes_to: Optional[List[DecompositionProduct]] = Field(
         None,
         description="List of decomposition data for this material. Only valid for metastable or unstable material.",
     )
 
-    decomposition_enthalpy: float = Field(
+    decomposition_enthalpy: Optional[float] = Field(
         None,
         description="Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen.",
     )
 
-    decomposition_enthalpy_decomposes_to: List[DecompositionProduct] = Field(
+    decomposition_enthalpy_decomposes_to: Optional[List[DecompositionProduct]] = Field(
         None,
         description="List of decomposition data associated with the decomposition_enthalpy quantity.",
     )

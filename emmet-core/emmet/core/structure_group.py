@@ -49,43 +49,43 @@ class StructureGroupDoc(BaseModel):
     Group of structure
     """
 
-    group_id: str = Field(
+    group_id: Optional[str] = Field(
         None,
         description="The combined material_id of the grouped document is given by the numerically smallest "
         "material_id, you can also append the followed by the ignored species at the end.",
     )
 
-    has_distinct_compositions: bool = Field(
+    has_distinct_compositions: Optional[bool] = Field(
         None, description="True if multiple compositions are present in the group."
     )
 
-    material_ids: list = Field(
+    material_ids: Optional[list] = Field(
         None,
         description="A list of materials ids for all of the materials that were grouped together.",
     )
 
-    host_material_ids: list = Field(
+    host_material_ids: Optional[list] = Field(
         None,
         description="Material id(s) that correspond(s) to the host structure(s), which has/have the lowest"
         "concentration of ignored specie.",
     )
 
-    insertion_material_ids: list = Field(
+    insertion_material_ids: Optional[list] = Field(
         None,
         description="Material ids that correspond to the non-host structures identified in a given structure group.",
     )
 
-    framework_formula: str = Field(
+    framework_formula: Optional[str] = Field(
         None,
         description="The chemical formula for the framework (the materials system without the ignored species).",
     )
 
-    ignored_specie: str = Field(
+    ignored_specie: Optional[str] = Field(
         None,
         description="Ignored atomic specie which is usually the working ion (ex: Li, Mg, or Ca).",
     )
 
-    chemsys: str = Field(
+    chemsys: Optional[str] = Field(
         None,
         description="The chemical system this group belongs to, if the atoms for the ignored species is "
         "present the chemsys will also include the ignored species.",

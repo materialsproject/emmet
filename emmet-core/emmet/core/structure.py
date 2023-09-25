@@ -23,30 +23,30 @@ class StructureMetadata(EmmetBaseModel):
 
     # Structure metadata
     nsites: Optional[int] = Field(None, description="Total number of sites in the structure.")
-    elements: List[Element] = Field(None, description="List of elements in the material.")
+    elements: Optional[List[Element]] = Field(None, description="List of elements in the material.")
     nelements: Optional[int] = Field(None, description="Number of elements.")
-    composition: Composition = Field(None, description="Full composition for the material.")
-    composition_reduced: Composition = Field(
+    composition: Optional[Composition] = Field(None, description="Full composition for the material.")
+    composition_reduced: Optional[Composition] = Field(
         None,
         title="Reduced Composition",
         description="Simplified representation of the composition.",
     )
-    formula_pretty: str = Field(
+    formula_pretty: Optional[str] = Field(
         None,
         title="Pretty Formula",
         description="Cleaned representation of the formula.",
     )
-    formula_anonymous: str = Field(
+    formula_anonymous: Optional[str] = Field(
         None,
         title="Anonymous Formula",
         description="Anonymized representation of the formula.",
     )
-    chemsys: str = Field(
+    chemsys: Optional[str] = Field(
         None,
         title="Chemical System",
         description="dash-delimited string of elements in the material.",
     )
-    volume: float = Field(
+    volume: Optional[float] = Field(
         None,
         title="Volume",
         description="Total volume for this structure in Angstroms^3.",
@@ -54,7 +54,7 @@ class StructureMetadata(EmmetBaseModel):
 
     density: Optional[float] = Field(None, title="Density", description="Density in grams per cm^3.")
 
-    density_atomic: float = Field(
+    density_atomic: Optional[float] = Field(
         None,
         title="Packing Density",
         description="The atomic packing density in atoms per cm^3.",

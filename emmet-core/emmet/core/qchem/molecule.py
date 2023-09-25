@@ -1,5 +1,5 @@
 """ Core definition of a Molecule Document """
-from typing import Any, Dict, List, Mapping, Union
+from typing import Any, Dict, List, Mapping, Union, Optional
 
 from pydantic import Field
 
@@ -140,35 +140,35 @@ def evaluate_task_entry(
 
 
 class MoleculeDoc(CoreMoleculeDoc):
-    species: List[str] = Field(
+    species: Optional[List[str]] = Field(
         None, description="Ordered list of elements/species in this Molecule."
     )
 
-    molecules: Dict[str, Molecule] = Field(
+    molecules: Optional[Dict[str, Molecule]] = Field(
         None,
         description="The lowest energy optimized structures for this molecule for each solvent.",
     )
 
-    molecule_levels_of_theory: Dict[str, str] = Field(
+    molecule_levels_of_theory: Optional[Dict[str, str]] = Field(
         None,
         description="Level of theory used to optimize the best molecular structure for each solvent.",
     )
 
-    species_hash: str = Field(
+    species_hash: Optional[str] = Field(
         None,
         description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph "
         "node attribute.",
     )
-    coord_hash: str = Field(
+    coord_hash: Optional[str] = Field(
         None,
         description="Weisfeiler Lehman (WL) graph hash using the atom coordinates as the graph "
         "node attribute.",
     )
 
-    inchi: str = Field(
+    inchi: Optional[str] = Field(
         None, description="International Chemical Identifier (InChI) for this molecule"
     )
-    inchi_key: str = Field(
+    inchi_key: Optional[str] = Field(
         None, description="Standardized hash of the InChI for this molecule"
     )
 
@@ -176,7 +176,7 @@ class MoleculeDoc(CoreMoleculeDoc):
         None,
         description="Calculation types for all the calculations that make up this molecule",
     )
-    task_types: Mapping[str, TaskType] = Field(
+    task_types: Optional[Mapping[str, TaskType]] = Field(
         None,
         description="Task types for all the calculations that make up this molecule",
     )

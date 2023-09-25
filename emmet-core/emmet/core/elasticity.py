@@ -19,22 +19,22 @@ SETTINGS = EmmetSettings()
 
 
 class ElasticTensorDoc(BaseModel):
-    raw: MatrixVoigt = Field(
+    raw: Optional[MatrixVoigt] = Field(
         None,
         description="Elastic tensor corresponding to structure orientation (GPa)",
     )
-    ieee_format: MatrixVoigt = Field(
+    ieee_format: Optional[MatrixVoigt] = Field(
         None,
         description="Elastic tensor corresponding to IEEE orientation (GPa)",
     )
 
 
 class ComplianceTensorDoc(BaseModel):
-    raw: MatrixVoigt = Field(
+    raw: Optional[MatrixVoigt] = Field(
         None,
         description="Compliance tensor corresponding to structure orientation (TPa^-1)",
     )
-    ieee_format: MatrixVoigt = Field(
+    ieee_format: Optional[MatrixVoigt] = Field(
         None,
         description="Compliance tensor corresponding to IEEE orientation (TPa^-1)",
     )
@@ -135,13 +135,13 @@ class ElasticityDoc(PropertyDoc):
 
     order: int = Field(default=2, description="Order of the expansion of the elastic tensor")
 
-    elastic_tensor: ElasticTensorDoc = Field(None, description="Elastic tensor")
+    elastic_tensor: Optional[ElasticTensorDoc] = Field(None, description="Elastic tensor")
 
-    compliance_tensor: ComplianceTensorDoc = Field(None, description="Compliance tensor")
+    compliance_tensor: Optional[ComplianceTensorDoc] = Field(None, description="Compliance tensor")
 
     # derived properties
-    bulk_modulus: BulkModulus = Field(None, description="Bulk modulus")
-    shear_modulus: ShearModulus = Field(None, description="Shear modulus")
+    bulk_modulus: Optional[BulkModulus] = Field(None, description="Bulk modulus")
+    shear_modulus: Optional[ShearModulus] = Field(None, description="Shear modulus")
     sound_velocity: SoundVelocity = Field(None, description="Sound velocity")
     thermal_conductivity: ThermalConductivity = Field(None, description="Thermal conductivity")
     young_modulus: Optional[float] = Field(None, description="Young's modulus (SI units)")

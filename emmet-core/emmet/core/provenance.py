@@ -28,8 +28,8 @@ class Author(BaseModel):
     Author information
     """
 
-    name: str = Field(None)
-    email: str = Field(None)
+    name: Optional[str] = Field(None)
+    email: Optional[str] = Field(None)
 
 
 class History(BaseModel):

@@ -83,9 +83,9 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
         None, description="The energy above hull of the discharged material in eV/atom."
     )
 
-    id_charge: Union[MPID, int, None] = Field(None, description="The Materials Project ID of the charged structure.")
+    id_charge: Optional[Union[MPID, int, None]] = Field(None, description="The Materials Project ID of the charged structure.")
 
-    id_discharge: Union[MPID, int, None] = Field(
+    id_discharge: Optional[Union[MPID, int, None]] = Field(
         None, description="The Materials Project ID of the discharged structure."
     )
 
@@ -95,7 +95,7 @@ class ConversionVoltagePairDoc(VoltagePairDoc):
     Features specific to conversion electrode
     """
 
-    reaction: dict = Field(
+    reaction: Optional[dict] = Field(
         None,
         description="The reaction that characterizes that particular voltage step.",
     )
@@ -107,27 +107,27 @@ class EntriesCompositionSummary(BaseModel):
     Included to enable better searching via the API.
     """
 
-    all_formulas: List[str] = Field(
+    all_formulas: Optional[List[str]] = Field(
         None,
         description="Reduced formulas for material entries across all voltage pairs.",
     )
 
-    all_chemsys: List[str] = Field(
+    all_chemsys: Optional[List[str]] = Field(
         None,
         description="Chemical systems for material entries across all voltage pairs.",
     )
 
-    all_formula_anonymous: List[str] = Field(
+    all_formula_anonymous: Optional[List[str]] = Field(
         None,
         description="Anonymous formulas for material entries across all voltage pairs.",
     )
 
-    all_elements: List[Element] = Field(
+    all_elements: Optional[List[Element]] = Field(
         None,
         description="Elements in material entries across all voltage pairs.",
     )
 
-    all_composition_reduced: Dict = Field(
+    all_composition_reduced: Optional[Dict] = Field(
         None,
         description="Composition reduced data for entries across all voltage pairs.",
     )

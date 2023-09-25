@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 
 import numpy as np
 from pydantic import model_validator, Field
@@ -35,8 +35,8 @@ class XRDDoc(SpectrumDoc):
     min_two_theta: float
     max_two_theta: float
     wavelength: float = Field(..., description="Wavelength for the diffraction source.")
-    target: Element = Field(None, description="Target element for the diffraction source.")
-    edge: Edge = Field(None, description="Atomic edge for the diffraction source.")
+    target: Optional[Element] = Field(None, description="Target element for the diffraction source.")
+    edge: Optional[Edge] = Field(None, description="Atomic edge for the diffraction source.")
 
     @model_validator(mode="before")
     @classmethod

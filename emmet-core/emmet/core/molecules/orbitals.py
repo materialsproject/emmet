@@ -225,32 +225,32 @@ class OrbitalDoc(PropertyDoc):
     nbo_population: List[NaturalPopulation] = Field(..., description="Natural electron populations of the molecule")
 
     # Populated for closed-shell molecules
-    nbo_lone_pairs: List[LonePair] = Field(None, description="Lone pair orbitals of a closed-shell molecule")
+    nbo_lone_pairs: Optional[List[LonePair]] = Field(None, description="Lone pair orbitals of a closed-shell molecule")
 
-    nbo_bonds: List[Bond] = Field(None, description="Bond-like orbitals of a closed-shell molecule")
+    nbo_bonds: Optional[List[Bond]] = Field(None, description="Bond-like orbitals of a closed-shell molecule")
 
-    nbo_interactions: List[Interaction] = Field(
+    nbo_interactions: Optional[List[Interaction]] = Field(
         None, description="Orbital-orbital interactions of a closed-shell molecule"
     )
 
     # Populated for open-shell molecules
-    alpha_population: List[NaturalPopulation] = Field(
+    alpha_population: Optional[List[NaturalPopulation]] = Field(
         None,
         description="Natural electron populations of the alpha electrons of an " "open-shell molecule",
     )
-    beta_population: List[NaturalPopulation] = Field(
+    beta_population: Optional[List[NaturalPopulation]] = Field(
         None,
         description="Natural electron populations of the beta electrons of an " "open-shell molecule",
     )
 
-    alpha_lone_pairs: List[LonePair] = Field(
+    alpha_lone_pairs: Optional[List[LonePair]] = Field(
         None, description="Alpha electron lone pair orbitals of an open-shell molecule"
     )
-    beta_lone_pairs: List[LonePair] = Field(
+    beta_lone_pairs: Optional[List[LonePair]] = Field(
         None, description="Beta electron lone pair orbitals of an open-shell molecule"
     )
 
-    alpha_bonds: List[Bond] = Field(None, description="Alpha electron bond-like orbitals of an open-shell molecule")
+    alpha_bonds: Optional[List[Bond]] = Field(None, description="Alpha electron bond-like orbitals of an open-shell molecule")
     beta_bonds: List[Bond] = Field(None, description="Beta electron bond-like orbitals of an open-shell molecule")
 
     alpha_interactions: List[Interaction] = Field(

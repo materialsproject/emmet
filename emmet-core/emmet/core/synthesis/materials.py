@@ -12,7 +12,7 @@ class Component(BaseModel):
 
 
 class Values(BaseModel):
-    values: List[float] = Field(None, description="List of values.")
+    values: Optional[List[float]] = Field(None, description="List of values.")
     min_value: Optional[float] = Field(None, description="Minimal value.")
     max_value: Optional[float] = Field(None, description="Maximal value.")
 

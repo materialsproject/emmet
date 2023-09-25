@@ -33,19 +33,19 @@ class RedoxDoc(PropertyDoc):
 
     electron_affinity: Optional[float] = Field(None, description="Vertical electron affinity (units: eV)")
 
-    ea_task_id: MPID = Field(None, description="Task ID for the electron affinity calculation")
+    ea_task_id: Optional[MPID] = Field(None, description="Task ID for the electron affinity calculation")
 
     ionization_energy: Optional[float] = Field(None, description="Vertical ionization energy (units: eV)")
 
-    ie_task_id: MPID = Field(None, description="Task ID for the ionization energy calculation")
+    ie_task_id: Optional[MPID] = Field(None, description="Task ID for the ionization energy calculation")
 
     reduction_energy: Optional[float] = Field(None, description="Adiabatic electronic energy of reduction (units: eV)")
 
     reduction_free_energy: Optional[float] = Field(None, description="Adiabatic free energy of reduction (units: eV)")
 
-    red_molecule_id: MPculeID = Field(None, description="Molecule ID for adiabatic reduction")
+    red_molecule_id: Optional[MPculeID] = Field(None, description="Molecule ID for adiabatic reduction")
 
-    red_property_id: str = Field(
+    red_property_id: Optional[str] = Field(
         None,
         description="Property ID for the thermodynamic data of the " "reduced molecule",
     )
@@ -54,19 +54,19 @@ class RedoxDoc(PropertyDoc):
 
     oxidation_free_energy: Optional[float] = Field(None, description="Adiabatic free energy of oxidation (units: eV)")
 
-    ox_molecule_id: MPculeID = Field(None, description="Molecule ID for adiabatic oxidation")
+    ox_molecule_id: Optional[MPculeID] = Field(None, description="Molecule ID for adiabatic oxidation")
 
-    ox_property_id: str = Field(
+    ox_property_id: Optional[str] = Field(
         None,
         description="Property ID for the thermodynamic data of the " "oxidized molecule",
     )
 
-    reduction_potential: float = Field(
+    reduction_potential: Optional[float] = Field(
         None,
         description="Reduction potential referenced to the standard hydrogen electrode (SHE) (units: V)",
     )
 
-    oxidation_potential: float = Field(
+    oxidation_potential: Optional[float] = Field(
         None,
         description="Oxidation potential referenced to the standard hydrogen electrode (SHE) (units: V)",
     )

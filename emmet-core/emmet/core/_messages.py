@@ -14,7 +14,7 @@ class MessagesDoc(BaseModel):
     Defines data for user messages
     """
 
-    title: str = Field(
+    title: Optional[str] = Field(
         None,
         title="Title",
         description="Generic title or short summary for the message.",
@@ -22,7 +22,7 @@ class MessagesDoc(BaseModel):
 
     body: Optional[str] = Field(None, title="Body", description="Main text body of message.")
 
-    authors: List[str] = Field(
+    authors: Optional[List[str]] = Field(
         None,
         title="Title",
         description="Generic title or short summary for the message.",

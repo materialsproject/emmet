@@ -45,7 +45,7 @@ class ValidationDoc(EmmetBaseModel):
         description="Last updated date for this document",
         default_factory=datetime.utcnow,
     )
-    reasons: List[Union[DeprecationMessage, str]] = Field(
+    reasons: Optional[List[Union[DeprecationMessage, str]]] = Field(
         None, description="List of deprecation tags detailing why this task isn't valid"
     )
     warnings: List[str] = Field(

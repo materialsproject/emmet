@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Union, Dict, Tuple, Sequence
+from typing import List, Union, Dict, Tuple, Sequence, Optional
 
 from pydantic import Field
 import numpy as np
@@ -29,7 +29,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         ..., description="The battery id for this MigrationGraphDoc"
     )
 
-    last_updated: datetime = Field(
+    last_updated: Optional[datetime] = Field(
         None,
         description="Timestamp for the most recent calculation for this MigrationGraph document.",
     )
@@ -43,21 +43,21 @@ class MigrationGraphDoc(EmmetBaseModel):
         description="Indicates whether a migration graph fails to be constructed from the provided entries. Defaults to False, indicating mg can be constructed from entries.",  # noqa: E501
     )
 
-    hop_cutoff: float = Field(
+    hop_cutoff: Optional[float] = Field(
         None,
         description="The numerical value in angstroms used to cap the maximum length of a hop.",
     )
 
-    entries_for_generation: List[ComputedStructureEntry] = Field(
+    entries_for_generation: Optional[List[ComputedStructureEntry]] = Field(
         None,
         description="A list of ComputedStructureEntries used to generate the structure with all working ion sites.",
     )
 
-    working_ion_entry: Union[ComputedEntry, ComputedStructureEntry] = Field(
+    working_ion_entry: Optional[Union[ComputedEntry, ComputedStructureEntry]] = Field(
         None, description="The ComputedStructureEntry of the working ion."
     )
 
-    migration_graph: MigrationGraph = Field(
+    migration_graph: Optional[MigrationGraph] = Field(
         None,
         description="The MigrationGraph object as defined in pymatgen.analysis.diffusion.",
     )
@@ -67,17 +67,17 @@ class MigrationGraphDoc(EmmetBaseModel):
         description="Flag indicating whether this document has populated the supercell fields",
     )
 
-    min_length_sc: float = Field(
+    min_length_sc: Optional[float] = Field(
         None,
         description="The minimum length used to generate supercell using pymatgen.",
     )
 
-    minmax_num_atoms: Tuple[int, int] = Field(
+    minmax_num_atoms: Optional[Tuple[int, int]] = Field(
         None,
         description="The min/max number of atoms used to genreate supercell using pymatgen.",
     )
 
-    matrix_supercell_structure: Structure = Field(
+    matrix_supercell_structure: Optional[Structure] = Field(
         None,
         description="The matrix suprcell structure that does not contain the mobile ions for the purpose of migration analysis.",  # noqa: E501
     )

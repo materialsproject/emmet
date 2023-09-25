@@ -38,7 +38,7 @@ _VOLUMETRIC_FILES = ("CHGCAR", "LOCPOT", "AECCAR0", "AECCAR1", "AECCAR2")
 class Potcar(BaseModel):
     pot_type: Optional[str] = Field(None, description="Pseudo-potential type, e.g. PAW")
     functional: Optional[str] = Field(None, description="Functional type use in the calculation.")
-    symbols: List[str] = Field(None, description="List of VASP potcar symbols used in the calculation.")
+    symbols: Optional[List[str]] = Field(None, description="List of VASP potcar symbols used in the calculation.")
 
 
 class OrigInputs(BaseModel):
@@ -73,7 +73,7 @@ class OrigInputs(BaseModel):
 
 
 class OutputDoc(BaseModel):
-    structure: Structure = Field(
+    structure: Optional[Structure] = Field(
         None,
         title="Output Structure",
         description="Output Structure from the VASP calculation.",
@@ -81,8 +81,8 @@ class OutputDoc(BaseModel):
 
     density: Optional[float] = Field(None, description="Density of in units of g/cc.")
     energy: float = Field(..., description="Total Energy in units of eV.")
-    forces: List[List[float]] = Field(None, description="The force on each atom in units of eV/A^2.")
-    stress: List[List[float]] = Field(None, description="The stress on the cell in units of kB.")
+    forces: Optional[List[List[float]]] = Field(None, description="The force on each atom in units of eV/A^2.")
+    stress: Optional[List[List[float]]] = Field(None, description="The stress on the cell in units of kB.")
     energy_per_atom: Optional[float] = Field(None, description="The final DFT energy per atom for the last calculation")
     bandgap: Optional[float] = Field(None, description="The DFT bandgap for the last calculation")
 
@@ -137,18 +137,18 @@ class OutputDoc(BaseModel):
 
 
 class InputDoc(BaseModel):
-    structure: Structure = Field(
+    structure: Optional[Structure] = Field(
         None,
         title="Input Structure",
         description="Output Structure from the VASP calculation.",
     )
 
-    parameters: Dict = Field(
+    parameters: Optional[Dict] = Field(
         None,
         description="Parameters from vasprun for the last calculation in the series",
     )
-    pseudo_potentials: Potcar = Field(None, description="Summary of the pseudo-potentials used in this calculation")
-    potcar_spec: List[PotcarSpec] = Field(None, description="Title and hash of POTCAR files used in the calculation")
+    pseudo_potentials: Optional[Potcar] = Field(None, description="Summary of the pseudo-potentials used in this calculation")
+    potcar_spec: Optional[List[PotcarSpec]] = Field(None, description="Title and hash of POTCAR files used in the calculation")
     xc_override: Optional[str] = Field(None, description="Exchange-correlation functional used if not the default")
     is_lasph: Optional[bool] = Field(None, description="Whether the calculation was run with aspherical corrections")
     is_hubbard: bool = Field(False, description="Is this a Hubbard +U calculation")

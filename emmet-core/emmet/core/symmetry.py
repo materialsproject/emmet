@@ -30,9 +30,9 @@ class PointGroupData(BaseModel):
     Defines symmetry for a molecule document
     """
 
-    point_group: str = Field(None, title="Point Group Symbol", description="The point group for the lattice")
+    point_group: Optional[str] = Field(None, title="Point Group Symbol", description="The point group for the lattice")
 
-    rotation_number: float = Field(
+    rotation_number: Optional[float] = Field(
         None,
         title="Rotational Symmetry Number",
         description="Rotational symmetry number for the molecule",
@@ -40,19 +40,19 @@ class PointGroupData(BaseModel):
 
     linear: Optional[bool] = Field(None, title="Molecule Linearity", description="Is the molecule linear?")
 
-    tolerance: float = Field(
+    tolerance: Optional[float] = Field(
         None,
         title="Point Group Analyzer Tolerance",
         description="Distance tolerance to consider sites as symmetrically equivalent.",
     )
 
-    eigen_tolerance: float = Field(
+    eigen_tolerance: Optional[float] = Field(
         None,
         title="Interia Tensor Eigenvalue Tolerance",
         description="Tolerance to compare eigen values of the inertia tensor.",
     )
 
-    matrix_tolerance: float = Field(
+    matrix_tolerance: Optional[float] = Field(
         None,
         title="Symmetry Operation Matrix Element Tolerance",
         description="Tolerance used to generate the full set of symmetry operations of the point group.",
@@ -112,17 +112,17 @@ class SymmetryData(BaseModel):
     Defines a symmetry data set for materials documents
     """
 
-    crystal_system: CrystalSystem = Field(
+    crystal_system: Optional[CrystalSystem] = Field(
         None, title="Crystal System", description="The crystal system for this lattice."
     )
 
-    symbol: str = Field(
+    symbol: Optional[str] = Field(
         None,
         title="Space Group Symbol",
         description="The spacegroup symbol for the lattice.",
     )
 
-    number: int = Field(
+    number: Optional[int] = Field(
         None,
         title="Space Group Number",
         description="The spacegroup number for the lattice.",

@@ -20,22 +20,22 @@ class PhononBSDOSDoc(BaseModel):
     Phonon band structures and density of states data.
     """
 
-    material_id: MPID = Field(
+    material_id: Optional[MPID] = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )
 
-    ph_bs: PhononBandStructureSymmLine = Field(
+    ph_bs: Optional[PhononBandStructureSymmLine] = Field(
         None,
         description="Phonon band structure object.",
     )
 
-    ph_dos: PhononDosObject = Field(
+    ph_dos: Optional[PhononDosObject] = Field(
         None,
         description="Phonon density of states object.",
     )
 
-    last_updated: datetime = Field(
+    last_updated: Optional[datetime] = Field(
         None,
         description="Timestamp for the most recent calculation for this Material document.",
     )
@@ -75,7 +75,7 @@ class PhononBandStructure(BaseModel):
 
     doc_type: Literal["bs"] = Field("bs", description="The type of the document: a phonon band structure.")
 
-    band_structure: dict = Field(
+    band_structure: Optional[dict] = Field(
         None,
         description="Serialized version of a pymatgen " "PhononBandStructureSymmLine object.",
     )
@@ -106,7 +106,7 @@ class PhononDos(BaseModel):
 
     dos: Optional[dict] = Field(None, description="Serialized version of a pymatgen CompletePhononDos object.")
 
-    dos_method: str = Field(None, description="The method used to calculate the phonon DOS.")
+    dos_method: Optional[str] = Field(None, description="The method used to calculate the phonon DOS.")
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property",
@@ -136,7 +136,7 @@ class PhononWebsiteBS(BaseModel):
         description="The type of the document: a phonon band structure for the phononwebsite.",
     )
 
-    phononwebsite: dict = Field(
+    phononwebsite: Optional[dict] = Field(
         None,
         description="Phononwebsite dictionary to plot the animated " "phonon modes.",
     )
@@ -228,7 +228,7 @@ class Phonon(StructureMetadata):
 
     asr_break: Optional[float] = Field(None, description="The maximum breaking of the acoustic sum rule (ASR).")
 
-    warnings: List[PhononWarnings] = Field(None, description="List of warnings associated to the phonon calculation.")
+    warnings: Optional[List[PhononWarnings]] = Field(None, description="List of warnings associated to the phonon calculation.")
 
     dielectric: DielectricDoc = Field(None, description="Dielectric properties obtained during a phonon calculations.")
 

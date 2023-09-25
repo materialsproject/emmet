@@ -9,43 +9,43 @@ class MoleculesDoc(BaseModel):
     Molecules relevant to battery electrolytes.
     """
 
-    elements: List[Element] = Field(
+    elements: Optional[List[Element]] = Field(
         None,
         description="List of elements in the molecule.",
     )
 
-    nelements: int = Field(
+    nelements: Optional[int] = Field(
         None,
         description="Number of elements in the molecule.",
     )
 
-    EA: float = Field(
+    EA: Optional[float] = Field(
         None,
         description="Electron affinity of the molecule in eV.",
     )
 
-    IE: float = Field(
+    IE: Optional[float] = Field(
         None,
         description="Ionization energy of the molecule in eV.",
     )
 
-    charge: int = Field(
+    charge: Optional[int] = Field(
         None,
         description="Charge of the molecule in +e.",
     )
 
-    pointgroup: str = Field(
+    pointgroup: Optional[str] = Field(
         None,
         description="Point group of the molecule in Schoenflies notation.",
     )
 
-    smiles: str = Field(
+    smiles: Optional[str] = Field(
         None,
         description="The simplified molecular input line-entry system (SMILES) \
             representation of the molecule.",
     )
 
-    task_id: str = Field(
+    task_id: Optional[str] = Field(
         None,
         description="Materials Project molecule ID. This takes the form mol-*****.",
     )

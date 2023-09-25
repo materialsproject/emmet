@@ -105,15 +105,15 @@ class PotcarSpec(BaseModel):
 class CalculationInput(BaseModel):
     """Document defining VASP calculation inputs."""
 
-    incar: Dict[str, Any] = Field(None, description="INCAR parameters for the calculation")
-    kpoints: Union[Dict[str, Any], Kpoints] = Field(None, description="KPOINTS for the calculation")
+    incar: Optional[Dict[str, Any]] = Field(None, description="INCAR parameters for the calculation")
+    kpoints: Optional[Union[Dict[str, Any], Kpoints]] = Field(None, description="KPOINTS for the calculation")
     nkpoints: Optional[int] = Field(None, description="Total number of k-points")
-    potcar: List[str] = Field(None, description="POTCAR symbols in the calculation")
-    potcar_spec: List[PotcarSpec] = Field(None, description="Title and hash of POTCAR files used in the calculation")
-    potcar_type: List[str] = Field(None, description="List of POTCAR functional types.")
+    potcar: Optional[List[str]] = Field(None, description="POTCAR symbols in the calculation")
+    potcar_spec: Optional[List[PotcarSpec]] = Field(None, description="Title and hash of POTCAR files used in the calculation")
+    potcar_type: Optional[List[str]] = Field(None, description="List of POTCAR functional types.")
     parameters: Optional[dict] = Field(None, description="Parameters from vasprun")
-    lattice_rec: Lattice = Field(None, description="Reciprocal lattice of the structure")
-    structure: Structure = Field(None, description="Input structure for the calculation")
+    lattice_rec: Optional[Lattice] = Field(None, description="Reciprocal lattice of the structure")
+    structure: Optional[Structure] = Field(None, description="Input structure for the calculation")
     is_hubbard: bool = Field(False, description="Is this a Hubbard +U calculation")
     hubbards: Optional[dict] = Field(None, description="The hubbard parameters used")
 
@@ -280,7 +280,7 @@ class IonicStep(BaseModel, extra=Extra.allow):  # type: ignore
     e_0_energy: Optional[float] = Field(None, description="The internal energy.")
     forces: Optional[List[Vector3D]] = Field(None, description="The forces on each atom.")
     stress: Optional[Matrix3D] = Field(None, description="The stress on the lattice.")
-    electronic_steps: List[ElectronicStep] = Field(None, description="The electronic convergence steps.")
+    electronic_steps: Optional[List[ElectronicStep]] = Field(None, description="The electronic convergence steps.")
     structure: Structure = Field(None, description="The structure at this step.")
 
 
