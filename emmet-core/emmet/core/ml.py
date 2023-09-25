@@ -9,13 +9,18 @@ from pydantic import Field, validator
 from pymatgen.analysis.elasticity import ElasticTensor
 from pymatgen.core import Structure
 
-from emmet.core.material_property import PropertyDoc
+from emmet.core.elasticity import (
+    BulkModulus,
+    ElasticityDoc,
+    ElasticTensorDoc,
+    ShearModulus,
+)
 
 if TYPE_CHECKING:
     from ase.calculators.calculator import Calculator
 
 
-class MLIPDoc(PropertyDoc):
+class MLIPDoc(ElasticityDoc):
     """Document model for matcalc-generated material properties from machine learning
     interatomic potential predictions.
 
@@ -41,8 +46,8 @@ class MLIPDoc(PropertyDoc):
         - heat_capacities (list[float]): heat capacities at constant volume in eV/K
     - elasticity
         - elastic_tensor (ElasticTensor): pymatgen ElasticTensor object
-        - shear_modulus_vrh (float): Voigt-Reuss-Hill shear modulus
-        - bulk_modulus_vrh (float): Voigt-Reuss-Hill bulk modulus
+        - shear_modulus (float): Voigt-Reuss-Hill shear modulus
+        - bulk_modulus (float): Voigt-Reuss-Hill bulk modulus
         - youngs_modulus (float): Young's modulus
     """
 
@@ -93,30 +98,30 @@ class MLIPDoc(PropertyDoc):
     )
 
     # elasticity attributes
-    elastic_tensor: ElasticTensor = Field(
-        None, description="pymatgen ElasticTensor in Voigt notation (GPa)"
-    )
-    shear_modulus_vrh: float = Field(
-        None, description="Voigt-Reuss-Hill shear modulus based on elastic tensor"
-    )
-    bulk_modulus_vrh: float = Field(
-        None, description="Voigt-Reuss-Hill bulk modulus based on elastic tensor"
-    )
-    youngs_modulus: float = Field(
-        None, description="Young's modulus based on elastic tensor"
-    )
+    # all inherited from ElasticityDoc
 
     @validator("elastic_tensor", pre=True)
-    def make_elastic_tensor(cls, val) -> ElasticTensor:
-        """This custom validator is not strictly necessary but allows elastic_tensor
-        to be passed as either MSONable dict, list (specifying the Voigt array)
+    def elastic_tensor(cls, val) -> ElasticTensorDoc:
+        """ElasticTensorDoc from MSONable dict of ElasticTensor, or list (specifying the Voigt array)
         or the ElasticTensor class itself.
         """
         if isinstance(val, dict):
-            return ElasticTensor.from_dict(val)
-        if isinstance(val, (list, tuple)):
-            return ElasticTensor(val)
-        return val
+            tensor = ElasticTensor.from_dict(val)
+        elif isinstance(val, (list, tuple)):
+            tensor = ElasticTensor(val)
+        else:
+            tensor = val
+        return ElasticTensorDoc(raw=tensor.voigt.tolist())
+
+    @validator("shear_modulus", pre=True)
+    def shear_modulus(cls, val) -> ShearModulus:
+        """ShearModulus from float."""
+        return ShearModulus(vrh=val)
+
+    @validator("bulk_modulus", pre=True)
+    def bulk_modulus(cls, val) -> BulkModulus:
+        """BulkModulus from float."""
+        return BulkModulus(vrh=val)
 
     def __init__(
         cls,
@@ -148,7 +153,7 @@ class MLIPDoc(PropertyDoc):
 
         for key, val in results.items():
             # convert arrays to lists
-            if hasattr(val, "tolist") and not isinstance(val, ElasticTensor):
+            if hasattr(val, "tolist"):
                 results[key] = val.tolist()
 
         super().__init__(
