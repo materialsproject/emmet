@@ -2,10 +2,10 @@ from typing import TYPE_CHECKING, Union
 
 import pytest
 from matcalc.util import get_universal_calculator
-from pymatgen.analysis.elasticity import ElasticTensor
 from pymatgen.core import Structure
 from pymatgen.util.testing import PymatgenTest
 
+from emmet.core.elasticity import BulkModulus, ElasticTensorDoc, ShearModulus
 from emmet.core.ml import MLIPDoc
 
 if TYPE_CHECKING:
@@ -41,10 +41,10 @@ expected_keys = {
     "entropy": list,
     "heat_capacity": list,
     # -- elasticity --
-    "elastic_tensor": ElasticTensor,
-    "shear_modulus_vrh": float,
-    "bulk_modulus_vrh": float,
-    "youngs_modulus": float,
+    "elastic_tensor": ElasticTensorDoc,
+    "shear_modulus": ShearModulus,
+    "bulk_modulus": BulkModulus,
+    "young_modulus": float,
 }
 
 
