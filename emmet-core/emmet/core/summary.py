@@ -345,7 +345,7 @@ class SummaryDoc(PropertyDoc):
 
     # Has Props
 
-    has_props: List[HasProps] = Field(
+    has_props: Optional[List[HasProps]] = Field(
         None,
         description="List of properties that are available for a given material.",
         source="summary",

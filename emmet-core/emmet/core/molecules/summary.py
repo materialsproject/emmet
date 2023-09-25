@@ -313,26 +313,26 @@ class MoleculeSummaryDoc(PropertyDoc):
     )
 
     # redox properties
-    redox_property_ids: Dict[str, str] = Field(
+    redox_property_ids: Optional[Dict[str, str]] = Field(
         None, description="Solvent:property ID map for each RedoxDoc for this molecule."
     )
 
-    redox_levels_of_theory: Dict[str, str] = Field(
+    redox_levels_of_theory: Optional[Dict[str, str]] = Field(
         None,
         description="Solvent:level of theory map for each RedoxDoc for this molecule.",
     )
 
-    electron_affinity: Dict[str, float] = Field(None, description="Vertical electron affinity in eV")
+    electron_affinity: Optional[Dict[str, float]] = Field(None, description="Vertical electron affinity in eV")
 
-    ea_task_id: Dict[str, MPID] = Field(None, description="Molecule ID for electron affinity")
+    ea_task_id: Optional[Dict[str, MPID]] = Field(None, description="Molecule ID for electron affinity")
 
-    ionization_energy: Dict[str, float] = Field(None, description="Vertical ionization energy in eV")
+    ionization_energy: Optional[Dict[str, float]] = Field(None, description="Vertical ionization energy in eV")
 
-    ie_task_id: Dict[str, MPID] = Field(None, description="Molecule ID for ionization energy")
+    ie_task_id: Optional[Dict[str, MPID]] = Field(None, description="Molecule ID for ionization energy")
 
-    reduction_free_energy: Dict[str, float] = Field(None, description="Adiabatic free energy of reduction")
+    reduction_free_energy: Optional[Dict[str, float]] = Field(None, description="Adiabatic free energy of reduction")
 
-    red_molecule_id: Dict[str, MPculeID] = Field(None, description="Molecule ID for adiabatic reduction")
+    red_molecule_id: Optional[Dict[str, MPculeID]] = Field(None, description="Molecule ID for adiabatic reduction")
 
     oxidation_free_energy: Dict[str, float] = Field(None, description="Adiabatic free energy of oxidation")
 
