@@ -37,7 +37,7 @@ def test_chemenv(structure: Structure):
     valences = [getattr(site.specie, "oxi_state", None) for site in structure]
     valences = [v for v in valences if v is not None]
     if len(valences) == len(structure):
-        assert doc.dict()["warnings"] is None
+        assert doc.model_dump()["warnings"] is None
     # elif structure.composition.almost_equals(Composition("CsCl")):
     #    # We do not have reference polyhedra above a certain number of neighbors.
     #    # ChemEnv cannot deliver an answer without oxidation states.
