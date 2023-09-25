@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 import pytest
 from matcalc.util import get_universal_calculator
@@ -49,7 +49,7 @@ expected_keys = {
 
 
 @pytest.mark.parametrize("calculator", [get_universal_calculator("chgnet"), "m3gnet"])
-def test_mlip_doc(calculator: str | Calculator) -> None:
+def test_mlip_doc(calculator: Union[str, "Calculator"]) -> None:
     doc = MLIPDoc(
         structure=struct, calculator=calculator, material_id="mp-33", deprecated=False
     )
