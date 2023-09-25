@@ -230,18 +230,18 @@ class Phonon(StructureMetadata):
 
     warnings: Optional[List[PhononWarnings]] = Field(None, description="List of warnings associated to the phonon calculation.")
 
-    dielectric: DielectricDoc = Field(None, description="Dielectric properties obtained during a phonon calculations.")
+    dielectric: Optional[DielectricDoc] = Field(None, description="Dielectric properties obtained during a phonon calculations.")
 
-    becs: BornEffectiveCharges = Field(None, description="Born effective charges obtained for a phonon calculation.")
+    becs: Optional[BornEffectiveCharges] = Field(None, description="Born effective charges obtained for a phonon calculation.")
 
-    ir_spectra: IRDielectric = Field(None, description="The IRDielectricTensor.")
+    ir_spectra: Optional[IRDielectric] = Field(None, description="The IRDielectricTensor.")
 
-    thermodynamic: ThermodynamicProperties = Field(
+    thermodynamic: Optional[ThermodynamicProperties] = Field(
         None,
         description="The thermodynamic properties extracted from the phonon " "frequencies.",
     )
 
-    vibrational_energy: VibrationalEnergy = Field(
+    vibrational_energy: Optional[VibrationalEnergy] = Field(
         None, description="The vibrational contributions to the total energy."
     )
 
@@ -262,7 +262,7 @@ class AbinitPhonon(Phonon):
     with Abinit.
     """
 
-    abinit_input_vars: dict = Field(
+    abinit_input_vars: Optional[dict] = Field(
         None,
         description="Dict representation of the inputs used to obtain the phonon"
         "properties and the main general options (e.g. number of "

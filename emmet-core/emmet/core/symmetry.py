@@ -128,9 +128,9 @@ class SymmetryData(BaseModel):
         description="The spacegroup number for the lattice.",
     )
 
-    point_group: str = Field(None, title="Point Group Symbol", description="The point group for the lattice.")
+    point_group: Optional[str] = Field(None, title="Point Group Symbol", description="The point group for the lattice.")
 
-    symprec: float = Field(
+    symprec: Optional[float] = Field(
         None,
         title="Symmetry Finding Precision",
         description="The precision given to spglib to determine the symmetry of this lattice.",

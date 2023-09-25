@@ -82,17 +82,17 @@ class MigrationGraphDoc(EmmetBaseModel):
         description="The matrix suprcell structure that does not contain the mobile ions for the purpose of migration analysis.",  # noqa: E501
     )
 
-    conversion_matrix: List[List[Union[int, float]]] = Field(
+    conversion_matrix: Optional[List[List[Union[int, float]]]] = Field(
         None,
         description="The conversion matrix used to convert unit cell to supercell.",
     )
 
-    inserted_ion_coords: List[Dict[str, Union[List[float], str, int]]] = Field(
+    inserted_ion_coords: Optional[List[Dict[str, Union[List[float], str, int]]]] = Field(
         None,
         description="A dictionary containing all mobile ion fractional coordinates in terms of supercell.",
     )
 
-    insert_coords_combo: List[str] = Field(
+    insert_coords_combo: Optional[List[str]] = Field(
         None,
         description="A list of combinations 'a+b' to designate hops in the supercell. Each combo should correspond to one unique hop in MigrationGraph.",  # noqa: E501
     )

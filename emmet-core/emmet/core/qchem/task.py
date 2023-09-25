@@ -96,17 +96,17 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
 
     special_run_type: Optional[str] = Field(None, description="Special workflow name (if applicable)")
 
-    smiles: str = Field(
+    smiles: Optional[str] = Field(
         None,
         description="Simplified molecular-input line-entry system (SMILES) string for the molecule involved "
         "in this calculation.",
     )
 
-    species_hash: str = Field(
+    species_hash: Optional[str] = Field(
         None,
         description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph " "node attribute.",
     )
-    coord_hash: str = Field(
+    coord_hash: Optional[str] = Field(
         None,
         description="Weisfeiler Lehman (WL) graph hash using the atom coordinates as the graph " "node attribute.",
     )
@@ -114,9 +114,9 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     # TODO - type of `tags` field seems to differ among task databases
     # sometimes List, sometimes Dict
     # left as Any here to ensure tags don't cause validation to fail.
-    tags: Any = Field(None, description="Metadata tags")
+    tags: Optional[Any] = Field(None, description="Metadata tags")
 
-    warnings: Dict[str, bool] = Field(None, description="Any warnings related to this task document")
+    warnings: Optional[Dict[str, bool]] = Field(None, description="Any warnings related to this task document")
 
     @property
     def level_of_theory(self) -> LevelOfTheory:

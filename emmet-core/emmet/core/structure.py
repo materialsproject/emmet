@@ -60,7 +60,7 @@ class StructureMetadata(EmmetBaseModel):
         description="The atomic packing density in atoms per cm^3.",
     )
 
-    symmetry: SymmetryData = Field(None, description="Symmetry data for this material.")
+    symmetry: Optional[SymmetryData] = Field(None, description="Symmetry data for this material.")
 
     @classmethod
     def from_composition(
@@ -150,27 +150,27 @@ class MoleculeMetadata(EmmetBaseModel):
     """
 
     charge: Optional[int] = Field(None, description="Charge of the molecule")
-    spin_multiplicity: int = Field(None, description="Spin multiplicity of the molecule")
+    spin_multiplicity: Optional[int] = Field(None, description="Spin multiplicity of the molecule")
     natoms: Optional[int] = Field(None, description="Total number of atoms in the molecule")
-    elements: List[Element] = Field(None, description="List of elements in the molecule")
+    elements: Optional[List[Element]] = Field(None, description="List of elements in the molecule")
     nelements: Optional[int] = Field(None, title="Number of Elements")
-    nelectrons: int = Field(
+    nelectrons: Optional[int] = Field(
         None,
         title="Number of electrons",
         description="The total number of electrons for the molecule",
     )
-    composition: Composition = Field(None, description="Full composition for the molecule")
-    composition_reduced: Composition = Field(
+    composition: Optional[Composition] = Field(None, description="Full composition for the molecule")
+    composition_reduced: Optional[Composition] = Field(
         None,
         title="Reduced Composition",
         description="Simplified representation of the composition",
     )
-    formula_alphabetical: str = Field(
+    formula_alphabetical: Optional[str] = Field(
         None,
         title="Alphabetical Formula",
         description="Alphabetical molecular formula",
     )
-    formula_pretty: str = Field(
+    formula_pretty: Optional[str] = Field(
         None,
         title="Pretty Formula",
         description="Cleaned representation of the formula.",

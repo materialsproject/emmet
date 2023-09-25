@@ -157,27 +157,27 @@ class EntriesCompositionSummary(BaseModel):
 
 
 class BaseElectrode(BaseModel):
-    battery_type: BatteryType = Field(None, description="The type of battery (insertion or conversion).")
+    battery_type: Optional[BatteryType] = Field(None, description="The type of battery (insertion or conversion).")
 
-    battery_id: str = Field(
+    battery_id: Optional[str] = Field(
         None,
         description="The id for this battery document is the numerically smallest material_id followed by "
         "the working ion.",
     )
 
-    thermo_type: str = Field(
+    thermo_type: Optional[str] = Field(
         None,
         description="The functional type used to compute the thermodynamics of this electrode document.",
     )
 
-    battery_formula: str = Field(
+    battery_formula: Optional[str] = Field(
         None,
         description="Reduced formula with working ion range produced by combining the charge and discharge formulas.",
     )
 
-    working_ion: Element = Field(None, description="The working ion as an Element object.")
+    working_ion: Optional[Element] = Field(None, description="The working ion as an Element object.")
 
-    num_steps: int = Field(
+    num_steps: Optional[int] = Field(
         None,
         description="The number of distinct voltage steps in from fully charge to "
         "discharge based on the stable intermediate states.",
@@ -187,12 +187,12 @@ class BaseElectrode(BaseModel):
         None, description="Maximum absolute difference in adjacent voltage steps."
     )
 
-    last_updated: datetime = Field(
+    last_updated: Optional[datetime] = Field(
         None,
         description="Timestamp for the most recent calculation for this Material document.",
     )
 
-    framework: Composition = Field(None, description="The chemical compositions of the host framework.")
+    framework: Optional[Composition] = Field(None, description="The chemical compositions of the host framework.")
 
     framework_formula: str = Field(None, description="The id for this battery document.")
 

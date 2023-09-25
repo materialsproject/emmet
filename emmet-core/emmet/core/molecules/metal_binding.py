@@ -83,7 +83,7 @@ class MetalBindingData(BaseModel):
         description="ID of MoleculeThermoDoc used to obtain the thermochemistry of the metal atom/ion",
     )
 
-    nometal_thermo_property_id: str = Field(
+    nometal_thermo_property_id: Optional[str] = Field(
         None,
         description="ID of MoleculeThermoDoc used to obtain the thermochemistry of of the molecule with the "
         "metal atom/ion removed",
@@ -108,37 +108,37 @@ class MetalBindingDoc(PropertyDoc):
         description="Method used to determine the charge, spin, and coordination environment of a metal",
     )
 
-    binding_partial_charges_property_id: str = Field(
+    binding_partial_charges_property_id: Optional[str] = Field(
         None,
         description="ID of PartialChargesDoc used to estimate metal charge",
     )
 
-    binding_partial_spins_property_id: str = Field(
+    binding_partial_spins_property_id: Optional[str] = Field(
         None,
         description="ID of PartialSpinsDoc used to estimate metal spin",
     )
 
-    binding_partial_charges_lot_solvent: str = Field(
+    binding_partial_charges_lot_solvent: Optional[str] = Field(
         None,
         description="Combination of level of theory and solvent used to calculate atomic partial charges",
     )
 
-    binding_partial_spins_lot_solvent: str = Field(
+    binding_partial_spins_lot_solvent: Optional[str] = Field(
         None,
         description="Combination of level of theory and solvent used to calculate atomic partial spins",
     )
 
-    binding_charge_spin_method: str = Field(
+    binding_charge_spin_method: Optional[str] = Field(
         None,
         description="The method used for partial charges and spins (must be the same).",
     )
 
-    binding_bonding_property_id: str = Field(
+    binding_bonding_property_id: Optional[str] = Field(
         None,
         description="ID of MoleculeBondingDoc used to detect bonding in this molecule",
     )
 
-    binding_bonding_lot_solvent: str = Field(
+    binding_bonding_lot_solvent: Optional[str] = Field(
         None,
         description="Combination of level of theory and solvent used to determine the coordination environment "
         "of the metal atom or ion",

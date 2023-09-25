@@ -55,12 +55,12 @@ class MagnetismDoc(PropertyDoc):
         description="Total magnetization in μB.",
     )
 
-    total_magnetization_normalized_vol: float = Field(
+    total_magnetization_normalized_vol: Optional[float] = Field(
         None,
         description="Total magnetization normalized by volume in μB/Å³.",
     )
 
-    total_magnetization_normalized_formula_units: float = Field(
+    total_magnetization_normalized_formula_units: Optional[float] = Field(
         None,
         description="Total magnetization normalized by formula unit in μB/f.u. .",
     )

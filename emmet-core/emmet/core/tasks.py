@@ -189,12 +189,12 @@ class InputDoc(BaseModel):
 
 
 class CustodianDoc(BaseModel):
-    corrections: List[Any] = Field(
+    corrections: Optional[List[Any]] = Field(
         None,
         title="Custodian Corrections",
         description="List of custodian correction data for calculation.",
     )
-    job: dict = Field(
+    job: Optional[dict] = Field(
         None,
         title="Cusotodian Job Data",
         description="Job data logged by custodian.",
@@ -202,29 +202,29 @@ class CustodianDoc(BaseModel):
 
 
 class AnalysisDoc(BaseModel):
-    delta_volume: float = Field(
+    delta_volume: Optional[float] = Field(
         None,
         title="Volume Change",
         description="Volume change for the calculation.",
     )
-    delta_volume_percent: float = Field(
+    delta_volume_percent: Optional[float] = Field(
         None,
         title="Volume Change Percent",
         description="Percent volume change for the calculation.",
     )
-    max_force: float = Field(
+    max_force: Optional[float] = Field(
         None,
         title="Max Force",
         description="Maximum force on any atom at the end of the calculation.",
     )
 
-    warnings: List[str] = Field(
+    warnings: Optional[List[str]] = Field(
         None,
         title="Calculation Warnings",
         description="Warnings issued after analysis.",
     )
 
-    errors: List[str] = Field(
+    errors: Optional[List[str]] = Field(
         None,
         title="Calculation Errors",
         description="Errors issued after analysis.",
@@ -538,7 +538,7 @@ class TrajectoryDoc(BaseModel):
     Model for task trajectory data
     """
 
-    task_id: str = Field(
+    task_id: Optional[str] = Field(
         None,
         description="The (task) ID of this calculation, used as a universal reference across property documents."
         "This comes in the form: mp-******.",

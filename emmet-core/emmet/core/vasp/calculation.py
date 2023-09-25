@@ -281,7 +281,7 @@ class IonicStep(BaseModel, extra=Extra.allow):  # type: ignore
     forces: Optional[List[Vector3D]] = Field(None, description="The forces on each atom.")
     stress: Optional[Matrix3D] = Field(None, description="The stress on the lattice.")
     electronic_steps: Optional[List[ElectronicStep]] = Field(None, description="The electronic convergence steps.")
-    structure: Structure = Field(None, description="The structure at this step.")
+    structure: Optional[Structure] = Field(None, description="The structure at this step.")
 
 
 class CalculationOutput(BaseModel):
@@ -482,21 +482,21 @@ class Calculation(BaseModel):
 
     dir_name: Optional[str] = Field(None, description="The directory for this VASP calculation")
     vasp_version: Optional[str] = Field(None, description="VASP version used to perform the calculation")
-    has_vasp_completed: Union[TaskState, bool] = Field(
+    has_vasp_completed: Optional[Union[TaskState, bool]] = Field(
         None, description="Whether VASP completed the calculation successfully"
     )
-    input: CalculationInput = Field(None, description="VASP input settings for the calculation")
-    output: CalculationOutput = Field(None, description="The VASP calculation output")
+    input: Optional[CalculationInput] = Field(None, description="VASP input settings for the calculation")
+    output: Optional[CalculationOutput] = Field(None, description="The VASP calculation output")
     completed_at: Optional[str] = Field(None, description="Timestamp for when the calculation was completed")
     task_name: Optional[str] = Field(None, description="Name of task given by custodian (e.g., relax1, relax2)")
-    output_file_paths: Dict[str, str] = Field(
+    output_file_paths: Optional[Dict[str, str]] = Field(
         None,
         description="Paths (relative to dir_name) of the VASP output files " "associated with this calculation",
     )
     bader: Optional[dict] = Field(None, description="Output from the bader software")
-    run_type: RunType = Field(None, description="Calculation run type (e.g., HF, HSE06, PBE)")
-    task_type: TaskType = Field(None, description="Calculation task type (e.g., Structure Optimization).")
-    calc_type: CalcType = Field(None, description="Return calculation type (run type + task_type).")
+    run_type: Optional[RunType] = Field(None, description="Calculation run type (e.g., HF, HSE06, PBE)")
+    task_type: Optional[TaskType] = Field(None, description="Calculation task type (e.g., Structure Optimization).")
+    calc_type: Optional[CalcType] = Field(None, description="Return calculation type (run type + task_type).")
 
     @classmethod
     def from_vasp_files(

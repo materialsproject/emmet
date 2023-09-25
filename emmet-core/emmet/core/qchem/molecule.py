@@ -180,40 +180,40 @@ class MoleculeDoc(CoreMoleculeDoc):
         None,
         description="Task types for all the calculations that make up this molecule",
     )
-    levels_of_theory: Mapping[str, LevelOfTheory] = Field(
+    levels_of_theory: Optional[Mapping[str, LevelOfTheory]] = Field(
         None,
         description="Levels of theory types for all the calculations that make up this molecule",
     )
-    solvents: Mapping[str, str] = Field(
+    solvents: Optional[Mapping[str, str]] = Field(
         None,
         description="Solvents (solvent parameters) for all the calculations that make up this molecule",
     )
-    lot_solvents: Mapping[str, str] = Field(
+    lot_solvents: Optional[Mapping[str, str]] = Field(
         None,
         description="Combinations of level of theory and solvent for all calculations that make up this molecule",
     )
 
-    unique_calc_types: List[CalcType] = Field(
+    unique_calc_types: Optional[List[CalcType]] = Field(
         None,
         description="Collection of all unique calculation types used for this molecule",
     )
 
-    unique_task_types: List[TaskType] = Field(
+    unique_task_types: Optional[List[TaskType]] = Field(
         None,
         description="Collection of all unique task types used for this molecule",
     )
 
-    unique_levels_of_theory: List[LevelOfTheory] = Field(
+    unique_levels_of_theory: Optional[List[LevelOfTheory]] = Field(
         None,
         description="Collection of all unique levels of theory used for this molecule",
     )
 
-    unique_solvents: List[str] = Field(
+    unique_solvents: Optional[List[str]] = Field(
         None,
         description="Collection of all unique solvents (solvent parameters) used for this molecule",
     )
 
-    unique_lot_solvents: List[str] = Field(
+    unique_lot_solvents: Optional[List[str]] = Field(
         None,
         description="Collection of all unique combinations of level of theory and solvent used for this molecule",
     )

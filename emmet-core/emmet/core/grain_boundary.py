@@ -58,7 +58,7 @@ class GrainBoundaryDoc(BaseModel):
 
     initial_structure: Optional[GrainBoundary] = Field(None, description="Initial grain boundary structure.")
 
-    final_structure: GrainBoundary = Field(None, description="Final grain boundary structure.")
+    final_structure: Optional[GrainBoundary] = Field(None, description="Final grain boundary structure.")
 
     pretty_formula: Optional[str] = Field(None, description="Reduced formula of the material.")
 
@@ -66,9 +66,9 @@ class GrainBoundaryDoc(BaseModel):
 
     cif: Optional[str] = Field(None, description="CIF file of the structure.")
 
-    chemsys: str = Field(None, description="Dash-delimited string of elements in the material.")
+    chemsys: Optional[str] = Field(None, description="Dash-delimited string of elements in the material.")
 
-    last_updated: datetime = Field(
+    last_updated: Optional[datetime] = Field(
         None,
         description="Timestamp for the most recent calculation for this Material document.",
     )

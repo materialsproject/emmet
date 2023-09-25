@@ -49,7 +49,7 @@ class SurfaceEntry(BaseModel):
         description="Area fraction.",
     )
 
-    has_wulff: bool = Field(
+    has_wulff: Optional[bool] = Field(
         None,
         description="Whether the surface has wulff entry.",
     )
@@ -60,37 +60,37 @@ class SurfacePropDoc(BaseModel):
     Model for a document containing surface properties data
     """
 
-    surfaces: List[SurfaceEntry] = Field(
+    surfaces: Optional[List[SurfaceEntry]] = Field(
         None,
         description="List of individual surface data.",
     )
 
-    weighted_surface_energy_EV_PER_ANG2: float = Field(
+    weighted_surface_energy_EV_PER_ANG2: Optional[float] = Field(
         None,
         description="Weighted surface energy in eV/Å²",
     )
 
-    weighted_surface_energy: float = Field(
+    weighted_surface_energy: Optional[float] = Field(
         None,
         description="Weighted surface energy in J/m²",
     )
 
-    surface_anisotropy: float = Field(
+    surface_anisotropy: Optional[float] = Field(
         None,
         description="Surface energy anisotropy.",
     )
 
-    pretty_formula: str = Field(
+    pretty_formula: Optional[str] = Field(
         None,
         description="Reduced Formula of the material.",
     )
 
-    shape_factor: float = Field(
+    shape_factor: Optional[float] = Field(
         None,
         description="Shape factor.",
     )
 
-    weighted_work_function: float = Field(
+    weighted_work_function: Optional[float] = Field(
         None,
         description="Weighted work function in eV.",
     )

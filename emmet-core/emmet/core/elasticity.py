@@ -142,18 +142,18 @@ class ElasticityDoc(PropertyDoc):
     # derived properties
     bulk_modulus: Optional[BulkModulus] = Field(None, description="Bulk modulus")
     shear_modulus: Optional[ShearModulus] = Field(None, description="Shear modulus")
-    sound_velocity: SoundVelocity = Field(None, description="Sound velocity")
-    thermal_conductivity: ThermalConductivity = Field(None, description="Thermal conductivity")
+    sound_velocity: Optional[SoundVelocity] = Field(None, description="Sound velocity")
+    thermal_conductivity: Optional[ThermalConductivity] = Field(None, description="Thermal conductivity")
     young_modulus: Optional[float] = Field(None, description="Young's modulus (SI units)")
     universal_anisotropy: Optional[float] = Field(None, description="Universal elastic anisotropy")
     homogeneous_poisson: Optional[float] = Field(None, description="Homogeneous Poisson ratio")
     debye_temperature: Optional[float] = Field(None, description="Debye temperature (SI units)")
 
-    fitting_data: FittingData = Field(None, description="Data used to fit the elastic tensor")
+    fitting_data: Optional[FittingData] = Field(None, description="Data used to fit the elastic tensor")
 
     fitting_method: Optional[str] = Field(None, description="Method used to fit the elastic tensor")
 
-    state: Status = Field(
+    state: Optional[Status] = Field(
         None,
         description="State of the fitting/analysis: `successful` or `failed`",
     )

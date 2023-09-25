@@ -104,17 +104,17 @@ class MoleculeSummaryDoc(PropertyDoc):
     )
 
     # thermo
-    thermo_property_ids: Dict[str, str] = Field(
+    thermo_property_ids: Optional[Dict[str, str]] = Field(
         None,
         description="Solvent:property ID map for each MoleculeThermoDoc for this molecule.",
     )
 
-    thermo_levels_of_theory: Dict[str, str] = Field(
+    thermo_levels_of_theory: Optional[Dict[str, str]] = Field(
         None,
         description="Solvent:level of theory map for each MoleculeThermoDoc for this molecule.",
     )
 
-    electronic_energy: Dict[str, float] = Field(None, description="Electronic energy of the molecule (units: eV)")
+    electronic_energy: Optional[Dict[str, float]] = Field(None, description="Electronic energy of the molecule (units: eV)")
 
     zero_point_energy: Dict[str, Optional[float]] = Field(
         None, description="Zero-point energy of the molecule (units: eV)"
@@ -158,24 +158,24 @@ class MoleculeSummaryDoc(PropertyDoc):
     )
 
     # vibrational properties
-    vibration_property_ids: Dict[str, str] = Field(
+    vibration_property_ids: Optional[Dict[str, str]] = Field(
         None,
         description="Solvent:property ID map for each VibrationDoc for this molecule.",
     )
 
-    vibration_levels_of_theory: Dict[str, str] = Field(
+    vibration_levels_of_theory: Optional[Dict[str, str]] = Field(
         None,
         description="Solvent:level of theory map for each VibrationDoc for this molecule.",
     )
 
-    frequencies: Dict[str, List[float]] = Field(None, description="List of molecular vibrational frequencies")
+    frequencies: Optional[Dict[str, List[float]]] = Field(None, description="List of molecular vibrational frequencies")
 
-    frequency_modes: Dict[str, List[List[List[float]]]] = Field(
+    frequency_modes: Optional[Dict[str, List[List[List[float]]]]] = Field(
         None,
         description="Vibrational frequency modes of the molecule (units: Angstrom)",
     )
 
-    ir_intensities: Dict[str, List[float]] = Field(
+    ir_intensities: Optional[Dict[str, List[float]]] = Field(
         None,
         title="IR intensities",
         description="Intensities for infrared vibrational spectrum peaks",

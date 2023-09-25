@@ -140,19 +140,19 @@ class SummaryDoc(PropertyDoc):
         source="thermo",
     )
 
-    energy_per_atom: float = Field(
+    energy_per_atom: Optional[float] = Field(
         None,
         description="The total corrected DFT energy of this material per atom in eV/atom.",
         source="thermo",
     )
 
-    formation_energy_per_atom: float = Field(
+    formation_energy_per_atom: Optional[float] = Field(
         None,
         description="The formation energy per atom in eV/atom.",
         source="thermo",
     )
 
-    energy_above_hull: float = Field(
+    energy_above_hull: Optional[float] = Field(
         None,
         description="The energy above the hull in eV/Atom.",
         source="thermo",
@@ -164,14 +164,14 @@ class SummaryDoc(PropertyDoc):
         source="thermo",
     )
 
-    equilibrium_reaction_energy_per_atom: float = Field(
+    equilibrium_reaction_energy_per_atom: Optional[float] = Field(
         None,
         description="The reaction energy of a stable entry from the neighboring equilibrium stable materials in eV."
         " Also known as the inverse distance to hull.",
         source="thermo",
     )
 
-    decomposes_to: List[DecompositionProduct] = Field(
+    decomposes_to: Optional[List[DecompositionProduct]] = Field(
         None,
         description="List of decomposition data for this material. Only valid for metastable or unstable material.",
         source="thermo",
@@ -179,11 +179,11 @@ class SummaryDoc(PropertyDoc):
 
     # XAS
 
-    xas: List[XASSearchData] = Field(None, description="List of xas documents.", source="xas")
+    xas: Optional[List[XASSearchData]] = Field(None, description="List of xas documents.", source="xas")
 
     # GB
 
-    grain_boundaries: List[GBSearchData] = Field(
+    grain_boundaries: Optional[List[GBSearchData]] = Field(
         None,
         description="List of grain boundary documents.",
         source="grain_boundary",
@@ -193,7 +193,7 @@ class SummaryDoc(PropertyDoc):
 
     band_gap: Optional[float] = Field(None, description="Band gap energy in eV.", source="electronic_structure")
 
-    cbm: Union[float, Dict] = Field(None, description="Conduction band minimum data.", source="electronic_structure")
+    cbm: Optional[Union[float, Dict]] = Field(None, description="Conduction band minimum data.", source="electronic_structure")
 
     vbm: Union[float, Dict] = Field(None, description="Valence band maximum data.", source="electronic_structure")
 

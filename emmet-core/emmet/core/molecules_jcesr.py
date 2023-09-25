@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Molecule
@@ -50,17 +50,17 @@ class MoleculesDoc(BaseModel):
         description="Materials Project molecule ID. This takes the form mol-*****.",
     )
 
-    molecule: Molecule = Field(
+    molecule: Optional[Molecule] = Field(
         None,
         description="Pymatgen molecule object.",
     )
 
-    formula_pretty: str = Field(
+    formula_pretty: Optional[str] = Field(
         None,
         description="Chemical formula of the molecule.",
     )
 
-    svg: str = Field(
+    svg: Optional[str] = Field(
         None,
         description="String representation of the SVG image of the molecule.",
     )

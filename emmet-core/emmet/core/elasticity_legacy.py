@@ -47,12 +47,12 @@ class ElasticityData(BaseModel):
         description="Poisson's ratio.",
     )
 
-    elastic_tensor: List[List[float]] = Field(
+    elastic_tensor: Optional[List[List[float]]] = Field(
         None,
         description="Stiffness tensor in GPa.",
     )
 
-    compliance_tensor: List[List[float]] = Field(
+    compliance_tensor: Optional[List[List[float]]] = Field(
         None,
         description="Compliance tensor in 10^(-12)/Pa.",
     )
@@ -63,22 +63,22 @@ class ElasticityDoc(BaseModel):
     Model for a document containing elasticity data
     """
 
-    pretty_formula: str = Field(
+    pretty_formula: Optional[str] = Field(
         None,
         description="Cleaned representation of the material formula",
     )
 
-    chemsys: str = Field(
+    chemsys: Optional[str] = Field(
         None,
         description="Dash-delimited string of elements in the material.",
     )
 
-    elasticity: ElasticityData = Field(
+    elasticity: Optional[ElasticityData] = Field(
         None,
         description="Elasticity data for the material.",
     )
 
-    task_id: str = Field(
+    task_id: Optional[str] = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )

@@ -251,13 +251,13 @@ class OrbitalDoc(PropertyDoc):
     )
 
     alpha_bonds: Optional[List[Bond]] = Field(None, description="Alpha electron bond-like orbitals of an open-shell molecule")
-    beta_bonds: List[Bond] = Field(None, description="Beta electron bond-like orbitals of an open-shell molecule")
+    beta_bonds: Optional[List[Bond]] = Field(None, description="Beta electron bond-like orbitals of an open-shell molecule")
 
-    alpha_interactions: List[Interaction] = Field(
+    alpha_interactions: Optional[List[Interaction]] = Field(
         None,
         description="Alpha electron orbital-orbital interactions of an open-shell molecule",
     )
-    beta_interactions: List[Interaction] = Field(
+    beta_interactions: Optional[List[Interaction]] = Field(
         None,
         description="Beta electron orbital-orbital interactions of an open-shell molecule",
     )
