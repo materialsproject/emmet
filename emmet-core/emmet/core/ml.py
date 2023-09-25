@@ -53,55 +53,58 @@ class MLIPDoc(PropertyDoc):
     matcalc_version: str = Field(
         None, description="Version of matcalc used to generate this document"
     )
-    model_name: str = Field(
-        None,
-        description="Name of model used as ML potential. See matcalc.util.UNIVERSAL_CALCULATORS for recognized names.",
-    )
+    model_name: str = Field(None, description="Name of model used as ML potential.")
     model_version: str = Field(
         None, description="Version of model used as ML potential"
     )
 
     # relaxation attributes
-    final_structure: Structure = Field(description="ML-potential-relaxed structure")
-    energy: float = Field(description="Final energy in eV")
-    volume: float = Field(description="Final volume in Angstrom^3")
-    a: float = Field(description="Lattice length a in Angstrom")
-    b: float = Field(description="Lattice length b in Angstrom")
-    c: float = Field(description="Lattice length c in Angstrom")
-    alpha: float = Field(description="Lattice angle alpha in degrees")
-    beta: float = Field(description="Lattice angle beta in degrees")
-    gamma: float = Field(description="Lattice angle gamma in degrees")
+    final_structure: Structure = Field(
+        None, description="ML-potential-relaxed structure"
+    )
+    energy: float = Field(None, description="Final energy in eV")
+    volume: float = Field(None, description="Final volume in Angstrom^3")
+    a: float = Field(None, description="Lattice length a in Angstrom")
+    b: float = Field(None, description="Lattice length b in Angstrom")
+    c: float = Field(None, description="Lattice length c in Angstrom")
+    alpha: float = Field(None, description="Lattice angle alpha in degrees")
+    beta: float = Field(None, description="Lattice angle beta in degrees")
+    gamma: float = Field(None, description="Lattice angle gamma in degrees")
 
     # equation of state attributes
     eos: Dict[str, List[float]] = Field(
-        description="dict with keys energies and volumes"
+        None, description="dict with keys energies and volumes"
     )
-    bulk_modulus_bm: float = Field(description="bm.b0_GPa")
+    bulk_modulus_bm: float = Field(None, description="bm.b0_GPa")
 
     # phonons attributes
-    temperatures: List[float] = Field(description="list of temperatures")
+    temperatures: List[float] = Field(None, description="list of temperatures")
     free_energy: List[float] = Field(
-        description="list of Helmholtz free energies at corresponding temperatures"
+        None,
+        description="list of Helmholtz free energies at corresponding temperatures",
     )
     entropy: List[float] = Field(
-        description="list of entropies at corresponding temperatures in eV/K"
+        None, description="list of entropies at corresponding temperatures in eV/K"
     )
     heat_capacity: List[float] = Field(
+        None,
         description="list of heat capacities at constant volume at corresponding "
-        "temperatures in eV/K"
+        "temperatures in eV/K",
     )
 
     # elasticity attributes
     elastic_tensor: ElasticTensor = Field(
-        description="pymatgen ElasticTensor in Voigt notation (GPa)"
+        None, description="pymatgen ElasticTensor in Voigt notation (GPa)"
     )
     shear_modulus_vrh: float = Field(
-        description="Voigt-Reuss-Hill shear modulus based on elastic tensor"
+        None, description="Voigt-Reuss-Hill shear modulus based on elastic tensor"
     )
     bulk_modulus_vrh: float = Field(
-        description="Voigt-Reuss-Hill bulk modulus based on elastic tensor"
+        None, description="Voigt-Reuss-Hill bulk modulus based on elastic tensor"
     )
-    youngs_modulus: float = Field(description="Young's modulus based on elastic tensor")
+    youngs_modulus: float = Field(
+        None, description="Young's modulus based on elastic tensor"
+    )
 
     @validator("elastic_tensor", pre=True)
     def make_elastic_tensor(cls, val) -> ElasticTensor:
