@@ -2,7 +2,7 @@ from typing import Optional
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
-from emmet.api.routes.materials.electrodes.utils import (
+from emmet.api.routes.materials.insertion_electrodes.utils import (
     electrodes_formula_to_criteria,
     electrodes_chemsys_to_criteria,
 )

@@ -52,9 +52,9 @@ class CorrectedEntriesBuilder(Builder):
         if self.corrected_entries.key != "chemsys":
             warnings.warn(
                 "Key for the corrected_entries store is incorrect and has been changed "
-                f"from {self.corrected_entries.key} to chemsys!"
+                f"from {self.corrected_entries.key} to thermo_id!"
             )
-            self.corrected_entries.key = "thermo_id"
+            self.corrected_entries.key = "chemsys"
 
         if self.materials.key != "material_id":
             warnings.warn(

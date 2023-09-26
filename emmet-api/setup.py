@@ -20,6 +20,7 @@ setup(
         "ddtrace",
         "setproctitle",
         "shapely",
+        "pymatgen<=2023.9.10",
     ],
     extras_require={
         "test": [
@@ -48,7 +49,7 @@ setup(
             "jinja2",
         ],
     },
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     license="modified BSD",
     zip_safe=False,
 )

@@ -1,4 +1,4 @@
-from pathlib import Path
+"""Module defining vasp calculation types."""
 
 try:
     import emmet.core.vasp.calc_types.enums

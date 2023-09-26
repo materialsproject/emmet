@@ -4,6 +4,7 @@ import itertools
 import re
 import boto3
 import numpy as np
+from botocore.handlers import disable_signing
 from maggma.builders import Builder
 from maggma.utils import grouper
 from pymatgen.analysis.magnetism.analyzer import CollinearMagneticStructureAnalyzer
@@ -79,6 +80,10 @@ class ElectronicStructureBuilder(Builder):
 
                 if self._s3_resource is None:
                     self._s3_resource = boto3.resource("s3")
+                    self._s3_resource.meta.client.meta.events.register(
+                        "choose-signer.s3.*", disable_signing
+                    )
+
             else:
                 sources.append(store)
 
@@ -454,6 +459,10 @@ class ElectronicStructureBuilder(Builder):
                                 )
                             except Exception:
                                 bs_type = None
+
+                        # Clear bs data
+                        bs = None
+                        bs_dict = None
 
                     is_hubbard = task_query["input"]["is_hubbard"]
                     lmaxmix = task_query["input"]["incar"].get(

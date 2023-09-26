@@ -16,7 +16,7 @@ setup(
     },
     include_package_data=True,
     install_requires=[
-        "pymatgen>=2023.7.20,<2023.9.10",
+        "pymatgen<=2023.9.10",
         "monty>=2021.3",
         "pydantic>=2.0",
         "pydantic-settings>=2.0",
@@ -28,8 +28,8 @@ setup(
     extras_require={
         "all": [
             "seekpath>=2.0.1",
-            "robocrys>=0.2.7",
-            "pymatgen-analysis-diffusion>=2022.1.15",
+            "robocrys>=0.2.8",
+            "pymatgen-analysis-diffusion>=2023.8.15",
             "pymatgen-analysis-alloys>=0.0.3",
         ],
         "test": [
@@ -60,7 +60,7 @@ setup(
             "jinja2",
         ],
     },
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     license="modified BSD",
     zip_safe=False,
 )
