@@ -88,7 +88,9 @@ jobs:
       - name: Install editable emmet-core if needed
         shell: bash -l {0}
         if: matrix.package != 'emmet-core'
-        run: python${{ matrix.python-version }} -m pip install --user --no-deps ./emmet-core
+        run: |
+          python${{ matrix.python-version }} -m pip uninstall --user emmet-core
+          python${{ matrix.python-version }} -m pip install --user --no-deps ./emmet-core
 
       - name: Install ${{ matrix.package }}
         shell: bash -l {0}
