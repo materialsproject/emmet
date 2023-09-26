@@ -77,20 +77,18 @@ jobs:
       #     echo "PYTHONPATH=/usr/local/lib:/usr/local/include/openbabel3:$PYTHONPATH" >> $GITHUB_PATH
       #     sudo ln -s /usr/include/openbabel3 /usr/local/include/openbabel3
       #     echo "LD_LIBRARY_PATH=/usr/local/lib:/usr/include/openbabel3:$LD_LIBRARY_PATH" >> $GITHUB_PATH
-
+      
+      - name: Install editable emmet-core if needed
+        shell: bash -l {0}
+        if: matrix.package != 'emmet-core'
+        run: python${{ matrix.python-version }} -m pip install --user --no-deps ./emmet-core
+      
       - name: Install Python dependencies
         shell: bash -l {0}
         run: |
           python${{ matrix.python-version }} -m pip install --upgrade pip pip-tools
           python${{ matrix.python-version }} -m pip install --user `grep numpy ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt`
           python${{ matrix.python-version }} -m piptools sync --user ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
-
-      - name: Install editable emmet-core if needed
-        shell: bash -l {0}
-        if: matrix.package != 'emmet-core'
-        run: |
-          python${{ matrix.python-version }} -m pip uninstall --user emmet-core
-          python${{ matrix.python-version }} -m pip install --user --no-deps ./emmet-core
 
       - name: Install ${{ matrix.package }}
         shell: bash -l {0}
