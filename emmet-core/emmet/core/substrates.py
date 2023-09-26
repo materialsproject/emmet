@@ -40,7 +40,7 @@ class SubstratesDoc(BaseModel):
     norients: Optional[int] = Field(
         None,
         description="Number of possible surface orientations for the substrate.",
-        alias="_norients"
+        alias="_norients",
     )
 
     orient: Optional[str] = Field(
