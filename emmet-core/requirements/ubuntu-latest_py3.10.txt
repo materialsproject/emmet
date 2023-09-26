@@ -4,6 +4,7 @@
 #
 #    pip-compile --output-file=requirements/ubuntu-latest_py3.10.txt
 #
+pydantic-settings
 certifi==2023.7.22
     # via requests
 charset-normalizer==3.2.0
@@ -67,10 +68,6 @@ pybtex==0.24.0
     #   emmet-core
     #   emmet-core (setup.py)
     #   pymatgen
-pydantic==1.10.12
-    # via
-    #   emmet-core
-    #   emmet-core (setup.py)
 pymatgen==2023.9.10
     # via
     #   emmet-core
