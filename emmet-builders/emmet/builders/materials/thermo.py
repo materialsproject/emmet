@@ -198,12 +198,12 @@ class ThermoBuilder(Builder):
                         thermo_type=thermo_type,
                     )
 
-                    pd_data = jsanitize(pd_doc.dict(), allow_bson=True)
+                    pd_data = jsanitize(pd_doc.model_dump(), allow_bson=True)
 
                     pd_docs = [pd_data]
 
             docs_pd_pair = (
-                jsanitize([d.dict() for d in docs], allow_bson=True),
+                jsanitize([d.model_dump() for d in docs], allow_bson=True),
                 pd_docs,
             )
 

@@ -141,7 +141,7 @@ class SoundVelocityBuilder(Builder):
 
             self.logger.debug("Item generated for {}".format(item["mp_id"]))
 
-            return jsanitize(sv.dict())
+            return jsanitize(sv.model_dump())
         except Exception:
             self.logger.warning(
                 "Error generating the sound velocity for {}: {}".format(

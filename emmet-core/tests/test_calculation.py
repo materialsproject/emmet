@@ -97,7 +97,7 @@ def test_mag_calculation_output(test_dir):
         Outcar(dir_name / "OUTCAR.gz"),
         Poscar.from_file(dir_name / "CONTCAR.gz"),
     )
-    assert d.dict()["mag_density"] == pytest.approx(0.19384725901794095)
+    assert d.model_dump()["mag_density"] == pytest.approx(0.19384725901794095)
 
 
 @pytest.mark.parametrize(

@@ -17,7 +17,9 @@ setup(
     install_requires=[
         "pymatgen<=2023.9.10",
         "monty>=2021.3",
-        "pydantic>=1.10.2,<2.0",
+        "pydantic>=2.0",
+        "pydantic-settings>=2.0",
+        "pydantic-core>=2.0",
         "pybtex~=0.24",
         "typing-extensions>=3.7,<5.0",
         "spglib>=2.0.1",
@@ -29,6 +31,8 @@ setup(
             "pymatgen-analysis-diffusion>=2023.8.15",
             "pymatgen-analysis-alloys>=0.0.3",
             "matcalc[models]",
+            "chgnet",
+            "matgl",
         ],
         "test": [
             "pre-commit",

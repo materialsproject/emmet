@@ -9,9 +9,9 @@ from typing import Dict, List, Type, TypeVar, Union
 
 import requests
 from monty.json import MontyDecoder
-from pydantic import BaseSettings, Field, root_validator
-from pydantic.class_validators import validator
+from pydantic import field_validator, model_validator, Field
 from pydantic.types import PyObject
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_CONFIG_FILE_PATH = str(Path.home().joinpath(".emmet.json"))
 
@@ -167,12 +167,10 @@ class EmmetSettings(BaseSettings):
         True,
         description="Use static calculations for structure and energy along with structure optimizations",
     )
+    model_config = SettingsConfigDict(env_prefix="emmet_", extra="ignore")
 
-    class Config:
-        env_prefix = "emmet_"
-        extra = "ignore"
-
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def load_default_settings(cls, values):
         """
         Loads settings from a root file if available and uses that as defaults in
@@ -200,7 +198,8 @@ class EmmetSettings(BaseSettings):
             return cls(**settings)
         return settings
 
-    @validator("VASP_DEFAULT_INPUT_SETS", pre=True)
+    @field_validator("VASP_DEFAULT_INPUT_SETS", mode="before")
+    @classmethod
     def convert_input_sets(cls, value):
         if isinstance(value, dict):
             return {k: MontyDecoder().process_decoded(v) for k, v in value.items()}

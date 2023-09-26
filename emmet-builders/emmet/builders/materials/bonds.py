@@ -50,6 +50,6 @@ class BondingBuilder(MapBuilder):
         bonding_doc = BondingDoc.from_structure(
             structure=structure, material_id=mpid, deprecated=deprecated
         )
-        doc = jsanitize(bonding_doc.dict(), allow_bson=True)
+        doc = jsanitize(bonding_doc.model_dump(), allow_bson=True)
 
         return doc

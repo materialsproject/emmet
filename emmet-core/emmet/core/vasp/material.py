@@ -1,5 +1,5 @@
 """ Core definition of a Materials Document """
-from typing import Dict, List, Mapping
+from typing import Dict, List, Mapping, Optional
 
 from pydantic import Field
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
@@ -21,20 +21,20 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         None,
         description="Calculation types for all the calculations that make up this material",
     )
-    task_types: Mapping[str, TaskType] = Field(
+    task_types: Optional[Mapping[str, TaskType]] = Field(
         None,
         description="Task types for all the calculations that make up this material",
     )
-    run_types: Mapping[str, RunType] = Field(
+    run_types: Optional[Mapping[str, RunType]] = Field(
         None,
         description="Run types for all the calculations that make up this material",
     )
 
-    origins: List[PropertyOrigin] = Field(
+    origins: Optional[List[PropertyOrigin]] = Field(
         None, description="Mappingionary for tracking the provenance of properties"
     )
 
-    entries: Mapping[RunType, ComputedStructureEntry] = Field(
+    entries: Optional[Mapping[RunType, ComputedStructureEntry]] = Field(
         None, description="Dictionary for tracking entries for VASP calculations"
     )
 

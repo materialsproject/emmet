@@ -1,4 +1,4 @@
-from typing import Literal, List, Union
+from typing import Literal, List, Union, Optional
 
 from pydantic import Field
 from pymatgen.analysis.chemenv.coordination_environments.chemenv_strategies import (
@@ -315,14 +315,14 @@ class ChemEnvDoc(PropertyDoc):
     If no oxidation states are available, all bonds will be considered as a fall-back.
     """
 
-    property_name = "coord_environment"
+    property_name: str = "coord_environment"
 
     structure: Structure = Field(
         ...,
         description="The structure used in the generation of the chemical environment data",
     )
 
-    valences: List[int] = Field(
+    valences: List[Union[int, float]] = Field(
         description="List of valences for each site in this material to determine cations"
     )
 
@@ -371,7 +371,7 @@ class ChemEnvDoc(PropertyDoc):
         description="List of Wyckoff positions for unique (cationic) species in structure."
     )
 
-    warnings: Union[str, None] = Field(None, description="Warning")
+    warnings: Optional[str] = Field(None, description="Warning")
 
     @classmethod
     def from_structure(
