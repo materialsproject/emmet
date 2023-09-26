@@ -4,6 +4,7 @@
 #
 #    pip-compile --output-file=requirements/ubuntu-latest_py3.10.txt
 #
+pydantic-settings
 aioitertools==0.11.0
     # via maggma
 anyio==3.7.1
@@ -170,12 +171,6 @@ pybtex==0.24.0
     #   robocrys
 pycparser==2.21
     # via cffi
-pydantic==1.10.12
-    # via
-    #   emmet-core
-    #   fastapi
-    #   inflect
-    #   maggma
 pydash==7.0.6
     # via maggma
 pymatgen==2023.9.10

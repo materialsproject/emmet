@@ -4,6 +4,7 @@
 #
 #    pip-compile --all-extras --output-file=requirements/ubuntu-latest_py3.9_extras.txt
 #
+pydantic-settings
 aioitertools==0.11.0
     # via maggma
 anyio==3.7.1
@@ -284,12 +285,6 @@ pycodestyle==2.11.0
     #   flake8
 pycparser==2.21
     # via cffi
-pydantic==1.10.12
-    # via
-    #   emmet-core
-    #   fastapi
-    #   inflect
-    #   maggma
 pydash==7.0.6
     # via maggma
 pydocstyle==6.3.0
