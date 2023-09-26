@@ -125,7 +125,7 @@ class MLDoc(ElasticityDoc):
 
     @model_validator(mode="before")
     @classmethod
-    def shear_vrh_no_suffix(cls, new_key, values):
+    def shear_vrh_no_suffix(cls, values):
         """Map field shear_modulus_vrh to shear_modulus."""
         val = values.get("shear_modulus_vrh", None)
         if val:
