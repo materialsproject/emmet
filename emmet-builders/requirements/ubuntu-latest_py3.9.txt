@@ -4,9 +4,10 @@
 #
 #    pip-compile --output-file=requirements/ubuntu-latest_py3.9.txt
 #
-pydantic-settings
 aioitertools==0.11.0
     # via maggma
+annotated-types==0.5.0
+    # via pydantic
 anyio==3.7.1
     # via
     #   fastapi
@@ -19,9 +20,9 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.28.54
+boto3==1.28.55
     # via maggma
-botocore==1.31.54
+botocore==1.31.55
     # via
     #   boto3
     #   s3transfer
@@ -48,7 +49,7 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.68.0
+emmet-core[all]==0.58.0
     # via
     #   emmet-builders (setup.py)
     #   mp-api
@@ -97,7 +98,7 @@ kiwisolver==1.4.5
     # via matplotlib
 latexcodec==2.0.1
     # via pybtex
-maggma==0.56.0
+maggma==0.57.0
     # via emmet-builders (setup.py)
 markupsafe==2.1.3
     # via
@@ -118,6 +119,7 @@ monty==2023.9.25
     #   emmet-core
     #   maggma
     #   matminer
+    #   mp-api
     #   pymatgen
     #   robocrys
 mp-api==0.36.1
@@ -174,6 +176,17 @@ pybtex==0.24.0
     #   robocrys
 pycparser==2.21
     # via cffi
+pydantic==2.4.1
+    # via
+    #   emmet-core
+    #   fastapi
+    #   inflect
+    #   maggma
+    #   pydantic-settings
+pydantic-core==2.10.1
+    # via pydantic
+pydantic-settings==2.0.3
+    # via maggma
 pydash==7.0.6
     # via maggma
 pymatgen==2023.9.10
@@ -181,6 +194,7 @@ pymatgen==2023.9.10
     #   emmet-builders (setup.py)
     #   emmet-core
     #   matminer
+    #   mp-api
     #   pymatgen-analysis-alloys
     #   pymatgen-analysis-diffusion
     #   robocrys
@@ -203,6 +217,8 @@ python-dateutil==2.8.2
     #   maggma
     #   matplotlib
     #   pandas
+python-dotenv==1.0.0
+    # via pydantic-settings
 pytz==2023.3.post1
     # via pandas
 pyyaml==6.0.1
@@ -217,6 +233,7 @@ requests==2.31.0
     # via
     #   matminer
     #   mongogrant
+    #   mp-api
     #   pymatgen
 robocrys==0.2.8
     # via emmet-core
@@ -231,7 +248,7 @@ ruamel-yaml==0.17.32
     #   robocrys
 ruamel-yaml-clib==0.2.7
     # via ruamel-yaml
-s3transfer==0.6.2
+s3transfer==0.7.0
     # via boto3
 scikit-learn==1.3.1
     # via matminer
@@ -284,7 +301,9 @@ typing-extensions==4.8.0
     #   emmet-core
     #   fastapi
     #   inflect
+    #   mp-api
     #   pydantic
+    #   pydantic-core
     #   pydash
     #   starlette
     #   uvicorn
