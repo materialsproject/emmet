@@ -4,6 +4,7 @@
 #
 #    pip-compile --all-extras --output-file=requirements/ubuntu-latest_py3.9_extras.txt
 #
+matcalc
 aioitertools==0.11.0
     # via maggma
 anyio==3.7.1
