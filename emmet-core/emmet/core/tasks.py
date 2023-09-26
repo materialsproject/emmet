@@ -404,14 +404,13 @@ class TaskDoc(StructureMetadata, extra="allow"):
     def last_updated_dict_ok(cls, v) -> datetime:
         return v if isinstance(v, datetime) else monty_decoder.process_decoded(v)
 
-    @model_validator(mode="before")
-    @classmethod
-    def set_entry(cls, values) -> datetime:
-        if not values.get("entry", None) and (
-            values.get("calcs_reversed", None) and values.get("task_id")
+    @model_validator(mode="after")
+    def set_entry(self) -> datetime:
+        if not self.entry and (
+            self.calcs_reversed and self.task_id
         ):
-            values["entry"] = cls.get_entry(values["calcs_reversed"], values["task_id"])
-        return values
+            self.entry = self.get_entry(self.calcs_reversed, self.task_id)
+        return self
 
     @classmethod
     def from_directory(
