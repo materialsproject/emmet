@@ -37,9 +37,10 @@ class SubstratesDoc(BaseModel):
         description="The Materials Project ID of the film material. This comes in the form: mp-******.",
     )
 
-    _norients: Optional[int] = Field(
+    norients: Optional[int] = Field(
         None,
         description="Number of possible surface orientations for the substrate.",
+        alias="_norients"
     )
 
     orient: Optional[str] = Field(
