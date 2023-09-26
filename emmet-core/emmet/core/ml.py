@@ -55,43 +55,43 @@ class MLDoc(ElasticityDoc):
 
     # metadata
     structure: Structure = Field(description="Original structure")
-    matcalc_version: str = Field(
+    matcalc_version: Optional[str] = Field(
         None, description="Version of matcalc used to generate this document"
     )
-    model_name: str = Field(None, description="Name of model used as ML potential.")
-    model_version: str = Field(
+    model_name: Optional[str] = Field(None, description="Name of model used as ML potential.")
+    model_version: Optional[str] = Field(
         None, description="Version of model used as ML potential"
     )
 
     # relaxation attributes
-    final_structure: Structure = Field(
+    final_structure: Optional[Structure] = Field(
         None, description="ML-potential-relaxed structure"
     )
-    energy: float = Field(None, description="Final energy in eV")
-    volume: float = Field(None, description="Final volume in Angstrom^3")
-    a: float = Field(None, description="Lattice length a in Angstrom")
-    b: float = Field(None, description="Lattice length b in Angstrom")
-    c: float = Field(None, description="Lattice length c in Angstrom")
-    alpha: float = Field(None, description="Lattice angle alpha in degrees")
-    beta: float = Field(None, description="Lattice angle beta in degrees")
-    gamma: float = Field(None, description="Lattice angle gamma in degrees")
+    energy: Optional[float] = Field(None, description="Final energy in eV")
+    volume: Optional[float] = Field(None, description="Final volume in Angstrom^3")
+    a: Optional[float] = Field(None, description="Lattice length a in Angstrom")
+    b: Optional[float] = Field(None, description="Lattice length b in Angstrom")
+    c: Optional[float] = Field(None, description="Lattice length c in Angstrom")
+    alpha: Optional[float] = Field(None, description="Lattice angle alpha in degrees")
+    beta: Optional[float] = Field(None, description="Lattice angle beta in degrees")
+    gamma: Optional[float] = Field(None, description="Lattice angle gamma in degrees")
 
     # equation of state attributes
-    eos: Dict[str, List[float]] = Field(
+    eos: Optional[Dict[str, List[float]]] = Field(
         None, description="dict with keys energies and volumes"
     )
-    bulk_modulus_bm: float = Field(None, description="bm.b0_GPa")
+    bulk_modulus_bm: Optional[float] = Field(None, description="bm.b0_GPa")
 
     # phonons attributes
-    temperatures: List[float] = Field(None, description="list of temperatures")
-    free_energy: List[float] = Field(
+    temperatures: Optional[List[float]] = Field(None, description="list of temperatures")
+    free_energy: Optional[List[float]] = Field(
         None,
         description="list of Helmholtz free energies at corresponding temperatures",
     )
-    entropy: List[float] = Field(
+    entropy: Optional[List[float]] = Field(
         None, description="list of entropies at corresponding temperatures in eV/K"
     )
-    heat_capacity: List[float] = Field(
+    heat_capacity: Optional[List[float]] = Field(
         None,
         description="list of heat capacities at constant volume at corresponding "
         "temperatures in eV/K",
