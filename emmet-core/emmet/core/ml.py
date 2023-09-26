@@ -45,9 +45,9 @@ class MLIPDoc(ElasticityDoc):
         - entropy (list[float]): entropies at those temperatures in eV/K
         - heat_capacities (list[float]): heat capacities at constant volume in eV/K
     - elasticity
-        - elastic_tensor (ElasticTensor): pymatgen ElasticTensor object
-        - shear_modulus (float): Voigt-Reuss-Hill shear modulus
-        - bulk_modulus (float): Voigt-Reuss-Hill bulk modulus
+        - elastic_tensor (ElasticTensorDoc): pydantic model from emmet.core.elasticity
+        - shear_modulus (ShearModulus): Voigt-Reuss-Hill shear modulus (single float)
+        - bulk_modulus (BulkModulus): Voigt-Reuss-Hill bulk modulus (single float)
         - youngs_modulus (float): Young's modulus
     """
 
