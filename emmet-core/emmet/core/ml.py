@@ -114,7 +114,8 @@ class MLDoc(ElasticityDoc):
             tensor = val
         return ElasticTensorDoc(raw=tensor.voigt.tolist())
 
-    @model_validator(mode="after")
+    @model_validator(mode="before")
+    @classmethod
     def bulk_vrh_no_suffix(cls, values):
         """Map field bulk_modulus_vrh to bulk_modulus."""
         val = values.get("bulk_modulus_vrh", None)
@@ -122,7 +123,8 @@ class MLDoc(ElasticityDoc):
             values["bulk_modulus"] = BulkModulus(vrh=val)
         return values
 
-    @model_validator(mode="after")
+    @model_validator(mode="before")
+    @classmethod
     def shear_vrh_no_suffix(cls, new_key, values):
         """Map field shear_modulus_vrh to shear_modulus."""
         val = values.get("shear_modulus_vrh", None)
