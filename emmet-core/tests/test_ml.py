@@ -48,10 +48,20 @@ expected_keys = {
 }
 
 
-@pytest.mark.parametrize("calculator", [get_universal_calculator("chgnet"), "m3gnet"])
-def test_mlip_doc(calculator: Union[str, "Calculator"]) -> None:
+@pytest.mark.parametrize(
+    ("calculator", "prop_kwargs"),
+    [
+        (get_universal_calculator("chgnet"), None),
+        ("m3gnet", {"ElasticityCalc": {"relax_structure": False}}),
+    ],
+)
+def test_mlip_doc(calculator: Union[str, "Calculator"], prop_kwargs: dict) -> None:
     doc = MLIPDoc(
-        structure=struct, calculator=calculator, material_id="mp-33", deprecated=False
+        structure=struct,
+        calculator=calculator,
+        material_id="mp-33",
+        deprecated=False,
+        prop_kwargs=prop_kwargs,
     )
 
     # check that all expected keys are present
