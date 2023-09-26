@@ -14,7 +14,7 @@ contourpy==1.1.1
     # via matplotlib
 cycler==0.11.0
     # via matplotlib
-emmet-core==0.58.0
+emmet-core==0.69.1
     # via mp-api
 fonttools==4.42.1
     # via matplotlib
@@ -76,10 +76,13 @@ pydantic==2.4.1
     #   pydantic-settings
 pydantic-core==2.10.1
     # via
+    #   emmet-core
     #   emmet-core (setup.py)
     #   pydantic
 pydantic-settings==2.0.3
-    # via emmet-core (setup.py)
+    # via
+    #   emmet-core
+    #   emmet-core (setup.py)
 pymatgen==2023.9.10
     # via
     #   emmet-core
