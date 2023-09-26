@@ -295,12 +295,12 @@ class ValueEnum(Enum):
     def __str__(self):
         return str(self.value)
 
-    def __eq__(self, o: object) -> bool:
+    def __eq__(self, obj: object) -> bool:
         """Special Equals to enable converting strings back to the enum"""
-        if isinstance(o, str):
-            return super().__eq__(self.__class__(o))
-        elif isinstance(o, self.__class__):
-            return super().__eq__(o)
+        if isinstance(obj, str):
+            return super().__eq__(self.__class__(obj))
+        elif isinstance(obj, self.__class__):
+            return super().__eq__(obj)
         return False
 
     def __hash__(self):

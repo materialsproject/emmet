@@ -2608,7 +2608,7 @@
 - Working Thermo Builder [\#170](https://github.com/materialsproject/emmet/pull/170) ([jmmshn](https://github.com/jmmshn))
 - Add SCF gradient and Manual deprecation to VASP validation [\#169](https://github.com/materialsproject/emmet/pull/169) ([shyamd](https://github.com/shyamd))
 - Create MPID Type [\#167](https://github.com/materialsproject/emmet/pull/167) ([shyamd](https://github.com/shyamd))
-- Remove stubs in favor of monty pydantic compatability [\#165](https://github.com/materialsproject/emmet/pull/165) ([shyamd](https://github.com/shyamd))
+- Remove stubs in favor of monty pydantic compatibility [\#165](https://github.com/materialsproject/emmet/pull/165) ([shyamd](https://github.com/shyamd))
 - made structure grouper work with material\_ids [\#163](https://github.com/materialsproject/emmet/pull/163) ([jmmshn](https://github.com/jmmshn))
 - minor changes to get material builder working on non-production databases. [\#162](https://github.com/materialsproject/emmet/pull/162) ([jmmshn](https://github.com/jmmshn))
 - Electrode Doc [\#149](https://github.com/materialsproject/emmet/pull/149) ([jmmshn](https://github.com/jmmshn))
