@@ -202,7 +202,9 @@ class ThermodynamicProperties(BaseModel):
     )
 
     cv: List[float] = Field(
-        ..., description="The values of the constant-volume specific heat."
+        ...,
+        description="The values of the constant-volume specific heat.",
+        alias="heat_capacity",
     )
 
     entropy: List[float] = Field(

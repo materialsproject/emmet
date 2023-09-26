@@ -107,7 +107,7 @@ class FittingData(BaseModel):
         description="Cauchy stress tensors on strained structures"
     )
     second_pk_stresses: List[Matrix3D] = Field(
-        description="Second Piola–Kirchhoff stress tensors on structures"
+        description="Second Piola-Kirchhoff stress tensors on structures"
     )
     deformation_tasks: Optional[List[MPID]] = Field(
         None,
@@ -193,10 +193,10 @@ class ElasticityDoc(PropertyDoc):
     thermal_conductivity: Optional[ThermalConductivity] = Field(
         None, description="Thermal conductivity"
     )
-    young_modulus: Optional[float] = Field(
-        None, description="Young's modulus (SI units)"
+    young_modulus: float = Field(
+        None, description="Young's modulus (SI units)", alias="youngs_modulus"
     )
-    universal_anisotropy: Optional[float] = Field(
+    universal_anisotropy: float = Field(
         None, description="Universal elastic anisotropy"
     )
     homogeneous_poisson: Optional[float] = Field(
@@ -258,7 +258,6 @@ class ElasticityDoc(PropertyDoc):
             fitting_method: method used to fit the elastic tensor:
                 {`finite_difference`, `pseudoinverse`, `independent`}.
         """
-
         CM = CriticalMessage()
 
         # primary fitting data
@@ -448,7 +447,6 @@ def generate_derived_fitting_data(
         derived_stresses: derived Cauchy stresses
         derived_2nd_pk_stresses: derived second Piola-Kirchhoff stresses
     """
-
     sga = SpacegroupAnalyzer(structure, symprec=symprec)
     symmops = sga.get_symmetry_operations(cartesian=True)
 
@@ -538,7 +536,7 @@ def symmetrize_stresses(
 
     # for each strain, get the stresses from other strain states related by symmetry
     symmmetrized_stresses = []  # type: List[Stress]
-    for strain, stress in zip(strains, stresses):
+    for strain, _stress in zip(strains, stresses):
         mapping = TensorMapping([strain], [[]], tol=tol)
         for strain2, stress2 in zip(strains, stresses):
             for op in symmops:
@@ -571,7 +569,6 @@ def fit_elastic_tensor(
     Returns:
         fitted elastic tensor
     """
-
     if order > 2 or fitting_method == "finite_difference":
         # force finite diff if order > 2
         result = ElasticTensorExpansion.from_diff_fit(
@@ -604,7 +601,6 @@ def get_derived_properties(
     Returns:
         a dict of derived elasticity properties
     """
-
     try:
         prop_dict = tensor.get_structure_property_dict(structure)
         prop_dict.pop("structure")
@@ -713,9 +709,6 @@ def sanity_check(
     if v > high:
         warnings.append(WM.LARGE_YOUNG_MODULUS.format(v, high))
 
-    if failed:
-        state = Status("failed")
-    else:
-        state = Status("successful")
+    state = Status("failed") if failed else Status("successful")
 
     return state, warnings

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from setuptools import find_namespace_packages, setup
 
 setup(
@@ -31,6 +30,7 @@ setup(
             "robocrys>=0.2.8",
             "pymatgen-analysis-diffusion>=2023.8.15",
             "pymatgen-analysis-alloys>=0.0.3",
+            "matcalc[models]",
         ],
         "test": [
             "pre-commit",

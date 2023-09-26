@@ -29,9 +29,7 @@ matplotlib==3.8.0
     # via pymatgen
 monty==2023.9.25
     # via
-    #   emmet-core
     #   emmet-core (setup.py)
-    #   mp-api
     #   pymatgen
 mp-api==0.36.1
     # via pymatgen
@@ -63,7 +61,6 @@ plotly==5.17.0
     # via pymatgen
 pybtex==0.24.0
     # via
-    #   emmet-core
     #   emmet-core (setup.py)
     #   pymatgen
 pymatgen==2023.9.10
@@ -82,9 +79,7 @@ pytz==2023.3.post1
 pyyaml==6.0.1
     # via pybtex
 requests==2.31.0
-    # via
-    #   mp-api
-    #   pymatgen
+    # via pymatgen
 ruamel-yaml==0.17.32
     # via pymatgen
 ruamel-yaml-clib==0.2.7
@@ -98,7 +93,6 @@ six==1.16.0
     #   python-dateutil
 spglib==2.1.0
     # via
-    #   emmet-core
     #   emmet-core (setup.py)
     #   pymatgen
 sympy==1.12
@@ -111,9 +105,7 @@ tqdm==4.66.1
     # via pymatgen
 typing-extensions==4.8.0
     # via
-    #   emmet-core
     #   emmet-core (setup.py)
-    #   mp-api
     #   pydantic
 tzdata==2023.3
     # via pandas
@@ -121,6 +113,3 @@ uncertainties==3.1.7
     # via pymatgen
 urllib3==2.0.5
     # via requests
-
-# The following packages are considered to be unsafe in a requirements file:
-# setuptools

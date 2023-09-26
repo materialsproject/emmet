@@ -2,37 +2,13 @@ from datetime import datetime
 
 import pytest
 from pymatgen.core.structure import Structure
-from pymatgen.util.testing import PymatgenTest
+
+from . import test_structures
 
 try:
     from emmet.core.optimade import OptimadeMaterialsDoc
 except Exception:
-    pytest.skip(
-        "could not import 'optimade': No module named 'optimade'",
-        allow_module_level=True,
-    )
-
-test_structures = {
-    name: struc.get_reduced_structure()
-    for name, struc in PymatgenTest.TEST_STRUCTURES.items()
-    if name
-    in [
-        "SiO2",
-        "Li2O",
-        "LiFePO4",
-        "TlBiSe2",
-        "K2O2",
-        "Li3V2(PO4)3",
-        "CsCl",
-        "Li2O2",
-        "NaFePO4",
-        "Pb2TiZrO6",
-        "SrTiO3",
-        "TiO2",
-        "BaNiO3",
-        "VO2",
-    ]
-}
+    pytest.skip("could not import 'optimade' ", allow_module_level=True)
 
 
 @pytest.mark.xfail(reason="Optimade + fastapi issues.")

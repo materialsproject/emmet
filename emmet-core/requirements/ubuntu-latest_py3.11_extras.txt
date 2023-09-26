@@ -112,6 +112,7 @@ jmespath==1.0.1
     #   botocore
 joblib==1.3.2
     # via
+    #   matcalc
     #   pymatgen
     #   pymatgen-analysis-diffusion
     #   scikit-learn
@@ -142,6 +143,8 @@ markupsafe==2.1.3
     #   mkdocs
     #   mkdocstrings
     #   werkzeug
+matcalc==0.0.3
+    # via emmet-core (setup.py)
 matminer==0.9.0
     # via robocrys
 matplotlib==3.8.0
@@ -186,11 +189,9 @@ mongomock==4.1.2
 monty==2023.9.25
     # via
     #   custodian
-    #   emmet-core
     #   emmet-core (setup.py)
     #   maggma
     #   matminer
-    #   mp-api
     #   pymatgen
     #   robocrys
 mp-api==0.36.1
@@ -217,11 +218,14 @@ nodeenv==1.8.0
     # via pre-commit
 numpy==1.26.0
     # via
+    #   ase
     #   contourpy
+    #   h5py
     #   maggma
     #   matminer
     #   matplotlib
     #   pandas
+    #   phonopy
     #   pymatgen
     #   robocrys
     #   scikit-learn
@@ -266,7 +270,6 @@ pubchempy==1.0.4
     # via robocrys
 pybtex==0.24.0
     # via
-    #   emmet-core
     #   emmet-core (setup.py)
     #   pymatgen
     #   robocrys
@@ -276,6 +279,12 @@ pycodestyle==2.11.0
     #   flake8
 pycparser==2.21
     # via cffi
+pydantic==1.10.12
+    # via
+    #   emmet-core (setup.py)
+    #   fastapi
+    #   inflect
+    #   maggma
 pydash==7.0.6
     # via maggma
 pydocstyle==6.3.0
@@ -286,10 +295,9 @@ pygments==2.16.1
     # via mkdocs-material
 pymatgen==2023.9.10
     # via
-    #   emmet-core
     #   emmet-core (setup.py)
+    #   matcalc
     #   matminer
-    #   mp-api
     #   pymatgen-analysis-alloys
     #   pymatgen-analysis-diffusion
     #   robocrys
@@ -329,6 +337,7 @@ pyyaml==6.0.1
     # via
     #   mkdocs
     #   mkdocs-markdownextradata-plugin
+    #   phonopy
     #   pre-commit
     #   pybtex
     #   pymdown-extensions
@@ -345,7 +354,6 @@ requests==2.31.0
     # via
     #   matminer
     #   mongogrant
-    #   mp-api
     #   pymatgen
 robocrys==0.2.8
     # via emmet-core (setup.py)
@@ -367,6 +375,7 @@ scikit-learn==1.3.1
     # via matminer
 scipy==1.11.2
     # via
+    #   ase
     #   pymatgen
     #   robocrys
     #   scikit-learn
@@ -390,8 +399,8 @@ snowballstemmer==2.2.0
     # via pydocstyle
 spglib==2.1.0
     # via
-    #   emmet-core
     #   emmet-core (setup.py)
+    #   phonopy
     #   pymatgen
     #   robocrys
     #   seekpath
@@ -424,11 +433,9 @@ types-urllib3==1.26.25.14
     # via types-requests
 typing-extensions==4.8.0
     # via
-    #   emmet-core
     #   emmet-core (setup.py)
     #   fastapi
     #   inflect
-    #   mp-api
     #   mypy
     #   pydantic
     #   pydash

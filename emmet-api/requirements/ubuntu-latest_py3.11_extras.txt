@@ -213,7 +213,6 @@ monty==2023.9.25
     #   emmet-core
     #   maggma
     #   matminer
-    #   mp-api
     #   pymatgen
     #   robocrys
 mp-api==0.36.1
@@ -316,7 +315,6 @@ pymatgen==2023.9.10
     #   emmet-api (setup.py)
     #   emmet-core
     #   matminer
-    #   mp-api
     #   pymatgen-analysis-alloys
     #   pymatgen-analysis-diffusion
     #   robocrys
@@ -372,7 +370,6 @@ requests==2.31.0
     # via
     #   matminer
     #   mongogrant
-    #   mp-api
     #   pymatgen
 robocrys==0.2.8
     # via emmet-core
@@ -457,7 +454,6 @@ typing-extensions==4.8.0
     #   emmet-core
     #   fastapi
     #   inflect
-    #   mp-api
     #   mypy
     #   pydantic
     #   pydash
