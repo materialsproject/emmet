@@ -113,15 +113,17 @@ class MLIPDoc(ElasticityDoc):
             tensor = val
         return ElasticTensorDoc(raw=tensor.voigt.tolist())
 
-    @validator("shear_modulus", pre=True)
-    def shear_modulus(cls, val) -> ShearModulus:
-        """ShearModulus from float."""
-        return ShearModulus(vrh=val)
-
-    @validator("bulk_modulus", pre=True)
-    def bulk_modulus(cls, val) -> BulkModulus:
-        """BulkModulus from float."""
+    @validator("bulk_modulus", pre=True, always=True)
+    def bulk_vrh_no_suffix(cls, new_key, values):
+        """Map field bulk_modulus_vrh to bulk_modulus."""
+        val = values.get("bulk_modulus_vrh", new_key)
         return BulkModulus(vrh=val)
+
+    @validator("shear_modulus", pre=True, always=True)
+    def shear_vrh_no_suffix(cls, new_key, values):
+        """Map field shear_modulus_vrh to shear_modulus."""
+        val = values.get("shear_modulus_vrh", new_key)
+        return ShearModulus(vrh=val)
 
     def __init__(
         cls,
