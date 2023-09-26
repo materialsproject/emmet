@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from ase.calculators.calculator import Calculator
 
 
-class MLIPDoc(ElasticityDoc):
+class MLDoc(ElasticityDoc):
     """Document model for matcalc-generated material properties from machine learning
     interatomic potential predictions.
 
@@ -51,7 +51,7 @@ class MLIPDoc(ElasticityDoc):
         - youngs_modulus (float): Young's modulus
     """
 
-    property_name = "mlip"
+    property_name = "ml"
 
     # metadata
     structure: Structure = Field(description="Original structure")
@@ -144,7 +144,7 @@ class MLIPDoc(ElasticityDoc):
             **kwargs: Passed to the PropertyDoc constructor.
 
         Returns:
-            MLIPRelaxationDoc
+            MLDoc
         """
         calculator = get_universal_calculator(calculator)
 

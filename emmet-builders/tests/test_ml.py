@@ -5,7 +5,7 @@ from maggma.stores import MemoryStore
 from matcalc.util import get_universal_calculator
 from pymatgen.core import Lattice, Structure
 
-from emmet.builders.materials.ml import MLIPBuilder
+from emmet.builders.materials.ml import MLBuilder
 
 if TYPE_CHECKING:
     from ase.calculators.calculator import Calculator
@@ -35,7 +35,7 @@ def materials_store():
 def test_ml_ip_builder(materials_store: MemoryStore, model: Union[str, "Calculator"]):
     ml_store = MemoryStore(key="material_id")
 
-    builder = MLIPBuilder(materials=materials_store, ml_potential=ml_store, model=model)
+    builder = MLBuilder(materials=materials_store, ml_potential=ml_store, model=model)
     item = materials_store.query_one()
 
     result_doc = builder.unary_function(item)

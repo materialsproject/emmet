@@ -6,7 +6,7 @@ from pymatgen.core import Structure
 from pymatgen.util.testing import PymatgenTest
 
 from emmet.core.elasticity import BulkModulus, ElasticTensorDoc, ShearModulus
-from emmet.core.ml import MLIPDoc
+from emmet.core.ml import MLDoc
 
 if TYPE_CHECKING:
     from ase.calculators.calculator import Calculator
@@ -55,8 +55,8 @@ expected_keys = {
         ("m3gnet", {"ElasticityCalc": {"relax_structure": False}}),
     ],
 )
-def test_mlip_doc(calculator: Union[str, "Calculator"], prop_kwargs: dict) -> None:
-    doc = MLIPDoc(
+def test_ml_doc(calculator: Union[str, "Calculator"], prop_kwargs: dict) -> None:
+    doc = MLDoc(
         structure=struct,
         calculator=calculator,
         material_id="mp-33",

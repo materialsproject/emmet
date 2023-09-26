@@ -6,14 +6,14 @@ from maggma.core import Store
 from matcalc.util import get_universal_calculator
 from pymatgen.core import Structure
 
-from emmet.core.ml import MLIPDoc
+from emmet.core.ml import MLDoc
 from emmet.core.utils import jsanitize
 
 if TYPE_CHECKING:
     from ase.calculators.calculator import Calculator
 
 
-class MLIPBuilder(MapBuilder):
+class MLBuilder(MapBuilder):
     def __init__(
         self,
         materials: Store,
@@ -28,7 +28,7 @@ class MLIPBuilder(MapBuilder):
 
         Args:
             materials (Store): Materials to use as input structures.
-            ml_potential (Store): Where to save MLIPDoc documents to.
+            ml_potential (Store): Where to save MLDoc documents to.
             model (str | Calculator): ASE calculator or name of model to use as ML
                 potential. See matcalc.util.UNIVERSAL_CALCULATORS for recognized names.
             model_kwargs (dict, optional): Additional kwargs to pass to the calculator.
@@ -37,7 +37,7 @@ class MLIPBuilder(MapBuilder):
                 PropCalc class. Recognized keys are RelaxCalc, ElasticityCalc, PhononCalc, EOSCalc.
                 Defaults to None.
             provenance (dict, optional): Additional provenance information to include in
-                MLIPDocs. Will be saved in each document so use sparingly. Defaults to None.
+                MLDocs. Will be saved in each document so use sparingly. Defaults to None.
                 Set to {} to disable default provenance model_name, model_version, matcalc_version.
         """
         self.materials = materials
@@ -75,7 +75,7 @@ class MLIPBuilder(MapBuilder):
         struct = Structure.from_dict(item["structure"])
         mp_id, deprecated = item["material_id"], item["deprecated"]
 
-        doc = MLIPDoc(
+        doc = MLDoc(
             structure=struct,
             material_id=mp_id,
             calculator=self.model,
