@@ -18,9 +18,9 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.28.49
+boto3==1.28.54
     # via maggma
-botocore==1.31.49
+botocore==1.31.54
     # via
     #   boto3
     #   s3transfer
@@ -106,7 +106,7 @@ mongogrant==0.3.3
     # via maggma
 mongomock==4.1.2
     # via maggma
-monty==2023.9.5
+monty==2023.9.25
     # via
     #   emmet-core
     #   maggma
@@ -118,7 +118,9 @@ mp-api==0.36.1
 mpmath==1.3.0
     # via sympy
 msgpack==1.0.6
-    # via maggma
+    # via
+    #   maggma
+    #   mp-api
 networkx==3.1
     # via
     #   pymatgen
@@ -175,6 +177,7 @@ pydash==7.0.6
     # via maggma
 pymatgen==2023.9.10
     # via
+    #   emmet-builders (setup.py)
     #   emmet-core
     #   matminer
     #   pymatgen-analysis-alloys
