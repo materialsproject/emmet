@@ -11,7 +11,7 @@ setup(
     packages=find_namespace_packages(include=["emmet.*"]),
     install_requires=[
         "emmet-core[all]",
-        "maggma>=0.56.0",
+        "maggma>=0.57.0",
         "matminer>=0.7.3",
         "pymatgen<=2023.9.10",
     ],
