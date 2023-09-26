@@ -456,7 +456,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                 if bs_entry.setyawan_curtarolo.cbm is not None  # type: ignore
                 else None
             )  # type: ignore
-            summary_efermi = bs_entry.setyawan_curtarolo.efermi
+            summary_efermi = bs_entry.setyawan_curtarolo.efermi  # type: ignore
             is_gap_direct = bs_entry.setyawan_curtarolo.is_gap_direct  # type: ignore
             is_metal = bs_entry.setyawan_curtarolo.is_metal  # type: ignore
             summary_magnetic_ordering = bs_entry.setyawan_curtarolo.magnetic_ordering  # type: ignore
