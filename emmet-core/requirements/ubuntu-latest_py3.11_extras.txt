@@ -65,8 +65,6 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core==0.68.0
-    # via mp-api
 fastapi==0.103.1
     # via maggma
 filelock==3.12.4
