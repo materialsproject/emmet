@@ -532,7 +532,7 @@ def best_lot(
     """
 
     sorted_lots = sorted(
-        mol_doc.best_entries.keys(),
+        mol_doc.best_entries.keys(),  # type: ignore
         key=lambda x: evaluate_lot(x, funct_scores, basis_scores, solvent_scores),
     )
 

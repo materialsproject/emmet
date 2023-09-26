@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Union, Optional, Any
 
 import numpy as np
-from pydantic import ConfigDict, Field, PyObject
+from pydantic import ConfigDict, Field
 from pymatgen.core.structure import Structure
 from pymatgen.io.vasp.sets import VaspInputSet
 
@@ -63,7 +63,7 @@ class ValidationDoc(EmmetBaseModel):
         task_doc: TaskDocument,
         kpts_tolerance: float = SETTINGS.VASP_KPTS_TOLERANCE,
         kspacing_tolerance: float = SETTINGS.VASP_KSPACING_TOLERANCE,
-        input_sets: Dict[str, PyObject] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
+        input_sets: Dict[str, Any] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
         LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
         max_allowed_scf_gradient: float = SETTINGS.VASP_MAX_SCF_GRADIENT,
         potcar_hashes: Optional[Dict[CalcType, Dict[str, str]]] = None,

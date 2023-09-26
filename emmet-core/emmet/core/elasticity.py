@@ -675,7 +675,7 @@ def sanity_check(
         warnings.append(CM.STRAIN_RANK.format(rank))
 
     # elastic tensor eigenvalues
-    eig_vals, _ = np.linalg.eig(elastic_doc.raw)
+    eig_vals, _ = np.linalg.eig(elastic_doc.raw)  # type: ignore
     if np.any(eig_vals < 0.0):
         warnings.append(WM.NEGATIVE_EIGVAL)
 
