@@ -31,6 +31,8 @@ setup(
             "pymatgen-analysis-diffusion>=2023.8.15",
             "pymatgen-analysis-alloys>=0.0.3",
             "matcalc[models]",
+            "chgnet",
+            "matgl",
         ],
         "test": [
             "pre-commit",

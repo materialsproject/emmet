@@ -5,7 +5,7 @@ from matcalc.eos import EOSCalc
 from matcalc.phonon import PhononCalc
 from matcalc.relaxation import RelaxCalc
 from matcalc.util import get_universal_calculator
-from pydantic import Field, validator
+from pydantic import Field, field_validator, model_validator
 from pymatgen.analysis.elasticity import ElasticTensor
 from pymatgen.core import Structure
 
@@ -51,7 +51,7 @@ class MLDoc(ElasticityDoc):
         - youngs_modulus (float): Young's modulus
     """
 
-    property_name = "ml"
+    property_name: str = "ml"
 
     # metadata
     structure: Structure = Field(description="Original structure")
@@ -100,7 +100,8 @@ class MLDoc(ElasticityDoc):
     # elasticity attributes
     # all inherited from ElasticityDoc
 
-    @validator("elastic_tensor", pre=True)
+    @field_validator("elastic_tensor", mode="before")
+    @classmethod
     def elastic_tensor(cls, val) -> ElasticTensorDoc:
         """ElasticTensorDoc from MSONable dict of ElasticTensor, or list (specifying the Voigt array)
         or the ElasticTensor class itself.
@@ -113,17 +114,22 @@ class MLDoc(ElasticityDoc):
             tensor = val
         return ElasticTensorDoc(raw=tensor.voigt.tolist())
 
-    @validator("bulk_modulus", pre=True, always=True)
-    def bulk_vrh_no_suffix(cls, new_key, values):
+    @model_validator(mode="after")
+    def bulk_vrh_no_suffix(cls, values):
         """Map field bulk_modulus_vrh to bulk_modulus."""
-        val = values.get("bulk_modulus_vrh", new_key)
-        return BulkModulus(vrh=val)
+        val = values.get("bulk_modulus_vrh", None)
+        if val:
+            values["bulk_modulus"] = BulkModulus(vrh=val)
+        return values
 
-    @validator("shear_modulus", pre=True, always=True)
+    @model_validator(mode="after")
     def shear_vrh_no_suffix(cls, new_key, values):
         """Map field shear_modulus_vrh to shear_modulus."""
-        val = values.get("shear_modulus_vrh", new_key)
-        return ShearModulus(vrh=val)
+        val = values.get("shear_modulus_vrh", None)
+        if val:
+           values["shear_modulus"] = ShearModulus(vrh=val)
+           
+        return values
 
     def __init__(
         cls,
