@@ -394,8 +394,8 @@ class CalculationOutput(BaseModel):
     def from_vasp_outputs(
         cls,
         vasprun: Vasprun,
-        outcar: Outcar,
-        contcar: Poscar,
+        outcar: Optional[Outcar],
+        contcar: Optional[Poscar],
         locpot: Optional[Locpot] = None,
         elph_poscars: Optional[List[Path]] = None,
         store_trajectory: bool = False,
@@ -474,21 +474,31 @@ class CalculationOutput(BaseModel):
                 normalmode_eigenvecs=vasprun.normalmode_eigenvecs.tolist(),
             )
 
-        outcar_dict = outcar.as_dict()
-        outcar_dict.pop("run_stats")
+        if outcar and contcar:
+            outcar_dict = outcar.as_dict()
+            outcar_dict.pop("run_stats")
 
-        # use structure from CONTCAR as it is written to
-        # greater precision than in the vasprun
-        # but still need to copy the charge over
-        structure = contcar.structure
-        structure._charge = vasprun.final_structure._charge
+            # use structure from CONTCAR as it is written to
+            # greater precision than in the vasprun
+            # but still need to copy the charge over
+            structure = contcar.structure
+            structure._charge = vasprun.final_structure._charge
 
-        mag_density = outcar.total_mag / structure.volume if outcar.total_mag else None
+            mag_density = (
+                outcar.total_mag / structure.volume if outcar.total_mag else None
+            )
 
-        if len(outcar.magnetization) != 0:
-            # patch calculated magnetic moments into final structure
-            magmoms = [m["tot"] for m in outcar.magnetization]
-            structure.add_site_property("magmom", magmoms)
+            if len(outcar.magnetization) != 0:
+                # patch calculated magnetic moments into final structure
+                magmoms = [m["tot"] for m in outcar.magnetization]
+                structure.add_site_property("magmom", magmoms)
+        else:
+            logger.warning(
+                "No OUTCAR/CONTCAR available, some information will be missing from TaskDoc."
+            )
+            outcar_dict = {}
+            structure = vasprun.final_structure
+            mag_density = None
 
         # Parse DOS properties
         dosprop_dict = (
@@ -519,7 +529,7 @@ class CalculationOutput(BaseModel):
             ionic_steps=vasprun.ionic_steps if not store_trajectory else None,
             locpot=locpot_avg,
             outcar=outcar_dict,
-            run_stats=RunStatistics.from_outcar(outcar),
+            run_stats=RunStatistics.from_outcar(outcar) if outcar else None,
             **electronic_output,
             **phonon_output,
         )
@@ -736,6 +746,70 @@ class Calculation(BaseModel):
                 calc_type=calc_type(input_doc.dict(), input_doc.parameters),
             ),
             vasp_objects,
+        )
+
+    @classmethod
+    def from_vasprun(
+        cls,
+        path: Union[Path, str],
+        task_name: str = "Unknown vapsrun.xml",
+        vasprun_kwargs: Optional[Dict] = None,
+    ) -> Tuple["Calculation", Dict[VaspObject, Dict]]:
+        """
+        Create a VASP calculation document from a directory and file paths.
+
+        Parameters
+        ----------
+        path
+            Path to the vasprun.xml file.
+        task_name
+            The task name.
+        vasprun_kwargs
+            Additional keyword arguments that will be passed to the Vasprun init.
+
+        Returns
+        -------
+        Calculation
+            A VASP calculation document.
+        """
+        path = Path(path)
+        vasprun_kwargs = vasprun_kwargs if vasprun_kwargs else {}
+        vasprun = Vasprun(path, **vasprun_kwargs)
+
+        completed_at = str(datetime.fromtimestamp(path.stat().st_mtime))
+
+        input_doc = CalculationInput.from_vasprun(vasprun)
+
+        output_doc = CalculationOutput.from_vasp_outputs(
+            vasprun,
+            outcar=None,
+            contcar=None,
+        )
+
+        # MD run
+        if vasprun.parameters.get("IBRION", -1) == 0:
+            if vasprun.parameters.get("NSW", 0) == vasprun.nionic_steps:
+                has_vasp_completed = TaskState.SUCCESS
+            else:
+                has_vasp_completed = TaskState.FAILED
+        # others
+        else:
+            has_vasp_completed = (
+                TaskState.SUCCESS if vasprun.converged else TaskState.FAILED
+            )
+
+        return cls(
+            dir_name=str(path.resolve().parent),
+            task_name=task_name,
+            vasp_version=vasprun.vasp_version,
+            has_vasp_completed=has_vasp_completed,
+            completed_at=completed_at,
+            input=input_doc,
+            output=output_doc,
+            output_file_paths={},
+            run_type=run_type(input_doc.parameters),
+            task_type=task_type(input_doc.dict()),
+            calc_type=calc_type(input_doc.dict(), input_doc.parameters),
         )
 
 

@@ -30,7 +30,7 @@ latexcodec==2.0.1
     # via pybtex
 matplotlib==3.7.3
     # via pymatgen
-monty==2023.9.25
+monty==2023.9.5
     # via
     #   emmet-core
     #   emmet-core (setup.py)

@@ -460,6 +460,10 @@ class ElectronicStructureBuilder(Builder):
                             except Exception:
                                 bs_type = None
 
+                        # Clear bs data
+                        bs = None
+                        bs_dict = None
+
                     is_hubbard = task_query["input"]["is_hubbard"]
                     lmaxmix = task_query["input"]["incar"].get(
                         "LMAXMIX", 2

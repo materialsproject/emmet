@@ -165,6 +165,13 @@ if db_uri:
         collection_name="insertion_electrodes",
     )
 
+    conversion_electrodes_store = MongoURIStore(
+        uri=db_uri,
+        database=f"mp_core_{db_suffix}",
+        key="battery_id",
+        collection_name="conversion_electrodes",
+    )
+
     oxi_states_store = MongoURIStore(
         uri=db_uri,
         database=f"mp_core_{db_suffix}",
@@ -418,11 +425,20 @@ from emmet.api.routes.materials.synthesis.resources import synth_resource
 materials_resources.extend([synth_resource(synth_store)])
 
 # Electrodes
-from emmet.api.routes.materials.electrodes.resources import (
+from emmet.api.routes.materials.insertion_electrodes.resources import (
     insertion_electrodes_resource,
 )
 
 materials_resources.extend([insertion_electrodes_resource(insertion_electrodes_store)])
+
+
+from emmet.api.routes.materials.conversion_electrodes.resources import (
+    conversion_electrodes_resource,
+)
+
+materials_resources.extend(
+    [conversion_electrodes_resource(conversion_electrodes_store)]
+)
 
 # Oxidation States
 from emmet.api.routes.materials.oxidation_states.resources import oxi_states_resource
