@@ -730,7 +730,9 @@ class Calculation(BaseModel):
         if store_trajectory:
             traj = Trajectory.from_structures(
                 [d["structure"] for d in vasprun.ionic_steps],
-                frame_properties=[IonicStep(**x).model_dump() for x in vasprun.ionic_steps],
+                frame_properties=[
+                    IonicStep(**x).model_dump() for x in vasprun.ionic_steps
+                ],
                 constant_lattice=False,
             )
             vasp_objects[VaspObject.TRAJECTORY] = traj  # type: ignore

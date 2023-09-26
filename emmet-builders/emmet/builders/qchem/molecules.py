@@ -648,7 +648,9 @@ class MoleculesBuilder(Builder):
 
         self.logger.debug(f"Produced {len(complete_mol_docs)} molecules for {formula}")
 
-        return jsanitize([mol.model_dump() for mol in complete_mol_docs], allow_bson=True)
+        return jsanitize(
+            [mol.model_dump() for mol in complete_mol_docs], allow_bson=True
+        )
 
     def update_targets(self, items: List[List[Dict]]):
         """

@@ -58,7 +58,9 @@ class MLDoc(ElasticityDoc):
     matcalc_version: Optional[str] = Field(
         None, description="Version of matcalc used to generate this document"
     )
-    model_name: Optional[str] = Field(None, description="Name of model used as ML potential.")
+    model_name: Optional[str] = Field(
+        None, description="Name of model used as ML potential."
+    )
     model_version: Optional[str] = Field(
         None, description="Version of model used as ML potential"
     )
@@ -83,7 +85,9 @@ class MLDoc(ElasticityDoc):
     bulk_modulus_bm: Optional[float] = Field(None, description="bm.b0_GPa")
 
     # phonons attributes
-    temperatures: Optional[List[float]] = Field(None, description="list of temperatures")
+    temperatures: Optional[List[float]] = Field(
+        None, description="list of temperatures"
+    )
     free_energy: Optional[List[float]] = Field(
         None,
         description="list of Helmholtz free energies at corresponding temperatures",
