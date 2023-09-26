@@ -194,7 +194,7 @@ class CorrectedEntriesBuilder(Builder):
 
         doc = CorrectedEntriesDoc(chemsys=chemsys, entries=corrected_entries)
 
-        return jsanitize(doc.dict(), allow_bson=True)
+        return jsanitize(doc.model_dump(), allow_bson=True)
 
     def update_targets(self, items):
         """

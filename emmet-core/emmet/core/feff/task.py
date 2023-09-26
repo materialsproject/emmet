@@ -27,7 +27,7 @@ class CalcType(ValueEnum):
 class TaskDocument(BaseTaskDocument, StructureMetadata):
     """Task Document for a FEFF XAS Calculation. Doesn't support EELS for now"""
 
-    calc_code = "FEFF"
+    calc_code: str = "FEFF"
 
     structure: Structure
     input_parameters: Dict[str, Any] = Field(

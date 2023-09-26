@@ -20,8 +20,8 @@ def test_symmetry(structure):
     assert symm_doc.symbol == "Pm-3m"
     assert symm_doc.crystal_system == CrystalSystem.cubic
 
-    assert symm_doc.dict()["crystal_system"] == CrystalSystem.cubic
-    assert str(symm_doc.dict()["crystal_system"]) == "Cubic"
+    assert symm_doc.model_dump()["crystal_system"] == CrystalSystem.cubic
+    assert str(symm_doc.model_dump()["crystal_system"]) == "Cubic"
 
 
 def test_structure_metadata(structure):

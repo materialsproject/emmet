@@ -126,4 +126,4 @@ def test_task_doc(test_dir, object_name):
 
     # Test that additional_fields works
     test_doc = TaskDoc.from_directory(dir_name, additional_fields={"foo": "bar"})
-    assert test_doc.dict()["foo"] == "bar"
+    assert test_doc.model_dump()["foo"] == "bar"

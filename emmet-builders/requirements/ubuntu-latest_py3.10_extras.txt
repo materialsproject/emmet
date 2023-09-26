@@ -276,12 +276,6 @@ pycodestyle==2.11.0
     #   flake8
 pycparser==2.21
     # via cffi
-pydantic==1.10.12
-    # via
-    #   emmet-core
-    #   fastapi
-    #   inflect
-    #   maggma
 pydash==7.0.6
     # via maggma
 pydocstyle==6.3.0

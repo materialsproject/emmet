@@ -259,7 +259,7 @@ class MaterialsBuilder(Builder):
 
         self.logger.debug(f"Produced {len(materials)} materials for {formula}")
 
-        return jsanitize([mat.dict() for mat in materials], allow_bson=True)
+        return jsanitize([mat.model_dump() for mat in materials], allow_bson=True)
 
     def update_targets(self, items: List[List[Dict]]):
         """
