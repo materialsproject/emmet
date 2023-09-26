@@ -41,4 +41,4 @@ class ChemEnvBuilder(MapBuilder):
             deprecated=deprecated,
         )
 
-        return jsanitize(doc.dict(), allow_bson=True)
+        return jsanitize(doc.model_dump(), allow_bson=True)

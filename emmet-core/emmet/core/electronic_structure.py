@@ -467,7 +467,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                     new_origin_task_id = origin["task_id"]
 
         else:
-            summary_task = dos_entry.dict()["total"][Spin.up]["task_id"]
+            summary_task = dos_entry.model_dump()["total"][Spin.up]["task_id"]
             summary_band_gap = dos_gap
             summary_cbm = dos_cbm
             summary_vbm = dos_vbm

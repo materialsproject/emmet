@@ -730,7 +730,7 @@ class Calculation(BaseModel):
         if store_trajectory:
             traj = Trajectory.from_structures(
                 [d["structure"] for d in vasprun.ionic_steps],
-                frame_properties=[IonicStep(**x).dict() for x in vasprun.ionic_steps],
+                frame_properties=[IonicStep(**x).model_dump() for x in vasprun.ionic_steps],
                 constant_lattice=False,
             )
             vasp_objects[VaspObject.TRAJECTORY] = traj  # type: ignore
@@ -761,8 +761,8 @@ class Calculation(BaseModel):
                 },
                 bader=bader,
                 run_type=run_type(input_doc.parameters),
-                task_type=task_type(input_doc.dict()),
-                calc_type=calc_type(input_doc.dict(), input_doc.parameters),
+                task_type=task_type(input_doc.model_dump()),
+                calc_type=calc_type(input_doc.model_dump(), input_doc.parameters),
             ),
             vasp_objects,
         )
@@ -827,8 +827,8 @@ class Calculation(BaseModel):
             output=output_doc,
             output_file_paths={},
             run_type=run_type(input_doc.parameters),
-            task_type=task_type(input_doc.dict()),
-            calc_type=calc_type(input_doc.dict(), input_doc.parameters),
+            task_type=task_type(input_doc.model_dump()),
+            calc_type=calc_type(input_doc.model_dump(), input_doc.parameters),
         )
 
 

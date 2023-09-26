@@ -691,7 +691,7 @@ def sanity_check(
     high = 1000.0
     for p in ["bulk_modulus", "shear_modulus"]:
         doc = derived_props[p]
-        doc = doc.dict()
+        doc = doc.model_dump()
         p = p.replace("_", " ")
         for name in ["voigt", "reuss", "vrh"]:
             v = doc[name]

@@ -268,7 +268,7 @@ def jsanitize(obj, strict=False, allow_bson=False):
     if isinstance(obj, BaseModel):
         return {
             k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson)
-            for k, v in obj.dict().items()
+            for k, v in obj.model_dump().items()
         }
     if isinstance(obj, (int, float)):
         if np.isnan(obj):

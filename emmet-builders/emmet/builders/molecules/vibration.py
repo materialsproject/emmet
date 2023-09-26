@@ -245,7 +245,7 @@ class VibrationBuilder(Builder):
 
         self.logger.debug(f"Produced {len(vibe_docs)} vibration docs for {formula}")
 
-        return jsanitize([doc.dict() for doc in vibe_docs], allow_bson=True)
+        return jsanitize([doc.model_dump() for doc in vibe_docs], allow_bson=True)
 
     def update_targets(self, items: List[List[Dict]]):
         """
