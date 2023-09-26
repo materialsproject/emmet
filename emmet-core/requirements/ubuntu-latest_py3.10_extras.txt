@@ -148,7 +148,7 @@ markupsafe==2.1.3
     #   mkdocs
     #   mkdocstrings
     #   werkzeug
-matcalc==0.0.2
+matcalc==0.0.3
     # via emmet-core (setup.py)
 matminer==0.9.0
     # via robocrys
