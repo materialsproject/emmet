@@ -193,7 +193,7 @@ class StructureGroupDoc(BaseModel):
                 struct_group = cls.from_grouped_entries(
                     f_group_l, ignored_specie=ignored_specie
                 )
-                cnt_ += len(struct_group.material_ids)
+                cnt_ += len(struct_group.material_ids)  # type: ignore
                 continue
 
             logger.debug(
@@ -203,7 +203,7 @@ class StructureGroupDoc(BaseModel):
                 struct_group = cls.from_grouped_entries(
                     g, ignored_specie=ignored_specie
                 )
-                cnt_ += len(struct_group.material_ids)
+                cnt_ += len(struct_group.material_ids)  # type: ignore
                 results.append(struct_group)
         if cnt_ != len(entries):
             raise RuntimeError(

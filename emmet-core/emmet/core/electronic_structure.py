@@ -444,22 +444,22 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         new_origin_task_id = None
 
         if bs_gap is not None and bs_gap <= dos_gap + 0.2:
-            summary_task = bs_entry.setyawan_curtarolo.task_id
+            summary_task = bs_entry.setyawan_curtarolo.task_id  # type: ignore
             summary_band_gap = bs_gap
             summary_cbm = (
                 bs_entry.setyawan_curtarolo.cbm.get("energy", None)  # type: ignore
-                if bs_entry.setyawan_curtarolo.cbm is not None
+                if bs_entry.setyawan_curtarolo.cbm is not None  # type: ignore
                 else None
             )
             summary_vbm = (
                 bs_entry.setyawan_curtarolo.vbm.get("energy", None)  # type: ignore
-                if bs_entry.setyawan_curtarolo.cbm is not None
+                if bs_entry.setyawan_curtarolo.cbm is not None  # type: ignore
                 else None
             )  # type: ignore
-            summary_efermi = bs_entry.setyawan_curtarolo.efermi
-            is_gap_direct = bs_entry.setyawan_curtarolo.is_gap_direct
-            is_metal = bs_entry.setyawan_curtarolo.is_metal
-            summary_magnetic_ordering = bs_entry.setyawan_curtarolo.magnetic_ordering
+            summary_efermi = bs_entry.setyawan_curtarolo.efermi  # type: ignore
+            is_gap_direct = bs_entry.setyawan_curtarolo.is_gap_direct  # type: ignore
+            is_metal = bs_entry.setyawan_curtarolo.is_metal  # type: ignore
+            summary_magnetic_ordering = bs_entry.setyawan_curtarolo.magnetic_ordering  # type: ignore
 
             for origin in origins:
                 if origin["name"] == "setyawan_curtarolo":
