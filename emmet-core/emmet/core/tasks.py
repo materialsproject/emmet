@@ -368,7 +368,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
     author: Optional[str] = Field(
         None, description="Author extracted from transformations"
     )
-    icsd_id: Optional[str | int] = Field(
+    icsd_id: Optional[Union[str, int]] = Field(
         None, description="Inorganic Crystal Structure Database id of the structure"
     )
     transformations: Optional[Dict[str, Any]] = Field(
