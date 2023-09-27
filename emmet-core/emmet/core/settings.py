@@ -9,8 +9,7 @@ from typing import Dict, List, Type, TypeVar, Union
 
 import requests
 from monty.json import MontyDecoder
-from pydantic import field_validator, model_validator, Field
-from pydantic.types import PyObject
+from pydantic import field_validator, model_validator, Field, ImportString
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_CONFIG_FILE_PATH = str(Path.home().joinpath(".emmet.json"))
@@ -121,7 +120,7 @@ class EmmetSettings(BaseSettings):
         description="Relative tolerance for kspacing to still be a valid task document",
     )
 
-    VASP_DEFAULT_INPUT_SETS: Dict[str, PyObject] = Field(
+    VASP_DEFAULT_INPUT_SETS: Dict[str, ImportString] = Field(
         {
             "GGA Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
             "GGA+U Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
