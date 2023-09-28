@@ -677,13 +677,6 @@ def test_common_error_checks(test_dir, object_name):
     dir_name = test_dir / "vasp" / test_object.folder
     test_doc = TaskDoc.from_directory(dir_name)
 
-    # # template
-    # temp_task_doc = copy.deepcopy(test_doc)
-    # temp_task_doc.input.parameters["LCHIMAG"] = True
-    # temp_task_doc.calcs_reversed[0].input.incar["IWAVPR"] = 1
-    # temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
-    # assert any(["LCHIMAG" in reason for reason in temp_validation_doc.reasons])
-
     # METAGGA and GGA tag check (should never be set together)
     temp_task_doc = copy.deepcopy(test_doc)
     temp_task_doc.calcs_reversed[0].input.incar["METAGGA"] = "R2SCAN"
@@ -762,6 +755,90 @@ def test_common_error_checks(test_dir, object_name):
     temp_task_doc.chemsys = "Am"
     temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
     assert any(["COMPOSITION" in reason for reason in temp_validation_doc.reasons])
+
+
+
+
+
+@pytest.mark.parametrize(
+    "object_name",
+    [
+        pytest.param("SiOptimizeDouble", id="SiOptimizeDouble"),
+
+    ],
+)
+def test_kpoints_checks(test_dir, object_name):
+
+    test_object = get_test_object(object_name)
+    dir_name = test_dir / "vasp" / test_object.folder
+    test_doc = TaskDoc.from_directory(dir_name)
+
+    # Valid mesh type check (should flag HCP structures)
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.calcs_reversed[0].input.structure = Structure(
+        lattice=[[0.5,-0.866025403784439,0],[0.5,0.866025403784439,0],[0,0,1.6329931618554521]],
+        coords=[[0,0,0],[0.333333333333333,-0.333333333333333, 0.5]],
+        species=["H", "H"]
+    ) # HCP structure
+    temp_task_doc.calcs_reversed[0].input.kpoints["generation_style"] = "monkhorst"
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["INPUT SETTINGS --> KPOINTS or KGAMMA: monkhorst-pack" in reason for reason in temp_validation_doc.reasons])
+
+    # Valid mesh type check (should flag FCC structures)
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.calcs_reversed[0].input.structure = Structure(
+        lattice=[[0.0,0.5,0.5],[0.5,0.0,0.5], [0.5,0.5,0.0]],
+        coords=[[0,0,0]],
+        species=["H"]
+    ) # FCC structure
+    temp_task_doc.calcs_reversed[0].input.kpoints["generation_style"] = "monkhorst"
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["INPUT SETTINGS --> KPOINTS or KGAMMA: monkhorst-pack" in reason for reason in temp_validation_doc.reasons])
+
+    # Valid mesh type check (should *not* flag BCC structures)
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.calcs_reversed[0].input.structure = Structure(
+        lattice=[[2.9, 0, 0], [0, 2.9, 0], [0, 0, 2.9]],
+        species=["H", "H"],
+        coords=[[0, 0, 0], [0.5, 0.5, 0.5]]
+    ) # BCC structure
+    temp_task_doc.calcs_reversed[0].input.kpoints["generation_style"] = "monkhorst"
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert not any(["INPUT SETTINGS --> KPOINTS or KGAMMA: monkhorst-pack" in reason for reason in temp_validation_doc.reasons])
+
+    # Too few kpoints check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.calcs_reversed[0].input.kpoints["kpoints"] = [[3,3,3]]
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["INPUT SETTINGS --> KPOINTS or KSPACING:" in reason for reason in temp_validation_doc.reasons])
+
+    # Explicit kpoints for SCF calc check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.calcs_reversed[0].input.kpoints["kpoints"] = [[0,0,0], [0,0,0.5]]
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["INPUT SETTINGS --> KPOINTS: explicitly" in reason for reason in temp_validation_doc.reasons])
+
+    # Shifting kpoints for SCF calc check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.calcs_reversed[0].input.kpoints["usershift"] = [0.5,0,0]
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["INPUT SETTINGS --> KPOINTS: shifting" in reason for reason in temp_validation_doc.reasons])
+
+
+
+
+
+
+
+
+
+    # # template
+    # temp_task_doc = copy.deepcopy(test_doc)
+    # temp_task_doc.input.parameters["LCHIMAG"] = True
+    # temp_task_doc.calcs_reversed[0].input.incar["IWAVPR"] = 1
+    # temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    # assert any(["LCHIMAG" in reason for reason in temp_validation_doc.reasons])
+
 
     # print(temp_validation_doc.reasons)
     # # print(temp_validation_doc.warnings)

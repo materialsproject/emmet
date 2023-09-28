@@ -12,28 +12,19 @@ def _check_kpoints_kspacing(
     structure
 ):
     
+    # Check number of kpoints used
     valid_num_kpts = _get_valid_num_kpts(valid_input_set, structure)    
-    valid_num_kpts = int(np.floor(valid_num_kpts * kpts_tolerance))
-    
+    valid_num_kpts = int(np.floor(valid_num_kpts * kpts_tolerance))    
     cur_kpoints_obj = calcs_reversed[0]['input']['kpoints']
-    
     cur_num_kpts = max(
         cur_kpoints_obj.get("nkpoints", 0),
         np.prod(cur_kpoints_obj.get("kpoints")),
         len(cur_kpoints_obj.get("kpoints"))
     )
+    if cur_num_kpts < valid_num_kpts:
+        reasons.append(f"INPUT SETTINGS --> KPOINTS or KSPACING: {cur_num_kpts} kpoints were used, but it should have been at least {valid_num_kpts}.")
     
-    
-    # has_gamma_point = False
-    # if [0,0,0] in cur_kpoints_obj.get("kpoints"):
-    #     has_gamma_point = True
-    # if len(cur_kpoints_obj.get("kpoints")) == 1:
-    #     for num_divs in cur_kpoints_obj.get("kpoints")[0]:
-    #         if num_divs%2 == 1:
-    #             has_gamma_point = True
-    # if cur_kpoints_obj.get("generation_style").lower() == "gamma":
-    #     has_gamma_point = True
-
+    # check for valid kpoint mesh (which depends on symmetry of the structure)
     cur_kpoint_style = cur_kpoints_obj.get("generation_style").lower()
     is_hexagonal = structure.lattice.is_hexagonal()
     is_face_centered = (structure.get_space_group_info()[0][0] == "F")
@@ -44,18 +35,13 @@ def _check_kpoints_kspacing(
         else:
             reasons.append(f"INPUT SETTINGS --> KPOINTS or KGAMMA: monkhorst-pack kpoint mesh was used with only even subdivisions, but the structure has symmetry that is incompatible with monkhorst-pack meshes.")
     
-    # print(f"valid input set INCAR: {valid_input_set.incar}")
-    # print(f"valid input set KPOINTS: {valid_input_set.kpoints}")
-    # print(f"valid kpoints style: {valid_kpoint_style}")
-    # print(f"cur input style: {cur_kpoint_style}")
 
-    if cur_num_kpts < valid_num_kpts:
-        reasons.append(f"INPUT SETTINGS --> KPOINTS or KSPACING: {cur_num_kpts} kpoints were used, but it should have been at least {valid_num_kpts}.")
-        
+    # Check for explicit kpoint meshes
     if not allow_explicit_kpoint_mesh:
         if len(cur_kpoints_obj['kpoints']) > 1:
             reasons.append(f"INPUT SETTINGS --> KPOINTS: explicitly defining the kpoint mesh is not currently allowed. Automatic kpoint generation is required.")
 
+    # Check for user shifts
     if not allow_kpoint_shifts:
         if any(shift_val != 0 for shift_val in cur_kpoints_obj['usershift']):
             reasons.append(f"INPUT SETTINGS --> KPOINTS: shifting the kpoint mesh is not currently allowed.") 
@@ -78,30 +64,3 @@ def _get_valid_num_kpts(valid_input_set, structure):
         valid_num_kpts = valid_input_set.kpoints.num_kpts or np.prod(valid_input_set.kpoints.kpts[0])
             
     return int(valid_num_kpts)
-
-
-# def _get_valid_gamma_point(valid_input_set, structure):
-#     # If MP input set specifies KSPACING in the INCAR
-#     if ("KSPACING" in valid_input_set.incar.keys()) and (valid_input_set.kpoints == None):
-#         if valid_input_set.incar.get("KGAMMA", True) == True:
-#             valid_has_gamma_point = True
-#         else:
-#             valid_has_gamma_point = False
-        
-#     # If MP input set specifies a KPOINTS file
-#     else:
-#         if valid_input_set.kpoints.style.name.lower() == "gamma":
-#             valid_has_gamma_point = True
-#         elif valid_input_set.kpoints.num_kpts > 0:
-#             valid_has_gamma_point = np.any(np.all(np.array([0,0,0]) == valid_input_set.kpoints.kpts, axis=1))
-#         elif valid_input_set.kpoints.num_kpts == 0:
-#             has_odd_num_divisions = any(n%2 == 1 for n in valid_input_set.kpoints.kpts[0])
-#             is_hexagonal = structure.lattice.is_hexagonal()
-#             if has_odd_num_divisions or is_hexagonal:
-#                 valid_has_gamma_point = True
-#             else:
-#                 valid_has_gamma_point = False
-#         else:
-#             valid_has_gamma_point = False
-        
-#     return valid_has_gamma_point
