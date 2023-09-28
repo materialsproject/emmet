@@ -202,7 +202,6 @@ class ValidationDoc(EmmetBaseModel):
                 parameters,
                 incar
             )    
-
                 
             reasons = _check_common_errors(
                 reasons, 
@@ -450,5 +449,8 @@ def _get_calc_type(calcs_reversed, orig_inputs):
     params = calcs_reversed[0].get("input", {}).get("parameters", {})
     incar = calcs_reversed[0].get("input", {}).get("incar", {})
 
-    return calc_type(inputs, {**params, **incar})    
+    return calc_type(inputs, {**params, **incar})
 
+
+# def filter_out_calcs_far_from_ehull(entry: ComputedStructureEntry, mp_api_key: str = None):
+    

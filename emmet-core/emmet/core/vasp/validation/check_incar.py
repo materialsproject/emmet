@@ -21,6 +21,8 @@ def _check_incar(
     task_type,
     fft_grid_tolerance,
 ):
+    # note that all changes to `reasons` and `warnings` can be done in-place (and hence there is no need to return those variables after every functionc all). 
+    # # Any cases where that is not done is just to make the code more readable. I didn't think that would be necessary here.
     _check_chemical_shift_params(reasons, parameters, valid_input_set)
     _check_dipol_correction_params(reasons, parameters, valid_input_set)
     _check_electronic_params(reasons, parameters, valid_input_set, structure, potcar)
