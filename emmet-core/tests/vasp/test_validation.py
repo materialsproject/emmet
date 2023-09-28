@@ -48,7 +48,7 @@ def test_validation_doc_from_directory(test_dir, object_name):
         pytest.param("SiStatic", id="SiStatic"),
     ],
 )
-def test_common_incar_checks(test_dir, object_name):
+def test_scf_incar_checks(test_dir, object_name):
 
     test_object = get_test_object(object_name)
     dir_name = test_dir / "vasp" / test_object.folder
@@ -657,6 +657,50 @@ def test_NSCF_incar_checks(test_dir, object_name):
     assert any(["LMAXMIX" in reason for reason in temp_validation_doc.reasons])
     # and should *not* create a warning for NSCF calcs
     assert not any(["LMAXMIX" in warning for warning in temp_validation_doc.warnings])
+
+
+
+
+
+@pytest.mark.parametrize(
+    "object_name",
+    [
+        # pytest.param("SiOptimizeDouble", id="SiOptimizeDouble"),
+        pytest.param("SiStatic", id="SiStatic"),
+
+    ],
+)
+def test_common_error_checks(test_dir, object_name):
+
+    test_object = get_test_object(object_name)
+    dir_name = test_dir / "vasp" / test_object.folder
+    test_doc = TaskDoc.from_directory(dir_name)
+
+    # # template
+    # temp_task_doc = copy.deepcopy(test_doc)
+    # temp_task_doc.input.parameters["LCHIMAG"] = True
+    # temp_task_doc.calcs_reversed[0].input.incar["IWAVPR"] = 1
+    # temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    # assert any(["LCHIMAG" in reason for reason in temp_validation_doc.reasons])
+
+    # METAGGA and GGA tag
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.calcs_reversed[0].input.incar["METAGGA"] = "R2SCAN"
+    temp_task_doc.calcs_reversed[0].input.incar["GGA"] = "PE"
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["KNOWN BUG" in reason for reason in temp_validation_doc.reasons])
+
+
+    # print(len(temp_task_doc.calcs_reversed[0].output.ionic_steps[-1].electronic_steps))
+    # No electronic convergence (i.e. more electronic steps than NELM)
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["NELM"] = 1
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["CONVERGENCE" in reason for reason in temp_validation_doc.reasons])
+
+
+
+
 
 
 

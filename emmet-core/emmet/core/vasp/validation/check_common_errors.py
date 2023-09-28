@@ -36,6 +36,8 @@ def _check_common_errors(
         is_converged = (i + 1 != parameters.get("NELM", 60))
     elif len(final_esteps) < parameters.get("NELM", 60):
         is_converged = True
+    else:
+        is_converged = False
         
     if not is_converged:
         reasons.append(f"CONVERGENCE --> Did not achieve electronic convergence in the final ionic step. NELM should be increased.")
@@ -104,11 +106,8 @@ def _check_common_errors(
         cur_max_gradient = np.max(np.gradient(energies)[skip:])
         cur_max_gradient_per_atom = cur_max_gradient / structure.num_sites
         if cur_max_gradient_per_atom > valid_max_allowed_scf_gradient:
-            reasons.append(f"STABILITY --> The max SCF gradient is {round(cur_max_gradient_per_atom,4)} eV/atom, which is larger than the allowed value of {valid_max_allowed_scf_gradient} eV/atom. "\
+            warnings.append(f"STABILITY --> The max SCF gradient is {round(cur_max_gradient_per_atom,4)} eV/atom, which is larger than the typical max expected value of {valid_max_allowed_scf_gradient} eV/atom. "\
                            f"This typically indicates an unstable calculation.")
-            # print(structure.num_sites)
-            # print(skip)
-            # print(np.gradient(energies))
     else:
         warnings.append(
             "Not enough electronic steps to compute valid gradient"

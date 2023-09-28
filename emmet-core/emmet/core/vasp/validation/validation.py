@@ -9,6 +9,7 @@ from pymatgen.core.structure import Structure
 from pymatgen.io.vasp.sets import VaspInputSet
 from pymatgen.io.vasp.sets import MPMetalRelaxSet ########################################################
 from pymatgen.io.vasp.inputs import Potcar
+from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 from atomate.vasp.drones import VaspDrone
 
@@ -449,4 +450,5 @@ def _get_calc_type(calcs_reversed, orig_inputs):
     params = calcs_reversed[0].get("input", {}).get("parameters", {})
     incar = calcs_reversed[0].get("input", {}).get("incar", {})
 
-    return calc_type(inputs, {**params, **incar})
+    return calc_type(inputs, {**params, **incar})    
+
