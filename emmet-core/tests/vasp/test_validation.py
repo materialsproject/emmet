@@ -827,9 +827,44 @@ def test_kpoints_checks(test_dir, object_name):
 
 
 
+@pytest.mark.parametrize(
+    "object_name",
+    [
+        pytest.param("SiOptimizeDouble", id="SiOptimizeDouble"),
 
+    ],
+)
+def test_vasp_version_check(test_dir, object_name):
 
+    test_object = get_test_object(object_name)
+    dir_name = test_dir / "vasp" / test_object.folder
+    test_doc = TaskDoc.from_directory(dir_name)
 
+    # Check VASP versions < 5.4.4
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.calcs_reversed[0].vasp_version = "5.4.0"
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["VASP VERSION" in reason for reason in temp_validation_doc.reasons])
+
+    # Check VASP versions < 5.4
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.calcs_reversed[0].vasp_version = "5.0.0"
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["VASP VERSION" in reason for reason in temp_validation_doc.reasons])
+
+    # Check VASP versions < 5
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.calcs_reversed[0].vasp_version = "4.0.0"
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["VASP VERSION" in reason for reason in temp_validation_doc.reasons])
+
+    # Check for obscure VASP 5 bug with spin-polarized METAGGA calcs
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.calcs_reversed[0].vasp_version = "5.0.0"
+    temp_task_doc.calcs_reversed[0].input.incar["METAGGA"] = "R2SCAN"
+    temp_task_doc.input.parameters["ISPIN"] = 2
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["POTENTIAL BUG --> We believe" in reason for reason in temp_validation_doc.reasons])
 
 
     # # template
