@@ -3,6 +3,7 @@ import copy
 from tests.conftest import assert_schemas_equal, get_test_object
 from emmet.core.vasp.validation.validation import ValidationDoc
 from emmet.core.tasks import TaskDoc
+from pymatgen.core.structure import Structure
 
 
 
@@ -665,8 +666,8 @@ def test_NSCF_incar_checks(test_dir, object_name):
 @pytest.mark.parametrize(
     "object_name",
     [
-        # pytest.param("SiOptimizeDouble", id="SiOptimizeDouble"),
-        pytest.param("SiStatic", id="SiStatic"),
+        pytest.param("SiOptimizeDouble", id="SiOptimizeDouble"),
+        # pytest.param("SiStatic", id="SiStatic"),
 
     ],
 )
@@ -683,27 +684,84 @@ def test_common_error_checks(test_dir, object_name):
     # temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
     # assert any(["LCHIMAG" in reason for reason in temp_validation_doc.reasons])
 
-    # METAGGA and GGA tag
+    # METAGGA and GGA tag check (should never be set together)
     temp_task_doc = copy.deepcopy(test_doc)
     temp_task_doc.calcs_reversed[0].input.incar["METAGGA"] = "R2SCAN"
     temp_task_doc.calcs_reversed[0].input.incar["GGA"] = "PE"
     temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
     assert any(["KNOWN BUG" in reason for reason in temp_validation_doc.reasons])
 
-
-    # print(len(temp_task_doc.calcs_reversed[0].output.ionic_steps[-1].electronic_steps))
-    # No electronic convergence (i.e. more electronic steps than NELM)
+    # No electronic convergence check (i.e. more electronic steps than NELM)
     temp_task_doc = copy.deepcopy(test_doc)
     temp_task_doc.input.parameters["NELM"] = 1
     temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
-    assert any(["CONVERGENCE" in reason for reason in temp_validation_doc.reasons])
+    assert any(["CONVERGENCE --> Did not achieve electronic" in reason for reason in temp_validation_doc.reasons])
 
+    # Drift forces too high check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.calcs_reversed[0].output.outcar["drift"] = [1,1,1]
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["CONVERGENCE --> Excessive drift" in reason for reason in temp_validation_doc.reasons])
 
+    # Final energy too high check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.output.energy_per_atom = 100
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["LARGE POSITIVE FINAL ENERGY" in reason for reason in temp_validation_doc.reasons])
 
+    # Excessive final magmom check (no elements Gd or Eu present)
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["ISPIN"] = 2
+    temp_task_doc.calcs_reversed[0].output.outcar["magnetization"] = (
+        {'s': 9.0, 'p': 0.0, 'd': 0.0, 'tot': 9.0}, 
+        {'s': 9.0, 'p': 0.0, 'd': 0.0, 'tot': 9.0}
+    )
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["MAGNETISM" in reason for reason in temp_validation_doc.reasons])
 
+    # Excessive final magmom check (elements Gd or Eu present)
+    # Should pass here, as it has a final magmom < 10
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["ISPIN"] = 2
+    temp_task_doc.calcs_reversed[0].input.structure = Structure(
+        lattice=[[2.9, 0, 0], [0, 2.9, 0], [0, 0, 2.9]],
+        species=["Gd", "Eu"],
+        coords=[[0, 0, 0], [0.5, 0.5, 0.5]]
+    )
+    temp_task_doc.calcs_reversed[0].output.outcar["magnetization"] = (
+        {'s':9.0, 'p': 0.0, 'd': 0.0, 'tot': 9.0}, 
+        {'s':9.0, 'p': 0.0, 'd': 0.0, 'tot': 9.0}
+    )
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert not any(["MAGNETISM" in reason for reason in temp_validation_doc.reasons])
 
+    # Excessive final magmom check (elements Gd or Eu present)
+    # Should not pass here, as it has a final magmom > 10
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.input.parameters["ISPIN"] = 2
+    temp_task_doc.calcs_reversed[0].input.structure = Structure(
+        lattice=[[2.9, 0, 0], [0, 2.9, 0], [0, 0, 2.9]],
+        species=["Gd", "Eu"],
+        coords=[[0, 0, 0], [0.5, 0.5, 0.5]]
+    )
+    temp_task_doc.calcs_reversed[0].output.outcar["magnetization"] = (
+        {'s':11.0, 'p': 0.0, 'd': 0.0, 'tot': 11.0}, 
+        {'s':11.0, 'p': 0.0, 'd': 0.0, 'tot': 11.0}
+    )
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["MAGNETISM" in reason for reason in temp_validation_doc.reasons])
 
+    # Element Po present 
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.chemsys = "Po"
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["COMPOSITION" in reason for reason in temp_validation_doc.reasons])
 
+    # Elements Am present check
+    temp_task_doc = copy.deepcopy(test_doc)
+    temp_task_doc.chemsys = "Am"
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["COMPOSITION" in reason for reason in temp_validation_doc.reasons])
 
     # print(temp_validation_doc.reasons)
     # # print(temp_validation_doc.warnings)
