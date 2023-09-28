@@ -3,6 +3,43 @@ from pymatgen.core.periodic_table import Element
 from emmet.core.vasp.calc_types.enums import TaskType
 
 
+def _check_incar(
+    reasons,
+    warnings,
+    valid_input_set,
+    structure,
+    task_doc,
+    calcs_reversed,
+    ionic_steps, 
+    nionic_steps,
+    parameters,
+    incar, 
+    potcar,
+    vasp_major_version,
+    vasp_minor_version,
+    vasp_patch_version,
+    task_type,
+    fft_grid_tolerance,
+):
+    _check_chemical_shift_params(reasons, parameters, valid_input_set)
+    _check_dipol_correction_params(reasons, parameters, valid_input_set)
+    _check_electronic_params(reasons, parameters, valid_input_set, structure, potcar)
+    _check_electronic_projector_params(reasons, parameters, incar, valid_input_set)
+    _check_fft_params(reasons, parameters, incar, valid_input_set, structure, fft_grid_tolerance)
+    _check_hybrid_functional_params(reasons, parameters, valid_input_set)
+    _check_ionic_params(reasons, warnings, parameters, valid_input_set, task_doc, calcs_reversed, nionic_steps, ionic_steps, structure)
+    _check_ismear_and_sigma(reasons, warnings, parameters, task_doc, ionic_steps, nionic_steps, structure)
+    _check_lmaxmix_and_lmaxtau(reasons, warnings, parameters, incar, valid_input_set, structure, task_type)
+    _check_magnetism_params(reasons, parameters, valid_input_set)
+    _check_misc_params(reasons, warnings, parameters, incar, valid_input_set, calcs_reversed, vasp_major_version, vasp_minor_version, structure)
+    _check_precision_params(reasons, parameters, valid_input_set)
+    _check_startup_params(reasons, parameters, incar, valid_input_set)
+    _check_symmetry_params(reasons, parameters, valid_input_set)
+    _check_u_params(reasons, incar, parameters, valid_input_set)
+    _check_write_params(reasons, parameters, valid_input_set)
+   
+    return reasons
+
 def _get_default_nbands(structure, parameters, nelect):
     """
     This method is copied from the `estimate_nbands` function in pymatgen.io.vasp.sets.py.
@@ -736,44 +773,3 @@ def _check_relative_params(reasons, parameters, input_tag, default_val, valid_va
             if extra_comments_upon_failure != "":
                 msg += " " + extra_comments_upon_failure
             reasons.append(msg)
-
-
-
-
-def _check_incar(
-    reasons,
-    warnings,
-    valid_input_set,
-    structure,
-    task_doc,
-    calcs_reversed,
-    ionic_steps, 
-    nionic_steps,
-    parameters,
-    incar, 
-    potcar,
-    vasp_major_version,
-    vasp_minor_version,
-    vasp_patch_version,
-    task_type,
-    fft_grid_tolerance,
-):
-        
-    _check_chemical_shift_params(reasons, parameters, valid_input_set)
-    _check_dipol_correction_params(reasons, parameters, valid_input_set)
-    _check_electronic_params(reasons, parameters, valid_input_set, structure, potcar)
-    _check_electronic_projector_params(reasons, parameters, incar, valid_input_set)
-    _check_fft_params(reasons, parameters, incar, valid_input_set, structure, fft_grid_tolerance)
-    _check_hybrid_functional_params(reasons, parameters, valid_input_set)
-    _check_ionic_params(reasons, warnings, parameters, valid_input_set, task_doc, calcs_reversed, nionic_steps, ionic_steps, structure)
-    _check_ismear_and_sigma(reasons, warnings, parameters, task_doc, ionic_steps, nionic_steps, structure)
-    _check_lmaxmix_and_lmaxtau(reasons, warnings, parameters, incar, valid_input_set, structure, task_type)
-    _check_magnetism_params(reasons, parameters, valid_input_set)
-    _check_misc_params(reasons, warnings, parameters, incar, valid_input_set, calcs_reversed, vasp_major_version, vasp_minor_version, structure)
-    _check_precision_params(reasons, parameters, valid_input_set)
-    _check_startup_params(reasons, parameters, incar, valid_input_set)
-    _check_symmetry_params(reasons, parameters, valid_input_set)
-    _check_u_params(reasons, incar, parameters, valid_input_set)
-    _check_write_params(reasons, parameters, valid_input_set)
-   
-    return reasons
