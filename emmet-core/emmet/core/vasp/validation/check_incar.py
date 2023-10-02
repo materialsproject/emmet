@@ -458,14 +458,8 @@ def _check_lmaxmix_and_lmaxtau(reasons, warnings, parameters, incar, valid_input
             if cur_lmaxtau > 6:
                 lmaxtau_msg += lmaxmix_or_lmaxtau_too_high_msg
                 
-            # Either add to reasons or warnings depending on task type (as this affects NSCF calcs the most).
-            # @ Andrew Rosen, is this an adequate check? Or should we somehow also be checking for cases where
-            # a previous SCF calc used the wrong LMAXMIX too?
-            if task_type == TaskType.NSCF_Uniform or task_type == TaskType.NSCF_Line or parameters.get("ICHARG", 2) >= 10:
-                reasons.append(lmaxtau_msg)
-            else:
-                warnings.append(lmaxmix_msg)
-
+            reasons.append(lmaxtau_msg)
+            
 
 def _check_magnetism_params(reasons, parameters, valid_input_set):
     # LNONCOLLINEAR.
