@@ -15,7 +15,6 @@ from pathlib import Path
     ### TODO: add check for an MP input set that uses an IBRION other than [-1, 1, 2]
     ### TODO: add in second check for POTIM that checks for large energy changes between ionic steps
     ### TODO: add in energy-based EDIFFG check
-    ### TODO: add in an LMAXTAU check for SCF and NSCF calcs (need METAGGA calcs)
     ### TODO: add in check for MP set where LEFG = True
     ### TODO: add in check for MP set where LOPTICS = True
 
@@ -36,9 +35,14 @@ def test_validation_doc_from_directory(test_dir, object_name):
     task_doc = TaskDoc.from_directory(dir_name)
     valid_validation_doc = ValidationDoc.from_task_doc(task_doc)
 
-    assert type(test_validation_doc) == type(valid_validation_doc)
-    # TODO: use `assert_schemas_equal` method, which I cannot figure out how to implement properly here
-    # assert_schemas_equal(test_validation_doc, valid_validation_doc)
+    # These attributes will always be different because the objects are created at
+    # different times. Hence, ignore before checking.
+    delattr(test_validation_doc.builder_meta, 'build_date')
+    delattr(test_validation_doc, 'last_updated')
+    delattr(valid_validation_doc.builder_meta, 'build_date')
+    delattr(valid_validation_doc, 'last_updated')
+
+    assert test_validation_doc == valid_validation_doc
 
 
 
