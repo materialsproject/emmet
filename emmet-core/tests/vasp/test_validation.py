@@ -10,10 +10,7 @@ from pathlib import Path
 
 ### TODO: add POTCAR checks to each of the `ValidationDoc.from_task_doc` calls
 ### TODO: add tests for many other MP input sets (e.g. MPNSCFSet, MPNMRSet, MPScanRelaxSet, Hybrid sets, etc.)
-    ### TODO: add ENAUG check for SCAN workflows
-    ### TODO: add check for wrong ismear (e.g. -5) for metal relaxation
     ### TODO: add check for an MP input set that uses an IBRION other than [-1, 1, 2]
-    ### TODO: add in second check for POTIM that checks for large energy changes between ionic steps
     ### TODO: add in energy-based EDIFFG check
     ### TODO: add in check for MP set where LEFG = True
     ### TODO: add in check for MP set where LOPTICS = True
@@ -248,10 +245,21 @@ def test_scf_incar_checks(test_dir, object_name):
     temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
     assert any(["PSTRESS" in reason for reason in temp_validation_doc.reasons])
 
-    # POTIM check
+    # POTIM check #1 (checks parameter itself)
     ### TODO: add in second check for POTIM that checks for large energy changes between ionic steps
     temp_task_doc = copy.deepcopy(task_doc)
     temp_task_doc.input.parameters["POTIM"] = 10
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["POTIM" in reason for reason in temp_validation_doc.reasons])
+
+    # POTIM check #2 (checks energy change between steps)
+    temp_task_doc = copy.deepcopy(task_doc)
+    temp_task_doc.input.parameters["IBRION"] = 2
+    temp_ionic_step_1 = copy.deepcopy(temp_task_doc.calcs_reversed[0].output.ionic_steps[0])
+    temp_ionic_step_2 = copy.deepcopy(temp_ionic_step_1)
+    temp_ionic_step_1.e_fr_energy = 0
+    temp_ionic_step_2.e_fr_energy = 10000
+    temp_task_doc.calcs_reversed[0].output.ionic_steps = [temp_ionic_step_1, temp_ionic_step_2]
     temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
     assert any(["POTIM" in reason for reason in temp_validation_doc.reasons])
 
@@ -276,6 +284,16 @@ def test_scf_incar_checks(test_dir, object_name):
     # ISMEAR wrong for nonmetal check
     temp_task_doc = copy.deepcopy(task_doc)
     temp_task_doc.input.parameters["ISMEAR"] = 1
+    temp_task_doc.output.bandgap = 1
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert any(["ISMEAR" in reason for reason in temp_validation_doc.reasons])
+
+    # ISMEAR wrong for metal relaxation check
+    temp_task_doc = copy.deepcopy(task_doc)
+    # make ionic_steps be length 2, making this be classified as a relaxation calculation
+    temp_task_doc.calcs_reversed[0].output.ionic_steps = 2 * temp_task_doc.calcs_reversed[0].output.ionic_steps
+    temp_task_doc.input.parameters["ISMEAR"] = -5
+    temp_task_doc.output.bandgap = 0
     temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
     assert any(["ISMEAR" in reason for reason in temp_validation_doc.reasons])
 
@@ -655,6 +673,13 @@ def test_scf_incar_checks(test_dir, object_name):
     temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
     assert not any(["LMAXTAU" in reason for reason in temp_validation_doc.reasons])
 
+    # ENAUG check for r2SCAN calcs
+    temp_task_doc = copy.deepcopy(task_doc)
+    temp_task_doc.input.parameters["ENAUG"] = 1
+    temp_task_doc.calcs_reversed[0].input.incar["METAGGA"] = "R2SCAN"
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert  any(["ENAUG" in reason for reason in temp_validation_doc.reasons])
+
 
 
 
@@ -916,7 +941,6 @@ def test_vasp_version_check(test_dir, object_name):
 #     with open(test_files_path / "test_GGA_NSCF_calc.json", 'r') as f:
 #         task_doc = json.load(f)
 
-
 #     # Explicit kpoints for NSCF calc check (this should not raise any flags)
 #     temp_task_doc = copy.deepcopy(task_doc)
 #     temp_task_doc.calcs_reversed[0].input.kpoints["kpoints"] = [[0,0,0], [0,0,0.5]]
@@ -926,22 +950,9 @@ def test_vasp_version_check(test_dir, object_name):
 
 
 
-
     # # template
     # temp_task_doc = copy.deepcopy(task_doc)
     # temp_task_doc.input.parameters["LCHIMAG"] = True
     # temp_task_doc.calcs_reversed[0].input.incar["IWAVPR"] = 1
     # temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
     # assert any(["LCHIMAG" in reason for reason in temp_validation_doc.reasons])
-
-    # # template
-    # temp_task_doc = copy.deepcopy(task_doc)
-    # temp_task_doc.input.parameters["LCHIMAG"] = True
-    # temp_task_doc.calcs_reversed[0].input.incar["IWAVPR"] = 1
-    # temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
-    # assert any(["LCHIMAG" in reason for reason in temp_validation_doc.reasons])
-
-
-    # print(temp_validation_doc.reasons)
-    # # print(temp_validation_doc.warnings)
-    # this_should_cause_an_error_because_it_is_undefined
