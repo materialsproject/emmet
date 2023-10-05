@@ -16,13 +16,11 @@ setup(
     include_package_data=True,
     install_requires=[
         "pymatgen>=2023.10.4",
-        "monty>=2021.3",
+        "monty>=2023.9.25",
         "pydantic>=2.0",
         "pydantic-settings>=2.0",
-        "pydantic-core>=2.0",
         "pybtex~=0.24",
-        "typing-extensions>=3.7,<5.0",
-        "spglib>=2.0.1",
+        "typing-extensions>=3.7",
     ],
     extras_require={
         "all": [
