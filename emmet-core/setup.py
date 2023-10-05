@@ -43,9 +43,8 @@ setup(
             "mypy-extensions",
             "types-setuptools",
             "types-requests",
-            "maggma",
             "wincertstore",
-            "custodian>=2022.5.26",
+            "custodian",
         ],
         "docs": [
             "mkdocs",
