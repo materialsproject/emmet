@@ -20,7 +20,6 @@ setup(
         "ddtrace",
         "setproctitle",
         "shapely",
-        "pymatgen>=2023.10.4",
     ],
     extras_require={
         "test": [
