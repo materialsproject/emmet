@@ -29,8 +29,8 @@ jobs:
         run: |
           python${{ matrix.python-version }} -m pip install --upgrade pip pip-tools
           cd ${{ matrix.package }}
-          python${{ matrix.python-version }} -m piptools compile -q --upgrade -o requirements/${{ matrix.os }}_py${{ matrix.python-version }}.txt
-          python${{ matrix.python-version }} -m piptools compile -q --upgrade --all-extras -o requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
+          python${{ matrix.python-version }} -m piptools compile -q --upgrade --resolver=backtracking -o requirements/${{ matrix.os }}_py${{ matrix.python-version }}.txt
+          python${{ matrix.python-version }} -m piptools compile -q --upgrade --resolver=backtracking --all-extras -o requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
       - name: Detect changes
         id: changes
         shell: bash
