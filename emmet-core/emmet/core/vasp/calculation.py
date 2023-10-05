@@ -81,8 +81,7 @@ class PotcarSpec(BaseModel):
         PotcarSpec
             A potcar spec.
         """
-        potcar_hash = potcar_single.get_potcar_hash()
-        return cls(titel=potcar_single.symbol, hash=potcar_hash)
+        return cls(titel=potcar_single.symbol, hash=potcar_single.md5_header_hash)
 
     @classmethod
     def from_potcar(cls, potcar: Potcar) -> List["PotcarSpec"]:
