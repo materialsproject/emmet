@@ -1,7 +1,5 @@
 import pytest
 from monty.serialization import loadfn
-from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
-from pymatgen.electronic_structure.dos import CompleteDos
 
 from emmet.core.electronic_structure import ElectronicStructureDoc
 
@@ -61,7 +59,6 @@ def test_from_bsdos_1(bandstructure, dos, structure):
 
 @pytest.fixture
 def bandstructure_fs(test_dir):
-
     bs = loadfn(test_dir / "electronic_structure/es_bs_objs.json.gz")
     return bs
 
@@ -73,7 +70,6 @@ def dos_fs(test_dir):
 
 
 def test_from_bsdos_2(bandstructure_fs, dos_fs):
-
     dos = dos_fs[0]["data"]
     bs = bandstructure_fs[0]["data"]
 
