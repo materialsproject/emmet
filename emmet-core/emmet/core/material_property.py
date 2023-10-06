@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Sequence, Type, TypeVar, Union, List
+from typing import Sequence, Type, TypeVar, Union, List, Optional
 
 from pydantic import Field
 from pymatgen.core import Structure
@@ -34,7 +34,7 @@ class PropertyDoc(StructureMetadata):
         description="Whether this property document is deprecated.",
     )
 
-    deprecation_reasons: List[Union[DeprecationMessage, str]] = Field(
+    deprecation_reasons: Optional[List[Union[DeprecationMessage, str]]] = Field(
         None,
         description="List of deprecation tags detailing why this document isn't valid.",
     )

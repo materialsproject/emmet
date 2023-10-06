@@ -33,6 +33,7 @@ def test_tasks(test_dir):
     return tasks
 
 
+@pytest.mark.skip(reason="Pymatgen OBAlign needs fix")
 @pytest.mark.skipif(
     not has_eigen, reason="OBAlign missing, presumably due to lack of Eigen"
 )
@@ -56,6 +57,7 @@ def test_make_mol(test_tasks):
         MoleculeDoc.from_tasks(bad_task_group)
 
 
+@pytest.mark.skip(reason="Pymatgen OBAlign needs fix")
 @pytest.mark.skipif(
     not has_eigen, reason="OBAlign missing, presumably due to lack of Eigen"
 )

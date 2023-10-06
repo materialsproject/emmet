@@ -127,7 +127,7 @@ class SubstratesBuilder(Builder):
             last_updated=item["last_updated"],
         )
 
-        return jsanitize(substrate_doc.dict(), allow_bson=True)
+        return jsanitize(substrate_doc.model_dump(), allow_bson=True)
 
     def update_targets(self, items):
         """

@@ -4,7 +4,7 @@ from emmet.core.electrode import InsertionElectrodeDoc
 from emmet.api.core.global_header import GlobalHeaderProcessor
 
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
-from emmet.api.routes.materials.electrodes.query_operators import (
+from emmet.api.routes.materials.insertion_electrodes.query_operators import (
     ElectrodeFormulaQuery,
     ElectrodeElementsQuery,
     ElectrodesChemsysQuery,

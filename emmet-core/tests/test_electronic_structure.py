@@ -1,8 +1,5 @@
 import pytest
-from maggma.stores import JSONStore
 from monty.serialization import loadfn
-from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
-from pymatgen.electronic_structure.dos import CompleteDos
 
 from emmet.core.electronic_structure import ElectronicStructureDoc
 
@@ -62,26 +59,19 @@ def test_from_bsdos_1(bandstructure, dos, structure):
 
 @pytest.fixture
 def bandstructure_fs(test_dir):
-    return JSONStore(
-        test_dir / "electronic_structure/es_bs_objs.json.gz", key="task_id"
-    )
+    bs = loadfn(test_dir / "electronic_structure/es_bs_objs.json.gz")
+    return bs
 
 
 @pytest.fixture
 def dos_fs(test_dir):
-    return JSONStore(
-        test_dir / "electronic_structure/es_dos_objs.json.gz", key="task_id"
-    )
+    dos = loadfn(test_dir / "electronic_structure/es_dos_objs.json.gz")
+    return dos
 
 
 def test_from_bsdos_2(bandstructure_fs, dos_fs):
-    dos_fs.connect()
-    bandstructure_fs.connect()
-
-    dos = CompleteDos.from_dict(dos_fs.query_one({"task_id": "mp-823888"})["data"])
-    bs = BandStructureSymmLine.from_dict(
-        bandstructure_fs.query_one({"task_id": "mp-1612487"})["data"]
-    )
+    dos = dos_fs[0]["data"]
+    bs = bandstructure_fs[0]["data"]
 
     es_doc = ElectronicStructureDoc.from_bsdos(
         material_id="mp-25375",

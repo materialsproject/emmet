@@ -15,7 +15,7 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
 class VibrationDoc(PropertyDoc):
-    property_name = "vibrations"
+    property_name: str = "vibrations"
 
     molecule: Molecule = Field(..., description="Molecular structure")
 

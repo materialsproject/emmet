@@ -22,51 +22,55 @@ class StructureMetadata(EmmetBaseModel):
     """
 
     # Structure metadata
-    nsites: int = Field(None, description="Total number of sites in the structure.")
-    elements: List[Element] = Field(
+    nsites: Optional[int] = Field(
+        None, description="Total number of sites in the structure."
+    )
+    elements: Optional[List[Element]] = Field(
         None, description="List of elements in the material."
     )
-    nelements: int = Field(None, description="Number of elements.")
-    composition: Composition = Field(
+    nelements: Optional[int] = Field(None, description="Number of elements.")
+    composition: Optional[Composition] = Field(
         None, description="Full composition for the material."
     )
-    composition_reduced: Composition = Field(
+    composition_reduced: Optional[Composition] = Field(
         None,
         title="Reduced Composition",
         description="Simplified representation of the composition.",
     )
-    formula_pretty: str = Field(
+    formula_pretty: Optional[str] = Field(
         None,
         title="Pretty Formula",
         description="Cleaned representation of the formula.",
     )
-    formula_anonymous: str = Field(
+    formula_anonymous: Optional[str] = Field(
         None,
         title="Anonymous Formula",
         description="Anonymized representation of the formula.",
     )
-    chemsys: str = Field(
+    chemsys: Optional[str] = Field(
         None,
         title="Chemical System",
         description="dash-delimited string of elements in the material.",
     )
-    volume: float = Field(
+    volume: Optional[float] = Field(
         None,
         title="Volume",
         description="Total volume for this structure in Angstroms^3.",
     )
 
-    density: float = Field(
+    density: Optional[float] = Field(
         None, title="Density", description="Density in grams per cm^3."
     )
 
-    density_atomic: float = Field(
+    density_atomic: Optional[float] = Field(
         None,
         title="Packing Density",
         description="The atomic packing density in atoms per cm^3.",
     )
 
-    symmetry: SymmetryData = Field(None, description="Symmetry data for this material.")
+    symmetry: Optional[SymmetryData] = Field(
+        None, description="Symmetry data for this material."
+    )
 
     @classmethod
     def from_composition(
@@ -147,7 +151,8 @@ class StructureMetadata(EmmetBaseModel):
             "density_atomic": meta_structure.volume / meta_structure.num_sites,
             "symmetry": symmetry,
         }
-        return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)
+        kwargs.update({k: v for k, v in data.items() if k in fields})
+        return cls(**kwargs)
 
 
 class MoleculeMetadata(EmmetBaseModel):
@@ -155,49 +160,51 @@ class MoleculeMetadata(EmmetBaseModel):
     Mix-in class for molecule metadata
     """
 
-    charge: int = Field(None, description="Charge of the molecule")
-    spin_multiplicity: int = Field(
+    charge: Optional[int] = Field(None, description="Charge of the molecule")
+    spin_multiplicity: Optional[int] = Field(
         None, description="Spin multiplicity of the molecule"
     )
-    natoms: int = Field(None, description="Total number of atoms in the molecule")
-    elements: List[Element] = Field(
+    natoms: Optional[int] = Field(
+        None, description="Total number of atoms in the molecule"
+    )
+    elements: Optional[List[Element]] = Field(
         None, description="List of elements in the molecule"
     )
-    nelements: int = Field(None, title="Number of Elements")
-    nelectrons: int = Field(
+    nelements: Optional[int] = Field(None, title="Number of Elements")
+    nelectrons: Optional[int] = Field(
         None,
         title="Number of electrons",
         description="The total number of electrons for the molecule",
     )
-    composition: Composition = Field(
+    composition: Optional[Composition] = Field(
         None, description="Full composition for the molecule"
     )
-    composition_reduced: Composition = Field(
+    composition_reduced: Optional[Composition] = Field(
         None,
         title="Reduced Composition",
         description="Simplified representation of the composition",
     )
-    formula_alphabetical: str = Field(
+    formula_alphabetical: Optional[str] = Field(
         None,
         title="Alphabetical Formula",
         description="Alphabetical molecular formula",
     )
-    formula_pretty: str = Field(
+    formula_pretty: Optional[str] = Field(
         None,
         title="Pretty Formula",
         description="Cleaned representation of the formula.",
     )
-    formula_anonymous: str = Field(
+    formula_anonymous: Optional[str] = Field(
         None,
         title="Anonymous Formula",
         description="Anonymized representation of the formula",
     )
-    chemsys: str = Field(
+    chemsys: Optional[str] = Field(
         None,
         title="Chemical System",
         description="dash-delimited string of elements in the molecule",
     )
-    symmetry: PointGroupData = Field(
+    symmetry: Optional[PointGroupData] = Field(
         None, description="Symmetry data for this molecule"
     )
 

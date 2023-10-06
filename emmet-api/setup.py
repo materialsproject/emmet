@@ -48,7 +48,7 @@ setup(
             "jinja2",
         ],
     },
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     license="modified BSD",
     zip_safe=False,
 )

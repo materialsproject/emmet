@@ -217,7 +217,7 @@ class ElasticityBuilder(Builder):
             optimization_dir_name=final_opt["dir_name"],
             fitting_method="finite_difference",
         )
-        elasticity_doc = jsanitize(elasticity_doc.dict(), allow_bson=True)
+        elasticity_doc = jsanitize(elasticity_doc.model_dump(), allow_bson=True)
 
         return elasticity_doc
 

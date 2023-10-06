@@ -249,7 +249,7 @@ class MaterialsBuilder(Builder):
                 )
             except Exception as e:
                 failed_ids = list({t_.task_id for t_ in group})
-                doc = MaterialsDoc.construct_deprecated_material(tasks)
+                doc = MaterialsDoc.construct_deprecated_material(group)
                 doc.warnings.append(str(e))
                 materials.append(doc)
                 self.logger.warn(
@@ -259,7 +259,7 @@ class MaterialsBuilder(Builder):
 
         self.logger.debug(f"Produced {len(materials)} materials for {formula}")
 
-        return jsanitize([mat.dict() for mat in materials], allow_bson=True)
+        return jsanitize([mat.model_dump() for mat in materials], allow_bson=True)
 
     def update_targets(self, items: List[List[Dict]]):
         """

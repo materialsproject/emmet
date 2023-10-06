@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Dict, List, Union, Optional
 
 import numpy as np
-from pydantic import Field, PyObject
+from pydantic import ConfigDict, Field, ImportString
 from pymatgen.core.structure import Structure
 from pymatgen.io.vasp.sets import VaspInputSet
 
@@ -45,7 +45,7 @@ class ValidationDoc(EmmetBaseModel):
         description="Last updated date for this document",
         default_factory=datetime.utcnow,
     )
-    reasons: List[Union[DeprecationMessage, str]] = Field(
+    reasons: Optional[List[Union[DeprecationMessage, str]]] = Field(
         None, description="List of deprecation tags detailing why this task isn't valid"
     )
     warnings: List[str] = Field(
@@ -55,9 +55,7 @@ class ValidationDoc(EmmetBaseModel):
         description="Dictioary of data used to perform validation."
         " Useful for post-mortem analysis"
     )
-
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
     @classmethod
     def from_task_doc(
@@ -65,7 +63,7 @@ class ValidationDoc(EmmetBaseModel):
         task_doc: TaskDocument,
         kpts_tolerance: float = SETTINGS.VASP_KPTS_TOLERANCE,
         kspacing_tolerance: float = SETTINGS.VASP_KSPACING_TOLERANCE,
-        input_sets: Dict[str, PyObject] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
+        input_sets: Dict[str, ImportString] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
         LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
         max_allowed_scf_gradient: float = SETTINGS.VASP_MAX_SCF_GRADIENT,
         potcar_hashes: Optional[Dict[CalcType, Dict[str, str]]] = None,

@@ -262,7 +262,7 @@ class ElectronicStructureBuilder(Builder):
             )
 
         if doc.dos is not None:
-            dos_dict = doc.dos.dict()
+            dos_dict = doc.dos.model_dump()
             mag_orderings.update(
                 {dos_dict["total"][Spin.up]["task_id"]: dos_dict["magnetic_ordering"]}
             )
@@ -290,7 +290,7 @@ class ElectronicStructureBuilder(Builder):
                     f"{bs_entry['task_id']}). A correction calculation is planned."
                 )
 
-        return doc.dict()
+        return doc.model_dump()
 
     def update_targets(self, items):
         """
