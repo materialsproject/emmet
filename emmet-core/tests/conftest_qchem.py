@@ -1,9 +1,11 @@
 from pathlib import Path
 import pytest
 
+
 @pytest.fixture(scope="session")
 def test_dir():
     return Path(__file__).parent.parent.parent.joinpath("test_files").resolve()
+
 
 def assert_schemas_equal(test_schema, valid_schema):
     """
@@ -39,11 +41,12 @@ def assert_schemas_equal(test_schema, valid_schema):
     else:
         assert test_schema == valid_schema
 
+
 class SchemaTestData:
     """Dummy class to be used to contain all test data information"""
 
+
 class SinglePointTest(SchemaTestData):
-    
     folder = "qchem_sp_test"
     task_files = {
         "standard": {
@@ -54,98 +57,98 @@ class SinglePointTest(SchemaTestData):
 
     objects = {"standard": []}
     task_doc = {
-    "calcs_reversed": [
-        {
-            "output": {
-                "mulliken": {"O": -0.713178, "H": 0.357278, "H": 0.355900},
-                "resp": {"O": -0.872759, "H": 0.436379, "H": 0.436379},
-                "final_energy": -76.4493700739,
-            },
-            "input": {
-                "charge": 0,
-                "rem": {
-                    "job_type": "sp",
-                    "basis": "def2-qzvppd",
-                    "max_scf_cycles": "100",
-                    "gen_scfman": "true",
-                    "xc_grid": "3",
-                    "thresh": "14",
-                    "s2thresh": "16",
-                    "scf_algorithm": "diis",
-                    "resp_charges": "true",
-                    "symmetry": "false",
-                    "sym_ignore": "true",
-                    "method": "wb97mv",
-                    "solvent_method": "smd",
-                    "ideriv": "1",
+        "calcs_reversed": [
+            {
+                "output": {
+                    "mulliken": [-0.713178, 0.357278, 0.3559],
+                    "resp": [-0.872759, 0.436379, 0.436379],
+                    "final_energy": -76.4493700739,
                 },
-                "job_type": "sp",
+                "input": {
+                    "charge": 0,
+                    "rem": {
+                        "job_type": "sp",
+                        "basis": "def2-qzvppd",
+                        "max_scf_cycles": "100",
+                        "gen_scfman": "true",
+                        "xc_grid": "3",
+                        "thresh": "14",
+                        "s2thresh": "16",
+                        "scf_algorithm": "diis",
+                        "resp_charges": "true",
+                        "symmetry": "false",
+                        "sym_ignore": "true",
+                        "method": "wb97mv",
+                        "solvent_method": "smd",
+                        "ideriv": "1",
+                    },
+                    "job_type": "sp",
+                },
+            }
+        ],
+        "input": {
+            "molecule": {
+                "@module": "pymatgen.core.structure",
+                "@class": "Molecule",
+                "charge": 0,
+                "spin_multiplicity": 1,
+                "sites": [
+                    {
+                        "name": "O",
+                        "species": [{"element": "O", "occu": 1}],
+                        "xyz": [-0.80595, 2.22952, -0.01914],
+                        "properties": {},
+                        "label": "O",
+                    },
+                    {
+                        "name": "H",
+                        "species": [{"element": "H", "occu": 1}],
+                        "xyz": [0.18338, 2.20176, 0.01351],
+                        "properties": {},
+                        "label": "H",
+                    },
+                    {
+                        "name": "H",
+                        "species": [{"element": "H", "occu": 1}],
+                        "xyz": [-1.09531, 1.61602, 0.70231],
+                        "properties": {},
+                        "label": "H",
+                    },
+                ],
             },
-        }
-    ],
-    "input": {
-        "molecule": {
-            '@module': 'pymatgen.core.structure',
-            '@class': 'Molecule',
-            'charge': 0,
-            'spin_multiplicity': 1,
-            'sites': [
-                {
-                    'name': 'O',
-                    'species': [{'element': 'O', 'occu': 1}],
-                    'xyz': [-0.80595, 2.22952, -0.01914],
-                    'properties': {},
-                    'label': 'O'
-                    },
-                {
-                    'name': 'H',
-                    'species': [{'element': 'H', 'occu': 1}],
-                    'xyz': [0.18338, 2.20176, 0.01351],
-                    'properties': {},
-                    'label': 'H'
-                    },
-                {
-                    'name': 'H',
-                    'species': [{'element': 'H', 'occu': 1}],
-                    'xyz': [-1.09531, 1.61602, 0.70231],
-                    'properties': {},
-                    'label': 'H'
-                }
-            ]},
-        "lev_theory": "wB97M-V/def2-QZVPPD/SMD",
-        "task_type": "Single Point",
-    },
-    "output": {
-        "mulliken": {"O": -0.713178, "H": 0.357278, "H": 0.355900},
-        "resp": {"O": -0.872759, "H": 0.436379, "H": 0.436379},
-        "final_energy": -76.4493700739,
-    },
-    "custodian": [
-        {"job": {
-            "@module": "custodian.qchem.jobs",
-            "@class": "QCJob",
-            "@version": "2022.5.26",
-            "qchem_command": [
-                "qchem"
-            ],
-            "max_cores": "40",
-            "multimode": "openmp",
-            "input_file": "mol.qin",
-            "output_file": "mol.qout",
-            "qclog_file": "mol.qclog",
-            "suffix": "",
-            "calc_loc": "/tmp",
-            "nboexe": "null",
-            "save_scratch": "false",
-            "backup": "true"
-             },
-        "corrections": [],
-        }
+            "lev_theory": "wB97M-V/def2-QZVPPD/SMD",
+            "task_type": "Single Point",
+        },
+        "output": {
+            "mulliken": [-0.713178, 0.357278, 0.3559],
+            "resp": [-0.872759, 0.436379, 0.436379],
+            "final_energy": -76.4493700739,
+        },
+        "custodian": [
+            {
+                "job": {
+                    "@module": "custodian.qchem.jobs",
+                    "@class": "QCJob",
+                    "@version": "2022.5.26",
+                    "qchem_command": ["qchem"],
+                    "max_cores": "40",
+                    "multimode": "openmp",
+                    "input_file": "mol.qin",
+                    "output_file": "mol.qout",
+                    "qclog_file": "mol.qclog",
+                    "suffix": "",
+                    "calc_loc": "/tmp",
+                    "nboexe": "null",
+                    "save_scratch": "false",
+                    "backup": "true",
+                },
+                "corrections": [],
+            }
         ],
     }
-        
+
+
 class OptimizationTest(SchemaTestData):
-    
     folder = "qchem_opt_test"
     task_files = {
         "standard": {
@@ -156,158 +159,158 @@ class OptimizationTest(SchemaTestData):
 
     objects = {"standard": []}
     task_doc = {
-    "calcs_reversed": [
-        {
-            "output": {
-                "optimized_molecule": {
-                        '@module': 'pymatgen.core.structure',
-                        '@class': 'Molecule',
-                        'charge': 0,
-                        'spin_multiplicity': 1,
-                        'sites': [
+        "calcs_reversed": [
+            {
+                "output": {
+                    "optimized_molecule": {
+                        "@module": "pymatgen.core.structure",
+                        "@class": "Molecule",
+                        "charge": 0,
+                        "spin_multiplicity": 1,
+                        "sites": [
                             {
-                                'name': 'O',
-                                'species': [{'element': 'O', 'occu': 1}],
-                                'xyz': [-0.80086, 2.22483, -0.01362],
-                                'properties': {},
-                                'label': 'O'
-                                },
+                                "name": "O",
+                                "species": [{"element": "O", "occu": 1}],
+                                "xyz": [-0.8008592596, 2.2248298937, -0.0136245943],
+                                "properties": {},
+                                "label": "O",
+                            },
                             {
-                                'name': 'H',
-                                'species': [{'element': 'H', 'occu': 1}],
-                                'xyz': [0.16379, 2.19629, 0.01994],
-                                'properties': {},
-                                'label': 'H'
-                                },
+                                "name": "H",
+                                "species": [{"element": "H", "occu": 1}],
+                                "xyz": [0.1637955748, 2.1962925542, 0.0199393927],
+                                "properties": {},
+                                "label": "H",
+                            },
                             {
-                                'name': 'H',
-                                'species': [{'element': 'H', 'occu': 1}],
-                                'xyz': [-1.08081, 1.62618, 0.69036],
-                                'properties': {},
-                                'label': 'H'
-                            }
-                        ]},
-                "mulliken": {"O": -0.373491, "H": 0.186964, "H": 0.186527},
-                "resp": {"O": -0.895220, "H": 0.447610, "H": 0.447610},
-                "final_energy": -76.358341626913,
-            },
-            "input": {
-                "charge": 0,
-                "rem": {
-                    "job_type": "sp",
-                    "basis": "def2-qzvppd",
-                    "max_scf_cycles": "100",
-                    "gen_scfman": "true",
-                    "xc_grid": "3",
-                    "thresh": "14",
-                    "s2thresh": "16",
-                    "scf_algorithm": "diis",
-                    "resp_charges": "true",
-                    "symmetry": "false",
-                    "sym_ignore": "true",
-                    "method": "wb97mv",
-                    "solvent_method": "smd",
-                    "ideriv": "1",
+                                "name": "H",
+                                "species": [{"element": "H", "occu": 1}],
+                                "xyz": [-1.0808163152, 1.6261775521, 0.6903652017],
+                                "properties": {},
+                                "label": "H",
+                            },
+                        ],
+                    },
+                    "mulliken": [-0.373491, 0.186964, 0.186527],
+                    "resp": [-0.89522, 0.44761, 0.44761],
+                    "final_energy": -76.358341626913,
                 },
-                "job_type": "sp",
+                "input": {
+                    "charge": 0,
+                    "rem": {
+                        "job_type": "sp",
+                        "basis": "def2-qzvppd",
+                        "max_scf_cycles": "100",
+                        "gen_scfman": "true",
+                        "xc_grid": "3",
+                        "thresh": "14",
+                        "s2thresh": "16",
+                        "scf_algorithm": "diis",
+                        "resp_charges": "true",
+                        "symmetry": "false",
+                        "sym_ignore": "true",
+                        "method": "wb97mv",
+                        "solvent_method": "smd",
+                        "ideriv": "1",
+                    },
+                    "job_type": "sp",
+                },
+            }
+        ],
+        "input": {
+            "molecule": {
+                "@module": "pymatgen.core.structure",
+                "@class": "Molecule",
+                "charge": 0,
+                "spin_multiplicity": 1,
+                "sites": [
+                    {
+                        "name": "O",
+                        "species": [{"element": "O", "occu": 1}],
+                        "xyz": [-0.80595, 2.22952, -0.01914],
+                        "properties": {},
+                        "label": "O",
+                    },
+                    {
+                        "name": "H",
+                        "species": [{"element": "H", "occu": 1}],
+                        "xyz": [0.18338, 2.20176, 0.01351],
+                        "properties": {},
+                        "label": "H",
+                    },
+                    {
+                        "name": "H",
+                        "species": [{"element": "H", "occu": 1}],
+                        "xyz": [-1.09531, 1.61602, 0.70231],
+                        "properties": {},
+                        "label": "H",
+                    },
+                ],
             },
-        }
-    ],
-    "input": {
-        "molecule": {
-            '@module': 'pymatgen.core.structure',
-            '@class': 'Molecule',
-            'charge': 0,
-            'spin_multiplicity': 1,
-            'sites': [
-                {
-                    'name': 'O',
-                    'species': [{'element': 'O', 'occu': 1}],
-                    'xyz': [-0.80595, 2.22952, -0.01914],
-                    'properties': {},
-                    'label': 'O'
+            "lev_theory": "wB97M-V/def2-SVPD/SMD",
+            "task_type": "Geometry Optimization",
+        },
+        "output": {
+            "optimized_molecule": {
+                "@module": "pymatgen.core.structure",
+                "@class": "Molecule",
+                "charge": 0,
+                "spin_multiplicity": 1,
+                "sites": [
+                    {
+                        "name": "O",
+                        "species": [{"element": "O", "occu": 1}],
+                        "xyz": [-0.8008592596, 2.2248298937, -0.0136245943],
+                        "properties": {},
+                        "label": "O",
                     },
-                {
-                    'name': 'H',
-                    'species': [{'element': 'H', 'occu': 1}],
-                    'xyz': [0.18338, 2.20176, 0.01351],
-                    'properties': {},
-                    'label': 'H'
+                    {
+                        "name": "H",
+                        "species": [{"element": "H", "occu": 1}],
+                        "xyz": [0.1637955748, 2.1962925542, 0.0199393927],
+                        "properties": {},
+                        "label": "H",
                     },
-                {
-                    'name': 'H',
-                    'species': [{'element': 'H', 'occu': 1}],
-                    'xyz': [-1.09531, 1.61602, 0.70231],
-                    'properties': {},
-                    'label': 'H'
-                }
-            ]},
-        "lev_theory": "wB97M-V/def2-SVPD/SMD",
-        "task_type": "Geometry Optimization",
-    },
-    "output": {
-        "optimized_molecule": {
-            '@module': 'pymatgen.core.structure',
-            '@class': 'Molecule',
-            'charge': 0,
-            'spin_multiplicity': 1,
-            'sites': [
-                {
-                    'name': 'O',
-                    'species': [{'element': 'O', 'occu': 1}],
-                    'xyz': [-0.80086, 2.22483, -0.01362],
-                    'properties': {},
-                    'label': 'O'
+                    {
+                        "name": "H",
+                        "species": [{"element": "H", "occu": 1}],
+                        "xyz": [-1.0808163152, 1.6261775521, 0.6903652017],
+                        "properties": {},
+                        "label": "H",
                     },
-                {
-                    'name': 'H',
-                    'species': [{'element': 'H', 'occu': 1}],
-                    'xyz': [0.16379, 2.19629, 0.01994],
-                    'properties': {},
-                    'label': 'H'
-                    },
-                {
-                    'name': 'H',
-                    'species': [{'element': 'H', 'occu': 1}],
-                    'xyz': [-1.08081, 1.62618, 0.69036],
-                    'properties': {},
-                    'label': 'H'
-                }
-                ]},
-        "mulliken": {"O": -0.373491, "H": 0.186964, "H": 0.186527},
-        "resp": {"O": -0.895220, "H": 0.447610, "H": 0.447610},
-        "final_energy": -76.358341626913,
-    },
-    "custodian": [
-        {"job": {
-            "@module": "custodian.qchem.jobs",
-            "@class": "QCJob",
-            "@version": "2022.5.26",
-            "qchem_command": [
-                "qchem"
-            ],
-            "max_cores": "40",
-            "multimode": "openmp",
-            "input_file": "mol.qin",
-            "output_file": "mol.qout",
-            "qclog_file": "mol.qclog",
-            "suffix": "",
-            "calc_loc": "/tmp",
-            "nboexe": "null",
-            "save_scratch": "false",
-            "backup": "true"
-             },
-        "corrections": [],
-        }
+                ],
+            },
+            "mulliken": [-0.373491, 0.186964, 0.186527],
+            "resp": [-0.89522, 0.44761, 0.44761],
+            "final_energy": -76.358341626913,
+        },
+        "custodian": [
+            {
+                "job": {
+                    "@module": "custodian.qchem.jobs",
+                    "@class": "QCJob",
+                    "@version": "2022.5.26",
+                    "qchem_command": ["qchem"],
+                    "max_cores": "40",
+                    "multimode": "openmp",
+                    "input_file": "mol.qin",
+                    "output_file": "mol.qout",
+                    "qclog_file": "mol.qclog",
+                    "suffix": "",
+                    "calc_loc": "/tmp",
+                    "nboexe": "null",
+                    "save_scratch": "false",
+                    "backup": "true",
+                },
+                "corrections": [],
+            }
         ],
     }
 
+
 objects = {cls.__name__: cls for cls in SchemaTestData.__subclasses__()}
+
 
 def get_test_object(object_name):
     """Get the schema test data object from the class name."""
     return objects[object_name]
-
-    
-
-        

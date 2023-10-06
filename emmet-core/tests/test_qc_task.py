@@ -8,8 +8,9 @@ from tests.conftest_qchem import assert_schemas_equal, get_test_object
         pytest.param("SinglePointTest", "standard", id="SinglePointTest"),
         pytest.param("OptimizationTest", "standard", id="OptimizationTest"),
     ],
-) #Can add more later, something like freq, pesscan, ts,
-  #FFOptTest, once we get flows working for qchem in atomate2
+)  # Can add more later, something like freq, pesscan, ts,
+# FFOptTest, once we get flows working for qchem in atomate2
+
 
 def test_input_summary(test_dir, object_name, task_name):
     from monty.json import MontyDecoder, jsanitize
@@ -17,7 +18,7 @@ def test_input_summary(test_dir, object_name, task_name):
     from emmet.core.qchem.calculation import Calculation
 
     test_object = get_test_object(object_name)
-    dir_name = test_dir/ "qchem" / test_object.folder
+    dir_name = test_dir / "qchem" / test_object.folder
 
     files = test_object.task_files[task_name]
     calc_doc, _ = Calculation.from_qchem_files(dir_name, task_name, **files)
@@ -26,17 +27,18 @@ def test_input_summary(test_dir, object_name, task_name):
     valid_doc = test_object.task_doc["input"]
     assert_schemas_equal(test_doc, valid_doc)
 
-    #test documnet can be jsanitized
+    # test documnet can be jsanitized
     d = jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)
 
-    #and decoded
+    # and decoded
     MontyDecoder().process_decoded(d)
+
 
 @pytest.mark.parametrize(
     "object_name, task_name",
     [
         pytest.param("SinglePointTest", "standard", id="SinglePointTest"),
-        pytest.param("OptimizationTest", "standard", id="OptimizationTest")
+        pytest.param("OptimizationTest", "standard", id="OptimizationTest"),
     ],
 )
 def test_output_summary(test_dir, object_name, task_name):
@@ -45,7 +47,7 @@ def test_output_summary(test_dir, object_name, task_name):
     from emmet.core.qchem.calculation import Calculation
 
     test_object = get_test_object(object_name)
-    dir_name = test_dir/ "qchem" / test_object.folder
+    dir_name = test_dir / "qchem" / test_object.folder
 
     files = test_object.task_files[task_name]
     calc_doc, _ = Calculation.from_qchem_files(dir_name, task_name, **files)
@@ -55,10 +57,10 @@ def test_output_summary(test_dir, object_name, task_name):
     valid_doc = test_object.task_doc["output"]
     assert_schemas_equal(test_doc, valid_doc)
 
-    #test document can be janitized
+    # test document can be janitized
     d = jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)
 
-    #and decoded
+    # and decoded
     MontyDecoder().process_decoded(d)
 
 
@@ -66,10 +68,9 @@ def test_output_summary(test_dir, object_name, task_name):
     "object_name",
     [
         pytest.param("SinglePointTest", id="SinglePointTest"),
-        pytest.param("OptimizationTest", id="OptimizationTest")
+        pytest.param("OptimizationTest", id="OptimizationTest"),
     ],
 )
-
 def test_task_doc(test_dir, object_name):
     from monty.json import MontyDecoder, jsanitize
     from emmet.core.qc_tasks import TaskDoc
@@ -79,10 +80,10 @@ def test_task_doc(test_dir, object_name):
     test_doc = TaskDoc.from_directory(dir_name)
     assert_schemas_equal(test_doc, test_object.task_doc)
 
-    #test document can be jsanitized
+    # test document can be jsanitized
     d = jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)
 
-    #and decoded
+    # and decoded
     MontyDecoder.process_decoded(d)
 
     # Test that additional_fields works
