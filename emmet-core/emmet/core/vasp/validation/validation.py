@@ -289,7 +289,10 @@ class ValidationDoc(EmmetBaseModel):
             potcar_hashes: Dictionary of potcar hash data. Mapping is calculation type -> potcar symbol -> hash value.
         """
         try: 
-            task_doc = TaskDoc.from_directory(dir_name = dir_name)
+            task_doc = TaskDoc.from_directory(
+                dir_name = dir_name,
+                volumetric_files = (),
+            )
             validation_doc = ValidationDoc.from_task_doc(
                 task_doc = task_doc,
                 kpts_tolerance = kpts_tolerance,
@@ -303,8 +306,8 @@ class ValidationDoc(EmmetBaseModel):
             return validation_doc
         except Exception as e:
             print(e)
-            if "no vasp files found" in e.lower():
-                pass
+            if "no vasp files found" in str(e).lower():
+                raise Exception(f"NO CALCULATION FOUND --> {dir_name} is not a VASP calculation directory.")
             else:
                 raise Exception(f"CAN NOT PARSE CALCULATION --> Issue parsing results. This often means your calculation did not complete. The error stack reads: \n {e}")
             
