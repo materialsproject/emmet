@@ -97,7 +97,7 @@ def _get_valid_ismears_and_sigma(parameters, bandgap, nionic_steps):
     else:
         valid_ismears = [0,1,2]
         cur_nsw = parameters.get("NSW", 0)
-        if cur_nsw == 0 or nionic_steps <= 1:
+        if cur_nsw == 0:
             valid_ismears.append(-5) # ISMEAR = -5 is valid for metals *only* when doing static calc
             extra_comments_for_ismear_and_sigma += " and is a static calculation"
         else:
@@ -229,7 +229,7 @@ def _check_electronic_projector_params(reasons, parameters, incar, valid_input_s
 
 def _check_fft_params(reasons, parameters, incar, valid_input_set, structure, fft_grid_tolerance,):
 
-    # NGX/Y/Z and NGXF/YF/ZF.
+    # NGX/Y/Z and NGXF/YF/ZF. Not checked if not in INCAR file (as this means the VASP default was used).
     if any(i for i in ["NGX", "NGY", "NGZ", "NGXF", "NGYF", "NGZF"] if i in incar.keys()):
 
         cur_prec = parameters.get("PREC", "NORMAL").upper()
