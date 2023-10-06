@@ -27,7 +27,6 @@ from emmet.core.vasp.validation.check_common_errors import _check_common_errors
 from emmet.core.vasp.validation.check_kpoints_kspacing import _check_kpoints_kspacing
 
 
-
 SETTINGS = EmmetSettings()
 
 
@@ -193,6 +192,8 @@ class ValidationDoc(EmmetBaseModel):
             
             ## TODO: check for surface/slab calculations!!!!!!
 
+            ## TODO: implement check to make sure calcs are within some amount (e.g. 250 meV) of the convex hull in the MPDB
+
             reasons = _check_vasp_version(
                 reasons, 
                 vasp_version, 
@@ -290,29 +291,43 @@ class ValidationDoc(EmmetBaseModel):
             potcar_hashes: Dictionary of potcar hash data. Mapping is calculation type -> potcar symbol -> hash value.
         """
 
-        vasp_drone = VaspDrone(
-            parse_aeccar=False, 
-            parse_bader=False,
-            parse_chgcar=False,
-            parse_dos=False, 
-            parse_locpot=False, 
-            store_additional_json=False,
-            store_volumetric_data=[]
-        )
+        # vasp_drone = VaspDrone(
+        #     parse_aeccar=False, 
+        #     parse_bader=False,
+        #     parse_chgcar=False,
+        #     parse_dos=False, 
+        #     parse_locpot=False, 
+        #     store_additional_json=False,
+        #     store_volumetric_data=[]
+        # )
 
-        vasprun_files = vasp_drone.filter_files(dir_name, file_pattern="vasprun.xml")
-        outcar_files = vasp_drone.filter_files(dir_name, file_pattern="OUTCAR")
-        task_doc = None
-        if len(vasprun_files) > 0 and len(outcar_files) > 0:
-            try:
-                task_doc = vasp_drone.generate_doc(dir_name, vasprun_files, outcar_files)
-            except:
-                pass
+        # vasprun_files = vasp_drone.filter_files(dir_name, file_pattern="vasprun.xml")
+        # outcar_files = vasp_drone.filter_files(dir_name, file_pattern="OUTCAR")
+        # task_doc = None
+        # if len(vasprun_files) > 0 and len(outcar_files) > 0:
+        #     try:
+        #         task_doc = vasp_drone.generate_doc(dir_name, vasprun_files, outcar_files)
+        #     except:
+        #         pass
 
-        if task_doc == None:
-            raise Exception("CAN NOT PARSE CALCULATION --> Issue parsing results. This often means your calculation did not complete.") # what type of error type is correct here? Unfamiliar with this
-        else:
-            task_doc = TaskDoc(**task_doc)
+        # if task_doc == None:
+        #     raise Exception("CAN NOT PARSE CALCULATION --> Issue parsing results. This often means your calculation did not complete.") # what type of error type is correct here? Unfamiliar with this
+        # else:
+        #     task_doc = TaskDoc(**task_doc)
+        #     validation_doc = ValidationDoc.from_task_doc(
+        #         task_doc = task_doc,
+        #         kpts_tolerance = kpts_tolerance,
+        #         kspacing_tolerance = kspacing_tolerance,
+        #         input_sets = input_sets,
+        #         LDAU_fields = LDAU_fields, ### Unused
+        #         max_allowed_scf_gradient = max_allowed_scf_gradient,
+        #         potcar_hashes = potcar_hashes,
+        #     )
+
+        #     return validation_doc
+        
+        try: 
+            task_doc = TaskDoc.from_directory(dir_name = dir_name)
             validation_doc = ValidationDoc.from_task_doc(
                 task_doc = task_doc,
                 kpts_tolerance = kpts_tolerance,
@@ -324,6 +339,13 @@ class ValidationDoc(EmmetBaseModel):
             )
 
             return validation_doc
+        except Exception as e:
+            print(e)
+            if "no vasp files found" in e.lower():
+                pass
+            else:
+                raise Exception(f"CAN NOT PARSE CALCULATION --> Issue parsing results. This often means your calculation did not complete. The error stack reads: \n {e}")
+            
 
 
 

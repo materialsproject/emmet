@@ -751,6 +751,13 @@ def test_common_error_checks(test_dir, object_name):
     temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
     assert any(["KNOWN BUG" in reason for reason in temp_validation_doc.reasons])
 
+    # METAGGA and GGA tag check (should not flag any reasons when METAGGA set to None)
+    temp_task_doc = copy.deepcopy(task_doc)
+    temp_task_doc.calcs_reversed[0].input.incar["METAGGA"] = "None"
+    temp_task_doc.calcs_reversed[0].input.incar["GGA"] = "PE"
+    temp_validation_doc = ValidationDoc.from_task_doc(temp_task_doc)
+    assert not any(["KNOWN BUG" in reason for reason in temp_validation_doc.reasons])
+
     # No electronic convergence check (i.e. more electronic steps than NELM)
     temp_task_doc = copy.deepcopy(task_doc)
     temp_task_doc.input.parameters["NELM"] = 1

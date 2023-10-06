@@ -17,7 +17,7 @@ def _check_common_errors(
     # Check for cases where both GGA and METAGGA are set. This should *not* be allowed, as it can erroneously change
     # the outputted energy significantly. See https://github.com/materialsproject/atomate2/issues/453#issuecomment-1699605867
     # for more details.
-    if incar.get("GGA", "--") != "--" and "METAGGA" in incar.keys():
+    if incar.get("GGA", "--") != "--" and str(incar.get("METAGGA", None)).lower() not in ["--", "none"]:
         reasons.append(
             "KNOWN BUG --> GGA and METAGGA should never be specified together, as this can cause major errors in the "
             "outputted energy. See https://github.com/materialsproject/atomate2/issues/453#issuecomment-1699605867 "
@@ -107,7 +107,7 @@ def _check_common_errors(
         cur_max_gradient_per_atom = cur_max_gradient / structure.num_sites
         if cur_max_gradient_per_atom > valid_max_allowed_scf_gradient:
             warnings.append(f"STABILITY --> The max SCF gradient is {round(cur_max_gradient_per_atom,4)} eV/atom, which is larger than the typical max expected value of {valid_max_allowed_scf_gradient} eV/atom. "\
-                           f"This typically indicates an unstable calculation.")
+                           f"This sometimes indicates an unstable calculation.")
     else:
         warnings.append(
             "Not enough electronic steps to compute valid gradient"
