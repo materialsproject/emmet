@@ -29,6 +29,8 @@ SETTINGS = EmmetSettings()
 
 
 ## TODO: check for surface/slab calculations. Especially necessary for external calcs.
+## TODO: implement check to make sure calcs are within some amount (e.g. 250 meV) of the convex hull in the MPDB
+
 
 
 class ValidationDoc(EmmetBaseModel):
@@ -114,21 +116,10 @@ class ValidationDoc(EmmetBaseModel):
         task_type = _get_task_type(calcs_reversed, orig_inputs)
         run_type = _get_run_type(calcs_reversed)        
         
-#         calc_type = task_doc.calc_type
-#         # ### get relevant valid (i.e. MP-compliant) input set
-#         # if parameters.get("NSW",0) == 0 or nionic_steps <= 1:
-#         #     task_type = TaskType("Static")
-#         # else:
-#         #     task_type = TaskType("Structure Optimization")
-#         # run_type = calc_type + task_type
-#         task_type = task_doc.task_type # be careful, as task_type function from Emmet not adequately broad for external calcs
-#         run_type = task_doc.run_type #####################################
-        
-        
-        num_ionic_steps_to_avg_drift_over = 3 ######################################################################################## maybe move to settings
-        fft_grid_tolerance = 0.9 ######################################################################################## maybe move to settings
-        allow_kpoint_shifts = False ############################################################################################# maybe move to settings
-        allow_explicit_kpoint_mesh = "auto" # or True or False ############################################################################################# maybe move to settings
+        num_ionic_steps_to_avg_drift_over = 3 ########################################################## maybe move to settings
+        fft_grid_tolerance = 0.9 ####################################################################### maybe move to settings
+        allow_kpoint_shifts = False #################################################################### maybe move to settings
+        allow_explicit_kpoint_mesh = "auto" # or True or False ######################################### maybe move to settings
         if allow_explicit_kpoint_mesh == "auto":
             if "NSCF" in calc_type.name:
                 allow_explicit_kpoint_mesh = True
@@ -177,20 +168,8 @@ class ValidationDoc(EmmetBaseModel):
 
             if potcar_hashes:
                 _check_potcars(reasons, warnings, calcs_reversed, calc_type, potcar_hashes)
-                    # if task_type in [
-                    #     TaskType.NSCF_Line,
-                    #     TaskType.NSCF_Uniform,
-                    #     TaskType.DFPT_Dielectric,
-                    #     TaskType.Dielectric,
-                    # ]:
-                    #     warnings.append(DeprecationMessage.POTCAR.__doc__)  # type: ignore
-                    # else:
-                        # reasons.append(DeprecationMessage.POTCAR)
-        
             
             ## TODO: check for surface/slab calculations!!!!!!
-
-            ## TODO: implement check to make sure calcs are within some amount (e.g. 250 meV) of the convex hull in the MPDB
 
             reasons = _check_vasp_version(
                 reasons, 
@@ -318,7 +297,7 @@ def _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandga
     
     ## TODO: For every input set key in emmet.core.settings.VASP_DEFAULT_INPUT_SETS,
     ##       with "GGA" in it, create an equivalent dictionary item with "PBE" instead.
-
+    ## In the mean time, the below workaround is used.
     gga_pbe_structure_opt_calc_types = [
         CalcType.GGA_Structure_Optimization, 
         CalcType.GGA_U_Structure_Optimization, 
@@ -330,10 +309,6 @@ def _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandga
     if "SCAN" in run_type.value:
         valid_input_set: VaspInputSet = input_sets[str(calc_type)](structure, bandgap=bandgap)  # type: ignore
 
-    # elif task_type == TaskType.NSCF_Uniform or task_type == TaskType.NSCF_Line:
-    #     # Constructing the k-path for line-mode calculations is too costly, so
-    #     # the uniform input set is used instead and k-points are not checked.
-    #     valid_input_set = input_sets[str(calc_type)](structure, mode="uniform")
     elif task_type == TaskType.NSCF_Uniform:
         valid_input_set = input_sets[str(calc_type)](structure, mode="uniform")
     elif task_type == TaskType.NSCF_Line:
@@ -395,7 +370,7 @@ def _check_potcars(reasons, warnings, calcs_reversed, calc_type, valid_potcar_ha
 
     except KeyError:
         # Assume it is an old calculation without potcar_spec data and treat it as failing the POTCAR check
-        reasons.append("Old version of Emmet --> potcar_spec is not saved in TaskDoc and cannot be validated.")
+        reasons.append("Old version of Emmet --> potcar_spec is not saved in TaskDoc and cannot be validated. Hence, it is marked as invalid")
 
 
 def _check_vasp_version(reasons, vasp_version, vasp_major_version, vasp_minor_version, vasp_patch_version, parameters, incar):
@@ -437,7 +412,3 @@ def _get_calc_type(calcs_reversed, orig_inputs):
     incar = calcs_reversed[0].get("input", {}).get("incar", {})
 
     return calc_type(inputs, {**params, **incar})
-
-
-# def filter_out_calcs_far_from_ehull(entry: ComputedStructureEntry, mp_api_key: str = None):
-    

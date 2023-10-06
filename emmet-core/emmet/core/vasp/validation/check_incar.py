@@ -612,9 +612,9 @@ def _check_precision_params(reasons, parameters, valid_input_set):
         raise ValueError("Validation code check for PREC tag needs to be updated to account for a new input set!")
     _check_allowed_params(reasons, parameters, "PREC", default_prec, valid_precs)
     
-    # ROPT. Should be better than or equal to default for the PREC level. But, this only matters if projectors are done in real-space.
+    # ROPT. Should be better than or equal to default for the PREC level. BThis only matters if projectors are done in real-space.
     # Note that if the user sets LREAL = Auto in their Incar, it will show up as "True" in the `parameters` object (hence we use the `parameters` object)
-    if str(parameters.get("LREAL", "FALSE")).upper() == "TRUE":
+    if str(parameters.get("LREAL", "FALSE")).upper() == "TRUE": # this only matters if projectors are done in real-space.
         cur_prec = parameters.get("PREC", "Normal").upper()
         if cur_prec == "NORMAL":
             default_ropt = -5e-4
@@ -625,7 +625,7 @@ def _check_precision_params(reasons, parameters, valid_input_set):
         elif cur_prec == "MED":
             default_ropt = -0.002
         elif cur_prec == "HIGH":
-            default_ropt = -1e-4 ########### LOOK AT SOURCE CODE IF THIS IS -1e-4 or -4e-4! Documentation is not clear!!
+            default_ropt = -1e-4 ########### TODO: LOOK AT SOURCE CODE IF THIS IS -1e-4 or -4e-4! Documentation is not clear!!
             
         cur_ropt = parameters.get("ROPT", [default_ropt])
         if True in (x < default_ropt for x in cur_ropt):
