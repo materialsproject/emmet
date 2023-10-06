@@ -261,6 +261,7 @@ class CalculationOutput(BaseModel):
             dipoles=qcoutput.data["dipoles"],
             gap_info=qcoutput.data["gap_info"],
         )
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
     # TODO What can be done for the trajectories, also how will walltime and cputime be reconciled
 
