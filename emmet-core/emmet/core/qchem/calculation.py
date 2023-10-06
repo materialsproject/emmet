@@ -158,21 +158,21 @@ class CalculationOutput(BaseModel):
         description="Calculated frequency modes if the job type is freq or frequency",
     )
 
-    frequency_modes: Union(List, str) = Field(
+    frequency_modes: Union[List, str] = Field(
         None, description="The list of calculated frequency mode vectors"
     )
 
-    final_energy: Union(str, float) = Field(
+    final_energy: Union[str, float] = Field(
         None,
         description="The final energy of the molecule after the calculation is complete",
     )
 
-    enthalpy: Union(str, float) = Field(
+    enthalpy: Union[str, float] = Field(
         None,
         description="The total enthalpy correction if a frequency calculation has been performed",
     )
 
-    entropy: Union(str, float) = Field(
+    entropy: Union[str, float] = Field(
         None,
         description="The total entropy of the system if a frequency calculation has been performed",
     )
@@ -191,12 +191,12 @@ class CalculationOutput(BaseModel):
         description="The constructed pymatgen molecules from the optimized scan geometries",
     )
 
-    pcm_gradients: Union(Dict[str, Any], np.ndarray) = Field(
+    pcm_gradients: Union[Dict[str, Any], np.ndarray] = Field(
         None,
         description="The parsed total gradients after adding the PCM contributions.",
     )
 
-    cds_gradients: Union(Dict[str, Any], np.ndarray) = Field(
+    cds_gradients: Union[Dict[str, Any], np.ndarray] = Field(
         None, description="The parsed CDS gradients."
     )
 

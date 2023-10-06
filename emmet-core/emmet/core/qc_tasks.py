@@ -275,7 +275,7 @@ class TaskDoc(MoleculeMetadata):
         None, description="Outputs from the critic2 calculation if performed"
     )
 
-    custom_smd: Union(str, Dict[str, Any]) = Field(
+    custom_smd: Union[str, Dict[str, Any]] = Field(
         None,
         description="The seven solvent parameters necessary to define a custom_smd model",
     )
