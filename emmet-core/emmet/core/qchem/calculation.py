@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import field_validator, BaseModel, Field
 from pydantic.datetime_parse import datetime
 from pymatgen.io.qchem.inputs import QCInput
 from pymatgen.io.qchem.outputs import QCOutput
@@ -196,9 +196,23 @@ class CalculationOutput(BaseModel):
         description="The parsed total gradients after adding the PCM contributions.",
     )
 
+    @field_validator("pcm_gradients", mode="before")
+    @classmethod
+    def validate_pcm_gradients(cls, v):
+        if v is not None and not isinstance(v, np.ndarray):
+            raise ValueError("pcm_gradients must be a numpy array or None.")
+        return v
+
     cds_gradients: Union[Dict[str, Any], np.ndarray] = Field(
         None, description="The parsed CDS gradients."
     )
+
+    @field_validator("cds_gradients", mode="before")
+    @classmethod
+    def validate_cds_gradients(cls, v):
+        if v is not None and not isinstance(v, np.ndarray):
+            raise ValueError("cds_gradients must be a numpy array or None.")
+        return v
 
     dipoles: Dict[str, Any] = Field(
         None, description="The associated dipoles for Mulliken/RESP/ESP charges"
