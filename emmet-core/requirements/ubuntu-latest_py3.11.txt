@@ -8,15 +8,13 @@ annotated-types==0.5.0
     # via pydantic
 certifi==2023.7.22
     # via requests
-charset-normalizer==3.2.0
+charset-normalizer==3.3.0
     # via requests
 contourpy==1.1.1
     # via matplotlib
-cycler==0.11.0
+cycler==0.12.0
     # via matplotlib
-emmet-core==0.69.1
-    # via mp-api
-fonttools==4.42.1
+fonttools==4.43.0
     # via matplotlib
 future==0.18.3
     # via uncertainties
@@ -32,16 +30,10 @@ matplotlib==3.8.0
     # via pymatgen
 monty==2023.9.25
     # via
-    #   emmet-core
     #   emmet-core (setup.py)
-    #   mp-api
     #   pymatgen
-mp-api==0.36.1
-    # via pymatgen
 mpmath==1.3.0
     # via sympy
-msgpack==1.0.6
-    # via mp-api
 networkx==3.1
     # via pymatgen
 numpy==1.26.0
@@ -52,7 +44,7 @@ numpy==1.26.0
     #   pymatgen
     #   scipy
     #   spglib
-packaging==23.1
+packaging==23.2
     # via
     #   matplotlib
     #   plotly
@@ -66,28 +58,18 @@ plotly==5.17.0
     # via pymatgen
 pybtex==0.24.0
     # via
-    #   emmet-core
     #   emmet-core (setup.py)
     #   pymatgen
-pydantic==2.4.1
+pydantic==2.4.2
     # via
-    #   emmet-core
     #   emmet-core (setup.py)
     #   pydantic-settings
 pydantic-core==2.10.1
-    # via
-    #   emmet-core
-    #   emmet-core (setup.py)
-    #   pydantic
+    # via pydantic
 pydantic-settings==2.0.3
-    # via
-    #   emmet-core
-    #   emmet-core (setup.py)
-pymatgen==2023.9.10
-    # via
-    #   emmet-core
-    #   emmet-core (setup.py)
-    #   mp-api
+    # via emmet-core (setup.py)
+pymatgen==2023.10.4
+    # via emmet-core (setup.py)
 pyparsing==3.1.1
     # via matplotlib
 python-dateutil==2.8.2
@@ -101,14 +83,12 @@ pytz==2023.3.post1
 pyyaml==6.0.1
     # via pybtex
 requests==2.31.0
-    # via
-    #   mp-api
-    #   pymatgen
-ruamel-yaml==0.17.32
     # via pymatgen
-ruamel-yaml-clib==0.2.7
+ruamel-yaml==0.17.35
+    # via pymatgen
+ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
-scipy==1.11.2
+scipy==1.11.3
     # via pymatgen
 six==1.16.0
     # via
@@ -116,10 +96,7 @@ six==1.16.0
     #   pybtex
     #   python-dateutil
 spglib==2.1.0
-    # via
-    #   emmet-core
-    #   emmet-core (setup.py)
-    #   pymatgen
+    # via pymatgen
 sympy==1.12
     # via pymatgen
 tabulate==0.9.0
@@ -130,17 +107,12 @@ tqdm==4.66.1
     # via pymatgen
 typing-extensions==4.8.0
     # via
-    #   emmet-core
     #   emmet-core (setup.py)
-    #   mp-api
     #   pydantic
     #   pydantic-core
 tzdata==2023.3
     # via pandas
 uncertainties==3.1.7
     # via pymatgen
-urllib3==2.0.5
+urllib3==2.0.6
     # via requests
-
-# The following packages are considered to be unsafe in a requirements file:
-# setuptools
