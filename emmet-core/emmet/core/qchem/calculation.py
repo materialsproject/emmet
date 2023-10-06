@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 from pydantic import field_validator, BaseModel, Field
-from pydantic.datetime_parse import datetime
+from datetime import datetime
 from pymatgen.io.qchem.inputs import QCInput
 from pymatgen.io.qchem.outputs import QCOutput
 from collections import OrderedDict
