@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
-from pydantic import field_validator, BaseModel, Field
+from pydantic import field_validator, BaseModel, Field, ConfigDict
 from datetime import datetime
 from pymatgen.io.qchem.inputs import QCInput
 from pymatgen.io.qchem.outputs import QCOutput
@@ -261,7 +261,7 @@ class CalculationOutput(BaseModel):
             dipoles=qcoutput.data["dipoles"],
             gap_info=qcoutput.data["gap_info"],
         )
-
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     # TODO What can be done for the trajectories, also how will walltime and cputime be reconciled
 
 
