@@ -104,10 +104,13 @@ def task_type(
     elif incar.get("LOPTICS", False) is True or incar.get("ALGO", None) == "CHI":
         calc_type.append("Optic")
 
-    elif incar.get("ISIF", 2) == 3 and incar.get("IBRION", 0) > 0:
+    elif incar.get("ISIF", 2) in [3,4,5,6,7,8] and incar.get("IBRION", 0) in [1,2]:
         calc_type.append("Structure Optimization")
 
-    elif incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
+    # TODO: Make the identification of deformation calcs also involve using the 
+    # `transformation` field in the TaskDoc. This would allow us to not misclassify all
+    # structures relaxed with ISIF=2 with deformations.
+    elif incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) in [1,2]:
         calc_type.append("Deformation")
 
     elif incar.get("IBRION", 1) == 0:
