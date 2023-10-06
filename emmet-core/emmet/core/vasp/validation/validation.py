@@ -11,8 +11,6 @@ from pymatgen.io.vasp.sets import MPMetalRelaxSet ##############################
 from pymatgen.io.vasp.inputs import Potcar
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
-from atomate.vasp.drones import VaspDrone
-
 from emmet.core.tasks import TaskDoc
 from emmet.core.settings import EmmetSettings
 from emmet.core.base import EmmetBaseModel
@@ -290,42 +288,6 @@ class ValidationDoc(EmmetBaseModel):
                 initial equillibriation period. Note this is in eV per atom.
             potcar_hashes: Dictionary of potcar hash data. Mapping is calculation type -> potcar symbol -> hash value.
         """
-
-        # vasp_drone = VaspDrone(
-        #     parse_aeccar=False, 
-        #     parse_bader=False,
-        #     parse_chgcar=False,
-        #     parse_dos=False, 
-        #     parse_locpot=False, 
-        #     store_additional_json=False,
-        #     store_volumetric_data=[]
-        # )
-
-        # vasprun_files = vasp_drone.filter_files(dir_name, file_pattern="vasprun.xml")
-        # outcar_files = vasp_drone.filter_files(dir_name, file_pattern="OUTCAR")
-        # task_doc = None
-        # if len(vasprun_files) > 0 and len(outcar_files) > 0:
-        #     try:
-        #         task_doc = vasp_drone.generate_doc(dir_name, vasprun_files, outcar_files)
-        #     except:
-        #         pass
-
-        # if task_doc == None:
-        #     raise Exception("CAN NOT PARSE CALCULATION --> Issue parsing results. This often means your calculation did not complete.") # what type of error type is correct here? Unfamiliar with this
-        # else:
-        #     task_doc = TaskDoc(**task_doc)
-        #     validation_doc = ValidationDoc.from_task_doc(
-        #         task_doc = task_doc,
-        #         kpts_tolerance = kpts_tolerance,
-        #         kspacing_tolerance = kspacing_tolerance,
-        #         input_sets = input_sets,
-        #         LDAU_fields = LDAU_fields, ### Unused
-        #         max_allowed_scf_gradient = max_allowed_scf_gradient,
-        #         potcar_hashes = potcar_hashes,
-        #     )
-
-        #     return validation_doc
-        
         try: 
             task_doc = TaskDoc.from_directory(dir_name = dir_name)
             validation_doc = ValidationDoc.from_task_doc(
