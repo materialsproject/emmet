@@ -50,8 +50,8 @@ class SinglePointTest(SchemaTestData):
     folder = "qchem_sp_test"
     task_files = {
         "standard": {
-            "input_file": "mol.qin.gz",
-            "output_file": "mol.qout.gz",
+            "qcinput_file": "mol.qin.gz",
+            "qcoutput_file": "mol.qout.gz",
         }
     }
 
