@@ -416,4 +416,4 @@ class LicenseQuery(QueryOperator):
         ),
     ) -> STORE_PARAMS:
 
-        return {"criteria": {"builder.meta.license": license}}
+        return {"criteria": {"builder_meta.license": license}}
