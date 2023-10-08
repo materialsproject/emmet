@@ -25,7 +25,7 @@ from emmet.api.routes.materials.materials.query_operators import (
     FindStructureQuery,
     FormulaAutoCompleteQuery,
     MultiMaterialIDQuery,
-    LicenseQuery
+    LicenseQuery,
 )
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings

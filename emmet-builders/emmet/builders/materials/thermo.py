@@ -2,6 +2,7 @@ from math import ceil
 import warnings
 from itertools import chain
 from typing import Dict, Iterator, List, Optional, Set
+from datetime import datetime
 
 from maggma.core import Builder, Store
 from maggma.stores import S3Store
@@ -284,7 +285,8 @@ class ThermoBuilder(Builder):
             for chemsys in corrected_entries_chemsys_dates
             if (chemsys not in thermo_chemsys_dates)
             or (
-                thermo_chemsys_dates[chemsys] < corrected_entries_chemsys_dates[chemsys]
+                thermo_chemsys_dates[chemsys]
+                < datetime.fromisoformat(corrected_entries_chemsys_dates[chemsys])
             )
         ]
 

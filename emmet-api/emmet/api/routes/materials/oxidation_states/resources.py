@@ -11,7 +11,7 @@ from emmet.api.routes.materials.materials.query_operators import (
     FormulaQuery,
     ChemsysQuery,
     MultiMaterialIDQuery,
-    LicenseQuery
+    LicenseQuery,
 )
 from emmet.api.routes.materials.oxidation_states.query_operators import (
     PossibleOxiStateQuery,

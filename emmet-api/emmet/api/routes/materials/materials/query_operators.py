@@ -400,8 +400,8 @@ class FormulaAutoCompleteQuery(QueryOperator):
 
     def ensure_indexes(self):  # pragma: no cover
         return [("formula_pretty", False)]
-    
-    
+
+
 class LicenseQuery(QueryOperator):
     """
     Factory method to generate a dependency for querying by
@@ -415,5 +415,4 @@ class LicenseQuery(QueryOperator):
             description="Query by license. Either commercial or non-commercial CC-BY",
         ),
     ) -> STORE_PARAMS:
-
         return {"criteria": {"builder_meta.license": license}}
