@@ -1,5 +1,5 @@
 from itertools import permutations
-from typing import Optional
+from typing import Literal, Optional
 
 from emmet.core.symmetry import CrystalSystem
 from fastapi import Body, HTTPException, Query
@@ -400,3 +400,20 @@ class FormulaAutoCompleteQuery(QueryOperator):
 
     def ensure_indexes(self):  # pragma: no cover
         return [("formula_pretty", False)]
+    
+    
+class LicenseQuery(QueryOperator):
+    """
+    Factory method to generate a dependency for querying by
+        license information in builder meta
+    """
+
+    def query(
+        self,
+        license: Optional[Literal["BY-C", "BY-NC"]] = Query(
+            "BY-C",
+            description="Query by license. Either commercial or non-commercial CC-BY",
+        ),
+    ) -> STORE_PARAMS:
+
+        return {"criteria": {"builder.meta.license": license}}
