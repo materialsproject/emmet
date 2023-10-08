@@ -18,6 +18,7 @@ from emmet.api.routes.materials.materials.query_operators import (
     MultiMaterialIDQuery,
     FormulaQuery,
     ChemsysQuery,
+    LicenseQuery,
 )
 from emmet.api.core.settings import MAPISettings
 
@@ -54,6 +55,7 @@ def thermo_resource(thermo_store):
             SparseFieldsQuery(
                 ThermoDoc, default_fields=["thermo_id", "material_id", "last_updated"]
             ),
+            LicenseQuery(),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Thermo"],
