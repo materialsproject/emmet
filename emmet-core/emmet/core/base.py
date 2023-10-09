@@ -2,7 +2,7 @@
 
 """ Base emmet model to add default metadata """
 from datetime import datetime
-from typing import TypeVar, Optional
+from typing import TypeVar, Optional, Literal
 
 from pydantic import field_validator, BaseModel, Field
 from pymatgen.core import __version__ as pmg_version
@@ -38,6 +38,10 @@ class EmmetMeta(BaseModel):
     build_date: datetime = Field(
         default_factory=datetime.utcnow,
         description="The build date for this document.",
+    )
+
+    license: Optional[Literal["BY-C", "BY-NC"]] = Field(
+        None, description="License for the data entry."
     )
 
     # Make sure that the datetime field is properly formatted
