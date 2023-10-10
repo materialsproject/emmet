@@ -62,7 +62,6 @@ click==8.1.7
     # via
     #   flask
     #   mongogrant
-    #   uvicorn
     #   uvicorn-tschaume
 contourpy==1.1.1
     # via matplotlib
@@ -120,7 +119,6 @@ gunicorn==21.2.0
     # via emmet-api (emmet/emmet-api/setup.py)
 h11==0.14.0
     # via
-    #   uvicorn
     #   uvicorn-tschaume
 h5py==3.10.0
     # via phonopy
@@ -466,15 +464,12 @@ typing-extensions==4.8.0
     #   pydash
     #   pytorch-lightning
     #   torch
-    #   uvicorn
 uncertainties==3.1.7
     # via pymatgen
 urllib3==2.0.6
     # via
     #   botocore
     #   requests
-uvicorn==0.23.2
-    # via maggma
 uvicorn-tschaume==0.19.1
     # via emmet-api (emmet/emmet-api/setup.py)
 werkzeug==3.0.0
