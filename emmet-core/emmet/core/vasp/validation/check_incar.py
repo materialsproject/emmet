@@ -628,7 +628,6 @@ def _check_precision_params(reasons, parameters, valid_input_set):
             
         cur_ropt = parameters.get("ROPT", [default_ropt])
         if True in (x < default_ropt for x in cur_ropt):
-            print(cur_prec)
             reasons.append(f"INPUT SETTINGS --> ROPT: value is set to {cur_ropt}, but should be {default_ropt} or stricter.")
     
 

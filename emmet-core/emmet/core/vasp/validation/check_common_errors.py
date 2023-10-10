@@ -1,6 +1,4 @@
 import numpy as np
-from pymatgen.core.structure import Structure
-
 
 def _check_common_errors(
     reasons, 
