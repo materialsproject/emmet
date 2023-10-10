@@ -166,7 +166,7 @@ lightning-utilities==0.9.0
     #   torchmetrics
 livereload==2.6.3
     # via emmet-builders (setup.py)
-maggma==0.57.1
+maggma==0.57.2
     # via emmet-builders (setup.py)
 markdown==3.5
     # via
@@ -246,7 +246,7 @@ multidict==6.0.4
     # via
     #   aiohttp
     #   yarl
-mypy==1.5.1
+mypy==1.6.0
     # via emmet-builders (setup.py)
 mypy-extensions==1.0.0
     # via
@@ -316,7 +316,7 @@ nvidia-nvjitlink-cu12==12.2.140
     #   nvidia-cusparse-cu12
 nvidia-nvtx-cu12==12.1.105
     # via torch
-orjson==3.9.7
+orjson==3.9.8
     # via maggma
 packaging==23.2
     # via
