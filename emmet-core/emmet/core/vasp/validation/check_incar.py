@@ -633,11 +633,8 @@ def _check_precision_params(reasons, parameters, valid_input_set):
 
 def _check_startup_params(reasons, parameters, incar, valid_input_set):
     # ICHARG.
-    if "ICHARG" not in valid_input_set.incar.keys():
-        valid_icharg = 9 # should be <10
-        _check_relative_params(reasons, parameters, "ICHARG", 2, valid_icharg, "less than or equal to")
-    elif valid_input_set.incar.get("ICHARG") < 10:
-        valid_icharg = 9 # should be <10
+    if valid_input_set.incar.get("ICHARG", 2) < 10:
+        valid_icharg = 9 # should be <10 (SCF calcs)
         _check_relative_params(reasons, parameters, "ICHARG", 2, valid_icharg, "less than or equal to")
     else:
         valid_icharg = valid_input_set.incar.get("ICHARG")
