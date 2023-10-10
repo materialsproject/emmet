@@ -5,11 +5,9 @@ from pydantic import Field, PyObject
 from pathlib import Path
 from monty.os.path import zpath
 
-from pymatgen.core.structure import Structure
 from pymatgen.io.vasp.sets import VaspInputSet
 from pymatgen.io.vasp.sets import MPMetalRelaxSet ########################################################
 from pymatgen.io.vasp.inputs import Potcar
-from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 from emmet.core.tasks import TaskDoc
 from emmet.core.settings import EmmetSettings
@@ -87,7 +85,6 @@ class ValidationDoc(EmmetBaseModel):
                 initial equillibriation period. Note this is in eV per atom.
             potcar_hashes: Dictionary of potcar hash data. Mapping is calculation type -> potcar symbol -> hash value.
         """        
-        
         
         bandgap = task_doc.output.bandgap
         calcs_reversed = task_doc.calcs_reversed
