@@ -38,7 +38,7 @@ class CalculationInput(BaseModel):
     Document defining QChem calculation inputs.
     """
 
-    initial_molecule: Dict[str, Any] = Field(
+    initial_molecule: Optional[Dict[str, Any]] = Field(
         None, description="input molecule geometry before the QChem calculation"
     )
 
@@ -48,7 +48,7 @@ class CalculationInput(BaseModel):
 
     charge: int = Field(None, description="The charge of the input molecule")
 
-    rem: Dict[str, Any] = Field(
+    rem: Optional[Dict[str, Any]] = Field(
         None,
         description="The rem dict of the input file which has all the input parameters",
     )
@@ -57,21 +57,21 @@ class CalculationInput(BaseModel):
         None, description="The type of QChem calculation being performed"
     )
 
-    opt: Dict[str, Any] = Field(
+    opt: Optional[Dict[str, Any]] = Field(
         None,
         description="A dictionary of opt section. For instance atom constraints and fixed atoms. Go to QCInput definition for more details.",
     )
 
-    pcm: Dict[str, Any] = Field(
+    pcm: Optional[Dict[str, Any]] = Field(
         None, description="A dictionary for the PCM solvent details if used"
     )
 
-    solvent: Dict[str, Any] = Field(
+    solvent: Optional[Dict[str, Any]] = Field(
         None,
         description="The solvent parameters used if the PCM solvent model has been employed",
     )
 
-    smx: Dict[str, Any] = Field(
+    smx: Optional[Dict[str, Any]] = Field(
         None,
         description="A dictionary for the solvent parameters if the SMD solvent method has been employed",
     )
@@ -81,11 +81,11 @@ class CalculationInput(BaseModel):
         description="Either atomic or sequential. Used when custon van der Waals radii are used to construct pcm cavity",
     )
 
-    van_der_waals: Dict[str, Any] = Field(
+    van_der_waals: Optional[Dict[str, Any]] = Field(
         None, description="The dictionary of the custom van der Waals radii if used"
     )
 
-    scan_variables: Dict[str, Any] = Field(
+    scan_variables: Optional[Dict[str, Any]] = Field(
         None,
         description="The dictionary of scan variables for torsions or bond stretches",
     )
@@ -132,30 +132,30 @@ class CalculationInput(BaseModel):
 class CalculationOutput(BaseModel):
     """Document defining QChem calculation outputs."""
 
-    optimized_molecule: Dict[str, Any] = Field(
+    optimized_molecule: Optional[Dict[str, Any]] = Field(
         None,
         description="optimized geometry of the molecule after calculation in case of opt, optimization or ts",
     )
 
-    mulliken: Dict[str, Any] = Field(
+    mulliken: Optional[Union[List, Dict[str, Any]]] = Field(
         None, description="Calculate Mulliken charges on the atoms"
     )
 
-    esp: Dict[str, Any] = Field(
+    esp: Optional[Union[List, Dict[str, Any]]] = Field(
         None,
         description="Calculated charges on the atoms if esp calculation has been performed",
     )
 
-    resp: Dict[str, Any] = Field(
+    resp: Optional[Union[List, Dict[str, Any]]] = Field(
         None,
         description="Calculated charges on the atoms if resp calculation has been performed",
     )
 
-    nbo_data: Dict[str, Any] = Field(
+    nbo_data: Optional[Dict[str, Any]] = Field(
         None, description="NBO data if analysis has been performed."
     )
 
-    frequencies: Dict[str, Any] = Field(
+    frequencies: Optional[Dict[str, Any]] = Field(
         None,
         description="Calculated frequency modes if the job type is freq or frequency",
     )
@@ -164,36 +164,36 @@ class CalculationOutput(BaseModel):
         None, description="The list of calculated frequency mode vectors"
     )
 
-    final_energy: Union[str, float] = Field(
+    final_energy: Optional[Union[str, float]] = Field(
         None,
         description="The final energy of the molecule after the calculation is complete",
     )
 
-    enthalpy: Union[str, float] = Field(
+    enthalpy: Optional[Union[str, float]] = Field(
         None,
         description="The total enthalpy correction if a frequency calculation has been performed",
     )
 
-    entropy: Union[str, float] = Field(
+    entropy: Optional[Union[str, float]] = Field(
         None,
         description="The total entropy of the system if a frequency calculation has been performed",
     )
 
-    scan_energies: Dict[str, Any] = Field(
+    scan_energies: Optional[Dict[str, Any]] = Field(
         None,
         description="A dictionary of the scan energies with their respective parameters",
     )
 
-    scan_geometries: Dict[str, Any] = Field(
+    scan_geometries: Optional[Dict[str, Any]] = Field(
         None, description="optimized geometry of the molecules after the geometric scan"
     )
 
-    scan_molecules: Dict[str, Any] = Field(
+    scan_molecules: Optional[Dict[str, Any]] = Field(
         None,
         description="The constructed pymatgen molecules from the optimized scan geometries",
     )
 
-    pcm_gradients: Union[Dict[str, Any], np.ndarray] = Field(
+    pcm_gradients: Optional[Union[Dict[str, Any], np.ndarray]] = Field(
         None,
         description="The parsed total gradients after adding the PCM contributions.",
     )
@@ -205,7 +205,7 @@ class CalculationOutput(BaseModel):
             raise ValueError("pcm_gradients must be a numpy array or None.")
         return v
 
-    cds_gradients: Union[Dict[str, Any], np.ndarray] = Field(
+    cds_gradients: Optional[Union[Dict[str, Any], np.ndarray]] = Field(
         None, description="The parsed CDS gradients."
     )
 
@@ -216,11 +216,11 @@ class CalculationOutput(BaseModel):
             raise ValueError("cds_gradients must be a numpy array or None.")
         return v
 
-    dipoles: Dict[str, Any] = Field(
+    dipoles: Optional[Dict[str, Any]] = Field(
         None, description="The associated dipoles for Mulliken/RESP/ESP charges"
     )
 
-    gap_info: Dict[str, Any] = Field(
+    gap_info: Optional[Dict[str, Any]] = Field(
         None, description="The Kohn-Sham HOMO-LUMO gaps and associated Eigenvalues"
     )
 
@@ -241,27 +241,25 @@ class CalculationOutput(BaseModel):
         """
 
         return cls(
-            optimized_molecule=qcoutput.data["molecule_from_optimized_geometry"],
-            mulliken=qcoutput.data["Mulliken"][-1],
-            esp=qcoutput.data["ESP"][-1],
-            resp=qcoutput.data["RESP"][-1],
-            nbo_data=qcoutput.data["nbo_data"],
-            frequencies=qcoutput.data["frequencies"],
-            frequency_modes=qcoutput.data.get(["frequency_mode_vectors"], []),
-            final_energy=qcoutput.data["final_energy"],
-            enthalpy=qcoutput.data["enthalpy"],
-            entropy=qcoutput.data["entropy"],
-            scan_energies=qcoutput.data.get(["scan_energies"]),
-            scan_geometries=qcoutput.data["optimized_geometries"]
-            if qcoutput.data["scan_energies"]
-            else None,
-            scan_molecules=qcoutput.data["molecules_from_optimized_geometries"]
-            if qcoutput.data["scan_energies"]
-            else None,
-            pcm_gradients=qcoutput.data["pcm_gradients"][0],
-            cds_gradients=qcoutput.data["CDS_gradients"][0],
-            dipoles=qcoutput.data["dipoles"],
-            gap_info=qcoutput.data["gap_info"],
+            optimized_molecule=qcoutput.data.get(
+                "molecule_from_optimized_geometry", {}
+            ),
+            mulliken=qcoutput.data.get(["Mulliken"][-1], []),
+            esp=qcoutput.data.get(["ESP"][-1], []),
+            resp=qcoutput.data.get(["RESP"][-1], []),
+            nbo_data=qcoutput.data.get("nbo_data", {}),
+            frequencies=qcoutput.data.get("frequencies", {}),
+            frequency_modes=qcoutput.data.get("frequency_mode_vectors", []),
+            final_energy=qcoutput.data.get("final_energy", None),
+            enthalpy=qcoutput.data.get("enthalpy", None),
+            entropy=qcoutput.data.get("entropy", None),
+            scan_energies=qcoutput.data.get("scan_energies", {}),
+            scan_geometries=qcoutput.data.get("optimized_geometries", {}),
+            scan_molecules=qcoutput.data.get("molecules_from_optimized_geometries", {}),
+            pcm_gradients=qcoutput.data.get(["pcm_gradients"][0], None),
+            cds_gradients=qcoutput.data.get(["CDS_gradients"][0], None),
+            dipoles=qcoutput.data.get("dipoles", None),
+            gap_info=qcoutput.data.get("gap_info", None),
         )
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -291,7 +289,7 @@ class Calculation(BaseModel):
         None,
         description="Name of task given by custodian (e.g. opt1, opt2, freq1, freq2)",
     )
-    output_file_paths: Dict[str, str] = Field(
+    output_file_paths: Dict[str, Union[str, Path, Dict[str, Path]]] = Field(
         None,
         description="Paths (relative to dir_name) of the QChem output files associated with this calculation",
     )
@@ -380,7 +378,12 @@ class Calculation(BaseModel):
             completed_at=completed_at,
             input=input_doc,
             output=output_doc,
-            output_file_paths={k.name.lower(): v for k, v in output_file_paths.items()},
+            output_file_paths={
+                k.lower(): Path(v)
+                if isinstance(v, str)
+                else {k2: Path(v2) for k2, v2 in v.items()}
+                for k, v in output_file_paths.items()
+            },
             level_of_theory=level_of_theory(input_doc.rem),
             task_type=task_type(input_doc.dict()),
             calc_type=calc_type(input_doc.dict()),
