@@ -8,4 +8,5 @@ exec ddtrace-run gunicorn --statsd-host $DD_AGENT_HOST:8125 \
     --access-logfile - --error-logfile - $RELOAD \
     --access-logformat '%(h)s %(t)s %(m)s %(U)s?%(q)s %(H)s %(s)s %(b)s "%(f)s" "%(a)s" %(D)s %(p)s %({x-consumer-id}i)s' \
     --max-requests $MAX_REQUESTS --max-requests-jitter $MAX_REQUESTS_JITTER \
+    --timeout 45 \
     app:app
