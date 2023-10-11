@@ -350,7 +350,8 @@ class Calculation(BaseModel):
         output_file_paths = _find_qchem_files(dir_name)
 
         qcinput_kwargs = qcinput_kwargs if qcinput_kwargs else {}
-        qcinput = QCInput(qcinput_file, **qcinput_kwargs)
+        qcinput = QCInput.from_file(qcinput_file, **qcinput_kwargs)
+        print(qcinput)
 
         qcoutput_kwargs = qcoutput_kwargs if qcoutput_kwargs else {}
         qcoutput = QCOutput(qcoutput_file, **qcoutput_kwargs)
