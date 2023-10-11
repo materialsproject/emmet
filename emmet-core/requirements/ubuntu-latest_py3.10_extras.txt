@@ -396,7 +396,7 @@ scipy==1.11.3
     #   scikit-learn
 seekpath==2.1.0
     # via emmet-core (setup.py)
-sentry-sdk==1.31.0
+sentry-sdk==1.32.0
     # via custodian
 shapely==2.0.1
     # via pymatgen-analysis-alloys
