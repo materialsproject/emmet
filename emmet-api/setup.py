@@ -13,7 +13,6 @@ setup(
     install_requires=[
         "emmet-core[all]",
         "fastapi",
-        "uvicorn-tschaume",
         "gunicorn",
         "boto3",
         "maggma",
