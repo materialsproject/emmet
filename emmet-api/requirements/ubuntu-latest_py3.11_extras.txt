@@ -4,13 +4,13 @@
 #
 #    pip-compile --all-extras --output-file=requirements/ubuntu-latest_py3.11_extras.txt
 #
-aiohttp==3.8.5
+aiohttp==3.8.6
     # via fsspec
 aioitertools==0.11.0
     # via maggma
 aiosignal==1.3.1
     # via aiohttp
-annotated-types==0.5.0
+annotated-types==0.6.0
     # via pydantic
 anyio==3.7.1
     # via
@@ -32,13 +32,13 @@ attrs==23.1.0
     #   referencing
 bcrypt==4.0.1
     # via paramiko
-blinker==1.6.2
+blinker==1.6.3
     # via flask
-boto3==1.28.61
+boto3==1.28.62
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.31.61
+botocore==1.31.62
     # via
     #   boto3
     #   s3transfer
@@ -79,7 +79,7 @@ cryptography==41.0.4
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
-cycler==0.12.0
+cycler==0.12.1
     # via matplotlib
 cython==3.0.3
     # via chgnet
@@ -97,10 +97,8 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.69.5
-    # via
-    #   emmet-api (setup.py)
-    #   mp-api
+emmet-core[all]==0.69.11
+    # via emmet-api (setup.py)
 envier==0.4.0
     # via ddtrace
 fastapi==0.103.2
@@ -116,7 +114,7 @@ flake8==6.1.0
     # via emmet-api (setup.py)
 flask==3.0.0
     # via mongogrant
-fonttools==4.43.0
+fonttools==4.43.1
     # via matplotlib
 frozenlist==1.4.0
     # via
@@ -132,7 +130,7 @@ future==0.18.3
     #   uncertainties
 ghp-import==2.1.0
     # via mkdocs
-griffe==0.36.4
+griffe==0.36.5
     # via mkdocstrings-python
 gunicorn==21.2.0
     # via emmet-api (setup.py)
@@ -140,7 +138,7 @@ h11==0.14.0
     # via
     #   uvicorn
     #   uvicorn-tschaume
-h5py==3.9.0
+h5py==3.10.0
     # via phonopy
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
@@ -193,11 +191,9 @@ lightning-utilities==0.9.0
     #   torchmetrics
 livereload==2.6.3
     # via emmet-api (setup.py)
-maggma==0.57.1
-    # via
-    #   emmet-api (setup.py)
-    #   mp-api
-markdown==3.4.4
+maggma==0.57.2
+    # via emmet-api (setup.py)
+markdown==3.5
     # via
     #   mkdocs
     #   mkdocs-autorefs
@@ -210,7 +206,7 @@ markupsafe==2.1.3
     #   mkdocs
     #   mkdocstrings
     #   werkzeug
-matcalc[models]==0.0.3
+matcalc==0.0.3
     # via emmet-core
 matgl==0.8.5
     # via emmet-core
@@ -252,7 +248,7 @@ mkdocstrings[python]==0.23.0
     # via
     #   emmet-api (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.7.2
+mkdocstrings-python==1.7.3
     # via mkdocstrings
 mongogrant==0.3.3
     # via maggma
@@ -263,22 +259,17 @@ monty==2023.9.25
     #   emmet-core
     #   maggma
     #   matminer
-    #   mp-api
     #   pymatgen
     #   robocrys
-mp-api==0.37.2
-    # via pymatgen
 mpmath==1.3.0
     # via sympy
 msgpack==1.0.7
-    # via
-    #   maggma
-    #   mp-api
+    # via maggma
 multidict==6.0.4
     # via
     #   aiohttp
     #   yarl
-mypy==1.5.1
+mypy==1.6.0
     # via emmet-api (setup.py)
 mypy-extensions==1.0.0
     # via
@@ -350,7 +341,7 @@ nvidia-nvtx-cu12==12.1.105
     # via torch
 opentelemetry-api==1.20.0
     # via ddtrace
-orjson==3.9.7
+orjson==3.9.8
     # via maggma
 packaging==23.2
     # via
@@ -415,9 +406,7 @@ pydantic==2.4.2
     #   maggma
     #   pydantic-settings
 pydantic-core==2.10.1
-    # via
-    #   emmet-core
-    #   pydantic
+    # via pydantic
 pydantic-settings==2.0.3
     # via
     #   emmet-core
@@ -430,14 +419,13 @@ pyflakes==3.1.0
     # via flake8
 pygments==2.16.1
     # via mkdocs-material
-pymatgen==2023.9.10
+pymatgen==2023.10.4
     # via
     #   chgnet
     #   emmet-core
     #   matcalc
     #   matgl
     #   matminer
-    #   mp-api
     #   pymatgen-analysis-alloys
     #   pymatgen-analysis-diffusion
     #   robocrys
@@ -501,11 +489,10 @@ requests==2.31.0
     #   fsspec
     #   matminer
     #   mongogrant
-    #   mp-api
     #   pymatgen
 robocrys==0.2.8
     # via emmet-core
-rpds-py==0.10.4
+rpds-py==0.10.6
     # via
     #   jsonschema
     #   referencing
@@ -551,7 +538,6 @@ snowballstemmer==2.2.0
     # via pydocstyle
 spglib==2.1.0
     # via
-    #   emmet-core
     #   phonopy
     #   pymatgen
     #   robocrys
@@ -590,12 +576,10 @@ tqdm==4.66.1
     #   pytorch-lightning
 triton==2.1.0
     # via torch
-types-requests==2.31.0.6
+types-requests==2.31.0.8
     # via emmet-api (setup.py)
 types-setuptools==68.2.0.0
     # via emmet-api (setup.py)
-types-urllib3==1.26.25.14
-    # via types-requests
 typing-extensions==4.8.0
     # via
     #   ddtrace
@@ -603,7 +587,6 @@ typing-extensions==4.8.0
     #   fastapi
     #   inflect
     #   lightning-utilities
-    #   mp-api
     #   mypy
     #   pydantic
     #   pydantic-core
@@ -612,10 +595,11 @@ typing-extensions==4.8.0
     #   torch
 uncertainties==3.1.7
     # via pymatgen
-urllib3==1.26.17
+urllib3==2.0.6
     # via
     #   botocore
     #   requests
+    #   types-requests
 uvicorn==0.23.2
     # via maggma
 uvicorn-tschaume==0.19.1
