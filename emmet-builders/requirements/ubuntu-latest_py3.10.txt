@@ -336,7 +336,7 @@ requests==2.31.0
     #   pymatgen
 robocrys==0.2.8
     # via emmet-core
-rpds-py==0.10.4
+rpds-py==0.10.6
     # via
     #   jsonschema
     #   referencing
