@@ -109,6 +109,8 @@ class CalculationInput(BaseModel):
         CalculationInput
             The input document.
         """
+        print("the molecule \n")
+        print(qcinput.molecule.as_dict())
 
         return cls(
             initial_molecule=qcinput.molecule.as_dict(),
