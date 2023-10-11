@@ -18,9 +18,12 @@ from emmet.core.qchem.calc_types import (
     LevelOfTheory,
     CalcType,
     TaskType,
+)
+
+from emmet.core.qchem.calc_types.em_utils import (
     level_of_theory,
-    calc_type,
     task_type,
+    calc_type,
 )
 
 from emmet.core.qchem.task import QChemStatus
@@ -384,9 +387,9 @@ class Calculation(BaseModel):
                 else {k2: Path(v2) for k2, v2 in v.items()}
                 for k, v in output_file_paths.items()
             },
-            level_of_theory=level_of_theory(input_doc.rem),
-            task_type=task_type(input_doc.dict()),
-            calc_type=calc_type(input_doc.dict()),
+            level_of_theory=level_of_theory(input_doc),
+            task_type=task_type(input_doc),
+            calc_type=calc_type(input_doc),
         )
 
 
