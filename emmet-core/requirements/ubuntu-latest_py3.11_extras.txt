@@ -31,7 +31,7 @@ charset-normalizer==3.3.0
     # via
     #   aiohttp
     #   requests
-chgnet==0.2.1
+chgnet==0.2.2
     # via emmet-core (setup.py)
 click==8.1.7
     # via mkdocs
@@ -396,7 +396,7 @@ seekpath==2.1.0
     # via emmet-core (setup.py)
 sentry-sdk==1.32.0
     # via custodian
-shapely==2.0.1
+shapely==2.0.2
     # via pymatgen-analysis-alloys
 six==1.16.0
     # via
