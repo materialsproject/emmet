@@ -69,7 +69,7 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.69.11
+emmet-core[all,ml]==0.69.11
     # via emmet-builders (setup.py)
 fastapi==0.103.2
     # via maggma
@@ -279,7 +279,7 @@ pydantic-settings==2.0.3
     #   maggma
 pydash==7.0.6
     # via maggma
-pymatgen==2023.10.4
+pymatgen==2023.10.11
     # via
     #   chgnet
     #   emmet-core
