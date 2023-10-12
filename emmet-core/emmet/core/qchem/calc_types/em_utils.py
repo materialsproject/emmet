@@ -1,5 +1,5 @@
 """ Utilities to determine level of theory, task type, and calculation type for Q-Chem calculations in the pydantic Docs paradigm"""
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from emmet.core.qchem.calc_types import LevelOfTheory, CalcType, TaskType
 from emmet.core.qchem.calculation import CalculationInput
@@ -9,7 +9,9 @@ from emmet.core.qchem.calc_types.calc_types import (
 )
 
 
-__author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>, Rishabh Debraj Guha <rdguha@lbl.gov>"
+__author__ = (
+    "Evan Spotte-Smith <ewcspottesmith@lbl.gov>, Rishabh Debraj Guha <rdguha@lbl.gov>"
+)
 
 
 functional_synonyms = {
@@ -170,7 +172,9 @@ def lot_solvent_string(
     return f"{lot}({solv})"
 
 
-def task_type(parameters: CalculationInput, special_run_type: Optional[str] = None) -> TaskType:
+def task_type(
+    parameters: CalculationInput, special_run_type: Optional[str] = None
+) -> TaskType:
     if special_run_type == "frequency_flattener":
         return TaskType("Frequency Flattening Geometry Optimization")
     elif special_run_type == "ts_frequency_flattener":
@@ -190,7 +194,9 @@ def task_type(parameters: CalculationInput, special_run_type: Optional[str] = No
     return TaskType("Unknown")
 
 
-def calc_type(parameters: CalculationInput, special_run_type: Optional[str] = None) -> CalcType:
+def calc_type(
+    parameters: CalculationInput, special_run_type: Optional[str] = None
+) -> CalcType:
     """
     Determines the calc type
 
