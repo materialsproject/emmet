@@ -22,7 +22,7 @@ def test_input_summary(test_dir, object_name, task_name):
 
     files = test_object.task_files[task_name]
     print(dir_name, task_name, files)
-    calc_doc, _ = Calculation.from_qchem_files(dir_name, task_name, **files)
+    calc_doc = Calculation.from_qchem_files(dir_name, task_name, **files)
 
     test_doc = InputDoc.from_qchem_calc_doc(calc_doc)
     valid_doc = test_object.task_doc["input"]
