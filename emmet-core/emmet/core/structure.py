@@ -152,7 +152,7 @@ class StructureMetadata(EmmetBaseModel):
         return cls(**kwargs)
 
 
-class MoleculeMetadata(EmmetBaseModel, extra="allow"):
+class MoleculeMetadata(EmmetBaseModel):
     """Mix-in class for molecule metadata."""
 
     charge: Optional[int] = Field(None, description="Charge of the molecule")

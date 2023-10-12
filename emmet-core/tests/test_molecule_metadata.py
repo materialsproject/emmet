@@ -27,8 +27,11 @@ def test_from_molecule(molecule):
     assert metadata.spin_multiplicity == 1
     assert metadata.nelectrons == 16
 
-    assert metadata.model_config.get("extra") == "allow"
-    assert metadata.model_dump().get("extra_field") == "extra_value"
+    assert metadata.model_config.get("extra") is None, (
+        "Should not allow extra field to keep validation strict, if "
+        "extra fields are needed, set extra='allow' on a subclass"
+    )
+    assert metadata.model_dump().get("extra_field") is None
 
 
 def test_from_comp(molecule):
