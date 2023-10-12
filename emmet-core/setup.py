@@ -15,7 +15,7 @@ setup(
     },
     include_package_data=True,
     install_requires=[
-        "pymatgen>=2023.10.4",
+        "pymatgen>=2023.10.11",
         "monty>=2023.9.25",
         "pydantic>=2.0",
         "pydantic-settings>=2.0",
@@ -24,14 +24,13 @@ setup(
     ],
     extras_require={
         "all": [
+            "matcalc",
             "seekpath>=2.0.1",
             "robocrys>=0.2.8",
             "pymatgen-analysis-diffusion>=2023.8.15",
             "pymatgen-analysis-alloys>=0.0.3",
-            "matcalc",
-            "chgnet",
-            "matgl",
         ],
+        "ml": ["chgnet", "matgl"],
         "test": [
             "pre-commit",
             "pytest",

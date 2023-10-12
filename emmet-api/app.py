@@ -1,6 +1,8 @@
 import time
+
 start = time.perf_counter()
 import logging
+
 logging.getLogger("uvicorn.access").handlers = []
 from asgi_logger import AccessLoggerMiddleware
 
@@ -25,7 +27,7 @@ api = MAPI(
 app = api.app
 app.add_middleware(
     AccessLoggerMiddleware,
-    format='%(h)s %(t)s %(m)s %(U)s?%(q)s %(H)s %(s)s %(b)s "%(f)s" "%(a)s" %(D)s %(p)s %({x-consumer-id}i)s'
+    format='%(h)s %(t)s %(m)s %(U)s?%(q)s %(H)s %(s)s %(b)s "%(f)s" "%(a)s" %(D)s %(p)s %({x-consumer-id}i)s',
 )
 delta = time.perf_counter() - start
 logger.warning(f"Startup took {delta:.1f}s")
