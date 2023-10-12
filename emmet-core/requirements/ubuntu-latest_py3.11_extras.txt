@@ -352,7 +352,7 @@ python-dateutil==2.8.2
     #   pandas
 python-dotenv==1.0.0
     # via pydantic-settings
-pytorch-lightning==2.0.9.post0
+pytorch-lightning==2.1.0
     # via matgl
 pytz==2023.3.post1
     # via pandas
