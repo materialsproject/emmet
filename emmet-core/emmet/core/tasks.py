@@ -587,7 +587,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
             task_type=calcs_reversed[0].task_type,
         )
         if additional_fields:
-            doc = doc.copy(update=additional_fields)
+            doc = doc.model_copy(update=additional_fields)
         return doc
 
     @staticmethod
