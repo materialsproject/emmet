@@ -21,6 +21,10 @@ ase==3.22.1
     #   chgnet
     #   matcalc
     #   matgl
+asgi-logger==0.1.0
+    # via emmet-api (setup.py)
+asgiref==3.7.2
+    # via asgi-logger
 async-timeout==4.0.3
     # via aiohttp
 attrs==23.1.0
@@ -68,7 +72,6 @@ click==8.1.7
     #   mkdocs
     #   mongogrant
     #   uvicorn
-    #   uvicorn-tschaume
 colorama==0.4.6
     # via griffe
 contourpy==1.1.1
@@ -135,9 +138,7 @@ griffe==0.36.5
 gunicorn==21.2.0
     # via emmet-api (setup.py)
 h11==0.14.0
-    # via
-    #   uvicorn
-    #   uvicorn-tschaume
+    # via uvicorn
 h5py==3.10.0
     # via phonopy
 htmlmin2==0.1.13
@@ -419,7 +420,7 @@ pyflakes==3.1.0
     # via flake8
 pygments==2.16.1
     # via mkdocs-material
-pymatgen==2023.10.4
+pymatgen==2023.10.11
     # via
     #   chgnet
     #   emmet-core
@@ -602,8 +603,6 @@ urllib3==2.0.6
     #   types-requests
 uvicorn==0.23.2
     # via maggma
-uvicorn-tschaume==0.19.1
-    # via emmet-api (setup.py)
 virtualenv==20.24.5
     # via pre-commit
 watchdog==3.0.0
