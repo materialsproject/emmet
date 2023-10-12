@@ -21,6 +21,10 @@ ase==3.22.1
     #   chgnet
     #   matcalc
     #   matgl
+asgi-logger==0.1.0
+    # via emmet-api (emmet/emmet-api/setup.py)
+asgiref==3.7.2
+    # via asgi-logger
 async-timeout==4.0.3
     # via aiohttp
 attrs==23.1.0
@@ -452,6 +456,7 @@ triton==2.1.0
     # via torch
 typing-extensions==4.8.0
     # via
+    #   asgiref
     #   cattrs
     #   ddtrace
     #   emmet-core

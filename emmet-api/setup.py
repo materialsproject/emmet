@@ -19,6 +19,7 @@ setup(
         "ddtrace",
         "setproctitle",
         "shapely",
+        "asgi-logger",
     ],
     extras_require={
         "test": [
