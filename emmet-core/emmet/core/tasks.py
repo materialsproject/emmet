@@ -406,7 +406,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
 
     @model_validator(mode="after")
     def set_entry(self) -> datetime:
-        if not self.entry and (self.calcs_reversed and self.task_id):
+        if not self.entry and self.calcs_reversed:
             self.entry = self.get_entry(self.calcs_reversed, self.task_id)
         return self
 
