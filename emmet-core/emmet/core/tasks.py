@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 import numpy as np
 from monty.json import MontyDecoder
 from monty.serialization import loadfn
-from pydantic import field_validator, ConfigDict, BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core.structure import Structure
 from pymatgen.core.trajectory import Trajectory
@@ -70,7 +70,7 @@ class OrigInputs(BaseModel):
     @classmethod
     def potcar_ok(cls, v):
         if isinstance(v, list):
-            return [i for i in v]
+            return list(v)
         return v
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -173,7 +173,9 @@ class InputDoc(BaseModel):
     is_lasph: Optional[bool] = Field(
         None, description="Whether the calculation was run with aspherical corrections"
     )
-    is_hubbard: bool = Field(False, description="Is this a Hubbard +U calculation")
+    is_hubbard: bool = Field(
+        default=False, description="Is this a Hubbard +U calculation"
+    )
     hubbards: Optional[dict] = Field(None, description="The hubbard parameters used")
 
     @classmethod
@@ -306,9 +308,7 @@ class AnalysisDoc(BaseModel):
 
 
 class TaskDoc(StructureMetadata, extra="allow"):
-    """
-    Calculation-level details about VASP calculations that power Materials Project.
-    """
+    """Calculation-level details about VASP calculations that power Materials Project."""
 
     tags: Union[List[str], None] = Field(
         [], title="tag", description="Metadata tagged to a given task."
@@ -406,7 +406,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
 
     @model_validator(mode="after")
     def set_entry(self) -> datetime:
-        if not self.entry and (self.calcs_reversed and self.task_id):
+        if not self.entry and self.calcs_reversed:
             self.entry = self.get_entry(self.calcs_reversed, self.task_id)
         return self
 
@@ -416,7 +416,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         dir_name: Union[Path, str],
         volumetric_files: Tuple[str, ...] = _VOLUMETRIC_FILES,
         store_additional_json: bool = True,
-        additional_fields: Dict[str, Any] = None,
+        additional_fields: Optional[Dict[str, Any]] = None,
         volume_change_warning_tol: float = 0.2,
         **vasp_calculation_kwargs,
     ) -> _T:
@@ -514,14 +514,13 @@ class TaskDoc(StructureMetadata, extra="allow"):
             included_objects=included_objects,
             task_type=calcs_reversed[0].task_type,
         )
-        doc = doc.model_copy(update=additional_fields)
-        return doc
+        return doc.model_copy(update=additional_fields)
 
     @classmethod
     def from_vasprun(
         cls: Type[_T],
         path: Union[str, Path],
-        additional_fields: Dict[str, Any] = None,
+        additional_fields: Optional[Dict[str, Any]] = None,
         volume_change_warning_tol: float = 0.2,
         **vasp_calculation_kwargs,
     ) -> _T:
@@ -588,7 +587,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
             task_type=calcs_reversed[0].task_type,
         )
         if additional_fields:
-            doc = doc.copy(update=additional_fields)
+            doc = doc.model_copy(update=additional_fields)
         return doc
 
     @staticmethod
@@ -654,9 +653,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
 
 
 class TrajectoryDoc(BaseModel):
-    """
-    Model for task trajectory data
-    """
+    """Model for task trajectory data."""
 
     task_id: Optional[str] = Field(
         None,
@@ -671,9 +668,7 @@ class TrajectoryDoc(BaseModel):
 
 
 class EntryDoc(BaseModel):
-    """
-    Model for task entry data
-    """
+    """Model for task entry data."""
 
     task_id: Optional[str] = Field(
         None,
@@ -688,9 +683,7 @@ class EntryDoc(BaseModel):
 
 
 class DeprecationDoc(BaseModel):
-    """
-    Model for task deprecation data
-    """
+    """Model for task deprecation data."""
 
     task_id: Optional[str] = Field(
         None,
@@ -871,7 +864,7 @@ def _get_drift_warnings(calc_doc: Calculation) -> List[str]:
 def _get_state(calcs_reversed: List[Calculation], analysis: AnalysisDoc) -> TaskState:
     """Get state from calculation documents and relaxation analysis."""
     all_calcs_completed = all(
-        [c.has_vasp_completed == TaskState.SUCCESS for c in calcs_reversed]
+        c.has_vasp_completed == TaskState.SUCCESS for c in calcs_reversed
     )
     if len(analysis.errors) == 0 and all_calcs_completed:
         return TaskState.SUCCESS  # type: ignore
@@ -956,7 +949,7 @@ def _find_vasp_files(
                 vasp_files["outcar_file"] = file
             elif file.match(f"*CONTCAR{suffix}*"):
                 vasp_files["contcar_file"] = file
-            elif any([file.match(f"*{f}{suffix}*") for f in volumetric_files]):
+            elif any(file.match(f"*{f}{suffix}*") for f in volumetric_files):
                 vol_files.append(file)
             elif file.match(f"*POSCAR.T=*{suffix}*"):
                 elph_poscars.append(file)
