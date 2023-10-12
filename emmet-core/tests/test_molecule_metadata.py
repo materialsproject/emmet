@@ -1,7 +1,4 @@
 import pytest
-
-import numpy as np
-
 from pymatgen.core import Molecule
 from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
@@ -9,17 +6,13 @@ from pymatgen.core.periodic_table import Element
 from emmet.core.structure import MoleculeMetadata
 
 
-@pytest.fixture
+@pytest.fixture()
 def molecule():
-    test_mol = Molecule(
-        species=["O", "O"],
-        coords=np.asarray([[0, 0, 0], [0.0, 0.0, 1.16]]),
-    )
-    return test_mol
+    return Molecule(species=["O", "O"], coords=[[0, 0, 0], [0.0, 0.0, 1.16]])
 
 
 def test_from_molecule(molecule):
-    metadata = MoleculeMetadata.from_molecule(molecule)
+    metadata = MoleculeMetadata.from_molecule(molecule, extra_field="extra_value")
     assert metadata.natoms == 2
     assert metadata.elements == [Element("O")]
     assert metadata.nelements == 1
@@ -33,6 +26,9 @@ def test_from_molecule(molecule):
     assert metadata.charge == 0
     assert metadata.spin_multiplicity == 1
     assert metadata.nelectrons == 16
+
+    assert metadata.model_config.get("extra") == "allow"
+    assert metadata.model_dump().get("extra_field") == "extra_value"
 
 
 def test_from_comp(molecule):
