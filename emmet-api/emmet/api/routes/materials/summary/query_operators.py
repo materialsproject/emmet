@@ -263,16 +263,16 @@ class SearchStatsQuery(QueryOperator):
     def post_process(self, docs, query):
         if docs:
             field = list(docs[0].keys())[0]
-            
+
             params = query.get("pipeline", {})[0].get("$match", {})
-            
+
             for entry in params.values():
                 if "$gte" in entry:
                     min_val = entry.get("$gte", None)
                     max_val = entry.get("$lte", None)
 
             num_points = 100
-            
+
             num_samples = len(docs)
             warnings = []
 
