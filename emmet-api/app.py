@@ -30,9 +30,6 @@ app.add_middleware(
     AccessLoggerMiddleware,
     format='%(h)s %(t)s %(m)s %(U)s?%(q)s %(H)s %(s)s %(b)s "%(f)s" "%(a)s" %(D)s %(p)s %({x-consumer-id}i)s',
 )
-app.add_middleware(
-    CORSMiddleware,
-    expose_headers=["x-consumer-id"]
-)
+app.add_middleware(CORSMiddleware, expose_headers=["x-consumer-id"])
 delta = time.perf_counter() - start
 logger.warning(f"Startup took {delta:.1f}s")

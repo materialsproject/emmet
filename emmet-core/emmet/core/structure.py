@@ -1,25 +1,22 @@
-""" Core definition of Structure and Molecule metadata """
+"""Core definition of Structure and Molecule metadata."""
 from __future__ import annotations
 
 from typing import List, Optional, Type, TypeVar
 
 from pydantic import Field
-
 from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
-from pymatgen.core.structure import Structure, Molecule
+from pymatgen.core.structure import Molecule, Structure
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.symmetry import SymmetryData, PointGroupData
+from emmet.core.symmetry import PointGroupData, SymmetryData
 
 T = TypeVar("T", bound="StructureMetadata")
 S = TypeVar("S", bound="MoleculeMetadata")
 
 
 class StructureMetadata(EmmetBaseModel):
-    """
-    Mix-in class for structure metadata
-    """
+    """Mix-in class for structure metadata."""
 
     # Structure metadata
     nsites: Optional[int] = Field(
@@ -94,7 +91,7 @@ class StructureMetadata(EmmetBaseModel):
         )
         composition = composition.remove_charges()
 
-        elsyms = sorted(set([e.symbol for e in composition.elements]))
+        elsyms = sorted({e.symbol for e in composition.elements})
 
         data = {
             "elements": elsyms,
@@ -134,7 +131,7 @@ class StructureMetadata(EmmetBaseModel):
             else fields
         )
         comp = meta_structure.composition.remove_charges()
-        elsyms = sorted(set([e.symbol for e in comp.elements]))
+        elsyms = sorted({e.symbol for e in comp.elements})
         symmetry = SymmetryData.from_structure(meta_structure)
 
         data = {
@@ -156,9 +153,7 @@ class StructureMetadata(EmmetBaseModel):
 
 
 class MoleculeMetadata(EmmetBaseModel):
-    """
-    Mix-in class for molecule metadata
-    """
+    """Mix-in class for molecule metadata."""
 
     charge: Optional[int] = Field(None, description="Charge of the molecule")
     spin_multiplicity: Optional[int] = Field(
@@ -288,7 +283,7 @@ class MoleculeMetadata(EmmetBaseModel):
             else fields
         )
         comp = meta_molecule.composition
-        elsyms = sorted(set([e.symbol for e in comp.elements]))
+        elsyms = sorted({e.symbol for e in comp.elements})
         symmetry = PointGroupData.from_molecule(meta_molecule)
 
         data = {

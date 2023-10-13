@@ -1,12 +1,13 @@
 # mypy: ignore-errors
 
-""" Base emmet model to add default metadata """
-from datetime import datetime
-from typing import TypeVar, Optional, Literal
+"""Base emmet model to add default metadata."""
 
-from pydantic import field_validator, BaseModel, Field
-from pymatgen.core import __version__ as pmg_version
+from datetime import datetime
+from typing import Literal, Optional, TypeVar
+
 from monty.json import MontyDecoder
+from pydantic import BaseModel, Field, field_validator
+from pymatgen.core import __version__ as pmg_version
 
 from emmet.core import __version__
 
@@ -16,9 +17,7 @@ monty_decoder = MontyDecoder()
 
 
 class EmmetMeta(BaseModel):
-    """
-    Default emmet metadata
-    """
+    """Default emmet metadata."""
 
     emmet_version: str = Field(
         __version__, description="The version of emmet this document was built with."
@@ -52,9 +51,7 @@ class EmmetMeta(BaseModel):
 
 
 class EmmetBaseModel(BaseModel):
-    """
-    Base Model for default emmet data
-    """
+    """Base Model for default emmet data."""
 
     builder_meta: EmmetMeta = Field(
         default_factory=EmmetMeta, description="Builder metadata."
