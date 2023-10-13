@@ -42,14 +42,14 @@ _T = TypeVar("_T", bound="TaskDoc")
 
 
 class OutputDoc(BaseModel):
-    molecule: Molecule = Field(
+    molecule: Optional[Molecule] = Field(
         None,
         title="Output Molecule",
         description="Output molecule after the QChem Calculation",
     )
 
-    initial_molecule: Molecule = Field(None, description="Input Molecule object")
-    optimized_molecule: Molecule = Field(None, description="Optimized Molecule object")
+    initial_molecule: Optional[Molecule] = Field(None, description="Input Molecule object")
+    optimized_molecule: Optional[Molecule] = Field(None, description="Optimized Molecule object")
 
     # TODO: Discuss with Evan if these go here
     # species_hash: str = Field(
@@ -69,25 +69,25 @@ class OutputDoc(BaseModel):
     final_energy: float = Field(
         None, description="Final electronic energy for the calculation (units: Hartree)"
     )
-    enthalpy: float = Field(
+    enthalpy: Optional[float] = Field(
         None, description="Total enthalpy of the molecule (units: kcal/mol)"
     )
-    entropy: float = Field(
+    entropy: Optional[float] = Field(
         None, description="Total entropy of the molecule (units: cal/mol-K"
     )
 
-    mulliken: List[Any] = Field(
+    mulliken: Optional[List[Any]] = Field(
         None, description="Mulliken atomic partial charges and partial spins"
     )
-    resp: List[float] = Field(
+    resp: Optional[List[float]] = Field(
         None,
         description="Restrained Electrostatic Potential (RESP) atomic partial charges",
     )
-    nbo: Dict[str, Any] = Field(
+    nbo: Optional[Dict[str, Any]] = Field(
         None, description="Natural Bonding Orbital (NBO) output"
     )
 
-    frequencies: List[float] = Field(
+    frequencies: Optional[List[float]] = Field(
         None, description="Vibrational frequencies of the molecule (units: cm^-1)"
     )
 
@@ -131,7 +131,7 @@ class InputDoc(BaseModel):
         description="Input molecule and calc details for the QChem calculation",
     )
 
-    prev_rem_params: Dict = Field(
+    prev_rem_params: Optional[Dict] = Field(
         None,
         description="Parameters from a previous qchem calculation in the series",
     )
@@ -149,25 +149,25 @@ class InputDoc(BaseModel):
         [], title="tag", description="Metadata tagged to a given task."
     )
 
-    solvent: Dict = Field(
+    solvent: Optional[Dict[str, Any]] = Field(
         None,
         description="Dictionary with the implicit solvent model and respective parameters",
     )
 
-    lot_solvent: str = Field(
+    lot_solvent: Optional[str] = Field(
         None,
         description="A string representation with the combined information of the solvemt used and the level of theory",
     )
 
-    custom_smd: str = Field(
+    custom_smd: Optional[str] = Field(
         None, description="Parameter string for SMD implicit solvent model"
     )
 
-    special_run_type: str = Field(
+    special_run_type: Optional[str] = Field(
         None, description="Special workflow name (if applicable)"
     )
 
-    smiles: str = Field(
+    smiles: Optional[str] = Field(
         None,
         description="Simplified molecular-input line-entry system (SMILES) string for the molecule involved "
         "in this calculation.",
@@ -210,13 +210,13 @@ class InputDoc(BaseModel):
 
 
 class CustodianDoc(BaseModel):
-    corrections: List[Any] = Field(
+    corrections: Optional[List[Any]] = Field(
         None,
         title="Custodian Corrections",
         description="List of custodian correction data for calculation.",
     )
 
-    job: dict = Field(
+    job: Optional[Dict[str, Any]] = Field(
         None,
         title="Custodian Job Data",
         description="Job data logged by custodian.",
@@ -249,7 +249,7 @@ class TaskDoc(MoleculeMetadata):
         None, description="the type of QChem calculation"
     )
 
-    orig: Dict[str, Any] = Field(
+    orig: Optional[Dict[str, Any]] = Field(
         {}, description="Summary of the original Q-Chem inputs"
     )
 
@@ -265,17 +265,17 @@ class TaskDoc(MoleculeMetadata):
 
     # TODO: Implement entry dict
 
-    custodian: List[CustodianDoc] = Field(
+    custodian: Optional[List[CustodianDoc]] = Field(
         None,
         title="Calcs reversed data",
         description="Detailed custodian data for each QChem calculation contributing to the task document.",
     )
 
-    critic2: Dict[str, Any] = Field(
+    critic2: Optional[Dict[str, Any]] = Field(
         None, description="Outputs from the critic2 calculation if performed"
     )
 
-    custom_smd: Union[str, Dict[str, Any]] = Field(
+    custom_smd: Optional[Union[str, Dict[str, Any]]] = Field(
         None,
         description="The seven solvent parameters necessary to define a custom_smd model",
     )

@@ -97,7 +97,7 @@ class CalculationInput(BaseModel):
         description="A dictionary for the solvent parameters if the SMD solvent method has been employed",
     )
 
-    vdw_mode: str = Field(
+    vdw_mode: Optional[str] = Field(
         None,
         description="Either atomic or sequential. Used when custon van der Waals radii are used to construct pcm cavity",
     )
@@ -111,7 +111,7 @@ class CalculationInput(BaseModel):
         description="The dictionary of scan variables for torsions or bond stretches",
     )
 
-    tags: Union[Dict[str, Any], str] = Field(
+    tags: Optional[Union[Dict[str, Any], str]] = Field(
         None, description="Any tags associated with the QChem calculation."
     )
 
@@ -181,7 +181,7 @@ class CalculationOutput(BaseModel):
         description="Calculated frequency modes if the job type is freq or frequency",
     )
 
-    frequency_modes: Union[List, str] = Field(
+    frequency_modes: Optional[Union[List, str]] = Field(
         None, description="The list of calculated frequency mode vectors"
     )
 
