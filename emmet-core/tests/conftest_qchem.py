@@ -236,7 +236,7 @@ class OptimizationTest(SchemaTestData):
             }
         ],
         "input": {
-            "molecule": {
+            "initial_molecule": {
                 "@module": "pymatgen.core.structure",
                 "@class": "Molecule",
                 "charge": 0.0,
