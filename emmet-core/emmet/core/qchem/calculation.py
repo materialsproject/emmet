@@ -205,11 +205,11 @@ class CalculationOutput(BaseModel):
         description="A dictionary of the scan energies with their respective parameters",
     )
 
-    scan_geometries: Optional[Dict[str, Any]] = Field(
+    scan_geometries: Optional[Union[List, Dict[str, Any]]] = Field(
         None, description="optimized geometry of the molecules after the geometric scan"
     )
 
-    scan_molecules: Optional[Dict[str, Any]] = Field(
+    scan_molecules: Optional[Union[List, Dict[str, Any]]] = Field(
         None,
         description="The constructed pymatgen molecules from the optimized scan geometries",
     )
@@ -262,9 +262,8 @@ class CalculationOutput(BaseModel):
         """
 
         return cls(
-            optimized_molecule=qcoutput.data.get(
-                "molecule_from_optimized_geometry", {}
-            ),
+            optimized_molecule=qcoutput.data.get("molecule_from_optimized_geometry").as_dict() 
+            if qcoutput.data.get("molecule_from_optimized_geometry") else {},
             mulliken=qcoutput.data.get(["Mulliken"][-1], []),
             esp=qcoutput.data.get(["ESP"][-1], []),
             resp=qcoutput.data.get(["RESP"][-1], []),

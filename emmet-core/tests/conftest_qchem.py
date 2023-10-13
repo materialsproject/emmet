@@ -239,7 +239,7 @@ class OptimizationTest(SchemaTestData):
             "molecule": {
                 "@module": "pymatgen.core.structure",
                 "@class": "Molecule",
-                "charge": 0,
+                "charge": 0.0,
                 "spin_multiplicity": 1,
                 "sites": [
                     {
@@ -265,8 +265,27 @@ class OptimizationTest(SchemaTestData):
                     },
                 ],
             },
-            "lev_theory": "wB97M-V/def2-SVPD/SMD",
+            "rem": {
+                "job_type": "opt",
+                "basis": "def2-svpd",
+                "max_scf_cycles": "100",
+                "gen_scfman": "true",
+                "xc_grid": "3",
+                "thresh": "14",
+                "s2thresh": "16",
+                "scf_algorithm": "diis",
+                "resp_charges": "true",
+                "symmetry": "false",
+                "sym_ignore": "true",
+                "method": "wb97mv",
+                "solvent_method": "smd",
+                "ideriv": "1",
+                "geom_opt2": "3"
+            },
+            "level_of_theory": "wB97M-V/def2-SVPD/SMD",
             "task_type": "Geometry Optimization",
+            "calc_type": "wB97M-V/def2-SVPD/SMD Geometry Optimization",
+            "solvation_lot_nfo": "wB97M-V/def2-SVPD/SMD(SOLVENT=WATER)",
         },
         "output": {
             "optimized_molecule": {
