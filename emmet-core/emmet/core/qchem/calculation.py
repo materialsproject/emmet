@@ -590,7 +590,7 @@ def solvent(parameters: CalculationInput, custom_smd: Optional[str] = None) -> s
     #         string += "," + piecestring
     #     return string
     elif solvation == "SMD":
-        solvent = parameters.get("smx", {}).get("solvent", "water")
+        solvent = parameters.smx.get("solvent", "water")
         if solvent == "other":
             if custom_smd is None:
                 raise ValueError(
