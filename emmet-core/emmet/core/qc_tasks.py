@@ -125,22 +125,27 @@ class OutputDoc(BaseModel):
 
 
 class InputDoc(BaseModel):
-    molecule: Molecule = Field(
+    initial_molecule: Dict[str, Any] = Field(
         None,
         title="Input Structure",
         description="Input molecule and calc details for the QChem calculation",
     )
 
-    prev_rem_params: Optional[Dict] = Field(
+    prev_rem_params: Optional[Dict[str, Any]] = Field(
         None,
         description="Parameters from a previous qchem calculation in the series",
     )
+    
+    rem: Dict[str, Any] = Field(
+        None,
+        description="Parameters from the rem section of the current QChem calculation"
+    )
 
-    lev_theory: LevelOfTheory = Field(
+    level_of_theory: Optional[Union[str,LevelOfTheory]] = Field(
         None, description="Level of theory used in the qchem calculation"
     )
 
-    task_type: TaskType = Field(
+    task_type: Optional[Union[str,TaskType]] = Field(
         None,
         description="The type of the QChem calculation : optimization, single point ... etc.",
     )
@@ -149,19 +154,11 @@ class InputDoc(BaseModel):
         [], title="tag", description="Metadata tagged to a given task."
     )
 
-    solvent: Optional[Dict[str, Any]] = Field(
+    solvation_lot_info: Optional[Union[Dict[str, Any], str]] = Field(
         None,
-        description="Dictionary with the implicit solvent model and respective parameters",
+        description="Str or Dict representation of the solvent method used for the calculation",
     )
-
-    lot_solvent: Optional[str] = Field(
-        None,
-        description="A string representation with the combined information of the solvemt used and the level of theory",
-    )
-
-    custom_smd: Optional[str] = Field(
-        None, description="Parameter string for SMD implicit solvent model"
-    )
+    
 
     special_run_type: Optional[str] = Field(
         None, description="Special workflow name (if applicable)"
@@ -173,7 +170,7 @@ class InputDoc(BaseModel):
         "in this calculation.",
     )
 
-    calc_type: CalcType = Field(
+    calc_type: Optional[Union[str,CalcType]] = Field(
         None,
         description="A combined dictionary representation of the task type along with the level of theory used",
     )
@@ -194,18 +191,17 @@ class InputDoc(BaseModel):
             A summary of the input molecule and corresponding calculation parameters
         """
         # TODO : modify this to get the different variables from the task doc.
+        print(calc_doc)
         return cls(
             initial_molecule=calc_doc.input.initial_molecule,
             rem=calc_doc.input.rem,
-            # lev_theory = level_of_theory(calc_doc.input.rem),
-            task_type=calc_doc.task_type,
+            level_of_theory = calc_doc.level_of_theory.value,
+            task_type=calc_doc.task_type.value,
             tags=calc_doc.input.tags,
-            solvent=calc_doc.input.solvent,
-            # lot_solvent_string = calc_doc.input.lot_solvent_string,
-            # custom_smd = calc_doc.input.custom_smd,
+            solvation_lot_info = calc_doc.solvation_lot_info,
             # special_run_type = calc_doc.input.special_run_type,
             # smiles = calc_doc.input.smiles,
-            calc_spec=calc_doc.calc_type,
+            calc_type=calc_doc.calc_type.value,
         )
 
 

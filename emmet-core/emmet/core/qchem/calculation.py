@@ -318,6 +318,10 @@ class Calculation(BaseModel):
         None,
         description="Levels of theory used for the QChem calculation: For instance, B97-D/6-31g*",
     )
+    solvation_lot_info: Optional[str] = Field(
+        None,
+        description="A condensed string representation of the comboned LOT and Solvent info"
+    )
     task_type: TaskType = Field(
         None,
         description="Calculation task type like Single Point, Geometry Optimization. Frequency...",
@@ -406,6 +410,7 @@ class Calculation(BaseModel):
                 for k, v in output_file_paths.items()
             },
             level_of_theory=level_of_theory(input_doc),
+            solvation_lot_info=lot_solvent_string(input_doc),
             task_type=task_type(input_doc),
             calc_type=calc_type(input_doc),
         )

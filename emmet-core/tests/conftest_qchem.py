@@ -87,10 +87,10 @@ class SinglePointTest(SchemaTestData):
             }
         ],
         "input": {
-            "molecule": {
+            "initial_molecule": {
                 "@module": "pymatgen.core.structure",
                 "@class": "Molecule",
-                "charge": 0,
+                "charge": 0.0,
                 "spin_multiplicity": 1,
                 "sites": [
                     {
@@ -116,8 +116,26 @@ class SinglePointTest(SchemaTestData):
                     },
                 ],
             },
-            "lev_theory": "wB97M-V/def2-QZVPPD/SMD",
+            "rem": {
+                "job_type": "sp",
+                "basis": "def2-qzvppd",
+                "max_scf_cycles": "100",
+                "gen_scfman": "true",
+                "xc_grid": "3",
+                "thresh": "14",
+                "s2thresh": "16",
+                "scf_algorithm": "diis",
+                "resp_charges": "true",
+                "symmetry": "false",
+                "sym_ignore": "true",
+                "method": "wb97mv",
+                "solvent_method": "smd",
+                "ideriv": "1"
+            },
+            "level_of_theory": "wB97M-V/def2-QZVPPD/SMD",
             "task_type": "Single Point",
+            "calc_type": "wB97M-V/def2-QZVPPD/SMD Single Point",
+            "solvation_lot_nfo": "wB97M-V/def2-QZVPPD/SMD(SOLVENT=WATER)",
         },
         "output": {
             "mulliken": [-0.713178, 0.357278, 0.3559],
