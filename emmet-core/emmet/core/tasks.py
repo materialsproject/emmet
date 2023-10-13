@@ -104,7 +104,11 @@ class OutputDoc(BaseModel):
         # specified. This might happen when importing an older atomate2-format
         # TaskDocument.
         if not values.get("density", None):
-            values["density"] = values["structure"].density
+            if isinstance(values["structure"], dict):
+                values["density"] = values["structure"].get("density", None)
+            else:
+                values["density"] = values["structure"].density
+
         return values
 
     @classmethod
