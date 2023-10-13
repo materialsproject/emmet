@@ -130,7 +130,7 @@ class SinglePointTest(SchemaTestData):
                 "sym_ignore": "true",
                 "method": "wb97mv",
                 "solvent_method": "smd",
-                "ideriv": "1"
+                "ideriv": "1",
             },
             "level_of_theory": "wB97M-V/def2-QZVPPD/SMD",
             "task_type": "Single Point",
@@ -139,8 +139,14 @@ class SinglePointTest(SchemaTestData):
         },
         "output": {
             "mulliken": [-0.713178, 0.357278, 0.3559],
-            "resp": [-0.872759, 0.436379, 0.436379],
+            "resp": [[-0.872759, 0.436379, 0.436379]],
             "final_energy": -76.4493700739,
+            "dipoles": {
+                "total": 2.4648,
+                "dipole": [[1.4227, -1.3039, 1.5333]],
+                "RESP_total": 2.5411,
+                "RESP_dipole": [[1.4672, -1.3441, 1.5806]],
+            },
         },
         "custodian": [
             {
@@ -280,7 +286,7 @@ class OptimizationTest(SchemaTestData):
                 "method": "wb97mv",
                 "solvent_method": "smd",
                 "ideriv": "1",
-                "geom_opt2": "3"
+                "geom_opt2": "3",
             },
             "level_of_theory": "wB97M-V/def2-SVPD/SMD",
             "task_type": "Geometry Optimization",

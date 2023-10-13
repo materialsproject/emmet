@@ -262,8 +262,11 @@ class CalculationOutput(BaseModel):
         """
 
         return cls(
-            optimized_molecule=qcoutput.data.get("molecule_from_optimized_geometry").as_dict() 
-            if qcoutput.data.get("molecule_from_optimized_geometry") else {},
+            optimized_molecule=qcoutput.data.get(
+                "molecule_from_optimized_geometry"
+            ).as_dict()
+            if qcoutput.data.get("molecule_from_optimized_geometry")
+            else {},
             mulliken=qcoutput.data.get(["Mulliken"][-1], []),
             esp=qcoutput.data.get(["ESP"][-1], []),
             resp=qcoutput.data.get(["RESP"][-1], []),
@@ -319,7 +322,7 @@ class Calculation(BaseModel):
     )
     solvation_lot_info: Optional[str] = Field(
         None,
-        description="A condensed string representation of the comboned LOT and Solvent info"
+        description="A condensed string representation of the comboned LOT and Solvent info",
     )
     task_type: TaskType = Field(
         None,

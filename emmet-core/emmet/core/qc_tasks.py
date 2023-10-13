@@ -48,8 +48,12 @@ class OutputDoc(BaseModel):
         description="Output molecule after the QChem Calculation",
     )
 
-    initial_molecule: Optional[Molecule] = Field(None, description="Input Molecule object")
-    optimized_molecule: Optional[Molecule] = Field(None, description="Optimized Molecule object")
+    initial_molecule: Optional[Molecule] = Field(
+        None, description="Input Molecule object"
+    )
+    optimized_molecule: Optional[Molecule] = Field(
+        None, description="Optimized Molecule object"
+    )
 
     # TODO: Discuss with Evan if these go here
     # species_hash: str = Field(
@@ -135,17 +139,17 @@ class InputDoc(BaseModel):
         None,
         description="Parameters from a previous qchem calculation in the series",
     )
-    
+
     rem: Dict[str, Any] = Field(
         None,
-        description="Parameters from the rem section of the current QChem calculation"
+        description="Parameters from the rem section of the current QChem calculation",
     )
 
-    level_of_theory: Optional[Union[str,LevelOfTheory]] = Field(
+    level_of_theory: Optional[Union[str, LevelOfTheory]] = Field(
         None, description="Level of theory used in the qchem calculation"
     )
 
-    task_type: Optional[Union[str,TaskType]] = Field(
+    task_type: Optional[Union[str, TaskType]] = Field(
         None,
         description="The type of the QChem calculation : optimization, single point ... etc.",
     )
@@ -158,7 +162,6 @@ class InputDoc(BaseModel):
         None,
         description="Str or Dict representation of the solvent method used for the calculation",
     )
-    
 
     special_run_type: Optional[str] = Field(
         None, description="Special workflow name (if applicable)"
@@ -170,7 +173,7 @@ class InputDoc(BaseModel):
         "in this calculation.",
     )
 
-    calc_type: Optional[Union[str,CalcType]] = Field(
+    calc_type: Optional[Union[str, CalcType]] = Field(
         None,
         description="A combined dictionary representation of the task type along with the level of theory used",
     )
@@ -195,10 +198,10 @@ class InputDoc(BaseModel):
         return cls(
             initial_molecule=calc_doc.input.initial_molecule,
             rem=calc_doc.input.rem,
-            level_of_theory = calc_doc.level_of_theory.value,
+            level_of_theory=calc_doc.level_of_theory.value,
             task_type=calc_doc.task_type.value,
             tags=calc_doc.input.tags,
-            solvation_lot_info = calc_doc.solvation_lot_info,
+            solvation_lot_info=calc_doc.solvation_lot_info,
             # special_run_type = calc_doc.input.special_run_type,
             # smiles = calc_doc.input.smiles,
             calc_type=calc_doc.calc_type.value,
