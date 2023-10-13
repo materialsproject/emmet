@@ -238,9 +238,6 @@ class SearchStatsQuery(QueryOperator):
                 100, title="The number of values in the returned distribution."
             ),
         ) -> STORE_PARAMS:
-            self.num_points = num_points
-            self.min_val = min_val
-            self.max_val = max_val
 
             if min_val or max_val:
                 pipeline = [{"$match": {field: {}}}]  # type: list
@@ -268,9 +265,9 @@ class SearchStatsQuery(QueryOperator):
         if docs:
             field = list(docs[0].keys())[0]
 
-            num_points = self.num_points
-            min_val = self.min_val
-            max_val = self.max_val
+            num_points = query["num_points"]
+            min_val = query.get("min_val", None)
+            max_val = query.get("max_val", None)
             num_samples = len(docs)
             warnings = []
 
