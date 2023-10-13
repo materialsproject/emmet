@@ -96,7 +96,7 @@ class OutputDoc(BaseModel):
     )
 
     @classmethod
-    def from_qchem_calc_doc(self, cls, calc_doc: Calculation, **kwargs) -> "OutputDoc":
+    def from_qchem_calc_doc(cls, calc_doc: Calculation) -> "OutputDoc":
         """
         Create a summary of QChem calculation outputs from a QChem calculation document.
 
