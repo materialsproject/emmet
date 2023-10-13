@@ -238,7 +238,6 @@ class SearchStatsQuery(QueryOperator):
                 100, title="The number of values in the returned distribution."
             ),
         ) -> STORE_PARAMS:
-
             if min_val or max_val:
                 pipeline = [{"$match": {field: {}}}]  # type: list
                 if min_val is not None:
