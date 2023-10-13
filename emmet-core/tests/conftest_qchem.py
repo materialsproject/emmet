@@ -170,8 +170,8 @@ class OptimizationTest(SchemaTestData):
     folder = "qchem_opt_test"
     task_files = {
         "standard": {
-            "input_file": "mol.qin.gz",
-            "output_file": "mol.qout.gz",
+            "qcinput_file": "mol.qin.gz",
+            "qcoutput_file": "mol.qout.gz",
         }
     }
 
