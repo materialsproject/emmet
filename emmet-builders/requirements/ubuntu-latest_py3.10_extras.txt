@@ -82,7 +82,7 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all,ml]==0.70.0
+emmet-core[all,ml]==0.70.4
     # via emmet-builders (setup.py)
 exceptiongroup==1.1.3
     # via
@@ -170,7 +170,7 @@ lightning-utilities==0.9.0
     #   torchmetrics
 livereload==2.6.3
     # via emmet-builders (setup.py)
-maggma==0.57.3
+maggma==0.57.4
     # via emmet-builders (setup.py)
 markdown==3.5
     # via
@@ -320,7 +320,7 @@ nvidia-nvjitlink-cu12==12.2.140
     #   nvidia-cusparse-cu12
 nvidia-nvtx-cu12==12.1.105
     # via torch
-orjson==3.9.8
+orjson==3.9.9
     # via maggma
 packaging==23.2
     # via
@@ -353,7 +353,7 @@ plotly==5.17.0
     # via pymatgen
 pluggy==1.3.0
     # via pytest
-pre-commit==3.4.0
+pre-commit==3.5.0
     # via emmet-builders (setup.py)
 psutil==5.9.5
     # via dgl
@@ -364,7 +364,7 @@ pybtex==0.24.0
     #   emmet-core
     #   pymatgen
     #   robocrys
-pycodestyle==2.11.0
+pycodestyle==2.11.1
     # via
     #   emmet-builders (setup.py)
     #   flake8
@@ -547,7 +547,7 @@ tqdm==4.66.1
     #   pytorch-lightning
 triton==2.1.0
     # via torch
-types-requests==2.31.0.8
+types-requests==2.31.0.9
     # via emmet-builders (setup.py)
 types-setuptools==68.2.0.0
     # via emmet-builders (setup.py)
