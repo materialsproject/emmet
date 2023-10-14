@@ -42,16 +42,8 @@ _T = TypeVar("_T", bound="TaskDoc")
 
 
 class OutputDoc(BaseModel):
-    molecule: Optional[Molecule] = Field(
-        None,
-        title="Output Molecule",
-        description="Output molecule after the QChem Calculation",
-    )
-
-    initial_molecule: Optional[Molecule] = Field(
-        None, description="Input Molecule object"
-    )
-    optimized_molecule: Optional[Molecule] = Field(
+    initial_molecule: Dict[str, Any] = Field(None, description="Input Molecule object")
+    optimized_molecule: Optional[Dict[str, Any]] = Field(
         None, description="Optimized Molecule object"
     )
 
