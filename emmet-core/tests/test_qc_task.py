@@ -57,6 +57,7 @@ def test_output_summary(test_dir, object_name, task_name):
 
     test_doc = OutputDoc.from_qchem_calc_doc(calc_doc)
     valid_doc = test_object.task_doc["output"]
+    print(valid_doc)
     assert_schemas_equal(test_doc, valid_doc)
 
     # test document can be janitized
