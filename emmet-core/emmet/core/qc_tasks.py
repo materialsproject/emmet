@@ -83,8 +83,9 @@ class OutputDoc(BaseModel):
         None, description="Natural Bonding Orbital (NBO) output"
     )
 
-    frequencies: Optional[List[float]] = Field(
-        None, description="Vibrational frequencies of the molecule (units: cm^-1)"
+    frequency_modes: Optional[Union[List, str]] = Field(
+        None,
+        description="The list of calculated frequency mode vectors if job type is freq (units: cm^-1)",
     )
 
     @classmethod
