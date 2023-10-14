@@ -75,7 +75,7 @@ class OutputDoc(BaseModel):
     mulliken: Optional[List[Any]] = Field(
         None, description="Mulliken atomic partial charges and partial spins"
     )
-    resp: Optional[List[float]] = Field(
+    resp: Optional[Union[List[float], List[Any]]] = Field(
         None,
         description="Restrained Electrostatic Potential (RESP) atomic partial charges",
     )
