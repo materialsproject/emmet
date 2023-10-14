@@ -138,7 +138,7 @@ class SinglePointTest(SchemaTestData):
             "solvation_lot_nfo": "wB97M-V/def2-QZVPPD/SMD(SOLVENT=WATER)",
         },
         "output": {
-            "mulliken": [-0.713178, 0.357278, 0.3559],
+            "mulliken": [[-0.713178, 0.357278, 0.3559]],
             "resp": [[-0.872759, 0.436379, 0.436379]],
             "final_energy": -76.4493700739,
             "dipoles": {
@@ -294,10 +294,39 @@ class OptimizationTest(SchemaTestData):
             "solvation_lot_nfo": "wB97M-V/def2-SVPD/SMD(SOLVENT=WATER)",
         },
         "output": {
+            "initial_molecule": {
+                "@module": "pymatgen.core.structure",
+                "@class": "Molecule",
+                "charge": 0.0,
+                "spin_multiplicity": 1,
+                "sites": [
+                    {
+                        "name": "O",
+                        "species": [{"element": "O", "occu": 1}],
+                        "xyz": [-0.80595, 2.22952, -0.01914],
+                        "properties": {},
+                        "label": "O",
+                    },
+                    {
+                        "name": "H",
+                        "species": [{"element": "H", "occu": 1}],
+                        "xyz": [0.18338, 2.20176, 0.01351],
+                        "properties": {},
+                        "label": "H",
+                    },
+                    {
+                        "name": "H",
+                        "species": [{"element": "H", "occu": 1}],
+                        "xyz": [-1.09531, 1.61602, 0.70231],
+                        "properties": {},
+                        "label": "H",
+                    },
+                ],
+            },
             "optimized_molecule": {
                 "@module": "pymatgen.core.structure",
                 "@class": "Molecule",
-                "charge": 0,
+                "charge": 0.0,
                 "spin_multiplicity": 1,
                 "sites": [
                     {
