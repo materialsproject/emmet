@@ -182,7 +182,7 @@ networkx==3.1
     #   pymatgen
     #   robocrys
     #   torch
-numpy==1.26.0
+numpy==1.26.1
     # via
     #   ase
     #   chgnet
@@ -255,11 +255,11 @@ paramiko==3.3.1
     # via sshtunnel
 phonopy==2.20.0
     # via matcalc
-pillow==10.0.1
+pillow==10.1.0
     # via matplotlib
 plotly==5.17.0
     # via pymatgen
-psutil==5.9.5
+psutil==5.9.6
     # via dgl
 pubchempy==1.0.4
     # via robocrys

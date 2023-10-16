@@ -63,7 +63,9 @@ colorama==0.4.6
 contourpy==1.1.1
     # via matplotlib
 coverage[toml]==7.3.2
-    # via pytest-cov
+    # via
+    #   coverage
+    #   pytest-cov
 cryptography==41.0.4
     # via paramiko
 csscompressor==0.9.5
@@ -248,7 +250,7 @@ networkx==3.1
     #   robocrys
 nodeenv==1.8.0
     # via pre-commit
-numpy==1.26.0
+numpy==1.26.1
     # via
     #   ase
     #   contourpy
@@ -289,7 +291,7 @@ pathspec==0.11.2
     # via mkdocs
 phonopy==2.20.0
     # via matcalc
-pillow==10.0.1
+pillow==10.1.0
     # via matplotlib
 platformdirs==3.11.0
     # via
@@ -305,7 +307,7 @@ protobuf==4.24.4
     # via
     #   ddsketch
     #   ddtrace
-psutil==5.9.5
+psutil==5.9.6
     # via ddtrace
 pubchempy==1.0.4
     # via robocrys
