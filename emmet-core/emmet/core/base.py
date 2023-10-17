@@ -19,10 +19,10 @@ monty_decoder = MontyDecoder()
 class EmmetMeta(BaseModel):
     """Default emmet metadata."""
 
-    emmet_version: str = Field(
+    emmet_version: Optional[str] = Field(
         __version__, description="The version of emmet this document was built with."
     )
-    pymatgen_version: str = Field(
+    pymatgen_version: Optional[str] = Field(
         pmg_version, description="The version of pymatgen this document was built with."
     )
 
@@ -34,7 +34,7 @@ class EmmetMeta(BaseModel):
         None, description="The database version for the built data."
     )
 
-    build_date: datetime = Field(
+    build_date: Optional[datetime] = Field(
         default_factory=datetime.utcnow,
         description="The build date for this document.",
     )
@@ -53,6 +53,6 @@ class EmmetMeta(BaseModel):
 class EmmetBaseModel(BaseModel):
     """Base Model for default emmet data."""
 
-    builder_meta: EmmetMeta = Field(
+    builder_meta: Optional[EmmetMeta] = Field(
         default_factory=EmmetMeta, description="Builder metadata."
     )
