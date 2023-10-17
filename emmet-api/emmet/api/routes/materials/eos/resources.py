@@ -1,4 +1,3 @@
-from maggma.api.query_operator.dynamic import NumericQuery
 from maggma.api.resource import ReadOnlyResource
 from emmet.core.eos import EOSDoc
 
