@@ -40,13 +40,18 @@ def run_type(parameters: Dict) -> RunType:
     # This is to force an order of evaluation
     for functional_class in ["HF", "VDW", "METAGGA", "GGA"]:
         for special_type, params in _RUN_TYPE_DATA[functional_class].items():
-            if all(_variant_equal(parameters.get(param, None), value) for param, value in params.items()):
+            if all(
+                _variant_equal(parameters.get(param, None), value)
+                for param, value in params.items()
+            ):
                 return RunType(f"{special_type}{is_hubbard}")
 
     return RunType(f"LDA{is_hubbard}")
 
 
-def task_type(inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict]) -> TaskType:
+def task_type(
+    inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict]
+) -> TaskType:
     """
     Determine task type from vasp inputs.
 
