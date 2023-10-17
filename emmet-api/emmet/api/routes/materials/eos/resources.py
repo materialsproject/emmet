@@ -12,7 +12,6 @@ def eos_resource(eos_store):
         eos_store,
         EOSDoc,
         query_operators=[
-            NumericQuery(model=EOSDoc),
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(EOSDoc, default_fields=["task_id"]),
