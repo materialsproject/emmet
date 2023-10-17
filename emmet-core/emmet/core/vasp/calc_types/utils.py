@@ -78,7 +78,7 @@ def task_type(
         else:
             calc_type.append("NSCF Uniform")
     elif len([x for x in kpts.get("labels") or [] if x is not None]) > 0:
-        calc_type.append("SCF Line")
+        calc_type.append("NSCF Line")
     elif incar.get("LEPSILON", False):
         if incar.get("IBRION", 0) > 6:
             calc_type.append("DFPT")
