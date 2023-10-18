@@ -233,7 +233,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         )
 
 
-class BlessedTasks(BaseModel):
+class BlessedCalcs(BaseModel):
     GGA: Optional[ComputedStructureEntry] = None
     GGA_U: Optional[ComputedStructureEntry] = Field(None, alias="GGA+U")
     PBESol: Optional[ComputedStructureEntry] = None
