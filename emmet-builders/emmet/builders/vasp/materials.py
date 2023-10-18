@@ -102,11 +102,17 @@ class MaterialsBuilder(Builder):
             temp_query["tags"] = {"$in": self.settings.BUILD_TAGS}
 
         self.logger.info("Finding tasks to process")
-        all_tasks = list(self.tasks.query(temp_query, [self.tasks.key, "formula_pretty"]))
+        all_tasks = list(
+            self.tasks.query(temp_query, [self.tasks.key, "formula_pretty"])
+        )
 
         processed_tasks = set(self.materials.distinct("task_ids"))
         to_process_tasks = {d[self.tasks.key] for d in all_tasks} - processed_tasks
-        to_process_forms = {d["formula_pretty"] for d in all_tasks if d[self.tasks.key] in to_process_tasks}
+        to_process_forms = {
+            d["formula_pretty"]
+            for d in all_tasks
+            if d[self.tasks.key] in to_process_tasks
+        }
 
         N = ceil(len(to_process_forms) / number_splits)
 
@@ -146,11 +152,17 @@ class MaterialsBuilder(Builder):
             temp_query["tags"] = {"$in": self.settings.BUILD_TAGS}
 
         self.logger.info("Finding tasks to process")
-        all_tasks = list(self.tasks.query(temp_query, [self.tasks.key, "formula_pretty"]))
+        all_tasks = list(
+            self.tasks.query(temp_query, [self.tasks.key, "formula_pretty"])
+        )
 
         processed_tasks = set(self.materials.distinct("task_ids"))
         to_process_tasks = {d[self.tasks.key] for d in all_tasks} - processed_tasks
-        to_process_forms = {d["formula_pretty"] for d in all_tasks if d[self.tasks.key] in to_process_tasks}
+        to_process_forms = {
+            d["formula_pretty"]
+            for d in all_tasks
+            if d[self.tasks.key] in to_process_tasks
+        }
 
         self.logger.info(f"Found {len(to_process_tasks)} unprocessed tasks")
         self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
@@ -160,7 +172,10 @@ class MaterialsBuilder(Builder):
 
         if self.task_validation:
             invalid_ids = {
-                doc[self.tasks.key] for doc in self.task_validation.query({"valid": False}, [self.task_validation.key])
+                doc[self.tasks.key]
+                for doc in self.task_validation.query(
+                    {"valid": False}, [self.task_validation.key]
+                )
             }
         else:
             invalid_ids = set()
@@ -192,7 +207,9 @@ class MaterialsBuilder(Builder):
         for formula in to_process_forms:
             tasks_query = dict(temp_query)
             tasks_query["formula_pretty"] = formula
-            tasks = list(self.tasks.query(criteria=tasks_query, properties=projected_fields))
+            tasks = list(
+                self.tasks.query(criteria=tasks_query, properties=projected_fields)
+            )
             for t in tasks:
                 t["is_valid"] = t[self.tasks.key] not in invalid_ids
 
@@ -236,7 +253,8 @@ class MaterialsBuilder(Builder):
                 doc.warnings.append(str(e))
                 materials.append(doc)
                 self.logger.warn(
-                    f"Failed making material for {failed_ids}." f" Inserted as deprecated Material: {doc.material_id}"
+                    f"Failed making material for {failed_ids}."
+                    f" Inserted as deprecated Material: {doc.material_id}"
                 )
 
         self.logger.debug(f"Produced {len(materials)} materials for {formula}")
@@ -276,20 +294,30 @@ class MaterialsBuilder(Builder):
         filtered_tasks = []
         filtered_transformations = []
         for task, transformations in zip(tasks, task_transformations):
-            if any(allowed_type == task.task_type for allowed_type in self.settings.VASP_ALLOWED_VASP_TYPES):
+            if any(
+                allowed_type == task.task_type
+                for allowed_type in self.settings.VASP_ALLOWED_VASP_TYPES
+            ):
                 filtered_tasks.append(task)
                 filtered_transformations.append(transformations)
 
         structures = []
-        for idx, (task, transformations) in enumerate(zip(filtered_tasks, filtered_transformations)):
+        for idx, (task, transformations) in enumerate(
+            zip(filtered_tasks, filtered_transformations)
+        ):
             if task.task_type == TaskType.Deformation:
-                if transformations is None:  # Do not include deformed tasks without transformation information
+                if (
+                    transformations is None
+                ):  # Do not include deformed tasks without transformation information
                     self.logger.debug(
-                        "Cannot find transformation for deformation task {}. Excluding task.".format(task.task_id)
+                        "Cannot find transformation for deformation task {}. Excluding task.".format(
+                            task.task_id
+                        )
                     )
                     continue
                 else:
                     s = undeform_structure(task.input.structure, transformations)
+
             else:
                 s = task.output.structure
             s.index: int = idx  # type: ignore
@@ -326,7 +354,8 @@ def undeform_structure(structure: Structure, transformations: Dict) -> Structure
             structure = dst.apply_transformation(structure)
         else:
             raise RuntimeError(
-                "Expect transformation to be `DeformStructureTransformation`; " f"got {transformation['@class']}"
+                "Expect transformation to be `DeformStructureTransformation`; "
+                f"got {transformation['@class']}"
             )
 
     return structure
