@@ -239,3 +239,4 @@ class BlessedTasks(BaseModel):
     PBESol: Optional[ComputedStructureEntry] = None
     SCAN: Optional[ComputedStructureEntry] = None
     R2SCAN: Optional[ComputedStructureEntry] = None
+    HSE: Optional[ComputedStructureEntry] = None
