@@ -180,25 +180,32 @@ class MultiTaskIDQuery(QueryOperator):
 
     def query(
         self,
-        task_ids: Optional[str] = Query(
-            None, description="Comma-separated list of task_ids to query on"
-        ),
+        task_ids: Optional[str] = Query(None, description="Comma-separated list of task_ids to query on"),
     ) -> STORE_PARAMS:
         crit = {}
 
         if task_ids:
-            crit.update(
-                {
-                    "task_ids": {
-                        "$in": [task_id.strip() for task_id in task_ids.split(",")]
-                    }
-                }
-            )
+            crit.update({"task_ids": {"$in": [task_id.strip() for task_id in task_ids.split(",")]}})
 
         return {"criteria": crit}
 
     def ensure_indexes(self):  # pragma: no cover
         return [("task_ids", False)]
+
+
+class BlessedCalcsQuery(QueryOperator):
+    """
+    Method to generate a query for nested blessed calculation data
+    """
+
+    def query(
+        self,
+        energy_min: Optional[float] = Query(None, description="Minimum total uncorrected DFT energy in eV/atom"),
+        energy_max: Optional[float] = Query(None, description="Maximum total uncorrected DFT energy in eV/atom"),
+    ) -> STORE_PARAMS:
+        crit = {}  # type: dict
+
+        return {"criteria": crit}
 
 
 class MultiMaterialIDQuery(QueryOperator):
@@ -208,16 +215,12 @@ class MultiMaterialIDQuery(QueryOperator):
 
     def query(
         self,
-        material_ids: Optional[str] = Query(
-            None, description="Comma-separated list of material_id values to query on"
-        ),
+        material_ids: Optional[str] = Query(None, description="Comma-separated list of material_id values to query on"),
     ) -> STORE_PARAMS:
         crit = {}  # type: dict
 
         if material_ids:
-            mpids_list = [
-                material_id.strip() for material_id in material_ids.split(",")
-            ]
+            mpids_list = [material_id.strip() for material_id in material_ids.split(",")]
 
             if len(mpids_list) == 1:
                 crit.update({"material_id": mpids_list[0]})
