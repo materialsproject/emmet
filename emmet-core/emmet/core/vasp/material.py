@@ -1,7 +1,7 @@
 """ Core definition of a Materials Document """
 from typing import Dict, List, Mapping, Optional
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedStructureEntry
@@ -42,9 +42,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
     def from_tasks(
         cls,
         task_group: List[TaskDocument],
-        structure_quality_scores: Dict[
-            str, int
-        ] = SETTINGS.VASP_STRUCTURE_QUALITY_SCORES,
+        structure_quality_scores: Dict[str, int] = SETTINGS.VASP_STRUCTURE_QUALITY_SCORES,
         use_statics: bool = SETTINGS.VASP_USE_STATICS,
     ) -> "MaterialsDoc":
         """
@@ -72,11 +70,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             task for task in task_group if task.task_type == TaskType.Structure_Optimization  # type: ignore
         ]
         statics = [task for task in task_group if task.task_type == TaskType.Static]  # type: ignore
-        structure_calcs = (
-            structure_optimizations + statics
-            if use_statics
-            else structure_optimizations
-        )
+        structure_calcs = structure_optimizations + statics if use_statics else structure_optimizations
 
         # Material ID
         possible_mat_ids = [task.task_id for task in structure_optimizations]
@@ -100,9 +94,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
             task_run_type = task.run_type
             _SPECIAL_TAGS = ["LASPH", "ISPIN"]
-            special_tags = sum(
-                task.input.parameters.get(tag, False) for tag in _SPECIAL_TAGS
-            )
+            special_tags = sum(task.input.parameters.get(tag, False) for tag in _SPECIAL_TAGS)
 
             return (
                 -1 * int(task.is_valid),
@@ -117,12 +109,8 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
         # Initial Structures
         initial_structures = [task.input.structure for task in task_group]
-        sm = StructureMatcher(
-            ltol=0.1, stol=0.1, angle_tol=0.1, scale=False, attempt_supercell=False
-        )
-        initial_structures = [
-            group[0] for group in sm.group_structures(initial_structures)
-        ]
+        sm = StructureMatcher(ltol=0.1, stol=0.1, angle_tol=0.1, scale=False, attempt_supercell=False)
+        initial_structures = [group[0] for group in sm.group_structures(initial_structures)]
 
         # Deprecated
         deprecated = all(task.task_id in deprecated_tasks for task in structure_calcs)
@@ -152,9 +140,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             """
 
             _SPECIAL_TAGS = ["LASPH", "ISPIN"]
-            special_tags = sum(
-                task.input.parameters.get(tag, False) for tag in _SPECIAL_TAGS
-            )
+            special_tags = sum(task.input.parameters.get(tag, False) for tag in _SPECIAL_TAGS)
 
             return (
                 -1 * int(task.is_valid),
@@ -183,9 +169,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
                 entries[rt] = entry
 
         if RunType.GGA not in entries and RunType.GGA_U not in entries:
-            raise ValueError(
-                "Individual material entry must contain at least one GGA or GGA+U calculation"
-            )
+            raise ValueError("Individual material entry must contain at least one GGA or GGA+U calculation")
 
         return cls.from_structure(
             structure=structure,
@@ -204,9 +188,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         )
 
     @classmethod
-    def construct_deprecated_material(
-        cls, task_group: List[TaskDocument]
-    ) -> "MaterialsDoc":
+    def construct_deprecated_material(cls, task_group: List[TaskDocument]) -> "MaterialsDoc":
         """
         Converts a group of tasks into a deprecated material
 
@@ -249,3 +231,11 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             deprecated=deprecated,
             deprecated_tasks=deprecated_tasks,
         )
+
+
+class BlessedTasks(BaseModel):
+    GGA: Optional[ComputedStructureEntry] = None
+    GGA_U: Optional[ComputedStructureEntry] = Field(None, alias="GGA+U")
+    PBESol: Optional[ComputedStructureEntry] = None
+    SCAN: Optional[ComputedStructureEntry] = None
+    R2SCAN: Optional[ComputedStructureEntry] = None
