@@ -154,10 +154,6 @@ class ElasticityBuilder(Builder):
         # filter by calc type
         opt_tasks = filter_opt_tasks(tasks, calc_types)
         deform_tasks = filter_deform_tasks(tasks, calc_types)
-        print("here")
-        for task in tasks:
-            if task.get("transformations", {}):
-                print(f"{task['task_id']} has a non-zero transformation field")
         if not opt_tasks or not deform_tasks:
             return None
 
