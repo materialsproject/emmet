@@ -162,8 +162,8 @@ class SinglePointTest(SchemaTestData):
                     "qclog_file": "mol.qclog",
                     "suffix": "",
                     "calc_loc": "/tmp",
-                    "nboexe": "null",
-                    "save_scratch": "false",
+                    "nboexe": None,
+                    "save_scratch": False,
                     "backup": "true",
                 },
                 "corrections": [],
@@ -326,7 +326,7 @@ class OptimizationTest(SchemaTestData):
             "optimized_molecule": {
                 "@module": "pymatgen.core.structure",
                 "@class": "Molecule",
-                "charge": 0.0,
+                "charge": 0,
                 "spin_multiplicity": 1,
                 "sites": [
                     {

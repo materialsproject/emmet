@@ -130,8 +130,8 @@ class CalculationInput(BaseModel):
         CalculationInput
             The input document.
         """
-        print("the molecule \n")
-        print(qcinput.molecule.as_dict())
+        # print("the molecule \n")
+        # print(qcinput.molecule.as_dict())
 
         return cls(
             initial_molecule=qcinput.molecule.as_dict(),
@@ -378,7 +378,7 @@ class Calculation(BaseModel):
 
         qcinput_kwargs = qcinput_kwargs if qcinput_kwargs else {}
         qcinput = QCInput.from_file(qcinput_file, **qcinput_kwargs)
-        print(qcinput)
+        # print(qcinput)
 
         qcoutput_kwargs = qcoutput_kwargs if qcoutput_kwargs else {}
         qcoutput = QCOutput(qcoutput_file, **qcoutput_kwargs)
@@ -448,39 +448,39 @@ def _find_qchem_files(
     """
     path = Path(path)
     task_files = OrderedDict()
-    print(Path)
+    # print(Path)
 
     in_file_pattern = re.compile(r"^(?P<in_task_name>mol\.qin(?:\..+)?)\.gz$")
-    print(in_file_pattern)
+    # print(in_file_pattern)
 
     for file in path.iterdir():
         if file.is_file():
-            print(file.name)
+            # print(file.name)
             in_match = in_file_pattern.match(file.name)
-            print(in_match)
+            # print(in_match)
             # out_match = out_file_pattern.match(file.name)
             if in_match:
                 # print(in_task_name)
                 in_task_name = in_match.group("in_task_name").replace("mol.qin.", "")
-                print(in_task_name)
+                # print(in_task_name)
                 # out_task_name = out_match.group('out_task_name').replace("mol.qout", "") #Remove mol.qout
                 if in_task_name == "orig":
                     task_files[in_task_name] = {"orig_input_file": file}
                 elif in_task_name == "mol.qin":
                     task_files["standard"] = {
-                        "qchem_in_file": file,
-                        "qchem_out_file": Path("mol.qout.gz"),
+                        "qcinput_file": file,
+                        "qcoutput_file": Path("mol.qout.gz"),
                     }
                 else:
                     try:
                         task_files[in_task_name] = {
-                            "qchem_in_file": file,
-                            "qchem_out_file": Path("mol.qout." + in_task_name + ".gz"),
+                            "qcinput_file": file,
+                            "qcoutput_file": Path("mol.qout." + in_task_name + ".gz"),
                         }
                     except FileNotFoundError:
                         task_files[in_task_name] = {
-                            "qchem_in_file": file,
-                            "qchem_out_file": "No qout files exist for this in file",
+                            "qcinput_file": file,
+                            "qcoutput_file": "No qout files exist for this in file",
                         }
 
     return task_files
@@ -658,8 +658,7 @@ def calc_type(
     Determines the calc type
 
     Args:
-        inputs: inputs dict with an incar, kpoints, potcar, and poscar dictionaries
-        parameters: Dictionary of VASP parameters from Vasprun.xml
+        parameters: CalculationInput parameters
     """
     rt = level_of_theory(parameters).value
     tt = task_type(parameters, special_run_type=special_run_type).value

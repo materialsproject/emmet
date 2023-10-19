@@ -18,7 +18,7 @@ from emmet.core.qchem.calc_types import (
     CalcType,
     TaskType,
 )
-from emmet.core.qchem.calculation import Calculation
+from emmet.core.qchem.calculation import Calculation, CalculationInput
 
 from emmet.core.qchem.task import QChemStatus
 
@@ -71,7 +71,9 @@ class OutputDoc(BaseModel):
     entropy: Optional[float] = Field(
         None, description="Total entropy of the molecule (units: cal/mol-K"
     )
-
+    dipoles: Optional[Dict[str, Any]] = Field(
+        None, description="Dipolar information from the output"
+    )
     mulliken: Optional[List[Any]] = Field(
         None, description="Mulliken atomic partial charges and partial spins"
     )
@@ -112,6 +114,7 @@ class OutputDoc(BaseModel):
             # coord_hash = self.coord_hash,
             # last_updated = self.last_updated,
             final_energy=calc_doc.output.final_energy,
+            dipoles=calc_doc.output.dipoles,
             enthalpy=calc_doc.output.enthalpy,
             entropy=calc_doc.output.entropy,
             mulliken=calc_doc.output.mulliken,
@@ -187,7 +190,7 @@ class InputDoc(BaseModel):
             A summary of the input molecule and corresponding calculation parameters
         """
         # TODO : modify this to get the different variables from the task doc.
-        print(calc_doc)
+        # print(calc_doc)
         return cls(
             initial_molecule=calc_doc.input.initial_molecule,
             rem=calc_doc.input.rem,
@@ -223,34 +226,34 @@ class TaskDoc(MoleculeMetadata):
     Calculation-level details about QChem calculations that would eventually take over the TaskDocument implementation
     """
 
-    dir_name: str = Field(None, description="The directory for this QChem task")
+    dir_name: Optional[Union[str, Path]] = Field(
+        None, description="The directory for this QChem task"
+    )
 
-    state: QChemStatus = Field(None, description="State of this QChem calculation")
+    state: Optional[QChemStatus] = Field(
+        None, description="State of this QChem calculation"
+    )
 
-    calcs_reversed: List[Calculation] = Field(
+    calcs_reversed: Optional[List[Calculation]] = Field(
         None,
         title="Calcs reversed data",
         description="Detailed data for each QChem calculation contributing to the task document.",
     )
 
-    molecule: Molecule = Field(
-        None, description="Final optimized/output molecule from this task"
-    )
-
-    task_type: Union[CalcType, TaskType] = Field(
+    task_type: Optional[Union[CalcType, TaskType]] = Field(
         None, description="the type of QChem calculation"
     )
 
-    orig: Optional[Dict[str, Any]] = Field(
+    orig_inputs: Optional[Union[CalculationInput, Dict[str, Any]]] = Field(
         {}, description="Summary of the original Q-Chem inputs"
     )
 
-    input: InputDoc = Field(
+    input: Optional[InputDoc] = Field(
         None,
         description="The input molecule and calc parameters used to generate the current task document.",
     )
 
-    output: OutputDoc = Field(
+    output: Optional[OutputDoc] = Field(
         None,
         description="The exact set of output parameters used to generate the current task document.",
     )
@@ -310,19 +313,24 @@ class TaskDoc(MoleculeMetadata):
 
         if len(task_files) == 0:
             raise FileNotFoundError("No QChem files found!")
+
         critic2 = {}
+        custom_smd = {}
         calcs_reversed = []
-        all_qchem_objects = []
         for task_name, files in task_files.items():
-            calc_doc, qchem_objects = Calculation.from_qchem_files(
-                dir_name, task_name, **files, **qchem_calculation_kwargs
-            )
-            calcs_reversed.append(calc_doc)
-            all_qchem_objects.append(qchem_objects)
+            if task_name == "orig":
+                continue
+            else:
+                calc_doc = Calculation.from_qchem_files(
+                    dir_name, task_name, **files, **qchem_calculation_kwargs
+                )
+                calcs_reversed.append(calc_doc)
+                # all_qchem_objects.append(qchem_objects)
 
         # Lists need to be reversed so that newest calc is the first calc, all_qchem_objects are also reversed to match
         calcs_reversed.reverse()
-        all_qchem_objects.reverse()
+
+        # all_qchem_objects.reverse()
         custodian = _parse_custodian(dir_name)
         additional_json = None
         if store_additional_json:
@@ -339,13 +347,13 @@ class TaskDoc(MoleculeMetadata):
                 elif key == "solvent_data":
                     custom_smd = additional_json["solvent_data"]
 
-        orig_inputs = _parse_orig_inputs(dir_name)
+        orig_inputs = CalculationInput.from_qcinput(_parse_orig_inputs(dir_name))
 
         dir_name = get_uri(dir_name)  # convert to full path
 
         # only store objects from last calculation
         # TODO: If vasp implementation makes this an option, change here as well
-        qchem_objects = all_qchem_objects[0]
+        qchem_objects = None
         included_objects = None
         if qchem_objects:
             included_objects = list(qchem_objects.keys())
@@ -353,16 +361,14 @@ class TaskDoc(MoleculeMetadata):
         # run_stats = _get_run_stats(calcs_reversed), Discuss whether this is something which is necessary in terms of QChem calcs
 
         doc = cls.from_molecule(
-            molecule=calcs_reversed[0].output.molecule,
-            meta_molecule=calcs_reversed[0].output.molecule,
-            include_molecule=True,
+            meta_molecule=Molecule.from_dict(calcs_reversed[-1].input.initial_molecule),
             dir_name=dir_name,
             calcs_reversed=calcs_reversed,
             custodian=custodian,
             additional_json=additional_json,
             completed_at=calcs_reversed[0].completed_at,
             orig_inputs=orig_inputs,
-            input=InputDoc.from_qchem_calc_doc(calcs_reversed[-1]),
+            input=InputDoc.from_qchem_calc_doc(calcs_reversed[0]),
             output=OutputDoc.from_qchem_calc_doc(calcs_reversed[0]),
             state=_get_state(calcs_reversed),
             qchem_objects=qchem_objects,
@@ -371,7 +377,9 @@ class TaskDoc(MoleculeMetadata):
             custom_smd=custom_smd,
             task_type=calcs_reversed[0].task_type,
         )
+
         doc = doc.copy(update=additional_fields)
+        # print(doc)
         return doc
 
     @staticmethod
@@ -399,7 +407,7 @@ class TaskDoc(MoleculeMetadata):
             "task_id": task_id,
             "charge": calcs_reversed[0].output.molecule.charge,
             "spin_multiplicity": calcs_reversed[0].output.molecule.spin_multiplicity,
-            "level_of_theory": calcs_reversed[-1].input.lev_theory,
+            "level_of_theory": calcs_reversed[-1].input.level_of_theory,
             "solvent": calcs_reversed[-1].input.solv_spec,
             "lot_solvent": calcs_reversed[-1].input.lot_solv_combo,
             "custom_smd": calcs_reversed[-1].input.custom_smd,
@@ -493,7 +501,8 @@ def _parse_orig_inputs(
     """
     orig_inputs = {}
     for filename in dir_name.glob("*.orig*"):
-        orig_inputs = QCInput.from_file(os.path.join(dir_name, filename.pop("orig")))
+        # orig_inputs = QCInput.from_file(os.path.join(dir_name, filename.pop("orig")))
+        orig_inputs = QCInput.from_file(os.path.join(dir_name, filename))
         return orig_inputs
 
 
@@ -583,19 +592,19 @@ def _find_qchem_files(
                     task_files[in_task_name] = {"orig_input_file": file}
                 elif in_task_name == "mol.qin":
                     task_files["standard"] = {
-                        "qchem_in_file": file,
-                        "qchem_out_file": Path("mol.qout.gz"),
+                        "qcinput_file": file,
+                        "qcoutput_file": Path("mol.qout.gz"),
                     }
                 else:
                     try:
                         task_files[in_task_name] = {
-                            "qchem_in_file": file,
-                            "qchem_out_file": Path("mol.qout." + in_task_name + ".gz"),
+                            "qcinput_file": file,
+                            "qcoutput_file": Path("mol.qout." + in_task_name + ".gz"),
                         }
                     except FileNotFoundError:
                         task_files[in_task_name] = {
-                            "qchem_in_file": file,
-                            "qchem_out_file": "No qout files exist for this in file",
+                            "qcinput_file": file,
+                            "qcoutput_file": "No qout files exist for this in file",
                         }
 
     return task_files
