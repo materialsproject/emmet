@@ -223,7 +223,9 @@ class CalculationOutput(BaseModel):
     @classmethod
     def validate_pcm_gradients(cls, v):
         if v is not None and not isinstance(v, (np.ndarray, Dict, List)):
-            raise ValueError("pcm_gradients must be a numpy array, a dict or a list or None.")
+            raise ValueError(
+                "pcm_gradients must be a numpy array, a dict or a list or None."
+            )
         return v
 
     cds_gradients: Optional[Union[Dict[str, Any], np.ndarray, List]] = Field(
@@ -234,7 +236,9 @@ class CalculationOutput(BaseModel):
     @classmethod
     def validate_cds_gradients(cls, v):
         if v is not None and not isinstance(v, (np.ndarray, Dict, List)):
-            raise ValueError("cds_gradients must be a numpy array, a dict or a list or None.")
+            raise ValueError(
+                "cds_gradients must be a numpy array, a dict or a list or None."
+            )
         return v
 
     dipoles: Optional[Dict[str, Any]] = Field(
