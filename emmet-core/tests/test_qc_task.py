@@ -97,4 +97,4 @@ def test_task_doc(test_dir, object_name):
     test_doc = TaskDoc.from_directory(dir_name, additional_fields={"foo": "bar"})
     print("\n The actual Task doc \n")
     print(test_doc)
-    assert test_doc.model_dump()["foo"] == "bar"
+    assert test_doc.model_dump()["additional_fields"] == {"foo": "bar"}
