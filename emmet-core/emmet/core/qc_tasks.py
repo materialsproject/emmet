@@ -366,6 +366,7 @@ class TaskDoc(MoleculeMetadata):
             calcs_reversed=calcs_reversed,
             custodian=custodian,
             additional_json=additional_json,
+            additional_fields=additional_fields,
             completed_at=calcs_reversed[0].completed_at,
             orig_inputs=orig_inputs,
             input=InputDoc.from_qchem_calc_doc(calcs_reversed[0]),
