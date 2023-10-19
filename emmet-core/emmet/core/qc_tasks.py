@@ -275,6 +275,10 @@ class TaskDoc(MoleculeMetadata):
         description="The seven solvent parameters necessary to define a custom_smd model",
     )
 
+    additional_fields: Optional[Dict[str, Any]] = Field(
+        None, description="Any miscellaneous fields passed to the pydantic model"
+    )
+
     # TODO some sort of @validator s if necessary
 
     @classmethod
@@ -379,7 +383,7 @@ class TaskDoc(MoleculeMetadata):
             task_type=calcs_reversed[0].task_type,
         )
 
-        #doc = doc.copy(update=additional_fields)
+        # doc = doc.copy(update=additional_fields)
         doc = doc.model_copy(update=additional_fields)
         # print(doc)
         return doc
