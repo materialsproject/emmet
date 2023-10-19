@@ -378,7 +378,8 @@ class TaskDoc(MoleculeMetadata):
             task_type=calcs_reversed[0].task_type,
         )
 
-        doc = doc.copy(update=additional_fields)
+        #doc = doc.copy(update=additional_fields)
+        doc = doc.model_copy(update=additional_fields)
         # print(doc)
         return doc
 
