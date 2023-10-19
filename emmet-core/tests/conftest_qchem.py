@@ -1,5 +1,6 @@
 from pathlib import Path
 import pytest
+import numpy as np
 
 
 @pytest.fixture(scope="session")
@@ -60,8 +61,8 @@ class SinglePointTest(SchemaTestData):
         "calcs_reversed": [
             {
                 "output": {
-                    "mulliken": [-0.713178, 0.357278, 0.3559],
-                    "resp": [-0.872759, 0.436379, 0.436379],
+                    "mulliken": np.array([-0.713178, 0.357278, 0.3559]),
+                    "resp": np.array([-0.872759, 0.436379, 0.436379]),
                     "final_energy": -76.4493700739,
                 },
                 "input": {
@@ -138,14 +139,14 @@ class SinglePointTest(SchemaTestData):
             "solvation_lot_nfo": "wB97M-V/def2-QZVPPD/SMD(SOLVENT=WATER)",
         },
         "output": {
-            "mulliken": [[-0.713178, 0.357278, 0.3559]],
-            "resp": [[-0.872759, 0.436379, 0.436379]],
+            "mulliken": [np.array([-0.713178, 0.357278, 0.3559])],
+            "resp": [np.array([-0.872759, 0.436379, 0.436379])],
             "final_energy": -76.4493700739,
             "dipoles": {
                 "total": 2.4648,
-                "dipole": [[1.4227, -1.3039, 1.5333]],
+                "dipole": [np.array([1.4227, -1.3039, 1.5333])],
                 "RESP_total": 2.5411,
-                "RESP_dipole": [[1.4672, -1.3441, 1.5806]],
+                "RESP_dipole": [np.array([1.4672, -1.3441, 1.5806])],
             },
         },
         "custodian": [
