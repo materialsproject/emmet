@@ -91,7 +91,7 @@ def test_task_doc(test_dir, object_name):
     print(test_doc)
 
     # and decoded
-    MontyDecoder.process_decoded(d)
+    MontyDecoder().process_decoded(d)
 
     # Test that additional_fields works
     test_doc = TaskDoc.from_directory(dir_name, additional_fields={"foo": "bar"})
