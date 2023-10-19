@@ -37,6 +37,9 @@ def assert_schemas_equal(test_schema, valid_schema):
         for i, sub_valid_schema in enumerate(valid_schema):
             return assert_schemas_equal(test_schema[i], sub_valid_schema)
 
+    elif isinstance(valid_schema, np.ndarray):
+        assert np.array_equal(test_schema, valid_schema)
+
     elif isinstance(valid_schema, float):
         assert test_schema == pytest.approx(valid_schema)
     else:
