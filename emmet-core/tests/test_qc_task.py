@@ -85,16 +85,10 @@ def test_task_doc(test_dir, object_name):
 
     # test document can be jsanitized
     d = jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)
-    # print("captured D \n")
-    # print(d)
-    # print("\n The actual Task doc \n")
-    # print(test_doc)
 
     # and decoded
     MontyDecoder().process_decoded(d)
 
     # Test that additional_fields works
     test_doc = TaskDoc.from_directory(dir_name, additional_fields={"foo": "bar"})
-    print("\n The actual Task doc \n")
-    print(test_doc)
     assert test_doc.model_dump()["additional_fields"] == {"foo": "bar"}

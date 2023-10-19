@@ -214,7 +214,7 @@ class CalculationOutput(BaseModel):
         description="The constructed pymatgen molecules from the optimized scan geometries",
     )
 
-    pcm_gradients: Optional[Union[Dict[str, Any], np.ndarray]] = Field(
+    pcm_gradients: Optional[Union[Dict[str, Any], np.ndarray, List]] = Field(
         None,
         description="The parsed total gradients after adding the PCM contributions.",
     )
@@ -226,7 +226,7 @@ class CalculationOutput(BaseModel):
             raise ValueError("pcm_gradients must be a numpy array or None.")
         return v
 
-    cds_gradients: Optional[Union[Dict[str, Any], np.ndarray]] = Field(
+    cds_gradients: Optional[Union[Dict[str, Any], np.ndarray, List]] = Field(
         None, description="The parsed CDS gradients."
     )
 
