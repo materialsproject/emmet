@@ -295,7 +295,7 @@ def filter_by_incar_settings(
                 break
 
             if isinstance(incar[k], str):
-                if incar[k].lower() != v.lower():
+                if incar[k].lower() != str(v).lower():
                     ok = False
                     break
 
