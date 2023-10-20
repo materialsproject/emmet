@@ -1,4 +1,5 @@
 import pytest
+
 from tests.conftest import assert_schemas_equal, get_test_object
 
 
@@ -150,6 +151,10 @@ def test_calculation(test_dir, object_name, task_name):
     valid_doc = test_object.task_doc["calcs_reversed"][0]
     assert_schemas_equal(test_doc, valid_doc)
     assert set(objects.keys()) == set(test_object.objects[task_name])
+
+    # check bader and ddec6 keys exist but are None
+    assert test_doc.bader is None
+    assert test_doc.ddec6 is None
 
     # test document can be jsanitized
     d = jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)
