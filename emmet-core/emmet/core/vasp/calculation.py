@@ -3,13 +3,14 @@
 # mypy: ignore-errors
 
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
-from datetime import datetime
 
 import numpy as np
 from pydantic import BaseModel, Extra, Field
 from pymatgen.command_line.bader_caller import bader_analysis_from_path
+from pymatgen.command_line.chargemol_caller import ChargemolAnalysis
 from pymatgen.core.lattice import Lattice
 from pymatgen.core.structure import Structure
 from pymatgen.core.trajectory import Trajectory
@@ -18,6 +19,7 @@ from pymatgen.electronic_structure.core import OrbitalType
 from pymatgen.electronic_structure.dos import CompleteDos, Dos
 from pymatgen.io.vasp import (
     BSVasprun,
+    Kpoints,
     Locpot,
     Outcar,
     Poscar,
@@ -25,10 +27,9 @@ from pymatgen.io.vasp import (
     PotcarSingle,
     Vasprun,
     VolumetricData,
-    Kpoints,
 )
 
-from emmet.core.math import Matrix3D, Vector3D, ListMatrix3D
+from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
 from emmet.core.utils import ValueEnum
 from emmet.core.vasp.calc_types import (
     CalcType,
@@ -127,7 +128,9 @@ class CalculationInput(BaseModel):
     structure: Optional[Structure] = Field(
         None, description="Input structure for the calculation"
     )
-    is_hubbard: bool = Field(False, description="Is this a Hubbard +U calculation")
+    is_hubbard: bool = Field(
+        default=False, description="Is this a Hubbard +U calculation"
+    )
     hubbards: Optional[dict] = Field(None, description="The hubbard parameters used")
 
     @classmethod
@@ -578,7 +581,8 @@ class Calculation(BaseModel):
         description="Paths (relative to dir_name) of the VASP output files "
         "associated with this calculation",
     )
-    bader: Optional[dict] = Field(None, description="Output from the bader software")
+    bader: Optional[dict] = Field(None, description="Output from bader charge analysis")
+    ddec6: Optional[dict] = Field(None, description="Output from DDEC6 charge analysis")
     run_type: Optional[RunType] = Field(
         None, description="Calculation run type (e.g., HF, HSE06, PBE)"
     )
@@ -603,6 +607,7 @@ class Calculation(BaseModel):
         parse_bandstructure: Union[str, bool] = False,
         average_locpot: bool = True,
         run_bader: bool = False,
+        run_ddec6: bool = False,
         strip_bandstructure_projections: bool = False,
         strip_dos_projections: bool = False,
         store_volumetric_data: Optional[Tuple[str]] = None,
@@ -651,8 +656,10 @@ class Calculation(BaseModel):
 
         average_locpot
             Whether to store the average of the LOCPOT along the crystal axes.
-        run_bader
+        run_bader : bool = False
             Whether to run bader on the charge density.
+        run_ddec6 : bool = False
+            Whether to run DDEC6 on the charge density.
         strip_dos_projections
             Whether to strip the element and site projections from the density of
             states. This can help reduce the size of DOS objects in systems with many
@@ -708,6 +715,10 @@ class Calculation(BaseModel):
             suffix = "" if task_name == "standard" else f".{task_name}"
             bader = bader_analysis_from_path(dir_name, suffix=suffix)
 
+        ddec6 = None
+        if run_ddec6 and VaspObject.CHGCAR in output_file_paths:
+            ddec6 = ChargemolAnalysis(path=dir_name).summary
+
         locpot = None
         if average_locpot:
             if VaspObject.LOCPOT in vasp_objects:
@@ -761,6 +772,7 @@ class Calculation(BaseModel):
                     k.name.lower(): v for k, v in output_file_paths.items()
                 },
                 bader=bader,
+                ddec6=ddec6,
                 run_type=run_type(input_doc.parameters),
                 task_type=task_type(input_doc.model_dump()),
                 calc_type=calc_type(input_doc.model_dump(), input_doc.parameters),
