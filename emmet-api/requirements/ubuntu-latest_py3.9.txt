@@ -28,11 +28,11 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.3
     # via flask
-boto3==1.28.63
+boto3==1.28.68
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.31.63
+botocore==1.31.68
     # via
     #   boto3
     #   s3transfer
@@ -61,7 +61,7 @@ cycler==0.12.1
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==2.1.0
+ddtrace==2.1.1
     # via emmet-api (setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -69,7 +69,7 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.70.4
+emmet-core[all]==0.71.2
     # via emmet-api (setup.py)
 envier==0.4.0
     # via ddtrace
@@ -77,7 +77,7 @@ exceptiongroup==1.1.3
     # via
     #   anyio
     #   cattrs
-fastapi==0.103.2
+fastapi==0.104.0
     # via
     #   emmet-api (setup.py)
     #   maggma
@@ -159,7 +159,7 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.0.7
     # via maggma
-networkx==3.1
+networkx==3.2
     # via
     #   pymatgen
     #   robocrys
@@ -286,7 +286,7 @@ rpds-py==0.10.6
     # via
     #   jsonschema
     #   referencing
-ruamel-yaml==0.17.35
+ruamel-yaml==0.17.40
     # via
     #   maggma
     #   pymatgen
@@ -364,7 +364,7 @@ typing-extensions==4.8.0
     #   uvicorn
 uncertainties==3.1.7
     # via pymatgen
-urllib3==1.26.17
+urllib3==1.26.18
     # via
     #   botocore
     #   requests
