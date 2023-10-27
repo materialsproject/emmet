@@ -675,9 +675,9 @@ class Calculation(BaseModel):
             A VASP calculation document.
         """
         dir_name = Path(dir_name)
-        vasprun_file = vasprun_file
-        outcar_file = outcar_file
-        contcar_file = contcar_file
+        vasprun_file = dir_name / vasprun_file
+        outcar_file = dir_name / outcar_file
+        contcar_file = dir_name / contcar_file
 
         vasprun_kwargs = vasprun_kwargs if vasprun_kwargs else {}
         volumetric_files = [] if volumetric_files is None else volumetric_files
@@ -688,7 +688,7 @@ class Calculation(BaseModel):
 
         output_file_paths = _get_output_file_paths(volumetric_files)
         vasp_objects: Dict[VaspObject, Any] = _get_volumetric_data(
-            output_file_paths, store_volumetric_data
+            dir_name, output_file_paths, store_volumetric_data
         )
 
         dos = _parse_dos(parse_dos, vasprun)
@@ -714,7 +714,7 @@ class Calculation(BaseModel):
                 locpot = vasp_objects[VaspObject.LOCPOT]  # type: ignore
             elif VaspObject.LOCPOT in output_file_paths:
                 locpot_file = output_file_paths[VaspObject.LOCPOT]  # type: ignore
-                locpot = Locpot.from_file(locpot_file)
+                locpot = Locpot.from_file(dir_name / locpot_file)
 
         input_doc = CalculationInput.from_vasprun(vasprun)
 
@@ -856,6 +856,7 @@ def _get_output_file_paths(volumetric_files: List[str]) -> Dict[VaspObject, str]
 
 
 def _get_volumetric_data(
+    dir_name: Path,
     output_file_paths: Dict[VaspObject, str],
     store_volumetric_data: Optional[Tuple[str]],
 ) -> Dict[VaspObject, VolumetricData]:
@@ -895,7 +896,7 @@ def _get_volumetric_data(
 
         try:
             # assume volumetric data is all in CHGCAR format
-            volumetric_data[file_type] = Chgcar.from_file(file)
+            volumetric_data[file_type] = Chgcar.from_file(dir_name / file)
         except Exception:
             raise ValueError(f"Failed to parse {file_type} at {file}.")
     return volumetric_data
