@@ -275,17 +275,25 @@ class SummaryDoc(PropertyDoc):
 
     # Elasticity
 
-    k_voigt: Optional[float] = Field(None, description="Voigt average of the bulk modulus.")
+    # k_voigt: Optional[float] = Field(None, description="Voigt average of the bulk modulus.")
 
-    k_reuss: Optional[float] = Field(None, description="Reuss average of the bulk modulus in GPa.")
+    # k_reuss: Optional[float] = Field(None, description="Reuss average of the bulk modulus in GPa.")
 
-    k_vrh: Optional[float] = Field(None, description="Voigt-Reuss-Hill average of the bulk modulus in GPa.")
+    # k_vrh: Optional[float] = Field(None, description="Voigt-Reuss-Hill average of the bulk modulus in GPa.")
 
-    g_voigt: Optional[float] = Field(None, description="Voigt average of the shear modulus in GPa.")
+    # g_voigt: Optional[float] = Field(None, description="Voigt average of the shear modulus in GPa.")
 
-    g_reuss: Optional[float] = Field(None, description="Reuss average of the shear modulus in GPa.")
+    # g_reuss: Optional[float] = Field(None, description="Reuss average of the shear modulus in GPa.")
 
-    g_vrh: Optional[float] = Field(None, description="Voigt-Reuss-Hill average of the shear modulus in GPa.")
+    # g_vrh: Optional[float] = Field(None, description="Voigt-Reuss-Hill average of the shear modulus in GPa.")
+
+    bulk_modulus: Optional[dict] = Field(
+        None, description="Voigt, Reuss, and Voigt-Reuss-Hill averages of the bulk modulus in GPa."
+    )
+
+    shear_modulus: Optional[dict] = Field(
+        None, description="Voigt, Reuss, and Voigt-Reuss-Hill averages of the shear modulus in GPa."
+    )
 
     universal_anisotropy: Optional[float] = Field(None, description="Elastic anisotropy.")
 
@@ -451,9 +459,8 @@ summary_fields: Dict[str, list] = {
         "is_magnetic",
     ],
     HasProps.elasticity.value: [
-        "voigt",
-        "reuss",
-        "vrh",
+        "bulk_modulus",
+        "shear_modulus",
         "universal_anisotropy",
         "homogeneous_poisson",
     ],

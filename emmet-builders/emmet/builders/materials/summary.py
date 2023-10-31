@@ -158,7 +158,7 @@ class SummaryBuilder(Builder):
                 ),
             }
 
-            sub_fields = {"bulk_modulus", "shear_modulus"}
+            sub_fields = {}
 
             for collection, sub_field in sub_fields.items():
                 if data[collection] is not None:
