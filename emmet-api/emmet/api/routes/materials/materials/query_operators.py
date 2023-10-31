@@ -218,6 +218,13 @@ class BlessedCalcsQuery(QueryOperator):
 
         return {"criteria": crit}
 
+    def post_process(self, docs, query):
+        run_type = list(query["criteria"].keys())[0].split(".")[-1]
+
+        return_data = [{"material_id": doc["material_id"], "blessed_entry": doc["entries"][run_type]} for doc in docs]
+
+        return return_data
+
 
 class MultiMaterialIDQuery(QueryOperator):
     """
