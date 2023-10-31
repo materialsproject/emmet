@@ -61,23 +61,15 @@ class SummaryStats(BaseModel):
     min: Optional[float] = Field(
         None,
         title="Minimum",
-        description="The minimum value "
-        "of the specified field used to "
-        "generate statistics.",
+        description="The minimum value " "of the specified field used to " "generate statistics.",
     )
     max: Optional[float] = Field(
         None,
         title="Maximum",
-        description="The maximum value "
-        "of the specified field used to "
-        "generate statistics.",
+        description="The maximum value " "of the specified field used to " "generate statistics.",
     )
-    median: Optional[float] = Field(
-        None, title="Median", description="The median of the field values."
-    )
-    mean: Optional[float] = Field(
-        None, title="Mean", description="The mean of the field values."
-    )
+    median: Optional[float] = Field(None, title="Median", description="The median of the field values.")
+    mean: Optional[float] = Field(None, title="Mean", description="The mean of the field values.")
     distribution: Optional[List[float]] = Field(
         None,
         title="Distribution",
@@ -98,13 +90,9 @@ class XASSearchData(BaseModel):
         description="The interaction edge for XAS",
         source="xas",
     )
-    absorbing_element: Optional[Element] = Field(
-        None, description="Absorbing element.", source="xas"
-    )
+    absorbing_element: Optional[Element] = Field(None, description="Absorbing element.", source="xas")
 
-    spectrum_type: Optional[Type] = Field(
-        None, description="Type of XAS spectrum.", source="xas"
-    )
+    spectrum_type: Optional[Type] = Field(None, description="Type of XAS spectrum.", source="xas")
 
 
 class GBSearchData(BaseModel):
@@ -112,21 +100,13 @@ class GBSearchData(BaseModel):
     Fields in grain boundary sub docs in summary
     """
 
-    sigma: Optional[int] = Field(
-        None, description="Sigma value of the boundary.", source="grain_boundary"
-    )
+    sigma: Optional[int] = Field(None, description="Sigma value of the boundary.", source="grain_boundary")
 
-    type: Optional[str] = Field(
-        None, description="Grain boundary type.", source="grain_boundary"
-    )
+    type: Optional[str] = Field(None, description="Grain boundary type.", source="grain_boundary")
 
-    gb_energy: Optional[float] = Field(
-        None, description="Grain boundary energy in J/m^2.", source="grain_boundary"
-    )
+    gb_energy: Optional[float] = Field(None, description="Grain boundary energy in J/m^2.", source="grain_boundary")
 
-    rotation_angle: Optional[float] = Field(
-        None, description="Rotation angle in degrees.", source="grain_boundary"
-    )
+    rotation_angle: Optional[float] = Field(None, description="Rotation angle in degrees.", source="grain_boundary")
 
 
 class SummaryDoc(PropertyDoc):
@@ -199,9 +179,7 @@ class SummaryDoc(PropertyDoc):
 
     # XAS
 
-    xas: Optional[List[XASSearchData]] = Field(
-        None, description="List of xas documents.", source="xas"
-    )
+    xas: Optional[List[XASSearchData]] = Field(None, description="List of xas documents.", source="xas")
 
     # GB
 
@@ -213,9 +191,7 @@ class SummaryDoc(PropertyDoc):
 
     # Electronic Structure
 
-    band_gap: Optional[float] = Field(
-        None, description="Band gap energy in eV.", source="electronic_structure"
-    )
+    band_gap: Optional[float] = Field(None, description="Band gap energy in eV.", source="electronic_structure")
 
     cbm: Optional[Union[float, Dict]] = Field(
         None, description="Conduction band minimum data.", source="electronic_structure"
@@ -225,9 +201,7 @@ class SummaryDoc(PropertyDoc):
         None, description="Valence band maximum data.", source="electronic_structure"
     )
 
-    efermi: Optional[float] = Field(
-        None, description="Fermi energy in eV.", source="electronic_structure"
-    )
+    efermi: Optional[float] = Field(None, description="Fermi energy in eV.", source="electronic_structure")
 
     is_gap_direct: Optional[bool] = Field(
         None,
@@ -271,17 +245,11 @@ class SummaryDoc(PropertyDoc):
 
     # Magnetism
 
-    is_magnetic: Optional[bool] = Field(
-        None, description="Whether the material is magnetic.", source="magnetism"
-    )
+    is_magnetic: Optional[bool] = Field(None, description="Whether the material is magnetic.", source="magnetism")
 
-    ordering: Optional[str] = Field(
-        None, description="Type of magnetic ordering.", source="magnetism"
-    )
+    ordering: Optional[str] = Field(None, description="Type of magnetic ordering.", source="magnetism")
 
-    total_magnetization: Optional[float] = Field(
-        None, description="Total magnetization in μB.", source="magnetism"
-    )
+    total_magnetization: Optional[float] = Field(None, description="Total magnetization in μB.", source="magnetism")
 
     total_magnetization_normalized_vol: Optional[float] = Field(
         None,
@@ -295,9 +263,7 @@ class SummaryDoc(PropertyDoc):
         source="magnetism",
     )
 
-    num_magnetic_sites: Optional[int] = Field(
-        None, description="The number of magnetic sites.", source="magnetism"
-    )
+    num_magnetic_sites: Optional[int] = Field(None, description="The number of magnetic sites.", source="magnetism")
 
     num_unique_magnetic_sites: Optional[int] = Field(
         None, description="The number of unique magnetic sites.", source="magnetism"
@@ -309,41 +275,25 @@ class SummaryDoc(PropertyDoc):
 
     # Elasticity
 
-    k_voigt: Optional[float] = Field(
-        None, description="Voigt average of the bulk modulus."
-    )
+    k_voigt: Optional[float] = Field(None, description="Voigt average of the bulk modulus.")
 
-    k_reuss: Optional[float] = Field(
-        None, description="Reuss average of the bulk modulus in GPa."
-    )
+    k_reuss: Optional[float] = Field(None, description="Reuss average of the bulk modulus in GPa.")
 
-    k_vrh: Optional[float] = Field(
-        None, description="Voigt-Reuss-Hill average of the bulk modulus in GPa."
-    )
+    k_vrh: Optional[float] = Field(None, description="Voigt-Reuss-Hill average of the bulk modulus in GPa.")
 
-    g_voigt: Optional[float] = Field(
-        None, description="Voigt average of the shear modulus in GPa."
-    )
+    g_voigt: Optional[float] = Field(None, description="Voigt average of the shear modulus in GPa.")
 
-    g_reuss: Optional[float] = Field(
-        None, description="Reuss average of the shear modulus in GPa."
-    )
+    g_reuss: Optional[float] = Field(None, description="Reuss average of the shear modulus in GPa.")
 
-    g_vrh: Optional[float] = Field(
-        None, description="Voigt-Reuss-Hill average of the shear modulus in GPa."
-    )
+    g_vrh: Optional[float] = Field(None, description="Voigt-Reuss-Hill average of the shear modulus in GPa.")
 
-    universal_anisotropy: Optional[float] = Field(
-        None, description="Elastic anisotropy."
-    )
+    universal_anisotropy: Optional[float] = Field(None, description="Elastic anisotropy.")
 
     homogeneous_poisson: Optional[float] = Field(None, description="Poisson's ratio.")
 
     # Dielectric and Piezo
 
-    e_total: Optional[float] = Field(
-        None, description="Total dielectric constant.", source="dielectric"
-    )
+    e_total: Optional[float] = Field(None, description="Total dielectric constant.", source="dielectric")
 
     e_ionic: Optional[float] = Field(
         None,
@@ -357,13 +307,9 @@ class SummaryDoc(PropertyDoc):
         source="dielectric",
     )
 
-    n: Optional[float] = Field(
-        None, description="Refractive index.", source="dielectric"
-    )
+    n: Optional[float] = Field(None, description="Refractive index.", source="dielectric")
 
-    e_ij_max: Optional[float] = Field(
-        None, description="Piezoelectric modulus.", source="piezoelectric"
-    )
+    e_ij_max: Optional[float] = Field(None, description="Piezoelectric modulus.", source="piezoelectric")
 
     # Surface Properties
 
@@ -387,9 +333,7 @@ class SummaryDoc(PropertyDoc):
         None, description="Surface energy anisotropy.", source="surface_properties"
     )
 
-    shape_factor: Optional[float] = Field(
-        None, description="Shape factor.", source="surface_properties"
-    )
+    shape_factor: Optional[float] = Field(None, description="Shape factor.", source="surface_properties")
 
     has_reconstructed: Optional[bool] = Field(
         None,
@@ -415,15 +359,11 @@ class SummaryDoc(PropertyDoc):
 
     # Theoretical
 
-    theoretical: bool = Field(
-        True, description="Whether the material is theoretical.", source="provenance"
-    )
+    theoretical: bool = Field(True, description="Whether the material is theoretical.", source="provenance")
 
     # External Database IDs
 
-    database_IDs: Dict[str, List[str]] = Field(
-        {}, description="External database IDs corresponding to this material."
-    )
+    database_IDs: Dict[str, List[str]] = Field({}, description="External database IDs corresponding to this material.")
 
     @classmethod
     def from_docs(cls, material_id: MPID, **docs: Dict[str, Dict]):
@@ -440,9 +380,7 @@ class SummaryDoc(PropertyDoc):
             else:
                 del doc["bandstructure"]
         if "dos" in doc:
-            if doc["dos"] is not None and list(
-                filter(lambda x: x is not None, doc["dos"].values())
-            ):
+            if doc["dos"] is not None and list(filter(lambda x: x is not None, doc["dos"].values())):
                 doc["has_props"].append(HasProps.dos.value)
             else:
                 del doc["dos"]
@@ -513,12 +451,9 @@ summary_fields: Dict[str, list] = {
         "is_magnetic",
     ],
     HasProps.elasticity.value: [
-        "k_voigt",
-        "k_reuss",
-        "k_vrh",
-        "g_voigt",
-        "g_reuss",
-        "g_vrh",
+        "voigt",
+        "reuss",
+        "vrh",
         "universal_anisotropy",
         "homogeneous_poisson",
     ],
@@ -556,20 +491,12 @@ def _copy_from_doc(doc):
             d[doc_key] = []
             for sub_item in sub_doc:
                 temp_doc = {
-                    copy_key: sub_item[copy_key]
-                    for copy_key in summary_fields[doc_key]
-                    if copy_key in sub_item
+                    copy_key: sub_item[copy_key] for copy_key in summary_fields[doc_key] if copy_key in sub_item
                 }
                 d[doc_key].append(temp_doc)
         elif isinstance(sub_doc, dict):
             d["has_props"].append(doc_key)
             if sub_doc.get("origins", None):
                 d["origins"].extend(sub_doc["origins"])
-            d.update(
-                {
-                    copy_key: sub_doc[copy_key]
-                    for copy_key in summary_fields[doc_key]
-                    if copy_key in sub_doc
-                }
-            )
+            d.update({copy_key: sub_doc[copy_key] for copy_key in summary_fields[doc_key] if copy_key in sub_doc})
     return d
