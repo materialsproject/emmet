@@ -16,6 +16,15 @@ from emmet.core.vasp.task_valid import TaskDocument
 SETTINGS = EmmetSettings()
 
 
+class BlessedCalcs(BaseModel):
+    GGA: Optional[ComputedStructureEntry] = None
+    GGA_U: Optional[ComputedStructureEntry] = Field(None, alias="GGA+U")
+    PBESol: Optional[ComputedStructureEntry] = None
+    SCAN: Optional[ComputedStructureEntry] = None
+    R2SCAN: Optional[ComputedStructureEntry] = None
+    HSE: Optional[ComputedStructureEntry] = None
+
+
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
     calc_types: Mapping[str, CalcType] = Field(  # type: ignore
         None,
@@ -34,9 +43,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         None, description="Mappingionary for tracking the provenance of properties"
     )
 
-    entries: Optional[Mapping[RunType, ComputedStructureEntry]] = Field(
-        None, description="Dictionary for tracking entries for VASP calculations"
-    )
+    entries: Optional[BlessedCalcs] = Field(None, description="Dictionary for tracking entries for VASP calculations")
 
     @classmethod
     def from_tasks(
@@ -231,12 +238,3 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             deprecated=deprecated,
             deprecated_tasks=deprecated_tasks,
         )
-
-
-class BlessedCalcs(BaseModel):
-    GGA: Optional[ComputedStructureEntry] = None
-    GGA_U: Optional[ComputedStructureEntry] = Field(None, alias="GGA+U")
-    PBESol: Optional[ComputedStructureEntry] = None
-    SCAN: Optional[ComputedStructureEntry] = None
-    R2SCAN: Optional[ComputedStructureEntry] = None
-    HSE: Optional[ComputedStructureEntry] = None
