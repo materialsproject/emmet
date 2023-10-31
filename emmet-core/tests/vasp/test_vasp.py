@@ -33,6 +33,7 @@ def test_run_type():
         ("SCAN+U", {"METAGGA": "Scan", "LDAU": True}),
         ("R2SCAN", {"METAGGA": "R2SCAN"}),
         ("R2SCAN+U", {"METAGGA": "R2SCAN", "LDAU": True}),
+        ("HFCus", {"LHFCALC": True}),
     ]
 
     for _type, params in params_sets:
