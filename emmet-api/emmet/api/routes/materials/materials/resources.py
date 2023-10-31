@@ -26,6 +26,7 @@ from emmet.api.routes.materials.materials.query_operators import (
     FormulaAutoCompleteQuery,
     MultiMaterialIDQuery,
     LicenseQuery,
+    BlessedCalcsQuery,
 )
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
@@ -56,6 +57,36 @@ def formula_autocomplete_resource(formula_autocomplete_store):
         sub_path="/core/formula_autocomplete/",
         header_processor=GlobalHeaderProcessor(),
         timeout=timeout,
+    )
+
+    return resource
+
+
+def blessed_tasks_resource(materials_store):
+    resource = ReadOnlyResource(
+        materials_store,
+        MaterialsDoc,
+        query_operators=[
+            BlessedCalcsQuery(),
+            MultiMaterialIDQuery(),
+            FormulaQuery(),
+            ChemsysQuery(),
+            ElementsQuery(),
+            MultiTaskIDQuery(),
+            SymmetryQuery(),
+            DeprecationQuery(),
+            NumericQuery(model=MaterialsDoc),
+            SortQuery(),
+            PaginationQuery(),
+            LicenseQuery(),
+        ],
+        key_fields=["material_id", "entries"],
+        header_processor=GlobalHeaderProcessor(),
+        hint_scheme=MaterialsHintScheme(),
+        tags=["Materials"],
+        sub_path="/core/blessed_tasks/",
+        disable_validation=True,
+        timeout=MAPISettings().TIMEOUT,
     )
 
     return resource
