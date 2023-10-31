@@ -84,6 +84,7 @@ def blessed_tasks_resource(materials_store):
         hint_scheme=MaterialsHintScheme(),
         tags=["Materials"],
         sub_path="/core/blessed_tasks/",
+        enable_get_by_key=False,
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,
     )
