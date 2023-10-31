@@ -41,9 +41,9 @@ class BulkModulusQuery(QueryOperator):
         crit = defaultdict(dict)  # type: dict
 
         d = {
-            "elasticity.k_voigt": [k_voigt_min, k_voigt_max],
-            "elasticity.k_reuss": [k_reuss_min, k_reuss_max],
-            "elasticity.k_vrh": [k_vrh_min, k_vrh_max],
+            "bulk_modulus.voigt": [k_voigt_min, k_voigt_max],
+            "bulk_modulus.reuss": [k_reuss_min, k_reuss_max],
+            "bulk_modulus.vrh": [k_vrh_min, k_vrh_max],
         }
 
         for entry in d:
@@ -91,9 +91,9 @@ class ShearModulusQuery(QueryOperator):
         crit = defaultdict(dict)  # type: dict
 
         d = {
-            "elasticity.g_voigt": [g_voigt_min, g_voigt_max],
-            "elasticity.g_reuss": [g_reuss_min, g_reuss_max],
-            "elasticity.g_vrh": [g_vrh_min, g_vrh_max],
+            "shear_modulus.voigt": [g_voigt_min, g_voigt_max],
+            "shear_modulus.reuss": [g_reuss_min, g_reuss_max],
+            "shear_modulus.vrh": [g_vrh_min, g_vrh_max],
         }
 
         for entry in d:
@@ -134,11 +134,11 @@ class PoissonQuery(QueryOperator):
         crit = defaultdict(dict)  # type: dict
 
         d = {
-            "elasticity.universal_anisotropy": [
+            "universal_anisotropy": [
                 elastic_anisotropy_min,
                 elastic_anisotropy_max,
             ],
-            "elasticity.homogeneous_poisson": [poisson_min, poisson_max],
+            "homogeneous_poisson": [poisson_min, poisson_max],
         }
 
         for entry in d:
