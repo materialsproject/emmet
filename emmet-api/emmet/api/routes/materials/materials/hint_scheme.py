@@ -12,7 +12,5 @@ class MaterialsHintScheme(HintScheme):
                 return {"hint": {"composition_reduced.$**": 1}}
             elif "nelements" in param:
                 return {"hint": {"nelements": 1}}
-            if "entries" in param:
-                return {"hint": {"deprecated": 1, "builder_meta.license": 1, param: 1}}
 
         return {"hint": {}}
