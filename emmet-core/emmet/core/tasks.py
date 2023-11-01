@@ -951,16 +951,17 @@ def _find_vasp_files(
         vol_files = []
         elph_poscars = []
         for file in files:
+            file_no_path = file.relative_to(path)
             if file.match(f"*vasprun.xml{suffix}*"):
-                vasp_files["vasprun_file"] = file
+                vasp_files["vasprun_file"] = file_no_path
             elif file.match(f"*OUTCAR{suffix}*"):
-                vasp_files["outcar_file"] = file
+                vasp_files["outcar_file"] = file_no_path
             elif file.match(f"*CONTCAR{suffix}*"):
-                vasp_files["contcar_file"] = file
+                vasp_files["contcar_file"] = file_no_path
             elif any(file.match(f"*{f}{suffix}*") for f in volumetric_files):
-                vol_files.append(file)
+                vol_files.append(file_no_path)
             elif file.match(f"*POSCAR.T=*{suffix}*"):
-                elph_poscars.append(file)
+                elph_poscars.append(file_no_path)
 
         if len(vol_files) > 0:
             # add volumetric files if some were found or other vasp files were found
