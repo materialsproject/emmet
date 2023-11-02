@@ -291,6 +291,7 @@ else:
 from emmet.api.routes.materials.materials.resources import (
     find_structure_resource,
     formula_autocomplete_resource,
+    blessed_tasks_resource,
     materials_resource,
 )
 
@@ -298,6 +299,7 @@ materials_resources = list()
 
 materials_resources.extend(
     [
+        blessed_tasks_resource(materials_store),
         find_structure_resource(materials_store),
         formula_autocomplete_resource(formula_autocomplete_store),
         materials_resource(materials_store),

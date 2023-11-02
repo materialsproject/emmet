@@ -1,7 +1,7 @@
 """ Core definition of a Materials Document """
 from typing import Dict, List, Mapping, Optional
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedStructureEntry
@@ -14,6 +14,15 @@ from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
 from emmet.core.vasp.task_valid import TaskDocument
 
 SETTINGS = EmmetSettings()
+
+
+class BlessedCalcs(BaseModel):
+    GGA: Optional[ComputedStructureEntry] = None
+    GGA_U: Optional[ComputedStructureEntry] = Field(None, alias="GGA+U")
+    PBESol: Optional[ComputedStructureEntry] = None
+    SCAN: Optional[ComputedStructureEntry] = None
+    R2SCAN: Optional[ComputedStructureEntry] = None
+    HSE: Optional[ComputedStructureEntry] = None
 
 
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
@@ -34,7 +43,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         None, description="Mappingionary for tracking the provenance of properties"
     )
 
-    entries: Optional[Mapping[RunType, ComputedStructureEntry]] = Field(
+    entries: Optional[BlessedCalcs] = Field(
         None, description="Dictionary for tracking entries for VASP calculations"
     )
 
