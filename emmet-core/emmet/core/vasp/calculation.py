@@ -65,6 +65,9 @@ class PotcarSpec(BaseModel):
 
     titel: Optional[str] = Field(None, description="TITEL field from POTCAR header")
     hash: Optional[str] = Field(None, description="md5 hash of POTCAR file")
+    summary_stats: Optional[dict] = Field(
+        None, description="summary statistics used to ID POTCARs without hashing"
+    )
 
     @classmethod
     def from_potcar_single(cls, potcar_single: PotcarSingle) -> "PotcarSpec":
@@ -81,7 +84,11 @@ class PotcarSpec(BaseModel):
         PotcarSpec
             A potcar spec.
         """
-        return cls(titel=potcar_single.symbol, hash=potcar_single.md5_header_hash)
+        return cls(
+            titel=potcar_single.symbol,
+            hash=potcar_single.md5_header_hash,
+            summary_stats=potcar_single._summary_stats,
+        )
 
     @classmethod
     def from_potcar(cls, potcar: Potcar) -> List["PotcarSpec"]:
