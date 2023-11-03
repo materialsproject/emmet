@@ -53,7 +53,7 @@ click==8.1.7
     #   flask
     #   mongogrant
     #   uvicorn
-contourpy==1.1.1
+contourpy==1.2.0
     # via matplotlib
 cryptography==41.0.5
     # via paramiko
@@ -61,7 +61,7 @@ cycler==0.12.1
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==2.0.6
+ddtrace==2.0.7
     # via emmet-api (emmet/emmet-api/setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -83,7 +83,7 @@ fastapi==0.104.1
     #   maggma
 flask==3.0.0
     # via mongogrant
-fonttools==4.43.1
+fonttools==4.44.0
     # via matplotlib
 future==0.18.3
     # via
@@ -145,7 +145,7 @@ mongogrant==0.3.3
     # via maggma
 mongomock==4.1.2
     # via maggma
-monty==2023.9.25
+monty==2023.11.3
     # via
     #   emmet-core
     #   maggma
@@ -207,8 +207,6 @@ protobuf==4.25.0
     # via
     #   ddsketch
     #   ddtrace
-psutil==5.9.6
-    # via ddtrace
 pubchempy==1.0.4
     # via robocrys
 pybtex==0.24.0
@@ -370,9 +368,7 @@ uvicorn==0.23.2
 werkzeug==3.0.1
     # via flask
 wrapt==1.15.0
-    # via
-    #   ddtrace
-    #   deprecated
+    # via deprecated
 xmltodict==0.13.0
     # via ddtrace
 zipp==3.17.0

@@ -10,11 +10,11 @@ certifi==2023.7.22
     # via requests
 charset-normalizer==3.3.2
     # via requests
-contourpy==1.1.1
+contourpy==1.2.0
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-fonttools==4.43.1
+fonttools==4.44.0
     # via matplotlib
 future==0.18.3
     # via uncertainties
@@ -30,7 +30,7 @@ matplotlib==3.8.1
     # via
     #   -r python/requirements.txt
     #   pymatgen
-monty==2023.9.25
+monty==2023.11.3
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pymatgen
@@ -89,7 +89,7 @@ pyyaml==6.0.1
     # via pybtex
 requests==2.31.0
     # via pymatgen
-ruamel-yaml==0.18.4
+ruamel-yaml==0.18.5
     # via pymatgen
 ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
