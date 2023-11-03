@@ -28,11 +28,11 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.28.77
+boto3==1.28.78
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.31.77
+botocore==1.31.78
     # via
     #   boto3
     #   s3transfer
