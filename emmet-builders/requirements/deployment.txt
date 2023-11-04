@@ -69,7 +69,7 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all,ml]==0.72.7
+emmet-core[all,ml]==0.72.8
     # via emmet-builders (emmet/emmet-builders/setup.py)
 exceptiongroup==1.1.3
     # via anyio
@@ -339,7 +339,7 @@ requests==2.31.0
     #   pymatgen
 robocrys==0.2.8
     # via emmet-core
-rpds-py==0.10.6
+rpds-py==0.12.0
     # via
     #   jsonschema
     #   referencing
