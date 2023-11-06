@@ -419,7 +419,7 @@ class CalculationOutput(BaseModel):
         contcar: Optional[Poscar],
         locpot: Optional[Locpot] = None,
         elph_poscars: Optional[List[Path]] = None,
-        store_trajectory: bool = False,
+        store_trajectory: Union[bool, str] = False,
     ) -> "CalculationOutput":
         """
         Create a VASP output document from VASP outputs.
@@ -438,8 +438,10 @@ class CalculationOutput(BaseModel):
             Path to displaced electron-phonon coupling POSCAR files generated using
             ``PHON_LMC = True``.
         store_trajectory
-            Whether to store ionic steps as a pymatgen Trajectory object. If `True`,
-            the `ionic_steps` field is left as None.
+            Whether to store ionic steps as a pymatgen Trajectory object. Can be
+            True, False or "partial", tuning the amount of data from the ionic_steps
+            stored in the Trajectory.
+            If not `False`, the `ionic_steps` field is left as None.
 
         Returns
         -------
@@ -613,7 +615,7 @@ class Calculation(BaseModel):
         strip_bandstructure_projections: bool = False,
         strip_dos_projections: bool = False,
         store_volumetric_data: Optional[Tuple[str]] = None,
-        store_trajectory: bool = False,
+        store_trajectory: Union[bool, str] = False,
         vasprun_kwargs: Optional[Dict] = None,
     ) -> Tuple["Calculation", Dict[VaspObject, Dict]]:
         """
@@ -670,9 +672,17 @@ class Calculation(BaseModel):
         store_volumetric_data
             Which volumetric files to store.
         store_trajectory
-            Whether to store the ionic steps in a pymatgen Trajectory object. if `True`,
-            :obj:'.CalculationOutput.ionic_steps' is set to None to reduce duplicating
-            information.
+            Whether to store the ionic steps in a pymatgen Trajectory object and the
+            amount of data to store from the ionic_steps. Can be:
+            - True: Store the Trajectory. All the properties from the ionic_steps
+              are stored in the frame_properties except for the Structure, to
+              avoid redundancy.
+            - "partial": Store the Trajectory. All the properties from the ionic_steps
+              are stored in the frame_properties except from Structure and
+              ElectronicStep
+            - False: Trajectory is not Stored.
+            If not `False`, :obj:'.CalculationOutput.ionic_steps' is set to None
+            to reduce duplicating information.
         vasprun_kwargs
             Additional keyword arguments that will be passed to the Vasprun init.
 
@@ -734,10 +744,14 @@ class Calculation(BaseModel):
             store_trajectory=store_trajectory,
         )
         if store_trajectory:
+            exclude_from_trajectory = ["structure"]
+            if store_trajectory == "partial":
+                exclude_from_trajectory.append("electronic_steps")
             traj = Trajectory.from_structures(
                 [d["structure"] for d in vasprun.ionic_steps],
                 frame_properties=[
-                    IonicStep(**x).model_dump() for x in vasprun.ionic_steps
+                    IonicStep(**x).model_dump(exclude=exclude_from_trajectory)
+                    for x in vasprun.ionic_steps
                 ],
                 constant_lattice=False,
             )
