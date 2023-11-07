@@ -405,7 +405,7 @@ class SummaryDoc(PropertyDoc):
 
     # Has Props
 
-    has_props: Optional[Dict[HasProps, bool]] = Field(
+    has_props: Optional[Dict[str, bool]] = Field(
         None,
         description="List of properties that are available for a given material.",
         source="summary",
