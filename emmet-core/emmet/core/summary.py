@@ -434,20 +434,18 @@ class SummaryDoc(PropertyDoc):
             if doc["bandstructure"] is not None and list(
                 filter(lambda x: x is not None, doc["bandstructure"].values())
             ):
-                doc["has_props"].append(HasProps.bandstructure.value)
+                doc["has_props"]["bandstructure"] = True
             else:
                 del doc["bandstructure"]
         if "dos" in doc:
             if doc["dos"] is not None and list(
                 filter(lambda x: x is not None, doc["dos"].values())
             ):
-                doc["has_props"].append(HasProps.dos.value)
+                doc["has_props"]["dos"] = True
             else:
                 del doc["dos"]
         if "task_id" in doc:
             del doc["task_id"]
-
-        doc["has_props"] = list(set(doc["has_props"]))
 
         return SummaryDoc(material_id=material_id, **doc)
 
@@ -540,13 +538,14 @@ summary_fields: Dict[str, list] = {
 
 def _copy_from_doc(doc):
     """Helper function to copy the list of keys over from amalgamated document"""
-    d = {"has_props": [], "origins": []}
+    has_props = {str(val.value): False for val in HasProps}
+    d = {"has_props": has_props, "origins": []}
     # Complex function to grab the keys and put them in the root doc
     # if the item is a list, it makes one doc per item with those corresponding keys
     for doc_key in summary_fields:
         sub_doc = doc.get(doc_key, None)
         if isinstance(sub_doc, list) and len(sub_doc) > 0:
-            d["has_props"].append(doc_key)
+            d["has_props"][doc_key] = True
             d[doc_key] = []
             for sub_item in sub_doc:
                 temp_doc = {
@@ -556,7 +555,7 @@ def _copy_from_doc(doc):
                 }
                 d[doc_key].append(temp_doc)
         elif isinstance(sub_doc, dict):
-            d["has_props"].append(doc_key)
+            d["has_props"][doc_key] = True
             if sub_doc.get("origins", None):
                 d["origins"].extend(sub_doc["origins"])
             d.update(
