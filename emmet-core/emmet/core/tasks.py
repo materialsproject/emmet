@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
+from custodian.vasp.jobs import VaspJob
 import numpy as np
 from monty.json import MontyDecoder
 from monty.serialization import loadfn
@@ -222,7 +223,7 @@ class CustodianDoc(BaseModel):
         title="Custodian Corrections",
         description="List of custodian correction data for calculation.",
     )
-    job: Optional[dict] = Field(
+    job: Optional[Union[dict, VaspJob]] = Field(
         None,
         title="Cusotodian Job Data",
         description="Job data logged by custodian.",
