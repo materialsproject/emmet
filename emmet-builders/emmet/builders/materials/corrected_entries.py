@@ -267,13 +267,14 @@ class CorrectedEntriesBuilder(Builder):
         # Convert entries into ComputedEntries and store
         for doc in materials_docs:
             for r_type, entry_dict in doc.get("entries", {}).items():
-                entry_dict["data"]["oxidation_states"] = oxi_states_data.get(
-                    entry_dict["data"]["material_id"], {}
-                )
-                entry_dict["data"]["run_type"] = r_type
-                elsyms = sorted(set([el for el in entry_dict["composition"]]))
-                self._entries_cache["-".join(elsyms)].append(entry_dict)
-                all_entries.append(entry_dict)
+                if entry_dict:
+                    entry_dict["data"]["oxidation_states"] = oxi_states_data.get(
+                        entry_dict["data"]["material_id"], {}
+                    )
+                    entry_dict["data"]["run_type"] = r_type
+                    elsyms = sorted(set([el for el in entry_dict["composition"]]))
+                    self._entries_cache["-".join(elsyms)].append(entry_dict)
+                    all_entries.append(entry_dict)
 
         self.logger.info(f"Total entries in {chemsys} : {len(all_entries)}")
 
