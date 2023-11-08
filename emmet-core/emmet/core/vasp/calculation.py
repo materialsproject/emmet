@@ -661,7 +661,8 @@ class Calculation(BaseModel):
         run_ddec6 : bool | str = False
             Whether to run DDEC6 on the charge density. If a string, it's interpreted
             as the path to the atomic densities directory. Can also be set via the
-            DDEC6_ATOMIC_DENSITIES_DIR environment variable.
+            DDEC6_ATOMIC_DENSITIES_DIR environment variable. The files are available at
+            https://sourceforge.net/projects/ddec/files.
         strip_dos_projections
             Whether to strip the element and site projections from the density of
             states. This can help reduce the size of DOS objects in systems with many
