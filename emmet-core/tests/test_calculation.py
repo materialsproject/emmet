@@ -152,7 +152,7 @@ def test_calculation(test_dir, object_name, task_name):
     assert_schemas_equal(test_doc, valid_doc)
     assert set(objects.keys()) == set(test_object.objects[task_name])
 
-    # check bader and ddec6 keys exist but are None
+    # check bader and ddec6 keys exist
     assert test_doc.bader is None
     assert test_doc.ddec6 is None
 

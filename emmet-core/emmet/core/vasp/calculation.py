@@ -607,7 +607,7 @@ class Calculation(BaseModel):
         parse_bandstructure: Union[str, bool] = False,
         average_locpot: bool = True,
         run_bader: bool = False,
-        run_ddec6: bool = False,
+        run_ddec6: bool | str = False,
         strip_bandstructure_projections: bool = False,
         strip_dos_projections: bool = False,
         store_volumetric_data: Optional[Tuple[str]] = None,
@@ -658,8 +658,10 @@ class Calculation(BaseModel):
             Whether to store the average of the LOCPOT along the crystal axes.
         run_bader : bool = False
             Whether to run bader on the charge density.
-        run_ddec6 : bool = False
-            Whether to run DDEC6 on the charge density.
+        run_ddec6 : bool | str = False
+            Whether to run DDEC6 on the charge density. If a string, it's interpreted
+            as the path to the atomic densities directory. Can also be set via the
+            DDEC6_ATOMIC_DENSITIES_DIR environment variable.
         strip_dos_projections
             Whether to strip the element and site projections from the density of
             states. This can help reduce the size of DOS objects in systems with many
@@ -717,7 +719,8 @@ class Calculation(BaseModel):
 
         ddec6 = None
         if run_ddec6 and VaspObject.CHGCAR in output_file_paths:
-            ddec6 = ChargemolAnalysis(path=dir_name).summary
+            densities_path = run_ddec6 if isinstance(run_ddec6, (str, Path)) else None
+            ddec6 = ChargemolAnalysis(path=dir_name, atomic_densities_path=densities_path).summary
 
         locpot = None
         if average_locpot:
