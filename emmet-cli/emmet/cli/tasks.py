@@ -91,8 +91,9 @@ def make_comment(ctx, txt):
 @tasks.command()
 @sbatch
 @click.option("--clean", is_flag=True, help="Remove original launchers.")
+@click.option("--tar", is_flag=True, help="tar blocks after backup and clean")
 @click.pass_context
-def backups(ctx, clean):
+def backups(ctx, clean, tar):
     """Scan root directory and submit separate backup jobs for subdirectories containing blocks"""
     ctx.parent.params["nmax"] = sys.maxsize  # disable maximum launchers for backup
     subdir_block_launchers = defaultdict(lambda: defaultdict(list))
@@ -123,7 +124,7 @@ def backups(ctx, clean):
 
         if run:
             ctx.parent.params["directory"] = subdir
-            ret = ctx.parent.invoke(backup, clean=clean, check=True)
+            ret = ctx.parent.invoke(backup, clean=clean, check=True, tar=tar)
             msg += f" -> {ret.value}"
             comment_txt.append(msg)
         else:
@@ -220,8 +221,9 @@ def extract_filename(line):
 @click.option("--clean", is_flag=True, help="Remove original launchers.")
 @click.option("--check", is_flag=True, help="Check backup consistency.")
 @click.option("--force-new", is_flag=True, help="Generate new backup.")
+@click.option("--tar", is_flag=True, help="tar blocks after backup and clean")
 @click.pass_context
-def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
+def backup(ctx, reorg, clean, check, force_new, tar):  # noqa: C901
     """Backup directory to HPSS"""
     run = ctx.parent.parent.params["run"]
     ctx.params["nmax"] = sys.maxsize  # disable maximum launchers for backup
@@ -240,6 +242,7 @@ def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
     counter, nremove_total = 0, 0
     os.chdir(directory)
     for block, launchers in block_launchers.items():
+        logger.info(block)
         nlaunchers = len(launchers)
         logger.info(f"{block} with {nlaunchers} launcher(s)")
         filelist = [os.path.join(block, l) for l in launchers]
@@ -282,7 +285,8 @@ def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
             logger.warning(f"Skip {block} - already in HPSS")
 
         # Check backup here to allow running it separately
-        if check and not already_in_hpss:
+        #if check and not already_in_hpss:
+        if check:
             logger.info(f"Verify {block}.tar ...")
             args = shlex.split(
                 f"htar -K -Hrelpaths -Hverify=all -f {GARDEN}/{block}.tar"
@@ -306,10 +310,25 @@ def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
                     logger.info(
                         f"Removed {nlaunchers} launchers from disk for {block}."
                     )
+                    if tar:
+                        args = shlex.split(
+                                f"tar czf {block}.tar.gz --remove-files {block}"
+                        )
+                        try:
+                            for line in run_command(args, []):
+                                logger.info(line.strip())
+                        except subprocess.CalledProcessError as e:
+                            logger.error(str(e))
+                            return ReturnCodes.ERROR
+
+                        logger.info(f"Compressed {block} to {block}.tar.gz")
                 else:
                     logger.info(
                         f"Would remove {nlaunchers} launchers from disk for {block}."
                     )
+                    if tar:
+                        logger.info(f"Would compress {block} to {block}.tar.gz")
+
 
     logger.info(f"{counter}/{len(block_launchers)} blocks newly backed up to HPSS.")
     if clean:
