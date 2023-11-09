@@ -7,10 +7,11 @@ class MaterialsHintScheme(HintScheme):
     """
 
     def generate_hints(self, query):
+        hints = {"count_hint": {"deprecated": 1, "builder_meta.license": 1}}
+    
         for param in query["criteria"]:
-            if "composition_reduced" in param:
-                return {"hint": {"composition_reduced.$**": 1}}
-            elif "nelements" in param:
-                return {"hint": {"nelements": 1}}
+            if "nelements" in param:
+                hints["count_hint"]= {"nelements": 1}
 
-        return {"hint": {}}
+        hints["agg_hint"] = hints["count_hint"]
+        return hints
