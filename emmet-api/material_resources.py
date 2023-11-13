@@ -193,7 +193,7 @@ if db_uri:
         uri=db_uri,
         database=f"mp_core_{db_suffix}",
         key="pair_id",
-        collection_name="alloy_pairs",
+        collection_name="alloys",
     )
 
     summary_store = MongoURIStore(

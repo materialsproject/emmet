@@ -34,9 +34,8 @@ class HasPropsQuery(QueryOperator):
         crit = {}
 
         if has_props:
-            crit = {
-                "has_props": {"$all": [prop.strip() for prop in has_props.split(",")]}
-            }
+            for entry in [prop.strip() for prop in has_props.split(",")]:
+                crit[f"has_props.{entry}"] = True
 
         return {"criteria": crit}
 

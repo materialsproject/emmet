@@ -33,7 +33,7 @@ def elasticity_resource(elasticity_store):
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Elasticity"],
         sub_path="/elasticity/",
-        disable_validation=False,
+        disable_validation=True,
         timeout=MAPISettings().TIMEOUT,
     )
 

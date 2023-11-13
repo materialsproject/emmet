@@ -30,6 +30,10 @@ from emmet.api.routes.materials.summary.query_operators import (
     SearchStatsQuery,
     SearchESQuery,
 )
+from emmet.api.routes.materials.elasticity.query_operators import (
+    BulkModulusQuery,
+    ShearModulusQuery,
+)
 
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
@@ -53,6 +57,8 @@ def summary_resource(summary_store):
             SearchMagneticQuery(),
             SearchESQuery(),
             NumericQuery(model=SummaryDoc, excluded_fields=["composition"]),
+            BulkModulusQuery(),
+            ShearModulusQuery(),
             SearchHasReconstructedQuery(),
             HasPropsQuery(),
             DeprecationQuery(),
