@@ -728,7 +728,9 @@ class Calculation(BaseModel):
         ddec6 = None
         if run_ddec6 and VaspObject.CHGCAR in output_file_paths:
             densities_path = run_ddec6 if isinstance(run_ddec6, (str, Path)) else None
-            ddec6 = ChargemolAnalysis(path=dir_name, atomic_densities_path=densities_path).summary
+            ddec6 = ChargemolAnalysis(
+                path=dir_name, atomic_densities_path=densities_path
+            ).summary
 
         locpot = None
         if average_locpot:
