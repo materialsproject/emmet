@@ -110,7 +110,7 @@ def test_output_summary(test_dir, object_name, task_name):
     ],
 )
 def test_task_doc(test_dir, object_name):
-    from monty.json import MontyDecoder, jsanitize
+    from monty.json import jsanitize
     from pymatgen.entries.computed_entries import ComputedEntry
 
     from emmet.core.tasks import TaskDoc
@@ -124,8 +124,8 @@ def test_task_doc(test_dir, object_name):
     jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)
 
     # This is currently an issue as older versions of dumped custodian VaspJob objects are in the
-    # test files. This needs to be updated to properly test decoding. 
-    # MontyDecoder().process_decoded(dct) 
+    # test files. This needs to be updated to properly test decoding.
+    # MontyDecoder().process_decoded(dct)
 
     # Test that additional_fields works
     test_doc = TaskDoc.from_directory(dir_name, additional_fields={"foo": "bar"})
