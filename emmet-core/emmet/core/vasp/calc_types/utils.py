@@ -66,6 +66,9 @@ def task_type(
     incar = inputs.get("incar", {})
     kpts = inputs.get("kpoints") or {}  # kpoints can be None, then want a dict
 
+    if not isinstance(kpts, dict):
+        kpts = kpts.as_dict()
+
     if incar.get("ICHARG", 0) > 10:
         try:
             kpt_labels = kpts.get("labels") or []
