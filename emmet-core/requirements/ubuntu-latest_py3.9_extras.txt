@@ -82,7 +82,7 @@ future==0.18.3
     #   uncertainties
 ghp-import==2.1.0
     # via mkdocs
-griffe==0.36.9
+griffe==0.37.0
     # via mkdocstrings-python
 h5py==3.10.0
     # via phonopy
@@ -99,7 +99,7 @@ importlib-metadata==6.8.0
     #   markdown
     #   mkdocs
     #   mkdocstrings
-importlib-resources==6.1.0
+importlib-resources==6.1.1
     # via matplotlib
 inflect==7.0.0
     # via robocrys
@@ -184,7 +184,7 @@ mkdocstrings[python]==0.23.0
     # via
     #   emmet-core (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.7.3
+mkdocstrings-python==1.7.4
     # via mkdocstrings
 monty==2023.11.3
     # via
@@ -199,7 +199,7 @@ multidict==6.0.4
     # via
     #   aiohttp
     #   yarl
-mypy==1.6.1
+mypy==1.7.0
     # via emmet-core (setup.py)
 mypy-extensions==1.0.0
     # via
@@ -215,7 +215,7 @@ networkx==3.2.1
     #   torch
 nodeenv==1.8.0
     # via pre-commit
-numpy==1.26.1
+numpy==1.26.2
     # via
     #   ase
     #   chgnet
@@ -328,7 +328,7 @@ pyflakes==3.1.0
     # via flake8
 pygments==2.16.1
     # via mkdocs-material
-pymatgen==2023.10.11
+pymatgen==2023.11.12
     # via
     #   chgnet
     #   emmet-core (setup.py)
@@ -342,7 +342,7 @@ pymatgen-analysis-alloys==0.0.6
     # via emmet-core (setup.py)
 pymatgen-analysis-diffusion==2023.8.15
     # via emmet-core (setup.py)
-pymdown-extensions==10.3.1
+pymdown-extensions==10.4
     # via
     #   mkdocs-material
     #   mkdocstrings
@@ -363,7 +363,7 @@ python-dateutil==2.8.2
     #   pandas
 python-dotenv==1.0.0
     # via pydantic-settings
-pytorch-lightning==2.1.0
+pytorch-lightning==2.1.1
     # via matgl
 pytz==2023.3.post1
     # via pandas
@@ -459,7 +459,7 @@ triton==2.1.0
     # via torch
 types-requests==2.31.0.10
     # via emmet-core (setup.py)
-types-setuptools==68.2.0.0
+types-setuptools==68.2.0.1
     # via emmet-core (setup.py)
 typing-extensions==4.8.0
     # via
