@@ -614,7 +614,7 @@ class Calculation(BaseModel):
         parse_bandstructure: Union[str, bool] = False,
         average_locpot: bool = True,
         run_bader: bool = False,
-        run_ddec6: bool | str = False,
+        run_ddec6: Union[bool , str] = False,
         strip_bandstructure_projections: bool = False,
         strip_dos_projections: bool = False,
         store_volumetric_data: Optional[Tuple[str]] = None,
@@ -665,7 +665,7 @@ class Calculation(BaseModel):
             Whether to store the average of the LOCPOT along the crystal axes.
         run_bader : bool = False
             Whether to run bader on the charge density.
-        run_ddec6 : bool | str = False
+        run_ddec6 : Union[bool , str] = False
             Whether to run DDEC6 on the charge density. If a string, it's interpreted
             as the path to the atomic densities directory. Can also be set via the
             DDEC6_ATOMIC_DENSITIES_DIR environment variable. The files are available at
