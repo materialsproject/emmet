@@ -21,6 +21,7 @@ from pymatgen.io.vasp import (
     BSVasprun,
     Kpoints,
     Locpot,
+    Oszicar,
     Outcar,
     Poscar,
     Potcar,
@@ -612,6 +613,7 @@ class Calculation(BaseModel):
         contcar_file: Union[Path, str],
         volumetric_files: List[str] = None,
         elph_poscars: List[Path] = None,
+        oszicar_file: Optional[Union[Path, str]] = None,
         parse_dos: Union[str, bool] = False,
         parse_bandstructure: Union[str, bool] = False,
         average_locpot: bool = True,
@@ -643,6 +645,8 @@ class Calculation(BaseModel):
         elph_poscars
             Path to displaced electron-phonon coupling POSCAR files generated using
             ``PHON_LMC = True``, given relative to dir_name.
+        oszicar_file
+            Path to the OSZICAR file, relative to dir_name
         parse_dos
             Whether to parse the DOS. Can be:
 
@@ -738,7 +742,9 @@ class Calculation(BaseModel):
         ddec6 = None
         if run_ddec6 and VaspObject.CHGCAR in output_file_paths:
             densities_path = run_ddec6 if isinstance(run_ddec6, (str, Path)) else None
-            ddec6 = ChargemolAnalysis(path=dir_name, atomic_densities_path=densities_path).summary
+            ddec6 = ChargemolAnalysis(
+                path=dir_name, atomic_densities_path=densities_path
+            ).summary
 
         locpot = None
         if average_locpot:
@@ -762,12 +768,25 @@ class Calculation(BaseModel):
             exclude_from_trajectory = ["structure"]
             if store_trajectory == "partial":
                 exclude_from_trajectory.append("electronic_steps")
+            frame_properties = [
+                IonicStep(**x).model_dump(exclude=exclude_from_trajectory)
+                for x in vasprun.ionic_steps
+            ]
+            if oszicar_file:
+                try:
+                    oszicar = Oszicar(oszicar_file)
+                    if "T" in oszicar.ionic_steps[0]:
+                        for frame_property, oszicar_is in zip(
+                            frame_properties, oszicar.ionic_steps
+                        ):
+                            frame_property["temperature"] = oszicar_is.get("T")
+                except ValueError:
+                    # there can be errors in parsing the floats from OSZICAR
+                    pass
+
             traj = Trajectory.from_structures(
                 [d["structure"] for d in vasprun.ionic_steps],
-                frame_properties=[
-                    IonicStep(**x).model_dump(exclude=exclude_from_trajectory)
-                    for x in vasprun.ionic_steps
-                ],
+                frame_properties=frame_properties,
                 constant_lattice=False,
             )
             vasp_objects[VaspObject.TRAJECTORY] = traj  # type: ignore
