@@ -440,7 +440,7 @@ class MoleculeSummaryDoc(PropertyDoc):
 
     binding_thermo_combined_lot_solvent: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
-        descrption="Combination of level of theory and solvent used for molecular thermochemistry, combining "
+        description="Combination of level of theory and solvent used for molecular thermochemistry, combining "
         "both the frequency calculation and (potentially) the single-point energy correction.",
     )
 
