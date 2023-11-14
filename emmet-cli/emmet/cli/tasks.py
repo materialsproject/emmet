@@ -280,56 +280,70 @@ def backup(ctx, reorg, clean, check, force_new, tar):  # noqa: C901
                     return ReturnCodes.ERROR
                 counter += 1
         else:
-            already_in_hpss = True
             logger.warning(f"Skip {block} - already in HPSS")
 
         # Check backup here to allow running it separately
-        #if check and not already_in_hpss:
         if check:
             logger.info(f"Verify {block}.tar ...")
             args = shlex.split(
                 f"htar -K -Hrelpaths -Hverify=all -f {GARDEN}/{block}.tar"
             )
-            try:
-                for line in run_command(args, []):
-                    logger.info(line.strip())
-            except subprocess.CalledProcessError as e:
-                logger.error(str(e))
-                return ReturnCodes.ERROR
 
-            if clean:
-                nremove_total += nlaunchers
-                if run:
-                    with click.progressbar(
-                        filelist, label="Removing launchers ..."
-                    ) as bar:
-                        for fn in bar:
-                            if os.path.exists(fn):
-                                shutil.rmtree(fn)
-                    logger.info(
-                        f"Removed {nlaunchers} launchers from disk for {block}."
+            failed_verification = []
+
+            for launcher in launchers:
+                try:
+                    for line in run_command(args, [f"{block}/{launcher}"]):
+                        logger.info(line.strip())
+                except subprocess.CalledProcessError as e:
+                    logger.error(str(e))
+                    click.secho(
+                        f"Failed to verify {block}/{launcher}",
+                        fg="red",
                     )
-                    if tar:
-                        args = shlex.split(
-                                f"tar czf {block}.tar.gz --remove-files {block}"
-                        )
-                        try:
-                            for line in run_command(args, []):
-                                logger.info(line.strip())
-                        except subprocess.CalledProcessError as e:
-                            logger.error(str(e))
-                            return ReturnCodes.ERROR
+                    failed_verification.append(f"{block}/{launcher}")
+                    continue
 
-                        logger.info(f"Compressed {block} to {block}.tar.gz")
-                else:
-                    logger.info(
-                        f"Would remove {nlaunchers} launchers from disk for {block}."
+        if clean:
+            safe_to_remove = [f for f in filelist if f not in failed_verification]
+            nremove_block = len(safe_to_remove)
+            n_skip = len(failed_verification)
+            nremove_total += nremove_block
+
+            if run:
+                with click.progressbar(
+                    safe_to_remove, label=f"removing {nremove_block} launchers..."
+                ) as bar:
+                    for fn in bar:
+                        if os.path.exists(fn):
+                            shutil.rmtree(fn)
+                logger.info(
+                    f"Verified and removed a total of {nremove_block} launchers from disk for {block}, skipped {n_skip} launchers that failed HPSS verification."
+                )
+
+                if tar:
+                    args = shlex.split(
+                            f"tar czf {block}.tar.gz --remove-files {block}"
                     )
-                    if tar:
-                        logger.info(f"Would compress {block} to {block}.tar.gz")
+                    try:
+                        for line in run_command(args, []):
+                            logger.info(line.strip())
+                    except subprocess.calledprocesserror as e:
+                        logger.error(str(e))
+                        return returncodes.error
 
+                    logger.info(f"Successfully compressed {block} to {block}.tar.gz")
+
+            else:
+                logger.info(
+                    f"Would verify and remove a total of {nremove_block} launchers for {block} and skip {n_skip} launchers that failed HPSS verfication."
+                )
+
+                if tar:
+                    logger.info(f"Would compress {block} to {block}.tar.gz")
 
     logger.info(f"{counter}/{len(block_launchers)} blocks newly backed up to HPSS.")
+
     if clean:
         if run:
             logger.info(f"Verified and removed a total of {nremove_total} launchers.")
