@@ -719,3 +719,27 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
     else:
         logger.info(f"Would parse and insert {count}/{gen.value} tasks in {directory}.")
     return ReturnCodes.SUCCESS if count and gen.value else ReturnCodes.WARNING
+
+
+@tasks.command()
+@sbatch
+@click.pass_context
+def survey(ctx):
+    '''Recursively search root directory for blocks containing VASP files'''
+
+    run = ctx.parent.parent.params["run"]
+    root_dir = ctx.parent.params['directory']
+
+    if run:
+        args = shlex.split(
+            f"launcher_finder.sh {root_dir}"
+        )
+        for line in run_command(args, []):
+            logger.info(line.strip())
+
+        logger.info(f"Launcher search results stored in {root_dir}/.emmet/")
+    else:
+        logger.info(f"Would recursively search for directories containing VASP files in {root_dir}")
+        logger.info(f"Run 'launcher_finder.sh {root_dir}' if you want to search without GH issue tracking")
+
+    return ReturnCodes.SUCCESS
