@@ -91,6 +91,7 @@ def make_comment(ctx, txt):
 @tasks.command()
 @sbatch
 @click.option("--clean", is_flag=True, help="Remove original launchers.")
+@click.option("--exhaustive", is_flag=True, help="Check backup consistency for each block/launcher individually")
 @click.option("--tar", is_flag=True, help="tar blocks after backup and clean")
 @click.pass_context
 def backups(ctx, clean, tar):
@@ -220,10 +221,11 @@ def extract_filename(line):
 @click.option("--reorg", is_flag=True, help="Reorganize directory in block/launchers.")
 @click.option("--clean", is_flag=True, help="Remove original launchers.")
 @click.option("--check", is_flag=True, help="Check backup consistency.")
+@click.option("--exhaustive", is_flag=True, help="Check backup consistency for each block/launcher individually")
 @click.option("--force-new", is_flag=True, help="Generate new backup.")
 @click.option("--tar", is_flag=True, help="tar blocks after backup and clean")
 @click.pass_context
-def backup(ctx, reorg, clean, check, force_new, tar):  # noqa: C901
+def backup(ctx, reorg, clean, check, exhaustive, force_new, tar):  # noqa: C901
     """Backup directory to HPSS"""
     run = ctx.parent.parent.params["run"]
     ctx.params["nmax"] = sys.maxsize  # disable maximum launchers for backup
@@ -291,18 +293,26 @@ def backup(ctx, reorg, clean, check, force_new, tar):  # noqa: C901
 
             failed_verification = []
 
-            for launcher in launchers:
+            if exhaustive:
+                for launcher in launchers:
+                    try:
+                        for line in run_command(args, [f"{block}/{launcher}"]):
+                            logger.info(line.strip())
+                    except subprocess.CalledProcessError as e:
+                        logger.error(str(e))
+                        click.secho(
+                            f"Failed to verify {block}/{launcher}",
+                            fg="red",
+                        )
+                        failed_verification.append(f"{block}/{launcher}")
+                        continue
+            else:
                 try:
-                    for line in run_command(args, [f"{block}/{launcher}"]):
+                    for line in run_command(args, []):
                         logger.info(line.strip())
                 except subprocess.CalledProcessError as e:
                     logger.error(str(e))
-                    click.secho(
-                        f"Failed to verify {block}/{launcher}",
-                        fg="red",
-                    )
-                    failed_verification.append(f"{block}/{launcher}")
-                    continue
+                    return ReturnCodes.ERROR
 
         if clean:
             safe_to_remove = [f for f in filelist if f not in failed_verification]
