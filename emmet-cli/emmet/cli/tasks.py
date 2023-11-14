@@ -242,11 +242,10 @@ def backup(ctx, reorg, clean, check, force_new, tar):  # noqa: C901
     counter, nremove_total = 0, 0
     os.chdir(directory)
     for block, launchers in block_launchers.items():
-        logger.info(block)
         nlaunchers = len(launchers)
         logger.info(f"{block} with {nlaunchers} launcher(s)")
         filelist = [os.path.join(block, l) for l in launchers]
-        already_in_hpss = False
+
         try:
             isfile(f"{GARDEN}/{block}.tar")
             if force_new and run:
