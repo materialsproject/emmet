@@ -725,7 +725,22 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
 @sbatch
 @click.pass_context
 def survey(ctx):
-    '''Recursively search root directory for blocks containing VASP files'''
+    """
+       Recursively search root directory for blocks containing VASP files.
+       Requires GNU Parallel to be installed and on path.
+    """
+
+    if not shutil.which("parallel"):
+        logger.error(
+           """
+              Survey requires GNU Parallel, if you are on NERSC run 'module load parallel' and retry.
+              Consider adding 'module load parallel' to your .bashrc to avoid this error in the future.
+
+              For use outside of NERSC, GNU Parallel can be installed from the Free Software Foundation
+              at gnu.org/software/parallel/
+           """
+        )
+        return ReturnCodes.ERROR
 
     run = ctx.parent.parent.params["run"]
     root_dir = ctx.parent.params['directory']
