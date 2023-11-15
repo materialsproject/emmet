@@ -12,6 +12,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/materialsproject/emmet",
     packages=["emmet.cli"],
+    scripts=["emmet/cli/bash_scripts/launcher_finder"],
     install_requires=[
         "log4mongo",
         "click",
