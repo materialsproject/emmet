@@ -35,8 +35,8 @@ generate_report() {
   local counts=("${@}")
 
   for file in "${counts[@]}"; do
-    awk '/block/ { print $0 }' "${file}" >&3
-    awk '!/block/ { print $0 }' "${file}" >&5
+    awk '/block/ && !/quarantine/ { print $0 }' "${file}" >&3
+    awk '!/block/ && !/quarantine/ { print $0 }' "${file}" >&5
     awk '/quarantine/ { print $0 }' "${file}" >&7
   done
 
