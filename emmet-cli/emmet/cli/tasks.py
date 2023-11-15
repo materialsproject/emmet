@@ -767,15 +767,6 @@ def survey(ctx):
     run = ctx.parent.parent.params["run"]
     root_dir = ctx.parent.params["directory"]
 
-    ts = datetime.utcnow().strftime("%y%m%d-%h%m%s")
-    args = shlex.split(
-        f"launcher_finder -d {root_dir} -f emmet-launcher-report-{ts}.txt"
-    )
-    for line in run_command(args, []):
-        logger.info(line.strip())
-
-    logger.info(f"launcher search results stored in {root_dir}/.emmet/")
-
     if run:
         ts = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
         args = shlex.split(
