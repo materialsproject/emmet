@@ -40,17 +40,23 @@ generate_report() {
     awk '/quarantine/ { print $0 }' "${file}" >&7
   done
 
-  cat "${backup}" "${re_org}" "${quar}" >> "${report}"
+  if [[ -n "${report}" ]]; then
+    cat "${backup}" "${re_org}" "${quar}" >> "${report}"
+  else
+    cat "${backup}" "${re_org}" "${quar}"
+  fi
 
   rm "${backup}" "${re_org}" "${quar}"
   exec 3>&- 5>&- 7>&-
 }
 
 dir=$(pwd)
+file_name=''
 
 while getopts 'd:f:v' flag; do
   case "${flag}" in
     d) dir="${OPTARG}" ;;
+    f) file_name="${OPTARG}" ;;
     *) echo "Unexpected option ${flag}" ;;
   esac
 done
@@ -73,7 +79,9 @@ export -f block_search
 
 parallel --link block_search ::: "${dirs[@]}" ::: "${search_logs[@]}" ::: "${counts[@]}"
 
-mkdir -p "${dir}/.emmet"
-report_file="${dir}/.emmet/emmet-laucher-report-$(UTC).txt"
+if [[ -n "${file_name}" ]]; then
+  mkdir -p "${dir}/.emmet"
+  report_file="${dir}/.emmet/${file_name}"
+fi
 
 generate_report "${report_file}" "${counts[@]}"

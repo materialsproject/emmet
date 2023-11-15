@@ -756,8 +756,9 @@ def survey(ctx):
     root_dir = ctx.parent.params['directory']
 
     if run:
+        ts = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
         args = shlex.split(
-            f"launcher_finder.sh {root_dir}"
+            f"launcher_finder.sh -d {root_dir} -f emmet-launcher-report-{ts}.txt"
         )
         for line in run_command(args, []):
             logger.info(line.strip())
@@ -768,3 +769,4 @@ def survey(ctx):
         logger.info(f"Run 'launcher_finder.sh {root_dir}' if you want to search without GH issue tracking")
 
     return ReturnCodes.SUCCESS
+
