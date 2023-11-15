@@ -53,11 +53,25 @@ generate_report() {
 dir=$(pwd)
 file_name=''
 
-while getopts 'd:f:v' flag; do
+usage="Invocation: $(basename "$0") [-h] [-d root-directory] [-f output-file-name] -- searches for directories containing VASP files
+
+where:
+    -h  show this help text
+    -d  set root directory to search for VASP files (default: PWD)
+    -f  set output file name to store search results (default: reports directly to stdout)
+        If a file name is set, the file weill be stored at: root-directory/.emmet/output-file-name"
+
+while getopts ':hd:f:v' flag; do
   case "${flag}" in
+    h) echo "${usage}"
+       exit
+       ;;
     d) dir="${OPTARG}" ;;
     f) file_name="${OPTARG}" ;;
-    *) echo "Unexpected option ${flag}" ;;
+    *) echo "Unexpected option ${flag}"
+       echo "${usage}"
+       exit
+       ;;
   esac
 done
 
