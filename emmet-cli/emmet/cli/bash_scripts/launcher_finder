@@ -53,7 +53,7 @@ generate_report() {
 dir=$(pwd)
 file_name=''
 
-usage="Invocation: $(basename "$0") [-h] [-d root-directory] [-f output-file-name] -- searches for directories containing VASP files
+usage="Usage: $(basename "$0") [-h] [-d root-directory] [-f output-file-name] -- searches for directories containing VASP files
 
 where:
     -h  show this help text
