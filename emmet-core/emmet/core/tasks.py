@@ -222,7 +222,7 @@ class CustodianDoc(BaseModel):
         title="Custodian Corrections",
         description="List of custodian correction data for calculation.",
     )
-    job: Optional[dict] = Field(
+    job: Optional[Any] = Field(
         None,
         title="Cusotodian Job Data",
         description="Job data logged by custodian.",

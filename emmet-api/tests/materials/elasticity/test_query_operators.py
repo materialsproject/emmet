@@ -21,7 +21,7 @@ def test_bulk_modulus_query():
         k_vrh_max=5,
     )
 
-    fields = ["elasticity.k_voigt", "elasticity.k_reuss", "elasticity.k_vrh"]
+    fields = ["bulk_modulus.voigt", "bulk_modulus.reuss", "bulk_modulus.vrh"]
 
     assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
 
@@ -51,7 +51,7 @@ def test_shear_modulus_query():
         g_vrh_max=5,
     )
 
-    fields = ["elasticity.g_voigt", "elasticity.g_reuss", "elasticity.g_vrh"]
+    fields = ["shear_modulus.voigt", "shear_modulus.reuss", "shear_modulus.vrh"]
 
     assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
 
@@ -79,7 +79,7 @@ def test_poisson_query():
         poisson_max=5,
     )
 
-    fields = ["elasticity.universal_anisotropy", "elasticity.homogeneous_poisson"]
+    fields = ["universal_anisotropy", "homogeneous_poisson"]
 
     assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
 
