@@ -62,6 +62,12 @@ class VaspObject(ValueEnum):
     PROCAR = "procar"
 
 
+class StoreTrajectoryOption(ValueEnum):
+    FULL = "full"
+    PARTIAL = "partial"
+    NO = "no"
+
+
 class PotcarSpec(BaseModel):
     """Document defining a VASP POTCAR specification."""
 
@@ -423,7 +429,7 @@ class CalculationOutput(BaseModel):
         contcar: Optional[Poscar],
         locpot: Optional[Locpot] = None,
         elph_poscars: Optional[List[Path]] = None,
-        store_trajectory: Union[bool, str] = False,
+        store_trajectory: StoreTrajectoryOption = StoreTrajectoryOption.NO,
     ) -> "CalculationOutput":
         """
         Create a VASP output document from VASP outputs.
@@ -442,10 +448,10 @@ class CalculationOutput(BaseModel):
             Path to displaced electron-phonon coupling POSCAR files generated using
             ``PHON_LMC = True``.
         store_trajectory
-            Whether to store ionic steps as a pymatgen Trajectory object. Can be
-            True, False or "partial", tuning the amount of data from the ionic_steps
+            Whether to store ionic steps as a pymatgen Trajectory object.
+            Different value tune the amount of data from the ionic_steps
             stored in the Trajectory.
-            If not `False`, the `ionic_steps` field is left as None.
+            If not NO, the `ionic_steps` field is left as None.
 
         Returns
         -------
@@ -553,7 +559,9 @@ class CalculationOutput(BaseModel):
             frequency_dependent_dielectric=freq_dependent_diel,
             elph_displaced_structures=elph_structures,
             dos_properties=dosprop_dict,
-            ionic_steps=vasprun.ionic_steps if not store_trajectory else None,
+            ionic_steps=vasprun.ionic_steps
+            if store_trajectory == StoreTrajectoryOption.NO
+            else None,
             locpot=locpot_avg,
             outcar=outcar_dict,
             run_stats=RunStatistics.from_outcar(outcar) if outcar else None,
@@ -622,7 +630,7 @@ class Calculation(BaseModel):
         strip_bandstructure_projections: bool = False,
         strip_dos_projections: bool = False,
         store_volumetric_data: Optional[Tuple[str]] = None,
-        store_trajectory: Union[bool, str] = False,
+        store_trajectory: StoreTrajectoryOption = StoreTrajectoryOption.NO,
         vasprun_kwargs: Optional[Dict] = None,
     ) -> Tuple["Calculation", Dict[VaspObject, Dict]]:
         """
@@ -688,14 +696,14 @@ class Calculation(BaseModel):
         store_trajectory
             Whether to store the ionic steps in a pymatgen Trajectory object and the
             amount of data to store from the ionic_steps. Can be:
-            - True: Store the Trajectory. All the properties from the ionic_steps
+            - FULL: Store the Trajectory. All the properties from the ionic_steps
               are stored in the frame_properties except for the Structure, to
               avoid redundancy.
-            - "partial": Store the Trajectory. All the properties from the ionic_steps
+            - PARTIAL: Store the Trajectory. All the properties from the ionic_steps
               are stored in the frame_properties except from Structure and
-              ElectronicStep
-            - False: Trajectory is not Stored.
-            If not `False`, :obj:'.CalculationOutput.ionic_steps' is set to None
+              ElectronicStep.
+            - NO: Trajectory is not Stored.
+            If not NO, :obj:'.CalculationOutput.ionic_steps' is set to None
             to reduce duplicating information.
         vasprun_kwargs
             Additional keyword arguments that will be passed to the Vasprun init.
@@ -764,9 +772,9 @@ class Calculation(BaseModel):
             elph_poscars=elph_poscars,
             store_trajectory=store_trajectory,
         )
-        if store_trajectory:
+        if store_trajectory != StoreTrajectoryOption.NO:
             exclude_from_trajectory = ["structure"]
-            if store_trajectory == "partial":
+            if store_trajectory == StoreTrajectoryOption.PARTIAL:
                 exclude_from_trajectory.append("electronic_steps")
             frame_properties = [
                 IonicStep(**x).model_dump(exclude=exclude_from_trajectory)
