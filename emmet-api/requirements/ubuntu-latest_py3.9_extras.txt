@@ -28,11 +28,11 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.28.84
+boto3==1.29.1
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.31.84
+botocore==1.32.1
     # via
     #   boto3
     #   s3transfer
@@ -56,6 +56,7 @@ click==8.1.7
     # via
     #   flask
     #   mkdocs
+    #   mkdocstrings
     #   mongogrant
     #   uvicorn
 colorama==0.4.6
@@ -74,7 +75,7 @@ cycler==0.12.1
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==2.0.8
+ddtrace==2.0.9
     # via emmet-api (setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -84,7 +85,7 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.72.20
+emmet-core[all]==0.72.21
     # via emmet-api (setup.py)
 envier==0.4.0
     # via ddtrace
@@ -103,7 +104,7 @@ flake8==6.1.0
     # via emmet-api (setup.py)
 flask==3.0.0
     # via mongogrant
-fonttools==4.44.0
+fonttools==4.44.3
     # via matplotlib
 future==0.18.3
     # via
@@ -163,7 +164,7 @@ jsmin==3.0.1
     # via mkdocs-minify-plugin
 jsonschema==4.19.2
     # via maggma
-jsonschema-specifications==2023.7.1
+jsonschema-specifications==2023.11.1
     # via jsonschema
 kiwisolver==1.4.5
     # via matplotlib
@@ -222,7 +223,7 @@ mkdocs-material-extensions==1.3
     #   mkdocs-material
 mkdocs-minify-plugin==0.7.1
     # via emmet-api (setup.py)
-mkdocstrings[python]==0.23.0
+mkdocstrings[python]==0.24.0
     # via
     #   emmet-api (setup.py)
     #   mkdocstrings-python
@@ -303,6 +304,7 @@ pillow==10.1.0
 platformdirs==3.11.0
     # via
     #   mkdocs
+    #   mkdocstrings
     #   virtualenv
 plotly==5.18.0
     # via pymatgen
@@ -310,7 +312,7 @@ pluggy==1.3.0
     # via pytest
 pre-commit==3.5.0
     # via emmet-api (setup.py)
-protobuf==4.25.0
+protobuf==4.25.1
     # via
     #   ddsketch
     #   ddtrace
@@ -327,16 +329,16 @@ pycodestyle==2.11.1
     #   flake8
 pycparser==2.21
     # via cffi
-pydantic==2.5.0
+pydantic==2.5.1
     # via
     #   emmet-core
     #   fastapi
     #   inflect
     #   maggma
     #   pydantic-settings
-pydantic-core==2.14.1
+pydantic-core==2.14.3
     # via pydantic
-pydantic-settings==2.0.3
+pydantic-settings==2.1.0
     # via
     #   emmet-core
     #   maggma
@@ -403,7 +405,7 @@ pyyaml-env-tag==0.1
     # via mkdocs
 pyzmq==25.1.1
     # via maggma
-referencing==0.30.2
+referencing==0.31.0
     # via
     #   jsonschema
     #   jsonschema-specifications
