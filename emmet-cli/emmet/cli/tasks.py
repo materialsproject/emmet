@@ -755,18 +755,27 @@ def survey(ctx):
     run = ctx.parent.parent.params["run"]
     root_dir = ctx.parent.params['directory']
 
+    ts = datetime.utcnow().strftime("%y%m%d-%h%m%s")
+    args = shlex.split(
+        f"launcher_finder -d {root_dir} -f emmet-launcher-report-{ts}.txt"
+    )
+    for line in run_command(args, []):
+        logger.info(line.strip())
+
+    logger.info(f"launcher search results stored in {root_dir}/.emmet/")
+
     if run:
-        ts = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
+        ts = datetime.utcnow().strftime("%y%m%d-%h%m%s")
         args = shlex.split(
-            f"launcher_finder.sh -d {root_dir} -f emmet-launcher-report-{ts}.txt"
+            f"launcher_finder -d {root_dir} -f emmet-launcher-report-{ts}.txt"
         )
         for line in run_command(args, []):
             logger.info(line.strip())
 
-        logger.info(f"Launcher search results stored in {root_dir}/.emmet/")
+        logger.info(f"launcher search results stored in {root_dir}/.emmet/")
     else:
         logger.info(f"Would recursively search for directories containing VASP files in {root_dir}")
-        logger.info(f"Run 'launcher_finder.sh {root_dir}' if you want to search without GH issue tracking")
+        logger.info(f"Run 'launcher_finder {root_dir}' if you want to search without GH issue tracking")
 
     return ReturnCodes.SUCCESS
 
