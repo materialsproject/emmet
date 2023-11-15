@@ -235,7 +235,7 @@ def backup(ctx, reorg, clean, check, exhaustive, force_new, tar):  # noqa: C901
         logger.error("Not running --clean without --check enabled.")
         return ReturnCodes.ERROR
 
-    if not clean and tar;
+    if not clean and tar:
         logger.error("Not running --tar wihout --clean enabled.")
         return ReturnCode.ERROR
 
