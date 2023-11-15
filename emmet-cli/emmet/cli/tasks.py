@@ -91,7 +91,11 @@ def make_comment(ctx, txt):
 @tasks.command()
 @sbatch
 @click.option("--clean", is_flag=True, help="Remove original launchers.")
-@click.option("--exhaustive", is_flag=True, help="Check backup consistency for each block/launcher individually")
+@click.option(
+    "--exhaustive",
+    is_flag=True,
+    help="Check backup consistency for each block/launcher individually",
+)
 @click.option("--tar", is_flag=True, help="tar blocks after backup and clean")
 @click.pass_context
 def backups(ctx, clean, tar):
@@ -221,7 +225,11 @@ def extract_filename(line):
 @click.option("--reorg", is_flag=True, help="Reorganize directory in block/launchers.")
 @click.option("--clean", is_flag=True, help="Remove original launchers.")
 @click.option("--check", is_flag=True, help="Check backup consistency.")
-@click.option("--exhaustive", is_flag=True, help="Check backup consistency for each block/launcher individually")
+@click.option(
+    "--exhaustive",
+    is_flag=True,
+    help="Check backup consistency for each block/launcher individually",
+)
 @click.option("--force-new", is_flag=True, help="Generate new backup.")
 @click.option("--tar", is_flag=True, help="tar blocks after backup and clean")
 @click.pass_context
@@ -237,7 +245,7 @@ def backup(ctx, reorg, clean, check, exhaustive, force_new, tar):  # noqa: C901
 
     if not clean and tar:
         logger.error("Not running --tar wihout --clean enabled.")
-        return ReturnCode.ERROR
+        return ReturnCodes.ERROR
 
     if not reorg:
         check_pattern()
@@ -332,13 +340,12 @@ def backup(ctx, reorg, clean, check, exhaustive, force_new, tar):  # noqa: C901
                         if os.path.exists(fn):
                             shutil.rmtree(fn)
                 logger.info(
-                    f"Verified and removed a total of {nremove_block} launchers from disk for {block}, skipped {n_skip} launchers that failed HPSS verification."
+                    f"Verified and removed a total of {nremove_block} launchers from disk for {block},"
+                    f"skipped {n_skip} launchers that failed HPSS verification."
                 )
 
                 if tar:
-                    args = shlex.split(
-                            f"tar czf {block}.tar.gz --remove-files {block}"
-                    )
+                    args = shlex.split(f"tar czf {block}.tar.gz --remove-files {block}")
                     try:
                         for line in run_command(args, []):
                             logger.info(line.strip())
@@ -350,7 +357,8 @@ def backup(ctx, reorg, clean, check, exhaustive, force_new, tar):  # noqa: C901
 
             else:
                 logger.info(
-                    f"Would verify and remove a total of {nremove_block} launchers for {block} and skip {n_skip} launchers that failed HPSS verfication."
+                    f"Would verify and remove a total of {nremove_block} launchers for {block} and skip {n_skip}"
+                    f"launchers that failed HPSS verfication."
                 )
 
                 if tar:
@@ -740,13 +748,13 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
 @click.pass_context
 def survey(ctx):
     """
-       Recursively search root directory for blocks containing VASP files.
-       Requires GNU Parallel to be installed and on path.
+    Recursively search root directory for blocks containing VASP files.
+    Requires GNU Parallel to be installed and on path.
     """
 
     if not shutil.which("parallel"):
         logger.error(
-           """
+            """
               Survey requires GNU Parallel, if you are on NERSC run 'module load parallel' and retry.
               Consider adding 'module load parallel' to your .bashrc to avoid this error in the future.
 
@@ -757,7 +765,7 @@ def survey(ctx):
         return ReturnCodes.ERROR
 
     run = ctx.parent.parent.params["run"]
-    root_dir = ctx.parent.params['directory']
+    root_dir = ctx.parent.params["directory"]
 
     ts = datetime.utcnow().strftime("%y%m%d-%h%m%s")
     args = shlex.split(
@@ -778,8 +786,11 @@ def survey(ctx):
 
         logger.info(f"launcher search results stored in {root_dir}/.emmet/")
     else:
-        logger.info(f"Would recursively search for directories containing VASP files in {root_dir}")
-        logger.info(f"Run 'launcher_finder {root_dir}' if you want to search without GH issue tracking")
+        logger.info(
+            f"Would recursively search for directories containing VASP files in {root_dir}"
+        )
+        logger.info(
+            f"Run 'launcher_finder {root_dir}' if you want to search without GH issue tracking"
+        )
 
     return ReturnCodes.SUCCESS
-
