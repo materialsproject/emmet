@@ -340,7 +340,7 @@ def backup(ctx, reorg, clean, check, exhaustive, force_new, tar):  # noqa: C901
                             logger.info(line.strip())
                     except subprocess.calledprocesserror as e:
                         logger.error(str(e))
-                        return returncodes.error
+                        return ReturnCodes.ERROR
 
                     logger.info(f"Successfully compressed {block} to {block}.tar.gz")
 
