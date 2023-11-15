@@ -765,7 +765,7 @@ def survey(ctx):
     logger.info(f"launcher search results stored in {root_dir}/.emmet/")
 
     if run:
-        ts = datetime.utcnow().strftime("%y%m%d-%h%m%s")
+        ts = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
         args = shlex.split(
             f"launcher_finder -d {root_dir} -f emmet-launcher-report-{ts}.txt"
         )
