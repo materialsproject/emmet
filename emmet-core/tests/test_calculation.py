@@ -187,4 +187,4 @@ def test_PotcarSpec(test_dir):
 
     except (OSError, ValueError):
         # missing Pymatgen POTCARs, cannot perform test
-        return True
+        assert True

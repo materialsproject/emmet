@@ -119,23 +119,23 @@ def test_potcar_hash_check(test_dir):
                 symbol=symbol, functional="PBE"
             )._summary_stats
 
+        assert not _potcar_hash_check(task_doc, expected_hashes)
+
+        # Second check: remove POTCAR from expected_hashes, check should fail
+
+        missing_hashes = {calc_type: {**expected_hashes[calc_type]}}
+        first_element = list(missing_hashes[calc_type])[0]
+        missing_hashes[calc_type].pop(first_element)
+        assert _potcar_hash_check(task_doc, missing_hashes)
+
+        # Third check: change data in expected hashes, check should fail
+
+        wrong_hashes = {calc_type: {**expected_hashes[calc_type]}}
+        for key in wrong_hashes[calc_type][first_element]["stats"]["data"]:
+            wrong_hashes[calc_type][first_element]["stats"]["data"][key] *= 1.1
+
+        assert _potcar_hash_check(task_doc, wrong_hashes)
+
     except (OSError, ValueError):
         # missing Pymatgen POTCARs, cannot perform test
-        return True
-
-    assert not _potcar_hash_check(task_doc, expected_hashes)
-
-    # Second check: remove POTCAR from expected_hashes, check should fail
-
-    missing_hashes = {calc_type: {**expected_hashes[calc_type]}}
-    first_element = list(missing_hashes[calc_type])[0]
-    missing_hashes[calc_type].pop(first_element)
-    assert _potcar_hash_check(task_doc, missing_hashes)
-
-    # Third check: change data in expected hashes, check should fail
-
-    wrong_hashes = {calc_type: {**expected_hashes[calc_type]}}
-    for key in wrong_hashes[calc_type][first_element]["stats"]["data"]:
-        wrong_hashes[calc_type][first_element]["stats"]["data"][key] *= 1.1
-
-    assert _potcar_hash_check(task_doc, wrong_hashes)
+        assert True
