@@ -46,9 +46,9 @@ class MLDoc(ElasticityDoc):
         - heat_capacities (list[float]): heat capacities at constant volume in eV/K
     - elasticity
         - elastic_tensor (ElasticTensorDoc): pydantic model from emmet.core.elasticity
-        - shear_modulus (ShearModulus): Voigt-Reuss-Hill shear modulus (single float)
-        - bulk_modulus (BulkModulus): Voigt-Reuss-Hill bulk modulus (single float)
-        - youngs_modulus (float): Young's modulus
+        - shear_modulus (ShearModulus): Voigt-Reuss-Hill shear modulus (single float in GPa)
+        - bulk_modulus (BulkModulus): Voigt-Reuss-Hill bulk modulus (single float in GPa)
+        - youngs_modulus (float): Young's modulus (single float in GPa)
     """
 
     property_name: str = "ml"
@@ -155,7 +155,14 @@ class MLDoc(ElasticityDoc):
         results = {}
         for prop_cls in (RelaxCalc, PhononCalc, EOSCalc, ElasticityCalc):
             kwds = (prop_kwargs or {}).get(prop_cls.__name__, {})
-            results.update(prop_cls(calculator, **kwds).calc(structure))
+            output = prop_cls(calculator, **kwds).calc(structure)
+            # extract thermal_properties from PhononCalc output
+            if isinstance(output, dict) and {*output} == {
+                "phonon",
+                "thermal_properties",
+            }:
+                output = output["thermal_properties"]
+            results.update(output)
 
         for key, val in results.items():
             # convert arrays to lists
