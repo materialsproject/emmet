@@ -12,14 +12,10 @@ class SummaryHintScheme(HintScheme):
 
         if list(query.get("criteria").keys()) != ["deprecated", "builder_meta.license"]:
             for param in query["criteria"]:
-                if (
-                    param
-                    not in [
-                        "deprecated",
-                        "builder_meta.license",
-                    ]
-                    and "has_props" not in param
-                ):
+                if param not in [
+                    "deprecated",
+                    "builder_meta.license",
+                ] and ("has_props" not in param and "composition_reduced" not in param):
                     hints["count_hint"] = {
                         "deprecated": 1,
                         "builder_meta.license": 1,

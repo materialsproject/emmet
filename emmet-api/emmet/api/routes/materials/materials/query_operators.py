@@ -86,9 +86,6 @@ class ElementsQuery(QueryOperator):
     ) -> STORE_PARAMS:
         crit = {}  # type: dict
 
-        if elements or exclude_elements:
-            crit["elements"] = {}
-
         if elements:
             try:
                 element_list = [Element(e) for e in elements.strip().split(",")]
@@ -98,7 +95,8 @@ class ElementsQuery(QueryOperator):
                     detail="Please provide a comma-seperated list of elements",
                 )
 
-            crit["elements"]["$all"] = [str(el) for el in element_list]
+            for el in element_list:
+                crit[f"composition_reduced.{el}"] = {"$exists": True}
 
         if exclude_elements:
             try:
@@ -108,7 +106,9 @@ class ElementsQuery(QueryOperator):
                     status_code=400,
                     detail="Please provide a comma-seperated list of elements",
                 )
-            crit["elements"]["$nin"] = [str(el) for el in element_list]
+
+            for el in element_list:
+                crit[f"composition_reduced.{el}"] = {"$exists": False}
 
         return {"criteria": crit}
 
