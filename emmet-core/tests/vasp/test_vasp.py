@@ -119,7 +119,7 @@ def test_potcar_hash_check(test_dir):
                 symbol=symbol, functional="PBE"
             )._summary_stats
 
-    except OSError:
+    except (OSError, ValueError):
         # missing Pymatgen POTCARs, cannot perform test
         return True
 

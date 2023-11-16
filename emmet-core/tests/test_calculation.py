@@ -185,6 +185,6 @@ def test_PotcarSpec(test_dir):
             assert ps.hash == potcars[ips].md5_header_hash
             assert ps.summary_stats == potcars[ips]._summary_stats
 
-    except OSError:
+    except (OSError, ValueError):
         # missing Pymatgen POTCARs, cannot perform test
         return True
