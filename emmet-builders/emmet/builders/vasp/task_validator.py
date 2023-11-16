@@ -52,7 +52,7 @@ class TaskValidator(MapBuilder):
                         potcar = PotcarSingle.from_symbol_and_functional(
                             symbol=potcar_symbol, functional=functional
                         )
-                        hashes[calc_type][potcar_symbol] = potcar.md5_header_hash
+                        hashes[calc_type][potcar_symbol] = potcar._summary_stats
 
                 self.potcar_hashes = potcar_hashes
         else:
