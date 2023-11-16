@@ -111,7 +111,7 @@ class ValidationDoc(EmmetBaseModel):
                 valid_input_set = None
 
             if valid_input_set:
-                # Checking POTCAR hashes if a directory is supplied
+                # Checking POTCAR summary_stats if a directory is supplied
                 if potcar_hashes:
                     if _potcar_hash_check(task_doc, potcar_hashes):
                         if task_type in [
@@ -313,28 +313,47 @@ def _kspacing_warnings(input_set, inputs, data, warnings, kspacing_tolerance):
 
 def _potcar_hash_check(task_doc, potcar_hashes):
     """
-    Checks to make sure the POTCAR hash is equal to the correct value from the
-    pymatgen input set.
+    Checks to make sure the POTCAR summary stats is equal to the correct
+    value from the pymatgen input set.
     """
+    data_tol = 1.0e-6
 
     try:
         potcar_details = task_doc.calcs_reversed[0]["input"]["potcar_spec"]
 
-        all_match = True
-
-        for entry in potcar_details:
-            symbol = entry["titel"].split(" ")[1]
-            hash = potcar_hashes[str(task_doc.calc_type)].get(symbol, None)
-
-            if not hash or hash != entry["hash"]:
-                all_match = False
-                break
-
-        return not all_match
-
     except KeyError:
         # Assume it is an old calculation without potcar_spec data and treat it as passing POTCAR hash check
         return False
+
+    all_match = True
+    for entry in potcar_details:
+        symbol = entry["titel"].split(" ")[1]
+        ref_summ_stats = potcar_hashes[str(task_doc.calc_type)].get(symbol, None)
+        if not ref_summ_stats:
+            all_match = False
+            break
+
+        key_match = all(
+            set(ref_summ_stats["keywords"][key])
+            == set(entry["summary_stats"]["keywords"][key])
+            for key in ["header", "data"]
+        )
+
+        data_match = all(
+            abs(
+                ref_summ_stats["stats"][key][stat]
+                - entry["summary_stats"]["stats"][key][stat]
+            )
+            < data_tol
+            for stat in ["MEAN", "ABSMEAN", "VAR", "MIN", "MAX"]
+            for key in ["header", "data"]
+        )
+
+        if (not key_match) or (not data_match):
+            all_match = False
+            break
+
+    return not all_match
 
 
 def _magmom_check(task_doc, chemsys):
