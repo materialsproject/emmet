@@ -46,9 +46,9 @@ class MLDoc(ElasticityDoc):
         - heat_capacities (list[float]): heat capacities at constant volume in eV/K
     - elasticity
         - elastic_tensor (ElasticTensorDoc): pydantic model from emmet.core.elasticity
-        - shear_modulus (ShearModulus): Voigt-Reuss-Hill shear modulus (single float in GPa)
-        - bulk_modulus (BulkModulus): Voigt-Reuss-Hill bulk modulus (single float in GPa)
-        - youngs_modulus (float): Young's modulus (single float in GPa)
+        - shear_modulus (ShearModulus): Voigt-Reuss-Hill shear modulus (single float in eV/Angstrom^3)
+        - bulk_modulus (BulkModulus): Voigt-Reuss-Hill bulk modulus (single float in eV/Angstrom^3)
+        - youngs_modulus (float): Young's modulus (single float in eV/Angstrom^3)
     """
 
     property_name: str = "ml"
