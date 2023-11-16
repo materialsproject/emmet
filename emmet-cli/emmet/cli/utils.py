@@ -23,6 +23,7 @@ from pymatgen.core import Structure
 from pymatgen.util.provenance import StructureNL
 from pymongo.errors import DocumentTooLarge
 from emmet.core.vasp.task_valid import TaskDocument
+from emmet.core.triage import TriageDoc
 from emmet.core.vasp.validation import ValidationDoc
 from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 
@@ -483,12 +484,36 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
 
             shutil.move(vaspdir, f".quarantine/{validation_dir}/{launcher}/")
 
-            logger.warning(f"Moved {vaspdir} to .quarantine/{validation_dir}/ !")
+            logger.warning(
+                f"Validation: Moved {vaspdir} to .quarantine/{validation_dir}/ !"
+            )
 
             continue
 
         if validation_doc.warnings:
             logger.warn(validation_doc.warnings)
+
+        try:
+            triage_doc = TriageDoc.from_task_doc(task_document)
+        except Exception as exc:
+            logger.error(f"Unable to construct a valid TriageDoc: {exc}")
+            continue
+
+        if not triage_doc.valid:
+            logger.error(f"Not valid: {triage_doc.reasons}")
+
+            if len(triage_doc.reasons) > 1:
+                triage_dir = "_".join(
+                    sorted([reason.value for reason in triage_doc.reasons])
+                )
+            else:
+                triage_dir = triage_doc.reasons[0].value
+
+            shutil.move(vaspdir, f".quarantine/{triage_dir}/{launcher}/")
+
+            logger.warning(f"Triager: Moved {vaspdir} to .quarantine/{triage_dir}/ !")
+
+            continue
 
         try:
             entry = MaterialsProject2020Compatibility().process_entry(
