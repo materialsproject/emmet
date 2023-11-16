@@ -52,7 +52,7 @@ expected_keys = {
     ("calculator", "prop_kwargs"),
     [
         (get_universal_calculator("chgnet"), None),
-        ("m3gnet", {"ElasticityCalc": {"relax_structure": False}}),
+        ("M3GNet-MP-2021.2.8-PES", {"ElasticityCalc": {"relax_structure": False}}),
     ],
 )
 def test_ml_doc(calculator: Union[str, "Calculator"], prop_kwargs: dict) -> None:
