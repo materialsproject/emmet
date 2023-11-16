@@ -1,7 +1,8 @@
-from typing import List, Optional
 from datetime import datetime
+from typing import List, Optional
+
 from monty.json import MontyDecoder
-from pydantic import field_validator, BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class FermiDoc(BaseModel):
