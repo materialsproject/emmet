@@ -11,6 +11,7 @@ from emmet.api.routes.materials.materials.query_operators import (
     FormulaQuery,
     ChemsysQuery,
     MultiMaterialIDQuery,
+    LicenseQuery,
 )
 from emmet.api.routes.materials.oxidation_states.query_operators import (
     PossibleOxiStateQuery,
@@ -33,6 +34,7 @@ def oxi_states_resource(oxi_states_store):
             SparseFieldsQuery(
                 OxidationStateDoc, default_fields=["material_id", "last_updated"]
             ),
+            LicenseQuery(),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Oxidation States"],

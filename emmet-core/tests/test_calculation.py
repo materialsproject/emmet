@@ -1,4 +1,5 @@
 import pytest
+
 from tests.conftest import assert_schemas_equal, get_test_object
 
 
@@ -10,17 +11,17 @@ def test_init():
         RunStatistics,
     )
 
-    c = CalculationInput()
-    assert c is not None
+    calc_input = CalculationInput()
+    assert calc_input is not None
 
-    c = CalculationOutput()
-    assert c is not None
+    calc_input = CalculationOutput()
+    assert calc_input is not None
 
-    c = RunStatistics()
-    assert c is not None
+    calc_input = RunStatistics()
+    assert calc_input is not None
 
-    c = Calculation()
-    assert c is not None
+    calc_input = Calculation()
+    assert calc_input is not None
 
 
 @pytest.mark.parametrize(
@@ -97,7 +98,7 @@ def test_mag_calculation_output(test_dir):
         Outcar(dir_name / "OUTCAR.gz"),
         Poscar.from_file(dir_name / "CONTCAR.gz"),
     )
-    assert d.dict()["mag_density"] == pytest.approx(0.19384725901794095)
+    assert d.model_dump()["mag_density"] == pytest.approx(0.19384725901794095)
 
 
 @pytest.mark.parametrize(
@@ -150,6 +151,10 @@ def test_calculation(test_dir, object_name, task_name):
     valid_doc = test_object.task_doc["calcs_reversed"][0]
     assert_schemas_equal(test_doc, valid_doc)
     assert set(objects.keys()) == set(test_object.objects[task_name])
+
+    # check bader and ddec6 keys exist
+    assert test_doc.bader is None
+    assert test_doc.ddec6 is None
 
     # test document can be jsanitized
     d = jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)

@@ -33,6 +33,7 @@ def test_run_type():
         ("SCAN+U", {"METAGGA": "Scan", "LDAU": True}),
         ("R2SCAN", {"METAGGA": "R2SCAN"}),
         ("R2SCAN+U", {"METAGGA": "R2SCAN", "LDAU": True}),
+        ("HFCus", {"LHFCALC": True}),
     ]
 
     for _type, params in params_sets:
@@ -51,7 +52,7 @@ def test_validator(tasks):
     validation_docs = [ValidationDoc.from_task_doc(task) for task in tasks]
 
     assert len(validation_docs) == len(tasks)
-    assert all(doc.valid for doc in validation_docs)
+    assert all([doc.valid for doc in validation_docs])
 
 
 def test_computed_entry(tasks):

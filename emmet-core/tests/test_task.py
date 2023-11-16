@@ -1,4 +1,5 @@
 import pytest
+
 from tests.conftest import assert_schemas_equal, get_test_object
 
 
@@ -39,7 +40,7 @@ def test_analysis_summary(test_dir, object_name):
 
 
 @pytest.mark.parametrize(
-    "object_name,task_name",
+    ("object_name", "task_name"),
     [
         pytest.param("SiOptimizeDouble", "relax1", id="SiOptimizeDouble"),
         pytest.param("SiStatic", "standard", id="SiStatic"),
@@ -70,7 +71,7 @@ def test_input_summary(test_dir, object_name, task_name):
 
 
 @pytest.mark.parametrize(
-    "object_name,task_name",
+    ("object_name", "task_name"),
     [
         pytest.param("SiOptimizeDouble", "relax2", id="SiOptimizeDouble"),
         pytest.param("SiStatic", "standard", id="SiStatic"),
@@ -109,7 +110,8 @@ def test_output_summary(test_dir, object_name, task_name):
     ],
 )
 def test_task_doc(test_dir, object_name):
-    from monty.json import MontyDecoder, jsanitize
+    from monty.json import jsanitize
+    from pymatgen.entries.computed_entries import ComputedEntry
 
     from emmet.core.tasks import TaskDoc
 
@@ -119,11 +121,20 @@ def test_task_doc(test_dir, object_name):
     assert_schemas_equal(test_doc, test_object.task_doc)
 
     # test document can be jsanitized
-    d = jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)
+    jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)
 
-    # and decoded
-    MontyDecoder().process_decoded(d)
+    # This is currently an issue as older versions of dumped custodian VaspJob objects are in the
+    # test files. This needs to be updated to properly test decoding.
+    # MontyDecoder().process_decoded(dct)
 
     # Test that additional_fields works
     test_doc = TaskDoc.from_directory(dir_name, additional_fields={"foo": "bar"})
-    assert test_doc.dict()["foo"] == "bar"
+    assert test_doc.model_dump()["foo"] == "bar"
+
+    assert len(test_doc.calcs_reversed) == len(test_object.task_files)
+
+    # Check that entry is populated when calcs_reversed is not None
+    if test_doc.calcs_reversed:
+        assert isinstance(
+            test_doc.entry, ComputedEntry
+        ), f"Unexpected entry {test_doc.entry} for {object_name}"

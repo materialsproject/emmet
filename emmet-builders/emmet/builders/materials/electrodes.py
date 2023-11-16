@@ -307,7 +307,7 @@ class StructureGroupBuilder(Builder):
             stol=self.stol,
             angle_tol=self.angle_tol,
         )
-        return [sg.dict() for sg in s_groups]
+        return [sg.model_dump() for sg in s_groups]
 
     def _remove_targets(self, rm_ids):
         self.sgroups.remove_docs({"material_ids": {"$in": rm_ids}})
@@ -458,7 +458,7 @@ class InsertionElectrodeBuilder(Builder):
         if ie is None:
             return None  # type: ignore
             # {"failed_reason": "unable to create InsertionElectrode document"}
-        return jsanitize(ie.dict())
+        return jsanitize(ie.model_dump())
 
     def update_targets(self, items: List):
         items = list(filter(None, items))
@@ -590,7 +590,7 @@ class ConversionElectrodeBuilder(Builder):
                     comps.add(c)
                     unique_reaction_compositions.add(c)
                 reaction_compositions.append(comps)
-                new_docs.append(jsanitize(conversion_electrode_doc.dict()))
+                new_docs.append(jsanitize(conversion_electrode_doc.model_dump()))
 
         entry_id_mapping = {}
         for c in unique_reaction_compositions:

@@ -1,5 +1,5 @@
 from sys import version_info
-from typing import Optional
+from typing import Optional, get_args
 from fastapi import Query
 
 from maggma.api.query_operator import QueryOperator
@@ -34,9 +34,8 @@ class HasPropsQuery(QueryOperator):
         crit = {}
 
         if has_props:
-            crit = {
-                "has_props": {"$all": [prop.strip() for prop in has_props.split(",")]}
-            }
+            for entry in [prop.strip() for prop in has_props.split(",")]:
+                crit[f"has_props.{entry}"] = True
 
         return {"criteria": crit}
 
@@ -207,7 +206,11 @@ class SearchStatsQuery(QueryOperator):
 
     def __init__(self, search_doc):
         valid_numeric_fields = tuple(
-            sorted(k for k, v in search_doc.__fields__.items() if v.type_ == float)
+            sorted(
+                k
+                for k, v in search_doc.model_fields.items()
+                if float in get_args(v.annotation)
+            )
         )
 
         def query(
@@ -234,10 +237,6 @@ class SearchStatsQuery(QueryOperator):
                 100, title="The number of values in the returned distribution."
             ),
         ) -> STORE_PARAMS:
-            self.num_points = num_points
-            self.min_val = min_val
-            self.max_val = max_val
-
             if min_val or max_val:
                 pipeline = [{"$match": {field: {}}}]  # type: list
                 if min_val is not None:
@@ -264,9 +263,15 @@ class SearchStatsQuery(QueryOperator):
         if docs:
             field = list(docs[0].keys())[0]
 
-            num_points = self.num_points
-            min_val = self.min_val
-            max_val = self.max_val
+            params = query.get("pipeline", {})[0].get("$match", {})
+
+            for entry in params.values():
+                if "$gte" in entry:
+                    min_val = entry.get("$gte", None)
+                    max_val = entry.get("$lte", None)
+
+            num_points = 100
+
             num_samples = len(docs)
             warnings = []
 

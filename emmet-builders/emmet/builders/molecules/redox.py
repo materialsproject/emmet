@@ -357,7 +357,7 @@ class RedoxBuilder(Builder):
         self.logger.debug(f"Produced {len(redox_docs)} redox docs for {formula}")
 
         return jsanitize(
-            [doc.dict() for doc in redox_docs if doc is not None], allow_bson=True
+            [doc.model_dump() for doc in redox_docs if doc is not None], allow_bson=True
         )
 
     def update_targets(self, items: List[List[Dict]]):

@@ -467,7 +467,7 @@ class ThermoBuilder(Builder):
 
         self.logger.debug(f"Produced {len(thermo_docs)} thermo docs for {formula}")
 
-        return jsanitize([doc.dict() for doc in thermo_docs], allow_bson=True)
+        return jsanitize([doc.model_dump() for doc in thermo_docs], allow_bson=True)
 
     def update_targets(self, items: List[List[Dict]]):
         """

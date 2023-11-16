@@ -99,4 +99,4 @@ class MigrationGraphBuilder(MapBuilder):
             self.logger.error(f"error getting MigrationGraphDoc: {e}")
             return jsanitize(mg_doc)
 
-        return jsanitize(mg_doc.dict())
+        return jsanitize(mg_doc.model_dump())

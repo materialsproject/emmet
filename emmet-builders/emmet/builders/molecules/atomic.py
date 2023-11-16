@@ -273,7 +273,7 @@ class PartialChargesBuilder(Builder):
 
         self.logger.debug(f"Produced {len(charges_docs)} charges docs for {formula}")
 
-        return jsanitize([doc.dict() for doc in charges_docs], allow_bson=True)
+        return jsanitize([doc.model_dump() for doc in charges_docs], allow_bson=True)
 
     def update_targets(self, items: List[List[Dict]]):
         """
@@ -555,7 +555,7 @@ class PartialSpinsBuilder(Builder):
             f"Produced {len(spins_docs)} partial spins docs for {formula}"
         )
 
-        return jsanitize([doc.dict() for doc in spins_docs], allow_bson=True)
+        return jsanitize([doc.model_dump() for doc in spins_docs], allow_bson=True)
 
     def update_targets(self, items: List[List[Dict]]):
         """

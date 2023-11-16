@@ -1,5 +1,5 @@
 from itertools import permutations
-from typing import Optional
+from typing import Literal, Optional
 
 from emmet.core.symmetry import CrystalSystem
 from fastapi import Body, HTTPException, Query
@@ -13,6 +13,7 @@ from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatc
 from pymatgen.core.composition import Composition, CompositionError
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Structure
+from emmet.core.vasp.calc_types import RunType
 
 
 class FormulaQuery(QueryOperator):
@@ -199,6 +200,50 @@ class MultiTaskIDQuery(QueryOperator):
 
     def ensure_indexes(self):  # pragma: no cover
         return [("task_ids", False)]
+
+
+class BlessedCalcsQuery(QueryOperator):
+    """
+    Method to generate a query for nested blessed calculation data
+    """
+
+    def query(
+        self,
+        run_type: RunType = Query(
+            ..., description="Calculation run type of blessed task data"
+        ),
+        energy_min: Optional[float] = Query(
+            None, description="Minimum total uncorrected DFT energy in eV/atom"
+        ),
+        energy_max: Optional[float] = Query(
+            None, description="Maximum total uncorrected DFT energy in eV/atom"
+        ),
+    ) -> STORE_PARAMS:
+        # crit = {f"entries.{run_type}": {}}  # type: dict
+
+        # if energy_min:
+        #     crit[f"entries.{run_type}"].update({"$gte": energy_min})
+
+        # if energy_max:
+        #     crit[f"entries.{run_type}"].update({"$lte": energy_max})
+
+        # if not crit[f"entries.{run_type}"]:
+        #     crit[f"entries.{run_type}"].update({"$exists": True})
+
+        return {"criteria": {f"entries.{run_type}": {"$exists": True}}}
+
+    def post_process(self, docs, query):
+        run_type = list(query["criteria"].keys())[0].split(".")[-1]
+
+        return_data = [
+            {
+                "material_id": doc["material_id"],
+                "blessed_entry": doc["entries"][run_type],
+            }
+            for doc in docs
+        ]
+
+        return return_data
 
 
 class MultiMaterialIDQuery(QueryOperator):
@@ -400,3 +445,19 @@ class FormulaAutoCompleteQuery(QueryOperator):
 
     def ensure_indexes(self):  # pragma: no cover
         return [("formula_pretty", False)]
+
+
+class LicenseQuery(QueryOperator):
+    """
+    Factory method to generate a dependency for querying by
+        license information in builder meta
+    """
+
+    def query(
+        self,
+        license: Optional[Literal["BY-C", "BY-NC"]] = Query(
+            "BY-C",
+            description="Query by license. Either commercial or non-commercial CC-BY",
+        ),
+    ) -> STORE_PARAMS:
+        return {"criteria": {"builder_meta.license": license}}

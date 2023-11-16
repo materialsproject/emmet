@@ -1,14 +1,14 @@
-# -*- coding: utf-8 -*-
 from setuptools import find_namespace_packages, setup
-
 
 setup(
     name="emmet-core",
     use_scm_version={"root": "..", "relative_to": __file__},
-    setup_requires=["setuptools_scm>=6,<8"],
+    setup_requires=["setuptools_scm"],
     description="Core Emmet Library",
     author="The Materials Project",
     author_email="feedback@materialsproject.org",
+    long_description=open("../README.md").read(),  # noqa: SIM115
+    long_description_content_type="text/markdown",
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
     package_data={
@@ -17,20 +17,22 @@ setup(
     },
     include_package_data=True,
     install_requires=[
-        "pymatgen>=2023.7.20",
-        "monty>=2021.3",
-        "pydantic>=1.10.2,<2.0",
+        "pymatgen>=2023.10.11",
+        "monty>=2023.9.25",
+        "pydantic>=2.0",
+        "pydantic-settings>=2.0",
         "pybtex~=0.24",
-        "typing-extensions>=3.7,<5.0",
-        "spglib>=2.0.1",
+        "typing-extensions>=3.7",
     ],
     extras_require={
         "all": [
+            "matcalc",
             "seekpath>=2.0.1",
             "robocrys>=0.2.8",
             "pymatgen-analysis-diffusion>=2023.8.15",
             "pymatgen-analysis-alloys>=0.0.3",
         ],
+        "ml": ["chgnet", "matgl"],
         "test": [
             "pre-commit",
             "pytest",
@@ -42,9 +44,8 @@ setup(
             "mypy-extensions",
             "types-setuptools",
             "types-requests",
-            "maggma",
             "wincertstore",
-            "custodian>=2022.5.26",
+            "custodian",
         ],
         "docs": [
             "mkdocs",
@@ -59,7 +60,7 @@ setup(
             "jinja2",
         ],
     },
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     license="modified BSD",
     zip_safe=False,
 )

@@ -14,7 +14,7 @@ class Component(BaseModel):
 
 
 class Values(BaseModel):
-    values: List[float] = Field(None, description="List of values.")
+    values: Optional[List[float]] = Field(None, description="List of values.")
     min_value: Optional[float] = Field(None, description="Minimal value.")
     max_value: Optional[float] = Field(None, description="Maximal value.")
 
@@ -30,12 +30,14 @@ class ExtractedMaterial(BaseModel):
     material_formula: str = Field(
         ..., description="Normalized formula of the material."
     )
-    material_name: str = Field(None, description="English name of the material.")
+    material_name: Optional[str] = Field(
+        None, description="English name of the material."
+    )
 
     phase: Optional[str] = Field(
         None, description="Phase description of material, such as anatase."
     )
-    is_acronym: bool = Field(
+    is_acronym: Optional[bool] = Field(
         None, description="Whether the material is an acronym, such as LMO for LiMn2O4."
     )
 

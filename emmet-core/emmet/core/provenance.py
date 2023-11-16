@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
-from pydantic import BaseModel, Field, root_validator, validator
+from pydantic import field_validator, model_validator, BaseModel, Field
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
@@ -28,8 +28,8 @@ class Author(BaseModel):
     Author information
     """
 
-    name: str = Field(None)
-    email: str = Field(None)
+    name: Optional[str] = Field(None)
+    email: Optional[str] = Field(None)
 
 
 class History(BaseModel):
@@ -43,7 +43,8 @@ class History(BaseModel):
         None, description="Dictionary of exra data for this history node."
     )
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def str_to_dict(cls, values):
         if isinstance(values.get("description"), str):
             values["description"] = {"string": values.get("description")}
@@ -79,7 +80,8 @@ class SNLAbout(BaseModel):
         default_factory=datetime.utcnow, description="The creation date for this SNL."
     )
 
-    @validator("created_at", pre=True)
+    @field_validator("created_at", mode="before")
+    @classmethod
     def convert_monty_date(cls, v):
         if isinstance(v, dict):
             if v.get("@module", "datetime") and v.get("@class", "datetime"):
@@ -101,7 +103,7 @@ class ProvenanceDoc(PropertyDoc):
     A provenance property block
     """
 
-    property_name = "provenance"
+    property_name: str = "provenance"
 
     created_at: datetime = Field(
         ...,
@@ -134,7 +136,8 @@ class ProvenanceDoc(PropertyDoc):
         " of this material for the entry closest matching the material input",
     )
 
-    @validator("authors")
+    @field_validator("authors")
+    @classmethod
     def remove_duplicate_authors(cls, authors):
         authors_dict = {entry.name.lower(): entry for entry in authors}
         return list(authors_dict.values())
