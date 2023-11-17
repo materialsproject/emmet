@@ -191,12 +191,12 @@ class Triager:
             if t["reason"] is not None:
                 self.reasons.append(t["reason"])
 
-        self.passed = len(self.reasons) == 0
+        self.valid = len(self.reasons) == 0
 
     def as_dict(self):
         return {
             "assessment": self.assessment,
             "triage": self.triage,
             "reasons": self.reasons,
-            "passed": self.passed,
+            "passed": self.valid,
         }

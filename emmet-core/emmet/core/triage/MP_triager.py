@@ -6,6 +6,8 @@ from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
 from emmet.core.triage.filter import Filter
 from emmet.core.triage.triager import Triager
+from emmet.core.tasks import TaskDoc
+from emmet.core.vasp.task_valid import TaskDocument
 
 from emmet.core.utils import DocEnum
 
@@ -18,11 +20,7 @@ from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.analysis.local_env import CrystalNN
 
 
-from typing import Any, Dict, List, Union, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from emmet.core.tasks import TaskDoc
-    from emmet.core.vasp.task_valid import TaskDocument
+from typing import Any, Dict, List, Union
 
 _MP_PARAMS = loadfn(str(import_files("emmet.core.triage") / "./MP_filter_bounds.json"))
 
@@ -149,9 +147,9 @@ class MPTriager(Triager):
                     NN = {}
                 coordination_numbers.append(NN)
 
-        if isinstance(task_doc,TaskDoc):
+        if isinstance(task_doc, TaskDoc):
             potcars = [ps.titel for ps in task_doc.input.potcar_spec]
-        elif isinstance(task_doc,TaskDocument):
+        elif isinstance(task_doc, TaskDocument):
             potcars = [ps["titel"] for ps in task_doc.input.potcar_spec]
 
         return cls(
@@ -207,7 +205,7 @@ class TriageDoc(EmmetBaseModel):
             assessment=triaged.assessment,
             triage=triaged.triage,
             reasons=triaged.reasons,
-            valid=triaged.passed,
+            valid=triaged.valid,
         )
 
         return doc
