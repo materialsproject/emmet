@@ -42,4 +42,4 @@ class RobocrystallographerBuilder(MapBuilder):
             fields=[],
         )
 
-        return jsanitize(doc.dict(), allow_bson=True)
+        return jsanitize(doc.model_dump(), allow_bson=True)

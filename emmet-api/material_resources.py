@@ -129,7 +129,10 @@ if db_uri:
     )
 
     elasticity_store = MongoURIStore(
-        uri=db_uri, database="mp_core", key="task_id", collection_name="elasticity"
+        uri=db_uri,
+        database=f"mp_core_{db_suffix}",
+        key="task_id",
+        collection_name="elasticity",
     )
 
     doi_store = MongoURIStore(
@@ -190,7 +193,7 @@ if db_uri:
         uri=db_uri,
         database=f"mp_core_{db_suffix}",
         key="pair_id",
-        collection_name="alloy_pairs",
+        collection_name="alloys",
     )
 
     summary_store = MongoURIStore(
@@ -291,6 +294,7 @@ else:
 from emmet.api.routes.materials.materials.resources import (
     find_structure_resource,
     formula_autocomplete_resource,
+    blessed_tasks_resource,
     materials_resource,
 )
 
@@ -298,6 +302,7 @@ materials_resources = list()
 
 materials_resources.extend(
     [
+        blessed_tasks_resource(materials_store),
         find_structure_resource(materials_store),
         formula_autocomplete_resource(formula_autocomplete_store),
         materials_resource(materials_store),

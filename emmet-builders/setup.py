@@ -7,9 +7,16 @@ setup(
     description="Builders for the Emmet Library",
     author="The Materials Project",
     author_email="feedback@materialsproject.org",
+    long_description=open("../README.md").read(),  # noqa: SIM115
+    long_description_content_type="text/markdown",
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
-    install_requires=["emmet-core[all]", "maggma>=0.51.16", "matminer>=0.7.3"],
+    install_requires=[
+        "emmet-core[all]",
+        "emmet-core[ml]",
+        "maggma>=0.57.6",
+        "matminer>=0.7.3",
+    ],
     extras_require={
         "test": [
             "pre-commit",
@@ -37,7 +44,7 @@ setup(
             "jinja2",
         ],
     },
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     license="modified BSD",
     zip_safe=False,
 )

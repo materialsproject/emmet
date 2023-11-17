@@ -1,7 +1,7 @@
-from typing import Dict
+from typing import Dict, Optional
 
 import numpy as np
-from pydantic import Field, root_validator
+from pydantic import model_validator, Field
 from pymatgen.analysis.diffraction.xrd import (
     WAVELENGTHS,
     DiffractionPattern,
@@ -29,18 +29,21 @@ class XRDDoc(SpectrumDoc):
     Document describing a XRD Diffraction Pattern
     """
 
-    spectrum_name = "XRD"
+    spectrum_name: str = "XRD"
 
     spectrum: DiffractionPattern
     min_two_theta: float
     max_two_theta: float
     wavelength: float = Field(..., description="Wavelength for the diffraction source.")
-    target: Element = Field(
+    target: Optional[Element] = Field(
         None, description="Target element for the diffraction source."
     )
-    edge: Edge = Field(None, description="Atomic edge for the diffraction source.")
+    edge: Optional[Edge] = Field(
+        None, description="Atomic edge for the diffraction source."
+    )
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def get_target_and_edge(cls, values: Dict):
         print("Validations")
         # Only do this if neither target not edge is defined

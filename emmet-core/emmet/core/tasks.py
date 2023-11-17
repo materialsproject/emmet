@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 import numpy as np
 from monty.json import MontyDecoder
 from monty.serialization import loadfn
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core.structure import Structure
 from pymatgen.core.trajectory import Trajectory
@@ -36,70 +36,80 @@ _VOLUMETRIC_FILES = ("CHGCAR", "LOCPOT", "AECCAR0", "AECCAR1", "AECCAR2")
 
 
 class Potcar(BaseModel):
-    pot_type: str = Field(None, description="Pseudo-potential type, e.g. PAW")
-    functional: str = Field(None, description="Functional type use in the calculation.")
-    symbols: List[str] = Field(
+    pot_type: Optional[str] = Field(None, description="Pseudo-potential type, e.g. PAW")
+    functional: Optional[str] = Field(
+        None, description="Functional type use in the calculation."
+    )
+    symbols: Optional[List[str]] = Field(
         None, description="List of VASP potcar symbols used in the calculation."
     )
 
 
 class OrigInputs(BaseModel):
-    incar: Union[Incar, Dict] = Field(
+    incar: Optional[Union[Incar, Dict]] = Field(
         None,
         description="Pymatgen object representing the INCAR file.",
     )
 
-    poscar: Poscar = Field(
+    poscar: Optional[Poscar] = Field(
         None,
         description="Pymatgen object representing the POSCAR file.",
     )
 
-    kpoints: Kpoints = Field(
+    kpoints: Optional[Kpoints] = Field(
         None,
         description="Pymatgen object representing the KPOINTS file.",
     )
 
-    potcar: Union[Potcar, VaspPotcar, List[Any]] = Field(
+    potcar: Optional[Union[Potcar, VaspPotcar, List[Any]]] = Field(
         None,
         description="Pymatgen object representing the POTCAR file.",
     )
 
-    @validator("potcar", pre=True)
+    @field_validator("potcar", mode="before")
+    @classmethod
     def potcar_ok(cls, v):
         if isinstance(v, list):
-            return [i for i in v]
+            return list(v)
         return v
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class OutputDoc(BaseModel):
-    structure: Structure = Field(
+    structure: Optional[Structure] = Field(
         None,
         title="Output Structure",
         description="Output Structure from the VASP calculation.",
     )
 
-    density: float = Field(None, description="Density of in units of g/cc.")
+    density: Optional[float] = Field(None, description="Density of in units of g/cc.")
     energy: float = Field(..., description="Total Energy in units of eV.")
-    forces: List[List[float]] = Field(
+    forces: Optional[List[List[float]]] = Field(
         None, description="The force on each atom in units of eV/A^2."
     )
-    stress: List[List[float]] = Field(
+    stress: Optional[List[List[float]]] = Field(
         None, description="The stress on the cell in units of kB."
     )
-    energy_per_atom: float = Field(
+    energy_per_atom: Optional[float] = Field(
         None, description="The final DFT energy per atom for the last calculation"
     )
-    bandgap: float = Field(None, description="The DFT bandgap for the last calculation")
+    bandgap: Optional[float] = Field(
+        None, description="The DFT bandgap for the last calculation"
+    )
 
-    @validator("density", pre=True, always=True)
-    def set_density_from_structure(cls, v, values, **kwargs):
+    @model_validator(mode="before")
+    def set_density_from_structure(cls, values):
         # Validator to automatically set density from structure if not already
         # specified. This might happen when importing an older atomate2-format
         # TaskDocument.
-        return v or values["structure"].density
+        if not values.get("density", None):
+            if isinstance(values["structure"], dict):
+                values["density"] = values["structure"].get("density", None)
+            else:
+                values["density"] = values["structure"].density
+
+        return values
 
     @classmethod
     def from_vasp_calc_doc(
@@ -145,30 +155,32 @@ class OutputDoc(BaseModel):
 
 
 class InputDoc(BaseModel):
-    structure: Structure = Field(
+    structure: Optional[Structure] = Field(
         None,
         title="Input Structure",
         description="Output Structure from the VASP calculation.",
     )
 
-    parameters: Dict = Field(
+    parameters: Optional[Dict] = Field(
         None,
         description="Parameters from vasprun for the last calculation in the series",
     )
-    pseudo_potentials: Potcar = Field(
+    pseudo_potentials: Optional[Potcar] = Field(
         None, description="Summary of the pseudo-potentials used in this calculation"
     )
-    potcar_spec: List[PotcarSpec] = Field(
+    potcar_spec: Optional[List[PotcarSpec]] = Field(
         None, description="Title and hash of POTCAR files used in the calculation"
     )
-    xc_override: str = Field(
+    xc_override: Optional[str] = Field(
         None, description="Exchange-correlation functional used if not the default"
     )
-    is_lasph: bool = Field(
+    is_lasph: Optional[bool] = Field(
         None, description="Whether the calculation was run with aspherical corrections"
     )
-    is_hubbard: bool = Field(False, description="Is this a Hubbard +U calculation")
-    hubbards: Dict = Field(None, description="The hubbard parameters used")
+    is_hubbard: bool = Field(
+        default=False, description="Is this a Hubbard +U calculation"
+    )
+    hubbards: Optional[dict] = Field(None, description="The hubbard parameters used")
 
     @classmethod
     def from_vasp_calc_doc(cls, calc_doc: Calculation) -> "InputDoc":
@@ -205,42 +217,42 @@ class InputDoc(BaseModel):
 
 
 class CustodianDoc(BaseModel):
-    corrections: List[Any] = Field(
+    corrections: Optional[List[Any]] = Field(
         None,
         title="Custodian Corrections",
         description="List of custodian correction data for calculation.",
     )
-    job: dict = Field(
+    job: Optional[Any] = Field(
         None,
-        title="Cusotodian Job Data",
+        title="Custodian Job Data",
         description="Job data logged by custodian.",
     )
 
 
 class AnalysisDoc(BaseModel):
-    delta_volume: float = Field(
+    delta_volume: Optional[float] = Field(
         None,
         title="Volume Change",
         description="Volume change for the calculation.",
     )
-    delta_volume_percent: float = Field(
+    delta_volume_percent: Optional[float] = Field(
         None,
         title="Volume Change Percent",
         description="Percent volume change for the calculation.",
     )
-    max_force: float = Field(
+    max_force: Optional[float] = Field(
         None,
         title="Max Force",
         description="Maximum force on any atom at the end of the calculation.",
     )
 
-    warnings: List[str] = Field(
+    warnings: Optional[List[str]] = Field(
         None,
         title="Calculation Warnings",
         description="Warnings issued after analysis.",
     )
 
-    errors: List[str] = Field(
+    errors: Optional[List[str]] = Field(
         None,
         title="Calculation Errors",
         description="Errors issued after analysis.",
@@ -299,103 +311,108 @@ class AnalysisDoc(BaseModel):
         )
 
 
-class TaskDoc(StructureMetadata):
-    """
-    Calculation-level details about VASP calculations that power Materials Project.
-    """
+class TaskDoc(StructureMetadata, extra="allow"):
+    """Calculation-level details about VASP calculations that power Materials Project."""
 
     tags: Union[List[str], None] = Field(
         [], title="tag", description="Metadata tagged to a given task."
     )
-    dir_name: str = Field(None, description="The directory for this VASP task")
+    dir_name: Optional[str] = Field(
+        None, description="The directory for this VASP task"
+    )
 
-    state: TaskState = Field(None, description="State of this calculation")
+    state: Optional[TaskState] = Field(None, description="State of this calculation")
 
-    calcs_reversed: List[Calculation] = Field(
+    calcs_reversed: Optional[List[Calculation]] = Field(
         None,
         title="Calcs reversed data",
         description="Detailed data for each VASP calculation contributing to the task document.",
     )
 
-    structure: Structure = Field(
+    structure: Optional[Structure] = Field(
         None, description="Final output structure from the task"
     )
 
-    task_type: Union[CalcType, TaskType] = Field(
+    task_type: Optional[Union[CalcType, TaskType]] = Field(
         None, description="The type of calculation."
     )
 
-    task_id: str = Field(
+    task_id: Optional[str] = Field(
         None,
         description="The (task) ID of this calculation, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
     )
 
-    orig_inputs: OrigInputs = Field(
+    orig_inputs: Optional[OrigInputs] = Field(
         None,
         description="The exact set of input parameters used to generate the current task document.",
     )
 
-    input: InputDoc = Field(
+    input: Optional[InputDoc] = Field(
         None,
         description="The input structure used to generate the current task document.",
     )
 
-    output: OutputDoc = Field(
+    output: Optional[OutputDoc] = Field(
         None,
         description="The exact set of output parameters used to generate the current task document.",
     )
 
-    included_objects: List[VaspObject] = Field(
+    included_objects: Optional[List[VaspObject]] = Field(
         None, description="List of VASP objects included with this task document"
     )
-    vasp_objects: Dict[VaspObject, Any] = Field(
+    vasp_objects: Optional[Dict[VaspObject, Any]] = Field(
         None, description="Vasp objects associated with this task"
     )
-    entry: ComputedEntry = Field(
+    entry: Optional[ComputedEntry] = Field(
         None, description="The ComputedEntry from the task doc"
     )
 
-    task_label: str = Field(None, description="A description of the task")
-    author: str = Field(None, description="Author extracted from transformations")
-    icsd_id: str = Field(
+    task_label: Optional[str] = Field(None, description="A description of the task")
+    author: Optional[str] = Field(
+        None, description="Author extracted from transformations"
+    )
+    icsd_id: Optional[Union[str, int]] = Field(
         None, description="Inorganic Crystal Structure Database id of the structure"
     )
-    transformations: Dict[str, Any] = Field(
+    transformations: Optional[Dict[str, Any]] = Field(
         None,
         description="Information on the structural transformations, parsed from a "
         "transformations.json file",
     )
-    additional_json: Dict[str, Any] = Field(
+    additional_json: Optional[Dict[str, Any]] = Field(
         None, description="Additional json loaded from the calculation directory"
     )
 
-    custodian: List[CustodianDoc] = Field(
+    custodian: Optional[List[CustodianDoc]] = Field(
         None,
         title="Calcs reversed data",
         description="Detailed custodian data for each VASP calculation contributing to the task document.",
     )
 
-    analysis: AnalysisDoc = Field(
+    analysis: Optional[AnalysisDoc] = Field(
         None,
         title="Calculation Analysis",
         description="Some analysis of calculation data after collection.",
     )
 
-    last_updated: datetime = Field(
+    last_updated: Optional[datetime] = Field(
         None,
         description="Timestamp for the most recent calculation for this task document",
     )
 
     # Make sure that the datetime field is properly formatted
     # (Unclear when this is not the case, please leave comment if observed)
-    @validator("last_updated", pre=True)
+    @field_validator("last_updated", mode="before")
+    @classmethod
     def last_updated_dict_ok(cls, v) -> datetime:
         return v if isinstance(v, datetime) else monty_decoder.process_decoded(v)
 
-    @validator("entry", pre=True)
-    def set_entry(cls, v, values) -> datetime:
-        return v or cls.get_entry(values["calcs_reversed"], values["task_id"])
+    @model_validator(mode="after")
+    def set_entry(self) -> datetime:
+        if not self.entry and self.calcs_reversed:
+            self.entry = self.get_entry(self.calcs_reversed, self.task_id)
+        return self
 
     @classmethod
     def from_directory(
@@ -403,7 +420,7 @@ class TaskDoc(StructureMetadata):
         dir_name: Union[Path, str],
         volumetric_files: Tuple[str, ...] = _VOLUMETRIC_FILES,
         store_additional_json: bool = True,
-        additional_fields: Dict[str, Any] = None,
+        additional_fields: Optional[Dict[str, Any]] = None,
         volume_change_warning_tol: float = 0.2,
         **vasp_calculation_kwargs,
     ) -> _T:
@@ -429,7 +446,7 @@ class TaskDoc(StructureMetadata):
 
         Returns
         -------
-        VaspTaskDoc
+        TaskDoc
             A task document for the calculation.
         """
         logger.info(f"Getting task doc in: {dir_name}")
@@ -501,7 +518,80 @@ class TaskDoc(StructureMetadata):
             included_objects=included_objects,
             task_type=calcs_reversed[0].task_type,
         )
-        doc = doc.copy(update=additional_fields)
+        return doc.model_copy(update=additional_fields)
+
+    @classmethod
+    def from_vasprun(
+        cls: Type[_T],
+        path: Union[str, Path],
+        additional_fields: Optional[Dict[str, Any]] = None,
+        volume_change_warning_tol: float = 0.2,
+        **vasp_calculation_kwargs,
+    ) -> _T:
+        """
+        Create a task document from a vasprun.xml file.
+
+        This is not recommended and will raise warnings, since some necessary
+        information is absent from the vasprun.xml file, such as per-atom
+        magnetic moments. However, the majority of the TaskDoc will
+        be complete.
+
+        Parameters
+        ----------
+        path
+            The path to the vasprun.xml.
+        additional_fields: Dict[str, Any] = None,
+        volume_change_warning_tol
+            Maximum volume change allowed in VASP relaxations before the calculation is
+            tagged with a warning.
+        **vasp_calculation_kwargs
+            Additional parsing options that will be passed to the
+            :obj:`.Calculation.from_vasp_files` function.
+
+        Returns
+        -------
+        TaskDoc
+            A task document for the calculation.
+        """
+        logger.info(f"Getting vasprun.xml at: {path}")
+
+        path = Path(path)
+        dir_name = path.resolve().parent
+
+        calc = Calculation.from_vasprun(path, **vasp_calculation_kwargs)
+        calcs_reversed = [calc]
+
+        analysis = AnalysisDoc.from_vasp_calc_docs(
+            calcs_reversed, volume_change_warning_tol=volume_change_warning_tol
+        )
+
+        # assume orig_inputs are those stated in vasprun.xml
+        orig_inputs = OrigInputs(
+            incar=calc.input.incar,
+            poscar=Poscar(calc.input.structure),
+            kpoints=calc.input.kpoints,
+            potcar=calc.input.potcar,
+        )
+
+        doc = cls.from_structure(
+            structure=calcs_reversed[0].output.structure,
+            meta_structure=calcs_reversed[0].output.structure,
+            include_structure=True,
+            dir_name=get_uri(dir_name),
+            calcs_reversed=calcs_reversed,
+            analysis=analysis,
+            orig_inputs=orig_inputs,
+            completed_at=calcs_reversed[0].completed_at,
+            input=InputDoc.from_vasp_calc_doc(calcs_reversed[-1]),
+            output=OutputDoc.from_vasp_calc_doc(calcs_reversed[0]),
+            state=_get_state(calcs_reversed, analysis),
+            run_stats=None,
+            vasp_objects={},
+            included_objects=[],
+            task_type=calcs_reversed[0].task_type,
+        )
+        if additional_fields:
+            doc = doc.model_copy(update=additional_fields)
         return doc
 
     @staticmethod
@@ -533,6 +623,8 @@ class TaskDoc(StructureMetadata):
                 "potcar_spec": [dict(d) for d in calcs_reversed[0].input.potcar_spec],
                 # Required to be compatible with MontyEncoder for the ComputedEntry
                 "run_type": str(calcs_reversed[0].run_type),
+                "is_hubbard": calcs_reversed[0].input.is_hubbard,
+                "hubbards": calcs_reversed[0].input.hubbards,
             },
             "data": {
                 "oxide_type": oxide_type(calcs_reversed[0].output.structure),
@@ -565,56 +657,50 @@ class TaskDoc(StructureMetadata):
 
 
 class TrajectoryDoc(BaseModel):
-    """
-    Model for task trajectory data
-    """
+    """Model for task trajectory data."""
 
-    task_id: str = Field(
+    task_id: Optional[str] = Field(
         None,
         description="The (task) ID of this calculation, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
     )
 
-    trajectories: List[Trajectory] = Field(
+    trajectories: Optional[List[Trajectory]] = Field(
         None,
         description="Trajectory data for calculations associated with a task doc.",
     )
 
 
 class EntryDoc(BaseModel):
-    """
-    Model for task entry data
-    """
+    """Model for task entry data."""
 
-    task_id: str = Field(
+    task_id: Optional[str] = Field(
         None,
         description="The (task) ID of this calculation, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
     )
 
-    entry: ComputedStructureEntry = Field(
+    entry: Optional[ComputedStructureEntry] = Field(
         None,
         description="Computed structure entry for the calculation associated with the task doc.",
     )
 
 
 class DeprecationDoc(BaseModel):
-    """
-    Model for task deprecation data
-    """
+    """Model for task deprecation data."""
 
-    task_id: str = Field(
+    task_id: Optional[str] = Field(
         None,
         description="The (task) ID of this calculation, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
     )
 
-    deprecated: bool = Field(
+    deprecated: Optional[bool] = Field(
         None,
         description="Whether the ID corresponds to a deprecated calculation.",
     )
 
-    deprecation_reason: str = Field(
+    deprecation_reason: Optional[str] = Field(
         None,
         description="Reason for deprecation.",
     )
@@ -745,7 +831,11 @@ def _parse_additional_json(dir_name: Path) -> Dict[str, Any]:
     additional_json = {}
     for filename in dir_name.glob("*.json*"):
         key = filename.name.split(".")[0]
-        if key not in ("custodian", "transformations"):
+        # ignore FW.json(.gz) so jobflow doesn't try to parse prev_vasp_dir OutputReferences
+        # was causing atomate2 MP workflows to fail with ValueError: Could not resolve reference
+        # 7f5a7f14-464c-4a5b-85f9-8d11b595be3b not in store or cache
+        # contact @janosh in case of questions
+        if key not in ("custodian", "transformations", "FW"):
             additional_json[key] = loadfn(filename, cls=None)
     return additional_json
 
@@ -782,7 +872,7 @@ def _get_drift_warnings(calc_doc: Calculation) -> List[str]:
 def _get_state(calcs_reversed: List[Calculation], analysis: AnalysisDoc) -> TaskState:
     """Get state from calculation documents and relaxation analysis."""
     all_calcs_completed = all(
-        [c.has_vasp_completed == TaskState.SUCCESS for c in calcs_reversed]
+        c.has_vasp_completed == TaskState.SUCCESS for c in calcs_reversed
     )
     if len(analysis.errors) == 0 and all_calcs_completed:
         return TaskState.SUCCESS  # type: ignore
@@ -861,16 +951,17 @@ def _find_vasp_files(
         vol_files = []
         elph_poscars = []
         for file in files:
+            file_no_path = file.relative_to(path)
             if file.match(f"*vasprun.xml{suffix}*"):
-                vasp_files["vasprun_file"] = file
+                vasp_files["vasprun_file"] = file_no_path
             elif file.match(f"*OUTCAR{suffix}*"):
-                vasp_files["outcar_file"] = file
+                vasp_files["outcar_file"] = file_no_path
             elif file.match(f"*CONTCAR{suffix}*"):
-                vasp_files["contcar_file"] = file
-            elif any([file.match(f"*{f}{suffix}*") for f in volumetric_files]):
-                vol_files.append(file)
+                vasp_files["contcar_file"] = file_no_path
+            elif any(file.match(f"*{f}{suffix}*") for f in volumetric_files):
+                vol_files.append(file_no_path)
             elif file.match(f"*POSCAR.T=*{suffix}*"):
-                elph_poscars.append(file)
+                elph_poscars.append(file_no_path)
 
         if len(vol_files) > 0:
             # add volumetric files if some were found or other vasp files were found

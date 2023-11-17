@@ -13,6 +13,7 @@ from emmet.api.routes.materials.materials.query_operators import (
     FormulaQuery,
     ChemsysQuery,
     SymmetryQuery,
+    LicenseQuery,
 )
 from emmet.api.routes.materials.oxidation_states.query_operators import (
     PossibleOxiStateQuery,
@@ -28,6 +29,10 @@ from emmet.api.routes.materials.summary.query_operators import (
     SearchHasReconstructedQuery,
     SearchStatsQuery,
     SearchESQuery,
+)
+from emmet.api.routes.materials.elasticity.query_operators import (
+    BulkModulusQuery,
+    ShearModulusQuery,
 )
 
 from emmet.api.core.global_header import GlobalHeaderProcessor
@@ -52,12 +57,15 @@ def summary_resource(summary_store):
             SearchMagneticQuery(),
             SearchESQuery(),
             NumericQuery(model=SummaryDoc, excluded_fields=["composition"]),
+            BulkModulusQuery(),
+            ShearModulusQuery(),
             SearchHasReconstructedQuery(),
             HasPropsQuery(),
             DeprecationQuery(),
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(SummaryDoc, default_fields=["material_id"]),
+            LicenseQuery(),
         ],
         hint_scheme=SummaryHintScheme(),
         header_processor=GlobalHeaderProcessor(),

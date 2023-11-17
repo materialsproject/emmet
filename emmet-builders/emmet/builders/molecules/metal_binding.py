@@ -490,7 +490,7 @@ class MetalBindingBuilder(Builder):
             f"Produced {len(binding_docs)} metal binding docs for {formula}"
         )
 
-        return jsanitize([doc.dict() for doc in binding_docs], allow_bson=True)
+        return jsanitize([doc.model_dump() for doc in binding_docs], allow_bson=True)
 
     def update_targets(self, items: List[List[Dict]]):
         """

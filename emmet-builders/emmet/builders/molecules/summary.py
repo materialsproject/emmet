@@ -350,7 +350,7 @@ class SummaryBuilder(Builder):
 
         self.logger.debug(f"Produced {len(summary_docs)} summary docs for {formula}")
 
-        return jsanitize([doc.dict() for doc in summary_docs], allow_bson=True)
+        return jsanitize([doc.model_dump() for doc in summary_docs], allow_bson=True)
 
     def update_targets(self, items: List[List[Dict]]):
         """

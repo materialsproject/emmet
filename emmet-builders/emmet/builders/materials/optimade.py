@@ -112,7 +112,7 @@ class OptimadeMaterialsBuilder(Builder):
             thermo_calcs=thermo_calcs,
         )
 
-        doc = jsanitize(optimade_doc.dict(), allow_bson=True)
+        doc = jsanitize(optimade_doc.model_dump(), allow_bson=True)
 
         return doc
 

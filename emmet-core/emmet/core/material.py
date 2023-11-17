@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Mapping, Type, TypeVar, Union
+from typing import List, Mapping, Type, TypeVar, Union, Optional
 
 from pydantic import BaseModel, Field
 
@@ -55,7 +55,7 @@ class MaterialsDoc(StructureMetadata):
         description="Whether this materials document is deprecated.",
     )
 
-    deprecation_reasons: List[Union[DeprecationMessage, str]] = Field(
+    deprecation_reasons: Optional[List[Union[DeprecationMessage, str]]] = Field(
         None,
         description="List of deprecation tags detailing why this materials document isn't valid.",
     )
@@ -72,7 +72,7 @@ class MaterialsDoc(StructureMetadata):
 
     deprecated_tasks: List[str] = Field([], title="Deprecated Tasks")
 
-    calc_types: Mapping[str, str] = Field(
+    calc_types: Optional[Mapping[str, str]] = Field(
         None,
         description="Calculation types for all the calculations that make up this material.",
     )
@@ -87,7 +87,7 @@ class MaterialsDoc(StructureMetadata):
         default_factory=datetime.utcnow,
     )
 
-    origins: List[PropertyOrigin] = Field(
+    origins: Optional[List[PropertyOrigin]] = Field(
         None, description="Dictionary for tracking the provenance of properties."
     )
 
@@ -132,7 +132,7 @@ class CoreMoleculeDoc(MoleculeMetadata):
     )
 
     # TODO: Why might a molecule be deprecated?
-    deprecation_reasons: List[str] = Field(
+    deprecation_reasons: Optional[List[str]] = Field(
         None,
         description="List of deprecation tags detailing why this molecules document isn't valid",
     )
@@ -151,7 +151,7 @@ class CoreMoleculeDoc(MoleculeMetadata):
     # TODO: Should this be MPID?
     deprecated_tasks: List[str] = Field([], title="Deprecated Tasks")
 
-    calc_types: Mapping[str, str] = Field(
+    calc_types: Optional[Mapping[str, str]] = Field(
         None,
         description="Calculation types for all the tasks that make up this molecule",
     )
@@ -166,7 +166,7 @@ class CoreMoleculeDoc(MoleculeMetadata):
         default_factory=datetime.utcnow,
     )
 
-    origins: List[PropertyOrigin] = Field(
+    origins: Optional[List[PropertyOrigin]] = Field(
         None, description="Dictionary for tracking the provenance of properties"
     )
 

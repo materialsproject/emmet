@@ -27,7 +27,7 @@ class CalcType(ValueEnum):
 class TaskDocument(BaseTaskDocument, StructureMetadata):
     """Task Document for a FEFF XAS Calculation. Doesn't support EELS for now"""
 
-    calc_code = "FEFF"
+    calc_code: str = "FEFF"
 
     structure: Structure
     input_parameters: Dict[str, Any] = Field(
@@ -45,7 +45,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
         ..., title="Absorption Edge", description="The interaction edge for XAS"
     )
 
-    # TEMP Stub properties for compatability with atomate drone
+    # TEMP Stub properties for compatibility with atomate drone
 
     @property
     def absorbing_element(self) -> Element:

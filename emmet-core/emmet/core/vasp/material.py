@@ -1,7 +1,7 @@
 """ Core definition of a Materials Document """
-from typing import Dict, List, Mapping
+from typing import Dict, List, Mapping, Optional
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedStructureEntry
@@ -16,25 +16,34 @@ from emmet.core.vasp.task_valid import TaskDocument
 SETTINGS = EmmetSettings()
 
 
+class BlessedCalcs(BaseModel):
+    GGA: Optional[ComputedStructureEntry] = None
+    GGA_U: Optional[ComputedStructureEntry] = Field(None, alias="GGA+U")
+    PBESol: Optional[ComputedStructureEntry] = None
+    SCAN: Optional[ComputedStructureEntry] = None
+    R2SCAN: Optional[ComputedStructureEntry] = None
+    HSE: Optional[ComputedStructureEntry] = None
+
+
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
     calc_types: Mapping[str, CalcType] = Field(  # type: ignore
         None,
         description="Calculation types for all the calculations that make up this material",
     )
-    task_types: Mapping[str, TaskType] = Field(
+    task_types: Optional[Mapping[str, TaskType]] = Field(
         None,
         description="Task types for all the calculations that make up this material",
     )
-    run_types: Mapping[str, RunType] = Field(
+    run_types: Optional[Mapping[str, RunType]] = Field(
         None,
         description="Run types for all the calculations that make up this material",
     )
 
-    origins: List[PropertyOrigin] = Field(
+    origins: Optional[List[PropertyOrigin]] = Field(
         None, description="Mappingionary for tracking the provenance of properties"
     )
 
-    entries: Mapping[RunType, ComputedStructureEntry] = Field(
+    entries: Optional[BlessedCalcs] = Field(
         None, description="Dictionary for tracking entries for VASP calculations"
     )
 

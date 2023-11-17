@@ -14,7 +14,6 @@ from maggma.api.query_operator import (
     NumericQuery,
 )
 
-from emmet.api.routes.materials.materials.hint_scheme import MaterialsHintScheme
 from emmet.api.routes.materials.materials.query_operators import (
     ElementsQuery,
     FormulaQuery,
@@ -25,6 +24,8 @@ from emmet.api.routes.materials.materials.query_operators import (
     FindStructureQuery,
     FormulaAutoCompleteQuery,
     MultiMaterialIDQuery,
+    LicenseQuery,
+    BlessedCalcsQuery,
 )
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
@@ -60,6 +61,41 @@ def formula_autocomplete_resource(formula_autocomplete_store):
     return resource
 
 
+def blessed_tasks_resource(materials_store):
+    resource = ReadOnlyResource(
+        materials_store,
+        MaterialsDoc,
+        query_operators=[
+            BlessedCalcsQuery(),
+            MultiMaterialIDQuery(),
+            FormulaQuery(),
+            ChemsysQuery(),
+            ElementsQuery(),
+            MultiTaskIDQuery(),
+            DeprecationQuery(),
+            NumericQuery(model=MaterialsDoc),
+            SortQuery(),
+            PaginationQuery(),
+            LicenseQuery(),
+        ],
+        key_fields=[
+            "material_id",
+            "chemsys",
+            "formula_pretty",
+            "deprecated",
+            "entries",
+        ],
+        header_processor=GlobalHeaderProcessor(),
+        tags=["Materials"],
+        sub_path="/core/blessed_tasks/",
+        enable_get_by_key=False,
+        disable_validation=True,
+        timeout=MAPISettings().TIMEOUT,
+    )
+
+    return resource
+
+
 def materials_resource(materials_store):
     resource = ReadOnlyResource(
         materials_store,
@@ -79,9 +115,9 @@ def materials_resource(materials_store):
                 MaterialsDoc,
                 default_fields=["material_id", "formula_pretty", "last_updated"],
             ),
+            LicenseQuery(),
         ],
         header_processor=GlobalHeaderProcessor(),
-        hint_scheme=MaterialsHintScheme(),
         tags=["Materials"],
         sub_path="/core/",
         disable_validation=True,

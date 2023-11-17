@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Sequence, Type, TypeVar, List
+from typing import Sequence, Type, TypeVar, List, Optional
 
 from pydantic import Field
 from pymatgen.core.structure import Molecule
@@ -43,22 +43,22 @@ class PropertyDoc(MoleculeMetadata):
         description="Whether this property document is deprecated.",
     )
 
-    deprecation_reasons: List[str] = Field(
+    deprecation_reasons: Optional[List[str]] = Field(
         None,
         description="List of deprecation tags detailing why this document isn't valid",
     )
 
-    level_of_theory: LevelOfTheory = Field(
+    level_of_theory: Optional[LevelOfTheory] = Field(
         None, description="Level of theory used to generate this property document."
     )
 
-    solvent: str = Field(
+    solvent: Optional[str] = Field(
         None,
         description="String representation of the solvent "
         "environment used to generate this property document.",
     )
 
-    lot_solvent: str = Field(
+    lot_solvent: Optional[str] = Field(
         None,
         description="String representation of the level of theory and solvent "
         "environment used to generate this property document.",

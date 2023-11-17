@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
 from pydantic import Field
@@ -15,7 +15,7 @@ from emmet.core.mpid import MPID
 class OxidationStateDoc(PropertyDoc):
     """Oxidation states computed from the structure"""
 
-    property_name = "oxidation"
+    property_name: str = "oxidation"
 
     structure: Structure = Field(
         ...,
@@ -30,7 +30,9 @@ class OxidationStateDoc(PropertyDoc):
     average_oxidation_states: Dict[str, float] = Field(
         description="Average oxidation states for each unique species."
     )
-    method: str = Field(None, description="Method used to compute oxidation states.")
+    method: Optional[str] = Field(
+        None, description="Method used to compute oxidation states."
+    )
 
     @classmethod
     def from_structure(cls, structure: Structure, material_id: MPID, **kwargs):  # type: ignore[override]

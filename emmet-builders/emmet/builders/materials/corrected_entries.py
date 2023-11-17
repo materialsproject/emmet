@@ -4,6 +4,7 @@ from itertools import chain
 from typing import Dict, Iterable, Iterator, List, Optional
 from math import ceil
 import copy
+from datetime import datetime
 
 from maggma.core import Builder, Store
 from maggma.utils import grouper
@@ -36,7 +37,7 @@ class CorrectedEntriesBuilder(Builder):
             corrected_entries (Store): Store to output corrected entry data
             oxidation_states (Store): Store of oxidation state data to use in correction scheme application
             query (dict): dictionary to limit materials to be analyzed
-            compatibility ([Compatability]): Compatability module
+            compatibility ([Compatibility]): Compatibility module
                 to ensure energies are compatible
             chunk_size (int): Size of chemsys chunks to process at any one time.
         """
@@ -52,9 +53,9 @@ class CorrectedEntriesBuilder(Builder):
         if self.corrected_entries.key != "chemsys":
             warnings.warn(
                 "Key for the corrected_entries store is incorrect and has been changed "
-                f"from {self.corrected_entries.key} to chemsys!"
+                f"from {self.corrected_entries.key} to thermo_id!"
             )
-            self.corrected_entries.key = "thermo_id"
+            self.corrected_entries.key = "chemsys"
 
         if self.materials.key != "material_id":
             warnings.warn(
@@ -145,12 +146,12 @@ class CorrectedEntriesBuilder(Builder):
 
         corrected_entries = {}
 
-        for compatability in self.compatibility:
-            if compatability is not None:
+        for compatibility in self.compatibility:
+            if compatibility is not None:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     with HiddenPrints():
-                        if compatability.name == "MP DFT mixing scheme":
+                        if compatibility.name == "MP DFT mixing scheme":
                             thermo_type = ThermoType.GGA_GGA_U_R2SCAN
 
                             if "R2SCAN" in all_entry_types:
@@ -161,7 +162,7 @@ class CorrectedEntriesBuilder(Builder):
                                 ]
                                 corrected_entries["R2SCAN"] = only_scan_pd_entries
 
-                                pd_entries = compatability.process_entries(
+                                pd_entries = compatibility.process_entries(
                                     copy.deepcopy(entries)
                                 )
 
@@ -169,14 +170,14 @@ class CorrectedEntriesBuilder(Builder):
                                 corrected_entries["R2SCAN"] = None
                                 pd_entries = None
 
-                        elif compatability.name == "MP2020":
+                        elif compatibility.name == "MP2020":
                             thermo_type = ThermoType.GGA_GGA_U
-                            pd_entries = compatability.process_entries(
+                            pd_entries = compatibility.process_entries(
                                 copy.deepcopy(entries)
                             )
                         else:
                             thermo_type = ThermoType.UNKNOWN
-                            pd_entries = compatability.process_entries(
+                            pd_entries = compatibility.process_entries(
                                 copy.deepcopy(entries)
                             )
 
@@ -194,7 +195,7 @@ class CorrectedEntriesBuilder(Builder):
 
         doc = CorrectedEntriesDoc(chemsys=chemsys, entries=corrected_entries)
 
-        return jsanitize(doc.dict(), allow_bson=True)
+        return jsanitize(doc.model_dump(), allow_bson=True)
 
     def update_targets(self, items):
         """
@@ -267,13 +268,14 @@ class CorrectedEntriesBuilder(Builder):
         # Convert entries into ComputedEntries and store
         for doc in materials_docs:
             for r_type, entry_dict in doc.get("entries", {}).items():
-                entry_dict["data"]["oxidation_states"] = oxi_states_data.get(
-                    entry_dict["data"]["material_id"], {}
-                )
-                entry_dict["data"]["run_type"] = r_type
-                elsyms = sorted(set([el for el in entry_dict["composition"]]))
-                self._entries_cache["-".join(elsyms)].append(entry_dict)
-                all_entries.append(entry_dict)
+                if entry_dict:
+                    entry_dict["data"]["oxidation_states"] = oxi_states_data.get(
+                        entry_dict["data"]["material_id"], {}
+                    )
+                    entry_dict["data"]["run_type"] = r_type
+                    elsyms = sorted(set([el for el in entry_dict["composition"]]))
+                    self._entries_cache["-".join(elsyms)].append(entry_dict)
+                    all_entries.append(entry_dict)
 
         self.logger.info(f"Total entries in {chemsys} : {len(all_entries)}")
 
@@ -309,7 +311,7 @@ class CorrectedEntriesBuilder(Builder):
             if (chemsys not in corrected_entries_chemsys_dates)
             or (
                 materials_chemsys_dates[chemsys]
-                > corrected_entries_chemsys_dates[chemsys]
+                > datetime.fromisoformat(corrected_entries_chemsys_dates[chemsys])
             )
         ]
 

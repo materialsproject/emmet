@@ -1,7 +1,8 @@
-from typing import Literal
-from pydantic import BaseSettings, Field
+from typing import Literal, Optional
+from pydantic import Field
 from emmet.api import __file__ as root_dir
 import os
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class MAPISettings(BaseSettings):
@@ -19,7 +20,7 @@ class MAPISettings(BaseSettings):
 
     DB_VERSION: str = Field("2021.11.10", description="Database version")
 
-    DB_NAME_SUFFIX: Literal["blue", "green"] = Field(
+    DB_NAME_SUFFIX: Optional[Literal["blue", "green"]] = Field(
         None, description="Database name suffix. Either blue or green."
     )
 
@@ -27,6 +28,4 @@ class MAPISettings(BaseSettings):
         30,
         description="Number of seconds to wait for pymongo operations before raising a timeout error.",
     )
-
-    class Config:
-        env_prefix = "MAPI_"
+    model_config = SettingsConfigDict(env_prefix="MAPI_")

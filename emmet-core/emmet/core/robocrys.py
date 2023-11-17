@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Optional
 
 from pydantic import BaseModel, Field
 from pymatgen.core.structure import Structure
@@ -16,7 +16,7 @@ class MineralData(BaseModel):
         description="Mineral type.",
     )
 
-    name: str = Field(None, description="The mineral name if found.")
+    name: Optional[str] = Field(None, description="The mineral name if found.")
 
 
 class CondensedStructureData(BaseModel):
@@ -33,17 +33,17 @@ class CondensedStructureData(BaseModel):
         description="Dimensionality of the material.",
     )
 
-    formula: str = Field(
+    formula: Optional[str] = Field(
         None,
         description="Formula for the material.",
     )
 
-    spg_symbol: str = Field(
+    spg_symbol: Optional[str] = Field(
         None,
         description="Space group symbol of the material.",
     )
 
-    crystal_system: str = Field(
+    crystal_system: Optional[str] = Field(
         None,
         description="Crystal system of the material.",
     )
@@ -57,10 +57,10 @@ class RobocrystallogapherDoc(PropertyDoc):
 
     """
 
-    property_name = "robocrys"
+    property_name: str = "robocrys"
 
     description: str = Field(
-        description="Decription text from robocrytallographer.",
+        description="Description text from robocrytallographer.",
     )
 
     condensed_structure: CondensedStructureData = Field(
