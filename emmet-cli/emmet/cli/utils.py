@@ -484,7 +484,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
 
             shutil.move(vaspdir, f".quarantine/{validation_dir}/{launcher}/")
 
-            logger.warning(f"Validation: Moved {vaspdir} to .quarantine/{validation_dir}/ !")
+            logger.warning(f"Moved {vaspdir} to .quarantine/{validation_dir}/ !")
 
             continue
 
