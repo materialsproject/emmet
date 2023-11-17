@@ -38,8 +38,8 @@ def test_summary_hint_scheme():
             "sort": {"energy_above_hull": 1},
         }
     ) == {
-        "count_hint": {"deprecated": 1, "builder_meta.license": 1},
-        "agg_hint": {"deprecated": 1, "builder_meta.license": 1},
+        "count_hint": {"has_props.$**": 1},
+        "agg_hint": {"has_props.$**": 1},
     }
     assert scheme.generate_hints(
         {
