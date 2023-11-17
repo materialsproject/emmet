@@ -149,10 +149,15 @@ class MPTriager(Triager):
                     NN = {}
                 coordination_numbers.append(NN)
 
+        if isinstance(task_doc,TaskDoc):
+            potcars = [ps.titel for ps in task_doc.input.potcar_spec]
+        elif isinstance(task_doc,TaskDocument):
+            potcars = [ps["titel"] for ps in task_doc.input.potcar_spec]
+
         return cls(
             structure=structure,
             coordination_envs=coordination_numbers,
-            potcars=[ps.titel for ps in task_doc.input.potcar_spec],
+            potcars=potcars,
         )
 
 
