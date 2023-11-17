@@ -131,7 +131,7 @@ if db_uri:
     elasticity_store = MongoURIStore(
         uri=db_uri,
         database=f"mp_core_{db_suffix}",
-        key="task_id",
+        key="material_id",
         collection_name="elasticity",
     )
 
