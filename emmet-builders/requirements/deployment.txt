@@ -32,9 +32,9 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.29.2
+boto3==1.29.3
     # via maggma
-botocore==1.32.2
+botocore==1.32.3
     # via
     #   boto3
     #   s3transfer
@@ -69,7 +69,7 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all,ml]==0.73.2
+emmet-core[all,ml]==0.73.3
     # via emmet-builders (emmet/emmet-builders/setup.py)
 exceptiongroup==1.1.3
     # via anyio
@@ -148,7 +148,7 @@ matminer==0.9.0
     # via
     #   emmet-builders (emmet/emmet-builders/setup.py)
     #   robocrys
-matplotlib==3.8.1
+matplotlib==3.8.2
     # via
     #   -r python/requirements.txt
     #   ase
