@@ -18,8 +18,8 @@ class SummaryHintScheme(HintScheme):
             elif "composition_reduced" in pure_params:
                 hints["count_hint"] = {"composition_reduced.$**": 1}
             else:
-                for param in pure_params:
-                    if param not in ["deprecated", "builder_meta"]:
+                for param in query["criteria"]:
+                    if param not in ["deprecated", "builder_meta.license"]:
                         hints["count_hint"] = {
                             "deprecated": 1,
                             "builder_meta.license": 1,
