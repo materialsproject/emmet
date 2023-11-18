@@ -161,3 +161,30 @@ def test_calculation(test_dir, object_name, task_name):
 
     # and decoded
     MontyDecoder().process_decoded(d)
+
+
+def test_PotcarSpec(test_dir):
+    from emmet.core.vasp.calculation import PotcarSpec
+    from pymatgen.io.vasp import PotcarSingle, Potcar
+
+    try:
+        # First test, PotcarSingle object
+        potcar = PotcarSingle.from_symbol_and_functional(symbol="Si", functional="PBE")
+        ps_spec = PotcarSpec.from_potcar_single(potcar_single=potcar)
+
+        assert ps_spec.titel == potcar.symbol
+        assert ps_spec.hash == potcar.md5_header_hash
+        assert ps_spec.summary_stats == potcar._summary_stats
+
+        # Second test, Potcar object containing mulitple PotcarSingle obejcts
+        potcars = Potcar(symbols=["Ga_d", "As"], functional="PBE")
+        ps_spec = PotcarSpec.from_potcar(potcar=potcars)
+
+        for ips, ps in enumerate(ps_spec):
+            assert ps.titel == potcars[ips].symbol
+            assert ps.hash == potcars[ips].md5_header_hash
+            assert ps.summary_stats == potcars[ips]._summary_stats
+
+    except (OSError, ValueError):
+        # missing Pymatgen POTCARs, cannot perform test
+        assert True

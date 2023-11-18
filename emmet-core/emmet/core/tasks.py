@@ -224,7 +224,7 @@ class CustodianDoc(BaseModel):
     )
     job: Optional[Any] = Field(
         None,
-        title="Cusotodian Job Data",
+        title="Custodian Job Data",
         description="Job data logged by custodian.",
     )
 

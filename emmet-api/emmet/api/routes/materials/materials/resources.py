@@ -14,7 +14,6 @@ from maggma.api.query_operator import (
     NumericQuery,
 )
 
-from emmet.api.routes.materials.materials.hint_scheme import MaterialsHintScheme
 from emmet.api.routes.materials.materials.query_operators import (
     ElementsQuery,
     FormulaQuery,
@@ -87,7 +86,6 @@ def blessed_tasks_resource(materials_store):
             "entries",
         ],
         header_processor=GlobalHeaderProcessor(),
-        hint_scheme=MaterialsHintScheme(),
         tags=["Materials"],
         sub_path="/core/blessed_tasks/",
         enable_get_by_key=False,
@@ -120,7 +118,6 @@ def materials_resource(materials_store):
             LicenseQuery(),
         ],
         header_processor=GlobalHeaderProcessor(),
-        hint_scheme=MaterialsHintScheme(),
         tags=["Materials"],
         sub_path="/core/",
         disable_validation=True,
