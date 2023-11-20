@@ -40,7 +40,7 @@ bytecode==0.15.1
     # via ddtrace
 cattrs==23.2.1
     # via ddtrace
-certifi==2023.7.22
+certifi==2023.11.17
     # via requests
 cffi==1.16.0
     # via
@@ -61,7 +61,7 @@ cycler==0.12.1
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==2.0.9
+ddtrace==2.0.10
     # via emmet-api (emmet/emmet-api/setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -83,7 +83,7 @@ fastapi==0.104.1
     #   maggma
 flask==3.0.0
     # via mongogrant
-fonttools==4.44.3
+fonttools==4.45.0
     # via matplotlib
 future==0.18.3
     # via
@@ -279,7 +279,7 @@ requests==2.31.0
     #   pymatgen
 robocrys==0.2.8
     # via emmet-core
-rpds-py==0.13.0
+rpds-py==0.13.1
     # via
     #   jsonschema
     #   referencing
@@ -294,7 +294,7 @@ s3transfer==0.7.0
     # via boto3
 scikit-learn==1.3.2
     # via matminer
-scipy==1.11.3
+scipy==1.11.4
     # via
     #   -r python/requirements.txt
     #   ase

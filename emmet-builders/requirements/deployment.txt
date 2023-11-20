@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=emmet/emmet-builders/requirements/deployment.txt emmet/emmet-builders/setup.py python/requirements.txt
 #
-aiohttp==3.8.6
+aiohttp==3.9.0
     # via fsspec
 aioitertools==0.11.0
     # via maggma
@@ -38,17 +38,15 @@ botocore==1.32.3
     # via
     #   boto3
     #   s3transfer
-certifi==2023.7.22
+certifi==2023.11.17
     # via requests
 cffi==1.16.0
     # via
     #   cryptography
     #   pynacl
 charset-normalizer==3.3.2
-    # via
-    #   aiohttp
-    #   requests
-chgnet==0.3.1
+    # via requests
+chgnet==0.3.2
     # via emmet-core
 click==8.1.7
     # via
@@ -81,7 +79,7 @@ filelock==3.13.1
     #   triton
 flask==3.0.0
     # via mongogrant
-fonttools==4.44.3
+fonttools==4.45.0
     # via matplotlib
 frozenlist==1.4.0
     # via
@@ -339,7 +337,7 @@ requests==2.31.0
     #   pymatgen
 robocrys==0.2.8
     # via emmet-core
-rpds-py==0.13.0
+rpds-py==0.13.1
     # via
     #   jsonschema
     #   referencing
@@ -354,7 +352,7 @@ s3transfer==0.7.0
     # via boto3
 scikit-learn==1.3.2
     # via matminer
-scipy==1.11.3
+scipy==1.11.4
     # via
     #   -r python/requirements.txt
     #   ase
