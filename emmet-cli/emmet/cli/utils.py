@@ -432,8 +432,9 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                 shutil.move(vaspdir, f".quarantine/{quarantine_dir}/{launcher}/")
                 logger.warning(f"Moved {vaspdir} to .quarantine/{quarantine_dir}/ !")
             else:
-                logger.warning(f"Would move {vaspdir} to .quarantine/{quarantine_dir}/ !")
-
+                logger.warning(
+                    f"Would move {vaspdir} to .quarantine/{quarantine_dir}/ !"
+                )
 
             if quarantine_dir == "unknown_error":
                 logger.warning(
@@ -489,7 +490,9 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                 shutil.move(vaspdir, f".quarantine/{validation_dir}/{launcher}/")
                 logger.warning(f"Moved {vaspdir} to .quarantine/{validation_dir}/ !")
             else:
-                logger.warning(f"Would move {vaspdir} to .quarantine/{validation_dir}/ !")
+                logger.warning(
+                    f"Would move {vaspdir} to .quarantine/{validation_dir}/ !"
+                )
 
             continue
 
@@ -514,9 +517,13 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
 
             if run:
                 shutil.move(vaspdir, f".quarantine/{triage_dir}/{launcher}/")
-                logger.warning(f"Triager: Moved {vaspdir} to .quarantine/{triage_dir}/ !")
+                logger.warning(
+                    f"Triager: Moved {vaspdir} to .quarantine/{triage_dir}/ !"
+                )
             else:
-                logger.warning(f"Triager: Would move {vaspdir} to .quarantine/{triage_dir}/ !")
+                logger.warning(
+                    f"Triager: Would move {vaspdir} to .quarantine/{triage_dir}/ !"
+                )
 
             continue
 

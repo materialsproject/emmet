@@ -117,7 +117,7 @@ class EmmetCLISettings(EmmetSettings):
     )
 
     tracker: Dict[str, str] = Field(
-        {"org": "materialsproject", "repo": "devops"}, description=""
+        {"org": "esoteric-ephemera", "repo": "emmet-cli-logs"}, description=""
     )
 
     year_tags: List[str] = Field(
