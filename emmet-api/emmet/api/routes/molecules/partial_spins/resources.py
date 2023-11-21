@@ -29,7 +29,6 @@ def spins_resource(spins_store):
             ChargeSpinQuery(),
             MethodQuery(),
             MultiPropertyIDQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 PartialSpinsDoc,

@@ -38,7 +38,6 @@ def orbitals_resource(orbital_store):
             NBOLonePairQuery(),
             NBOBondQuery(),
             NBOInteractionQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 OrbitalDoc,

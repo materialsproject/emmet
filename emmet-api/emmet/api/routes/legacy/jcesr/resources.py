@@ -21,7 +21,6 @@ def jcesr_resource(molecules_store):
             MoleculeElementsQuery(),
             MoleculeFormulaQuery(),
             MultipleTaskIDsQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(MoleculesDoc, default_fields=["task_id"]),
         ],

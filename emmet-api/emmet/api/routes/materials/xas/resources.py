@@ -22,7 +22,6 @@ def xas_resource(xas_store):
             ElementsQuery(),
             XASQuery(),
             XASTaskIDQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 XASDoc,

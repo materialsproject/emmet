@@ -20,7 +20,6 @@ def bonds_resource(bonds_store):
             MultiMaterialIDQuery(),
             BondLengthQuery(),
             CoordinationEnvsQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 BondingDoc,

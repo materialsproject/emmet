@@ -50,7 +50,6 @@ def thermo_resource(thermo_store):
             ChemsysQuery(),
             IsStableQuery(),
             NumericQuery(model=ThermoDoc),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 ThermoDoc, default_fields=["thermo_id", "material_id", "last_updated"]

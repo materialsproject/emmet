@@ -23,7 +23,6 @@ def elasticity_resource(elasticity_store):
             BulkModulusQuery(),
             ShearModulusQuery(),
             PoissonQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 ElasticityDoc,

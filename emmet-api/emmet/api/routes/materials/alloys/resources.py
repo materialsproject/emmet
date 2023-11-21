@@ -18,7 +18,6 @@ def alloy_pairs_resource(alloy_pairs_store):
         query_operators=[
             MaterialIDsSearchQuery(),
             FormulaSearchQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 AlloyPairDoc,

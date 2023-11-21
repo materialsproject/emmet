@@ -31,7 +31,6 @@ def metal_binding_resource(metal_binding_store):
             MethodQuery(),
             BindingDataQuery(),
             MultiPropertyIDQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 MetalBindingDoc,

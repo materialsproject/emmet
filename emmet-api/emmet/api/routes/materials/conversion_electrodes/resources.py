@@ -28,7 +28,6 @@ def conversion_electrodes_resource(conversion_electrodes_store):
             WorkingIonQuery(),
             ElectrodeElementsQuery(),
             NumericQuery(model=ConversionElectrodeDoc),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 ConversionElectrodeDoc,

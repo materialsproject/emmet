@@ -60,7 +60,6 @@ def mol_assoc_resource(assoc_store):
             HashQuery(),
             DeprecationQuery(),
             NumericQuery(model=MoleculeDoc),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 MoleculeDoc,

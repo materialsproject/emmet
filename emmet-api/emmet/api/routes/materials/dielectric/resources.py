@@ -15,7 +15,6 @@ def dielectric_resource(dielectric_store):
         query_operators=[
             MultiMaterialIDQuery(),
             DielectricQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 DielectricDoc, default_fields=["material_id", "last_updated"]

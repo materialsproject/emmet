@@ -15,7 +15,6 @@ def piezo_resource(piezo_store):
         query_operators=[
             MultiMaterialIDQuery(),
             PiezoelectricQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 PiezoelectricDoc, default_fields=["material_id", "last_updated"]

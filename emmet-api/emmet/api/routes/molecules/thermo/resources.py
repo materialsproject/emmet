@@ -48,7 +48,6 @@ def thermo_resource(thermo_store):
                     "rt",
                 ],
             ),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 MoleculeThermoDoc,

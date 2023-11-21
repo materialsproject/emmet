@@ -47,7 +47,6 @@ def redox_resource(redox_store):
                     "oxidation_potentials",
                 ],
             ),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 RedoxDoc,

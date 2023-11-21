@@ -15,7 +15,6 @@ def magnetism_resource(magnetism_store):
         query_operators=[
             MultiMaterialIDQuery(),
             MagneticQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 MagnetismDoc, default_fields=["material_id", "last_updated"]

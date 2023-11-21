@@ -28,7 +28,6 @@ def insertion_electrodes_resource(insertion_electrodes_store):
             WorkingIonQuery(),
             ElectrodeElementsQuery(),
             NumericQuery(model=InsertionElectrodeDoc),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 InsertionElectrodeDoc,

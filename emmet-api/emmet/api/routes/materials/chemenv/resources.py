@@ -25,7 +25,6 @@ def chemenv_resource(chemenv_store):
             ChemEnvQuery(),
             ElementsQuery(),
             NumericQuery(model=ChemEnvDoc, excluded_fields=["valences"]),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 ChemEnvDoc,

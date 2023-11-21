@@ -60,7 +60,6 @@ def molecules_resource(molecules_store):
             HashQuery(),
             DeprecationQuery(),
             NumericQuery(model=MoleculeDoc),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 MoleculeDoc,

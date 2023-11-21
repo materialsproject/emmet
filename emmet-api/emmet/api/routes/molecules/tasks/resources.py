@@ -30,7 +30,6 @@ def task_resource(task_store):
             ChemsysQuery(),
             ElementsQuery(),
             MultipleTaskIDsQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 TaskDocument,

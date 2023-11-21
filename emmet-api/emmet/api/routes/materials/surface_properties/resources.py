@@ -17,7 +17,6 @@ def surface_props_resource(surface_prop_store):
         query_operators=[
             NumericQuery(model=SurfacePropDoc),
             ReconstructedQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(SurfacePropDoc, default_fields=["task_id"]),
         ],

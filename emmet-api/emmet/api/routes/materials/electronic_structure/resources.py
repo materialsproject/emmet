@@ -36,7 +36,6 @@ def es_resource(es_store):
             ElementsQuery(),
             NumericQuery(model=ElectronicStructureDoc),
             DeprecationQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 ElectronicStructureDoc, default_fields=["material_id", "last_updated"]
@@ -59,7 +58,6 @@ def bs_resource(es_store):
         query_operators=[
             BSDataQuery(),
             DeprecationQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 ElectronicStructureDoc,
@@ -103,7 +101,6 @@ def dos_resource(es_store):
         query_operators=[
             DOSDataQuery(),
             DeprecationQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 ElectronicStructureDoc,

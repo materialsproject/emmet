@@ -35,7 +35,6 @@ def summary_resource(summary_store):
             HasPropsQuery(),
             ChargeSpinQuery(),
             DeprecationQuery(),
-            SortQuery(),
             PaginationQuery(),
             NumericQuery(
                 model=MoleculeSummaryDoc,

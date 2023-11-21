@@ -25,7 +25,6 @@ def gb_resource(gb_store):
                 model=GrainBoundaryDoc, excluded_fields=["rotation_axis", "gb_plane"]
             ),
             GBStructureQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 GrainBoundaryDoc, default_fields=["task_id", "last_updated"]

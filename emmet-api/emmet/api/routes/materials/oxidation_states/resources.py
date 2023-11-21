@@ -29,7 +29,6 @@ def oxi_states_resource(oxi_states_store):
             FormulaQuery(),
             ChemsysQuery(),
             PossibleOxiStateQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 OxidationStateDoc, default_fields=["material_id", "last_updated"]

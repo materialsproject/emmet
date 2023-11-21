@@ -29,7 +29,6 @@ def absorption_resource(absorption_store):
                     "energy_max",
                 ],
             ),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 AbsorptionDoc,

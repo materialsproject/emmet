@@ -62,7 +62,6 @@ def summary_resource(summary_store):
             SearchHasReconstructedQuery(),
             HasPropsQuery(),
             DeprecationQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(SummaryDoc, default_fields=["material_id"]),
             LicenseQuery(),

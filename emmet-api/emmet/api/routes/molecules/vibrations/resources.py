@@ -28,7 +28,6 @@ def vibration_resource(vibes_store):
             ElementsQuery(),
             ChargeSpinQuery(),
             MultiPropertyIDQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 VibrationDoc,

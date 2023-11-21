@@ -29,7 +29,6 @@ def charges_resource(charges_store):
             ChargeSpinQuery(),
             MethodQuery(),
             MultiPropertyIDQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 PartialChargesDoc,

@@ -33,7 +33,6 @@ def bonding_resource(bonds_store):
             MethodQuery(),
             MultiPropertyIDQuery(),
             BondTypeLengthQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 MoleculeBondingDoc,
