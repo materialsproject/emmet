@@ -1,5 +1,6 @@
 """ Core definition of a Materials Document """
 from typing import Dict, List, Mapping, Optional
+from emmet.core.base import EmmetMeta
 
 from pydantic import Field, BaseModel
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
@@ -55,6 +56,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             str, int
         ] = SETTINGS.VASP_STRUCTURE_QUALITY_SCORES,
         use_statics: bool = SETTINGS.VASP_USE_STATICS,
+        commercial_license: bool = True,
     ) -> "MaterialsDoc":
         """
         Converts a group of tasks into one material
@@ -63,6 +65,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             task_group: List of task document
             structure_quality_scores: quality scores for various calculation types
             use_statics: Use statics to define a material
+            commercial_license: Whether the data should be licensed with BY-C (otherwise BY-NC).
         """
         if len(task_group) == 0:
             raise Exception("Must have more than one task in the group.")
@@ -196,6 +199,9 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
                 "Individual material entry must contain at least one GGA or GGA+U calculation"
             )
 
+        # Builder meta and license
+        builder_meta = EmmetMeta(license="BY-C" if commercial_license else "BY-NC")
+
         return cls.from_structure(
             structure=structure,
             material_id=material_id,
@@ -210,17 +216,21 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             deprecated_tasks=deprecated_tasks,
             origins=origins,
             entries=entries,
+            builder_meta=builder_meta,
         )
 
     @classmethod
     def construct_deprecated_material(
-        cls, task_group: List[TaskDocument]
+        cls,
+        task_group: List[TaskDocument],
+        commercial_license: bool = True,
     ) -> "MaterialsDoc":
         """
         Converts a group of tasks into a deprecated material
 
         Args:
             task_group: List of task document
+            commercial_license: Whether the data should be licensed with BY-C (otherwise BY-NC).
         """
         if len(task_group) == 0:
             raise Exception("Must have more than one task in the group.")
@@ -246,6 +256,9 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         # Deprecated
         deprecated = True
 
+        # Builder meta and license
+        builder_meta = EmmetMeta(license="BY-C" if commercial_license else "BY-NC")
+
         return cls.from_structure(
             structure=structure,
             material_id=material_id,
@@ -257,4 +270,5 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             task_types=task_types,
             deprecated=deprecated,
             deprecated_tasks=deprecated_tasks,
+            builder_meta=builder_meta,
         )
