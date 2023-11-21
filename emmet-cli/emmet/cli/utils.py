@@ -381,6 +381,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
     logger.info(f"Using sandboxes {sbxn}.")
     no_dupe_check = ctx.parent.parent.params["no_dupe_check"]
     run = ctx.parent.parent.params["run"]
+    quar = ctx.params["quar"]
     projection = {"tags": 1, "task_id": 1}
     # projection = {"tags": 1, "task_id": 1, "calcs_reversed": 1}
     count = 0
@@ -486,7 +487,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
             else:
                 validation_dir = validation_doc.reasons[0].value
 
-            if run:
+            if run and quar:
                 shutil.move(vaspdir, f".quarantine/{validation_dir}/{launcher}/")
                 logger.warning(f"Moved {vaspdir} to .quarantine/{validation_dir}/ !")
             else:
@@ -515,7 +516,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
             else:
                 triage_dir = triage_doc.reasons[0].value
 
-            if run:
+            if run and quar:
                 shutil.move(vaspdir, f".quarantine/{triage_dir}/{launcher}/")
                 logger.warning(
                     f"Triager: Moved {vaspdir} to .quarantine/{triage_dir}/ !"

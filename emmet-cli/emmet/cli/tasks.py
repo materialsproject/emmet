@@ -613,6 +613,11 @@ def parsers(ctx, task_ids):
     default=["precondition", "relax1", "relax2", "static"],
     help="Naming scheme for multiple calculations in one folder - subfolder or extension.",
 )
+@click.option(
+    "--quar",
+    is_flag=True,
+    help="Move launchers that fail validation into quarantine direcory"
+)
 def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C901
     """Parse VASP launchers into tasks"""
     ctx = click.get_current_context()
