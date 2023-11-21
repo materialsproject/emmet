@@ -5,7 +5,7 @@ import numpy as np
 from pydantic import ConfigDict, Field, ImportString
 from pymatgen.core.structure import Structure
 from pymatgen.io.vasp.sets import VaspInputSet
-from pymatgen.io.vasp import PotcarSingle, Potcar
+from pymatgen.io.vasp import PotcarSingle
 
 from emmet.core.settings import EmmetSettings
 from emmet.core.base import EmmetBaseModel
@@ -330,7 +330,7 @@ def _potcar_hash_check(task_doc, potcar_hashes):
     except KeyError:
         # Assume it is an old calculation without potcar_spec data and treat it as passing POTCAR hash check
         return False
-    
+
     all_match = True
     for entry in potcar_details:
         symbol = entry["titel"].split(" ")[1]
@@ -397,8 +397,8 @@ def _get_unsorted_symbol_set(structure: Structure):
         }.keys()
     )
 
-def _gen_potcar_hashes(input_set: VaspInputSet):
 
+def _gen_potcar_hashes(input_set: VaspInputSet):
     functional = input_set._config_dict["POTCAR_FUNCTIONAL"]
     hashes = {}
     for potcar_symbol in input_set._config_dict["POTCAR"].values():

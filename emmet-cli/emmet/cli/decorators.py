@@ -153,7 +153,7 @@ def sbatch(func):
                 "licenses": "SCRATCH",
                 "mem": "48GB",
                 "mail-user": "adkaplan@lbl.gov",
-                "mail-type": "ALL"
+                "mail-type": "ALL",
             }
             command = ""
 

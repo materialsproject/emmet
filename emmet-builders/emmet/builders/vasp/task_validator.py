@@ -8,7 +8,7 @@ from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.vasp.task_valid import TaskDocument
 from emmet.core.vasp.calc_types.enums import CalcType
 from emmet.core.vasp.validation import (
-    DeprecationMessage, 
+    DeprecationMessage,
     ValidationDoc,
     _gen_potcar_hashes,
 )
@@ -43,8 +43,6 @@ class TaskValidator(MapBuilder):
         # Set up potcar cache if appropriate
         if self.settings.VASP_VALIDATE_POTCAR_HASHES:
             if not self.potcar_hashes:
-                from pymatgen.io.vasp.inputs import PotcarSingle
-
                 potcar_hashes = defaultdict(dict)  # type: dict
 
                 for (
