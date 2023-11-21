@@ -2,7 +2,6 @@ from emmet.core.summary import SummaryDoc
 
 from maggma.api.query_operator import (
     PaginationQuery,
-    SortQuery,
     SparseFieldsQuery,
     NumericQuery,
 )

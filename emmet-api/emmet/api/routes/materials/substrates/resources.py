@@ -1,7 +1,6 @@
 from maggma.api.query_operator import (
     NumericQuery,
     PaginationQuery,
-    SortQuery,
     SparseFieldsQuery,
     StringQueryOperator,
 )

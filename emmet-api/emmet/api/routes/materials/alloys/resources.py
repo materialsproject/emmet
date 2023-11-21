@@ -1,6 +1,6 @@
 from maggma.api.resource import ReadOnlyResource
 
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 
 from emmet.core.alloys import AlloyPairDoc
 

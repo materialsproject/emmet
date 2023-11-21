@@ -5,7 +5,6 @@ from emmet.core.thermo import PhaseDiagramDoc
 
 from maggma.api.query_operator import (
     PaginationQuery,
-    SortQuery,
     SparseFieldsQuery,
 )
 from emmet.api.routes.materials.thermo.query_operators import (

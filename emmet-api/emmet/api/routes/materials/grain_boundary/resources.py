@@ -7,7 +7,6 @@ from emmet.api.routes.materials.grain_boundary.query_operators import (
 )
 from maggma.api.query_operator import (
     PaginationQuery,
-    SortQuery,
     SparseFieldsQuery,
     NumericQuery,
 )

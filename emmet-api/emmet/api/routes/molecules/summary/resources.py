@@ -2,7 +2,6 @@ from emmet.core.molecules.summary import MoleculeSummaryDoc
 
 from maggma.api.query_operator import (
     PaginationQuery,
-    SortQuery,
     SparseFieldsQuery,
     NumericQuery,
 )

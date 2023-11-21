@@ -3,7 +3,6 @@ from emmet.core.oxidation_states import OxidationStateDoc
 
 from maggma.api.query_operator import (
     PaginationQuery,
-    SortQuery,
     SparseFieldsQuery,
 )
 

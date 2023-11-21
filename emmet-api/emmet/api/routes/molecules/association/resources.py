@@ -7,7 +7,6 @@ from emmet.core.qchem.molecule import MoleculeDoc
 from maggma.api.query_operator import (
     PaginationQuery,
     SparseFieldsQuery,
-    SortQuery,
     NumericQuery,
 )
 

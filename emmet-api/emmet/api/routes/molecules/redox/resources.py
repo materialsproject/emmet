@@ -4,7 +4,6 @@ from emmet.core.molecules.redox import RedoxDoc
 from maggma.api.query_operator import (
     NumericQuery,
     PaginationQuery,
-    SortQuery,
     SparseFieldsQuery,
 )
 

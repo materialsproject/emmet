@@ -10,7 +10,6 @@ from emmet.core.formula_autocomplete import FormulaAutocomplete
 from maggma.api.query_operator import (
     PaginationQuery,
     SparseFieldsQuery,
-    SortQuery,
     NumericQuery,
 )
 
