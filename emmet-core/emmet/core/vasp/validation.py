@@ -334,7 +334,7 @@ def _potcar_hash_check(task_doc, potcar_hashes):
     all_match = True
     for entry in potcar_details:
         symbol = entry["titel"].split(" ")[1]
-        ref_summ_stats = potcar_hashes[str(task_doc.calc_type)].get(symbol, None)
+        ref_summ_stats = potcar_hashes.get(symbol, None)
         if not ref_summ_stats:
             all_match = False
             break
