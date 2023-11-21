@@ -618,7 +618,7 @@ def parsers(ctx, task_ids):
     is_flag=True,
     help="Move launchers that fail validation into quarantine direcory"
 )
-def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C901
+def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs, quar):  # noqa: C901
     """Parse VASP launchers into tasks"""
     ctx = click.get_current_context()
     if "CLIENT" not in ctx.obj:
