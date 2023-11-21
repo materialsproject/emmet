@@ -399,9 +399,9 @@ def _get_unsorted_symbol_set(structure: Structure):
 
 def _gen_potcar_hashes(input_set: VaspInputSet):
 
-    functional = input_set.CONFIG["POTCAR_FUNCTIONAL"]
+    functional = input_set._config_dict["POTCAR_FUNCTIONAL"]
     hashes = {}
-    for potcar_symbol in input_set.CONFIG["POTCAR"].values():
+    for potcar_symbol in input_set._config_dict["POTCAR"].values():
         potcar = PotcarSingle.from_symbol_and_functional(
             symbol=potcar_symbol, functional=functional
         )
