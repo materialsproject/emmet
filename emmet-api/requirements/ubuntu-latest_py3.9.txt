@@ -28,19 +28,19 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.29.2
+boto3==1.29.5
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.32.2
+botocore==1.32.5
     # via
     #   boto3
     #   s3transfer
 bytecode==0.15.1
     # via ddtrace
-cattrs==23.2.0
+cattrs==23.2.2
     # via ddtrace
-certifi==2023.7.22
+certifi==2023.11.17
     # via requests
 cffi==1.16.0
     # via
@@ -61,7 +61,7 @@ cycler==0.12.1
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==2.0.9
+ddtrace==2.0.10
     # via emmet-api (setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -69,11 +69,11 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.73.2
+emmet-core[all]==0.74.0
     # via emmet-api (setup.py)
 envier==0.4.0
     # via ddtrace
-exceptiongroup==1.1.3
+exceptiongroup==1.2.0
     # via
     #   anyio
     #   cattrs
@@ -83,7 +83,7 @@ fastapi==0.104.1
     #   maggma
 flask==3.0.0
     # via mongogrant
-fonttools==4.44.3
+fonttools==4.45.0
     # via matplotlib
 future==0.18.3
     # via
@@ -129,7 +129,7 @@ kiwisolver==1.4.5
     # via matplotlib
 latexcodec==2.0.1
     # via pybtex
-maggma==0.57.10
+maggma==0.58.0
     # via emmet-api (setup.py)
 markupsafe==2.1.3
     # via
@@ -139,7 +139,7 @@ matcalc==0.0.3
     # via emmet-core
 matminer==0.9.0
     # via robocrys
-matplotlib==3.8.1
+matplotlib==3.8.2
     # via
     #   ase
     #   phonopy
@@ -280,7 +280,7 @@ requests==2.31.0
     #   pymatgen
 robocrys==0.2.8
     # via emmet-core
-rpds-py==0.13.0
+rpds-py==0.13.1
     # via
     #   jsonschema
     #   referencing
@@ -295,7 +295,7 @@ s3transfer==0.7.0
     # via boto3
 scikit-learn==1.3.2
     # via matminer
-scipy==1.11.3
+scipy==1.11.4
     # via
     #   ase
     #   pymatgen
