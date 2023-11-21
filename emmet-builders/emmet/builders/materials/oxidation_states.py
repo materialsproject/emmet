@@ -33,7 +33,7 @@ class OxidationStatesBuilder(MapBuilder):
         super().__init__(
             source=materials,
             target=oxidation_states,
-            projection=["structure", "deprecated"],
+            projection=["structure", "deprecated", "builder_meta"],
             query=query,
             **kwargs,
         )
