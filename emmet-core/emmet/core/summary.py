@@ -469,6 +469,7 @@ summary_fields: Dict[str, list] = {
         "structure",
         "deprecated",
         "task_ids",
+        "builder_meta",
     ],
     HasProps.thermo.value: [
         "uncorrected_energy_per_atom",
