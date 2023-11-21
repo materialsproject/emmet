@@ -239,17 +239,27 @@ class MaterialsBuilder(Builder):
         grouped_tasks = self.filter_and_group_tasks(tasks, task_transformations)
         materials = []
         for group in grouped_tasks:
+            commercial_license = True
+            for task_doc in group:
+                if set(task_doc["tags"]).intersection(
+                    set(self.settings.NON_COMMERCIAL_TAGS)
+                ):
+                    commercial_license = False
+                    break
             try:
                 materials.append(
                     MaterialsDoc.from_tasks(
                         group,
                         structure_quality_scores=self.settings.VASP_STRUCTURE_QUALITY_SCORES,
                         use_statics=self.settings.VASP_USE_STATICS,
+                        commercial_license=commercial_license,
                     )
                 )
             except Exception as e:
                 failed_ids = list({t_.task_id for t_ in group})
-                doc = MaterialsDoc.construct_deprecated_material(group)
+                doc = MaterialsDoc.construct_deprecated_material(
+                    group, commercial_license
+                )
                 doc.warnings.append(str(e))
                 materials.append(doc)
                 self.logger.warn(
