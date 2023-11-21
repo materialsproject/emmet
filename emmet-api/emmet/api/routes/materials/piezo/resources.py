@@ -1,7 +1,7 @@
 from maggma.api.resource import ReadOnlyResource
 from emmet.core.polar import PiezoelectricDoc
 
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 from emmet.api.routes.materials.piezo.query_operators import PiezoelectricQuery
 from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery
 from emmet.api.core.global_header import GlobalHeaderProcessor
@@ -15,7 +15,6 @@ def piezo_resource(piezo_store):
         query_operators=[
             MultiMaterialIDQuery(),
             PiezoelectricQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 PiezoelectricDoc, default_fields=["material_id", "last_updated"]

@@ -4,7 +4,6 @@ from emmet.core.molecules.thermo import MoleculeThermoDoc
 from maggma.api.query_operator import (
     NumericQuery,
     PaginationQuery,
-    SortQuery,
     SparseFieldsQuery,
 )
 
@@ -48,7 +47,6 @@ def thermo_resource(thermo_store):
                     "rt",
                 ],
             ),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 MoleculeThermoDoc,

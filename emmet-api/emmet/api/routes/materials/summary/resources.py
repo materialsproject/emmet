@@ -2,7 +2,6 @@ from emmet.core.summary import SummaryDoc
 
 from maggma.api.query_operator import (
     PaginationQuery,
-    SortQuery,
     SparseFieldsQuery,
     NumericQuery,
 )
@@ -62,7 +61,6 @@ def summary_resource(summary_store):
             SearchHasReconstructedQuery(),
             HasPropsQuery(),
             DeprecationQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(SummaryDoc, default_fields=["material_id"]),
             LicenseQuery(),

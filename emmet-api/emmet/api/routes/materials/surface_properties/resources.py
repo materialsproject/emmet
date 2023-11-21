@@ -1,4 +1,4 @@
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 from maggma.api.query_operator.dynamic import NumericQuery
 from maggma.api.resource import ReadOnlyResource
 from emmet.api.core.settings import MAPISettings
@@ -17,7 +17,6 @@ def surface_props_resource(surface_prop_store):
         query_operators=[
             NumericQuery(model=SurfacePropDoc),
             ReconstructedQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(SurfacePropDoc, default_fields=["task_id"]),
         ],

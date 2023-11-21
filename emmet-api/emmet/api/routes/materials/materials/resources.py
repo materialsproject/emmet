@@ -10,7 +10,6 @@ from emmet.core.formula_autocomplete import FormulaAutocomplete
 from maggma.api.query_operator import (
     PaginationQuery,
     SparseFieldsQuery,
-    SortQuery,
     NumericQuery,
 )
 
@@ -74,7 +73,6 @@ def blessed_tasks_resource(materials_store):
             MultiTaskIDQuery(),
             DeprecationQuery(),
             NumericQuery(model=MaterialsDoc),
-            SortQuery(),
             PaginationQuery(),
             LicenseQuery(),
         ],
@@ -109,7 +107,6 @@ def materials_resource(materials_store):
             SymmetryQuery(),
             DeprecationQuery(),
             NumericQuery(model=MaterialsDoc),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 MaterialsDoc,

@@ -7,7 +7,6 @@ from emmet.core.find_structure import FindMolecule
 from maggma.api.query_operator import (
     PaginationQuery,
     SparseFieldsQuery,
-    SortQuery,
     NumericQuery,
 )
 
@@ -60,7 +59,6 @@ def molecules_resource(molecules_store):
             HashQuery(),
             DeprecationQuery(),
             NumericQuery(model=MoleculeDoc),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 MoleculeDoc,

@@ -1,7 +1,7 @@
 from maggma.api.resource import ReadOnlyResource
 from emmet.core.molecules.vibration import VibrationDoc
 
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 
 from emmet.api.routes.molecules.molecules.query_operators import (
     MultiMPculeIDQuery,
@@ -28,7 +28,6 @@ def vibration_resource(vibes_store):
             ElementsQuery(),
             ChargeSpinQuery(),
             MultiPropertyIDQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 VibrationDoc,

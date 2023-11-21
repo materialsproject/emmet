@@ -5,7 +5,6 @@ from emmet.core.thermo import PhaseDiagramDoc
 
 from maggma.api.query_operator import (
     PaginationQuery,
-    SortQuery,
     SparseFieldsQuery,
 )
 from emmet.api.routes.materials.thermo.query_operators import (
@@ -50,7 +49,6 @@ def thermo_resource(thermo_store):
             ChemsysQuery(),
             IsStableQuery(),
             NumericQuery(model=ThermoDoc),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 ThermoDoc, default_fields=["thermo_id", "material_id", "last_updated"]

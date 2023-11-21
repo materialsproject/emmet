@@ -1,7 +1,7 @@
 from maggma.api.resource import ReadOnlyResource
 from emmet.core.molecules.metal_binding import MetalBindingDoc
 
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 
 from emmet.api.routes.molecules.molecules.query_operators import (
     MultiMPculeIDQuery,
@@ -31,7 +31,6 @@ def metal_binding_resource(metal_binding_store):
             MethodQuery(),
             BindingDataQuery(),
             MultiPropertyIDQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 MetalBindingDoc,

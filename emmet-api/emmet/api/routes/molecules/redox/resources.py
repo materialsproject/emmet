@@ -4,7 +4,6 @@ from emmet.core.molecules.redox import RedoxDoc
 from maggma.api.query_operator import (
     NumericQuery,
     PaginationQuery,
-    SortQuery,
     SparseFieldsQuery,
 )
 
@@ -47,7 +46,6 @@ def redox_resource(redox_store):
                     "oxidation_potentials",
                 ],
             ),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 RedoxDoc,

@@ -1,7 +1,7 @@
 from maggma.api.resource import ReadOnlyResource
 from emmet.core.elasticity import ElasticityDoc
 from emmet.api.core.global_header import GlobalHeaderProcessor
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery
 from emmet.api.routes.materials.elasticity.query_operators import (
     ElasticityChemsysQuery,
@@ -23,7 +23,6 @@ def elasticity_resource(elasticity_store):
             BulkModulusQuery(),
             ShearModulusQuery(),
             PoissonQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 ElasticityDoc,

@@ -1,7 +1,7 @@
 from maggma.api.resource import ReadOnlyResource
 from emmet.core.molecules.orbitals import OrbitalDoc
 
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 
 from emmet.api.routes.molecules.orbitals.query_operators import (
     NBOPopulationQuery,
@@ -38,7 +38,6 @@ def orbitals_resource(orbital_store):
             NBOLonePairQuery(),
             NBOBondQuery(),
             NBOInteractionQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 OrbitalDoc,
