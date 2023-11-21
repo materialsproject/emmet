@@ -5,6 +5,7 @@ import numpy as np
 from pydantic import ConfigDict, Field, ImportString
 from pymatgen.core.structure import Structure
 from pymatgen.io.vasp.sets import VaspInputSet
+from pymatgen.io.vasp import PotcarSingle, Potcar
 
 from emmet.core.settings import EmmetSettings
 from emmet.core.base import EmmetBaseModel
@@ -112,6 +113,11 @@ class ValidationDoc(EmmetBaseModel):
 
             if valid_input_set:
                 # Checking POTCAR summary_stats if a directory is supplied
+                if SETTINGS.VASP_VALIDATE_POTCAR_HASHES and not potcar_hashes:
+                    potcar_hashes = _gen_potcar_hashes(valid_input_set)
+                else:
+                    potcar_hashes = None
+
                 if potcar_hashes:
                     if _potcar_hash_check(task_doc, potcar_hashes):
                         if task_type in [
@@ -324,7 +330,7 @@ def _potcar_hash_check(task_doc, potcar_hashes):
     except KeyError:
         # Assume it is an old calculation without potcar_spec data and treat it as passing POTCAR hash check
         return False
-
+    
     all_match = True
     for entry in potcar_details:
         symbol = entry["titel"].split(" ")[1]
@@ -390,3 +396,14 @@ def _get_unsorted_symbol_set(structure: Structure):
             str(sp): 1 for site in structure for sp, v in site.species.items() if v != 0
         }.keys()
     )
+
+def _gen_potcar_hashes(input_set: VaspInputSet):
+
+    functional = input_set.CONFIG["POTCAR_FUNCTIONAL"]
+    hashes = {}
+    for potcar_symbol in input_set.CONFIG["POTCAR"].values():
+        potcar = PotcarSingle.from_symbol_and_functional(
+            symbol=potcar_symbol, functional=functional
+        )
+        hashes[potcar_symbol] = potcar._summary_stats
+    return hashes

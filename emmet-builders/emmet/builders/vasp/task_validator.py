@@ -7,7 +7,11 @@ from maggma.core import Store
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.vasp.task_valid import TaskDocument
 from emmet.core.vasp.calc_types.enums import CalcType
-from emmet.core.vasp.validation import DeprecationMessage, ValidationDoc
+from emmet.core.vasp.validation import (
+    DeprecationMessage, 
+    ValidationDoc,
+    _gen_potcar_hashes,
+)
 
 
 class TaskValidator(MapBuilder):
@@ -41,18 +45,13 @@ class TaskValidator(MapBuilder):
             if not self.potcar_hashes:
                 from pymatgen.io.vasp.inputs import PotcarSingle
 
-                hashes = defaultdict(dict)  # type: dict
+                potcar_hashes = defaultdict(dict)  # type: dict
 
                 for (
                     calc_type,
                     input_set,
                 ) in self.settings.VASP_DEFAULT_INPUT_SETS.items():
-                    functional = input_set.CONFIG["POTCAR_FUNCTIONAL"]
-                    for potcar_symbol in input_set.CONFIG["POTCAR"].values():
-                        potcar = PotcarSingle.from_symbol_and_functional(
-                            symbol=potcar_symbol, functional=functional
-                        )
-                        hashes[calc_type][potcar_symbol] = potcar._summary_stats
+                    potcar_hashes[calc_type] = _gen_potcar_hashes(input_set)
 
                 self.potcar_hashes = potcar_hashes
         else:

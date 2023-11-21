@@ -127,7 +127,7 @@ class MPTriager(Triager):
         cls,
         task_doc: Union[TaskDoc, TaskDocument],
         coordination_numbers: list = None,
-        calc_oxi_states: bool = False,
+        calc_oxi_states: bool = True,
     ):
         structure = task_doc.output.structure
         if calc_oxi_states:
@@ -192,7 +192,7 @@ class TriageDoc(EmmetBaseModel):
         cls,
         task_doc: Union[TaskDoc, TaskDocument],
         coordination_numbers: list = None,
-        calc_oxi_states: bool = False,
+        calc_oxi_states: bool = True,
     ):
         triaged = MPTriager.from_task_doc(
             task_doc=task_doc,
