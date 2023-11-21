@@ -42,9 +42,13 @@ class OxidationStatesBuilder(MapBuilder):
         structure = Structure.from_dict(item["structure"])
         mpid = item["material_id"]
         deprecated = item["deprecated"]
+        builder_meta = item["builder_meta"]
 
         oxi_doc = OxidationStateDoc.from_structure(
-            structure=structure, material_id=mpid, deprecated=deprecated
+            structure=structure,
+            material_id=mpid,
+            deprecated=deprecated,
+            builder_meta=builder_meta,
         )
         doc = jsanitize(oxi_doc.model_dump(), allow_bson=True)
 

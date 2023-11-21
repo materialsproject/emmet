@@ -242,7 +242,8 @@ class CorrectedEntriesBuilder(Builder):
 
         materials_docs = list(
             self.materials.query(
-                criteria=new_q, properties=["material_id", "entries", "deprecated"]
+                criteria=new_q,
+                properties=["material_id", "entries", "deprecated", "builder_meta"],
             )
         )
 
@@ -253,7 +254,10 @@ class CorrectedEntriesBuilder(Builder):
             oxi_states_data = {
                 d["material_id"]: d.get("average_oxidation_states", {})
                 for d in self.oxidation_states.query(
-                    properties=["material_id", "average_oxidation_states"],
+                    properties=[
+                        "material_id",
+                        "average_oxidation_states",
+                    ],
                     criteria={
                         "material_id": {"$in": material_ids},
                         "state": "successful",
@@ -272,6 +276,7 @@ class CorrectedEntriesBuilder(Builder):
                     entry_dict["data"]["oxidation_states"] = oxi_states_data.get(
                         entry_dict["data"]["material_id"], {}
                     )
+                    entry_dict["data"]["license"] = doc["builder_meta"].get("license")
                     entry_dict["data"]["run_type"] = r_type
                     elsyms = sorted(set([el for el in entry_dict["composition"]]))
                     self._entries_cache["-".join(elsyms)].append(entry_dict)
