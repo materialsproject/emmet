@@ -21,6 +21,7 @@ from pymatgen.io.vasp import (
     BSVasprun,
     Kpoints,
     Locpot,
+    Oszicar,
     Outcar,
     Poscar,
     Potcar,
@@ -59,6 +60,12 @@ class VaspObject(ValueEnum):
     LOCPOT = "locpot"
     OPTIC = "optic"
     PROCAR = "procar"
+
+
+class StoreTrajectoryOption(ValueEnum):
+    FULL = "full"
+    PARTIAL = "partial"
+    NO = "no"
 
 
 class PotcarSpec(BaseModel):
@@ -422,7 +429,7 @@ class CalculationOutput(BaseModel):
         contcar: Optional[Poscar],
         locpot: Optional[Locpot] = None,
         elph_poscars: Optional[List[Path]] = None,
-        store_trajectory: bool = False,
+        store_trajectory: StoreTrajectoryOption = StoreTrajectoryOption.NO,
     ) -> "CalculationOutput":
         """
         Create a VASP output document from VASP outputs.
@@ -441,8 +448,10 @@ class CalculationOutput(BaseModel):
             Path to displaced electron-phonon coupling POSCAR files generated using
             ``PHON_LMC = True``.
         store_trajectory
-            Whether to store ionic steps as a pymatgen Trajectory object. If `True`,
-            the `ionic_steps` field is left as None.
+            Whether to store ionic steps as a pymatgen Trajectory object.
+            Different value tune the amount of data from the ionic_steps
+            stored in the Trajectory.
+            If not NO, the `ionic_steps` field is left as None.
 
         Returns
         -------
@@ -550,7 +559,9 @@ class CalculationOutput(BaseModel):
             frequency_dependent_dielectric=freq_dependent_diel,
             elph_displaced_structures=elph_structures,
             dos_properties=dosprop_dict,
-            ionic_steps=vasprun.ionic_steps if not store_trajectory else None,
+            ionic_steps=vasprun.ionic_steps
+            if store_trajectory == StoreTrajectoryOption.NO
+            else None,
             locpot=locpot_avg,
             outcar=outcar_dict,
             run_stats=RunStatistics.from_outcar(outcar) if outcar else None,
@@ -610,6 +621,7 @@ class Calculation(BaseModel):
         contcar_file: Union[Path, str],
         volumetric_files: List[str] = None,
         elph_poscars: List[Path] = None,
+        oszicar_file: Optional[Union[Path, str]] = None,
         parse_dos: Union[str, bool] = False,
         parse_bandstructure: Union[str, bool] = False,
         average_locpot: bool = True,
@@ -618,7 +630,7 @@ class Calculation(BaseModel):
         strip_bandstructure_projections: bool = False,
         strip_dos_projections: bool = False,
         store_volumetric_data: Optional[Tuple[str]] = None,
-        store_trajectory: bool = False,
+        store_trajectory: StoreTrajectoryOption = StoreTrajectoryOption.NO,
         vasprun_kwargs: Optional[Dict] = None,
     ) -> Tuple["Calculation", Dict[VaspObject, Dict]]:
         """
@@ -641,6 +653,8 @@ class Calculation(BaseModel):
         elph_poscars
             Path to displaced electron-phonon coupling POSCAR files generated using
             ``PHON_LMC = True``, given relative to dir_name.
+        oszicar_file
+            Path to the OSZICAR file, relative to dir_name
         parse_dos
             Whether to parse the DOS. Can be:
 
@@ -680,9 +694,17 @@ class Calculation(BaseModel):
         store_volumetric_data
             Which volumetric files to store.
         store_trajectory
-            Whether to store the ionic steps in a pymatgen Trajectory object. if `True`,
-            :obj:'.CalculationOutput.ionic_steps' is set to None to reduce duplicating
-            information.
+            Whether to store the ionic steps in a pymatgen Trajectory object and the
+            amount of data to store from the ionic_steps. Can be:
+            - FULL: Store the Trajectory. All the properties from the ionic_steps
+              are stored in the frame_properties except for the Structure, to
+              avoid redundancy.
+            - PARTIAL: Store the Trajectory. All the properties from the ionic_steps
+              are stored in the frame_properties except from Structure and
+              ElectronicStep.
+            - NO: Trajectory is not Stored.
+            If not NO, :obj:'.CalculationOutput.ionic_steps' is set to None
+            to reduce duplicating information.
         vasprun_kwargs
             Additional keyword arguments that will be passed to the Vasprun init.
 
@@ -750,12 +772,29 @@ class Calculation(BaseModel):
             elph_poscars=elph_poscars,
             store_trajectory=store_trajectory,
         )
-        if store_trajectory:
+        if store_trajectory != StoreTrajectoryOption.NO:
+            exclude_from_trajectory = ["structure"]
+            if store_trajectory == StoreTrajectoryOption.PARTIAL:
+                exclude_from_trajectory.append("electronic_steps")
+            frame_properties = [
+                IonicStep(**x).model_dump(exclude=exclude_from_trajectory)
+                for x in vasprun.ionic_steps
+            ]
+            if oszicar_file:
+                try:
+                    oszicar = Oszicar(oszicar_file)
+                    if "T" in oszicar.ionic_steps[0]:
+                        for frame_property, oszicar_is in zip(
+                            frame_properties, oszicar.ionic_steps
+                        ):
+                            frame_property["temperature"] = oszicar_is.get("T")
+                except ValueError:
+                    # there can be errors in parsing the floats from OSZICAR
+                    pass
+
             traj = Trajectory.from_structures(
                 [d["structure"] for d in vasprun.ionic_steps],
-                frame_properties=[
-                    IonicStep(**x).model_dump() for x in vasprun.ionic_steps
-                ],
+                frame_properties=frame_properties,
                 constant_lattice=False,
             )
             vasp_objects[VaspObject.TRAJECTORY] = traj  # type: ignore

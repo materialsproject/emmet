@@ -962,6 +962,8 @@ def _find_vasp_files(
                 vol_files.append(file_no_path)
             elif file.match(f"*POSCAR.T=*{suffix}*"):
                 elph_poscars.append(file_no_path)
+            elif file.match(f"*OSZICAR{suffix}*"):
+                vasp_files["oszicar_file"] = file_no_path
 
         if len(vol_files) > 0:
             # add volumetric files if some were found or other vasp files were found
