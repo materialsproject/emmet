@@ -241,7 +241,7 @@ class MaterialsBuilder(Builder):
         for group in grouped_tasks:
             commercial_license = True
             for task_doc in group:
-                if set(task_doc["tags"]).intersection(
+                if set(task_doc.tags).intersection(
                     set(self.settings.NON_COMMERCIAL_TAGS)
                 ):
                     commercial_license = False
