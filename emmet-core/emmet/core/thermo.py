@@ -2,6 +2,7 @@
 from collections import defaultdict
 from typing import Dict, List, Optional, Union
 from datetime import datetime
+from emmet.core.base import EmmetMeta
 from emmet.core.utils import ValueEnum
 
 from pydantic import BaseModel, Field
@@ -178,6 +179,8 @@ class ThermoDoc(PropertyDoc):
 
             (decomp, ehull) = pd.get_decomp_and_e_above_hull(blessed_entry)
 
+            builder_meta = EmmetMeta(license=blessed_entry.data.get("license"))
+
             d = {
                 "thermo_id": "{}_{}".format(material_id, str(thermo_type)),
                 "material_id": material_id,
@@ -189,6 +192,7 @@ class ThermoDoc(PropertyDoc):
                 "formation_energy_per_atom": pd.get_form_energy_per_atom(blessed_entry),
                 "energy_above_hull": ehull,
                 "is_stable": blessed_entry in pd.stable_entries,
+                "builder_meta": builder_meta.model_dump(),
             }
 
             # Uncomment to make last_updated line up with materials.
