@@ -67,7 +67,7 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all,ml]==0.74.0
+emmet-core[all,ml]==0.74.2
     # via emmet-builders (emmet/emmet-builders/setup.py)
 exceptiongroup==1.2.0
     # via anyio
