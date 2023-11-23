@@ -83,7 +83,7 @@ fastapi==0.104.1
     #   maggma
 flask==3.0.0
     # via mongogrant
-fonttools==4.45.0
+fonttools==4.45.1
     # via matplotlib
 future==0.18.3
     # via

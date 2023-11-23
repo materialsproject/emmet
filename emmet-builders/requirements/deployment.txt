@@ -79,7 +79,7 @@ filelock==3.13.1
     #   triton
 flask==3.0.0
     # via mongogrant
-fonttools==4.45.0
+fonttools==4.45.1
     # via matplotlib
 frozenlist==1.4.0
     # via
