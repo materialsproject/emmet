@@ -76,6 +76,12 @@ class RunType(ValueEnum):
     LDA = "LDA"
     LDA_U = "LDA+U"
 
+    @classmethod
+    def _missing_(cls, value):
+        for member in cls:
+            if member.value.upper() == value.upper():
+                return member
+
 
 class TaskType(ValueEnum):
     """VASP calculation task types."""
