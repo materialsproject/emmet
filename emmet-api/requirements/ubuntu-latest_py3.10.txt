@@ -28,11 +28,11 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.29.5
+boto3==1.33.0
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.32.5
+botocore==1.33.0
     # via
     #   boto3
     #   s3transfer
@@ -55,7 +55,7 @@ click==8.1.7
     #   uvicorn
 contourpy==1.2.0
     # via matplotlib
-cryptography==41.0.5
+cryptography==41.0.6
     # via paramiko
 cycler==0.12.1
     # via matplotlib
@@ -69,7 +69,7 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.74.0
+emmet-core[all]==0.74.3
     # via emmet-api (setup.py)
 envier==0.4.0
     # via ddtrace
@@ -83,7 +83,7 @@ fastapi==0.104.1
     #   maggma
 flask==3.0.0
     # via mongogrant
-fonttools==4.45.0
+fonttools==4.45.1
     # via matplotlib
 future==0.18.3
     # via
@@ -95,7 +95,7 @@ h11==0.14.0
     # via uvicorn
 h5py==3.10.0
     # via phonopy
-idna==3.4
+idna==3.6
     # via
     #   anyio
     #   requests
@@ -213,14 +213,14 @@ pybtex==0.24.0
     #   robocrys
 pycparser==2.21
     # via cffi
-pydantic==2.5.1
+pydantic==2.5.2
     # via
     #   emmet-core
     #   fastapi
     #   inflect
     #   maggma
     #   pydantic-settings
-pydantic-core==2.14.3
+pydantic-core==2.14.5
     # via pydantic
 pydantic-settings==2.1.0
     # via
@@ -287,7 +287,7 @@ ruamel-yaml==0.17.40
     #   robocrys
 ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
-s3transfer==0.7.0
+s3transfer==0.8.0
     # via boto3
 scikit-learn==1.3.2
     # via matminer
