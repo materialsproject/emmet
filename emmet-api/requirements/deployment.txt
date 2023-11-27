@@ -28,11 +28,11 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.29.7
+boto3==1.33.0
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.32.7
+botocore==1.33.0
     # via
     #   boto3
     #   s3transfer
@@ -55,7 +55,7 @@ click==8.1.7
     #   uvicorn
 contourpy==1.2.0
     # via matplotlib
-cryptography==41.0.5
+cryptography==41.0.6
     # via paramiko
 cycler==0.12.1
     # via matplotlib
@@ -69,7 +69,7 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.74.2
+emmet-core[all]==0.74.3
     # via emmet-api (emmet/emmet-api/setup.py)
 envier==0.4.0
     # via ddtrace
