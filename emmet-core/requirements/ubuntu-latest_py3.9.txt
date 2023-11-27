@@ -14,11 +14,11 @@ contourpy==1.2.0
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-fonttools==4.45.0
+fonttools==4.45.1
     # via matplotlib
 future==0.18.3
     # via uncertainties
-idna==3.4
+idna==3.6
     # via requests
 importlib-resources==6.1.1
     # via matplotlib
@@ -62,11 +62,11 @@ pybtex==0.24.0
     # via
     #   emmet-core (setup.py)
     #   pymatgen
-pydantic==2.5.1
+pydantic==2.5.2
     # via
     #   emmet-core (setup.py)
     #   pydantic-settings
-pydantic-core==2.14.3
+pydantic-core==2.14.5
     # via pydantic
 pydantic-settings==2.1.0
     # via emmet-core (setup.py)
