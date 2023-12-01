@@ -106,7 +106,9 @@ class VibrationDoc(PropertyDoc):
 
         ir_active = [True if ira.upper() == "YES" else False for ira in ir_active]
         if raman_active is not None:
-            raman_active = [True if ra.upper() == "YES" else False for ra in raman_active]
+            raman_active = [
+                True if ra.upper() == "YES" else False for ra in raman_active
+            ]
 
         warnings = list()
         if frequencies[0] < 0.0:
