@@ -449,8 +449,9 @@ class MoleculeSummaryDoc(PropertyDoc):
     )
 
     # has props
-    has_props: Optional[List[HasProps]] = Field(
-        None, description="List of properties that are available for a given material."
+    has_props: Optional[Dict[str, bool]] = Field(
+        None,
+        description="Properties available for this molecule",
     )
 
     @classmethod
@@ -482,6 +483,7 @@ summary_fields: Dict[str, list] = {
         "elements",
         "nelements",
         "composition",
+        "composition_reduced",
         "formula_alphabetical",
         "chemsys",
         "symmetry",
@@ -520,6 +522,8 @@ summary_fields: Dict[str, list] = {
         "frequency_modes",
         "ir_intensities",
         "ir_activities",
+        "raman_intensities",
+        "raman_activities",
     ],
     HasProps.orbitals.value: [
         "open_shell",
