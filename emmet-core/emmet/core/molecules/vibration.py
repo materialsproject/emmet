@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from hashlib import blake2b
 
 from pydantic import Field
@@ -39,13 +39,13 @@ class VibrationDoc(PropertyDoc):
         description="List indicating if frequency-modes are IR-active",
     )
 
-    raman_intensities: List[float] = Field(
+    raman_intensities: Optional[List[float]] = Field(
         None,
         title="Raman intensities",
         description="Intensities for Raman spectrum peaks"
     )
 
-    raman_activities: List[float] = Field(
+    raman_activities: Optional[List[float]] = Field(
         None,
         title="Raman activities",
         description="List indicating if frequency-modes are Raman-active",
