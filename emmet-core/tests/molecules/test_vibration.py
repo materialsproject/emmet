@@ -34,5 +34,5 @@ def test_vibration(test_tasks):
     assert len(vib_doc.frequency_modes) == 27
     assert len(vib_doc.ir_intensities) == 27
     assert vib_doc.frequencies[0] == pytest.approx(49.47)
-    assert vib_doc.ir_intensities[0] == 93.886
-    assert vib_doc.ir_activities[0] == "YES"
+    assert vib_doc.ir_intensities[0] == pytest.approx(93.886)
+    assert vib_doc.ir_activities[0] == True
