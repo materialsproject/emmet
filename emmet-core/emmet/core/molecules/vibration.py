@@ -42,7 +42,7 @@ class VibrationDoc(PropertyDoc):
     raman_intensities: Optional[List[float]] = Field(
         None,
         title="Raman intensities",
-        description="Intensities for Raman spectrum peaks"
+        description="Intensities for Raman spectrum peaks",
     )
 
     raman_activities: Optional[List[float]] = Field(
@@ -92,7 +92,9 @@ class VibrationDoc(PropertyDoc):
 
             # IR intensities and activities required
             # Raman intensitives/activities are optional
-            if all([x is not None for x in [frequency_modes, ir_intensities, ir_active]]):
+            if all(
+                [x is not None for x in [frequency_modes, ir_intensities, ir_active]]
+            ):
                 break
 
         if frequency_modes is None:
