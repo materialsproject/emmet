@@ -200,6 +200,18 @@ class MoleculeSummaryDoc(PropertyDoc):
         description="List indicating if frequency-modes are IR-active",
     )
 
+    raman_intensities: Optional[Dict[str, List[float]]] = Field(
+        None,
+        title="Raman intensities",
+        description="Intensities for Raman spectrum peaks",
+    )
+
+    raman_activities: Optional[Dict[str, List]] = Field(
+        None,
+        title="Raman activities",
+        description="List indicating if frequency-modes are Raman-active",
+    )
+
     # natural bonding orbitals
     orbitals_property_ids: Optional[Dict[str, str]] = Field(
         None,
