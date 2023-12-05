@@ -36,7 +36,7 @@ def test_chemsys_query():
     assert op.query("O-C") == {"criteria": {"chemsys": "C-O"}}
 
     assert op.query("C-*") == {
-        "criteria": {"nelements": 2, "elements": {"$all": ["C"]}}
+        "criteria": {"nelements": 2, "composition_reduced.C": {"$exists": True}}
     }
 
     with ScratchDir("."):
