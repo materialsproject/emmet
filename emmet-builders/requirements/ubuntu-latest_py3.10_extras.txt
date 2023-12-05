@@ -28,13 +28,13 @@ attrs==23.1.0
     #   aiohttp
     #   jsonschema
     #   referencing
-bcrypt==4.0.1
+bcrypt==4.1.1
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.33.0
+boto3==1.33.8
     # via maggma
-botocore==1.33.0
+botocore==1.33.8
     # via
     #   boto3
     #   s3transfer
@@ -67,7 +67,7 @@ coverage[toml]==7.3.2
     # via
     #   coverage
     #   pytest-cov
-cryptography==41.0.6
+cryptography==41.0.7
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -83,7 +83,7 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all,ml]==0.74.3
+emmet-core[all,ml]==0.74.7
     # via emmet-builders (setup.py)
 exceptiongroup==1.2.0
     # via
@@ -100,13 +100,13 @@ flake8==6.1.0
     # via emmet-builders (setup.py)
 flask==3.0.0
     # via mongogrant
-fonttools==4.45.1
+fonttools==4.46.0
     # via matplotlib
 frozenlist==1.4.0
     # via
     #   aiohttp
     #   aiosignal
-fsspec[http]==2023.10.0
+fsspec[http]==2023.12.1
     # via
     #   pytorch-lightning
     #   torch
@@ -159,7 +159,7 @@ jsmin==3.0.1
     # via mkdocs-minify-plugin
 jsonschema==4.20.0
     # via maggma
-jsonschema-specifications==2023.11.1
+jsonschema-specifications==2023.11.2
     # via jsonschema
 kiwisolver==1.4.5
     # via matplotlib
@@ -332,6 +332,7 @@ packaging==23.2
     #   plotly
     #   pytest
     #   pytorch-lightning
+    #   torchmetrics
 palettable==3.3.3
     # via pymatgen
 pandas==1.5.3
@@ -342,11 +343,11 @@ paramiko==3.3.1
     # via sshtunnel
 pathspec==0.11.2
     # via mkdocs
-phonopy==2.20.0
+phonopy==2.21.0
     # via matcalc
 pillow==10.1.0
     # via matplotlib
-platformdirs==4.0.0
+platformdirs==4.1.0
     # via
     #   mkdocs
     #   mkdocstrings
@@ -411,7 +412,7 @@ pymdown-extensions==10.5
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.6.0
+pymongo==4.6.1
     # via
     #   maggma
     #   matminer
@@ -451,9 +452,9 @@ pyyaml==6.0.1
     #   pyyaml-env-tag
 pyyaml-env-tag==0.1
     # via mkdocs
-pyzmq==25.1.1
+pyzmq==25.1.2
     # via maggma
-referencing==0.31.0
+referencing==0.31.1
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -466,7 +467,7 @@ requests==2.31.0
     #   pymatgen
 robocrys==0.2.8
     # via emmet-core
-rpds-py==0.13.1
+rpds-py==0.13.2
     # via
     #   jsonschema
     #   referencing
@@ -477,7 +478,7 @@ ruamel-yaml==0.17.40
     #   robocrys
 ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
-s3transfer==0.8.0
+s3transfer==0.8.2
     # via boto3
 scikit-learn==1.3.2
     # via matminer
@@ -536,9 +537,9 @@ torch==2.1.1
     #   matgl
     #   pytorch-lightning
     #   torchmetrics
-torchmetrics==1.2.0
+torchmetrics==1.2.1
     # via pytorch-lightning
-tornado==6.3.3
+tornado==6.4
     # via livereload
 tqdm==4.66.1
     # via
@@ -551,7 +552,7 @@ triton==2.1.0
     # via torch
 types-requests==2.31.0.10
     # via emmet-builders (setup.py)
-types-setuptools==68.2.0.2
+types-setuptools==69.0.0.0
     # via emmet-builders (setup.py)
 typing-extensions==4.8.0
     # via
@@ -575,7 +576,7 @@ urllib3==2.0.7
     #   types-requests
 uvicorn==0.24.0.post1
     # via maggma
-virtualenv==20.24.7
+virtualenv==20.25.0
     # via pre-commit
 watchdog==3.0.0
     # via mkdocs
