@@ -66,13 +66,13 @@ filelock==3.13.1
     #   virtualenv
 flake8==6.1.0
     # via emmet-core (setup.py)
-fonttools==4.45.1
+fonttools==4.46.0
     # via matplotlib
 frozenlist==1.4.0
     # via
     #   aiohttp
     #   aiosignal
-fsspec[http]==2023.10.0
+fsspec[http]==2023.12.1
     # via
     #   pytorch-lightning
     #   torch
@@ -269,6 +269,7 @@ packaging==23.2
     #   plotly
     #   pytest
     #   pytorch-lightning
+    #   torchmetrics
 palettable==3.3.3
     # via pymatgen
 pandas==1.5.3
@@ -277,11 +278,11 @@ pandas==1.5.3
     #   pymatgen
 pathspec==0.11.2
     # via mkdocs
-phonopy==2.20.0
+phonopy==2.21.0
     # via matcalc
 pillow==10.1.0
     # via matplotlib
-platformdirs==4.0.0
+platformdirs==4.1.0
     # via
     #   mkdocs
     #   mkdocstrings
@@ -340,7 +341,7 @@ pymdown-extensions==10.5
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.6.0
+pymongo==4.6.1
     # via matminer
 pyparsing==3.1.1
     # via matplotlib
@@ -399,7 +400,7 @@ scipy==1.11.4
     #   scikit-learn
 seekpath==2.1.0
     # via emmet-core (setup.py)
-sentry-sdk==1.37.1
+sentry-sdk==1.38.0
     # via custodian
 shapely==2.0.2
     # via pymatgen-analysis-alloys
@@ -439,9 +440,9 @@ torch==2.1.1
     #   matgl
     #   pytorch-lightning
     #   torchmetrics
-torchmetrics==1.2.0
+torchmetrics==1.2.1
     # via pytorch-lightning
-tornado==6.3.3
+tornado==6.4
     # via livereload
 tqdm==4.66.1
     # via
@@ -453,7 +454,7 @@ triton==2.1.0
     # via torch
 types-requests==2.31.0.10
     # via emmet-core (setup.py)
-types-setuptools==68.2.0.2
+types-setuptools==69.0.0.0
     # via emmet-core (setup.py)
 typing-extensions==4.8.0
     # via
@@ -472,7 +473,7 @@ urllib3==2.1.0
     #   requests
     #   sentry-sdk
     #   types-requests
-virtualenv==20.24.7
+virtualenv==20.25.0
     # via pre-commit
 watchdog==3.0.0
     # via mkdocs
