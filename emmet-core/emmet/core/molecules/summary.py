@@ -621,7 +621,6 @@ def _copy_from_doc(doc: Dict[str, Any]):
             sd, by_method = sub_doc
 
             if isinstance(sd, dict) and len(sd) > 0:
-                d["has_props"].append(doc_key)
                 for copy_key in summary_fields[doc_key]:
                     d[copy_key] = dict()
 
