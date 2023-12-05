@@ -32,7 +32,7 @@ def test_chemsys_to_criteria():
     # Chemsys
     assert chemsys_to_criteria("Si-O") == {"chemsys": "O-Si"}
     assert chemsys_to_criteria("Si-*") == {
-        "composition_reduced.Si": True,
+        "composition_reduced.Si": {"$exists": True},
         "nelements": 2,
     }
     assert chemsys_to_criteria("*-*-*") == {"nelements": 3}
