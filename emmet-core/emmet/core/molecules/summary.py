@@ -594,7 +594,8 @@ def _copy_from_doc(doc: Dict[str, Any]):
     #  property2: {solvent1: [{...}, {...}], solvent2: [{...}, {...}]}
     # }
 
-    d: Dict[str, Any] = {"has_props": []}
+    has_props = {str(val.value): False for val in HasProps}
+    d = {"has_props": has_props, "origins": []}
 
     # Function to grab the keys and put them in the root doc
     for doc_key in summary_fields:
@@ -606,6 +607,8 @@ def _copy_from_doc(doc: Dict[str, Any]):
             # There are not multiple MoleculeDocs for different solvents
             if sub_doc is None:
                 break
+
+            d["has_props"][doc_key] = True
             for copy_key in summary_fields[doc_key]:
                 d[copy_key] = sub_doc[copy_key]
         else:
@@ -614,6 +617,7 @@ def _copy_from_doc(doc: Dict[str, Any]):
             if sub_doc is None:
                 continue
 
+            d["has_props"][doc_key] = True
             sd, by_method = sub_doc
 
             if isinstance(sd, dict) and len(sd) > 0:
