@@ -13,7 +13,14 @@ class SummaryHintScheme(HintScheme):
         if list(query.get("criteria").keys()) != ["deprecated", "builder_meta.license"]:
             pure_params = []
             excluded_elements = False
-            for param, val in query["criteria"].items():
+
+            sort_priority = {float: 0, int: 1, str: 2, bool: 3}
+
+            sorted_raw_params = sorted(
+                query["criteria"].items(), key=lambda x: sort_priority[type(x[1])]
+            )
+
+            for param, val in sorted_raw_params:
                 pure_param = param.split(".")[0]
                 pure_params.append(pure_param)
                 if pure_param == "composition_reduced" and val == {"$exists": False}:
