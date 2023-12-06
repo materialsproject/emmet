@@ -28,11 +28,11 @@ bcrypt==4.1.1
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.33.8
+boto3==1.33.9
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.33.8
+botocore==1.33.9
     # via
     #   boto3
     #   s3transfer
@@ -85,7 +85,7 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.74.7
+emmet-core[all]==0.74.8
     # via emmet-api (setup.py)
 envier==0.4.0
     # via ddtrace
@@ -112,7 +112,7 @@ future==0.18.3
     #   uncertainties
 ghp-import==2.1.0
     # via mkdocs
-griffe==0.38.0
+griffe==0.38.1
     # via mkdocstrings-python
 gunicorn==21.2.0
     # via emmet-api (setup.py)
