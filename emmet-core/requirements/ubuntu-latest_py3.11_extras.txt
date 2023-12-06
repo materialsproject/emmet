@@ -78,7 +78,7 @@ future==0.18.3
     #   uncertainties
 ghp-import==2.1.0
     # via mkdocs
-griffe==0.38.0
+griffe==0.38.1
     # via mkdocstrings-python
 h5py==3.10.0
     # via phonopy
@@ -472,7 +472,7 @@ wcmatch==8.5
     # via mkdocs-awesome-pages-plugin
 wincertstore==0.2
     # via emmet-core (setup.py)
-yarl==1.9.3
+yarl==1.9.4
     # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
