@@ -32,9 +32,9 @@ bcrypt==4.1.1
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.33.8
+boto3==1.33.9
     # via maggma
-botocore==1.33.8
+botocore==1.33.9
     # via
     #   boto3
     #   s3transfer
@@ -67,7 +67,7 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all,ml]==0.74.7
+emmet-core[all,ml]==0.74.8
     # via emmet-builders (setup.py)
 exceptiongroup==1.2.0
     # via anyio
@@ -436,7 +436,7 @@ uvicorn==0.24.0.post1
     # via maggma
 werkzeug==3.0.1
     # via flask
-yarl==1.9.3
+yarl==1.9.4
     # via aiohttp
 zipp==3.17.0
     # via
