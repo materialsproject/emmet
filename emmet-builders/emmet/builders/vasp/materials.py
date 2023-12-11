@@ -199,7 +199,7 @@ class MaterialsBuilder(Builder):
             "input.hubbards",
             "input.potcar_spec",
             # needed for transform deformation structure back for grouping
-            "transmuter",
+            "transformations",
             # misc info for materials doc
             "tags",
         ]
@@ -231,25 +231,35 @@ class MaterialsBuilder(Builder):
         formula = tasks[0].formula_pretty
         task_ids = [task.task_id for task in tasks]
 
-        # not all tasks contains transmuter
-        transmuters = [task.get("transmuter", None) for task in items]
+        # not all tasks contains transformation information
+        task_transformations = [task.get("transformations", None) for task in items]
 
         self.logger.debug(f"Processing {formula}: {task_ids}")
 
-        grouped_tasks = self.filter_and_group_tasks(tasks, transmuters)
+        grouped_tasks = self.filter_and_group_tasks(tasks, task_transformations)
         materials = []
         for group in grouped_tasks:
+            commercial_license = True
+            for task_doc in group:
+                if set(task_doc.tags).intersection(
+                    set(self.settings.NON_COMMERCIAL_TAGS)
+                ):
+                    commercial_license = False
+                    break
             try:
                 materials.append(
                     MaterialsDoc.from_tasks(
                         group,
                         structure_quality_scores=self.settings.VASP_STRUCTURE_QUALITY_SCORES,
                         use_statics=self.settings.VASP_USE_STATICS,
+                        commercial_license=commercial_license,
                     )
                 )
             except Exception as e:
                 failed_ids = list({t_.task_id for t_ in group})
-                doc = MaterialsDoc.construct_deprecated_material(group)
+                doc = MaterialsDoc.construct_deprecated_material(
+                    group, commercial_license
+                )
                 doc.warnings.append(str(e))
                 materials.append(doc)
                 self.logger.warn(
@@ -285,38 +295,39 @@ class MaterialsBuilder(Builder):
             self.logger.info("No items to update")
 
     def filter_and_group_tasks(
-        self, tasks: List[TaskDocument], transmuters: List[Union[Dict, None]]
+        self, tasks: List[TaskDocument], task_transformations: List[Union[Dict, None]]
     ) -> Iterator[List[TaskDocument]]:
         """
         Groups tasks by structure matching
         """
 
         filtered_tasks = []
-        filtered_transmuters = []
-        for task, transmuter in zip(tasks, transmuters):
+        filtered_transformations = []
+        for task, transformations in zip(tasks, task_transformations):
             if any(
                 allowed_type == task.task_type
                 for allowed_type in self.settings.VASP_ALLOWED_VASP_TYPES
             ):
                 filtered_tasks.append(task)
-                filtered_transmuters.append(transmuter)
+                filtered_transformations.append(transformations)
 
         structures = []
-        for idx, (task, transmuter) in enumerate(
-            zip(filtered_tasks, filtered_transmuters)
+        for idx, (task, transformations) in enumerate(
+            zip(filtered_tasks, filtered_transformations)
         ):
             if task.task_type == TaskType.Deformation:
                 if (
-                    transmuter is None
-                ):  # Do not include deformed tasks without transmuter information
+                    transformations is None
+                ):  # Do not include deformed tasks without transformation information
                     self.logger.debug(
-                        "Cannot find transmuter for deformation task {}. Excluding task.".format(
+                        "Cannot find transformation for deformation task {}. Excluding task.".format(
                             task.task_id
                         )
                     )
                     continue
                 else:
-                    s = undeform_structure(task.input.structure, transmuter)
+                    s = undeform_structure(task.input.structure, transformations)
+
             else:
                 s = task.output.structure
             s.index: int = idx  # type: ignore
@@ -334,32 +345,27 @@ class MaterialsBuilder(Builder):
             yield grouped_tasks
 
 
-def undeform_structure(structure: Structure, transmuter: Dict) -> Structure:
+def undeform_structure(structure: Structure, transformations: Dict) -> Structure:
     """
     Get the undeformed structure by applying the transformations in a reverse order.
 
     Args:
         structure: deformed structure
-        transmuter: transformation that deforms the structure
+        transformation: transformation that deforms the structure
 
     Returns:
         undeformed structure
     """
 
-    for trans, params in reversed(
-        list(zip(transmuter["transformations"], transmuter["transformation_params"]))
-    ):
-        # The transmuter only stores the transformation class and parameter, without
-        # module info and such. Therefore, there is no general way to reconstruct it,
-        # and has to do if else check.
-        if trans == "DeformStructureTransformation":
-            deform = Deformation(params["deformation"])
+    for transformation in reversed(transformations.get("history", [])):
+        if transformation["@class"] == "DeformStructureTransformation":
+            deform = Deformation(transformation["deformation"])
             dst = DeformStructureTransformation(deform.inv)
             structure = dst.apply_transformation(structure)
         else:
             raise RuntimeError(
                 "Expect transformation to be `DeformStructureTransformation`; "
-                f"got {trans}"
+                f"got {transformation['@class']}"
             )
 
     return structure

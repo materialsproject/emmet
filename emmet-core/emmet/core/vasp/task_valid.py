@@ -67,10 +67,10 @@ class OutputSummary(BaseModel):
     bandgap: Optional[float] = Field(
         None, description="The DFT bandgap for the last calculation"
     )
-    forces: List[Vector3D] = Field(
+    forces: Optional[List[Vector3D]] = Field(
         [], description="Forces on atoms from the last calculation"
     )
-    stress: Matrix3D = Field(
+    stress: Optional[Matrix3D] = Field(
         [], description="Stress on the unitcell from the last calculation"
     )
 

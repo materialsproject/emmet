@@ -3,7 +3,7 @@ from maggma.api.resource import ReadOnlyResource
 from emmet.core.electrode import ConversionElectrodeDoc
 from emmet.api.core.global_header import GlobalHeaderProcessor
 
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 from emmet.api.routes.materials.insertion_electrodes.query_operators import (
     ElectrodeFormulaQuery,
     ElectrodeElementsQuery,
@@ -28,7 +28,6 @@ def conversion_electrodes_resource(conversion_electrodes_store):
             WorkingIonQuery(),
             ElectrodeElementsQuery(),
             NumericQuery(model=ConversionElectrodeDoc),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 ConversionElectrodeDoc,

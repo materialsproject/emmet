@@ -46,7 +46,7 @@ def test_chemsys_query():
     assert op.query("Si-O") == {"criteria": {"chemsys": "O-Si"}}
 
     assert op.query("Si-*") == {
-        "criteria": {"nelements": 2, "elements": {"$all": ["Si"]}}
+        "criteria": {"nelements": 2, "composition_reduced.Si": {"$exists": True}}
     }
 
     with ScratchDir("."):
@@ -61,7 +61,12 @@ def test_elements_query():
 
     op = ElementsQuery()
     assert op.query(elements=",".join(eles), exclude_elements=",".join(neles)) == {
-        "criteria": {"elements": {"$all": ["Si", "O"], "$nin": ["N", "P"]}}
+        "criteria": {
+            "composition_reduced.Si": {"$exists": True},
+            "composition_reduced.O": {"$exists": True},
+            "composition_reduced.N": {"$exists": False},
+            "composition_reduced.P": {"$exists": False},
+        }
     }
 
     with ScratchDir("."):
@@ -69,7 +74,14 @@ def test_elements_query():
         new_op = loadfn("temp.json")
         assert new_op.query(
             elements=",".join(eles), exclude_elements=",".join(neles)
-        ) == {"criteria": {"elements": {"$all": ["Si", "O"], "$nin": ["N", "P"]}}}
+        ) == {
+            "criteria": {
+                "composition_reduced.Si": {"$exists": True},
+                "composition_reduced.O": {"$exists": True},
+                "composition_reduced.N": {"$exists": False},
+                "composition_reduced.P": {"$exists": False},
+            }
+        }
 
 
 def test_deprecation_query():

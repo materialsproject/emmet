@@ -1,6 +1,7 @@
 import pytest
 from maggma.stores import JSONStore, MemoryStore
 
+from emmet.core.base import EmmetMeta
 from emmet.builders.materials.oxidation_states import OxidationStatesBuilder
 
 
@@ -13,12 +14,14 @@ def fake_materials(test_dir):
     materials_store.connect()
 
     for doc in entries.query():
+        builder_meta = EmmetMeta(license="BY-C").model_dump()
         materials_store.update(
             {
                 "material_id": doc["entry_id"],
                 "structure": doc["structure"],
                 "deprecated": False,
-            }
+                "builder_meta": builder_meta,
+            },
         )
     return materials_store
 

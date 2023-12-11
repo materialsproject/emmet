@@ -4,6 +4,7 @@ from itertools import chain
 from typing import Dict, Iterable, Iterator, List, Optional
 from math import ceil
 import copy
+from datetime import datetime
 
 from maggma.core import Builder, Store
 from maggma.utils import grouper
@@ -241,7 +242,8 @@ class CorrectedEntriesBuilder(Builder):
 
         materials_docs = list(
             self.materials.query(
-                criteria=new_q, properties=["material_id", "entries", "deprecated"]
+                criteria=new_q,
+                properties=["material_id", "entries", "deprecated", "builder_meta"],
             )
         )
 
@@ -252,7 +254,10 @@ class CorrectedEntriesBuilder(Builder):
             oxi_states_data = {
                 d["material_id"]: d.get("average_oxidation_states", {})
                 for d in self.oxidation_states.query(
-                    properties=["material_id", "average_oxidation_states"],
+                    properties=[
+                        "material_id",
+                        "average_oxidation_states",
+                    ],
                     criteria={
                         "material_id": {"$in": material_ids},
                         "state": "successful",
@@ -267,13 +272,15 @@ class CorrectedEntriesBuilder(Builder):
         # Convert entries into ComputedEntries and store
         for doc in materials_docs:
             for r_type, entry_dict in doc.get("entries", {}).items():
-                entry_dict["data"]["oxidation_states"] = oxi_states_data.get(
-                    entry_dict["data"]["material_id"], {}
-                )
-                entry_dict["data"]["run_type"] = r_type
-                elsyms = sorted(set([el for el in entry_dict["composition"]]))
-                self._entries_cache["-".join(elsyms)].append(entry_dict)
-                all_entries.append(entry_dict)
+                if entry_dict:
+                    entry_dict["data"]["oxidation_states"] = oxi_states_data.get(
+                        entry_dict["data"]["material_id"], {}
+                    )
+                    entry_dict["data"]["license"] = doc["builder_meta"].get("license")
+                    entry_dict["data"]["run_type"] = r_type
+                    elsyms = sorted(set([el for el in entry_dict["composition"]]))
+                    self._entries_cache["-".join(elsyms)].append(entry_dict)
+                    all_entries.append(entry_dict)
 
         self.logger.info(f"Total entries in {chemsys} : {len(all_entries)}")
 
@@ -309,7 +316,7 @@ class CorrectedEntriesBuilder(Builder):
             if (chemsys not in corrected_entries_chemsys_dates)
             or (
                 materials_chemsys_dates[chemsys]
-                > corrected_entries_chemsys_dates[chemsys]
+                > datetime.fromisoformat(corrected_entries_chemsys_dates[chemsys])
             )
         ]
 

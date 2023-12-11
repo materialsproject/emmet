@@ -1,7 +1,7 @@
 from maggma.api.query_operator.dynamic import NumericQuery
 from maggma.api.resource import ReadOnlyResource
 from emmet.core.electronic_structure import ElectronicStructureDoc
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 
 from emmet.api.routes.materials.materials.query_operators import (
     ElementsQuery,
@@ -36,7 +36,6 @@ def es_resource(es_store):
             ElementsQuery(),
             NumericQuery(model=ElectronicStructureDoc),
             DeprecationQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 ElectronicStructureDoc, default_fields=["material_id", "last_updated"]
@@ -59,7 +58,6 @@ def bs_resource(es_store):
         query_operators=[
             BSDataQuery(),
             DeprecationQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 ElectronicStructureDoc,
@@ -103,7 +101,6 @@ def dos_resource(es_store):
         query_operators=[
             DOSDataQuery(),
             DeprecationQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 ElectronicStructureDoc,

@@ -22,6 +22,7 @@ class RunType(ValueEnum):
     HF = "HF"
     HSE03 = "HSE03"
     HSE06 = "HSE06"
+    HFCus = "HFCus"
     PBE0 = "PBE0"
     M06L = "M06L"
     MBJL = "MBJL"
@@ -53,6 +54,7 @@ class RunType(ValueEnum):
     HF_U = "HF+U"
     HSE03_U = "HSE03+U"
     HSE06_U = "HSE06+U"
+    HFCus_U = "HFCus+U"
     PBE0_U = "PBE0+U"
     M06L_U = "M06L+U"
     MBJL_U = "MBJL+U"
@@ -73,6 +75,12 @@ class RunType(ValueEnum):
     vdW_DF2_U = "vdW-DF2+U"
     LDA = "LDA"
     LDA_U = "LDA+U"
+
+    @classmethod
+    def _missing_(cls, value):
+        for member in cls:
+            if member.value.upper() == value.upper():
+                return member
 
 
 class TaskType(ValueEnum):

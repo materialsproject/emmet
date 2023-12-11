@@ -66,6 +66,9 @@ def task_type(
     incar = inputs.get("incar", {})
     kpts = inputs.get("kpoints") or {}  # kpoints can be None, then want a dict
 
+    if not isinstance(kpts, dict):
+        kpts = kpts.as_dict()
+
     if incar.get("ICHARG", 0) > 10:
         try:
             kpt_labels = kpts.get("labels") or []
@@ -78,7 +81,7 @@ def task_type(
         else:
             calc_type.append("NSCF Uniform")
     elif len([x for x in kpts.get("labels") or [] if x is not None]) > 0:
-        calc_type.append("SCF Line")
+        calc_type.append("NSCF Line")
     elif incar.get("LEPSILON", False):
         if incar.get("IBRION", 0) > 6:
             calc_type.append("DFPT")

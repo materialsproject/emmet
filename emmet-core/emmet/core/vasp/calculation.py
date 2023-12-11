@@ -3,13 +3,14 @@
 # mypy: ignore-errors
 
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
-from datetime import datetime
 
 import numpy as np
 from pydantic import BaseModel, Extra, Field
 from pymatgen.command_line.bader_caller import bader_analysis_from_path
+from pymatgen.command_line.chargemol_caller import ChargemolAnalysis
 from pymatgen.core.lattice import Lattice
 from pymatgen.core.structure import Structure
 from pymatgen.core.trajectory import Trajectory
@@ -18,17 +19,18 @@ from pymatgen.electronic_structure.core import OrbitalType
 from pymatgen.electronic_structure.dos import CompleteDos, Dos
 from pymatgen.io.vasp import (
     BSVasprun,
+    Kpoints,
     Locpot,
+    Oszicar,
     Outcar,
     Poscar,
     Potcar,
     PotcarSingle,
     Vasprun,
     VolumetricData,
-    Kpoints,
 )
 
-from emmet.core.math import Matrix3D, Vector3D, ListMatrix3D
+from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
 from emmet.core.utils import ValueEnum
 from emmet.core.vasp.calc_types import (
     CalcType,
@@ -60,11 +62,20 @@ class VaspObject(ValueEnum):
     PROCAR = "procar"
 
 
+class StoreTrajectoryOption(ValueEnum):
+    FULL = "full"
+    PARTIAL = "partial"
+    NO = "no"
+
+
 class PotcarSpec(BaseModel):
     """Document defining a VASP POTCAR specification."""
 
     titel: Optional[str] = Field(None, description="TITEL field from POTCAR header")
     hash: Optional[str] = Field(None, description="md5 hash of POTCAR file")
+    summary_stats: Optional[dict] = Field(
+        None, description="summary statistics used to ID POTCARs without hashing"
+    )
 
     @classmethod
     def from_potcar_single(cls, potcar_single: PotcarSingle) -> "PotcarSpec":
@@ -81,7 +92,11 @@ class PotcarSpec(BaseModel):
         PotcarSpec
             A potcar spec.
         """
-        return cls(titel=potcar_single.symbol, hash=potcar_single.md5_header_hash)
+        return cls(
+            titel=potcar_single.symbol,
+            hash=potcar_single.md5_header_hash,
+            summary_stats=potcar_single._summary_stats,
+        )
 
     @classmethod
     def from_potcar(cls, potcar: Potcar) -> List["PotcarSpec"]:
@@ -127,7 +142,9 @@ class CalculationInput(BaseModel):
     structure: Optional[Structure] = Field(
         None, description="Input structure for the calculation"
     )
-    is_hubbard: bool = Field(False, description="Is this a Hubbard +U calculation")
+    is_hubbard: bool = Field(
+        default=False, description="Is this a Hubbard +U calculation"
+    )
     hubbards: Optional[dict] = Field(None, description="The hubbard parameters used")
 
     @classmethod
@@ -412,7 +429,7 @@ class CalculationOutput(BaseModel):
         contcar: Optional[Poscar],
         locpot: Optional[Locpot] = None,
         elph_poscars: Optional[List[Path]] = None,
-        store_trajectory: bool = False,
+        store_trajectory: StoreTrajectoryOption = StoreTrajectoryOption.NO,
     ) -> "CalculationOutput":
         """
         Create a VASP output document from VASP outputs.
@@ -431,8 +448,10 @@ class CalculationOutput(BaseModel):
             Path to displaced electron-phonon coupling POSCAR files generated using
             ``PHON_LMC = True``.
         store_trajectory
-            Whether to store ionic steps as a pymatgen Trajectory object. If `True`,
-            the `ionic_steps` field is left as None.
+            Whether to store ionic steps as a pymatgen Trajectory object.
+            Different value tune the amount of data from the ionic_steps
+            stored in the Trajectory.
+            If not NO, the `ionic_steps` field is left as None.
 
         Returns
         -------
@@ -540,7 +559,9 @@ class CalculationOutput(BaseModel):
             frequency_dependent_dielectric=freq_dependent_diel,
             elph_displaced_structures=elph_structures,
             dos_properties=dosprop_dict,
-            ionic_steps=vasprun.ionic_steps if not store_trajectory else None,
+            ionic_steps=vasprun.ionic_steps
+            if store_trajectory == StoreTrajectoryOption.NO
+            else None,
             locpot=locpot_avg,
             outcar=outcar_dict,
             run_stats=RunStatistics.from_outcar(outcar) if outcar else None,
@@ -578,7 +599,8 @@ class Calculation(BaseModel):
         description="Paths (relative to dir_name) of the VASP output files "
         "associated with this calculation",
     )
-    bader: Optional[dict] = Field(None, description="Output from the bader software")
+    bader: Optional[dict] = Field(None, description="Output from bader charge analysis")
+    ddec6: Optional[dict] = Field(None, description="Output from DDEC6 charge analysis")
     run_type: Optional[RunType] = Field(
         None, description="Calculation run type (e.g., HF, HSE06, PBE)"
     )
@@ -599,14 +621,16 @@ class Calculation(BaseModel):
         contcar_file: Union[Path, str],
         volumetric_files: List[str] = None,
         elph_poscars: List[Path] = None,
+        oszicar_file: Optional[Union[Path, str]] = None,
         parse_dos: Union[str, bool] = False,
         parse_bandstructure: Union[str, bool] = False,
         average_locpot: bool = True,
         run_bader: bool = False,
+        run_ddec6: Union[bool, str] = False,
         strip_bandstructure_projections: bool = False,
         strip_dos_projections: bool = False,
         store_volumetric_data: Optional[Tuple[str]] = None,
-        store_trajectory: bool = False,
+        store_trajectory: StoreTrajectoryOption = StoreTrajectoryOption.NO,
         vasprun_kwargs: Optional[Dict] = None,
     ) -> Tuple["Calculation", Dict[VaspObject, Dict]]:
         """
@@ -629,6 +653,8 @@ class Calculation(BaseModel):
         elph_poscars
             Path to displaced electron-phonon coupling POSCAR files generated using
             ``PHON_LMC = True``, given relative to dir_name.
+        oszicar_file
+            Path to the OSZICAR file, relative to dir_name
         parse_dos
             Whether to parse the DOS. Can be:
 
@@ -651,8 +677,13 @@ class Calculation(BaseModel):
 
         average_locpot
             Whether to store the average of the LOCPOT along the crystal axes.
-        run_bader
+        run_bader : bool = False
             Whether to run bader on the charge density.
+        run_ddec6 : Union[bool , str] = False
+            Whether to run DDEC6 on the charge density. If a string, it's interpreted
+            as the path to the atomic densities directory. Can also be set via the
+            DDEC6_ATOMIC_DENSITIES_DIR environment variable. The files are available at
+            https://sourceforge.net/projects/ddec/files.
         strip_dos_projections
             Whether to strip the element and site projections from the density of
             states. This can help reduce the size of DOS objects in systems with many
@@ -663,9 +694,17 @@ class Calculation(BaseModel):
         store_volumetric_data
             Which volumetric files to store.
         store_trajectory
-            Whether to store the ionic steps in a pymatgen Trajectory object. if `True`,
-            :obj:'.CalculationOutput.ionic_steps' is set to None to reduce duplicating
-            information.
+            Whether to store the ionic steps in a pymatgen Trajectory object and the
+            amount of data to store from the ionic_steps. Can be:
+            - FULL: Store the Trajectory. All the properties from the ionic_steps
+              are stored in the frame_properties except for the Structure, to
+              avoid redundancy.
+            - PARTIAL: Store the Trajectory. All the properties from the ionic_steps
+              are stored in the frame_properties except from Structure and
+              ElectronicStep.
+            - NO: Trajectory is not Stored.
+            If not NO, :obj:'.CalculationOutput.ionic_steps' is set to None
+            to reduce duplicating information.
         vasprun_kwargs
             Additional keyword arguments that will be passed to the Vasprun init.
 
@@ -708,6 +747,13 @@ class Calculation(BaseModel):
             suffix = "" if task_name == "standard" else f".{task_name}"
             bader = bader_analysis_from_path(dir_name, suffix=suffix)
 
+        ddec6 = None
+        if run_ddec6 and VaspObject.CHGCAR in output_file_paths:
+            densities_path = run_ddec6 if isinstance(run_ddec6, (str, Path)) else None
+            ddec6 = ChargemolAnalysis(
+                path=dir_name, atomic_densities_path=densities_path
+            ).summary
+
         locpot = None
         if average_locpot:
             if VaspObject.LOCPOT in vasp_objects:
@@ -726,12 +772,29 @@ class Calculation(BaseModel):
             elph_poscars=elph_poscars,
             store_trajectory=store_trajectory,
         )
-        if store_trajectory:
+        if store_trajectory != StoreTrajectoryOption.NO:
+            exclude_from_trajectory = ["structure"]
+            if store_trajectory == StoreTrajectoryOption.PARTIAL:
+                exclude_from_trajectory.append("electronic_steps")
+            frame_properties = [
+                IonicStep(**x).model_dump(exclude=exclude_from_trajectory)
+                for x in vasprun.ionic_steps
+            ]
+            if oszicar_file:
+                try:
+                    oszicar = Oszicar(oszicar_file)
+                    if "T" in oszicar.ionic_steps[0]:
+                        for frame_property, oszicar_is in zip(
+                            frame_properties, oszicar.ionic_steps
+                        ):
+                            frame_property["temperature"] = oszicar_is.get("T")
+                except ValueError:
+                    # there can be errors in parsing the floats from OSZICAR
+                    pass
+
             traj = Trajectory.from_structures(
                 [d["structure"] for d in vasprun.ionic_steps],
-                frame_properties=[
-                    IonicStep(**x).model_dump() for x in vasprun.ionic_steps
-                ],
+                frame_properties=frame_properties,
                 constant_lattice=False,
             )
             vasp_objects[VaspObject.TRAJECTORY] = traj  # type: ignore
@@ -761,6 +824,7 @@ class Calculation(BaseModel):
                     k.name.lower(): v for k, v in output_file_paths.items()
                 },
                 bader=bader,
+                ddec6=ddec6,
                 run_type=run_type(input_doc.parameters),
                 task_type=task_type(input_doc.model_dump()),
                 calc_type=calc_type(input_doc.model_dump(), input_doc.parameters),

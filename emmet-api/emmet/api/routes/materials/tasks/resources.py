@@ -1,4 +1,4 @@
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 from maggma.api.resource import ReadOnlyResource
 
 from emmet.api.routes.materials.materials.query_operators import (
@@ -29,7 +29,6 @@ def task_resource(task_store):
             ChemsysQuery(),
             ElementsQuery(),
             MultipleTaskIDsQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 TaskDoc,

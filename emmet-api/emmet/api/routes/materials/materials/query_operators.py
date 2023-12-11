@@ -13,6 +13,7 @@ from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatc
 from pymatgen.core.composition import Composition, CompositionError
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Structure
+from emmet.core.vasp.calc_types import RunType
 
 
 class FormulaQuery(QueryOperator):
@@ -77,16 +78,15 @@ class ElementsQuery(QueryOperator):
         elements: Optional[str] = Query(
             None,
             description="Query by elements in the material composition as a comma-separated list",
+            max_length=15,
         ),
         exclude_elements: Optional[str] = Query(
             None,
             description="Query by excluded elements in the material composition as a comma-separated list",
+            max_length=15,
         ),
     ) -> STORE_PARAMS:
         crit = {}  # type: dict
-
-        if elements or exclude_elements:
-            crit["elements"] = {}
 
         if elements:
             try:
@@ -97,7 +97,8 @@ class ElementsQuery(QueryOperator):
                     detail="Please provide a comma-seperated list of elements",
                 )
 
-            crit["elements"]["$all"] = [str(el) for el in element_list]
+            for el in element_list:
+                crit[f"composition_reduced.{el}"] = {"$exists": True}
 
         if exclude_elements:
             try:
@@ -107,7 +108,9 @@ class ElementsQuery(QueryOperator):
                     status_code=400,
                     detail="Please provide a comma-seperated list of elements",
                 )
-            crit["elements"]["$nin"] = [str(el) for el in element_list]
+
+            for el in element_list:
+                crit[f"composition_reduced.{el}"] = {"$exists": False}
 
         return {"criteria": crit}
 
@@ -199,6 +202,50 @@ class MultiTaskIDQuery(QueryOperator):
 
     def ensure_indexes(self):  # pragma: no cover
         return [("task_ids", False)]
+
+
+class BlessedCalcsQuery(QueryOperator):
+    """
+    Method to generate a query for nested blessed calculation data
+    """
+
+    def query(
+        self,
+        run_type: RunType = Query(
+            ..., description="Calculation run type of blessed task data"
+        ),
+        energy_min: Optional[float] = Query(
+            None, description="Minimum total uncorrected DFT energy in eV/atom"
+        ),
+        energy_max: Optional[float] = Query(
+            None, description="Maximum total uncorrected DFT energy in eV/atom"
+        ),
+    ) -> STORE_PARAMS:
+        # crit = {f"entries.{run_type}": {}}  # type: dict
+
+        # if energy_min:
+        #     crit[f"entries.{run_type}"].update({"$gte": energy_min})
+
+        # if energy_max:
+        #     crit[f"entries.{run_type}"].update({"$lte": energy_max})
+
+        # if not crit[f"entries.{run_type}"]:
+        #     crit[f"entries.{run_type}"].update({"$exists": True})
+
+        return {"criteria": {f"entries.{run_type}": {"$exists": True}}}
+
+    def post_process(self, docs, query):
+        run_type = list(query["criteria"].keys())[0].split(".")[-1]
+
+        return_data = [
+            {
+                "material_id": doc["material_id"],
+                "blessed_entry": doc["entries"][run_type],
+            }
+            for doc in docs
+        ]
+
+        return return_data
 
 
 class MultiMaterialIDQuery(QueryOperator):

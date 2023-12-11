@@ -42,7 +42,7 @@ class ComplianceTensorDoc(BaseModel):
 
 class BulkModulus(BaseModel):
     voigt: Optional[float] = Field(None, description="Bulk modulus Voigt average (GPa)")
-    reuss: Optional[float] = Field(None, description="Bulk modulus Reuss average (Gpa)")
+    reuss: Optional[float] = Field(None, description="Bulk modulus Reuss average (GPa)")
     vrh: Optional[float] = Field(
         None, description="Bulk modulus Voigt-Reuss-Hill average (GPa)"
     )
