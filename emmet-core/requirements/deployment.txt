@@ -102,7 +102,7 @@ six==1.16.0
     #   latexcodec
     #   pybtex
     #   python-dateutil
-spglib==2.1.0
+spglib==2.2.0
     # via pymatgen
 sympy==1.12
     # via pymatgen
@@ -112,7 +112,7 @@ tenacity==8.2.3
     # via plotly
 tqdm==4.66.1
     # via pymatgen
-typing-extensions==4.8.0
+typing-extensions==4.9.0
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pydantic
