@@ -21,7 +21,6 @@ def test_input_summary(test_dir, object_name, task_name):
     dir_name = test_dir / "qchem" / test_object.folder
 
     files = test_object.task_files[task_name]
-    print(dir_name, task_name, files)
     calc_doc = Calculation.from_qchem_files(dir_name, task_name, **files)
 
     test_doc = InputDoc.from_qchem_calc_doc(calc_doc)
@@ -51,13 +50,10 @@ def test_output_summary(test_dir, object_name, task_name):
     dir_name = test_dir / "qchem" / test_object.folder
 
     files = test_object.task_files[task_name]
-    print(dir_name, task_name, files)
     calc_doc = Calculation.from_qchem_files(dir_name, task_name, **files)
-    print(calc_doc)
 
     test_doc = OutputDoc.from_qchem_calc_doc(calc_doc)
     valid_doc = test_object.task_doc["output"]
-    print(valid_doc)
     assert_schemas_equal(test_doc, valid_doc)
 
     # test document can be janitized

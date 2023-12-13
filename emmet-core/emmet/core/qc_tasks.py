@@ -7,6 +7,7 @@ import os
 import re
 from collections import OrderedDict
 from pydantic import BaseModel, Field
+from custodian.qchem.jobs import QCJob
 from pymatgen.core.structure import Molecule
 from pymatgen.io.qchem.inputs import QCInput
 from monty.serialization import loadfn
@@ -32,18 +33,9 @@ _T = TypeVar("_T", bound="TaskDoc")
 # _DERIVATIVE_FILES = ("GRAD", "HESS")
 
 
-# class QChemStatus(ValueEnum):
-#     """
-#     Q-Chem Calculation State
-#     """
-
-#     SUCCESS = "successful"
-#     FAILED = "unsuccessful"
-
-
 class OutputDoc(BaseModel):
-    initial_molecule: Dict[str, Any] = Field(None, description="Input Molecule object")
-    optimized_molecule: Optional[Dict[str, Any]] = Field(
+    initial_molecule: Molecule = Field(None, description="Input Molecule object")
+    optimized_molecule: Optional[Molecule] = Field(
         None, description="Optimized Molecule object"
     )
 
@@ -125,7 +117,7 @@ class OutputDoc(BaseModel):
 
 
 class InputDoc(BaseModel):
-    initial_molecule: Dict[str, Any] = Field(
+    initial_molecule: Molecule = Field(
         None,
         title="Input Structure",
         description="Input molecule and calc details for the QChem calculation",
@@ -190,7 +182,6 @@ class InputDoc(BaseModel):
             A summary of the input molecule and corresponding calculation parameters
         """
         # TODO : modify this to get the different variables from the task doc.
-        # print(calc_doc)
         return cls(
             initial_molecule=calc_doc.input.initial_molecule,
             rem=calc_doc.input.rem,
@@ -211,7 +202,7 @@ class CustodianDoc(BaseModel):
         description="List of custodian correction data for calculation.",
     )
 
-    job: Optional[Dict[str, Any]] = Field(
+    job: Optional[Union[Dict[str, Any], QCJob]] = Field(
         None,
         title="Custodian Job Data",
         description="Job data logged by custodian.",
@@ -363,9 +354,8 @@ class TaskDoc(MoleculeMetadata):
             included_objects = list(qchem_objects.keys())
 
         # run_stats = _get_run_stats(calcs_reversed), Discuss whether this is something which is necessary in terms of QChem calcs
-
         doc = cls.from_molecule(
-            meta_molecule=Molecule.from_dict(calcs_reversed[-1].input.initial_molecule),
+            meta_molecule=calcs_reversed[-1].input.initial_molecule,
             dir_name=dir_name,
             calcs_reversed=calcs_reversed,
             custodian=custodian,
@@ -385,7 +375,6 @@ class TaskDoc(MoleculeMetadata):
 
         # doc = doc.copy(update=additional_fields)
         doc = doc.model_copy(update=additional_fields)
-        # print(doc)
         return doc
 
     @staticmethod
@@ -578,20 +567,14 @@ def _find_qchem_files(
     """
     path = Path(path)
     task_files = OrderedDict()
-    print(Path)
 
     in_file_pattern = re.compile(r"^(?P<in_task_name>mol\.qin(?:\..+)?)\.gz$")
-    # print(in_file_pattern)
-    # out_file_pattern = re.compile(r"^(?P<out_task_name>mol\.q(?:\..+)?)\.gz$")
-    # print(out_file_pattern)
 
     for file in path.iterdir():
         if file.is_file():
             in_match = in_file_pattern.match(file.name)
-            # out_match = out_file_pattern.match(file.name)
             if in_match:
                 in_task_name = in_match.group("in_task_name").replace("mol.qin.", "")
-                # out_task_name = out_match.group('out_task_name').replace("mol.qout", "") #Remove mol.qout
                 if in_task_name == "orig":
                     task_files[in_task_name] = {"orig_input_file": file}
                 elif in_task_name == "mol.qin":

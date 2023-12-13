@@ -11,6 +11,7 @@ from pydantic import field_validator, BaseModel, Field, ConfigDict
 from datetime import datetime
 from pymatgen.io.qchem.inputs import QCInput
 from pymatgen.io.qchem.outputs import QCOutput
+from pymatgen.core.structure import Molecule
 from collections import OrderedDict
 import re
 
@@ -59,7 +60,7 @@ class CalculationInput(BaseModel):
     Document defining QChem calculation inputs.
     """
 
-    initial_molecule: Optional[Dict[str, Any]] = Field(
+    initial_molecule: Optional[Molecule] = Field(
         None, description="input molecule geometry before the QChem calculation"
     )
 
@@ -130,11 +131,9 @@ class CalculationInput(BaseModel):
         CalculationInput
             The input document.
         """
-        # print("the molecule \n")
-        # print(qcinput.molecule.as_dict())
 
         return cls(
-            initial_molecule=qcinput.molecule.as_dict(),
+            initial_molecule=qcinput.molecule,
             charge=int(qcinput.molecule.as_dict()["charge"])
             if qcinput.molecule.as_dict()
             else None,
@@ -153,7 +152,7 @@ class CalculationInput(BaseModel):
 class CalculationOutput(BaseModel):
     """Document defining QChem calculation outputs."""
 
-    optimized_molecule: Optional[Dict[str, Any]] = Field(
+    optimized_molecule: Optional[Molecule] = Field(
         None,
         description="optimized geometry of the molecule after calculation in case of opt, optimization or ts",
     )
@@ -209,7 +208,7 @@ class CalculationOutput(BaseModel):
         None, description="optimized geometry of the molecules after the geometric scan"
     )
 
-    scan_molecules: Optional[Union[List, Dict[str, Any]]] = Field(
+    scan_molecules: Optional[Union[List, Dict[str, Any], Molecule]] = Field(
         None,
         description="The constructed pymatgen molecules from the optimized scan geometries",
     )
@@ -264,13 +263,10 @@ class CalculationOutput(BaseModel):
         CalculationOutput
             The output document.
         """
-
+        optimized_molecule = qcoutput.data.get("molecule_from_optimized_geometry", {})
+        optimized_molecule = optimized_molecule if optimized_molecule else None
         return cls(
-            optimized_molecule=qcoutput.data.get(
-                "molecule_from_optimized_geometry"
-            ).as_dict()
-            if qcoutput.data.get("molecule_from_optimized_geometry")
-            else {},
+            optimized_molecule=optimized_molecule,
             mulliken=qcoutput.data.get(["Mulliken"][-1], []),
             esp=qcoutput.data.get(["ESP"][-1], []),
             resp=qcoutput.data.get(["RESP"][-1], []),
@@ -382,7 +378,6 @@ class Calculation(BaseModel):
 
         qcinput_kwargs = qcinput_kwargs if qcinput_kwargs else {}
         qcinput = QCInput.from_file(qcinput_file, **qcinput_kwargs)
-        # print(qcinput)
 
         qcoutput_kwargs = qcoutput_kwargs if qcoutput_kwargs else {}
         qcoutput = QCOutput(qcoutput_file, **qcoutput_kwargs)
@@ -452,22 +447,14 @@ def _find_qchem_files(
     """
     path = Path(path)
     task_files = OrderedDict()
-    # print(Path)
 
     in_file_pattern = re.compile(r"^(?P<in_task_name>mol\.qin(?:\..+)?)\.gz$")
-    # print(in_file_pattern)
 
     for file in path.iterdir():
         if file.is_file():
-            # print(file.name)
             in_match = in_file_pattern.match(file.name)
-            # print(in_match)
-            # out_match = out_file_pattern.match(file.name)
             if in_match:
-                # print(in_task_name)
                 in_task_name = in_match.group("in_task_name").replace("mol.qin.", "")
-                # print(in_task_name)
-                # out_task_name = out_match.group('out_task_name').replace("mol.qout", "") #Remove mol.qout
                 if in_task_name == "orig":
                     task_files[in_task_name] = {"orig_input_file": file}
                 elif in_task_name == "mol.qin":
