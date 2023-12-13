@@ -568,8 +568,8 @@ def solvent(parameters: CalculationInput, custom_smd: Optional[str] = None) -> s
     solvation = lot.value.split("/")[-1]
 
     if solvation == "PCM":
-        #dielectric = float(parameters.get("solvent", {}).get("dielectric", 78.39))
-        #dielectric = float(parameters.get("solvent", {}))
+        # dielectric = float(parameters.get("solvent", {}).get("dielectric", 78.39))
+        # dielectric = float(parameters.get("solvent", {}))
         # dielectric = getattr(parameters, "solvent", None)
         # dielectric_string = f"{dielectric.get('dielectric', '0.0'):.2f}".replace(".", ",")
         dielectric_string = getattr(parameters, "solvent", None)
