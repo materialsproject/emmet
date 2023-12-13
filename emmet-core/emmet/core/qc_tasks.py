@@ -581,18 +581,16 @@ def _find_qchem_files(
     print(Path)
 
     in_file_pattern = re.compile(r"^(?P<in_task_name>mol\.qin(?:\..+)?)\.gz$")
-    print(in_file_pattern)
+    # print(in_file_pattern)
+    # out_file_pattern = re.compile(r"^(?P<out_task_name>mol\.q(?:\..+)?)\.gz$")
+    # print(out_file_pattern)
 
     for file in path.iterdir():
         if file.is_file():
-            print(file.name)
             in_match = in_file_pattern.match(file.name)
-            print(in_match)
             # out_match = out_file_pattern.match(file.name)
             if in_match:
-                # print(in_task_name)
                 in_task_name = in_match.group("in_task_name").replace("mol.qin.", "")
-                print(in_task_name)
                 # out_task_name = out_match.group('out_task_name').replace("mol.qout", "") #Remove mol.qout
                 if in_task_name == "orig":
                     task_files[in_task_name] = {"orig_input_file": file}
