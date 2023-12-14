@@ -294,7 +294,7 @@ class BondingBuilder(Builder):
 
     def update_targets(self, items: List[List[Dict]]):
         """
-        Inserts the new documents into the charges collection
+        Inserts the new documents into the bonds collection
 
         Args:
             items [[dict]]: A list of documents to update
