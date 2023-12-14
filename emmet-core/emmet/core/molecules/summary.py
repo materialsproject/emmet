@@ -27,6 +27,7 @@ class HasProps(Enum):
     molecules = "molecules"
     bonding = "bonding"
     metal_binding = "metal_binding"
+    multipole_moments = "multipole_moments"
     orbitals = "orbitals"
     partial_charges = "partial_charges"
     partial_spins = "partial_spins"
@@ -342,6 +343,42 @@ class MoleculeSummaryDoc(PropertyDoc):
         "0-indexed atom indices.",
     )
 
+    # electric multipoles
+    total_dipole: Optional[str, float] = Field(
+        None,
+        description="Total molecular dipole moment (Debye)",
+    )
+
+    dipole_moment: Optional[str, Vector3D] = Field(
+        None,
+        description="Molecular dipole moment vector (Debye)",
+    )
+
+    resp_total_dipole: Optional[str, float] = Field(
+        None,
+        description="Total dipole moment, calculated via restrained electrostatic potential (RESP) (Debye)",
+    )
+
+    resp_dipole_moment: Optional[str, Vector3D] = Field(
+        None,
+        description="Molecular dipole moment vector, calculated via RESP (Debye)",
+    )
+
+    quadrupole_moment: Optional[str, Dict[str, float]] = Field(
+        None,
+        description="Quadrupole moment components (Debye Ang)",
+    )
+
+    octopole_moment: Optional[str, Dict[str, float]] = Field(
+        None,
+        description="Octopole moment components (Debye Ang^2)",
+    )
+
+    hexadecapole_moment: Optional[str, Dict[str, float]] = Field(
+        None,
+        description="Hexadecapole moment tensor components (Debye Ang^2)",
+    )
+
     # redox properties
     redox_property_ids: Optional[Dict[str, str]] = Field(
         None, description="Solvent:property ID map for each RedoxDoc for this molecule."
@@ -555,6 +592,15 @@ summary_fields: Dict[str, list] = {
     HasProps.partial_charges.value: ["partial_charges"],
     HasProps.partial_spins.value: ["partial_spins"],
     HasProps.bonding.value: ["molecule_graph", "bond_types", "bonds", "bonds_nometal"],
+    HasProps.multipole_moments.value: [
+        "total_dipole",
+        "dipole_moment",
+        "resp_total_dipole",
+        "resp_dipole_moment",
+        "quadrupole_moment",
+        "octopole_moment",
+        "hexadecapole_moment",
+    ],
     HasProps.redox.value: [
         "electron_affinity",
         "ea_task_id",
