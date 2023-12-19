@@ -28,11 +28,11 @@ bcrypt==4.1.2
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.34.2
+boto3==1.34.4
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.34.2
+botocore==1.34.4
     # via
     #   boto3
     #   s3transfer
@@ -83,7 +83,7 @@ fastapi==0.105.0
     #   maggma
 flask==3.0.0
     # via mongogrant
-fonttools==4.46.0
+fonttools==4.47.0
     # via matplotlib
 future==0.18.3
     # via
@@ -195,7 +195,7 @@ pandas==1.5.3
     #   -r python/requirements.txt
     #   matminer
     #   pymatgen
-paramiko==3.3.1
+paramiko==3.4.0
     # via sshtunnel
 phonopy==2.21.0
     # via matcalc
@@ -231,7 +231,7 @@ pydantic-settings==2.1.0
     #   maggma
 pydash==7.0.6
     # via maggma
-pymatgen==2023.11.12
+pymatgen==2023.12.18
     # via
     #   emmet-core
     #   matcalc

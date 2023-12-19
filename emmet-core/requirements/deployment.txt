@@ -14,7 +14,7 @@ contourpy==1.2.0
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-fonttools==4.46.0
+fonttools==4.47.0
     # via matplotlib
 future==0.18.3
     # via uncertainties
@@ -73,7 +73,7 @@ pydantic-core==2.14.5
     # via pydantic
 pydantic-settings==2.1.0
     # via emmet-core (emmet/emmet-core/setup.py)
-pymatgen==2023.11.12
+pymatgen==2023.12.18
     # via emmet-core (emmet/emmet-core/setup.py)
 pyparsing==3.1.1
     # via matplotlib
