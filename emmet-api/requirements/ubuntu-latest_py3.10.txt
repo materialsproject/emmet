@@ -24,21 +24,21 @@ attrs==23.1.0
     #   ddtrace
     #   jsonschema
     #   referencing
-bcrypt==4.0.1
+bcrypt==4.1.2
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.33.0
+boto3==1.34.4
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.33.0
+botocore==1.34.4
     # via
     #   boto3
     #   s3transfer
 bytecode==0.15.1
     # via ddtrace
-cattrs==23.2.2
+cattrs==23.2.3
     # via ddtrace
 certifi==2023.11.17
     # via requests
@@ -55,7 +55,7 @@ click==8.1.7
     #   uvicorn
 contourpy==1.2.0
     # via matplotlib
-cryptography==41.0.6
+cryptography==41.0.7
     # via paramiko
 cycler==0.12.1
     # via matplotlib
@@ -69,21 +69,21 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.74.3
+emmet-core[all]==0.75.0
     # via emmet-api (setup.py)
-envier==0.4.0
+envier==0.5.0
     # via ddtrace
 exceptiongroup==1.2.0
     # via
     #   anyio
     #   cattrs
-fastapi==0.104.1
+fastapi==0.105.0
     # via
     #   emmet-api (setup.py)
     #   maggma
 flask==3.0.0
     # via mongogrant
-fonttools==4.45.1
+fonttools==4.47.0
     # via matplotlib
 future==0.18.3
     # via
@@ -99,7 +99,7 @@ idna==3.6
     # via
     #   anyio
     #   requests
-importlib-metadata==6.8.0
+importlib-metadata==6.11.0
     # via opentelemetry-api
 inflect==7.0.0
     # via robocrys
@@ -119,13 +119,13 @@ joblib==1.3.2
     #   scikit-learn
 jsonschema==4.20.0
     # via maggma
-jsonschema-specifications==2023.11.1
+jsonschema-specifications==2023.11.2
     # via jsonschema
 kiwisolver==1.4.5
     # via matplotlib
 latexcodec==2.0.1
     # via pybtex
-maggma==0.58.0
+maggma==0.60.0
     # via emmet-api (setup.py)
 markupsafe==2.1.3
     # via
@@ -176,7 +176,7 @@ numpy==1.26.2
     #   seekpath
     #   shapely
     #   spglib
-opentelemetry-api==1.21.0
+opentelemetry-api==1.22.0
     # via ddtrace
 orjson==3.9.10
     # via maggma
@@ -192,9 +192,9 @@ pandas==1.5.3
     # via
     #   matminer
     #   pymatgen
-paramiko==3.3.1
+paramiko==3.4.0
     # via sshtunnel
-phonopy==2.20.0
+phonopy==2.21.0
     # via matcalc
 pillow==10.1.0
     # via matplotlib
@@ -228,7 +228,7 @@ pydantic-settings==2.1.0
     #   maggma
 pydash==7.0.6
     # via maggma
-pymatgen==2023.11.12
+pymatgen==2023.12.18
     # via
     #   emmet-core
     #   matcalc
@@ -240,7 +240,7 @@ pymatgen-analysis-alloys==0.0.6
     # via emmet-core
 pymatgen-analysis-diffusion==2023.8.15
     # via emmet-core
-pymongo==4.6.0
+pymongo==4.6.1
     # via
     #   maggma
     #   matminer
@@ -263,9 +263,9 @@ pyyaml==6.0.1
     # via
     #   phonopy
     #   pybtex
-pyzmq==25.1.1
+pyzmq==25.1.2
     # via maggma
-referencing==0.31.0
+referencing==0.32.0
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -276,7 +276,7 @@ requests==2.31.0
     #   pymatgen
 robocrys==0.2.8
     # via emmet-core
-rpds-py==0.13.1
+rpds-py==0.15.2
     # via
     #   jsonschema
     #   referencing
@@ -287,7 +287,7 @@ ruamel-yaml==0.17.40
     #   robocrys
 ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
-s3transfer==0.8.0
+s3transfer==0.9.0
     # via boto3
 scikit-learn==1.3.2
     # via matminer
@@ -316,7 +316,7 @@ six==1.16.0
     #   python-dateutil
 sniffio==1.3.0
     # via anyio
-spglib==2.1.0
+spglib==2.2.0
     # via
     #   phonopy
     #   pymatgen
@@ -341,7 +341,7 @@ tqdm==4.66.1
     #   maggma
     #   matminer
     #   pymatgen
-typing-extensions==4.8.0
+typing-extensions==4.9.0
     # via
     #   asgiref
     #   cattrs
