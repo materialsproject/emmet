@@ -10,7 +10,7 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 @pytest.fixture(scope="session")
 def tasks_store(test_dir):
-    return JSONStore(test_dir / "multipole_builder.json.gz")  # TODO: need new test file
+    return JSONStore(test_dir / "multipole_builder.json.gz")
 
 
 @pytest.fixture(scope="session")
@@ -35,5 +35,5 @@ def test_electric_multipole_builder(tasks_store, mol_store, multipole_store):
     builder = ElectricMultipoleBuilder(tasks_store, mol_store, multipole_store)
     builder.run()
 
-    assert multipole_store.count() == None  # TODO: unsure how many docs will be present
+    assert multipole_store.count() == 2
     assert multipole_store.count({"total_dipole": None}) == 0

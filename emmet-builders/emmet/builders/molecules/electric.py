@@ -53,7 +53,7 @@ class ElectricMultipoleBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[tasks, molecules], targets=[electric], **kwargs)
+        super().__init__(sources=[tasks, molecules], targets=[multipoles], **kwargs)
         # Uncomment in case of issue with mrun not connecting automatically to collections
         # for i in [self.tasks, self.molecules, self.multipoles]:
         #     try:
@@ -192,7 +192,6 @@ class ElectricMultipoleBuilder(Builder):
                 and e["spin_multiplicity"] == mol.spin_multiplicity
                 and (
                     e["output"].get("dipoles") is not None
-                    or "dipoles" in e["calcs_reversed"][0]
                 )
             ]
 
