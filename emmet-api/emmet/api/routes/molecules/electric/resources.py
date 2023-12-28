@@ -11,10 +11,10 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     ExactCalcMethodQuery,
     FormulaQuery,
     ChemsysQuery,
-    ElementsQuery,
+    CompositionElementsQuery,
     ChargeSpinQuery,
 )
-from emmet.api.routes.molecules.utils import MethodQuery, MultiPropertyIDQuery
+from emmet.api.routes.molecules.utils import MultiPropertyIDQuery
 from emmet.api.core.settings import MAPISettings
 from emmet.api.core.global_header import GlobalHeaderProcessor
 
@@ -28,9 +28,8 @@ def electric_multipole_resource(multipole_store):
             ExactCalcMethodQuery(),
             FormulaQuery(),
             ChemsysQuery(),
-            ElementsQuery(),
+            CompositionElementsQuery(),
             ChargeSpinQuery(),
-            MethodQuery(),
             MultiPropertyIDQuery(),
             MultipoleMomentComponentQuery(),
             PaginationQuery(),
@@ -40,7 +39,6 @@ def electric_multipole_resource(multipole_store):
                     "molecule_id",
                     "property_id",
                     "solvent",
-                    "method",
                     "last_updated",
                 ],
             ),

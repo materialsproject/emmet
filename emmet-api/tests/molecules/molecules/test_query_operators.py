@@ -13,6 +13,7 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     FindMoleculeQuery,
     CalcMethodQuery,
     HashQuery,
+    StringRepQuery
 )
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
@@ -268,5 +269,28 @@ def test_hash_query():
             "criteria": {
                 "species_hash": "ea83c62377feef8c8c3190562e13ffd6",
                 "coord_hash": "5a0282381090c5c9646d03891133d8c9",
+            }
+        }
+
+
+def test_string_rep_query():
+    op = StringRepQuery()
+
+    assert op.query(
+        inchi="InChI=1S/C2H3NO3/c3-1(4)2(5)6/h(H2,3,4)(H,5,6)"
+    ) == {
+        "criteria": {
+            "inchi": "InChI=1S/C2H3NO3/c3-1(4)2(5)6/h(H2,3,4)(H,5,6)"
+        }
+    }
+
+    with ScratchDir("."):
+        dumpfn(op, "temp.json")
+        new_op = loadfn("temp.json")
+        assert new_op.query(
+            inchi_key="SOWBFZRMHSNYGE-UHFFFAOYSA-N"
+        ) == {
+            "criteria": {
+                "inchi_key": "SOWBFZRMHSNYGE-UHFFFAOYSA-N"
             }
         }

@@ -14,7 +14,7 @@ from emmet.api.routes.molecules.molecules.hint_scheme import MoleculesHintScheme
 from emmet.api.routes.molecules.molecules.query_operators import (
     FormulaQuery,
     ChemsysQuery,
-    ElementsQuery,
+    CompositionElementsQuery,
     ChargeSpinQuery,
     DeprecationQuery,
     MultiTaskIDQuery,
@@ -22,6 +22,7 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     FindMoleculeQuery,
     CalcMethodQuery,
     HashQuery,
+    StringRepQuery,
 )
 
 from emmet.api.core.global_header import GlobalHeaderProcessor
@@ -52,11 +53,12 @@ def molecules_resource(molecules_store):
             MultiMPculeIDQuery(),
             FormulaQuery(),
             ChemsysQuery(),
-            ElementsQuery(),
+            CompositionElementsQuery(),
             ChargeSpinQuery(),
             MultiTaskIDQuery(),
             CalcMethodQuery(),
             HashQuery(),
+            StringRepQuery(),
             DeprecationQuery(),
             NumericQuery(model=MoleculeDoc),
             PaginationQuery(),
