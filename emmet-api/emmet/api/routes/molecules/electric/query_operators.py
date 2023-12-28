@@ -4,6 +4,31 @@ from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
 
 
+allowed_components = {
+    "dipole": {"X", "Y", "Z"},
+    "resp_dipole": {"X", "Y", "Z"},
+    "quadrupole": {"XX", "XY", "YY", "XZ", "YZ", "ZZ"},
+    "octopole": {"XXX", "XXY", "XYY", "YYY", "XXZ", "XYZ", "YYZ", "XZZ", "YZZ", "ZZZ"},
+    "hexadecapole": {
+        "XXXX",
+        "XXXY",
+        "XXYY",
+        "XYYY",
+        "YYYY",
+        "XXXZ",
+        "XXYZ",
+        "XYYZ",
+        "YYYZ",
+        "XXZZ",
+        "XYZZ",
+        "YYZZ",
+        "XZZZ",
+        "YZZZ",
+        "ZZZZ",
+    }
+}
+
+
 class MultipoleMomentComponentQuery(QueryOperator):
     """
     Method to generate a query on components of electric multipole moments.
@@ -35,30 +60,6 @@ class MultipoleMomentComponentQuery(QueryOperator):
         if self.moment_type is None or self.component is None:
             return {"criteria": dict()}
 
-        allowed_components = {
-            "dipole": {"X", "Y", "Z"},
-            "resp_dipole": {"X", "Y", "Z"},
-            "quadrupole": {"XX", "XY", "YY", "XZ", "YZ", "ZZ"},
-            "octopole": {"XXX", "XXY", "XYY", "YYY", "XXZ", "XYZ", "YYZ", "XZZ", "YZZ", "ZZZ"},
-            "hexadecapole": {
-                "XXXX",
-                "XXXY",
-                "XXYY",
-                "XYYY",
-                "YYYY",
-                "XXXZ",
-                "XXYZ",
-                "XYYZ",
-                "YYYZ",
-                "XXZZ",
-                "XYZZ",
-                "YYZZ",
-                "XZZZ",
-                "YZZZ",
-                "ZZZZ",
-            }
-        }
-
         allowed = allowed_components[self.moment_type]
 
         if self.component not in allowed:
@@ -66,23 +67,33 @@ class MultipoleMomentComponentQuery(QueryOperator):
 
         key_prefix = self.moment_type + "_moment"
 
+        if self.moment_type in ["dipole", "resp_dipole"]:
+            mapping = {"X": "0", "Y": "1", "Z": "2"}
+            key_suffix = mapping[self.component]
+        else:
+            key_suffix = self.component
+        
+        key = key_prefix + "." + key_suffix
+
         crit: Dict[str, Any] = {key: dict()}  # type: ignore
 
-        if self.moment_type in ["dipole", "resp_dipole"]:
-            mapping = {"X": 0, "Y": 1, "Z": 2}
-            # TODO: you are here
-
         if self.min_value is not None:
-            crit[key]["$lte"] = max_bond_length
-        if min_bond_length is not None:
-            crit[key]["$gte"] = min_bond_length
+            crit[key]["$gte"] = self.min_value
+        if self.max_value is not None:
+            crit[key]["$lte"] = self.max_value
 
         return {"criteria": crit}
 
-    def ensure_indexes(self):  # pragma: no cover
-        return [
-            ("correction_level_of_theory", False),
-            ("correction_solvent", False),
-            ("correction_lot_solvent", False),
-            ("combined_lot_solvent", False),
-        ]
+    def ensure_indexes(self):
+        # Right now, indexing on all sub-fields of all electric multipole moments
+        # TODO: is this necessary? Is this the best way to do this?
+        indexes = list()
+        for dp in ["dipole_moment", "resp_dipole_moment"]:
+            for index in range(3):
+                indexes.append((f"{dp}.{index}", False))
+        
+        for mp in ["quadrupole", "octopole", "hexadecapole"]:
+            for valid_key in allowed_components[mp]:
+                indexes.append((f"{mp}_moment.{valid_key}", False))
+
+        return indexes

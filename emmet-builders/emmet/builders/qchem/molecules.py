@@ -138,6 +138,7 @@ class MoleculesAssociationBuilder(Builder):
         self.tasks.ensure_index("formula_alphabetical")
         self.tasks.ensure_index("smiles")
         self.tasks.ensure_index("species_hash")
+        self.tasks.ensure_index("coord_hash")
 
         # Search index for molecules
         self.assoc.ensure_index("molecule_id")
@@ -390,6 +391,7 @@ class MoleculesBuilder(Builder):
         self.assoc.ensure_index("last_updated")
         self.assoc.ensure_index("task_ids")
         self.assoc.ensure_index("formula_alphabetical")
+        self.assoc.ensure_index("species_hash")
 
         # Search index for molecules
         self.molecules.ensure_index("molecule_id")

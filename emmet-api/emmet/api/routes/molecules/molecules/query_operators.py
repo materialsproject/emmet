@@ -124,6 +124,69 @@ class ElementsQuery(QueryOperator):
         return [("elements", False)]
 
 
+class CompositionElementsQuery(QueryOperator):
+    """
+    Factory method to generate a dependency for querying by elements present in a composition.
+    """
+
+    def query(
+        self,
+        elements: Optional[str] = Query(
+            None,
+            description="Query by elements in the material composition as a comma-separated list",
+        ),
+        exclude_elements: Optional[str] = Query(
+            None,
+            description="Query by excluded elements in the material composition as a comma-separated list",
+        ),
+    ) -> STORE_PARAMS:
+        crit = dict()  # type: dict
+
+        if elements or exclude_elements:
+            crit["composition"] = dict()
+        
+        if elements:
+            try:
+                element_list = [Element(e.strip()) for e in elements.strip().split(",")]
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Please provide a comma-seperated list of elements",
+                )
+
+            for el in element_list:
+                crit["composition"][el] = {"$exists": True}
+
+        if exclude_elements:
+            try:
+                element_list = [
+                    Element(e.strip()) for e in exclude_elements.strip().split(",")
+                ]
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Please provide a comma-seperated list of elements",
+                )
+
+            for el in element_list:
+                crit["composition"][el] = {"$exists": False}
+
+        return {"criteria": crit}
+
+    def ensure_indexes(self):  # pragma: no cover
+        return [("composition.$**", False)]
+
+
+class CompositionQuery(QueryOperator):
+    """
+    Factory method to generate a dependency for querying by composition.
+    """
+
+    def query(self,):
+        #TODO: this
+        pass
+
+
 class ChargeSpinQuery(QueryOperator):
     """
     Factory method to generate a dependency for querying by
