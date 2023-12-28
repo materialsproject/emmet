@@ -1,7 +1,11 @@
 from maggma.api.resource import ReadOnlyResource
 from emmet.core.molecules.electric import ElectricMultipoleDoc
 
-from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
+from maggma.api.query_operator import (
+    PaginationQuery,
+    SparseFieldsQuery,
+    NumericQuery,
+)
 
 from emmet.api.routes.molecules.electric.query_operators import (
     MultipoleMomentComponentQuery,
@@ -33,6 +37,13 @@ def electric_multipole_resource(multipole_store):
             MultiPropertyIDQuery(),
             MultipoleMomentComponentQuery(),
             PaginationQuery(),
+            NumericQuery(
+                model=ElectricMultipoleDoc,
+                fields=[
+                    "total_dipole",
+                    "resp_total_dipole",
+                ]
+            ),
             SparseFieldsQuery(
                 ElectricMultipoleDoc,
                 default_fields=[

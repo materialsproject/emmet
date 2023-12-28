@@ -6,6 +6,7 @@ from pydantic import Field
 from pymatgen.core.structure import Molecule
 from pymatgen.analysis.graphs import MoleculeGraph
 
+from emmet.core.math import Vector3D
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPID, MPculeID
@@ -344,37 +345,37 @@ class MoleculeSummaryDoc(PropertyDoc):
     )
 
     # electric multipoles
-    total_dipole: Optional[str, float] = Field(
+    total_dipole: Optional[Dict[str, float]] = Field(
         None,
         description="Total molecular dipole moment (Debye)",
     )
 
-    dipole_moment: Optional[str, Vector3D] = Field(
+    dipole_moment: Optional[Dict[str, Vector3D]] = Field(
         None,
         description="Molecular dipole moment vector (Debye)",
     )
 
-    resp_total_dipole: Optional[str, float] = Field(
+    resp_total_dipole: Optional[Dict[str, float]] = Field(
         None,
         description="Total dipole moment, calculated via restrained electrostatic potential (RESP) (Debye)",
     )
 
-    resp_dipole_moment: Optional[str, Vector3D] = Field(
+    resp_dipole_moment: Optional[Dict[str, Vector3D]] = Field(
         None,
         description="Molecular dipole moment vector, calculated via RESP (Debye)",
     )
 
-    quadrupole_moment: Optional[str, Dict[str, float]] = Field(
+    quadrupole_moment: Optional[Dict[str, Dict[str, float]]] = Field(
         None,
         description="Quadrupole moment components (Debye Ang)",
     )
 
-    octopole_moment: Optional[str, Dict[str, float]] = Field(
+    octopole_moment: Optional[Dict[str, Dict[str, float]]] = Field(
         None,
         description="Octopole moment components (Debye Ang^2)",
     )
 
-    hexadecapole_moment: Optional[str, Dict[str, float]] = Field(
+    hexadecapole_moment: Optional[Dict[str, Dict[str, float]]] = Field(
         None,
         description="Hexadecapole moment tensor components (Debye Ang^2)",
     )
