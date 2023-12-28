@@ -142,9 +142,6 @@ class CompositionElementsQuery(QueryOperator):
     ) -> STORE_PARAMS:
         crit = dict()  # type: dict
 
-        if elements or exclude_elements:
-            crit["composition"] = dict()
-        
         if elements:
             try:
                 element_list = [Element(e.strip()) for e in elements.strip().split(",")]
@@ -155,7 +152,7 @@ class CompositionElementsQuery(QueryOperator):
                 )
 
             for el in element_list:
-                crit["composition"][el] = {"$exists": True}
+                crit[f"composition.{str(el)}"] = {"$exists": True}
 
         if exclude_elements:
             try:
@@ -169,22 +166,12 @@ class CompositionElementsQuery(QueryOperator):
                 )
 
             for el in element_list:
-                crit["composition"][el] = {"$exists": False}
+                crit[f"composition.{str(el)}"] = {"$exists": False}
 
         return {"criteria": crit}
 
     def ensure_indexes(self):  # pragma: no cover
         return [("composition.$**", False)]
-
-
-class CompositionQuery(QueryOperator):
-    """
-    Factory method to generate a dependency for querying by composition.
-    """
-
-    def query(self,):
-        #TODO: this
-        pass
 
 
 class ChargeSpinQuery(QueryOperator):

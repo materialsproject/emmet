@@ -5,6 +5,7 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     FormulaQuery,
     ChemsysQuery,
     ElementsQuery,
+    CompositionElementsQuery,
     ChargeSpinQuery,
     DeprecationQuery,
     MultiTaskIDQuery,
@@ -60,6 +61,35 @@ def test_elements_query():
         assert new_op.query(
             elements=",".join(eles), exclude_elements=",".join(neles)
         ) == {"criteria": {"elements": {"$all": ["C", "O"], "$nin": ["N", "P"]}}}
+
+
+def test_composition_query():
+    eles = ["C", "O"]
+    neles = ["N", "P"]
+
+    op = CompositionElementsQuery()
+    assert op.query(elements=",".join(eles), exclude_elements=",".join(neles)) == {
+        "criteria": {
+            "composition.C": {"$exists": True},
+            "composition.O": {"$exists": True},
+            "composition.N": {"$exists": False},
+            "composition.P": {"$exists": False}
+        }
+    }
+
+    with ScratchDir("."):
+        dumpfn(op, "temp.json")
+        new_op = loadfn("temp.json")
+        assert new_op.query(
+            elements=",".join(eles), exclude_elements=",".join(neles)
+        ) == {
+            "criteria": {
+                "composition.C": {"$exists": True},
+                "composition.O": {"$exists": True},
+                "composition.N": {"$exists": False},
+                "composition.P": {"$exists": False}
+            }
+        }
 
 
 def test_charge_spin_query():
