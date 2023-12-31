@@ -36,6 +36,7 @@ class SummaryBuilder(Builder):
         charges: Store,
         spins: Store,
         bonds: Store,
+        multipoles: Store,
         metal_binding: Store,
         orbitals: Store,
         redox: Store,
@@ -50,6 +51,7 @@ class SummaryBuilder(Builder):
         self.charges = charges
         self.spins = spins
         self.bonds = bonds
+        self.multipoles = multipoles
         self.metal_binding = metal_binding
         self.orbitals = orbitals
         self.redox = redox
@@ -66,6 +68,7 @@ class SummaryBuilder(Builder):
                 charges,
                 spins,
                 bonds,
+                multipoles,
                 metal_binding,
                 orbitals,
                 redox,
@@ -81,6 +84,7 @@ class SummaryBuilder(Builder):
         #     self.charges,
         #     self.spins,
         #     self.bonds,
+        #     self.multipoles
         #     self.metal_binding,
         #     self.orbitals,
         #     self.redox,
@@ -134,6 +138,15 @@ class SummaryBuilder(Builder):
         self.bonds.ensure_index("property_id")
         self.bonds.ensure_index("last_updated")
         self.bonds.ensure_index("formula_alphabetical")
+
+        # Search index for multipoles
+        self.multipoles.ensure_index("molecule_id")
+        self.multipoles.ensure_index("task_id")
+        self.multipoles.ensure_index("solvent")
+        self.multipoles.ensure_index("lot_solvent")
+        self.multipoles.ensure_index("property_id")
+        self.multipoles.ensure_index("last_updated")
+        self.multipoles.ensure_index("formula_alphabetical")
 
         # Search index for metal_binding
         self.metal_binding.ensure_index("molecule_id")
@@ -315,6 +328,9 @@ class SummaryBuilder(Builder):
                 ),
                 "bonding": _group_docs(
                     list(self.bonds.query({"molecule_id": mol_id})), True
+                ),
+                "multipole_moments": _group_docs(
+                    list(self.multipoles.query({"molecule_id": mol_id})), True
                 ),
                 "metal_binding": _group_docs(
                     list(self.metal_binding.query({"molecule_id": mol_id})), True
