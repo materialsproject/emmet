@@ -14,7 +14,7 @@ def test_multipole_moment_query():
         max_component_value=3.1,
         ) == {
         "criteria": {
-            "dipole_moment.0": {"$lte": 3.1, "$gte": 0.1}
+            "dipole_moment.0": {"$lte": 3.1, "$gte": 0.1},
         }
     }
 
@@ -28,9 +28,18 @@ def test_multipole_moment_query():
             max_component_value=100.00,
         ) == {
             "criteria": {
-                "octopole_moment.ZZZ": {"$lte": 100.00, "$gte": -100.00}
+                "octopole_moment.ZZZ": {"$lte": 100.00, "$gte": -100.00},
             }
         }
+
+    assert op.query(
+        moment_type="hexadecapole",
+        component="YYYY"
+    ) == {
+        "criteria": {
+            "hexadecapole_moment.YYYY": {"$exists": True},
+        }
+    }
 
     with pytest.raises(ValueError):
         op.query(moment_type="resp_dipole", component="flapper")

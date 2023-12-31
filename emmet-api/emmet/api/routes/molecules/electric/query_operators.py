@@ -54,8 +54,8 @@ class MultipoleMomentComponentQuery(QueryOperator):
     ) -> STORE_PARAMS:
         self.moment_type = moment_type
         self.component = component
-        self.min_value = min_value
-        self.max_value = max_value
+        self.min_value = min_component_value
+        self.max_value = max_component_value
 
         if self.moment_type is None or self.component is None:
             return {"criteria": dict()}
@@ -77,10 +77,13 @@ class MultipoleMomentComponentQuery(QueryOperator):
 
         crit: Dict[str, Any] = {key: dict()}  # type: ignore
 
-        if self.min_value is not None:
+        if self.min_value is not None and isinstance(self.min_value, float):
             crit[key]["$gte"] = self.min_value
-        if self.max_value is not None:
+        if self.max_value is not None and isinstance(self.max_value, float):
             crit[key]["$lte"] = self.max_value
+
+        if not isinstance(self.min_value, float) and not isinstance(self.max_value, float):
+            crit[key]["$exists"] = True
 
         return {"criteria": crit}
 
