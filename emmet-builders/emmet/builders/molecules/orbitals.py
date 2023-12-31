@@ -27,7 +27,7 @@ class OrbitalBuilder(Builder):
     each solvent available).
 
     The process is as follows:
-        1. Gather MoleculeDocs by formula
+        1. Gather MoleculeDocs by species hash
         2. For each doc, sort tasks by solvent
         3. For each solvent, grab the best TaskDoc (including NBO data using
             the highest level of theory with lowest electronic energy for the

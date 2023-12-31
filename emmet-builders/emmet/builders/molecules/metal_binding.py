@@ -44,7 +44,7 @@ class MetalBindingBuilder(Builder):
     will be used.
 
     The process is as follows:
-        1. Gather MoleculeDocs by formula
+        1. Gather MoleculeDocs by species hash
         2. For each molecule, first identify if there are any metals. If not, then no MetalBindingDoc can be made.
             If so, then identify the possible solvents that can be used to generate MetalBindingDocs
         3. For each combination of Molecule ID and solvent, search for additional documents:

@@ -29,7 +29,7 @@ class ElectricMultipoleBuilder(Builder):
     data available (based on level of theory and electronic energy) will be used.
 
     The process is as follows:
-        1. Gather MoleculeDocs by formula
+        1. Gather MoleculeDocs by species hash
         2. For each molecule, group all tasks by solvent.
         3. For each solvent, grab the best TaskDoc (doc with elecrtric dipole/multipole information
         that has the highest level of theory with the lowest electronic energy) for the molecule

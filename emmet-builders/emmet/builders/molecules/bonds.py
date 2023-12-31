@@ -40,7 +40,7 @@ class BondingBuilder(Builder):
     data available (based on level of theory and electronic energy) will be used.
 
     The process is as follows:
-        1. Gather MoleculeDocs by species_hash
+        1. Gather MoleculeDocs by species hash
         2. For each molecule, group all tasks by solvent.
         3. For each solvent, sort tasks by level of theory and electronic energy
         4. For each method:
