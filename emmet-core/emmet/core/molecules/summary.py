@@ -519,8 +519,6 @@ class MoleculeSummaryDoc(PropertyDoc):
         property_id = h.hexdigest()
         doc["property_id"] = property_id
 
-        doc["has_props"] = list(set(doc["has_props"]))
-
         return MoleculeSummaryDoc(molecule_id=molecule_id, **doc)
 
 

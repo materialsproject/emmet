@@ -42,6 +42,7 @@ def test_make_mol(test_tasks):
     assert molecule.formula_alphabetical == "C3 H4 Li1 O3"
     assert len(molecule.task_ids) == 5
     assert len(molecule.entries) == 5
+    assert molecule.coord_hash == "4cbc38414f4e0e809d53d6dc34ef0be4"
 
     bad_task_group = [
         task
@@ -78,6 +79,7 @@ def test_make_deprecated_mol(test_tasks):
     assert molecule.formula_alphabetical == "C3 H4 Li1 O3"
     assert len(molecule.task_ids) == 4
     assert molecule.entries is None
+    assert molecule.species_hash is not None
 
 
 def test_schema():

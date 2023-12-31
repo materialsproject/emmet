@@ -154,17 +154,6 @@ class MoleculeDoc(CoreMoleculeDoc):
         description="Level of theory used to optimize the best molecular structure for each solvent.",
     )
 
-    species_hash: Optional[str] = Field(
-        None,
-        description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph "
-        "node attribute.",
-    )
-    coord_hash: Optional[str] = Field(
-        None,
-        description="Weisfeiler Lehman (WL) graph hash using the atom coordinates as the graph "
-        "node attribute.",
-    )
-
     inchi: Optional[str] = Field(
         None, description="International Chemical Identifier (InChI) for this molecule"
     )
@@ -399,9 +388,6 @@ class MoleculeDoc(CoreMoleculeDoc):
         for entry in entries:
             entry["entry_id"] = molecule_id
 
-        species_hash = get_graph_hash(molecule, "specie")
-        coord_hash = get_graph_hash(molecule, "coords")
-
         ad = BabelMolAdaptor(molecule)
         openbabel.StereoFrom3D(ad.openbabel_mol)
 
@@ -412,8 +398,6 @@ class MoleculeDoc(CoreMoleculeDoc):
             molecule=molecule,
             molecule_id=molecule_id,
             species=species,
-            species_hash=species_hash,
-            coord_hash=coord_hash,
             inchi=inchi,
             inchi_key=inchikey,
             initial_molecules=initial_molecules,
@@ -478,9 +462,6 @@ class MoleculeDoc(CoreMoleculeDoc):
         # Molecule ID
         molecule_id = get_molecule_id(molecule, "coords")
 
-        species_hash = get_graph_hash(molecule, "specie")
-        coord_hash = get_graph_hash(molecule, "coords")
-
         ad = BabelMolAdaptor(molecule)
         openbabel.StereoFrom3D(ad.openbabel_mol)
 
@@ -491,8 +472,6 @@ class MoleculeDoc(CoreMoleculeDoc):
             molecule=molecule,
             molecule_id=molecule_id,
             species=species,
-            species_hash=species_hash,
-            coord_hash=coord_hash,
             inchi=inchi,
             inchi_key=inchikey,
             last_updated=last_updated,
