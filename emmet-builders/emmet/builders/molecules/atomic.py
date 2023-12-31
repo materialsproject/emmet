@@ -86,6 +86,7 @@ class PartialChargesBuilder(Builder):
         self.tasks.ensure_index("last_updated")
         self.tasks.ensure_index("state")
         self.tasks.ensure_index("formula_alphabetical")
+        self.tasks.ensure_index("species_hash")
 
         # Search index for molecules
         self.molecules.ensure_index("molecule_id")
@@ -366,6 +367,7 @@ class PartialSpinsBuilder(Builder):
         self.tasks.ensure_index("last_updated")
         self.tasks.ensure_index("state")
         self.tasks.ensure_index("formula_alphabetical")
+        self.tasks.ensure_index("species_hash")
 
         # Search index for molecules
         self.molecules.ensure_index("molecule_id")
