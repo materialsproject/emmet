@@ -1,16 +1,15 @@
 import re
-from datetime import datetime
-from typing import List, Union, Dict, Optional
 from collections import defaultdict
-
-from emmet.core.utils import ValueEnum
+from datetime import datetime
+from enum import StrEnum
+from typing import Dict, List, Optional, Union
 
 from monty.json import MontyDecoder
-from pydantic import field_validator, BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.apps.battery.battery_abc import AbstractElectrode
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
-from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.core import Composition, Structure
 from pymatgen.core.periodic_table import Element
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
@@ -18,7 +17,7 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 from emmet.core.mpid import MPID
 
 
-class BatteryType(str, ValueEnum):
+class BatteryType(StrEnum):
     """
     Enum for battery type
     """
@@ -323,7 +322,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
 
         # Check if more than one working ion per transition metal and warn
         warnings = []
-        if any([element.is_transition_metal for element in dchg_comp]):
+        if any(element.is_transition_metal for element in dchg_comp):
             transition_metal_fraction = sum(
                 [
                     dchg_comp.get_atomic_fraction(elem)

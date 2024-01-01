@@ -1,7 +1,7 @@
-from emmet.core.utils import ValueEnum
+from enum import StrEnum
 
 
-class Status(ValueEnum):
+class Status(StrEnum):
     """
     State of a calculation/analysis.
     """

@@ -3,26 +3,26 @@
 # mypy: ignore-errors
 
 import logging
+import re
+from collections import OrderedDict
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
-from pydantic import field_validator, BaseModel, Field, ConfigDict
-from datetime import datetime
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pymatgen.core.structure import Molecule
 from pymatgen.io.qchem.inputs import QCInput
 from pymatgen.io.qchem.outputs import QCOutput
-from pymatgen.core.structure import Molecule
-from collections import OrderedDict
-import re
 
 from emmet.core.qchem.calc_types import (
-    LevelOfTheory,
     CalcType,
+    LevelOfTheory,
     TaskType,
 )
 from emmet.core.qchem.calc_types.calc_types import (
-    FUNCTIONALS,
     BASIS_SETS,
+    FUNCTIONALS,
 )
 
 # from emmet.core.qchem.calc_types.em_utils import (
@@ -30,7 +30,6 @@ from emmet.core.qchem.calc_types.calc_types import (
 #     task_type,
 #     calc_type,
 # )
-
 from emmet.core.qchem.task import QChemStatus
 
 functional_synonyms = {
@@ -50,7 +49,7 @@ smd_synonyms = {
 __author__ = "Rishabh D. Guha <rdguha@lbl.gov>"
 logger = logging.getLogger(__name__)
 
-# class QChemObject(ValueEnum):
+# class QChemObject(StrEnum):
 # Not sure but can we have something like GRAD and HESS
 # as QChem data objects
 

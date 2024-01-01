@@ -1,7 +1,8 @@
+from enum import StrEnum
 from typing import Dict, Optional
 
 import numpy as np
-from pydantic import model_validator, Field
+from pydantic import Field, model_validator
 from pymatgen.analysis.diffraction.xrd import (
     WAVELENGTHS,
     DiffractionPattern,
@@ -12,10 +13,9 @@ from pymatgen.core.periodic_table import Element
 
 from emmet.core.mpid import MPID
 from emmet.core.spectrum import SpectrumDoc
-from emmet.core.utils import ValueEnum
 
 
-class Edge(ValueEnum):
+class Edge(StrEnum):
     K_Alpha = "Ka"
     K_Alpha1 = "Ka1"
     K_Alpha2 = "Ka2"

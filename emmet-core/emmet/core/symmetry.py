@@ -1,3 +1,4 @@
+from enum import StrEnum
 from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field
@@ -6,12 +7,11 @@ from pymatgen.core.structure import Molecule
 from pymatgen.symmetry.analyzer import PointGroupAnalyzer, SpacegroupAnalyzer, spglib
 
 from emmet.core.settings import EmmetSettings
-from emmet.core.utils import ValueEnum
 
 SETTINGS = EmmetSettings()
 
 
-class CrystalSystem(ValueEnum):
+class CrystalSystem(StrEnum):
     """
     The crystal system of the lattice
     """
@@ -100,10 +100,7 @@ class PointGroupData(BaseModel):
             if symmetry["point_group"] in point_groups:
                 r = rot_num
                 break
-        if symmetry["point_group"] in ["C*v", "D*h"]:
-            linear = True
-        else:
-            linear = False
+        linear = symmetry["point_group"] in ["C*v", "D*h"]
 
         symmetry["rotation_number"] = float(r)
         symmetry["linear"] = linear

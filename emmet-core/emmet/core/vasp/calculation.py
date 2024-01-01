@@ -4,6 +4,7 @@
 
 import logging
 from datetime import datetime
+from enum import StrEnum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -31,7 +32,6 @@ from pymatgen.io.vasp import (
 )
 
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
-from emmet.core.utils import ValueEnum
 from emmet.core.vasp.calc_types import (
     CalcType,
     RunType,
@@ -45,7 +45,7 @@ from emmet.core.vasp.task_valid import TaskState
 logger = logging.getLogger(__name__)
 
 
-class VaspObject(ValueEnum):
+class VaspObject(StrEnum):
     """Types of VASP data objects."""
 
     BANDSTRUCTURE = "bandstructure"
@@ -62,7 +62,7 @@ class VaspObject(ValueEnum):
     PROCAR = "procar"
 
 
-class StoreTrajectoryOption(ValueEnum):
+class StoreTrajectoryOption(StrEnum):
     FULL = "full"
     PARTIAL = "partial"
     NO = "no"

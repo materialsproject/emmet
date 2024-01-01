@@ -1,30 +1,29 @@
 # mypy: ignore-errors
 
 """ Core definition of a Q-Chem Task Document """
-from typing import Any, Dict, List, Optional, Callable
+from enum import StrEnum
+from typing import Any, Callable, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 from pymatgen.core.structure import Molecule
 
-from emmet.core.structure import MoleculeMetadata
-from emmet.core.task import BaseTaskDocument
-from emmet.core.utils import ValueEnum
 from emmet.core.qchem.calc_types import (
-    LevelOfTheory,
     CalcType,
+    LevelOfTheory,
     TaskType,
     calc_type,
     level_of_theory,
-    task_type,
-    solvent,
     lot_solvent_string,
+    solvent,
+    task_type,
 )
-
+from emmet.core.structure import MoleculeMetadata
+from emmet.core.task import BaseTaskDocument
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
-class QChemStatus(ValueEnum):
+class QChemStatus(StrEnum):
     """
     Q-Chem Calculation State
     """
@@ -177,10 +176,7 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
         else:
             mol = self.output.initial_molecule
 
-        if self.charge is None:
-            charge = int(mol.charge)
-        else:
-            charge = int(self.charge)
+        charge = int(mol.charge) if self.charge is None else int(self.charge)
 
         if self.spin_multiplicity is None:
             spin = mol.spin_multiplicity

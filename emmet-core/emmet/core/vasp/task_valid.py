@@ -1,7 +1,8 @@
 # mypy: ignore-errors
 
 """ Core definition of a VASP Task Document """
-from typing import Any, Dict, List, Union, Optional
+from enum import StrEnum
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_analyzer import oxide_type
@@ -9,13 +10,12 @@ from pymatgen.core.structure import Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.math import Matrix3D, Vector3D
-from emmet.core.task import BaseTaskDocument
 from emmet.core.structure import StructureMetadata
-from emmet.core.utils import ValueEnum
+from emmet.core.task import BaseTaskDocument
 from emmet.core.vasp.calc_types import RunType, calc_type, run_type, task_type
 
 
-class TaskState(ValueEnum):
+class TaskState(StrEnum):
     """
     VASP Calculation State
     """

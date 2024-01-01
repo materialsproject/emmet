@@ -1,19 +1,19 @@
 """ Core definition of a Provenance Document """
 import warnings
 from datetime import datetime
+from enum import StrEnum
 from typing import Dict, List, Optional
 
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
-from pydantic import field_validator, model_validator, BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
+from pymatgen.core.structure import Structure
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
-from emmet.core.utils import ValueEnum
-from pymatgen.core.structure import Structure
 
 
-class Database(ValueEnum):
+class Database(StrEnum):
     """
     Database identifiers for provenance IDs
     """
@@ -179,7 +179,7 @@ class ProvenanceDoc(PropertyDoc):
 
         # TODO: Maybe we should combine this robocrystallographer?
         # TODO: Refine these tags / remarks
-        remarks = list(set([remark for snl in snls for remark in snl.about.remarks]))
+        remarks = list({remark for snl in snls for remark in snl.about.remarks})
         tags = [r for r in remarks if len(r) < 140]
 
         authors = [entry for snl in snls for entry in snl.about.authors]

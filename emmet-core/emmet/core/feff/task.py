@@ -1,4 +1,5 @@
 """ Core definition of a VASP Task Document """
+from enum import StrEnum
 from typing import Any, Dict, List
 
 from pydantic import Field
@@ -8,10 +9,9 @@ from pymatgen.core.periodic_table import Element
 
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.task_valid import TaskDocument as BaseTaskDocument
-from emmet.core.utils import ValueEnum
 
 
-class CalcType(ValueEnum):
+class CalcType(StrEnum):
     """
     The type of FEFF Calculation
     XANES - Just the near-edge region
@@ -56,7 +56,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
     @property
     def xas_spectrum(self) -> XAS:
         if not hasattr(self, "_xas_spectrum"):
-            if not all([len(p) == 6 for p in self.spectrum]):
+            if not all(len(p) == 6 for p in self.spectrum):
                 raise ValueError(
                     "Spectrum data doesn't appear to be from xmu.dat which holds XAS data"
                 )
