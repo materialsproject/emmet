@@ -42,7 +42,6 @@ class ElectricMultipoleBuilder(Builder):
         molecules: Store,
         multipoles: Store,
         query: Optional[Dict] = None,
-        methods: Optional[List] = None,
         settings: Optional[EmmetBuildSettings] = None,
         **kwargs,
     ):
