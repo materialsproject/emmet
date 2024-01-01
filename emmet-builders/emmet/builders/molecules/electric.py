@@ -102,7 +102,7 @@ class ElectricMultipoleBuilder(Builder):
             )
         )
 
-        processed_docs = set([e for e in self.bonds.distinct("molecule_id")])
+        processed_docs = set([e for e in self.multipoles.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
         to_process_hashes = {
             d["species_hash"]
