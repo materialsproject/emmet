@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Union
 
 import pytest
-from matcalc.util import get_universal_calculator
+from matcalc.utils import get_universal_calculator
 from pymatgen.core import Structure
 from pymatgen.util.testing import PymatgenTest
 
