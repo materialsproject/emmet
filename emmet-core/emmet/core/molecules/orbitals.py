@@ -146,6 +146,90 @@ class Bond(MSONable):
         self.type_code = type_code
 
 
+class Hyperbond(MSONable):
+    def __init__(
+        self,
+        index: int,
+        atom1_index: int,
+        atom2_index: int,
+        atom3_index: int,
+        atom1_s_character: float,
+        atom2_s_character: float,
+        atom3_s_character: float,
+        atom1_p_character: float,
+        atom2_p_character: float,
+        atom3_p_character: float,
+        atom1_d_character: float,
+        atom2_d_character: float,
+        atom3_d_character: float,
+        atom1_f_character: float,
+        atom2_f_character: float,
+        atom3_f_character: float,
+        atom1_polarization: float,
+        atom2_polarization: float,
+        atom3_polarization: float,
+        atom1_polarization_coeff: float,
+        atom2_polarization_coeff: float,
+        atom3_polarization_coeff: float,
+        occupancy: float,
+        type_code: str,
+    ):
+        """
+        Basic description of a three-center, 4-electron hyperbond (3C or 3CHB) natural bonding orbital.
+
+        :param index: Bond orbital index from NBO. 1-indexed.
+        :param atom1_index: Index of first atom involved in this orbital. 0-indexed
+        :param atom2_index: Index of second atom involved in this orbital. 0-indexed
+        :param atom3_index: Index of third atom involved in this orbital. 0-indexed
+        :param atom1_s_character: What fraction of this orbital comes from atom 1 s electrons
+        :param atom2_s_character: What fraction of this orbital comes from atom 2 s electrons
+        :param atom3_s_character: What fraction of this orbital comes from atom 3 s electrons
+        :param atom1_p_character: What fraction of this orbital comes from atom 1 p electrons
+        :param atom2_p_character: What fraction of this orbital comes from atom 2 p electrons
+        :param atom3_p_character: What fraction of this orbital comes from atom 3 p electrons
+        :param atom1_d_character: What fraction of this orbital comes from atom 1 d electrons
+        :param atom2_d_character: What fraction of this orbital comes from atom 2 d electrons
+        :param atom3_d_character: What fraction of this orbital comes from atom 3 d electrons
+        :param atom1_f_character: What fraction of this orbital comes from atom 1 f electrons
+        :param atom2_f_character: What fraction of this orbital comes from atom 2 f electrons
+        :param atom3_f_character: What fraction of this orbital comes from atom 3 f electrons
+        :param atom1_polarization: Percentage of polarization from atom 1
+        :param atom2_polarization: Percentage of polarization from atom 2
+        :param atom3_polarization: Percentage of polarization from atom 3
+        :param atom1_polarization_coeff: Polarization coefficient of atom 1
+        :param atom2_polarization_coeff: Polarization coefficient of atom 2
+        :param atom3_polarization_coeff: Polarization coefficient of atom 3
+        :param occupancy: Total electron occupancy of this orbital
+        :param type_code: Description of this bonding orbital (ex: BD for bonding,
+            BD* for anti-bonding)
+        """
+
+        self.index = int(index)
+        self.atom1_index = int(atom1_index)
+        self.atom2_index = int(atom2_index)
+        self.atom3_index = int(atom3_index)
+        self.atom1_s_character = float(atom1_s_character)
+        self.atom2_s_character = float(atom2_s_character)
+        self.atom3_s_character = float(atom3_s_character)
+        self.atom1_p_character = float(atom1_p_character)
+        self.atom2_p_character = float(atom2_p_character)
+        self.atom3_p_character = float(atom3_p_character)
+        self.atom1_d_character = float(atom1_d_character)
+        self.atom2_d_character = float(atom2_d_character)
+        self.atom3_d_character = float(atom3_d_character)
+        self.atom1_f_character = float(atom1_f_character)
+        self.atom2_f_character = float(atom2_f_character)
+        self.atom3_f_character = float(atom3_f_character)
+        self.atom1_polarization = float(atom1_polarization)
+        self.atom2_polarization = float(atom2_polarization)
+        self.atom3_polarization = float(atom3_polarization)
+        self.atom1_polarization_coeff = float(atom1_polarization_coeff)
+        self.atom2_polarization_coeff = float(atom2_polarization_coeff)
+        self.atom3_polarization_coeff = float(atom3_polarization_coeff)
+        self.occupancy = float(occupancy)
+        self.type_code = type_code
+
+
 class Interaction(MSONable):
     def __init__(
         self,
