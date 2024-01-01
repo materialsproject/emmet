@@ -19,7 +19,7 @@ jobs:
         package: ["emmet-core", "emmet-builders", "emmet-api"]
         python-version: ["3.9", "3.10", "3.11"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -35,7 +35,7 @@ jobs:
         run: |
           conda install openbabel -y
 
-      # - uses: actions/setup-python@v4
+      # - uses: actions/setup-python@v5
       #   with:
       #     python-version: ${{ matrix.python-version }}
       #     cache: 'pip'
@@ -116,11 +116,11 @@ jobs:
   #       python-version: ["3.8"]
 
   #   steps:
-  #     - uses: actions/checkout@v3
+  #     - uses: actions/checkout@v4
   #       with:
   #         fetch-depth: 0
 
-  #     - uses: actions/setup-python@v4
+  #     - uses: actions/setup-python@v5
   #       with:
   #         python-version: ${{ matrix.python-version }}
   #         cache: 'pip'
