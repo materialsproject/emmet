@@ -14,7 +14,7 @@ contourpy==1.2.0
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-fonttools==4.45.1
+fonttools==4.47.0
     # via matplotlib
 future==0.18.3
     # via uncertainties
@@ -57,7 +57,7 @@ pandas==1.5.3
     # via
     #   -r python/requirements.txt
     #   pymatgen
-pillow==10.1.0
+pillow==10.2.0
     # via matplotlib
 plotly==5.18.0
     # via pymatgen
@@ -65,15 +65,15 @@ pybtex==0.24.0
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pymatgen
-pydantic==2.5.2
+pydantic==2.5.3
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pydantic-settings
-pydantic-core==2.14.5
+pydantic-core==2.14.6
     # via pydantic
 pydantic-settings==2.1.0
     # via emmet-core (emmet/emmet-core/setup.py)
-pymatgen==2023.11.12
+pymatgen==2023.12.18
     # via emmet-core (emmet/emmet-core/setup.py)
 pyparsing==3.1.1
     # via matplotlib
@@ -102,7 +102,7 @@ six==1.16.0
     #   latexcodec
     #   pybtex
     #   python-dateutil
-spglib==2.1.0
+spglib==2.2.0
     # via pymatgen
 sympy==1.12
     # via pymatgen
@@ -112,7 +112,7 @@ tenacity==8.2.3
     # via plotly
 tqdm==4.66.1
     # via pymatgen
-typing-extensions==4.8.0
+typing-extensions==4.9.0
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pydantic

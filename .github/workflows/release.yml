@@ -13,9 +13,9 @@ jobs:
         package: ["emmet-core", "emmet-builders", "emmet-api"]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: 3.9
 
@@ -41,13 +41,13 @@ jobs:
       - deploy
     strategy:
       matrix:
-        os: ['ubuntu-latest'] # TODO openbabel for windows
+        os: ["ubuntu-latest"] # TODO openbabel for windows
         python-version: ["3.8"] # TODO numpy import error for pymatgen install in 3.10
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: 3.9
 
