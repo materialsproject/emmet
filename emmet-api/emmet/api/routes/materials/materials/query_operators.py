@@ -221,21 +221,21 @@ class BlessedCalcsQuery(QueryOperator):
             None, description="Maximum total uncorrected DFT energy in eV/atom"
         ),
     ) -> STORE_PARAMS:
-        # crit = {f"entries.{run_type}": {}}  # type: dict
+        crit = {f"entries.{run_type}.energy": {}}  # type: dict
 
-        # if energy_min:
-        #     crit[f"entries.{run_type}"].update({"$gte": energy_min})
+        if energy_min:
+            crit[f"entries.{run_type}.energy"].update({"$gte": energy_min})
 
-        # if energy_max:
-        #     crit[f"entries.{run_type}"].update({"$lte": energy_max})
+        if energy_max:
+            crit[f"entries.{run_type}.energy"].update({"$lte": energy_max})
 
-        # if not crit[f"entries.{run_type}"]:
-        #     crit[f"entries.{run_type}"].update({"$exists": True})
+        if not crit[f"entries.{run_type}.energy"]:
+            return {"criteria": {f"entries.{run_type}": {"$exists": True}}}
 
-        return {"criteria": {f"entries.{run_type}": {"$exists": True}}}
+        return {"criteria": crit}
 
     def post_process(self, docs, query):
-        run_type = list(query["criteria"].keys())[0].split(".")[-1]
+        run_type = list(query["criteria"].keys())[0].split(".")[1]
 
         return_data = [
             {
