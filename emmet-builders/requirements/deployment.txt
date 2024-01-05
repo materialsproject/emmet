@@ -30,9 +30,9 @@ bcrypt==4.1.2
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.34.11
+boto3==1.34.14
     # via maggma
-botocore==1.34.11
+botocore==1.34.14
     # via
     #   boto3
     #   s3transfer
@@ -65,7 +65,7 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all,ml]==0.75.0
+emmet-core[all,ml]==0.75.2
     # via emmet-builders (emmet/emmet-builders/setup.py)
 exceptiongroup==1.2.0
     # via anyio
@@ -130,7 +130,7 @@ lightning-utilities==0.10.0
     # via
     #   pytorch-lightning
     #   torchmetrics
-maggma==0.60.0
+maggma==0.60.1
     # via emmet-builders (emmet/emmet-builders/setup.py)
 markupsafe==2.1.3
     # via
@@ -175,7 +175,7 @@ networkx==3.2.1
     #   pymatgen
     #   robocrys
     #   torch
-numpy==1.26.2
+numpy==1.26.3
     # via
     #   -r python/requirements.txt
     #   ase
@@ -323,7 +323,7 @@ pyyaml==6.0.1
     #   pytorch-lightning
 pyzmq==25.1.2
     # via maggma
-referencing==0.32.0
+referencing==0.32.1
     # via
     #   jsonschema
     #   jsonschema-specifications
