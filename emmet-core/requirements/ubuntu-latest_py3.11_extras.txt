@@ -60,7 +60,7 @@ filelock==3.13.1
     #   torch
     #   triton
     #   virtualenv
-flake8==6.1.0
+flake8==7.0.0
     # via emmet-core (setup.py)
 fonttools==4.47.0
     # via matplotlib
@@ -204,7 +204,7 @@ networkx==3.2.1
     #   torch
 nodeenv==1.8.0
     # via pre-commit
-numpy==1.26.2
+numpy==1.26.3
     # via
     #   ase
     #   chgnet
@@ -315,7 +315,7 @@ pydantic-settings==2.1.0
     # via emmet-core (setup.py)
 pydocstyle==6.3.0
     # via emmet-core (setup.py)
-pyflakes==3.1.0
+pyflakes==3.2.0
     # via flake8
 pygments==2.17.2
     # via mkdocs-material
