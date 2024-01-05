@@ -30,9 +30,9 @@ bcrypt==4.1.2
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.34.11
+boto3==1.34.13
     # via maggma
-botocore==1.34.11
+botocore==1.34.13
     # via
     #   boto3
     #   s3transfer
@@ -81,7 +81,7 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all,ml]==0.75.0
+emmet-core[all,ml]==0.75.1
     # via emmet-builders (setup.py)
 exceptiongroup==1.2.0
     # via
@@ -94,7 +94,7 @@ filelock==3.13.1
     #   torch
     #   triton
     #   virtualenv
-flake8==6.1.0
+flake8==7.0.0
     # via emmet-builders (setup.py)
 flask==3.0.0
     # via mongogrant
@@ -169,7 +169,7 @@ lightning-utilities==0.10.0
     #   torchmetrics
 livereload==2.6.3
     # via emmet-builders (setup.py)
-maggma==0.60.0
+maggma==0.60.1
     # via emmet-builders (setup.py)
 markdown==3.5.1
     # via
@@ -265,7 +265,7 @@ networkx==3.2.1
     #   torch
 nodeenv==1.8.0
     # via pre-commit
-numpy==1.26.2
+numpy==1.26.3
     # via
     #   ase
     #   chgnet
@@ -388,7 +388,7 @@ pydash==7.0.6
     # via maggma
 pydocstyle==6.3.0
     # via emmet-builders (setup.py)
-pyflakes==3.1.0
+pyflakes==3.2.0
     # via flake8
 pygments==2.17.2
     # via mkdocs-material
