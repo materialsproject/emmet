@@ -130,7 +130,7 @@ lightning-utilities==0.10.0
     # via
     #   pytorch-lightning
     #   torchmetrics
-maggma==0.60.1
+maggma==0.60.2
     # via emmet-builders (emmet/emmet-builders/setup.py)
 markupsafe==2.1.3
     # via
