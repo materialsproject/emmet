@@ -48,7 +48,6 @@ expected_keys = {
 }
 
 
-@pytest.mark.skip(reason="Temporary skip. Needs attention.")
 @pytest.mark.parametrize(
     ("calculator", "prop_kwargs"),
     [
@@ -56,6 +55,7 @@ expected_keys = {
         ("M3GNet-MP-2021.2.8-PES", {"ElasticityCalc": {"relax_structure": False}}),
     ],
 )
+@pytest.mark.skip(reason="Temporary skip. Needs attention.")
 def test_ml_doc(calculator: Union[str, "Calculator"], prop_kwargs: dict) -> None:
     doc = MLDoc(
         structure=struct,

@@ -31,8 +31,8 @@ def materials_store():
     return materials_store
 
 
-@pytest.mark.skip(reason="Temporary skip. Needs attention.")
 @pytest.mark.parametrize("model", [get_universal_calculator("chgnet"), "m3gnet"])
+@pytest.mark.skip(reason="Temporary skip. Needs attention.")
 def test_ml_ip_builder(materials_store: MemoryStore, model: Union[str, "Calculator"]):
     ml_store = MemoryStore(key="material_id")
 
