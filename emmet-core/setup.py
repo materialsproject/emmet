@@ -26,7 +26,7 @@ setup(
     ],
     extras_require={
         "all": [
-            "matcalc",
+            "matcalc>=0.0.4",
             "seekpath>=2.0.1",
             "robocrys>=0.2.8",
             "pymatgen-analysis-diffusion>=2023.8.15",

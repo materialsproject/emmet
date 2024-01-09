@@ -1,3 +1,5 @@
+from datetime import datetime
+from collections import defaultdict
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
 from emmet.api.routes.materials.tasks.utils import (
@@ -7,6 +9,27 @@ from emmet.api.routes.materials.tasks.utils import (
 from fastapi import Query
 from typing import Optional
 from monty.json import jsanitize
+
+
+class LastUpdatedQuery(QueryOperator):
+    def query(
+        self,
+        last_updated_min: Optional[datetime] = Query(
+            None, description="Minimum last updated UTC datetime"
+        ),
+        last_updated_max: Optional[datetime] = Query(
+            None, description="Maximum last updated UTC datetime"
+        ),
+    ) -> STORE_PARAMS:
+        crit: dict = defaultdict(dict)
+
+        if last_updated_min:
+            crit["last_updated"]["$gte"] = last_updated_min
+
+        if last_updated_max:
+            crit["last_updated"]["$lte"] = last_updated_max
+
+        return {"criteria": crit}
 
 
 class MultipleTaskIDsQuery(QueryOperator):

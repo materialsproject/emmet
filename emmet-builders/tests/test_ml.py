@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Union
 
 import pytest
 from maggma.stores import MemoryStore
-from matcalc.util import get_universal_calculator
+from matcalc.utils import get_universal_calculator
 from pymatgen.core import Lattice, Structure
 
 from emmet.builders.materials.ml import MLBuilder

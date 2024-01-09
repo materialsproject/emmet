@@ -40,7 +40,7 @@ class History(BaseModel):
     name: str
     url: str
     description: Optional[Dict] = Field(
-        None, description="Dictionary of exra data for this history node."
+        None, description="Dictionary of extra data for this history node."
     )
 
     @model_validator(mode="before")
@@ -52,7 +52,7 @@ class History(BaseModel):
 
 
 class SNLAbout(BaseModel):
-    """A data dictionary definining extra fields in a SNL"""
+    """A data dictionary defining extra fields in a SNL"""
 
     references: str = Field(
         "", description="Bibtex reference strings for this material."

@@ -15,7 +15,7 @@ ase==3.22.1
     #   chgnet
     #   matcalc
     #   matgl
-attrs==23.1.0
+attrs==23.2.0
     # via aiohttp
 bracex==2.4
     # via wcmatch
@@ -27,7 +27,7 @@ cfgv==3.4.0
     # via pre-commit
 charset-normalizer==3.3.2
     # via requests
-chgnet==0.3.2
+chgnet==0.3.3
     # via emmet-core (setup.py)
 click==8.1.7
     # via
@@ -37,7 +37,7 @@ colorama==0.4.6
     # via griffe
 contourpy==1.2.0
     # via matplotlib
-coverage[toml]==7.3.2
+coverage[toml]==7.4.0
     # via
     #   coverage
     #   pytest-cov
@@ -47,11 +47,11 @@ custodian==2023.10.9
     # via emmet-core (setup.py)
 cycler==0.12.1
     # via matplotlib
-cython==3.0.6
+cython==3.0.7
     # via chgnet
-dgl==1.1.2
+dgl==1.1.3
     # via matgl
-distlib==0.3.7
+distlib==0.3.8
     # via virtualenv
 dnspython==2.4.2
     # via pymongo
@@ -60,15 +60,15 @@ filelock==3.13.1
     #   torch
     #   triton
     #   virtualenv
-flake8==6.1.0
+flake8==7.0.0
     # via emmet-core (setup.py)
-fonttools==4.46.0
+fonttools==4.47.0
     # via matplotlib
-frozenlist==1.4.0
+frozenlist==1.4.1
     # via
     #   aiohttp
     #   aiosignal
-fsspec[http]==2023.12.1
+fsspec[http]==2023.12.2
     # via
     #   pytorch-lightning
     #   torch
@@ -84,7 +84,7 @@ h5py==3.10.0
     # via phonopy
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
-identify==2.5.32
+identify==2.5.33
     # via pre-commit
 idna==3.6
     # via
@@ -131,7 +131,7 @@ markupsafe==2.1.3
     #   jinja2
     #   mkdocs
     #   mkdocstrings
-matcalc==0.0.3
+matcalc==0.0.4
     # via emmet-core (setup.py)
 matgl==0.9.1
     # via emmet-core (setup.py)
@@ -167,7 +167,7 @@ mkdocs-material-extensions==1.3.1
     # via
     #   emmet-core (setup.py)
     #   mkdocs-material
-mkdocs-minify-plugin==0.7.1
+mkdocs-minify-plugin==0.7.2
     # via emmet-core (setup.py)
 mkdocstrings[python]==0.24.0
     # via
@@ -188,7 +188,7 @@ multidict==6.0.4
     # via
     #   aiohttp
     #   yarl
-mypy==1.7.1
+mypy==1.8.0
     # via emmet-core (setup.py)
 mypy-extensions==1.0.0
     # via
@@ -204,7 +204,7 @@ networkx==3.2.1
     #   torch
 nodeenv==1.8.0
     # via pre-commit
-numpy==1.26.2
+numpy==1.26.3
     # via
     #   ase
     #   chgnet
@@ -272,11 +272,11 @@ pandas==1.5.3
     # via
     #   matminer
     #   pymatgen
-pathspec==0.11.2
+pathspec==0.12.1
     # via mkdocs
 phonopy==2.21.0
     # via matcalc
-pillow==10.1.0
+pillow==10.2.0
     # via matplotlib
 platformdirs==4.1.0
     # via
@@ -287,9 +287,9 @@ plotly==5.18.0
     # via pymatgen
 pluggy==1.3.0
     # via pytest
-pre-commit==3.5.0
+pre-commit==3.6.0
     # via emmet-core (setup.py)
-psutil==5.9.6
+psutil==5.9.7
     # via
     #   custodian
     #   dgl
@@ -304,22 +304,22 @@ pycodestyle==2.11.1
     # via
     #   emmet-core (setup.py)
     #   flake8
-pydantic==2.5.2
+pydantic==2.5.3
     # via
     #   emmet-core (setup.py)
     #   inflect
     #   pydantic-settings
-pydantic-core==2.14.5
+pydantic-core==2.14.6
     # via pydantic
 pydantic-settings==2.1.0
     # via emmet-core (setup.py)
 pydocstyle==6.3.0
     # via emmet-core (setup.py)
-pyflakes==3.1.0
+pyflakes==3.2.0
     # via flake8
 pygments==2.17.2
     # via mkdocs-material
-pymatgen==2023.11.12
+pymatgen==2023.12.18
     # via
     #   chgnet
     #   emmet-core (setup.py)
@@ -333,7 +333,7 @@ pymatgen-analysis-alloys==0.0.6
     # via emmet-core (setup.py)
 pymatgen-analysis-diffusion==2023.8.15
     # via emmet-core (setup.py)
-pymdown-extensions==10.5
+pymdown-extensions==10.7
     # via
     #   mkdocs-material
     #   mkdocstrings
@@ -341,7 +341,7 @@ pymongo==4.6.1
     # via matminer
 pyparsing==3.1.1
     # via matplotlib
-pytest==7.4.3
+pytest==7.4.4
     # via
     #   emmet-core (setup.py)
     #   pytest-cov
@@ -354,7 +354,7 @@ python-dateutil==2.8.2
     #   pandas
 python-dotenv==1.0.0
     # via pydantic-settings
-pytorch-lightning==2.1.2
+pytorch-lightning==2.1.3
     # via matgl
 pytz==2023.3.post1
     # via pandas
@@ -396,7 +396,7 @@ scipy==1.11.4
     #   scikit-learn
 seekpath==2.1.0
     # via emmet-core (setup.py)
-sentry-sdk==1.38.0
+sentry-sdk==1.39.1
     # via custodian
 shapely==2.0.2
     # via pymatgen-analysis-alloys
@@ -408,7 +408,7 @@ six==1.16.0
     #   python-dateutil
 snowballstemmer==2.2.0
     # via pydocstyle
-spglib==2.1.0
+spglib==2.2.0
     # via
     #   phonopy
     #   pymatgen
@@ -425,7 +425,7 @@ tenacity==8.2.3
     # via plotly
 threadpoolctl==3.2.0
     # via scikit-learn
-torch==2.1.1
+torch==2.1.2
     # via
     #   chgnet
     #   matgl
@@ -443,11 +443,11 @@ tqdm==4.66.1
     #   pytorch-lightning
 triton==2.1.0
     # via torch
-types-requests==2.31.0.10
+types-requests==2.31.0.20231231
     # via emmet-core (setup.py)
 types-setuptools==69.0.0.0
     # via emmet-core (setup.py)
-typing-extensions==4.8.0
+typing-extensions==4.9.0
     # via
     #   emmet-core (setup.py)
     #   inflect

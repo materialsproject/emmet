@@ -12,6 +12,7 @@ from emmet.api.routes.materials.tasks.query_operators import (
     MultipleTaskIDsQuery,
     TrajectoryQuery,
     EntryQuery,
+    LastUpdatedQuery,
 )
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
@@ -29,6 +30,7 @@ def task_resource(task_store):
             ChemsysQuery(),
             ElementsQuery(),
             MultipleTaskIDsQuery(),
+            LastUpdatedQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 TaskDoc,
