@@ -1,5 +1,3 @@
-from typing import Union
-
 import pytest
 
 # from matcalc.utils import get_universal_calculator
@@ -57,7 +55,7 @@ expected_keys = {
 #    ],
 # )
 @pytest.mark.skip(reason="Temporary skip. Needs attention.")
-def test_ml_doc(calculator: Union[str, "Calculator"], prop_kwargs: dict) -> None:
+def test_ml_doc(calculator, prop_kwargs: dict) -> None:
     doc = MLDoc(
         structure=struct,
         calculator=calculator,

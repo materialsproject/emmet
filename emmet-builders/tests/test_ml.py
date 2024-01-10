@@ -1,5 +1,3 @@
-from typing import Union
-
 import pytest
 from maggma.stores import MemoryStore
 
@@ -33,7 +31,7 @@ def materials_store():
 
 # @pytest.mark.parametrize("model", [get_universal_calculator("chgnet"), "m3gnet"])
 @pytest.mark.skip(reason="Temporary skip. Needs attention.")
-def test_ml_ip_builder(materials_store: MemoryStore, model: Union[str, "Calculator"]):
+def test_ml_ip_builder(materials_store: MemoryStore, model):
     ml_store = MemoryStore(key="material_id")
 
     builder = MLBuilder(materials=materials_store, ml_potential=ml_store, model=model)
