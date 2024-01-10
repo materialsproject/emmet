@@ -173,7 +173,7 @@ mkdocstrings[python]==0.24.0
     # via
     #   emmet-core (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.7.5
+mkdocstrings-python==1.8.0
     # via mkdocstrings
 monty==2023.11.3
     # via
@@ -443,9 +443,9 @@ tqdm==4.66.1
     #   pytorch-lightning
 triton==2.1.0
     # via torch
-types-requests==2.31.0.20231231
+types-requests==2.31.0.20240106
     # via emmet-core (setup.py)
-types-setuptools==69.0.0.0
+types-setuptools==69.0.0.20240106
     # via emmet-core (setup.py)
 typing-extensions==4.9.0
     # via
