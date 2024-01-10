@@ -1,15 +1,15 @@
-from typing import TYPE_CHECKING, Union
+from typing import Union
 
 import pytest
 from maggma.stores import MemoryStore
-from matcalc.utils import get_universal_calculator
+
+# from matcalc.utils import get_universal_calculator
 from pymatgen.core import Lattice, Structure
 
 from emmet.builders.materials.ml import MLBuilder
 
-if TYPE_CHECKING:
-    from ase.calculators.calculator import Calculator
-
+# if TYPE_CHECKING:
+#    from ase.calculators.calculator import Calculator
 
 material_id = "1234"
 
