@@ -162,6 +162,7 @@ class EntriesCompositionSummary(BaseModel):
 
             for ele, num in comp_red.items():
                 all_composition_reduced[ele].add(num)
+
         # Convert to list
         all_composition_reduced = {
             k: sorted(list(v)) for k, v in all_composition_reduced.items()
