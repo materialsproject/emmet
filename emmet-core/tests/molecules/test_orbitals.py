@@ -18,6 +18,18 @@ def open_shell(test_dir):
     return task
 
 
+@pytest.fixture(scope="session")
+def new_closed(test_dir):
+    task = TaskDocument(**loadfn((test_dir / "closed_shell_with3c.json.gz")))
+    return task
+
+
+@pytest.fixture(scope="session")
+def new_open(test_dir):
+    task = TaskDocument(**loadfn((test_dir / "open_shell_with3c.json.gz")))
+    return task
+
+
 def test_orbital(closed_shell, open_shell):
     # Test closed-shell NBO parsing
     doc = OrbitalDoc.from_task(
@@ -55,3 +67,13 @@ def test_orbital(closed_shell, open_shell):
     assert doc.beta_population is not None
     assert doc.nbo_lone_pairs is None
     assert doc.nbo_bonds is None
+
+
+# TODO: flesh this out when parsers are fixed and we're confident in the NBO data with 3C bonds and hyperbonds
+# def test_new_parser(new_closed, new_open):
+#     # Test closed-shell parsing including 3-center bonds and hyperbonds
+#     cs_doc = OrbitalDoc.from_task(
+#         new_closed, "b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2", deprecated=False
+#     )
+
+#     assert cs_doc.open_shell is False

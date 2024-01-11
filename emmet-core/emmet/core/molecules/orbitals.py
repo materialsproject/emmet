@@ -638,7 +638,7 @@ class OrbitalDoc(PropertyDoc):
                     hbds["h(C)"][ind],
                 )
                 hyperbonds.append(this_hyperbond)
-            hyperbond_sets.append(Hyperbonds)
+            hyperbond_sets.append(hyperbonds)
 
         return hyperbond_sets
 
@@ -662,14 +662,27 @@ class OrbitalDoc(PropertyDoc):
                 if perts["donor atom 2 number"].get(ind) is None:
                     donor_atom2_number = None
                 else:
-                    donor_atom2_number = int(perts["donor atom 2 number"][ind]) - 1
+                    # Currently necessary because of (potentially) broken parsing
+                    # At least of systems with 3c bonds and hyperbonds
+                    # TODO: remove this when possible
+                    try:
+                        donor_atom2_number = int(perts["donor atom 2 number"][ind]) - 1
+                    except ValueError:
+                        # Just skip this interaction
+                        # TODO: should we return ANY perturbations if some are messed up?
+                        continue
 
                 if perts["acceptor atom 2 number"].get(ind) is None:
                     acceptor_atom2_number = None
                 else:
-                    acceptor_atom2_number = (
-                        int(perts["acceptor atom 2 number"][ind]) - 1
-                    )
+                    # See above
+                    # TODO: remove when possible
+                    try:
+                        acceptor_atom2_number = (
+                            int(perts["acceptor atom 2 number"][ind]) - 1
+                        )
+                    except ValueError:
+                        continue
 
                 this_inter = Interaction(
                     perts["perturbation energy"][ind],
@@ -749,7 +762,7 @@ class OrbitalDoc(PropertyDoc):
                 tc_inds = list()
             else:
                 # New parser - with three-center bonds
-                lp_inds = [0, 3]
+                lps_inds = [0, 3]
                 bds_inds = [1, 4]
                 tc_inds = [2, 5]
             hbds_inds = [0, 1]
@@ -757,7 +770,7 @@ class OrbitalDoc(PropertyDoc):
 
         for dset, inds in [
             ("natural_populations", pops_inds),
-            ("hybridization_character", lp_inds + bds_inds + tc_inds),
+            ("hybridization_character", lps_inds + bds_inds + tc_inds),
             ("perturbation_energy", perts_inds),
         ]:
             if len(nbo.get(dset, list())) < inds[-1]:
@@ -771,8 +784,15 @@ class OrbitalDoc(PropertyDoc):
         population_sets = cls.get_populations(nbo, pops_inds)
         lone_pair_sets = cls.get_lone_pairs(nbo, lps_inds)
         bond_sets = cls.get_bonds(nbo, bds_inds)
-        threec_sets = cls.get_three_center_bonds(nbo, tc_inds)
-        hyperbond_sets = cls.get_hyperbonds(nbo, hbds_inds)
+        # threec_sets = cls.get_three_center_bonds(nbo, tc_inds)
+        # hyperbond_sets = cls.get_hyperbonds(nbo, hbds_inds)
+        
+        # Placeholder
+        # Currently, parsers (particularly of 2nd-order perturbation theory analysis) seem broken
+        # Until more testing has been done/parsers have been fixed, best not to try to parse these
+        # TODO: remove when possible
+        threec_sets = None
+        hyperbond_sets = None
         interaction_sets = cls.get_interactions(nbo, perts_inds)
 
         if not (
@@ -855,10 +875,10 @@ class OrbitalDoc(PropertyDoc):
                 beta_lone_pairs=lone_pair_sets[1],
                 alpha_bonds=bond_sets[0],
                 beta_bonds=bond_sets[1],
-                alpha_three_center_bonds=,
-                beta_three_center_bonds=,
-                alpha_hyperbonds=,
-                beta_hyperbonds=,
+                alpha_three_center_bonds=threec_alpha,
+                beta_three_center_bonds=threec_beta,
+                alpha_hyperbonds=hyperbond_alpha,
+                beta_hyperbonds=hyperbond_beta,
                 alpha_interactions=interaction_sets[0],
                 beta_interactions=interaction_sets[1],
                 origins=[
