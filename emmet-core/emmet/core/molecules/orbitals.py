@@ -1,3 +1,5 @@
+import re
+
 from typing import List, Optional, Dict, Any
 from hashlib import blake2b
 
@@ -295,6 +297,8 @@ class Interaction(MSONable):
         acceptor_atom1_index: int,
         donor_atom2_index: Optional[int] = None,
         acceptor_atom2_index: Optional[int] = None,
+        donor_atom3_index: Optional[int] = None,
+        acceptor_atom3_index: Optional[int] = None
     ):
         """
         Description of an interaction between two orbitals
@@ -310,6 +314,8 @@ class Interaction(MSONable):
         :acceptor_atom1_index: Index of the first atom involved in the acceptor orbital
         :donor_atom2_index: Index of the second atom involved in the donor orbital
         :acceptor_atom2_index: Index of the second atom involved in the acceptor orbital
+        :donor_atom3_index: Index of the third atom involved in the donor orbital
+        :acceptor_atom3_index: Index of the third atom involved in the acceptor orbital
         """
 
         self.donor_index = int(donor_index)
@@ -319,17 +325,53 @@ class Interaction(MSONable):
         self.acceptor_type = acceptor_type
 
         if isinstance(donor_atom2_index, int):
-            donor2 = int(donor_atom2_index)
+            if donor_atom2_index < 0:
+                donor2 = None
+            else:
+                donor2 = int(donor_atom2_index)
         else:
             donor2 = None
 
         if isinstance(acceptor_atom2_index, int):
-            acceptor2 = int(acceptor_atom2_index)
+            if acceptor_atom2_index < 0:
+                acceptor2 = None
+            else:
+                acceptor2 = int(acceptor_atom2_index)
         else:
             acceptor2 = None
 
-        self.donor_atom_indices = (int(donor_atom1_index), donor2)
-        self.acceptor_atom_indices = (int(acceptor_atom1_index), acceptor2)
+        if isinstance(donor_atom3_index, int):
+            # Not sure if this is actual possible
+            if donor_atom3_index < 0:
+                donor3 = None
+            else:
+                donor3 = int(donor_atom3_index)
+        else:
+            donor3 = None
+
+        if isinstance(acceptor_atom3_index, int):
+            # Similarly, not sure if this is important
+            if acceptor_atom3_index < 0:
+                acceptor3 = None
+            else:
+                acceptor3 = int(acceptor_atom3_index)
+        else:
+            acceptor3 = None
+
+        self.donor_atom_indices = [
+            index for index in [
+                int(donor_atom1_index),
+                donor2,
+                donor3
+            ] if index is not None
+        ]
+        self.acceptor_atom_indices = [
+            index for index in [
+                int(acceptor_atom1_index),
+                acceptor2,
+                acceptor3
+            ] if index is not None
+        ]
 
         self.perturbation_energy = float(perturbation_energy)
         self.energy_difference = float(energy_difference)
@@ -352,6 +394,19 @@ class Interaction(MSONable):
 
     @classmethod
     def from_dict(cls, d):
+        donor_inds = d["donor_atom_indices"]
+        acceptor_inds = d["acceptor_atom_indices"]
+
+        if len(donor_inds) < 2:
+            donor_inds += [None, None]
+        elif len(donor_inds) < 3:
+            donor_inds += [None]
+
+        if len(acceptor_inds) < 2:
+            acceptor_inds += [None, None]
+        elif len(acceptor_inds) < 3:
+            acceptor_inds += [None]
+
         return cls(
             d["perturbation_energy"],
             d["energy_difference"],
@@ -360,10 +415,12 @@ class Interaction(MSONable):
             d["acceptor_index"],
             d["donor_type"],
             d["acceptor_type"],
-            d["donor_atom_indices"][0],
-            d["acceptor_atom_indices"][0],
-            d["donor_atom_indices"][1],
-            d["acceptor_atom_indices"][1],
+            donor_inds[0],
+            acceptor_inds[0],
+            donor_inds[1],
+            acceptor_inds[1],
+            donor_inds[2],
+            acceptor_inds[2]
         )
 
 
@@ -659,30 +716,35 @@ class OrbitalDoc(PropertyDoc):
             perts = nbo["perturbation_energy"][pert_ind]
             interactions = list()
             for ind in perts.get("donor bond index", list()):
-                if perts["donor atom 2 number"].get(ind) is None:
-                    donor_atom2_number = None
+                donor_atom2 = perts["donor atom 2 number"].get(ind)
+                if donor_atom2 == "info_is_from_3C":
+                    # There's a pretty horrible hack in the current pymatgen NBO parsers
+                    # To prevent a dramatic increase in storage space, atom indices and element symbols for 3C bonds
+                    # are stored using the same keys as those used for lone pairs and conventional two-center bonds
+                    donor_atom1_index = int(re.sub("\D","", perts["donor atom 1 symbol"][ind])) - 1
+                    donor_atom2_index = int(re.sub("\D","", perts["donor atom 1 number"][ind])) - 1
+                    donor_atom3_index = int(re.sub("\D","", perts["donor atom 2 symbol"][ind])) - 1
                 else:
-                    # Currently necessary because of (potentially) broken parsing
-                    # At least of systems with 3c bonds and hyperbonds
-                    # TODO: remove this when possible
-                    try:
-                        donor_atom2_number = int(perts["donor atom 2 number"][ind]) - 1
-                    except ValueError:
-                        # Just skip this interaction
-                        # TODO: should we return ANY perturbations if some are messed up?
-                        continue
+                    donor_atom1_index = int(perts["donor atom 1 number"][ind]) - 1
+                    donor_atom3_index = None
+                    if donor_atom2 is None:
+                        donor_atom2_index = None
+                    else:
+                        donor_atom2_index = int(donor_atom2) - 1
 
-                if perts["acceptor atom 2 number"].get(ind) is None:
-                    acceptor_atom2_number = None
+                acceptor_atom2 = perts["acceptor atom 2 number"].get(ind)
+                if acceptor_atom2 == "info_is_from_3C":
+                    acceptor_atom1_index = int(re.sub("\D","", perts["acceptor atom 1 symbol"][ind])) - 1
+                    acceptor_atom2_index = int(re.sub("\D","", perts["acceptor atom 1 number"][ind])) - 1
+                    acceptor_atom3_index = int(re.sub("\D","", perts["acceptor atom 2 symbol"][ind])) - 1
                 else:
-                    # See above
-                    # TODO: remove when possible
-                    try:
-                        acceptor_atom2_number = (
-                            int(perts["acceptor atom 2 number"][ind]) - 1
-                        )
-                    except ValueError:
-                        continue
+                    acceptor_atom1_index = int(perts["acceptor atom 1 number"][ind]) - 1
+                    acceptor_atom3_index = None
+                    if acceptor_atom2 is None:
+                        acceptor_atom2_index = None
+                    else:
+                        acceptor_atom2_index = int(acceptor_atom2) - 1
+
 
                 this_inter = Interaction(
                     perts["perturbation energy"][ind],
@@ -692,10 +754,12 @@ class OrbitalDoc(PropertyDoc):
                     int(perts["acceptor bond index"][ind]),
                     perts["donor type"][ind],
                     perts["acceptor type"][ind],
-                    int(perts["donor atom 1 number"][ind]) - 1,
-                    int(perts["acceptor atom 1 number"][ind]) - 1,
-                    donor_atom2_number,
-                    acceptor_atom2_number,
+                    donor_atom1_index,
+                    acceptor_atom1_index,
+                    donor_atom2_index,
+                    acceptor_atom2_index,
+                    donor_atom3_index,
+                    acceptor_atom3_index
                 )
 
                 interactions.append(this_inter)
@@ -784,15 +848,8 @@ class OrbitalDoc(PropertyDoc):
         population_sets = cls.get_populations(nbo, pops_inds)
         lone_pair_sets = cls.get_lone_pairs(nbo, lps_inds)
         bond_sets = cls.get_bonds(nbo, bds_inds)
-        # threec_sets = cls.get_three_center_bonds(nbo, tc_inds)
-        # hyperbond_sets = cls.get_hyperbonds(nbo, hbds_inds)
-        
-        # Placeholder
-        # Currently, parsers (particularly of 2nd-order perturbation theory analysis) seem broken
-        # Until more testing has been done/parsers have been fixed, best not to try to parse these
-        # TODO: remove when possible
-        threec_sets = None
-        hyperbond_sets = None
+        threec_sets = cls.get_three_center_bonds(nbo, tc_inds)
+        hyperbond_sets = cls.get_hyperbonds(nbo, hbds_inds)
         interaction_sets = cls.get_interactions(nbo, perts_inds)
 
         if not (
