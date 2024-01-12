@@ -10,7 +10,14 @@ from emmet.core.math import Vector3D
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPID, MPculeID
-from emmet.core.molecules.orbitals import NaturalPopulation, LonePair, Bond, Interaction
+from emmet.core.molecules.orbitals import (
+    NaturalPopulation,
+    LonePair,
+    Bond,
+    ThreeCenterBond,
+    Hyperbond,
+    Interaction
+)
 from emmet.core.molecules.metal_binding import MetalBindingData
 
 
@@ -238,6 +245,12 @@ class MoleculeSummaryDoc(PropertyDoc):
     nbo_bonds: Optional[Dict[str, Optional[List[Bond]]]] = Field(
         None, description="Bond-like orbitals of a closed-shell molecule"
     )
+    nbo_three_center_bonds: Optional[Dict[str, Optional[List[ThreeCenterBond]]]] = Field(
+        None, description="Three-center bond-like orbitals of a closed-shell molecule"
+    )
+    nbo_hyperbonds: Optional[Dict[str, Optional[List[Hyperbond]]]] = Field(
+        None, description="3-center hyperbond-like orbitals of a closed-shell molecule"
+    )
     nbo_interactions: Optional[Dict[str, Optional[List[Interaction]]]] = Field(
         None, description="Orbital-orbital interactions of a closed-shell molecule"
     )
@@ -263,6 +276,18 @@ class MoleculeSummaryDoc(PropertyDoc):
     )
     beta_bonds: Optional[Dict[str, Optional[List[Bond]]]] = Field(
         None, description="Beta electron bond-like orbitals of an open-shell molecule"
+    )
+    alpha_three_center_bonds: Optional[Dict[str, Optional[List[ThreeCenterBond]]]] = Field(
+        None, description="Alpha electron three-center bond-like orbitals of an open-shell molecule"
+    )
+    beta_three_center_bonds: Optional[Dict[str, Optional[List[ThreeCenterBond]]]] = Field(
+        None, description="Beta electron three-center bond-like orbitals of an open-shell molecule"
+    )
+    alpha_hyperbonds: Optional[Dict[str, Optional[List[Hyperbond]]]] = Field(
+        None, description="Alpha electron hyperbond-like orbitals of an open-shell molecule"
+    )
+    beta_hyperbonds: Optional[Dict[str, Optional[List[Hyperbond]]]] = Field(
+        None, description="Beta electron hyperbond-like orbitals of an open-shell molecule"
     )
     alpha_interactions: Optional[Dict[str, Optional[List[Interaction]]]] = Field(
         None,
@@ -578,6 +603,8 @@ summary_fields: Dict[str, list] = {
         "nbo_population",
         "nbo_lone_pairs",
         "nbo_bonds",
+        "nbo_three_center_bonds",
+        "nbo_hyperbonds",
         "nbo_interactions",
         "alpha_population",
         "beta_population",
@@ -585,6 +612,10 @@ summary_fields: Dict[str, list] = {
         "beta_lone_pairs",
         "alpha_bonds",
         "beta_bonds",
+        "alpha_three_center_bonds",
+        "beta_three_center_bonds",
+        "alpha_hyperbonds",
+        "beta_hyperbonds",
         "alpha_interactions",
         "beta_interactions",
     ],
