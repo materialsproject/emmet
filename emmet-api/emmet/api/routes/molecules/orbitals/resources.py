@@ -3,12 +3,6 @@ from emmet.core.molecules.orbitals import OrbitalDoc
 
 from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 
-from emmet.api.routes.molecules.orbitals.query_operators import (
-    NBOPopulationQuery,
-    NBOLonePairQuery,
-    NBOBondQuery,
-    NBOInteractionQuery,
-)
 from emmet.api.routes.molecules.molecules.query_operators import (
     MultiMPculeIDQuery,
     ExactCalcMethodQuery,
@@ -34,10 +28,6 @@ def orbitals_resource(orbital_store):
             CompositionElementsQuery(),
             ChargeSpinQuery(),
             MultiPropertyIDQuery(),
-            NBOPopulationQuery(),
-            NBOLonePairQuery(),
-            NBOBondQuery(),
-            NBOInteractionQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 OrbitalDoc,

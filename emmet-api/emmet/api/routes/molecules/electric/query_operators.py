@@ -45,17 +45,17 @@ class MultipoleMomentComponentQuery(QueryOperator):
         component: Optional[str] = Query(
             None, description="Component to query on, i.e. 'X', 'Y', or 'Z' for dipole moments"
         ),
-        min_component_value: Optional[float] = Query(
+        component_value_min: Optional[float] = Query(
             None, description="Minimum value for the multipole moment component"
         ),
-        max_component_value: Optional[float] = Query(
+        component_value_max: Optional[float] = Query(
             None, description="Maximum value for the multipole moment component"
         )
     ) -> STORE_PARAMS:
         self.moment_type = moment_type
         self.component = component
-        self.min_value = min_component_value
-        self.max_value = max_component_value
+        self.min_value = component_value_min
+        self.max_value = component_value_max
 
         if self.moment_type is None or self.component is None:
             return {"criteria": dict()}
