@@ -4,7 +4,7 @@ from matcalc.elasticity import ElasticityCalc
 from matcalc.eos import EOSCalc
 from matcalc.phonon import PhononCalc
 from matcalc.relaxation import RelaxCalc
-from matcalc.util import get_universal_calculator
+from matcalc.utils import get_universal_calculator
 from pydantic import Field, validator
 from pymatgen.analysis.elasticity import ElasticTensor
 from pymatgen.core import Structure
@@ -142,7 +142,7 @@ class MLDoc(ElasticityDoc):
             structure (Structure): Pymatgen Structure object.
             material_id (str): MP ID.
             calculator (str | Calculator): ASE calculator or name of model to use as ML
-                potential. See matcalc.util.UNIVERSAL_CALCULATORS for recognized names.
+                potential. See matcalc.utils.UNIVERSAL_CALCULATORS for recognized names.
             prop_kwargs (dict): Keyword arguments for each matcalc PropCalc class.
                 Recognized keys are RelaxCalc, ElasticityCalc, PhononCalc, EOSCalc.
             **kwargs: Passed to the PropertyDoc constructor.

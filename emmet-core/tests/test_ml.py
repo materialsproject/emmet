@@ -1,15 +1,14 @@
-from typing import TYPE_CHECKING, Union
-
 import pytest
-from matcalc.util import get_universal_calculator
+
+# from matcalc.utils import get_universal_calculator
 from pymatgen.core import Structure
 from pymatgen.util.testing import PymatgenTest
 
 from emmet.core.elasticity import BulkModulus, ElasticTensorDoc, ShearModulus
 from emmet.core.ml import MLDoc
 
-if TYPE_CHECKING:
-    from ase.calculators.calculator import Calculator
+# if TYPE_CHECKING:
+#    from ase.calculators.calculator import Calculator
 
 struct = PymatgenTest.get_structure("Si")
 
@@ -48,15 +47,15 @@ expected_keys = {
 }
 
 
+# @pytest.mark.parametrize(
+#    ("calculator", "prop_kwargs"),
+#    [
+#        (get_universal_calculator("chgnet"), None),
+#        ("M3GNet-MP-2021.2.8-PES", {"ElasticityCalc": {"relax_structure": False}}),
+#    ],
+# )
 @pytest.mark.skip(reason="Temporary skip. Needs attention.")
-@pytest.mark.parametrize(
-    ("calculator", "prop_kwargs"),
-    [
-        (get_universal_calculator("chgnet"), None),
-        ("M3GNet-MP-2021.2.8-PES", {"ElasticityCalc": {"relax_structure": False}}),
-    ],
-)
-def test_ml_doc(calculator: Union[str, "Calculator"], prop_kwargs: dict) -> None:
+def test_ml_doc(calculator, prop_kwargs: dict) -> None:
     doc = MLDoc(
         structure=struct,
         calculator=calculator,

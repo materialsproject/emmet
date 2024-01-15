@@ -3,7 +3,6 @@
 """ Core definition of a Q-Chem Task Document """
 from typing import Any, Dict, List, Optional
 import logging
-import os
 import re
 from collections import OrderedDict
 from pydantic import BaseModel, Field
@@ -342,7 +341,11 @@ class TaskDoc(MoleculeMetadata):
                 elif key == "solvent_data":
                     custom_smd = additional_json["solvent_data"]
 
-        orig_inputs = CalculationInput.from_qcinput(_parse_orig_inputs(dir_name))
+        orig_inputs = (
+            CalculationInput.from_qcinput(_parse_orig_inputs(dir_name))
+            if _parse_orig_inputs(dir_name)
+            else {}
+        )
 
         dir_name = get_uri(dir_name)  # convert to full path
 
@@ -495,10 +498,12 @@ def _parse_orig_inputs(
         The original molecule, rem, solvent and other data.
     """
     orig_inputs = {}
-    for filename in dir_name.glob("*.orig*"):
-        # orig_inputs = QCInput.from_file(os.path.join(dir_name, filename.pop("orig")))
-        orig_inputs = QCInput.from_file(os.path.join(dir_name, filename))
-        return orig_inputs
+    orig_file_path = next(dir_name.glob("*.orig*"), None)
+
+    if orig_file_path:
+        orig_inputs = QCInput.from_file(orig_file_path)
+
+    return orig_inputs
 
 
 def _parse_additional_json(dir_name: Path) -> Dict[str, Any]:
@@ -568,20 +573,40 @@ def _find_qchem_files(
     path = Path(path)
     task_files = OrderedDict()
 
-    in_file_pattern = re.compile(r"^(?P<in_task_name>mol\.qin(?:\..+)?)\.gz$")
+    in_file_pattern = re.compile(r"^(?P<in_task_name>mol\.(qin|in)(?:\..+)?)(\.gz)?$")
 
     for file in path.iterdir():
         if file.is_file():
             in_match = in_file_pattern.match(file.name)
+
+            # This block is for generalizing outputs coming from both atomate and manual qchem calculations
             if in_match:
-                in_task_name = in_match.group("in_task_name").replace("mol.qin.", "")
+                in_task_name = re.sub(
+                    r"(\.gz|gz)$",
+                    "",
+                    in_match.group("in_task_name").replace("mol.qin.", ""),
+                )
+                in_task_name = in_task_name or "mol.qin"
                 if in_task_name == "orig":
                     task_files[in_task_name] = {"orig_input_file": file}
-                elif in_task_name == "mol.qin":
+                elif in_task_name == "mol.qin" or in_task_name == "mol.in":
+                    if in_task_name == "mol.qin":
+                        out_file = (
+                            path / "mol.qout.gz"
+                            if (path / "mol.qout.gz").exists()
+                            else path / "mol.qout"
+                        )
+                    else:
+                        out_file = (
+                            path / "mol.out.gz"
+                            if (path / "mol.out.gz").exists()
+                            else path / "mol.out"
+                        )
                     task_files["standard"] = {
                         "qcinput_file": file,
-                        "qcoutput_file": Path("mol.qout.gz"),
+                        "qcoutput_file": out_file,
                     }
+                # This block will exist only if calcs were run through atomate
                 else:
                     try:
                         task_files[in_task_name] = {

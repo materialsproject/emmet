@@ -175,7 +175,7 @@ class CalculationOutput(BaseModel):
         None, description="NBO data if analysis has been performed."
     )
 
-    frequencies: Optional[Dict[str, Any]] = Field(
+    frequencies: Optional[Union[Dict[str, Any], List]] = Field(
         None,
         description="Calculated frequency modes if the job type is freq or frequency",
     )

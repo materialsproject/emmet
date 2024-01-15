@@ -75,6 +75,10 @@ def blessed_tasks_resource(materials_store):
             NumericQuery(model=MaterialsDoc),
             PaginationQuery(),
             LicenseQuery(),
+            SparseFieldsQuery(
+                MaterialsDoc,
+                default_fields=["material_id", "last_updated"],
+            ),
         ],
         key_fields=[
             "material_id",

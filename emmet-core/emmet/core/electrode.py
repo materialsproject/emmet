@@ -168,7 +168,9 @@ class EntriesCompositionSummary(BaseModel):
             all_chemsys=all_chemsys,
             all_formula_anonymous=all_formula_anonymous,
             all_elements=all_elements,
-            all_composition_reduced=all_composition_reduced,
+            all_composition_reduced={
+                k: sorted(list(v)) for k, v in all_composition_reduced.items()
+            },
         )
 
 

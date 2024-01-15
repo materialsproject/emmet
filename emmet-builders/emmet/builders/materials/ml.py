@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional, Union
 
 from maggma.builders.map_builder import MapBuilder
 from maggma.core import Store
-from matcalc.util import get_universal_calculator
+from matcalc.utils import get_universal_calculator
 from pymatgen.core import Structure
 
 from emmet.core.ml import MLDoc
@@ -22,7 +22,7 @@ class MLBuilder(MapBuilder):
         model_kwargs: Optional[dict] = None,
         prop_kwargs: Optional[dict] = None,
         provenance: Optional[dict] = None,
-        **kwargs
+        **kwargs,
     ):
         """Machine learning interatomic potential builder.
 
@@ -30,7 +30,7 @@ class MLBuilder(MapBuilder):
             materials (Store): Materials to use as input structures.
             ml_potential (Store): Where to save MLDoc documents to.
             model (str | Calculator): ASE calculator or name of model to use as ML
-                potential. See matcalc.util.UNIVERSAL_CALCULATORS for recognized names.
+                potential. See matcalc.utils.UNIVERSAL_CALCULATORS for recognized names.
             model_kwargs (dict, optional): Additional kwargs to pass to the calculator.
                 Defaults to None.
             prop_kwargs (dict[str, dict], optional): Separate kwargs passed to each matcalc
