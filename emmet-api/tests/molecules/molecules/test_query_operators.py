@@ -4,7 +4,6 @@ from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.molecules.molecules.query_operators import (
     FormulaQuery,
     ChemsysQuery,
-    ElementsQuery,
     CompositionElementsQuery,
     ChargeSpinQuery,
     DeprecationQuery,
@@ -45,23 +44,6 @@ def test_chemsys_query():
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
         assert new_op.query("O-C") == {"criteria": {"chemsys": "C-O"}}
-
-
-def test_elements_query():
-    eles = ["C", "O"]
-    neles = ["N ", "P"]
-
-    op = ElementsQuery()
-    assert op.query(elements=",".join(eles), exclude_elements=",".join(neles)) == {
-        "criteria": {"elements": {"$all": ["C", "O"], "$nin": ["N", "P"]}}
-    }
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(
-            elements=",".join(eles), exclude_elements=",".join(neles)
-        ) == {"criteria": {"elements": {"$all": ["C", "O"], "$nin": ["N", "P"]}}}
 
 
 def test_composition_query():

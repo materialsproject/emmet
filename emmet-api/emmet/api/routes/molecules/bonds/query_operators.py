@@ -41,7 +41,7 @@ class BondTypeLengthQuery(QueryOperator):
 
         if bond_length_max is not None:
             crit[key]["$lte"] = bond_length_max
-        if min_bond_length is not None:
+        if bond_length_min is not None:
             crit[key]["$gte"] = bond_length_min
 
         # If no max or min, just make sure bond type exists
