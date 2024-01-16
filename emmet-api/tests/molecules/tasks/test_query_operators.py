@@ -1,8 +1,11 @@
+import os
+
 from emmet.api.routes.molecules.tasks.query_operators import (
     MultipleTaskIDsQuery,
     TrajectoryQuery,
     DeprecationQuery,
 )
+from emmet.api.core.settings import MAPISettings
 
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
@@ -71,4 +74,12 @@ def test_trajectory_query():
 
         assert new_op.query(task_ids=" mpcule-149, mpcule-13") == query
 
-    # TODO: test post-processing to actually form trajectory
+    query = {"criteria": {"task_id": {"$in": [
+        "mpcule-451514",
+        "mpcule-451525",
+        "mpcule-451623"
+    ]}}}
+    path = os.path.join(MAPISettings().TEST_FILES, "new_orbital_buildtasks.json.gz")
+    tasks = loadfn(path)
+    docs = op.post_process(tasks[0:3], query)
+    assert docs[0]["trajectories"][0]["@class"] == "Trajectory"

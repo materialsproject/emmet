@@ -36,9 +36,11 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
         valid_trajectory = True
         if geometries is None or energies is None:
             # No valid geometry optimization found
+            print("NO GEOM OR NO ENERGIES!")
             valid_trajectory = False
         elif len(geometries) != len(energies):
             # Ambiguous - no one-to-one mapping of molecule structure and energy
+            print("GEOMS NOT EQUAL ENERGIES")
             valid_trajectory = False
 
         if not valid_trajectory:
