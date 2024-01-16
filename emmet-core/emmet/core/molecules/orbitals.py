@@ -673,12 +673,22 @@ class OrbitalDoc(PropertyDoc):
         hyperbond_sets = list()
 
         # No hyperbonds present
-        if "hyperbonds" not in nbo or len(indices) == 0:
+        if "hyperbonds" not in nbo or len(indices) == 0 or len(nbo["hyperbonds"]) == 0:
             return None
 
         for hb_ind in indices:
-            hbds = nbo["hyperbonds"][hb_ind]
+            # For other types of bonds, all indices must be present
+            # That is, we always expect one set of orbitals for closed-shell molecules,
+            # And we always expect two sets (alpha and beta) for open-shell molecules
+            # Hyperbonds are different.
+            # Since these are (up to) 4-electron configurations, you could have a partially occupied
+            # hyperbond with only two electrons
+            # And in this case, for an open-shell molecule, you may only have one set of hyperbonds
             hyperbonds = list()
+            try:
+                hbds = nbo["hyperbonds"][hb_ind]
+            except IndexError:
+                hbds = dict()
             for ind, orb_ind in hbds.get("hyperbond index", dict()).items():
                 this_hyperbond = Hyperbond(
                     orb_ind,
@@ -837,12 +847,7 @@ class OrbitalDoc(PropertyDoc):
             ("hybridization_character", lps_inds + bds_inds + tc_inds),
             ("perturbation_energy", perts_inds),
         ]:
-            if len(nbo.get(dset, list())) < inds[-1]:
-                return
-        
-        # Hyperbonds may not exist if the old parser was used
-        if "hyperbonds" in nbo:
-            if len(nbo["hyperbonds"]) < hbds_inds[-1]:
+            if len(nbo.get(dset, list())) <= inds[-1]:
                 return
 
         population_sets = cls.get_populations(nbo, pops_inds)

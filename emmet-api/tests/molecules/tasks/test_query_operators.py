@@ -1,8 +1,7 @@
 from emmet.api.routes.molecules.tasks.query_operators import (
     MultipleTaskIDsQuery,
-    # TrajectoryQuery,
+    TrajectoryQuery,
     DeprecationQuery,
-    # EntryQuery,
 )
 
 from monty.tempfile import ScratchDir
@@ -56,3 +55,20 @@ def test_deprecation_query():
         "deprecated": False,
         "deprecation_reason": None,
     }
+
+
+def test_trajectory_query():
+    op = TrajectoryQuery()
+
+    assert op.query(task_ids=" mpcule-149, mpcule-13") == {
+        "criteria": {"task_id": {"$in": ["mpcule-149", "mpcule-13"]}}
+    }
+
+    with ScratchDir("."):
+        dumpfn(op, "temp.json")
+        new_op = loadfn("temp.json")
+        query = {"criteria": {"task_id": {"$in": ["mpcule-149", "mpcule-13"]}}}
+
+        assert new_op.query(task_ids=" mpcule-149, mpcule-13") == query
+
+    # TODO: test post-processing to actually form trajectory
