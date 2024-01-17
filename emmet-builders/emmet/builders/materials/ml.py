@@ -38,7 +38,7 @@ class MLBuilder(MapBuilder):
                 Defaults to None.
             provenance (dict, optional): Additional provenance information to include in
                 MLDocs. Will be saved in each document so use sparingly. Defaults to None.
-                Set to {} to disable default provenance name, version, matcalc_version.
+                Set to {} to disable default provenance model, version, matcalc_version.
         """
         self.materials = materials
         self.ml_potential = ml_potential
