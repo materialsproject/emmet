@@ -55,7 +55,7 @@ class MLBuilder(MapBuilder):
             model_name = {"chgnetcalculator": "chgnet"}.get(model_name, model_name)
             pkg_name = {"m3gnet": "matgl"}.get(model_name, model_name)
             self.provenance = dict(
-                name=model_name,
+                model=model_name,
                 version=version(pkg_name),
                 matcalc_version=version("matcalc"),
                 **(provenance or {}),
