@@ -455,6 +455,7 @@ class CalculationOutput(BaseModel):
             If not NO, the `ionic_steps` field is left as None.
         store_onsite_density_matrices
             Whether to store the onsite density matrices from the OUTCAR.
+            
         Returns
         -------
             The VASP calculation output document.
@@ -550,6 +551,7 @@ class CalculationOutput(BaseModel):
                 temp = str(elph_poscar.name).replace("POSCAR.T=", "").replace(".gz", "")
                 elph_structures["temperatures"].append(temp)
                 elph_structures["structures"].append(Structure.from_file(elph_poscar))
+                
         return cls(
             structure=structure,
             energy=vasprun.final_energy,
