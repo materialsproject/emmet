@@ -330,7 +330,7 @@ class SummaryBuilder(Builder):
                     list(self.bonds.query({"molecule_id": mol_id})), True
                 ),
                 "multipole_moments": _group_docs(
-                    list(self.multipoles.query({"molecule_id": mol_id})), True
+                    list(self.multipoles.query({"molecule_id": mol_id})), False
                 ),
                 "metal_binding": _group_docs(
                     list(self.metal_binding.query({"molecule_id": mol_id})), True
