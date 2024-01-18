@@ -298,7 +298,7 @@ class Interaction(MSONable):
         donor_atom2_index: Optional[int] = None,
         acceptor_atom2_index: Optional[int] = None,
         donor_atom3_index: Optional[int] = None,
-        acceptor_atom3_index: Optional[int] = None
+        acceptor_atom3_index: Optional[int] = None,
     ):
         """
         Description of an interaction between two orbitals
@@ -359,18 +359,14 @@ class Interaction(MSONable):
             acceptor3 = None
 
         self.donor_atom_indices = [
-            index for index in [
-                int(donor_atom1_index),
-                donor2,
-                donor3
-            ] if index is not None
+            index
+            for index in [int(donor_atom1_index), donor2, donor3]
+            if index is not None
         ]
         self.acceptor_atom_indices = [
-            index for index in [
-                int(acceptor_atom1_index),
-                acceptor2,
-                acceptor3
-            ] if index is not None
+            index
+            for index in [int(acceptor_atom1_index), acceptor2, acceptor3]
+            if index is not None
         ]
 
         self.perturbation_energy = float(perturbation_energy)
@@ -420,7 +416,7 @@ class Interaction(MSONable):
             donor_inds[1],
             acceptor_inds[1],
             donor_inds[2],
-            acceptor_inds[2]
+            acceptor_inds[2],
         )
 
 
@@ -484,17 +480,21 @@ class OrbitalDoc(PropertyDoc):
     )
 
     alpha_three_center_bonds: Optional[List[ThreeCenterBond]] = Field(
-        None, description="Alpha electron three-center bond-like orbitals of an open-shell molecule"
+        None,
+        description="Alpha electron three-center bond-like orbitals of an open-shell molecule",
     )
     beta_three_center_bonds: Optional[List[ThreeCenterBond]] = Field(
-        None, description="Beta electron three-center bond-like orbitals of an open-shell molecule"
+        None,
+        description="Beta electron three-center bond-like orbitals of an open-shell molecule",
     )
 
     alpha_hyperbonds: Optional[List[Hyperbond]] = Field(
-        None, description="Alpha electron hyperbond-like orbitals of an open-shell molecule"
+        None,
+        description="Alpha electron hyperbond-like orbitals of an open-shell molecule",
     )
     beta_hyperbonds: Optional[List[Hyperbond]] = Field(
-        None, description="Beta electron hyperbond-like orbitals of an open-shell molecule"
+        None,
+        description="Beta electron hyperbond-like orbitals of an open-shell molecule",
     )
 
     alpha_interactions: Optional[List[Interaction]] = Field(
@@ -667,7 +667,7 @@ class OrbitalDoc(PropertyDoc):
 
         :param nbo: Dictionary of NBO output data
         :param indices: Data subsets from which to extract interactions
-        :return: interactions (list of Hyperbonds)        
+        :return: interactions (list of Hyperbonds)
         """
 
         hyperbond_sets = list()
@@ -731,9 +731,15 @@ class OrbitalDoc(PropertyDoc):
                     # There's a pretty horrible hack in the current pymatgen NBO parsers
                     # To prevent a dramatic increase in storage space, atom indices and element symbols for 3C bonds
                     # are stored using the same keys as those used for lone pairs and conventional two-center bonds
-                    donor_atom1_index = int(re.sub("\D","", perts["donor atom 1 symbol"][ind])) - 1
-                    donor_atom2_index = int(re.sub("\D","", perts["donor atom 1 number"][ind])) - 1
-                    donor_atom3_index = int(re.sub("\D","", perts["donor atom 2 symbol"][ind])) - 1
+                    donor_atom1_index = (
+                        int(re.sub("\D", "", perts["donor atom 1 symbol"][ind])) - 1
+                    )
+                    donor_atom2_index = (
+                        int(re.sub("\D", "", perts["donor atom 1 number"][ind])) - 1
+                    )
+                    donor_atom3_index = (
+                        int(re.sub("\D", "", perts["donor atom 2 symbol"][ind])) - 1
+                    )
                 else:
                     donor_atom1_index = int(perts["donor atom 1 number"][ind]) - 1
                     donor_atom3_index = None
@@ -744,9 +750,15 @@ class OrbitalDoc(PropertyDoc):
 
                 acceptor_atom2 = perts["acceptor atom 2 number"].get(ind)
                 if acceptor_atom2 == "info_is_from_3C":
-                    acceptor_atom1_index = int(re.sub("\D","", perts["acceptor atom 1 symbol"][ind])) - 1
-                    acceptor_atom2_index = int(re.sub("\D","", perts["acceptor atom 1 number"][ind])) - 1
-                    acceptor_atom3_index = int(re.sub("\D","", perts["acceptor atom 2 symbol"][ind])) - 1
+                    acceptor_atom1_index = (
+                        int(re.sub("\D", "", perts["acceptor atom 1 symbol"][ind])) - 1
+                    )
+                    acceptor_atom2_index = (
+                        int(re.sub("\D", "", perts["acceptor atom 1 number"][ind])) - 1
+                    )
+                    acceptor_atom3_index = (
+                        int(re.sub("\D", "", perts["acceptor atom 2 symbol"][ind])) - 1
+                    )
                 else:
                     acceptor_atom1_index = int(perts["acceptor atom 1 number"][ind]) - 1
                     acceptor_atom3_index = None
@@ -754,7 +766,6 @@ class OrbitalDoc(PropertyDoc):
                         acceptor_atom2_index = None
                     else:
                         acceptor_atom2_index = int(acceptor_atom2) - 1
-
 
                 this_inter = Interaction(
                     perts["perturbation energy"][ind],
@@ -769,7 +780,7 @@ class OrbitalDoc(PropertyDoc):
                     donor_atom2_index,
                     acceptor_atom2_index,
                     donor_atom3_index,
-                    acceptor_atom3_index
+                    acceptor_atom3_index,
                 )
 
                 interactions.append(this_inter)

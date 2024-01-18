@@ -115,9 +115,7 @@ class RedoxBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(
-                temp_query, [self.molecules.key, "species_hash"]
-            )
+            self.molecules.query(temp_query, [self.molecules.key, "species_hash"])
         )
 
         processed_docs = set([e for e in self.redox.distinct("molecule_id")])
@@ -156,9 +154,7 @@ class RedoxBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(
-                temp_query, [self.molecules.key, "species_hash"]
-            )
+            self.molecules.query(temp_query, [self.molecules.key, "species_hash"])
         )
 
         processed_docs = set([e for e in self.redox.distinct("molecule_id")])

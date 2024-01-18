@@ -8,7 +8,7 @@ from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 from pymatgen.io.babel import BabelMolAdaptor
 
 from emmet.core.mpid import MPculeID
-from emmet.core.utils import get_graph_hash, get_molecule_id
+from emmet.core.utils import get_molecule_id
 from emmet.core.settings import EmmetSettings
 from emmet.core.material import CoreMoleculeDoc, PropertyOrigin
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType

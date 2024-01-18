@@ -97,9 +97,7 @@ class ElectricMultipoleBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(
-                temp_query, [self.molecules.key, "species_hash"]
-            )
+            self.molecules.query(temp_query, [self.molecules.key, "species_hash"])
         )
 
         processed_docs = set([e for e in self.multipoles.distinct("molecule_id")])
@@ -138,9 +136,7 @@ class ElectricMultipoleBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(
-                temp_query, [self.molecules.key, "species_hash"]
-            )
+            self.molecules.query(temp_query, [self.molecules.key, "species_hash"])
         )
 
         processed_docs = set([e for e in self.multipoles.distinct("molecule_id")])
@@ -191,9 +187,7 @@ class ElectricMultipoleBuilder(Builder):
                 for e in mol.entries
                 if e["charge"] == mol.charge
                 and e["spin_multiplicity"] == mol.spin_multiplicity
-                and (
-                    e["output"].get("dipoles") is not None
-                )
+                and (e["output"].get("dipoles") is not None)
             ]
 
             # Organize by solvent environment
@@ -248,7 +242,9 @@ class ElectricMultipoleBuilder(Builder):
                 )
                 multipole_docs.append(multipole_doc)
 
-        self.logger.debug(f"Produced {len(multipole_docs)} electric multipole docs for {shash}")
+        self.logger.debug(
+            f"Produced {len(multipole_docs)} electric multipole docs for {shash}"
+        )
 
         return jsanitize([doc.model_dump() for doc in multipole_docs], allow_bson=True)
 

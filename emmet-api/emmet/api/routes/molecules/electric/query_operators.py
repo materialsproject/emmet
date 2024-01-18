@@ -25,7 +25,7 @@ allowed_components = {
         "XZZZ",
         "YZZZ",
         "ZZZZ",
-    }
+    },
 }
 
 
@@ -36,21 +36,25 @@ class MultipoleMomentComponentQuery(QueryOperator):
 
     def query(
         self,
-        moment_type: Optional[Literal["dipole", "resp_dipole", "quadrupole", "octopole", "hexadecapole"]] = Query(
-            None, description=(
+        moment_type: Optional[
+            Literal["dipole", "resp_dipole", "quadrupole", "octopole", "hexadecapole"]
+        ] = Query(
+            None,
+            description=(
                 "Type of multipole moment. Allowed values: 'dipole', 'resp_dipole', 'quadrupole', 'octopole', and "
                 "'hexadecapole'"
-            )
+            ),
         ),
         component: Optional[str] = Query(
-            None, description="Component to query on, i.e. 'X', 'Y', or 'Z' for dipole moments"
+            None,
+            description="Component to query on, i.e. 'X', 'Y', or 'Z' for dipole moments",
         ),
         component_value_min: Optional[float] = Query(
             None, description="Minimum value for the multipole moment component"
         ),
         component_value_max: Optional[float] = Query(
             None, description="Maximum value for the multipole moment component"
-        )
+        ),
     ) -> STORE_PARAMS:
         self.moment_type = moment_type
         self.component = component
@@ -63,7 +67,9 @@ class MultipoleMomentComponentQuery(QueryOperator):
         allowed = allowed_components[self.moment_type]
 
         if self.component not in allowed:
-            raise ValueError(f"Improper component! Allowed components for {self.moment_type} are {allowed}!")
+            raise ValueError(
+                f"Improper component! Allowed components for {self.moment_type} are {allowed}!"
+            )
 
         key_prefix = self.moment_type + "_moment"
 
@@ -72,7 +78,7 @@ class MultipoleMomentComponentQuery(QueryOperator):
             key_suffix = mapping[self.component]
         else:
             key_suffix = self.component
-        
+
         key = key_prefix + "." + key_suffix
 
         crit: Dict[str, Any] = {key: dict()}  # type: ignore
@@ -82,7 +88,9 @@ class MultipoleMomentComponentQuery(QueryOperator):
         if self.max_value is not None and isinstance(self.max_value, float):
             crit[key]["$lte"] = self.max_value
 
-        if not isinstance(self.min_value, float) and not isinstance(self.max_value, float):
+        if not isinstance(self.min_value, float) and not isinstance(
+            self.max_value, float
+        ):
             crit[key]["$exists"] = True
 
         return {"criteria": crit}
@@ -94,7 +102,7 @@ class MultipoleMomentComponentQuery(QueryOperator):
         for dp in ["dipole_moment", "resp_dipole_moment"]:
             for index in range(3):
                 indexes.append((f"{dp}.{index}", False))
-        
+
         for mp in ["quadrupole", "octopole", "hexadecapole"]:
             for valid_key in allowed_components[mp]:
                 indexes.append((f"{mp}_moment.{valid_key}", False))

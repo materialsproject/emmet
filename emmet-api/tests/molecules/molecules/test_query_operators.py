@@ -12,7 +12,7 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     FindMoleculeQuery,
     CalcMethodQuery,
     HashQuery,
-    StringRepQuery
+    StringRepQuery,
 )
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
@@ -56,7 +56,7 @@ def test_composition_query():
             "composition.C": {"$exists": True},
             "composition.O": {"$exists": True},
             "composition.N": {"$exists": False},
-            "composition.P": {"$exists": False}
+            "composition.P": {"$exists": False},
         }
     }
 
@@ -70,7 +70,7 @@ def test_composition_query():
                 "composition.C": {"$exists": True},
                 "composition.O": {"$exists": True},
                 "composition.N": {"$exists": False},
-                "composition.P": {"$exists": False}
+                "composition.P": {"$exists": False},
             }
         }
 
@@ -258,21 +258,13 @@ def test_hash_query():
 def test_string_rep_query():
     op = StringRepQuery()
 
-    assert op.query(
-        inchi="InChI=1S/C2H3NO3/c3-1(4)2(5)6/h(H2,3,4)(H,5,6)"
-    ) == {
-        "criteria": {
-            "inchi": "InChI=1S/C2H3NO3/c3-1(4)2(5)6/h(H2,3,4)(H,5,6)"
-        }
+    assert op.query(inchi="InChI=1S/C2H3NO3/c3-1(4)2(5)6/h(H2,3,4)(H,5,6)") == {
+        "criteria": {"inchi": "InChI=1S/C2H3NO3/c3-1(4)2(5)6/h(H2,3,4)(H,5,6)"}
     }
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(
-            inchi_key="SOWBFZRMHSNYGE-UHFFFAOYSA-N"
-        ) == {
-            "criteria": {
-                "inchi_key": "SOWBFZRMHSNYGE-UHFFFAOYSA-N"
-            }
+        assert new_op.query(inchi_key="SOWBFZRMHSNYGE-UHFFFAOYSA-N") == {
+            "criteria": {"inchi_key": "SOWBFZRMHSNYGE-UHFFFAOYSA-N"}
         }

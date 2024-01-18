@@ -64,24 +64,48 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
 
         # electric dipoles
         if dipoles is not None:
-            if isinstance(dipoles.get("total"), list) and len(dipoles["total"]) == num_steps:
+            if (
+                isinstance(dipoles.get("total"), list)
+                and len(dipoles["total"]) == num_steps
+            ):
                 frame_props["total_dipole"] = dipoles["total"]
-            if isinstance(dipoles.get("RESP_total"), list) and len(dipoles["RESP_total"]) == num_steps:
+            if (
+                isinstance(dipoles.get("RESP_total"), list)
+                and len(dipoles["RESP_total"]) == num_steps
+            ):
                 frame_props["resp_total_dipole"] = dipoles["RESP_total"]
             if dipoles.get("dipole") is not None and len(dipoles["dipole"]) > 0:
-                if isinstance(dipoles["dipole"][0], list) and len(dipoles["dipole"]) == num_steps:
-                     frame_props["dipole_moment"] = dipoles["dipole"]
-            if dipoles.get("RESP_dipole") is not None and len(dipoles["RESP_dipole"]) > 0:
-                if isinstance(dipoles["RESP_dipole"][0], list) and len(dipoles["RESP_dipole"]) == num_steps:
-                     frame_props["resp_dipole_moment"] = dipoles["RESP_dipole"]
+                if (
+                    isinstance(dipoles["dipole"][0], list)
+                    and len(dipoles["dipole"]) == num_steps
+                ):
+                    frame_props["dipole_moment"] = dipoles["dipole"]
+            if (
+                dipoles.get("RESP_dipole") is not None
+                and len(dipoles["RESP_dipole"]) > 0
+            ):
+                if (
+                    isinstance(dipoles["RESP_dipole"][0], list)
+                    and len(dipoles["RESP_dipole"]) == num_steps
+                ):
+                    frame_props["resp_dipole_moment"] = dipoles["RESP_dipole"]
 
         # electric multipoles
         if multipoles is not None:
-            if isinstance(multipoles.get("quadrupole"), list) and len(multipoles["quadrupole"]) == num_steps:
+            if (
+                isinstance(multipoles.get("quadrupole"), list)
+                and len(multipoles["quadrupole"]) == num_steps
+            ):
                 frame_props["quadrupole_moment"] = multipoles["quadrupole"]
-            if isinstance(multipoles.get("octopole"), list) and len(multipoles["octopole"]) == num_steps:
+            if (
+                isinstance(multipoles.get("octopole"), list)
+                and len(multipoles["octopole"]) == num_steps
+            ):
                 frame_props["octopole_moment"] = multipoles["octopole"]
-            if isinstance(multipoles.get("hexadecapole"), list) and len(multipoles["hexadecapole"]) == num_steps:
+            if (
+                isinstance(multipoles.get("hexadecapole"), list)
+                and len(multipoles["hexadecapole"]) == num_steps
+            ):
                 frame_props["hexadecapole_moment"] = multipoles["hexadecapole"]
 
         # Site (atomic) properties
@@ -94,7 +118,7 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
             site_props["pcm_gradient"] = pcm_gradients
         if cds_gradients is not None and len(cds_gradients) == num_steps:
             site_props["cds_gradient"] = cds_gradients
-    
+
         # Partial charges/spins
         if mulliken is not None:
             if len(mulliken) == num_steps:

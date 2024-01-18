@@ -29,8 +29,7 @@ def test_tasks(test_dir):
 def test_electric_multipole(test_tasks):
     # First, test from SP
     sp_doc = ElectricMultipoleDoc.from_task(
-        test_tasks[0],
-        molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2"
+        test_tasks[0], molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2"
     )
     assert sp_doc.property_name == "multipole_moments"
     assert sp_doc.total_dipole == pytest.approx(4.2371)
@@ -47,30 +46,26 @@ def test_electric_multipole(test_tasks):
 
     # Test from force calc
     force_doc = ElectricMultipoleDoc.from_task(
-        test_tasks[1],
-        molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2"
+        test_tasks[1], molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2"
     )
     assert force_doc.total_dipole == pytest.approx(6.562)
     assert force_doc.dipole_moment[0] == pytest.approx(5.4663)
 
     # Test from FFOpt
     ffopt_doc = ElectricMultipoleDoc.from_task(
-        test_tasks[2],
-        molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2"
+        test_tasks[2], molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2"
     )
     assert ffopt_doc.quadrupole_moment["XZ"] == pytest.approx(0.1372)
 
     # Test from opt
     opt_doc = ElectricMultipoleDoc.from_task(
-        test_tasks[3],
-        molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2"
+        test_tasks[3], molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2"
     )
     assert opt_doc.octopole_moment["YZZ"] == pytest.approx(35.289)
     assert opt_doc.total_dipole == ffopt_doc.total_dipole
 
     # Test from freq
     freq_doc = ElectricMultipoleDoc.from_task(
-        test_tasks[4],
-        molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2"
+        test_tasks[4], molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2"
     )
     assert freq_doc.hexadecapole_moment["ZZZZ"] == pytest.approx(-366.0089)

@@ -314,7 +314,7 @@ class MoleculeMetadata(EmmetBaseModel):
             "chemsys": "-".join(elsyms),
             "symmetry": symmetry,
             "species_hash": get_graph_hash(meta_molecule, "specie"),
-            "coord_hash": get_graph_hash(meta_molecule, "coords")
+            "coord_hash": get_graph_hash(meta_molecule, "coords"),
         }
 
         return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)

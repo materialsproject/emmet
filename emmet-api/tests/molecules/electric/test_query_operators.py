@@ -1,6 +1,8 @@
 import pytest
 
-from emmet.api.routes.molecules.electric.query_operators import MultipoleMomentComponentQuery
+from emmet.api.routes.molecules.electric.query_operators import (
+    MultipoleMomentComponentQuery,
+)
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
 
@@ -12,7 +14,7 @@ def test_multipole_moment_query():
         component="X",
         component_value_min=0.1,
         component_value_max=3.1,
-        ) == {
+    ) == {
         "criteria": {
             "dipole_moment.0": {"$lte": 3.1, "$gte": 0.1},
         }
@@ -32,10 +34,7 @@ def test_multipole_moment_query():
             }
         }
 
-    assert op.query(
-        moment_type="hexadecapole",
-        component="YYYY"
-    ) == {
+    assert op.query(moment_type="hexadecapole", component="YYYY") == {
         "criteria": {
             "hexadecapole_moment.YYYY": {"$exists": True},
         }

@@ -42,7 +42,7 @@ def electric_multipole_resource(multipole_store):
                 fields=[
                     "total_dipole",
                     "resp_total_dipole",
-                ]
+                ],
             ),
             SparseFieldsQuery(
                 ElectricMultipoleDoc,

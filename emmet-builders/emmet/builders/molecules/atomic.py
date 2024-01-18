@@ -113,9 +113,7 @@ class PartialChargesBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(
-                temp_query, [self.molecules.key, "species_hash"]
-            )
+            self.molecules.query(temp_query, [self.molecules.key, "species_hash"])
         )
 
         processed_docs = set([e for e in self.charges.distinct("molecule_id")])
@@ -154,9 +152,7 @@ class PartialChargesBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(
-                temp_query, [self.molecules.key, "species_hash"]
-            )
+            self.molecules.query(temp_query, [self.molecules.key, "species_hash"])
         )
 
         processed_docs = set([e for e in self.charges.distinct("molecule_id")])
@@ -394,9 +390,7 @@ class PartialSpinsBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(
-                temp_query, [self.molecules.key, "species_hash"]
-            )
+            self.molecules.query(temp_query, [self.molecules.key, "species_hash"])
         )
 
         processed_docs = set([e for e in self.spins.distinct("molecule_id")])
@@ -435,9 +429,7 @@ class PartialSpinsBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(
-                temp_query, [self.molecules.key, "species_hash"]
-            )
+            self.molecules.query(temp_query, [self.molecules.key, "species_hash"])
         )
 
         processed_docs = set([e for e in self.spins.distinct("molecule_id")])
@@ -555,9 +547,7 @@ class PartialSpinsBuilder(Builder):
 
                     spins_docs.append(doc)
 
-        self.logger.debug(
-            f"Produced {len(spins_docs)} partial spins docs for {shash}"
-        )
+        self.logger.debug(f"Produced {len(spins_docs)} partial spins docs for {shash}")
 
         return jsanitize([doc.model_dump() for doc in spins_docs], allow_bson=True)
 

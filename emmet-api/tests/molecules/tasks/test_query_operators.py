@@ -74,11 +74,11 @@ def test_trajectory_query():
 
         assert new_op.query(task_ids=" mpcule-149, mpcule-13") == query
 
-    query = {"criteria": {"task_id": {"$in": [
-        "mpcule-451514",
-        "mpcule-451525",
-        "mpcule-451623"
-    ]}}}
+    query = {
+        "criteria": {
+            "task_id": {"$in": ["mpcule-451514", "mpcule-451525", "mpcule-451623"]}
+        }
+    }
     path = os.path.join(MAPISettings().TEST_FILES, "new_orbital_buildtasks.json.gz")
     tasks = loadfn(path)
     docs = op.post_process(tasks[0:3], query)

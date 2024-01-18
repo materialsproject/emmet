@@ -93,7 +93,7 @@ class ElectricMultipoleDoc(PropertyDoc):
         # FFOpt/FFTSOpt: grab final multipole moments from final optimization
         if task_type in [
             "Frequency Flattening Geometry Optimization",
-            "Frequency Flattening Transition State Geometry Optimization"
+            "Frequency Flattening Transition State Geometry Optimization",
         ]:
             calc = calcs_reversed[1]
             grab_index = -1

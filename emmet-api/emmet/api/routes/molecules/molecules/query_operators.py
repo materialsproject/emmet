@@ -520,19 +520,19 @@ class HashQuery(QueryOperator):
 class StringRepQuery(QueryOperator):
     """
     Method to generate a query based on molecular string representations,
-        such as international chemical identifier (InChI) strings. 
+        such as international chemical identifier (InChI) strings.
     """
 
     def query(
         self,
         inchi: Optional[str] = Query(
-            None, description="International chemical identifier (InChI) string for this molecule",
+            None,
+            description="International chemical identifier (InChI) string for this molecule",
         ),
         inchi_key: Optional[str] = Query(
             None, description="Hash of the InChI, also known as the InChI-key"
         ),
     ):
-
         crit = dict()
 
         self.inchi = inchi
@@ -542,7 +542,7 @@ class StringRepQuery(QueryOperator):
             crit.update({"inchi": self.inchi})
         if self.inchi_key is not None and isinstance(self.inchi_key, str):
             crit.update({"inchi_key": self.inchi_key})
-        
+
         return {"criteria": crit}
 
     def ensure_indexes(self):  # pragma: no cover
