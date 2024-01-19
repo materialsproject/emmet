@@ -14,7 +14,7 @@ contourpy==1.2.0
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-fonttools==4.47.0
+fonttools==4.47.2
     # via matplotlib
 future==0.18.3
     # via uncertainties
