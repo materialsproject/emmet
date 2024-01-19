@@ -26,11 +26,11 @@ bcrypt==4.1.2
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.34.15
+boto3==1.34.22
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.34.15
+botocore==1.34.22
     # via
     #   boto3
     #   s3transfer
@@ -67,7 +67,7 @@ dnspython==2.4.2
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.75.3
+emmet-core[all]==0.76.2
     # via emmet-api (setup.py)
 envier==0.5.0
     # via ddtrace
@@ -75,13 +75,13 @@ exceptiongroup==1.2.0
     # via
     #   anyio
     #   cattrs
-fastapi==0.108.0
+fastapi==0.109.0
     # via
     #   emmet-api (setup.py)
     #   maggma
-flask==3.0.0
+flask==3.0.1
     # via mongogrant
-fonttools==4.47.0
+fonttools==4.47.2
     # via matplotlib
 future==0.18.3
     # via
@@ -103,7 +103,7 @@ inflect==7.0.0
     # via robocrys
 itsdangerous==2.1.2
     # via flask
-jinja2==3.1.2
+jinja2==3.1.3
     # via flask
 jmespath==1.0.1
     # via
@@ -115,7 +115,7 @@ joblib==1.3.2
     #   pymatgen
     #   pymatgen-analysis-diffusion
     #   scikit-learn
-jsonschema==4.20.0
+jsonschema==4.21.0
     # via maggma
 jsonschema-specifications==2023.12.1
     # via jsonschema
@@ -123,7 +123,7 @@ kiwisolver==1.4.5
     # via matplotlib
 latexcodec==2.0.1
     # via pybtex
-maggma==0.60.2
+maggma==0.61.0
     # via emmet-api (setup.py)
 markupsafe==2.1.3
     # via
@@ -176,7 +176,7 @@ numpy==1.26.3
     #   spglib
 opentelemetry-api==1.22.0
     # via ddtrace
-orjson==3.9.10
+orjson==3.9.12
     # via maggma
 packaging==23.2
     # via
@@ -198,7 +198,7 @@ pillow==10.2.0
     # via matplotlib
 plotly==5.18.0
     # via pymatgen
-protobuf==4.25.1
+protobuf==4.25.2
     # via
     #   ddsketch
     #   ddtrace
@@ -274,7 +274,7 @@ requests==2.31.0
     #   pymatgen
 robocrys==0.2.8
     # via emmet-core
-rpds-py==0.16.2
+rpds-py==0.17.1
     # via
     #   jsonschema
     #   referencing
@@ -287,7 +287,7 @@ ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
 s3transfer==0.10.0
     # via boto3
-scikit-learn==1.3.2
+scikit-learn==1.4.0
     # via matminer
 scipy==1.11.4
     # via
@@ -322,7 +322,7 @@ spglib==2.2.0
     #   seekpath
 sshtunnel==0.4.0
     # via maggma
-starlette==0.32.0.post1
+starlette==0.35.1
     # via fastapi
 sympy==1.12
     # via
@@ -358,7 +358,7 @@ urllib3==2.0.7
     # via
     #   botocore
     #   requests
-uvicorn==0.25.0
+uvicorn==0.26.0
     # via maggma
 werkzeug==3.0.1
     # via flask
