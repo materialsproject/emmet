@@ -93,7 +93,7 @@ ruamel-yaml==0.18.5
     # via pymatgen
 ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
-scipy==1.11.4
+scipy==1.12.0
     # via
     #   -r python/requirements.txt
     #   pymatgen
