@@ -1,6 +1,5 @@
 import logging
 import operator
-import re
 from datetime import datetime
 from itertools import groupby
 from typing import Iterable, List, Optional, Union
@@ -11,6 +10,7 @@ from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatc
 from pymatgen.core.composition import Composition
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from emmet.core.mpid import MPID
 
 logger = logging.getLogger(__name__)
 
@@ -282,19 +282,8 @@ def group_entries_with_structure_matcher(
 def _get_id_lexi(task_id) -> Union[int, str]:
     """Get a lexicographic representation for a task ID"""
     # matches "mp-1234" or "1234" followed by and optional "-(Alphanumeric)"
-    mpid_regex = re.compile(r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$")
-    # matches capital letters and numbers of length 26 (ULID)
-    check_ulid = re.compile(r"^[A-Z0-9]{26}$")
-
-    if isinstance(task_id, int):
-        return task_id
-    if isinstance(task_id, str):
-        if mpid_regex.fullmatch(task_id):
-            return int(task_id.split("-")[-1])
-        elif check_ulid.fullmatch(task_id):
-            return task_id
-    else:
-        raise ValueError("TaskID needs to be either a number or of the form xxx-#####")
+    mpid = MPID(task_id)
+    return mpid.parts
 
 
 def _get_framework(formula, ignored_specie) -> str:

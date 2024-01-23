@@ -58,6 +58,9 @@ def test_StructureGroupDoc_from_ungrouped_entries(entries_lfeo):
 
 
 def test_lexi_id():
-    assert _get_id_lexi("01HMVV88CCQ6JQ2Y1N8F3ZTVWP") == "01HMVV88CCQ6JQ2Y1N8F3ZTVWP"
-    assert _get_id_lexi("mp-123") == 123
-    assert _get_id_lexi("123") == 123
+    assert _get_id_lexi("01HMVV88CCQ6JQ2Y1N8F3ZTVWP") == (
+        "01HMVV88CCQ6JQ2Y1N8F3ZTVWP",
+        0,
+    )
+    assert _get_id_lexi("mp-123") == ("mp", 123)
+    assert _get_id_lexi("123") == ("", 123)
