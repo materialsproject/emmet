@@ -2,7 +2,7 @@ import pytest
 from monty.serialization import loadfn
 from pymatgen.core import Composition
 
-from emmet.core.structure_group import StructureGroupDoc
+from emmet.core.structure_group import StructureGroupDoc, _get_id_lexi
 
 
 @pytest.fixture(scope="session")
@@ -55,3 +55,12 @@ def test_StructureGroupDoc_from_ungrouped_entries(entries_lfeo):
                 dd_.pop(ignored)
             framework = Composition.from_dict(dd_).reduced_formula
             assert framework == framework_ref
+
+
+def test_lexi_id():
+    assert _get_id_lexi("01HMVV88CCQ6JQ2Y1N8F3ZTVWP") == (
+        "01HMVV88CCQ6JQ2Y1N8F3ZTVWP",
+        0,
+    )
+    assert _get_id_lexi("mp-123") == ("mp", 123)
+    assert _get_id_lexi("123") == ("", 123)
