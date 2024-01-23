@@ -24,7 +24,8 @@ def test_mpid():
     )
 
     MPID(3)
-    MPID("01HMVV88CCQ6JQ2Y1N8F3ZTVWP")
+    ulid_mpid = MPID("01HMVV88CCQ6JQ2Y1N8F3ZTVWP-Li")
+    assert ulid_mpid.parts == ("01HMVV88CCQ6JQ2Y1N8F3ZTVWP", 0)
 
 
 def test_mpculeid():
