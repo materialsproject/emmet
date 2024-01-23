@@ -59,7 +59,7 @@ class MPID(str):
 
         else:
             raise ValueError(
-                "Must provide an MPID, int, or string of the format prefix-number"
+                "Must provide an MPID, int, or string of the format prefix-number or start with a valid ULID."
             )
 
     def __eq__(self, other: object):
