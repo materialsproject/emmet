@@ -1,5 +1,6 @@
 import logging
 import operator
+import re
 from datetime import datetime
 from itertools import groupby
 from typing import Iterable, List, Optional, Union
@@ -127,7 +128,7 @@ class StructureGroupDoc(BaseModel):
             framework_comp = Composition.from_dict(comp_d)
             framework_str = framework_comp.reduced_formula
         ids = [ient.data["material_id"] for ient in entries]
-        lowest_id = min(ids, key=_get_id_num)
+        lowest_id = min(ids, key=_get_id_lexi)
         sub_script = "_".join([ignored_specie])
         host_and_insertion_ids = StructureGroupDoc.get_host_and_insertion_ids(
             entries=entries, ignored_specie=ignored_specie
@@ -278,11 +279,20 @@ def group_entries_with_structure_matcher(
         yield [el for el in sub_g]
 
 
-def _get_id_num(task_id) -> Union[int, str]:
+def _get_id_lexi(task_id) -> Union[int, str]:
+    """Get a lexicographic representation for a task ID"""
+    # matches "mp-1234" or "1234" followed by and optional "-(Alphanumeric)"
+    mpid_regex = re.compile(r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$")
+    # matches capital letters and numbers of length 26 (ULID)
+    check_ulid = re.compile(r"^[A-Z0-9]{26}$")
+
     if isinstance(task_id, int):
         return task_id
     if isinstance(task_id, str):
-        return int(task_id.split("-")[-1])
+        if mpid_regex.fullmatch(task_id):
+            return int(task_id.split("-")[-1])
+        elif check_ulid.fullmatch(task_id):
+            return task_id
     else:
         raise ValueError("TaskID needs to be either a number or of the form xxx-#####")
 

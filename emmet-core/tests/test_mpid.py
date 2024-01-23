@@ -24,6 +24,7 @@ def test_mpid():
     )
 
     MPID(3)
+    MPID("01HMVV88CCQ6JQ2Y1N8F3ZTVWP")
 
 
 def test_mpculeid():
