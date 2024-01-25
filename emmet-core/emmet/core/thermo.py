@@ -1,16 +1,16 @@
 """ Core definition of a Thermo Document """
 from collections import defaultdict
-from typing import Dict, List, Optional, Union
 from datetime import datetime
-from emmet.core.base import EmmetMeta
-from emmet.core.utils import ValueEnum
+from enum import StrEnum
+from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
-from emmet.core.material_property import PropertyDoc
+from emmet.core.base import EmmetMeta
 from emmet.core.material import PropertyOrigin
+from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
 from emmet.core.vasp.calc_types.enums import RunType
 
@@ -34,7 +34,7 @@ class DecompositionProduct(BaseModel):
     )
 
 
-class ThermoType(ValueEnum):
+class ThermoType(StrEnum):
     GGA_GGA_U = "GGA_GGA+U"
     GGA_GGA_U_R2SCAN = "GGA_GGA+U_R2SCAN"
     R2SCAN = "R2SCAN"
@@ -125,7 +125,7 @@ class ThermoDoc(PropertyDoc):
         thermo_type: Union[ThermoType, RunType],
         phase_diagram: Optional[PhaseDiagram] = None,
         use_max_chemsys: bool = False,
-        **kwargs
+        **kwargs,
     ):
         """Produce a list of ThermoDocs from a list of Entry objects
 

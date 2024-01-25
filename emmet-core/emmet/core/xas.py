@@ -1,4 +1,5 @@
 import warnings
+from enum import StrEnum
 from itertools import groupby
 from typing import List
 
@@ -11,10 +12,9 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from emmet.core.feff.task import TaskDocument
 from emmet.core.mpid import MPID
 from emmet.core.spectrum import SpectrumDoc
-from emmet.core.utils import ValueEnum
 
 
-class Edge(ValueEnum):
+class Edge(StrEnum):
     """
     The interaction edge for XAS
     There are 2n-1 sub-components to each edge where
@@ -30,7 +30,7 @@ class Edge(ValueEnum):
     L2_3 = "L2,3"
 
 
-class Type(ValueEnum):
+class Type(StrEnum):
     """
     The type of XAS Spectrum
     XANES - Just the near-edge region

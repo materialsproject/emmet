@@ -5,11 +5,8 @@ from itertools import groupby
 from typing import Any, Dict, Iterator, List, Optional, Union
 
 import numpy as np
-
 from monty.json import MSONable
-
 from pydantic import BaseModel
-
 from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
@@ -105,7 +102,7 @@ def group_molecules(molecules: List[Molecule]):
 
     # First, group by formula
     # Hopefully this step is unnecessary - builders should already be doing this
-    for mol_key, pregroup in groupby(sorted(molecules, key=_mol_form), key=_mol_form):
+    for _mol_key, pregroup in groupby(sorted(molecules, key=_mol_form), key=_mol_form):
         groups: List[Dict[str, Any]] = list()
         for mol in pregroup:
             mol_copy = copy.deepcopy(mol)
@@ -334,7 +331,7 @@ class DocEnum(ValueEnum):
 
 def get_enum_source(enum_name, doc, items):
     header = f"""
-class {enum_name}(ValueEnum):
+class {enum_name}(StrEnum):
     \"\"\" {doc} \"\"\"\n
 """
     items = [f'    {const} = "{val}"' for const, val in items.items()]
