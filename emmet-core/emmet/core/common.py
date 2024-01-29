@@ -1,4 +1,3 @@
-from pymatgen.core.sites import MontyEncoder
 from emmet.core.utils import ValueEnum
 from datetime import datetime
 from monty.json import MontyDecoder

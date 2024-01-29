@@ -6,7 +6,6 @@ from collections import defaultdict
 from emmet.core.utils import ValueEnum
 from emmet.core.common import convert_datetime
 
-from monty.json import MontyDecoder
 from pydantic import field_validator, BaseModel, Field
 from pymatgen.apps.battery.battery_abc import AbstractElectrode
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode

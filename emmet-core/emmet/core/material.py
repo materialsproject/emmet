@@ -1,7 +1,7 @@
 """ Core definition of a Materials Document """
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import datetime
 from typing import List, Mapping, Type, TypeVar, Union, Optional
 
 from pydantic import BaseModel, Field, field_validator
