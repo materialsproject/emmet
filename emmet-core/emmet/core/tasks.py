@@ -17,6 +17,7 @@ from pymatgen.core.trajectory import Trajectory
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.io.vasp import Incar, Kpoints, Poscar
 from pymatgen.io.vasp import Potcar as VaspPotcar
+from emmet.core.common import convert_datetime
 
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import CalcType, TaskType
@@ -406,7 +407,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
     @field_validator("last_updated", mode="before")
     @classmethod
     def last_updated_dict_ok(cls, v) -> datetime:
-        return v if isinstance(v, datetime) else monty_decoder.process_decoded(v)
+        return convert_datetime(cls, v)
 
     @model_validator(mode="after")
     def set_entry(self) -> datetime:

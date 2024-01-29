@@ -10,6 +10,7 @@ from pydantic import field_validator, model_validator, BaseModel, Field
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
 from emmet.core.utils import ValueEnum
+from emmet.core.common import convert_datetime
 from pymatgen.core.structure import Structure
 
 
@@ -82,12 +83,8 @@ class SNLAbout(BaseModel):
 
     @field_validator("created_at", mode="before")
     @classmethod
-    def convert_monty_date(cls, v):
-        if isinstance(v, dict):
-            if v.get("@module", "datetime") and v.get("@class", "datetime"):
-                return datetime.fromisoformat(v["string"])
-            raise ValueError("Improper monty dict datetime")
-        return v
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)
 
 
 class SNLDict(BaseModel):
