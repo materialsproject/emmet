@@ -204,11 +204,12 @@ tags_meta = [
             Project database. See the `SynthesisSearchResultModel` schema for a full list of fields returned by this route.",
     },
     {
-        "name": "Electrodes",
+        "name": "Materials Electrodes",
         "description": "Route providing computed electrode data for a material following the \
             methodology discussed by [Shen *et al.*](https://doi.org/10.1038/s41524-020-00422-3) \
             Note that electrode data has not been calculated for all materials in the Materials \
-            Project database. See the `InsertionElectrodeDoc` schema for a full list of fields returned by this route.",
+            Project database. See the `InsertionElectrodeDoc` and `ConversionElectrodeDoc` schema \
+            for a full list of fields returned by this route.",
     },
     {
         "name": "Materials Oxidation States",

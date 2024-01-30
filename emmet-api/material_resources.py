@@ -6,7 +6,7 @@ from emmet.api.core.settings import MAPISettings
 
 resources = {}
 
-default_settings = MAPISettings()
+default_settings = MAPISettings()  # type: ignore
 
 db_uri = os.environ.get("MPCONTRIBS_MONGO_HOST", None)
 db_version = default_settings.DB_VERSION
