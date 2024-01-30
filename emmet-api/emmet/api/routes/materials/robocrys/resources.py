@@ -40,6 +40,7 @@ def robo_search_resource(robo_store):
         tags=["Robocrystallographer"],
         sub_path="/robocrys/text_search/",
         header_processor=GlobalHeaderProcessor(),
+        tags=["Materials Robocrystallographer"],
         timeout=timeout,
     )
 
