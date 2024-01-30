@@ -32,7 +32,6 @@ def gb_resource(gb_store):
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Grain Boundaries"],
         sub_path="/grain_boundary/",
-        enable_get_by_key=False,
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,
     )
