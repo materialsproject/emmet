@@ -6,7 +6,7 @@
 #
 annotated-types==0.6.0
     # via pydantic
-certifi==2023.11.17
+certifi==2024.2.2
     # via requests
 charset-normalizer==3.3.2
     # via requests
@@ -83,7 +83,7 @@ python-dateutil==2.8.2
     #   pandas
 python-dotenv==1.0.1
     # via pydantic-settings
-pytz==2023.4
+pytz==2024.1
     # via pandas
 pyyaml==6.0.1
     # via pybtex
@@ -119,5 +119,5 @@ typing-extensions==4.9.0
     #   pydantic-core
 uncertainties==3.1.7
     # via pymatgen
-urllib3==2.1.0
+urllib3==2.2.0
     # via requests
