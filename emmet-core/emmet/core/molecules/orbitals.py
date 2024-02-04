@@ -1,3 +1,5 @@
+import re
+
 from typing import List, Optional, Dict, Any
 from hashlib import blake2b
 
@@ -146,6 +148,141 @@ class Bond(MSONable):
         self.type_code = type_code
 
 
+class ThreeCenterBond(MSONable):
+    def __init__(
+        self,
+        index: int,
+        number: int,
+        atom1_index: int,
+        atom2_index: int,
+        atom3_index: int,
+        atom1_s_character: float,
+        atom2_s_character: float,
+        atom3_s_character: float,
+        atom1_p_character: float,
+        atom2_p_character: float,
+        atom3_p_character: float,
+        atom1_d_character: float,
+        atom2_d_character: float,
+        atom3_d_character: float,
+        atom1_f_character: float,
+        atom2_f_character: float,
+        atom3_f_character: float,
+        atom1_polarization: float,
+        atom2_polarization: float,
+        atom3_polarization: float,
+        atom1_polarization_coeff: float,
+        atom2_polarization_coeff: float,
+        atom3_polarization_coeff: float,
+        occupancy: float,
+        type_code: str,
+    ):
+        """
+        Basic description of a three-center bond (3C) natural bonding orbital.
+
+        :param index: Bond orbital index from NBO. 1-indexed.
+        :param number: Another index, for cases where there are multiple bonds
+            between two atoms. 1-indexed
+        :param atom1_index: Index of first atom involved in this orbital. 0-indexed
+        :param atom2_index: Index of second atom involved in this orbital. 0-indexed
+        :param atom3_index: Index of third atom involved in this orbital. 0-indexed
+        :param atom1_s_character: What fraction of this orbital comes from atom 1 s electrons
+        :param atom2_s_character: What fraction of this orbital comes from atom 2 s electrons
+        :param atom3_s_character: What fraction of this orbital comes from atom 3 s electrons
+        :param atom1_p_character: What fraction of this orbital comes from atom 1 p electrons
+        :param atom2_p_character: What fraction of this orbital comes from atom 2 p electrons
+        :param atom3_p_character: What fraction of this orbital comes from atom 3 p electrons
+        :param atom1_d_character: What fraction of this orbital comes from atom 1 d electrons
+        :param atom2_d_character: What fraction of this orbital comes from atom 2 d electrons
+        :param atom3_d_character: What fraction of this orbital comes from atom 3 d electrons
+        :param atom1_f_character: What fraction of this orbital comes from atom 1 f electrons
+        :param atom2_f_character: What fraction of this orbital comes from atom 2 f electrons
+        :param atom3_f_character: What fraction of this orbital comes from atom 3 f electrons
+        :param atom1_polarization: Percentage of polarization from atom 1
+        :param atom2_polarization: Percentage of polarization from atom 2
+        :param atom3_polarization: Percentage of polarization from atom 3
+        :param atom1_polarization_coeff: Polarization coefficient of atom 1
+        :param atom2_polarization_coeff: Polarization coefficient of atom 2
+        :param atom3_polarization_coeff: Polarization coefficient of atom 3
+        :param occupancy: Total electron occupancy of this orbital
+        :param type_code: Description of this bonding orbital (ex: 3C for three-center bond,
+            3C* for three-center anti-bond)
+        """
+
+        self.index = int(index)
+        self.number = int(number)
+        self.atom1_index = int(atom1_index)
+        self.atom2_index = int(atom2_index)
+        self.atom3_index = int(atom3_index)
+        self.atom1_s_character = float(atom1_s_character)
+        self.atom2_s_character = float(atom2_s_character)
+        self.atom3_s_character = float(atom3_s_character)
+        self.atom1_p_character = float(atom1_p_character)
+        self.atom2_p_character = float(atom2_p_character)
+        self.atom3_p_character = float(atom3_p_character)
+        self.atom1_d_character = float(atom1_d_character)
+        self.atom2_d_character = float(atom2_d_character)
+        self.atom3_d_character = float(atom3_d_character)
+        self.atom1_f_character = float(atom1_f_character)
+        self.atom2_f_character = float(atom2_f_character)
+        self.atom3_f_character = float(atom3_f_character)
+        self.atom1_polarization = float(atom1_polarization)
+        self.atom2_polarization = float(atom2_polarization)
+        self.atom3_polarization = float(atom3_polarization)
+        self.atom1_polarization_coeff = float(atom1_polarization_coeff)
+        self.atom2_polarization_coeff = float(atom2_polarization_coeff)
+        self.atom3_polarization_coeff = float(atom3_polarization_coeff)
+        self.occupancy = float(occupancy)
+        self.type_code = type_code
+
+
+class Hyperbond(MSONable):
+    def __init__(
+        self,
+        index: int,
+        atom1_index: int,
+        atom2_index: int,
+        atom3_index: int,
+        fraction_12: float,
+        fraction_23: float,
+        occupancy: float,
+        bond_index_12: int,
+        lp_index_3: int,
+        hybrid_index_1: int,
+        hybrid_index_2: int,
+        hybrid_index_3: int,
+    ):
+        """
+        Basic description of a three-center, four-electron hyperbond (3CHB).
+
+        :param index: Bond orbital index from NBO. 1-indexed.
+        :param atom1_index: Index of first atom involved in this orbital. 0-indexed
+        :param atom2_index: Index of second atom involved in this orbital. 0-indexed
+        :param atom3_index: Index of third atom involved in this orbital. 0-indexed
+        :param fraction_12: What fraction of this hyperbond comes from the bond between atoms 1 and 2
+        :param fraction_23: What fraction of this hyperbond comes from the bond between atoms 2 and 3
+        :param occupancy: Total electron occupancy of this orbital
+        :param bond_index_12: Index of the bond orbital between atoms used 1 and 2 used to make this hyperbond
+        :param lp_index_3: Index of the LP on atom 3 used to make this hyperbond
+        :hybrid_index_1: Index of the natural hybrid orbital (NHO) on atom 1 used to make this hyperbond
+        :hybrid_index_2: Index of the natural hybrid orbital (NHO) on atom 2 used to make this hyperbond
+        :hybrid_index_3: Index of the natural hybrid orbital (NHO) on atom 3 used to make this hyperbond
+        """
+
+        self.index = int(index)
+        self.atom1_index = int(atom1_index)
+        self.atom2_index = int(atom2_index)
+        self.atom3_index = int(atom3_index)
+        self.fraction_12 = float(fraction_12)
+        self.fraction_23 = float(fraction_23)
+        self.occupancy = float(occupancy)
+        self.bond_index_12 = int(bond_index_12)
+        self.lp_index_3 = int(lp_index_3)
+        self.hybrid_index_1 = int(hybrid_index_1)
+        self.hybrid_index_2 = int(hybrid_index_2)
+        self.hybrid_index_3 = int(hybrid_index_3)
+
+
 class Interaction(MSONable):
     def __init__(
         self,
@@ -160,7 +297,27 @@ class Interaction(MSONable):
         acceptor_atom1_index: int,
         donor_atom2_index: Optional[int] = None,
         acceptor_atom2_index: Optional[int] = None,
+        donor_atom3_index: Optional[int] = None,
+        acceptor_atom3_index: Optional[int] = None,
     ):
+        """
+        Description of an interaction between two orbitals
+
+        :param perturbation_energy: second-order perturbation energy, in kcal/mol
+        :param energy_difference: difference in energy between the interacting orbitals, in Ha
+        :param fock_element: Fock matrix element corresponding to this interaction, in a.u.
+        :donor_index: Index of the donating orbital
+        :acceptor_index: Index of the accepting orbital
+        :donor_type: Type code for the donating orbital
+        :acceptor_type: Type code for the accepting orbital
+        :donor_atom1_index: Index of the first atom involved in the donor orbital
+        :acceptor_atom1_index: Index of the first atom involved in the acceptor orbital
+        :donor_atom2_index: Index of the second atom involved in the donor orbital
+        :acceptor_atom2_index: Index of the second atom involved in the acceptor orbital
+        :donor_atom3_index: Index of the third atom involved in the donor orbital
+        :acceptor_atom3_index: Index of the third atom involved in the acceptor orbital
+        """
+
         self.donor_index = int(donor_index)
         self.acceptor_index = int(acceptor_index)
 
@@ -168,17 +325,49 @@ class Interaction(MSONable):
         self.acceptor_type = acceptor_type
 
         if isinstance(donor_atom2_index, int):
-            donor2 = int(donor_atom2_index)
+            if donor_atom2_index < 0:
+                donor2 = None
+            else:
+                donor2 = int(donor_atom2_index)
         else:
             donor2 = None
 
         if isinstance(acceptor_atom2_index, int):
-            acceptor2 = int(acceptor_atom2_index)
+            if acceptor_atom2_index < 0:
+                acceptor2 = None
+            else:
+                acceptor2 = int(acceptor_atom2_index)
         else:
             acceptor2 = None
 
-        self.donor_atom_indices = (int(donor_atom1_index), donor2)
-        self.acceptor_atom_indices = (int(acceptor_atom1_index), acceptor2)
+        if isinstance(donor_atom3_index, int):
+            # Not sure if this is actual possible
+            if donor_atom3_index < 0:
+                donor3 = None
+            else:
+                donor3 = int(donor_atom3_index)
+        else:
+            donor3 = None
+
+        if isinstance(acceptor_atom3_index, int):
+            # Similarly, not sure if this is important
+            if acceptor_atom3_index < 0:
+                acceptor3 = None
+            else:
+                acceptor3 = int(acceptor_atom3_index)
+        else:
+            acceptor3 = None
+
+        self.donor_atom_indices = [
+            index
+            for index in [int(donor_atom1_index), donor2, donor3]
+            if index is not None
+        ]
+        self.acceptor_atom_indices = [
+            index
+            for index in [int(acceptor_atom1_index), acceptor2, acceptor3]
+            if index is not None
+        ]
 
         self.perturbation_energy = float(perturbation_energy)
         self.energy_difference = float(energy_difference)
@@ -201,6 +390,19 @@ class Interaction(MSONable):
 
     @classmethod
     def from_dict(cls, d):
+        donor_inds = d["donor_atom_indices"]
+        acceptor_inds = d["acceptor_atom_indices"]
+
+        if len(donor_inds) < 2:
+            donor_inds += [None, None]
+        elif len(donor_inds) < 3:
+            donor_inds += [None]
+
+        if len(acceptor_inds) < 2:
+            acceptor_inds += [None, None]
+        elif len(acceptor_inds) < 3:
+            acceptor_inds += [None]
+
         return cls(
             d["perturbation_energy"],
             d["energy_difference"],
@@ -209,10 +411,12 @@ class Interaction(MSONable):
             d["acceptor_index"],
             d["donor_type"],
             d["acceptor_type"],
-            d["donor_atom_indices"][0],
-            d["acceptor_atom_indices"][0],
-            d["donor_atom_indices"][1],
-            d["acceptor_atom_indices"][1],
+            donor_inds[0],
+            acceptor_inds[0],
+            donor_inds[1],
+            acceptor_inds[1],
+            donor_inds[2],
+            acceptor_inds[2],
         )
 
 
@@ -235,6 +439,14 @@ class OrbitalDoc(PropertyDoc):
 
     nbo_bonds: Optional[List[Bond]] = Field(
         None, description="Bond-like orbitals of a closed-shell molecule"
+    )
+
+    nbo_three_center_bonds: Optional[List[ThreeCenterBond]] = Field(
+        None, description="Three-center bond-like orbitals of a closed-shell molecule"
+    )
+
+    nbo_hyperbonds: Optional[List[Hyperbond]] = Field(
+        None, description="3-center hyperbond-like orbitals of a closed-shell molecule"
     )
 
     nbo_interactions: Optional[List[Interaction]] = Field(
@@ -265,6 +477,24 @@ class OrbitalDoc(PropertyDoc):
     )
     beta_bonds: Optional[List[Bond]] = Field(
         None, description="Beta electron bond-like orbitals of an open-shell molecule"
+    )
+
+    alpha_three_center_bonds: Optional[List[ThreeCenterBond]] = Field(
+        None,
+        description="Alpha electron three-center bond-like orbitals of an open-shell molecule",
+    )
+    beta_three_center_bonds: Optional[List[ThreeCenterBond]] = Field(
+        None,
+        description="Beta electron three-center bond-like orbitals of an open-shell molecule",
+    )
+
+    alpha_hyperbonds: Optional[List[Hyperbond]] = Field(
+        None,
+        description="Alpha electron hyperbond-like orbitals of an open-shell molecule",
+    )
+    beta_hyperbonds: Optional[List[Hyperbond]] = Field(
+        None,
+        description="Beta electron hyperbond-like orbitals of an open-shell molecule",
     )
 
     alpha_interactions: Optional[List[Interaction]] = Field(
@@ -380,6 +610,106 @@ class OrbitalDoc(PropertyDoc):
         return bond_sets
 
     @staticmethod
+    def get_three_center_bonds(nbo: Dict[str, Any], indices: List[int]):
+        """
+        Helper function to extract bonding information from NBO output
+
+        :param nbo: Dictionary of NBO output data
+        :param indices: Data subsets from which to extract bonds
+        :return: threec_bonds (list of ThreeCenterBonds)
+        """
+
+        if len(indices) == 0:
+            return None
+
+        threec_sets = list()
+
+        for tc_ind in indices:
+            tcs = nbo["hybridization_character"][tc_ind]
+            threecs = list()
+            for ind, orb_ind in tcs.get("bond index", dict()).items():
+                this_threec = ThreeCenterBond(
+                    orb_ind,
+                    tcs["orbital index"][ind],
+                    int(tcs["atom 1 number"][ind]) - 1,
+                    int(tcs["atom 2 number"][ind]) - 1,
+                    int(tcs["atom 3 number"][ind]) - 1,
+                    tcs["atom 1 s"][ind],
+                    tcs["atom 2 s"][ind],
+                    tcs["atom 3 s"][ind],
+                    tcs["atom 1 p"][ind],
+                    tcs["atom 2 p"][ind],
+                    tcs["atom 3 p"][ind],
+                    tcs["atom 1 d"][ind],
+                    tcs["atom 2 d"][ind],
+                    tcs["atom 3 d"][ind],
+                    tcs["atom 1 f"][ind],
+                    tcs["atom 2 f"][ind],
+                    tcs["atom 3 f"][ind],
+                    tcs["atom 1 polarization"][ind],
+                    tcs["atom 2 polarization"][ind],
+                    tcs["atom 3 polarization"][ind],
+                    tcs["atom 1 pol coeff"][ind],
+                    tcs["atom 2 pol coeff"][ind],
+                    tcs["atom 3 pol coeff"][ind],
+                    tcs["occupancy"][ind],
+                    tcs["type"][ind],
+                )
+                threecs.append(this_threec)
+            threec_sets.append(threecs)
+
+        return threec_sets
+
+    @staticmethod
+    def get_hyperbonds(nbo: Dict[str, Any], indices: List[int]):
+        """
+        Helper function to extract hyperbond information form NBO output
+
+        :param nbo: Dictionary of NBO output data
+        :param indices: Data subsets from which to extract interactions
+        :return: interactions (list of Hyperbonds)
+        """
+
+        hyperbond_sets = list()
+
+        # No hyperbonds present
+        if "hyperbonds" not in nbo or len(indices) == 0 or len(nbo["hyperbonds"]) == 0:
+            return None
+
+        for hb_ind in indices:
+            # For other types of bonds, all indices must be present
+            # That is, we always expect one set of orbitals for closed-shell molecules,
+            # And we always expect two sets (alpha and beta) for open-shell molecules
+            # Hyperbonds are different.
+            # Since these are (up to) 4-electron configurations, you could have a partially occupied
+            # hyperbond with only two electrons
+            # And in this case, for an open-shell molecule, you may only have one set of hyperbonds
+            hyperbonds = list()
+            try:
+                hbds = nbo["hyperbonds"][hb_ind]
+            except IndexError:
+                hbds = dict()
+            for ind, orb_ind in hbds.get("hyperbond index", dict()).items():
+                this_hyperbond = Hyperbond(
+                    orb_ind,
+                    int(hbds["bond atom 1 index"][ind]) - 1,
+                    int(hbds["bond atom 2 index"][ind]) - 1,
+                    int(hbds["bond atom 3 index"][ind]) - 1,
+                    hbds["pctA-B"][ind],
+                    hbds["pctB-C"][ind],
+                    hbds["occ"][ind],
+                    hbds["BD(A-B)"][ind],
+                    hbds["LP(C)"][ind],
+                    hbds["h(A)"][ind],
+                    hbds["h(B)"][ind],
+                    hbds["h(C)"][ind],
+                )
+                hyperbonds.append(this_hyperbond)
+            hyperbond_sets.append(hyperbonds)
+
+        return hyperbond_sets
+
+    @staticmethod
     def get_interactions(nbo: Dict[str, Any], indices: List[int]):
         """
         Helper function to extract orbital interaction information
@@ -396,17 +726,46 @@ class OrbitalDoc(PropertyDoc):
             perts = nbo["perturbation_energy"][pert_ind]
             interactions = list()
             for ind in perts.get("donor bond index", list()):
-                if perts["donor atom 2 number"].get(ind) is None:
-                    donor_atom2_number = None
-                else:
-                    donor_atom2_number = int(perts["donor atom 2 number"][ind]) - 1
-
-                if perts["acceptor atom 2 number"].get(ind) is None:
-                    acceptor_atom2_number = None
-                else:
-                    acceptor_atom2_number = (
-                        int(perts["acceptor atom 2 number"][ind]) - 1
+                donor_atom2 = perts["donor atom 2 number"].get(ind)
+                if donor_atom2 == "info_is_from_3C":
+                    # There's a pretty horrible hack in the current pymatgen NBO parsers
+                    # To prevent a dramatic increase in storage space, atom indices and element symbols for 3C bonds
+                    # are stored using the same keys as those used for lone pairs and conventional two-center bonds
+                    donor_atom1_index = (
+                        int(re.sub("\D", "", perts["donor atom 1 symbol"][ind])) - 1
                     )
+                    donor_atom2_index = (
+                        int(re.sub("\D", "", perts["donor atom 1 number"][ind])) - 1
+                    )
+                    donor_atom3_index = (
+                        int(re.sub("\D", "", perts["donor atom 2 symbol"][ind])) - 1
+                    )
+                else:
+                    donor_atom1_index = int(perts["donor atom 1 number"][ind]) - 1
+                    donor_atom3_index = None
+                    if donor_atom2 is None:
+                        donor_atom2_index = None
+                    else:
+                        donor_atom2_index = int(donor_atom2) - 1
+
+                acceptor_atom2 = perts["acceptor atom 2 number"].get(ind)
+                if acceptor_atom2 == "info_is_from_3C":
+                    acceptor_atom1_index = (
+                        int(re.sub("\D", "", perts["acceptor atom 1 symbol"][ind])) - 1
+                    )
+                    acceptor_atom2_index = (
+                        int(re.sub("\D", "", perts["acceptor atom 1 number"][ind])) - 1
+                    )
+                    acceptor_atom3_index = (
+                        int(re.sub("\D", "", perts["acceptor atom 2 symbol"][ind])) - 1
+                    )
+                else:
+                    acceptor_atom1_index = int(perts["acceptor atom 1 number"][ind]) - 1
+                    acceptor_atom3_index = None
+                    if acceptor_atom2 is None:
+                        acceptor_atom2_index = None
+                    else:
+                        acceptor_atom2_index = int(acceptor_atom2) - 1
 
                 this_inter = Interaction(
                     perts["perturbation energy"][ind],
@@ -416,10 +775,12 @@ class OrbitalDoc(PropertyDoc):
                     int(perts["acceptor bond index"][ind]),
                     perts["donor type"][ind],
                     perts["acceptor type"][ind],
-                    int(perts["donor atom 1 number"][ind]) - 1,
-                    int(perts["acceptor atom 1 number"][ind]) - 1,
-                    donor_atom2_number,
-                    acceptor_atom2_number,
+                    donor_atom1_index,
+                    acceptor_atom1_index,
+                    donor_atom2_index,
+                    acceptor_atom2_index,
+                    donor_atom3_index,
+                    acceptor_atom3_index,
                 )
 
                 interactions.append(this_inter)
@@ -467,26 +828,44 @@ class OrbitalDoc(PropertyDoc):
             pops_inds = [0]
             lps_inds = [0]
             bds_inds = [1]
+            if "hyperbonds" in nbo:
+                # New parser, with three-center bonds
+                tc_inds = [2]
+            else:
+                # Old parser - no three-center bonds
+                tc_inds = list()
+            hbds_inds = [0]
             perts_inds = [0]
 
         # Open-shell
         else:
             pops_inds = [0, 1, 2]
-            lps_inds = [0, 2]
-            bds_inds = [1, 3]
+            if len(nbo.get("hybridization_character", [0, 0, 0, 0])) == 4:
+                # Old parser - no three-center bonds
+                lps_inds = [0, 2]
+                bds_inds = [1, 3]
+                tc_inds = list()
+            else:
+                # New parser - with three-center bonds
+                lps_inds = [0, 3]
+                bds_inds = [1, 4]
+                tc_inds = [2, 5]
+            hbds_inds = [0, 1]
             perts_inds = [0, 1]
 
         for dset, inds in [
             ("natural_populations", pops_inds),
-            ("hybridization_character", bds_inds),
+            ("hybridization_character", lps_inds + bds_inds + tc_inds),
             ("perturbation_energy", perts_inds),
         ]:
-            if len(nbo[dset]) < inds[-1]:
+            if len(nbo.get(dset, list())) <= inds[-1]:
                 return
 
         population_sets = cls.get_populations(nbo, pops_inds)
         lone_pair_sets = cls.get_lone_pairs(nbo, lps_inds)
         bond_sets = cls.get_bonds(nbo, bds_inds)
+        threec_sets = cls.get_three_center_bonds(nbo, tc_inds)
+        hyperbond_sets = cls.get_hyperbonds(nbo, hbds_inds)
         interaction_sets = cls.get_interactions(nbo, perts_inds)
 
         if not (
@@ -505,6 +884,16 @@ class OrbitalDoc(PropertyDoc):
         property_id = h.hexdigest()
 
         if int(spin) == 1:
+            if threec_sets is None:
+                threec = None
+            else:
+                threec = threec_sets[0]
+
+            if hyperbond_sets is None:
+                hyperbond = None
+            else:
+                hyperbond = hyperbond_sets[0]
+
             return super().from_molecule(
                 meta_molecule=mol,
                 property_id=property_id,
@@ -516,6 +905,8 @@ class OrbitalDoc(PropertyDoc):
                 nbo_population=population_sets[0],
                 nbo_lone_pairs=lone_pair_sets[0],
                 nbo_bonds=bond_sets[0],
+                nbo_three_center_bonds=threec,
+                nbo_hyperbonds=hyperbond,
                 nbo_interactions=interaction_sets[0],
                 origins=[
                     PropertyOrigin(
@@ -528,6 +919,20 @@ class OrbitalDoc(PropertyDoc):
             )
 
         else:
+            if threec_sets is None:
+                threec_alpha = None
+                threec_beta = None
+            else:
+                threec_alpha = threec_sets[0]
+                threec_beta = threec_sets[1]
+
+            if hyperbond_sets is None:
+                hyperbond_alpha = None
+                hyperbond_beta = None
+            else:
+                hyperbond_alpha = hyperbond_sets[0]
+                hyperbond_beta = hyperbond_sets[1]
+
             return super().from_molecule(
                 meta_molecule=mol,
                 property_id=property_id,
@@ -543,6 +948,10 @@ class OrbitalDoc(PropertyDoc):
                 beta_lone_pairs=lone_pair_sets[1],
                 alpha_bonds=bond_sets[0],
                 beta_bonds=bond_sets[1],
+                alpha_three_center_bonds=threec_alpha,
+                beta_three_center_bonds=threec_beta,
+                alpha_hyperbonds=hyperbond_alpha,
+                beta_hyperbonds=hyperbond_beta,
                 alpha_interactions=interaction_sets[0],
                 beta_interactions=interaction_sets[1],
                 origins=[

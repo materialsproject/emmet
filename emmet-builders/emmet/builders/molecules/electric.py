@@ -10,7 +10,7 @@ from maggma.utils import grouper
 
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
-from emmet.core.molecules.orbitals import OrbitalDoc
+from emmet.core.molecules.electric import ElectricMultipoleDoc
 from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
 
@@ -20,40 +20,41 @@ __author__ = "Evan Spotte-Smith"
 SETTINGS = EmmetBuildSettings()
 
 
-class OrbitalBuilder(Builder):
+class ElectricMultipoleBuilder(Builder):
     """
-    The OrbitalBuilder extracts the highest-quality natural bonding orbital data
-    from a MoleculeDoc (lowest electronic energy, highest level of theory for
-    each solvent available).
+    The ElectricMultipoleBuilder defines the electric multipole properties of a MoleculeDoc.
+
+    This builder will attempt to build documents for each molecule, in each solvent.
+    For each molecule-solvent combination, the highest-quality
+    data available (based on level of theory and electronic energy) will be used.
 
     The process is as follows:
         1. Gather MoleculeDocs by species hash
-        2. For each doc, sort tasks by solvent
-        3. For each solvent, grab the best TaskDoc (including NBO data using
-            the highest level of theory with lowest electronic energy for the
-            molecule)
-        4. Convert TaskDoc to OrbitalDoc
+        2. For each molecule, group all tasks by solvent.
+        3. For each solvent, grab the best TaskDoc (doc with elecrtric dipole/multipole information
+        that has the highest level of theory with the lowest electronic energy) for the molecule
+        4. Convert TaskDoc to ElectricMultipoleDoc
     """
 
     def __init__(
         self,
         tasks: Store,
         molecules: Store,
-        orbitals: Store,
+        multipoles: Store,
         query: Optional[Dict] = None,
         settings: Optional[EmmetBuildSettings] = None,
         **kwargs,
     ):
         self.tasks = tasks
         self.molecules = molecules
-        self.orbitals = orbitals
+        self.multipoles = multipoles
         self.query = query if query else dict()
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[tasks, molecules], targets=[orbitals], **kwargs)
+        super().__init__(sources=[tasks, molecules], targets=[multipoles], **kwargs)
         # Uncomment in case of issue with mrun not connecting automatically to collections
-        # for i in [self.tasks, self.molecules, self.orbitals]:
+        # for i in [self.tasks, self.molecules, self.multipoles]:
         #     try:
         #         i.connect()
         #     except Exception as e:
@@ -78,14 +79,15 @@ class OrbitalBuilder(Builder):
         self.molecules.ensure_index("formula_alphabetical")
         self.molecules.ensure_index("species_hash")
 
-        # Search index for orbitals
-        self.orbitals.ensure_index("molecule_id")
-        self.orbitals.ensure_index("task_id")
-        self.orbitals.ensure_index("solvent")
-        self.orbitals.ensure_index("lot_solvent")
-        self.orbitals.ensure_index("property_id")
-        self.orbitals.ensure_index("last_updated")
-        self.orbitals.ensure_index("formula_alphabetical")
+        # Search index for electric
+        self.multipoles.ensure_index("method")
+        self.multipoles.ensure_index("molecule_id")
+        self.multipoles.ensure_index("task_id")
+        self.multipoles.ensure_index("solvent")
+        self.multipoles.ensure_index("lot_solvent")
+        self.multipoles.ensure_index("property_id")
+        self.multipoles.ensure_index("last_updated")
+        self.multipoles.ensure_index("formula_alphabetical")
 
     def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
         """Prechunk the builder for distributed computation"""
@@ -98,7 +100,7 @@ class OrbitalBuilder(Builder):
             self.molecules.query(temp_query, [self.molecules.key, "species_hash"])
         )
 
-        processed_docs = set([e for e in self.orbitals.distinct("molecule_id")])
+        processed_docs = set([e for e in self.multipoles.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
         to_process_hashes = {
             d["species_hash"]
@@ -113,15 +115,15 @@ class OrbitalBuilder(Builder):
 
     def get_items(self) -> Iterator[List[Dict]]:
         """
-        Gets all items to process into orbital documents.
+        Gets all items to process into multipole documents.
         This does no datetime checking; relying on on whether
-        task_ids are included in the orbitals Store
+        task_ids are included in the multipoles Store
 
         Returns:
             generator or list relevant tasks and molecules to process into documents
         """
 
-        self.logger.info("Orbital builder started")
+        self.logger.info("Electric multipoles builder started")
         self.logger.info("Setting indexes")
         self.ensure_indexes()
 
@@ -137,7 +139,7 @@ class OrbitalBuilder(Builder):
             self.molecules.query(temp_query, [self.molecules.key, "species_hash"])
         )
 
-        processed_docs = set([e for e in self.orbitals.distinct("molecule_id")])
+        processed_docs = set([e for e in self.multipoles.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
         to_process_hashes = {
             d["species_hash"]
@@ -160,104 +162,95 @@ class OrbitalBuilder(Builder):
 
     def process_item(self, items: List[Dict]) -> List[Dict]:
         """
-        Process the tasks into a OrbitalDocs
+        Process the tasks into ElectricMultipoleDocs
 
         Args:
             tasks List[Dict] : a list of MoleculeDocs in dict form
 
         Returns:
-            [dict] : a list of new orbital docs
+            [dict] : a list of new electric multipole docs
         """
 
         mols = [MoleculeDoc(**item) for item in items]
         shash = mols[0].species_hash
         mol_ids = [m.molecule_id for m in mols]
-        self.logger.info(f"Processing {shash} : {mol_ids}")
+        self.logger.debug(f"Processing {shash} : {mol_ids}")
 
-        orbital_docs = list()
+        multipole_docs = list()
 
         for mol in mols:
-            correct_charge_spin = [
+            # Relevant tasks are those with the correct charge and spin
+            # for which there are AT LEAST electric dipoles present
+            # (ideally, multipole information would also be present)
+            multip_entries = [
                 e
                 for e in mol.entries
                 if e["charge"] == mol.charge
                 and e["spin_multiplicity"] == mol.spin_multiplicity
-            ]
-
-            # Must have NBO, and must specifically use NBO7
-            orbital_entries = [
-                e
-                for e in correct_charge_spin
-                if e["output"]["nbo"] is not None
-                and (
-                    e["orig"]["rem"].get("run_nbo6", False)
-                    or e["orig"]["rem"].get("nbo_external", False)
-                )
+                and (e["output"].get("dipoles") is not None)
             ]
 
             # Organize by solvent environment
             by_solvent = defaultdict(list)
-            for entry in orbital_entries:
+            for entry in multip_entries:
                 by_solvent[entry["solvent"]].append(entry)
 
             for solvent, entries in by_solvent.items():
-                # No documents with NBO data; no documents to be made
+                # No documents with enthalpy and entropy
                 if len(entries) == 0:
                     continue
                 else:
-                    sorted_entries = sorted(
+                    best = sorted(
                         entries,
                         key=lambda x: (
                             sum(evaluate_lot(x["level_of_theory"])),
                             x["energy"],
                         ),
-                    )
+                    )[0]
+                    task = best["task_id"]
 
-                    for best in sorted_entries:
-                        task = best["task_id"]
+                tdoc = self.tasks.query_one(
+                    {
+                        "task_id": task,
+                        "species_hash": shash,
+                        "orig": {"$exists": True},
+                    }
+                )
 
+                if tdoc is None:
+                    try:
                         tdoc = self.tasks.query_one(
                             {
-                                "task_id": task,
+                                "task_id": int(task),
                                 "species_hash": shash,
                                 "orig": {"$exists": True},
                             }
                         )
+                    except ValueError:
+                        tdoc = None
 
-                        if tdoc is None:
-                            try:
-                                tdoc = self.tasks.query_one(
-                                    {
-                                        "task_id": int(task),
-                                        "species_hash": shash,
-                                        "orig": {"$exists": True},
-                                    }
-                                )
-                            except ValueError:
-                                tdoc = None
+                if tdoc is None:
+                    continue
 
-                        if tdoc is None:
-                            continue
+                task_doc = TaskDocument(**tdoc)
 
-                        task_doc = TaskDocument(**tdoc)
+                if task_doc is None:
+                    continue
 
-                        if task_doc is None:
-                            continue
+                multipole_doc = ElectricMultipoleDoc.from_task(
+                    task_doc, molecule_id=mol.molecule_id, deprecated=False
+                )
+                multipole_docs.append(multipole_doc)
 
-                        orbital_doc = OrbitalDoc.from_task(
-                            task_doc, molecule_id=mol.molecule_id, deprecated=False
-                        )
+        self.logger.debug(
+            f"Produced {len(multipole_docs)} electric multipole docs for {shash}"
+        )
 
-                        if orbital_doc is not None:
-                            orbital_docs.append(orbital_doc)
-
-        self.logger.debug(f"Produced {len(orbital_docs)} orbital docs for {shash}")
-
-        return jsanitize([doc.model_dump() for doc in orbital_docs], allow_bson=True)
+        return jsanitize([doc.model_dump() for doc in multipole_docs], allow_bson=True)
 
     def update_targets(self, items: List[List[Dict]]):
         """
-        Inserts the new documents into the orbitals collection
+        Inserts the new documents into the multipoles collection
 
         Args:
             items [[dict]]: A list of documents to update
@@ -276,9 +269,10 @@ class OrbitalBuilder(Builder):
         molecule_ids = list({item["molecule_id"] for item in docs})
 
         if len(items) > 0:
-            self.logger.info(f"Updating {len(docs)} orbital documents")
-            self.orbitals.remove_docs({self.orbitals.key: {"$in": molecule_ids}})
-            self.orbitals.update(
+            self.logger.info(f"Updating {len(docs)} electric multipole documents")
+            self.multipoles.remove_docs({self.multipoles.key: {"$in": molecule_ids}})
+            # Neither molecule_id nor method need to be unique, but the combination must be
+            self.multipoles.update(
                 docs=docs,
                 key=["molecule_id", "solvent"],
             )

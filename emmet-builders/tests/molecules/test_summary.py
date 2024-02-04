@@ -5,6 +5,7 @@ from maggma.stores import JSONStore, MemoryStore
 from emmet.builders.qchem.molecules import MoleculesAssociationBuilder, MoleculesBuilder
 from emmet.builders.molecules.atomic import PartialChargesBuilder, PartialSpinsBuilder
 from emmet.builders.molecules.bonds import BondingBuilder
+from emmet.builders.molecules.electric import ElectricMultipoleBuilder
 from emmet.builders.molecules.metal_binding import MetalBindingBuilder
 from emmet.builders.molecules.orbitals import OrbitalBuilder
 from emmet.builders.molecules.redox import RedoxBuilder
@@ -52,6 +53,11 @@ def metal_binding(test_dir):
 
 
 @pytest.fixture(scope="session")
+def multipoles(test_dir):
+    return MemoryStore(key="molecule_id")
+
+
+@pytest.fixture(scope="session")
 def orbitals(test_dir):
     return MemoryStore(key="molecule_id")
 
@@ -82,6 +88,7 @@ def test_summary_doc(
     charges,
     spins,
     bonds,
+    multipoles,
     metal_binding,
     orbitals,
     redox,
@@ -100,6 +107,9 @@ def test_summary_doc(
 
     orb_build = OrbitalBuilder(tasks, mols, orbitals)
     orb_build.run()
+
+    multipole_build = ElectricMultipoleBuilder(tasks, mols, multipoles)
+    multipole_build.run()
 
     thermo_build = ThermoBuilder(tasks, mols, thermo)
     thermo_build.run()
@@ -120,6 +130,7 @@ def test_summary_doc(
         charges=charges,
         spins=spins,
         bonds=bonds,
+        multipoles=multipoles,
         metal_binding=metal_binding,
         orbitals=orbitals,
         redox=redox,

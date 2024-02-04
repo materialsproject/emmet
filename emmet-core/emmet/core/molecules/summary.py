@@ -6,10 +6,18 @@ from pydantic import Field
 from pymatgen.core.structure import Molecule
 from pymatgen.analysis.graphs import MoleculeGraph
 
+from emmet.core.math import Vector3D
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPID, MPculeID
-from emmet.core.molecules.orbitals import NaturalPopulation, LonePair, Bond, Interaction
+from emmet.core.molecules.orbitals import (
+    NaturalPopulation,
+    LonePair,
+    Bond,
+    ThreeCenterBond,
+    Hyperbond,
+    Interaction,
+)
 from emmet.core.molecules.metal_binding import MetalBindingData
 
 
@@ -27,6 +35,7 @@ class HasProps(Enum):
     molecules = "molecules"
     bonding = "bonding"
     metal_binding = "metal_binding"
+    multipole_moments = "multipole_moments"
     orbitals = "orbitals"
     partial_charges = "partial_charges"
     partial_spins = "partial_spins"
@@ -200,6 +209,18 @@ class MoleculeSummaryDoc(PropertyDoc):
         description="List indicating if frequency-modes are IR-active",
     )
 
+    raman_intensities: Optional[Dict[str, List[float]]] = Field(
+        None,
+        title="Raman intensities",
+        description="Intensities for Raman spectrum peaks",
+    )
+
+    raman_activities: Optional[Dict[str, List]] = Field(
+        None,
+        title="Raman activities",
+        description="List indicating if frequency-modes are Raman-active",
+    )
+
     # natural bonding orbitals
     orbitals_property_ids: Optional[Dict[str, str]] = Field(
         None,
@@ -223,6 +244,14 @@ class MoleculeSummaryDoc(PropertyDoc):
     )
     nbo_bonds: Optional[Dict[str, Optional[List[Bond]]]] = Field(
         None, description="Bond-like orbitals of a closed-shell molecule"
+    )
+    nbo_three_center_bonds: Optional[
+        Dict[str, Optional[List[ThreeCenterBond]]]
+    ] = Field(
+        None, description="Three-center bond-like orbitals of a closed-shell molecule"
+    )
+    nbo_hyperbonds: Optional[Dict[str, Optional[List[Hyperbond]]]] = Field(
+        None, description="3-center hyperbond-like orbitals of a closed-shell molecule"
     )
     nbo_interactions: Optional[Dict[str, Optional[List[Interaction]]]] = Field(
         None, description="Orbital-orbital interactions of a closed-shell molecule"
@@ -249,6 +278,26 @@ class MoleculeSummaryDoc(PropertyDoc):
     )
     beta_bonds: Optional[Dict[str, Optional[List[Bond]]]] = Field(
         None, description="Beta electron bond-like orbitals of an open-shell molecule"
+    )
+    alpha_three_center_bonds: Optional[
+        Dict[str, Optional[List[ThreeCenterBond]]]
+    ] = Field(
+        None,
+        description="Alpha electron three-center bond-like orbitals of an open-shell molecule",
+    )
+    beta_three_center_bonds: Optional[
+        Dict[str, Optional[List[ThreeCenterBond]]]
+    ] = Field(
+        None,
+        description="Beta electron three-center bond-like orbitals of an open-shell molecule",
+    )
+    alpha_hyperbonds: Optional[Dict[str, Optional[List[Hyperbond]]]] = Field(
+        None,
+        description="Alpha electron hyperbond-like orbitals of an open-shell molecule",
+    )
+    beta_hyperbonds: Optional[Dict[str, Optional[List[Hyperbond]]]] = Field(
+        None,
+        description="Beta electron hyperbond-like orbitals of an open-shell molecule",
     )
     alpha_interactions: Optional[Dict[str, Optional[List[Interaction]]]] = Field(
         None,
@@ -328,6 +377,52 @@ class MoleculeSummaryDoc(PropertyDoc):
         description="List of bonds under different definitions of bonding with all metal ions "
         "removed. Each bond takes the form in the form (a, b), where a and b are "
         "0-indexed atom indices.",
+    )
+
+    # electric multipoles
+    multipole_moments_property_ids: Optional[Dict[str, Dict[str, str]]] = Field(
+        None,
+        description="Solvent:method:property ID map for each ElectricMultipoleDoc for this molecule.",
+    )
+
+    multipole_moments_levels_of_theory: Optional[Dict[str, Dict[str, str]]] = Field(
+        None,
+        description="Solvent:method:level of theory map for each ElectricMultipoleDoc for this molecule.",
+    )
+
+    total_dipole: Optional[Dict[str, float]] = Field(
+        None,
+        description="Total molecular dipole moment (Debye)",
+    )
+
+    dipole_moment: Optional[Dict[str, Vector3D]] = Field(
+        None,
+        description="Molecular dipole moment vector (Debye)",
+    )
+
+    resp_total_dipole: Optional[Dict[str, float]] = Field(
+        None,
+        description="Total dipole moment, calculated via restrained electrostatic potential (RESP) (Debye)",
+    )
+
+    resp_dipole_moment: Optional[Dict[str, Vector3D]] = Field(
+        None,
+        description="Molecular dipole moment vector, calculated via RESP (Debye)",
+    )
+
+    quadrupole_moment: Optional[Dict[str, Dict[str, float]]] = Field(
+        None,
+        description="Quadrupole moment components (Debye Ang)",
+    )
+
+    octopole_moment: Optional[Dict[str, Dict[str, float]]] = Field(
+        None,
+        description="Octopole moment components (Debye Ang^2)",
+    )
+
+    hexadecapole_moment: Optional[Dict[str, Dict[str, float]]] = Field(
+        None,
+        description="Hexadecapole moment tensor components (Debye Ang^2)",
     )
 
     # redox properties
@@ -449,8 +544,9 @@ class MoleculeSummaryDoc(PropertyDoc):
     )
 
     # has props
-    has_props: Optional[List[HasProps]] = Field(
-        None, description="List of properties that are available for a given material."
+    has_props: Optional[Dict[str, bool]] = Field(
+        None,
+        description="Properties available for this molecule",
     )
 
     @classmethod
@@ -468,8 +564,6 @@ class MoleculeSummaryDoc(PropertyDoc):
         property_id = h.hexdigest()
         doc["property_id"] = property_id
 
-        doc["has_props"] = list(set(doc["has_props"]))
-
         return MoleculeSummaryDoc(molecule_id=molecule_id, **doc)
 
 
@@ -482,6 +576,7 @@ summary_fields: Dict[str, list] = {
         "elements",
         "nelements",
         "composition",
+        "composition_reduced",
         "formula_alphabetical",
         "chemsys",
         "symmetry",
@@ -520,12 +615,16 @@ summary_fields: Dict[str, list] = {
         "frequency_modes",
         "ir_intensities",
         "ir_activities",
+        "raman_intensities",
+        "raman_activities",
     ],
     HasProps.orbitals.value: [
         "open_shell",
         "nbo_population",
         "nbo_lone_pairs",
         "nbo_bonds",
+        "nbo_three_center_bonds",
+        "nbo_hyperbonds",
         "nbo_interactions",
         "alpha_population",
         "beta_population",
@@ -533,12 +632,25 @@ summary_fields: Dict[str, list] = {
         "beta_lone_pairs",
         "alpha_bonds",
         "beta_bonds",
+        "alpha_three_center_bonds",
+        "beta_three_center_bonds",
+        "alpha_hyperbonds",
+        "beta_hyperbonds",
         "alpha_interactions",
         "beta_interactions",
     ],
     HasProps.partial_charges.value: ["partial_charges"],
     HasProps.partial_spins.value: ["partial_spins"],
     HasProps.bonding.value: ["molecule_graph", "bond_types", "bonds", "bonds_nometal"],
+    HasProps.multipole_moments.value: [
+        "total_dipole",
+        "dipole_moment",
+        "resp_total_dipole",
+        "resp_dipole_moment",
+        "quadrupole_moment",
+        "octopole_moment",
+        "hexadecapole_moment",
+    ],
     HasProps.redox.value: [
         "electron_affinity",
         "ea_task_id",
@@ -578,7 +690,8 @@ def _copy_from_doc(doc: Dict[str, Any]):
     #  property2: {solvent1: [{...}, {...}], solvent2: [{...}, {...}]}
     # }
 
-    d: Dict[str, Any] = {"has_props": []}
+    has_props = {str(val.value): False for val in HasProps}
+    d = {"has_props": has_props, "origins": []}
 
     # Function to grab the keys and put them in the root doc
     for doc_key in summary_fields:
@@ -590,6 +703,8 @@ def _copy_from_doc(doc: Dict[str, Any]):
             # There are not multiple MoleculeDocs for different solvents
             if sub_doc is None:
                 break
+
+            d["has_props"][doc_key] = True
             for copy_key in summary_fields[doc_key]:
                 d[copy_key] = sub_doc[copy_key]
         else:
@@ -598,10 +713,10 @@ def _copy_from_doc(doc: Dict[str, Any]):
             if sub_doc is None:
                 continue
 
+            d["has_props"][doc_key] = True
             sd, by_method = sub_doc
 
             if isinstance(sd, dict) and len(sd) > 0:
-                d["has_props"].append(doc_key)
                 for copy_key in summary_fields[doc_key]:
                     d[copy_key] = dict()
 

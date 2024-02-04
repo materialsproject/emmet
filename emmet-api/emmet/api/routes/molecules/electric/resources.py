@@ -1,13 +1,15 @@
 from maggma.api.resource import ReadOnlyResource
-from emmet.core.molecules.redox import RedoxDoc
+from emmet.core.molecules.electric import ElectricMultipoleDoc
 
 from maggma.api.query_operator import (
-    NumericQuery,
     PaginationQuery,
     SparseFieldsQuery,
+    NumericQuery,
 )
 
-from emmet.api.routes.molecules.redox.query_operators import RedoxPotentialQuery
+from emmet.api.routes.molecules.electric.query_operators import (
+    MultipoleMomentComponentQuery,
+)
 from emmet.api.routes.molecules.molecules.query_operators import (
     MultiMPculeIDQuery,
     ExactCalcMethodQuery,
@@ -21,10 +23,10 @@ from emmet.api.core.settings import MAPISettings
 from emmet.api.core.global_header import GlobalHeaderProcessor
 
 
-def redox_resource(redox_store):
+def electric_multipole_resource(multipole_store):
     resource = ReadOnlyResource(
-        redox_store,
-        RedoxDoc,
+        multipole_store,
+        ElectricMultipoleDoc,
         query_operators=[
             MultiMPculeIDQuery(),
             ExactCalcMethodQuery(),
@@ -33,22 +35,17 @@ def redox_resource(redox_store):
             CompositionElementsQuery(),
             ChargeSpinQuery(),
             MultiPropertyIDQuery(),
-            RedoxPotentialQuery(),
+            MultipoleMomentComponentQuery(),
+            PaginationQuery(),
             NumericQuery(
-                model=RedoxDoc,
-                excluded_fields=[
-                    "charge",
-                    "spin_multiplicity",
-                    "natoms",
-                    "nelements",
-                    "nelectrons",
-                    "reduction_potentials",
-                    "oxidation_potentials",
+                model=ElectricMultipoleDoc,
+                fields=[
+                    "total_dipole",
+                    "resp_total_dipole",
                 ],
             ),
-            PaginationQuery(),
             SparseFieldsQuery(
-                RedoxDoc,
+                ElectricMultipoleDoc,
                 default_fields=[
                     "molecule_id",
                     "property_id",
@@ -58,8 +55,8 @@ def redox_resource(redox_store):
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Molecules Redox"],
-        sub_path="/redox/",
+        tags=["Molecules Electric Dipoles and Multipoles"],
+        sub_path="/multipoles/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,
     )
