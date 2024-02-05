@@ -69,13 +69,13 @@ emmet-core[all,ml]==0.77.0
     # via emmet-builders (emmet/emmet-builders/setup.py)
 exceptiongroup==1.2.0
     # via anyio
-fastapi==0.109.0
+fastapi==0.109.2
     # via maggma
 filelock==3.13.1
     # via
     #   torch
     #   triton
-flask==3.0.1
+flask==3.0.2
     # via mongogrant
 fonttools==4.47.2
     # via matplotlib
@@ -83,7 +83,7 @@ frozenlist==1.4.1
     # via
     #   aiohttp
     #   aiosignal
-fsspec[http]==2023.12.2
+fsspec[http]==2024.2.0
     # via
     #   pytorch-lightning
     #   torch
@@ -154,7 +154,7 @@ mongogrant==0.3.3
     # via maggma
 mongomock==4.1.2
     # via maggma
-monty==2024.1.26
+monty==2024.2.2
     # via
     #   emmet-core
     #   maggma
@@ -230,7 +230,7 @@ nvidia-nvjitlink-cu12==12.3.101
     #   nvidia-cusparse-cu12
 nvidia-nvtx-cu12==12.1.105
     # via torch
-orjson==3.9.12
+orjson==3.9.13
     # via maggma
 packaging==23.2
     # via
@@ -266,14 +266,14 @@ pybtex==0.24.0
     #   robocrys
 pycparser==2.21
     # via cffi
-pydantic==2.6.0
+pydantic==2.6.1
     # via
     #   emmet-core
     #   fastapi
     #   inflect
     #   maggma
     #   pydantic-settings
-pydantic-core==2.16.1
+pydantic-core==2.16.2
     # via pydantic
 pydantic-settings==2.1.0
     # via
@@ -330,7 +330,6 @@ referencing==0.33.0
 requests==2.31.0
     # via
     #   dgl
-    #   fsspec
     #   matminer
     #   mongogrant
     #   pymatgen
@@ -380,7 +379,7 @@ spglib==2.3.0
     #   seekpath
 sshtunnel==0.4.0
     # via maggma
-starlette==0.35.1
+starlette==0.36.3
     # via fastapi
 sympy==1.12
     # via

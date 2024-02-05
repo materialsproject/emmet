@@ -75,11 +75,11 @@ exceptiongroup==1.2.0
     # via
     #   anyio
     #   cattrs
-fastapi==0.109.0
+fastapi==0.109.2
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-flask==3.0.1
+flask==3.0.2
     # via mongogrant
 fonttools==4.47.2
     # via matplotlib
@@ -143,7 +143,7 @@ mongogrant==0.3.3
     # via maggma
 mongomock==4.1.2
     # via maggma
-monty==2024.1.26
+monty==2024.2.2
     # via
     #   emmet-core
     #   maggma
@@ -178,7 +178,7 @@ numpy==1.26.3
     #   spglib
 opentelemetry-api==1.22.0
     # via ddtrace
-orjson==3.9.12
+orjson==3.9.13
     # via maggma
 packaging==23.2
     # via
@@ -214,14 +214,14 @@ pybtex==0.24.0
     #   robocrys
 pycparser==2.21
     # via cffi
-pydantic==2.6.0
+pydantic==2.6.1
     # via
     #   emmet-core
     #   fastapi
     #   inflect
     #   maggma
     #   pydantic-settings
-pydantic-core==2.16.1
+pydantic-core==2.16.2
     # via pydantic
 pydantic-settings==2.1.0
     # via
@@ -326,7 +326,7 @@ spglib==2.3.0
     #   seekpath
 sshtunnel==0.4.0
     # via maggma
-starlette==0.35.1
+starlette==0.36.3
     # via fastapi
 sympy==1.12
     # via
