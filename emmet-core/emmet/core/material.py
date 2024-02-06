@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import List, Mapping, Type, TypeVar, Union, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from pymatgen.core import Structure
 from pymatgen.core.structure import Molecule
@@ -12,6 +12,7 @@ from pymatgen.core.structure import Molecule
 from emmet.core.mpid import MPID, MPculeID
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
 from emmet.core.vasp.validation import DeprecationMessage
+from emmet.core.common import convert_datetime
 
 
 class PropertyOrigin(BaseModel):
@@ -23,10 +24,15 @@ class PropertyOrigin(BaseModel):
     task_id: Union[MPID, MPculeID] = Field(
         ..., description="The calculation ID this property comes from"
     )
-    last_updated: datetime = Field(
+    last_updated: datetime = Field(  # type: ignore
         description="The timestamp when this calculation was last updated",
         default_factory=datetime.utcnow,
     )
+
+    @field_validator("last_updated", mode="before")
+    @classmethod
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)
 
 
 T = TypeVar("T", bound="MaterialsDoc")
@@ -96,7 +102,9 @@ class MaterialsDoc(StructureMetadata):
     )
 
     @classmethod
-    def from_structure(cls: Type[T], structure: Structure, material_id: MPID, **kwargs) -> T:  # type: ignore[override]
+    def from_structure(
+        cls: Type[T], structure: Structure, material_id: MPID, **kwargs
+    ) -> T:  # type: ignore[override]
         """
         Builds a materials document using the minimal amount of information
         """
@@ -173,7 +181,9 @@ class CoreMoleculeDoc(MoleculeMetadata):
     warnings: List[str] = Field([], description="Any warnings related to this molecule")
 
     @classmethod
-    def from_molecule(cls: Type[S], molecule: Molecule, molecule_id: MPculeID, **kwargs) -> S:  # type: ignore[override]
+    def from_molecule(
+        cls: Type[S], molecule: Molecule, molecule_id: MPculeID, **kwargs
+    ) -> S:  # type: ignore[override]
         """
         Builds a molecule document using the minimal amount of information
         """

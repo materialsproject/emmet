@@ -1,8 +1,9 @@
 from datetime import datetime
 from typing import List, Optional
 
-from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, field_validator
+
+from emmet.core.common import convert_datetime
 
 
 class FermiDoc(BaseModel):
@@ -34,5 +35,5 @@ class FermiDoc(BaseModel):
     # Make sure that the datetime field is properly formatted
     @field_validator("last_updated", mode="before")
     @classmethod
-    def last_updated_dict_ok(cls, v):
-        return MontyDecoder().process_decoded(v)
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)

@@ -14,7 +14,7 @@ contourpy==1.2.0
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-fonttools==4.47.0
+fonttools==4.47.2
     # via matplotlib
 future==0.18.3
     # via uncertainties
@@ -52,7 +52,7 @@ packaging==23.2
     #   plotly
 palettable==3.3.3
     # via pymatgen
-pandas==2.1.4
+pandas==2.2.0
     # via pymatgen
 pillow==10.2.0
     # via matplotlib
@@ -90,7 +90,7 @@ ruamel-yaml==0.18.5
     # via pymatgen
 ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
-scipy==1.11.4
+scipy==1.12.0
     # via pymatgen
 six==1.16.0
     # via

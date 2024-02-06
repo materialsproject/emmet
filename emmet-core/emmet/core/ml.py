@@ -58,10 +58,10 @@ class MLDoc(ElasticityDoc):
     matcalc_version: Optional[str] = Field(
         None, description="Version of matcalc used to generate this document"
     )
-    model_name: Optional[str] = Field(
+    model: Optional[str] = Field(
         None, description="Name of model used as ML potential."
     )
-    model_version: Optional[str] = Field(
+    version: Optional[str] = Field(
         None, description="Version of model used as ML potential"
     )
 
