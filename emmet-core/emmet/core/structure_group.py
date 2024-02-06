@@ -97,7 +97,7 @@ class StructureGroupDoc(BaseModel):
     )
 
     # Make sure that the datetime field is properly formatted
-    @field_validator("build_date", mode="before")
+    @field_validator("last_updated", mode="before")
     @classmethod
     def handle_datetime(cls, v):
         return convert_datetime(cls, v)
