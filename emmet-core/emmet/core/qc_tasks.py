@@ -76,9 +76,14 @@ class OutputDoc(BaseModel):
         None, description="Natural Bonding Orbital (NBO) output"
     )
 
+    frequencies: Optional[Union[Dict[str, Any], List]] = Field(
+        None,
+        description="The list of calculated frequencies if job type is freq (units: cm^-1)",
+    )
+
     frequency_modes: Optional[Union[List, str]] = Field(
         None,
-        description="The list of calculated frequency mode vectors if job type is freq (units: cm^-1)",
+        description="The list of calculated frequency mode vectors if job type is freq",
     )
 
     @classmethod
@@ -112,6 +117,7 @@ class OutputDoc(BaseModel):
             resp=calc_doc.output.resp,
             nbo=calc_doc.output.nbo_data,
             frequencies=calc_doc.output.frequencies,
+            frequency_modes=calc_doc.output.frequency_modes,
         )
 
 
@@ -588,7 +594,9 @@ def _find_qchem_files(
                 )
                 in_task_name = in_task_name or "mol.qin"
                 if in_task_name == "orig":
-                    task_files[in_task_name] = {"orig_input_file": file}
+                    task_files[in_task_name] = {"orig_input_file": file.name}
+                elif in_task_name == "last":
+                    continue
                 elif in_task_name == "mol.qin" or in_task_name == "mol.in":
                     if in_task_name == "mol.qin":
                         out_file = (
@@ -603,19 +611,21 @@ def _find_qchem_files(
                             else path / "mol.out"
                         )
                     task_files["standard"] = {
-                        "qcinput_file": file,
-                        "qcoutput_file": out_file,
+                        "qcinput_file": file.name,
+                        "qcoutput_file": out_file.name,
                     }
                 # This block will exist only if calcs were run through atomate
                 else:
                     try:
                         task_files[in_task_name] = {
-                            "qcinput_file": file,
-                            "qcoutput_file": Path("mol.qout." + in_task_name + ".gz"),
+                            "qcinput_file": file.name,
+                            "qcoutput_file": Path(
+                                "mol.qout." + in_task_name + ".gz"
+                            ).name,
                         }
                     except FileNotFoundError:
                         task_files[in_task_name] = {
-                            "qcinput_file": file,
+                            "qcinput_file": file.name,
                             "qcoutput_file": "No qout files exist for this in file",
                         }
 

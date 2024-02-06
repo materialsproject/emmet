@@ -274,8 +274,8 @@ class CalculationOutput(BaseModel):
             frequencies=qcoutput.data.get("frequencies", {}),
             frequency_modes=qcoutput.data.get("frequency_mode_vectors", []),
             final_energy=qcoutput.data.get("final_energy", None),
-            enthalpy=qcoutput.data.get("enthalpy", None),
-            entropy=qcoutput.data.get("entropy", None),
+            enthalpy=qcoutput.data.get("total_enthalpy", None),
+            entropy=qcoutput.data.get("total_entropy", None),
             scan_energies=qcoutput.data.get("scan_energies", {}),
             scan_geometries=qcoutput.data.get("optimized_geometries", {}),
             scan_molecules=qcoutput.data.get("molecules_from_optimized_geometries", {}),
@@ -448,29 +448,53 @@ def _find_qchem_files(
     path = Path(path)
     task_files = OrderedDict()
 
-    in_file_pattern = re.compile(r"^(?P<in_task_name>mol\.qin(?:\..+)?)\.gz$")
+    in_file_pattern = re.compile(r"^(?P<in_task_name>mol\.(qin|in)(?:\..+)?)(\.gz)?$")
 
     for file in path.iterdir():
         if file.is_file():
             in_match = in_file_pattern.match(file.name)
+
+            # This block is for generalizing outputs coming from both atomate and manual qchem calculations
             if in_match:
-                in_task_name = in_match.group("in_task_name").replace("mol.qin.", "")
+                in_task_name = re.sub(
+                    r"(\.gz|gz)$",
+                    "",
+                    in_match.group("in_task_name").replace("mol.qin.", ""),
+                )
+                in_task_name = in_task_name or "mol.qin"
                 if in_task_name == "orig":
-                    task_files[in_task_name] = {"orig_input_file": file}
-                elif in_task_name == "mol.qin":
+                    task_files[in_task_name] = {"orig_input_file": file.name}
+                elif in_task_name == "last":
+                    continue
+                elif in_task_name == "mol.qin" or in_task_name == "mol.in":
+                    if in_task_name == "mol.qin":
+                        out_file = (
+                            path / "mol.qout.gz"
+                            if (path / "mol.qout.gz").exists()
+                            else path / "mol.qout"
+                        )
+                    else:
+                        out_file = (
+                            path / "mol.out.gz"
+                            if (path / "mol.out.gz").exists()
+                            else path / "mol.out"
+                        )
                     task_files["standard"] = {
-                        "qcinput_file": file,
-                        "qcoutput_file": Path("mol.qout.gz"),
+                        "qcinput_file": file.name,
+                        "qcoutput_file": out_file.name,
                     }
+                # This block will exist only if calcs were run through atomate
                 else:
                     try:
                         task_files[in_task_name] = {
-                            "qcinput_file": file,
-                            "qcoutput_file": Path("mol.qout." + in_task_name + ".gz"),
+                            "qcinput_file": file.name,
+                            "qcoutput_file": Path(
+                                "mol.qout." + in_task_name + ".gz"
+                            ).name,
                         }
                     except FileNotFoundError:
                         task_files[in_task_name] = {
-                            "qcinput_file": file,
+                            "qcinput_file": file.name,
                             "qcoutput_file": "No qout files exist for this in file",
                         }
 
