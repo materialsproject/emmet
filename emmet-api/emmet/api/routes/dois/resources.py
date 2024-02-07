@@ -13,7 +13,7 @@ def dois_resource(dois_store):
         query_operators=[
             MultiMaterialIDQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(DOIDoc, default_fields=["task_id", "doi"]),
+            SparseFieldsQuery(DOIDoc, default_fields=["material_id", "doi"]),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["DOIs"],
