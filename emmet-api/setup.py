@@ -12,7 +12,7 @@ setup(
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
     install_requires=[
-        "emmet-core[all]",
+        "emmet-core",
         "fastapi",
         "gunicorn",
         "boto3",
@@ -21,6 +21,7 @@ setup(
         "setproctitle",
         "shapely",
         "asgi-logger",
+        "pymatgen-analysis-alloys>=0.0.3",
     ],
     extras_require={
         "test": [
