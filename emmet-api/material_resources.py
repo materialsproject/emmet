@@ -136,7 +136,7 @@ if db_uri:
     )
 
     doi_store = MongoURIStore(
-        uri=db_uri, database="mp_core", key="task_id", collection_name="dois"
+        uri=db_uri, database="mp_core", key="material_id", collection_name="dois"
     )
 
     substrates_store = MongoURIStore(
