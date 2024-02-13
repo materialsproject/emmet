@@ -24,11 +24,11 @@ bcrypt==4.1.2
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.34.39
+boto3==1.34.41
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.34.39
+botocore==1.34.41
     # via
     #   boto3
     #   s3transfer
@@ -57,7 +57,7 @@ cycler==0.12.1
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==2.6.0
+ddtrace==2.6.1
     # via emmet-api (emmet/emmet-api/setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -111,7 +111,7 @@ kiwisolver==1.4.5
     # via matplotlib
 latexcodec==2.0.1
     # via pybtex
-maggma==0.62.1
+maggma==0.63.0
     # via emmet-api (emmet/emmet-api/setup.py)
 markupsafe==2.1.5
     # via
@@ -229,7 +229,7 @@ requests==2.31.0
     # via
     #   mongogrant
     #   pymatgen
-rpds-py==0.17.1
+rpds-py==0.18.0
     # via
     #   jsonschema
     #   referencing
