@@ -31,6 +31,7 @@ def descriptors_store(materials_store):
     return descriptors_store
 
 
+@pytest.skip(reason="Waiting on matminer update")
 def test_basic_descriptions(descriptors_store):
     similarity_store = MemoryStore()
     builder = StructureSimilarityBuilder(
