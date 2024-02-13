@@ -24,11 +24,11 @@ bcrypt==4.1.2
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.34.38
+boto3==1.34.41
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.34.38
+botocore==1.34.41
     # via
     #   boto3
     #   s3transfer
@@ -71,7 +71,7 @@ cycler==0.12.1
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==2.6.0
+ddtrace==2.6.1
     # via emmet-api (setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -114,7 +114,7 @@ h11==0.14.0
     # via uvicorn
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
-identify==2.5.33
+identify==2.5.34
     # via pre-commit
 idna==3.6
     # via
@@ -267,7 +267,7 @@ plotly==5.18.0
     # via pymatgen
 pluggy==1.4.0
     # via pytest
-pre-commit==3.6.0
+pre-commit==3.6.1
     # via emmet-api (setup.py)
 protobuf==4.25.2
     # via
@@ -358,7 +358,7 @@ requests==2.31.0
     # via
     #   mongogrant
     #   pymatgen
-rpds-py==0.17.1
+rpds-py==0.18.0
     # via
     #   jsonschema
     #   referencing
@@ -392,7 +392,7 @@ sniffio==1.3.0
     # via anyio
 snowballstemmer==2.2.0
     # via pydocstyle
-spglib==2.3.0
+spglib==2.3.1
     # via pymatgen
 sshtunnel==0.4.0
     # via maggma
@@ -411,7 +411,7 @@ tomli==2.0.1
     #   pytest
 tornado==6.4
     # via livereload
-tqdm==4.66.1
+tqdm==4.66.2
     # via
     #   maggma
     #   pymatgen
@@ -432,7 +432,7 @@ typing-extensions==4.9.0
     #   pydantic-core
     #   pydash
     #   uvicorn
-tzdata==2023.4
+tzdata==2024.1
     # via pandas
 uncertainties==3.1.7
     # via pymatgen
@@ -441,7 +441,7 @@ urllib3==2.0.7
     #   botocore
     #   requests
     #   types-requests
-uvicorn==0.27.0.post1
+uvicorn==0.27.1
     # via maggma
 virtualenv==20.25.0
     # via pre-commit
