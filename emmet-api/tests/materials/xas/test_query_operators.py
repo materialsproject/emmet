@@ -34,7 +34,7 @@ def test_xas_operator():
 def test_xas_task_id_operator():
     op = XASIDQuery()
 
-    assert op.query(spectrum_ids=["mp-149-XANES-Pd-K", "mp-8951-XANES-Pd-K"]) == {
+    assert op.query(spectrum_ids="mp-149-XANES-Pd-K, mp-8951-XANES-Pd-K") == {
         "criteria": {
             "spectrum_ids": {"$in": ["mp-149-XANES-Pd-K", "mp-8951-XANES-Pd-K"]}
         }
@@ -44,9 +44,7 @@ def test_xas_task_id_operator():
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
 
-        assert new_op.query(
-            spectrum_ids=["mp-149-XANES-Pd-K", "mp-8951-XANES-Pd-K"]
-        ) == {
+        assert new_op.query(spectrum_ids="mp-149-XANES-Pd-K, mp-8951-XANES-Pd-K") == {
             "criteria": {
                 "spectrum_ids": {"$in": ["mp-149-XANES-Pd-K", "mp-8951-XANES-Pd-K"]}
             }
