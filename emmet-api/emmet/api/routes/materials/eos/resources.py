@@ -1,5 +1,6 @@
 from maggma.api.resource import ReadOnlyResource
 from emmet.core.eos import EOSDoc
+from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery
 
 from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 from emmet.api.core.global_header import GlobalHeaderProcessor
@@ -11,6 +12,7 @@ def eos_resource(eos_store):
         eos_store,
         EOSDoc,
         query_operators=[
+            MultiMaterialIDQuery(),
             PaginationQuery(),
             SparseFieldsQuery(EOSDoc, default_fields=["task_id"]),
         ],

@@ -1,7 +1,7 @@
 import pytest
 from maggma.stores import JSONStore, MemoryStore
 
-from emmet.builders.materials.basic_descriptors import BasicDescriptorsBuilder
+# from emmet.builders.materials.basic_descriptors import BasicDescriptorsBuilder
 from emmet.builders.vasp.materials import MaterialsBuilder
 from emmet.builders.materials.similarity import StructureSimilarityBuilder
 
@@ -21,16 +21,17 @@ def materials_store(tasks_store):
     return materials_store
 
 
-@pytest.fixture(scope="session")
-def descriptors_store(materials_store):
-    descriptors_store = MemoryStore(key="task_id")
-    builder = BasicDescriptorsBuilder(
-        materials=materials_store, descriptors=descriptors_store
-    )
-    builder.run()
-    return descriptors_store
+# @pytest.fixture(scope="session")
+# def descriptors_store(materials_store):
+#    descriptors_store = MemoryStore(key="task_id")
+#    builder = BasicDescriptorsBuilder(
+#        materials=materials_store, descriptors=descriptors_store
+#    )
+#    builder.run()
+#    return descriptors_store
 
 
+@pytest.mark.skip(reason="Waiting on matminer update")
 def test_basic_descriptions(descriptors_store):
     similarity_store = MemoryStore()
     builder = StructureSimilarityBuilder(

@@ -37,9 +37,9 @@ def robo_search_resource(robo_store):
         robo_store,
         RobocrystallogapherDoc,
         pipeline_query_operator=RoboTextSearchQuery(),
-        tags=["Robocrystallographer"],
         sub_path="/robocrys/text_search/",
         header_processor=GlobalHeaderProcessor(),
+        tags=["Materials Robocrystallographer"],
         timeout=timeout,
     )
 
