@@ -18,7 +18,7 @@ def materials_store(tasks_store):
     return materials_store
 
 
-@pytest.skip(reason="Waiting on matminer update")
+@pytest.mark.skip(reason="Waiting on matminer update")
 def test_basic_descriptions(materials_store):
     descriptors_store = MemoryStore()
     builder = BasicDescriptorsBuilder(
