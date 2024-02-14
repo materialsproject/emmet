@@ -22,7 +22,7 @@ class FermiDoc(BaseModel):
             Is either CBM or VBM for semiconductors, or fermi_surface for metals.",
     )
 
-    task_id: Optional[str] = Field(
+    material_id: Optional[str] = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )
