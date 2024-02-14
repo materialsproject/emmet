@@ -133,7 +133,7 @@ markupsafe==2.1.5
     #   mkdocstrings
 matcalc==0.0.4
     # via emmet-core (setup.py)
-matgl==0.9.2
+matgl==1.0.0
     # via emmet-core (setup.py)
 matminer==0.9.0
     # via robocrys
@@ -422,7 +422,7 @@ tabulate==0.9.0
     # via pymatgen
 tenacity==8.2.3
     # via plotly
-threadpoolctl==3.2.0
+threadpoolctl==3.3.0
     # via scikit-learn
 torch==2.2.0
     # via
