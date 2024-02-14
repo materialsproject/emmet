@@ -57,7 +57,7 @@ cycler==0.12.1
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==2.6.1
+ddtrace==2.6.2
     # via emmet-api (emmet/emmet-api/setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -149,7 +149,7 @@ numpy==1.26.4
     #   spglib
 opentelemetry-api==1.22.0
     # via ddtrace
-orjson==3.9.13
+orjson==3.9.14
     # via maggma
 packaging==23.2
     # via
