@@ -71,7 +71,7 @@ cycler==0.12.1
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==2.6.1
+ddtrace==2.6.2
     # via emmet-api (setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -81,7 +81,7 @@ dnspython==2.5.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.78.0rc1
+emmet-core==0.78.0rc3
     # via emmet-api (setup.py)
 envier==0.5.1
     # via ddtrace
@@ -158,7 +158,7 @@ latexcodec==2.0.1
     # via pybtex
 livereload==2.6.3
     # via emmet-api (setup.py)
-maggma==0.62.1
+maggma==0.63.0
     # via emmet-api (setup.py)
 markdown==3.5.2
     # via
@@ -245,7 +245,7 @@ numpy==1.26.4
     #   spglib
 opentelemetry-api==1.22.0
     # via ddtrace
-orjson==3.9.13
+orjson==3.9.14
     # via maggma
 packaging==23.2
     # via
