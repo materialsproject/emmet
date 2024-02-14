@@ -376,7 +376,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
     icsd_id: Optional[Union[str, int]] = Field(
         None, description="Inorganic Crystal Structure Database id of the structure"
     )
-    transformations: Optional[Dict[str, Any]] = Field(
+    transformations: Optional[Any] = Field(
         None,
         description="Information on the structural transformations, parsed from a "
         "transformations.json file",
