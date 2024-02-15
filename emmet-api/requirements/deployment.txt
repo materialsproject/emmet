@@ -117,7 +117,7 @@ markupsafe==2.1.5
     # via
     #   jinja2
     #   werkzeug
-matplotlib==3.8.2
+matplotlib==3.8.3
     # via
     #   -r python/requirements.txt
     #   pymatgen
@@ -167,7 +167,7 @@ paramiko==3.4.0
     # via sshtunnel
 pillow==10.2.0
     # via matplotlib
-plotly==5.18.0
+plotly==5.19.0
     # via pymatgen
 protobuf==4.25.2
     # via
