@@ -801,7 +801,7 @@ class Calculation(BaseModel):
 
         # MD run
         if vasprun.parameters.get("IBRION", -1) == 0:
-            if vasprun.parameters.get("NSW", 0) == vasprun.nionic_steps:
+            if vasprun.parameters.get("NSW", 0) == vasprun.md_n_steps:
                 has_vasp_completed = TaskState.SUCCESS
             else:
                 has_vasp_completed = TaskState.FAILED
