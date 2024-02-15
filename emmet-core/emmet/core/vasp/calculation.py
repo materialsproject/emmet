@@ -455,7 +455,6 @@ class CalculationOutput(BaseModel):
             If not NO, the `ionic_steps` field is left as None.
         store_onsite_density_matrices
             Whether to store the onsite density matrices from the OUTCAR.
-            
         Returns
         -------
             The VASP calculation output document.
