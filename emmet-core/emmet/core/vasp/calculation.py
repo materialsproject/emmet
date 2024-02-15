@@ -551,7 +551,6 @@ class CalculationOutput(BaseModel):
                 temp = str(elph_poscar.name).replace("POSCAR.T=", "").replace(".gz", "")
                 elph_structures["temperatures"].append(temp)
                 elph_structures["structures"].append(Structure.from_file(elph_poscar))
-                
         return cls(
             structure=structure,
             energy=vasprun.final_energy,
