@@ -28,7 +28,7 @@ kiwisolver==1.4.5
     # via matplotlib
 latexcodec==2.0.1
     # via pybtex
-matplotlib==3.8.2
+matplotlib==3.8.3
     # via pymatgen
 monty==2024.2.2
     # via
@@ -56,7 +56,7 @@ pandas==2.2.0
     # via pymatgen
 pillow==10.2.0
     # via matplotlib
-plotly==5.18.0
+plotly==5.19.0
     # via pymatgen
 pybtex==0.24.0
     # via

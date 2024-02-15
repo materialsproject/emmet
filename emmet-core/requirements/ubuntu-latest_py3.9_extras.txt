@@ -22,9 +22,7 @@ attrs==23.2.0
 bracex==2.4
     # via wcmatch
 certifi==2024.2.2
-    # via
-    #   requests
-    #   sentry-sdk
+    # via requests
 cfgv==3.4.0
     # via pre-commit
 charset-normalizer==3.3.2
@@ -45,7 +43,7 @@ coverage[toml]==7.4.1
     #   pytest-cov
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
-custodian==2023.10.9
+custodian==2024.2.15
     # via emmet-core (setup.py)
 cycler==0.12.1
     # via matplotlib
@@ -148,7 +146,7 @@ matgl==1.0.0
     # via emmet-core (setup.py)
 matminer==0.9.0
     # via robocrys
-matplotlib==3.8.2
+matplotlib==3.8.3
     # via
     #   ase
     #   phonopy
@@ -294,7 +292,7 @@ platformdirs==4.2.0
     #   mkdocs
     #   mkdocstrings
     #   virtualenv
-plotly==5.18.0
+plotly==5.19.0
     # via pymatgen
 pluggy==1.4.0
     # via pytest
@@ -406,8 +404,6 @@ scipy==1.12.0
     #   scikit-learn
 seekpath==2.1.0
     # via emmet-core (setup.py)
-sentry-sdk==1.40.4
-    # via custodian
 shapely==2.0.2
     # via pymatgen-analysis-alloys
 six==1.16.0
@@ -460,7 +456,7 @@ triton==2.2.0
     # via torch
 types-requests==2.31.0.20240125
     # via emmet-core (setup.py)
-types-setuptools==69.0.0.20240125
+types-setuptools==69.1.0.20240215
     # via emmet-core (setup.py)
 typing-extensions==4.9.0
     # via
@@ -478,7 +474,6 @@ uncertainties==3.1.7
 urllib3==2.2.0
     # via
     #   requests
-    #   sentry-sdk
     #   types-requests
 virtualenv==20.25.0
     # via pre-commit
