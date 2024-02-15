@@ -24,11 +24,11 @@ bcrypt==4.1.2
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.34.41
+boto3==1.34.42
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.34.41
+botocore==1.34.42
     # via
     #   boto3
     #   s3transfer
@@ -158,7 +158,7 @@ latexcodec==2.0.1
     # via pybtex
 livereload==2.6.3
     # via emmet-api (setup.py)
-maggma==0.63.0
+maggma==0.63.1
     # via emmet-api (setup.py)
 markdown==3.5.2
     # via
@@ -173,7 +173,7 @@ markupsafe==2.1.5
     #   mkdocs
     #   mkdocstrings
     #   werkzeug
-matplotlib==3.8.2
+matplotlib==3.8.3
     # via pymatgen
 mccabe==0.7.0
     # via flake8
@@ -270,7 +270,7 @@ platformdirs==4.2.0
     #   mkdocs
     #   mkdocstrings
     #   virtualenv
-plotly==5.18.0
+plotly==5.19.0
     # via pymatgen
 pluggy==1.4.0
     # via pytest
@@ -424,7 +424,7 @@ tqdm==4.66.2
     #   pymatgen
 types-requests==2.31.0.6
     # via emmet-api (setup.py)
-types-setuptools==69.0.0.20240125
+types-setuptools==69.1.0.20240215
     # via emmet-api (setup.py)
 types-urllib3==1.26.25.14
     # via types-requests
