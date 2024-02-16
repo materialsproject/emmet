@@ -38,9 +38,7 @@ colorama==0.4.6
 contourpy==1.2.0
     # via matplotlib
 coverage[toml]==7.4.1
-    # via
-    #   coverage
-    #   pytest-cov
+    # via pytest-cov
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
 custodian==2024.2.15
@@ -53,7 +51,7 @@ dgl==1.1.3
     # via matgl
 distlib==0.3.8
     # via virtualenv
-dnspython==2.5.0
+dnspython==2.6.0
     # via pymongo
 exceptiongroup==1.2.0
     # via pytest
@@ -64,7 +62,7 @@ filelock==3.13.1
     #   virtualenv
 flake8==7.0.0
     # via emmet-core (setup.py)
-fonttools==4.48.1
+fonttools==4.49.0
     # via matplotlib
 frozenlist==1.4.1
     # via
@@ -283,7 +281,7 @@ pandas==1.5.3
     #   pymatgen
 pathspec==0.12.1
     # via mkdocs
-phonopy==2.21.0
+phonopy==2.21.1
     # via matcalc
 pillow==10.2.0
     # via matplotlib
@@ -320,7 +318,7 @@ pydantic==2.6.1
     #   pydantic-settings
 pydantic-core==2.16.2
     # via pydantic
-pydantic-settings==2.1.0
+pydantic-settings==2.2.0
     # via emmet-core (setup.py)
 pydocstyle==6.3.0
     # via emmet-core (setup.py)
@@ -350,7 +348,7 @@ pymongo==4.6.1
     # via matminer
 pyparsing==3.1.1
     # via matplotlib
-pytest==8.0.0
+pytest==8.0.1
     # via
     #   emmet-core (setup.py)
     #   pytest-cov
@@ -393,7 +391,7 @@ ruamel-yaml==0.18.6
     #   robocrys
 ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
-scikit-learn==1.4.0
+scikit-learn==1.4.1.post1
     # via matminer
 scipy==1.12.0
     # via
@@ -404,7 +402,7 @@ scipy==1.12.0
     #   scikit-learn
 seekpath==2.1.0
     # via emmet-core (setup.py)
-shapely==2.0.2
+shapely==2.0.3
     # via pymatgen-analysis-alloys
 six==1.16.0
     # via
