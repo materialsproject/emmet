@@ -28,9 +28,9 @@ bcrypt==4.1.2
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.34.42
+boto3==1.34.44
     # via maggma
-botocore==1.34.42
+botocore==1.34.44
     # via
     #   boto3
     #   s3transfer
@@ -51,7 +51,7 @@ click==8.1.7
     #   uvicorn
 contourpy==1.2.0
     # via matplotlib
-cryptography==42.0.2
+cryptography==42.0.3
     # via paramiko
 cycler==0.12.1
     # via matplotlib
@@ -59,7 +59,7 @@ cython==3.0.8
     # via chgnet
 dgl==1.1.3
     # via matgl
-dnspython==2.5.0
+dnspython==2.6.0
     # via
     #   maggma
     #   pymongo
@@ -73,7 +73,7 @@ filelock==3.13.1
     #   triton
 flask==3.0.2
     # via mongogrant
-fonttools==4.48.1
+fonttools==4.49.0
     # via matplotlib
 frozenlist==1.4.1
     # via
@@ -126,7 +126,7 @@ lightning-utilities==0.10.1
     # via
     #   pytorch-lightning
     #   torchmetrics
-maggma==0.63.1
+maggma==0.63.2
     # via emmet-builders (setup.py)
 markupsafe==2.1.5
     # via
@@ -242,7 +242,7 @@ pandas==1.5.3
     #   pymatgen
 paramiko==3.4.0
     # via sshtunnel
-phonopy==2.21.0
+phonopy==2.21.1
     # via matcalc
 pillow==10.2.0
     # via matplotlib
@@ -268,7 +268,7 @@ pydantic==2.6.1
     #   pydantic-settings
 pydantic-core==2.16.2
     # via pydantic
-pydantic-settings==2.1.0
+pydantic-settings==2.2.0
     # via
     #   emmet-core
     #   maggma
@@ -341,7 +341,7 @@ ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
 s3transfer==0.10.0
     # via boto3
-scikit-learn==1.4.0
+scikit-learn==1.4.1.post1
     # via matminer
 scipy==1.12.0
     # via
@@ -354,7 +354,7 @@ seekpath==2.1.0
     # via emmet-core
 sentinels==1.0.0
     # via mongomock
-shapely==2.0.2
+shapely==2.0.3
     # via pymatgen-analysis-alloys
 six==1.16.0
     # via
