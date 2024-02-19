@@ -8,7 +8,7 @@ aioitertools==0.11.0
     # via maggma
 annotated-types==0.6.0
     # via pydantic
-anyio==4.2.0
+anyio==4.3.0
     # via starlette
 asgi-logger==0.1.0
     # via emmet-api (emmet/emmet-api/setup.py)
@@ -61,7 +61,7 @@ ddtrace==2.6.3
     # via emmet-api (emmet/emmet-api/setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
-dnspython==2.6.0
+dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
@@ -117,7 +117,7 @@ markupsafe==2.1.5
     # via
     #   jinja2
     #   werkzeug
-matplotlib==3.8.2
+matplotlib==3.8.3
     # via
     #   -r python/requirements.txt
     #   pymatgen

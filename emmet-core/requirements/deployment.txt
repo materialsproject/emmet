@@ -121,5 +121,5 @@ tzdata==2024.1
     # via pandas
 uncertainties==3.1.7
     # via pymatgen
-urllib3==2.2.0
+urllib3==2.2.1
     # via requests
