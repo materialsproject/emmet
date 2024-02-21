@@ -287,32 +287,7 @@ def jsanitize(obj, strict=False, allow_bson=False):
     return jsanitize(obj.as_dict(), strict=strict, allow_bson=allow_bson)
 
 
-class ValueEnum(Enum):
-    """
-    Enum that serializes to string as the value
-    """
-
-    def __str__(self):
-        return str(self.value)
-
-    def __eq__(self, obj: object) -> bool:
-        """Special Equals to enable converting strings back to the enum"""
-        if isinstance(obj, str):
-            return super().__eq__(self.__class__(obj))
-        elif isinstance(obj, self.__class__):
-            return super().__eq__(obj)
-        return False
-
-    def __hash__(self):
-        """Get a hash of the enum."""
-        return hash(str(self))
-
-    def as_dict(self):
-        """Create a serializable representation of the enum."""
-        return str(self.value)
-
-
-class DocEnum(ValueEnum):
+class DocEnum(Enum):
     """
     Enum with docstrings support
     from: https://stackoverflow.com/a/50473952
