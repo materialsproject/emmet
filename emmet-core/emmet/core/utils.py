@@ -5,11 +5,8 @@ from itertools import groupby
 from typing import Any, Dict, Iterator, List, Optional, Union
 
 import numpy as np
-
 from monty.json import MSONable
-
 from pydantic import BaseModel
-
 from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
@@ -287,7 +284,28 @@ def jsanitize(obj, strict=False, allow_bson=False):
     return jsanitize(obj.as_dict(), strict=strict, allow_bson=allow_bson)
 
 
-class DocEnum(Enum):
+class ValueEnum(Enum):
+    """
+    Enum that serializes to string as the value
+    """
+
+    def __str__(self):
+        return str(self.value)
+
+    def __eq__(self, obj: object) -> bool:
+        """Special Equals to enable converting strings back to the enum"""
+        if isinstance(obj, str):
+            return super().__eq__(self.__class__(obj))
+        elif isinstance(obj, self.__class__):
+            return super().__eq__(obj)
+        return False
+
+    def __hash__(self):
+        """Get a hash of the enum."""
+        return hash(str(self))
+
+
+class DocEnum(ValueEnum):
     """
     Enum with docstrings support
     from: https://stackoverflow.com/a/50473952

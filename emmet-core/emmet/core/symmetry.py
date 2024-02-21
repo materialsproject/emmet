@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field
@@ -7,11 +6,12 @@ from pymatgen.core.structure import Molecule
 from pymatgen.symmetry.analyzer import PointGroupAnalyzer, SpacegroupAnalyzer, spglib
 
 from emmet.core.settings import EmmetSettings
+from emmet.core.utils import ValueEnum
 
 SETTINGS = EmmetSettings()
 
 
-class CrystalSystem(Enum):
+class CrystalSystem(ValueEnum):
     """
     The crystal system of the lattice
     """
