@@ -16,7 +16,7 @@ cycler==0.12.1
     # via matplotlib
 fonttools==4.49.0
     # via matplotlib
-future==0.18.3
+future==1.0.0
     # via uncertainties
 idna==3.6
     # via requests
@@ -30,7 +30,7 @@ matplotlib==3.8.3
     # via
     #   -r python/requirements.txt
     #   pymatgen
-monty==2024.2.2
+monty==2024.2.26
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pymatgen
@@ -53,7 +53,7 @@ packaging==23.2
     #   plotly
 palettable==3.3.3
     # via pymatgen
-pandas==2.2.0
+pandas==2.2.1
     # via
     #   -r python/requirements.txt
     #   pymatgen
@@ -65,15 +65,15 @@ pybtex==0.24.0
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pymatgen
-pydantic==2.6.1
+pydantic==2.6.2
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pydantic-settings
-pydantic-core==2.16.2
+pydantic-core==2.16.3
     # via pydantic
-pydantic-settings==2.2.0
+pydantic-settings==2.2.1
     # via emmet-core (emmet/emmet-core/setup.py)
-pymatgen==2024.2.8
+pymatgen==2024.2.23
     # via emmet-core (emmet/emmet-core/setup.py)
 pyparsing==3.1.1
     # via matplotlib
@@ -112,7 +112,7 @@ tenacity==8.2.3
     # via plotly
 tqdm==4.66.2
     # via pymatgen
-typing-extensions==4.9.0
+typing-extensions==4.10.0
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pydantic
