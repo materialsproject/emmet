@@ -12,7 +12,7 @@ aiosignal==1.3.1
     # via aiohttp
 annotated-types==0.6.0
     # via pydantic
-anyio==4.2.0
+anyio==4.3.0
     # via starlette
 ase==3.22.1
     # via
@@ -30,9 +30,9 @@ bcrypt==4.1.2
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.34.44
+boto3==1.34.49
     # via maggma
-botocore==1.34.44
+botocore==1.34.49
     # via
     #   boto3
     #   s3transfer
@@ -53,7 +53,7 @@ click==8.1.7
     #   uvicorn
 contourpy==1.2.0
     # via matplotlib
-cryptography==42.0.3
+cryptography==42.0.5
     # via paramiko
 cycler==0.12.1
     # via matplotlib
@@ -61,7 +61,7 @@ cython==3.0.8
     # via chgnet
 dgl==1.1.3
     # via matgl
-dnspython==2.6.0
+dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
@@ -69,7 +69,7 @@ emmet-core[all,ml]==0.77.1
     # via emmet-builders (setup.py)
 exceptiongroup==1.2.0
     # via anyio
-fastapi==0.109.2
+fastapi==0.110.0
     # via maggma
 filelock==3.13.1
     # via
@@ -87,7 +87,7 @@ fsspec[http]==2024.2.0
     # via
     #   pytorch-lightning
     #   torch
-future==0.18.3
+future==1.0.0
     # via
     #   matminer
     #   uncertainties
@@ -130,7 +130,7 @@ lightning-utilities==0.10.1
     # via
     #   pytorch-lightning
     #   torchmetrics
-maggma==0.63.2
+maggma==0.63.3
     # via emmet-builders (setup.py)
 markupsafe==2.1.5
     # via
@@ -228,7 +228,7 @@ nvidia-nvjitlink-cu12==12.3.101
     #   nvidia-cusparse-cu12
 nvidia-nvtx-cu12==12.1.105
     # via torch
-orjson==3.9.14
+orjson==3.9.15
     # via maggma
 packaging==23.2
     # via
@@ -246,7 +246,7 @@ pandas==1.5.3
     #   pymatgen
 paramiko==3.4.0
     # via sshtunnel
-phonopy==2.21.1
+phonopy==2.21.2
     # via matcalc
 pillow==10.2.0
     # via matplotlib
@@ -263,22 +263,22 @@ pybtex==0.24.0
     #   robocrys
 pycparser==2.21
     # via cffi
-pydantic==2.6.1
+pydantic==2.6.2
     # via
     #   emmet-core
     #   fastapi
     #   inflect
     #   maggma
     #   pydantic-settings
-pydantic-core==2.16.2
+pydantic-core==2.16.3
     # via pydantic
-pydantic-settings==2.2.0
+pydantic-settings==2.2.1
     # via
     #   emmet-core
     #   maggma
 pydash==7.0.7
     # via maggma
-pymatgen==2024.2.8
+pymatgen==2024.2.23
     # via
     #   chgnet
     #   emmet-core
@@ -292,7 +292,7 @@ pymatgen-analysis-alloys==0.0.6
     # via emmet-core
 pymatgen-analysis-diffusion==2023.8.15
     # via emmet-core
-pymongo==4.6.1
+pymongo==4.6.2
     # via
     #   maggma
     #   matminer
@@ -365,7 +365,7 @@ six==1.16.0
     #   latexcodec
     #   pybtex
     #   python-dateutil
-sniffio==1.3.0
+sniffio==1.3.1
     # via anyio
 spglib==2.3.1
     # via
@@ -388,7 +388,7 @@ tenacity==8.2.3
     # via plotly
 threadpoolctl==3.3.0
     # via scikit-learn
-torch==2.2.0
+torch==2.2.1
     # via
     #   chgnet
     #   matgl
@@ -405,7 +405,7 @@ tqdm==4.66.2
     #   pytorch-lightning
 triton==2.2.0
     # via torch
-typing-extensions==4.9.0
+typing-extensions==4.10.0
     # via
     #   anyio
     #   emmet-core

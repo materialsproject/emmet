@@ -12,7 +12,7 @@ aiosignal==1.3.1
     # via aiohttp
 annotated-types==0.6.0
     # via pydantic
-anyio==4.2.0
+anyio==4.3.0
     # via starlette
 ase==3.22.1
     # via
@@ -30,9 +30,9 @@ bcrypt==4.1.2
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.34.44
+boto3==1.34.49
     # via maggma
-botocore==1.34.44
+botocore==1.34.49
     # via
     #   boto3
     #   s3transfer
@@ -61,9 +61,9 @@ colorama==0.4.6
     # via griffe
 contourpy==1.2.0
     # via matplotlib
-coverage[toml]==7.4.1
+coverage[toml]==7.4.3
     # via pytest-cov
-cryptography==42.0.3
+cryptography==42.0.5
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -75,7 +75,7 @@ dgl==1.1.3
     # via matgl
 distlib==0.3.8
     # via virtualenv
-dnspython==2.6.0
+dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
@@ -85,7 +85,7 @@ exceptiongroup==1.2.0
     # via
     #   anyio
     #   pytest
-fastapi==0.109.2
+fastapi==0.110.0
     # via maggma
 filelock==3.13.1
     # via
@@ -106,7 +106,7 @@ fsspec[http]==2024.2.0
     # via
     #   pytorch-lightning
     #   torch
-future==0.18.3
+future==1.0.0
     # via
     #   matminer
     #   uncertainties
@@ -120,7 +120,7 @@ h5py==3.10.0
     # via phonopy
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
-identify==2.5.34
+identify==2.5.35
     # via pre-commit
 idna==3.6
     # via
@@ -167,7 +167,7 @@ lightning-utilities==0.10.1
     #   torchmetrics
 livereload==2.6.3
     # via emmet-builders (setup.py)
-maggma==0.63.2
+maggma==0.63.3
     # via emmet-builders (setup.py)
 markdown==3.5.2
     # via
@@ -317,7 +317,7 @@ nvidia-nvjitlink-cu12==12.3.101
     #   nvidia-cusparse-cu12
 nvidia-nvtx-cu12==12.1.105
     # via torch
-orjson==3.9.14
+orjson==3.9.15
     # via maggma
 packaging==23.2
     # via
@@ -339,7 +339,7 @@ paramiko==3.4.0
     # via sshtunnel
 pathspec==0.12.1
     # via mkdocs
-phonopy==2.21.1
+phonopy==2.21.2
     # via matcalc
 pillow==10.2.0
     # via matplotlib
@@ -352,7 +352,7 @@ plotly==5.19.0
     # via pymatgen
 pluggy==1.4.0
     # via pytest
-pre-commit==3.6.1
+pre-commit==3.6.2
     # via emmet-builders (setup.py)
 psutil==5.9.8
     # via dgl
@@ -369,16 +369,16 @@ pycodestyle==2.11.1
     #   flake8
 pycparser==2.21
     # via cffi
-pydantic==2.6.1
+pydantic==2.6.2
     # via
     #   emmet-core
     #   fastapi
     #   inflect
     #   maggma
     #   pydantic-settings
-pydantic-core==2.16.2
+pydantic-core==2.16.3
     # via pydantic
-pydantic-settings==2.2.0
+pydantic-settings==2.2.1
     # via
     #   emmet-core
     #   maggma
@@ -390,7 +390,7 @@ pyflakes==3.2.0
     # via flake8
 pygments==2.17.2
     # via mkdocs-material
-pymatgen==2024.2.8
+pymatgen==2024.2.23
     # via
     #   chgnet
     #   emmet-core
@@ -408,7 +408,7 @@ pymdown-extensions==10.7
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.6.1
+pymongo==4.6.2
     # via
     #   maggma
     #   matminer
@@ -417,7 +417,7 @@ pynacl==1.5.0
     # via paramiko
 pyparsing==3.1.1
     # via matplotlib
-pytest==8.0.1
+pytest==8.0.2
     # via
     #   emmet-builders (setup.py)
     #   pytest-cov
@@ -496,7 +496,7 @@ six==1.16.0
     #   livereload
     #   pybtex
     #   python-dateutil
-sniffio==1.3.0
+sniffio==1.3.1
     # via anyio
 snowballstemmer==2.2.0
     # via pydocstyle
@@ -526,7 +526,7 @@ tomli==2.0.1
     #   coverage
     #   mypy
     #   pytest
-torch==2.2.0
+torch==2.2.1
     # via
     #   chgnet
     #   matgl
@@ -545,11 +545,11 @@ tqdm==4.66.2
     #   pytorch-lightning
 triton==2.2.0
     # via torch
-types-requests==2.31.0.20240125
+types-requests==2.31.0.20240218
     # via emmet-builders (setup.py)
-types-setuptools==69.1.0.20240215
+types-setuptools==69.1.0.20240223
     # via emmet-builders (setup.py)
-typing-extensions==4.9.0
+typing-extensions==4.10.0
     # via
     #   anyio
     #   emmet-core
@@ -572,11 +572,11 @@ urllib3==2.0.7
     #   types-requests
 uvicorn==0.27.1
     # via maggma
-virtualenv==20.25.0
+virtualenv==20.25.1
     # via pre-commit
 watchdog==4.0.0
     # via mkdocs
-wcmatch==8.5
+wcmatch==8.5.1
     # via mkdocs-awesome-pages-plugin
 werkzeug==3.0.1
     # via flask
