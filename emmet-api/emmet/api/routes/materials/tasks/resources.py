@@ -27,7 +27,6 @@ def task_resource(task_store):
         TaskDoc,
         query_operators=[
             FormulaQuery(),
-            ChemsysQuery(),
             ElementsQuery(),
             MultipleTaskIDsQuery(),
             LastUpdatedQuery(),
