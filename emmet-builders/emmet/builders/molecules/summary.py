@@ -84,7 +84,7 @@ class SummaryBuilder(Builder):
         #     self.charges,
         #     self.spins,
         #     self.bonds,
-        #     self.multipoles
+        #     self.multipoles,
         #     self.metal_binding,
         #     self.orbitals,
         #     self.redox,

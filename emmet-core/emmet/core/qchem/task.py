@@ -74,6 +74,26 @@ class OutputSummary(BaseModel):
         None, description="Electric dipole information for the molecule"
     )
 
+    gradients: Optional[List[List[float]]] = Field(
+        None, description="Atomic forces, in atomic units (Ha/Bohr)"
+    )
+
+    precise_gradients: Optional[List[List[float]]] = Field(
+        None, description="High-precision atomic forces, in atomic units (Ha/Bohr)"
+    )
+
+    pcm_gradients: Optional[List[List[float]]] = Field(
+        None,
+        description="Electrostatic atomic forces from polarizable continuum model (PCM) implicit solvation,"
+                    "in atomic units (Ha/Bohr)."
+    )
+
+    CDS_gradients: Optional[List[List[float]]] = Field(
+        None,
+        description="Atomic force contributions from cavitation, dispersion, and structural rearrangement in the SMx"
+                    "family of implicit solvent models, in atomic units (Ha/Bohr)"
+    )
+
     def as_dict(self) -> Dict[str, Any]:
         return {
             "@module": self.__class__.__module__,
@@ -88,6 +108,8 @@ class OutputSummary(BaseModel):
             "nbo": self.nbo,
             "frequencies": self.frequencies,
             "dipoles": self.dipoles,
+            "gradients": self.gradients,
+            "precise_gradients": self.precise_gradients
         }
 
 
