@@ -41,8 +41,8 @@ jobs:
       - deploy
     strategy:
       matrix:
-        os: ["ubuntu-latest"] 
-        python-version: ["3.11"] 
+        os: ["ubuntu-latest"]
+        python-version: ["3.11"]
 
     steps:
       - uses: actions/checkout@v4
