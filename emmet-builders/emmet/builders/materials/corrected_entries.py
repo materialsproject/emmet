@@ -189,7 +189,7 @@ class CorrectedEntriesBuilder(Builder):
                                     corrected_entries["R2SCAN"] = only_scan_pd_entries
 
                                     pd_entries = compatibility.process_entries(
-                                        copy.deepcopy(entries)
+                                        copy.deepcopy(entries), verbose=False
                                     )
 
                                 else:
@@ -199,12 +199,12 @@ class CorrectedEntriesBuilder(Builder):
                             elif compatibility.name == "MP2020":
                                 thermo_type = ThermoType.GGA_GGA_U
                                 pd_entries = compatibility.process_entries(
-                                    copy.deepcopy(entries)
+                                    copy.deepcopy(entries), verbose=False
                                 )
                             else:
                                 thermo_type = ThermoType.UNKNOWN
                                 pd_entries = compatibility.process_entries(
-                                    copy.deepcopy(entries)
+                                    copy.deepcopy(entries), verbose=False
                                 )
 
                             corrected_entries[str(thermo_type)] = pd_entries
