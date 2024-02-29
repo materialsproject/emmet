@@ -77,7 +77,7 @@ def blessed_tasks_resource(materials_store):
             LicenseQuery(),
             SparseFieldsQuery(
                 MaterialsDoc,
-                default_fields=["material_id", "last_updated"],
+                default_fields=["material_id", "last_updated", "entries"],
             ),
         ],
         key_fields=[
