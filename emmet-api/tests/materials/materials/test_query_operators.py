@@ -158,6 +158,7 @@ def test_multi_material_id_query():
         }
 
 
+@pytest.mark.skip(reason="Pmg cif reader issue")
 def test_find_structure_query():
     op = FindStructureQuery()
 

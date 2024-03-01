@@ -11,6 +11,7 @@ from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
 
 
+@pytest.mark.skip(reason="Pmg cif reader issue")
 def test_mpcomplete_post_query():
     op = MPCompletePostQuery()
 
