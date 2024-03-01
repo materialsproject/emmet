@@ -24,11 +24,11 @@ bcrypt==4.1.2
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.34.49
+boto3==1.34.54
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.34.49
+botocore==1.34.54
     # via
     #   boto3
     #   s3transfer
@@ -69,7 +69,7 @@ cycler==0.12.1
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==2.6.5
+ddtrace==2.7.0
     # via emmet-api (setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -79,7 +79,7 @@ dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
-emmet-core==0.78.0rc4
+emmet-core==0.78.6
     # via emmet-api (setup.py)
 envier==0.5.1
     # via ddtrace
@@ -104,7 +104,7 @@ future==1.0.0
     # via uncertainties
 ghp-import==2.1.0
     # via mkdocs
-griffe==0.40.1
+griffe==0.41.1
     # via mkdocstrings-python
 gunicorn==21.2.0
     # via emmet-api (setup.py)
@@ -156,7 +156,7 @@ latexcodec==2.0.1
     # via pybtex
 livereload==2.6.3
     # via emmet-api (setup.py)
-maggma==0.63.3
+maggma==0.63.4
     # via emmet-api (setup.py)
 markdown==3.5.2
     # via
@@ -169,6 +169,7 @@ markupsafe==2.1.5
     # via
     #   jinja2
     #   mkdocs
+    #   mkdocs-autorefs
     #   mkdocstrings
     #   werkzeug
 matplotlib==3.8.3
@@ -186,7 +187,7 @@ mkdocs==1.5.3
     #   mkdocs-material
     #   mkdocs-minify-plugin
     #   mkdocstrings
-mkdocs-autorefs==0.5.0
+mkdocs-autorefs==1.0.1
     # via mkdocstrings
 mkdocs-awesome-pages-plugin==2.9.2
     # via emmet-api (setup.py)
@@ -200,7 +201,7 @@ mkdocs-material-extensions==1.3.1
     #   mkdocs-material
 mkdocs-minify-plugin==0.8.0
     # via emmet-api (setup.py)
-mkdocstrings[python]==0.24.0
+mkdocstrings[python]==0.24.1
     # via
     #   emmet-api (setup.py)
     #   mkdocstrings-python
@@ -210,14 +211,14 @@ mongogrant==0.3.3
     # via maggma
 mongomock==4.1.2
     # via maggma
-monty==2024.2.2
+monty==2024.2.26
     # via
     #   emmet-core
     #   maggma
     #   pymatgen
 mpmath==1.3.0
     # via sympy
-msgpack==1.0.7
+msgpack==1.0.8
     # via maggma
 mypy==1.8.0
     # via emmet-api (setup.py)
@@ -288,7 +289,7 @@ pycodestyle==2.11.1
     #   flake8
 pycparser==2.21
     # via cffi
-pydantic==2.6.2
+pydantic==2.6.3
     # via
     #   emmet-core
     #   fastapi
@@ -308,7 +309,7 @@ pyflakes==3.2.0
     # via flake8
 pygments==2.17.2
     # via mkdocs-material
-pymatgen==2024.2.23
+pymatgen==2024.3.1
     # via
     #   emmet-core
     #   pymatgen-analysis-alloys
@@ -332,7 +333,7 @@ pytest==8.0.2
     #   pytest-cov
 pytest-cov==4.1.0
     # via emmet-api (setup.py)
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
     # via
     #   botocore
     #   ghp-import
@@ -399,6 +400,8 @@ snowballstemmer==2.2.0
     # via pydocstyle
 spglib==2.3.1
     # via pymatgen
+sqlparse==0.4.4
+    # via ddtrace
 sshtunnel==0.4.0
     # via maggma
 starlette==0.36.3
@@ -422,7 +425,7 @@ tqdm==4.66.2
     #   pymatgen
 types-requests==2.31.0.6
     # via emmet-api (setup.py)
-types-setuptools==69.1.0.20240223
+types-setuptools==69.1.0.20240301
     # via emmet-api (setup.py)
 types-urllib3==1.26.25.14
     # via types-requests
