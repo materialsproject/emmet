@@ -1,4 +1,5 @@
 import os
+import pytest
 from emmet.api.routes.materials.mpcomplete.query_operator import (
     MPCompleteGetQuery,
     MPCompletePostQuery,
