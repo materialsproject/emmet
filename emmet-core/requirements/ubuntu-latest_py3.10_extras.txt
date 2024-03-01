@@ -78,7 +78,7 @@ future==1.0.0
     #   uncertainties
 ghp-import==2.1.0
     # via mkdocs
-griffe==0.40.1
+griffe==0.41.1
     # via mkdocstrings-python
 h5py==3.10.0
     # via phonopy
@@ -130,6 +130,7 @@ markupsafe==2.1.5
     # via
     #   jinja2
     #   mkdocs
+    #   mkdocs-autorefs
     #   mkdocstrings
 matcalc==0.0.4
     # via emmet-core (setup.py)
@@ -155,7 +156,7 @@ mkdocs==1.5.3
     #   mkdocs-material
     #   mkdocs-minify-plugin
     #   mkdocstrings
-mkdocs-autorefs==0.5.0
+mkdocs-autorefs==1.0.1
     # via mkdocstrings
 mkdocs-awesome-pages-plugin==2.9.2
     # via emmet-core (setup.py)
@@ -169,13 +170,13 @@ mkdocs-material-extensions==1.3.1
     #   mkdocs-material
 mkdocs-minify-plugin==0.8.0
     # via emmet-core (setup.py)
-mkdocstrings[python]==0.24.0
+mkdocstrings[python]==0.24.1
     # via
     #   emmet-core (setup.py)
     #   mkdocstrings-python
 mkdocstrings-python==1.8.0
     # via mkdocstrings
-monty==2024.2.2
+monty==2024.2.26
     # via
     #   custodian
     #   emmet-core (setup.py)
@@ -304,7 +305,7 @@ pycodestyle==2.11.1
     # via
     #   emmet-core (setup.py)
     #   flake8
-pydantic==2.6.2
+pydantic==2.6.3
     # via
     #   emmet-core (setup.py)
     #   inflect
@@ -319,7 +320,7 @@ pyflakes==3.2.0
     # via flake8
 pygments==2.17.2
     # via mkdocs-material
-pymatgen==2024.2.23
+pymatgen==2024.3.1
     # via
     #   chgnet
     #   emmet-core (setup.py)
@@ -347,7 +348,7 @@ pytest==8.0.2
     #   pytest-cov
 pytest-cov==4.1.0
     # via emmet-core (setup.py)
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
     # via
     #   ghp-import
     #   matplotlib
@@ -447,7 +448,7 @@ triton==2.2.0
     # via torch
 types-requests==2.31.0.20240218
     # via emmet-core (setup.py)
-types-setuptools==69.1.0.20240223
+types-setuptools==69.1.0.20240301
     # via emmet-core (setup.py)
 typing-extensions==4.10.0
     # via
