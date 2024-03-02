@@ -65,7 +65,7 @@ dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
-emmet-core==0.78.6
+emmet-core==0.78.7
     # via emmet-api (emmet/emmet-api/setup.py)
 envier==0.5.1
     # via ddtrace
