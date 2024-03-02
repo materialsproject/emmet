@@ -22,6 +22,7 @@ setup(
         "shapely",
         "asgi-logger",
         "pymatgen-analysis-alloys>=0.0.3",
+        "pymatgen<=2023.12.18",
     ],
     extras_require={
         "test": [
