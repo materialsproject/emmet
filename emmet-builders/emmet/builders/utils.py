@@ -234,6 +234,11 @@ def get_potcar_stats():
             potcar = PotcarSingle.from_symbol_and_functional(
                 symbol=potcar_symbol, functional=functional
             )
-            stats[calc_type].update({potcar_symbol: potcar._summary_stats.copy()})
+            summary_stats = potcar._summary_stats.copy()
+            # fallback method for validation - use header hash and symbol
+            # note that the potcar_spec assigns PotcarSingle.symbol to "titel"
+            summary_stats["titel"] = potcar.TITEL
+            summary_stats["hash"] = potcar.md5_header_hash
+            stats[calc_type].update({potcar_symbol: summary_stats})
 
     return stats
