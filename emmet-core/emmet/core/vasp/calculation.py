@@ -561,9 +561,11 @@ class CalculationOutput(BaseModel):
             frequency_dependent_dielectric=freq_dependent_diel,
             elph_displaced_structures=elph_structures,
             dos_properties=dosprop_dict,
-            ionic_steps=vasprun.ionic_steps
-            if store_trajectory == StoreTrajectoryOption.NO
-            else None,
+            ionic_steps=(
+                vasprun.ionic_steps
+                if store_trajectory == StoreTrajectoryOption.NO
+                else None
+            ),
             locpot=locpot_avg,
             outcar=outcar_dict,
             run_stats=RunStatistics.from_outcar(outcar) if outcar else None,

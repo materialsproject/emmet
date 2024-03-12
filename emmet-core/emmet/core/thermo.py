@@ -1,4 +1,5 @@
 """ Core definition of a Thermo Document """
+
 from collections import defaultdict
 from typing import Dict, List, Optional, Union
 from datetime import datetime
@@ -201,9 +202,9 @@ class ThermoDoc(PropertyDoc):
 
             # Store different info if stable vs decomposes
             if d["is_stable"]:
-                d[
-                    "equilibrium_reaction_energy_per_atom"
-                ] = pd.get_equilibrium_reaction_energy(blessed_entry)
+                d["equilibrium_reaction_energy_per_atom"] = (
+                    pd.get_equilibrium_reaction_energy(blessed_entry)
+                )
             else:
                 d["decomposes_to"] = [
                     {

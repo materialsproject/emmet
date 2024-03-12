@@ -165,13 +165,15 @@ class SynthesisSearchQuery(QueryOperator):
         pipeline.append(
             {
                 "$facet": {
-                    "results": [{"$skip": _skip}, {"$limit": _limit}]
-                    if not keywords
-                    else [
-                        {"$sort": {"search_score": -1}},
-                        {"$skip": _skip},
-                        {"$limit": _limit},
-                    ],
+                    "results": (
+                        [{"$skip": _skip}, {"$limit": _limit}]
+                        if not keywords
+                        else [
+                            {"$sort": {"search_score": -1}},
+                            {"$skip": _skip},
+                            {"$limit": _limit},
+                        ]
+                    ),
                     "total_doc": [{"$count": "count"}],
                 }
             }

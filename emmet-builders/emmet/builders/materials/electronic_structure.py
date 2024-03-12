@@ -577,9 +577,9 @@ class ElectronicStructureBuilder(Builder):
 
                 other_calcs.append(
                     {
-                        "is_static": True
-                        if "Static" in mat["task_types"][task_id]
-                        else False,
+                        "is_static": (
+                            True if "Static" in mat["task_types"][task_id] else False
+                        ),
                         "task_id": task_id,
                         "is_hubbard": int(is_hubbard),
                         "nkpoints": int(nkpoints),
@@ -640,9 +640,9 @@ class ElectronicStructureBuilder(Builder):
                     bs_obj["data"] if bs_obj is not None else None
                 )
 
-                materials_doc["bandstructure"][bs_type][
-                    "output_structure"
-                ] = sorted_bs_data[0]["output_structure"]
+                materials_doc["bandstructure"][bs_type]["output_structure"] = (
+                    sorted_bs_data[0]["output_structure"]
+                )
 
                 materials_doc["origins"].append(
                     {

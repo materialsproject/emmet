@@ -1,4 +1,5 @@
 """ Core definition of a Materials Document """
+
 from __future__ import annotations
 
 from typing import Sequence, Type, TypeVar, Union, List, Optional

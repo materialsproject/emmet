@@ -1,4 +1,5 @@
 """Module to define various calculation types as Enums for VASP."""
+
 from itertools import product
 from pathlib import Path
 

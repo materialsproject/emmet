@@ -1,4 +1,5 @@
 """ Core definition of an Electronic Structure """
+
 from __future__ import annotations
 
 from collections import defaultdict

@@ -1,6 +1,5 @@
 """Task types and level of theory components for Q-Chem calculations"""
 
-
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 

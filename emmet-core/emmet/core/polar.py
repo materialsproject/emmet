@@ -1,4 +1,5 @@
 """ Core definition for Polar property Document """
+
 from typing import List, Optional
 from emmet.core.mpid import MPID
 

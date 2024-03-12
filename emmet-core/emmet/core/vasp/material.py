@@ -1,4 +1,5 @@
 """ Core definition of a Materials Document """
+
 from typing import Dict, List, Mapping, Optional
 from emmet.core.base import EmmetMeta
 

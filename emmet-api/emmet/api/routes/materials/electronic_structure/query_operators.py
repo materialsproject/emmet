@@ -109,9 +109,9 @@ class BSDataQuery(QueryOperator):
                     crit[entry]["$lte"] = d[entry][1]
 
             if magnetic_ordering:
-                crit[
-                    f"bandstructure.{path_type.value}.magnetic_ordering"
-                ] = magnetic_ordering.value
+                crit[f"bandstructure.{path_type.value}.magnetic_ordering"] = (
+                    magnetic_ordering.value
+                )
 
             if is_gap_direct is not None:
                 crit[f"bandstructure.{path_type.value}.is_gap_direct"] = is_gap_direct
