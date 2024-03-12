@@ -1,5 +1,4 @@
 from typing import Dict, Optional
-from collections import defaultdict
 
 from maggma.builders import MapBuilder
 from maggma.core import Store

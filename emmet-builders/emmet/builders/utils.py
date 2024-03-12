@@ -217,7 +217,6 @@ class HiddenPrints:
 
 
 def get_potcar_stats():
-
     default_settings = EmmetBuildSettings()
 
     stats: dict[str, dict] = {}  # type: dict
