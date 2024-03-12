@@ -7,7 +7,6 @@ from emmet.builders.settings import EmmetBuildSettings
 from emmet.builders.utils import get_potcar_stats
 from emmet.core.vasp.calc_types.enums import CalcType
 from emmet.core.vasp.task_valid import TaskDocument
-from emmet.core.vasp.calc_types.enums import CalcType
 from emmet.core.vasp.validation import DeprecationMessage, ValidationDoc
 
 
