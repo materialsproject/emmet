@@ -325,36 +325,47 @@ def _potcar_stats_check(task_doc, potcar_stats: dict):
         # Assume it is an old calculation without potcar_spec data and treat it as passing POTCAR hash check
         return False
 
+    use_legacy_hash_check = False
     if any(len(entry.get("summary_stats", {})) == 0 for entry in potcar_details):
         # potcar_spec doesn't include summary_stats kwarg needed to check potcars
-        return False
+        # fall back to header hash checking
+        use_legacy_hash_check = True
 
     all_match = True
     for entry in potcar_details:
         symbol = entry["titel"].split(" ")[1]
         ref_summ_stats = potcar_stats[str(task_doc.calc_type)].get(symbol, None)
+
         if not ref_summ_stats:
+            # Symbol differs from reference set - deprecate
             all_match = False
             break
 
-        key_match = all(
-            set(ref_summ_stats["keywords"][key])
-            == set(entry["summary_stats"]["keywords"][key])
-            for key in ["header", "data"]
-        )
-
-        data_match = all(
-            abs(
-                ref_summ_stats["stats"][key][stat]
-                - entry["summary_stats"]["stats"][key][stat]
+        if use_legacy_hash_check:
+            all_match = all(
+                entry[key] == ref_summ_stats[key]
+                for key in (
+                    "hash",
+                    "titel",
+                )
             )
-            < data_tol
-            for stat in ["MEAN", "ABSMEAN", "VAR", "MIN", "MAX"]
-            for key in ["header", "data"]
-        )
 
-        if (not key_match) or (not data_match):
-            all_match = False
+        else:
+            all_match = all(
+                set(ref_summ_stats["keywords"][key])
+                == set(entry["summary_stats"]["keywords"][key])
+                for key in ["header", "data"]
+            ) and all(
+                abs(
+                    ref_summ_stats["stats"][key][stat]
+                    - entry["summary_stats"]["stats"][key][stat]
+                )
+                < data_tol
+                for stat in ["MEAN", "ABSMEAN", "VAR", "MIN", "MAX"]
+                for key in ["header", "data"]
+            )
+
+        if not all_match:
             break
 
     return not all_match
