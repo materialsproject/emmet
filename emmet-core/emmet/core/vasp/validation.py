@@ -66,7 +66,7 @@ class ValidationDoc(EmmetBaseModel):
         input_sets: Dict[str, ImportString] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
         LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
         max_allowed_scf_gradient: float = SETTINGS.VASP_MAX_SCF_GRADIENT,
-        potcar_hashes: Optional[Dict[CalcType, Dict[str, str]]] = None,
+        potcar_stats: Optional[Dict[CalcType, Dict[str, str]]] = None,
     ) -> "ValidationDoc":
         """
         Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
@@ -80,7 +80,7 @@ class ValidationDoc(EmmetBaseModel):
             LDAU_fields: LDAU fields to check for consistency
             max_allowed_scf_gradient: maximum uphill gradient allowed for SCF steps after the
                 initial equillibriation period
-            potcar_hashes: Dictionary of potcar hash data. Mapping is calculation type -> potcar symbol -> hash value.
+            potcar_stats: Dictionary of potcar stat data. Mapping is calculation type -> potcar symbol -> hash value.
         """
 
         bandgap = task_doc.output.bandgap
@@ -112,8 +112,8 @@ class ValidationDoc(EmmetBaseModel):
 
             if valid_input_set:
                 # Checking POTCAR summary_stats if a directory is supplied
-                if potcar_hashes:
-                    if _potcar_hash_check(task_doc, potcar_hashes):
+                if potcar_stats:
+                    if _potcar_stats_check(task_doc, potcar_stats):
                         if task_type in [
                             TaskType.NSCF_Line,
                             TaskType.NSCF_Uniform,
@@ -311,7 +311,7 @@ def _kspacing_warnings(input_set, inputs, data, warnings, kspacing_tolerance):
             )
 
 
-def _potcar_hash_check(task_doc, potcar_hashes):
+def _potcar_stats_check(task_doc, potcar_stats: dict):
     """
     Checks to make sure the POTCAR summary stats is equal to the correct
     value from the pymatgen input set.
@@ -325,10 +325,14 @@ def _potcar_hash_check(task_doc, potcar_hashes):
         # Assume it is an old calculation without potcar_spec data and treat it as passing POTCAR hash check
         return False
 
+    if any(len(entry.get("summary_stats", {})) == 0 for entry in potcar_details):
+        # potcar_spec doesn't include summary_stats kwarg needed to check potcars
+        return False
+
     all_match = True
     for entry in potcar_details:
         symbol = entry["titel"].split(" ")[1]
-        ref_summ_stats = potcar_hashes[str(task_doc.calc_type)].get(symbol, None)
+        ref_summ_stats = potcar_stats[str(task_doc.calc_type)].get(symbol, None)
         if not ref_summ_stats:
             all_match = False
             break
