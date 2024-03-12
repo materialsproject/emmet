@@ -1,5 +1,4 @@
 """ Core definition of a Molecule Document """
-
 from typing import Any, Dict, List, Mapping, Union, Optional
 
 from pydantic import Field

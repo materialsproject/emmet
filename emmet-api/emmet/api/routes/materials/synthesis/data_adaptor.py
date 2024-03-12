@@ -4,7 +4,6 @@ from the public repo of synthesis recipes
 (https://github.com/CederGroupHub/text-mined-synthesis_public)
 into MP compatible formats.
 """
-
 import json
 import sys
 import logging

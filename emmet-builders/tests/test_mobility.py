@@ -25,4 +25,4 @@ def test_migration_graph_builder(ie_store, mg_store):
     assert mg_store.count({"state": "successful"}) == 2
     assert mg_store.count({"deprecated": False}) == 2
     d = builder.as_dict()
-    assert isinstance(d, dict)
+    assert type(d) is dict

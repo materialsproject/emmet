@@ -1,5 +1,4 @@
 """ Core definition of a VASP Task Document """
-
 from typing import Any, Dict, List
 
 from pydantic import Field

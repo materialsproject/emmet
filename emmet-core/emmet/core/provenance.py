@@ -1,5 +1,4 @@
 """ Core definition of a Provenance Document """
-
 import warnings
 from datetime import datetime
 from typing import Dict, List, Optional

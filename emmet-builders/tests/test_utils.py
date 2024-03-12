@@ -2,12 +2,10 @@ from emmet.builders.utils import (
     chemsys_permutations,
     maximal_spanning_non_intersecting_subsets,
     get_hop_cutoff,
-    get_potcar_stats,
 )
 from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
 from numpy.testing import assert_almost_equal
 from monty.serialization import loadfn
-from emmet.core.settings import EmmetSettings
 
 
 def test_maximal_spanning_non_intersecting_subsets():
@@ -57,19 +55,3 @@ def test_get_hop_cutoff(test_dir):
     check_mg = MigrationGraph.with_distance(nasicon_mg.structure, "Mg", d)
     assert_almost_equal(d, 4.59, decimal=2)
     assert len(check_mg.unique_hops) == 6
-
-
-def test_get_potcar_stats():
-    calc_type = EmmetSettings().VASP_DEFAULT_INPUT_SETS
-    potcar_stats = get_potcar_stats()
-    # ensure that all calc types are included in potcar_stats
-    assert potcar_stats.keys() == calc_type.keys()
-
-    for calc_type in potcar_stats:
-        # ensure that each entry has needed fields for both
-        # legacy and modern potcar validation
-        assert all(
-            set(potcar_stats[calc_type][symb])
-            == set(["hash", "keywords", "titel", "stats"])
-            for symb in potcar_stats[calc_type]
-        )

@@ -1,5 +1,4 @@
 """ Module to define various calculation types as Enums for Q-Chem"""
-
 from itertools import product
 from pathlib import Path
 
