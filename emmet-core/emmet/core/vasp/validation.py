@@ -18,6 +18,7 @@ SETTINGS = EmmetSettings()
 
 class DeprecationMessage(DocEnum):
     MANUAL = "M", "Manual deprecation"
+    SYMMETRY = "S001", "Could not determine crystalline space group, needed for input set check."
     KPTS = "C001", "Too few KPoints"
     KSPACING = "C002", "KSpacing not high enough"
     ENCUT = "C002", "ENCUT too low"
@@ -110,6 +111,16 @@ class ValidationDoc(EmmetBaseModel):
                 reasons.append(DeprecationMessage.SET)
                 valid_input_set = None
 
+            try:
+                # Sometimes spglib can't determine space group with the default
+                # `symprec` and `angle_tolerance`. In these cases, 
+                # `Structure.get_space_group_info()` fails
+                valid_input_set.structure.get_space_group_info()
+            except Exception:
+                reasons.append(DeprecationMessage.SYMMETRY)
+                valid_input_set = None
+
+
             if valid_input_set:
                 # Checking POTCAR summary_stats if a directory is supplied
                 if potcar_stats:
@@ -130,6 +141,7 @@ class ValidationDoc(EmmetBaseModel):
                 if task_type != task_type.NSCF_Line:
                     # Not validating k-point data for line-mode calculations as constructing
                     # the k-path is too costly for the builder and the uniform input set is used.
+
                     if valid_input_set.kpoints is not None:
                         if _kpoint_check(
                             valid_input_set,

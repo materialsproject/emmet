@@ -55,6 +55,16 @@ def test_validator(tasks):
     assert all([doc.valid for doc in validation_docs])
 
 
+def test_validator_failed_symmetry(test_dir):
+
+    with zopen(test_dir / "failed_elastic_task.json.gz","r") as f:
+        failed_task = json.load(f)
+    taskdoc = TaskDocument(**failed_task)
+    validation = ValidationDoc.from_task_doc(taskdoc)
+    assert any(
+        "SYMMETRY" in repr(reason) for reason in validation.reasons
+    )
+
 def test_computed_entry(tasks):
     entries = [task.entry for task in tasks]
     ids = {e.entry_id for e in entries}
@@ -107,7 +117,6 @@ def test_potcar_stats_check(test_dir):
     """
     task_doc = TaskDocument(**{key: data[key] for key in data if key != "last_updated"})
     try:
-        
         # First check: generate hashes from POTCARs in TaskDoc, check should pass
         calc_type = str(task_doc.calc_type)
         expected_hashes = {calc_type: {}}
@@ -145,7 +154,10 @@ def test_potcar_stats_check(test_dir):
         legacy_data["calcs_reversed"][0]["input"]["potcar_spec"] = [
             {
                 key: potcar[key]
-                for key in ("titel","hash",)
+                for key in (
+                    "titel",
+                    "hash",
+                )
             }
             for potcar in legacy_data["calcs_reversed"][0]["input"]["potcar_spec"]
         ]
@@ -160,13 +172,16 @@ def test_potcar_stats_check(test_dir):
         legacy_data["calcs_reversed"][0]["input"]["potcar_spec"] = [
             {
                 key: potcar[key]
-                for key in ("titel","hash",)
+                for key in (
+                    "titel",
+                    "hash",
+                )
             }
             for potcar in legacy_data["calcs_reversed"][0]["input"]["potcar_spec"]
         ]
-        legacy_data["calcs_reversed"][0]["input"]["potcar_spec"][0]["hash"] = (
-            legacy_data["calcs_reversed"][0]["input"]["potcar_spec"][0]["hash"][:-1]
-        )
+        legacy_data["calcs_reversed"][0]["input"]["potcar_spec"][0][
+            "hash"
+        ] = legacy_data["calcs_reversed"][0]["input"]["potcar_spec"][0]["hash"][:-1]
         legacy_task_doc = TaskDocument(
             **{key: legacy_data[key] for key in legacy_data if key != "last_updated"}
         )
