@@ -281,7 +281,7 @@ pydantic-settings==2.1.0
     #   maggma
 pydash==7.0.7
     # via maggma
-pymatgen==2024.1.27
+pymatgen==2024.2.20
     # via
     #   chgnet
     #   emmet-core
