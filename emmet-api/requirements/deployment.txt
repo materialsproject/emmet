@@ -111,7 +111,7 @@ kiwisolver==1.4.5
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
-maggma==0.63.4
+maggma==0.64.0
     # via emmet-api (emmet/emmet-api/setup.py)
 markupsafe==2.1.5
     # via
@@ -221,7 +221,7 @@ pyyaml==6.0.1
     # via pybtex
 pyzmq==25.1.2
     # via maggma
-referencing==0.33.0
+referencing==0.34.0
     # via
     #   jsonschema
     #   jsonschema-specifications
