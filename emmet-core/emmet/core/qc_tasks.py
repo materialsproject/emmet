@@ -281,6 +281,7 @@ class TaskDoc(MoleculeMetadata):
     def from_directory(
         cls: Type[_T],
         dir_name: Union[Path, str],
+        validate_lot: bool = True,
         store_additional_json: bool = True,
         additional_fields: Dict[str, Any] = None,
         **qchem_calculation_kwargs,
@@ -292,6 +293,9 @@ class TaskDoc(MoleculeMetadata):
         ----------
         dir_name
             The path to the folder containing the calculation outputs.
+        validate_lot
+            Flag for matching the basis and functional with the list of functionals consistent with MPCules.
+            Defaults to True. Change to False if you want to create a TaskDoc with other basis sets and functionals.
         store_additional_json
             Whether to store additional json files in the calculation directory.
         additional_fields
@@ -322,7 +326,11 @@ class TaskDoc(MoleculeMetadata):
                 continue
             else:
                 calc_doc = Calculation.from_qchem_files(
-                    dir_name, task_name, **files, **qchem_calculation_kwargs
+                    dir_name,
+                    task_name,
+                    validate_lot,
+                    **files,
+                    **qchem_calculation_kwargs,
                 )
                 calcs_reversed.append(calc_doc)
                 # all_qchem_objects.append(qchem_objects)
