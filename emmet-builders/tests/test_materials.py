@@ -16,7 +16,7 @@ def tasks_store(test_dir):
 
 @pytest.fixture(scope="session")
 def validation_store(tasks_store):
-    settings = EmmetBuildSettings(VASP_VALIDATE_POTCAR_HASHES=False)
+    settings = EmmetBuildSettings(VASP_VALIDATE_POTCAR_STATS=False)
     validation_store = MemoryStore()
     builder = TaskValidator(
         tasks=tasks_store, task_validation=validation_store, settings=settings
