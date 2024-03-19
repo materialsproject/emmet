@@ -61,7 +61,16 @@ def test_get_hop_cutoff(test_dir):
 
 def test_get_potcar_stats():
     calc_type = EmmetSettings().VASP_DEFAULT_INPUT_SETS
-    potcar_stats = get_potcar_stats()
+
+    try:
+        potcar_stats = get_potcar_stats()
+    except Exception as exc:
+        if "No POTCAR for" in str(exc):
+            # No Potcar library available, skip test
+            return
+        else:
+            raise exc
+
     # ensure that all calc types are included in potcar_stats
     assert potcar_stats.keys() == calc_type.keys()
 
