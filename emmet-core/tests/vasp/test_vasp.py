@@ -56,14 +56,12 @@ def test_validator(tasks):
 
 
 def test_validator_failed_symmetry(test_dir):
-
-    with zopen(test_dir / "failed_elastic_task.json.gz","r") as f:
+    with zopen(test_dir / "failed_elastic_task.json.gz", "r") as f:
         failed_task = json.load(f)
     taskdoc = TaskDocument(**failed_task)
     validation = ValidationDoc.from_task_doc(taskdoc)
-    assert any(
-        "SYMMETRY" in repr(reason) for reason in validation.reasons
-    )
+    assert any("SYMMETRY" in repr(reason) for reason in validation.reasons)
+
 
 def test_computed_entry(tasks):
     entries = [task.entry for task in tasks]

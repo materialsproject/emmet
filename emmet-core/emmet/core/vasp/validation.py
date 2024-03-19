@@ -18,7 +18,10 @@ SETTINGS = EmmetSettings()
 
 class DeprecationMessage(DocEnum):
     MANUAL = "M", "Manual deprecation"
-    SYMMETRY = "S001", "Could not determine crystalline space group, needed for input set check."
+    SYMMETRY = (
+        "S001",
+        "Could not determine crystalline space group, needed for input set check.",
+    )
     KPTS = "C001", "Too few KPoints"
     KSPACING = "C002", "KSpacing not high enough"
     ENCUT = "C002", "ENCUT too low"
@@ -113,13 +116,12 @@ class ValidationDoc(EmmetBaseModel):
 
             try:
                 # Sometimes spglib can't determine space group with the default
-                # `symprec` and `angle_tolerance`. In these cases, 
+                # `symprec` and `angle_tolerance`. In these cases,
                 # `Structure.get_space_group_info()` fails
                 valid_input_set.structure.get_space_group_info()
             except Exception:
                 reasons.append(DeprecationMessage.SYMMETRY)
                 valid_input_set = None
-
 
             if valid_input_set:
                 # Checking POTCAR summary_stats if a directory is supplied
