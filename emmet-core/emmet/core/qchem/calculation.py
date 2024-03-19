@@ -317,7 +317,7 @@ class Calculation(BaseModel):
         None,
         description="Paths (relative to dir_name) of the QChem output files associated with this calculation",
     )
-    level_of_theory: LevelOfTheory = Field(
+    level_of_theory: Union[LevelOfTheory, str] = Field(
         None,
         description="Levels of theory used for the QChem calculation: For instance, B97-D/6-31g*",
     )
@@ -412,7 +412,7 @@ class Calculation(BaseModel):
                 else {k2: Path(v2) for k2, v2 in v.items()}
                 for k, v in output_file_paths.items()
             },
-            level_of_theory=level_of_theory(input_doc, validate_lot),
+            level_of_theory=level_of_theory(input_doc, validate_lot=validate_lot),
             solvation_lot_info=lot_solvent_string(input_doc),
             task_type=task_type(input_doc),
             calc_type=calc_type(input_doc),
@@ -503,7 +503,9 @@ def _find_qchem_files(
     return task_files
 
 
-def level_of_theory(parameters: CalculationInput, validate_lot: bool) -> LevelOfTheory:
+def level_of_theory(
+    parameters: CalculationInput, validate_lot: bool = True
+) -> LevelOfTheory:
     """
 
     Returns the level of theory for a calculation,
@@ -534,31 +536,8 @@ def level_of_theory(parameters: CalculationInput, validate_lot: bool) -> LevelOf
 
     basis_lower = basis_raw.lower()
 
-    if validate_lot:
-        functional = [f for f in FUNCTIONALS if f.lower() == funct_lower]
-        if not functional:
-            raise ValueError(f"Unexpected functional {funct_lower}!")
-
-        functional = functional[0]
-
-        basis = [b for b in BASIS_SETS if b.lower() == basis_lower]
-        if not basis:
-            raise ValueError(f"Unexpected basis set {basis_lower}!")
-
-        basis = basis[0]
-    else:
-        warnings.warn(
-            "User has turned the validate flag off."
-            "This can have downstream effects if the chosen functional and basis"
-            "is not in the available sets of MP employed functionals and the user"
-            "wants to include the TaskDoc in the MP infrastructure."
-            "Users should ignore this warning if their objective is just to create TaskDocs",
-            UserWarning,
-        )
-        functional = funct_lower
-        basis = basis_lower
-
     solvent_method = parameters.rem.get("solvent_method", "").lower()
+
     if solvent_method == "":
         solvation = "VACUUM"
     elif solvent_method in ["pcm", "cosmo"]:
@@ -574,9 +553,36 @@ def level_of_theory(parameters: CalculationInput, validate_lot: bool) -> LevelOf
     else:
         raise ValueError(f"Unexpected implicit solvent method {solvent_method}!")
 
-    lot = f"{functional}/{basis}/{solvation}"
+    if validate_lot:
+        functional = [f for f in FUNCTIONALS if f.lower() == funct_lower]
+        if not functional:
+            raise ValueError(f"Unexpected functional {funct_lower}!")
 
-    return LevelOfTheory(lot)
+        functional = functional[0]
+
+        basis = [b for b in BASIS_SETS if b.lower() == basis_lower]
+        if not basis:
+            raise ValueError(f"Unexpected basis set {basis_lower}!")
+
+        basis = basis[0]
+
+        lot = f"{functional}/{basis}/{solvation}"
+
+        return LevelOfTheory(lot)
+    else:
+        warnings.warn(
+            "User has turned the validate flag off."
+            "This can have downstream effects if the chosen functional and basis"
+            "is not in the available sets of MP employed functionals and the user"
+            "wants to include the TaskDoc in the MP infrastructure."
+            "Users should ignore this warning if their objective is just to create TaskDocs",
+            UserWarning,
+        )
+        functional = funct_lower
+        basis = basis_lower
+        lot = f"{functional}/{basis}/{solvation}"
+
+        return lot
 
 
 def solvent(parameters: CalculationInput, custom_smd: Optional[str] = None) -> str:
