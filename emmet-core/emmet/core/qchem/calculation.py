@@ -329,7 +329,7 @@ class Calculation(BaseModel):
         None,
         description="Calculation task type like Single Point, Geometry Optimization. Frequency...",
     )
-    calc_type: CalcType = Field(
+    calc_type: Union[CalcType, str] = Field(
         None,
         description="Combination dict of LOT + TaskType: B97-D/6-31g*/VACUUM Geometry Optimization",
     )
@@ -413,9 +413,9 @@ class Calculation(BaseModel):
                 for k, v in output_file_paths.items()
             },
             level_of_theory=level_of_theory(input_doc, validate_lot=validate_lot),
-            solvation_lot_info=lot_solvent_string(input_doc),
+            solvation_lot_info=lot_solvent_string(input_doc, validate_lot=validate_lot),
             task_type=task_type(input_doc),
-            calc_type=calc_type(input_doc),
+            calc_type=calc_type(input_doc, validate_lot=validate_lot),
         )
 
 
@@ -572,11 +572,12 @@ def level_of_theory(
     else:
         warnings.warn(
             "User has turned the validate flag off."
-            "This can have downstream effects if the chosen functional and basis"
+            "This can have downstream effects if the chosen functional and basis "
             "is not in the available sets of MP employed functionals and the user"
             "wants to include the TaskDoc in the MP infrastructure."
             "Users should ignore this warning if their objective is just to create TaskDocs",
             UserWarning,
+            stacklevel=2,
         )
         functional = funct_lower
         basis = basis_lower
@@ -585,7 +586,11 @@ def level_of_theory(
         return lot
 
 
-def solvent(parameters: CalculationInput, custom_smd: Optional[str] = None) -> str:
+def solvent(
+    parameters: CalculationInput,
+    validate_lot: bool = True,
+    custom_smd: Optional[str] = None,
+) -> str:
     """
     Returns the solvent used for this calculation.
 
@@ -594,9 +599,11 @@ def solvent(parameters: CalculationInput, custom_smd: Optional[str] = None) -> s
         custom_smd: (Optional) string representing SMD parameters for a
         non-standard solvent
     """
-
-    lot = level_of_theory(parameters)
-    solvation = lot.value.split("/")[-1]
+    lot = level_of_theory(parameters, validate_lot=validate_lot)
+    if validate_lot:
+        solvation = lot.value.split("/")[-1]
+    else:
+        solvation = lot.split("/")[-1]
 
     if solvation == "PCM":
         # dielectric = float(parameters.get("solvent", {}).get("dielectric", 78.39))
@@ -651,7 +658,9 @@ def solvent(parameters: CalculationInput, custom_smd: Optional[str] = None) -> s
 
 
 def lot_solvent_string(
-    parameters: CalculationInput, custom_smd: Optional[str] = None
+    parameters: CalculationInput,
+    validate_lot: bool = True,
+    custom_smd: Optional[str] = None,
 ) -> str:
     """
     Returns a string representation of the level of theory and solvent used for this calculation.
@@ -661,9 +670,11 @@ def lot_solvent_string(
         custom_smd: (Optional) string representing SMD parameters for a
         non-standard solvent
     """
-
-    lot = level_of_theory(parameters).value
-    solv = solvent(parameters, custom_smd=custom_smd)
+    if validate_lot:
+        lot = level_of_theory(parameters, validate_lot=validate_lot).value
+    else:
+        lot = level_of_theory(parameters, validate_lot=validate_lot)
+    solv = solvent(parameters, custom_smd=custom_smd, validate_lot=validate_lot)
     return f"{lot}({solv})"
 
 
@@ -690,7 +701,9 @@ def task_type(
 
 
 def calc_type(
-    parameters: CalculationInput, special_run_type: Optional[str] = None
+    parameters: CalculationInput,
+    validate_lot: bool = True,
+    special_run_type: Optional[str] = None,
 ) -> CalcType:
     """
     Determines the calc type
@@ -698,6 +711,10 @@ def calc_type(
     Args:
         parameters: CalculationInput parameters
     """
-    rt = level_of_theory(parameters).value
     tt = task_type(parameters, special_run_type=special_run_type).value
-    return CalcType(f"{rt} {tt}")
+    if validate_lot:
+        rt = level_of_theory(parameters, validate_lot=validate_lot).value
+        return CalcType(f"{rt} {tt}")
+    else:
+        rt = level_of_theory(parameters, validate_lot=validate_lot)
+        return str(f"{rt} {tt}")

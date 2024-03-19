@@ -190,6 +190,11 @@ class InputDoc(BaseModel):
             lot_val = calc_doc.level_of_theory.value
         except AttributeError:
             lot_val = calc_doc.level_of_theory
+
+        try:
+            ct_val = calc_doc.calc_type.value
+        except AttributeError:
+            ct_val = calc_doc.calc_type
         # TODO : modify this to get the different variables from the task doc.
         return cls(
             initial_molecule=calc_doc.input.initial_molecule,
@@ -200,7 +205,7 @@ class InputDoc(BaseModel):
             solvation_lot_info=calc_doc.solvation_lot_info,
             # special_run_type = calc_doc.input.special_run_type,
             # smiles = calc_doc.input.smiles,
-            calc_type=calc_doc.calc_type.value,
+            calc_type=ct_val,
         )
 
 
