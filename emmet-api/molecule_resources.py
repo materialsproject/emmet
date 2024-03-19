@@ -135,51 +135,51 @@ else:
 
 mp_molecules_resources = list()
 
-# Tasks
-mp_molecules_resources.extend(
-    [
-        task_resource(task_store),
-        task_deprecation_resource(task_store),
-        trajectory_resource(task_store),
-    ]
-)
-
-# Assoc
-mp_molecules_resources.extend(
-    [mol_assoc_resource(assoc_store), find_molecule_assoc_resource(assoc_store)]
-)
-
-# Molecules
-mp_molecules_resources.extend(
-    [
-        molecules_resource(mol_store),
-        find_molecule_resource(mol_store),
-    ]
-)
-
-# Partial charges
-mp_molecules_resources.extend([charges_resource(charges_store)])
-
-# Partial spins
-mp_molecules_resources.extend([spins_resource(spins_store)])
-
-# Bonds
-mp_molecules_resources.extend([bonding_resource(bonds_store)])
-
-# Metal binding
-mp_molecules_resources.extend([metal_binding_resource(metal_binding_store)])
-
-# Orbitals
-mp_molecules_resources.extend([orbitals_resource(orbitals_store)])
-
-# Redox
-mp_molecules_resources.extend([redox_resource(redox_store)])
-
-# Thermo
-mp_molecules_resources.extend([thermo_resource(thermo_store)])
-
-# Vibes
-mp_molecules_resources.extend([vibration_resource(vibes_store)])
+## Tasks
+# mp_molecules_resources.extend(
+#    [
+#        task_resource(task_store),
+#        task_deprecation_resource(task_store),
+#        trajectory_resource(task_store),
+#    ]
+# )
+#
+## Assoc
+# mp_molecules_resources.extend(
+#    [mol_assoc_resource(assoc_store), find_molecule_assoc_resource(assoc_store)]
+# )
+#
+## Molecules
+# mp_molecules_resources.extend(
+#    [
+#        molecules_resource(mol_store),
+#        find_molecule_resource(mol_store),
+#    ]
+# )
+#
+## Partial charges
+# mp_molecules_resources.extend([charges_resource(charges_store)])
+#
+## Partial spins
+# mp_molecules_resources.extend([spins_resource(spins_store)])
+#
+## Bonds
+# mp_molecules_resources.extend([bonding_resource(bonds_store)])
+#
+## Metal binding
+# mp_molecules_resources.extend([metal_binding_resource(metal_binding_store)])
+#
+## Orbitals
+# mp_molecules_resources.extend([orbitals_resource(orbitals_store)])
+#
+## Redox
+# mp_molecules_resources.extend([redox_resource(redox_store)])
+#
+## Thermo
+# mp_molecules_resources.extend([thermo_resource(thermo_store)])
+#
+## Vibes
+# mp_molecules_resources.extend([vibration_resource(vibes_store)])
 
 # Summary
 mp_molecules_resources.extend([summary_resource(summary_store)])

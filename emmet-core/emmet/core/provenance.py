@@ -133,6 +133,11 @@ class ProvenanceDoc(PropertyDoc):
         " of this material for the entry closest matching the material input",
     )
 
+    @field_validator("created_at", mode="before")
+    @classmethod
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)
+
     @field_validator("authors")
     @classmethod
     def remove_duplicate_authors(cls, authors):

@@ -21,7 +21,7 @@ class GrainBoundaryDoc(BaseModel):
     Grain boundary energies, work of separation...
     """
 
-    task_id: Optional[str] = Field(
+    material_id: Optional[str] = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )

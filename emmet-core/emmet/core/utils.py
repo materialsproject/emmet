@@ -5,11 +5,8 @@ from itertools import groupby
 from typing import Any, Dict, Iterator, List, Optional, Union
 
 import numpy as np
-
 from monty.json import MSONable
-
 from pydantic import BaseModel
-
 from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
@@ -306,10 +303,6 @@ class ValueEnum(Enum):
     def __hash__(self):
         """Get a hash of the enum."""
         return hash(str(self))
-
-    def as_dict(self):
-        """Create a serializable representation of the enum."""
-        return str(self.value)
 
 
 class DocEnum(ValueEnum):
