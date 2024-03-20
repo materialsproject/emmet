@@ -10,7 +10,14 @@ from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 import numpy as np
 from emmet.core.common import convert_datetime
 from emmet.core.structure import StructureMetadata
-from emmet.core.vasp.calc_types import CalcType, calc_type, TaskType, run_type, RunType, task_type
+from emmet.core.vasp.calc_types import (
+    CalcType,
+    calc_type,
+    TaskType,
+    run_type,
+    RunType,
+    task_type,
+)
 from emmet.core.vasp.calculation import (
     CalculationBaseModel,
     Calculation,
@@ -411,24 +418,21 @@ class TaskDoc(StructureMetadata, extra="allow"):
     # attrs on the model, it searches for them in the model extra dict first, and if it
     # can't find them, throws an AttributeError. It does this before looking to see if the
     # class has that attr defined on it.
-    
-    private_calc_type : Optional[CalcType] = Field(
-        None,
-        description="Private field used to store output of `TaskDoc.calc_type`."
+
+    private_calc_type: Optional[CalcType] = Field(
+        None, description="Private field used to store output of `TaskDoc.calc_type`."
     )
 
-    private_run_type : Optional[RunType] = Field(
-        None,
-        description = "Private field used to store output of `TaskDoc.run_type`."
+    private_run_type: Optional[RunType] = Field(
+        None, description="Private field used to store output of `TaskDoc.run_type`."
     )
 
-    private_structure_entry : Optional[ComputedStructureEntry] = Field(
+    private_structure_entry: Optional[ComputedStructureEntry] = Field(
         None,
-        description="Private field used to store output of `TaskDoc.structure_entry`."
+        description="Private field used to store output of `TaskDoc.structure_entry`.",
     )
 
     def model_post_init(self, __context: Any) -> None:
-
         # Needed for compatibility with TaskDocument
         if self.task_type is None:
             self.task_type = task_type(self.orig_inputs)
@@ -454,7 +458,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         store_additional_json: bool = True,
         additional_fields: Optional[Dict[str, Any]] = None,
         volume_change_warning_tol: float = 0.2,
-        task_names : Optional[list[str]] | None = None,
+        task_names: Optional[list[str]] | None = None,
         **vasp_calculation_kwargs,
     ) -> _T:
         """
@@ -489,7 +493,9 @@ class TaskDoc(StructureMetadata, extra="allow"):
 
         additional_fields = {} if additional_fields is None else additional_fields
         dir_name = Path(dir_name)
-        task_files = _find_vasp_files(dir_name, volumetric_files=volumetric_files, task_names = task_names)
+        task_files = _find_vasp_files(
+            dir_name, volumetric_files=volumetric_files, task_names=task_names
+        )
 
         if len(task_files) == 0:
             raise FileNotFoundError("No VASP files found!")
@@ -720,7 +726,8 @@ class TaskDoc(StructureMetadata, extra="allow"):
             entry_id=self.entry.entry_id,
         )
         return self.private_structure_entry
-    
+
+
 class TrajectoryDoc(BaseModel):
     """Model for task trajectory data."""
 
@@ -973,7 +980,7 @@ def _get_run_stats(calcs_reversed: List[Calculation]) -> Dict[str, RunStatistics
 def _find_vasp_files(
     path: Union[str, Path],
     volumetric_files: Tuple[str, ...] = _VOLUMETRIC_FILES,
-    task_names : Optional[list[str]] | None = None
+    task_names: Optional[list[str]] | None = None,
 ) -> Dict[str, Any]:
     """
     Find VASP files in a directory.

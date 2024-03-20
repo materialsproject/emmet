@@ -94,13 +94,13 @@ class ValidationDoc(EmmetBaseModel):
         inputs = task_doc.orig_inputs
         chemsys = task_doc.chemsys
         calcs_reversed = [
-            calc if not hasattr(calc,"model_dump") else calc.model_dump()
+            calc if not hasattr(calc, "model_dump") else calc.model_dump()
             for calc in task_doc.calcs_reversed
         ]
 
         if calcs_reversed[0].get("input", {}).get("structure", None):
             structure = calcs_reversed[0]["input"]["structure"]
-            if isinstance(structure,dict):
+            if isinstance(structure, dict):
                 structure = Structure.from_dict(structure)
         else:
             structure = task_doc.input.structure or task_doc.output.structure
@@ -303,11 +303,9 @@ def _kpoint_check(input_set, inputs, calcs_reversed, data, kpts_tolerance):
         input_dict = inputs
 
     kpoints = input_dict.get("kpoints", {})
-    if not isinstance(kpoints,dict):
+    if not isinstance(kpoints, dict):
         kpoints = kpoints.as_dict()
-    num_kpts = kpoints.get("nkpoints", 0) or np.prod(
-        kpoints.get("kpoints", [1, 1, 1])
-    )
+    num_kpts = kpoints.get("nkpoints", 0) or np.prod(kpoints.get("kpoints", [1, 1, 1]))
 
     data["kpts_ratio"] = num_kpts / valid_num_kpts
     return data["kpts_ratio"] < kpts_tolerance

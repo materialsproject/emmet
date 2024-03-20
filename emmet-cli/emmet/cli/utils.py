@@ -408,7 +408,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                     logger.warning(f"{name} {launcher} already parsed -> would remove.")
                 continue
 
-        additional_fields = {"sbxn" : sbxn, "tags": []}
+        additional_fields = {"sbxn": sbxn, "tags": []}
         snl_metas_avail = isinstance(snl_metas, dict)
         task_id = (
             task_ids.get(launcher) if manual_taskid else task_ids[chunk_idx][count]
@@ -431,10 +431,10 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
 
         try:
             task_doc = TaskDoc.from_directory(
-                dir_name = vaspdir,
+                dir_name=vaspdir,
                 additional_fields=additional_fields,
                 volumetric_files=ctx.params["store_volumetric_data"],
-                task_names=ctx.params["runs"]
+                task_names=ctx.params["runs"],
             )
         except Exception as ex:
             logger.error(f"Failed to build a TaskDoc from {vaspdir}: {ex}")
