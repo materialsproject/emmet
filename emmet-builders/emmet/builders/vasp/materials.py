@@ -181,7 +181,7 @@ class MaterialsBuilder(Builder):
             invalid_ids = set()
 
         projected_fields = [
-            "last_updated",
+            # "last_updated",
             "completed_at",
             "task_id",
             "formula_pretty",
@@ -195,9 +195,11 @@ class MaterialsBuilder(Builder):
             "input.structure",
             # needed for entry from task_doc
             "output.energy",
+            "calcs_reversed.output.energy",
             "input.is_hubbard",
             "input.hubbards",
-            "input.potcar_spec",
+            "calcs_reversed.input.potcar_spec",
+            "calcs_reversed.output.structure",
             # needed for transform deformation structure back for grouping
             "transformations",
             # misc info for materials doc

@@ -409,7 +409,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
     )
 
     last_updated: Optional[datetime] = Field(
-        None,
+        datetime.utcnow(),
         description="Timestamp for the most recent calculation for this task document",
     )
 
@@ -436,6 +436,9 @@ class TaskDoc(StructureMetadata, extra="allow"):
         # Needed for compatibility with TaskDocument
         if self.task_type is None:
             self.task_type = task_type(self.orig_inputs)
+
+        if self.structure is None:
+            self.structure = self.calcs_reversed[0].output.structure
 
     # Make sure that the datetime field is properly formatted
     # (Unclear when this is not the case, please leave comment if observed)
@@ -662,7 +665,10 @@ class TaskDoc(StructureMetadata, extra="allow"):
             "energy": calcs_reversed[0].output.energy,
             "parameters": {
                 # Cannot be PotcarSpec document, pymatgen expects a dict
-                "potcar_spec": [dict(d) for d in calcs_reversed[0].input.potcar_spec],
+                # Note that `potcar_spec` is optional
+                "potcar_spec": [dict(d) for d in calcs_reversed[0].input.potcar_spec]
+                if calcs_reversed[0].input.potcar_spec
+                else [],
                 # Required to be compatible with MontyEncoder for the ComputedEntry
                 "run_type": str(calcs_reversed[0].run_type),
                 "is_hubbard": calcs_reversed[0].input.is_hubbard,
@@ -716,7 +722,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
             The TaskDoc.entry with corresponding TaskDoc.structure added.
         """
         self.private_structure_entry = ComputedStructureEntry(
-            structure=self.output.structure,
+            structure=self.structure,
             energy=self.entry.energy,
             correction=self.entry.correction,
             composition=self.entry.composition,
