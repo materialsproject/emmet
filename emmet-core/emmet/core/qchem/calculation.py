@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
+import warnings
 from pydantic import field_validator, BaseModel, Field, ConfigDict
 from datetime import datetime
 from pymatgen.io.qchem.inputs import QCInput
@@ -316,7 +317,7 @@ class Calculation(BaseModel):
         None,
         description="Paths (relative to dir_name) of the QChem output files associated with this calculation",
     )
-    level_of_theory: LevelOfTheory = Field(
+    level_of_theory: Union[LevelOfTheory, str] = Field(
         None,
         description="Levels of theory used for the QChem calculation: For instance, B97-D/6-31g*",
     )
@@ -328,7 +329,7 @@ class Calculation(BaseModel):
         None,
         description="Calculation task type like Single Point, Geometry Optimization. Frequency...",
     )
-    calc_type: CalcType = Field(
+    calc_type: Union[CalcType, str] = Field(
         None,
         description="Combination dict of LOT + TaskType: B97-D/6-31g*/VACUUM Geometry Optimization",
     )
@@ -340,6 +341,7 @@ class Calculation(BaseModel):
         task_name: str,
         qcinput_file: Union[Path, str],
         qcoutput_file: Union[Path, str],
+        validate_lot: bool = True,
         store_energy_trajectory: bool = False,
         qcinput_kwargs: Optional[Dict] = None,
         qcoutput_kwargs: Optional[Dict] = None,
@@ -410,10 +412,10 @@ class Calculation(BaseModel):
                 else {k2: Path(v2) for k2, v2 in v.items()}
                 for k, v in output_file_paths.items()
             },
-            level_of_theory=level_of_theory(input_doc),
-            solvation_lot_info=lot_solvent_string(input_doc),
+            level_of_theory=level_of_theory(input_doc, validate_lot=validate_lot),
+            solvation_lot_info=lot_solvent_string(input_doc, validate_lot=validate_lot),
             task_type=task_type(input_doc),
-            calc_type=calc_type(input_doc),
+            calc_type=calc_type(input_doc, validate_lot=validate_lot),
         )
 
 
@@ -501,7 +503,9 @@ def _find_qchem_files(
     return task_files
 
 
-def level_of_theory(parameters: CalculationInput) -> LevelOfTheory:
+def level_of_theory(
+    parameters: CalculationInput, validate_lot: bool = True
+) -> LevelOfTheory:
     """
 
     Returns the level of theory for a calculation,
@@ -532,19 +536,8 @@ def level_of_theory(parameters: CalculationInput) -> LevelOfTheory:
 
     basis_lower = basis_raw.lower()
 
-    functional = [f for f in FUNCTIONALS if f.lower() == funct_lower]
-    if not functional:
-        raise ValueError(f"Unexpected functional {funct_lower}!")
-
-    functional = functional[0]
-
-    basis = [b for b in BASIS_SETS if b.lower() == basis_lower]
-    if not basis:
-        raise ValueError(f"Unexpected basis set {basis_lower}!")
-
-    basis = basis[0]
-
     solvent_method = parameters.rem.get("solvent_method", "").lower()
+
     if solvent_method == "":
         solvation = "VACUUM"
     elif solvent_method in ["pcm", "cosmo"]:
@@ -560,12 +553,44 @@ def level_of_theory(parameters: CalculationInput) -> LevelOfTheory:
     else:
         raise ValueError(f"Unexpected implicit solvent method {solvent_method}!")
 
-    lot = f"{functional}/{basis}/{solvation}"
+    if validate_lot:
+        functional = [f for f in FUNCTIONALS if f.lower() == funct_lower]
+        if not functional:
+            raise ValueError(f"Unexpected functional {funct_lower}!")
 
-    return LevelOfTheory(lot)
+        functional = functional[0]
+
+        basis = [b for b in BASIS_SETS if b.lower() == basis_lower]
+        if not basis:
+            raise ValueError(f"Unexpected basis set {basis_lower}!")
+
+        basis = basis[0]
+
+        lot = f"{functional}/{basis}/{solvation}"
+
+        return LevelOfTheory(lot)
+    else:
+        warnings.warn(
+            "User has turned the validate flag off."
+            "This can have downstream effects if the chosen functional and basis "
+            "is not in the available sets of MP employed functionals and the user"
+            "wants to include the TaskDoc in the MP infrastructure."
+            "Users should ignore this warning if their objective is just to create TaskDocs",
+            UserWarning,
+            stacklevel=2,
+        )
+        functional = funct_lower
+        basis = basis_lower
+        lot = f"{functional}/{basis}/{solvation}"
+
+        return lot
 
 
-def solvent(parameters: CalculationInput, custom_smd: Optional[str] = None) -> str:
+def solvent(
+    parameters: CalculationInput,
+    validate_lot: bool = True,
+    custom_smd: Optional[str] = None,
+) -> str:
     """
     Returns the solvent used for this calculation.
 
@@ -574,9 +599,11 @@ def solvent(parameters: CalculationInput, custom_smd: Optional[str] = None) -> s
         custom_smd: (Optional) string representing SMD parameters for a
         non-standard solvent
     """
-
-    lot = level_of_theory(parameters)
-    solvation = lot.value.split("/")[-1]
+    lot = level_of_theory(parameters, validate_lot=validate_lot)
+    if validate_lot:
+        solvation = lot.value.split("/")[-1]
+    else:
+        solvation = lot.split("/")[-1]
 
     if solvation == "PCM":
         # dielectric = float(parameters.get("solvent", {}).get("dielectric", 78.39))
@@ -631,7 +658,9 @@ def solvent(parameters: CalculationInput, custom_smd: Optional[str] = None) -> s
 
 
 def lot_solvent_string(
-    parameters: CalculationInput, custom_smd: Optional[str] = None
+    parameters: CalculationInput,
+    validate_lot: bool = True,
+    custom_smd: Optional[str] = None,
 ) -> str:
     """
     Returns a string representation of the level of theory and solvent used for this calculation.
@@ -641,9 +670,11 @@ def lot_solvent_string(
         custom_smd: (Optional) string representing SMD parameters for a
         non-standard solvent
     """
-
-    lot = level_of_theory(parameters).value
-    solv = solvent(parameters, custom_smd=custom_smd)
+    if validate_lot:
+        lot = level_of_theory(parameters, validate_lot=validate_lot).value
+    else:
+        lot = level_of_theory(parameters, validate_lot=validate_lot)
+    solv = solvent(parameters, custom_smd=custom_smd, validate_lot=validate_lot)
     return f"{lot}({solv})"
 
 
@@ -670,7 +701,9 @@ def task_type(
 
 
 def calc_type(
-    parameters: CalculationInput, special_run_type: Optional[str] = None
+    parameters: CalculationInput,
+    validate_lot: bool = True,
+    special_run_type: Optional[str] = None,
 ) -> CalcType:
     """
     Determines the calc type
@@ -678,6 +711,10 @@ def calc_type(
     Args:
         parameters: CalculationInput parameters
     """
-    rt = level_of_theory(parameters).value
     tt = task_type(parameters, special_run_type=special_run_type).value
-    return CalcType(f"{rt} {tt}")
+    if validate_lot:
+        rt = level_of_theory(parameters, validate_lot=validate_lot).value
+        return CalcType(f"{rt} {tt}")
+    else:
+        rt = level_of_theory(parameters, validate_lot=validate_lot)
+        return str(f"{rt} {tt}")
