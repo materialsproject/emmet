@@ -18,7 +18,7 @@ def validation_store():
 
 
 def test_validator(tasks_store, validation_store):
-    settings = EmmetBuildSettings(VASP_VALIDATE_POTCAR_HASHES=False)
+    settings = EmmetBuildSettings(VASP_VALIDATE_POTCAR_STATS=False)
     builder = TaskValidator(
         tasks=tasks_store, task_validation=validation_store, settings=settings
     )

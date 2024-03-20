@@ -10,6 +10,9 @@ from botocore.exceptions import ClientError
 from itertools import chain, combinations
 from pymatgen.core import Structure
 from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
+from pymatgen.io.vasp.inputs import PotcarSingle
+
+from emmet.builders.settings import EmmetBuildSettings
 
 
 def maximal_spanning_non_intersecting_subsets(sets) -> Set[Set]:
@@ -211,3 +214,31 @@ class HiddenPrints:
     def __exit__(self, exc_type, exc_val, exc_tb):
         sys.stdout.close()
         sys.stdout = self._original_stdout
+
+
+def get_potcar_stats():
+    default_settings = EmmetBuildSettings()
+
+    stats: dict[str, dict] = {}  # type: ignore
+
+    for (
+        calc_type,
+        input_set,
+    ) in default_settings.VASP_DEFAULT_INPUT_SETS.items():
+        _input = input_set()
+
+        stats[calc_type] = {}
+        functional = _input._config_dict["POTCAR_FUNCTIONAL"]
+
+        for potcar_symbol in _input.CONFIG["POTCAR"].values():
+            potcar = PotcarSingle.from_symbol_and_functional(
+                symbol=potcar_symbol, functional=functional
+            )
+            summary_stats = potcar._summary_stats.copy()
+            # fallback method for validation - use header hash and symbol
+            # note that the potcar_spec assigns PotcarSingle.symbol to "titel"
+            summary_stats["titel"] = potcar.TITEL
+            summary_stats["hash"] = potcar.md5_header_hash
+            stats[calc_type].update({potcar_symbol: summary_stats})
+
+    return stats
