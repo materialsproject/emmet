@@ -68,6 +68,14 @@ class StoreTrajectoryOption(ValueEnum):
     NO = "no"
 
 
+class CalculationBaseModel(BaseModel):
+    """Wrapper around pydantic BaseModel with extra functionality. """
+
+    def get(self, key : Any, default_value : Any | None = None) -> Any:
+        if hasattr(self,key):
+            return self.__getattribute__(key)
+        return default_value
+
 class PotcarSpec(BaseModel):
     """Document defining a VASP POTCAR specification."""
 
@@ -116,7 +124,7 @@ class PotcarSpec(BaseModel):
         return [cls.from_potcar_single(p) for p in potcar]
 
 
-class CalculationInput(BaseModel):
+class CalculationInput(CalculationBaseModel):
     """Document defining VASP calculation inputs."""
 
     incar: Optional[Dict[str, Any]] = Field(
@@ -572,7 +580,7 @@ class CalculationOutput(BaseModel):
         )
 
 
-class Calculation(BaseModel):
+class Calculation(CalculationBaseModel):
     """Full VASP calculation inputs and outputs."""
 
     dir_name: Optional[str] = Field(
