@@ -216,7 +216,7 @@ class HiddenPrints:
         sys.stdout = self._original_stdout
 
 
-def get_potcar_stats():
+def get_potcar_stats(strict: bool = False):
     default_settings = EmmetBuildSettings()
 
     stats: dict[str, dict] = {}  # type: ignore
@@ -231,10 +231,11 @@ def get_potcar_stats():
         functional = _input._config_dict["POTCAR_FUNCTIONAL"]
 
         for potcar_symbol in _input.CONFIG["POTCAR"].values():
-            potcar = PotcarSingle.from_symbol_and_functional(
-                symbol=potcar_symbol, functional=functional
-            )
-            summary_stats = potcar._summary_stats.copy()
+            if strict:
+                potcar = PotcarSingle.from_symbol_and_functional(
+                    symbol=potcar_symbol, functional=functional
+                )
+                summary_stats = potcar._summary_stats.copy()
             # fallback method for validation - use header hash and symbol
             # note that the potcar_spec assigns PotcarSingle.symbol to "titel"
             summary_stats["titel"] = potcar.TITEL

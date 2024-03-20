@@ -458,7 +458,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         store_additional_json: bool = True,
         additional_fields: Optional[Dict[str, Any]] = None,
         volume_change_warning_tol: float = 0.2,
-        task_names: Optional[list[str]] | None = None,
+        task_names: Optional[list[str]] = None,
         **vasp_calculation_kwargs,
     ) -> _T:
         """
@@ -980,7 +980,7 @@ def _get_run_stats(calcs_reversed: List[Calculation]) -> Dict[str, RunStatistics
 def _find_vasp_files(
     path: Union[str, Path],
     volumetric_files: Tuple[str, ...] = _VOLUMETRIC_FILES,
-    task_names: Optional[list[str]] | None = None,
+    task_names: Optional[list[str]] = None,
 ) -> Dict[str, Any]:
     """
     Find VASP files in a directory.
