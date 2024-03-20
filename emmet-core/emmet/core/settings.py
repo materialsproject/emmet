@@ -149,8 +149,8 @@ class EmmetSettings(BaseSettings):
         description="Default input sets for task validation",
     )
 
-    VASP_VALIDATE_POTCAR_HASHES: bool = Field(
-        True, description="Whether to validate POTCAR hash values."
+    VASP_VALIDATE_POTCAR_STATS: bool = Field(
+        True, description="Whether to validate POTCAR stat values."
     )
 
     VASP_CHECKED_LDAU_FIELDS: List[str] = Field(
