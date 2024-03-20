@@ -71,7 +71,7 @@ class StoreTrajectoryOption(ValueEnum):
 class CalculationBaseModel(BaseModel):
     """Wrapper around pydantic BaseModel with extra functionality."""
 
-    def get(self, key: Any, default_value: Any | None = None) -> Any:
+    def get(self, key: Any, default_value: Optional[Any] = None) -> Any:
         if hasattr(self, key):
             return self.__getattribute__(key)
         return default_value
