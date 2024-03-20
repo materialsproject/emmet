@@ -4469,7 +4469,12 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 <span class="normal">214</span>
 <span class="normal">215</span>
 <span class="normal">216</span>
-<span class="normal">217</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ProvenanceDoc</span><span class="p">(</span><span class="n">PropertyDoc</span><span class="p">):</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ProvenanceDoc</span><span class="p">(</span><span class="n">PropertyDoc</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A provenance property block</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -4506,6 +4511,11 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of history nodes specifying the transformations or orignation&quot;</span>
         <span class="s2">&quot; of this material for the entry closest matching the material input&quot;</span><span class="p">,</span>
     <span class="p">)</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;created_at&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">handle_datetime</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">convert_datetime</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
 
     <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;authors&quot;</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
@@ -4625,12 +4635,7 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
           <details class="quote">
             <summary>Source code in <code>emmet/core/provenance.py</code></summary>
-            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">142</span>
-<span class="normal">143</span>
-<span class="normal">144</span>
-<span class="normal">145</span>
-<span class="normal">146</span>
-<span class="normal">147</span>
+            <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">147</span>
 <span class="normal">148</span>
 <span class="normal">149</span>
 <span class="normal">150</span>
@@ -4700,7 +4705,12 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 <span class="normal">214</span>
 <span class="normal">215</span>
 <span class="normal">216</span>
-<span class="normal">217</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span> <span class="nf">from_SNLs</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">,</span> <span class="n">material_id</span><span class="p">:</span> <span class="n">MPID</span><span class="p">,</span> <span class="n">structure</span><span class="p">:</span> <span class="n">Structure</span><span class="p">,</span> <span class="n">snls</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">SNLDict</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ProvenanceDoc&quot;</span><span class="p">:</span>
