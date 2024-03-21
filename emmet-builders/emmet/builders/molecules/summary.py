@@ -33,6 +33,7 @@ class SummaryBuilder(Builder):
     def __init__(
         self,
         molecules: Store,
+        forces: Store,
         charges: Store,
         spins: Store,
         bonds: Store,
@@ -48,6 +49,7 @@ class SummaryBuilder(Builder):
         **kwargs,
     ):
         self.molecules = molecules
+        self.forces = forces
         self.charges = charges
         self.spins = spins
         self.bonds = bonds
@@ -65,6 +67,7 @@ class SummaryBuilder(Builder):
         super().__init__(
             sources=[
                 molecules,
+                forces,
                 charges,
                 spins,
                 bonds,
@@ -81,6 +84,7 @@ class SummaryBuilder(Builder):
         # Uncomment in case of issue with mrun not connecting automatically to collections
         # for i in [
         #     self.molecules,
+        #     self.forces,
         #     self.charges,
         #     self.spins,
         #     self.bonds,
@@ -108,6 +112,15 @@ class SummaryBuilder(Builder):
         self.molecules.ensure_index("task_ids")
         self.molecules.ensure_index("formula_alphabetical")
         self.molecules.ensure_index("species_hash")
+
+        # Search index for forces
+        self.forces.ensure_index("molecule_id")
+        self.forces.ensure_index("task_id")
+        self.forces.ensure_index("solvent")
+        self.forces.ensure_index("lot_solvent")
+        self.forces.ensure_index("property_id")
+        self.forces.ensure_index("last_updated")
+        self.forces.ensure_index("formula_alphabetical")
 
         # Search index for charges
         self.charges.ensure_index("molecule_id")
@@ -316,6 +329,9 @@ class SummaryBuilder(Builder):
 
             d = {
                 "molecules": mol,
+                "forces": _group_docs(
+                    list(self.forces.query({"molecule_id": mol_id})), False
+                ),
                 "partial_charges": _group_docs(
                     list(self.charges.query({"molecule_id": mol_id})), True
                 ),
