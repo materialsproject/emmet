@@ -328,8 +328,6 @@ class TrajectoryDoc(PropertyDoc):
             mol = task.output.initial_molecule
 
         species = None
-        charge = None
-        spin_multiplicity = None
         geometries = list()
         energies = list()
         total_gradients = list()
@@ -343,8 +341,6 @@ class TrajectoryDoc(PropertyDoc):
 
         for calculation in task.calcs_reversed:
             species = calculation.get("species", species)
-            charge = calculation.get("charge", charge)
-            spin_multiplicity = calculation.get("multiplicity", spin_multiplicity)
             
             this_geometries = calculation.get("geometries")
             this_energies = calculation.get("energy_trajectory")
@@ -379,10 +375,6 @@ class TrajectoryDoc(PropertyDoc):
             else:
                 init_mol = Molecule.from_dict(calculation["initial_molecule"])  # type: ignore
 
-            if charge is None:
-                charge = init_mol.charge  # type: ignore
-            if spin_multiplicity is None:
-                spin_multiplicity = init_mol.spin_multiplicity
             if species is None:
                 species = init_mol.species  # type: ignore
 
