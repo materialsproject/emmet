@@ -216,7 +216,7 @@ class HiddenPrints:
         sys.stdout = self._original_stdout
 
 
-def get_potcar_stats(strict: bool = True):
+def get_potcar_stats():
     default_settings = EmmetBuildSettings()
 
     stats: dict[str, dict] = {}  # type: ignore
@@ -231,29 +231,14 @@ def get_potcar_stats(strict: bool = True):
         functional = _input._config_dict["POTCAR_FUNCTIONAL"]
 
         for potcar_symbol in _input.CONFIG["POTCAR"].values():
-            if strict:
-                potcar = PotcarSingle.from_symbol_and_functional(
-                    symbol=potcar_symbol, functional=functional
-                )
-                summary_stats = potcar._summary_stats.copy()
-                # fallback method for validation - use header hash and symbol
-                # note that the potcar_spec assigns PotcarSingle.symbol to "titel"
-                summary_stats["titel"] = potcar.TITEL
-                summary_stats["hash"] = potcar.md5_header_hash
-
-            else:
-                for titel_no_spc, entries in PotcarSingle._potcar_summary_stats[
-                    functional
-                ].items():
-                    if any(potcar_symbol in entry for entry in entries):
-                        _titel = titel_no_spc.split(potcar_symbol)
-                        titel = f"{_titel[0]} {potcar_symbol} " + " ".join(_titel[1:])
-                        summary_stats = [
-                            {**entry, "titel": titel, "hash": None} for entry in entries
-                        ]
-
-                        break
-
+            potcar = PotcarSingle.from_symbol_and_functional(
+                symbol=potcar_symbol, functional=functional
+            )
+            summary_stats = potcar._summary_stats.copy()
+            # fallback method for validation - use header hash and symbol
+            # note that the potcar_spec assigns PotcarSingle.symbol to "titel"
+            summary_stats["titel"] = potcar.TITEL
+            summary_stats["hash"] = potcar.md5_header_hash
             stats[calc_type].update({potcar_symbol: summary_stats})
 
     return stats
