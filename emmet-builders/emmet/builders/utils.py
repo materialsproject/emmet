@@ -1,4 +1,5 @@
-from typing import Set, Union, Any
+from __future__ import annotations
+from typing import Set, Union, Any, Literal, Optional
 import sys
 import os
 from gzip import GzipFile
@@ -215,11 +216,40 @@ class HiddenPrints:
         sys.stdout.close()
         sys.stdout = self._original_stdout
 
-
-def get_potcar_stats():
+def get_potcar_stats(
+    method : Literal["potcar","pymatgen","stored"] = "potcar",
+    path_to_stored_stats : Optional[Union[str, os.PathLike]] = None
+) -> dict[str, Any]:
+    """
+    Get the POTCAR stats used in MP calculations to validate POTCARs.
+    
+    Args:
+        method : Literal[str : "potcar","pymatgen","stored"] = "potcar"
+            Method to generate the POTCAR stats:
+            - "potcar": regenerate stats from a user's POTCAR library.
+            - "pymatgen": regenerate stats from the stored pymatgen 
+              summary stats dict. This has the downside of the possibility
+              of finding multiple matching POTCAR stats for older POTCAR
+              releases. As of 25 March, 2024, it does not appear that the
+              MP POTCARs have duplicates
+            - "stored": load a stored dict of POTCAR stats.
+        path_to_stored_stats : str, os.Pathlike, or None
+            If a str, the path to the stored summary stats file.
+            If None, defaults to 
+              `importlib.resources.file("emmet.builders.vasp") / "mp_potcar_stats.json.gz"`
+    Returns:
+        dict, of POTCAR summary stats.
+    """
     default_settings = EmmetBuildSettings()
 
     stats: dict[str, dict] = {}  # type: ignore
+
+    if method == "stored":
+        from monty.serialization import loadfn
+        if path_to_stored_stats is None:
+            from importlib.resources import files
+            path_to_stored_stats = files("emmet.builders.vasp") / "mp_potcar_stats.json.gz"
+        return loadfn(path_to_stored_stats)
 
     for (
         calc_type,
@@ -231,14 +261,26 @@ def get_potcar_stats():
         functional = _input._config_dict["POTCAR_FUNCTIONAL"]
 
         for potcar_symbol in _input.CONFIG["POTCAR"].values():
-            potcar = PotcarSingle.from_symbol_and_functional(
-                symbol=potcar_symbol, functional=functional
-            )
-            summary_stats = potcar._summary_stats.copy()
-            # fallback method for validation - use header hash and symbol
-            # note that the potcar_spec assigns PotcarSingle.symbol to "titel"
-            summary_stats["titel"] = potcar.TITEL
-            summary_stats["hash"] = potcar.md5_header_hash
+            if method == "potcar":
+                potcar = PotcarSingle.from_symbol_and_functional(
+                    symbol=potcar_symbol, functional=functional
+                )
+                summary_stats = potcar._summary_stats.copy()
+                # fallback method for validation - use header hash and symbol
+                # note that the potcar_spec assigns PotcarSingle.symbol to "titel"
+                # whereas the ***correct*** field is `header`
+                summary_stats["titel"] = potcar.header
+                summary_stats["hash"] = potcar.md5_header_hash
+                summary_stats = [summary_stats]
+
+            elif method == "pymatgen":
+                summary_stats = []
+                for _, entries in PotcarSingle._potcar_summary_stats[functional].items():
+                    summary_stats += [
+                        {**entry, "titel": None, "hash": None} for entry in entries
+                        if entry["symbol"] == potcar_symbol
+                    ]
+
             stats[calc_type].update({potcar_symbol: summary_stats})
 
     return stats

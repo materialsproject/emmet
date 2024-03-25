@@ -11,6 +11,9 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
+    package_data = {
+        "emmet.builders": ["*.json","*.json.gz"]
+    },
     install_requires=[
         "emmet-core[all]",
         "emmet-core[ml]",
