@@ -252,7 +252,7 @@ def get_potcar_stats(
         if path_to_stored_stats is None:
             from importlib.resources import files
 
-            path_to_stored_stats = (
+            path_to_stored_stats = str(
                 files("emmet.builders.vasp") / "mp_potcar_stats.json.gz"
             )
         return loadfn(path_to_stored_stats)
