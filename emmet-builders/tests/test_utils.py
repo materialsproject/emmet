@@ -62,7 +62,7 @@ def test_get_hop_cutoff(test_dir):
 @pytest.mark.parametrize(
     "method", ("potcar","pymatgen","stored") 
 )
-def test_get_potcar_stats(method : str, test_dir):
+def test_get_potcar_stats(method : str, tmp_path):
 
     calc_type = EmmetSettings().VASP_DEFAULT_INPUT_SETS
 
@@ -91,7 +91,7 @@ def test_get_potcar_stats(method : str, test_dir):
 
     if method == "stored":
 
-        new_stats_path = test_dir / "_temp_potcar_stats.json"
+        new_stats_path = tmp_path / "_temp_potcar_stats.json"
         dumpfn(potcar_stats,new_stats_path)
 
         new_potcar_stats = get_potcar_stats(
