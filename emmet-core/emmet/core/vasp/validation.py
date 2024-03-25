@@ -356,28 +356,43 @@ def _potcar_stats_check(task_doc, potcar_stats: dict):
             break
 
         if use_legacy_hash_check:
-            all_match = all(
-                entry[key] == ref_summ_stats[key]
-                for key in (
-                    "hash",
-                    "titel",
+            all_match = any(
+                all(
+                    entry[key] == ref_stat[key]
+                    for key in (
+                        "hash",
+                        "titel",
+                    )
                 )
+                for ref_stat in ref_summ_stats
             )
 
         else:
-            all_match = all(
-                set(ref_summ_stats["keywords"][key])
-                == set(entry["summary_stats"]["keywords"][key])
-                for key in ["header", "data"]
-            ) and all(
-                abs(
-                    ref_summ_stats["stats"][key][stat]
-                    - entry["summary_stats"]["stats"][key][stat]
+            all_match = False
+            for ref_stat in ref_summ_stats:
+                key_match = all(
+                    set(ref_stat["keywords"][key])
+                    == set(entry["summary_stats"]["keywords"][key])
+                    for key in ["header", "data"]
                 )
-                < data_tol
-                for stat in ["MEAN", "ABSMEAN", "VAR", "MIN", "MAX"]
-                for key in ["header", "data"]
-            )
+
+                data_match = False
+                if key_match:
+                    data_match = all(
+                        abs(
+                            ref_stat["stats"][key][stat]
+                            - entry["summary_stats"]["stats"][key][stat]
+                        )
+                        < data_tol
+                        for stat in ["MEAN", "ABSMEAN", "VAR", "MIN", "MAX"]
+                        for key in ["header", "data"]
+                    )
+                all_match = key_match and data_match
+
+                if all_match:
+                    # Found at least one match to reference POTCAR summary stats,
+                    # that suffices for the check
+                    break
 
         if not all_match:
             break
