@@ -28,9 +28,9 @@ bcrypt==4.1.2
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.34.59
+boto3==1.34.69
     # via maggma
-botocore==1.34.59
+botocore==1.34.69
     # via
     #   boto3
     #   s3transfer
@@ -46,7 +46,7 @@ cfgv==3.4.0
     # via pre-commit
 charset-normalizer==3.3.2
     # via requests
-chgnet==0.3.4
+chgnet==0.3.5
     # via emmet-core
 click==8.1.7
     # via
@@ -59,7 +59,7 @@ colorama==0.4.6
     # via griffe
 contourpy==1.2.0
     # via matplotlib
-coverage[toml]==7.4.3
+coverage[toml]==7.4.4
     # via pytest-cov
 cryptography==42.0.5
     # via paramiko
@@ -77,7 +77,7 @@ dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
-emmet-core[all,ml]==0.78.7
+emmet-core[all,ml]==0.80.0
     # via emmet-builders (setup.py)
 fastapi==0.110.0
     # via maggma
@@ -90,13 +90,13 @@ flake8==7.0.0
     # via emmet-builders (setup.py)
 flask==3.0.2
     # via mongogrant
-fonttools==4.49.0
+fonttools==4.50.0
     # via matplotlib
 frozenlist==1.4.1
     # via
     #   aiohttp
     #   aiosignal
-fsspec[http]==2024.2.0
+fsspec[http]==2024.3.1
     # via
     #   pytorch-lightning
     #   torch
@@ -106,7 +106,7 @@ future==1.0.0
     #   uncertainties
 ghp-import==2.1.0
     # via mkdocs
-griffe==0.41.3
+griffe==0.42.1
     # via mkdocstrings-python
 h11==0.14.0
     # via uvicorn
@@ -155,13 +155,13 @@ kiwisolver==1.4.5
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
-lightning-utilities==0.10.1
+lightning-utilities==0.11.0
     # via
     #   pytorch-lightning
     #   torchmetrics
 livereload==2.6.3
     # via emmet-builders (setup.py)
-maggma==0.63.4
+maggma==0.64.0
     # via emmet-builders (setup.py)
 markdown==3.5.2
     # via
@@ -169,6 +169,7 @@ markdown==3.5.2
     #   mkdocs-autorefs
     #   mkdocs-material
     #   mkdocstrings
+    #   mkdocstrings-python
     #   pymdown-extensions
 markupsafe==2.1.5
     # via
@@ -221,7 +222,7 @@ mkdocstrings[python]==0.24.1
     # via
     #   emmet-builders (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.8.0
+mkdocstrings-python==1.9.0
     # via mkdocstrings
 mongogrant==0.3.3
     # via maggma
@@ -334,7 +335,7 @@ paramiko==3.4.0
     # via sshtunnel
 pathspec==0.12.1
     # via mkdocs
-phonopy==2.21.2
+phonopy==2.22.0
     # via matcalc
 pillow==10.2.0
     # via matplotlib
@@ -343,11 +344,11 @@ platformdirs==4.2.0
     #   mkdocs
     #   mkdocstrings
     #   virtualenv
-plotly==5.19.0
+plotly==5.20.0
     # via pymatgen
 pluggy==1.4.0
     # via pytest
-pre-commit==3.6.2
+pre-commit==3.7.0
     # via emmet-builders (setup.py)
 psutil==5.9.8
     # via dgl
@@ -364,7 +365,7 @@ pycodestyle==2.11.1
     #   flake8
 pycparser==2.21
     # via cffi
-pydantic==2.6.3
+pydantic==2.6.4
     # via
     #   emmet-core
     #   fastapi
@@ -416,7 +417,7 @@ pytest==8.1.1
     # via
     #   emmet-builders (setup.py)
     #   pytest-cov
-pytest-cov==4.1.0
+pytest-cov==5.0.0
     # via emmet-builders (setup.py)
 python-dateutil==2.9.0.post0
     # via
@@ -445,7 +446,7 @@ pyyaml-env-tag==0.1
     # via mkdocs
 pyzmq==25.1.2
     # via maggma
-referencing==0.33.0
+referencing==0.34.0
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -469,7 +470,7 @@ ruamel-yaml==0.17.40
     #   robocrys
 ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
-s3transfer==0.10.0
+s3transfer==0.10.1
     # via boto3
 scikit-learn==1.4.1.post1
     # via matminer
@@ -514,7 +515,7 @@ tabulate==0.9.0
     # via pymatgen
 tenacity==8.2.3
     # via plotly
-threadpoolctl==3.3.0
+threadpoolctl==3.4.0
     # via scikit-learn
 torch==2.2.1
     # via
@@ -525,7 +526,7 @@ torch==2.2.1
     #   torchmetrics
 torchdata==0.7.1
     # via dgl
-torchmetrics==1.3.1
+torchmetrics==1.3.2
     # via pytorch-lightning
 tornado==6.4
     # via livereload
@@ -540,7 +541,7 @@ triton==2.2.0
     # via torch
 types-requests==2.31.0.20240311
     # via emmet-builders (setup.py)
-types-setuptools==69.1.0.20240310
+types-setuptools==69.2.0.20240317
     # via emmet-builders (setup.py)
 typing-extensions==4.10.0
     # via
@@ -556,13 +557,13 @@ typing-extensions==4.10.0
     #   torch
 uncertainties==3.1.7
     # via pymatgen
-urllib3==2.0.7
+urllib3==2.2.1
     # via
     #   botocore
     #   requests
     #   torchdata
     #   types-requests
-uvicorn==0.28.0
+uvicorn==0.29.0
     # via maggma
 virtualenv==20.25.1
     # via pre-commit
