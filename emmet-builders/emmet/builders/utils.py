@@ -216,18 +216,19 @@ class HiddenPrints:
         sys.stdout.close()
         sys.stdout = self._original_stdout
 
+
 def get_potcar_stats(
-    method : Literal["potcar","pymatgen","stored"] = "potcar",
-    path_to_stored_stats : Optional[Union[str, os.PathLike]] = None
+    method: Literal["potcar", "pymatgen", "stored"] = "potcar",
+    path_to_stored_stats: Optional[Union[str, os.PathLike]] = None,
 ) -> dict[str, Any]:
     """
     Get the POTCAR stats used in MP calculations to validate POTCARs.
-    
+
     Args:
         method : Literal[str : "potcar","pymatgen","stored"] = "potcar"
             Method to generate the POTCAR stats:
             - "potcar": regenerate stats from a user's POTCAR library.
-            - "pymatgen": regenerate stats from the stored pymatgen 
+            - "pymatgen": regenerate stats from the stored pymatgen
               summary stats dict. This has the downside of the possibility
               of finding multiple matching POTCAR stats for older POTCAR
               releases. As of 25 March, 2024, it does not appear that the
@@ -235,7 +236,7 @@ def get_potcar_stats(
             - "stored": load a stored dict of POTCAR stats.
         path_to_stored_stats : str, os.Pathlike, or None
             If a str, the path to the stored summary stats file.
-            If None, defaults to 
+            If None, defaults to
               `importlib.resources.file("emmet.builders.vasp") / "mp_potcar_stats.json.gz"`
     Returns:
         dict, of POTCAR summary stats.
@@ -246,9 +247,13 @@ def get_potcar_stats(
 
     if method == "stored":
         from monty.serialization import loadfn
+
         if path_to_stored_stats is None:
             from importlib.resources import files
-            path_to_stored_stats = files("emmet.builders.vasp") / "mp_potcar_stats.json.gz"
+
+            path_to_stored_stats = (
+                files("emmet.builders.vasp") / "mp_potcar_stats.json.gz"
+            )
         return loadfn(path_to_stored_stats)
 
     for (
@@ -275,9 +280,12 @@ def get_potcar_stats(
 
             elif method == "pymatgen":
                 summary_stats = []
-                for _, entries in PotcarSingle._potcar_summary_stats[functional].items():
+                for _, entries in PotcarSingle._potcar_summary_stats[
+                    functional
+                ].items():
                     summary_stats += [
-                        {**entry, "titel": None, "hash": None} for entry in entries
+                        {**entry, "titel": None, "hash": None}
+                        for entry in entries
                         if entry["symbol"] == potcar_symbol
                     ]
 

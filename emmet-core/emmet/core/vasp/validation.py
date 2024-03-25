@@ -359,12 +359,15 @@ def _potcar_stats_check(task_doc, potcar_stats: dict):
             all_match = any(
                 all(
                     entry[key] == ref_stat[key]
-                    for key in ("hash","titel",)
-                ) for ref_stat in ref_summ_stats
+                    for key in (
+                        "hash",
+                        "titel",
+                    )
+                )
+                for ref_stat in ref_summ_stats
             )
 
         else:
-            
             all_match = False
             for ref_stat in ref_summ_stats:
                 key_match = all(
@@ -372,7 +375,7 @@ def _potcar_stats_check(task_doc, potcar_stats: dict):
                     == set(entry["summary_stats"]["keywords"][key])
                     for key in ["header", "data"]
                 )
-                
+
                 data_match = False
                 if key_match:
                     data_match = all(
