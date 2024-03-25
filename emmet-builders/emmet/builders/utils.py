@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Set, Union, Any, Literal, Optional
 import sys
 import os
+from pathlib import Path
 from gzip import GzipFile
 import orjson
 import json
@@ -219,7 +220,7 @@ class HiddenPrints:
 
 def get_potcar_stats(
     method: Literal["potcar", "pymatgen", "stored"] = "potcar",
-    path_to_stored_stats: Optional[Union[str, os.PathLike]] = None,
+    path_to_stored_stats: Optional[Union[str, os.PathLike, Path]] = None,
 ) -> dict[str, Any]:
     """
     Get the POTCAR stats used in MP calculations to validate POTCARs.
@@ -234,7 +235,7 @@ def get_potcar_stats(
               releases. As of 25 March, 2024, it does not appear that the
               MP POTCARs have duplicates
             - "stored": load a stored dict of POTCAR stats.
-        path_to_stored_stats : str, os.Pathlike, or None
+        path_to_stored_stats : str, os.Pathlike, Path, or None
             If a str, the path to the stored summary stats file.
             If None, defaults to
               `importlib.resources.file("emmet.builders.vasp") / "mp_potcar_stats.json.gz"`
