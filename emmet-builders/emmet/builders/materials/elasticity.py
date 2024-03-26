@@ -184,19 +184,19 @@ class ElasticityBuilder(Builder):
                     f"types ({len(calc_types)}) for material with material id "
                     f"{material_id}. Cannot proceed."
                 )
-                return None
+                continue
 
             # filter by calc type
             opt_tasks = filter_opt_tasks(tasks, calc_types)
             deform_tasks = filter_deform_tasks(tasks, calc_types)
             if not opt_tasks or not deform_tasks:
-                return None
+                continue
 
             # filter by incar
             opt_tasks = filter_by_incar_settings(opt_tasks)
             deform_tasks = filter_by_incar_settings(deform_tasks)
             if not opt_tasks or not deform_tasks:
-                return None
+                continue
 
             # select one task for each set of optimization tasks with the same lattice
             opt_grouped_tmp = group_by_parent_lattice(opt_tasks, mode="opt")
@@ -218,7 +218,7 @@ class ElasticityBuilder(Builder):
                 opt_grouped, deform_grouped, self.logger
             )
             if final_opt is None or final_deform is None:
-                return None
+                continue
 
             # convert to elasticity doc
             deforms = []
