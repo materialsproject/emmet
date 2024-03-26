@@ -186,17 +186,26 @@ class InputDoc(BaseModel):
         InputDoc
             A summary of the input molecule and corresponding calculation parameters
         """
+        try:
+            lot_val = calc_doc.level_of_theory.value
+        except AttributeError:
+            lot_val = calc_doc.level_of_theory
+
+        try:
+            ct_val = calc_doc.calc_type.value
+        except AttributeError:
+            ct_val = calc_doc.calc_type
         # TODO : modify this to get the different variables from the task doc.
         return cls(
             initial_molecule=calc_doc.input.initial_molecule,
             rem=calc_doc.input.rem,
-            level_of_theory=calc_doc.level_of_theory.value,
+            level_of_theory=lot_val,
             task_type=calc_doc.task_type.value,
             tags=calc_doc.input.tags,
             solvation_lot_info=calc_doc.solvation_lot_info,
             # special_run_type = calc_doc.input.special_run_type,
             # smiles = calc_doc.input.smiles,
-            calc_type=calc_doc.calc_type.value,
+            calc_type=ct_val,
         )
 
 
@@ -281,6 +290,7 @@ class TaskDoc(MoleculeMetadata):
     def from_directory(
         cls: Type[_T],
         dir_name: Union[Path, str],
+        validate_lot: bool = True,
         store_additional_json: bool = True,
         additional_fields: Dict[str, Any] = None,
         **qchem_calculation_kwargs,
@@ -292,6 +302,9 @@ class TaskDoc(MoleculeMetadata):
         ----------
         dir_name
             The path to the folder containing the calculation outputs.
+        validate_lot
+            Flag for matching the basis and functional with the list of functionals consistent with MPCules.
+            Defaults to True. Change to False if you want to create a TaskDoc with other basis sets and functionals.
         store_additional_json
             Whether to store additional json files in the calculation directory.
         additional_fields
@@ -322,7 +335,11 @@ class TaskDoc(MoleculeMetadata):
                 continue
             else:
                 calc_doc = Calculation.from_qchem_files(
-                    dir_name, task_name, **files, **qchem_calculation_kwargs
+                    dir_name,
+                    task_name,
+                    **files,
+                    **qchem_calculation_kwargs,
+                    validate_lot=validate_lot,
                 )
                 calcs_reversed.append(calc_doc)
                 # all_qchem_objects.append(qchem_objects)

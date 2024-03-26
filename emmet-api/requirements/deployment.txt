@@ -12,7 +12,7 @@ anyio==4.3.0
     # via starlette
 asgi-logger==0.1.0
     # via emmet-api (emmet/emmet-api/setup.py)
-asgiref==3.7.2
+asgiref==3.8.1
     # via asgi-logger
 attrs==23.2.0
     # via
@@ -24,11 +24,11 @@ bcrypt==4.1.2
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.34.64
+boto3==1.34.69
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.34.64
+botocore==1.34.69
     # via
     #   boto3
     #   s3transfer
@@ -57,7 +57,7 @@ cycler==0.12.1
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==2.7.3
+ddtrace==2.7.4
     # via emmet-api (emmet/emmet-api/setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -65,7 +65,7 @@ dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
-emmet-core==0.78.7
+emmet-core==0.80.0
     # via emmet-api (emmet/emmet-api/setup.py)
 envier==0.5.1
     # via ddtrace
@@ -299,7 +299,7 @@ urllib3==2.2.1
     # via
     #   botocore
     #   requests
-uvicorn==0.28.0
+uvicorn==0.29.0
     # via maggma
 werkzeug==3.0.1
     # via flask
