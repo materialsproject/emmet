@@ -16,7 +16,7 @@ setup(
         "emmet-core[all]",
         "emmet-core[ml]",
         "maggma>=0.57.6",
-        "matminer>=0.7.3",
+        "matminer>=0.9.1",
     ],
     extras_require={
         "test": [
