@@ -4,9 +4,9 @@ from maggma.builders import MapBuilder
 from maggma.core import Store
 
 from emmet.builders.settings import EmmetBuildSettings
+from emmet.core.tasks import TaskDoc
 from emmet.builders.utils import get_potcar_stats
 from emmet.core.vasp.calc_types.enums import CalcType
-from emmet.core.vasp.task_valid import TaskDocument
 from emmet.core.vasp.validation import DeprecationMessage, ValidationDoc
 
 
@@ -39,7 +39,7 @@ class TaskValidator(MapBuilder):
         # Set up potcar cache if appropriate
         if self.settings.VASP_VALIDATE_POTCAR_STATS:
             if not self.potcar_stats:
-                self.potcar_stats = get_potcar_stats()
+                self.potcar_stats = get_potcar_stats(strict = False)
         else:
             self.potcar_stats = None
 
@@ -65,7 +65,9 @@ class TaskValidator(MapBuilder):
         Args:
             item (dict): a (projection of a) task doc
         """
-        task_doc = TaskDocument(**item)
+        if not item["output"].get("energy"):
+            item["output"]["energy"] = -1e20
+        task_doc = TaskDoc(**item)
         validation_doc = ValidationDoc.from_task_doc(
             task_doc=task_doc,
             kpts_tolerance=self.settings.VASP_KPTS_TOLERANCE,
