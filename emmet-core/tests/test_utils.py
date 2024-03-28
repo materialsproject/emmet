@@ -82,8 +82,9 @@ def test_value_enum(monkeypatch, tmp_path):
     assert Path(tmp_path, "temp.json").is_file()
 
     # ensure that as_dict method yields str
-    assert hasattr(TempEnum,"as_dict")
-    assert all(isinstance(val.as_dict(),str) for val in TempEnum)
+    assert hasattr(TempEnum, "as_dict")
+    assert all(isinstance(val.as_dict(), str) for val in TempEnum)
+
 
 def test_doc_enum():
     class TestEnum(DocEnum):

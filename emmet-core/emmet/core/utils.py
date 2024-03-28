@@ -311,8 +311,9 @@ class ValueEnum(Enum):
         return hash(str(self))
 
     def as_dict(self) -> str:
-        """ Deserialize in a kludgey way. """
+        """Deserialize in a kludgey way."""
         return self.__str__()
+
 
 class DocEnum(ValueEnum):
     """
