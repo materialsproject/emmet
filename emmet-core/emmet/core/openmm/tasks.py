@@ -5,8 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional, Union
 
-import pandas as pd
-from emmet.core.vasp.task_valid import TaskState
+import pandas as pd  # type: ignore[import-untyped]
+from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
 from pydantic import BaseModel, Field
 
 from atomate2.classical_md.schemas import ClassicalMDTaskDocument
@@ -160,11 +160,11 @@ class CalculationOutput(BaseModel):
             attributes = data.to_dict(orient="list")
         else:
             attributes = {name: None for name in column_name_map.values()}
-            state_file_name = None
+            state_file_name = None  # type: ignore[assignment]
 
         dcd_file = Path(dir_name) / dcd_file_name
         dcd_is_not_empty = dcd_file.exists() and dcd_file.stat().st_size > 0
-        dcd_file_name = dcd_file_name if dcd_is_not_empty else None
+        dcd_file_name = dcd_file_name if dcd_is_not_empty else None  # type: ignore
 
         return CalculationOutput(
             dir_name=str(dir_name),
