@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.82.0](https://github.com/materialsproject/emmet/tree/v0.82.0) (2024-04-01)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.81.1...v0.82.0)
+
+**Merged pull requests:**
+
+- Add schema for atomate2 classical\_md workflows [\#975](https://github.com/materialsproject/emmet/pull/975) ([orionarcher](https://github.com/orionarcher))
+
 ## [v0.81.1](https://github.com/materialsproject/emmet/tree/v0.81.1) (2024-03-26)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.81.0...v0.81.1)
@@ -40,16 +48,16 @@
 
 ## [v0.78.7](https://github.com/materialsproject/emmet/tree/v0.78.7) (2024-03-02)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.2...v0.78.7)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.3...v0.78.7)
 
 **Merged pull requests:**
 
 - Fix hydrogen element injection in anonymous formula queries [\#957](https://github.com/materialsproject/emmet/pull/957) ([munrojm](https://github.com/munrojm))
 - Automated dependency upgrades [\#956](https://github.com/materialsproject/emmet/pull/956) ([tschaume](https://github.com/tschaume))
 
-## [v0.78.2](https://github.com/materialsproject/emmet/tree/v0.78.2) (2024-03-01)
+## [v0.78.3](https://github.com/materialsproject/emmet/tree/v0.78.3) (2024-03-01)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.6...v0.78.2)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.6...v0.78.3)
 
 ## [v0.78.6](https://github.com/materialsproject/emmet/tree/v0.78.6) (2024-03-01)
 
@@ -57,11 +65,11 @@
 
 ## [v0.78.5](https://github.com/materialsproject/emmet/tree/v0.78.5) (2024-03-01)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.3...v0.78.5)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.2...v0.78.5)
 
-## [v0.78.3](https://github.com/materialsproject/emmet/tree/v0.78.3) (2024-03-01)
+## [v0.78.2](https://github.com/materialsproject/emmet/tree/v0.78.2) (2024-03-01)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.4...v0.78.3)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.4...v0.78.2)
 
 ## [v0.78.4](https://github.com/materialsproject/emmet/tree/v0.78.4) (2024-03-01)
 
