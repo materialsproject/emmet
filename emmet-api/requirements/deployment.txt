@@ -24,11 +24,11 @@ bcrypt==4.1.2
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.34.74
+boto3==1.34.76
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.34.74
+botocore==1.34.76
     # via
     #   boto3
     #   s3transfer
@@ -49,7 +49,7 @@ click==8.1.7
     #   flask
     #   mongogrant
     #   uvicorn
-contourpy==1.2.0
+contourpy==1.2.1
     # via matplotlib
 cryptography==42.0.5
     # via paramiko
@@ -65,7 +65,7 @@ dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
-emmet-core==0.81.1
+emmet-core==0.82.0
     # via emmet-api (emmet/emmet-api/setup.py)
 envier==0.5.1
     # via ddtrace
@@ -73,7 +73,7 @@ exceptiongroup==1.2.0
     # via
     #   anyio
     #   cattrs
-fastapi==0.110.0
+fastapi==0.110.1
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
@@ -265,7 +265,7 @@ sqlparse==0.4.4
     # via ddtrace
 sshtunnel==0.4.0
     # via maggma
-starlette==0.36.3
+starlette==0.37.2
     # via fastapi
 sympy==1.12
     # via pymatgen
@@ -299,7 +299,7 @@ urllib3==2.2.1
     #   requests
 uvicorn==0.29.0
     # via maggma
-werkzeug==3.0.1
+werkzeug==3.0.2
     # via flask
 wrapt==1.16.0
     # via deprecated
