@@ -10,11 +10,11 @@ certifi==2024.2.2
     # via requests
 charset-normalizer==3.3.2
     # via requests
-contourpy==1.2.0
+contourpy==1.2.1
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-fonttools==4.49.0
+fonttools==4.50.0
     # via matplotlib
 future==1.0.0
     # via uncertainties
@@ -28,7 +28,7 @@ latexcodec==3.0.0
     # via pybtex
 matplotlib==3.8.3
     # via pymatgen
-monty==2024.2.26
+monty==2024.3.31
     # via
     #   emmet-core (setup.py)
     #   pymatgen
@@ -52,15 +52,15 @@ palettable==3.3.3
     # via pymatgen
 pandas==2.2.1
     # via pymatgen
-pillow==10.2.0
+pillow==10.3.0
     # via matplotlib
-plotly==5.19.0
+plotly==5.20.0
     # via pymatgen
 pybtex==0.24.0
     # via
     #   emmet-core (setup.py)
     #   pymatgen
-pydantic==2.6.3
+pydantic==2.6.4
     # via
     #   emmet-core (setup.py)
     #   pydantic-settings
