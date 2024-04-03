@@ -286,7 +286,13 @@ def jsanitize(obj, strict=False, allow_bson=False):
 
 class ValueEnum(Enum):
     """
-    Enum that serializes to string as the value
+    Enum that serializes to string as the value.
+
+    While this method has an `as_dict` method, this
+    returns a `str`. This is to ensure deserialization
+    to a `str` when functions like `monty.json.jsanitize`
+    are called on a ValueEnum with `strict = True` and
+    `enum_values = False` (occurs often in jobflow).
     """
 
     def __str__(self):
@@ -303,6 +309,10 @@ class ValueEnum(Enum):
     def __hash__(self):
         """Get a hash of the enum."""
         return hash(str(self))
+
+    def as_dict(self) -> str:
+        """Deserialize in a kludgey way."""
+        return self.__str__()
 
 
 class DocEnum(ValueEnum):
