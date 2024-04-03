@@ -109,14 +109,16 @@ def test_output_summary(test_dir, object_name, task_name):
         pytest.param("SiNonSCFUniform", id="SiNonSCFUniform"),
     ],
 )
-def test_task_doc(test_dir, object_name):
+def test_task_doc(test_dir, object_name, tmpdir):
     from monty.json import jsanitize
     from monty.serialization import dumpfn
+    import os
     from pymatgen.alchemy.materials import TransformedStructure
     from pymatgen.entries.computed_entries import ComputedEntry
     from pymatgen.transformations.standard_transformations import (
         DeformStructureTransformation,
     )
+    import shutil
 
     from emmet.core.tasks import TaskDoc
 
@@ -156,8 +158,11 @@ def test_task_doc(test_dir, object_name):
         ],
     )
     ts_json = jsanitize(ts.as_dict())
-    dumpfn(ts, f"{dir_name}/transformations.json")
-    test_doc = TaskDoc.from_directory(dir_name)
+    dumpfn(ts, f"{tmpdir}/transformations.json")
+    for f in os.listdir(dir_name):
+        if os.path.isfile(os.path.join(dir_name, f)):
+            shutil.copy(os.path.join(dir_name, f), tmpdir)
+    test_doc = TaskDoc.from_directory(tmpdir)
     # if other_parameters == {}, this is popped from the TaskDoc.transformations field
     # seems like @version is added by monty serialization
     # jsanitize needed because pymatgen.core.Structure.pbc is a tuple
