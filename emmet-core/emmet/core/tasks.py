@@ -417,7 +417,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
     )
 
     last_updated: Optional[datetime] = Field(
-        datetime.now(timezone.UTC),
+        datetime.now(timezone.utc),
         description="Timestamp for the most recent calculation for this task document",
     )
 
@@ -690,7 +690,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
             "data": {
                 "oxide_type": oxide_type(calcs_reversed[0].output.structure),
                 "aspherical": calcs_reversed[0].input.parameters.get("LASPH", False),
-                "last_updated": str(datetime.now(timezone.UTC)),
+                "last_updated": str(datetime.now(timezone.utc)),
             },
         }
         return ComputedEntry.from_dict(entry_dict)
