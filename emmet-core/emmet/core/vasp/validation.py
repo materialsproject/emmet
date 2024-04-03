@@ -4,6 +4,7 @@ from typing import Dict, List, Union, Optional
 import numpy as np
 from pydantic import ConfigDict, Field, ImportString
 from pymatgen.core.structure import Structure
+from pymatgen.io.vasp.inputs import Kpoints
 from pymatgen.io.vasp.sets import VaspInputSet
 
 from emmet.core.settings import EmmetSettings
@@ -145,7 +146,7 @@ class ValidationDoc(EmmetBaseModel):
                 # Checking K-Points
                 # Calculations that use KSPACING will not have a .kpoints attr
 
-                if task_type != task_type.NSCF_Line:
+                if task_type != TaskType.NSCF_Line:
                     # Not validating k-point data for line-mode calculations as constructing
                     # the k-path is too costly for the builder and the uniform input set is used.
 
@@ -257,7 +258,7 @@ def _scf_upward_check(calcs_reversed, inputs, data, max_allowed_scf_gradient, wa
 
 def _u_value_checks(task_doc, valid_input_set, warnings):
     # NOTE: Reverting to old method of just using input.hubbards which is wrong in many instances
-    input_hubbards = task_doc.input.hubbards
+    input_hubbards = {} if task_doc.input.hubbards is None else task_doc.input.hubbards
 
     if valid_input_set.incar.get("LDAU", False) or len(input_hubbards) > 0:
         # Assemble required input_set LDAU params into dictionary
@@ -303,8 +304,10 @@ def _kpoint_check(input_set, inputs, calcs_reversed, data, kpts_tolerance):
         input_dict = inputs
 
     kpoints = input_dict.get("kpoints", {})
-    if not isinstance(kpoints, dict):
+    if isinstance(kpoints, Kpoints):
         kpoints = kpoints.as_dict()
+    elif kpoints is None:
+        kpoints = {}
     num_kpts = kpoints.get("nkpoints", 0) or np.prod(kpoints.get("kpoints", [1, 1, 1]))
 
     data["kpts_ratio"] = num_kpts / valid_num_kpts

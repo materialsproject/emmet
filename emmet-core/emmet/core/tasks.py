@@ -3,7 +3,7 @@
 import logging
 import re
 from collections import OrderedDict
-from datetime import datetime
+from datetime import datetime, UTC
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
@@ -100,7 +100,7 @@ class OutputDoc(BaseModel):
     )
 
     density: Optional[float] = Field(None, description="Density of in units of g/cc.")
-    energy: float = Field(..., description="Total Energy in units of eV.")
+    energy: Optional[float] = Field(None, description="Total Energy in units of eV.")
     forces: Optional[List[List[float]]] = Field(
         None, description="The force on each atom in units of eV/A^2."
     )
@@ -353,7 +353,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         None, description="Final output structure from the task"
     )
 
-    task_type: Optional[Union[CalcType, TaskType]] = Field(
+    task_type: Optional[Union[TaskType, CalcType]] = Field(
         None, description="The type of calculation."
     )
 
@@ -417,7 +417,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
     )
 
     last_updated: Optional[datetime] = Field(
-        datetime.utcnow(),
+        datetime.now(UTC),
         description="Timestamp for the most recent calculation for this task document",
     )
 
@@ -438,6 +438,13 @@ class TaskDoc(StructureMetadata, extra="allow"):
         # Needed for compatibility with TaskDocument
         if self.task_type is None:
             self.task_type = task_type(self.orig_inputs)
+        
+        if isinstance(self.task_type,CalcType):
+            # For a while, the TaskDoc.task_type was allowed to be a CalcType or TaskType
+            # For backwards compatibility with TaskDocument, ensure that isinstance(TaskDoc.task_type, TaskType)
+            temp = str(self.task_type).split(" ")
+            self._run_type = RunType(temp[0])
+            self.task_type = TaskType(" ".join(temp[1:]))
 
         if self.structure is None:
             self.structure = self.calcs_reversed[0].output.structure
@@ -451,7 +458,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
 
     @model_validator(mode="after")
     def set_entry(self) -> datetime:
-        if not self.entry and self.calcs_reversed:
+        if not self.entry and self.calcs_reversed and getattr(self.calcs_reversed[0].output,"structure",None):
             self.entry = self.get_entry(self.calcs_reversed, self.task_id)
         return self
 
@@ -679,7 +686,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
             "data": {
                 "oxide_type": oxide_type(calcs_reversed[0].output.structure),
                 "aspherical": calcs_reversed[0].input.parameters.get("LASPH", False),
-                "last_updated": str(datetime.utcnow()),
+                "last_updated": str(datetime.now(UTC)),
             },
         }
         return ComputedEntry.from_dict(entry_dict)

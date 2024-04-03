@@ -65,10 +65,6 @@ class TaskValidator(MapBuilder):
         Args:
             item (dict): a (projection of a) task doc
         """
-        if not item["output"].get("energy"):
-            # Default value required for pydantic typing. `TaskDoc.output.energy`
-            # must be float.
-            item["output"]["energy"] = 1e20
         task_doc = TaskDoc(**item)
         validation_doc = ValidationDoc.from_task_doc(
             task_doc=task_doc,
