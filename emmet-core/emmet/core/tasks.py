@@ -438,8 +438,8 @@ class TaskDoc(StructureMetadata, extra="allow"):
         # Needed for compatibility with TaskDocument
         if self.task_type is None:
             self.task_type = task_type(self.orig_inputs)
-        
-        if isinstance(self.task_type,CalcType):
+
+        if isinstance(self.task_type, CalcType):
             # For a while, the TaskDoc.task_type was allowed to be a CalcType or TaskType
             # For backwards compatibility with TaskDocument, ensure that isinstance(TaskDoc.task_type, TaskType)
             temp = str(self.task_type).split(" ")
@@ -458,7 +458,11 @@ class TaskDoc(StructureMetadata, extra="allow"):
 
     @model_validator(mode="after")
     def set_entry(self) -> datetime:
-        if not self.entry and self.calcs_reversed and getattr(self.calcs_reversed[0].output,"structure",None):
+        if (
+            not self.entry
+            and self.calcs_reversed
+            and getattr(self.calcs_reversed[0].output, "structure", None)
+        ):
             self.entry = self.get_entry(self.calcs_reversed, self.task_id)
         return self
 
