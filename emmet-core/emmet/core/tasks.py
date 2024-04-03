@@ -3,7 +3,7 @@
 import logging
 import re
 from collections import OrderedDict
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
@@ -417,7 +417,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
     )
 
     last_updated: Optional[datetime] = Field(
-        datetime.now(UTC),
+        datetime.now(timezone.UTC),
         description="Timestamp for the most recent calculation for this task document",
     )
 
@@ -690,7 +690,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
             "data": {
                 "oxide_type": oxide_type(calcs_reversed[0].output.structure),
                 "aspherical": calcs_reversed[0].input.parameters.get("LASPH", False),
-                "last_updated": str(datetime.now(UTC)),
+                "last_updated": str(datetime.now(timezone.UTC)),
             },
         }
         return ComputedEntry.from_dict(entry_dict)
