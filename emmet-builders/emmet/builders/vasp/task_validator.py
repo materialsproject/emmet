@@ -4,8 +4,8 @@ from maggma.builders import MapBuilder
 from maggma.core import Store
 
 from emmet.builders.settings import EmmetBuildSettings
-from emmet.core.tasks import TaskDoc
 from emmet.builders.utils import get_potcar_stats
+from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calc_types.enums import CalcType
 from emmet.core.vasp.validation import DeprecationMessage, ValidationDoc
 
@@ -66,7 +66,9 @@ class TaskValidator(MapBuilder):
             item (dict): a (projection of a) task doc
         """
         if not item["output"].get("energy"):
-            item["output"]["energy"] = -1e20
+            # Default value required for pydantic typing. `TaskDoc.output.energy`
+            # must be float.
+            item["output"]["energy"] = 1e20
         task_doc = TaskDoc(**item)
         validation_doc = ValidationDoc.from_task_doc(
             task_doc=task_doc,

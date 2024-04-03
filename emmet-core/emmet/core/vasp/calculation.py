@@ -72,9 +72,7 @@ class CalculationBaseModel(BaseModel):
     """Wrapper around pydantic BaseModel with extra functionality."""
 
     def get(self, key: Any, default_value: Optional[Any] = None) -> Any:
-        if hasattr(self, key):
-            return self.__getattribute__(key)
-        return default_value
+        return getattr(self, key, default_value)
 
 
 class PotcarSpec(BaseModel):

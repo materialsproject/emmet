@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
 import numpy as np
 from emmet.core.common import convert_datetime
+from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import (
     CalcType,
@@ -28,7 +29,14 @@ from emmet.core.vasp.calculation import (
 from emmet.core.vasp.task_valid import TaskState
 from monty.json import MontyDecoder
 from monty.serialization import loadfn
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_validator,
+    model_validator,
+    PrivateAttr,
+)
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core.structure import Structure
 from pymatgen.core.trajectory import Trajectory
@@ -349,7 +357,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         None, description="The type of calculation."
     )
 
-    task_id: Optional[str] = Field(
+    task_id: Optional[Union[MPID, str]] = Field(
         None,
         description="The (task) ID of this calculation, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
@@ -419,18 +427,12 @@ class TaskDoc(StructureMetadata, extra="allow"):
     # can't find them, throws an AttributeError. It does this before looking to see if the
     # class has that attr defined on it.
 
-    private_calc_type: Optional[CalcType] = Field(
-        None, description="Private field used to store output of `TaskDoc.calc_type`."
-    )
-
-    private_run_type: Optional[RunType] = Field(
-        None, description="Private field used to store output of `TaskDoc.run_type`."
-    )
-
-    private_structure_entry: Optional[ComputedStructureEntry] = Field(
-        None,
-        description="Private field used to store output of `TaskDoc.structure_entry`.",
-    )
+    # Private field used to store output of `TaskDoc.calc_type`
+    _calc_type: Optional[CalcType] = PrivateAttr(None)
+    # Private field used to store output of `TaskDoc.run_type`
+    _run_type: Optional[RunType] = PrivateAttr(None)
+    # Private field used to store output of `TaskDoc.structure_entry`.
+    _structure_entry: Optional[ComputedStructureEntry] = PrivateAttr(None)
 
     def model_post_init(self, __context: Any) -> None:
         # Needed for compatibility with TaskDocument
@@ -641,7 +643,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
 
     @staticmethod
     def get_entry(
-        calcs_reversed: List[Calculation], task_id: Optional[str] = None
+        calcs_reversed: List[Calculation], task_id: Optional[Union[MPID, str]] = None
     ) -> ComputedEntry:
         """
         Get a computed entry from a list of VASP calculation documents.
@@ -700,16 +702,16 @@ class TaskDoc(StructureMetadata, extra="allow"):
         params = self.calcs_reversed[0].input.parameters
         incar = self.calcs_reversed[0].input.incar
 
-        self.private_calc_type = calc_type(inputs, {**params, **incar})
-        return self.private_calc_type
+        self._calc_type = calc_type(inputs, {**params, **incar})
+        return self._calc_type
 
     @property
     def run_type(self) -> RunType:
         params = self.calcs_reversed[0].input.parameters
         incar = self.calcs_reversed[0].input.incar
 
-        self.private_run_type = run_type({**params, **incar})
-        return self.private_run_type
+        self._run_type = run_type({**params, **incar})
+        return self._run_type
 
     @property
     def structure_entry(self) -> ComputedStructureEntry:
@@ -721,7 +723,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         ComputedStructureEntry
             The TaskDoc.entry with corresponding TaskDoc.structure added.
         """
-        self.private_structure_entry = ComputedStructureEntry(
+        self._structure_entry = ComputedStructureEntry(
             structure=self.structure,
             energy=self.entry.energy,
             correction=self.entry.correction,
@@ -731,7 +733,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
             data=self.entry.data,
             entry_id=self.entry.entry_id,
         )
-        return self.private_structure_entry
+        return self._structure_entry
 
 
 class TrajectoryDoc(BaseModel):

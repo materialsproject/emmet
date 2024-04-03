@@ -229,7 +229,9 @@ class MaterialsBuilder(Builder):
                 were processed
         """
 
-        tasks = [TaskDoc(**task) for task in items]
+        tasks = [
+            TaskDoc(**task) for task in items
+        ]  # [TaskDoc(**task) for task in items]
         formula = tasks[0].formula_pretty
         task_ids = [task.task_id for task in tasks]
 

@@ -339,14 +339,14 @@ def _potcar_stats_check(task_doc, potcar_stats: dict):
     data_tol = 1.0e-6
 
     try:
-        potcar_details = task_doc.calcs_reversed[0]["input"]["potcar_spec"]
+        potcar_details = task_doc.calcs_reversed[0].model_dump()["input"]["potcar_spec"]
 
     except KeyError:
         # Assume it is an old calculation without potcar_spec data and treat it as passing POTCAR hash check
         return False
 
     use_legacy_hash_check = False
-    if any(len(entry.get("summary_stats", {})) == 0 for entry in potcar_details):
+    if any(entry.get("summary_stats", None) is None for entry in potcar_details):
         # potcar_spec doesn't include summary_stats kwarg needed to check potcars
         # fall back to header hash checking
         use_legacy_hash_check = True
