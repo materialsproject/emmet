@@ -24,11 +24,11 @@ bcrypt==4.1.2
     # via paramiko
 blinker==1.7.0
     # via flask
-boto3==1.34.76
+boto3==1.34.79
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.34.76
+botocore==1.34.79
     # via
     #   boto3
     #   s3transfer
@@ -69,7 +69,7 @@ cycler==0.12.1
     # via matplotlib
 ddsketch==3.0.1
     # via ddtrace
-ddtrace==2.7.5
+ddtrace==2.8.0
     # via emmet-api (setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -79,7 +79,7 @@ dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
-emmet-core==0.82.0
+emmet-core==0.82.1
     # via emmet-api (setup.py)
 envier==0.5.1
     # via ddtrace
@@ -98,7 +98,7 @@ flake8==7.0.0
     # via emmet-api (setup.py)
 flask==3.0.2
     # via mongogrant
-fonttools==4.50.0
+fonttools==4.51.0
     # via matplotlib
 future==1.0.0
     # via uncertainties
@@ -165,7 +165,7 @@ markupsafe==2.1.5
     #   mkdocs-autorefs
     #   mkdocstrings
     #   werkzeug
-matplotlib==3.8.3
+matplotlib==3.8.4
     # via pymatgen
 mccabe==0.7.0
     # via flake8
@@ -194,7 +194,7 @@ mkdocs-material-extensions==1.3.1
     #   mkdocs-material
 mkdocs-minify-plugin==0.8.0
     # via emmet-api (setup.py)
-mkdocstrings[python]==0.24.2
+mkdocstrings[python]==0.24.3
     # via
     #   emmet-api (setup.py)
     #   mkdocstrings-python
@@ -367,7 +367,7 @@ ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
 s3transfer==0.10.1
     # via boto3
-scipy==1.12.0
+scipy==1.13.0
     # via pymatgen
 sentinels==1.0.0
     # via mongomock
@@ -413,11 +413,11 @@ tqdm==4.66.2
     # via
     #   maggma
     #   pymatgen
-types-requests==2.31.0.20240402
+types-requests==2.31.0.20240403
     # via emmet-api (setup.py)
 types-setuptools==69.2.0.20240317
     # via emmet-api (setup.py)
-typing-extensions==4.10.0
+typing-extensions==4.11.0
     # via
     #   anyio
     #   asgiref
