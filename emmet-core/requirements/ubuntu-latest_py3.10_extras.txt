@@ -197,7 +197,7 @@ mypy-extensions==1.0.0
     #   mypy
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
-networkx==3.2.1
+networkx==3.3
     # via
     #   dgl
     #   pymatgen
@@ -450,7 +450,7 @@ triton==2.2.0
     # via torch
 typeguard==4.2.1
     # via inflect
-types-requests==2.31.0.20240403
+types-requests==2.31.0.20240406
     # via emmet-core (setup.py)
 types-setuptools==69.2.0.20240317
     # via emmet-core (setup.py)
