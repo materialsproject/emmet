@@ -96,7 +96,7 @@ filelock==3.13.3
     # via virtualenv
 flake8==7.0.0
     # via emmet-api (setup.py)
-flask==3.0.2
+flask==3.0.3
     # via mongogrant
 fonttools==4.51.0
     # via matplotlib
@@ -221,7 +221,7 @@ mypy-extensions==1.0.0
     #   mypy
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
-networkx==3.2.1
+networkx==3.3
     # via pymatgen
 nodeenv==1.8.0
     # via pre-commit
@@ -413,7 +413,7 @@ tqdm==4.66.2
     # via
     #   maggma
     #   pymatgen
-types-requests==2.31.0.20240403
+types-requests==2.31.0.20240406
     # via emmet-api (setup.py)
 types-setuptools==69.2.0.20240317
     # via emmet-api (setup.py)
