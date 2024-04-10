@@ -354,7 +354,7 @@ class CorrectedEntriesBuilder(Builder):
             if (chemsys not in corrected_entries_chemsys_dates)
             or (
                 materials_chemsys_dates[chemsys]
-                > datetime.fromisoformat(corrected_entries_chemsys_dates[chemsys])
+                > corrected_entries_chemsys_dates[chemsys]
             )
         ]
 
