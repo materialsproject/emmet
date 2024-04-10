@@ -5,7 +5,7 @@ import openff.toolkit as tk
 from atomate2.classical_md.schemas import MoleculeSpec
 from MDAnalysis import Universe
 from solvation_analysis.solute import Solute
-from solvation_analysis.rdf_parse import identify_cutoff_scipy
+from solvation_analysis.rdf_parser import identify_cutoff_scipy
 
 from pathlib import Path
 
@@ -57,6 +57,7 @@ def label_resnames(
 def label_charges(u: Universe, interchange: Interchange):
     charge_arrays = []
     for mol in interchange.topology.molecules:
+        # TODO: no way to determine charge scaling on neutral molecules
         charge_scaling = sum(mol.partial_charges) / mol.total_charge
         charge_arrays.append(mol.partial_charges / charge_scaling)
     charges = np.concatenate(charge_arrays).magnitude
@@ -65,7 +66,11 @@ def label_charges(u: Universe, interchange: Interchange):
 
 def find_peaks(bins, rdf, fallback_radius: float = 3):
     peak = identify_cutoff_scipy(bins, rdf, failure_behavior="warn")
-    return peak or fallback_radius
+    return peak if not np.isnan(peak) else fallback_radius
+
+
+def mol_specs_from_interchange(interchange: Interchange) -> list[MoleculeSpec]:
+    return
 
 
 def create_solute(
@@ -83,7 +88,7 @@ def create_solute(
         if resname != solute_name
     }
 
-    return Solute.from_atoms(
+    solute = Solute.from_atoms(
         solute,
         solvents,
         solute_name=solute_name,
@@ -92,6 +97,8 @@ def create_solute(
         networking_solvents=networking_solvents,
         kernel_kwargs={"fallback_radius": fallback_radius},
     )
+    solute.run()
+    return solute
 
 
 # def molgraph_from_molecules(molecules: Iterable[tk.Molecule]):

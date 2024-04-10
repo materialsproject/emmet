@@ -1,5 +1,7 @@
-from emmet.builders.classical_md.utils import create_universe
+from emmet.builders.classical_md.utils import create_universe, create_solute
 from openff.interchange import Interchange
+
+from emmet.core.classical_md.solvation import SolvationDoc
 
 
 def test_create_universe(ec_emc_taskdoc, ec_emc_traj):
@@ -12,6 +14,10 @@ def test_create_universe(ec_emc_taskdoc, ec_emc_traj):
         str(ec_emc_traj),
         traj_format="DCD",
     )
+
+    solute = create_solute(u, solute_name="Li", networking_solvents=["PF6"])
+
+    SolvationDoc.from_solute(solute)
 
     return
 
