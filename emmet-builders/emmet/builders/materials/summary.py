@@ -201,6 +201,9 @@ class SummaryBuilder(Builder):
 
             all_docs.append(data)
 
+        for store in self.source_keys:
+            self.source_keys[store].close()
+
         return all_docs
 
     def prechunk(self, number_splits: int):  # pragma: no cover
