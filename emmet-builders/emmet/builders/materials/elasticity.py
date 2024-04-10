@@ -76,7 +76,6 @@ class ElasticityBuilder(Builder):
         )
 
     def ensure_index(self):
-        self.tasks.ensure_index("nsites")
         self.tasks.ensure_index("formula_pretty")
         self.tasks.ensure_index("last_updated")
 
