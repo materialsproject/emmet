@@ -5,11 +5,43 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
+from typing_extensions import Annotated
+import zlib
+from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import (
+    BaseModel,
+    Field,
+    PlainValidator,
+    PlainSerializer,
+    BaseModel,
+    errors,
+    WithJsonSchema,
+)
 from monty.json import MSONable
 
 from emmet.core.vasp.task_valid import TaskState
+
+
+def hex_bytes_validator(o: Any) -> bytes:
+    if isinstance(o, bytes):
+        return o
+    elif isinstance(o, bytearray):
+        return bytes(o)
+    elif isinstance(o, str):
+        return zlib.decompress(bytes.fromhex(o))
+
+
+def hex_bytes_serializer(b: bytes) -> str:
+    return zlib.compress(b).hex()
+
+
+HexBytes = Annotated[
+    bytes,
+    PlainValidator(hex_bytes_validator),
+    PlainSerializer(hex_bytes_serializer),
+    WithJsonSchema({"type": "string"}),
+]
 
 
 @dataclass
@@ -41,7 +73,7 @@ class ClassicalMDTaskDocument(BaseModel, extra="allow"):  # type: ignore[call-ar
         "the task document.",
     )
 
-    interchange: Optional[str] = Field(
+    interchange: Optional[HexBytes] = Field(
         None, description="Final output structure from the task"
     )
 

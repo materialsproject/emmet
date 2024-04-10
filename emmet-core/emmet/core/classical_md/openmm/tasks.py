@@ -10,6 +10,7 @@ from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
 from pydantic import BaseModel, Field
 
 from emmet.core.classical_md import ClassicalMDTaskDocument
+from emmet.core.classical_md.tasks import HexBytes
 
 
 class CalculationInput(BaseModel, extra="allow"):  # type: ignore[call-arg]
@@ -82,7 +83,7 @@ class CalculationInput(BaseModel, extra="allow"):  # type: ignore[call-arg]
 
     traj_file_type: Optional[str] = Field(
         None,
-        description="The type of trajectory file to save. Options are 'dcd' and 'h5'.",
+        description="The type of trajectory file to save.",
     )
 
 
@@ -93,8 +94,12 @@ class CalculationOutput(BaseModel):
         None, description="The directory for this OpenMM task"
     )
 
-    dcd_file: Optional[str] = Field(
-        None, description="Path to the DCD file relative to `dir_name`"
+    traj_file: Optional[str] = Field(
+        None, description="Path to the trajectory file relative to `dir_name`"
+    )
+
+    traj_blob: Optional[HexBytes] = Field(
+        None, description="Trajectory file as a binary blob"
     )
 
     state_file: Optional[str] = Field(
@@ -134,10 +139,11 @@ class CalculationOutput(BaseModel):
         cls,
         dir_name: Path | str,
         state_file_name: str,
-        dcd_file_name: str,
+        traj_file_name: str,
         elapsed_time: Optional[float] = None,
-        steps: Optional[int] = None,
+        n_steps: Optional[int] = None,
         state_interval: Optional[int] = None,
+        embed_traj: bool = False,
     ) -> CalculationOutput:
         """Extract data from the output files in the directory."""
         state_file = Path(dir_name) / state_file_name
@@ -151,7 +157,7 @@ class CalculationOutput(BaseModel):
             "Density (g/mL)": "density",
         }
         state_is_not_empty = state_file.exists() and state_file.stat().st_size > 0
-        state_steps = state_interval and steps and steps // state_interval or 0
+        state_steps = state_interval and n_steps and n_steps // state_interval or 0
         if state_is_not_empty and (state_steps > 0):
             data = pd.read_csv(state_file, header=0)
             data = data.rename(columns=column_name_map)
@@ -162,15 +168,22 @@ class CalculationOutput(BaseModel):
             attributes = {name: None for name in column_name_map.values()}
             state_file_name = None  # type: ignore[assignment]
 
-        dcd_file = Path(dir_name) / dcd_file_name
-        dcd_is_not_empty = dcd_file.exists() and dcd_file.stat().st_size > 0
-        dcd_file_name = dcd_file_name if dcd_is_not_empty else None  # type: ignore
+        traj_file = Path(dir_name) / traj_file_name
+        traj_is_not_empty = traj_file.exists() and traj_file.stat().st_size > 0
+        traj_file_name = traj_file_name if traj_is_not_empty else None  # type: ignore
+
+        if embed_traj:
+            with open(traj_file, "rb") as f:
+                traj_blob = f.read()
+        else:
+            traj_blob = None
 
         return CalculationOutput(
             dir_name=str(dir_name),
             elapsed_time=elapsed_time,
-            dcd_file=dcd_file_name,
+            traj_file=traj_file_name,
             state_file=state_file_name,
+            traj_blob=traj_blob,
             **attributes,
         )
 
