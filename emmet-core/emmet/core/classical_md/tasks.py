@@ -14,8 +14,6 @@ from pydantic import (
     Field,
     PlainValidator,
     PlainSerializer,
-    BaseModel,
-    errors,
     WithJsonSchema,
 )
 from monty.json import MSONable
