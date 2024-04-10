@@ -122,25 +122,29 @@ class CorrectedEntriesBuilder(Builder):
 
         to_process_chemsys = self._get_chemsys_to_process()
 
-        self.logger.info(
-            f"Processing entries in {len(to_process_chemsys)} chemical systems"
-        )
-        self.total = len(to_process_chemsys)
+        all_chemsys = []
+
+        for chemsys in sorted(
+            to_process_chemsys, key=lambda x: len(x.split("-")), reverse=False
+        ):
+            all_chemsys.append(chemsys)
+
+        self.logger.info(f"Processing entries in {len(all_chemsys)} chemical systems")
+        self.total = len(all_chemsys)
 
         return [
-            to_process_chemsys[i : i + self.chunk_size]
-            for i in range(0, len(to_process_chemsys), self.chunk_size)
+            all_chemsys[i : i + self.chunk_size]
+            for i in range(0, self.total, self.chunk_size)
         ]
 
-    def get_processed_docs(self, mats):
+    def get_processed_docs(self, all_chemsys):
         self.materials.connect()
         if self.oxidation_states:
             self.oxidation_states.connect()
 
         all_docs = []
 
-        # Yield the chemical systems in order of increasing size
-        for chemsys in sorted(mats, key=lambda x: len(x.split("-")), reverse=False):
+        for chemsys in all_chemsys:
             entries = self.get_entries(chemsys)
             all_docs.append(entries)
 
