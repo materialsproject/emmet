@@ -6,10 +6,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
+from pydantic import BaseModel, Field
 from monty.json import MSONable
 
 from emmet.core.vasp.task_valid import TaskState
-from pydantic import BaseModel, Field
 
 
 @dataclass
@@ -21,18 +21,6 @@ class MoleculeSpec(MSONable):
     formal_charge: int
     charge_method: str
     openff_mol: str  # a tk.Molecule object serialized with to_json
-
-    # @field_validator("openff_mol")
-    # @classmethod
-    # def _validate_openff_mol(cls, v: str) -> str:
-    #     try:
-    #         tk.Molecule.from_json(v)
-    #     except Exception as e:
-    #         raise ValueError(
-    #             "MoleculeSpec.openff_mol must be able to be"
-    #             "parsed with Molecule.from_json."
-    #         ) from e
-    #     return v
 
 
 class ClassicalMDTaskDocument(BaseModel, extra="allow"):  # type: ignore[call-arg]
