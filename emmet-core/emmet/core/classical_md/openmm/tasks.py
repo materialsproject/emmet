@@ -9,7 +9,7 @@ import pandas as pd  # type: ignore[import-untyped]
 from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
 from pydantic import BaseModel, Field
 
-from atomate2.classical_md.schemas import ClassicalMDTaskDocument
+from emmet.core.classical_md import ClassicalMDTaskDocument
 
 
 class CalculationInput(BaseModel, extra="allow"):  # type: ignore[call-arg]
