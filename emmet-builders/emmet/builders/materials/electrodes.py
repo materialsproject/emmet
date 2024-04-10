@@ -124,6 +124,8 @@ class StructureGroupBuilder(Builder):
             "deprecated"
         ] = False  # Ensure only non-deprecated materials are chosen
 
+        self.name = f"{working_ion}_{self.__class__.__name__}"
+
         super().__init__(
             sources=[self.materials],
             targets=[self.sgroups],
@@ -587,6 +589,8 @@ class ConversionElectrodeBuilder(Builder):
 
         self.phase_diagram_store.key = "phase_diagram_id"
         self.conversion_electrode_store.key = "battery_id"
+
+        self.name = f"{working_ion}_{self.__class__.__name__}"
 
         super().__init__(
             sources=[self.phase_diagram_store],
