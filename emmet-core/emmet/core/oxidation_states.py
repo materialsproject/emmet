@@ -36,6 +36,7 @@ class OxidationStateDoc(PropertyDoc):
 
     @classmethod
     def from_structure(cls, structure: Structure, material_id: MPID, **kwargs):  # type: ignore[override]
+        logger = logging.getLogger("OxidationStateDoc")
         # TODO: add check for if it already has oxidation states, if so pass this along unchanged ("method": "manual")
         structure.remove_oxidation_states()
 
@@ -77,7 +78,7 @@ class OxidationStateDoc(PropertyDoc):
             }
 
         except Exception as e:
-            logging.error("BVAnalyzer failed with: {}".format(e))
+            logger.error("BVAnalyzer failed with: {}".format(e))
 
             try:
                 first_oxi_state_guess = structure.composition.oxi_state_guesses(
@@ -101,7 +102,7 @@ class OxidationStateDoc(PropertyDoc):
                 }
 
             except Exception as e:
-                logging.error("Oxidation state guess failed with: {}".format(e))
+                logger.error("Oxidation state guess failed with: {}".format(e))
                 d["warnings"] = ["Oxidation state guessing failed."]
                 d["state"] = "unsuccessful"
 
