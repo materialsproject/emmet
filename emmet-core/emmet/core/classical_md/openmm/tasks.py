@@ -172,7 +172,7 @@ class CalculationOutput(BaseModel):
         traj_is_not_empty = traj_file.exists() and traj_file.stat().st_size > 0
         traj_file_name = traj_file_name if traj_is_not_empty else None  # type: ignore
 
-        if embed_traj:
+        if embed_traj and traj_is_not_empty:
             with open(traj_file, "rb") as f:
                 traj_blob = f.read()
         else:
