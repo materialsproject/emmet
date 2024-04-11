@@ -15,10 +15,11 @@ from pydantic import (
     PlainValidator,
     PlainSerializer,
     WithJsonSchema,
+    errors,
 )
 from monty.json import MSONable
 
-from emmet.core.vasp.task_valid import TaskState
+from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
 
 
 def hex_bytes_validator(o: Any) -> bytes:
@@ -28,6 +29,7 @@ def hex_bytes_validator(o: Any) -> bytes:
         return bytes(o)
     elif isinstance(o, str):
         return zlib.decompress(bytes.fromhex(o))
+    raise errors.BytesError()
 
 
 def hex_bytes_serializer(b: bytes) -> str:
@@ -48,7 +50,7 @@ class MoleculeSpec(MSONable):
 
     name: str
     count: int
-    formal_charge: int
+    charge_scaling: float
     charge_method: str
     openff_mol: str  # a tk.Molecule object serialized with to_json
 
@@ -59,27 +61,30 @@ class ClassicalMDTaskDocument(BaseModel, extra="allow"):  # type: ignore[call-ar
     tags: Optional[list[str]] = Field(
         [], title="tag", description="Metadata tagged to a given task."
     )
-    dir_name: Optional[str] = Field(
-        None, description="The directory for this VASP task"
-    )
+
+    dir_name: Optional[str] = Field(None, description="The directory for this MD task")
+
     state: Optional[TaskState] = Field(None, description="State of this calculation")
 
     calcs_reversed: Optional[list] = Field(
         None,
         title="Calcs reversed data",
-        description="Detailed data for each VASP calculation contributing to "
+        description="Detailed data for each MD calculation contributing to "
         "the task document.",
     )
 
     interchange: Optional[HexBytes] = Field(
-        None, description="Final output structure from the task"
+        None,
+        description="A byte serialized OpenFF interchange object. "
+        "To generate, the Interchange is serialized to json and"
+        "the json is transformed to bytes with a utf-8 encoding. ",
     )
 
     molecule_specs: Optional[list[MoleculeSpec]] = Field(
-        None, description="Molecules within the box."
+        None, description="Molecules within the system."
     )
 
-    forcefield: Optional[str] = Field(None, description="forcefield")
+    force_field: Optional[str] = Field(None, description="The classical MD forcefield.")
 
     task_type: Optional[str] = Field(None, description="The type of calculation.")
 

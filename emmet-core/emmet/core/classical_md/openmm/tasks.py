@@ -9,8 +9,8 @@ import pandas as pd  # type: ignore[import-untyped]
 from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
 from pydantic import BaseModel, Field
 
-from emmet.core.classical_md import ClassicalMDTaskDocument
-from emmet.core.classical_md.tasks import HexBytes
+from emmet.core.classical_md import ClassicalMDTaskDocument  # type: ignore[import-untyped]
+from emmet.core.classical_md.tasks import HexBytes  # type: ignore[import-untyped]
 
 
 class CalculationInput(BaseModel, extra="allow"):  # type: ignore[call-arg]
@@ -31,7 +31,7 @@ class CalculationInput(BaseModel, extra="allow"):  # type: ignore[call-arg]
     friction_coefficient: Optional[float] = Field(
         None,
         description=(
-            "The friction coefficient for the integrator " "(inverse picoseconds)."
+            "The friction coefficient for the integrator (inverse picoseconds)."
         ),
     )
 
@@ -54,7 +54,7 @@ class CalculationInput(BaseModel, extra="allow"):  # type: ignore[call-arg]
     state_interval: Optional[int] = Field(
         None,
         description=(
-            "The interval for saving simulation state. For no state, set to 0."
+            "State is saved every `state_interval` timesteps. For no state, set to 0."
         ),
     )
 
@@ -65,7 +65,7 @@ class CalculationInput(BaseModel, extra="allow"):  # type: ignore[call-arg]
     traj_interval: Optional[int] = Field(
         None,
         description=(
-            "The interval for saving trajectory frames. For no trajectory, set to 0."
+            "The trajectory is saved every `traj_interval` timesteps. For no trajectory, set to 0."
         ),
     )
 
@@ -84,6 +84,11 @@ class CalculationInput(BaseModel, extra="allow"):  # type: ignore[call-arg]
     traj_file_type: Optional[str] = Field(
         None,
         description="The type of trajectory file to save.",
+    )
+
+    embed_traj: Optional[bool] = Field(
+        None,
+        description="Whether to embed the trajectory blob in CalculationOutput.",
     )
 
 
@@ -106,7 +111,7 @@ class CalculationOutput(BaseModel):
         None, description="Path to the state file relative to `dir_name`"
     )
 
-    steps: Optional[list[int]] = Field(
+    steps_reported: Optional[list[int]] = Field(
         None, description="Steps where outputs are reported"
     )
 
@@ -131,7 +136,7 @@ class CalculationOutput(BaseModel):
     density: Optional[list[float]] = Field(None, description="List of densities")
 
     elapsed_time: Optional[float] = Field(
-        None, description="Elapsed time for the calculation"
+        None, description="Elapsed time for the calculation (seconds)."
     )
 
     @classmethod
@@ -148,7 +153,7 @@ class CalculationOutput(BaseModel):
         """Extract data from the output files in the directory."""
         state_file = Path(dir_name) / state_file_name
         column_name_map = {
-            '#"Step"': "steps",
+            '#"Step"': "steps_reported",
             "Potential Energy (kJ/mole)": "potential_energy",
             "Kinetic Energy (kJ/mole)": "kinetic_energy",
             "Total Energy (kJ/mole)": "total_energy",
