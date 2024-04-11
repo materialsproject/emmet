@@ -50,7 +50,7 @@ class MoleculeSpec(MSONable):
 
     name: str
     count: int
-    formal_charge: int
+    charge_scaling: float
     charge_method: str
     openff_mol: str  # a tk.Molecule object serialized with to_json
 
