@@ -52,7 +52,7 @@ packaging==24.0
     #   plotly
 palettable==3.3.3
     # via pymatgen
-pandas==2.2.1
+pandas==2.2.2
     # via pymatgen
 pillow==10.3.0
     # via matplotlib
