@@ -15,10 +15,11 @@ from pydantic import (
     PlainValidator,
     PlainSerializer,
     WithJsonSchema,
+    errors,
 )
 from monty.json import MSONable
 
-from emmet.core.vasp.task_valid import TaskState
+from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
 
 
 def hex_bytes_validator(o: Any) -> bytes:
@@ -28,6 +29,7 @@ def hex_bytes_validator(o: Any) -> bytes:
         return bytes(o)
     elif isinstance(o, str):
         return zlib.decompress(bytes.fromhex(o))
+    raise errors.BytesError()
 
 
 def hex_bytes_serializer(b: bytes) -> str:
