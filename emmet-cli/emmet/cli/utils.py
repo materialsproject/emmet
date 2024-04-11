@@ -73,7 +73,7 @@ def calcdb_from_mgrant(spec_or_dbfile):
     if auth is None:
         raise Exception("No valid auth credentials available!")
     return TaskStore(
-        store_kwargs = {
+        store_kwargs={
             "host": auth["host"],
             "port": 27017,
             "database": auth["db"],

@@ -344,6 +344,7 @@ class {enum_name}(ValueEnum):
 
     return header + "\n".join(items)
 
+
 def utcnow() -> datetime.datetime:
-    """ Get UTC time right now. """
+    """Get UTC time right now."""
     return datetime.datetime.now(datetime.timezone.utc)

@@ -18,16 +18,16 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("emmet")
 
-class TaskStore:
 
-    _get_store_from_type : dict[str,Store] = {
+class TaskStore:
+    _get_store_from_type: dict[str, Store] = {
         "mongo": MongoStore,
         "s3": S3Store,
         "gridfs": GridFSStore,
         "mongo_uri": MongoURIStore,
     }
 
-    _object_names : tuple[str,...] = (
+    _object_names: tuple[str, ...] = (
         "dos",
         "bandstructure",
         "chgcar",
@@ -40,28 +40,34 @@ class TaskStore:
 
     def __init__(
         self,
-        store_kwargs : dict,
-        store_type : Optional[Literal["mongo","s3","gridfs","mongo_uri"]] = None
+        store_kwargs: dict,
+        store_type: Optional[Literal["mongo", "s3", "gridfs", "mongo_uri"]] = None,
     ) -> None:
-        
         self._store_kwargs = store_kwargs
         self._store_type = store_type
-        
+
         if all(
-            store_kwargs.get(k) for k in ("@module","@class",)
+            store_kwargs.get(k)
+            for k in (
+                "@module",
+                "@class",
+            )
         ):
             self.store = MontyDecoder().process_decoded(store_kwargs)
-            
+
         elif store_type and self._get_store_from_type.get(store_type):
-            store =  self._get_store_from_type[store_type]
+            store = self._get_store_from_type[store_type]
             store_kwargs = {
-                k: v for k, v in store_kwargs.items()
-                if k in Store.__init__.__code__.co_varnames + store.__init__.__code__.co_varnames
+                k: v
+                for k, v in store_kwargs.items()
+                if k
+                in Store.__init__.__code__.co_varnames
+                + store.__init__.__code__.co_varnames
             }
             self.store = store(**store_kwargs)
         else:
             raise ValueError("TaskStore cannot construct desired store!")
-        
+
         self.store.connect()
         self.db = self.store._coll
         self.collection = self.db[store_kwargs.get("collection")]
@@ -70,8 +76,7 @@ class TaskStore:
         if isinstance(self.store, (MongoStore, MongoURIStore)):
             gridfs_store_kwargs = store_kwargs.copy()
             gridfs_store_kwargs["collection_name"] = gridfs_store_kwargs.get(
-                "gridfs_collection",
-                gridfs_store_kwargs["collection_name"]
+                "gridfs_collection", gridfs_store_kwargs["collection_name"]
             )
             self.large_data_store = GridFSStore(**gridfs_store_kwargs)
 
@@ -86,24 +91,24 @@ class TaskStore:
     def from_db_file(cls, db_file) -> TaskStore:
         from monty.serialization import loadfn
 
-        store_kwargs = loadfn(db_file,cls=None)
+        store_kwargs = loadfn(db_file, cls=None)
         if store_kwargs.get("collection") and not store_kwargs.get("collection_name"):
             store_kwargs["collection_name"] = store_kwargs["collection"]
 
         store_kwargs.pop("aliases", None)
 
-        if not all(store_kwargs.get(key) for key in ("username","password")):
-            for mode in ("admin","readonly"):
+        if not all(store_kwargs.get(key) for key in ("username", "password")):
+            for mode in ("admin", "readonly"):
                 if all(
-                    store_kwargs.get(f"{mode}_{key}") for key in ("user","password")
+                    store_kwargs.get(f"{mode}_{key}") for key in ("user", "password")
                 ):
                     store_kwargs["username"] = store_kwargs[f"{mode}_user"]
                     store_kwargs["password"] = store_kwargs[f"{mode}_password"]
                     break
 
-        return cls(store_kwargs, store_type = "mongo")
+        return cls(store_kwargs, store_type="mongo")
 
-    def insert(self, dct : dict, update_duplicates : bool = True) -> Union[str | None]:
+    def insert(self, dct: dict, update_duplicates: bool = True) -> Union[str | None]:
         """
         Insert the task document to the database collection.
 
@@ -125,20 +130,24 @@ class TaskStore:
                         {"$inc": {"c": 1}},
                         return_document=ReturnDocument.AFTER,
                     )["c"]
-                logger.info(f"Inserting {dct['dir_name']} with taskid = {dct['task_id']}")
+                logger.info(
+                    f"Inserting {dct['dir_name']} with taskid = {dct['task_id']}"
+                )
             elif update_duplicates:
                 dct["task_id"] = result["task_id"]
-                logger.info(f"Updating {dct['dir_name']} with taskid = {dct['task_id']}")
+                logger.info(
+                    f"Updating {dct['dir_name']} with taskid = {dct['task_id']}"
+                )
             dct = jsanitize(dct, allow_bson=True)
             self.collection.update_one(
                 {"dir_name": dct["dir_name"]}, {"$set": dct}, upsert=True
             )
             return dct["task_id"]
-        
+
         else:
             logger.info(f"Skipping duplicate {dct['dir_name']}")
 
-    def insert_task(self, task_doc : TaskDoc) -> int:
+    def insert_task(self, task_doc: TaskDoc) -> int:
         """
         Inserts a TaskDoc into the database.
         Handles putting DOS, band structure and charge density into GridFS as needed.
@@ -154,7 +163,7 @@ class TaskStore:
 
         big_data_to_store = {}
 
-        def extract_from_calcs_reversed(obj_key : str) -> Any:
+        def extract_from_calcs_reversed(obj_key: str) -> Any:
             """
             Grab the data from calcs_reversed.0.obj_key and store on gridfs directly or some Maggma store
             Args:
@@ -215,11 +224,11 @@ class TaskStore:
 
     def insert_gridfs(
         self,
-        dct : dict,
-        collection : str = "fs",
-        compression_type : Optional[Literal["zlib"]] = "zlib",
-        oid : Optional[ObjectId] = None,
-        task_id : Optional[Union[int,str]] = None
+        dct: dict,
+        collection: str = "fs",
+        compression_type: Optional[Literal["zlib"]] = "zlib",
+        oid: Optional[ObjectId] = None,
+        task_id: Optional[Union[int, str]] = None,
     ) -> tuple[int, str]:
         """
         Insert the given document into GridFS.
@@ -234,7 +243,7 @@ class TaskStore:
             file id, the type of compression used.
         """
         oid = oid or ObjectId()
-        if isinstance(oid,ObjectId):
+        if isinstance(oid, ObjectId):
             oid = str(oid)
 
         # always perform the string conversion when inserting directly to gridfs
@@ -256,7 +265,7 @@ class TaskStore:
         dct: Any,
         collection: str,
         oid: Optional[Union[str, ObjectId]] = None,
-        task_id: Optional[Any] = None
+        task_id: Optional[Any] = None,
     ) -> tuple[int, str]:
         """
         Insert the given document into a Maggma store, first check if the store is already
@@ -270,7 +279,7 @@ class TaskStore:
             file id, the type of compression used.
         """
         oid = oid or ObjectId()
-        if isinstance(oid,ObjectId):
+        if isinstance(oid, ObjectId):
             oid = str(oid)
 
         compression_type = None
@@ -282,7 +291,9 @@ class TaskStore:
             "data": dct,
         }
 
-        search_keys = ["fs_id",]
+        search_keys = [
+            "fs_id",
+        ]
 
         if task_id is not None:
             search_keys.append("task_id")
