@@ -5,7 +5,6 @@ import os
 import shutil
 import stat
 from collections import defaultdict
-from datetime import datetime
 from enum import Enum
 from fnmatch import fnmatch
 from glob import glob
@@ -14,7 +13,6 @@ from pathlib import Path
 import click
 import mgzip
 from botocore.exceptions import EndpointConnectionError
-from atomate.vasp.database import VaspCalcDb
 from dotty_dict import dotty
 from fireworks.fw_config import FW_BLOCK_FORMAT
 from mongogrant.client import Client
@@ -22,7 +20,9 @@ from pymatgen.core import Structure
 from pymatgen.util.provenance import StructureNL
 from pymongo.errors import DocumentTooLarge
 from emmet.core.tasks import TaskDoc
+from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import ValidationDoc
+from emmet.cli.db import TaskStore
 from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 
 from emmet.cli import SETTINGS
@@ -64,7 +64,7 @@ def ensure_indexes(indexes, colls):
 
 def calcdb_from_mgrant(spec_or_dbfile):
     if os.path.exists(spec_or_dbfile):
-        return VaspCalcDb.from_db_file(spec_or_dbfile)
+        return TaskStore.from_db_file(spec_or_dbfile)
 
     client = Client()
     role = "rw"  # NOTE need write access to source to ensure indexes
@@ -72,14 +72,16 @@ def calcdb_from_mgrant(spec_or_dbfile):
     auth = client.get_auth(host, dbname_or_alias, role)
     if auth is None:
         raise Exception("No valid auth credentials available!")
-    return VaspCalcDb(
-        auth["host"],
-        27017,
-        auth["db"],
-        "tasks",
-        auth["username"],
-        auth["password"],
-        authSource=auth["db"],
+    return TaskStore(
+        store_kwargs = {
+            "host": auth["host"],
+            "port": 27017,
+            "database": auth["db"],
+            "collection": "tasks",
+            "user": auth["username"],
+            "password": auth["password"],
+            "authSource": auth["db"],
+        }
     )
 
 
@@ -148,7 +150,7 @@ def get_subdir(dn):
 
 
 def get_timestamp_dir(prefix="launcher"):
-    time_now = datetime.utcnow().strftime(FW_BLOCK_FORMAT)
+    time_now = utcnow().strftime(FW_BLOCK_FORMAT)
     return "_".join([prefix, time_now])
 
 

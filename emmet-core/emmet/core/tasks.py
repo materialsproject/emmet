@@ -3,7 +3,7 @@
 import logging
 import re
 from collections import OrderedDict
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
@@ -11,6 +11,7 @@ import numpy as np
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
+from emmet.core.utils import utcnow
 from emmet.core.vasp.calc_types import (
     CalcType,
     calc_type,
@@ -417,7 +418,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
     )
 
     last_updated: Optional[datetime] = Field(
-        datetime.now(timezone.utc),
+        utcnow(),
         description="Timestamp for the most recent calculation for this task document",
     )
 
@@ -690,7 +691,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
             "data": {
                 "oxide_type": oxide_type(calcs_reversed[0].output.structure),
                 "aspherical": calcs_reversed[0].input.parameters.get("LASPH", False),
-                "last_updated": str(datetime.now(timezone.utc)),
+                "last_updated": str(utcnow()),
             },
         }
         return ComputedEntry.from_dict(entry_dict)
