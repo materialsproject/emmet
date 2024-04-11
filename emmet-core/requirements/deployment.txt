@@ -18,7 +18,7 @@ fonttools==4.51.0
     # via matplotlib
 future==1.0.0
     # via uncertainties
-idna==3.6
+idna==3.7
     # via requests
 joblib==1.4.0
     # via pymatgen
@@ -65,11 +65,11 @@ pybtex==0.24.0
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pymatgen
-pydantic==2.6.4
+pydantic==2.7.0
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pydantic-settings
-pydantic-core==2.16.3
+pydantic-core==2.18.1
     # via pydantic
 pydantic-settings==2.2.1
     # via emmet-core (emmet/emmet-core/setup.py)
@@ -101,7 +101,7 @@ six==1.16.0
     # via
     #   pybtex
     #   python-dateutil
-spglib==2.3.1
+spglib==2.4.0
     # via pymatgen
 sympy==1.12
     # via pymatgen
