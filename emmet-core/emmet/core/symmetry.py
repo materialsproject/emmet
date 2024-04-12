@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Literal, Optional
 
 from pydantic import BaseModel, Field
 from pymatgen.core import Structure
@@ -102,7 +102,7 @@ class SymmetryData(BaseModel):
     Defines a symmetry data set for materials documents
     """
 
-    crystal_system: Optional[CrystalSystem] = Field(
+    crystal_system: Optional[Literal["Triclinic", "Monoclinic", "Orthorhombic", "Tetragonal", "Trigonal", "Hexagonal", "Cubic"]] = Field(
         None, title="Crystal System", description="The crystal system for this lattice."
     )
 
