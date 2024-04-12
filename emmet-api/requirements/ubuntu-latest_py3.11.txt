@@ -83,7 +83,7 @@ gunicorn==21.2.0
     # via emmet-api (setup.py)
 h11==0.14.0
     # via uvicorn
-idna==3.6
+idna==3.7
     # via
     #   anyio
     #   requests
