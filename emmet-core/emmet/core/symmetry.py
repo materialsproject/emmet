@@ -11,20 +11,6 @@ from emmet.core.utils import ValueEnum
 SETTINGS = EmmetSettings()
 
 
-class CrystalSystem(ValueEnum):
-    """
-    The crystal system of the lattice
-    """
-
-    tri = "Triclinic"
-    mono = "Monoclinic"
-    ortho = "Orthorhombic"
-    tet = "Tetragonal"
-    trig = "Trigonal"
-    hex_ = "Hexagonal"
-    cubic = "Cubic"
-
-
 class PointGroupData(BaseModel):
     """
     Defines symmetry for a molecule document
