@@ -80,7 +80,7 @@ htmlmin2==0.1.13
     # via mkdocs-minify-plugin
 identify==2.5.35
     # via pre-commit
-idna==3.6
+idna==3.7
     # via
     #   requests
     #   yarl
