@@ -3,12 +3,9 @@ from typing import Optional
 import pandas as pd
 from pydantic import Field, BaseModel
 
-from emmet.core.classical_md.core import ClassicalMDDoc
-
 
 # class SolvationDoc(ClassicalMDDoc, arbitrary_types_allowed=True):
 class SolvationDoc(BaseModel, arbitrary_types_allowed=True):
-
     solute_name: Optional[str] = Field(None, description="Name of the solute")
 
     solvent_names: Optional[list[str]] = Field(
@@ -133,8 +130,12 @@ class SolvationDoc(BaseModel, arbitrary_types_allowed=True):
         "from the pool of all coordinated solvents. ",
     )
 
+    job_uuid: Optional[str] = Field(
+        None, description="The UUID of the flow that generated this data."
+    )
+
     @classmethod
-    def from_solute(cls, solute) -> "SolvationDoc":
+    def from_solute(cls, solute, job_uuid) -> "SolvationDoc":
         return SolvationDoc(
             solute_name=solute.solute_name,
             solvent_names=list(solute.solvents.keys()),
@@ -156,4 +157,5 @@ class SolvationDoc(BaseModel, arbitrary_types_allowed=True):
             residence_times_fit=solute.residence.residence_times_fit,
             speciation_fraction=solute.speciation.speciation_fraction,
             solvent_co_occurrence=solute.speciation.solvent_co_occurrence,
+            flow_uuid=job_uuid,
         )

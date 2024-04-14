@@ -7,7 +7,7 @@ from emmet.builders.classical_md.openmm.core import ElectrolyteBuilder
 
 @pytest.fixture()
 def solute_store():
-    return MemoryStore(key="md_uuid")
+    return MemoryStore(key="job_uuid")
 
 
 @pytest.fixture()
@@ -75,11 +75,11 @@ def water_stores(test_dir, tmp_path):
 def test_builder(water_stores, solute_store):
     doc_store, blob_store = water_stores
     builder = ElectrolyteBuilder(doc_store, blob_store, solute_store)
-    builder.connect()
 
+    builder.connect()
     items = builder.get_items()
-    builder.process_items(items)
-    # builder.update_targets(processed_docs)
+    processed_docs = builder.process_items(items)
+    builder.update_targets(processed_docs)
 
     print("hello")
     return
