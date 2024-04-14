@@ -1,6 +1,8 @@
 import pytest
+
+
 from maggma.stores import MemoryStore, JSONStore
-from emmet.builders.classical_md.openmm.core import OpenMMBuilder
+from emmet.builders.classical_md.openmm.core import ElectrolyteBuilder
 
 
 @pytest.fixture()
@@ -9,11 +11,11 @@ def solute_store():
 
 
 @pytest.fixture()
-def doc_and_blob_stores(test_dir, tmp_path):
+def water_stores(test_dir, tmp_path):
     # intended to only be run locally in a dev environment
     recreate_input = False
 
-    stores_dir = test_dir / "classical_md" / "stores"
+    stores_dir = test_dir / "classical_md" / "water_stores"
     md_doc_store = JSONStore(
         str(stores_dir / "docs_store.json"), read_only=False, key="uuid"
     )
@@ -34,23 +36,27 @@ def doc_and_blob_stores(test_dir, tmp_path):
         mol_specs = [
             create_mol_spec("CCO", 10, name="ethanol"),
             create_mol_spec("O", 400, name="water"),
+            create_mol_spec("[Na+]", 400, name="Na"),
+            create_mol_spec("[Br-]", 400, name="Br"),
         ]
 
         interchange_job = generate_interchange(mol_specs, 0.8)
 
-        nvt1 = NPTMaker(n_steps=1, traj_interval=1, state_interval=1, name="nvt1").make(
+        nvt1 = NPTMaker(
+            n_steps=100, traj_interval=10, state_interval=10, name="nvt1"
+        ).make(
             interchange_job.output.interchange,
             prev_task=interchange_job.output,
             output_dir=tmp_path,
         )
 
-        nvt2 = NVTMaker(name="nvt2", n_steps=1, embed_traj=True).make(
+        nvt2 = NVTMaker(name="nvt2", n_steps=100, embed_traj=True).make(
             nvt1.output.interchange,
             prev_task=nvt1.output,
             output_dir=tmp_path,
         )
 
-        nvt3 = NVTMaker(name="nvt3", n_steps=1).make(
+        nvt3 = NVTMaker(name="nvt3", n_steps=100).make(
             nvt2.output.interchange,
             prev_task=nvt2.output,
             output_dir=tmp_path,
@@ -66,9 +72,9 @@ def doc_and_blob_stores(test_dir, tmp_path):
     return md_doc_store, blob_store
 
 
-def test_fixture(doc_and_blob_stores, solute_store):
-    doc_store, blob_store = doc_and_blob_stores
-    builder = OpenMMBuilder(doc_store, blob_store, solute_store)
+def test_builder(water_stores, solute_store):
+    doc_store, blob_store = water_stores
+    builder = ElectrolyteBuilder(doc_store, blob_store, solute_store)
     builder.connect()
 
     items = builder.get_items()
