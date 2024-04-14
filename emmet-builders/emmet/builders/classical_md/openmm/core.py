@@ -1,4 +1,3 @@
-import warnings
 from typing import Optional, List
 from pathlib import Path
 import tempfile
@@ -34,27 +33,9 @@ class ElectrolyteBuilder(Builder):
         self.query = query or {}
         self.solvation_fallback_radius = solvation_fallback_radius
 
-        # TODO: needed?
-        if self.md_docs.key != "uuid":
-            warnings.warn(
-                "Key for the corrected entries store is incorrect and has been changed "
-                f"from {self.md_docs.key} to uuid!"
-            )
-            self.md_docs.key = "uuid"
-
-        if self.blobs.key != "blob_uuid":
-            warnings.warn(
-                "Key for the blobs store is incorrect and has been changed "
-                f"from {self.blobs.key} to blob_uuid!"
-            )
-            self.blobs.key = "blob_uuid"
-
-        if self.solute.key != "job_uuid":
-            warnings.warn(
-                "Key for the solute store is incorrect and has been changed "
-                f"from {self.solute.key} to job_uuid!"
-            )
-            self.solute.key = "job_uuid"
+        self.md_docs.key = "uuid"
+        self.blobs.key = "blob_uuid"
+        self.solute.key = "job_uuid"
 
         super().__init__(
             sources=[md_docs, blobs], targets=[solute], chunk_size=chunk_size
