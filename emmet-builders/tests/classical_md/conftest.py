@@ -1,5 +1,4 @@
-from atomate2.classical_md.openmm.schemas.tasks import OpenMMTaskDocument
-from atomate2.classical_md.schemas import ClassicalMDTaskDocument
+from emmet.core.classical_md import ClassicalMDTaskDocument
 
 import pytest
 
