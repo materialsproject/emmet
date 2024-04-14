@@ -1,8 +1,10 @@
+import warnings
+
 import numpy as np
 
 from openff.interchange import Interchange
 import openff.toolkit as tk
-from atomate2.classical_md.schemas import MoleculeSpec
+from emmet.core.classical_md import MoleculeSpec
 from MDAnalysis import Universe
 from solvation_analysis.solute import Solute
 from solvation_analysis.rdf_parser import identify_cutoff_scipy
@@ -26,7 +28,7 @@ def create_universe(
 
     label_resnames(u, mols, mol_specs)
 
-    label_charges(u, interchange)
+    label_charges(u, mols, mol_specs)
 
     return u
 
@@ -54,12 +56,20 @@ def label_resnames(
     u.add_TopologyAttr("resnames", resnames)
 
 
-def label_charges(u: Universe, interchange: Interchange):
+def label_charges(u: Universe, mols: list[tk.Molecule], mol_specs: list[MoleculeSpec]):
     charge_arrays = []
-    for mol in interchange.topology.molecules:
-        # TODO: no way to determine charge scaling on neutral molecules
-        charge_scaling = sum(mol.partial_charges) / mol.total_charge
-        charge_arrays.append(mol.partial_charges / charge_scaling)
+    if mol_specs:
+        for spec in mol_specs:
+            mol = tk.Molecule.from_json(spec.openff_mol)
+            charge_arr = np.tile(mol.partial_charges / spec.charge_scaling, spec.count)
+            charge_arrays.append(charge_arr)
+    else:
+        warnings.warn(
+            "`mol_specs` are not present so charges cannot be unscaled. "
+            "If charges were scaled, conductivity calculations will be inaccurate."
+        )
+        for mol in mols:
+            charge_arrays.append(mol.partial_charges)
     charges = np.concatenate(charge_arrays).magnitude
     u.add_TopologyAttr("charges", charges)
 
@@ -85,7 +95,7 @@ def create_solute(
     solvents = {
         resname: u.select_atoms(f"resname {resname}")
         for resname in unique_resnames
-        if resname != solute_name
+        # if resname != solute_name
     }
 
     solute = Solute.from_atoms(
@@ -99,6 +109,23 @@ def create_solute(
     )
     solute.run()
     return solute
+
+
+def identify_solute(u: Universe):
+    # currently just cations
+    cation_residues = u.residues[u.residues.charges > 0.01]
+    unique_names = np.unique(cation_residues.resnames)
+    if len(unique_names) > 1:
+        # TODO: fail gracefully?
+        raise ValueError("Multiple cationic species detected, not yet supported.")
+    return unique_names[0]
+
+
+def identify_networking_solvents(u: Universe):
+    # currently just anions
+    anion_residues = u.residues[u.residues.charges > 0.01]
+    unique_names = np.unique(anion_residues.resnames)
+    return list(unique_names)
 
 
 # def molgraph_from_molecules(molecules: Iterable[tk.Molecule]):
