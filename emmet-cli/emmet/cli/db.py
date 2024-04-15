@@ -20,7 +20,6 @@ logger = logging.getLogger("emmet")
 
 
 class TaskStore:
-    
     _get_store_from_type: dict[str, Store] = {
         "mongo": MongoStore,
         "s3": S3Store,
