@@ -20,6 +20,7 @@ logger = logging.getLogger("emmet")
 
 
 class TaskStore:
+    
     _get_store_from_type: dict[str, Store] = {
         "mongo": MongoStore,
         "s3": S3Store,
@@ -225,7 +226,6 @@ class TaskStore:
     def insert_gridfs(
         self,
         dct: dict,
-        collection: str = "fs",
         compression_type: Optional[Literal["zlib"]] = "zlib",
         oid: Optional[ObjectId] = None,
         task_id: Optional[Union[int, str]] = None,
@@ -268,12 +268,12 @@ class TaskStore:
         task_id: Optional[Any] = None,
     ) -> tuple[int, str]:
         """
-        Insert the given document into a Maggma store, first check if the store is already
+        Insert the given document into a Maggma store.
 
         Args:
             data: the document to be stored
             collection (string): the name prefix for the maggma store
-            oid (str or ObjectId): the _id of the file; if specified, it must not already exist in GridFS
+            oid (str, ObjectId, None): the _id of the file; if specified, it must not already exist in GridFS
             task_id(int or str): the task_id to store into the gridfs metadata
         Returns:
             file id, the type of compression used.
