@@ -4,7 +4,7 @@
 #
 #    pip-compile --all-extras --output-file=requirements/ubuntu-latest_py3.9_extras.txt
 #
-aiohttp==3.9.3
+aiohttp==3.9.4
     # via fsspec
 aiosignal==1.3.1
     # via aiohttp
@@ -78,13 +78,13 @@ ghp-import==2.1.0
     # via mkdocs
 griffe==0.42.1
     # via mkdocstrings-python
-h5py==3.10.0
+h5py==3.11.0
     # via phonopy
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
 identify==2.5.35
     # via pre-commit
-idna==3.6
+idna==3.7
     # via
     #   requests
     #   yarl
@@ -95,7 +95,9 @@ importlib-metadata==7.1.0
     #   mkdocstrings
     #   typeguard
 importlib-resources==6.4.0
-    # via matplotlib
+    # via
+    #   matplotlib
+    #   spglib
 inflect==7.2.0
     # via robocrys
 iniconfig==2.0.0
@@ -277,7 +279,7 @@ packaging==24.0
     #   torchmetrics
 palettable==3.3.3
     # via pymatgen
-pandas==2.2.1
+pandas==2.2.2
     # via
     #   matminer
     #   pymatgen
@@ -313,11 +315,11 @@ pycodestyle==2.11.1
     # via
     #   emmet-core (setup.py)
     #   flake8
-pydantic==2.6.4
+pydantic==2.7.0
     # via
     #   emmet-core (setup.py)
     #   pydantic-settings
-pydantic-core==2.16.3
+pydantic-core==2.18.1
     # via pydantic
 pydantic-settings==2.2.1
     # via emmet-core (setup.py)
@@ -327,7 +329,7 @@ pyflakes==3.2.0
     # via flake8
 pygments==2.17.2
     # via mkdocs-material
-pymatgen==2024.3.1
+pymatgen==2024.4.13
     # via
     #   chgnet
     #   emmet-core (setup.py)
@@ -362,7 +364,7 @@ python-dateutil==2.9.0.post0
     #   pandas
 python-dotenv==1.0.1
     # via pydantic-settings
-pytorch-lightning==2.2.1
+pytorch-lightning==2.2.2
     # via matgl
 pytz==2024.1
     # via pandas
@@ -413,7 +415,7 @@ six==1.16.0
     #   python-dateutil
 snowballstemmer==2.2.0
     # via pydocstyle
-spglib==2.3.1
+spglib==2.4.0
     # via
     #   phonopy
     #   pymatgen
@@ -460,7 +462,7 @@ typeguard==4.2.1
     # via inflect
 types-requests==2.31.0.20240406
     # via emmet-core (setup.py)
-types-setuptools==69.2.0.20240317
+types-setuptools==69.5.0.20240415
     # via emmet-core (setup.py)
 typing-extensions==4.11.0
     # via
