@@ -146,8 +146,6 @@ class CalculationOutput(BaseModel):
         state_file_name: str,
         traj_file_name: str,
         elapsed_time: Optional[float] = None,
-        n_steps: Optional[int] = None,
-        state_interval: Optional[int] = None,
         embed_traj: bool = False,
     ) -> CalculationOutput:
         """Extract data from the output files in the directory."""
@@ -162,12 +160,10 @@ class CalculationOutput(BaseModel):
             "Density (g/mL)": "density",
         }
         state_is_not_empty = state_file.exists() and state_file.stat().st_size > 0
-        state_steps = state_interval and n_steps and n_steps // state_interval or 0
-        if state_is_not_empty and (state_steps > 0):
+        if state_is_not_empty:
             data = pd.read_csv(state_file, header=0)
             data = data.rename(columns=column_name_map)
             data = data.filter(items=column_name_map.values())
-            data = data.iloc[-state_steps:]
             attributes = data.to_dict(orient="list")
         else:
             attributes = {name: None for name in column_name_map.values()}
