@@ -64,8 +64,8 @@ class ElectrolyteBuilder(Builder):
         job_groups = []
         for flow_id in flow_ids:
             # get last item in hosts, which should be top level workflow
-            mg_filter = {"$expr": {"$eq": [{"$arrayElemAt": ["$hosts", -1]}, flow_id]}}
-            job_groups.append(list(self.md_docs.query(criteria=mg_filter)))
+            host_match = {"$expr": {"$eq": [{"$arrayElemAt": ["$hosts", -1]}, flow_id]}}
+            job_groups.append(list(self.md_docs.query(criteria=host_match)))
 
         items = []
         for jobs in job_groups:
@@ -76,19 +76,7 @@ class ElectrolyteBuilder(Builder):
             len_calcs = [len(job["output"]["calcs_reversed"] or []) for job in jobs]
             last_job = jobs[np.argmax(len_calcs)]
 
-            # inject interchange blobs
-            interchange_uuid = last_job["output"]["interchange"]["blob_uuid"]
-            interchange_blob = self.blobs.query_one({"blob_uuid": interchange_uuid})
-            last_job["output"]["interchange"] = interchange_blob["data"]
-
-            for calc in last_job["output"]["calcs_reversed"]:
-                traj_blob = calc["output"]["traj_blob"]
-
-                # inject trajectory blobs
-                if traj_blob:
-                    traj_uuid = calc["output"]["traj_blob"]["blob_uuid"]
-                    traj_blob = self.blobs.query_one({"blob_uuid": traj_uuid})
-                    calc["output"]["traj_blob"] = traj_blob["data"]
+            self._insert_blobs(last_job)
 
             items.append(last_job)
 
@@ -127,7 +115,9 @@ class ElectrolyteBuilder(Builder):
                 fallback_radius=self.solvation_fallback_radius,
             )
             solute.run()
-            solvation_doc = SolvationDoc.from_solute(solute, job_uuid=item["uuid"])
+            solvation_doc = SolvationDoc.from_solute(
+                solute, job_uuid=item["uuid"], flow_uuid=item["hosts"][-1]
+            )
 
             # create docs
             # TODO: what cleanup do I need?
@@ -146,3 +136,60 @@ class ElectrolyteBuilder(Builder):
             self.solute.update(solutes)
         else:
             self.logger.info("No items to update.")
+
+    def _insert_blobs(self, job):
+        # inject interchange blobs
+        interchange_uuid = job["output"]["interchange"]["blob_uuid"]
+        interchange_blob = self.blobs.query_one({"blob_uuid": interchange_uuid})
+        job["output"]["interchange"] = interchange_blob["data"]
+
+        if len(job["output"]["calcs_reversed"]) == 0:
+            raise ValueError("No calculations found in job output.")
+
+        for calc in job["output"]["calcs_reversed"]:
+            traj_blob = calc["output"]["traj_blob"]
+
+            # inject trajectory blobs
+            if traj_blob:
+                traj_uuid = calc["output"]["traj_blob"]["blob_uuid"]
+                traj_blob = self.blobs.query_one({"blob_uuid": traj_uuid})
+                calc["output"]["traj_blob"] = traj_blob["data"]
+
+    def instantiate_universe(self, job_uuid: str, traj_directory: str | Path = "."):
+        """
+        Instantiate a MDAnalysis universe from a task document.
+
+        Args:
+            job_uuid: str
+                The UUID of the job.
+            traj_directory: str
+                Name of the DCD file to write.
+        """
+        doc = list(self.md_docs.query(criteria={"uuid": job_uuid}))
+        if len(doc) != 1:
+            raise ValueError(
+                f"The job_uuid, {job_uuid}, must be unique. Found {len(doc)} documents."
+            )
+        doc = doc[0]
+
+        self._insert_blobs(doc)
+
+        task_doc = OpenMMTaskDocument.parse_obj(doc["output"])
+        calc = task_doc.calcs_reversed[0]
+
+        # create interchange
+        interchange_str = task_doc.interchange.decode("utf-8")
+        interchange = Interchange.parse_raw(interchange_str)
+
+        # write the trajectory to a file
+        traj_name = f"{calc.input.traj_file_name}.{calc.input.traj_file_type}"
+        traj_path = Path(traj_directory) / traj_name
+        with open(traj_path, "wb") as f:
+            f.write(calc.output.traj_blob)
+
+        return create_universe(
+            interchange,
+            task_doc.molecule_specs,
+            traj_path,
+            traj_format=calc.input.traj_file_type,
+        )

@@ -1,8 +1,14 @@
 import pytest
-
+from MDAnalysis import Universe
+from solvation_analysis.solute import Solute
 
 from maggma.stores import MemoryStore, JSONStore
 from emmet.builders.classical_md.openmm.core import ElectrolyteBuilder
+from emmet.builders.classical_md.utils import (
+    create_solute,
+    identify_solute,
+    identify_networking_solvents,
+)
 
 
 @pytest.fixture()
@@ -83,3 +89,23 @@ def test_builder(water_stores, solute_store):
 
     print("hello")
     return
+
+
+def test_instantiate_universe(water_stores, solute_store, tmp_path):
+    doc_store, blob_store = water_stores
+    builder = ElectrolyteBuilder(doc_store, blob_store, solute_store)
+    builder.connect()
+
+    u = builder.instantiate_universe("da21514c-7c40-4f00-a85f-0b176e90c4ec", tmp_path)
+
+    assert isinstance(u, Universe)
+
+    solute = create_solute(
+        u,
+        solute_name=identify_solute(u),
+        networking_solvents=identify_networking_solvents(u),
+        fallback_radius=3,
+    )
+    solute.run()
+
+    assert isinstance(solute, Solute)
