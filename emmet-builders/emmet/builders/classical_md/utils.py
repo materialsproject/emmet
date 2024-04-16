@@ -123,7 +123,7 @@ def identify_solute(u: Universe):
 
 def identify_networking_solvents(u: Universe):
     # currently just anions
-    anion_residues = u.residues[u.residues.charges > 0.01]
+    anion_residues = u.residues[u.residues.charges < -0.01]
     unique_names = np.unique(anion_residues.resnames)
     return list(unique_names)
 
