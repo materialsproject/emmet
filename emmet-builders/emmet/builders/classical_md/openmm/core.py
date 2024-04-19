@@ -165,6 +165,9 @@ class ElectrolyteBuilder(Builder):
             traj_directory: str
                 Name of the DCD file to write.
         """
+        traj_directory = Path(traj_directory)
+        traj_directory.mkdir(parents=True, exist_ok=True)
+
         doc = list(self.md_docs.query(criteria={"uuid": job_uuid}))
         if len(doc) != 1:
             raise ValueError(
@@ -183,7 +186,8 @@ class ElectrolyteBuilder(Builder):
 
         # write the trajectory to a file
         traj_name = f"{calc.input.traj_file_name}.{calc.input.traj_file_type}"
-        traj_path = Path(traj_directory) / traj_name
+        # create directory if needed
+        traj_path = traj_directory / traj_name
         with open(traj_path, "wb") as f:
             f.write(calc.output.traj_blob)
 
