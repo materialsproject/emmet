@@ -513,7 +513,7 @@ class TrajectoryBuilder(Builder):
         molecule_ids = list({item["molecule_id"] for item in docs})
 
         if len(items) > 0:
-            self.logger.info(f"Updating {len(docs)} force documents")
+            self.logger.info(f"Updating {len(docs)} trajectory documents")
             self.trajectories.remove_docs({self.trajectories.key: {"$in": molecule_ids}})
             self.trajectories.update(
                 docs=docs,
