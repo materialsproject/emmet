@@ -26,7 +26,7 @@ from emmet.core.utils import get_sg, group_structures
 
 _UNPACK_INT = struct.Struct("<i").unpack
 logger = logging.getLogger("emmet")
-canonical_structures = defaultdict(dict)
+canonical_structures = defaultdict(dict)  # type: ignore[var-annotated]
 
 
 def get_format(fname):

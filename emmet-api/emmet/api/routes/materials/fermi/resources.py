@@ -1,5 +1,6 @@
 from maggma.api.resource import ReadOnlyResource
 from emmet.core.fermi import FermiDoc
+from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 
@@ -9,6 +10,7 @@ def fermi_resource(fermi_store):
         fermi_store,
         FermiDoc,
         query_operators=[
+            MultiMaterialIDQuery(),
             PaginationQuery(),
             SparseFieldsQuery(FermiDoc, default_fields=["task_id", "last_updated"]),
         ],

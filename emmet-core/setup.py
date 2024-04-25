@@ -18,7 +18,7 @@ setup(
     include_package_data=True,
     install_requires=[
         "pymatgen>=2023.10.11",
-        "monty>=2023.9.25",
+        "monty>=2024.2.2",
         "pydantic>=2.0",
         "pydantic-settings>=2.0",
         "pybtex~=0.24",

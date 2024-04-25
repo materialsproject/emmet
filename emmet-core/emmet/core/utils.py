@@ -5,11 +5,8 @@ from itertools import groupby
 from typing import Any, Dict, Iterator, List, Optional, Union
 
 import numpy as np
-
 from monty.json import MSONable
-
 from pydantic import BaseModel
-
 from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
@@ -289,7 +286,13 @@ def jsanitize(obj, strict=False, allow_bson=False):
 
 class ValueEnum(Enum):
     """
-    Enum that serializes to string as the value
+    Enum that serializes to string as the value.
+
+    While this method has an `as_dict` method, this
+    returns a `str`. This is to ensure deserialization
+    to a `str` when functions like `monty.json.jsanitize`
+    are called on a ValueEnum with `strict = True` and
+    `enum_values = False` (occurs often in jobflow).
     """
 
     def __str__(self):
@@ -307,9 +310,9 @@ class ValueEnum(Enum):
         """Get a hash of the enum."""
         return hash(str(self))
 
-    def as_dict(self):
-        """Create a serializable representation of the enum."""
-        return str(self.value)
+    def as_dict(self) -> str:
+        """Deserialize in a kludgey way."""
+        return self.__str__()
 
 
 class DocEnum(ValueEnum):

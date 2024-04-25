@@ -8,16 +8,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
 import numpy as np
-from monty.json import MontyDecoder
-from monty.serialization import loadfn
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
-from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.core.structure import Structure
-from pymatgen.core.trajectory import Trajectory
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
-from pymatgen.io.vasp import Incar, Kpoints, Poscar
-from pymatgen.io.vasp import Potcar as VaspPotcar
-
+from emmet.core.common import convert_datetime
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import CalcType, TaskType
 from emmet.core.vasp.calculation import (
@@ -27,6 +18,15 @@ from emmet.core.vasp.calculation import (
     VaspObject,
 )
 from emmet.core.vasp.task_valid import TaskState
+from monty.json import MontyDecoder
+from monty.serialization import loadfn
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pymatgen.analysis.structure_analyzer import oxide_type
+from pymatgen.core.structure import Structure
+from pymatgen.core.trajectory import Trajectory
+from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from pymatgen.io.vasp import Incar, Kpoints, Poscar
+from pymatgen.io.vasp import Potcar as VaspPotcar
 
 monty_decoder = MontyDecoder()
 logger = logging.getLogger(__name__)
@@ -181,6 +181,9 @@ class InputDoc(BaseModel):
         default=False, description="Is this a Hubbard +U calculation"
     )
     hubbards: Optional[dict] = Field(None, description="The hubbard parameters used")
+    magnetic_moments: Optional[List[float]] = Field(
+        None, description="Magnetic moments for each atom"
+    )
 
     @classmethod
     def from_vasp_calc_doc(cls, calc_doc: Calculation) -> "InputDoc":
@@ -209,10 +212,11 @@ class InputDoc(BaseModel):
             parameters=calc_doc.input.parameters,
             pseudo_potentials=pps,
             potcar_spec=calc_doc.input.potcar_spec,
-            is_hubbard=calc_doc.input.is_hubbard,
-            hubbards=calc_doc.input.hubbards,
             xc_override=xc,
             is_lasph=calc_doc.input.parameters.get("LASPH", False),
+            is_hubbard=calc_doc.input.is_hubbard,
+            hubbards=calc_doc.input.hubbards,
+            magnetic_moments=calc_doc.input.parameters.get("MAGMOM"),
         )
 
 
@@ -375,7 +379,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
     icsd_id: Optional[Union[str, int]] = Field(
         None, description="Inorganic Crystal Structure Database id of the structure"
     )
-    transformations: Optional[Dict[str, Any]] = Field(
+    transformations: Optional[Any] = Field(
         None,
         description="Information on the structural transformations, parsed from a "
         "transformations.json file",
@@ -406,7 +410,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
     @field_validator("last_updated", mode="before")
     @classmethod
     def last_updated_dict_ok(cls, v) -> datetime:
-        return v if isinstance(v, datetime) else monty_decoder.process_decoded(v)
+        return convert_datetime(cls, v)
 
     @model_validator(mode="after")
     def set_entry(self) -> datetime:

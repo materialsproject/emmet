@@ -2,7 +2,7 @@ from typing import List, Optional
 from pydantic import field_validator, BaseModel, Field
 from enum import Enum
 from datetime import datetime
-from monty.json import MontyDecoder
+from emmet.core.common import convert_datetime
 
 from pymatgen.analysis.gb.grain import GrainBoundary
 
@@ -21,7 +21,7 @@ class GrainBoundaryDoc(BaseModel):
     Grain boundary energies, work of separation...
     """
 
-    task_id: Optional[str] = Field(
+    material_id: Optional[str] = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )
@@ -84,5 +84,5 @@ class GrainBoundaryDoc(BaseModel):
     # Make sure that the datetime field is properly formatted
     @field_validator("last_updated", mode="before")
     @classmethod
-    def last_updated_dict_ok(cls, v):
-        return MontyDecoder().process_decoded(v)
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)

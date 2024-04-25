@@ -14,7 +14,7 @@ from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 from pymatgen.analysis.phase_diagram import PhaseDiagram, Composition
 
 from emmet.core.electrode import InsertionElectrodeDoc, ConversionElectrodeDoc
-from emmet.core.structure_group import StructureGroupDoc, _get_id_num
+from emmet.core.structure_group import StructureGroupDoc, _get_id_lexi
 from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
 
@@ -571,7 +571,7 @@ class ConversionElectrodeBuilder(Builder):
                     for e in pd.entries
                 ]
                 material_ids = list(filter(None, material_ids))
-                lowest_id = min(material_ids, key=_get_id_num)
+                lowest_id = min(material_ids, key=_get_id_lexi)
                 conversion_electrode_doc = (
                     ConversionElectrodeDoc.from_composition_and_pd(
                         comp=v[1],
