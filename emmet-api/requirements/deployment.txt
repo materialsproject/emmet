@@ -22,13 +22,13 @@ attrs==23.2.0
     #   referencing
 bcrypt==4.1.2
     # via paramiko
-blinker==1.7.0
+blinker==1.8.1
     # via flask
-boto3==1.34.88
+boto3==1.34.93
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.34.88
+botocore==1.34.93
     # via
     #   boto3
     #   s3transfer
@@ -57,7 +57,7 @@ cycler==0.12.1
     # via matplotlib
 ddsketch==3.0.1
     # via ddtrace
-ddtrace==2.8.1
+ddtrace==2.8.3
     # via emmet-api (emmet/emmet-api/setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -177,19 +177,19 @@ pybtex==0.24.0
     #   pymatgen
 pycparser==2.22
     # via cffi
-pydantic==2.7.0
+pydantic==2.7.1
     # via
     #   emmet-core
     #   fastapi
     #   maggma
     #   pydantic-settings
-pydantic-core==2.18.1
+pydantic-core==2.18.2
     # via pydantic
 pydantic-settings==2.2.1
     # via
     #   emmet-core
     #   maggma
-pydash==8.0.0
+pydash==8.0.1
     # via maggma
 pymatgen==2024.4.13
     # via
@@ -197,7 +197,7 @@ pymatgen==2024.4.13
     #   pymatgen-analysis-alloys
 pymatgen-analysis-alloys==0.0.6
     # via emmet-api (emmet/emmet-api/setup.py)
-pymongo==4.6.3
+pymongo==4.7.0
     # via
     #   maggma
     #   mongogrant
@@ -219,7 +219,7 @@ pyyaml==6.0.1
     # via pybtex
 pyzmq==26.0.2
     # via maggma
-referencing==0.34.0
+referencing==0.35.0
     # via
     #   jsonschema
     #   jsonschema-specifications
