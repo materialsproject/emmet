@@ -32,7 +32,7 @@ latexcodec==3.0.0
     # via pybtex
 matplotlib==3.8.4
     # via pymatgen
-monty==2024.3.31
+monty==2024.4.17
     # via
     #   emmet-core (setup.py)
     #   pymatgen
@@ -58,17 +58,17 @@ pandas==2.2.2
     # via pymatgen
 pillow==10.3.0
     # via matplotlib
-plotly==5.20.0
+plotly==5.21.0
     # via pymatgen
 pybtex==0.24.0
     # via
     #   emmet-core (setup.py)
     #   pymatgen
-pydantic==2.7.0
+pydantic==2.7.1
     # via
     #   emmet-core (setup.py)
     #   pydantic-settings
-pydantic-core==2.18.1
+pydantic-core==2.18.2
     # via pydantic
 pydantic-settings==2.2.1
     # via emmet-core (setup.py)
