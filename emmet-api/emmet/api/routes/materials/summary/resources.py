@@ -7,7 +7,6 @@ from maggma.api.query_operator import (
     SortQuery,
 )
 from maggma.api.resource import ReadOnlyResource, AggregationResource
-from maggma.core import Sort
 from emmet.api.routes.materials.materials.query_operators import (
     DeprecationQuery,
     ElementsQuery,
