@@ -30,9 +30,9 @@ bcrypt==4.1.2
     # via paramiko
 blinker==1.8.1
     # via flask
-boto3==1.34.95
+boto3==1.34.97
     # via maggma
-botocore==1.34.95
+botocore==1.34.97
     # via
     #   boto3
     #   s3transfer
@@ -65,7 +65,7 @@ dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
-emmet-core[all,ml]==0.83.0
+emmet-core[all,ml]==0.83.6
     # via
     #   emmet-builders (setup.py)
     #   mp-api
@@ -112,7 +112,7 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-joblib==1.4.0
+joblib==1.4.2
     # via
     #   matcalc
     #   pymatgen
@@ -237,7 +237,7 @@ nvidia-nvjitlink-cu12==12.4.127
     #   nvidia-cusparse-cu12
 nvidia-nvtx-cu12==12.1.105
     # via torch
-orjson==3.10.1
+orjson==3.10.2
     # via maggma
 packaging==24.0
     # via
@@ -255,11 +255,11 @@ pandas==2.2.2
     #   pymatgen
 paramiko==3.4.0
     # via sshtunnel
-phonopy==2.22.1
+phonopy==2.23.0
     # via matcalc
 pillow==10.3.0
     # via matplotlib
-plotly==5.21.0
+plotly==5.22.0
     # via pymatgen
 psutil==5.9.8
     # via dgl
@@ -286,7 +286,7 @@ pydantic-settings==2.2.1
     #   maggma
 pydash==8.0.1
     # via maggma
-pymatgen==2024.4.13
+pymatgen==2024.5.1
     # via
     #   chgnet
     #   emmet-core
@@ -318,7 +318,7 @@ python-dateutil==2.9.0.post0
     #   pandas
 python-dotenv==1.0.1
     # via pydantic-settings
-pytorch-lightning==2.2.3
+pytorch-lightning==2.2.4
     # via matgl
 pytz==2024.1
     # via pandas
@@ -327,9 +327,9 @@ pyyaml==6.0.1
     #   phonopy
     #   pybtex
     #   pytorch-lightning
-pyzmq==26.0.2
+pyzmq==26.0.3
     # via maggma
-referencing==0.35.0
+referencing==0.35.1
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -411,7 +411,7 @@ torchdata==0.7.1
     # via dgl
 torchmetrics==1.3.2
     # via pytorch-lightning
-tqdm==4.66.2
+tqdm==4.66.3
     # via
     #   dgl
     #   maggma

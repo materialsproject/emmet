@@ -24,7 +24,7 @@ importlib-resources==6.4.0
     # via
     #   matplotlib
     #   spglib
-joblib==1.4.0
+joblib==1.4.2
     # via pymatgen
 kiwisolver==1.4.5
     # via matplotlib
@@ -58,7 +58,7 @@ pandas==2.2.2
     # via pymatgen
 pillow==10.3.0
     # via matplotlib
-plotly==5.21.0
+plotly==5.22.0
     # via pymatgen
 pybtex==0.24.0
     # via
@@ -72,7 +72,7 @@ pydantic-core==2.18.2
     # via pydantic
 pydantic-settings==2.2.1
     # via emmet-core (setup.py)
-pymatgen==2024.4.13
+pymatgen==2024.5.1
     # via emmet-core (setup.py)
 pyparsing==3.1.2
     # via matplotlib
@@ -106,7 +106,7 @@ tabulate==0.9.0
     # via pymatgen
 tenacity==8.2.3
     # via plotly
-tqdm==4.66.2
+tqdm==4.66.3
     # via pymatgen
 typing-extensions==4.11.0
     # via
