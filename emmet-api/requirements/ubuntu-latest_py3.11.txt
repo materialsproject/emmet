@@ -24,11 +24,11 @@ bcrypt==4.1.2
     # via paramiko
 blinker==1.8.1
     # via flask
-boto3==1.34.95
+boto3==1.34.97
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.34.95
+botocore==1.34.97
     # via
     #   boto3
     #   s3transfer
@@ -65,7 +65,7 @@ dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
-emmet-core==0.83.0
+emmet-core==0.83.6
     # via emmet-api (setup.py)
 envier==0.5.1
     # via ddtrace
@@ -97,7 +97,7 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-joblib==1.4.0
+joblib==1.4.2
     # via pymatgen
 jsonschema==4.22.0
     # via maggma
@@ -142,7 +142,7 @@ numpy==1.26.4
     #   spglib
 opentelemetry-api==1.24.0
     # via ddtrace
-orjson==3.10.1
+orjson==3.10.2
     # via maggma
 packaging==24.0
     # via
@@ -158,7 +158,7 @@ paramiko==3.4.0
     # via sshtunnel
 pillow==10.3.0
     # via matplotlib
-plotly==5.21.0
+plotly==5.22.0
     # via pymatgen
 protobuf==5.26.1
     # via ddtrace
@@ -182,7 +182,7 @@ pydantic-settings==2.2.1
     #   maggma
 pydash==8.0.1
     # via maggma
-pymatgen==2024.4.13
+pymatgen==2024.5.1
     # via
     #   emmet-core
     #   pymatgen-analysis-alloys
@@ -208,9 +208,9 @@ pytz==2024.1
     # via pandas
 pyyaml==6.0.1
     # via pybtex
-pyzmq==26.0.2
+pyzmq==26.0.3
     # via maggma
-referencing==0.35.0
+referencing==0.35.1
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -262,7 +262,7 @@ tabulate==0.9.0
     # via pymatgen
 tenacity==8.2.3
     # via plotly
-tqdm==4.66.2
+tqdm==4.66.3
     # via
     #   maggma
     #   pymatgen
