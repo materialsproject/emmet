@@ -255,7 +255,7 @@ def get_potcar_stats(
             path_to_stored_stats = str(
                 files("emmet.builders.vasp") / "mp_potcar_stats.json.gz"
             )
-        return loadfn(path_to_stored_stats)
+        return loadfn(path_to_stored_stats)  # type: ignore
 
     for (
         calc_type,
