@@ -9,7 +9,10 @@ aioitertools==0.11.0
 annotated-types==0.6.0
     # via pydantic
 anyio==4.3.0
-    # via starlette
+    # via
+    #   httpx
+    #   starlette
+    #   watchfiles
 asgi-logger==0.1.0
     # via emmet-api (setup.py)
 asgiref==3.8.1
@@ -20,15 +23,15 @@ attrs==23.2.0
     #   ddtrace
     #   jsonschema
     #   referencing
-bcrypt==4.1.2
+bcrypt==4.1.3
     # via paramiko
 blinker==1.8.1
     # via flask
-boto3==1.34.97
+boto3==1.34.98
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.34.97
+botocore==1.34.98
     # via
     #   boto3
     #   s3transfer
@@ -37,7 +40,10 @@ bytecode==0.15.1
 cattrs==23.2.3
     # via ddtrace
 certifi==2024.2.2
-    # via requests
+    # via
+    #   httpcore
+    #   httpx
+    #   requests
 cffi==1.16.0
     # via
     #   cryptography
@@ -48,10 +54,11 @@ click==8.1.7
     # via
     #   flask
     #   mongogrant
+    #   typer
     #   uvicorn
 contourpy==1.2.1
     # via matplotlib
-cryptography==42.0.5
+cryptography==42.0.6
     # via paramiko
 cycler==0.12.1
     # via matplotlib
@@ -63,8 +70,11 @@ deprecated==1.2.14
     # via opentelemetry-api
 dnspython==2.6.1
     # via
+    #   email-validator
     #   maggma
     #   pymongo
+email-validator==2.1.1
+    # via fastapi
 emmet-core==0.83.6
     # via emmet-api (setup.py)
 envier==0.5.1
@@ -73,10 +83,13 @@ exceptiongroup==1.2.1
     # via
     #   anyio
     #   cattrs
-fastapi==0.110.3
+fastapi==0.111.0
     # via
     #   emmet-api (setup.py)
+    #   fastapi-cli
     #   maggma
+fastapi-cli==0.0.2
+    # via fastapi
 flask==3.0.3
     # via mongogrant
 fonttools==4.51.0
@@ -86,10 +99,20 @@ future==1.0.0
 gunicorn==22.0.0
     # via emmet-api (setup.py)
 h11==0.14.0
+    # via
+    #   httpcore
+    #   uvicorn
+httpcore==1.0.5
+    # via httpx
+httptools==0.6.1
     # via uvicorn
+httpx==0.27.0
+    # via fastapi
 idna==3.7
     # via
     #   anyio
+    #   email-validator
+    #   httpx
     #   requests
 importlib-metadata==7.0.0
     # via
@@ -101,8 +124,10 @@ importlib-resources==6.4.0
     #   spglib
 itsdangerous==2.2.0
     # via flask
-jinja2==3.1.3
-    # via flask
+jinja2==3.1.4
+    # via
+    #   fastapi
+    #   flask
 jmespath==1.0.1
     # via
     #   boto3
@@ -119,12 +144,16 @@ latexcodec==3.0.0
     # via pybtex
 maggma==0.66.0
     # via emmet-api (setup.py)
+markdown-it-py==3.0.0
+    # via rich
 markupsafe==2.1.5
     # via
     #   jinja2
     #   werkzeug
 matplotlib==3.8.4
     # via pymatgen
+mdurl==0.1.2
+    # via markdown-it-py
 mongogrant==0.3.3
     # via maggma
 mongomock==4.1.2
@@ -152,8 +181,10 @@ numpy==1.26.4
     #   spglib
 opentelemetry-api==1.24.0
     # via ddtrace
-orjson==3.10.2
-    # via maggma
+orjson==3.10.3
+    # via
+    #   fastapi
+    #   maggma
 packaging==24.0
     # via
     #   gunicorn
@@ -192,6 +223,8 @@ pydantic-settings==2.2.1
     #   maggma
 pydash==8.0.1
     # via maggma
+pygments==2.18.0
+    # via rich
 pymatgen==2024.5.1
     # via
     #   emmet-core
@@ -213,11 +246,17 @@ python-dateutil==2.9.0.post0
     #   matplotlib
     #   pandas
 python-dotenv==1.0.1
-    # via pydantic-settings
+    # via
+    #   pydantic-settings
+    #   uvicorn
+python-multipart==0.0.9
+    # via fastapi
 pytz==2024.1
     # via pandas
 pyyaml==6.0.1
-    # via pybtex
+    # via
+    #   pybtex
+    #   uvicorn
 pyzmq==26.0.3
     # via maggma
 referencing==0.35.1
@@ -228,6 +267,8 @@ requests==2.31.0
     # via
     #   mongogrant
     #   pymatgen
+rich==13.7.1
+    # via typer
 rpds-py==0.18.0
     # via
     #   jsonschema
@@ -250,6 +291,8 @@ shapely==2.0.4
     # via
     #   emmet-api (setup.py)
     #   pymatgen-analysis-alloys
+shellingham==1.5.4
+    # via typer
 six==1.16.0
     # via
     #   ddsketch
@@ -257,7 +300,9 @@ six==1.16.0
     #   pybtex
     #   python-dateutil
 sniffio==1.3.1
-    # via anyio
+    # via
+    #   anyio
+    #   httpx
 spglib==2.4.0
     # via pymatgen
 sqlparse==0.5.0
@@ -272,10 +317,12 @@ tabulate==0.9.0
     # via pymatgen
 tenacity==8.2.3
     # via plotly
-tqdm==4.66.3
+tqdm==4.66.4
     # via
     #   maggma
     #   pymatgen
+typer==0.12.3
+    # via fastapi-cli
 typing-extensions==4.11.0
     # via
     #   aioitertools
@@ -290,18 +337,30 @@ typing-extensions==4.11.0
     #   pydantic-core
     #   pydash
     #   starlette
+    #   typer
     #   uvicorn
 tzdata==2024.1
     # via pandas
+ujson==5.9.0
+    # via fastapi
 uncertainties==3.1.7
     # via pymatgen
 urllib3==1.26.18
     # via
     #   botocore
     #   requests
-uvicorn==0.29.0
-    # via maggma
-werkzeug==3.0.2
+uvicorn[standard]==0.29.0
+    # via
+    #   fastapi
+    #   fastapi-cli
+    #   maggma
+uvloop==0.19.0
+    # via uvicorn
+watchfiles==0.21.0
+    # via uvicorn
+websockets==12.0
+    # via uvicorn
+werkzeug==3.0.3
     # via flask
 wrapt==1.16.0
     # via deprecated
