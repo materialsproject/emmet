@@ -14,7 +14,7 @@ def formula_to_criteria(formulas: str) -> Dict:
     Returns:
         Mongo style search criteria for this formula
     """
-    dummies = "ADEGJLMQRXZ"
+    dummies = "AEGJLMQRXZ"
 
     formula_list = [formula.strip() for formula in formulas.split(",")]
 

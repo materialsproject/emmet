@@ -88,3 +88,33 @@ def test_task_doc(test_dir, object_name):
     # Test that additional_fields works
     test_doc = TaskDoc.from_directory(dir_name, additional_fields={"foo": "bar"})
     assert test_doc.model_dump()["additional_fields"] == {"foo": "bar"}
+
+
+@pytest.mark.parametrize(
+    "object_name",
+    [
+        pytest.param("SinglePointTest", id="SinglePointTest"),
+        pytest.param("OptimizationTest", id="OptimizationTest"),
+    ],
+)
+def test_task_doc_val_flag(test_dir, object_name):
+    from monty.json import MontyDecoder, jsanitize
+    from emmet.core.qc_tasks import TaskDoc
+
+    test_object = get_test_object(object_name)
+    dir_name = test_dir / "qchem" / test_object.folder
+    print(f"The test object is {test_object.task_doc}")
+    test_doc = TaskDoc.from_directory(dir_name, validate_lot=False)
+    assert_schemas_equal(test_doc, test_object.task_doc)
+
+    # test document can be jsanitized
+    d = jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)
+
+    # and decoded
+    MontyDecoder().process_decoded(d)
+
+    # Test that additional_fields works
+    test_doc = TaskDoc.from_directory(
+        dir_name, validate_lot=False, additional_fields={"foo": "bar"}
+    )
+    assert test_doc.model_dump()["additional_fields"] == {"foo": "bar"}

@@ -13,9 +13,8 @@ from pymatgen.analysis.phase_diagram import Composition, PhaseDiagram
 from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
-from emmet.builders.settings import EmmetBuildSettings
-from emmet.core.electrode import ConversionElectrodeDoc, InsertionElectrodeDoc
-from emmet.core.structure_group import StructureGroupDoc, _get_id_num
+from emmet.core.electrode import InsertionElectrodeDoc, ConversionElectrodeDoc
+from emmet.core.structure_group import StructureGroupDoc, _get_id_lexi
 from emmet.core.utils import jsanitize
 
 
@@ -654,27 +653,30 @@ class ConversionElectrodeBuilder(Builder):
             if not item:
                 continue
 
-            # To work around "el_refs" serialization issue (#576)
-            _pd = PhaseDiagram.from_dict(item["phase_diagram"])
-            _entries = _pd.all_entries
-            pd = PhaseDiagram(entries=_entries)
-
-            most_wi = defaultdict(lambda: (-1, None))  # type: dict
-            n_elements = pd.dim
-            # Only using entries on convex hull for now
-            for entry in pd.stable_entries:
-                if len(entry.composition.elements) != n_elements:
-                    continue
-                composition_dict = entry.composition.as_dict()
-                composition_dict.pop(self.working_ion)
-                composition_without_wi = Composition.from_dict(composition_dict)
-                (
-                    red_form,
-                    num_form,
-                ) = composition_without_wi.get_reduced_formula_and_factor()
-                n_wi = entry.composition.get_el_amt_dict()[self.working_ion]
-                most_wi[red_form] = max(
-                    most_wi[red_form], (n_wi / num_form, entry.composition)
+        new_docs = []
+        unique_reaction_compositions = set()
+        reaction_compositions = []
+        for k, v in most_wi.items():
+            if v[1] is not None:
+                # Get lowest material_id with matching composition
+                material_ids = [
+                    (
+                        lambda x: x.data["material_id"]
+                        if x.composition.reduced_formula == v[1].reduced_formula
+                        else None
+                    )(e)
+                    for e in pd.entries
+                ]
+                material_ids = list(filter(None, material_ids))
+                lowest_id = min(material_ids, key=_get_id_lexi)
+                conversion_electrode_doc = (
+                    ConversionElectrodeDoc.from_composition_and_pd(
+                        comp=v[1],
+                        pd=pd,
+                        working_ion_symbol=self.working_ion,
+                        battery_id=f"{lowest_id}_{self.working_ion}",
+                        thermo_type=self.thermo_type,
+                    )
                 )
 
             new_docs = []

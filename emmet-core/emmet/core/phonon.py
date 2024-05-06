@@ -1,5 +1,4 @@
 from datetime import datetime
-from monty.json import MontyDecoder
 
 from pydantic import field_validator, BaseModel, Field
 from emmet.core.mpid import MPID
@@ -12,6 +11,7 @@ from pymatgen.core import Structure
 from emmet.core.math import Vector3D, Tensor4R
 from emmet.core.polar import DielectricDoc, BornEffectiveCharges, IRDielectric
 from emmet.core.structure import StructureMetadata
+from emmet.core.common import convert_datetime
 from typing_extensions import Literal
 
 
@@ -43,8 +43,8 @@ class PhononBSDOSDoc(BaseModel):
     # Make sure that the datetime field is properly formatted
     @field_validator("last_updated", mode="before")
     @classmethod
-    def last_updated_dict_ok(cls, v):
-        return MontyDecoder().process_decoded(v)
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)
 
 
 class PhononWarnings(DocEnum):

@@ -1,3 +1,4 @@
+# %%
 import re
 from typing import Union, Any, Callable
 
@@ -7,10 +8,14 @@ from pydantic import GetJsonSchemaHandler
 from pydantic.json_schema import JsonSchemaValue
 
 
+# matches "mp-1234" or "1234" followed by and optional "-(Alphanumeric)"
 mpid_regex = re.compile(r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$")
 mpculeid_regex = re.compile(
     r"^([A-Za-z]+-)?([A-Fa-f0-9]+)-([A-Za-z0-9]+)-(m?[0-9]+)-([0-9]+)$"
 )
+# matches capital letters and numbers of length 26 (ULID)
+# followed by and optional "-(Alphanumeric)"
+check_ulid = re.compile(r"^[A-Z0-9]{26}(-[A-Za-z0-9]+)*$")
 
 
 class MPID(str):
@@ -39,14 +44,22 @@ class MPID(str):
             self.string = str(val)
 
         elif isinstance(val, str):
-            parts = val.split("-")
-            parts[1] = int(parts[1])  # type: ignore
-            self.parts = tuple(parts)
+            if mpid_regex.fullmatch(val):
+                parts = val.split("-")
+                parts[1] = int(parts[1])  # type: ignore
+                self.parts = tuple(parts)
+            elif check_ulid.fullmatch(val):
+                ulid = val.split("-")[0]
+                self.parts = (ulid, 0)
+            else:
+                raise ValueError(
+                    "MPID string representation must follow the format prefix-number or start with a valid ULID."
+                )
             self.string = val
 
         else:
             raise ValueError(
-                "Must provide an MPID, int, or string of the format prefix-number"
+                "Must provide an MPID, int, or string of the format prefix-number or start with a valid ULID."
             )
 
     def __eq__(self, other: object):
@@ -106,10 +119,15 @@ class MPID(str):
             return __input_value
         elif isinstance(__input_value, str) and mpid_regex.fullmatch(__input_value):
             return MPID(__input_value)
+        elif isinstance(__input_value, str) and check_ulid.fullmatch(__input_value):
+            return MPID(__input_value)
         elif isinstance(__input_value, int):
             return MPID(__input_value)
 
         raise ValueError("Invalid MPID Format")
+
+
+# %%
 
 
 class MPculeID(str):

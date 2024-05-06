@@ -145,7 +145,7 @@ class SinglePointTest(SchemaTestData):
             "level_of_theory": "wB97M-V/def2-QZVPPD/SMD",
             "task_type": "Single Point",
             "calc_type": "wB97M-V/def2-QZVPPD/SMD Single Point",
-            "solvation_lot_nfo": "wB97M-V/def2-QZVPPD/SMD(SOLVENT=WATER)",
+            "solvation_lot_info": "wB97M-V/def2-QZVPPD/SMD(SOLVENT=WATER)",
         },
         "output": {
             "mulliken": [np.array([-0.713178, 0.357278, 0.3559])],
@@ -301,7 +301,7 @@ class OptimizationTest(SchemaTestData):
             "level_of_theory": "wB97M-V/def2-SVPD/SMD",
             "task_type": "Geometry Optimization",
             "calc_type": "wB97M-V/def2-SVPD/SMD Geometry Optimization",
-            "solvation_lot_nfo": "wB97M-V/def2-SVPD/SMD(SOLVENT=WATER)",
+            "solvation_lot_info": "wB97M-V/def2-SVPD/SMD(SOLVENT=WATER)",
         },
         "output": {
             "initial_molecule": {

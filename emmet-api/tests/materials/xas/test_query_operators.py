@@ -1,4 +1,4 @@
-from emmet.api.routes.materials.xas.query_operators import XASQuery, XASTaskIDQuery
+from emmet.api.routes.materials.xas.query_operators import XASQuery, XASIDQuery
 
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
@@ -32,16 +32,20 @@ def test_xas_operator():
 
 
 def test_xas_task_id_operator():
-    op = XASTaskIDQuery()
+    op = XASIDQuery()
 
-    assert op.query(material_ids="mp-149, mp-13") == {
-        "criteria": {"material_id": {"$in": ["mp-149", "mp-13"]}}
+    assert op.query(spectrum_ids="mp-149-XANES-Pd-K, mp-8951-XANES-Pd-K") == {
+        "criteria": {
+            "spectrum_id": {"$in": ["mp-149-XANES-Pd-K", "mp-8951-XANES-Pd-K"]}
+        }
     }
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
 
-        assert new_op.query(material_ids="mp-149, mp-13") == {
-            "criteria": {"material_id": {"$in": ["mp-149", "mp-13"]}}
+        assert new_op.query(spectrum_ids="mp-149-XANES-Pd-K, mp-8951-XANES-Pd-K") == {
+            "criteria": {
+                "spectrum_id": {"$in": ["mp-149-XANES-Pd-K", "mp-8951-XANES-Pd-K"]}
+            }
         }

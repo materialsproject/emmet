@@ -100,7 +100,7 @@ class SurfacePropDoc(BaseModel):
         description="Whether the entry has any reconstructed surfaces.",
     )
 
-    task_id: Optional[str] = Field(
+    material_id: Optional[str] = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )

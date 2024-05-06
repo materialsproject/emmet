@@ -4,6 +4,7 @@ from maggma.api.query_operator import (
     PaginationQuery,
     SparseFieldsQuery,
     NumericQuery,
+    SortQuery,
 )
 from maggma.api.resource import ReadOnlyResource, AggregationResource
 from emmet.api.routes.materials.materials.query_operators import (
@@ -37,7 +38,9 @@ from emmet.api.routes.materials.elasticity.query_operators import (
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 
-timeout = MAPISettings().TIMEOUT
+settings = MAPISettings()  # type: ignore
+timeout = settings.TIMEOUT
+sort_fields = settings.SORT_FIELDS
 
 
 def summary_resource(summary_store):
@@ -64,6 +67,7 @@ def summary_resource(summary_store):
             PaginationQuery(),
             SparseFieldsQuery(SummaryDoc, default_fields=["material_id"]),
             LicenseQuery(),
+            SortQuery(fields=sort_fields, max_num=1),
         ],
         hint_scheme=SummaryHintScheme(),
         header_processor=GlobalHeaderProcessor(),

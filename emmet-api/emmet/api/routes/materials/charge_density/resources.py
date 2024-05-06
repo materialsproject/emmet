@@ -20,7 +20,6 @@ def charge_density_resource(s3_store):
         tags=["Materials Charge Density"],
         sub_path="/charge_density/",
         enable_default_search=True,
-        enable_get_by_key=False,
         disable_validation=True,
         query_disk_use=False,
     )

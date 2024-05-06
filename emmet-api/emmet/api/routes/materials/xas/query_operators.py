@@ -30,26 +30,26 @@ class XASQuery(QueryOperator):
         return [(key, False) for key in keys]
 
 
-class XASTaskIDQuery(QueryOperator):
+class XASIDQuery(QueryOperator):
     """
-    Method to generate a query for XAS data given a list of task_ids
+    Method to generate a query for XAS data given a list of spectrum_ids
     """
 
     def query(
         self,
-        material_ids: Optional[str] = Query(
-            None, description="Comma-separated list of material_id to query on"
+        spectrum_ids: Optional[str] = Query(
+            None, description="Comma-separated list of spectrum_id to query on"
         ),
     ) -> STORE_PARAMS:
         crit = {}
 
-        if material_ids:
+        if spectrum_ids:
             crit.update(
                 {
-                    "material_id": {
+                    "spectrum_id": {
                         "$in": [
-                            material_id.strip()
-                            for material_id in material_ids.split(",")
+                            spectrum_id.strip()
+                            for spectrum_id in spectrum_ids.split(",")
                         ]
                     }
                 }

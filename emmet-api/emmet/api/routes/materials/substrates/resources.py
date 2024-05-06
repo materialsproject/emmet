@@ -30,7 +30,6 @@ def substrates_resource(substrates_store):
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Substrates"],
         sub_path="/substrates/",
-        enable_get_by_key=False,
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,
     )

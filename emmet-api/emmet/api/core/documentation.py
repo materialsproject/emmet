@@ -190,7 +190,7 @@ tags_meta = [
             Project database. See the `SurfacePropDoc` schema for a full list of fields returned by this route.",
     },
     {
-        "name": "Robocrystallographer",
+        "name": "Materials Robocrystallographer",
         "description": "Route providing a computed text description for a material following the \
             methodology discussed by [Ganose *et al.*](https://doi.org/10.1557/mrc.2019.94) \
             Note that descriptions may not been calculated for all materials in the Materials \
@@ -204,11 +204,12 @@ tags_meta = [
             Project database. See the `SynthesisSearchResultModel` schema for a full list of fields returned by this route.",
     },
     {
-        "name": "Electrodes",
+        "name": "Materials Electrodes",
         "description": "Route providing computed electrode data for a material following the \
             methodology discussed by [Shen *et al.*](https://doi.org/10.1038/s41524-020-00422-3) \
             Note that electrode data has not been calculated for all materials in the Materials \
-            Project database. See the `InsertionElectrodeDoc` schema for a full list of fields returned by this route.",
+            Project database. See the `InsertionElectrodeDoc` and `ConversionElectrodeDoc` schema \
+            for a full list of fields returned by this route.",
     },
     {
         "name": "Materials Oxidation States",
@@ -237,6 +238,10 @@ tags_meta = [
         "description": "Route for retrevial of information about which hypothetical alloy(s) a given material might "
         "belong to, following the methodolgy discussed by "
         "[Woods-Robinson, Horton and Persson](https://arxiv.org/pdf/2206.10715).",
+    },
+    {
+        "name": "Materials Bonds",
+        "description": "Route for retrevial of bonding information for a given material.",
     },
     {
         "name": "MPComplete",

@@ -1,7 +1,7 @@
 import pytest
 from maggma.stores import JSONStore, MemoryStore
 
-from emmet.builders.materials.basic_descriptors import BasicDescriptorsBuilder
+# from emmet.builders.materials.basic_descriptors import BasicDescriptorsBuilder
 from emmet.builders.vasp.materials import MaterialsBuilder
 
 
@@ -18,12 +18,13 @@ def materials_store(tasks_store):
     return materials_store
 
 
-def test_basic_descriptions(materials_store):
-    descriptors_store = MemoryStore()
-    builder = BasicDescriptorsBuilder(
-        materials=materials_store, descriptors=descriptors_store
-    )
-    builder.run()
-
-    print(descriptors_store.query_one({}))
-    assert descriptors_store.count() == 1
+# @pytest.mark.skip(reason="Waiting on matminer update")
+# def test_basic_descriptions(materials_store):
+#    descriptors_store = MemoryStore()
+#    builder = BasicDescriptorsBuilder(
+#        materials=materials_store, descriptors=descriptors_store
+#    )
+#    builder.run()
+#
+#    print(descriptors_store.query_one({}))
+#    assert descriptors_store.count() == 1

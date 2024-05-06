@@ -430,6 +430,7 @@ class CalculationOutput(BaseModel):
         locpot: Optional[Locpot] = None,
         elph_poscars: Optional[List[Path]] = None,
         store_trajectory: StoreTrajectoryOption = StoreTrajectoryOption.NO,
+        store_onsite_density_matrices: bool = False,
     ) -> "CalculationOutput":
         """
         Create a VASP output document from VASP outputs.
@@ -452,7 +453,8 @@ class CalculationOutput(BaseModel):
             Different value tune the amount of data from the ionic_steps
             stored in the Trajectory.
             If not NO, the `ionic_steps` field is left as None.
-
+        store_onsite_density_matrices
+            Whether to store the onsite density matrices from the OUTCAR.
         Returns
         -------
             The VASP calculation output document.
@@ -510,7 +512,8 @@ class CalculationOutput(BaseModel):
         if outcar and contcar:
             outcar_dict = outcar.as_dict()
             outcar_dict.pop("run_stats")
-
+            if not store_onsite_density_matrices and outcar.has_onsite_density_matrices:
+                outcar_dict.pop("onsite_density_matrices")
             # use structure from CONTCAR as it is written to
             # greater precision than in the vasprun
             # but still need to copy the charge over
@@ -547,7 +550,6 @@ class CalculationOutput(BaseModel):
                 temp = str(elph_poscar.name).replace("POSCAR.T=", "").replace(".gz", "")
                 elph_structures["temperatures"].append(temp)
                 elph_structures["structures"].append(Structure.from_file(elph_poscar))
-
         return cls(
             structure=structure,
             energy=vasprun.final_energy,
@@ -631,6 +633,7 @@ class Calculation(BaseModel):
         strip_dos_projections: bool = False,
         store_volumetric_data: Optional[Tuple[str]] = None,
         store_trajectory: StoreTrajectoryOption = StoreTrajectoryOption.NO,
+        store_onsite_density_matrices: bool = False,
         vasprun_kwargs: Optional[Dict] = None,
     ) -> Tuple["Calculation", Dict[VaspObject, Dict]]:
         """
@@ -705,6 +708,8 @@ class Calculation(BaseModel):
             - NO: Trajectory is not Stored.
             If not NO, :obj:'.CalculationOutput.ionic_steps' is set to None
             to reduce duplicating information.
+        store_onsite_density_matrices
+            Whether to store the onsite density matrices from the OUTCAR.
         vasprun_kwargs
             Additional keyword arguments that will be passed to the Vasprun init.
 
@@ -771,6 +776,7 @@ class Calculation(BaseModel):
             locpot=locpot,
             elph_poscars=elph_poscars,
             store_trajectory=store_trajectory,
+            store_onsite_density_matrices=store_onsite_density_matrices,
         )
         if store_trajectory != StoreTrajectoryOption.NO:
             exclude_from_trajectory = ["structure"]
@@ -801,7 +807,7 @@ class Calculation(BaseModel):
 
         # MD run
         if vasprun.parameters.get("IBRION", -1) == 0:
-            if vasprun.parameters.get("NSW", 0) == vasprun.nionic_steps:
+            if vasprun.parameters.get("NSW", 0) == vasprun.md_n_steps:
                 has_vasp_completed = TaskState.SUCCESS
             else:
                 has_vasp_completed = TaskState.FAILED
