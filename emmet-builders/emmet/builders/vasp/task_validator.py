@@ -15,7 +15,7 @@ class TaskValidator(MapBuilder):
         self,
         source_keys: Dict[str, Store],
         target_keys: Dict[str, Store],
-        potcar_hashes: Optional[Dict[CalcType, Dict[str, str]]] = None,
+        potcar_stats: Optional[Dict[CalcType, Dict[str, str]]] = None,
         settings: Optional[EmmetBuildSettings] = None,
         query: Optional[Dict] = None,
         chunk_size: int = 300,
