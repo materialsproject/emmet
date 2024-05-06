@@ -13,7 +13,10 @@ aiosignal==1.3.1
 annotated-types==0.6.0
     # via pydantic
 anyio==4.3.0
-    # via starlette
+    # via
+    #   httpx
+    #   starlette
+    #   watchfiles
 ase==3.22.1
     # via
     #   chgnet
@@ -26,18 +29,21 @@ attrs==23.2.0
     #   aiohttp
     #   jsonschema
     #   referencing
-bcrypt==4.1.2
+bcrypt==4.1.3
     # via paramiko
 blinker==1.8.1
     # via flask
-boto3==1.34.97
+boto3==1.34.98
     # via maggma
-botocore==1.34.97
+botocore==1.34.98
     # via
     #   boto3
     #   s3transfer
 certifi==2024.2.2
-    # via requests
+    # via
+    #   httpcore
+    #   httpx
+    #   requests
 cffi==1.16.0
     # via
     #   cryptography
@@ -50,10 +56,11 @@ click==8.1.7
     # via
     #   flask
     #   mongogrant
+    #   typer
     #   uvicorn
 contourpy==1.2.1
     # via matplotlib
-cryptography==42.0.5
+cryptography==42.0.6
     # via paramiko
 cycler==0.12.1
     # via matplotlib
@@ -63,16 +70,23 @@ dgl==2.1.0
     # via matgl
 dnspython==2.6.1
     # via
+    #   email-validator
     #   maggma
     #   pymongo
+email-validator==2.1.1
+    # via fastapi
 emmet-core[all,ml]==0.83.6
     # via
     #   emmet-builders (setup.py)
     #   mp-api
 exceptiongroup==1.2.1
     # via anyio
-fastapi==0.110.3
-    # via maggma
+fastapi==0.111.0
+    # via
+    #   fastapi-cli
+    #   maggma
+fastapi-cli==0.0.2
+    # via fastapi
 filelock==3.14.0
     # via
     #   torch
@@ -92,20 +106,31 @@ fsspec[http]==2024.3.1
 future==1.0.0
     # via uncertainties
 h11==0.14.0
-    # via uvicorn
+    # via
+    #   httpcore
+    #   uvicorn
 h5py==3.11.0
     # via phonopy
+httpcore==1.0.5
+    # via httpx
+httptools==0.6.1
+    # via uvicorn
+httpx==0.27.0
+    # via fastapi
 idna==3.7
     # via
     #   anyio
+    #   email-validator
+    #   httpx
     #   requests
     #   yarl
 inflect==7.2.1
     # via robocrys
 itsdangerous==2.2.0
     # via flask
-jinja2==3.1.3
+jinja2==3.1.4
     # via
+    #   fastapi
     #   flask
     #   torch
 jmespath==1.0.1
@@ -134,6 +159,8 @@ maggma==0.66.0
     # via
     #   emmet-builders (setup.py)
     #   mp-api
+markdown-it-py==3.0.0
+    # via rich
 markupsafe==2.1.5
     # via
     #   jinja2
@@ -151,6 +178,8 @@ matplotlib==3.8.4
     #   ase
     #   phonopy
     #   pymatgen
+mdurl==0.1.2
+    # via markdown-it-py
 mongogrant==0.3.3
     # via maggma
 mongomock==4.1.2
@@ -237,8 +266,10 @@ nvidia-nvjitlink-cu12==12.4.127
     #   nvidia-cusparse-cu12
 nvidia-nvtx-cu12==12.1.105
     # via torch
-orjson==3.10.2
-    # via maggma
+orjson==3.10.3
+    # via
+    #   fastapi
+    #   maggma
 packaging==24.0
     # via
     #   lightning-utilities
@@ -255,7 +286,7 @@ pandas==2.2.2
     #   pymatgen
 paramiko==3.4.0
     # via sshtunnel
-phonopy==2.23.0
+phonopy==2.23.1
     # via matcalc
 pillow==10.3.0
     # via matplotlib
@@ -286,6 +317,8 @@ pydantic-settings==2.2.1
     #   maggma
 pydash==8.0.1
     # via maggma
+pygments==2.18.0
+    # via rich
 pymatgen==2024.5.1
     # via
     #   chgnet
@@ -317,7 +350,11 @@ python-dateutil==2.9.0.post0
     #   matplotlib
     #   pandas
 python-dotenv==1.0.1
-    # via pydantic-settings
+    # via
+    #   pydantic-settings
+    #   uvicorn
+python-multipart==0.0.9
+    # via fastapi
 pytorch-lightning==2.2.4
     # via matgl
 pytz==2024.1
@@ -327,6 +364,7 @@ pyyaml==6.0.1
     #   phonopy
     #   pybtex
     #   pytorch-lightning
+    #   uvicorn
 pyzmq==26.0.3
     # via maggma
 referencing==0.35.1
@@ -341,6 +379,8 @@ requests==2.31.0
     #   mp-api
     #   pymatgen
     #   torchdata
+rich==13.7.1
+    # via typer
 robocrys==0.2.9
     # via emmet-core
 rpds-py==0.18.0
@@ -371,6 +411,8 @@ sentinels==1.0.0
     # via mongomock
 shapely==2.0.4
     # via pymatgen-analysis-alloys
+shellingham==1.5.4
+    # via typer
 six==1.16.0
     # via
     #   pybtex
@@ -378,7 +420,9 @@ six==1.16.0
 smart-open==7.0.4
     # via mp-api
 sniffio==1.3.1
-    # via anyio
+    # via
+    #   anyio
+    #   httpx
 spglib==2.4.0
     # via
     #   phonopy
@@ -411,7 +455,7 @@ torchdata==0.7.1
     # via dgl
 torchmetrics==1.3.2
     # via pytorch-lightning
-tqdm==4.66.3
+tqdm==4.66.4
     # via
     #   dgl
     #   maggma
@@ -422,6 +466,8 @@ triton==2.3.0
     # via torch
 typeguard==4.2.1
     # via inflect
+typer==0.12.3
+    # via fastapi-cli
 typing-extensions==4.11.0
     # via
     #   anyio
@@ -436,9 +482,12 @@ typing-extensions==4.11.0
     #   pytorch-lightning
     #   torch
     #   typeguard
+    #   typer
     #   uvicorn
 tzdata==2024.1
     # via pandas
+ujson==5.9.0
+    # via fastapi
 uncertainties==3.1.7
     # via pymatgen
 urllib3==2.2.1
@@ -446,9 +495,18 @@ urllib3==2.2.1
     #   botocore
     #   requests
     #   torchdata
-uvicorn==0.29.0
-    # via maggma
-werkzeug==3.0.2
+uvicorn[standard]==0.29.0
+    # via
+    #   fastapi
+    #   fastapi-cli
+    #   maggma
+uvloop==0.19.0
+    # via uvicorn
+watchfiles==0.21.0
+    # via uvicorn
+websockets==12.0
+    # via uvicorn
+werkzeug==3.0.3
     # via flask
 wrapt==1.16.0
     # via smart-open
