@@ -95,7 +95,7 @@ h11==0.14.0
     # via uvicorn
 h5py==3.10.0
     # via phonopy
-idna==3.6
+idna==3.7
     # via
     #   anyio
     #   requests
