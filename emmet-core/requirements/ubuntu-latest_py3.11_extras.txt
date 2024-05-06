@@ -599,7 +599,7 @@ watchdog==4.0.0
     # via mkdocs
 wcmatch==8.5.1
     # via mkdocs-awesome-pages-plugin
-werkzeug==3.0.2
+werkzeug==3.0.3
     # via flask
 wincertstore==0.2
     # via emmet-core (setup.py)
