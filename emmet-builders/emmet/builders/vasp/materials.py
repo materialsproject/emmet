@@ -6,14 +6,9 @@ from typing import Dict, Iterable, Iterator, List, Optional, Union
 from maggma.builders import Builder
 from maggma.stores import Store
 from maggma.utils import grouper
-from pymatgen.analysis.elasticity.strain import Deformation
-from pymatgen.core.structure import Structure
-from pymatgen.transformations.standard_transformations import (
-    DeformStructureTransformation,
-)
 
 from emmet.builders.settings import EmmetBuildSettings
-from emmet.core.utils import group_structures, jsanitize
+from emmet.core.utils import group_structures, jsanitize, undeform_structure
 from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
 from emmet.core.tasks import TaskDoc
@@ -347,29 +342,3 @@ class MaterialsBuilder(Builder):
         for group in grouped_structures:
             grouped_tasks = [filtered_tasks[struct.index] for struct in group]  # type: ignore
             yield grouped_tasks
-
-
-def undeform_structure(structure: Structure, transformations: Dict) -> Structure:
-    """
-    Get the undeformed structure by applying the transformations in a reverse order.
-
-    Args:
-        structure: deformed structure
-        transformation: transformation that deforms the structure
-
-    Returns:
-        undeformed structure
-    """
-
-    for transformation in reversed(transformations.get("history", [])):
-        if transformation["@class"] == "DeformStructureTransformation":
-            deform = Deformation(transformation["deformation"])
-            dst = DeformStructureTransformation(deform.inv)
-            structure = dst.apply_transformation(structure)
-        else:
-            raise RuntimeError(
-                "Expect transformation to be `DeformStructureTransformation`; "
-                f"got {transformation['@class']}"
-            )
-
-    return structure
