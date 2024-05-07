@@ -34,7 +34,9 @@ click==8.1.7
     #   mkdocs
     #   mkdocstrings
 colorama==0.4.6
-    # via griffe
+    # via
+    #   griffe
+    #   pretty-errors
 contourpy==1.2.1
     # via matplotlib
 coverage[toml]==7.5.1
@@ -315,6 +317,8 @@ pluggy==1.5.0
     # via pytest
 pre-commit==3.7.0
     # via emmet-core (setup.py)
+pretty-errors==1.2.25
+    # via torchmetrics
 psutil==5.9.8
     # via
     #   custodian
@@ -451,7 +455,7 @@ sympy==1.12
     #   torch
 tabulate==0.9.0
     # via pymatgen
-tenacity==8.2.3
+tenacity==8.3.0
     # via plotly
 threadpoolctl==3.5.0
     # via scikit-learn
@@ -469,7 +473,7 @@ torch==2.3.0
     #   torchmetrics
 torchdata==0.7.1
     # via dgl
-torchmetrics==1.3.2
+torchmetrics==1.4.0
     # via pytorch-lightning
 tornado==6.4
     # via livereload
