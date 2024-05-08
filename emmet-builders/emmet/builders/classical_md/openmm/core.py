@@ -137,7 +137,7 @@ class ElectrolyteBuilder(Builder):
         else:
             self.logger.info("No items to update.")
 
-    def _insert_blobs(self, job):
+    def _insert_blobs(self, job, include_traj=True):
         # inject interchange blobs
         interchange_uuid = job["output"]["interchange"]["blob_uuid"]
         interchange_blob = self.blobs.query_one({"blob_uuid": interchange_uuid})
@@ -147,6 +147,9 @@ class ElectrolyteBuilder(Builder):
             raise ValueError("No calculations found in job output.")
 
         for calc in job["output"]["calcs_reversed"]:
+            if not include_traj:
+                calc["output"]["traj_blob"] = None
+
             traj_blob = calc["output"]["traj_blob"]
 
             # inject trajectory blobs
@@ -155,7 +158,12 @@ class ElectrolyteBuilder(Builder):
                 traj_blob = self.blobs.query_one({"blob_uuid": traj_uuid})
                 calc["output"]["traj_blob"] = traj_blob["data"]
 
-    def instantiate_universe(self, job_uuid: str, traj_directory: str | Path = "."):
+    def instantiate_universe(
+        self,
+        job_uuid: str,
+        traj_directory: str | Path = ".",
+        overwrite_local_traj: bool = True,
+    ):
         """
         Instantiate a MDAnalysis universe from a task document.
 
@@ -165,35 +173,36 @@ class ElectrolyteBuilder(Builder):
             traj_directory: str
                 Name of the DCD file to write.
         """
-        traj_directory = Path(traj_directory)
-        traj_directory.mkdir(parents=True, exist_ok=True)
 
+        # pull job
         doc = list(self.md_docs.query(criteria={"uuid": job_uuid}))
         if len(doc) != 1:
             raise ValueError(
                 f"The job_uuid, {job_uuid}, must be unique. Found {len(doc)} documents."
             )
         doc = doc[0]
+        traj_file_type = doc["output"]["calcs_reversed"][0]["input"]["traj_file_type"]
 
-        self._insert_blobs(doc)
+        # define path to trajectory
+        traj_directory = Path(traj_directory)
+        traj_directory.mkdir(parents=True, exist_ok=True)
+        traj_path = traj_directory / f"{job_uuid}.{traj_file_type}"
 
+        # download and insert blobs if necessary
+        new_traj = not traj_path.exists() or overwrite_local_traj
+        self._insert_blobs(doc, include_traj=new_traj)
         task_doc = OpenMMTaskDocument.parse_obj(doc["output"])
-        calc = task_doc.calcs_reversed[0]
+        if new_traj:
+            with open(traj_path, "wb") as f:
+                f.write(task_doc.calcs_reversed[0].output.traj_blob)
 
         # create interchange
         interchange_str = task_doc.interchange.decode("utf-8")
         interchange = Interchange.parse_raw(interchange_str)
 
-        # write the trajectory to a file
-        traj_name = f"{calc.input.traj_file_name}.{calc.input.traj_file_type}"
-        # create directory if needed
-        traj_path = traj_directory / traj_name
-        with open(traj_path, "wb") as f:
-            f.write(calc.output.traj_blob)
-
         return create_universe(
             interchange,
             task_doc.molecule_specs,
             traj_path,
-            traj_format=calc.input.traj_file_type,
+            traj_format=traj_file_type,
         )
