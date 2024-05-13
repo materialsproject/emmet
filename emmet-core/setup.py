@@ -1,4 +1,14 @@
+import os
+
 from setuptools import find_namespace_packages, setup
+
+readme_path = os.path.join(os.path.dirname(__file__), "..", "README.md")
+if os.path.exists(readme_path):
+    with open(readme_path) as f:
+        long_description = f.read()
+else:
+    long_description = "Core Emmet Library"
+
 
 setup(
     name="emmet-core",
@@ -7,7 +17,7 @@ setup(
     description="Core Emmet Library",
     author="The Materials Project",
     author_email="feedback@materialsproject.org",
-    long_description=open("../README.md").read(),  # noqa: SIM115
+    long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
