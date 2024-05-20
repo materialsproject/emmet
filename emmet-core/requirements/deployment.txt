@@ -26,11 +26,11 @@ kiwisolver==1.4.5
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
-matplotlib==3.8.4
+matplotlib==3.9.0
     # via
     #   -r python/requirements.txt
     #   pymatgen
-monty==2024.4.17
+monty==2024.5.15
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pymatgen
@@ -87,7 +87,7 @@ pytz==2024.1
     # via pandas
 pyyaml==6.0.1
     # via pybtex
-requests==2.31.0
+requests==2.32.0
     # via pymatgen
 ruamel-yaml==0.18.6
     # via pymatgen
