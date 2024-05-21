@@ -18,6 +18,7 @@ setup(
         "click",
         "colorama",
         "mongogrant",
+        "atomate",
         "mgzip",
         "slurmpy",
         "github3.py",
