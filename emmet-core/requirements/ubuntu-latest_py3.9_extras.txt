@@ -352,7 +352,7 @@ pyflakes==3.2.0
     # via flake8
 pygments==2.18.0
     # via mkdocs-material
-pymatgen==2024.5.1
+pymatgen==2024.4.13
     # via
     #   chgnet
     #   emmet-core

@@ -4,8 +4,12 @@
 #
 #    pip-compile --all-extras --output-file=requirements/ubuntu-latest_py3.10_extras.txt
 #
+aiohttp==3.9.5
+    # via fsspec
 aioitertools==0.11.0
     # via maggma
+aiosignal==1.3.1
+    # via aiohttp
 annotated-types==0.6.0
     # via pydantic
 anyio==4.3.0
@@ -13,14 +17,16 @@ anyio==4.3.0
     #   httpx
     #   starlette
     #   watchfiles
-asgi-logger==0.1.0
-    # via emmet-api (setup.py)
-asgiref==3.8.1
-    # via asgi-logger
+ase==3.22.1
+    # via
+    #   chgnet
+    #   matcalc
+    #   matgl
+async-timeout==4.0.3
+    # via aiohttp
 attrs==23.2.0
     # via
-    #   cattrs
-    #   ddtrace
+    #   aiohttp
     #   jsonschema
     #   referencing
 bcrypt==4.1.3
@@ -28,19 +34,13 @@ bcrypt==4.1.3
 blinker==1.8.2
     # via flask
 boto3==1.34.99
-    # via
-    #   emmet-api (setup.py)
-    #   maggma
+    # via maggma
 botocore==1.34.99
     # via
     #   boto3
     #   s3transfer
 bracex==2.4
     # via wcmatch
-bytecode==0.15.1
-    # via ddtrace
-cattrs==23.2.3
-    # via ddtrace
 certifi==2024.2.2
     # via
     #   httpcore
@@ -54,6 +54,8 @@ cfgv==3.4.0
     # via pre-commit
 charset-normalizer==3.3.2
     # via requests
+chgnet==0.3.5
+    # via emmet-core
 click==8.1.7
     # via
     #   flask
@@ -63,7 +65,9 @@ click==8.1.7
     #   typer
     #   uvicorn
 colorama==0.4.6
-    # via griffe
+    # via
+    #   griffe
+    #   pretty-errors
 contourpy==1.2.1
     # via matplotlib
 coverage[toml]==7.5.1
@@ -74,12 +78,10 @@ csscompressor==0.9.5
     # via mkdocs-minify-plugin
 cycler==0.12.1
     # via matplotlib
-ddsketch==3.0.1
-    # via ddtrace
-ddtrace==2.8.4
-    # via emmet-api (setup.py)
-deprecated==1.2.14
-    # via opentelemetry-api
+cython==3.0.10
+    # via chgnet
+dgl==2.1.0
+    # via matgl
 distlib==0.3.8
     # via virtualenv
 dnspython==2.6.1
@@ -89,42 +91,51 @@ dnspython==2.6.1
     #   pymongo
 email-validator==2.1.1
     # via fastapi
-emmet-core==0.83.6
-    # via emmet-api (setup.py)
-envier==0.5.1
-    # via ddtrace
+emmet-core[all,ml]==0.83.6
+    # via
+    #   emmet-builders (setup.py)
+    #   mp-api
 exceptiongroup==1.2.1
     # via
     #   anyio
-    #   cattrs
     #   pytest
 fastapi==0.111.0
     # via
-    #   emmet-api (setup.py)
     #   fastapi-cli
     #   maggma
 fastapi-cli==0.0.2
     # via fastapi
 filelock==3.14.0
-    # via virtualenv
+    # via
+    #   torch
+    #   triton
+    #   virtualenv
 flake8==7.0.0
-    # via emmet-api (setup.py)
+    # via emmet-builders (setup.py)
 flask==3.0.3
     # via mongogrant
 fonttools==4.51.0
     # via matplotlib
+frozenlist==1.4.1
+    # via
+    #   aiohttp
+    #   aiosignal
+fsspec[http]==2024.3.1
+    # via
+    #   pytorch-lightning
+    #   torch
 future==1.0.0
     # via uncertainties
 ghp-import==2.1.0
     # via mkdocs
 griffe==0.44.0
     # via mkdocstrings-python
-gunicorn==22.0.0
-    # via emmet-api (setup.py)
 h11==0.14.0
     # via
     #   httpcore
     #   uvicorn
+h5py==3.11.0
+    # via phonopy
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
 httpcore==1.0.5
@@ -141,26 +152,32 @@ idna==3.7
     #   email-validator
     #   httpx
     #   requests
-importlib-metadata==7.0.0
-    # via opentelemetry-api
+    #   yarl
+inflect==7.2.1
+    # via robocrys
 iniconfig==2.0.0
     # via pytest
 itsdangerous==2.2.0
     # via flask
 jinja2==3.1.4
     # via
-    #   emmet-api (setup.py)
+    #   emmet-builders (setup.py)
     #   fastapi
     #   flask
     #   mkdocs
     #   mkdocs-material
     #   mkdocstrings
+    #   torch
 jmespath==1.0.1
     # via
     #   boto3
     #   botocore
 joblib==1.4.2
-    # via pymatgen
+    # via
+    #   matcalc
+    #   pymatgen
+    #   pymatgen-analysis-diffusion
+    #   scikit-learn
 jsmin==3.0.1
     # via mkdocs-minify-plugin
 jsonschema==4.22.0
@@ -171,10 +188,16 @@ kiwisolver==1.4.5
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
+lightning-utilities==0.11.2
+    # via
+    #   pytorch-lightning
+    #   torchmetrics
 livereload==2.6.3
-    # via emmet-api (setup.py)
+    # via emmet-builders (setup.py)
 maggma==0.66.0
-    # via emmet-api (setup.py)
+    # via
+    #   emmet-builders (setup.py)
+    #   mp-api
 markdown==3.6
     # via
     #   mkdocs
@@ -191,8 +214,19 @@ markupsafe==2.1.5
     #   mkdocs-autorefs
     #   mkdocstrings
     #   werkzeug
+matcalc==0.0.4
+    # via emmet-core
+matgl==1.0.0
+    # via emmet-core
+matminer==0.9.2
+    # via
+    #   emmet-builders (setup.py)
+    #   robocrys
 matplotlib==3.8.4
-    # via pymatgen
+    # via
+    #   ase
+    #   phonopy
+    #   pymatgen
 mccabe==0.7.0
     # via flake8
 mdurl==0.1.2
@@ -203,7 +237,7 @@ mergedeep==1.3.4
     #   mkdocs-get-deps
 mkdocs==1.6.0
     # via
-    #   emmet-api (setup.py)
+    #   emmet-builders (setup.py)
     #   mkdocs-autorefs
     #   mkdocs-awesome-pages-plugin
     #   mkdocs-markdownextradata-plugin
@@ -213,22 +247,22 @@ mkdocs==1.6.0
 mkdocs-autorefs==1.0.1
     # via mkdocstrings
 mkdocs-awesome-pages-plugin==2.9.2
-    # via emmet-api (setup.py)
+    # via emmet-builders (setup.py)
 mkdocs-get-deps==0.2.0
     # via mkdocs
 mkdocs-markdownextradata-plugin==0.2.5
-    # via emmet-api (setup.py)
+    # via emmet-builders (setup.py)
 mkdocs-material==8.2.16
-    # via emmet-api (setup.py)
+    # via emmet-builders (setup.py)
 mkdocs-material-extensions==1.3.1
     # via
-    #   emmet-api (setup.py)
+    #   emmet-builders (setup.py)
     #   mkdocs-material
 mkdocs-minify-plugin==0.8.0
-    # via emmet-api (setup.py)
+    # via emmet-builders (setup.py)
 mkdocstrings[python]==0.25.1
     # via
-    #   emmet-api (setup.py)
+    #   emmet-builders (setup.py)
     #   mkdocstrings-python
 mkdocstrings-python==1.10.0
     # via mkdocstrings
@@ -240,55 +274,120 @@ monty==2024.4.17
     # via
     #   emmet-core
     #   maggma
+    #   matminer
+    #   mp-api
     #   pymatgen
+    #   robocrys
+more-itertools==10.2.0
+    # via inflect
+mp-api==0.41.2
+    # via robocrys
 mpmath==1.3.0
     # via sympy
 msgpack==1.0.8
-    # via maggma
+    # via
+    #   maggma
+    #   mp-api
+multidict==6.0.5
+    # via
+    #   aiohttp
+    #   yarl
 mypy==1.10.0
-    # via emmet-api (setup.py)
+    # via emmet-builders (setup.py)
 mypy-extensions==1.0.0
     # via
-    #   emmet-api (setup.py)
+    #   emmet-builders (setup.py)
     #   mypy
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
 networkx==3.3
-    # via pymatgen
+    # via
+    #   dgl
+    #   pymatgen
+    #   robocrys
+    #   torch
 nodeenv==1.8.0
     # via pre-commit
 numpy==1.26.4
     # via
+    #   ase
+    #   chgnet
     #   contourpy
+    #   dgl
+    #   h5py
     #   maggma
+    #   matminer
     #   matplotlib
     #   pandas
+    #   phonopy
     #   pymatgen
+    #   pytorch-lightning
+    #   robocrys
+    #   scikit-learn
     #   scipy
+    #   seekpath
     #   shapely
     #   spglib
-opentelemetry-api==1.24.0
-    # via ddtrace
+    #   torchmetrics
+nvidia-cublas-cu12==12.1.3.1
+    # via
+    #   nvidia-cudnn-cu12
+    #   nvidia-cusolver-cu12
+    #   torch
+nvidia-cuda-cupti-cu12==12.1.105
+    # via torch
+nvidia-cuda-nvrtc-cu12==12.1.105
+    # via torch
+nvidia-cuda-runtime-cu12==12.1.105
+    # via torch
+nvidia-cudnn-cu12==8.9.2.26
+    # via torch
+nvidia-cufft-cu12==11.0.2.54
+    # via torch
+nvidia-curand-cu12==10.3.2.106
+    # via torch
+nvidia-cusolver-cu12==11.4.5.107
+    # via torch
+nvidia-cusparse-cu12==12.1.0.106
+    # via
+    #   nvidia-cusolver-cu12
+    #   torch
+nvidia-ml-py3==7.352.0
+    # via chgnet
+nvidia-nccl-cu12==2.20.5
+    # via torch
+nvidia-nvjitlink-cu12==12.4.127
+    # via
+    #   nvidia-cusolver-cu12
+    #   nvidia-cusparse-cu12
+nvidia-nvtx-cu12==12.1.105
+    # via torch
 orjson==3.10.3
     # via
     #   fastapi
     #   maggma
 packaging==24.0
     # via
-    #   gunicorn
+    #   lightning-utilities
     #   matplotlib
     #   mkdocs
     #   mongomock
     #   plotly
     #   pytest
+    #   pytorch-lightning
+    #   torchmetrics
 palettable==3.3.3
     # via pymatgen
 pandas==2.2.2
-    # via pymatgen
+    # via
+    #   matminer
+    #   pymatgen
 paramiko==3.4.0
     # via sshtunnel
 pathspec==0.12.1
     # via mkdocs
+phonopy==2.23.1
+    # via matcalc
 pillow==10.3.0
     # via matplotlib
 platformdirs==4.2.1
@@ -301,16 +400,21 @@ plotly==5.22.0
 pluggy==1.5.0
     # via pytest
 pre-commit==3.7.0
-    # via emmet-api (setup.py)
-protobuf==5.26.1
-    # via ddtrace
+    # via emmet-builders (setup.py)
+pretty-errors==1.2.25
+    # via torchmetrics
+psutil==5.9.8
+    # via dgl
+pubchempy==1.0.4
+    # via robocrys
 pybtex==0.24.0
     # via
     #   emmet-core
     #   pymatgen
+    #   robocrys
 pycodestyle==2.11.1
     # via
-    #   emmet-api (setup.py)
+    #   emmet-builders (setup.py)
     #   flake8
 pycparser==2.22
     # via cffi
@@ -329,19 +433,28 @@ pydantic-settings==2.2.1
 pydash==8.0.1
     # via maggma
 pydocstyle==6.3.0
-    # via emmet-api (setup.py)
+    # via emmet-builders (setup.py)
 pyflakes==3.2.0
     # via flake8
 pygments==2.18.0
     # via
     #   mkdocs-material
     #   rich
-pymatgen==2024.4.13
+pymatgen==2024.5.1
     # via
+    #   chgnet
     #   emmet-core
+    #   matcalc
+    #   matgl
+    #   matminer
+    #   mp-api
     #   pymatgen-analysis-alloys
+    #   pymatgen-analysis-diffusion
+    #   robocrys
 pymatgen-analysis-alloys==0.0.6
-    # via emmet-api (setup.py)
+    # via emmet-core
+pymatgen-analysis-diffusion==2023.8.15
+    # via emmet-core
 pymdown-extensions==10.8.1
     # via
     #   mkdocs-material
@@ -349,6 +462,7 @@ pymdown-extensions==10.8.1
 pymongo==4.7.1
     # via
     #   maggma
+    #   matminer
     #   mongogrant
 pynacl==1.5.0
     # via paramiko
@@ -356,10 +470,10 @@ pyparsing==3.1.2
     # via matplotlib
 pytest==8.2.0
     # via
-    #   emmet-api (setup.py)
+    #   emmet-builders (setup.py)
     #   pytest-cov
 pytest-cov==5.0.0
-    # via emmet-api (setup.py)
+    # via emmet-builders (setup.py)
 python-dateutil==2.9.0.post0
     # via
     #   botocore
@@ -373,6 +487,8 @@ python-dotenv==1.0.1
     #   uvicorn
 python-multipart==0.0.9
     # via fastapi
+pytorch-lightning==2.2.4
+    # via matgl
 pytz==2024.1
     # via pandas
 pyyaml==6.0.1
@@ -380,9 +496,11 @@ pyyaml==6.0.1
     #   mkdocs
     #   mkdocs-get-deps
     #   mkdocs-markdownextradata-plugin
+    #   phonopy
     #   pre-commit
     #   pybtex
     #   pymdown-extensions
+    #   pytorch-lightning
     #   pyyaml-env-tag
     #   uvicorn
 pyyaml-env-tag==0.1
@@ -395,10 +513,16 @@ referencing==0.35.1
     #   jsonschema-specifications
 requests==2.31.0
     # via
+    #   dgl
+    #   matminer
     #   mongogrant
+    #   mp-api
     #   pymatgen
+    #   torchdata
 rich==13.7.1
     # via typer
+robocrys==0.2.9
+    # via emmet-core
 rpds-py==0.18.1
     # via
     #   jsonschema
@@ -407,29 +531,35 @@ ruamel-yaml==0.18.6
     # via
     #   maggma
     #   pymatgen
+    #   robocrys
 ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
 s3transfer==0.10.1
     # via boto3
+scikit-learn==1.4.2
+    # via matminer
 scipy==1.13.0
-    # via pymatgen
+    # via
+    #   ase
+    #   dgl
+    #   pymatgen
+    #   robocrys
+    #   scikit-learn
+seekpath==2.1.0
+    # via emmet-core
 sentinels==1.0.0
     # via mongomock
-setproctitle==1.3.3
-    # via emmet-api (setup.py)
 shapely==2.0.4
-    # via
-    #   emmet-api (setup.py)
-    #   pymatgen-analysis-alloys
+    # via pymatgen-analysis-alloys
 shellingham==1.5.4
     # via typer
 six==1.16.0
     # via
-    #   ddsketch
-    #   ddtrace
     #   livereload
     #   pybtex
     #   python-dateutil
+smart-open==7.0.4
+    # via mp-api
 sniffio==1.3.1
     # via
     #   anyio
@@ -437,48 +567,76 @@ sniffio==1.3.1
 snowballstemmer==2.2.0
     # via pydocstyle
 spglib==2.4.0
-    # via pymatgen
-sqlparse==0.5.0
-    # via ddtrace
+    # via
+    #   phonopy
+    #   pymatgen
+    #   robocrys
+    #   seekpath
 sshtunnel==0.4.0
     # via maggma
 starlette==0.37.2
     # via fastapi
 sympy==1.12
-    # via pymatgen
+    # via
+    #   matminer
+    #   pymatgen
+    #   torch
 tabulate==0.9.0
     # via pymatgen
 tenacity==8.3.0
     # via plotly
+threadpoolctl==3.5.0
+    # via scikit-learn
 tomli==2.0.1
     # via
     #   coverage
     #   mypy
     #   pytest
+torch==2.3.0
+    # via
+    #   chgnet
+    #   matgl
+    #   pytorch-lightning
+    #   torchdata
+    #   torchmetrics
+torchdata==0.7.1
+    # via dgl
+torchmetrics==1.4.0
+    # via pytorch-lightning
 tornado==6.4
     # via livereload
 tqdm==4.66.4
     # via
+    #   dgl
     #   maggma
+    #   matminer
     #   pymatgen
+    #   pytorch-lightning
+triton==2.3.0
+    # via torch
+typeguard==4.2.1
+    # via inflect
 typer==0.12.3
     # via fastapi-cli
 types-requests==2.31.0.20240406
-    # via emmet-api (setup.py)
+    # via emmet-builders (setup.py)
 types-setuptools==69.5.0.20240423
-    # via emmet-api (setup.py)
+    # via emmet-builders (setup.py)
 typing-extensions==4.11.0
     # via
     #   anyio
-    #   asgiref
-    #   cattrs
-    #   ddtrace
     #   emmet-core
     #   fastapi
+    #   inflect
+    #   lightning-utilities
+    #   mp-api
     #   mypy
     #   pydantic
     #   pydantic-core
     #   pydash
+    #   pytorch-lightning
+    #   torch
+    #   typeguard
     #   typer
     #   uvicorn
 tzdata==2024.1
@@ -491,6 +649,7 @@ urllib3==2.2.1
     # via
     #   botocore
     #   requests
+    #   torchdata
     #   types-requests
 uvicorn[standard]==0.29.0
     # via
@@ -512,13 +671,11 @@ websockets==12.0
 werkzeug==3.0.3
     # via flask
 wincertstore==0.2
-    # via emmet-api (setup.py)
+    # via emmet-builders (setup.py)
 wrapt==1.16.0
-    # via deprecated
-xmltodict==0.13.0
-    # via ddtrace
-zipp==3.18.1
-    # via importlib-metadata
+    # via smart-open
+yarl==1.9.4
+    # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
