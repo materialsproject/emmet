@@ -422,6 +422,11 @@ class TaskDoc(StructureMetadata, extra="allow"):
         description="Timestamp for the most recent calculation for this task document",
     )
 
+    batch_id: Optional[str] = Field(
+        None,
+        description="Identifier for this calculation; should provide rough information about the calculation origin and purpose.",
+    )
+
     # Note that these private fields are needed because TaskDoc permits extra info
     # added to the model, unlike TaskDocument. Because of this, when pydantic looks up
     # attrs on the model, it searches for them in the model extra dict first, and if it
@@ -447,6 +452,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
             self._run_type = RunType(temp[0])
             self.task_type = TaskType(" ".join(temp[1:]))
 
+        # TODO: remove after imposing TaskDoc schema on older tasks in collection
         if self.structure is None:
             self.structure = self.calcs_reversed[0].output.structure
 
@@ -456,6 +462,19 @@ class TaskDoc(StructureMetadata, extra="allow"):
     @classmethod
     def last_updated_dict_ok(cls, v) -> datetime:
         return convert_datetime(cls, v)
+
+    @field_validator("batch_id", mode="before")
+    @classmethod
+    def _validate_batch_id(cls, v) -> str:
+        if v is not None:
+            invalid_chars = set(
+                char for char in v if (not char.isalnum()) or (char not in {"-", "_"})
+            )
+            if len(invalid_chars) > 0:
+                raise ValueError(
+                    f"Invalid characters in batch_id:\n{' '.join(invalid_chars)}"
+                )
+        return v
 
     @model_validator(mode="after")
     def set_entry(self) -> datetime:
