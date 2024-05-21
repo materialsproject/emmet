@@ -319,7 +319,7 @@ pydash==8.0.1
     # via maggma
 pygments==2.18.0
     # via rich
-pymatgen==2024.5.1
+pymatgen==2024.4.13
     # via
     #   chgnet
     #   emmet-core
