@@ -373,3 +373,8 @@ class {enum_name}(ValueEnum):
     items = [f'    {const} = "{val}"' for const, val in items.items()]
 
     return header + "\n".join(items)
+
+
+def utcnow() -> datetime.datetime:
+    """Get UTC time right now."""
+    return datetime.datetime.now(datetime.timezone.utc)
