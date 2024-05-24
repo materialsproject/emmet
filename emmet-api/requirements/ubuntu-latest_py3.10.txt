@@ -6,7 +6,7 @@
 #
 aioitertools==0.11.0
     # via maggma
-annotated-types==0.6.0
+annotated-types==0.7.0
     # via pydantic
 anyio==4.3.0
     # via
@@ -27,11 +27,11 @@ bcrypt==4.1.3
     # via paramiko
 blinker==1.8.2
     # via flask
-boto3==1.34.99
+boto3==1.34.112
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.34.99
+botocore==1.34.112
     # via
     #   boto3
     #   s3transfer
@@ -64,7 +64,7 @@ cycler==0.12.1
     # via matplotlib
 ddsketch==3.0.1
     # via ddtrace
-ddtrace==2.8.4
+ddtrace==2.8.5
     # via emmet-api (setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -86,9 +86,8 @@ exceptiongroup==1.2.1
 fastapi==0.111.0
     # via
     #   emmet-api (setup.py)
-    #   fastapi-cli
     #   maggma
-fastapi-cli==0.0.2
+fastapi-cli==0.0.4
     # via fastapi
 flask==3.0.3
     # via mongogrant
@@ -136,7 +135,7 @@ kiwisolver==1.4.5
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
-maggma==0.66.0
+maggma==0.67.0
     # via emmet-api (setup.py)
 markdown-it-py==3.0.0
     # via rich
@@ -144,7 +143,7 @@ markupsafe==2.1.5
     # via
     #   jinja2
     #   werkzeug
-matplotlib==3.8.4
+matplotlib==3.9.0
     # via pymatgen
 mdurl==0.1.2
     # via markdown-it-py
@@ -152,7 +151,7 @@ mongogrant==0.3.3
     # via maggma
 mongomock==4.1.2
     # via maggma
-monty==2024.4.17
+monty==2024.5.15
     # via
     #   emmet-core
     #   maggma
@@ -195,7 +194,7 @@ pillow==10.3.0
     # via matplotlib
 plotly==5.22.0
     # via pymatgen
-protobuf==5.26.1
+protobuf==5.27.0
     # via ddtrace
 pybtex==0.24.0
     # via
@@ -225,7 +224,7 @@ pymatgen==2024.5.1
     #   pymatgen-analysis-alloys
 pymatgen-analysis-alloys==0.0.6
     # via emmet-api (setup.py)
-pymongo==4.7.1
+pymongo==4.7.2
     # via
     #   maggma
     #   mongogrant
@@ -257,7 +256,7 @@ referencing==0.35.1
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.31.0
+requests==2.32.2
     # via
     #   mongogrant
     #   pymatgen
@@ -275,7 +274,7 @@ ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
 s3transfer==0.10.1
     # via boto3
-scipy==1.13.0
+scipy==1.13.1
     # via pymatgen
 sentinels==1.0.0
     # via mongomock
@@ -332,7 +331,7 @@ typing-extensions==4.11.0
     #   uvicorn
 tzdata==2024.1
     # via pandas
-ujson==5.9.0
+ujson==5.10.0
     # via fastapi
 uncertainties==3.1.7
     # via pymatgen
@@ -343,7 +342,6 @@ urllib3==2.2.1
 uvicorn[standard]==0.29.0
     # via
     #   fastapi
-    #   fastapi-cli
     #   maggma
 uvloop==0.19.0
     # via uvicorn
@@ -357,7 +355,7 @@ wrapt==1.16.0
     # via deprecated
 xmltodict==0.13.0
     # via ddtrace
-zipp==3.18.1
+zipp==3.18.2
     # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
