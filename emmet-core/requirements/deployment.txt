@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=emmet/emmet-core/requirements/deployment.txt emmet/emmet-core/setup.py python/requirements.txt
 #
-annotated-types==0.6.0
+annotated-types==0.7.0
     # via pydantic
 certifi==2024.2.2
     # via requests
@@ -30,7 +30,7 @@ matplotlib==3.9.0
     # via
     #   -r python/requirements.txt
     #   pymatgen
-monty==2024.5.15
+monty==2024.5.24
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pymatgen
@@ -73,7 +73,7 @@ pydantic-core==2.18.2
     # via pydantic
 pydantic-settings==2.2.1
     # via emmet-core (emmet/emmet-core/setup.py)
-pymatgen==2024.5.1
+pymatgen==2024.4.13
     # via emmet-core (emmet/emmet-core/setup.py)
 pyparsing==3.1.2
     # via matplotlib
@@ -87,13 +87,13 @@ pytz==2024.1
     # via pandas
 pyyaml==6.0.1
     # via pybtex
-requests==2.32.0
+requests==2.32.2
     # via pymatgen
 ruamel-yaml==0.18.6
     # via pymatgen
 ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
-scipy==1.13.0
+scipy==1.13.1
     # via
     #   -r python/requirements.txt
     #   pymatgen
@@ -111,7 +111,7 @@ tenacity==8.3.0
     # via plotly
 tqdm==4.66.4
     # via pymatgen
-typing-extensions==4.11.0
+typing-extensions==4.12.0
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pydantic
