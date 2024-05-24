@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements/ubuntu-latest_py3.9.txt
 #
-annotated-types==0.6.0
+annotated-types==0.7.0
     # via pydantic
 certifi==2024.2.2
     # via requests
@@ -30,9 +30,9 @@ kiwisolver==1.4.5
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
-matplotlib==3.8.4
+matplotlib==3.9.0
     # via pymatgen
-monty==2024.4.17
+monty==2024.5.15
     # via
     #   emmet-core (setup.py)
     #   pymatgen
@@ -72,7 +72,7 @@ pydantic-core==2.18.2
     # via pydantic
 pydantic-settings==2.2.1
     # via emmet-core (setup.py)
-pymatgen==2024.5.1
+pymatgen==2024.4.13
     # via emmet-core (setup.py)
 pyparsing==3.1.2
     # via matplotlib
@@ -86,13 +86,13 @@ pytz==2024.1
     # via pandas
 pyyaml==6.0.1
     # via pybtex
-requests==2.31.0
+requests==2.32.2
     # via pymatgen
 ruamel-yaml==0.18.6
     # via pymatgen
 ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
-scipy==1.13.0
+scipy==1.13.1
     # via pymatgen
 six==1.16.0
     # via
@@ -119,5 +119,5 @@ uncertainties==3.1.7
     # via pymatgen
 urllib3==2.2.1
     # via requests
-zipp==3.18.1
+zipp==3.18.2
     # via importlib-resources
