@@ -84,6 +84,7 @@ def create_solute(
     networking_solvents: list[str] | None = None,
     fallback_radius: float | None = None,
     include_solute_in_solvents=False,
+    analysis_classes="all",
     step=1,
 ):
     solute = u.select_atoms(f"resname {solute_name}")
@@ -99,7 +100,7 @@ def create_solute(
         solute,
         solvents,
         solute_name=solute_name,
-        analysis_classes="all",
+        analysis_classes=analysis_classes,
         networking_solvents=networking_solvents,
         kernel_kwargs={"default": fallback_radius},
     )
