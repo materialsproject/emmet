@@ -4,6 +4,7 @@ from typing import Dict, List, Union, Optional
 import numpy as np
 from pydantic import ConfigDict, Field, ImportString
 from pymatgen.core.structure import Structure
+from pymatgen.io.vasp.inputs import Kpoints
 from pymatgen.io.vasp.sets import VaspInputSet
 
 from emmet.core.settings import EmmetSettings
@@ -93,10 +94,15 @@ class ValidationDoc(EmmetBaseModel):
         run_type = task_doc.run_type
         inputs = task_doc.orig_inputs
         chemsys = task_doc.chemsys
-        calcs_reversed = task_doc.calcs_reversed
+        calcs_reversed = [
+            calc if not hasattr(calc, "model_dump") else calc.model_dump()
+            for calc in task_doc.calcs_reversed
+        ]
 
         if calcs_reversed[0].get("input", {}).get("structure", None):
-            structure = Structure.from_dict(calcs_reversed[0]["input"]["structure"])
+            structure = calcs_reversed[0]["input"]["structure"]
+            if isinstance(structure, dict):
+                structure = Structure.from_dict(structure)
         else:
             structure = task_doc.input.structure or task_doc.output.structure
 
@@ -140,7 +146,7 @@ class ValidationDoc(EmmetBaseModel):
                 # Checking K-Points
                 # Calculations that use KSPACING will not have a .kpoints attr
 
-                if task_type != task_type.NSCF_Line:
+                if task_type != TaskType.NSCF_Line:
                     # Not validating k-point data for line-mode calculations as constructing
                     # the k-path is too costly for the builder and the uniform input set is used.
 
@@ -252,7 +258,7 @@ def _scf_upward_check(calcs_reversed, inputs, data, max_allowed_scf_gradient, wa
 
 def _u_value_checks(task_doc, valid_input_set, warnings):
     # NOTE: Reverting to old method of just using input.hubbards which is wrong in many instances
-    input_hubbards = task_doc.input.hubbards
+    input_hubbards = {} if task_doc.input.hubbards is None else task_doc.input.hubbards
 
     if valid_input_set.incar.get("LDAU", False) or len(input_hubbards) > 0:
         # Assemble required input_set LDAU params into dictionary
@@ -297,9 +303,12 @@ def _kpoint_check(input_set, inputs, calcs_reversed, data, kpts_tolerance):
     else:
         input_dict = inputs
 
-    num_kpts = input_dict.get("kpoints", {}).get("nkpoints", 0) or np.prod(
-        input_dict.get("kpoints", {}).get("kpoints", [1, 1, 1])
-    )
+    kpoints = input_dict.get("kpoints", {})
+    if isinstance(kpoints, Kpoints):
+        kpoints = kpoints.as_dict()
+    elif kpoints is None:
+        kpoints = {}
+    num_kpts = kpoints.get("nkpoints", 0) or np.prod(kpoints.get("kpoints", [1, 1, 1]))
 
     data["kpts_ratio"] = num_kpts / valid_num_kpts
     return data["kpts_ratio"] < kpts_tolerance
@@ -333,14 +342,14 @@ def _potcar_stats_check(task_doc, potcar_stats: dict):
     data_tol = 1.0e-6
 
     try:
-        potcar_details = task_doc.calcs_reversed[0]["input"]["potcar_spec"]
+        potcar_details = task_doc.calcs_reversed[0].model_dump()["input"]["potcar_spec"]
 
     except KeyError:
         # Assume it is an old calculation without potcar_spec data and treat it as passing POTCAR hash check
         return False
 
     use_legacy_hash_check = False
-    if any(len(entry.get("summary_stats", {})) == 0 for entry in potcar_details):
+    if any(entry.get("summary_stats", None) is None for entry in potcar_details):
         # potcar_spec doesn't include summary_stats kwarg needed to check potcars
         # fall back to header hash checking
         use_legacy_hash_check = True

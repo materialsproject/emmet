@@ -12,7 +12,7 @@ from emmet.core.material import PropertyOrigin
 from emmet.core.settings import EmmetSettings
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
-from emmet.core.vasp.task_valid import TaskDocument
+from emmet.core.tasks import TaskDoc
 
 SETTINGS = EmmetSettings()
 
@@ -51,7 +51,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
     @classmethod
     def from_tasks(
         cls,
-        task_group: List[TaskDocument],
+        task_group: List[TaskDoc],
         structure_quality_scores: Dict[
             str, int
         ] = SETTINGS.VASP_STRUCTURE_QUALITY_SCORES,
@@ -101,7 +101,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         # Always prefer a static over a structure opt
         structure_task_quality_scores = {"Structure Optimization": 1, "Static": 2}
 
-        def _structure_eval(task: TaskDocument):
+        def _structure_eval(task: TaskDoc):
             """
             Helper function to order structures optimization and statics calcs by
             - Functional Type
@@ -155,7 +155,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         # Always prefer a static over a structure opt
         entry_task_quality_scores = {"Structure Optimization": 1, "Static": 2}
 
-        def _entry_eval(task: TaskDocument):
+        def _entry_eval(task: TaskDoc):
             """
             Helper function to order entries and statics calcs by
             - Spin polarization
@@ -222,7 +222,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
     @classmethod
     def construct_deprecated_material(
         cls,
-        task_group: List[TaskDocument],
+        task_group: List[TaskDoc],
         commercial_license: bool = True,
     ) -> "MaterialsDoc":
         """

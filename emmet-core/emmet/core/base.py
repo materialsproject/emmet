@@ -11,6 +11,7 @@ from pymatgen.core import __version__ as pmg_version
 
 from emmet.core import __version__
 from emmet.core.common import convert_datetime
+from emmet.core.utils import utcnow
 
 T = TypeVar("T", bound="EmmetBaseModel")
 
@@ -34,7 +35,7 @@ class EmmetMeta(BaseModel):
     )
 
     build_date: Optional[datetime] = Field(  # type: ignore
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
         description="The build date for this document.",
     )
 
