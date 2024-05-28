@@ -37,7 +37,7 @@ production_maker = ProductionMaker(
 )
 
 production_flow = production_maker.make(
-    setup.output.interchange, 
+    setup.output.interchange,
     prev_task=setup.output,
     output_dir="/pscratch/sd/o/oac/water_test_dcd"
 )
@@ -51,7 +51,7 @@ Then we reduced the trajectory length with
 ```python
 # Create a writer for the output DCD file
 with mda.Writer("every_10th_frame.dcd", u.atoms.n_atoms) as writer:
-    
+
     # Iterate over the trajectory with a step size of 10
     for ts in u.trajectory[::10]:
         # Write the current frame to the output DCD file
