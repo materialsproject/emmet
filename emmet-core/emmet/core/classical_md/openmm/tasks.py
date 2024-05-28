@@ -28,6 +28,10 @@ class CalculationInput(BaseModel, extra="allow"):  # type: ignore[call-arg]
         None, description="The simulation temperature (kelvin)."
     )
 
+    pressure: Optional[float] = Field(
+        None, description="The simulation pressure (atmospheres)."
+    )
+
     friction_coefficient: Optional[float] = Field(
         None,
         description=(

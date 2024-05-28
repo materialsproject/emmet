@@ -14,6 +14,7 @@ from emmet.builders.classical_md.utils import (
     identify_networking_solvents,
 )
 from emmet.core.classical_md.solvation import SolvationDoc
+from emmet.core.classical_md.openmm.calculations import CalculationsDoc
 from emmet.core.utils import jsanitize
 
 
@@ -63,7 +64,7 @@ class ElectrolyteBuilder(Builder):
 
         job_groups = []
         for flow_id in flow_ids:
-            # get last item in hosts, which should be top level workflow
+            # the last item in hosts should be the top level workflow
             host_match = {"$expr": {"$eq": [{"$arrayElemAt": ["$hosts", -1]}, flow_id]}}
             job_groups.append(list(self.md_docs.query(criteria=host_match)))
 
@@ -118,11 +119,17 @@ class ElectrolyteBuilder(Builder):
             solvation_doc = SolvationDoc.from_solute(
                 solute, job_uuid=item["uuid"], flow_uuid=item["hosts"][-1]
             )
+            calculations_doc = CalculationsDoc.from_calcs_reversed(
+                task_doc.calcs_reversed,
+                job_uuid=item["uuid"],
+                flow_uuid=item["hosts"][-1],
+            )
 
             # create docs
             # TODO: what cleanup do I need?
             docs = {
                 "solute": jsanitize(solvation_doc.model_dump()),
+                "calculations": jsanitize(calculations_doc.model_dump()),
             }
 
             processed_items.append(docs)
