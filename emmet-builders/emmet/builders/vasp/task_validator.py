@@ -39,7 +39,7 @@ class TaskValidator(MapBuilder):
         # Set up potcar cache if appropriate
         if self.settings.VASP_VALIDATE_POTCAR_STATS:
             if not self.potcar_stats:
-                self.potcar_stats = get_potcar_stats(strict=False)
+                self.potcar_stats = get_potcar_stats(method="stored")
         else:
             self.potcar_stats = None
 
