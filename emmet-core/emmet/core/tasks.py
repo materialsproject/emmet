@@ -86,24 +86,20 @@ class OrigInputs(CalculationBaseModel):
     @field_validator("potcar", mode="before")
     @classmethod
     def potcar_ok(cls, v):
-        """ Check that the POTCAR meets type requirements. """
+        """Check that the POTCAR meets type requirements."""
         if isinstance(v, list):
             return list(v)
         return v
-    
+
     @field_validator("potcar", mode="after")
     @classmethod
     def parse_potcar(cls, v):
-        """ Check that potcar attribute is not a pymatgen POTCAR. """
+        """Check that potcar attribute is not a pymatgen POTCAR."""
         if isinstance(v, VaspPotcar):
             # The user should not mix potential types, but account for that here
             # Using multiple potential types will be caught in validation
             pot_typ = "_".join(set(p.potential_type for p in v))
-            return Potcar(
-                pot_type = pot_typ,
-                functional = v.functional,
-                symbols = v.symbols
-            )
+            return Potcar(pot_type=pot_typ, functional=v.functional, symbols=v.symbols)
         return v
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
