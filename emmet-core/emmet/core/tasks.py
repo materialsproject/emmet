@@ -93,8 +93,8 @@ class OrigInputs(CalculationBaseModel):
     
     @field_validator("potcar", mode="after")
     @classmethod
-    def _prune_potcar(cls, v):
-        """ Check that potcar attr is not a pymatgen POTCAR. """
+    def parse_potcar(cls, v):
+        """ Check that potcar attribute is not a pymatgen POTCAR. """
         if isinstance(v, VaspPotcar):
             # The user should not mix potential types, but account for that here
             # Using multiple potential types will be caught in validation
