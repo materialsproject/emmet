@@ -4,7 +4,7 @@
 #
 #    pip-compile --all-extras --output-file=requirements/ubuntu-latest_py3.11_extras.txt
 #
-aiohttp==3.9.5
+aiohttp==3.9.4
     # via fsspec
 aioitertools==0.11.0
     # via maggma
