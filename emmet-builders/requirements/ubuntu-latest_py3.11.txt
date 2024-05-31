@@ -450,7 +450,7 @@ torchdata==0.7.1
     # via dgl
 torchmetrics==1.4.0.post0
     # via pytorch-lightning
-tqdm==4.66.4
+tqdm==4.66.3
     # via
     #   dgl
     #   maggma
