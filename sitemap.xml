@@ -2,27 +2,27 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://materialsproject.github.io/emmet/</loc>
-         <lastmod>2024-05-21</lastmod>
+         <lastmod>2024-05-31</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://materialsproject.github.io/emmet/CHANGELOG/</loc>
-         <lastmod>2024-05-21</lastmod>
+         <lastmod>2024-05-31</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://materialsproject.github.io/emmet/core/</loc>
-         <lastmod>2024-05-21</lastmod>
+         <lastmod>2024-05-31</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://materialsproject.github.io/emmet/packages/</loc>
-         <lastmod>2024-05-21</lastmod>
+         <lastmod>2024-05-31</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://materialsproject.github.io/emmet/settings/</loc>
-         <lastmod>2024-05-21</lastmod>
+         <lastmod>2024-05-31</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
