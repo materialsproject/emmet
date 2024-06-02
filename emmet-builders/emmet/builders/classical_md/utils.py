@@ -25,9 +25,7 @@ def create_universe(
     mols = [mol for mol in interchange.topology.molecules]
 
     label_types(u, mols)
-
     label_resnames(u, mols, mol_specs)
-
     label_charges(u, mols, mol_specs)
 
     return u
@@ -84,7 +82,7 @@ def create_solute(
     networking_solvents: list[str] | None = None,
     fallback_radius: float | None = None,
     include_solute_in_solvents=False,
-    analysis_classes="all",
+    analysis_classes=["coordination", "pairing", "speciation", "networking"],
     step=1,
 ):
     solute = u.select_atoms(f"resname {solute_name}")
