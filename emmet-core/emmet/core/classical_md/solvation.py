@@ -165,27 +165,36 @@ class SolvationDoc(BaseModel, arbitrary_types_allowed=True):
     def from_solute(
         cls, solute: Solute, job_uuid: str | None = None, flow_uuid: str | None = None
     ) -> "SolvationDoc":
-        return SolvationDoc(
+        props = dict(
             solute_name=solute.solute_name,
             solvent_names=list(solute.solvents.keys()),
             is_electrolyte=True,
-            coordination_numbers=solute.coordination.coordination_numbers,
-            # coordination_numbers_by_frame=solute.coordination.coordination_numbers_by_frame,
-            coordinating_atoms=solute.coordination.coordinating_atoms,
-            coordination_vs_random=solute.coordination.coordination_vs_random,
-            network_sizes=solute.networking.network_sizes,
-            solute_status=solute.networking.solute_status,
-            # solute_status_by_frame=solute.networking.solute_status_by_frame,
-            solvent_pairing=solute.pairing.solvent_pairing,
-            # pairing_by_frame=solute.pairing.pairing_by_frame,
-            fraction_free_solvents=solute.pairing.fraction_free_solvents,
-            diluent_composition=solute.pairing.diluent_composition,
-            # diluent_composition_by_frame=solute.pairing.diluent_composition_by_frame,
-            diluent_counts=solute.pairing.diluent_counts,
-            residence_times=solute.residence.residence_times_cutoff,
-            residence_times_fit=solute.residence.residence_times_fit,
-            speciation_fraction=solute.speciation.speciation_fraction,
-            solvent_co_occurrence=solute.speciation.solvent_co_occurrence,
-            job_uuid=job_uuid,
-            flow_uuid=flow_uuid,
         )
+        # as a dict
+        props = {
+            "solute_name": solute.solute_name,
+            "solvent_names": list(solute.solvents.keys()),
+            "is_electrolyte": True,
+            "job_uuid": job_uuid,
+            "flow_uuid": flow_uuid,
+        }
+        if hasattr(solute, "coordination"):
+            props["coordination_numbers"] = solute.coordination.coordination_numbers
+            props["coordinating_atoms"] = solute.coordination.coordinating_atoms
+            props["coordination_vs_random"] = solute.coordination.coordination_vs_random
+        if hasattr(solute, "pairing"):
+            props["solvent_pairing"] = solute.pairing.solvent_pairing
+            props["fraction_free_solvents"] = solute.pairing.fraction_free_solvents
+            props["diluent_composition"] = solute.pairing.diluent_composition
+            props["diluent_counts"] = solute.pairing.diluent_counts
+        if hasattr(solute, "speciation"):
+            props["speciation_fraction"] = solute.speciation.speciation_fraction
+            props["solvent_co_occurrence"] = solute.speciation.solvent_co_occurrence
+        if hasattr(solute, "networking"):
+            props["network_sizes"] = solute.networking.network_sizes
+            props["solute_status"] = solute.networking.solute_status
+        if hasattr(solute, "residence"):
+            props["residence_times"] = solute.residence.residence_times_cutoff
+            props["residence_times_fit"] = solute.residence.residence_times_fit
+
+        return SolvationDoc(**props)
