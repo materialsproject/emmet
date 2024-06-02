@@ -30,10 +30,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
           channels: anaconda, conda-forge
 
-      - name: Install OpenBabel
+      - name: Install all conda requirements
         shell: bash -l {0}
         run: |
-          conda install openbabel -y
+          conda install --file emmet-builders/requirements/concda_requirements.txt -y
+      #          conda install openbabel -y
 
       # - uses: actions/setup-python@v5
       #   with:
