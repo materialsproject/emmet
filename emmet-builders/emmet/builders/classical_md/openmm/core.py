@@ -20,6 +20,15 @@ from emmet.core.utils import jsanitize
 
 
 class ElectrolyteBuilder(Builder):
+    """
+    Builder to create solvation and calculations documents from OpenMM task documents.
+
+    This class processes molecular dynamics (MD) simulations and generates
+    comprehensive reports including solvation properties and calculation results.
+    It leverages the OpenFF toolkit and MDAnalysis for molecular topology and trajectory
+    handling, respectively.
+    """
+
     def __init__(
         self,
         md_docs: Store,
@@ -188,11 +197,16 @@ class ElectrolyteBuilder(Builder):
         """
         Instantiate a MDAnalysis universe from a task document.
 
+        This is useful if you want to analyze a small number of systems
+        without running the whole build pipeline.
+
         Args:
             job_uuid: str
                 The UUID of the job.
             traj_directory: str
                 Name of the DCD file to write.
+            overwrite_local_traj: bool
+                Whether to overwrite the local trajectory if it exists.
         """
 
         # pull job
