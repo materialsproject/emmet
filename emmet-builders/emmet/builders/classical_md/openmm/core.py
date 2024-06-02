@@ -5,6 +5,7 @@ import tempfile
 import numpy as np
 
 from maggma.core import Builder, Store
+from maggma.stores import MemoryStore
 from openff.interchange import Interchange
 from emmet.core.classical_md.openmm import OpenMMTaskDocument
 from emmet.builders.classical_md.utils import (
@@ -23,23 +24,31 @@ class ElectrolyteBuilder(Builder):
         self,
         md_docs: Store,
         blobs: Store,
-        solute: Store,
+        solute: Store | None = None,
+        calculations: Store | None = None,
         query: Optional[dict] = None,
+        solute_analysis_classes: List[str] | str = "all",
         solvation_fallback_radius: float = 3,
         chunk_size: int = 10,
     ):
         self.md_docs = md_docs
         self.blobs = blobs
-        self.solute = solute
+        self.solute = solute or MemoryStore()
+        self.calculations = calculations or MemoryStore()
         self.query = query or {}
         self.solvation_fallback_radius = solvation_fallback_radius
 
         self.md_docs.key = "uuid"
         self.blobs.key = "blob_uuid"
-        self.solute.key = "job_uuid"
+        if self.solute:
+            self.solute.key = "job_uuid"
+        if self.calculations:
+            self.calculations.key = "job_uuid"
 
         super().__init__(
-            sources=[md_docs, blobs], targets=[solute], chunk_size=chunk_size
+            sources=[md_docs, blobs],
+            targets=[self.solute, self.calculations],
+            chunk_size=chunk_size,
         )
 
     # def prechunk(self, number_splits: int):  # pragma: no cover
@@ -139,8 +148,13 @@ class ElectrolyteBuilder(Builder):
     def update_targets(self, items: List):
         if len(items) > 0:
             self.logger.info(f"Found {len(items)} electrolyte docs to update.")
+
             solutes = [item["solute"] for item in items]
             self.solute.update(solutes)
+
+            calculations = [item["calculations"] for item in items]
+            self.calculations.update(calculations)
+
         else:
             self.logger.info("No items to update.")
 
