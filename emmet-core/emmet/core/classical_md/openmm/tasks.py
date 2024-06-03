@@ -184,7 +184,6 @@ class CalculationOutput(BaseModel):
             else:
                 traj_blob = None
         else:
-            traj_file = None
             traj_blob = None
 
         return CalculationOutput(
