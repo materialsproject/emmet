@@ -210,12 +210,12 @@ class ElectrolyteBuilder(Builder):
         """
 
         # pull job
-        doc = list(self.md_docs.query(criteria={"uuid": job_uuid}))
-        if len(doc) != 1:
+        docs = list(self.md_docs.query(criteria={"uuid": job_uuid}))
+        if len(docs) != 1:
             raise ValueError(
-                f"The job_uuid, {job_uuid}, must be unique. Found {len(doc)} documents."
+                f"The job_uuid, {job_uuid}, must be unique. Found {len(docs)} documents."
             )
-        doc = doc[0]
+        doc = docs[0]
         traj_file_type = doc["output"]["calcs_reversed"][0]["input"]["traj_file_type"]
 
         # define path to trajectory
