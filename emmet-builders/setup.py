@@ -14,7 +14,6 @@ setup(
     include_package_data=True,
     install_requires=[
         "emmet-core[all]",
-        "emmet-core[ml]",
         "maggma>=0.57.6",
         "matminer>=0.9.1",
     ],
@@ -44,6 +43,7 @@ setup(
             "livereload",
             "jinja2",
         ],
+        "ml": ["emmet-core[ml]"],
     },
     python_requires=">=3.9",
     license="modified BSD",
