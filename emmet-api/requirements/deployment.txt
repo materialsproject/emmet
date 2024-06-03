@@ -27,11 +27,11 @@ bcrypt==4.1.3
     # via paramiko
 blinker==1.8.2
     # via flask
-boto3==1.34.117
+boto3==1.34.118
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.34.117
+botocore==1.34.118
     # via
     #   boto3
     #   s3transfer
@@ -75,7 +75,7 @@ dnspython==2.6.1
     #   pymongo
 email-validator==2.1.1
     # via fastapi
-emmet-core==0.83.7
+emmet-core==0.83.8
     # via emmet-api (emmet/emmet-api/setup.py)
 envier==0.5.1
     # via ddtrace
@@ -205,13 +205,13 @@ pybtex==0.24.0
     #   pymatgen
 pycparser==2.22
     # via cffi
-pydantic==2.7.2
+pydantic==2.7.3
     # via
     #   emmet-core
     #   fastapi
     #   maggma
     #   pydantic-settings
-pydantic-core==2.18.3
+pydantic-core==2.18.4
     # via pydantic
 pydantic-settings==2.3.0
     # via
