@@ -12,12 +12,12 @@ aiosignal==1.3.1
     # via aiohttp
 annotated-types==0.7.0
     # via pydantic
-anyio==4.3.0
+anyio==4.4.0
     # via
     #   httpx
     #   starlette
     #   watchfiles
-ase==3.22.1
+ase==3.23.0
     # via
     #   chgnet
     #   matcalc
@@ -31,15 +31,15 @@ bcrypt==4.1.3
     # via paramiko
 blinker==1.8.2
     # via flask
-boto3==1.34.112
+boto3==1.34.118
     # via maggma
-botocore==1.34.112
+botocore==1.34.118
     # via
     #   boto3
     #   s3transfer
 bracex==2.4
     # via wcmatch
-certifi==2024.2.2
+certifi==2024.6.2
     # via
     #   httpcore
     #   httpx
@@ -52,7 +52,7 @@ cfgv==3.4.0
     # via pre-commit
 charset-normalizer==3.3.2
     # via requests
-chgnet==0.3.5
+chgnet==0.3.7
     # via emmet-core (setup.py)
 click==8.1.7
     # via
@@ -66,7 +66,7 @@ colorama==0.4.6
     # via griffe
 contourpy==1.2.1
     # via matplotlib
-coverage[toml]==7.5.1
+coverage[toml]==7.5.3
     # via pytest-cov
 cryptography==42.0.7
     # via paramiko
@@ -89,7 +89,7 @@ dnspython==2.6.1
     #   pymongo
 email-validator==2.1.1
     # via fastapi
-emmet-core==0.83.6
+emmet-core==0.83.8
     # via mp-api
 fastapi==0.111.0
     # via maggma
@@ -104,7 +104,7 @@ flake8==7.0.0
     # via emmet-core (setup.py)
 flask==3.0.3
     # via mongogrant
-fonttools==4.51.0
+fonttools==4.53.0
     # via matplotlib
 frozenlist==1.4.1
     # via
@@ -114,8 +114,6 @@ fsspec[http]==2024.5.0
     # via
     #   pytorch-lightning
     #   torch
-future==1.0.0
-    # via uncertainties
 ghp-import==2.1.0
     # via mkdocs
 griffe==0.45.2
@@ -256,7 +254,7 @@ mongogrant==0.3.3
     # via maggma
 mongomock==4.1.2
     # via maggma
-monty==2024.5.15
+monty==2024.5.24
     # via
     #   custodian
     #   emmet-core
@@ -294,7 +292,7 @@ networkx==3.3
     #   pymatgen
     #   robocrys
     #   torch
-nodeenv==1.8.0
+nodeenv==1.9.0
     # via pre-commit
 numpy==1.26.4
     # via
@@ -407,7 +405,7 @@ pycodestyle==2.11.1
     #   flake8
 pycparser==2.22
     # via cffi
-pydantic==2.7.1
+pydantic==2.7.3
     # via
     #   emmet-core
     #   emmet-core (setup.py)
@@ -415,9 +413,9 @@ pydantic==2.7.1
     #   maggma
     #   matgl
     #   pydantic-settings
-pydantic-core==2.18.2
+pydantic-core==2.18.4
     # via pydantic
-pydantic-settings==2.2.1
+pydantic-settings==2.3.0
     # via
     #   emmet-core
     #   emmet-core (setup.py)
@@ -504,7 +502,7 @@ referencing==0.35.1
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.2
+requests==2.32.3
     # via
     #   dgl
     #   matminer
@@ -570,7 +568,7 @@ sshtunnel==0.4.0
     # via maggma
 starlette==0.37.2
     # via fastapi
-sympy==1.12
+sympy==1.12.1
     # via
     #   matminer
     #   pymatgen
@@ -603,15 +601,15 @@ tqdm==4.66.4
     #   pytorch-lightning
 triton==2.2.0
     # via torch
-typeguard==4.2.1
+typeguard==4.3.0
     # via inflect
 typer==0.12.3
     # via fastapi-cli
-types-requests==2.32.0.20240523
+types-requests==2.32.0.20240602
     # via emmet-core (setup.py)
-types-setuptools==70.0.0.20240523
+types-setuptools==70.0.0.20240524
     # via emmet-core (setup.py)
-typing-extensions==4.11.0
+typing-extensions==4.12.1
     # via
     #   emmet-core
     #   emmet-core (setup.py)
@@ -631,7 +629,7 @@ tzdata==2024.1
     # via pandas
 ujson==5.10.0
     # via fastapi
-uncertainties==3.1.7
+uncertainties==3.2.0
     # via pymatgen
 urllib3==2.2.1
     # via
@@ -639,7 +637,7 @@ urllib3==2.2.1
     #   requests
     #   torchdata
     #   types-requests
-uvicorn[standard]==0.29.0
+uvicorn[standard]==0.30.1
     # via
     #   fastapi
     #   maggma
@@ -649,7 +647,7 @@ virtualenv==20.26.2
     # via pre-commit
 watchdog==4.0.1
     # via mkdocs
-watchfiles==0.21.0
+watchfiles==0.22.0
     # via uvicorn
 wcmatch==8.5.2
     # via mkdocs-awesome-pages-plugin
