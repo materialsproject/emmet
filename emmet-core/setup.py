@@ -41,6 +41,8 @@ setup(
             "robocrys>=0.2.8",
             "pymatgen-analysis-diffusion>=2023.8.15",
             "pymatgen-analysis-alloys>=0.0.3",
+            "solvation-analysis>=0.4.0",
+            "mdanalysis>=2.7.0",
         ],
         "ml": ["chgnet", "matgl"],
         "test": [
