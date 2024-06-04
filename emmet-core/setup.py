@@ -44,7 +44,7 @@ setup(
             "solvation-analysis>=0.4.0",
             "MDAnalysis>=2.7.0",
         ],
-        "ml": ["chgnet", "matgl"],
+        "ml": ["chgnet==0.3.5", "matgl"],
         "test": [
             "pre-commit",
             "pytest",
