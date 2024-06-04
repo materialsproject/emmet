@@ -33,7 +33,7 @@ jobs:
       - name: Install OpenBabel
         shell: bash -l {0}
         run: |
-          conda install openbabel -y
+          conda install openbabel openff-toolkit>=0.14.0 openff-interchange>=0.3.22 -y
 
       # - uses: actions/setup-python@v5
       #   with:
