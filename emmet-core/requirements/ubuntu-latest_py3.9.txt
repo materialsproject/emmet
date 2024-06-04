@@ -117,5 +117,5 @@ uncertainties==3.2.0
     # via pymatgen
 urllib3==2.2.1
     # via requests
-zipp==3.19.1
+zipp==3.19.2
     # via importlib-resources
