@@ -59,6 +59,8 @@ emmet-core==0.83.8
     # via mp-api
 exceptiongroup==1.2.1
     # via pytest
+fasteners==0.19
+    # via mdanalysis
 filelock==3.14.0
     # via
     #   torch
@@ -72,12 +74,14 @@ frozenlist==1.4.1
     # via
     #   aiohttp
     #   aiosignal
-fsspec[http]==2024.5.0
+fsspec[http]==2024.6.0
     # via
     #   pytorch-lightning
     #   torch
 ghp-import==2.1.0
     # via mkdocs
+griddataformats==1.0.2
+    # via mdanalysis
 griffe==0.45.2
     # via mkdocstrings-python
 h5py==3.11.0
@@ -115,6 +119,7 @@ jinja2==3.1.4
 joblib==1.4.2
     # via
     #   matcalc
+    #   mdanalysis
     #   pymatgen
     #   pymatgen-analysis-diffusion
     #   scikit-learn
@@ -152,10 +157,18 @@ matminer==0.9.2
 matplotlib==3.9.0
     # via
     #   ase
+    #   mdanalysis
     #   phonopy
     #   pymatgen
+    #   solvation-analysis
 mccabe==0.7.0
     # via flake8
+mda-xdrlib==0.2.0
+    # via mdanalysis
+mdanalysis==2.7.0
+    # via
+    #   emmet-core (setup.py)
+    #   solvation-analysis
 mergedeep==1.3.4
     # via
     #   mkdocs
@@ -191,6 +204,8 @@ mkdocstrings[python]==0.25.1
     #   mkdocstrings-python
 mkdocstrings-python==1.10.3
     # via mkdocstrings
+mmtf-python==1.1.3
+    # via mdanalysis
 monty==2024.5.24
     # via
     #   custodian
@@ -206,8 +221,12 @@ mp-api==0.36.1
     # via robocrys
 mpmath==1.3.0
     # via sympy
+mrcfile==1.5.0
+    # via griddataformats
 msgpack==1.0.8
-    # via mp-api
+    # via
+    #   mmtf-python
+    #   mp-api
 multidict==6.0.5
     # via
     #   aiohttp
@@ -226,7 +245,7 @@ networkx==3.2.1
     #   pymatgen
     #   robocrys
     #   torch
-nodeenv==1.9.0
+nodeenv==1.9.1
     # via pre-commit
 numpy==1.26.4
     # via
@@ -234,19 +253,26 @@ numpy==1.26.4
     #   chgnet
     #   contourpy
     #   dgl
+    #   griddataformats
     #   h5py
     #   matminer
     #   matplotlib
+    #   mdanalysis
+    #   mrcfile
     #   pandas
+    #   patsy
     #   phonopy
     #   pymatgen
     #   pytorch-lightning
+    #   rdkit
     #   robocrys
     #   scikit-learn
     #   scipy
     #   seekpath
     #   shapely
+    #   solvation-analysis
     #   spglib
+    #   statsmodels
     #   torchmetrics
 nvidia-cublas-cu12==12.1.3.1
     # via
@@ -285,10 +311,12 @@ packaging==24.0
     # via
     #   lightning-utilities
     #   matplotlib
+    #   mdanalysis
     #   mkdocs
     #   plotly
     #   pytest
     #   pytorch-lightning
+    #   statsmodels
     #   torchmetrics
 palettable==3.3.3
     # via pymatgen
@@ -296,19 +324,27 @@ pandas==2.2.2
     # via
     #   matminer
     #   pymatgen
+    #   solvation-analysis
+    #   statsmodels
 pathspec==0.12.1
     # via mkdocs
+patsy==0.5.6
+    # via statsmodels
 phonopy==2.23.1
     # via matcalc
 pillow==10.3.0
-    # via matplotlib
+    # via
+    #   matplotlib
+    #   rdkit
 platformdirs==4.2.2
     # via
     #   mkdocs-get-deps
     #   mkdocstrings
     #   virtualenv
 plotly==5.22.0
-    # via pymatgen
+    # via
+    #   pymatgen
+    #   solvation-analysis
 pluggy==1.5.0
     # via pytest
 pre-commit==3.7.1
@@ -367,14 +403,15 @@ pymdown-extensions==10.8.1
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.7.2
+pymongo==4.7.3
     # via matminer
 pyparsing==3.1.2
     # via matplotlib
-pytest==8.2.1
+pytest==8.2.2
     # via
     #   emmet-core (setup.py)
     #   pytest-cov
+    #   solvation-analysis
 pytest-cov==5.0.0
     # via emmet-core (setup.py)
 python-dateutil==2.9.0.post0
@@ -401,6 +438,8 @@ pyyaml==6.0.1
     #   pyyaml-env-tag
 pyyaml-env-tag==0.1
     # via mkdocs
+rdkit==2023.9.6
+    # via solvation-analysis
 requests==2.32.3
     # via
     #   dgl
@@ -419,13 +458,17 @@ ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
 scikit-learn==1.5.0
     # via matminer
-scipy==1.13.1
+scipy==1.12.0
     # via
     #   ase
     #   dgl
+    #   griddataformats
+    #   mdanalysis
     #   pymatgen
     #   robocrys
     #   scikit-learn
+    #   solvation-analysis
+    #   statsmodels
 seekpath==2.1.0
     # via emmet-core (setup.py)
 shapely==2.0.4
@@ -433,16 +476,21 @@ shapely==2.0.4
 six==1.16.0
     # via
     #   livereload
+    #   patsy
     #   pybtex
     #   python-dateutil
 snowballstemmer==2.2.0
     # via pydocstyle
+solvation-analysis==0.4.0
+    # via emmet-core (setup.py)
 spglib==2.4.0
     # via
     #   phonopy
     #   pymatgen
     #   robocrys
     #   seekpath
+statsmodels==0.14.2
+    # via solvation-analysis
 sympy==1.12.1
     # via
     #   matminer
@@ -453,7 +501,9 @@ tabulate==0.9.0
 tenacity==8.3.0
     # via plotly
 threadpoolctl==3.5.0
-    # via scikit-learn
+    # via
+    #   mdanalysis
+    #   scikit-learn
 tomli==2.0.1
     # via
     #   coverage
@@ -476,6 +526,7 @@ tqdm==4.66.4
     # via
     #   dgl
     #   matminer
+    #   mdanalysis
     #   pymatgen
     #   pytorch-lightning
 triton==2.2.0
@@ -519,7 +570,7 @@ wincertstore==0.2
     # via emmet-core (setup.py)
 yarl==1.9.4
     # via aiohttp
-zipp==3.19.1
+zipp==3.19.2
     # via
     #   importlib-metadata
     #   importlib-resources
