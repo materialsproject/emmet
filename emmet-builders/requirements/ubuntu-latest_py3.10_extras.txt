@@ -33,9 +33,9 @@ bcrypt==4.1.3
     # via paramiko
 blinker==1.8.2
     # via flask
-boto3==1.34.118
+boto3==1.34.119
     # via maggma
-botocore==1.34.118
+botocore==1.34.119
     # via
     #   boto3
     #   s3transfer
@@ -70,7 +70,7 @@ contourpy==1.2.1
     # via matplotlib
 coverage[toml]==7.5.3
     # via pytest-cov
-cryptography==42.0.7
+cryptography==42.0.8
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -116,7 +116,7 @@ frozenlist==1.4.1
     # via
     #   aiohttp
     #   aiosignal
-fsspec[http]==2024.5.0
+fsspec[http]==2024.6.0
     # via
     #   pytorch-lightning
     #   torch
@@ -300,7 +300,7 @@ networkx==3.3
     #   pymatgen
     #   robocrys
     #   torch
-nodeenv==1.9.0
+nodeenv==1.9.1
     # via pre-commit
 numpy==1.26.4
     # via
@@ -452,7 +452,7 @@ pymdown-extensions==10.8.1
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.7.2
+pymongo==4.7.3
     # via
     #   maggma
     #   matminer
@@ -461,7 +461,7 @@ pynacl==1.5.0
     # via paramiko
 pyparsing==3.1.2
     # via matplotlib
-pytest==8.2.1
+pytest==8.2.2
     # via
     #   emmet-builders (setup.py)
     #   pytest-cov
