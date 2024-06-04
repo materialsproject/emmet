@@ -8,7 +8,7 @@ aioitertools==0.11.0
     # via maggma
 annotated-types==0.7.0
     # via pydantic
-anyio==4.3.0
+anyio==4.4.0
     # via
     #   httpx
     #   starlette
@@ -27,11 +27,11 @@ bcrypt==4.1.3
     # via paramiko
 blinker==1.8.2
     # via flask
-boto3==1.34.112
+boto3==1.34.118
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.34.112
+botocore==1.34.118
     # via
     #   boto3
     #   s3transfer
@@ -41,7 +41,7 @@ bytecode==0.15.1
     # via ddtrace
 cattrs==23.2.3
     # via ddtrace
-certifi==2024.2.2
+certifi==2024.6.2
     # via
     #   httpcore
     #   httpx
@@ -66,7 +66,7 @@ colorama==0.4.6
     # via griffe
 contourpy==1.2.1
     # via matplotlib
-coverage[toml]==7.5.1
+coverage[toml]==7.5.3
     # via pytest-cov
 cryptography==42.0.7
     # via paramiko
@@ -89,7 +89,7 @@ dnspython==2.6.1
     #   pymongo
 email-validator==2.1.1
     # via fastapi
-emmet-core==0.83.6
+emmet-core==0.83.8
     # via emmet-api (setup.py)
 envier==0.5.1
     # via ddtrace
@@ -110,10 +110,8 @@ flake8==7.0.0
     # via emmet-api (setup.py)
 flask==3.0.3
     # via mongogrant
-fonttools==4.51.0
+fonttools==4.53.0
     # via matplotlib
-future==1.0.0
-    # via uncertainties
 ghp-import==2.1.0
     # via mkdocs
 griffe==0.45.2
@@ -140,7 +138,7 @@ idna==3.7
     #   email-validator
     #   httpx
     #   requests
-importlib-metadata==7.0.0
+importlib-metadata==7.1.0
     # via opentelemetry-api
 iniconfig==2.0.0
     # via pytest
@@ -235,7 +233,7 @@ mongogrant==0.3.3
     # via maggma
 mongomock==4.1.2
     # via maggma
-monty==2024.5.15
+monty==2024.5.24
     # via
     #   emmet-core
     #   maggma
@@ -254,7 +252,7 @@ natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
 networkx==3.3
     # via pymatgen
-nodeenv==1.8.0
+nodeenv==1.9.0
     # via pre-commit
 numpy==1.26.4
     # via
@@ -266,7 +264,7 @@ numpy==1.26.4
     #   scipy
     #   shapely
     #   spglib
-opentelemetry-api==1.24.0
+opentelemetry-api==1.25.0
     # via ddtrace
 orjson==3.10.3
     # via
@@ -313,15 +311,15 @@ pycodestyle==2.11.1
     #   flake8
 pycparser==2.22
     # via cffi
-pydantic==2.7.1
+pydantic==2.7.3
     # via
     #   emmet-core
     #   fastapi
     #   maggma
     #   pydantic-settings
-pydantic-core==2.18.2
+pydantic-core==2.18.4
     # via pydantic
-pydantic-settings==2.2.1
+pydantic-settings==2.3.0
     # via
     #   emmet-core
     #   maggma
@@ -335,7 +333,7 @@ pygments==2.18.0
     # via
     #   mkdocs-material
     #   rich
-pymatgen==2024.5.1
+pymatgen==2024.4.13
     # via
     #   emmet-core
     #   pymatgen-analysis-alloys
@@ -392,7 +390,7 @@ referencing==0.35.1
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.2
+requests==2.32.3
     # via
     #   mongogrant
     #   pymatgen
@@ -443,7 +441,7 @@ sshtunnel==0.4.0
     # via maggma
 starlette==0.37.2
     # via fastapi
-sympy==1.12
+sympy==1.12.1
     # via pymatgen
 tabulate==0.9.0
     # via pymatgen
@@ -462,11 +460,11 @@ tqdm==4.66.4
     #   pymatgen
 typer==0.12.3
     # via fastapi-cli
-types-requests==2.32.0.20240523
+types-requests==2.32.0.20240602
     # via emmet-api (setup.py)
-types-setuptools==70.0.0.20240523
+types-setuptools==70.0.0.20240524
     # via emmet-api (setup.py)
-typing-extensions==4.11.0
+typing-extensions==4.12.1
     # via
     #   anyio
     #   asgiref
@@ -484,14 +482,14 @@ tzdata==2024.1
     # via pandas
 ujson==5.10.0
     # via fastapi
-uncertainties==3.1.7
+uncertainties==3.2.0
     # via pymatgen
 urllib3==2.2.1
     # via
     #   botocore
     #   requests
     #   types-requests
-uvicorn[standard]==0.29.0
+uvicorn[standard]==0.30.1
     # via
     #   fastapi
     #   maggma
@@ -501,7 +499,7 @@ virtualenv==20.26.2
     # via pre-commit
 watchdog==4.0.1
     # via mkdocs
-watchfiles==0.21.0
+watchfiles==0.22.0
     # via uvicorn
 wcmatch==8.5.2
     # via mkdocs-awesome-pages-plugin
@@ -515,7 +513,7 @@ wrapt==1.16.0
     # via deprecated
 xmltodict==0.13.0
     # via ddtrace
-zipp==3.18.2
+zipp==3.19.1
     # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
