@@ -64,7 +64,7 @@ pydantic==2.7.3
     #   pydantic-settings
 pydantic-core==2.18.4
     # via pydantic
-pydantic-settings==2.3.0
+pydantic-settings==2.3.1
     # via emmet-core (setup.py)
 pymatgen==2024.4.13
     # via emmet-core (setup.py)

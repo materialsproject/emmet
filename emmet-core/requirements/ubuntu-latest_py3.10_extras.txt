@@ -54,7 +54,7 @@ cfgv==3.4.0
     # via pre-commit
 charset-normalizer==3.3.2
     # via requests
-chgnet==0.3.7
+chgnet==0.3.8
     # via emmet-core (setup.py)
 click==8.1.7
     # via
@@ -456,7 +456,7 @@ pydantic==2.7.3
     #   pydantic-settings
 pydantic-core==2.18.4
     # via pydantic
-pydantic-settings==2.3.0
+pydantic-settings==2.3.1
     # via
     #   emmet-core
     #   emmet-core (setup.py)
