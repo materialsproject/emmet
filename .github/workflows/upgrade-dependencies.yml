@@ -43,9 +43,9 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add ${{ matrix.package }}/requirements && commit="yes" || commit="no"
-          echo COMMIT $commit
-          [[ "$commit" == "yes" ]] && git commit -m "update dependencies for ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }})" && git push -f origin ${{ github.ref_name }}:auto-dependency-upgrades-${{ matrix.package }}-${{ matrix.os }}-py${{ matrix.python-version }}
+          git add ${{ matrix.package }}/requirements
+          git commit --allow-empty -m "update dependencies for ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }})"
+          git push -f origin ${{ github.ref_name }}:auto-dependency-upgrades-${{ matrix.package }}-${{ matrix.os }}-py${{ matrix.python-version }}
 
   pull_request:
     name: Merge all branches and open PR
