@@ -27,11 +27,11 @@ bcrypt==4.1.3
     # via paramiko
 blinker==1.8.2
     # via flask
-boto3==1.34.118
+boto3==1.34.121
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.34.118
+botocore==1.34.121
     # via
     #   boto3
     #   s3transfer
@@ -68,7 +68,7 @@ contourpy==1.2.1
     # via matplotlib
 coverage[toml]==7.5.3
     # via pytest-cov
-cryptography==42.0.7
+cryptography==42.0.8
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -262,7 +262,7 @@ natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
 networkx==3.2.1
     # via pymatgen
-nodeenv==1.9.0
+nodeenv==1.9.1
     # via pre-commit
 numpy==1.26.4
     # via
@@ -309,7 +309,7 @@ pluggy==1.5.0
     # via pytest
 pre-commit==3.7.1
     # via emmet-api (setup.py)
-protobuf==5.27.0
+protobuf==5.27.1
     # via ddtrace
 pybtex==0.24.0
     # via
@@ -329,7 +329,7 @@ pydantic==2.7.3
     #   pydantic-settings
 pydantic-core==2.18.4
     # via pydantic
-pydantic-settings==2.3.0
+pydantic-settings==2.3.1
     # via
     #   emmet-core
     #   maggma
@@ -353,7 +353,7 @@ pymdown-extensions==10.8.1
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.7.2
+pymongo==4.7.3
     # via
     #   maggma
     #   mongogrant
@@ -361,7 +361,7 @@ pynacl==1.5.0
     # via paramiko
 pyparsing==3.1.2
     # via matplotlib
-pytest==8.2.1
+pytest==8.2.2
     # via
     #   emmet-api (setup.py)
     #   pytest-cov
@@ -462,7 +462,7 @@ tomli==2.0.1
     #   coverage
     #   mypy
     #   pytest
-tornado==6.4
+tornado==6.4.1
     # via livereload
 tqdm==4.66.4
     # via
@@ -528,7 +528,7 @@ wrapt==1.16.0
     # via deprecated
 xmltodict==0.13.0
     # via ddtrace
-zipp==3.19.1
+zipp==3.19.2
     # via
     #   importlib-metadata
     #   importlib-resources

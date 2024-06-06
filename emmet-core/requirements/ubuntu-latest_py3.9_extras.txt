@@ -27,7 +27,7 @@ cfgv==3.4.0
     # via pre-commit
 charset-normalizer==3.3.2
     # via requests
-chgnet==0.3.7
+chgnet==0.3.8
     # via emmet-core (setup.py)
 click==8.1.7
     # via
@@ -71,7 +71,7 @@ frozenlist==1.4.1
     # via
     #   aiohttp
     #   aiosignal
-fsspec[http]==2024.5.0
+fsspec[http]==2024.6.0
     # via
     #   pytorch-lightning
     #   torch
@@ -242,7 +242,7 @@ networkx==3.2.1
     #   pymatgen
     #   robocrys
     #   torch
-nodeenv==1.9.0
+nodeenv==1.9.1
     # via pre-commit
 numpy==1.26.4
     # via
@@ -339,7 +339,7 @@ pydantic==2.7.3
     #   pydantic-settings
 pydantic-core==2.18.4
     # via pydantic
-pydantic-settings==2.3.0
+pydantic-settings==2.3.1
     # via
     #   emmet-core
     #   emmet-core (setup.py)
@@ -369,11 +369,11 @@ pymdown-extensions==10.8.1
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.7.2
+pymongo==4.7.3
     # via matminer
 pyparsing==3.1.2
     # via matplotlib
-pytest==8.2.1
+pytest==8.2.2
     # via
     #   emmet-core (setup.py)
     #   pytest-cov
@@ -486,7 +486,7 @@ torchdata==0.7.1
     # via dgl
 torchmetrics==1.4.0.post0
     # via pytorch-lightning
-tornado==6.4
+tornado==6.4.1
     # via livereload
 tqdm==4.66.4
     # via
@@ -534,7 +534,7 @@ wincertstore==0.2
     # via emmet-core (setup.py)
 yarl==1.9.4
     # via aiohttp
-zipp==3.19.1
+zipp==3.19.2
     # via
     #   importlib-metadata
     #   importlib-resources
