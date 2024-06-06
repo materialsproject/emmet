@@ -31,9 +31,9 @@ bcrypt==4.1.3
     # via paramiko
 blinker==1.8.2
     # via flask
-boto3==1.34.119
+boto3==1.34.121
     # via maggma
-botocore==1.34.119
+botocore==1.34.121
     # via
     #   boto3
     #   s3transfer
@@ -639,7 +639,7 @@ torchdata==0.7.1
     # via dgl
 torchmetrics==1.4.0.post0
     # via pytorch-lightning
-tornado==6.4
+tornado==6.4.1
     # via livereload
 tqdm==4.66.4
     # via
