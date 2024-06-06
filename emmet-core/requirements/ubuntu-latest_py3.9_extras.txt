@@ -520,7 +520,7 @@ torchdata==0.7.1
     # via dgl
 torchmetrics==1.4.0.post0
     # via pytorch-lightning
-tornado==6.4
+tornado==6.4.1
     # via livereload
 tqdm==4.66.4
     # via

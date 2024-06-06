@@ -27,11 +27,11 @@ bcrypt==4.1.3
     # via paramiko
 blinker==1.8.2
     # via flask
-boto3==1.34.119
+boto3==1.34.121
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.34.119
+botocore==1.34.121
     # via
     #   boto3
     #   s3transfer
@@ -294,7 +294,7 @@ pluggy==1.5.0
     # via pytest
 pre-commit==3.7.1
     # via emmet-api (setup.py)
-protobuf==5.27.0
+protobuf==5.27.1
     # via ddtrace
 pybtex==0.24.0
     # via
@@ -442,7 +442,7 @@ tabulate==0.9.0
     # via pymatgen
 tenacity==8.3.0
     # via plotly
-tornado==6.4
+tornado==6.4.1
     # via livereload
 tqdm==4.66.4
     # via
