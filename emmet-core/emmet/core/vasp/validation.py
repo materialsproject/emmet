@@ -11,7 +11,7 @@ from emmet.core.settings import EmmetSettings
 from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
 from emmet.core.utils import DocEnum
-from emmet.core.vasp.task_valid import TaskDocument
+from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calc_types.enums import CalcType, TaskType
 
 SETTINGS = EmmetSettings()
@@ -65,7 +65,7 @@ class ValidationDoc(EmmetBaseModel):
     @classmethod
     def from_task_doc(
         cls,
-        task_doc: TaskDocument,
+        task_doc: TaskDoc,
         kpts_tolerance: float = SETTINGS.VASP_KPTS_TOLERANCE,
         kspacing_tolerance: float = SETTINGS.VASP_KSPACING_TOLERANCE,
         input_sets: Dict[str, ImportString] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
@@ -320,7 +320,7 @@ def _kspacing_warnings(input_set, inputs, data, warnings, kspacing_tolerance):
     """
     valid_kspacing = input_set.incar.get("KSPACING", 0)
     if inputs.get("incar", {}).get("KSPACING"):
-        data["kspacing_delta"] = inputs["incar"].get("KSPACING") - valid_kspacing
+        data["kspacing_delta"] = inputs.incar.get("KSPACING") - valid_kspacing
         # larger KSPACING means fewer k-points
         if data["kspacing_delta"] > kspacing_tolerance:
             warnings.append(
