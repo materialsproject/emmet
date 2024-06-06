@@ -61,6 +61,12 @@ class ValidationDoc(EmmetBaseModel):
         " Useful for post-mortem analysis"
     )
     model_config = ConfigDict(extra="allow")
+    nelements: Optional[int] = Field(None, description="Number of elements.")
+    symmetry_number: Optional[int] = Field(
+        None,
+        title="Space Group Number",
+        description="The spacegroup number for the lattice.",
+    )
 
     @classmethod
     def from_task_doc(
@@ -87,6 +93,9 @@ class ValidationDoc(EmmetBaseModel):
                 initial equillibriation period
             potcar_stats: Dictionary of potcar stat data. Mapping is calculation type -> potcar symbol -> hash value.
         """
+
+        nelements = task_doc.nelements or None
+        symmetry_number = task_doc.symmetry.number if task_doc.symmetry else None
 
         bandgap = task_doc.output.bandgap
         calc_type = task_doc.calc_type
@@ -214,6 +223,8 @@ class ValidationDoc(EmmetBaseModel):
             reasons=reasons,
             data=data,
             warnings=warnings,
+            nelements=nelements,
+            symmetry_number=symmetry_number,
         )
 
         return doc
