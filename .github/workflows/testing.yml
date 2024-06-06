@@ -33,7 +33,7 @@ jobs:
       - name: Install OpenBabel
         shell: bash -l {0}
         run: |
-          conda install openbabel openff-toolkit>=0.14.0 openff-interchange>=0.3.22 -y
+          conda install openbabel openff-toolkit>=0.14.0 openff-interchange>=0.3.22 sqlite -y
 
       # - uses: actions/setup-python@v5
       #   with:
@@ -83,7 +83,7 @@ jobs:
         run: |
           python${{ matrix.python-version }} -m pip install --upgrade pip pip-tools
           python${{ matrix.python-version }} -m pip install --user `grep numpy ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt`
-          python${{ matrix.python-version }} -m piptools sync --user ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
+          python${{ matrix.python-version }} -m pip install --user -r ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
 
       - name: Install editable emmet-core if needed
         shell: bash -l {0}
