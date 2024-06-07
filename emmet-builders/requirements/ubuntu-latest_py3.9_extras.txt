@@ -101,6 +101,8 @@ fastapi==0.111.0
     # via maggma
 fastapi-cli==0.0.4
     # via fastapi
+fasteners==0.19
+    # via mdanalysis
 filelock==3.14.0
     # via
     #   torch
@@ -118,10 +120,13 @@ frozenlist==1.4.1
     #   aiosignal
 fsspec[http]==2024.6.0
     # via
+    #   lightning
     #   pytorch-lightning
     #   torch
 ghp-import==2.1.0
     # via mkdocs
+griddataformats==1.0.2
+    # via mdanalysis
 griffe==0.45.2
     # via mkdocstrings-python
 h11==0.14.0
@@ -181,6 +186,7 @@ jmespath==1.0.1
 joblib==1.4.2
     # via
     #   matcalc
+    #   mdanalysis
     #   pymatgen
     #   pymatgen-analysis-diffusion
     #   scikit-learn
@@ -194,8 +200,11 @@ kiwisolver==1.4.5
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
+lightning==2.2.5
+    # via matgl
 lightning-utilities==0.11.2
     # via
+    #   lightning
     #   pytorch-lightning
     #   torchmetrics
 livereload==2.6.3
@@ -222,7 +231,7 @@ markupsafe==2.1.5
     #   werkzeug
 matcalc==0.0.4
     # via emmet-core
-matgl==1.1.1
+matgl==1.1.2
     # via emmet-core
 matminer==0.9.2
     # via
@@ -231,10 +240,18 @@ matminer==0.9.2
 matplotlib==3.9.0
     # via
     #   ase
+    #   mdanalysis
     #   phonopy
     #   pymatgen
+    #   solvation-analysis
 mccabe==0.7.0
     # via flake8
+mda-xdrlib==0.2.0
+    # via mdanalysis
+mdanalysis==2.7.0
+    # via
+    #   emmet-builders (setup.py)
+    #   solvation-analysis
 mdurl==0.1.2
     # via markdown-it-py
 mergedeep==1.3.4
@@ -272,6 +289,8 @@ mkdocstrings[python]==0.25.1
     #   mkdocstrings-python
 mkdocstrings-python==1.10.3
     # via mkdocstrings
+mmtf-python==1.1.3
+    # via mdanalysis
 mongogrant==0.3.3
     # via maggma
 mongomock==4.1.2
@@ -290,9 +309,12 @@ mp-api==0.41.2
     # via robocrys
 mpmath==1.3.0
     # via sympy
+mrcfile==1.5.0
+    # via griddataformats
 msgpack==1.0.8
     # via
     #   maggma
+    #   mmtf-python
     #   mp-api
 multidict==6.0.5
     # via
@@ -320,20 +342,28 @@ numpy==1.26.4
     #   chgnet
     #   contourpy
     #   dgl
+    #   griddataformats
     #   h5py
+    #   lightning
     #   maggma
     #   matminer
     #   matplotlib
+    #   mdanalysis
+    #   mrcfile
     #   pandas
+    #   patsy
     #   phonopy
     #   pymatgen
     #   pytorch-lightning
+    #   rdkit
     #   robocrys
     #   scikit-learn
     #   scipy
     #   seekpath
     #   shapely
+    #   solvation-analysis
     #   spglib
+    #   statsmodels
     #   torchmetrics
 nvidia-cublas-cu12==12.1.3.1
     # via
@@ -374,13 +404,16 @@ orjson==3.10.3
     #   maggma
 packaging==24.0
     # via
+    #   lightning
     #   lightning-utilities
     #   matplotlib
+    #   mdanalysis
     #   mkdocs
     #   mongomock
     #   plotly
     #   pytest
     #   pytorch-lightning
+    #   statsmodels
     #   torchmetrics
 palettable==3.3.3
     # via pymatgen
@@ -388,21 +421,29 @@ pandas==2.2.2
     # via
     #   matminer
     #   pymatgen
+    #   solvation-analysis
+    #   statsmodels
 paramiko==3.4.0
     # via sshtunnel
 pathspec==0.12.1
     # via mkdocs
-phonopy==2.23.1
+patsy==0.5.6
+    # via statsmodels
+phonopy==2.24.1
     # via matcalc
 pillow==10.3.0
-    # via matplotlib
+    # via
+    #   matplotlib
+    #   rdkit
 platformdirs==4.2.2
     # via
     #   mkdocs-get-deps
     #   mkdocstrings
     #   virtualenv
 plotly==5.22.0
-    # via pymatgen
+    # via
+    #   pymatgen
+    #   solvation-analysis
 pluggy==1.5.0
     # via pytest
 pre-commit==3.7.1
@@ -477,6 +518,7 @@ pytest==8.2.2
     # via
     #   emmet-builders (setup.py)
     #   pytest-cov
+    #   solvation-analysis
 pytest-cov==5.0.0
     # via emmet-builders (setup.py)
 python-dateutil==2.9.0.post0
@@ -493,11 +535,12 @@ python-dotenv==1.0.1
 python-multipart==0.0.9
     # via fastapi
 pytorch-lightning==2.2.5
-    # via matgl
+    # via lightning
 pytz==2024.1
     # via pandas
 pyyaml==6.0.1
     # via
+    #   lightning
     #   mkdocs
     #   mkdocs-get-deps
     #   mkdocs-markdownextradata-plugin
@@ -512,6 +555,8 @@ pyyaml-env-tag==0.1
     # via mkdocs
 pyzmq==26.0.3
     # via maggma
+rdkit==2023.9.6
+    # via solvation-analysis
 referencing==0.35.1
     # via
     #   jsonschema
@@ -543,13 +588,17 @@ s3transfer==0.10.1
     # via boto3
 scikit-learn==1.5.0
     # via matminer
-scipy==1.13.1
+scipy==1.12.0
     # via
     #   ase
     #   dgl
+    #   griddataformats
+    #   mdanalysis
     #   pymatgen
     #   robocrys
     #   scikit-learn
+    #   solvation-analysis
+    #   statsmodels
 seekpath==2.1.0
     # via emmet-core
 sentinels==1.0.0
@@ -561,6 +610,7 @@ shellingham==1.5.4
 six==1.16.0
     # via
     #   livereload
+    #   patsy
     #   pybtex
     #   python-dateutil
 smart-open==7.0.4
@@ -571,6 +621,8 @@ sniffio==1.3.1
     #   httpx
 snowballstemmer==2.2.0
     # via pydocstyle
+solvation-analysis==0.4.0
+    # via emmet-builders (setup.py)
 spglib==2.4.0
     # via
     #   phonopy
@@ -581,6 +633,8 @@ sshtunnel==0.4.0
     # via maggma
 starlette==0.37.2
     # via fastapi
+statsmodels==0.14.2
+    # via solvation-analysis
 sympy==1.12.1
     # via
     #   matminer
@@ -591,7 +645,9 @@ tabulate==0.9.0
 tenacity==8.3.0
     # via plotly
 threadpoolctl==3.5.0
-    # via scikit-learn
+    # via
+    #   mdanalysis
+    #   scikit-learn
 tomli==2.0.1
     # via
     #   coverage
@@ -600,6 +656,7 @@ tomli==2.0.1
 torch==2.2.1
     # via
     #   chgnet
+    #   lightning
     #   matgl
     #   pytorch-lightning
     #   torchdata
@@ -607,14 +664,18 @@ torch==2.2.1
 torchdata==0.7.1
     # via dgl
 torchmetrics==1.4.0.post0
-    # via pytorch-lightning
+    # via
+    #   lightning
+    #   pytorch-lightning
 tornado==6.4.1
     # via livereload
 tqdm==4.66.4
     # via
     #   dgl
+    #   lightning
     #   maggma
     #   matminer
+    #   mdanalysis
     #   pymatgen
     #   pytorch-lightning
 triton==2.2.0
@@ -629,13 +690,14 @@ types-setuptools==70.0.0.20240524
     # via emmet-builders (setup.py)
 types-urllib3==1.26.25.14
     # via types-requests
-typing-extensions==4.12.1
+typing-extensions==4.12.2
     # via
     #   aioitertools
     #   anyio
     #   emmet-core
     #   fastapi
     #   inflect
+    #   lightning
     #   lightning-utilities
     #   mkdocstrings
     #   mp-api
