@@ -429,7 +429,7 @@ def _magmom_check(calcs_reversed : list, structure : Structure):
     Returns True if the maximum absolute value outlined below is exceded for the associated element.
     """
     eles_max_vals = {"Cr": 5}
-    if (mag_info := calcs_reversed[0]["output"]["outcar"].get("magnetization",[])):
+    if (outcar := calcs_reversed[0]["output"]["outcar"]) and (mag_info := outcar.get("magnetization",[])):
         return any(
             abs(mag_info[isite].get("tot", 0.)) > abs(eles_max_vals.get(site.label,np.inf))
             for isite, site in enumerate(structure)

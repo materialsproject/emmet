@@ -108,7 +108,7 @@ def task_ldau(test_dir):
 def test_ldau(task_ldau):
     task_ldau.input.is_hubbard = True
     assert task_ldau.run_type == RunType.GGA_U
-    print(task_ldau.calcs_reversed[0].output.outcar)
+    print("craps",task_ldau.calcs_reversed[0].output.outcar)
     assert not ValidationDoc.from_task_doc(task_ldau).valid
 
 
