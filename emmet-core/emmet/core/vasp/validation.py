@@ -72,7 +72,7 @@ class ValidationDoc(EmmetBaseModel):
     @classmethod
     def from_task_doc(
         cls,
-        task_doc: TaskDoc | TaskDocument,
+        task_doc: Union[TaskDoc, TaskDocument],
         kpts_tolerance: float = SETTINGS.VASP_KPTS_TOLERANCE,
         kspacing_tolerance: float = SETTINGS.VASP_KSPACING_TOLERANCE,
         input_sets: Dict[str, ImportString] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
