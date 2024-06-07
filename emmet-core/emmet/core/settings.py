@@ -120,6 +120,10 @@ class EmmetSettings(BaseSettings):
         description="Relative tolerance for kspacing to still be a valid task document",
     )
 
+    VASP_MAX_MAGMOM: dict[str, float] = Field(
+        {"Cr": 5}, description="Maximum permitted magnetic moments by element type."
+    )
+
     VASP_DEFAULT_INPUT_SETS: Dict[str, ImportString] = Field(
         {
             "GGA Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
