@@ -137,7 +137,7 @@ def calc_type(
         The calc type.
     """
     run_type_params = parameters.copy()
-    if (metagga := inputs["incar"].get("METAGGA")):
+    if metagga := inputs["incar"].get("METAGGA"):
         # Per issue #960, the METAGGA tag is populated in the
         # INCAR field of vasprun.xml, and not parameters
         run_type_params.update({"METAGGA": metagga})
