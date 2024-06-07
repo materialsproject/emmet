@@ -57,23 +57,26 @@ def test_validator(tasks):
 
 
 def test_validator_magmom(test_dir):
-
     # Task with Cr in structure - this is only element with MAGMOM check
     with zopen(test_dir / "task_doc_mp-2766060.json.gz") as f:
         cr_task_dict = json.load(f)
-    
+
     taskdoc = TaskDoc(**cr_task_dict)
     assert ValidationDoc.from_task_doc(taskdoc).valid
 
     # test backwards compatibility
-    taskdocument = TaskDocument(**{k: v for k, v in cr_task_dict.items() if k != "last_updated"})
+    taskdocument = TaskDocument(
+        **{k: v for k, v in cr_task_dict.items() if k != "last_updated"}
+    )
     assert ValidationDoc.from_task_doc(taskdocument).valid
 
     # Change MAGMOM on Cr to fail magmom test
     td_bad_mag = TaskDoc(**cr_task_dict)
     td_bad_mag.calcs_reversed[0].output.outcar["magnetization"] = [
-        {"tot": 6.} if td_bad_mag.structure[ientry].species_string == "Cr" else entry
-        for ientry, entry in enumerate(td_bad_mag.calcs_reversed[0].output.outcar["magnetization"] )
+        {"tot": 6.0} if td_bad_mag.structure[ientry].species_string == "Cr" else entry
+        for ientry, entry in enumerate(
+            td_bad_mag.calcs_reversed[0].output.outcar["magnetization"]
+        )
     ]
     assert not (valid_doc := ValidationDoc.from_task_doc(td_bad_mag)).valid
     assert any("MAG" in repr(reason) for reason in valid_doc.reasons)
@@ -82,6 +85,7 @@ def test_validator_magmom(test_dir):
     td_no_mag = TaskDoc(**cr_task_dict)
     del td_no_mag.calcs_reversed[0].output.outcar["magnetization"]
     assert ValidationDoc.from_task_doc(td_no_mag).valid
+
 
 def test_validator_failed_symmetry(test_dir):
     with zopen(test_dir / "failed_elastic_task.json.gz", "r") as f:
@@ -108,7 +112,7 @@ def task_ldau(test_dir):
 def test_ldau(task_ldau):
     task_ldau.input.is_hubbard = True
     assert task_ldau.run_type == RunType.GGA_U
-    print("craps",task_ldau.calcs_reversed[0].output.outcar)
+    print("craps", task_ldau.calcs_reversed[0].output.outcar)
     assert not ValidationDoc.from_task_doc(task_ldau).valid
 
 
