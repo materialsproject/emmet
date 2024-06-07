@@ -371,6 +371,10 @@ def _potcar_stats_check(task_doc, potcar_stats: dict):
 
     all_match = True
     for entry in potcar_details:
+        if not entry["titel"]:
+            all_match = False
+            break
+
         symbol = entry["titel"].split(" ")[1]
         ref_summ_stats = potcar_stats[str(task_doc.calc_type)].get(symbol, None)
 
