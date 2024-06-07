@@ -56,7 +56,7 @@ def test_validator(tasks):
     assert all([doc.valid for doc in validation_docs])
 
 
-def test_validator_magmom(test_dir, tasks):
+def test_validator_magmom(test_dir):
     # Task with Cr in structure - this is only element with MAGMOM check
     with zopen(test_dir / "task_doc_mp-2766060.json.gz") as f:
         cr_task_dict = json.load(f)
