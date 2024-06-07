@@ -78,6 +78,7 @@ class ValidationDoc(EmmetBaseModel):
         input_sets: Dict[str, ImportString] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
         LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
         max_allowed_scf_gradient: float = SETTINGS.VASP_MAX_SCF_GRADIENT,
+        max_magmoms: Dict[str, float] = SETTINGS.VASP_MAX_MAGMOM,
         potcar_stats: Optional[Dict[CalcType, Dict[str, str]]] = None,
     ) -> "ValidationDoc":
         """
@@ -210,7 +211,7 @@ class ValidationDoc(EmmetBaseModel):
                     reasons.append(DeprecationMessage.MANUAL)
 
                 # Check for magmom anomalies for specific elements
-                if _magmom_check(calcs_reversed, structure):
+                if _magmom_check(calcs_reversed, structure, max_magmoms=max_magmoms):
                     reasons.append(DeprecationMessage.MAG)
             else:
                 if "Unrecognized" in str(calc_type):
@@ -423,18 +424,19 @@ def _potcar_stats_check(task_doc, potcar_stats: dict):
     return not all_match
 
 
-def _magmom_check(calcs_reversed: list, structure: Structure):
+def _magmom_check(
+    calcs_reversed: list, structure: Structure, max_magmoms: dict[str, float]
+):
     """
     Checks for maximum magnetization values for specific elements.
     Returns True if the maximum absolute value outlined below is exceded for the associated element.
     """
-    eles_max_vals = {"Cr": 5}
     if (outcar := calcs_reversed[0]["output"]["outcar"]) and (
         mag_info := outcar.get("magnetization", [])
     ):
         return any(
             abs(mag_info[isite].get("tot", 0.0))
-            > abs(eles_max_vals.get(site.label, np.inf))
+            > abs(max_magmoms.get(site.label, np.inf))
             for isite, site in enumerate(structure)
         )
     return False
