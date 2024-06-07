@@ -165,6 +165,7 @@ def test_calculation(test_dir, object_name, task_name):
 
 def test_calculation_run_type_metagga(test_dir):
     # Test to ensure that meta-GGA calculations are correctly identified
+    # The VASP files were kindly provided by @Andrew-S-Rosen in issue #960
     from emmet.core.vasp.calculation import Calculation
 
     calc_input, _ = Calculation.from_vasp_files(
