@@ -113,7 +113,7 @@ class ValidationDoc(EmmetBaseModel):
             structure = calcs_reversed[0]["input"]["structure"]
         else:
             structure = task_doc.input.structure or task_doc.output.structure
-            
+
         if isinstance(structure, dict):
             structure = Structure.from_dict(structure)
 
@@ -333,7 +333,7 @@ def _kspacing_warnings(input_set, inputs, data, warnings, kspacing_tolerance):
     Issues warnings based on KSPACING values
     """
     valid_kspacing = input_set.incar.get("KSPACING", 0)
-    if (kspacing := inputs.get("incar", {}).get("KSPACING")):
+    if kspacing := inputs.get("incar", {}).get("KSPACING"):
         data["kspacing_delta"] = kspacing - valid_kspacing
         # larger KSPACING means fewer k-points
         if data["kspacing_delta"] > kspacing_tolerance:
@@ -423,15 +423,18 @@ def _potcar_stats_check(task_doc, potcar_stats: dict):
     return not all_match
 
 
-def _magmom_check(calcs_reversed : list, structure : Structure):
+def _magmom_check(calcs_reversed: list, structure: Structure):
     """
     Checks for maximum magnetization values for specific elements.
     Returns True if the maximum absolute value outlined below is exceded for the associated element.
     """
     eles_max_vals = {"Cr": 5}
-    if (outcar := calcs_reversed[0]["output"]["outcar"]) and (mag_info := outcar.get("magnetization",[])):
+    if (outcar := calcs_reversed[0]["output"]["outcar"]) and (
+        mag_info := outcar.get("magnetization", [])
+    ):
         return any(
-            abs(mag_info[isite].get("tot", 0.)) > abs(eles_max_vals.get(site.label,np.inf))
+            abs(mag_info[isite].get("tot", 0.0))
+            > abs(eles_max_vals.get(site.label, np.inf))
             for isite, site in enumerate(structure)
         )
     return False

@@ -966,7 +966,9 @@ def _parse_additional_json(dir_name: Path) -> Dict[str, Any]:
 def _get_max_force(calc_doc: Calculation) -> Optional[float]:
     """Get max force acting on atoms from a calculation document."""
     if calc_doc.output.ionic_steps:
-        forces: Optional[Union[np.ndarray, List]] = calc_doc.output.ionic_steps[-1].forces
+        forces: Optional[Union[np.ndarray, List]] = calc_doc.output.ionic_steps[
+            -1
+        ].forces
         structure = calc_doc.output.structure
         if forces:
             forces = np.array(forces)
