@@ -136,6 +136,11 @@ def calc_type(
     Returns:
         The calc type.
     """
-    rt = run_type(parameters).value
+    run_type_params = parameters.copy()
+    if (metagga := inputs["incar"].get("METAGGA")):
+        # Per issue #960, the METAGGA tag is populated in the
+        # INCAR field of vasprun.xml, and not parameters
+        run_type_params.update({"METAGGA": metagga})
+    rt = run_type(run_type_params).value
     tt = task_type(inputs).value
     return CalcType(f"{rt} {tt}")
