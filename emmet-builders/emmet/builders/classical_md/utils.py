@@ -1,4 +1,5 @@
 import warnings
+from typing import Optional, Union
 
 import numpy as np
 
@@ -13,8 +14,8 @@ from pathlib import Path
 
 def create_universe(
     interchange: Interchange,
-    mol_specs: list[MoleculeSpec] | None,
-    traj_file: Path | str,
+    mol_specs: Optional[list[MoleculeSpec]],
+    traj_file: Union[Path, str],
     traj_format=None,
 ):
     """
@@ -72,7 +73,7 @@ def label_types(u: Universe, mols: list[tk.Molecule]):
 
 
 def label_resnames(
-    u: Universe, mols: list[tk.Molecule], mol_specs: list[MoleculeSpec] | None
+    u: Universe, mols: list[tk.Molecule], mol_specs: Optional[list[MoleculeSpec]]
 ):
     """
     Label atoms in the Universe with residue names.
@@ -96,7 +97,7 @@ def label_resnames(
 
 
 def label_charges(
-    u: Universe, mols: list[tk.Molecule], mol_specs: list[MoleculeSpec] | None
+    u: Universe, mols: list[tk.Molecule], mol_specs: Optional[list[MoleculeSpec]]
 ):
     """
     Label atoms in the Universe with partial charges.
@@ -130,8 +131,8 @@ def label_charges(
 def create_solute(
     u: Universe,
     solute_name: str,
-    networking_solvents: list[str] | None = None,
-    fallback_radius: float | None = None,
+    networking_solvents: Optional[list[str]] = None,
+    fallback_radius: Optional[float] = None,
     include_solute_in_solvents=False,
     analysis_classes=["coordination", "pairing", "speciation", "networking"],
     step=1,

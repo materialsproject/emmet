@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from datetime import datetime
 
 from pydantic import BaseModel, Field
@@ -11,25 +11,27 @@ class CalculationsDoc(BaseModel):
 
     calc_types: List[str] = Field(None, description="Types of calculations.")
 
-    elapsed_times: List[float | None] = Field(
+    elapsed_times: List[Union[float, None]] = Field(
         None, description="Elapsed time for each calculation."
     )
 
-    steps: List[int | None] = Field(None, description="n_steps for each calculation.")
+    steps: List[Union[float, None]] = Field(
+        None, description="n_steps for each calculation."
+    )
 
-    step_sizes: List[float | None] = Field(
+    step_sizes: List[Union[float, None]] = Field(
         None, description="Step sizes for each calculation."
     )
 
-    temperatures: List[float | None] = Field(
+    temperatures: List[Union[float, None]] = Field(
         None, description="Temperature for each calculation."
     )
 
-    pressures: List[float | None] = Field(
+    pressures: List[Union[float, None]] = Field(
         None, description="Pressure for each calculation."
     )
 
-    friction_coefficients: List[float | None] = Field(
+    friction_coefficients: List[Union[float, None]] = Field(
         None, description="Friction coefficients for each calculation."
     )
 
@@ -50,8 +52,8 @@ class CalculationsDoc(BaseModel):
     def from_calcs_reversed(
         cls,
         calcs_reversed: List[Calculation],
-        job_uuid: str | None = None,
-        flow_uuid: str | None = None,
+        job_uuid: Optional[str] = None,
+        flow_uuid: Optional[str] = None,
     ) -> "CalculationsDoc":
         calcs = calcs_reversed[::-1]
         return CalculationsDoc(
