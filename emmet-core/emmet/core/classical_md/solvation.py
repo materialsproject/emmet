@@ -163,7 +163,10 @@ class SolvationDoc(BaseModel, arbitrary_types_allowed=True):
 
     @classmethod
     def from_solute(
-        cls, solute: Solute, job_uuid: str | None = None, flow_uuid: str | None = None
+        cls,
+        solute: Solute,
+        job_uuid: Optional[str] = None,
+        flow_uuid: Optional[str] = None,
     ) -> "SolvationDoc":
         props = dict(
             solute_name=solute.solute_name,
