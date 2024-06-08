@@ -65,11 +65,9 @@ class ElectrolyteBuilder(Builder):
     #     Prechunk method to perform chunking by the key field
     #     """
     #     q = dict(self.query)
-    #
     #     keys = self.electronic_structure.newer_in(
     #         self.materials, criteria=q, exhaustive=True
     #     )
-    #
     #     N = ceil(len(keys) / number_splits)
     #     for split in grouper(keys, N):
     #         yield {"query": {self.materials.key: {"$in": list(split)}}}
