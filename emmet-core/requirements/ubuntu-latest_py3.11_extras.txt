@@ -113,6 +113,7 @@ frozenlist==1.4.1
     #   aiosignal
 fsspec[http]==2024.6.0
     # via
+    #   lightning
     #   pytorch-lightning
     #   torch
 ghp-import==2.1.0
@@ -180,8 +181,11 @@ kiwisolver==1.4.5
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
+lightning==2.2.5
+    # via matgl
 lightning-utilities==0.11.2
     # via
+    #   lightning
     #   pytorch-lightning
     #   torchmetrics
 livereload==2.6.3
@@ -206,7 +210,7 @@ markupsafe==2.1.5
     #   werkzeug
 matcalc==0.0.4
     # via emmet-core (setup.py)
-matgl==1.1.1
+matgl==1.1.2
     # via emmet-core (setup.py)
 matminer==0.9.2
     # via robocrys
@@ -319,6 +323,7 @@ numpy==1.26.4
     #   dgl
     #   griddataformats
     #   h5py
+    #   lightning
     #   maggma
     #   matminer
     #   matplotlib
@@ -347,6 +352,7 @@ orjson==3.10.3
     #   maggma
 packaging==24.0
     # via
+    #   lightning
     #   lightning-utilities
     #   matplotlib
     #   mdanalysis
@@ -371,7 +377,7 @@ pathspec==0.12.1
     # via mkdocs
 patsy==0.5.6
     # via statsmodels
-phonopy==2.23.1
+phonopy==2.24.1
     # via matcalc
 pillow==10.3.0
     # via
@@ -483,11 +489,12 @@ python-dotenv==1.0.1
 python-multipart==0.0.9
     # via fastapi
 pytorch-lightning==2.2.5
-    # via matgl
+    # via lightning
 pytz==2024.1
     # via pandas
 pyyaml==6.0.1
     # via
+    #   lightning
     #   mkdocs
     #   mkdocs-get-deps
     #   mkdocs-markdownextradata-plugin
@@ -599,6 +606,7 @@ threadpoolctl==3.5.0
 torch==2.2.1
     # via
     #   chgnet
+    #   lightning
     #   matgl
     #   pytorch-lightning
     #   torchdata
@@ -606,12 +614,15 @@ torch==2.2.1
 torchdata==0.7.1
     # via dgl
 torchmetrics==1.4.0.post0
-    # via pytorch-lightning
+    # via
+    #   lightning
+    #   pytorch-lightning
 tornado==6.4.1
     # via livereload
 tqdm==4.66.4
     # via
     #   dgl
+    #   lightning
     #   maggma
     #   matminer
     #   mdanalysis
@@ -627,12 +638,13 @@ types-requests==2.32.0.20240602
     # via emmet-core (setup.py)
 types-setuptools==70.0.0.20240524
     # via emmet-core (setup.py)
-typing-extensions==4.12.1
+typing-extensions==4.12.2
     # via
     #   emmet-core
     #   emmet-core (setup.py)
     #   fastapi
     #   inflect
+    #   lightning
     #   lightning-utilities
     #   mp-api
     #   mypy

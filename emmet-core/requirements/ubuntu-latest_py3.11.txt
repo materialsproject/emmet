@@ -102,7 +102,7 @@ tenacity==8.3.0
     # via plotly
 tqdm==4.66.4
     # via pymatgen
-typing-extensions==4.12.1
+typing-extensions==4.12.2
     # via
     #   emmet-core (setup.py)
     #   pydantic

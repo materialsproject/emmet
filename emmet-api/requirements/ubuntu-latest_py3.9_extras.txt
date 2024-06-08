@@ -476,7 +476,7 @@ types-setuptools==70.0.0.20240524
     # via emmet-api (setup.py)
 types-urllib3==1.26.25.14
     # via types-requests
-typing-extensions==4.12.1
+typing-extensions==4.12.2
     # via
     #   aioitertools
     #   anyio
