@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Union
 from pathlib import Path
 import tempfile
 
@@ -33,10 +33,10 @@ class ElectrolyteBuilder(Builder):
         self,
         md_docs: Store,
         blobs: Store,
-        solute: Store | None = None,
-        calculations: Store | None = None,
+        solute: Optional[Store] = None,
+        calculations: Optional[Store] = None,
         query: Optional[dict] = None,
-        solute_analysis_classes: List[str] | str = "all",
+        solute_analysis_classes: Union[List[str], str] = "all",
         solvation_fallback_radius: float = 3,
         chunk_size: int = 10,
     ):
