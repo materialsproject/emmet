@@ -189,7 +189,7 @@ class ElectrolyteBuilder(Builder):
     def instantiate_universe(
         self,
         job_uuid: str,
-        traj_directory: Optional[str, Path] = ".",
+        traj_directory: Union[str, Path] = ".",
         overwrite_local_traj: bool = True,
     ):
         """
