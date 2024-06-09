@@ -214,6 +214,16 @@ class InputDoc(BaseModel):
         None, description="Magnetic moments for each atom"
     )
 
+    @field_validator("parameters", mode="after")
+    @classmethod
+    def parameter_keys_should_not_contain_spaces(cls, parameters: Optional[Dict]):
+        # A change in VASP introduced whitespace into some parameters,
+        # for example `<i type="string" name="GGA    ">PE</I>` was observed in
+        # VASP 6.4.3. This will lead to an incorrect return value from RunType.
+        # This validator will ensure that any already-parsed documents are fixed.
+        if parameters:
+            return {k.strip(): v for k, v in parameters}
+
     @classmethod
     def from_vasp_calc_doc(cls, calc_doc: Calculation) -> "InputDoc":
         """
