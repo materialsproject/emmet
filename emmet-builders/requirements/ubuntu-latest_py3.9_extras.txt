@@ -33,9 +33,9 @@ bcrypt==4.1.3
     # via paramiko
 blinker==1.8.2
     # via flask
-boto3==1.34.121
+boto3==1.34.122
     # via maggma
-botocore==1.34.121
+botocore==1.34.122
     # via
     #   boto3
     #   s3transfer
@@ -127,7 +127,7 @@ ghp-import==2.1.0
     # via mkdocs
 griddataformats==1.0.2
     # via mdanalysis
-griffe==0.45.2
+griffe==0.45.3
     # via mkdocstrings-python
 h11==0.14.0
     # via
@@ -402,7 +402,7 @@ orjson==3.10.3
     # via
     #   fastapi
     #   maggma
-packaging==24.0
+packaging==24.1
     # via
     #   lightning
     #   lightning-utilities
@@ -429,7 +429,7 @@ pathspec==0.12.1
     # via mkdocs
 patsy==0.5.6
     # via statsmodels
-phonopy==2.24.1
+phonopy==2.24.2
     # via matcalc
 pillow==10.3.0
     # via
@@ -715,7 +715,7 @@ tzdata==2024.1
     # via pandas
 ujson==5.10.0
     # via fastapi
-uncertainties==3.2.0
+uncertainties==3.2.1
     # via pymatgen
 urllib3==1.26.18
     # via
