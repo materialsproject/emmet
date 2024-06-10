@@ -83,7 +83,7 @@ ghp-import==2.1.0
     # via mkdocs
 griddataformats==1.0.2
     # via mdanalysis
-griffe==0.45.2
+griffe==0.45.3
     # via mkdocstrings-python
 h5py==3.11.0
     # via phonopy
@@ -312,7 +312,7 @@ nvidia-nvjitlink-cu12==12.5.40
     #   nvidia-cusparse-cu12
 nvidia-nvtx-cu12==12.1.105
     # via torch
-packaging==24.0
+packaging==24.1
     # via
     #   lightning
     #   lightning-utilities
@@ -336,7 +336,7 @@ pathspec==0.12.1
     # via mkdocs
 patsy==0.5.6
     # via statsmodels
-phonopy==2.24.1
+phonopy==2.24.2
     # via matcalc
 pillow==10.3.0
     # via
@@ -565,7 +565,7 @@ typing-extensions==4.12.2
     #   typeguard
 tzdata==2024.1
     # via pandas
-uncertainties==3.2.0
+uncertainties==3.2.1
     # via pymatgen
 urllib3==2.2.1
     # via
