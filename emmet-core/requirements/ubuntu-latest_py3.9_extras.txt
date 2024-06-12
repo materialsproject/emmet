@@ -55,7 +55,7 @@ dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
-emmet-core==0.83.8
+emmet-core==0.83.9
     # via mp-api
 exceptiongroup==1.2.1
     # via pytest
@@ -371,7 +371,7 @@ pycodestyle==2.11.1
     # via
     #   emmet-core (setup.py)
     #   flake8
-pydantic==2.7.3
+pydantic==2.7.4
     # via
     #   emmet-core
     #   emmet-core (setup.py)
