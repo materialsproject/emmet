@@ -63,13 +63,13 @@ pybtex==0.24.0
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pymatgen
-pydantic==2.7.3
+pydantic==2.7.4
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pydantic-settings
 pydantic-core==2.18.4
     # via pydantic
-pydantic-settings==2.3.1
+pydantic-settings==2.3.2
     # via emmet-core (emmet/emmet-core/setup.py)
 pymatgen==2024.4.13
     # via emmet-core (emmet/emmet-core/setup.py)
