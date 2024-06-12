@@ -36,7 +36,6 @@ from pydantic import (
     Field,
     field_validator,
     model_validator,
-    PrivateAttr,
 )
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core.structure import Structure
@@ -383,11 +382,10 @@ class TaskDoc(StructureMetadata, extra="allow"):
     run_type: Optional[RunType] = Field(
         None, description="The functional used in the calculation."
     )
-    
+
     calc_type: Optional[CalcType] = Field(
         None, description="The functional and task type used in the calculation."
     )
-
 
     task_id: Optional[Union[MPID, str]] = Field(
         None,
@@ -464,10 +462,9 @@ class TaskDoc(StructureMetadata, extra="allow"):
     # can't find them, throws an AttributeError. It does this before looking to see if the
     # class has that attr defined on it.
 
-    #_structure_entry: Optional[ComputedStructureEntry] = PrivateAttr(None)
+    # _structure_entry: Optional[ComputedStructureEntry] = PrivateAttr(None)
 
     def model_post_init(self, __context: Any) -> None:
-
         # Always refresh task_type, calc_type, run_type
         # See, e.g. https://github.com/materialsproject/emmet/issues/960
         # where run_type's were set incorrectly in older versions of TaskDoc
@@ -739,7 +736,9 @@ class TaskDoc(StructureMetadata, extra="allow"):
         return ComputedEntry.from_dict(entry_dict)
 
     @staticmethod
-    def _get_calc_type(calcs_reversed : list[Calculation], orig_inputs : OrigInputs) -> CalcType:
+    def _get_calc_type(
+        calcs_reversed: list[Calculation], orig_inputs: OrigInputs
+    ) -> CalcType:
         """Get the calc type from calcs_reversed.
 
         Returns
@@ -747,13 +746,17 @@ class TaskDoc(StructureMetadata, extra="allow"):
         CalcType
             The type of calculation.
         """
-        inputs = calcs_reversed[0].input.model_dump() if len(calcs_reversed) > 0 else orig_inputs
+        inputs = (
+            calcs_reversed[0].input.model_dump()
+            if len(calcs_reversed) > 0
+            else orig_inputs
+        )
         params = calcs_reversed[0].input.parameters
         incar = calcs_reversed[0].input.incar
         return calc_type(inputs, {**params, **incar})
 
     @staticmethod
-    def _get_run_type(calcs_reversed : list[Calculation]) -> RunType:
+    def _get_run_type(calcs_reversed: list[Calculation]) -> RunType:
         """Get the run type from calcs_reversed.
 
         Returns
@@ -785,6 +788,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
             data=self.entry.data,
             entry_id=self.entry.entry_id,
         )
+
 
 class TrajectoryDoc(BaseModel):
     """Model for task trajectory data."""
