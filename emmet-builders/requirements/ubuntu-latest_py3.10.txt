@@ -23,9 +23,9 @@ bcrypt==4.1.3
     # via paramiko
 blinker==1.8.2
     # via flask
-boto3==1.34.121
+boto3==1.34.124
     # via maggma
-botocore==1.34.121
+botocore==1.34.124
     # via
     #   boto3
     #   s3transfer
@@ -126,7 +126,7 @@ kiwisolver==1.4.5
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
-maggma==0.67.0
+maggma==0.68.4
     # via
     #   emmet-builders (setup.py)
     #   mp-api
@@ -171,7 +171,7 @@ monty==2024.5.24
     #   mp-api
     #   pymatgen
     #   robocrys
-more-itertools==10.2.0
+more-itertools==10.3.0
     # via inflect
 mp-api==0.41.2
     # via robocrys
@@ -212,11 +212,11 @@ numpy==1.26.4
     #   solvation-analysis
     #   spglib
     #   statsmodels
-orjson==3.10.3
+orjson==3.10.4
     # via
     #   fastapi
     #   maggma
-packaging==24.0
+packaging==24.1
     # via
     #   matplotlib
     #   mdanalysis
@@ -236,7 +236,7 @@ paramiko==3.4.0
     # via sshtunnel
 patsy==0.5.6
     # via statsmodels
-phonopy==2.24.1
+phonopy==2.24.2
     # via matcalc
 pillow==10.3.0
     # via
@@ -265,7 +265,7 @@ pydantic==2.7.3
     #   pydantic-settings
 pydantic-core==2.18.4
     # via pydantic
-pydantic-settings==2.3.1
+pydantic-settings==2.3.2
     # via
     #   emmet-core
     #   maggma
@@ -433,7 +433,7 @@ tzdata==2024.1
     # via pandas
 ujson==5.10.0
     # via fastapi
-uncertainties==3.2.0
+uncertainties==3.2.1
     # via pymatgen
 urllib3==2.2.1
     # via

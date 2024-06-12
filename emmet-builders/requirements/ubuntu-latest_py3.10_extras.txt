@@ -33,9 +33,9 @@ bcrypt==4.1.3
     # via paramiko
 blinker==1.8.2
     # via flask
-boto3==1.34.121
+boto3==1.34.124
     # via maggma
-botocore==1.34.121
+botocore==1.34.124
     # via
     #   boto3
     #   s3transfer
@@ -127,7 +127,7 @@ ghp-import==2.1.0
     # via mkdocs
 griddataformats==1.0.2
     # via mdanalysis
-griffe==0.45.2
+griffe==0.45.3
     # via mkdocstrings-python
 h11==0.14.0
     # via
@@ -197,7 +197,7 @@ lightning-utilities==0.11.2
     #   torchmetrics
 livereload==2.6.3
     # via emmet-builders (setup.py)
-maggma==0.67.0
+maggma==0.68.4
     # via
     #   emmet-builders (setup.py)
     #   mp-api
@@ -291,7 +291,7 @@ monty==2024.5.24
     #   mp-api
     #   pymatgen
     #   robocrys
-more-itertools==10.2.0
+more-itertools==10.3.0
     # via inflect
 mp-api==0.41.2
     # via robocrys
@@ -386,11 +386,11 @@ nvidia-nvjitlink-cu12==12.5.40
     #   nvidia-cusparse-cu12
 nvidia-nvtx-cu12==12.1.105
     # via torch
-orjson==3.10.3
+orjson==3.10.4
     # via
     #   fastapi
     #   maggma
-packaging==24.0
+packaging==24.1
     # via
     #   lightning
     #   lightning-utilities
@@ -417,7 +417,7 @@ pathspec==0.12.1
     # via mkdocs
 patsy==0.5.6
     # via statsmodels
-phonopy==2.24.1
+phonopy==2.24.2
     # via matcalc
 pillow==10.3.0
     # via
@@ -460,7 +460,7 @@ pydantic==2.7.3
     #   pydantic-settings
 pydantic-core==2.18.4
     # via pydantic
-pydantic-settings==2.3.1
+pydantic-settings==2.3.2
     # via
     #   emmet-core
     #   maggma
@@ -698,7 +698,7 @@ tzdata==2024.1
     # via pandas
 ujson==5.10.0
     # via fastapi
-uncertainties==3.2.0
+uncertainties==3.2.1
     # via pymatgen
 urllib3==2.2.1
     # via
