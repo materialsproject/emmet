@@ -25,3 +25,10 @@ if [[ -n "$STATS_ARG" ]]; then
 else
 	exec gunicorn $MAIN_ARGS "${ACCESS_LOG_FORMAT[@]}" $SERVER_APP
 fi
+#exec ddtrace-run gunicorn --statsd-host $DD_AGENT_HOST:8125 \
+exec gunicorn \
+    -b 0.0.0.0:$PORT -k uvicorn.workers.UvicornWorker -w $NUM_WORKERS \
+    --access-logfile - --error-logfile - $RELOAD \
+    --max-requests $MAX_REQUESTS --max-requests-jitter $MAX_REQUESTS_JITTER \
+    --timeout 120 \
+    app:app
