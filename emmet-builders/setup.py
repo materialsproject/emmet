@@ -16,8 +16,6 @@ setup(
         "emmet-core[all]",
         "maggma>=0.57.6",
         "matminer>=0.9.1",
-        "solvation-analysis>=0.4.0",
-        "MDAnalysis>=2.7.0",
     ],
     extras_require={
         "test": [
