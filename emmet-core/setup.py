@@ -27,6 +27,7 @@ setup(
     },
     include_package_data=True,
     install_requires=[
+        "numpy<2",
         "pymatgen==2024.4.13",
         "monty>=2024.2.2",
         "pydantic>=2.0",
