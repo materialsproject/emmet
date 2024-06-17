@@ -36,10 +36,11 @@ mpmath==1.3.0
     # via sympy
 networkx==3.3
     # via pymatgen
-numpy==2.0.0
+numpy==1.26.4
     # via
     #   -r python/requirements.txt
     #   contourpy
+    #   emmet-core (emmet/emmet-core/setup.py)
     #   matplotlib
     #   pandas
     #   pymatgen
