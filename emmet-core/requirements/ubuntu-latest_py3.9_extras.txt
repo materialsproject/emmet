@@ -55,18 +55,18 @@ dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
-emmet-core==0.83.8
+emmet-core==0.83.9
     # via mp-api
 exceptiongroup==1.2.1
     # via pytest
 fasteners==0.19
     # via mdanalysis
-filelock==3.14.0
+filelock==3.15.1
     # via
     #   torch
     #   triton
     #   virtualenv
-flake8==7.0.0
+flake8==7.1.0
     # via emmet-core (setup.py)
 fonttools==4.53.0
     # via matplotlib
@@ -83,7 +83,7 @@ ghp-import==2.1.0
     # via mkdocs
 griddataformats==1.0.2
     # via mdanalysis
-griffe==0.45.3
+griffe==0.46.1
     # via mkdocstrings-python
 h5py==3.11.0
     # via phonopy
@@ -257,6 +257,7 @@ numpy==1.26.4
     #   chgnet
     #   contourpy
     #   dgl
+    #   emmet-core (setup.py)
     #   griddataformats
     #   h5py
     #   lightning
@@ -367,11 +368,11 @@ pybtex==0.24.0
     #   emmet-core (setup.py)
     #   pymatgen
     #   robocrys
-pycodestyle==2.11.1
+pycodestyle==2.12.0
     # via
     #   emmet-core (setup.py)
     #   flake8
-pydantic==2.7.3
+pydantic==2.7.4
     # via
     #   emmet-core
     #   emmet-core (setup.py)
@@ -379,7 +380,7 @@ pydantic==2.7.3
     #   pydantic-settings
 pydantic-core==2.18.4
     # via pydantic
-pydantic-settings==2.3.2
+pydantic-settings==2.3.3
     # via
     #   emmet-core
     #   emmet-core (setup.py)
@@ -427,7 +428,7 @@ python-dateutil==2.9.0.post0
     #   pandas
 python-dotenv==1.0.1
     # via pydantic-settings
-pytorch-lightning==2.2.5
+pytorch-lightning==2.3.0
     # via lightning
 pytz==2024.1
     # via pandas
@@ -505,7 +506,7 @@ sympy==1.12.1
     #   torch
 tabulate==0.9.0
     # via pymatgen
-tenacity==8.3.0
+tenacity==8.4.1
     # via plotly
 threadpoolctl==3.5.0
     # via
@@ -567,7 +568,7 @@ tzdata==2024.1
     # via pandas
 uncertainties==3.2.1
     # via pymatgen
-urllib3==2.2.1
+urllib3==2.2.2
     # via
     #   requests
     #   torchdata
