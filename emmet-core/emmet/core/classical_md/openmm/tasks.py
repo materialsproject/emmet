@@ -28,6 +28,10 @@ class CalculationInput(BaseModel, extra="allow"):  # type: ignore[call-arg]
         None, description="The simulation temperature (kelvin)."
     )
 
+    pressure: Optional[float] = Field(
+        None, description="The simulation pressure (atmospheres)."
+    )
+
     friction_coefficient: Optional[float] = Field(
         None,
         description=(
@@ -146,8 +150,6 @@ class CalculationOutput(BaseModel):
         state_file_name: str,
         traj_file_name: str,
         elapsed_time: Optional[float] = None,
-        n_steps: Optional[int] = None,
-        state_interval: Optional[int] = None,
         embed_traj: bool = False,
     ) -> CalculationOutput:
         """Extract data from the output files in the directory."""
@@ -162,12 +164,10 @@ class CalculationOutput(BaseModel):
             "Density (g/mL)": "density",
         }
         state_is_not_empty = state_file.exists() and state_file.stat().st_size > 0
-        state_steps = state_interval and n_steps and n_steps // state_interval or 0
-        if state_is_not_empty and (state_steps > 0):
+        if state_is_not_empty:
             data = pd.read_csv(state_file, header=0)
             data = data.rename(columns=column_name_map)
             data = data.filter(items=column_name_map.values())
-            data = data.iloc[-state_steps:]
             attributes = data.to_dict(orient="list")
         else:
             attributes = {name: None for name in column_name_map.values()}
@@ -177,9 +177,12 @@ class CalculationOutput(BaseModel):
         traj_is_not_empty = traj_file.exists() and traj_file.stat().st_size > 0
         traj_file_name = traj_file_name if traj_is_not_empty else None  # type: ignore
 
-        if embed_traj and traj_is_not_empty:
-            with open(traj_file, "rb") as f:
-                traj_blob = f.read()
+        if traj_is_not_empty:
+            if embed_traj:
+                with open(traj_file, "rb") as f:
+                    traj_blob = f.read()
+            else:
+                traj_blob = None
         else:
             traj_blob = None
 
