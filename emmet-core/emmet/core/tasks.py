@@ -21,7 +21,7 @@ from emmet.core.vasp.calc_types import (
     task_type,
 )
 from emmet.core.vasp.calculation import (
-    CalculationBaseModel,
+    CalculationInput,
     Calculation,
     PotcarSpec,
     RunStatistics,
@@ -61,20 +61,11 @@ class Potcar(BaseModel):
     )
 
 
-class OrigInputs(CalculationBaseModel):
-    incar: Optional[Union[Incar, Dict]] = Field(
-        None,
-        description="Pymatgen object representing the INCAR file.",
-    )
+class OrigInputs(CalculationInput):
 
     poscar: Optional[Poscar] = Field(
         None,
         description="Pymatgen object representing the POSCAR file.",
-    )
-
-    kpoints: Optional[Kpoints] = Field(
-        None,
-        description="Pymatgen object representing the KPOINTS file.",
     )
 
     potcar: Optional[Union[Potcar, VaspPotcar, List[Any]]] = Field(
@@ -182,33 +173,26 @@ class OutputDoc(BaseModel):
         )
 
 
-class InputDoc(BaseModel):
-    structure: Optional[Structure] = Field(
-        None,
-        title="Input Structure",
-        description="Output Structure from the VASP calculation.",
-    )
+class InputDoc(CalculationInput):
+    """Light wrapper around `CalculationInput` with a few extra fields.
+    
+    pseudo_potentials (Potcar) : summary of the POTCARs used in the calculation
+    xc_override (str) : the exchange-correlation functional used if not
+        the one specified by POTCAR
+    is_lasph (bool) : how the calculation set LASPH (aspherical corrections)
+    magnetic_moments (list of floats) : on-site magnetic moments
+    """
 
-    parameters: Optional[Dict] = Field(
-        None,
-        description="Parameters from vasprun for the last calculation in the series",
-    )
     pseudo_potentials: Optional[Potcar] = Field(
         None, description="Summary of the pseudo-potentials used in this calculation"
     )
-    potcar_spec: Optional[List[PotcarSpec]] = Field(
-        None, description="Title and hash of POTCAR files used in the calculation"
-    )
+    
     xc_override: Optional[str] = Field(
         None, description="Exchange-correlation functional used if not the default"
     )
     is_lasph: Optional[bool] = Field(
         None, description="Whether the calculation was run with aspherical corrections"
     )
-    is_hubbard: bool = Field(
-        default=False, description="Is this a Hubbard +U calculation"
-    )
-    hubbards: Optional[dict] = Field(None, description="The hubbard parameters used")
     magnetic_moments: Optional[List[float]] = Field(
         None, description="Magnetic moments for each atom"
     )
@@ -238,7 +222,7 @@ class InputDoc(BaseModel):
         InputDoc
             A summary of the input structure and parameters.
         """
-        xc = calc_doc.input.incar.get("GGA")
+        xc = calc_doc.input.incar.get("GGA") or calc_doc.input.incar.get("METAGGA")
         if xc:
             xc = xc.upper()
 
@@ -246,14 +230,10 @@ class InputDoc(BaseModel):
         func = "lda" if len(pot_type) == 1 else "_".join(func)
         pps = Potcar(pot_type=pot_type, functional=func, symbols=calc_doc.input.potcar)
         return cls(
-            structure=calc_doc.input.structure,
-            parameters=calc_doc.input.parameters,
+            **calc_doc.input.model_dump(),
             pseudo_potentials=pps,
-            potcar_spec=calc_doc.input.potcar_spec,
             xc_override=xc,
             is_lasph=calc_doc.input.parameters.get("LASPH", False),
-            is_hubbard=calc_doc.input.is_hubbard,
-            hubbards=calc_doc.input.hubbards,
             magnetic_moments=calc_doc.input.parameters.get("MAGMOM"),
         )
 
@@ -468,9 +448,15 @@ class TaskDoc(StructureMetadata, extra="allow"):
         # Always refresh task_type, calc_type, run_type
         # See, e.g. https://github.com/materialsproject/emmet/issues/960
         # where run_type's were set incorrectly in older versions of TaskDoc
-        self.task_type = task_type(self.orig_inputs)
+        
+        # To determine task and run type, we search for input sets in this order
+        # of precedence: calcs_reversed, inputs, orig_inputs
+        for inp_set in [self.calcs_reversed[0].input, self.input, self.orig_inputs]:
+            if inp_set is not None:
+                break
+        self.task_type = task_type(inp_set)
         self.run_type = self._get_run_type(self.calcs_reversed)
-        self.calc_type = self._get_calc_type(self.calcs_reversed, self.orig_inputs)
+        self.calc_type = self._get_calc_type(self.calcs_reversed, inp_set)
 
         # TODO: remove after imposing TaskDoc schema on older tasks in collection
         if self.structure is None:
