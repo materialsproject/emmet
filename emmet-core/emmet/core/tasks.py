@@ -62,7 +62,6 @@ class Potcar(BaseModel):
 
 
 class OrigInputs(CalculationInput):
-
     poscar: Optional[Poscar] = Field(
         None,
         description="Pymatgen object representing the POSCAR file.",
@@ -175,7 +174,7 @@ class OutputDoc(BaseModel):
 
 class InputDoc(CalculationInput):
     """Light wrapper around `CalculationInput` with a few extra fields.
-    
+
     pseudo_potentials (Potcar) : summary of the POTCARs used in the calculation
     xc_override (str) : the exchange-correlation functional used if not
         the one specified by POTCAR
@@ -186,7 +185,7 @@ class InputDoc(CalculationInput):
     pseudo_potentials: Optional[Potcar] = Field(
         None, description="Summary of the pseudo-potentials used in this calculation"
     )
-    
+
     xc_override: Optional[str] = Field(
         None, description="Exchange-correlation functional used if not the default"
     )
@@ -448,7 +447,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         # Always refresh task_type, calc_type, run_type
         # See, e.g. https://github.com/materialsproject/emmet/issues/960
         # where run_type's were set incorrectly in older versions of TaskDoc
-        
+
         # To determine task and run type, we search for input sets in this order
         # of precedence: calcs_reversed, inputs, orig_inputs
         for inp_set in [self.calcs_reversed[0].input, self.input, self.orig_inputs]:
