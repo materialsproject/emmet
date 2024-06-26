@@ -26,8 +26,8 @@ class EmmetMeta(BaseModel):
         pmg_version, description="The version of pymatgen this document was built with."
     )
 
-    pull_request: Optional[int] = Field(
-        None, description="The pull request number associated with this data build."
+    run_id: Optional[int] = Field(
+        None, description="The run id associated with this data build."
     )
 
     database_version: Optional[str] = Field(
