@@ -4,11 +4,14 @@ from pydantic import Field
 
 from emmet.core.tasks import TaskDoc, _VOLUMETRIC_FILES
 from typing import TYPE_CHECKING
+from pymatgen.analysis.defects.core import Defect
+from monty.json import MontyDecoder
 
 if TYPE_CHECKING:
-    from pymatgen.analysis.defects.core import Defect
     from typing import Any, Dict, Optional, Tuple, Union
     from pathlib import Path
+
+mdecoder = MontyDecoder().process_decoded
 
 
 class DefectTaskDoc(TaskDoc, extra="allow"):
@@ -72,4 +75,11 @@ class DefectTaskDoc(TaskDoc, extra="allow"):
             volume_change_warning_tol=volume_change_warning_tol,
             **vasp_calculation_kwargs,
         )
-        return doc.model_copy(update=additional_fields)
+        defect_doc = doc.model_copy(update=additional_fields)
+        defect_doc.defect = mdecoder(
+            defect_doc.additional_json.get("info", {}).get("defect", None)
+        )
+        defect_doc.charge_state = defect_doc.additional_json.get("info", {}).get(
+            "charge_state", None
+        )
+        return defect_doc
