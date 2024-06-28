@@ -15,6 +15,13 @@ mdecoder = MontyDecoder().process_decoded
 
 
 class DefectTaskDoc(TaskDoc, extra="allow"):
+    """Defect Task Document"""
+
+    defect_name: str = Field(
+        None,
+        title="The name of the defect",
+    )
+
     defect: Defect = Field(
         None,
         title="Defect Object",
