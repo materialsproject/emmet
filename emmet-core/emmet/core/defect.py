@@ -3,7 +3,6 @@ from __future__ import annotations
 from pydantic import Field
 
 from emmet.core.tasks import TaskDoc, _VOLUMETRIC_FILES
-from emmet.core.utils import jsanitize
 from typing import TYPE_CHECKING
 from pymatgen.analysis.defects.core import Defect
 from monty.json import MontyDecoder
@@ -112,12 +111,15 @@ class DefectTaskDoc(TaskDoc, extra="allow"):
         defect_name = additional_info["defect_name"]
         bulk_formula = additional_info["bulk_formula"]
         supercell_matrix = additional_info["sc_mat"]
-        d_ = {
-            "defect_name": defect_name,
-            "defect": defect,
-            "charge_state": charge_state,
-            "bulk_formula": bulk_formula,
-            "supercell_matrix": supercell_matrix,
-            **jsanitize(taskdoc),
-        }
-        return cls(**d_)
+
+        task_dict = taskdoc.model_dump()
+        task_dict.update(
+            {
+                "defect_name": defect_name,
+                "defect": defect,
+                "charge_state": charge_state,
+                "bulk_formula": bulk_formula,
+                "supercell_matrix": supercell_matrix,
+            }
+        )
+        return cls(**task_dict)
