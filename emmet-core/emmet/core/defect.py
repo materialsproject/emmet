@@ -101,7 +101,8 @@ class DefectTaskDoc(TaskDoc, extra="allow"):
 
         Args:
             taskdoc: TaskDoc to convert
-            additional_info_key: Key for additional info in the document
+            additional_info_key: The key in the `additional_json`
+                to extract the defect information from
 
         Returns:
             DefectTaskDoc
