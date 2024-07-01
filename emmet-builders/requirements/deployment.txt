@@ -251,7 +251,7 @@ paramiko==3.4.0
     # via sshtunnel
 phonopy==2.21.0
     # via matcalc
-pillow==10.2.0
+pillow==10.3.0
     # via matplotlib
 plotly==5.18.0
     # via pymatgen
