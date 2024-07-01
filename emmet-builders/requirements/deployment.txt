@@ -230,7 +230,7 @@ nvidia-nvjitlink-cu12==12.3.101
     #   nvidia-cusparse-cu12
 nvidia-nvtx-cu12==12.1.105
     # via torch
-orjson==3.9.13
+orjson==3.9.15
     # via maggma
 packaging==23.2
     # via
