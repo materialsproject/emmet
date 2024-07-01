@@ -29,7 +29,7 @@ from emmet.api.routes.materials.materials.query_operators import (
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 
-timeout = MAPISettings().TIMEOUT
+timeout = MAPISettings().TIMEOUT  # type: ignore
 
 
 def find_structure_resource(materials_store):
@@ -77,7 +77,7 @@ def blessed_tasks_resource(materials_store):
             LicenseQuery(),
             SparseFieldsQuery(
                 MaterialsDoc,
-                default_fields=["material_id", "last_updated"],
+                default_fields=["material_id", "last_updated", "entries"],
             ),
         ],
         key_fields=[
@@ -90,9 +90,8 @@ def blessed_tasks_resource(materials_store):
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials"],
         sub_path="/core/blessed_tasks/",
-        enable_get_by_key=False,
         disable_validation=True,
-        timeout=MAPISettings().TIMEOUT,
+        timeout=MAPISettings().TIMEOUT,  # type: ignore
     )
 
     return resource
@@ -122,7 +121,7 @@ def materials_resource(materials_store):
         tags=["Materials"],
         sub_path="/core/",
         disable_validation=True,
-        timeout=MAPISettings().TIMEOUT,
+        timeout=MAPISettings().TIMEOUT,  # type: ignore
     )
 
     return resource

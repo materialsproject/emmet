@@ -76,9 +76,14 @@ class OutputDoc(BaseModel):
         None, description="Natural Bonding Orbital (NBO) output"
     )
 
+    frequencies: Optional[Union[Dict[str, Any], List]] = Field(
+        None,
+        description="The list of calculated frequencies if job type is freq (units: cm^-1)",
+    )
+
     frequency_modes: Optional[Union[List, str]] = Field(
         None,
-        description="The list of calculated frequency mode vectors if job type is freq (units: cm^-1)",
+        description="The list of calculated frequency mode vectors if job type is freq",
     )
 
     @classmethod
@@ -112,6 +117,7 @@ class OutputDoc(BaseModel):
             resp=calc_doc.output.resp,
             nbo=calc_doc.output.nbo_data,
             frequencies=calc_doc.output.frequencies,
+            frequency_modes=calc_doc.output.frequency_modes,
         )
 
 
@@ -180,17 +186,26 @@ class InputDoc(BaseModel):
         InputDoc
             A summary of the input molecule and corresponding calculation parameters
         """
+        try:
+            lot_val = calc_doc.level_of_theory.value
+        except AttributeError:
+            lot_val = calc_doc.level_of_theory
+
+        try:
+            ct_val = calc_doc.calc_type.value
+        except AttributeError:
+            ct_val = calc_doc.calc_type
         # TODO : modify this to get the different variables from the task doc.
         return cls(
             initial_molecule=calc_doc.input.initial_molecule,
             rem=calc_doc.input.rem,
-            level_of_theory=calc_doc.level_of_theory.value,
+            level_of_theory=lot_val,
             task_type=calc_doc.task_type.value,
             tags=calc_doc.input.tags,
             solvation_lot_info=calc_doc.solvation_lot_info,
             # special_run_type = calc_doc.input.special_run_type,
             # smiles = calc_doc.input.smiles,
-            calc_type=calc_doc.calc_type.value,
+            calc_type=ct_val,
         )
 
 
@@ -275,6 +290,7 @@ class TaskDoc(MoleculeMetadata):
     def from_directory(
         cls: Type[_T],
         dir_name: Union[Path, str],
+        validate_lot: bool = True,
         store_additional_json: bool = True,
         additional_fields: Dict[str, Any] = None,
         **qchem_calculation_kwargs,
@@ -286,6 +302,9 @@ class TaskDoc(MoleculeMetadata):
         ----------
         dir_name
             The path to the folder containing the calculation outputs.
+        validate_lot
+            Flag for matching the basis and functional with the list of functionals consistent with MPCules.
+            Defaults to True. Change to False if you want to create a TaskDoc with other basis sets and functionals.
         store_additional_json
             Whether to store additional json files in the calculation directory.
         additional_fields
@@ -316,7 +335,11 @@ class TaskDoc(MoleculeMetadata):
                 continue
             else:
                 calc_doc = Calculation.from_qchem_files(
-                    dir_name, task_name, **files, **qchem_calculation_kwargs
+                    dir_name,
+                    task_name,
+                    **files,
+                    **qchem_calculation_kwargs,
+                    validate_lot=validate_lot,
                 )
                 calcs_reversed.append(calc_doc)
                 # all_qchem_objects.append(qchem_objects)
@@ -588,7 +611,9 @@ def _find_qchem_files(
                 )
                 in_task_name = in_task_name or "mol.qin"
                 if in_task_name == "orig":
-                    task_files[in_task_name] = {"orig_input_file": file}
+                    task_files[in_task_name] = {"orig_input_file": file.name}
+                elif in_task_name == "last":
+                    continue
                 elif in_task_name == "mol.qin" or in_task_name == "mol.in":
                     if in_task_name == "mol.qin":
                         out_file = (
@@ -603,19 +628,21 @@ def _find_qchem_files(
                             else path / "mol.out"
                         )
                     task_files["standard"] = {
-                        "qcinput_file": file,
-                        "qcoutput_file": out_file,
+                        "qcinput_file": file.name,
+                        "qcoutput_file": out_file.name,
                     }
                 # This block will exist only if calcs were run through atomate
                 else:
                     try:
                         task_files[in_task_name] = {
-                            "qcinput_file": file,
-                            "qcoutput_file": Path("mol.qout." + in_task_name + ".gz"),
+                            "qcinput_file": file.name,
+                            "qcoutput_file": Path(
+                                "mol.qout." + in_task_name + ".gz"
+                            ).name,
                         }
                     except FileNotFoundError:
                         task_files[in_task_name] = {
-                            "qcinput_file": file,
+                            "qcinput_file": file.name,
                             "qcoutput_file": "No qout files exist for this in file",
                         }
 

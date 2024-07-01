@@ -23,7 +23,7 @@ class EOSDoc(BaseModel):
         description="Data for each type of equation of state.",
     )
 
-    task_id: Optional[str] = Field(
+    material_id: Optional[str] = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )

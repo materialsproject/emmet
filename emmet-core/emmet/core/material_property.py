@@ -1,16 +1,17 @@
 """ Core definition of a Materials Document """
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Sequence, Type, TypeVar, Union, List, Optional
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pymatgen.core import Structure
+from datetime import datetime
 
 from emmet.core.material import PropertyOrigin
 from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.validation import DeprecationMessage
+from emmet.core.common import convert_datetime
 
 S = TypeVar("S", bound="PropertyDoc")
 
@@ -52,6 +53,11 @@ class PropertyDoc(StructureMetadata):
         [], description="Any warnings related to this property."
     )
 
+    @field_validator("last_updated", mode="before")
+    @classmethod
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)
+
     @classmethod
     def from_structure(  # type: ignore[override]
         cls: Type[S], meta_structure: Structure, material_id: MPID, **kwargs
@@ -60,4 +66,6 @@ class PropertyDoc(StructureMetadata):
         Builds a materials document using the minimal amount of information
         """
 
-        return super().from_structure(meta_structure=meta_structure, material_id=material_id, **kwargs)  # type: ignore
+        return super().from_structure(
+            meta_structure=meta_structure, material_id=material_id, **kwargs
+        )  # type: ignore

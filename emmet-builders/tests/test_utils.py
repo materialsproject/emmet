@@ -2,10 +2,14 @@ from emmet.builders.utils import (
     chemsys_permutations,
     maximal_spanning_non_intersecting_subsets,
     get_hop_cutoff,
+    get_potcar_stats,
 )
 from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
 from numpy.testing import assert_almost_equal
-from monty.serialization import loadfn
+from monty.serialization import loadfn, dumpfn
+from emmet.core.settings import EmmetSettings
+
+import pytest
 
 
 def test_maximal_spanning_non_intersecting_subsets():
@@ -55,3 +59,43 @@ def test_get_hop_cutoff(test_dir):
     check_mg = MigrationGraph.with_distance(nasicon_mg.structure, "Mg", d)
     assert_almost_equal(d, 4.59, decimal=2)
     assert len(check_mg.unique_hops) == 6
+
+
+@pytest.mark.parametrize("method", ("potcar", "pymatgen", "stored"))
+def test_get_potcar_stats(method: str, tmp_path):
+    calc_type = EmmetSettings().VASP_DEFAULT_INPUT_SETS
+
+    try:
+        potcar_stats = get_potcar_stats(method=method)
+    except Exception as exc:
+        if "No POTCAR for" in str(exc):
+            # No Potcar library available, skip test
+            return
+        else:
+            raise exc
+
+    # ensure that all calc types are included in potcar_stats
+    assert potcar_stats.keys() == calc_type.keys()
+
+    for calc_type in potcar_stats:
+        # ensure that each entry has needed fields for both
+        # legacy and modern potcar validation
+        assert all(
+            [
+                set(entry) == set(["hash", "keywords", "titel", "stats"])
+                for entry in entries
+            ]
+            for entries in potcar_stats[calc_type].values()
+        )
+
+    if method == "stored":
+        new_stats_path = tmp_path / "_temp_potcar_stats.json"
+        dumpfn(potcar_stats, new_stats_path)
+
+        new_potcar_stats = get_potcar_stats(
+            method="stored", path_to_stored_stats=new_stats_path
+        )
+        assert all(
+            potcar_stats[calc_type] == new_potcar_stats[calc_type]
+            for calc_type in potcar_stats
+        )

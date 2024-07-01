@@ -120,6 +120,10 @@ class EmmetSettings(BaseSettings):
         description="Relative tolerance for kspacing to still be a valid task document",
     )
 
+    VASP_MAX_MAGMOM: dict[str, float] = Field(
+        {"Cr": 5}, description="Maximum permitted magnetic moments by element type."
+    )
+
     VASP_DEFAULT_INPUT_SETS: Dict[str, ImportString] = Field(
         {
             "GGA Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
@@ -149,8 +153,8 @@ class EmmetSettings(BaseSettings):
         description="Default input sets for task validation",
     )
 
-    VASP_VALIDATE_POTCAR_HASHES: bool = Field(
-        True, description="Whether to validate POTCAR hash values."
+    VASP_VALIDATE_POTCAR_STATS: bool = Field(
+        True, description="Whether to validate POTCAR stat values."
     )
 
     VASP_CHECKED_LDAU_FIELDS: List[str] = Field(

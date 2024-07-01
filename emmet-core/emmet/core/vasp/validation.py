@@ -4,20 +4,26 @@ from typing import Dict, List, Union, Optional
 import numpy as np
 from pydantic import ConfigDict, Field, ImportString
 from pymatgen.core.structure import Structure
+from pymatgen.io.vasp.inputs import Kpoints
 from pymatgen.io.vasp.sets import VaspInputSet
 
 from emmet.core.settings import EmmetSettings
 from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
 from emmet.core.utils import DocEnum
-from emmet.core.vasp.task_valid import TaskDocument
+from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calc_types.enums import CalcType, TaskType
+from emmet.core.vasp.task_valid import TaskDocument
 
 SETTINGS = EmmetSettings()
 
 
 class DeprecationMessage(DocEnum):
     MANUAL = "M", "Manual deprecation"
+    SYMMETRY = (
+        "S001",
+        "Could not determine crystalline space group, needed for input set check.",
+    )
     KPTS = "C001", "Too few KPoints"
     KSPACING = "C002", "KSpacing not high enough"
     ENCUT = "C002", "ENCUT too low"
@@ -56,17 +62,24 @@ class ValidationDoc(EmmetBaseModel):
         " Useful for post-mortem analysis"
     )
     model_config = ConfigDict(extra="allow")
+    nelements: Optional[int] = Field(None, description="Number of elements.")
+    symmetry_number: Optional[int] = Field(
+        None,
+        title="Space Group Number",
+        description="The spacegroup number for the lattice.",
+    )
 
     @classmethod
     def from_task_doc(
         cls,
-        task_doc: TaskDocument,
+        task_doc: Union[TaskDoc, TaskDocument],
         kpts_tolerance: float = SETTINGS.VASP_KPTS_TOLERANCE,
         kspacing_tolerance: float = SETTINGS.VASP_KSPACING_TOLERANCE,
         input_sets: Dict[str, ImportString] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
         LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
         max_allowed_scf_gradient: float = SETTINGS.VASP_MAX_SCF_GRADIENT,
-        potcar_hashes: Optional[Dict[CalcType, Dict[str, str]]] = None,
+        max_magmoms: Dict[str, float] = SETTINGS.VASP_MAX_MAGMOM,
+        potcar_stats: Optional[Dict[CalcType, Dict[str, str]]] = None,
     ) -> "ValidationDoc":
         """
         Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
@@ -80,8 +93,11 @@ class ValidationDoc(EmmetBaseModel):
             LDAU_fields: LDAU fields to check for consistency
             max_allowed_scf_gradient: maximum uphill gradient allowed for SCF steps after the
                 initial equillibriation period
-            potcar_hashes: Dictionary of potcar hash data. Mapping is calculation type -> potcar symbol -> hash value.
+            potcar_stats: Dictionary of potcar stat data. Mapping is calculation type -> potcar symbol -> hash value.
         """
+
+        nelements = task_doc.nelements or None
+        symmetry_number = task_doc.symmetry.number if task_doc.symmetry else None
 
         bandgap = task_doc.output.bandgap
         calc_type = task_doc.calc_type
@@ -89,12 +105,18 @@ class ValidationDoc(EmmetBaseModel):
         run_type = task_doc.run_type
         inputs = task_doc.orig_inputs
         chemsys = task_doc.chemsys
-        calcs_reversed = task_doc.calcs_reversed
+        calcs_reversed = [
+            calc if not hasattr(calc, "model_dump") else calc.model_dump()
+            for calc in task_doc.calcs_reversed
+        ]
 
         if calcs_reversed[0].get("input", {}).get("structure", None):
-            structure = Structure.from_dict(calcs_reversed[0]["input"]["structure"])
+            structure = calcs_reversed[0]["input"]["structure"]
         else:
             structure = task_doc.input.structure or task_doc.output.structure
+
+        if isinstance(structure, dict):
+            structure = Structure.from_dict(structure)
 
         reasons = []
         data = {}  # type: ignore
@@ -110,10 +132,19 @@ class ValidationDoc(EmmetBaseModel):
                 reasons.append(DeprecationMessage.SET)
                 valid_input_set = None
 
+            try:
+                # Sometimes spglib can't determine space group with the default
+                # `symprec` and `angle_tolerance`. In these cases,
+                # `Structure.get_space_group_info()` fails
+                valid_input_set.structure.get_space_group_info()
+            except Exception:
+                reasons.append(DeprecationMessage.SYMMETRY)
+                valid_input_set = None
+
             if valid_input_set:
                 # Checking POTCAR summary_stats if a directory is supplied
-                if potcar_hashes:
-                    if _potcar_hash_check(task_doc, potcar_hashes):
+                if potcar_stats:
+                    if _potcar_stats_check(task_doc, potcar_stats):
                         if task_type in [
                             TaskType.NSCF_Line,
                             TaskType.NSCF_Uniform,
@@ -127,9 +158,10 @@ class ValidationDoc(EmmetBaseModel):
                 # Checking K-Points
                 # Calculations that use KSPACING will not have a .kpoints attr
 
-                if task_type != task_type.NSCF_Line:
+                if task_type != TaskType.NSCF_Line:
                     # Not validating k-point data for line-mode calculations as constructing
                     # the k-path is too costly for the builder and the uniform input set is used.
+
                     if valid_input_set.kpoints is not None:
                         if _kpoint_check(
                             valid_input_set,
@@ -148,7 +180,8 @@ class ValidationDoc(EmmetBaseModel):
 
                 # warn, but don't invalidate if wrong ISMEAR
                 valid_ismear = valid_input_set.incar.get("ISMEAR", 1)
-                curr_ismear = inputs.get("incar", {}).get("ISMEAR", 1)
+                incar = inputs.get("incar", {})
+                curr_ismear = incar.get("ISMEAR", 1)
                 if curr_ismear != valid_ismear:
                     warnings.append(
                         f"Inappropriate smearing settings. Set to {curr_ismear},"
@@ -156,7 +189,7 @@ class ValidationDoc(EmmetBaseModel):
                     )
 
                 # Checking ENCUT
-                encut = inputs.get("incar", {}).get("ENCUT")
+                encut = incar.get("ENCUT")
                 valid_encut = valid_input_set.incar["ENCUT"]
                 data["encut_ratio"] = float(encut) / valid_encut  # type: ignore
                 if data["encut_ratio"] < 1:
@@ -178,7 +211,7 @@ class ValidationDoc(EmmetBaseModel):
                     reasons.append(DeprecationMessage.MANUAL)
 
                 # Check for magmom anomalies for specific elements
-                if _magmom_check(task_doc, chemsys):
+                if _magmom_check(calcs_reversed, structure, max_magmoms=max_magmoms):
                     reasons.append(DeprecationMessage.MAG)
             else:
                 if "Unrecognized" in str(calc_type):
@@ -194,6 +227,8 @@ class ValidationDoc(EmmetBaseModel):
             reasons=reasons,
             data=data,
             warnings=warnings,
+            nelements=nelements,
+            symmetry_number=symmetry_number,
         )
 
         return doc
@@ -238,7 +273,7 @@ def _scf_upward_check(calcs_reversed, inputs, data, max_allowed_scf_gradient, wa
 
 def _u_value_checks(task_doc, valid_input_set, warnings):
     # NOTE: Reverting to old method of just using input.hubbards which is wrong in many instances
-    input_hubbards = task_doc.input.hubbards
+    input_hubbards = {} if task_doc.input.hubbards is None else task_doc.input.hubbards
 
     if valid_input_set.incar.get("LDAU", False) or len(input_hubbards) > 0:
         # Assemble required input_set LDAU params into dictionary
@@ -283,9 +318,12 @@ def _kpoint_check(input_set, inputs, calcs_reversed, data, kpts_tolerance):
     else:
         input_dict = inputs
 
-    num_kpts = input_dict.get("kpoints", {}).get("nkpoints", 0) or np.prod(
-        input_dict.get("kpoints", {}).get("kpoints", [1, 1, 1])
-    )
+    kpoints = input_dict.get("kpoints", {})
+    if isinstance(kpoints, Kpoints):
+        kpoints = kpoints.as_dict()
+    elif kpoints is None:
+        kpoints = {}
+    num_kpts = kpoints.get("nkpoints", 0) or np.prod(kpoints.get("kpoints", [1, 1, 1]))
 
     data["kpts_ratio"] = num_kpts / valid_num_kpts
     return data["kpts_ratio"] < kpts_tolerance
@@ -296,8 +334,8 @@ def _kspacing_warnings(input_set, inputs, data, warnings, kspacing_tolerance):
     Issues warnings based on KSPACING values
     """
     valid_kspacing = input_set.incar.get("KSPACING", 0)
-    if inputs.get("incar", {}).get("KSPACING"):
-        data["kspacing_delta"] = inputs["incar"].get("KSPACING") - valid_kspacing
+    if kspacing := inputs.get("incar", {}).get("KSPACING"):
+        data["kspacing_delta"] = kspacing - valid_kspacing
         # larger KSPACING means fewer k-points
         if data["kspacing_delta"] > kspacing_tolerance:
             warnings.append(
@@ -311,7 +349,7 @@ def _kspacing_warnings(input_set, inputs, data, warnings, kspacing_tolerance):
             )
 
 
-def _potcar_hash_check(task_doc, potcar_hashes):
+def _potcar_stats_check(task_doc, potcar_stats: dict):
     """
     Checks to make sure the POTCAR summary stats is equal to the correct
     value from the pymatgen input set.
@@ -319,64 +357,92 @@ def _potcar_hash_check(task_doc, potcar_hashes):
     data_tol = 1.0e-6
 
     try:
-        potcar_details = task_doc.calcs_reversed[0]["input"]["potcar_spec"]
+        potcar_details = task_doc.calcs_reversed[0].model_dump()["input"]["potcar_spec"]
 
     except KeyError:
         # Assume it is an old calculation without potcar_spec data and treat it as passing POTCAR hash check
         return False
 
+    use_legacy_hash_check = False
+    if any(entry.get("summary_stats", None) is None for entry in potcar_details):
+        # potcar_spec doesn't include summary_stats kwarg needed to check potcars
+        # fall back to header hash checking
+        use_legacy_hash_check = True
+
     all_match = True
     for entry in potcar_details:
-        symbol = entry["titel"].split(" ")[1]
-        ref_summ_stats = potcar_hashes[str(task_doc.calc_type)].get(symbol, None)
-        if not ref_summ_stats:
+        if not entry["titel"]:
             all_match = False
             break
 
-        key_match = all(
-            set(ref_summ_stats["keywords"][key])
-            == set(entry["summary_stats"]["keywords"][key])
-            for key in ["header", "data"]
-        )
+        symbol = entry["titel"].split(" ")[1]
+        ref_summ_stats = potcar_stats[str(task_doc.calc_type)].get(symbol, None)
 
-        data_match = all(
-            abs(
-                ref_summ_stats["stats"][key][stat]
-                - entry["summary_stats"]["stats"][key][stat]
-            )
-            < data_tol
-            for stat in ["MEAN", "ABSMEAN", "VAR", "MIN", "MAX"]
-            for key in ["header", "data"]
-        )
-
-        if (not key_match) or (not data_match):
+        if not ref_summ_stats:
+            # Symbol differs from reference set - deprecate
             all_match = False
+            break
+
+        if use_legacy_hash_check:
+            all_match = any(
+                all(
+                    entry[key] == ref_stat[key]
+                    for key in (
+                        "hash",
+                        "titel",
+                    )
+                )
+                for ref_stat in ref_summ_stats
+            )
+
+        else:
+            all_match = False
+            for ref_stat in ref_summ_stats:
+                key_match = all(
+                    set(ref_stat["keywords"][key])
+                    == set(entry["summary_stats"]["keywords"][key])
+                    for key in ["header", "data"]
+                )
+
+                data_match = False
+                if key_match:
+                    data_match = all(
+                        abs(
+                            ref_stat["stats"][key][stat]
+                            - entry["summary_stats"]["stats"][key][stat]
+                        )
+                        < data_tol
+                        for stat in ["MEAN", "ABSMEAN", "VAR", "MIN", "MAX"]
+                        for key in ["header", "data"]
+                    )
+                all_match = key_match and data_match
+
+                if all_match:
+                    # Found at least one match to reference POTCAR summary stats,
+                    # that suffices for the check
+                    break
+
+        if not all_match:
             break
 
     return not all_match
 
 
-def _magmom_check(task_doc, chemsys):
+def _magmom_check(
+    calcs_reversed: list, structure: Structure, max_magmoms: dict[str, float]
+):
     """
     Checks for maximum magnetization values for specific elements.
     Returns True if the maximum absolute value outlined below is exceded for the associated element.
     """
-    eles_max_vals = {"Cr": 5}
-
-    for ele, max_val in eles_max_vals.items():
-        if ele in chemsys:
-            for site_num, mag in enumerate(
-                task_doc.calcs_reversed[0]["output"]["outcar"]["magnetization"]
-            ):
-                if "structure" in task_doc.calcs_reversed[0]["output"]:
-                    output_structure = task_doc.calcs_reversed[0]["output"]["structure"]
-                else:
-                    output_structure = task_doc.output.structure.as_dict()
-
-                if output_structure["sites"][site_num]["label"] == ele:
-                    if abs(mag["tot"]) > max_val:
-                        return True
-
+    if (outcar := calcs_reversed[0]["output"]["outcar"]) and (
+        mag_info := outcar.get("magnetization", [])
+    ):
+        return any(
+            abs(mag_info[isite].get("tot", 0.0))
+            > abs(max_magmoms.get(site.label, np.inf))
+            for isite, site in enumerate(structure)
+        )
     return False
 
 

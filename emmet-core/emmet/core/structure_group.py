@@ -4,13 +4,13 @@ from datetime import datetime
 from itertools import groupby
 from typing import Iterable, List, Optional, Union
 
-from monty.json import MontyDecoder
 from pydantic import field_validator, BaseModel, Field
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 from pymatgen.core.composition import Composition
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from emmet.core.mpid import MPID
+from emmet.core.common import convert_datetime
 
 logger = logging.getLogger(__name__)
 
@@ -99,8 +99,8 @@ class StructureGroupDoc(BaseModel):
     # Make sure that the datetime field is properly formatted
     @field_validator("last_updated", mode="before")
     @classmethod
-    def last_updated_dict_ok(cls, v):
-        return MontyDecoder().process_decoded(v)
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)
 
     @classmethod
     def from_grouped_entries(

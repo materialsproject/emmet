@@ -109,9 +109,16 @@ def test_output_summary(test_dir, object_name, task_name):
         pytest.param("SiNonSCFUniform", id="SiNonSCFUniform"),
     ],
 )
-def test_task_doc(test_dir, object_name):
+def test_task_doc(test_dir, object_name, tmpdir):
     from monty.json import jsanitize
+    from monty.serialization import dumpfn
+    import os
+    from pymatgen.alchemy.materials import TransformedStructure
     from pymatgen.entries.computed_entries import ComputedEntry
+    from pymatgen.transformations.standard_transformations import (
+        DeformStructureTransformation,
+    )
+    import shutil
 
     from emmet.core.tasks import TaskDoc
 
@@ -138,3 +145,46 @@ def test_task_doc(test_dir, object_name):
         assert isinstance(
             test_doc.entry, ComputedEntry
         ), f"Unexpected entry {test_doc.entry} for {object_name}"
+
+    # Test that transformations field works, using hydrostatic compression as example
+    ts = TransformedStructure(
+        test_doc.output.structure,
+        transformations=[
+            DeformStructureTransformation(
+                deformation=[
+                    [0.9 if i == j else 0.0 for j in range(3)] for i in range(3)
+                ]
+            )
+        ],
+    )
+    ts_json = jsanitize(ts.as_dict())
+    dumpfn(ts, f"{tmpdir}/transformations.json")
+    for f in os.listdir(dir_name):
+        if os.path.isfile(os.path.join(dir_name, f)):
+            shutil.copy(os.path.join(dir_name, f), tmpdir)
+    test_doc = TaskDoc.from_directory(tmpdir)
+    # if other_parameters == {}, this is popped from the TaskDoc.transformations field
+    # seems like @version is added by monty serialization
+    # jsanitize needed because pymatgen.core.Structure.pbc is a tuple
+    assert all(
+        test_doc.transformations[k] == v
+        for k, v in ts_json.items()
+        if k
+        not in (
+            "other_parameters",
+            "@version",
+            "last_modified",
+        )
+    )
+    assert isinstance(test_doc.transformations, dict)
+
+    # now test case when transformations are serialized, relevant for atomate2
+    test_doc = TaskDoc(
+        **{
+            "transformations": ts,
+            **{
+                k: v for k, v in test_doc.model_dump().items() if k != "transformations"
+            },
+        }
+    )
+    assert test_doc.transformations == ts

@@ -3,6 +3,7 @@ from __future__ import annotations
 from pydantic import Field
 
 from emmet.core.tasks import TaskDoc, _VOLUMETRIC_FILES
+from emmet.core.utils import jsanitize
 from typing import TYPE_CHECKING
 from pymatgen.analysis.defects.core import Defect
 from monty.json import MontyDecoder
@@ -20,6 +21,12 @@ class DefectTaskDoc(TaskDoc, extra="allow"):
     defect_name: str = Field(
         None,
         title="The name of the defect",
+    )
+
+    bulk_formula: str = Field(
+        None,
+        title="Bulk Formula",
+        description="Formula of the bulk structure.",
     )
 
     defect: Defect = Field(
@@ -48,7 +55,7 @@ class DefectTaskDoc(TaskDoc, extra="allow"):
         additional_fields: Optional[Dict[str, Any]] = None,
         volume_change_warning_tol: float = 0.2,
         **vasp_calculation_kwargs,
-    ) -> TaskDoc:
+    ) -> DefectTaskDoc:
         """
         Create a task document from a directory containing VASP files.
 
@@ -74,7 +81,7 @@ class DefectTaskDoc(TaskDoc, extra="allow"):
         TaskDoc
             A task document for the calculation.
         """
-        doc = super().from_directory(
+        tdoc = super().from_directory(
             dir_name=dir_name,
             volumetric_files=volumetric_files,
             store_additional_json=True,
@@ -82,11 +89,35 @@ class DefectTaskDoc(TaskDoc, extra="allow"):
             volume_change_warning_tol=volume_change_warning_tol,
             **vasp_calculation_kwargs,
         )
-        defect_doc = doc.model_copy(update=additional_fields)
-        defect_doc.defect = mdecoder(
-            defect_doc.additional_json.get("info", {}).get("defect", None)
-        )
-        defect_doc.charge_state = defect_doc.additional_json.get("info", {}).get(
-            "charge_state", None
-        )
-        return defect_doc
+        return cls.from_taskdoc(tdoc)
+
+    @classmethod
+    def from_taskdoc(
+        cls,
+        taskdoc: TaskDoc,
+        additional_info_key: str = "info",
+    ) -> DefectTaskDoc:
+        """
+        Create a DefectTaskDoc from a TaskDoc
+
+        Args:
+            taskdoc: TaskDoc to convert
+
+        Returns:
+            DefectTaskDoc
+        """
+        additional_info = taskdoc.additional_json[additional_info_key]
+        defect = additional_info["defect"]
+        charge_state = additional_info["charge_state"]
+        defect_name = additional_info["defect_name"]
+        bulk_formula = additional_info["bulk_formula"]
+        supercell_matrix = additional_info["sc_mat"]
+        d_ = {
+            "defect_name": defect_name,
+            "defect": defect,
+            "charge_state": charge_state,
+            "bulk_formula": bulk_formula,
+            "supercell_matrix": supercell_matrix,
+            **jsanitize(taskdoc),
+        }
+        return cls(**d_)

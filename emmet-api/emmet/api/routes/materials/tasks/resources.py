@@ -54,7 +54,6 @@ def task_deprecation_resource(materials_store):
         DeprecationDoc,
         query_operators=[DeprecationQuery(), PaginationQuery()],
         tags=["Materials Tasks"],
-        enable_get_by_key=False,
         enable_default_search=True,
         sub_path="/tasks/deprecation/",
         header_processor=GlobalHeaderProcessor(),

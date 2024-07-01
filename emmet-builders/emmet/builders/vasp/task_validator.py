@@ -1,11 +1,11 @@
 from typing import Dict, Optional
-from collections import defaultdict
 
 from maggma.builders import MapBuilder
 from maggma.core import Store
 
 from emmet.builders.settings import EmmetBuildSettings
-from emmet.core.vasp.task_valid import TaskDocument
+from emmet.builders.utils import get_potcar_stats
+from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calc_types.enums import CalcType
 from emmet.core.vasp.validation import DeprecationMessage, ValidationDoc
 
@@ -15,7 +15,7 @@ class TaskValidator(MapBuilder):
         self,
         tasks: Store,
         task_validation: Store,
-        potcar_hashes: Optional[Dict[CalcType, Dict[str, str]]] = None,
+        potcar_stats: Optional[Dict[CalcType, Dict[str, str]]] = None,
         settings: Optional[EmmetBuildSettings] = None,
         query: Optional[Dict] = None,
         **kwargs,
@@ -26,7 +26,7 @@ class TaskValidator(MapBuilder):
         Args:
             tasks: Store of task documents
             task_validation: Store of task_types for tasks
-            potcar_hashes: Optional dictionary of potcar hash data.
+            potcar_stats: Optional dictionary of potcar hash data.
                 Mapping is calculation type -> potcar symbol -> hash value.
         """
         self.tasks = tasks
@@ -34,29 +34,14 @@ class TaskValidator(MapBuilder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.query = query
         self.kwargs = kwargs
-        self.potcar_hashes = potcar_hashes
+        self.potcar_stats = potcar_stats
 
         # Set up potcar cache if appropriate
-        if self.settings.VASP_VALIDATE_POTCAR_HASHES:
-            if not self.potcar_hashes:
-                from pymatgen.io.vasp.inputs import PotcarSingle
-
-                hashes = defaultdict(dict)  # type: dict
-
-                for (
-                    calc_type,
-                    input_set,
-                ) in self.settings.VASP_DEFAULT_INPUT_SETS.items():
-                    functional = input_set.CONFIG["POTCAR_FUNCTIONAL"]
-                    for potcar_symbol in input_set.CONFIG["POTCAR"].values():
-                        potcar = PotcarSingle.from_symbol_and_functional(
-                            symbol=potcar_symbol, functional=functional
-                        )
-                        hashes[calc_type][potcar_symbol] = potcar._summary_stats
-
-                self.potcar_hashes = potcar_hashes
+        if self.settings.VASP_VALIDATE_POTCAR_STATS:
+            if not self.potcar_stats:
+                self.potcar_stats = get_potcar_stats(method="stored")
         else:
-            self.potcar_hashes = None
+            self.potcar_stats = None
 
         super().__init__(
             source=tasks,
@@ -80,7 +65,7 @@ class TaskValidator(MapBuilder):
         Args:
             item (dict): a (projection of a) task doc
         """
-        task_doc = TaskDocument(**item)
+        task_doc = TaskDoc(**item)
         validation_doc = ValidationDoc.from_task_doc(
             task_doc=task_doc,
             kpts_tolerance=self.settings.VASP_KPTS_TOLERANCE,
@@ -88,7 +73,7 @@ class TaskValidator(MapBuilder):
             input_sets=self.settings.VASP_DEFAULT_INPUT_SETS,
             LDAU_fields=self.settings.VASP_CHECKED_LDAU_FIELDS,
             max_allowed_scf_gradient=self.settings.VASP_MAX_SCF_GRADIENT,
-            potcar_hashes=self.potcar_hashes,
+            potcar_stats=self.potcar_stats,
         )
 
         bad_tags = list(set(task_doc.tags).intersection(self.settings.DEPRECATED_TAGS))

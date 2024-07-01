@@ -4,8 +4,9 @@ import pytest
 from monty.io import zopen
 
 from emmet.core.vasp.calc_types import RunType, TaskType, run_type, task_type
+from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.task_valid import TaskDocument
-from emmet.core.vasp.validation import ValidationDoc, _potcar_hash_check
+from emmet.core.vasp.validation import ValidationDoc, _potcar_stats_check
 
 
 def test_task_type():
@@ -45,7 +46,7 @@ def tasks(test_dir):
     with zopen(test_dir / "test_si_tasks.json.gz") as f:
         data = json.load(f)
 
-    return [TaskDocument(**d) for d in data]
+    return [TaskDoc(**d) for d in data]
 
 
 def test_validator(tasks):
@@ -53,6 +54,45 @@ def test_validator(tasks):
 
     assert len(validation_docs) == len(tasks)
     assert all([doc.valid for doc in validation_docs])
+
+
+def test_validator_magmom(test_dir):
+    # Task with Cr in structure - this is only element with MAGMOM check
+    with zopen(test_dir / "task_doc_mp-2766060.json.gz") as f:
+        cr_task_dict = json.load(f)
+
+    taskdoc = TaskDoc(**cr_task_dict)
+    assert ValidationDoc.from_task_doc(taskdoc).valid
+
+    # test backwards compatibility
+    taskdocument = TaskDocument(
+        **{k: v for k, v in cr_task_dict.items() if k != "last_updated"}
+    )
+    assert ValidationDoc.from_task_doc(taskdocument).valid
+
+    # Change MAGMOM on Cr to fail magmom test
+    td_bad_mag = TaskDoc(**cr_task_dict)
+    td_bad_mag.calcs_reversed[0].output.outcar["magnetization"] = [
+        {"tot": 6.0} if td_bad_mag.structure[ientry].species_string == "Cr" else entry
+        for ientry, entry in enumerate(
+            td_bad_mag.calcs_reversed[0].output.outcar["magnetization"]
+        )
+    ]
+    assert not (valid_doc := ValidationDoc.from_task_doc(td_bad_mag)).valid
+    assert any("MAG" in repr(reason) for reason in valid_doc.reasons)
+
+    # Remove magnetization tag to simulate spin-unpolarized (ISPIN = 1) calculation
+    td_no_mag = TaskDoc(**cr_task_dict)
+    del td_no_mag.calcs_reversed[0].output.outcar["magnetization"]
+    assert ValidationDoc.from_task_doc(td_no_mag).valid
+
+
+def test_validator_failed_symmetry(test_dir):
+    with zopen(test_dir / "failed_elastic_task.json.gz", "r") as f:
+        failed_task = json.load(f)
+    taskdoc = TaskDoc(**failed_task)
+    validation = ValidationDoc.from_task_doc(taskdoc)
+    assert any("SYMMETRY" in repr(reason) for reason in validation.reasons)
 
 
 def test_computed_entry(tasks):
@@ -66,20 +106,20 @@ def task_ldau(test_dir):
     with zopen(test_dir / "test_task.json") as f:
         data = json.load(f)
 
-    return TaskDocument(**data)
+    return TaskDoc(**data)
 
 
 def test_ldau(task_ldau):
     task_ldau.input.is_hubbard = True
     assert task_ldau.run_type == RunType.GGA_U
-    assert ValidationDoc.from_task_doc(task_ldau).valid is False
+    assert not ValidationDoc.from_task_doc(task_ldau).valid
 
 
 def test_ldau_validation(test_dir):
     with open(test_dir / "old_aflow_ggau_task.json") as f:
         data = json.load(f)
 
-    task = TaskDocument(**data)
+    task = TaskDoc(**data)
     assert task.run_type == "GGA+U"
 
     valid = ValidationDoc.from_task_doc(task)
@@ -87,7 +127,7 @@ def test_ldau_validation(test_dir):
     assert valid.valid
 
 
-def test_potcar_hash_check(test_dir):
+def test_potcar_stats_check(test_dir):
     from pymatgen.io.vasp import PotcarSingle
 
     with zopen(test_dir / "CoF_TaskDoc.json") as f:
@@ -105,36 +145,80 @@ def test_potcar_hash_check(test_dir):
         < filename > )
     I cannot rebuild the TaskDoc without excluding the `orig_inputs` key.
     """
-    task_doc = TaskDocument(**{key: data[key] for key in data if key != "last_updated"})
-
-    # First check: generate hashes from POTCARs in TaskDoc, check should pass
-    calc_type = str(task_doc.calc_type)
-    expected_hashes = {calc_type: {}}
+    # task_doc = TaskDocument(**{key: data[key] for key in data if key != "last_updated"})
+    task_doc = TaskDoc(**data)
     try:
-        for spec in task_doc.calcs_reversed[0]["input"]["potcar_spec"]:
-            symbol = spec["titel"].split(" ")[1]
-            expected_hashes[calc_type][
-                symbol
-            ] = PotcarSingle.from_symbol_and_functional(
+        # First check: generate hashes from POTCARs in TaskDoc, check should pass
+        calc_type = str(task_doc.calc_type)
+        expected_hashes = {calc_type: {}}
+        for spec in task_doc.calcs_reversed[0].input.potcar_spec:
+            symbol = spec.titel.split(" ")[1]
+            potcar = PotcarSingle.from_symbol_and_functional(
                 symbol=symbol, functional="PBE"
-            )._summary_stats
+            )
+            expected_hashes[calc_type][symbol] = [
+                {
+                    **potcar._summary_stats,
+                    "hash": potcar.md5_header_hash,
+                    "titel": potcar.TITEL,
+                }
+            ]
 
-        assert not _potcar_hash_check(task_doc, expected_hashes)
+        assert not _potcar_stats_check(task_doc, expected_hashes)
 
         # Second check: remove POTCAR from expected_hashes, check should fail
 
-        missing_hashes = {calc_type: {**expected_hashes[calc_type]}}
+        missing_hashes = {calc_type: expected_hashes[calc_type].copy()}
         first_element = list(missing_hashes[calc_type])[0]
         missing_hashes[calc_type].pop(first_element)
-        assert _potcar_hash_check(task_doc, missing_hashes)
+        assert _potcar_stats_check(task_doc, missing_hashes)
 
         # Third check: change data in expected hashes, check should fail
 
         wrong_hashes = {calc_type: {**expected_hashes[calc_type]}}
-        for key in wrong_hashes[calc_type][first_element]["stats"]["data"]:
-            wrong_hashes[calc_type][first_element]["stats"]["data"][key] *= 1.1
+        for key in wrong_hashes[calc_type][first_element][0]["stats"]["data"]:
+            wrong_hashes[calc_type][first_element][0]["stats"]["data"][key] *= 1.1
 
-        assert _potcar_hash_check(task_doc, wrong_hashes)
+        assert _potcar_stats_check(task_doc, wrong_hashes)
+
+        # Fourth check: use legacy hash check if `summary_stats`
+        # field not populated. This should pass
+        legacy_data = data.copy()
+        legacy_data["calcs_reversed"][0]["input"]["potcar_spec"] = [
+            {
+                key: potcar[key]
+                for key in (
+                    "titel",
+                    "hash",
+                )
+            }
+            for potcar in legacy_data["calcs_reversed"][0]["input"]["potcar_spec"]
+        ]
+        legacy_task_doc = TaskDoc(
+            **{key: legacy_data[key] for key in legacy_data if key != "last_updated"}
+        )
+        assert not _potcar_stats_check(legacy_task_doc, expected_hashes)
+
+        # Fifth check: use legacy hash check if `summary_stats`
+        # field not populated, but one hash is wrong. This should fail
+        legacy_data = data.copy()
+        legacy_data["calcs_reversed"][0]["input"]["potcar_spec"] = [
+            {
+                key: potcar[key]
+                for key in (
+                    "titel",
+                    "hash",
+                )
+            }
+            for potcar in legacy_data["calcs_reversed"][0]["input"]["potcar_spec"]
+        ]
+        legacy_data["calcs_reversed"][0]["input"]["potcar_spec"][0][
+            "hash"
+        ] = legacy_data["calcs_reversed"][0]["input"]["potcar_spec"][0]["hash"][:-1]
+        legacy_task_doc = TaskDoc(
+            **{key: legacy_data[key] for key in legacy_data if key != "last_updated"}
+        )
+        assert _potcar_stats_check(legacy_task_doc, expected_hashes)
 
     except (OSError, ValueError):
         # missing Pymatgen POTCARs, cannot perform test

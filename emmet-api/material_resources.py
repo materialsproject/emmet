@@ -6,7 +6,7 @@ from emmet.api.core.settings import MAPISettings
 
 resources = {}
 
-default_settings = MAPISettings()
+default_settings = MAPISettings()  # type: ignore
 
 db_uri = os.environ.get("MPCONTRIBS_MONGO_HOST", None)
 db_version = default_settings.DB_VERSION
@@ -136,7 +136,7 @@ if db_uri:
     )
 
     doi_store = MongoURIStore(
-        uri=db_uri, database="mp_core", key="task_id", collection_name="dois"
+        uri=db_uri, database="mp_core", key="material_id", collection_name="dois"
     )
 
     substrates_store = MongoURIStore(

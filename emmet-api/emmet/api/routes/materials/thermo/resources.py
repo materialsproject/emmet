@@ -11,6 +11,7 @@ from emmet.api.routes.materials.thermo.query_operators import (
     IsStableQuery,
     MultiThermoIDQuery,
     MultiThermoTypeQuery,
+    MultiPhaseDiagramIDQuery,
 )
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.routes.materials.materials.query_operators import (
@@ -26,10 +27,16 @@ def phase_diagram_resource(phase_diagram_store):
     resource = ReadOnlyResource(
         phase_diagram_store,
         PhaseDiagramDoc,
+        query_operators=[
+            MultiPhaseDiagramIDQuery(),
+            SparseFieldsQuery(
+                ThermoDoc,
+                default_fields=["phase_diagram_id"],
+            ),
+        ],
         tags=["Materials Thermo"],
         sub_path="/thermo/phase_diagram/",
         disable_validation=True,
-        enable_default_search=False,
         header_processor=GlobalHeaderProcessor(),
         query_disk_use=False,
     )

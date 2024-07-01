@@ -35,8 +35,8 @@ jobs:
         id: changes
         shell: bash
         run: |
-          echo "count=$(git diff-index HEAD | wc -l | xargs)" >> $GITHUB_OUTPUT
-          echo "files=$(git ls-files --exclude-standard --others | wc -l | xargs)" >> $GITHUB_OUTPUT
+          echo "count=$(git diff-index HEAD ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}*.txt | wc -l | xargs)" >> $GITHUB_OUTPUT
+          echo "files=$(git ls-files --exclude-standard --others ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}*.txt | wc -l | xargs)" >> $GITHUB_OUTPUT
       - name: commit & push changes
         if: steps.changes.outputs.count > 0 || steps.changes.outputs.files > 0
         shell: bash
@@ -44,7 +44,7 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add ${{ matrix.package }}/requirements
-          git commit -m "update dependencies for ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }})"
+          git commit --allow-empty -m "update dependencies for ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }})"
           git push -f origin ${{ github.ref_name }}:auto-dependency-upgrades-${{ matrix.package }}-${{ matrix.os }}-py${{ matrix.python-version }}
 
   pull_request:

@@ -5,11 +5,9 @@ from itertools import groupby
 from typing import Any, Dict, Iterator, List, Optional, Union
 
 import numpy as np
-
 from monty.json import MSONable
-
 from pydantic import BaseModel
-
+from pymatgen.analysis.elasticity.strain import Deformation
 from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
@@ -19,6 +17,9 @@ from pymatgen.analysis.structure_matcher import (
     StructureMatcher,
 )
 from pymatgen.core.structure import Molecule, Structure
+from pymatgen.transformations.standard_transformations import (
+    DeformStructureTransformation,
+)
 from pymatgen.util.graph_hashing import weisfeiler_lehman_graph_hash
 
 from emmet.core.mpid import MPculeID
@@ -77,6 +78,32 @@ def group_structures(
     for _, pregroup in groupby(sorted(structures, key=_get_sg), key=_get_sg):
         for group in sm.group_structures(list(pregroup)):
             yield group
+
+
+def undeform_structure(structure: Structure, transformations: Dict) -> Structure:
+    """
+    Get an undeformed structure by applying transformations in a reverse order.
+
+    Args:
+        structure: deformed structure
+        transformation: transformation that deforms the structure
+
+    Returns:
+        undeformed structure
+    """
+
+    for transformation in reversed(transformations.get("history", [])):
+        if transformation["@class"] == "DeformStructureTransformation":
+            deform = Deformation(transformation["deformation"])
+            dst = DeformStructureTransformation(deform.inv)
+            structure = dst.apply_transformation(structure)
+        else:
+            raise RuntimeError(
+                "Expect transformation to be `DeformStructureTransformation`; "
+                f"got {transformation['@class']}"
+            )
+
+    return structure
 
 
 def group_molecules(molecules: List[Molecule]):
@@ -289,7 +316,13 @@ def jsanitize(obj, strict=False, allow_bson=False):
 
 class ValueEnum(Enum):
     """
-    Enum that serializes to string as the value
+    Enum that serializes to string as the value.
+
+    While this method has an `as_dict` method, this
+    returns a `str`. This is to ensure deserialization
+    to a `str` when functions like `monty.json.jsanitize`
+    are called on a ValueEnum with `strict = True` and
+    `enum_values = False` (occurs often in jobflow).
     """
 
     def __str__(self):
@@ -307,9 +340,9 @@ class ValueEnum(Enum):
         """Get a hash of the enum."""
         return hash(str(self))
 
-    def as_dict(self):
-        """Create a serializable representation of the enum."""
-        return str(self.value)
+    def as_dict(self) -> str:
+        """Deserialize in a kludgey way."""
+        return self.__str__()
 
 
 class DocEnum(ValueEnum):
@@ -340,3 +373,8 @@ class {enum_name}(ValueEnum):
     items = [f'    {const} = "{val}"' for const, val in items.items()]
 
     return header + "\n".join(items)
+
+
+def utcnow() -> datetime.datetime:
+    """Get UTC time right now."""
+    return datetime.datetime.now(datetime.timezone.utc)
