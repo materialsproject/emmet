@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 mdecoder = MontyDecoder().process_decoded
 
 
-class DefectTaskDoc(TaskDoc, extra="allow"):
+class DefectTaskDoc(TaskDoc, extra="alllow"):
     """Defect Task Document"""
 
     defect_name: str = Field(
