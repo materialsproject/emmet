@@ -53,6 +53,7 @@ class DefectTaskDoc(TaskDoc):
         volumetric_files: Tuple[str, ...] = _VOLUMETRIC_FILES,
         additional_fields: Optional[Dict[str, Any]] = None,
         volume_change_warning_tol: float = 0.2,
+        defect_info_key: str = "info",
         **vasp_calculation_kwargs,
     ) -> DefectTaskDoc:
         """
@@ -71,6 +72,8 @@ class DefectTaskDoc(TaskDoc):
         volume_change_warning_tol
             Maximum volume change allowed in VASP relaxations before the calculation is
             tagged with a warning.
+        defect_info_key
+            The key in the `additional_json` to extract the defect information from
         **vasp_calculation_kwargs
             Additional parsing options that will be passed to the
             :obj:`.Calculation.from_vasp_files` function.
@@ -94,20 +97,20 @@ class DefectTaskDoc(TaskDoc):
     def from_taskdoc(
         cls,
         taskdoc: TaskDoc,
-        additional_info_key: str = "info",
+        defect_info_key: str = "info",
     ) -> DefectTaskDoc:
         """
         Create a DefectTaskDoc from a TaskDoc
 
         Args:
             taskdoc: TaskDoc to convert
-            additional_info_key: The key in the `additional_json`
+            defect_info_key: The key in the `additional_json`
                 to extract the defect information from
 
         Returns:
             DefectTaskDoc
         """
-        additional_info = taskdoc.additional_json[additional_info_key]
+        additional_info = taskdoc.additional_json[defect_info_key]
         defect = additional_info["defect"]
         charge_state = additional_info["charge_state"]
         defect_name = additional_info["defect_name"]
