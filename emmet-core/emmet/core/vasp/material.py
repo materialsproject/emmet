@@ -113,7 +113,12 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             task_run_type = task.run_type
             _SPECIAL_TAGS = ["LASPH", "ISPIN"]
             special_tags = sum(
-                task.input.parameters.get(tag, False) for tag in _SPECIAL_TAGS
+                (
+                    task.input.parameters.get(tag, False)
+                    if task.input.parameters
+                    else False
+                )
+                for tag in _SPECIAL_TAGS
             )
 
             return (
@@ -165,7 +170,12 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
             _SPECIAL_TAGS = ["LASPH", "ISPIN"]
             special_tags = sum(
-                task.input.parameters.get(tag, False) for tag in _SPECIAL_TAGS
+                (
+                    task.input.parameters.get(tag, False)
+                    if task.input.parameters
+                    else False
+                )
+                for tag in _SPECIAL_TAGS
             )
 
             return (
