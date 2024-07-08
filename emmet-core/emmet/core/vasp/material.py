@@ -90,6 +90,10 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             else structure_optimizations
         )
 
+        validity_check = [doc for doc in structure_calcs if doc.is_valid]
+        if not validity_check:
+            raise ValueError("Group must contain at least one valid task")
+
         # Material ID
         possible_mat_ids = [task.task_id for task in structure_optimizations]
 
