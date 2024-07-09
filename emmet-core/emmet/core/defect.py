@@ -6,6 +6,7 @@ from emmet.core.tasks import TaskDoc, _VOLUMETRIC_FILES
 from typing import TYPE_CHECKING
 from pymatgen.analysis.defects.core import Defect
 from monty.json import MontyDecoder
+from pydantic import BaseModel
 
 if TYPE_CHECKING:
     from typing import Any, Dict, Optional, Tuple, Union
@@ -14,8 +15,8 @@ if TYPE_CHECKING:
 mdecoder = MontyDecoder().process_decoded
 
 
-class DefectTaskDoc(TaskDoc):
-    """Defect Task Document"""
+class DefectInfo(BaseModel):
+    """Information related to a point defect."""
 
     defect_name: str = Field(
         None,
@@ -45,6 +46,13 @@ class DefectTaskDoc(TaskDoc):
         title="Supercell Matrix",
         description="Supercell matrix used to construct the defect supercell.",
     )
+
+
+class DefectTaskDoc(DefectInfo, TaskDoc):
+    """Defect Task Document.
+
+    Contains all the task-level information for a defect supercell calculation.
+    """
 
     @classmethod
     def from_directory(
