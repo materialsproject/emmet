@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from hashlib import blake2b
 import statistics
 
@@ -138,7 +138,7 @@ class TrajectoryDoc(PropertyDoc):
         description="Number of separate optimization trajectories extracted from this task",
     )
 
-    species: List[Element | str] = Field(
+    species: List[Union[Element, str]] = Field(
         ...,
         description="Element or element name for each atom in the molecule for each optimization step",
     )
