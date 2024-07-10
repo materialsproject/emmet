@@ -745,8 +745,8 @@ def _copy_from_doc(doc: Dict[str, Any]):
     #  property2: {solvent1: [{...}, {...}], solvent2: [{...}, {...}]}
     # }
 
-    has_props = {str(val.value): False for val in HasProps}
-    d = {"has_props": has_props, "origins": []}
+    has_props: Dict[str, bool] = {str(val.value): False for val in HasProps}
+    d: Dict[str, Any] = {"has_props": has_props, "origins": []}
 
     # Function to grab the keys and put them in the root doc
     for doc_key in summary_fields:

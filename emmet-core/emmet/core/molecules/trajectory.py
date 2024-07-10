@@ -101,7 +101,7 @@ class ForcesDoc(PropertyDoc):
         else:
             magnitudes = [np.linalg.norm(np.asarray(f)) for f in forces]
 
-        average_force_magnitude = statistics.mean(magnitudes)
+        average_force_magnitude = np.mean(magnitudes)
         max_force_magnitude = max(magnitudes)
         min_force_magnitude = min(magnitudes)
 
@@ -275,7 +275,7 @@ class TrajectoryDoc(PropertyDoc):
                         step_dict[k] = v[jj]  # type: ignore
 
                 step_mol = mols[jj]
-                for k, v in site_props.items():
+                for k, v in site_props.items():  # type: ignore
                     if v is not None:
                         step_mol.add_site_property(property_name=k, values=v[jj])
 
@@ -327,7 +327,7 @@ class TrajectoryDoc(PropertyDoc):
         multiplicity = mol.spin_multiplicity
 
         species = None
-        geometries = list()
+        geometries = list()  # type: ignore
         energies = list()
         total_gradients = list()
         pcm_gradients = list()
