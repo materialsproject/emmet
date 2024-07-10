@@ -1,6 +1,5 @@
 from typing import List, Optional, Union
 from hashlib import blake2b
-import statistics
 
 import numpy as np
 
