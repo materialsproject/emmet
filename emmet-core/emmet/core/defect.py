@@ -19,18 +19,15 @@ class DefectInfo(BaseModel):
     """Information related to a point defect."""
 
     defect_name: str = Field(
-        None,
         title="The name of the defect",
     )
 
     bulk_formula: str = Field(
-        None,
         title="Bulk Formula",
         description="Formula of the bulk structure.",
     )
 
     defect: Defect = Field(
-        None,
         title="Defect Object",
         description="Unit cell representation of the defect object.",
     )
