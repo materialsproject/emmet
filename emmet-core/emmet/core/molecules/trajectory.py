@@ -324,6 +324,8 @@ class TrajectoryDoc(PropertyDoc):
         else:
             mol = task.output.initial_molecule
 
+        multiplicity = mol.spin_multiplicity
+
         species = None
         geometries = list()
         energies = list()
