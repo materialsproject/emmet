@@ -88,7 +88,7 @@ class DefectTaskDoc(DefectInfo, TaskDoc):
         TaskDoc
             A task document for the calculation.
         """
-        tdoc = super().from_directory(
+        tdoc = TaskDoc.from_directory(
             dir_name=dir_name,
             volumetric_files=volumetric_files,
             store_additional_json=True,
@@ -96,7 +96,7 @@ class DefectTaskDoc(DefectInfo, TaskDoc):
             volume_change_warning_tol=volume_change_warning_tol,
             **vasp_calculation_kwargs,
         )
-        return cls.from_taskdoc(tdoc)
+        return cls.from_taskdoc(tdoc, defect_info_key=defect_info_key)
 
     @classmethod
     def from_taskdoc(
@@ -132,4 +132,5 @@ class DefectTaskDoc(DefectInfo, TaskDoc):
                 "supercell_matrix": supercell_matrix,
             }
         )
+
         return cls(**task_dict)
