@@ -10,10 +10,7 @@ from maggma.utils import grouper
 
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
-from emmet.core.molecules.trajectory import (
-    ForcesDoc,
-    TrajectoryDoc
-)
+from emmet.core.molecules.trajectory import ForcesDoc, TrajectoryDoc
 from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
 
@@ -184,8 +181,7 @@ class ForcesBuilder(Builder):
             force_entries = [
                 e
                 for e in mol.entries
-                if e["charge"] == mol.charge
-                and e["task_type"] == "Force"
+                if e["charge"] == mol.charge and e["task_type"] == "Force"
             ]
 
             # Organize by solvent environment
@@ -488,7 +484,9 @@ class TrajectoryBuilder(Builder):
                 )
                 trajectory_docs.append(trajectory_doc)
 
-        self.logger.debug(f"Produced {len(trajectory_docs)} trajectory docs for {shash}")
+        self.logger.debug(
+            f"Produced {len(trajectory_docs)} trajectory docs for {shash}"
+        )
 
         return jsanitize([doc.model_dump() for doc in trajectory_docs], allow_bson=True)
 
@@ -514,7 +512,9 @@ class TrajectoryBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info(f"Updating {len(docs)} trajectory documents")
-            self.trajectories.remove_docs({self.trajectories.key: {"$in": molecule_ids}})
+            self.trajectories.remove_docs(
+                {self.trajectories.key: {"$in": molecule_ids}}
+            )
             self.trajectories.update(
                 docs=docs,
                 key=["molecule_id", "solvent"],

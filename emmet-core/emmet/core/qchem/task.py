@@ -85,13 +85,13 @@ class OutputSummary(BaseModel):
     pcm_gradients: Optional[List[List[float]]] = Field(
         None,
         description="Electrostatic atomic forces from polarizable continuum model (PCM) implicit solvation,"
-                    "in atomic units (Ha/Bohr)."
+        "in atomic units (Ha/Bohr).",
     )
 
     CDS_gradients: Optional[List[List[float]]] = Field(
         None,
         description="Atomic force contributions from cavitation, dispersion, and structural rearrangement in the SMx"
-                    "family of implicit solvent models, in atomic units (Ha/Bohr)"
+        "family of implicit solvent models, in atomic units (Ha/Bohr)",
     )
 
     def as_dict(self) -> Dict[str, Any]:
@@ -109,7 +109,7 @@ class OutputSummary(BaseModel):
             "frequencies": self.frequencies,
             "dipoles": self.dipoles,
             "gradients": self.gradients,
-            "precise_gradients": self.precise_gradients
+            "precise_gradients": self.precise_gradients,
         }
 
 

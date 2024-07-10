@@ -121,7 +121,6 @@ def test_summary_one(
     vibes,
     summary,
 ):
-
     force_build = ForcesBuilder(tasks_one, mols_one, forces)
     force_build.run()
 
@@ -188,7 +187,6 @@ def test_summary_two(
     vibes,
     summary,
 ):
-
     force_build = ForcesBuilder(tasks_two, mols_two, forces)
     force_build.run()
 

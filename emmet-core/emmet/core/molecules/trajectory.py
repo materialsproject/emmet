@@ -22,31 +22,26 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 class ForcesDoc(PropertyDoc):
     property_name: str = "forces"
 
-    forces: List[List[float]] = Field(
-        ...,
-        description="Atomic forces (units: Ha/Bohr)"
-    )
+    forces: List[List[float]] = Field(..., description="Atomic forces (units: Ha/Bohr)")
 
     precise_forces: Optional[List[List[float]]] = Field(
-        None,
-        description="High-precision atomic forces (units: Ha/Bohr)"
+        None, description="High-precision atomic forces (units: Ha/Bohr)"
     )
 
     pcm_forces: Optional[List[List[float]]] = Field(
         None,
         description="Electrostatic atomic forces from polarizable continuum model (PCM) implicit solvation "
-                    "(units: Ha/Bohr)."
+        "(units: Ha/Bohr).",
     )
 
     cds_forces: Optional[List[List[float]]] = Field(
         None,
         description="Atomic force contributions from cavitation, dispersion, and structural rearrangement in the SMx "
-                    "family of implicit solvent models (units: Ha/Bohr)"
+        "family of implicit solvent models (units: Ha/Bohr)",
     )
 
     average_force_magnitude: Optional[float] = Field(
-        None,
-        description="Average magnitude of atomic forces (units: Ha/Bohr)"
+        None, description="Average magnitude of atomic forces (units: Ha/Bohr)"
     )
 
     max_force_magnitude: Optional[float] = Field(
@@ -78,8 +73,10 @@ class ForcesDoc(PropertyDoc):
         """
 
         if task.task_type.value != "Force":
-            raise ValueError("ForcesDoc can only be constructed from force calculations,"
-                             f"not {task.task_type.value}!")
+            raise ValueError(
+                "ForcesDoc can only be constructed from force calculations,"
+                f"not {task.task_type.value}!"
+            )
 
         mol = task.output.initial_molecule
 
@@ -94,21 +91,15 @@ class ForcesDoc(PropertyDoc):
         # For PCM and CDS forces, can check "calcs_reversed"
         if pcm_forces is None:
             pcm_forces = calc.get("pcm_gradients")
-        
+
         if cds_forces is None:
             cds_forces = calc.get("CDS_gradients")
 
         # Basic stats
         if precise_forces is not None:
-            magnitudes = [
-                np.linalg.norm(np.asarray(f))
-                for f in precise_forces
-            ]
+            magnitudes = [np.linalg.norm(np.asarray(f)) for f in precise_forces]
         else:
-            magnitudes = [
-                np.linalg.norm(np.asarray(f))
-                for f in forces
-            ]
+            magnitudes = [np.linalg.norm(np.asarray(f)) for f in forces]
 
         average_force_magnitude = statistics.mean(magnitudes)
         max_force_magnitude = max(magnitudes)
@@ -144,79 +135,78 @@ class TrajectoryDoc(PropertyDoc):
 
     num_trajectories: int = Field(
         ...,
-        description="Number of separate optimization trajectories extracted from this task"
+        description="Number of separate optimization trajectories extracted from this task",
     )
 
     species: List[Element | str] = Field(
         ...,
-        description="Element or element name for each atom in the molecule for each optimization step"
+        description="Element or element name for each atom in the molecule for each optimization step",
     )
 
     geometries: List[List[List[List[float]]]] = Field(
         ...,
         description="XYZ positions of each atom in the molecule for each optimization step for each optimization "
-                    "trajectory (units: Angstrom)",
+        "trajectory (units: Angstrom)",
     )
 
     energies: List[List[float]] = Field(
         ...,
-        description="Electronic energies for each optimization step for each optimization trajectory (units: Hartree)"
+        description="Electronic energies for each optimization step for each optimization trajectory (units: Hartree)",
     )
 
     forces: List[List[List[List[float]]]] = Field(
         ...,
-        description="Forces on each atom for each optimization step for each optimization trajectory (units: Ha/Bohr)"
+        description="Forces on each atom for each optimization step for each optimization trajectory (units: Ha/Bohr)",
     )
 
     pcm_forces: List[Optional[List[List[List[float]]]]] = Field(
         None,
         description="Electrostatic atomic forces from polarizable continuum model (PCM) implicit solvation "
-                    "for each optimization step for each optimization trajectory (units: Ha/Bohr)."
+        "for each optimization step for each optimization trajectory (units: Ha/Bohr).",
     )
 
     cds_forces: List[Optional[List[List[List[float]]]]] = Field(
         None,
         description="Atomic force contributions from cavitation, dispersion, and structural rearrangement in the SMx "
-                    "family of implicit solvent models, for each optimization step for each optimization trajectory "
-                    "(units: Ha/Bohr)"
+        "family of implicit solvent models, for each optimization step for each optimization trajectory "
+        "(units: Ha/Bohr)",
     )
 
     mulliken_partial_charges: List[Optional[List[List[float]]]] = Field(
         None,
         description="Partial charges of each atom for each optimization step for each optimization trajectory, using "
-                    "the Mulliken method"
+        "the Mulliken method",
     )
 
     mulliken_partial_spins: List[Optional[List[List[float]]]] = Field(
         None,
         description="Partial spins of each atom for each optimization step for each optimization trajectory, using "
-                    "the Mulliken method"
+        "the Mulliken method",
     )
 
     resp_partial_charges: List[Optional[List[List[float]]]] = Field(
         None,
         description="Partial charges of each atom for each optimization step for each optimization trajectory, using "
-                    "the restrained electrostatic potential (RESP) method"
+        "the restrained electrostatic potential (RESP) method",
     )
 
     dipole_moments: List[Optional[List[List[float]]]] = Field(
         None,
         description="Molecular dipole moment for each optimization step for each optimization trajectory, "
-                    "(units: Debye)"
+        "(units: Debye)",
     )
 
     resp_dipole_moments: List[Optional[List[List[float]]]] = Field(
         None,
         description="Molecular dipole moment for each optimization step for each optimization trajectory, "
-                    "using the restrainted electrostatic potential (RESP) method (units: Debye)"
+        "using the restrainted electrostatic potential (RESP) method (units: Debye)",
     )
-
 
     @property
     def molecules(self) -> List[Molecule]:
         """
         Geometries along the optimization trajectory, represented as pymatgen Molecule objects.
-        
+
         Args:
             self
 
@@ -227,10 +217,15 @@ class TrajectoryDoc(PropertyDoc):
 
         return [
             [
-                Molecule(self.species, geom, charge=self.charge, spin_multiplicity=self.spin_multiplicity)
+                Molecule(
+                    self.species,
+                    geom,
+                    charge=self.charge,
+                    spin_multiplicity=self.spin_multiplicity,
+                )
                 for geom in trajectory
             ]
-            for trajectory in self.geometries    
+            for trajectory in self.geometries
         ]
 
     def as_trajectories(self) -> List[Trajectory]:
@@ -256,8 +251,8 @@ class TrajectoryDoc(PropertyDoc):
             frame_props = {
                 "energies": self.energies[ii],
                 "dipole_moments": self.dipole_moments[ii],
-                "resp_dipole_moments": self.resp_dipole_moments[ii]
-                }
+                "resp_dipole_moments": self.resp_dipole_moments[ii],
+            }
 
             # Site (atomic) properties
             site_props = {
@@ -266,7 +261,7 @@ class TrajectoryDoc(PropertyDoc):
                 "cds_forces": self.cds_forces[ii],
                 "mulliken_partial_charges": self.mulliken_partial_charges[ii],
                 "mulliken_partial_spins": self.mulliken_partial_spins[ii],
-                "resp_partial_charges": self.resp_partial_charges[ii]
+                "resp_partial_charges": self.resp_partial_charges[ii],
             }
 
             # Convert into a Trajectory object
@@ -317,10 +312,12 @@ class TrajectoryDoc(PropertyDoc):
             "Geometry Optimization",
             "Frequency Flattening Geometry Optimization",
             "Transition State Geometry Optimization",
-            "Frequency Flattening Transition State Geometry Optimization"
+            "Frequency Flattening Transition State Geometry Optimization",
         ]:
-            raise ValueError("TrajectoryDoc can only be constructed from geometry optimization calculations,"
-                             f"not {task.task_type.value}!")
+            raise ValueError(
+                "TrajectoryDoc can only be constructed from geometry optimization calculations,"
+                f"not {task.task_type.value}!"
+            )
 
         if task.output.optimized_molecule is not None:
             mol = task.output.optimized_molecule
@@ -341,13 +338,13 @@ class TrajectoryDoc(PropertyDoc):
 
         for calculation in task.calcs_reversed:
             species = calculation.get("species", species)
-            
+
             this_geometries = calculation.get("geometries")
             this_energies = calculation.get("energy_trajectory")
             this_total_gradients = calculation.get("gradients")
             this_pcm_gradients = calculation.get("pcm_gradients")
             this_cds_gradients = calculation.get("CDS_gradients")
-            
+
             this_mulliken = calculation.get("Mulliken")
             this_resp = calculation.get("RESP")
             this_dipoles = calculation.get("dipoles")
@@ -362,7 +359,9 @@ class TrajectoryDoc(PropertyDoc):
             elif len(this_geometries) != len(this_energies):
                 # Initial geometry not included - common because of how parsing is done
                 if len(this_geometries) == len(this_energies) - 1:
-                    this_geometries = [calculation["initial_geometry"]] + this_geometries
+                    this_geometries = [
+                        calculation["initial_geometry"]
+                    ] + this_geometries
                 # Other issue - no one-to-one mapping of molecule structure and energy
                 else:
                     valid_trajectory = False
@@ -387,7 +386,10 @@ class TrajectoryDoc(PropertyDoc):
 
             # electric dipoles
             if this_dipoles is not None:
-                if this_dipoles.get("dipole") is not None and len(this_dipoles["dipole"]) > 0:
+                if (
+                    this_dipoles.get("dipole") is not None
+                    and len(this_dipoles["dipole"]) > 0
+                ):
                     if (
                         isinstance(this_dipoles["dipole"][0], list)
                         and len(this_dipoles["dipole"]) == num_steps
@@ -425,17 +427,16 @@ class TrajectoryDoc(PropertyDoc):
                                 step_spins.append(atom[1])
                             charges.append(step_charges)
                             spins.append(step_spins)
-                        
+
                         this_mulliken_partial_charges = charges
                         this_mulliken_partial_spins = spins
                 elif len(this_mulliken) == num_steps + 1:
                     last = np.asarray(this_mulliken[-1])
                     seclast = np.asarray(this_mulliken[-2])
                     if np.allclose(last, seclast):
-                        
                         if int(multiplicity) == 1:
                             this_mulliken_partial_charges = this_mulliken[:-1]
-                        
+
                         else:
                             charges = list()
                             spins = list()
@@ -448,7 +449,7 @@ class TrajectoryDoc(PropertyDoc):
                                     step_spins.append(atom[1])
                                 charges.append(step_charges)
                                 spins.append(step_spins)
-                            
+
                             this_mulliken_partial_charges = charges
                             this_mulliken_partial_spins = spins
 

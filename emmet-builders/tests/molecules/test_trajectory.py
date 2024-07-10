@@ -2,10 +2,7 @@ import pytest
 from maggma.stores import JSONStore, MemoryStore
 
 from emmet.builders.qchem.molecules import MoleculesAssociationBuilder, MoleculesBuilder
-from emmet.builders.molecules.trajectory import (
-    ForcesBuilder,
-    TrajectoryBuilder
-)
+from emmet.builders.molecules.trajectory import ForcesBuilder, TrajectoryBuilder
 
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
@@ -13,7 +10,7 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 @pytest.fixture(scope="session")
 def tasks_store(test_dir):
-    return JSONStore(test_dir / "force_trajectory"/ "force_traj_tasks.json.gz")
+    return JSONStore(test_dir / "force_trajectory" / "force_traj_tasks.json.gz")
 
 
 @pytest.fixture(scope="session")

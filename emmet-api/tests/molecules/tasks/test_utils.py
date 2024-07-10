@@ -35,11 +35,10 @@ def test_calcs_reversed_to_trajectory():
         0.084031,
     ]
 
-
     # TODO: improve testing coverage
     # Find examples where dipole info gets included in optimization trajectory
     # Also example where the HTTP error gets tripped
     # And (if possible) case where energies != gradients
     docs = loadfn(os.path.join(MAPISettings().TEST_FILES, "multipole_docs.json.gz"))
 
-    opt_doc = docs[2]
+    docs[2]

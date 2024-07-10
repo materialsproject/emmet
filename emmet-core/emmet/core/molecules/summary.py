@@ -133,30 +133,27 @@ class MoleculeSummaryDoc(PropertyDoc):
     )
 
     forces: Optional[Dict[str, Optional[List[List[float]]]]] = Field(
-        None,
-        description="Atomic forces (units: Ha/Bohr)"
+        None, description="Atomic forces (units: Ha/Bohr)"
     )
 
     precise_forces: Optional[Dict[str, Optional[List[List[float]]]]] = Field(
-        None,
-        description="High-precision atomic forces (units: Ha/Bohr)"
+        None, description="High-precision atomic forces (units: Ha/Bohr)"
     )
 
     pcm_forces: Optional[Dict[str, Optional[List[List[float]]]]] = Field(
         None,
         description="Electrostatic atomic forces from polarizable continuum model (PCM) implicit solvation "
-                    "(units: Ha/Bohr)."
+        "(units: Ha/Bohr).",
     )
 
     cds_forces: Optional[Dict[str, Optional[List[List[float]]]]] = Field(
         None,
         description="Atomic force contributions from cavitation, dispersion, and structural rearrangement in the SMx "
-                    "family of implicit solvent models (units: Ha/Bohr)"
+        "family of implicit solvent models (units: Ha/Bohr)",
     )
 
     average_force_magnitude: Optional[Dict[str, Optional[float]]] = Field(
-        None,
-        description="Average magnitude of atomic forces (units: Ha/Bohr)"
+        None, description="Average magnitude of atomic forces (units: Ha/Bohr)"
     )
 
     max_force_magnitude: Optional[Dict[str, Optional[float]]] = Field(
@@ -652,7 +649,7 @@ summary_fields: Dict[str, list] = {
         "cds_forces",
         "average_force_magnitude",
         "max_force_magnitude",
-        "min_force_magnitude"
+        "min_force_magnitude",
     ],
     HasProps.thermo.value: [
         "electronic_energy",
