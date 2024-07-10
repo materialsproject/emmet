@@ -68,6 +68,13 @@ class StoreTrajectoryOption(ValueEnum):
     NO = "no"
 
 
+class CalculationBaseModel(BaseModel):
+    """Wrapper around pydantic BaseModel with extra functionality."""
+
+    def get(self, key: Any, default_value: Optional[Any] = None) -> Any:
+        return getattr(self, key, default_value)
+
+
 class PotcarSpec(BaseModel):
     """Document defining a VASP POTCAR specification."""
 
@@ -116,7 +123,7 @@ class PotcarSpec(BaseModel):
         return [cls.from_potcar_single(p) for p in potcar]
 
 
-class CalculationInput(BaseModel):
+class CalculationInput(CalculationBaseModel):
     """Document defining VASP calculation inputs."""
 
     incar: Optional[Dict[str, Any]] = Field(
@@ -168,15 +175,22 @@ class CalculationInput(BaseModel):
             for k, w in zip(vasprun.actual_kpoints, vasprun.actual_kpoints_weights)
         ]
 
+        parameters = dict(vasprun.parameters).copy()
+        incar = dict(vasprun.incar)
+        if metagga := incar.get("METAGGA"):
+            # Per issue #960, the METAGGA tag is populated in the
+            # INCAR field of vasprun.xml, and not parameters
+            parameters.update({"METAGGA": metagga})
+
         return cls(
             structure=vasprun.initial_structure,
-            incar=dict(vasprun.incar),
+            incar=incar,
             kpoints=kpoints_dict,
             nkpoints=len(kpoints_dict["actual_kpoints"]),
             potcar=[s.split()[0] for s in vasprun.potcar_symbols],
             potcar_spec=vasprun.potcar_spec,
             potcar_type=[s.split()[0] for s in vasprun.potcar_symbols],
-            parameters=dict(vasprun.parameters),
+            parameters=parameters,
             lattice_rec=vasprun.initial_structure.lattice.reciprocal_lattice,
             is_hubbard=vasprun.is_hubbard,
             hubbards=vasprun.hubbards,
@@ -572,7 +586,7 @@ class CalculationOutput(BaseModel):
         )
 
 
-class Calculation(BaseModel):
+class Calculation(CalculationBaseModel):
     """Full VASP calculation inputs and outputs."""
 
     dir_name: Optional[str] = Field(

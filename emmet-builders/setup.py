@@ -11,12 +11,13 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
-    package_data={"emmet.builders": ["*.json", "*.json.gz"]},
+    include_package_data=True,
     install_requires=[
         "emmet-core[all]",
-        "emmet-core[ml]",
         "maggma>=0.57.6",
         "matminer>=0.9.1",
+        "solvation-analysis>=0.4.0",
+        "MDAnalysis>=2.7.0",
     ],
     extras_require={
         "test": [
@@ -44,6 +45,7 @@ setup(
             "livereload",
             "jinja2",
         ],
+        "ml": ["emmet-core[ml]"],
     },
     python_requires=">=3.9",
     license="modified BSD",

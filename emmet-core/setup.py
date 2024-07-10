@@ -1,4 +1,14 @@
+import os
+
 from setuptools import find_namespace_packages, setup
+
+readme_path = os.path.join(os.path.dirname(__file__), "..", "README.md")
+if os.path.exists(readme_path):
+    with open(readme_path) as f:
+        long_description = f.read()
+else:
+    long_description = "Core Emmet Library"
+
 
 setup(
     name="emmet-core",
@@ -7,7 +17,7 @@ setup(
     description="Core Emmet Library",
     author="The Materials Project",
     author_email="feedback@materialsproject.org",
-    long_description=open("../README.md").read(),  # noqa: SIM115
+    long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
@@ -17,7 +27,8 @@ setup(
     },
     include_package_data=True,
     install_requires=[
-        "pymatgen>=2023.10.11",
+        "numpy<2",
+        "pymatgen==2024.4.13",
         "monty>=2024.2.2",
         "pydantic>=2.0",
         "pydantic-settings>=2.0",
@@ -29,8 +40,11 @@ setup(
             "matcalc>=0.0.4",
             "seekpath>=2.0.1",
             "robocrys>=0.2.8",
+            "pymatgen-analysis-defects>=2024.5.11",
             "pymatgen-analysis-diffusion>=2023.8.15",
             "pymatgen-analysis-alloys>=0.0.3",
+            "solvation-analysis>=0.4.0",
+            "MDAnalysis>=2.7.0",
         ],
         "ml": ["chgnet", "matgl"],
         "test": [

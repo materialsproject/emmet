@@ -163,6 +163,22 @@ def test_calculation(test_dir, object_name, task_name):
     MontyDecoder().process_decoded(d)
 
 
+def test_calculation_run_type_metagga(test_dir):
+    # Test to ensure that meta-GGA calculations are correctly identified
+    # The VASP files were kindly provided by @Andrew-S-Rosen in issue #960
+    from emmet.core.vasp.calculation import Calculation
+
+    calc_input, _ = Calculation.from_vasp_files(
+        dir_name=test_dir / "vasp" / "r2scan_relax",
+        task_name="relax",
+        vasprun_file="vasprun.xml.gz",
+        outcar_file="OUTCAR.gz",
+        contcar_file="CONTCAR.gz",
+    )
+    assert "R2SCAN" in repr(calc_input.run_type)
+    assert "R2SCAN" in repr(calc_input.calc_type)
+
+
 def test_PotcarSpec(test_dir):
     from emmet.core.vasp.calculation import PotcarSpec
     from pymatgen.io.vasp import PotcarSingle, Potcar
