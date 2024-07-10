@@ -1,7 +1,8 @@
+import datetime
 import os
 from json import load
 
-from monty.serialization import loadfn
+from monty.io import zopen
 
 from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.molecules.tasks.utils import calcs_reversed_to_trajectory
@@ -39,6 +40,13 @@ def test_calcs_reversed_to_trajectory():
     # Find examples where dipole info gets included in optimization trajectory
     # Also example where the HTTP error gets tripped
     # And (if possible) case where energies != gradients
-    docs = loadfn(os.path.join(MAPISettings().TEST_FILES, "multipole_docs.json.gz"))
+    with zopen(os.path.join(MAPISettings().TEST_FILES, "multipole_docs.json.gz")) as f:
+        docs = load(f)
+
+    for d in docs:
+        del d["custodian"]
+        d["last_updated"] = datetime.datetime.strptime(
+            d["last_updated"]["string"], "%Y-%m-%d %H:%M:%S.%f"
+        )
 
     docs[2]
