@@ -10,14 +10,6 @@ from emmet.core.math import Vector3D
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPID, MPculeID
-from emmet.core.molecules.orbitals import (
-    NaturalPopulation,
-    LonePair,
-    Bond,
-    ThreeCenterBond,
-    Hyperbond,
-    Interaction,
-)
 from emmet.core.molecules.metal_binding import MetalBindingData
 
 
@@ -132,40 +124,6 @@ class MoleculeSummaryDoc(PropertyDoc):
         description="Solvent:level of theory map for each ForcesDoc for this molecule.",
     )
 
-    forces: Optional[Dict[str, Optional[List[List[float]]]]] = Field(
-        None, description="Atomic forces (units: Ha/Bohr)"
-    )
-
-    precise_forces: Optional[Dict[str, Optional[List[List[float]]]]] = Field(
-        None, description="High-precision atomic forces (units: Ha/Bohr)"
-    )
-
-    pcm_forces: Optional[Dict[str, Optional[List[List[float]]]]] = Field(
-        None,
-        description="Electrostatic atomic forces from polarizable continuum model (PCM) implicit solvation "
-        "(units: Ha/Bohr).",
-    )
-
-    cds_forces: Optional[Dict[str, Optional[List[List[float]]]]] = Field(
-        None,
-        description="Atomic force contributions from cavitation, dispersion, and structural rearrangement in the SMx "
-        "family of implicit solvent models (units: Ha/Bohr)",
-    )
-
-    average_force_magnitude: Optional[Dict[str, Optional[float]]] = Field(
-        None, description="Average magnitude of atomic forces (units: Ha/Bohr)"
-    )
-
-    max_force_magnitude: Optional[Dict[str, Optional[float]]] = Field(
-        None,
-        description="Maximum magnitude of atomic forces (units: Ha/Bohr)",
-    )
-
-    min_force_magnitude: Optional[Dict[str, Optional[float]]] = Field(
-        None,
-        description="Minimum magnitude of atomic forces (units: Ha/Bohr)",
-    )
-
     # thermo
     thermo_property_ids: Optional[Dict[str, str]] = Field(
         None,
@@ -185,38 +143,11 @@ class MoleculeSummaryDoc(PropertyDoc):
         None, description="Zero-point energy of the molecule (units: eV)"
     )
 
-    rt: Optional[Dict[str, Optional[float]]] = Field(
-        None,
-        description="R*T, where R is the gas constant and T is temperature, taken "
-        "to be 298.15K (units: eV)",
-    )
-
     total_enthalpy: Optional[Dict[str, Optional[float]]] = Field(
         None, description="Total enthalpy of the molecule at 298.15K (units: eV)"
     )
     total_entropy: Optional[Dict[str, Optional[float]]] = Field(
         None, description="Total entropy of the molecule at 298.15K (units: eV/K)"
-    )
-
-    translational_enthalpy: Optional[Dict[str, Optional[float]]] = Field(
-        None,
-        description="Translational enthalpy of the molecule at 298.15K (units: eV)",
-    )
-    translational_entropy: Optional[Dict[str, Optional[float]]] = Field(
-        None,
-        description="Translational entropy of the molecule at 298.15K (units: eV/K)",
-    )
-    rotational_enthalpy: Optional[Dict[str, Optional[float]]] = Field(
-        None, description="Rotational enthalpy of the molecule at 298.15K (units: eV)"
-    )
-    rotational_entropy: Optional[Dict[str, Optional[float]]] = Field(
-        None, description="Rotational entropy of the molecule at 298.15K (units: eV/K)"
-    )
-    vibrational_enthalpy: Optional[Dict[str, Optional[float]]] = Field(
-        None, description="Vibrational enthalpy of the molecule at 298.15K (units: eV)"
-    )
-    vibrational_entropy: Optional[Dict[str, Optional[float]]] = Field(
-        None, description="Vibrational entropy of the molecule at 298.15K (units: eV/K)"
     )
 
     free_energy: Optional[Dict[str, Optional[float]]] = Field(
@@ -238,35 +169,6 @@ class MoleculeSummaryDoc(PropertyDoc):
         None, description="List of molecular vibrational frequencies"
     )
 
-    frequency_modes: Optional[Dict[str, List[List[List[float]]]]] = Field(
-        None,
-        description="Vibrational frequency modes of the molecule (units: Angstrom)",
-    )
-
-    ir_intensities: Optional[Dict[str, List[float]]] = Field(
-        None,
-        title="IR intensities",
-        description="Intensities for infrared vibrational spectrum peaks",
-    )
-
-    ir_activities: Optional[Dict[str, List]] = Field(
-        None,
-        title="IR activities",
-        description="List indicating if frequency-modes are IR-active",
-    )
-
-    raman_intensities: Optional[Dict[str, List[float]]] = Field(
-        None,
-        title="Raman intensities",
-        description="Intensities for Raman spectrum peaks",
-    )
-
-    raman_activities: Optional[Dict[str, List]] = Field(
-        None,
-        title="Raman activities",
-        description="List indicating if frequency-modes are Raman-active",
-    )
-
     # natural bonding orbitals
     orbitals_property_ids: Optional[Dict[str, str]] = Field(
         None,
@@ -280,78 +182,6 @@ class MoleculeSummaryDoc(PropertyDoc):
 
     open_shell: Optional[Dict[str, bool]] = Field(
         None, description="Is this molecule open-shell (spin multiplicity != 1)?"
-    )
-
-    nbo_population: Optional[Dict[str, Optional[List[NaturalPopulation]]]] = Field(
-        None, description="Natural electron populations of the molecule"
-    )
-    nbo_lone_pairs: Optional[Dict[str, Optional[List[LonePair]]]] = Field(
-        None, description="Lone pair orbitals of a closed-shell molecule"
-    )
-    nbo_bonds: Optional[Dict[str, Optional[List[Bond]]]] = Field(
-        None, description="Bond-like orbitals of a closed-shell molecule"
-    )
-    nbo_three_center_bonds: Optional[
-        Dict[str, Optional[List[ThreeCenterBond]]]
-    ] = Field(
-        None, description="Three-center bond-like orbitals of a closed-shell molecule"
-    )
-    nbo_hyperbonds: Optional[Dict[str, Optional[List[Hyperbond]]]] = Field(
-        None, description="3-center hyperbond-like orbitals of a closed-shell molecule"
-    )
-    nbo_interactions: Optional[Dict[str, Optional[List[Interaction]]]] = Field(
-        None, description="Orbital-orbital interactions of a closed-shell molecule"
-    )
-
-    alpha_population: Optional[Dict[str, Optional[List[NaturalPopulation]]]] = Field(
-        None,
-        description="Natural electron populations of the alpha electrons of an "
-        "open-shell molecule",
-    )
-    beta_population: Optional[Dict[str, Optional[List[NaturalPopulation]]]] = Field(
-        None,
-        description="Natural electron populations of the beta electrons of an "
-        "open-shell molecule",
-    )
-    alpha_lone_pairs: Optional[Dict[str, Optional[List[LonePair]]]] = Field(
-        None, description="Alpha electron lone pair orbitals of an open-shell molecule"
-    )
-    beta_lone_pairs: Optional[Dict[str, Optional[List[LonePair]]]] = Field(
-        None, description="Beta electron lone pair orbitals of an open-shell molecule"
-    )
-    alpha_bonds: Optional[Dict[str, Optional[List[Bond]]]] = Field(
-        None, description="Alpha electron bond-like orbitals of an open-shell molecule"
-    )
-    beta_bonds: Optional[Dict[str, Optional[List[Bond]]]] = Field(
-        None, description="Beta electron bond-like orbitals of an open-shell molecule"
-    )
-    alpha_three_center_bonds: Optional[
-        Dict[str, Optional[List[ThreeCenterBond]]]
-    ] = Field(
-        None,
-        description="Alpha electron three-center bond-like orbitals of an open-shell molecule",
-    )
-    beta_three_center_bonds: Optional[
-        Dict[str, Optional[List[ThreeCenterBond]]]
-    ] = Field(
-        None,
-        description="Beta electron three-center bond-like orbitals of an open-shell molecule",
-    )
-    alpha_hyperbonds: Optional[Dict[str, Optional[List[Hyperbond]]]] = Field(
-        None,
-        description="Alpha electron hyperbond-like orbitals of an open-shell molecule",
-    )
-    beta_hyperbonds: Optional[Dict[str, Optional[List[Hyperbond]]]] = Field(
-        None,
-        description="Beta electron hyperbond-like orbitals of an open-shell molecule",
-    )
-    alpha_interactions: Optional[Dict[str, Optional[List[Interaction]]]] = Field(
-        None,
-        description="Alpha electron orbital-orbital interactions of an open-shell molecule",
-    )
-    beta_interactions: Optional[Dict[str, Optional[List[Interaction]]]] = Field(
-        None,
-        description="Beta electron orbital-orbital interactions of an open-shell molecule",
     )
 
     # partial charges
@@ -399,12 +229,6 @@ class MoleculeSummaryDoc(PropertyDoc):
         description="Solvent:method:level of theory map for each MoleculeBondingDoc for this molecule.",
     )
 
-    molecule_graph: Optional[Dict[str, Dict[str, MoleculeGraph]]] = Field(
-        None,
-        description="Molecular graph representations of the molecule using different "
-        "definitions of bonding.",
-    )
-
     bond_types: Optional[Dict[str, Dict[str, Dict[str, List[float]]]]] = Field(
         None,
         description="Dictionaries of bond types to their length under different "
@@ -441,34 +265,9 @@ class MoleculeSummaryDoc(PropertyDoc):
         description="Total molecular dipole moment (Debye)",
     )
 
-    dipole_moment: Optional[Dict[str, Vector3D]] = Field(
-        None,
-        description="Molecular dipole moment vector (Debye)",
-    )
-
     resp_total_dipole: Optional[Dict[str, float]] = Field(
         None,
         description="Total dipole moment, calculated via restrained electrostatic potential (RESP) (Debye)",
-    )
-
-    resp_dipole_moment: Optional[Dict[str, Vector3D]] = Field(
-        None,
-        description="Molecular dipole moment vector, calculated via RESP (Debye)",
-    )
-
-    quadrupole_moment: Optional[Dict[str, Dict[str, float]]] = Field(
-        None,
-        description="Quadrupole moment components (Debye Ang)",
-    )
-
-    octopole_moment: Optional[Dict[str, Dict[str, float]]] = Field(
-        None,
-        description="Octopole moment components (Debye Ang^2)",
-    )
-
-    hexadecapole_moment: Optional[Dict[str, Dict[str, float]]] = Field(
-        None,
-        description="Hexadecapole moment tensor components (Debye Ang^2)",
     )
 
     # redox properties
@@ -642,69 +441,26 @@ summary_fields: Dict[str, list] = {
         "constituent_molecules",
         "molecule_levels_of_theory",
     ],
-    HasProps.forces.value: [
-        "forces",
-        "precise_forces",
-        "pcm_forces",
-        "cds_forces",
-        "average_force_magnitude",
-        "max_force_magnitude",
-        "min_force_magnitude",
-    ],
+    HasProps.forces.value: [],
     HasProps.thermo.value: [
         "electronic_energy",
         "zero_point_energy",
-        "rt",
         "total_enthalpy",
         "total_entropy",
-        "translational_enthalpy",
-        "translational_entropy",
-        "rotational_enthalpy",
-        "rotational_entropy",
-        "vibrational_enthalpy",
-        "vibrational_entropy",
         "free_energy",
     ],
     HasProps.vibration.value: [
         "frequencies",
-        "frequency_modes",
-        "ir_intensities",
-        "ir_activities",
-        "raman_intensities",
-        "raman_activities",
     ],
     HasProps.orbitals.value: [
         "open_shell",
-        "nbo_population",
-        "nbo_lone_pairs",
-        "nbo_bonds",
-        "nbo_three_center_bonds",
-        "nbo_hyperbonds",
-        "nbo_interactions",
-        "alpha_population",
-        "beta_population",
-        "alpha_lone_pairs",
-        "beta_lone_pairs",
-        "alpha_bonds",
-        "beta_bonds",
-        "alpha_three_center_bonds",
-        "beta_three_center_bonds",
-        "alpha_hyperbonds",
-        "beta_hyperbonds",
-        "alpha_interactions",
-        "beta_interactions",
     ],
     HasProps.partial_charges.value: ["partial_charges"],
     HasProps.partial_spins.value: ["partial_spins"],
-    HasProps.bonding.value: ["molecule_graph", "bond_types", "bonds", "bonds_nometal"],
+    HasProps.bonding.value: ["bond_types", "bonds", "bonds_nometal"],
     HasProps.multipole_moments.value: [
         "total_dipole",
-        "dipole_moment",
         "resp_total_dipole",
-        "resp_dipole_moment",
-        "quadrupole_moment",
-        "octopole_moment",
-        "hexadecapole_moment",
     ],
     HasProps.redox.value: [
         "electron_affinity",

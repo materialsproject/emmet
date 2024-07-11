@@ -18,7 +18,7 @@ def test_summary_doc(docs_data):
     assert summary_doc.electronic_energy is not None
     assert summary_doc.total_enthalpy is not None
     assert summary_doc.frequencies is not None
-    assert summary_doc.nbo_population is None
+    assert summary_doc.open_shell is None
     assert summary_doc.electron_affinity is None
     assert summary_doc.bonds is not None
     assert summary_doc.binding_data is None
