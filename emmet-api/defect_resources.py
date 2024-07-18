@@ -32,6 +32,7 @@ defect_resources = list()
 
 # Tasks
 from emmet.api.routes.defects.tasks.resources import task_resource
+
 #
 
 defect_resources.extend(
