@@ -152,7 +152,7 @@ class ThermoDoc(PropertyDoc):
 
         entry_quality_scores = {"GGA": 1, "GGA+U": 2, "SCAN": 3, "R2SCAN": 4}
 
-        def _energy_eval(entry: ComputedStructureEntry):
+        def _energy_eval(entry: Union[ComputedStructureEntry, ComputedEntry]):
             """
             Helper function to order entries for thermo energy data selection
             - Run type
