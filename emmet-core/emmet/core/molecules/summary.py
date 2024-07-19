@@ -35,89 +35,37 @@ class HasProps(Enum):
     vibration = "vibration"
 
 
-summary_fields: Dict[str, list] = {
-    HasProps.thermo.value: [
-        "electronic_energy",
-        "zero_point_energy",
-        "total_enthalpy",
-        "total_entropy",
-        "free_energy",
-    ],
-    HasProps.vibration.value: [
-        "frequencies",
-    ],
-    HasProps.orbitals.value: [
-        "open_shell",
-    ],
-    HasProps.partial_charges.value: ["partial_charges"],
-    HasProps.partial_spins.value: ["partial_spins"],
-    HasProps.bonding.value: ["bond_types", "bonds", "bonds_nometal"],
-    HasProps.multipole_moments.value: [
-        "total_dipole",
-        "resp_total_dipole",
-    ],
-    HasProps.redox.value: [
-        "electron_affinity",
-        "ea_task_id",
-        "ionization_energy",
-        "ie_task_id",
-        "reduction_free_energy",
-        "red_molecule_id",
-        "oxidation_free_energy",
-        "ox_molecule_id",
-        "reduction_potential",
-        "oxidation_potential",
-    ],
-    HasProps.metal_binding.value: [
-        "binding_partial_charges_property_id",
-        "binding_partial_spins_property_id",
-        "binding_partial_charges_lot_solvent",
-        "binding_partial_spins_lot_solvent",
-        "binding_charge_spin_method",
-        "binding_bonding_property_id",
-        "binding_bonding_lot_solvent",
-        "binding_bonding_method",
-        "binding_thermo_property_id",
-        "binding_thermo_lot_solvent",
-        "binding_thermo_correction_lot_solvent",
-        "binding_thermo_combined_lot_solvent",
-        "binding_data",
-    ],
-}
-
-
-
 class ThermoComposite(BaseModel):
     """
     Summary information obtained from MoleculeThermoDocs
     """
     
-    thermo_property_ids: Optional[Dict[str, str]] = Field(
+    property_id: Optional[str] = Field(
         None,
-        description="Solvent:property ID map for each MoleculeThermoDoc for this molecule.",
+        description="Property ID map for this MoleculeThermoDoc",
     )
 
-    thermo_levels_of_theory: Optional[Dict[str, str]] = Field(
+    level_of_theory: Optional[str] = Field(
         None,
-        description="Solvent:level of theory map for each MoleculeThermoDoc for this molecule.",
+        description="Level of theory for this MoleculeThermoDoc.",
     )
 
-    electronic_energy: Optional[Dict[str, float]] = Field(
+    electronic_energy: Optional[float] = Field(
         None, description="Electronic energy of the molecule (units: eV)"
     )
 
-    zero_point_energy: Optional[Dict[str, Optional[float]]] = Field(
+    zero_point_energy: Optional[float] = Field(
         None, description="Zero-point energy of the molecule (units: eV)"
     )
 
-    total_enthalpy: Optional[Dict[str, Optional[float]]] = Field(
+    total_enthalpy: Optional[float] = Field(
         None, description="Total enthalpy of the molecule at 298.15K (units: eV)"
     )
-    total_entropy: Optional[Dict[str, Optional[float]]] = Field(
+    total_entropy: Optional[float] = Field(
         None, description="Total entropy of the molecule at 298.15K (units: eV/K)"
     )
 
-    free_energy: Optional[Dict[str, Optional[float]]] = Field(
+    free_energy: Optional[float] = Field(
         None, description="Gibbs free energy of the molecule at 298.15K (units: eV)"
     )
 
@@ -127,17 +75,17 @@ class VibrationComposite(BaseModel):
     Summary information obtained from VibrationDocs
     """
     
-    vibration_property_ids: Optional[Dict[str, str]] = Field(
+    property_id: Optional[str] = Field(
         None,
-        description="Solvent:property ID map for each VibrationDoc for this molecule.",
+        description="Property ID for this VibrationDoc.",
     )
 
-    vibration_levels_of_theory: Optional[Dict[str, str]] = Field(
+    level_of_theory: Optional[str] = Field(
         None,
-        description="Solvent:level of theory map for each VibrationDoc for this molecule.",
+        description="Level of theory for this VibrationDoc.",
     )
 
-    frequencies: Optional[Dict[str, List[float]]] = Field(
+    frequencies: Optional[List[float]] = Field(
         None, description="List of molecular vibrational frequencies"
     )
 
@@ -147,17 +95,17 @@ class OrbitalComposite(BaseModel):
     Summary information obtained from OrbitalDocs
     """
     
-    orbitals_property_ids: Optional[Dict[str, str]] = Field(
+    orbitals_property_ids: Optional[str] = Field(
         None,
-        description="Solvent:property ID map for each OrbitalDoc for this molecule.",
+        description="Property ID for this OrbitalDoc.",
     )
 
-    orbitals_levels_of_theory: Optional[Dict[str, str]] = Field(
+    level_of_theory: Optional[str] = Field(
         None,
-        description="Solvent:level of theory map for each OrbitalDoc for this molecule.",
+        description="Level of theory for this OrbitalDoc.",
     )
 
-    open_shell: Optional[Dict[str, bool]] = Field(
+    open_shell: Optional[bool] = Field(
         None, description="Is this molecule open-shell (spin multiplicity != 1)?"
     )
 
@@ -167,20 +115,19 @@ class PartialChargesComposite(BaseModel):
     Summary information obtained from PartialChargesDocs
     """
 
-    partial_charges_property_ids: Optional[Dict[str, Dict[str, str]]] = Field(
+    property_id: Optional[str] = Field(
         None,
-        description="Solvent:method:property ID map for each PartialChargesDoc for this molecule.",
+        description="Property ID for this PartialChargesDoc.",
     )
 
-    partial_charges_levels_of_theory: Optional[Dict[str, Dict[str, str]]] = Field(
+    level_of_theory: Optional[str] = Field(
         None,
-        description="Solvent:method:level of theory map for each PartialChargesDoc for this molecule.",
+        description="Level of theory for this PartialChargesDoc.",
     )
 
-    partial_charges: Optional[Dict[str, Dict[str, List[float]]]] = Field(
+    partial_charges: Optional[List[float]] = Field(
         None,
-        description="Atomic partial charges for the molecule using different partitioning schemes "
-        "(Mulliken, Restrained Electrostatic Potential, Natural Bonding Orbitals, etc.)",
+        description="Atomic partial charges for the molecule",
     )
 
 
@@ -189,20 +136,19 @@ class PartialSpinsComposite(BaseModel):
     Summary information obtained from PartialSpinsDocs
     """
 
-    partial_spins_property_ids: Optional[Dict[str, Dict[str, str]]] = Field(
+    property_id: Optional[str] = Field(
         None,
-        description="Solvent:method:property ID map for each PartialSpinsDoc for this molecule.",
+        description="Property ID for this PartialSpinsDoc.",
     )
 
-    partial_spins_levels_of_theory: Optional[Dict[str, Dict[str, str]]] = Field(
+    level_of_theory: Optional[str] = Field(
         None,
-        description="Solvent:method:level of theory map for each PartialSpinsDoc for this molecule.",
+        description="Level of theory for this PartialSpinsDoc.",
     )
 
-    partial_spins: Optional[Dict[str, Dict[str, List[float]]]] = Field(
+    partial_spins: Optional[List[float]] = Field(
         None,
-        description="Atomic partial spins for the molecule using different partitioning schemes "
-        "(Mulliken, Natural Bonding Orbitals, etc.)",
+        description="Atomic partial spins for the molecule",
     )
 
 
@@ -211,34 +157,31 @@ class BondingComposite(BaseModel):
     Summary information obtained from MoleculeBondingDocs
     """
 
-    bonding_property_ids: Optional[Dict[str, Dict[str, str]]] = Field(
+    property_id: Optional[str] = Field(
         None,
-        description="Solvent:method:property ID map for each MoleculeBondingDoc for this molecule.",
+        description="Property ID for this MoleculeBondingDoc.",
     )
 
-    bonding_levels_of_theory: Optional[Dict[str, Dict[str, str]]] = Field(
+    level_of_theory: Optional[str] = Field(
         None,
-        description="Solvent:method:level of theory map for each MoleculeBondingDoc for this molecule.",
+        description="Level of theory for this MoleculeBondingDoc.",
     )
 
-    bond_types: Optional[Dict[str, Dict[str, Dict[str, List[float]]]]] = Field(
+    bond_types: Optional[Dict[str, List[float]]] = Field(
         None,
-        description="Dictionaries of bond types to their length under different "
-        "definitions of bonding, e.g. C-O to a list of the lengths of "
-        "C-O bonds in Angstrom.",
+        description="Dictionaries of bond types to their length, e.g. C-O to a list of the lengths of C-O bonds in "
+        "Angstrom.",
     )
 
-    bonds: Optional[Dict[str, Dict[str, List[Tuple[int, int]]]]] = Field(
+    bonds: Optional[List[Tuple[int, int]]] = Field(
         None,
-        description="List of bonds under different definitions of bonding. Each bond takes "
-        "the form (a, b), where a and b are 0-indexed atom indices",
+        description="List of bonds. Each bond takes the form (a, b), where a and b are 0-indexed atom indices",
     )
 
-    bonds_nometal: Optional[Dict[str, Dict[str, List[Tuple[int, int]]]]] = Field(
+    bonds_nometal: Optional[List[Tuple[int, int]]] = Field(
         None,
-        description="List of bonds under different definitions of bonding with all metal ions "
-        "removed. Each bond takes the form in the form (a, b), where a and b are "
-        "0-indexed atom indices.",
+        description="List of bonds with all metal ions removed. Each bond takes the form in the form (a, b), where a "
+        "and b are 0-indexed atom indices.",
     )
 
 
@@ -247,22 +190,22 @@ class MultipolesComposite(BaseModel):
     Summary information obtained from ElectricMultipoleDocs
     """
 
-    multipole_moments_property_ids: Optional[Dict[str, str]] = Field(
+    property_id: Optional[str] = Field(
         None,
-        description="Solvent:method:property ID map for each ElectricMultipoleDoc for this molecule.",
+        description="Property ID for this ElectricMultipoleDoc.",
     )
 
-    multipole_moments_levels_of_theory: Optional[Dict[str, str]] = Field(
+    level_of_theory: Optional[str] = Field(
         None,
-        description="Solvent:method:level of theory map for each ElectricMultipoleDoc for this molecule.",
+        description="Level of theory for this ElectricMultipoleDoc.",
     )
 
-    total_dipole: Optional[Dict[str, float]] = Field(
+    total_dipole: Optional[float] = Field(
         None,
         description="Total molecular dipole moment (Debye)",
     )
 
-    resp_total_dipole: Optional[Dict[str, float]] = Field(
+    resp_total_dipole: Optional[float] = Field(
         None,
         description="Total dipole moment, calculated via restrained electrostatic potential (RESP) (Debye)",
     )
@@ -273,53 +216,53 @@ class RedoxComposite(BaseModel):
     Summary information obtained from RedoxDocs
     """
 
-    redox_property_ids: Optional[Dict[str, str]] = Field(
-        None, description="Solvent:property ID map for each RedoxDoc for this molecule."
+    property_id: Optional[str] = Field(
+        None, description="Property ID for this RedoxDoc."
     )
 
-    redox_levels_of_theory: Optional[Dict[str, str]] = Field(
+    level_of_theory: Optional[str] = Field(
         None,
-        description="Solvent:level of theory map for each RedoxDoc for this molecule.",
+        description="Level of theory for this RedoxDoc.",
     )
 
-    electron_affinity: Optional[Dict[str, float]] = Field(
+    electron_affinity: Optional[float] = Field(
         None, description="Vertical electron affinity in eV"
     )
 
-    ea_task_id: Optional[Dict[str, MPID]] = Field(
+    ea_task_id: Optional[MPID] = Field(
         None, description="Molecule ID for electron affinity"
     )
 
-    ionization_energy: Optional[Dict[str, float]] = Field(
+    ionization_energy: Optional[float] = Field(
         None, description="Vertical ionization energy in eV"
     )
 
-    ie_task_id: Optional[Dict[str, MPID]] = Field(
+    ie_task_id: Optional[MPID] = Field(
         None, description="Molecule ID for ionization energy"
     )
 
-    reduction_free_energy: Optional[Dict[str, float]] = Field(
+    reduction_free_energy: Optional[float] = Field(
         None, description="Adiabatic free energy of reduction"
     )
 
-    red_molecule_id: Optional[Dict[str, MPculeID]] = Field(
+    red_molecule_id: Optional[MPculeID] = Field(
         None, description="Molecule ID for adiabatic reduction"
     )
 
-    oxidation_free_energy: Optional[Dict[str, float]] = Field(
+    oxidation_free_energy: Optional[float] = Field(
         None, description="Adiabatic free energy of oxidation"
     )
 
-    ox_molecule_id: Optional[Dict[str, MPculeID]] = Field(
+    ox_molecule_id: Optional[MPculeID] = Field(
         None, description="Molecule ID for adiabatic oxidation"
     )
 
-    reduction_potential: Optional[Dict[str, float]] = Field(
+    reduction_potential: Optional[float] = Field(
         None,
         description="Reduction potential referenced to the standard hydrogen electrode (SHE) (units: V)",
     )
 
-    oxidation_potential: Optional[Dict[str, float]] = Field(
+    oxidation_potential: Optional[float] = Field(
         None,
         description="Oxidation potential referenced to the standard hydrogen electrode (SHE) (units: V)",
     )
@@ -330,62 +273,62 @@ class MetalBindingComposite(BaseModel):
     Summary information obtained from MetalBindingDocs
     """
 
-    binding_partial_charges_property_id: Optional[Dict[str, Dict[str, str]]] = Field(
+    partial_charges_property_id: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="ID of PartialChargesDoc used to estimate metal charge",
     )
 
-    binding_partial_spins_property_id: Optional[Dict[str, Dict[str, str]]] = Field(
+    partial_spins_property_id: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="ID of PartialSpinsDoc used to estimate metal spin",
     )
 
-    binding_partial_charges_lot_solvent: Optional[Dict[str, Dict[str, str]]] = Field(
+    partial_charges_lot_solvent: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="Combination of level of theory and solvent used to calculate atomic partial charges",
     )
 
-    binding_partial_spins_lot_solvent: Optional[Dict[str, Dict[str, str]]] = Field(
+    partial_spins_lot_solvent: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="Combination of level of theory and solvent used to calculate atomic partial spins",
     )
 
-    binding_charge_spin_method: Optional[Dict[str, Dict[str, str]]] = Field(
+    charge_spin_method: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="The method used for partial charges and spins (must be the same).",
     )
 
-    binding_bonding_property_id: Optional[Dict[str, Dict[str, str]]] = Field(
+    bonding_property_id: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="ID of MoleculeBondingDoc used to detect bonding in this molecule",
     )
 
-    binding_bonding_lot_solvent: Optional[Dict[str, Dict[str, str]]] = Field(
+    bonding_lot_solvent: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="Combination of level of theory and solvent used to determine the coordination environment "
         "of the metal atom or ion",
     )
 
-    binding_bonding_method: Optional[Dict[str, Dict[str, str]]] = Field(
+    bonding_method: Optional[Dict[str, Dict[str, str]]] = Field(
         None, description="The method used for to define bonding."
     )
 
-    binding_thermo_property_id: Optional[Dict[str, Dict[str, str]]] = Field(
+    thermo_property_id: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="ID of MoleculeThermoDoc used to obtain this molecule's thermochemistry",
     )
 
-    binding_thermo_lot_solvent: Optional[Dict[str, Dict[str, str]]] = Field(
+    thermo_lot_solvent: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="Combination of level of theory and solvent used for uncorrected thermochemistry",
     )
 
-    binding_thermo_correction_lot_solvent: Optional[Dict[str, Dict[str, str]]] = Field(
+    thermo_correction_lot_solvent: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="Combination of level of theory and solvent used to correct the electronic energy",
     )
 
-    binding_thermo_combined_lot_solvent: Optional[Dict[str, Dict[str, str]]] = Field(
+    thermo_combined_lot_solvent: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="Combination of level of theory and solvent used for molecular thermochemistry, combining "
         "both the frequency calculation and (potentially) the single-point energy correction.",
@@ -625,6 +568,8 @@ summary_fields: Dict[str, list] = {
     ],
 }
 
+
+# TODO: you are here
 
 def _copy_from_doc(doc: Dict[str, Any]):
     """Helper function to copy the list of keys over from amalgamated document"""
