@@ -152,7 +152,7 @@ class XASDoc(SpectrumDoc):
                 try:
                     total_spectrum = xanes.stitch(exafs, mode="XAFS")
                     total_spectrum.absorbing_index = site
-                    total_spectrum.task_ids = xanes.task_ids + exafs.task_ids
+                    total_spectrum.task_ids = xanes.task_ids + exafs.task_ids  # type: ignore[attr-defined]
                     all_spectra.append(total_spectrum)
                 except ValueError as e:
                     warnings.warn(f"Warning during spectral merging in XASDoC: {e}")
@@ -167,7 +167,7 @@ class XASDoc(SpectrumDoc):
                 try:
                     total_spectrum = l2.stitch(l3, mode="L23")
                     total_spectrum.absorbing_index = site
-                    total_spectrum.task_ids = l2.task_ids + l3.task_ids
+                    total_spectrum.task_ids = l2.task_ids + l3.task_ids  # type: ignore[attr-defined]
                     all_spectra.append(total_spectrum)
                 except ValueError as e:
                     warnings.warn(f"Warning during spectral merging in XASDoC: {e}")
@@ -193,12 +193,12 @@ class XASDoc(SpectrumDoc):
                         avg_spectrum = site_weighted_spectrum(
                             relevant_spectra, num_samples=num_samples
                         )
-                        avg_spectrum.task_ids = [
+                        avg_spectrum.task_ids = [  # type: ignore[attr-defined]
                             id
                             for spectrum in relevant_spectra
                             for id in spectrum.task_ids
                         ]
-                        avg_spectrum.last_updated = max(
+                        avg_spectrum.last_updated = max(  # type: ignore[attr-defined, type-var]
                             [spectrum.last_updated for spectrum in relevant_spectra]
                         )
                         averaged_spectra.append(avg_spectrum)
