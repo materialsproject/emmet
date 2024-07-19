@@ -4,9 +4,7 @@ from hashlib import blake2b
 
 from pydantic import Field
 from pymatgen.core.structure import Molecule
-from pymatgen.analysis.graphs import MoleculeGraph
 
-from emmet.core.math import Vector3D
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPID, MPculeID
