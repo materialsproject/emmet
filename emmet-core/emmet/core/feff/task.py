@@ -4,7 +4,7 @@ from typing import Any, Dict, List
 from pydantic import Field
 from pymatgen.analysis.xas.spectrum import XAS
 from pymatgen.core import Structure
-from pymatgen.core.periodic_table import Element
+from pymatgen.core.periodic_table import Element, Species
 
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.task_valid import TaskDocument as BaseTaskDocument
@@ -48,7 +48,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
     # TEMP Stub properties for compatibility with atomate drone
 
     @property
-    def absorbing_element(self) -> Element:
+    def absorbing_element(self) -> Element | Species:
         if isinstance(self.structure[self.absorbing_atom].specie, Element):
             return self.structure[self.absorbing_atom].specie
         return self.structure[self.absorbing_atom].specie.element
