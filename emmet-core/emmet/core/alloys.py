@@ -33,5 +33,5 @@ class AlloySystemDoc(EmmetBaseModel):
     @classmethod
     def from_pair(cls, alloy_system: AlloySystem):
         # Too large to duplicate alloy pairs here.
-        alloy_system.alloy_pairs = None
+        alloy_system.alloy_pairs = None  # type: ignore[assignment]
         return cls(alloy_system=alloy_system, alloy_id=alloy_system.alloy_id)
