@@ -193,7 +193,7 @@ class MigrationGraphDoc(EmmetBaseModel):
             min_length=min_length_sc,
         )
 
-        sc_mat = sc_mat.tolist()
+        sc_mat = sc_mat.tolist()  # type: ignore[attr-defined]
         host_sc = mg.host_structure * sc_mat
         working_ion = mg.only_sites[0].species_string
 
@@ -205,9 +205,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         return host_sc, sc_mat, min_length_sc, minmax_num_atoms, coords_list, combo
 
     @staticmethod
-    def ordered_sc_site_list(
-        uc_sites_only: Structure, sc_mat: List[List[Union[int, float]]]
-    ):
+    def ordered_sc_site_list(uc_sites_only: Structure, sc_mat: List[List[int]]):
         uc_no_site = uc_sites_only.copy()
         uc_no_site.remove_sites(range(len(uc_sites_only)))
         working_ion = uc_sites_only[0].species_string
@@ -238,7 +236,7 @@ class MigrationGraphDoc(EmmetBaseModel):
     @staticmethod
     def get_hop_sc_combo(
         unique_hops: Dict,
-        sc_mat: List[List[Union[int, float]]],
+        sc_mat: List[List[int]],
         sm: StructureMatcher,
         host_sc: Structure,
         working_ion: str,
@@ -321,7 +319,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         host_sc: Structure,
         ordered_sc_site_list: list,
         one_hop: Dict,
-        sc_mat: List[List[Union[int, float]]],
+        sc_mat: List[List[int]],
         working_ion: str,
     ):
         sc_mat_inv = np.linalg.inv(sc_mat)
