@@ -405,8 +405,8 @@ class MoleculeDoc(CoreMoleculeDoc):
         ad = BabelMolAdaptor(molecule)
         openbabel.StereoFrom3D(ad.openbabel_mol)
 
-        inchi = ad.pybel_mol.write("inchi").strip()
-        inchikey = ad.pybel_mol.write("inchikey").strip()
+        inchi = ad.pybel_mol.write("inchi").strip()  # type: ignore[attr-defined]
+        inchikey = ad.pybel_mol.write("inchikey").strip()  # type: ignore[attr-defined]
 
         return cls.from_molecule(
             molecule=molecule,
@@ -484,8 +484,8 @@ class MoleculeDoc(CoreMoleculeDoc):
         ad = BabelMolAdaptor(molecule)
         openbabel.StereoFrom3D(ad.openbabel_mol)
 
-        inchi = ad.pybel_mol.write("inchi").strip()
-        inchikey = ad.pybel_mol.write("inchikey").strip()
+        inchi = ad.pybel_mol.write("inchi").strip()  # type: ignore[attr-defined]
+        inchikey = ad.pybel_mol.write("inchikey").strip()  # type: ignore[attr-defined]
 
         return cls.from_molecule(
             molecule=molecule,
