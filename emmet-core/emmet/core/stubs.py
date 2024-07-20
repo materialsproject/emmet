@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 # isort: off
 """
 This module stubs some pymatgen classes that implement custom behavior
