@@ -44,6 +44,7 @@ setup(
             "jinja2",
         ],
         "ml": ["emmet-core[ml]"],
+        "classical_md": ["transport-analysis>=0.1.0"],
     },
     python_requires=">=3.9",
     license="modified BSD",
