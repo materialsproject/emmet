@@ -168,11 +168,6 @@ class SolvationDoc(BaseModel, arbitrary_types_allowed=True):
         job_uuid: Optional[str] = None,
         flow_uuid: Optional[str] = None,
     ) -> "SolvationDoc":
-        props = dict(
-            solute_name=solute.solute_name,
-            solvent_names=list(solute.solvents.keys()),
-            is_electrolyte=True,
-        )
         # as a dict
         props = {
             "solute_name": solute.solute_name,
