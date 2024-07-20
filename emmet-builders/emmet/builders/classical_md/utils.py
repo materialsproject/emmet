@@ -40,7 +40,11 @@ def create_universe(
     # TODO: profile this
     topology = interchange.to_openmm_topology()
 
-    u = Universe(topology, str(traj_file), format=traj_format)
+    u = Universe(
+        topology,
+        str(traj_file),
+        format=traj_format,
+    )
 
     mols = [mol for mol in interchange.topology.molecules]
 
@@ -153,7 +157,7 @@ def create_solute(
     include_solute_in_solvents : bool, optional
         Whether to include the solute in the solvents dictionary. Default is False.
     analysis_classes : list[str], optional
-        The analysis classes to run. Default is ["coordination", "pairing", "speciation", "networking"].
+        The analysis classes to run. Default is ("coordination", "pairing", "speciation", "networking").
     step : int, optional
         The step size for the analysis. Default is 1.
 
