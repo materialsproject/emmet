@@ -15,8 +15,14 @@ from emmet.builders.classical_md.utils import (
     identify_networking_solvents,
 )
 from emmet.core.classical_md.solvation import SolvationDoc
+from emmet.core.classical_md.benchmarking import SolventBenchmarkingDoc
 from emmet.core.classical_md.openmm.calculations import CalculationsDoc
 from emmet.core.utils import jsanitize
+
+from emmet.builders.classical_md.openmm.openmm_utils import (
+    insert_blobs,
+    instantiate_universe,
+)
 
 
 class ElectrolyteBuilder(Builder):
@@ -45,6 +51,7 @@ class ElectrolyteBuilder(Builder):
         self.solute = solute or MemoryStore()
         self.calculations = calculations or MemoryStore()
         self.query = query or {}
+        self.solute_analysis_classes = solute_analysis_classes
         self.solvation_fallback_radius = solvation_fallback_radius
 
         self.md_docs.key = "uuid"
@@ -86,18 +93,19 @@ class ElectrolyteBuilder(Builder):
 
         items = []
         for jobs in job_groups:
-            # TODO: check for changes in non_calc features
-            # TODO: support branching flows
-
             # find the job with the most calcs in the flow, presumably the last
             len_calcs = [len(job["output"]["calcs_reversed"] or []) for job in jobs]
             last_job = jobs[np.argmax(len_calcs)]
 
-            self._insert_blobs(last_job)
+            insert_blobs(self.blobs, last_job["output"])
 
             items.append(last_job)
 
         return items
+
+    def get_items_from_directories(self):
+        # query will be ignored
+        return
 
     def process_items(self, items):
         self.logger.info(f"Processing {len(items)} materials for electrolyte builder.")
@@ -130,6 +138,7 @@ class ElectrolyteBuilder(Builder):
                 solute_name=identify_solute(u),
                 networking_solvents=identify_networking_solvents(u),
                 fallback_radius=self.solvation_fallback_radius,
+                analysis_classes=self.solute_analysis_classes,
             )
             solute.run()
             solvation_doc = SolvationDoc.from_solute(
@@ -165,26 +174,155 @@ class ElectrolyteBuilder(Builder):
         else:
             self.logger.info("No items to update.")
 
-    def _insert_blobs(self, job, include_traj=True):
-        # inject interchange blobs
-        interchange_uuid = job["output"]["interchange"]["blob_uuid"]
-        interchange_blob = self.blobs.query_one({"blob_uuid": interchange_uuid})
-        job["output"]["interchange"] = interchange_blob["data"]
+    def instantiate_universe(
+        self,
+        job_uuid: str,
+        traj_directory: Union[str, Path] = ".",
+        overwrite_local_traj: bool = True,
+    ):
+        """
+        Instantiate a MDAnalysis universe from a task document.
 
-        if len(job["output"]["calcs_reversed"]) == 0:
-            raise ValueError("No calculations found in job output.")
+        This is useful if you want to analyze a small number of systems
+        without running the whole build pipeline.
 
-        for calc in job["output"]["calcs_reversed"]:
-            if not include_traj:
-                calc["output"]["traj_blob"] = None
+        Args:
+            job_uuid: str
+                The UUID of the job.
+            traj_directory: str
+                Name of the DCD file to write.
+            overwrite_local_traj: bool
+                Whether to overwrite the local trajectory if it exists.
+        """
+        return instantiate_universe(
+            self.md_docs, self.blobs, job_uuid, traj_directory, overwrite_local_traj
+        )
 
-            traj_blob = calc["output"]["traj_blob"]
 
-            # inject trajectory blobs
-            if traj_blob:
-                traj_uuid = calc["output"]["traj_blob"]["blob_uuid"]
-                traj_blob = self.blobs.query_one({"blob_uuid": traj_uuid})
-                calc["output"]["traj_blob"] = traj_blob["data"]
+class BenchmarkingBuilder(Builder):
+    """
+    Builder to create solvation and calculations documents from OpenMM task documents.
+
+    This class processes molecular dynamics (MD) simulations and generates
+    comprehensive reports including solvation properties and calculation results.
+    It leverages the OpenFF toolkit and MDAnalysis for molecular topology and trajectory
+    handling, respectively.
+    """
+
+    def __init__(
+        self,
+        md_docs: Store,
+        blobs: Store,
+        benchmarking: Optional[Store] = None,
+        query: Optional[dict] = None,
+        chunk_size: int = 10,
+    ):
+        self.md_docs = md_docs
+        self.blobs = blobs
+        self.benchmarking = benchmarking or MemoryStore()
+        self.query = query or {}
+
+        self.md_docs.key = "uuid"
+        self.blobs.key = "blob_uuid"
+        self.benchmarking.key = "job_uuid"
+
+        super().__init__(
+            sources=[md_docs, blobs],
+            targets=[self.benchmarking],
+            chunk_size=chunk_size,
+        )
+
+    # def prechunk(self, number_splits: int):  # pragma: no cover
+    #     """
+    #     Prechunk method to perform chunking by the key field
+    #     """
+    #     q = dict(self.query)
+    #     keys = self.electronic_structure.newer_in(
+    #         self.materials, criteria=q, exhaustive=True
+    #     )
+    #     N = ceil(len(keys) / number_splits)
+    #     for split in grouper(keys, N):
+    #         yield {"query": {self.materials.key: {"$in": list(split)}}}
+
+    def get_items(self):
+        self.logger.info("Electrolyte builder started.")
+
+        hosts = self.md_docs.query(self.query, ["hosts"])
+        flow_ids = {doc["hosts"][-1] for doc in hosts}  # top level flows
+
+        job_groups = []
+        for flow_id in flow_ids:
+            # the last item in hosts should be the top level workflow
+            host_match = {"$expr": {"$eq": [{"$arrayElemAt": ["$hosts", -1]}, flow_id]}}
+            job_groups.append(list(self.md_docs.query(criteria=host_match)))
+
+        items = []
+        for jobs in job_groups:
+            # find the job with the most calcs in the flow, presumably the last
+            len_calcs = [len(job["output"]["calcs_reversed"] or []) for job in jobs]
+            last_job = jobs[np.argmax(len_calcs)]
+
+            insert_blobs(self.blobs, last_job["output"])
+
+            items.append(last_job)
+
+        return items
+
+    def get_items_from_directories(self):
+        # query will be ignored
+        return
+
+    def process_items(self, items):
+        self.logger.info(f"Processing {len(items)} materials for electrolyte builder.")
+
+        processed_items = []
+        for item in items:
+            # create task_doc
+            task_doc = OpenMMTaskDocument.parse_obj(item["output"])
+            calc = task_doc.calcs_reversed[0]
+
+            # create interchange
+            interchange_str = task_doc.interchange.decode("utf-8")
+            interchange = Interchange.parse_raw(interchange_str)
+
+            # write the trajectory to a file
+            traj_file = tempfile.NamedTemporaryFile()
+            traj_path = Path(traj_file.name)
+            with open(traj_path, "wb") as f:
+                f.write(calc.output.traj_blob)
+            u = create_universe(
+                interchange,
+                task_doc.molecule_specs,
+                traj_path,
+                traj_format=calc.input.traj_file_type,
+            )
+            benchmarking_doc = SolventBenchmarkingDoc.from_universe(
+                u,
+                temperature=calc.input.temperature,
+                density=calc.output.density[-1],
+                job_uuid=item["uuid"],
+                flow_uuid=item["hosts"][-1],
+            )
+
+            del u
+
+            docs = {
+                "benchmarking": jsanitize(benchmarking_doc.model_dump()),
+            }
+
+            processed_items.append(docs)
+
+        return processed_items
+
+    def update_targets(self, items: List):
+        if len(items) > 0:
+            self.logger.info(f"Found {len(items)} electrolyte docs to update.")
+
+            calculations = [item["benchmarking"] for item in items]
+            self.benchmarking.update(calculations)
+
+        else:
+            self.logger.info("No items to update.")
 
     def instantiate_universe(
         self,
@@ -206,36 +344,6 @@ class ElectrolyteBuilder(Builder):
             overwrite_local_traj: bool
                 Whether to overwrite the local trajectory if it exists.
         """
-
-        # pull job
-        docs = list(self.md_docs.query(criteria={"uuid": job_uuid}))
-        if len(docs) != 1:
-            raise ValueError(
-                f"The job_uuid, {job_uuid}, must be unique. Found {len(docs)} documents."
-            )
-        doc = docs[0]
-        traj_file_type = doc["output"]["calcs_reversed"][0]["input"]["traj_file_type"]
-
-        # define path to trajectory
-        traj_directory = Path(traj_directory)
-        traj_directory.mkdir(parents=True, exist_ok=True)
-        traj_path = traj_directory / f"{job_uuid}.{traj_file_type}"
-
-        # download and insert blobs if necessary
-        new_traj = not traj_path.exists() or overwrite_local_traj
-        self._insert_blobs(doc, include_traj=new_traj)
-        task_doc = OpenMMTaskDocument.parse_obj(doc["output"])
-        if new_traj:
-            with open(traj_path, "wb") as f:
-                f.write(task_doc.calcs_reversed[0].output.traj_blob)
-
-        # create interchange
-        interchange_str = task_doc.interchange.decode("utf-8")
-        interchange = Interchange.parse_raw(interchange_str)
-
-        return create_universe(
-            interchange,
-            task_doc.molecule_specs,
-            traj_path,
-            traj_format=traj_file_type,
+        return instantiate_universe(
+            self.md_docs, self.blobs, job_uuid, traj_directory, overwrite_local_traj
         )
