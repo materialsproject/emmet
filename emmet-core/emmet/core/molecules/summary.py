@@ -483,7 +483,7 @@ class MoleculeSummaryDoc(PropertyDoc):
     def from_docs(cls, molecule_id: MPculeID, docs: Dict[str, Any]):
         """Converts a bunch of property docs into a SummaryDoc"""
 
-        doc = _copy_from_doc(docs)
+        doc = _copy_from_docs(**docs)
 
         if len(doc["has_props"]) == 0:
             raise ValueError("Missing minimal properties!")
@@ -578,15 +578,15 @@ summary_fields: Dict[str, list] = {
 
 def _copy_from_docs(
     molecules: Dict[str, Any],
-    partial_charges: Dict[str, Dict[str, Dict[str, Any]]],
-    partial_spins: Dict[str, Dict[str, Dict[str, Any]]],
-    bonding: Dict[str, Dict[str, Dict[str, Any]]],
-    metal_binding: Dict[str, Dict[str, Dict[str, Any]]],
-    multipole_moments: Dict[str, Dict[str, Any]],
-    orbitals: Dict[str, Dict[str, Any]],
-    redox: Dict[str, Dict[str, Any]],
-    thermo: Dict[str, Dict[str, Any]],
-    vibration: Dict[str, Dict[str, Any]]
+    partial_charges: Optional[Dict[str, Dict[str, Dict[str, Any]]]] = None,
+    partial_spins: Optional[Dict[str, Dict[str, Dict[str, Any]]]] = None,
+    bonding: Optional[Dict[str, Dict[str, Dict[str, Any]]]] = None,
+    metal_binding: Optional[Dict[str, Dict[str, Dict[str, Any]]]] = None,
+    multipole_moments: Optional[Dict[str, Dict[str, Any]]] = None,
+    orbitals: Optional[Dict[str, Dict[str, Any]]] = None,
+    redox: Optional[Dict[str, Dict[str, Any]]] = None,
+    thermo: Optional[Dict[str, Dict[str, Any]]] = None,
+    vibration: Optional[Dict[str, Dict[str, Any]]] = None
 ):
     """Helper function to cut down documents to composite models and then combine to create a MoleculeSummaryDoc"""
 
@@ -626,39 +626,39 @@ def _copy_from_docs(
         # No information for this particular set of properties
         # Shouldn't happen, but can
         if sub_docs is None or target_type is None:
-            continue
-
-        d["has_props"][doc_key] = True
-
-        if isinstance(sub_docs, dict) and len(sub_docs) > 0:
+            composite_docs = None
+        else:
             composite_docs = dict()
 
-            if doc_key in by_method:
-                for solvent, solv_entries in sub_docs.items():
-                    composite_docs[solvent] = dict()
-                    for method, entry in solv_entries.items():
-                        composite_docs[solvent][method] = dict()
-                        for copy_key in summary_fields[doc_key]:
-                            composite_docs[solvent][method][copy_key] = entry.get(copy_key)
+            if isinstance(sub_docs, dict) and len(sub_docs) > 0:
+                d["has_props"][doc_key] = True
 
-                        composite_docs[solvent][method]["property_id"] = entry.get("property_id")
-                        composite_docs[solvent][method]["level_of_theory"] = entry.get("level_of_theory")
+                if doc_key in by_method:
+                    for solvent, solv_entries in sub_docs.items():
+                        composite_docs[solvent] = dict()
+                        for method, entry in solv_entries.items():
+                            composite_docs[solvent][method] = dict()
+                            for copy_key in summary_fields[doc_key]:
+                                composite_docs[solvent][method][copy_key] = entry.get(copy_key)
+
+                            composite_docs[solvent][method]["property_id"] = entry.get("property_id")
+                            composite_docs[solvent][method]["level_of_theory"] = entry.get("level_of_theory")
+
+                            # Convert to appropriate BaseModel
+                            composite_docs[solvent][method] = target_type(**composite_docs[solvent][method])
+
+                else:
+                    for solvent, entry in sub_docs.items():
+                        composite_docs[solvent] = dict()
+                        for copy_key in summary_fields[doc_key]:
+                            composite_docs[solvent][copy_key] = entry.get(copy_key)
+
+                        composite_docs[solvent]["property_id"] = entry.get("property_id")
+                        composite_docs[solvent]["level_of_theory"] = entry.get("level_of_theory")
 
                         # Convert to appropriate BaseModel
-                        composite_docs[solvent][method] = target_type(**composite_docs[solvent][method])
+                        composite_docs[solvent] = target_type(**composite_docs[solvent])
 
-            else:
-                for solvent, entry in sub_docs.items():
-                    composite_docs[solvent] = dict()
-                    for copy_key in summary_fields[doc_key]:
-                        composite_docs[solvent][copy_key] = entry.get(copy_key)
-
-                    composite_docs[solvent]["property_id"] = entry.get("property_id")
-                    composite_docs[solvent]["level_of_theory"] = entry.get("level_of_theory")
-
-                    # Convert to appropriate BaseModel
-                    composite_docs[solvent] = target_type(**composite_docs[solvent])
-
-        d[doc_key] = composite_docs
+            d[doc_key] = composite_docs
 
     return d
