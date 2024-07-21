@@ -329,9 +329,6 @@ class SummaryBuilder(Builder):
 
             d = {
                 "molecules": mol,
-                "forces": _group_docs(
-                    list(self.forces.query({"molecule_id": mol_id})), False
-                ),
                 "partial_charges": _group_docs(
                     list(self.charges.query({"molecule_id": mol_id})), True
                 ),

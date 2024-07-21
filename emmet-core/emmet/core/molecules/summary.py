@@ -24,7 +24,6 @@ class HasProps(Enum):
 
     molecules = "molecules"
     bonding = "bonding"
-    forces = "forces"
     metal_binding = "metal_binding"
     multipole_moments = "multipole_moments"
     orbitals = "orbitals"
@@ -95,7 +94,7 @@ class OrbitalComposite(BaseModel):
     Summary information obtained from OrbitalDocs
     """
     
-    orbitals_property_ids: Optional[str] = Field(
+    property_id: Optional[str] = Field(
         None,
         description="Property ID for this OrbitalDoc.",
     )
@@ -273,6 +272,15 @@ class MetalBindingComposite(BaseModel):
     Summary information obtained from MetalBindingDocs
     """
 
+    property_id: Optional[str] = Field(
+        None, description="Property ID for this MetalBindingDoc."
+    )
+
+    level_of_theory: Optional[str] = Field(
+        None,
+        description="Level of theory for this MetalBindingDoc.",
+    )
+
     partial_charges_property_id: Optional[Dict[str, Dict[str, str]]] = Field(
         None,
         description="ID of PartialChargesDoc used to estimate metal charge",
@@ -422,7 +430,7 @@ class MoleculeSummaryDoc(PropertyDoc):
         description="A summary of thermodynamic data available for this molecule, organized by solvent"
     )
 
-    vibrations: Optional[Dict[str, VibrationComposite]] = Field(
+    vibration: Optional[Dict[str, VibrationComposite]] = Field(
         None,
         description="A summary of the vibrational data available for this molecule, organized by solvent"
     )
@@ -449,7 +457,7 @@ class MoleculeSummaryDoc(PropertyDoc):
         description="A summary of the bonding data available for this molecule, organized by solvent and by method"
     )
 
-    multipoles: Optional[Dict[str, MultipolesComposite]] = Field(
+    multipole_moments: Optional[Dict[str, MultipolesComposite]] = Field(
         None,
         description="A summary of the electric multipole data available for this molecule, organized by solvent"
     )
@@ -518,7 +526,6 @@ summary_fields: Dict[str, list] = {
         "constituent_molecules",
         "molecule_levels_of_theory",
     ],
-    HasProps.forces.value: [],
     HasProps.thermo.value: [
         "electronic_energy",
         "zero_point_energy",
@@ -569,94 +576,89 @@ summary_fields: Dict[str, list] = {
 }
 
 
-# TODO: you are here
-
-def _copy_from_doc(doc: Dict[str, Any]):
-    """Helper function to copy the list of keys over from amalgamated document"""
-
-    # Doc format:
-    # {property0: {...},
-    #  property1: {solvent1: {...}, solvent2: {...}},
-    #  property2: {solvent1: [{...}, {...}], solvent2: [{...}, {...}]}
-    # }
+def _copy_from_docs(
+    molecules: Dict[str, Any],
+    partial_charges: Dict[str, Dict[str, Dict[str, Any]]],
+    partial_spins: Dict[str, Dict[str, Dict[str, Any]]],
+    bonding: Dict[str, Dict[str, Dict[str, Any]]],
+    metal_binding: Dict[str, Dict[str, Dict[str, Any]]],
+    multipole_moments: Dict[str, Dict[str, Any]],
+    orbitals: Dict[str, Dict[str, Any]],
+    redox: Dict[str, Dict[str, Any]],
+    thermo: Dict[str, Dict[str, Any]],
+    vibration: Dict[str, Dict[str, Any]]
+):
+    """Helper function to cut down documents to composite models and then combine to create a MoleculeSummaryDoc"""
 
     has_props: Dict[str, bool] = {str(val.value): False for val in HasProps}
     d: Dict[str, Any] = {"has_props": has_props, "origins": []}
 
+    # Molecules is special because there should only ever be one
+    # MoleculeDoc for a given molecule
+    # There are not multiple MoleculeDocs for different solvents
+    d["has_props"][HasProps.molecules.value] = True
+    for copy_key in summary_fields[HasProps.molecules.value]:
+        d[copy_key] = molecules[copy_key]
+
+    doc_type_mapping = {
+        HasProps.partial_charges.value: (partial_charges, PartialChargesComposite),
+        HasProps.partial_spins.value: (partial_spins, PartialSpinsComposite),
+        HasProps.bonding.value: (bonding, BondingComposite),
+        HasProps.metal_binding.value: (metal_binding, MetalBindingComposite),
+        HasProps.multipole_moments.value: (multipole_moments, MultipolesComposite),
+        HasProps.orbitals.value: (orbitals, OrbitalComposite),
+        HasProps.redox.value: (redox, RedoxComposite),
+        HasProps.thermo.value: (thermo, ThermoComposite),
+        HasProps.vibration.value: (vibration, VibrationComposite)
+    }
+
+    by_method = {
+        HasProps.partial_charges.value,
+        HasProps.partial_spins.value,
+        HasProps.bonding.value,
+        HasProps.metal_binding.value
+    }
+
     # Function to grab the keys and put them in the root doc
     for doc_key in summary_fields:
-        sub_doc = doc.get(doc_key, None)
+        sub_docs, target_type = doc_type_mapping.get(doc_key, (None, None))
 
-        if doc_key == "molecules":
-            # Molecules is special because there should only ever be one
-            # MoleculeDoc for a given molecule
-            # There are not multiple MoleculeDocs for different solvents
-            if sub_doc is None:
-                break
+        # No information for this particular set of properties
+        # Shouldn't happen, but can
+        if sub_docs is None or target_type is None:
+            continue
 
-            d["has_props"][doc_key] = True
-            for copy_key in summary_fields[doc_key]:
-                d[copy_key] = sub_doc[copy_key]
-        else:
-            # No information for this particular set of properties
-            # Shouldn't happen, but can
-            if sub_doc is None:
-                continue
+        d["has_props"][doc_key] = True
 
-            d["has_props"][doc_key] = True
-            sd, by_method = sub_doc
+        if isinstance(sub_docs, dict) and len(sub_docs) > 0:
+            composite_docs = dict()
 
-            if isinstance(sd, dict) and len(sd) > 0:
-                for copy_key in summary_fields[doc_key]:
-                    d[copy_key] = dict()
+            if doc_key in by_method:
+                for solvent, solv_entries in sub_docs.items():
+                    composite_docs[solvent] = dict()
+                    for method, entry in solv_entries.items():
+                        composite_docs[solvent][method] = dict()
+                        for copy_key in summary_fields[doc_key]:
+                            composite_docs[solvent][method][copy_key] = entry.get(copy_key)
 
-                    if by_method:
-                        for solvent, solv_entries in sd.items():
-                            d[copy_key][solvent] = dict()
-                            for method, entry in solv_entries.items():
-                                if entry.get(copy_key) is not None:
-                                    d[copy_key][solvent][method] = entry[copy_key]
-                            if len(d[copy_key][solvent]) == 0:
-                                # If this key was not populated at all for this solvent, get rid of it
-                                del d[copy_key][solvent]
-                    else:
-                        for solvent, entry in sd.items():
-                            if entry.get(copy_key) is not None:
-                                d[copy_key][solvent] = entry[copy_key]
+                        composite_docs[solvent][method]["property_id"] = entry.get("property_id")
+                        composite_docs[solvent][method]["level_of_theory"] = entry.get("level_of_theory")
 
-                    if len(d[copy_key]) == 0:
-                        # If this key was not populated at all, set it to None
-                        d[copy_key] = None
+                        # Convert to appropriate BaseModel
+                        composite_docs[solvent][method] = target_type(**composite_docs[solvent][method])
 
-                # Populate property id and level of theory values
-                d[doc_key + "_property_ids"] = dict()
-                d[doc_key + "_levels_of_theory"] = dict()
-                if by_method:
-                    for solvent, solv_entries in sd.items():
-                        d[doc_key + "_property_ids"][solvent] = dict()
-                        d[doc_key + "_levels_of_theory"][solvent] = dict()
-                        for method, entry in solv_entries.items():
-                            d[doc_key + "_property_ids"][solvent][method] = entry[
-                                "property_id"
-                            ]
-                            d[doc_key + "_levels_of_theory"][solvent][method] = entry[
-                                "level_of_theory"
-                            ]
-                        if len(d[doc_key + "_property_ids"][solvent]) == 0:
-                            del d[doc_key + "_property_ids"][solvent]
-                        if len(d[doc_key + "_levels_of_theory"][solvent]) == 0:
-                            del d[doc_key + "_levels_of_theory"][solvent]
+            else:
+                for solvent, entry in sub_docs.items():
+                    composite_docs[solvent] = dict()
+                    for copy_key in summary_fields[doc_key]:
+                        composite_docs[solvent][copy_key] = entry.get(copy_key)
 
-                else:
-                    for solvent, entry in sd.items():
-                        d[doc_key + "_property_ids"][solvent] = entry["property_id"]
-                        d[doc_key + "_levels_of_theory"][solvent] = entry[
-                            "level_of_theory"
-                        ]
+                    composite_docs[solvent]["property_id"] = entry.get("property_id")
+                    composite_docs[solvent]["level_of_theory"] = entry.get("level_of_theory")
 
-                if len(d[doc_key + "_property_ids"]) == 0:
-                    d[doc_key + "_property_ids"] = None
-                if len(d[doc_key + "_levels_of_theory"]) == 0:
-                    d[doc_key + "_levels_of_theory"] = None
+                    # Convert to appropriate BaseModel
+                    composite_docs[solvent] = target_type(**composite_docs[solvent])
+
+        d[doc_key] = composite_docs
 
     return d
