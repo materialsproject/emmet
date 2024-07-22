@@ -1,10 +1,12 @@
 """ Core definition of an Electronic Structure """
+
 from __future__ import annotations
 
 from collections import defaultdict
 from datetime import datetime
+from enum import Enum
 from math import isnan
-from typing import Dict, Optional, Type, TypeVar, Union, List
+from typing import Dict, List, Optional, Type, TypeVar, Union
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -20,11 +22,10 @@ from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 from typing_extensions import Literal
-from enum import Enum
 
-from emmet.core.settings import EmmetSettings
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
+from emmet.core.settings import EmmetSettings
 
 SETTINGS = EmmetSettings()
 
@@ -279,7 +280,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             except KeyError:
                 spin_polarization = None
 
-            dos_data["total"][spin] = DosSummaryData(
+            dos_data["total"][spin] = DosSummaryData(  # type: ignore[index]
                 task_id=dos_task,
                 band_gap=band_gap,
                 cbm=cbm,
@@ -296,7 +297,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
                 spin_polarization = None
 
-                dos_data["orbital"][orbital][spin] = DosSummaryData(
+                dos_data["orbital"][orbital][spin] = DosSummaryData(  # type: ignore[index]
                     task_id=dos_task,
                     band_gap=band_gap,
                     cbm=cbm,
@@ -309,7 +310,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         for ele in ele_dos:
             orb_dos = dos_obj.get_element_spd_dos(ele)
 
-            for orbital in ["total"] + list(orb_dos.keys()):
+            for orbital in ["total"] + list(orb_dos.keys()):  # type: ignore[assignment]
                 if orbital == "total":
                     proj_dos = ele_dos
                     label = ele
@@ -323,7 +324,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
                     spin_polarization = None
 
-                    dos_data["elemental"][ele][orbital][spin] = DosSummaryData(
+                    dos_data["elemental"][ele][orbital][spin] = DosSummaryData(  # type: ignore[index]
                         task_id=dos_task,
                         band_gap=band_gap,
                         cbm=cbm,
@@ -349,7 +350,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                     ).ordering
                 else:
                     bs_mag_ordering = CollinearMagneticStructureAnalyzer(
-                        bs.structure
+                        bs.structure  # type: ignore[arg-type]
                     ).ordering
 
                 gap_dict = bs.get_band_gap()
@@ -358,8 +359,8 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
                 if is_metal:
                     band_gap = 0.0
-                    cbm = None
-                    vbm = None
+                    cbm = None  # type: ignore[assignment]
+                    vbm = None  # type: ignore[assignment]
                     is_gap_direct = False
                 else:
                     band_gap = gap_dict["energy"]
@@ -399,7 +400,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
                     if not gen_labels.issubset(kpath_labels):
                         new_structure = SpacegroupAnalyzer(
-                            bs.structure
+                            bs.structure  # type: ignore[arg-type]
                         ).get_primitive_standard_structure(
                             international_monoclinic=False
                         )
@@ -428,7 +429,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                 )
 
         bs_entry = BandstructureData(**bs_data)  # type: ignore
-        dos_entry = DosData(**dos_data)
+        dos_entry = DosData(**dos_data)  # type: ignore[arg-type]
 
         # Obtain summary data
 
