@@ -201,9 +201,11 @@ class ThermoDoc(PropertyDoc):
 
             # Store different info if stable vs decomposes
             if d["is_stable"]:
-                d["equilibrium_reaction_energy_per_atom"] = (
-                    pd.get_equilibrium_reaction_energy(blessed_entry)  # type: ignore[arg-type]
-                )
+                d[
+                    "equilibrium_reaction_energy_per_atom"
+                ] = pd.get_equilibrium_reaction_energy(
+                    blessed_entry
+                )  # type: ignore[arg-type]
             else:
                 d["decomposes_to"] = [
                     {
