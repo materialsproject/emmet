@@ -1,7 +1,7 @@
 from collections import defaultdict
-from typing import Dict, Iterable, List, Optional, Tuple
-from math import ceil
 from datetime import datetime
+from math import ceil
+from typing import Dict, Iterable, List, Optional, Tuple
 
 from maggma.core import Builder, Store
 from maggma.utils import grouper
@@ -168,7 +168,7 @@ class ProvenanceBuilder(Builder):
             for snl in snls:
                 struc = Structure.from_dict(snl)
                 snl_sg = get_sg(struc)
-                struc.snl = SNLDict(**snl)
+                struc.snl = SNLDict(**snl)  # type: ignore[attr-defined]
                 snl_groups[snl_sg].append(struc)
 
             mat_sg = get_sg(Structure.from_dict(mat["structure"]))
