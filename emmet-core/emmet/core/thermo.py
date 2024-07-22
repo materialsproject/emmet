@@ -1,17 +1,18 @@
 """ Core definition of a Thermo Document """
+
 from collections import defaultdict
-from typing import Dict, List, Optional, Union
 from datetime import datetime
-from emmet.core.base import EmmetMeta
-from emmet.core.utils import ValueEnum
+from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
-from emmet.core.material_property import PropertyDoc
+from emmet.core.base import EmmetMeta
 from emmet.core.material import PropertyOrigin
+from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
+from emmet.core.utils import ValueEnum
 from emmet.core.vasp.calc_types.enums import RunType
 
 
@@ -204,8 +205,8 @@ class ThermoDoc(PropertyDoc):
                 d[
                     "equilibrium_reaction_energy_per_atom"
                 ] = pd.get_equilibrium_reaction_energy(
-                    blessed_entry
-                )  # type: ignore[arg-type]
+                    blessed_entry  # type: ignore[arg-type]
+                )
             else:
                 d["decomposes_to"] = [
                     {
