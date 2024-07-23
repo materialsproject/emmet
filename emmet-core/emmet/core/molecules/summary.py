@@ -38,7 +38,7 @@ class ThermoComposite(BaseModel):
     """
     Summary information obtained from MoleculeThermoDocs
     """
-    
+
     property_id: Optional[str] = Field(
         None,
         description="Property ID map for this MoleculeThermoDoc",
@@ -73,7 +73,7 @@ class VibrationComposite(BaseModel):
     """
     Summary information obtained from VibrationDocs
     """
-    
+
     property_id: Optional[str] = Field(
         None,
         description="Property ID for this VibrationDoc.",
@@ -93,7 +93,7 @@ class OrbitalComposite(BaseModel):
     """
     Summary information obtained from OrbitalDocs
     """
-    
+
     property_id: Optional[str] = Field(
         None,
         description="Property ID for this OrbitalDoc.",
@@ -427,50 +427,50 @@ class MoleculeSummaryDoc(PropertyDoc):
 
     thermo: Optional[Dict[str, ThermoComposite]] = Field(
         None,
-        description="A summary of thermodynamic data available for this molecule, organized by solvent"
+        description="A summary of thermodynamic data available for this molecule, organized by solvent",
     )
 
     vibration: Optional[Dict[str, VibrationComposite]] = Field(
         None,
-        description="A summary of the vibrational data available for this molecule, organized by solvent"
+        description="A summary of the vibrational data available for this molecule, organized by solvent",
     )
 
     orbitals: Optional[Dict[str, OrbitalComposite]] = Field(
         None,
-        description="A summary of the orbital (NBO) data available for this molecule, organized by solvent"
+        description="A summary of the orbital (NBO) data available for this molecule, organized by solvent",
     )
 
     partial_charges: Optional[Dict[str, Dict[str, PartialChargesComposite]]] = Field(
         None,
         description="A summary of the partial charge data available for this molecule, organized by solvent and by "
-                    "method"
+        "method",
     )
 
     partial_spins: Optional[Dict[str, Dict[str, PartialSpinsComposite]]] = Field(
         None,
         description="A summary of the partial spin data available for this molecule, organized by solvent and by "
-                    "method"
+        "method",
     )
 
     bonding: Optional[Dict[str, Dict[str, BondingComposite]]] = Field(
         None,
-        description="A summary of the bonding data available for this molecule, organized by solvent and by method"
+        description="A summary of the bonding data available for this molecule, organized by solvent and by method",
     )
 
     multipole_moments: Optional[Dict[str, MultipolesComposite]] = Field(
         None,
-        description="A summary of the electric multipole data available for this molecule, organized by solvent"
+        description="A summary of the electric multipole data available for this molecule, organized by solvent",
     )
 
     redox: Optional[Dict[str, RedoxComposite]] = Field(
         None,
-        description="A summary of the redox data available for this molecule, organized by solvent"
+        description="A summary of the redox data available for this molecule, organized by solvent",
     )
 
     metal_binding: Optional[Dict[str, Dict[str, MetalBindingComposite]]] = Field(
         None,
         description="A summary of the metal binding data available for this molecule, organized by solvent and by "
-                    "method"
+        "method",
     )
 
     # has props
@@ -586,7 +586,7 @@ def _copy_from_docs(
     orbitals: Optional[Dict[str, Dict[str, Any]]] = None,
     redox: Optional[Dict[str, Dict[str, Any]]] = None,
     thermo: Optional[Dict[str, Dict[str, Any]]] = None,
-    vibration: Optional[Dict[str, Dict[str, Any]]] = None
+    vibration: Optional[Dict[str, Dict[str, Any]]] = None,
 ):
     """Helper function to cut down documents to composite models and then combine to create a MoleculeSummaryDoc"""
 
@@ -609,14 +609,14 @@ def _copy_from_docs(
         HasProps.orbitals.value: (orbitals, OrbitalComposite),
         HasProps.redox.value: (redox, RedoxComposite),
         HasProps.thermo.value: (thermo, ThermoComposite),
-        HasProps.vibration.value: (vibration, VibrationComposite)
+        HasProps.vibration.value: (vibration, VibrationComposite),
     }
 
     by_method = {
         HasProps.partial_charges.value,
         HasProps.partial_spins.value,
         HasProps.bonding.value,
-        HasProps.metal_binding.value
+        HasProps.metal_binding.value,
     }
 
     # Function to grab the keys and put them in the root doc
@@ -639,13 +639,21 @@ def _copy_from_docs(
                         for method, entry in solv_entries.items():
                             composite_docs[solvent][method] = dict()
                             for copy_key in summary_fields[doc_key]:
-                                composite_docs[solvent][method][copy_key] = entry.get(copy_key)
+                                composite_docs[solvent][method][copy_key] = entry.get(
+                                    copy_key
+                                )
 
-                            composite_docs[solvent][method]["property_id"] = entry.get("property_id")
-                            composite_docs[solvent][method]["level_of_theory"] = entry.get("level_of_theory")
+                            composite_docs[solvent][method]["property_id"] = entry.get(
+                                "property_id"
+                            )
+                            composite_docs[solvent][method][
+                                "level_of_theory"
+                            ] = entry.get("level_of_theory")
 
                             # Convert to appropriate BaseModel
-                            composite_docs[solvent][method] = target_type(**composite_docs[solvent][method])
+                            composite_docs[solvent][method] = target_type(
+                                **composite_docs[solvent][method]
+                            )
 
                 else:
                     for solvent, entry in sub_docs.items():
@@ -653,8 +661,12 @@ def _copy_from_docs(
                         for copy_key in summary_fields[doc_key]:
                             composite_docs[solvent][copy_key] = entry.get(copy_key)
 
-                        composite_docs[solvent]["property_id"] = entry.get("property_id")
-                        composite_docs[solvent]["level_of_theory"] = entry.get("level_of_theory")
+                        composite_docs[solvent]["property_id"] = entry.get(
+                            "property_id"
+                        )
+                        composite_docs[solvent]["level_of_theory"] = entry.get(
+                            "level_of_theory"
+                        )
 
                         # Convert to appropriate BaseModel
                         composite_docs[solvent] = target_type(**composite_docs[solvent])
