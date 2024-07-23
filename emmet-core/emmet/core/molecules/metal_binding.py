@@ -67,7 +67,7 @@ class MetalBindingData(BaseModel):
         description="The number of atoms neighboring the metal atom or ion of interest",
     )
 
-    coordinating_atoms: Optional[List[Union[str, Species]]] = Field(
+    coordinating_atoms: Optional[List[str]] = Field(
         None, description="The elements/species coordinating the metal."
     )
 

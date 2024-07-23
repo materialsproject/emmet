@@ -442,7 +442,7 @@ class ChemEnvDoc(PropertyDoc):
             inequivalent_indices_cations = [
                 indices[0]
                 for indices in symm_struct.equivalent_indices
-                if valences[indices[0]] > 0.0
+                if valences[indices[0]] > 0.0  # type: ignore[operator]
             ]
 
             se = lgf.compute_structure_environments(

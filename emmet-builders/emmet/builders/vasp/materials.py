@@ -11,7 +11,7 @@ from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.utils import group_structures, jsanitize, undeform_structure
 from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
-from emmet.core.vasp.task_valid import TaskDocument
+from emmet.core.tasks import TaskDoc
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -176,7 +176,7 @@ class MaterialsBuilder(Builder):
             invalid_ids = set()
 
         projected_fields = [
-            "last_updated",
+            # "last_updated",
             "completed_at",
             "task_id",
             "formula_pretty",
@@ -190,9 +190,11 @@ class MaterialsBuilder(Builder):
             "input.structure",
             # needed for entry from task_doc
             "output.energy",
+            "calcs_reversed.output.energy",
             "input.is_hubbard",
             "input.hubbards",
-            "input.potcar_spec",
+            "calcs_reversed.input.potcar_spec",
+            "calcs_reversed.output.structure",
             # needed for transform deformation structure back for grouping
             "transformations",
             # misc info for materials doc
@@ -222,7 +224,9 @@ class MaterialsBuilder(Builder):
                 were processed
         """
 
-        tasks = [TaskDocument(**task) for task in items]
+        tasks = [
+            TaskDoc(**task) for task in items
+        ]  # [TaskDoc(**task) for task in items]
         formula = tasks[0].formula_pretty
         task_ids = [task.task_id for task in tasks]
 
@@ -290,8 +294,8 @@ class MaterialsBuilder(Builder):
             self.logger.info("No items to update")
 
     def filter_and_group_tasks(
-        self, tasks: List[TaskDocument], task_transformations: List[Union[Dict, None]]
-    ) -> Iterator[List[TaskDocument]]:
+        self, tasks: List[TaskDoc], task_transformations: List[Union[Dict, None]]
+    ) -> Iterator[List[TaskDoc]]:
         """
         Groups tasks by structure matching
         """

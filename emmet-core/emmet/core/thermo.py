@@ -1,17 +1,18 @@
 """ Core definition of a Thermo Document """
+
 from collections import defaultdict
-from typing import Dict, List, Optional, Union
 from datetime import datetime
-from emmet.core.base import EmmetMeta
-from emmet.core.utils import ValueEnum
+from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
-from emmet.core.material_property import PropertyDoc
+from emmet.core.base import EmmetMeta
 from emmet.core.material import PropertyOrigin
+from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
+from emmet.core.utils import ValueEnum
 from emmet.core.vasp.calc_types.enums import RunType
 
 
@@ -152,7 +153,7 @@ class ThermoDoc(PropertyDoc):
 
         entry_quality_scores = {"GGA": 1, "GGA+U": 2, "SCAN": 3, "R2SCAN": 4}
 
-        def _energy_eval(entry: ComputedStructureEntry):
+        def _energy_eval(entry: Union[ComputedStructureEntry, ComputedEntry]):
             """
             Helper function to order entries for thermo energy data selection
             - Run type
@@ -177,7 +178,7 @@ class ThermoDoc(PropertyDoc):
 
             blessed_entry = sorted_entries[0]
 
-            (decomp, ehull) = pd.get_decomp_and_e_above_hull(blessed_entry)
+            (decomp, ehull) = pd.get_decomp_and_e_above_hull(blessed_entry)  # type: ignore[arg-type]
 
             builder_meta = EmmetMeta(license=blessed_entry.data.get("license"))
 
@@ -189,7 +190,7 @@ class ThermoDoc(PropertyDoc):
                 / blessed_entry.composition.num_atoms,
                 "energy_per_atom": blessed_entry.energy
                 / blessed_entry.composition.num_atoms,
-                "formation_energy_per_atom": pd.get_form_energy_per_atom(blessed_entry),
+                "formation_energy_per_atom": pd.get_form_energy_per_atom(blessed_entry),  # type: ignore[arg-type]
                 "energy_above_hull": ehull,
                 "is_stable": blessed_entry in pd.stable_entries,
                 "builder_meta": builder_meta.model_dump(),
@@ -203,29 +204,31 @@ class ThermoDoc(PropertyDoc):
             if d["is_stable"]:
                 d[
                     "equilibrium_reaction_energy_per_atom"
-                ] = pd.get_equilibrium_reaction_energy(blessed_entry)
+                ] = pd.get_equilibrium_reaction_energy(
+                    blessed_entry  # type: ignore[arg-type]
+                )
             else:
                 d["decomposes_to"] = [
                     {
-                        "material_id": de.data["material_id"],
+                        "material_id": de.data["material_id"],  # type: ignore[union-attr]
                         "formula": de.composition.formula,
                         "amount": amt,
                     }
-                    for de, amt in decomp.items()
+                    for de, amt in decomp.items()  # type: ignore[union-attr]
                 ]
 
             try:
                 decomp, energy = pd.get_decomp_and_phase_separation_energy(
-                    blessed_entry
+                    blessed_entry  # type: ignore[arg-type]
                 )
                 d["decomposition_enthalpy"] = energy
                 d["decomposition_enthalpy_decomposes_to"] = [
                     {
-                        "material_id": de.data["material_id"],
+                        "material_id": de.data["material_id"],  # type: ignore[union-attr]
                         "formula": de.composition.formula,
                         "amount": amt,
                     }
-                    for de, amt in decomp.items()
+                    for de, amt in decomp.items()  # type: ignore[union-attr]
                 ]
             except ValueError:
                 # try/except so this quantity does not take down the builder if it fails:
@@ -254,7 +257,7 @@ class ThermoDoc(PropertyDoc):
 
             docs.append(
                 ThermoDoc.from_structure(
-                    meta_structure=blessed_entry.structure, **d, **kwargs
+                    meta_structure=blessed_entry.structure, **d, **kwargs  # type: ignore[attr-defined]
                 )
             )
 

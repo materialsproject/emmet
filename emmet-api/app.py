@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from material_resources import resources as materials_resources
 from molecule_resources import resources as molecule_resources
+from defect_resources import resources as defect_resources
 
 from emmet.api.core.api import MAPI
 from emmet.api.core.documentation import description, tags_meta
@@ -17,7 +18,7 @@ from emmet.api.core.settings import MAPISettings
 logger = logging.getLogger(__name__)
 default_settings = MAPISettings()
 
-resources = {**materials_resources, **molecule_resources}
+resources = {**materials_resources, **molecule_resources, **defect_resources}
 
 api = MAPI(
     resources=resources,

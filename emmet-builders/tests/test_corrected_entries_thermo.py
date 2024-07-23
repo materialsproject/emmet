@@ -34,7 +34,7 @@ def thermo_store():
 
 @pytest.fixture
 def phase_diagram_store():
-    return MemoryStore(key="chemsys")
+    return MemoryStore(key="phase_diagram_id")
 
 
 def test_corrected_entries_builder(corrected_entries_store, materials_store):

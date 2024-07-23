@@ -97,5 +97,5 @@ watchdog==2.1.9
     # via mkdocs
 wcmatch==8.4.1
     # via mkdocs-awesome-pages-plugin
-zipp==3.10.0
+zipp==3.19.1
     # via importlib-metadata
