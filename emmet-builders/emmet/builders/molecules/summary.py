@@ -315,7 +315,7 @@ class SummaryBuilder(Builder):
                     else:
                         grouped[solvent][method] = doc
 
-            return (grouped, by_method)
+            return grouped
 
         mols = items
         shash = mols[0]["species_hash"]
