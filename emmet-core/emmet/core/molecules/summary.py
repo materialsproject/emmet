@@ -628,7 +628,7 @@ def _copy_from_docs(
         if sub_docs is None or target_type is None:
             composite_docs = None
         else:
-            composite_docs = dict()
+            composite_docs = dict()  # type: ignore[var-annotated]
 
             if isinstance(sub_docs, dict) and len(sub_docs) > 0:
                 d["has_props"][doc_key] = True
