@@ -33,7 +33,7 @@ charset-normalizer==3.3.2
     # via requests
 contourpy==1.2.1
     # via matplotlib
-cryptography==43.0.0
+cryptography==42.0.4
     # via paramiko
 cycler==0.12.1
     # via matplotlib
@@ -158,7 +158,7 @@ numpy==1.26.4
     #   solvation-analysis
     #   spglib
     #   statsmodels
-orjson==3.10.6
+orjson==3.9.15
     # via maggma
 packaging==24.1
     # via
@@ -183,7 +183,7 @@ patsy==0.5.6
     # via statsmodels
 phonopy==2.26.6
     # via matcalc
-pillow==10.4.0
+pillow==10.3.0
     # via
     #   matplotlib
     #   rdkit
@@ -215,7 +215,7 @@ pydantic-settings==2.3.4
     #   maggma
 pydash==8.0.3
     # via maggma
-pymatgen==2024.4.13
+pymatgen==2024.2.20
     # via
     #   emmet-core
     #   matcalc
@@ -228,7 +228,7 @@ pymatgen-analysis-alloys==0.0.6
     # via emmet-core
 pymatgen-analysis-diffusion==2023.8.15
     # via emmet-core
-pymongo==4.8.0
+pymongo==4.6.3
     # via
     #   maggma
     #   matminer
@@ -260,7 +260,7 @@ referencing==0.35.1
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.3
+requests==2.32.2
     # via
     #   matminer
     #   mp-api
@@ -280,7 +280,7 @@ ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
 s3transfer==0.10.2
     # via boto3
-scikit-learn==1.5.1
+scikit-learn==1.5.0
     # via matminer
 scipy==1.14.0
     # via
@@ -331,7 +331,7 @@ threadpoolctl==3.5.0
     # via
     #   mdanalysis
     #   scikit-learn
-tqdm==4.66.4
+tqdm==4.66.3
     # via
     #   maggma
     #   matminer
