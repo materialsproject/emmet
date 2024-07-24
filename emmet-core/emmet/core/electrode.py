@@ -1,21 +1,22 @@
+from __future__ import annotations
+
 import re
-from datetime import datetime
-from typing import List, Union, Dict, Optional
 from collections import defaultdict
+from datetime import datetime
+from typing import Dict, List, Optional, Union
 
-from emmet.core.utils import ValueEnum
-from emmet.core.common import convert_datetime
-
-from pydantic import field_validator, BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.apps.battery.battery_abc import AbstractElectrode
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
-from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.core import Composition, Structure
-from pymatgen.core.periodic_table import Element
+from pymatgen.core.periodic_table import DummySpecies, Element, Species
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
+from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
+from emmet.core.utils import ValueEnum
 
 
 class BatteryType(str, ValueEnum):
@@ -138,7 +139,7 @@ class EntriesCompositionSummary(BaseModel):
         description="Anonymous formulas for material entries across all voltage pairs.",
     )
 
-    all_elements: Optional[List[Element]] = Field(
+    all_elements: Optional[List[Union[Element, Species, DummySpecies]]] = Field(
         None,
         description="Elements in material entries across all voltage pairs.",
     )
@@ -348,7 +349,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
             host_structure=stripped_host.as_dict(),
             framework=framework,
             battery_formula=battery_formula,
-            electrode_object=ie.as_dict(),
+            electrode_object=ie,
             elements=elements,
             nelements=len(elements),
             chemsys=chemsys,
@@ -465,7 +466,7 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
             entries_in_chemsys=entries,
             working_ion_symbol=working_ion_symbol,
         )
-        d = cls.get_conversion_elec_doc(ce)
+        d = cls.get_conversion_elec_doc(ce)  # type: ignore[arg-type]
         return cls(battery_id=battery_id, thermo_type=thermo_type, **d)
 
     @classmethod
@@ -480,7 +481,7 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
         ce = ConversionElectrode.from_composition_and_pd(
             comp=comp, pd=pd, working_ion_symbol=working_ion_symbol
         )
-        d = cls.get_conversion_elec_doc(ce)
+        d = cls.get_conversion_elec_doc(ce)  # type: ignore[arg-type]
         return cls(battery_id=battery_id, thermo_type=thermo_type, **d)
 
     @staticmethod

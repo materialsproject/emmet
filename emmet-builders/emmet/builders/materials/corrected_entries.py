@@ -1,20 +1,20 @@
+import copy
 import warnings
 from collections import defaultdict
-from itertools import chain
-from typing import Dict, Iterable, Iterator, List, Optional
-from math import ceil
-import copy
 from datetime import datetime
+from itertools import chain
+from math import ceil
+from typing import Dict, Iterable, Iterator, List, Optional, Union
 
 from maggma.core import Builder, Store
 from maggma.utils import grouper
-from pymatgen.entries.computed_entries import ComputedStructureEntry
 from pymatgen.entries.compatibility import Compatibility
+from pymatgen.entries.computed_entries import ComputedStructureEntry
 
-from emmet.core.utils import jsanitize
-from emmet.builders.utils import chemsys_permutations, HiddenPrints
-from emmet.core.thermo import ThermoType
+from emmet.builders.utils import HiddenPrints, chemsys_permutations
 from emmet.core.corrected_entries import CorrectedEntriesDoc
+from emmet.core.thermo import ThermoType
+from emmet.core.utils import jsanitize
 
 
 class CorrectedEntriesBuilder(Builder):
@@ -24,7 +24,7 @@ class CorrectedEntriesBuilder(Builder):
         corrected_entries: Store,
         oxidation_states: Optional[Store] = None,
         query: Optional[Dict] = None,
-        compatibility: Optional[List[Compatibility]] = None,
+        compatibility: Optional[Union[List[Compatibility], List[None]]] = [None],
         chunk_size: int = 1000,
         **kwargs,
     ):
@@ -45,10 +45,10 @@ class CorrectedEntriesBuilder(Builder):
         self.materials = materials
         self.query = query if query else {}
         self.corrected_entries = corrected_entries
-        self.compatibility = compatibility or [None]
+        self.compatibility = compatibility
         self.oxidation_states = oxidation_states
         self.chunk_size = chunk_size
-        self._entries_cache: Dict[str, List[ComputedStructureEntry]] = defaultdict(list)
+        self._entries_cache: Dict[str, List[Dict]] = defaultdict(list)
 
         if self.corrected_entries.key != "chemsys":
             warnings.warn(

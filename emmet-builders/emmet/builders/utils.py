@@ -1,17 +1,19 @@
 from __future__ import annotations
-from typing import Set, Union, Any, Literal, Optional
-import sys
-import os
-from pathlib import Path
-from gzip import GzipFile
-import orjson
+
 import json
+import os
+import sys
+from gzip import GzipFile
 from io import BytesIO
-from monty.serialization import MontyDecoder
-from botocore.exceptions import ClientError
 from itertools import chain, combinations
-from pymatgen.core import Structure
+from pathlib import Path
+from typing import Any, Literal, Optional, Set, Union
+
+import orjson
+from botocore.exceptions import ClientError
+from monty.serialization import MontyDecoder
 from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
+from pymatgen.core import Structure
 from pymatgen.io.vasp.inputs import PotcarSingle
 
 from emmet.builders.settings import EmmetBuildSettings
@@ -275,16 +277,16 @@ def get_potcar_stats(
                 # fallback method for validation - use header hash and symbol
                 # note that the potcar_spec assigns PotcarSingle.symbol to "titel"
                 # whereas the ***correct*** field is `header`
-                summary_stats["titel"] = potcar.header
-                summary_stats["hash"] = potcar.md5_header_hash
-                summary_stats = [summary_stats]
+                summary_stats["titel"] = potcar.header  # type: ignore[assignment]
+                summary_stats["hash"] = potcar.md5_header_hash  # type: ignore[assignment]
+                summary_stats = [summary_stats]  # type: ignore[assignment]
 
             elif method == "pymatgen":
-                summary_stats = []
+                summary_stats = []  # type: ignore[assignment]
                 for _, entries in PotcarSingle._potcar_summary_stats[
                     functional
                 ].items():
-                    summary_stats += [
+                    summary_stats += [  # type: ignore[operator]
                         {**entry, "titel": None, "hash": None}
                         for entry in entries
                         if entry["symbol"] == potcar_symbol

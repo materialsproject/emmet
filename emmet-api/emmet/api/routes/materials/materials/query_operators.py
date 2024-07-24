@@ -1,18 +1,19 @@
 from itertools import permutations
-from typing import Literal, Optional
+from typing import Dict, Literal, Optional
 
-from emmet.core.symmetry import CrystalSystem
 from fastapi import Body, HTTPException, Query
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
-from emmet.api.routes.materials.materials.utils import (
-    formula_to_criteria,
-    chemsys_to_criteria,
-)
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 from pymatgen.core.composition import Composition, CompositionError
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Structure
+
+from emmet.api.routes.materials.materials.utils import (
+    chemsys_to_criteria,
+    formula_to_criteria,
+)
+from emmet.core.symmetry import CrystalSystem
 from emmet.core.vasp.calc_types import RunType
 
 
@@ -281,9 +282,9 @@ class FindStructureQuery(QueryOperator):
 
     def query(
         self,
-        structure: Structure = Body(
+        structure: Dict = Body(
             ...,
-            description="Pymatgen structure object to query with",
+            description="Dictionary representaion of Pymatgen structure object to query with",
         ),
         ltol: float = Query(
             0.2,

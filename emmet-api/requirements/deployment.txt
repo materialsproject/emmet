@@ -27,11 +27,11 @@ bcrypt==4.1.3
     # via paramiko
 blinker==1.8.2
     # via flask
-boto3==1.34.125
+boto3==1.34.128
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.34.125
+botocore==1.34.128
     # via
     #   boto3
     #   s3transfer
@@ -39,7 +39,7 @@ bytecode==0.15.1
     # via ddtrace
 cattrs==23.2.3
     # via ddtrace
-certifi==2024.6.2
+certifi==2024.7.4
     # via
     #   httpcore
     #   httpx
@@ -58,7 +58,7 @@ click==8.1.7
     #   uvicorn
 contourpy==1.2.1
     # via matplotlib
-cryptography==42.0.8
+cryptography==43.0.0
     # via paramiko
 cycler==0.12.1
     # via matplotlib
@@ -73,7 +73,7 @@ dnspython==2.6.1
     #   email-validator
     #   maggma
     #   pymongo
-email-validator==2.1.1
+email-validator==2.1.2
     # via fastapi
 emmet-core==0.83.9
     # via emmet-api (emmet/emmet-api/setup.py)
@@ -166,6 +166,7 @@ numpy==1.26.4
     # via
     #   -r python/requirements.txt
     #   contourpy
+    #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
     #   matplotlib
     #   pandas
@@ -175,7 +176,7 @@ numpy==1.26.4
     #   spglib
 opentelemetry-api==1.25.0
     # via ddtrace
-orjson==3.10.4
+orjson==3.10.6
     # via
     #   fastapi
     #   maggma
@@ -193,7 +194,7 @@ pandas==2.2.2
     #   pymatgen
 paramiko==3.4.0
     # via sshtunnel
-pillow==10.3.0
+pillow==10.4.0
     # via matplotlib
 plotly==5.22.0
     # via pymatgen
@@ -213,7 +214,7 @@ pydantic==2.7.4
     #   pydantic-settings
 pydantic-core==2.18.4
     # via pydantic
-pydantic-settings==2.3.2
+pydantic-settings==2.3.3
     # via
     #   emmet-core
     #   maggma
@@ -221,13 +222,13 @@ pydash==8.0.1
     # via maggma
 pygments==2.18.0
     # via rich
-pymatgen==2024.4.13
+pymatgen==2024.7.18
     # via
     #   emmet-core
     #   pymatgen-analysis-alloys
 pymatgen-analysis-alloys==0.0.6
     # via emmet-api (emmet/emmet-api/setup.py)
-pymongo==4.7.3
+pymongo==4.8.0
     # via
     #   maggma
     #   mongogrant
@@ -311,7 +312,7 @@ sympy==1.12.1
     # via pymatgen
 tabulate==0.9.0
     # via pymatgen
-tenacity==8.3.0
+tenacity==8.4.1
     # via plotly
 tqdm==4.66.4
     # via
@@ -338,7 +339,7 @@ ujson==5.10.0
     # via fastapi
 uncertainties==3.2.1
     # via pymatgen
-urllib3==2.2.1
+urllib3==2.2.2
     # via
     #   botocore
     #   requests

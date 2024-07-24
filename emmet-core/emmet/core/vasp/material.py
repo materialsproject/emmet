@@ -90,6 +90,10 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             else structure_optimizations
         )
 
+        validity_check = [doc for doc in structure_calcs if doc.is_valid]
+        if not validity_check:
+            raise ValueError("Group must contain at least one valid task")
+
         # Material ID
         possible_mat_ids = [task.task_id for task in structure_optimizations]
 
@@ -113,7 +117,12 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             task_run_type = task.run_type
             _SPECIAL_TAGS = ["LASPH", "ISPIN"]
             special_tags = sum(
-                task.input.parameters.get(tag, False) for tag in _SPECIAL_TAGS
+                (
+                    task.input.parameters.get(tag, False)
+                    if task.input.parameters
+                    else False
+                )
+                for tag in _SPECIAL_TAGS
             )
 
             return (
@@ -165,7 +174,12 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
             _SPECIAL_TAGS = ["LASPH", "ISPIN"]
             special_tags = sum(
-                task.input.parameters.get(tag, False) for tag in _SPECIAL_TAGS
+                (
+                    task.input.parameters.get(tag, False)
+                    if task.input.parameters
+                    else False
+                )
+                for tag in _SPECIAL_TAGS
             )
 
             return (

@@ -5,6 +5,7 @@ from monty.io import zopen
 
 from emmet.core.vasp.calc_types import RunType, TaskType, run_type, task_type
 from emmet.core.tasks import TaskDoc
+from emmet.core.vasp.task_valid import TaskDocument
 from emmet.core.vasp.validation import ValidationDoc, _potcar_stats_check
 
 
@@ -53,6 +54,37 @@ def test_validator(tasks):
 
     assert len(validation_docs) == len(tasks)
     assert all([doc.valid for doc in validation_docs])
+
+
+def test_validator_magmom(test_dir):
+    # Task with Cr in structure - this is only element with MAGMOM check
+    with zopen(test_dir / "task_doc_mp-2766060.json.gz") as f:
+        cr_task_dict = json.load(f)
+
+    taskdoc = TaskDoc(**cr_task_dict)
+    assert ValidationDoc.from_task_doc(taskdoc).valid
+
+    # test backwards compatibility
+    taskdocument = TaskDocument(
+        **{k: v for k, v in cr_task_dict.items() if k != "last_updated"}
+    )
+    assert ValidationDoc.from_task_doc(taskdocument).valid
+
+    # Change MAGMOM on Cr to fail magmom test
+    td_bad_mag = TaskDoc(**cr_task_dict)
+    td_bad_mag.calcs_reversed[0].output.outcar["magnetization"] = [
+        {"tot": 6.0} if td_bad_mag.structure[ientry].species_string == "Cr" else entry
+        for ientry, entry in enumerate(
+            td_bad_mag.calcs_reversed[0].output.outcar["magnetization"]
+        )
+    ]
+    assert not (valid_doc := ValidationDoc.from_task_doc(td_bad_mag)).valid
+    assert any("MAG" in repr(reason) for reason in valid_doc.reasons)
+
+    # Remove magnetization tag to simulate spin-unpolarized (ISPIN = 1) calculation
+    td_no_mag = TaskDoc(**cr_task_dict)
+    del td_no_mag.calcs_reversed[0].output.outcar["magnetization"]
+    assert ValidationDoc.from_task_doc(td_no_mag).valid
 
 
 def test_validator_failed_symmetry(test_dir):

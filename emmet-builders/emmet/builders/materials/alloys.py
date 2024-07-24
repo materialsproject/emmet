@@ -1,19 +1,19 @@
-from itertools import combinations, chain
-from typing import Tuple, List, Dict, Union
+from itertools import chain, combinations
+from typing import Dict, List, Tuple, Union
 
-from tqdm import tqdm
 from maggma.builders import Builder
-from pymatgen.core.structure import Structure
 from matminer.datasets import load_dataset
-from emmet.core.thermo import ThermoType
-
 from pymatgen.analysis.alloys.core import (
-    AlloyPair,
-    InvalidAlloy,
     KNOWN_ANON_FORMULAS,
     AlloyMember,
+    AlloyPair,
     AlloySystem,
+    InvalidAlloy,
 )
+from pymatgen.core.structure import Structure
+from tqdm import tqdm
+
+from emmet.core.thermo import ThermoType
 
 # rough sort of ANON_FORMULAS by "complexity"
 ANON_FORMULAS = sorted(KNOWN_ANON_FORMULAS, key=lambda af: len(af))
@@ -291,7 +291,7 @@ class AlloyPairMemberBuilder(Builder):
                             is_ordered=structure.is_ordered,
                             x=pair.get_x(structure.composition),
                         )
-                        pair_members["members"].append(member.as_dict())
+                        pair_members["members"].append(member.as_dict())  # type: ignore[attr-defined]
                 except Exception as exc:
                     print(f"Exception for {db_id}: {exc}")
             if pair_members["members"]:

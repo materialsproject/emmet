@@ -1,22 +1,22 @@
 import operator
+from collections import defaultdict
 from datetime import datetime
 from functools import lru_cache
 from itertools import chain
 from math import ceil
-from typing import Any, Iterator, Dict, List, Optional
-from collections import defaultdict
+from typing import Any, Dict, Iterator, List, Optional
 
 from maggma.builders import Builder
 from maggma.stores import MongoStore
 from maggma.utils import grouper
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from pymatgen.analysis.phase_diagram import Composition, PhaseDiagram
 from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
-from pymatgen.analysis.phase_diagram import PhaseDiagram, Composition
+from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
-from emmet.core.electrode import InsertionElectrodeDoc, ConversionElectrodeDoc
+from emmet.builders.settings import EmmetBuildSettings
+from emmet.core.electrode import ConversionElectrodeDoc, InsertionElectrodeDoc
 from emmet.core.structure_group import StructureGroupDoc, _get_id_lexi
 from emmet.core.utils import jsanitize
-from emmet.builders.settings import EmmetBuildSettings
 
 
 def s_hash(el):
@@ -564,9 +564,11 @@ class ConversionElectrodeBuilder(Builder):
                 # Get lowest material_id with matching composition
                 material_ids = [
                     (
-                        lambda x: x.data["material_id"]
-                        if x.composition.reduced_formula == v[1].reduced_formula
-                        else None
+                        lambda x: (
+                            x.data["material_id"]  # type: ignore[attr-defined]
+                            if x.composition.reduced_formula == v[1].reduced_formula
+                            else None
+                        )
                     )(e)
                     for e in pd.entries
                 ]
@@ -597,7 +599,7 @@ class ConversionElectrodeBuilder(Builder):
             relevant_entry_data = []
             for e in pd.entries:
                 if e.composition == Composition(c):
-                    relevant_entry_data.append((e.energy_per_atom, e.entry_id))
+                    relevant_entry_data.append((e.energy_per_atom, e.entry_id))  # type: ignore[attr-defined]
             relevant_entry_data.sort(key=lambda x: x[0])
             entry_id_mapping[c] = relevant_entry_data[0][1]
 

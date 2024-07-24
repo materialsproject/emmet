@@ -1,6 +1,9 @@
 import os
 
-import pytest
+from monty.serialization import dumpfn, loadfn
+from monty.tempfile import ScratchDir
+from pymatgen.core.structure import Structure
+
 from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.materials.query_operators import (
     ChemsysQuery,
@@ -14,9 +17,6 @@ from emmet.api.routes.materials.materials.query_operators import (
     SymmetryQuery,
 )
 from emmet.core.symmetry import CrystalSystem
-from monty.serialization import dumpfn, loadfn
-from monty.tempfile import ScratchDir
-from pymatgen.core.structure import Structure
 
 
 def test_formula_query():
@@ -158,7 +158,6 @@ def test_multi_material_id_query():
         }
 
 
-@pytest.mark.skip(reason="Pmg cif reader issue")
 def test_find_structure_query():
     op = FindStructureQuery()
 

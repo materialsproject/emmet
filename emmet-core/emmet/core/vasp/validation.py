@@ -11,8 +11,9 @@ from emmet.core.settings import EmmetSettings
 from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
 from emmet.core.utils import DocEnum
-from emmet.core.vasp.task_valid import TaskDocument
+from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calc_types.enums import CalcType, TaskType
+from emmet.core.vasp.task_valid import TaskDocument
 
 SETTINGS = EmmetSettings()
 
@@ -61,16 +62,23 @@ class ValidationDoc(EmmetBaseModel):
         " Useful for post-mortem analysis"
     )
     model_config = ConfigDict(extra="allow")
+    nelements: Optional[int] = Field(None, description="Number of elements.")
+    symmetry_number: Optional[int] = Field(
+        None,
+        title="Space Group Number",
+        description="The spacegroup number for the lattice.",
+    )
 
     @classmethod
     def from_task_doc(
         cls,
-        task_doc: TaskDocument,
+        task_doc: Union[TaskDoc, TaskDocument],
         kpts_tolerance: float = SETTINGS.VASP_KPTS_TOLERANCE,
         kspacing_tolerance: float = SETTINGS.VASP_KSPACING_TOLERANCE,
         input_sets: Dict[str, ImportString] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
         LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
         max_allowed_scf_gradient: float = SETTINGS.VASP_MAX_SCF_GRADIENT,
+        max_magmoms: Dict[str, float] = SETTINGS.VASP_MAX_MAGMOM,
         potcar_stats: Optional[Dict[CalcType, Dict[str, str]]] = None,
     ) -> "ValidationDoc":
         """
@@ -88,6 +96,9 @@ class ValidationDoc(EmmetBaseModel):
             potcar_stats: Dictionary of potcar stat data. Mapping is calculation type -> potcar symbol -> hash value.
         """
 
+        nelements = task_doc.nelements or None
+        symmetry_number = task_doc.symmetry.number if task_doc.symmetry else None
+
         bandgap = task_doc.output.bandgap
         calc_type = task_doc.calc_type
         task_type = task_doc.task_type
@@ -101,10 +112,11 @@ class ValidationDoc(EmmetBaseModel):
 
         if calcs_reversed[0].get("input", {}).get("structure", None):
             structure = calcs_reversed[0]["input"]["structure"]
-            if isinstance(structure, dict):
-                structure = Structure.from_dict(structure)
         else:
             structure = task_doc.input.structure or task_doc.output.structure
+
+        if isinstance(structure, dict):
+            structure = Structure.from_dict(structure)
 
         reasons = []
         data = {}  # type: ignore
@@ -168,7 +180,8 @@ class ValidationDoc(EmmetBaseModel):
 
                 # warn, but don't invalidate if wrong ISMEAR
                 valid_ismear = valid_input_set.incar.get("ISMEAR", 1)
-                curr_ismear = inputs.get("incar", {}).get("ISMEAR", 1)
+                incar = inputs.get("incar", {})
+                curr_ismear = incar.get("ISMEAR", 1)
                 if curr_ismear != valid_ismear:
                     warnings.append(
                         f"Inappropriate smearing settings. Set to {curr_ismear},"
@@ -176,7 +189,7 @@ class ValidationDoc(EmmetBaseModel):
                     )
 
                 # Checking ENCUT
-                encut = inputs.get("incar", {}).get("ENCUT")
+                encut = incar.get("ENCUT")
                 valid_encut = valid_input_set.incar["ENCUT"]
                 data["encut_ratio"] = float(encut) / valid_encut  # type: ignore
                 if data["encut_ratio"] < 1:
@@ -198,7 +211,7 @@ class ValidationDoc(EmmetBaseModel):
                     reasons.append(DeprecationMessage.MANUAL)
 
                 # Check for magmom anomalies for specific elements
-                if _magmom_check(task_doc, chemsys):
+                if _magmom_check(calcs_reversed, structure, max_magmoms=max_magmoms):
                     reasons.append(DeprecationMessage.MAG)
             else:
                 if "Unrecognized" in str(calc_type):
@@ -214,6 +227,8 @@ class ValidationDoc(EmmetBaseModel):
             reasons=reasons,
             data=data,
             warnings=warnings,
+            nelements=nelements,
+            symmetry_number=symmetry_number,
         )
 
         return doc
@@ -319,8 +334,8 @@ def _kspacing_warnings(input_set, inputs, data, warnings, kspacing_tolerance):
     Issues warnings based on KSPACING values
     """
     valid_kspacing = input_set.incar.get("KSPACING", 0)
-    if inputs.get("incar", {}).get("KSPACING"):
-        data["kspacing_delta"] = inputs["incar"].get("KSPACING") - valid_kspacing
+    if kspacing := inputs.get("incar", {}).get("KSPACING"):
+        data["kspacing_delta"] = kspacing - valid_kspacing
         # larger KSPACING means fewer k-points
         if data["kspacing_delta"] > kspacing_tolerance:
             warnings.append(
@@ -356,6 +371,10 @@ def _potcar_stats_check(task_doc, potcar_stats: dict):
 
     all_match = True
     for entry in potcar_details:
+        if not entry["titel"]:
+            all_match = False
+            break
+
         symbol = entry["titel"].split(" ")[1]
         ref_summ_stats = potcar_stats[str(task_doc.calc_type)].get(symbol, None)
 
@@ -409,27 +428,21 @@ def _potcar_stats_check(task_doc, potcar_stats: dict):
     return not all_match
 
 
-def _magmom_check(task_doc, chemsys):
+def _magmom_check(
+    calcs_reversed: list, structure: Structure, max_magmoms: dict[str, float]
+):
     """
     Checks for maximum magnetization values for specific elements.
     Returns True if the maximum absolute value outlined below is exceded for the associated element.
     """
-    eles_max_vals = {"Cr": 5}
-
-    for ele, max_val in eles_max_vals.items():
-        if ele in chemsys:
-            for site_num, mag in enumerate(
-                task_doc.calcs_reversed[0]["output"]["outcar"]["magnetization"]
-            ):
-                if "structure" in task_doc.calcs_reversed[0]["output"]:
-                    output_structure = task_doc.calcs_reversed[0]["output"]["structure"]
-                else:
-                    output_structure = task_doc.output.structure.as_dict()
-
-                if output_structure["sites"][site_num]["label"] == ele:
-                    if abs(mag["tot"]) > max_val:
-                        return True
-
+    if (outcar := calcs_reversed[0]["output"]["outcar"]) and (
+        mag_info := outcar.get("magnetization", [])
+    ):
+        return any(
+            abs(mag_info[isite].get("tot", 0.0))
+            > abs(max_magmoms.get(site.label, np.inf))
+            for isite, site in enumerate(structure)
+        )
     return False
 
 

@@ -1,41 +1,39 @@
-import tempfile
 import os
+import tempfile
 from math import ceil
-from emmet.builders.settings import EmmetBuildSettings
-import numpy as np
-from typing import Optional, Dict, List, Iterator, Tuple
-from maggma.utils import grouper
+from typing import Dict, Iterator, List, Optional, Tuple
 
+import numpy as np
+from abipy.abio.inputs import AnaddbInput
+from abipy.core.abinit_units import eV_to_THz
+from abipy.dfpt.anaddbnc import AnaddbNcFile
+from abipy.dfpt.ddb import AnaddbError, DdbFile, DielectricTensorGenerator
+from abipy.dfpt.phonons import PhononBands
+from abipy.flowtk.tasks import AnaddbTask, TaskManager
+from maggma.builders import Builder
+from maggma.core import Store
+from maggma.utils import grouper
+from pymatgen.core.structure import Structure
+from pymatgen.io.abinit.abiobjects import KSampling
 from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
 from pymatgen.phonon.dos import CompletePhononDos
 from pymatgen.phonon.ir_spectra import IRDielectricTensor
-from pymatgen.core.structure import Structure
-from pymatgen.io.abinit.abiobjects import KSampling
-from pymatgen.symmetry.bandstructure import HighSymmKpath
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from abipy.dfpt.anaddbnc import AnaddbNcFile
-from abipy.abio.inputs import AnaddbInput
-from abipy.flowtk.tasks import AnaddbTask, TaskManager
-from abipy.dfpt.ddb import AnaddbError, DielectricTensorGenerator, DdbFile
-from abipy.dfpt.phonons import PhononBands
-from abipy.core.abinit_units import eV_to_THz
-from maggma.builders import Builder
-from maggma.core import Store
+from pymatgen.symmetry.bandstructure import HighSymmKpath
 
+from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.phonon import (
-    PhononWarnings,
-    ThermodynamicProperties,
     AbinitPhonon,
+    Ddb,
+    PhononBandStructure,
+    PhononDos,
+    PhononWarnings,
+    PhononWebsiteBS,
+    ThermalDisplacement,
+    ThermodynamicProperties,
     VibrationalEnergy,
 )
-from emmet.core.phonon import (
-    PhononDos,
-    PhononBandStructure,
-    PhononWebsiteBS,
-    Ddb,
-    ThermalDisplacement,
-)
-from emmet.core.polar import DielectricDoc, BornEffectiveCharges, IRDielectric
+from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
 from emmet.core.utils import jsanitize
 
 SETTINGS = EmmetBuildSettings()
@@ -679,7 +677,7 @@ class PhononBuilder(Builder):
         )
 
         ph_bs_sl = PhononBandStructureSymmLine(
-            qpoints=qpts,
+            qpoints=qpts,  # type: ignore[arg-type]
             frequencies=ph_freqs,
             lattice=structure.reciprocal_lattice,
             has_nac=phbands.non_anal_ph is not None,

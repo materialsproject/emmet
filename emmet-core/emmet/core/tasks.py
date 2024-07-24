@@ -21,7 +21,7 @@ from emmet.core.vasp.calc_types import (
     task_type,
 )
 from emmet.core.vasp.calculation import (
-    CalculationBaseModel,
+    CalculationInput,
     Calculation,
     PotcarSpec,
     RunStatistics,
@@ -36,7 +36,6 @@ from pydantic import (
     Field,
     field_validator,
     model_validator,
-    PrivateAttr,
 )
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core.structure import Structure
@@ -62,20 +61,10 @@ class Potcar(BaseModel):
     )
 
 
-class OrigInputs(CalculationBaseModel):
-    incar: Optional[Union[Incar, Dict]] = Field(
-        None,
-        description="Pymatgen object representing the INCAR file.",
-    )
-
+class OrigInputs(CalculationInput):
     poscar: Optional[Poscar] = Field(
         None,
         description="Pymatgen object representing the POSCAR file.",
-    )
-
-    kpoints: Optional[Kpoints] = Field(
-        None,
-        description="Pymatgen object representing the KPOINTS file.",
     )
 
     potcar: Optional[Union[Potcar, VaspPotcar, List[Any]]] = Field(
@@ -183,36 +172,39 @@ class OutputDoc(BaseModel):
         )
 
 
-class InputDoc(BaseModel):
-    structure: Optional[Structure] = Field(
-        None,
-        title="Input Structure",
-        description="Output Structure from the VASP calculation.",
-    )
+class InputDoc(CalculationInput):
+    """Light wrapper around `CalculationInput` with a few extra fields.
 
-    parameters: Optional[Dict] = Field(
-        None,
-        description="Parameters from vasprun for the last calculation in the series",
-    )
+    pseudo_potentials (Potcar) : summary of the POTCARs used in the calculation
+    xc_override (str) : the exchange-correlation functional used if not
+        the one specified by POTCAR
+    is_lasph (bool) : how the calculation set LASPH (aspherical corrections)
+    magnetic_moments (list of floats) : on-site magnetic moments
+    """
+
     pseudo_potentials: Optional[Potcar] = Field(
         None, description="Summary of the pseudo-potentials used in this calculation"
     )
-    potcar_spec: Optional[List[PotcarSpec]] = Field(
-        None, description="Title and hash of POTCAR files used in the calculation"
-    )
+
     xc_override: Optional[str] = Field(
         None, description="Exchange-correlation functional used if not the default"
     )
     is_lasph: Optional[bool] = Field(
         None, description="Whether the calculation was run with aspherical corrections"
     )
-    is_hubbard: bool = Field(
-        default=False, description="Is this a Hubbard +U calculation"
-    )
-    hubbards: Optional[dict] = Field(None, description="The hubbard parameters used")
     magnetic_moments: Optional[List[float]] = Field(
         None, description="Magnetic moments for each atom"
     )
+
+    @field_validator("parameters", mode="after")
+    @classmethod
+    def parameter_keys_should_not_contain_spaces(cls, parameters: Optional[Dict]):
+        # A change in VASP introduced whitespace into some parameters,
+        # for example `<i type="string" name="GGA    ">PE</I>` was observed in
+        # VASP 6.4.3. This will lead to an incorrect return value from RunType.
+        # This validator will ensure that any already-parsed documents are fixed.
+        if parameters:
+            return {k.strip(): v for k, v in parameters.items()}
 
     @classmethod
     def from_vasp_calc_doc(cls, calc_doc: Calculation) -> "InputDoc":
@@ -229,7 +221,7 @@ class InputDoc(BaseModel):
         InputDoc
             A summary of the input structure and parameters.
         """
-        xc = calc_doc.input.incar.get("GGA")
+        xc = calc_doc.input.incar.get("GGA") or calc_doc.input.incar.get("METAGGA")
         if xc:
             xc = xc.upper()
 
@@ -237,14 +229,10 @@ class InputDoc(BaseModel):
         func = "lda" if len(pot_type) == 1 else "_".join(func)
         pps = Potcar(pot_type=pot_type, functional=func, symbols=calc_doc.input.potcar)
         return cls(
-            structure=calc_doc.input.structure,
-            parameters=calc_doc.input.parameters,
+            **calc_doc.input.model_dump(),
             pseudo_potentials=pps,
-            potcar_spec=calc_doc.input.potcar_spec,
             xc_override=xc,
             is_lasph=calc_doc.input.parameters.get("LASPH", False),
-            is_hubbard=calc_doc.input.is_hubbard,
-            hubbards=calc_doc.input.hubbards,
             magnetic_moments=calc_doc.input.parameters.get("MAGMOM"),
         )
 
@@ -370,6 +358,14 @@ class TaskDoc(StructureMetadata, extra="allow"):
         None, description="The type of calculation."
     )
 
+    run_type: Optional[RunType] = Field(
+        None, description="The functional used in the calculation."
+    )
+
+    calc_type: Optional[CalcType] = Field(
+        None, description="The functional and task type used in the calculation."
+    )
+
     task_id: Optional[Union[MPID, str]] = Field(
         None,
         description="The (task) ID of this calculation, used as a universal reference across property documents."
@@ -439,30 +435,27 @@ class TaskDoc(StructureMetadata, extra="allow"):
         description="Identifier for this calculation; should provide rough information about the calculation origin and purpose.",
     )
 
-    # Note that these private fields are needed because TaskDoc permits extra info
+    # Note that private fields are needed because TaskDoc permits extra info
     # added to the model, unlike TaskDocument. Because of this, when pydantic looks up
     # attrs on the model, it searches for them in the model extra dict first, and if it
     # can't find them, throws an AttributeError. It does this before looking to see if the
     # class has that attr defined on it.
 
-    # Private field used to store output of `TaskDoc.calc_type`
-    _calc_type: Optional[CalcType] = PrivateAttr(None)
-    # Private field used to store output of `TaskDoc.run_type`
-    _run_type: Optional[RunType] = PrivateAttr(None)
-    # Private field used to store output of `TaskDoc.structure_entry`.
-    _structure_entry: Optional[ComputedStructureEntry] = PrivateAttr(None)
+    # _structure_entry: Optional[ComputedStructureEntry] = PrivateAttr(None)
 
     def model_post_init(self, __context: Any) -> None:
-        # Needed for compatibility with TaskDocument
-        if self.task_type is None:
-            self.task_type = task_type(self.orig_inputs)
+        # Always refresh task_type, calc_type, run_type
+        # See, e.g. https://github.com/materialsproject/emmet/issues/960
+        # where run_type's were set incorrectly in older versions of TaskDoc
 
-        if isinstance(self.task_type, CalcType):
-            # For a while, the TaskDoc.task_type was allowed to be a CalcType or TaskType
-            # For backwards compatibility with TaskDocument, ensure that isinstance(TaskDoc.task_type, TaskType)
-            temp = str(self.task_type).split(" ")
-            self._run_type = RunType(temp[0])
-            self.task_type = TaskType(" ".join(temp[1:]))
+        # To determine task and run type, we search for input sets in this order
+        # of precedence: calcs_reversed, inputs, orig_inputs
+        for inp_set in [self.calcs_reversed[0].input, self.input, self.orig_inputs]:
+            if inp_set is not None:
+                break
+        self.task_type = task_type(inp_set)
+        self.run_type = self._get_run_type(self.calcs_reversed)
+        self.calc_type = self._get_calc_type(self.calcs_reversed, inp_set)
 
         # TODO: remove after imposing TaskDoc schema on older tasks in collection
         if self.structure is None:
@@ -727,10 +720,11 @@ class TaskDoc(StructureMetadata, extra="allow"):
         }
         return ComputedEntry.from_dict(entry_dict)
 
-    @property
-    def calc_type(self) -> CalcType:
-        """
-        Get the calc type for this TaskDoc.
+    @staticmethod
+    def _get_calc_type(
+        calcs_reversed: list[Calculation], orig_inputs: OrigInputs
+    ) -> CalcType:
+        """Get the calc type from calcs_reversed.
 
         Returns
         --------
@@ -738,23 +732,26 @@ class TaskDoc(StructureMetadata, extra="allow"):
             The type of calculation.
         """
         inputs = (
-            self.calcs_reversed[0].input.model_dump()
-            if len(self.calcs_reversed) > 0
-            else self.orig_inputs
+            calcs_reversed[0].input.model_dump()
+            if len(calcs_reversed) > 0
+            else orig_inputs
         )
-        params = self.calcs_reversed[0].input.parameters
-        incar = self.calcs_reversed[0].input.incar
+        params = calcs_reversed[0].input.parameters
+        incar = calcs_reversed[0].input.incar
+        return calc_type(inputs, {**params, **incar})
 
-        self._calc_type = calc_type(inputs, {**params, **incar})
-        return self._calc_type
+    @staticmethod
+    def _get_run_type(calcs_reversed: list[Calculation]) -> RunType:
+        """Get the run type from calcs_reversed.
 
-    @property
-    def run_type(self) -> RunType:
-        params = self.calcs_reversed[0].input.parameters
-        incar = self.calcs_reversed[0].input.incar
-
-        self._run_type = run_type({**params, **incar})
-        return self._run_type
+        Returns
+        --------
+        RunType
+            The type of calculation.
+        """
+        params = calcs_reversed[0].input.parameters
+        incar = calcs_reversed[0].input.incar
+        return run_type({**params, **incar})
 
     @property
     def structure_entry(self) -> ComputedStructureEntry:
@@ -766,7 +763,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         ComputedStructureEntry
             The TaskDoc.entry with corresponding TaskDoc.structure added.
         """
-        self._structure_entry = ComputedStructureEntry(
+        return ComputedStructureEntry(
             structure=self.structure,
             energy=self.entry.energy,
             correction=self.entry.correction,
@@ -776,7 +773,6 @@ class TaskDoc(StructureMetadata, extra="allow"):
             data=self.entry.data,
             entry_id=self.entry.entry_id,
         )
-        return self._structure_entry
 
 
 class TrajectoryDoc(BaseModel):
@@ -965,14 +961,17 @@ def _parse_additional_json(dir_name: Path) -> Dict[str, Any]:
 
 def _get_max_force(calc_doc: Calculation) -> Optional[float]:
     """Get max force acting on atoms from a calculation document."""
-    forces: Optional[Union[np.ndarray, List]] = calc_doc.output.ionic_steps[-1].forces
-    structure = calc_doc.output.structure
-    if forces:
-        forces = np.array(forces)
-        sdyn = structure.site_properties.get("selective_dynamics")
-        if sdyn:
-            forces[np.logical_not(sdyn)] = 0
-        return max(np.linalg.norm(forces, axis=1))
+    if calc_doc.output.ionic_steps:
+        forces: Optional[Union[np.ndarray, List]] = calc_doc.output.ionic_steps[
+            -1
+        ].forces
+        structure = calc_doc.output.structure
+        if forces:
+            forces = np.array(forces)
+            sdyn = structure.site_properties.get("selective_dynamics")
+            if sdyn:
+                forces[np.logical_not(sdyn)] = 0
+            return max(np.linalg.norm(forces, axis=1))
     return None
 
 
