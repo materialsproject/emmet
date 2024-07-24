@@ -28,11 +28,11 @@ backports-strenum==1.3.1
     # via griffe
 bcrypt==4.2.0
     # via paramiko
-boto3==1.34.146
+boto3==1.34.148
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.34.146
+botocore==1.34.148
     # via
     #   boto3
     #   s3transfer
@@ -88,7 +88,7 @@ dnspython==2.6.1
     #   pymongo
 email-validator==2.2.0
     # via fastapi
-emmet-core==0.84.2rc0
+emmet-core==0.84.2rc2
     # via emmet-api (setup.py)
 envier==0.5.2
     # via ddtrace
@@ -164,7 +164,7 @@ latexcodec==3.0.0
     # via pybtex
 livereload==2.7.0
     # via emmet-api (setup.py)
-maggma==0.69.0
+maggma==0.69.1
     # via emmet-api (setup.py)
 markdown==3.6
     # via
@@ -326,7 +326,7 @@ pygments==2.18.0
     # via
     #   mkdocs-material
     #   rich
-pymatgen==2024.4.13
+pymatgen==2024.7.18
     # via
     #   emmet-core
     #   pymatgen-analysis-alloys
@@ -385,7 +385,7 @@ requests==2.32.3
     # via pymatgen
 rich==13.7.1
     # via typer
-rpds-py==0.19.0
+rpds-py==0.19.1
     # via
     #   jsonschema
     #   referencing
@@ -448,7 +448,7 @@ typer==0.12.3
     # via fastapi-cli
 types-requests==2.32.0.20240712
     # via emmet-api (setup.py)
-types-setuptools==71.1.0.20240723
+types-setuptools==71.1.0.20240724
     # via emmet-api (setup.py)
 typing-extensions==4.12.2
     # via
