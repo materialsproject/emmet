@@ -72,7 +72,7 @@ packaging==21.3
     # via mkdocs
 pygments==2.13.0
     # via mkdocs-material
-pymdown-extensions==9.7
+pymdown-extensions==10.0
     # via
     #   mkdocs-material
     #   mkdocstrings
@@ -91,7 +91,7 @@ six==1.16.0
     # via
     #   livereload
     #   python-dateutil
-tornado==6.2
+tornado==6.4.1
     # via livereload
 watchdog==2.1.9
     # via mkdocs
