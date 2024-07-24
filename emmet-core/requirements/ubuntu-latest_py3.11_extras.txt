@@ -150,7 +150,7 @@ latexcodec==3.0.0
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
-lightning==2.3.3
+lightning==2.3.2
     # via matgl
 lightning-utilities==0.11.6
     # via

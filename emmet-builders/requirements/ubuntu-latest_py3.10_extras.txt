@@ -4,7 +4,7 @@
 #
 #    pip-compile --all-extras --output-file=requirements/ubuntu-latest_py3.10_extras.txt
 #
-aiohttp==3.9.5
+aiohttp==3.9.4
     # via fsspec
 aioitertools==0.11.0
     # via maggma
@@ -59,7 +59,7 @@ contourpy==1.2.1
     # via matplotlib
 coverage[toml]==7.6.0
     # via pytest-cov
-cryptography==43.0.0
+cryptography==42.0.4
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -344,7 +344,7 @@ nvidia-nvjitlink-cu12==12.5.82
     #   nvidia-cusparse-cu12
 nvidia-nvtx-cu12==12.1.105
     # via torch
-orjson==3.10.6
+orjson==3.9.15
     # via maggma
 packaging==24.1
     # via
@@ -376,7 +376,7 @@ patsy==0.5.6
     # via statsmodels
 phonopy==2.26.6
     # via matcalc
-pillow==10.4.0
+pillow==10.3.0
     # via
     #   matplotlib
     #   rdkit
@@ -428,7 +428,7 @@ pyflakes==3.2.0
     # via flake8
 pygments==2.18.0
     # via mkdocs-material
-pymatgen==2024.4.13
+pymatgen==2024.2.20
     # via
     #   chgnet
     #   emmet-core
@@ -447,7 +447,7 @@ pymdown-extensions==10.8.1
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.8.0
+pymongo==4.6.3
     # via
     #   maggma
     #   matminer
@@ -497,7 +497,7 @@ referencing==0.35.1
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.3
+requests==2.32.2
     # via
     #   dgl
     #   matminer
@@ -519,7 +519,7 @@ ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
 s3transfer==0.10.2
     # via boto3
-scikit-learn==1.5.1
+scikit-learn==1.5.0
     # via matminer
 scipy==1.14.0
     # via
@@ -595,7 +595,7 @@ torchmetrics==1.4.0.post0
     #   pytorch-lightning
 tornado==6.4.1
     # via livereload
-tqdm==4.66.4
+tqdm==4.66.3
     # via
     #   dgl
     #   lightning

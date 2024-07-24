@@ -21,7 +21,7 @@ attrs==23.2.0
     # via aiohttp
 bracex==2.4
     # via wcmatch
-certifi==2024.6.2
+certifi==2024.7.4
     # via requests
 cfgv==3.4.0
     # via pre-commit
@@ -134,7 +134,7 @@ latexcodec==3.0.0
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
-lightning==2.3.0
+lightning==2.3.2
     # via matgl
 lightning-utilities==0.11.3.post0
     # via
@@ -406,7 +406,7 @@ pyflakes==3.2.0
     # via flake8
 pygments==2.18.0
     # via mkdocs-material
-pymatgen==2024.4.13
+pymatgen==2024.7.18
     # via
     #   chgnet
     #   emmet-core
@@ -486,7 +486,7 @@ ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
 scikit-image==0.24.0
     # via pymatgen-analysis-defects
-scikit-learn==1.5.0
+scikit-learn==1.5.1
     # via matminer
 scipy==1.12.0
     # via
