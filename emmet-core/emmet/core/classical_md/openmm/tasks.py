@@ -5,6 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional, Union
 
+import openmm
+from openmm import XmlSerializer
+from openmm.app import Simulation
 import pandas as pd  # type: ignore[import-untyped]
 from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
 from pydantic import BaseModel, Field
@@ -236,3 +239,40 @@ class OpenMMTaskDocument(ClassicalMDTaskDocument):
         description="Detailed data for each OpenMM calculation contributing to the "
         "task document.",
     )
+
+
+class FauxInterchange(BaseModel):
+    """An object to sit in the place of the Interchance object
+    and serialize the OpenMM system, topology, and state."""
+
+    system: str = Field(None, description="An XML file representing the OpenMM system.")
+    state: str = Field(
+        None,
+        description="An XML file representing the OpenMM state.",
+    )
+    topology: str = Field(
+        None,
+        description="A JSON file representing an OpenFF topology object."
+        "This must correspond to the atom ordering in the system.",
+    )
+
+    def to_openmm_simulation(
+        self,
+        integrator: openmm.Integrator,
+        platform: openmm.Platform,
+        platformProperties: dict[str, str],
+    ):
+        from openff.toolkit import Topology
+
+        system = XmlSerializer.deserialize(self.system)
+        state = XmlSerializer.deserialize(self.state)
+        topology = Topology.from_json(self.topology).to_openmm()
+        simulation = Simulation(
+            topology,
+            system,
+            integrator,
+            platform,
+            platformProperties,
+        )
+        simulation.context.setState(state)
+        return simulation
