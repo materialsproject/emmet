@@ -79,7 +79,7 @@ class ElectrolyteBuilder(Builder):
     #     for split in grouper(keys, N):
     #         yield {"query": {self.materials.key: {"$in": list(split)}}}
 
-    def get_items(self):
+    def get_items(self, local_trajectories=False):
         self.logger.info("Electrolyte builder started.")
 
         hosts = self.md_docs.query(self.query, ["hosts"])
@@ -97,7 +97,9 @@ class ElectrolyteBuilder(Builder):
             len_calcs = [len(job["output"]["calcs_reversed"] or []) for job in jobs]
             last_job = jobs[np.argmax(len_calcs)]
 
-            insert_blobs(self.blobs, last_job["output"])
+            insert_blobs(
+                self.blobs, last_job["output"], include_traj=not local_trajectories
+            )
 
             items.append(last_job)
 
@@ -107,7 +109,7 @@ class ElectrolyteBuilder(Builder):
         # query will be ignored
         return
 
-    def process_items(self, items):
+    def process_items(self, items, local_trajectories=False):
         self.logger.info(f"Processing {len(items)} materials for electrolyte builder.")
 
         processed_items = []
@@ -120,11 +122,15 @@ class ElectrolyteBuilder(Builder):
             interchange_str = task_doc.interchange.decode("utf-8")
             interchange = Interchange.parse_raw(interchange_str)
 
-            # write the trajectory to a file
-            traj_file = tempfile.NamedTemporaryFile()
-            traj_path = Path(traj_file.name)
-            with open(traj_path, "wb") as f:
-                f.write(calc.output.traj_blob)
+            if local_trajectories:
+                traj_path = Path(calc.output.dir_name) / calc.output.traj_file
+            else:
+                # write the trajectory to a file
+                # TODO: will the temp file get cleaned up here?
+                traj_file = tempfile.NamedTemporaryFile()
+                traj_path = Path(traj_file.name)
+                with open(traj_path, "wb") as f:
+                    f.write(calc.output.traj_blob)
             u = create_universe(
                 interchange,
                 task_doc.molecule_specs,
@@ -185,6 +191,9 @@ class ElectrolyteBuilder(Builder):
 
         This is useful if you want to analyze a small number of systems
         without running the whole build pipeline.
+
+        To get a solute, call create_solute using the universe. See
+        the body of process_items for the appropriate syntax.
 
         Args:
             job_uuid: str

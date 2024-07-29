@@ -12,7 +12,17 @@ from transport_analysis.viscosity import ViscosityHelfand
 class SolventBenchmarkingDoc(BaseModel, arbitrary_types_allowed=True):
     density: Optional[float] = Field(None, description="Density of the solvent")
 
-    viscosity: Optional[float] = Field(None, description="Viscosity of the solvent")
+    viscosity_values: Optional[list[float]] = Field(
+        None, description="Viscosity function over time"
+    )
+
+    viscosity_times: Optional[list[float]] = Field(
+        None, description="Timeseries for viscosity function"
+    )
+
+    viscosity_coefficient: Optional[float] = Field(
+        None, description="Viscosity coefficient of the solvent"
+    )
 
     dielectric: Optional[float] = Field(
         None, description="Dielectric constant of the solvent"
@@ -48,16 +58,19 @@ class SolventBenchmarkingDoc(BaseModel, arbitrary_types_allowed=True):
             eps = None
 
         if u.atoms.ts.has_velocities:
+            # TODO: rewrite viscosity data and reconsider names
             viscosity_helfand = ViscosityHelfand(u.atoms, temp_avg=temperature)
             viscosity_helfand.run()
-            viscosity = viscosity_helfand.results.visc_by_particle.mean()
+            # viscosity = viscosity_helfand.results.visc_by_particle.mean()
 
         else:
-            viscosity = None
+            pass
 
         return cls(
             density=density,
-            viscosity=viscosity,
+            viscosity_values=viscosity_helfand.results.visc_by_particle.tolist(),
+            viscosity_times=viscosity_helfand.results.time.tolist(),
+            # viscosity=viscosity,
             dielectric=eps,
             job_uuid=job_uuid,
             flow_uuid=flow_uuid,
