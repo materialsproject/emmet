@@ -10,22 +10,31 @@ from openff.units import unit
 import openff.toolkit as tk
 from emmet.core.classical_md.solvation import SolvationDoc
 from emmet.core.classical_md import MoleculeSpec
+from emmet.core.classical_md import ClassicalMDTaskDocument
 from MDAnalysis import Universe
 import numpy as np
 
 
-def test_create_universe_and_solute(ec_emc_taskdoc, ec_emc_traj):
-    interchange = Interchange.parse_raw(ec_emc_taskdoc.interchange)
-    mol_specs = ec_emc_taskdoc.molecule_specs
+def test_create_universe_and_solute(test_dir):
+    system_dir = test_dir / "classical_md" / "water_system"
+
+    water_taskdoc = ClassicalMDTaskDocument.parse_file(system_dir / "taskdoc.json")
+    interchange = Interchange.parse_raw(water_taskdoc.interchange)
+    mol_specs = water_taskdoc.molecule_specs
 
     u = create_universe(
         interchange,
         mol_specs,
-        str(ec_emc_traj),
+        str(system_dir / "trajectory3.dcd"),
         traj_format="DCD",
     )
 
-    solute = create_solute(u, solute_name="Li", networking_solvents=["PF6"])
+    solute = create_solute(
+        u,
+        solute_name="water",
+        networking_solvents=["Na"],
+        fallback_radius=3,
+    )
 
     solvation_doc = SolvationDoc.from_solute(solute)
 
