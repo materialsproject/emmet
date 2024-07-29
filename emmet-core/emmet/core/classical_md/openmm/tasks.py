@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import io
 from pathlib import Path
 from typing import Optional, Union
 
 import openmm
 from openmm import XmlSerializer
 from openmm.app import Simulation
+from openmm.app.pdbxfile import PDBxFile
 import pandas as pd  # type: ignore[import-untyped]
 from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
 from pydantic import BaseModel, Field
@@ -241,7 +243,7 @@ class OpenMMTaskDocument(ClassicalMDTaskDocument):
     )
 
 
-class FauxInterchange(BaseModel):
+class OpenMMInterchange(BaseModel):
     """An object to sit in the place of the Interchance object
     and serialize the OpenMM system, topology, and state."""
 
@@ -252,7 +254,7 @@ class FauxInterchange(BaseModel):
     )
     topology: str = Field(
         None,
-        description="A JSON file representing an OpenFF topology object."
+        description="An XML file representing an OpenMM topology object."
         "This must correspond to the atom ordering in the system.",
     )
 
@@ -262,11 +264,12 @@ class FauxInterchange(BaseModel):
         platform: openmm.Platform,
         platformProperties: dict[str, str],
     ):
-        from openff.toolkit import Topology
-
         system = XmlSerializer.deserialize(self.system)
         state = XmlSerializer.deserialize(self.state)
-        topology = Topology.from_json(self.topology).to_openmm()
+        with io.StringIO(self.topology) as s:
+            pdb = PDBxFile(s)
+            topology = pdb.getTopology()
+
         simulation = Simulation(
             topology,
             system,
