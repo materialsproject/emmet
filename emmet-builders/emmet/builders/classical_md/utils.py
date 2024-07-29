@@ -46,6 +46,7 @@ def create_universe(
         format=traj_format,
     )
 
+    # TODO: this won't work
     mols = [mol for mol in interchange.topology.molecules]
 
     label_types(u, mols)
