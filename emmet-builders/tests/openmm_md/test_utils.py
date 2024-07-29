@@ -1,4 +1,4 @@
-from emmet.builders.classical_md.utils import (
+from emmet.builders.openmm.utils import (
     create_universe,
     create_solute,
     label_types,
@@ -8,15 +8,14 @@ from emmet.builders.classical_md.utils import (
 from openff.interchange import Interchange
 from openff.units import unit
 import openff.toolkit as tk
-from emmet.core.classical_md.solvation import SolvationDoc
-from emmet.core.classical_md import MoleculeSpec
-from emmet.core.classical_md import ClassicalMDTaskDocument
+from emmet.core.openff.solvation import SolvationDoc
+from emmet.core.openff import ClassicalMDTaskDocument, MoleculeSpec
 from MDAnalysis import Universe
 import numpy as np
 
 
 def test_create_universe_and_solute(test_dir):
-    system_dir = test_dir / "classical_md" / "water_system"
+    system_dir = test_dir / "openmm" / "water_system"
 
     water_taskdoc = ClassicalMDTaskDocument.parse_file(system_dir / "taskdoc.json")
     interchange = Interchange.parse_raw(water_taskdoc.interchange)

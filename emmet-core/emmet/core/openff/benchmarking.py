@@ -68,8 +68,8 @@ class SolventBenchmarkingDoc(BaseModel, arbitrary_types_allowed=True):
 
         return cls(
             density=density,
-            viscosity_values=viscosity_helfand.results.visc_by_particle.tolist(),
-            viscosity_times=viscosity_helfand.results.time.tolist(),
+            # viscosity_values=viscosity_helfand.results.visc_by_particle.tolist(),
+            # viscosity_times=viscosity_helfand.results.timeseries.tolist(),
             # viscosity=viscosity,
             dielectric=eps,
             job_uuid=job_uuid,

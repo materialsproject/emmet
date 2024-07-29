@@ -1,4 +1,4 @@
-from emmet.core.classical_md import MoleculeSpec
+from emmet.core.openff import MoleculeSpec
 from emmet.core.base import EmmetBaseModel
 
 

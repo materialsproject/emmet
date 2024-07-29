@@ -7,19 +7,19 @@ import numpy as np
 from maggma.core import Builder, Store
 from maggma.stores import MemoryStore
 from openff.interchange import Interchange
-from emmet.core.classical_md.openmm import OpenMMTaskDocument
-from emmet.builders.classical_md.utils import (
+from emmet.core.openmm import OpenMMTaskDocument
+from emmet.builders.openmm.utils import (
     create_universe,
     create_solute,
     identify_solute,
     identify_networking_solvents,
 )
-from emmet.core.classical_md.solvation import SolvationDoc
-from emmet.core.classical_md.benchmarking import SolventBenchmarkingDoc
-from emmet.core.classical_md.openmm.calculations import CalculationsDoc
+from emmet.core.openff.solvation import SolvationDoc
+from emmet.core.openff.benchmarking import SolventBenchmarkingDoc
+from emmet.core.openmm.calculations import CalculationsDoc
 from emmet.core.utils import jsanitize
 
-from emmet.builders.classical_md.openmm.openmm_utils import (
+from emmet.builders.openmm.openmm_utils import (
     insert_blobs,
     instantiate_universe,
 )

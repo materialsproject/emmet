@@ -5,11 +5,11 @@ from solvation_analysis.solute import Solute
 import numpy as np
 
 from maggma.stores import MemoryStore, JSONStore
-from emmet.builders.classical_md.openmm.core import (
+from emmet.builders.openmm.core import (
     ElectrolyteBuilder,
     BenchmarkingBuilder,
 )
-from emmet.builders.classical_md.utils import (
+from emmet.builders.openmm.utils import (
     create_solute,
     identify_solute,
     identify_networking_solvents,
@@ -36,7 +36,7 @@ def water_stores(test_dir, tmp_path):
     # intended to only be run locally in a dev environment
     recreate_input = False
 
-    stores_dir = test_dir / "classical_md" / "water_stores"
+    stores_dir = test_dir / "openmm" / "water_stores"
 
     read_only = not recreate_input
     md_doc_store = JSONStore(
@@ -47,9 +47,9 @@ def water_stores(test_dir, tmp_path):
     )
 
     if recreate_input:
-        from atomate2.classical_md.core import generate_interchange
-        from atomate2.classical_md.utils import create_mol_spec
-        from atomate2.classical_md.openmm.jobs import NVTMaker, NPTMaker
+        from atomate2.openff.core import generate_interchange
+        from atomate2.openff.utils import create_mol_spec
+        from atomate2.openmm.jobs import NVTMaker, NPTMaker
         from jobflow import run_locally, JobStore
 
         # delete old stores
@@ -98,7 +98,7 @@ def cco_stores(test_dir, tmp_path):
     # intended to only be run locally in a dev environment
     recreate_input = False
 
-    stores_dir = test_dir / "classical_md" / "cco_stores"
+    stores_dir = test_dir / "openmm" / "cco_stores"
 
     read_only = not recreate_input
     md_doc_store = JSONStore(
@@ -109,9 +109,9 @@ def cco_stores(test_dir, tmp_path):
     )
 
     if recreate_input:
-        from atomate2.classical_md.core import generate_interchange
-        from atomate2.classical_md.utils import create_mol_spec
-        from atomate2.classical_md.openmm.jobs import NVTMaker
+        from atomate2.openff.core import generate_interchange
+        from atomate2.openff.utils import create_mol_spec
+        from atomate2.openmm.jobs import NVTMaker
         from jobflow import run_locally, JobStore
 
         # delete old stores
@@ -196,8 +196,10 @@ def test_electrolyte_builder_local(
     items = builder.get_items(local_trajectories=True)
 
     # needed because files are generated locally
-    for calc in items[0]["output"]["calcs_reversed"]:
-        calc["dir_name"] = str(test_dir / "classical_md" / "water_system")
+    for item in items:
+        for calc in item["output"]["calcs_reversed"]:
+            calc["dir_name"] = str(test_dir / "openmm" / "water_system")
+            calc["output"]["dir_name"] = str(test_dir / "openmm" / "water_system")
 
     processed_docs = builder.process_items(items, local_trajectories=True)
     builder.update_targets(processed_docs)

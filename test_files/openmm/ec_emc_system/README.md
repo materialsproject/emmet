@@ -4,11 +4,11 @@
 Executed on Perlmutter
 
 ```python
-from atomate2.classical_md.core import generate_interchange
+from atomate2.openff.core import generate_interchange
 import numpy as np
 from jobflow import run_locally, Flow
-from atomate2.classical_md.openmm.flows.core import AnnealMaker, ProductionMaker
-from atomate2.classical_md.openmm.jobs.core import (
+from atomate2.openmm.flows.core import AnnealMaker, ProductionMaker
+from atomate2.openmm.jobs.core import (
     EnergyMinimizationMaker,
     NPTMaker,
     NVTMaker,

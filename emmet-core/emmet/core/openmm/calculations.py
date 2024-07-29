@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from emmet.core.classical_md.openmm.tasks import Calculation
+from emmet.core.openmm.tasks import Calculation
 
 
 class CalculationsDoc(BaseModel):

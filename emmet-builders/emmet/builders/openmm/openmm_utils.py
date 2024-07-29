@@ -4,8 +4,8 @@ from pathlib import Path
 from openff.interchange import Interchange
 from maggma.core import Store
 
-from emmet.core.classical_md.openmm import OpenMMTaskDocument
-from emmet.builders.classical_md.utils import create_universe
+from emmet.core.openmm import OpenMMTaskDocument
+from emmet.builders.openmm.utils import create_universe
 
 
 def insert_blobs(blobs_store: Store, task_doc: dict, include_traj: bool = True):
