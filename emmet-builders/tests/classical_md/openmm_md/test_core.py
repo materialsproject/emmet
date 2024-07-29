@@ -70,19 +70,16 @@ def water_stores(test_dir, tmp_path):
         ).make(
             interchange_job.output.interchange,
             prev_task=interchange_job.output,
-            output_dir=tmp_path,
         )
 
         nvt2 = NVTMaker(name="nvt2", n_steps=100, embed_traj=True).make(
             npt1.output.interchange,
             prev_task=npt1.output,
-            output_dir=tmp_path,
         )
 
         nvt3 = NVTMaker(name="nvt3", n_steps=100).make(
             nvt2.output.interchange,
             prev_task=nvt2.output,
-            output_dir=tmp_path,
         )
 
         wf = [interchange_job, npt1, nvt2, nvt3]
@@ -90,6 +87,7 @@ def water_stores(test_dir, tmp_path):
             wf,
             store=JobStore(md_doc_store, additional_stores={"data": blob_store}),
             ensure_success=True,
+            root_dir=tmp_path,
         )
 
     return md_doc_store, blob_store
@@ -137,7 +135,6 @@ def cco_stores(test_dir, tmp_path):
         ).make(
             interchange_job.output.interchange,
             prev_task=interchange_job.output,
-            output_dir=tmp_path,
         )
 
         nvt2 = NVTMaker(
@@ -151,7 +148,6 @@ def cco_stores(test_dir, tmp_path):
         ).make(
             nvt1.output.interchange,
             prev_task=nvt1.output,
-            output_dir=tmp_path,
         )
 
         wf = [
@@ -163,6 +159,7 @@ def cco_stores(test_dir, tmp_path):
             wf,
             store=JobStore(md_doc_store, additional_stores={"data": blob_store}),
             ensure_success=True,
+            root_dir=tmp_path,
         )
 
     return md_doc_store, blob_store
@@ -177,6 +174,32 @@ def test_electrolyte_builder(water_stores, solute_store, calculations_store):
     builder.connect()
     items = builder.get_items()
     processed_docs = builder.process_items(items)
+    builder.update_targets(processed_docs)
+
+    solute_doc = solute_store.query_one()
+    assert len(solute_doc["coordination_numbers"]) == 3
+
+    calculations_doc = calculations_store.query_one()
+    assert calculations_doc["calc_types"] == ["NPTMaker", "NVTMaker", "NVTMaker"]
+    assert calculations_doc["steps"] == [100, 100, 100]
+
+
+def test_electrolyte_builder_local(
+    water_stores, solute_store, calculations_store, test_dir
+):
+    doc_store, blob_store = water_stores
+    builder = ElectrolyteBuilder(
+        doc_store, blob_store, solute_store, calculations_store
+    )
+
+    builder.connect()
+    items = builder.get_items(local_trajectories=True)
+
+    # needed because files are generated locally
+    for calc in items[0]["output"]["calcs_reversed"]:
+        calc["dir_name"] = str(test_dir / "classical_md" / "water_system")
+
+    processed_docs = builder.process_items(items, local_trajectories=True)
     builder.update_targets(processed_docs)
 
     solute_doc = solute_store.query_one()
