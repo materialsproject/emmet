@@ -4,7 +4,9 @@
 #
 #    pip-compile --all-extras --output-file=requirements/ubuntu-latest_py3.11_extras.txt
 #
-aiohttp==3.9.4
+aiohappyeyeballs==2.3.2
+    # via aiohttp
+aiohttp==3.10.0
     # via fsspec
 aioitertools==0.11.0
     # via maggma
@@ -25,9 +27,9 @@ attrs==23.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.34.148
+boto3==1.34.151
     # via maggma
-botocore==1.34.148
+botocore==1.34.151
     # via
     #   boto3
     #   s3transfer
@@ -55,7 +57,7 @@ contourpy==1.2.1
     # via matplotlib
 coverage[toml]==7.6.0
     # via pytest-cov
-cryptography==42.0.4
+cryptography==43.0.0
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -210,7 +212,7 @@ mkdocs==1.6.0
     #   mkdocstrings
 mkdocs-autorefs==1.0.1
     # via mkdocstrings
-mkdocs-awesome-pages-plugin==2.9.2
+mkdocs-awesome-pages-plugin==2.9.3
     # via emmet-builders (setup.py)
 mkdocs-get-deps==0.2.0
     # via mkdocs
@@ -224,17 +226,17 @@ mkdocs-material-extensions==1.3.1
     #   mkdocs-material
 mkdocs-minify-plugin==0.8.0
     # via emmet-builders (setup.py)
-mkdocstrings[python]==0.25.1
+mkdocstrings[python]==0.25.2
     # via
     #   emmet-builders (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.10.5
+mkdocstrings-python==1.10.7
     # via mkdocstrings
 mmtf-python==1.1.3
     # via mdanalysis
 mongomock==4.1.2
     # via maggma
-monty==2024.7.12
+monty==2024.7.30
     # via
     #   emmet-core
     #   maggma
@@ -248,7 +250,7 @@ mp-api==0.41.2
     # via robocrys
 mpmath==1.3.0
     # via sympy
-mrcfile==1.5.2
+mrcfile==1.5.3
     # via griddataformats
 msgpack==1.0.8
     # via
@@ -338,7 +340,7 @@ nvidia-nvjitlink-cu12==12.5.82
     #   nvidia-cusparse-cu12
 nvidia-nvtx-cu12==12.1.105
     # via torch
-orjson==3.9.15
+orjson==3.10.6
     # via maggma
 packaging==24.1
     # via
@@ -370,7 +372,7 @@ patsy==0.5.6
     # via statsmodels
 phonopy==2.26.6
     # via matcalc
-pillow==10.3.0
+pillow==10.4.0
     # via
     #   matplotlib
     #   rdkit
@@ -385,7 +387,7 @@ plotly==5.23.0
     #   solvation-analysis
 pluggy==1.5.0
     # via pytest
-pre-commit==3.7.1
+pre-commit==3.8.0
     # via emmet-builders (setup.py)
 psutil==6.0.0
     # via dgl
@@ -410,7 +412,7 @@ pydantic==2.8.2
     #   pydantic-settings
 pydantic-core==2.20.1
     # via pydantic
-pydantic-settings==2.3.4
+pydantic-settings==2.4.0
     # via
     #   emmet-core
     #   maggma
@@ -422,7 +424,7 @@ pyflakes==3.2.0
     # via flake8
 pygments==2.18.0
     # via mkdocs-material
-pymatgen==2024.2.20
+pymatgen==2024.4.13
     # via
     #   chgnet
     #   emmet-core
@@ -437,11 +439,11 @@ pymatgen-analysis-alloys==0.0.6
     # via emmet-core
 pymatgen-analysis-diffusion==2023.8.15
     # via emmet-core
-pymdown-extensions==10.8.1
+pymdown-extensions==10.9
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.6.3
+pymongo==4.8.0
     # via
     #   maggma
     #   matminer
@@ -449,7 +451,7 @@ pynacl==1.5.0
     # via paramiko
 pyparsing==3.1.2
     # via matplotlib
-pytest==8.3.1
+pytest==8.3.2
     # via
     #   emmet-builders (setup.py)
     #   pytest-cov
@@ -491,7 +493,7 @@ referencing==0.35.1
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.2
+requests==2.32.3
     # via
     #   dgl
     #   matminer
@@ -513,7 +515,7 @@ ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
 s3transfer==0.10.2
     # via boto3
-scikit-learn==1.5.0
+scikit-learn==1.5.1
     # via matminer
 scipy==1.14.0
     # via
@@ -562,7 +564,7 @@ sympy==1.13.1
     #   torch
 tabulate==0.9.0
     # via pymatgen
-tenacity==8.5.0
+tenacity==9.0.0
     # via plotly
 threadpoolctl==3.5.0
     # via
@@ -584,7 +586,7 @@ torchmetrics==1.4.0.post0
     #   pytorch-lightning
 tornado==6.4.1
     # via livereload
-tqdm==4.66.3
+tqdm==4.66.4
     # via
     #   dgl
     #   lightning
@@ -599,7 +601,7 @@ typeguard==4.3.0
     # via inflect
 types-requests==2.32.0.20240712
     # via emmet-builders (setup.py)
-types-setuptools==71.1.0.20240724
+types-setuptools==71.1.0.20240726
     # via emmet-builders (setup.py)
 typing-extensions==4.12.2
     # via
