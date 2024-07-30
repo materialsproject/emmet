@@ -7,7 +7,6 @@ import numpy as np
 from maggma.core import Builder, Store
 from maggma.stores import MemoryStore
 from openff.interchange import Interchange
-from emmet.core.openmm import OpenMMTaskDocument
 from emmet.builders.openmm.utils import (
     create_universe,
     create_solute,
@@ -16,6 +15,7 @@ from emmet.builders.openmm.utils import (
 )
 from emmet.core.openff.solvation import SolvationDoc
 from emmet.core.openff.benchmarking import SolventBenchmarkingDoc
+from emmet.core.openmm import OpenMMTaskDocument, OpenMMInterchange
 from emmet.core.openmm.calculations import CalculationsDoc
 from emmet.core.utils import jsanitize
 
@@ -137,7 +137,11 @@ class ElectrolyteBuilder(Builder):
 
             # create interchange
             interchange_str = task_doc.interchange.decode("utf-8")
-            interchange = Interchange.parse_raw(interchange_str)
+            try:
+                interchange = Interchange.parse_raw(interchange_str)
+            except:  # noqa: E722
+                # parse with openmm instead
+                interchange = OpenMMInterchange.parse_raw(interchange_str)
 
             if local_trajectories:
                 traj_path = Path(calc.output.dir_name) / calc.output.traj_file
