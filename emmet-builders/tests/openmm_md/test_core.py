@@ -50,6 +50,7 @@ def water_stores(test_dir, tmp_path):
         from atomate2.openff.core import generate_interchange
         from atomate2.openff.utils import create_mol_spec
         from atomate2.openmm.jobs import NVTMaker, NPTMaker
+        from atomate2.openmm.flows import OpenMMFlowMaker
         from jobflow import run_locally, JobStore
 
         # delete old stores
@@ -64,27 +65,22 @@ def water_stores(test_dir, tmp_path):
         ]
 
         interchange_job = generate_interchange(mol_specs, 0.8)
-
-        npt1 = NPTMaker(
-            n_steps=100, traj_interval=10, state_interval=10, name="npt1"
-        ).make(
+        production_maker = OpenMMFlowMaker(
+            name="test_production",
+            tags=["test"],
+            makers=[
+                NPTMaker(name="npt1", n_steps=100, traj_interval=10, state_interval=10),
+                NVTMaker(name="nvt2", n_steps=100, embed_traj=True),
+                NVTMaker(name="nvt3", n_steps=100),
+            ],
+        )
+        production_flow = production_maker.make(
             interchange_job.output.interchange,
             prev_task=interchange_job.output,
         )
 
-        nvt2 = NVTMaker(name="nvt2", n_steps=100, embed_traj=True).make(
-            npt1.output.interchange,
-            prev_task=npt1.output,
-        )
-
-        nvt3 = NVTMaker(name="nvt3", n_steps=100).make(
-            nvt2.output.interchange,
-            prev_task=nvt2.output,
-        )
-
-        wf = [interchange_job, npt1, nvt2, nvt3]
         run_locally(
-            wf,
+            [interchange_job, production_flow],
             store=JobStore(md_doc_store, additional_stores={"data": blob_store}),
             ensure_success=True,
             root_dir=tmp_path,
@@ -111,6 +107,7 @@ def cco_stores(test_dir, tmp_path):
     if recreate_input:
         from atomate2.openff.core import generate_interchange
         from atomate2.openff.utils import create_mol_spec
+        from atomate2.openmm.flows import OpenMMFlowMaker
         from atomate2.openmm.jobs import NVTMaker
         from jobflow import run_locally, JobStore
 
@@ -123,7 +120,6 @@ def cco_stores(test_dir, tmp_path):
         ]
 
         interchange_job = generate_interchange(mol_specs, 0.8)
-
         nvt1 = NVTMaker(
             name="nvt1",
             n_steps=200,
@@ -132,11 +128,7 @@ def cco_stores(test_dir, tmp_path):
             embed_traj=True,
             report_velocities=True,
             traj_file_type="h5md",
-        ).make(
-            interchange_job.output.interchange,
-            prev_task=interchange_job.output,
         )
-
         nvt2 = NVTMaker(
             name="nvt2",
             n_steps=200,
@@ -145,18 +137,21 @@ def cco_stores(test_dir, tmp_path):
             embed_traj=True,
             report_velocities=True,
             traj_file_type="h5md",
-        ).make(
-            nvt1.output.interchange,
-            prev_task=nvt1.output,
         )
 
-        wf = [
-            interchange_job,
-            nvt1,
-            nvt2,
-        ]
+        interchange_job = generate_interchange(mol_specs, 0.8)
+        production_maker = OpenMMFlowMaker(
+            name="test_production",
+            tags=["test"],
+            makers=[nvt1, nvt2],
+        )
+        production_flow = production_maker.make(
+            interchange_job.output.interchange,
+            prev_task=interchange_job.output,
+        )
+
         run_locally(
-            wf,
+            [interchange_job, production_flow],
             store=JobStore(md_doc_store, additional_stores={"data": blob_store}),
             ensure_success=True,
             root_dir=tmp_path,
@@ -227,6 +222,8 @@ def test_benchmarking_builder(cco_stores, benchmarking_store):
 
     benchmarking_doc = benchmarking_store.query_one()
     assert np.isclose(benchmarking_doc["density"], 0.8)
+
+    # TODO: write more robust testing
 
 
 def test_instantiate_universe(water_stores, solute_store, tmp_path):
