@@ -120,30 +120,22 @@ def cco_stores(test_dir, tmp_path):
         ]
 
         interchange_job = generate_interchange(mol_specs, 0.8)
-        nvt1 = NVTMaker(
-            name="nvt1",
-            n_steps=200,
-            traj_interval=10,
-            state_interval=10,
-            embed_traj=True,
-            report_velocities=True,
-            traj_file_type="h5md",
-        )
-        nvt2 = NVTMaker(
-            name="nvt2",
-            n_steps=200,
-            traj_interval=10,
-            state_interval=10,
-            embed_traj=True,
-            report_velocities=True,
-            traj_file_type="h5md",
-        )
 
-        interchange_job = generate_interchange(mol_specs, 0.8)
         production_maker = OpenMMFlowMaker(
             name="test_production",
             tags=["test"],
-            makers=[nvt1, nvt2],
+            makers=[
+                NVTMaker(
+                    name="nvt1",
+                    n_steps=200,
+                    traj_interval=10,
+                    state_interval=10,
+                    embed_traj=True,
+                    report_velocities=True,
+                    traj_file_type="h5md",
+                ),
+                NVTMaker(name="nvt2", n_steps=200),
+            ],
         )
         production_flow = production_maker.make(
             interchange_job.output.interchange,
