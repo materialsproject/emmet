@@ -152,6 +152,74 @@ def cco_stores(test_dir, tmp_path):
     return md_doc_store, blob_store
 
 
+@pytest.fixture
+def opls_stores(test_dir, tmp_path):
+    # intended to only be run locally in a dev environment
+    recreate_input = False
+
+    stores_dir = test_dir / "openmm" / "opls_stores"
+
+    read_only = not recreate_input
+    md_doc_store = JSONStore(
+        str(stores_dir / "docs_store.json"), read_only=read_only, key="uuid"
+    )
+    blob_store = JSONStore(
+        str(stores_dir / "blob_store.json"), read_only=read_only, key="blob_uuid"
+    )
+
+    if recreate_input:
+        from atomate2.openmm.jobs.opls import generate_openmm_interchange
+        from atomate2.openff.utils import create_mol_spec
+        from atomate2.openmm.flows import OpenMMFlowMaker
+        from atomate2.openmm.jobs import NVTMaker, EnergyMinimizationMaker
+        from jobflow import run_locally, JobStore
+
+        # delete old stores
+        for store_file in stores_dir.glob("*.json"):
+            store_file.unlink()
+
+        opls_xmls = test_dir / "openmm" / "opls_xml_files"
+
+        mol_specs = [
+            create_mol_spec("CCO", 10, name="ethanol", charge_method="mmff94"),
+            create_mol_spec("CO", 300, name="water", charge_method="mmff94"),
+        ]
+
+        ff_xmls = [
+            (opls_xmls / "CCO.xml").read_text(),
+            (opls_xmls / "CO.xml").read_text(),
+        ]
+
+        interchange_job = generate_openmm_interchange(mol_specs, 1.0, ff_xmls)
+        production_maker = OpenMMFlowMaker(
+            name="test_production",
+            tags=["test"],
+            makers=[
+                EnergyMinimizationMaker(name="em1"),
+                NVTMaker(
+                    name="npt1",
+                    n_steps=100,
+                    traj_interval=10,
+                    state_interval=10,
+                    embed_traj=True,
+                ),
+            ],
+        )
+        production_flow = production_maker.make(
+            interchange_job.output.interchange,
+            prev_task=interchange_job.output,
+        )
+
+        run_locally(
+            [interchange_job, production_flow],
+            store=JobStore(md_doc_store, additional_stores={"data": blob_store}),
+            ensure_success=True,
+            root_dir=tmp_path,
+        )
+
+    return md_doc_store, blob_store
+
+
 def test_electrolyte_builder(water_stores, solute_store, calculations_store):
     doc_store, blob_store = water_stores
     builder = ElectrolyteBuilder(
