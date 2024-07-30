@@ -109,7 +109,24 @@ class ElectrolyteBuilder(Builder):
         # query will be ignored
         return
 
-    def process_items(self, items, local_trajectories=False):
+    def process_items(
+        self,
+        items: List,
+        local_trajectories: bool = False,
+        rebase_traj_path: tuple[Path, Path] = None,
+    ):
+        """
+
+        Parameters
+        ----------
+        items: the items from get_items
+        local_trajectories: whether to look for files locally in lieu of downloading
+        rebase_traj_path: useful if the launch directory has moved
+
+        Returns
+        -------
+
+        """
         self.logger.info(f"Processing {len(items)} materials for electrolyte builder.")
 
         processed_items = []
@@ -124,6 +141,9 @@ class ElectrolyteBuilder(Builder):
 
             if local_trajectories:
                 traj_path = Path(calc.output.dir_name) / calc.output.traj_file
+                if rebase_traj_path:
+                    old, new = rebase_traj_path
+                    traj_path = new / traj_path.relative_to(old)
             else:
                 # write the trajectory to a file
                 # TODO: will the temp file get cleaned up here?
