@@ -1,10 +1,13 @@
 import warnings
 from typing import Optional, Union
 from pathlib import Path
+import io
 
 import numpy as np
 from MDAnalysis import Universe
 from solvation_analysis.solute import Solute
+
+from openmm.app.pdbfile import PDBFile
 
 from openff.interchange import Interchange
 import openff.toolkit as tk
@@ -12,11 +15,11 @@ import openff.toolkit as tk
 from maggma.core import Store
 
 from emmet.core.openff import MoleculeSpec
-from emmet.core.openmm import OpenMMTaskDocument
+from emmet.core.openmm import OpenMMTaskDocument, OpenMMInterchange
 
 
 def create_universe(
-    interchange: Interchange,
+    interchange: Interchange | OpenMMInterchange,
     mol_specs: Optional[list[MoleculeSpec]],
     traj_file: Union[Path, str],
     traj_format=None,
@@ -40,17 +43,32 @@ def create_universe(
     Universe
         The created Universe object.
     """
-    # TODO: profile this
-    topology = interchange.to_openmm_topology()
+    if isinstance(interchange, Interchange):
+        openff_topology = interchange.topology
+        openmm_topology = openff_topology.to_openmm()
+    else:
+        with io.StringIO(interchange.topology) as s:
+            pdb = PDBFile(s)
+            openmm_topology = pdb.getTopology()
+        if mol_specs is None:
+            raise ValueError(
+                "Molecule specs must be provided if using OpenMMInterchange."
+            )
+        unique_molecules = [
+            tk.Molecule.from_json(spec.openff_mol) for spec in mol_specs
+        ]
+        openff_topology = tk.Topology.from_openmm(
+            openmm_topology,
+            unique_molecules=unique_molecules,
+        )
+
+    mols = [mol for mol in openff_topology.molecules]
 
     u = Universe(
-        topology,
+        openmm_topology,
         str(traj_file),
         format=traj_format,
     )
-
-    # TODO: this won't work
-    mols = [mol for mol in interchange.topology.molecules]
 
     label_types(u, mols)
     label_resnames(u, mols, mol_specs)
