@@ -9,7 +9,7 @@ from typing import Optional, Union
 import openmm
 from openmm import XmlSerializer
 from openmm.app import Simulation
-from openmm.app.pdbxfile import PDBxFile
+from openmm.app.pdbfile import PDBFile
 import pandas as pd  # type: ignore[import-untyped]
 from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
 from pydantic import BaseModel, Field
@@ -267,7 +267,7 @@ class OpenMMInterchange(BaseModel):
         system = XmlSerializer.deserialize(self.system)
         state = XmlSerializer.deserialize(self.state)
         with io.StringIO(self.topology) as s:
-            pdb = PDBxFile(s)
+            pdb = PDBFile(s)
             topology = pdb.getTopology()
 
         simulation = Simulation(
