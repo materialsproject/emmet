@@ -76,7 +76,7 @@ def water_stores(test_dir, tmp_path):
         )
         production_flow = production_maker.make(
             interchange_job.output.interchange,
-            prev_task=interchange_job.output,
+            prev_dir=interchange_job.output.dir_name,
         )
 
         run_locally(
@@ -139,7 +139,7 @@ def cco_stores(test_dir, tmp_path):
         )
         production_flow = production_maker.make(
             interchange_job.output.interchange,
-            prev_task=interchange_job.output,
+            prev_dir=interchange_job.output.dir_name,
         )
 
         run_locally(
@@ -207,7 +207,7 @@ def opls_stores(test_dir, tmp_path):
         )
         production_flow = production_maker.make(
             interchange_job.output.interchange,
-            prev_task=interchange_job.output,
+            prev_dir=interchange_job.output.dir_name,
         )
 
         run_locally(
