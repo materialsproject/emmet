@@ -104,6 +104,8 @@ idna==3.7
     #   email-validator
     #   httpx
     #   requests
+imageio==2.34.2
+    # via scikit-image
 importlib-metadata==8.0.0
     # via opentelemetry-api
 jinja2==3.1.4
@@ -124,6 +126,8 @@ kiwisolver==1.4.5
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
+lazy-loader==0.4
+    # via scikit-image
 maggma==0.69.1
     # via emmet-api (setup.py)
 markdown-it-py==3.0.0
@@ -141,24 +145,32 @@ monty==2024.7.30
     #   emmet-core
     #   maggma
     #   pymatgen
+mp-pyrho==0.4.4
+    # via pymatgen-analysis-defects
 mpmath==1.3.0
     # via sympy
 msgpack==1.0.8
     # via maggma
 networkx==3.3
-    # via pymatgen
+    # via
+    #   pymatgen
+    #   scikit-image
 numpy==1.26.4
     # via
     #   contourpy
     #   emmet-api (setup.py)
     #   emmet-core
+    #   imageio
     #   maggma
     #   matplotlib
     #   pandas
     #   pymatgen
+    #   pymatgen-analysis-defects
+    #   scikit-image
     #   scipy
     #   shapely
     #   spglib
+    #   tifffile
 opentelemetry-api==1.26.0
     # via ddtrace
 orjson==3.10.6
@@ -166,9 +178,11 @@ orjson==3.10.6
 packaging==24.1
     # via
     #   gunicorn
+    #   lazy-loader
     #   matplotlib
     #   mongomock
     #   plotly
+    #   scikit-image
 palettable==3.3.3
     # via pymatgen
 pandas==2.2.2
@@ -178,7 +192,10 @@ pandas==2.2.2
 paramiko==3.4.0
     # via sshtunnel
 pillow==10.4.0
-    # via matplotlib
+    # via
+    #   imageio
+    #   matplotlib
+    #   scikit-image
 plotly==5.23.0
     # via pymatgen
 protobuf==5.27.3
@@ -208,8 +225,12 @@ pygments==2.18.0
 pymatgen==2024.7.18
     # via
     #   emmet-core
+    #   mp-pyrho
     #   pymatgen-analysis-alloys
+    #   pymatgen-analysis-defects
 pymatgen-analysis-alloys==0.0.6
+    # via emmet-api (setup.py)
+pymatgen-analysis-defects==2024.7.19
     # via emmet-api (setup.py)
 pymongo==4.8.0
     # via maggma
@@ -257,8 +278,12 @@ ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
 s3transfer==0.10.2
     # via boto3
+scikit-image==0.24.0
+    # via pymatgen-analysis-defects
 scipy==1.14.0
-    # via pymatgen
+    # via
+    #   pymatgen
+    #   scikit-image
 sentinels==1.0.0
     # via mongomock
 setproctitle==1.3.3
@@ -291,6 +316,8 @@ tabulate==0.9.0
     # via pymatgen
 tenacity==9.0.0
     # via plotly
+tifffile==2024.7.24
+    # via scikit-image
 tqdm==4.66.4
     # via
     #   maggma
