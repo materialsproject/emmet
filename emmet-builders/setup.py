@@ -46,6 +46,7 @@ setup(
             "jinja2",
         ],
         "ml": ["emmet-core[ml]"],
+        "openmm": ["transport-analysis>=0.1.0"],
     },
     python_requires=">=3.9",
     license="modified BSD",
