@@ -4,7 +4,7 @@
 #
 #    pip-compile --all-extras --output-file=requirements/ubuntu-latest_py3.11_extras.txt
 #
-aiohappyeyeballs==2.3.3
+aiohappyeyeballs==2.3.4
     # via aiohttp
 aiohttp==3.10.0
     # via fsspec
