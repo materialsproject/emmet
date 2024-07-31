@@ -226,7 +226,7 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.0.8
     # via maggma
-mypy==1.11.0
+mypy==1.11.1
     # via emmet-api (setup.py)
 mypy-extensions==1.0.0
     # via
@@ -285,7 +285,7 @@ pluggy==1.5.0
     # via pytest
 pre-commit==3.8.0
     # via emmet-api (setup.py)
-protobuf==5.27.2
+protobuf==5.27.3
     # via ddtrace
 pybtex==0.24.0
     # via
