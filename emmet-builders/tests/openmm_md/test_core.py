@@ -239,6 +239,20 @@ def test_electrolyte_builder(water_stores, solute_store, calculations_store):
     assert calculations_doc["steps"] == [100, 100, 100]
 
 
+def test_electrolyte_builder_w_opls(opls_stores, benchmarking_store):
+    doc_store, blob_store = opls_stores
+    builder = BenchmarkingBuilder(doc_store, blob_store, benchmarking_store)
+
+    builder.connect()
+    items = builder.get_items()
+    processed_docs = builder.process_items(items)
+    builder.update_targets(processed_docs)
+
+    benchmarking_doc = benchmarking_store.query_one()
+
+    assert np.isclose(benchmarking_doc["density"], 1.0)
+
+
 def test_electrolyte_builder_local(
     water_stores, solute_store, calculations_store, test_dir
 ):
