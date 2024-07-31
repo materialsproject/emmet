@@ -185,7 +185,7 @@ pillow==10.4.0
     # via matplotlib
 plotly==5.23.0
     # via pymatgen
-protobuf==5.27.2
+protobuf==5.27.3
     # via ddtrace
 pybtex==0.24.0
     # via
