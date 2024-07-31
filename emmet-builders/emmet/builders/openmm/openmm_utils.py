@@ -4,8 +4,10 @@ from pathlib import Path
 from openff.interchange import Interchange
 from maggma.core import Store
 
-from emmet.core.openmm import OpenMMTaskDocument
+from emmet.core.openmm import OpenMMTaskDocument, OpenMMInterchange
 from emmet.builders.openmm.utils import create_universe
+
+import tempfile
 
 
 def insert_blobs(blobs_store: Store, task_doc: dict, include_traj: bool = True):
@@ -86,4 +88,40 @@ def instantiate_universe(
         task_doc.molecule_specs,
         traj_path,
         traj_format=traj_file_type,
+    )
+
+
+def resolve_traj_path(task_doc, local_trajectories, rebase_traj_path):
+    calc = task_doc.calcs_reversed[0]
+
+    if local_trajectories:
+        traj_file = calc.output.traj_file
+        traj_path = Path(calc.output.dir_name) / traj_file
+        if rebase_traj_path:
+            old, new = rebase_traj_path
+            traj_path = new / traj_path.relative_to(old)
+    else:
+        traj_file = tempfile.NamedTemporaryFile()
+        traj_path = Path(traj_file.name)
+        with open(traj_path, "wb") as f:
+            f.write(calc.output.traj_blob)
+    return traj_path, traj_file
+
+
+def task_doc_to_universe(task_doc, traj_path):
+    calc = task_doc.calcs_reversed[0]
+
+    # create interchange
+    interchange_str = task_doc.interchange.decode("utf-8")
+    try:
+        interchange = Interchange.parse_raw(interchange_str)
+    except:  # noqa: E722
+        # parse with openmm instead
+        interchange = OpenMMInterchange.parse_raw(interchange_str)
+
+    return create_universe(
+        interchange,
+        task_doc.molecule_specs,
+        traj_path,
+        traj_format=calc.input.traj_file_type,
     )

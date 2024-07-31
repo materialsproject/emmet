@@ -1,27 +1,26 @@
 from typing import Optional, List, Union
 from pathlib import Path
-import tempfile
 
 import numpy as np
 
 from maggma.core import Builder, Store
 from maggma.stores import MemoryStore
-from openff.interchange import Interchange
 from emmet.builders.openmm.utils import (
-    create_universe,
     create_solute,
     identify_solute,
     identify_networking_solvents,
 )
 from emmet.core.openff.solvation import SolvationDoc
 from emmet.core.openff.benchmarking import SolventBenchmarkingDoc
-from emmet.core.openmm import OpenMMTaskDocument, OpenMMInterchange
+from emmet.core.openmm import OpenMMTaskDocument
 from emmet.core.openmm.calculations import CalculationsDoc
 from emmet.core.utils import jsanitize
 
 from emmet.builders.openmm.openmm_utils import (
     insert_blobs,
     instantiate_universe,
+    resolve_traj_path,
+    task_doc_to_universe,
 )
 
 
@@ -133,34 +132,13 @@ class ElectrolyteBuilder(Builder):
         for item in items:
             # create task_doc
             task_doc = OpenMMTaskDocument.parse_obj(item["output"])
-            calc = task_doc.calcs_reversed[0]
 
-            # create interchange
-            interchange_str = task_doc.interchange.decode("utf-8")
-            try:
-                interchange = Interchange.parse_raw(interchange_str)
-            except:  # noqa: E722
-                # parse with openmm instead
-                interchange = OpenMMInterchange.parse_raw(interchange_str)
-
-            if local_trajectories:
-                traj_path = Path(calc.output.dir_name) / calc.output.traj_file
-                if rebase_traj_path:
-                    old, new = rebase_traj_path
-                    traj_path = new / traj_path.relative_to(old)
-            else:
-                # write the trajectory to a file
-                # TODO: will the temp file get cleaned up here?
-                traj_file = tempfile.NamedTemporaryFile()
-                traj_path = Path(traj_file.name)
-                with open(traj_path, "wb") as f:
-                    f.write(calc.output.traj_blob)
-            u = create_universe(
-                interchange,
-                task_doc.molecule_specs,
-                traj_path,
-                traj_format=calc.input.traj_file_type,
+            # _ is needed bc traj_path may be a tmpfile and a reference must be in scope
+            traj_path, _ = resolve_traj_path(
+                task_doc, local_trajectories, rebase_traj_path
             )
+
+            u = task_doc_to_universe(task_doc, traj_path)
 
             # create solute_doc
             solute = create_solute(
@@ -305,34 +283,30 @@ class BenchmarkingBuilder(Builder):
         # query will be ignored
         return
 
-    def process_items(self, items):
+    def process_items(
+        self,
+        items,
+        local_trajectories: bool = False,
+        rebase_traj_path: tuple[Path, Path] = None,
+    ):
         self.logger.info(f"Processing {len(items)} materials for electrolyte builder.")
 
         processed_items = []
         for item in items:
             # create task_doc
             task_doc = OpenMMTaskDocument.parse_obj(item["output"])
-            calc = task_doc.calcs_reversed[0]
 
-            # create interchange
-            interchange_str = task_doc.interchange.decode("utf-8")
-            interchange = Interchange.parse_raw(interchange_str)
-
-            # write the trajectory to a file
-            traj_file = tempfile.NamedTemporaryFile()
-            traj_path = Path(traj_file.name)
-            with open(traj_path, "wb") as f:
-                f.write(calc.output.traj_blob)
-            u = create_universe(
-                interchange,
-                task_doc.molecule_specs,
-                traj_path,
-                traj_format=calc.input.traj_file_type,
+            # _ is needed bc traj_path may be a tmpfile and a reference must be in scope
+            traj_path, _ = resolve_traj_path(
+                task_doc, local_trajectories, rebase_traj_path
             )
+
+            u = task_doc_to_universe(task_doc, traj_path)
+
             benchmarking_doc = SolventBenchmarkingDoc.from_universe(
                 u,
-                temperature=calc.input.temperature,
-                density=calc.output.density[-1],
+                temperature=task_doc.calcs_reversed[0].input.temperature,
+                density=task_doc.calcs_reversed[0].output.density[-1],
                 job_uuid=item["uuid"],
                 flow_uuid=item["hosts"][-1],
             )
