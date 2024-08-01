@@ -10,7 +10,6 @@ from emmet.builders.molecules.metal_binding import MetalBindingBuilder
 from emmet.builders.molecules.orbitals import OrbitalBuilder
 from emmet.builders.molecules.redox import RedoxBuilder
 from emmet.builders.molecules.thermo import ThermoBuilder
-from emmet.builders.molecules.trajectory import ForcesBuilder
 from emmet.builders.molecules.vibration import VibrationBuilder
 from emmet.builders.molecules.summary import SummaryBuilder
 
