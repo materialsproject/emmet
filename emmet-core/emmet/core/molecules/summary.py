@@ -281,62 +281,62 @@ class MetalBindingComposite(BaseModel):
         description="Level of theory for this MetalBindingDoc.",
     )
 
-    partial_charges_property_id: Optional[str] = Field(
+    binding_partial_charges_property_id: Optional[str] = Field(
         None,
         description="ID of PartialChargesDoc used to estimate metal charge",
     )
 
-    partial_spins_property_id: Optional[str] = Field(
+    binding_partial_spins_property_id: Optional[str] = Field(
         None,
         description="ID of PartialSpinsDoc used to estimate metal spin",
     )
 
-    partial_charges_lot_solvent: Optional[str] = Field(
+    binding_partial_charges_lot_solvent: Optional[str] = Field(
         None,
         description="Combination of level of theory and solvent used to calculate atomic partial charges",
     )
 
-    partial_spins_lot_solvent: Optional[str] = Field(
+    binding_partial_spins_lot_solvent: Optional[str] = Field(
         None,
         description="Combination of level of theory and solvent used to calculate atomic partial spins",
     )
 
-    charge_spin_method: Optional[str] = Field(
+    binding_charge_spin_method: Optional[str] = Field(
         None,
         description="The method used for partial charges and spins (must be the same).",
     )
 
-    bonding_property_id: Optional[str] = Field(
+    binding_bonding_property_id: Optional[str] = Field(
         None,
         description="ID of MoleculeBondingDoc used to detect bonding in this molecule",
     )
 
-    bonding_lot_solvent: Optional[str] = Field(
+    binding_bonding_lot_solvent: Optional[str] = Field(
         None,
         description="Combination of level of theory and solvent used to determine the coordination environment "
         "of the metal atom or ion",
     )
 
-    bonding_method: Optional[str] = Field(
+    binding_bonding_method: Optional[str] = Field(
         None, description="The method used for to define bonding."
     )
 
-    thermo_property_id: Optional[str] = Field(
+    binding_thermo_property_id: Optional[str] = Field(
         None,
         description="ID of MoleculeThermoDoc used to obtain this molecule's thermochemistry",
     )
 
-    thermo_lot_solvent: Optional[str] = Field(
+    binding_thermo_lot_solvent: Optional[str] = Field(
         None,
         description="Combination of level of theory and solvent used for uncorrected thermochemistry",
     )
 
-    thermo_correction_lot_solvent: Optional[str] = Field(
+    binding_thermo_correction_lot_solvent: Optional[str] = Field(
         None,
         description="Combination of level of theory and solvent used to correct the electronic energy",
     )
 
-    thermo_combined_lot_solvent: Optional[str] = Field(
+    binding_thermo_combined_lot_solvent: Optional[str] = Field(
         None,
         description="Combination of level of theory and solvent used for molecular thermochemistry, combining "
         "both the frequency calculation and (potentially) the single-point energy correction.",
