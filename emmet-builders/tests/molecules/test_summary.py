@@ -52,11 +52,6 @@ def mols_two(tasks_two):
 
 
 @pytest.fixture(scope="session")
-def forces(test_dir):
-    return MemoryStore(key="molecule_id")
-
-
-@pytest.fixture(scope="session")
 def charges(test_dir):
     return MemoryStore(key="molecule_id")
 
@@ -109,7 +104,6 @@ def summary():
 def test_summary_one(
     tasks_one,
     mols_one,
-    forces,
     charges,
     spins,
     bonds,
@@ -121,9 +115,6 @@ def test_summary_one(
     vibes,
     summary,
 ):
-    force_build = ForcesBuilder(tasks_one, mols_one, forces)
-    force_build.run()
-
     charge_build = PartialChargesBuilder(tasks_one, mols_one, charges)
     charge_build.run()
 
@@ -155,7 +146,6 @@ def test_summary_one(
 
     builder = SummaryBuilder(
         molecules=mols_one,
-        forces=forces,
         charges=charges,
         spins=spins,
         bonds=bonds,
@@ -175,7 +165,6 @@ def test_summary_one(
 def test_summary_two(
     tasks_two,
     mols_two,
-    forces,
     charges,
     spins,
     bonds,
@@ -187,9 +176,6 @@ def test_summary_two(
     vibes,
     summary,
 ):
-    force_build = ForcesBuilder(tasks_two, mols_two, forces)
-    force_build.run()
-
     charge_build = PartialChargesBuilder(tasks_two, mols_two, charges)
     charge_build.run()
 
@@ -221,7 +207,6 @@ def test_summary_two(
 
     builder = SummaryBuilder(
         molecules=mols_two,
-        forces=forces,
         charges=charges,
         spins=spins,
         bonds=bonds,
