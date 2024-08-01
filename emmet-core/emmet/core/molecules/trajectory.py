@@ -276,7 +276,7 @@ class TrajectoryDoc(PropertyDoc):
                 step_mol = mols[jj]
                 for k, v in site_props.items():  # type: ignore
                     if v is not None:
-                        step_mol.add_site_property(property_name=k, values=v[jj])
+                        step_mol.add_site_property(property_name=k, values=v[jj])  # type: ignore[arg-type]
 
                 traj_mols.append(step_mol)
 
