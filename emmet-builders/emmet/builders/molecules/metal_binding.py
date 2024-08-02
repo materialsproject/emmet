@@ -183,7 +183,9 @@ class MetalBindingBuilder(Builder):
         N = ceil(len(to_process_hashes) / number_splits)
 
         for hash_chunk in grouper(to_process_hashes, N):
-            yield {"query": {"species_hash": {"$in": list(hash_chunk)}}}
+            query = dict(temp_query)
+            query["species_hash"] = {"$in": list(hash_chunk)}
+            yield {"query": query}
 
     def get_items(self) -> Iterator[List[Dict]]:
         """
