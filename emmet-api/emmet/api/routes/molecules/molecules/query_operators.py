@@ -74,56 +74,6 @@ Wildcards for unknown elements only supported for single chemsys queries",
         return [(key, False) for key in keys]
 
 
-# class ElementsQuery(QueryOperator):
-#     """
-#     Factory method to generate a dependency for querying by element data
-#     """
-
-#     def query(
-#         self,
-#         elements: Optional[str] = Query(
-#             None,
-#             description="Query by elements in the material composition as a comma-separated list",
-#         ),
-#         exclude_elements: Optional[str] = Query(
-#             None,
-#             description="Query by excluded elements in the material composition as a comma-separated list",
-#         ),
-#     ) -> STORE_PARAMS:
-#         crit = {}  # type: dict
-
-#         if elements or exclude_elements:
-#             crit["elements"] = {}
-
-#         if elements:
-#             try:
-#                 element_list = [Element(e.strip()) for e in elements.strip().split(",")]
-#             except ValueError:
-#                 raise HTTPException(
-#                     status_code=400,
-#                     detail="Please provide a comma-seperated list of elements",
-#                 )
-
-#             crit["elements"]["$all"] = [str(el) for el in element_list]
-
-#         if exclude_elements:
-#             try:
-#                 element_list = [
-#                     Element(e.strip()) for e in exclude_elements.strip().split(",")
-#                 ]
-#             except ValueError:
-#                 raise HTTPException(
-#                     status_code=400,
-#                     detail="Please provide a comma-seperated list of elements",
-#                 )
-#             crit["elements"]["$nin"] = [str(el) for el in element_list]
-
-#         return {"criteria": crit}
-
-#     def ensure_indexes(self):  # pragma: no cover
-#         return [("elements", False)]
-
-
 class CompositionElementsQuery(QueryOperator):
     """
     Factory method to generate a dependency for querying by elements present in a composition.

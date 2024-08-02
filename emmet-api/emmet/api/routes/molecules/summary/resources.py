@@ -35,6 +35,7 @@ def summary_resource(summary_store):
             HasPropsQuery(),
             ChargeSpinQuery(),
             StringRepQuery(),
+            HashQuery(),
             DeprecationQuery(),
             PaginationQuery(),
             NumericQuery(
