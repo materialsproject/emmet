@@ -2846,8 +2846,7 @@ fields : list of str or None
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/thermo.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">18</span>
-<span class="normal">19</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">19</span>
 <span class="normal">20</span>
 <span class="normal">21</span>
 <span class="normal">22</span>
@@ -2862,7 +2861,8 @@ fields : list of str or None
 <span class="normal">31</span>
 <span class="normal">32</span>
 <span class="normal">33</span>
-<span class="normal">34</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">DecompositionProduct</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">34</span>
+<span class="normal">35</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">DecompositionProduct</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Entry metadata for a decomposition process</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -2922,10 +2922,7 @@ fields : list of str or None
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/thermo.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">295</span>
-<span class="normal">296</span>
-<span class="normal">297</span>
-<span class="normal">298</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">298</span>
 <span class="normal">299</span>
 <span class="normal">300</span>
 <span class="normal">301</span>
@@ -2952,7 +2949,10 @@ fields : list of str or None
 <span class="normal">322</span>
 <span class="normal">323</span>
 <span class="normal">324</span>
-<span class="normal">325</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">PhaseDiagramDoc</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">PhaseDiagramDoc</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A phase diagram document</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -3026,8 +3026,7 @@ fields : list of str or None
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/thermo.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 44</span>
-<span class="normal"> 45</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 45</span>
 <span class="normal"> 46</span>
 <span class="normal"> 47</span>
 <span class="normal"> 48</span>
@@ -3274,7 +3273,10 @@ fields : list of str or None
 <span class="normal">289</span>
 <span class="normal">290</span>
 <span class="normal">291</span>
-<span class="normal">292</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ThermoDoc</span><span class="p">(</span><span class="n">PropertyDoc</span><span class="p">):</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ThermoDoc</span><span class="p">(</span><span class="n">PropertyDoc</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A thermo entry document</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -3385,7 +3387,7 @@ fields : list of str or None
 
         <span class="n">entry_quality_scores</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;GGA&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;GGA+U&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;SCAN&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;R2SCAN&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
 
-        <span class="k">def</span> <span class="nf">_energy_eval</span><span class="p">(</span><span class="n">entry</span><span class="p">:</span> <span class="n">ComputedStructureEntry</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">_energy_eval</span><span class="p">(</span><span class="n">entry</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ComputedStructureEntry</span><span class="p">,</span> <span class="n">ComputedEntry</span><span class="p">]):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            Helper function to order entries for thermo energy data selection</span>
 <span class="sd">            - Run type</span>
@@ -3410,7 +3412,7 @@ fields : list of str or None
 
             <span class="n">blessed_entry</span> <span class="o">=</span> <span class="n">sorted_entries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-            <span class="p">(</span><span class="n">decomp</span><span class="p">,</span> <span class="n">ehull</span><span class="p">)</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_decomp_and_e_above_hull</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">)</span>
+            <span class="p">(</span><span class="n">decomp</span><span class="p">,</span> <span class="n">ehull</span><span class="p">)</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_decomp_and_e_above_hull</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]</span>
 
             <span class="n">builder_meta</span> <span class="o">=</span> <span class="n">EmmetMeta</span><span class="p">(</span><span class="n">license</span><span class="o">=</span><span class="n">blessed_entry</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;license&quot;</span><span class="p">))</span>
 
@@ -3422,7 +3424,7 @@ fields : list of str or None
                 <span class="o">/</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_atoms</span><span class="p">,</span>
                 <span class="s2">&quot;energy_per_atom&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">energy</span>
                 <span class="o">/</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_atoms</span><span class="p">,</span>
-                <span class="s2">&quot;formation_energy_per_atom&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_form_energy_per_atom</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">),</span>
+                <span class="s2">&quot;formation_energy_per_atom&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_form_energy_per_atom</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">),</span>  <span class="c1"># type: ignore[arg-type]</span>
                 <span class="s2">&quot;energy_above_hull&quot;</span><span class="p">:</span> <span class="n">ehull</span><span class="p">,</span>
                 <span class="s2">&quot;is_stable&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span> <span class="ow">in</span> <span class="n">pd</span><span class="o">.</span><span class="n">stable_entries</span><span class="p">,</span>
                 <span class="s2">&quot;builder_meta&quot;</span><span class="p">:</span> <span class="n">builder_meta</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(),</span>
@@ -3436,29 +3438,31 @@ fields : list of str or None
             <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;is_stable&quot;</span><span class="p">]:</span>
                 <span class="n">d</span><span class="p">[</span>
                     <span class="s2">&quot;equilibrium_reaction_energy_per_atom&quot;</span>
-                <span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_equilibrium_reaction_energy</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">)</span>
+                <span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_equilibrium_reaction_energy</span><span class="p">(</span>
+                    <span class="n">blessed_entry</span>  <span class="c1"># type: ignore[arg-type]</span>
+                <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">d</span><span class="p">[</span><span class="s2">&quot;decomposes_to&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
                     <span class="p">{</span>
-                        <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span>  <span class="c1"># type: ignore[union-attr]</span>
                         <span class="s2">&quot;formula&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">formula</span><span class="p">,</span>
                         <span class="s2">&quot;amount&quot;</span><span class="p">:</span> <span class="n">amt</span><span class="p">,</span>
                     <span class="p">}</span>
-                    <span class="k">for</span> <span class="n">de</span><span class="p">,</span> <span class="n">amt</span> <span class="ow">in</span> <span class="n">decomp</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">de</span><span class="p">,</span> <span class="n">amt</span> <span class="ow">in</span> <span class="n">decomp</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>  <span class="c1"># type: ignore[union-attr]</span>
                 <span class="p">]</span>
 
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">decomp</span><span class="p">,</span> <span class="n">energy</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_decomp_and_phase_separation_energy</span><span class="p">(</span>
-                    <span class="n">blessed_entry</span>
+                    <span class="n">blessed_entry</span>  <span class="c1"># type: ignore[arg-type]</span>
                 <span class="p">)</span>
                 <span class="n">d</span><span class="p">[</span><span class="s2">&quot;decomposition_enthalpy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy</span>
                 <span class="n">d</span><span class="p">[</span><span class="s2">&quot;decomposition_enthalpy_decomposes_to&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
                     <span class="p">{</span>
-                        <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span>  <span class="c1"># type: ignore[union-attr]</span>
                         <span class="s2">&quot;formula&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">formula</span><span class="p">,</span>
                         <span class="s2">&quot;amount&quot;</span><span class="p">:</span> <span class="n">amt</span><span class="p">,</span>
                     <span class="p">}</span>
-                    <span class="k">for</span> <span class="n">de</span><span class="p">,</span> <span class="n">amt</span> <span class="ow">in</span> <span class="n">decomp</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">de</span><span class="p">,</span> <span class="n">amt</span> <span class="ow">in</span> <span class="n">decomp</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>  <span class="c1"># type: ignore[union-attr]</span>
                 <span class="p">]</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
                 <span class="c1"># try/except so this quantity does not take down the builder if it fails:</span>
@@ -3487,7 +3491,7 @@ fields : list of str or None
 
             <span class="n">docs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">ThermoDoc</span><span class="o">.</span><span class="n">from_structure</span><span class="p">(</span>
-                    <span class="n">meta_structure</span><span class="o">=</span><span class="n">blessed_entry</span><span class="o">.</span><span class="n">structure</span><span class="p">,</span> <span class="o">**</span><span class="n">d</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+                    <span class="n">meta_structure</span><span class="o">=</span><span class="n">blessed_entry</span><span class="o">.</span><span class="n">structure</span><span class="p">,</span> <span class="o">**</span><span class="n">d</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>  <span class="c1"># type: ignore[attr-defined]</span>
                 <span class="p">)</span>
             <span class="p">)</span>
 
@@ -3610,10 +3614,7 @@ represented in the entry data passed.</p>
 
             <details class="quote">
               <summary>Source code in <code>emmet/core/thermo.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">263</span>
-<span class="normal">264</span>
-<span class="normal">265</span>
-<span class="normal">266</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">266</span>
 <span class="normal">267</span>
 <span class="normal">268</span>
 <span class="normal">269</span>
@@ -3639,7 +3640,10 @@ represented in the entry data passed.</p>
 <span class="normal">289</span>
 <span class="normal">290</span>
 <span class="normal">291</span>
-<span class="normal">292</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span> <span class="nf">construct_phase_diagram</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PhaseDiagram</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Efficienty construct a phase diagram using only the lowest entries at every composition</span>
@@ -3788,8 +3792,7 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
             <details class="quote">
               <summary>Source code in <code>emmet/core/thermo.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">121</span>
-<span class="normal">122</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">122</span>
 <span class="normal">123</span>
 <span class="normal">124</span>
 <span class="normal">125</span>
@@ -3928,7 +3931,10 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 <span class="normal">258</span>
 <span class="normal">259</span>
 <span class="normal">260</span>
-<span class="normal">261</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span> <span class="nf">from_entries</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">,</span>
     <span class="n">entries</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ComputedEntry</span><span class="p">,</span> <span class="n">ComputedStructureEntry</span><span class="p">]],</span>
@@ -3962,7 +3968,7 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
     <span class="n">entry_quality_scores</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;GGA&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;GGA+U&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;SCAN&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;R2SCAN&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">_energy_eval</span><span class="p">(</span><span class="n">entry</span><span class="p">:</span> <span class="n">ComputedStructureEntry</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_energy_eval</span><span class="p">(</span><span class="n">entry</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ComputedStructureEntry</span><span class="p">,</span> <span class="n">ComputedEntry</span><span class="p">]):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Helper function to order entries for thermo energy data selection</span>
 <span class="sd">        - Run type</span>
@@ -3987,7 +3993,7 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
         <span class="n">blessed_entry</span> <span class="o">=</span> <span class="n">sorted_entries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-        <span class="p">(</span><span class="n">decomp</span><span class="p">,</span> <span class="n">ehull</span><span class="p">)</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_decomp_and_e_above_hull</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">decomp</span><span class="p">,</span> <span class="n">ehull</span><span class="p">)</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_decomp_and_e_above_hull</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]</span>
 
         <span class="n">builder_meta</span> <span class="o">=</span> <span class="n">EmmetMeta</span><span class="p">(</span><span class="n">license</span><span class="o">=</span><span class="n">blessed_entry</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;license&quot;</span><span class="p">))</span>
 
@@ -3999,7 +4005,7 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
             <span class="o">/</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_atoms</span><span class="p">,</span>
             <span class="s2">&quot;energy_per_atom&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">energy</span>
             <span class="o">/</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_atoms</span><span class="p">,</span>
-            <span class="s2">&quot;formation_energy_per_atom&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_form_energy_per_atom</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">),</span>
+            <span class="s2">&quot;formation_energy_per_atom&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_form_energy_per_atom</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">),</span>  <span class="c1"># type: ignore[arg-type]</span>
             <span class="s2">&quot;energy_above_hull&quot;</span><span class="p">:</span> <span class="n">ehull</span><span class="p">,</span>
             <span class="s2">&quot;is_stable&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span> <span class="ow">in</span> <span class="n">pd</span><span class="o">.</span><span class="n">stable_entries</span><span class="p">,</span>
             <span class="s2">&quot;builder_meta&quot;</span><span class="p">:</span> <span class="n">builder_meta</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(),</span>
@@ -4013,29 +4019,31 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
         <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;is_stable&quot;</span><span class="p">]:</span>
             <span class="n">d</span><span class="p">[</span>
                 <span class="s2">&quot;equilibrium_reaction_energy_per_atom&quot;</span>
-            <span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_equilibrium_reaction_energy</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">)</span>
+            <span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_equilibrium_reaction_energy</span><span class="p">(</span>
+                <span class="n">blessed_entry</span>  <span class="c1"># type: ignore[arg-type]</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">d</span><span class="p">[</span><span class="s2">&quot;decomposes_to&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span>
+                    <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span>  <span class="c1"># type: ignore[union-attr]</span>
                     <span class="s2">&quot;formula&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">formula</span><span class="p">,</span>
                     <span class="s2">&quot;amount&quot;</span><span class="p">:</span> <span class="n">amt</span><span class="p">,</span>
                 <span class="p">}</span>
-                <span class="k">for</span> <span class="n">de</span><span class="p">,</span> <span class="n">amt</span> <span class="ow">in</span> <span class="n">decomp</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">de</span><span class="p">,</span> <span class="n">amt</span> <span class="ow">in</span> <span class="n">decomp</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>  <span class="c1"># type: ignore[union-attr]</span>
             <span class="p">]</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">decomp</span><span class="p">,</span> <span class="n">energy</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_decomp_and_phase_separation_energy</span><span class="p">(</span>
-                <span class="n">blessed_entry</span>
+                <span class="n">blessed_entry</span>  <span class="c1"># type: ignore[arg-type]</span>
             <span class="p">)</span>
             <span class="n">d</span><span class="p">[</span><span class="s2">&quot;decomposition_enthalpy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy</span>
             <span class="n">d</span><span class="p">[</span><span class="s2">&quot;decomposition_enthalpy_decomposes_to&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span>
+                    <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span>  <span class="c1"># type: ignore[union-attr]</span>
                     <span class="s2">&quot;formula&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">formula</span><span class="p">,</span>
                     <span class="s2">&quot;amount&quot;</span><span class="p">:</span> <span class="n">amt</span><span class="p">,</span>
                 <span class="p">}</span>
-                <span class="k">for</span> <span class="n">de</span><span class="p">,</span> <span class="n">amt</span> <span class="ow">in</span> <span class="n">decomp</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">de</span><span class="p">,</span> <span class="n">amt</span> <span class="ow">in</span> <span class="n">decomp</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>  <span class="c1"># type: ignore[union-attr]</span>
             <span class="p">]</span>
         <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
             <span class="c1"># try/except so this quantity does not take down the builder if it fails:</span>
@@ -4064,7 +4072,7 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
         <span class="n">docs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="n">ThermoDoc</span><span class="o">.</span><span class="n">from_structure</span><span class="p">(</span>
-                <span class="n">meta_structure</span><span class="o">=</span><span class="n">blessed_entry</span><span class="o">.</span><span class="n">structure</span><span class="p">,</span> <span class="o">**</span><span class="n">d</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+                <span class="n">meta_structure</span><span class="o">=</span><span class="n">blessed_entry</span><span class="o">.</span><span class="n">structure</span><span class="p">,</span> <span class="o">**</span><span class="n">d</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>  <span class="c1"># type: ignore[attr-defined]</span>
             <span class="p">)</span>
         <span class="p">)</span>
 
@@ -5362,7 +5370,7 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
     <span class="p">):</span>
         <span class="n">ionic_tensor</span> <span class="o">=</span> <span class="n">BasePiezoTensor</span><span class="o">.</span><span class="n">from_vasp_voigt</span><span class="p">(</span><span class="n">ionic</span><span class="p">)</span>
         <span class="n">electronic_tensor</span> <span class="o">=</span> <span class="n">BasePiezoTensor</span><span class="o">.</span><span class="n">from_vasp_voigt</span><span class="p">(</span><span class="n">electronic</span><span class="p">)</span>
-        <span class="n">total</span> <span class="o">=</span> <span class="n">ionic_tensor</span> <span class="o">+</span> <span class="n">electronic_tensor</span>
+        <span class="n">total</span><span class="p">:</span> <span class="n">BasePiezoTensor</span> <span class="o">=</span> <span class="n">ionic_tensor</span> <span class="o">+</span> <span class="n">electronic_tensor</span>  <span class="c1"># type: ignore[assignment]</span>
 
         <span class="c1"># Symmeterize Convert to IEEE orientation</span>
         <span class="n">total</span> <span class="o">=</span> <span class="n">total</span><span class="o">.</span><span class="n">convert_to_ieee</span><span class="p">(</span><span class="n">structure</span><span class="p">)</span>
