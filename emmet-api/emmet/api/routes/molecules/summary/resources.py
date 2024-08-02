@@ -11,6 +11,7 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     ChemsysQuery,
     CompositionElementsQuery,
     ChargeSpinQuery,
+    HashQuery,
     StringRepQuery,
     DeprecationQuery,
 )
