@@ -1,4 +1,3 @@
-import copy
 from datetime import datetime
 from itertools import chain, groupby
 from math import ceil
