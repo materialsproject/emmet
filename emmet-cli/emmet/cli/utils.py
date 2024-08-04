@@ -5,7 +5,6 @@ import os
 import shutil
 import stat
 from collections import defaultdict
-from datetime import datetime
 from enum import Enum
 from fnmatch import fnmatch
 from glob import glob
@@ -14,16 +13,16 @@ from pathlib import Path
 import click
 import mgzip
 from botocore.exceptions import EndpointConnectionError
-from atomate.vasp.database import VaspCalcDb
-from atomate.vasp.drones import VaspDrone
 from dotty_dict import dotty
 from fireworks.fw_config import FW_BLOCK_FORMAT
 from mongogrant.client import Client
 from pymatgen.core import Structure
 from pymatgen.util.provenance import StructureNL
 from pymongo.errors import DocumentTooLarge
-from emmet.core.vasp.task_valid import TaskDocument
+from emmet.core.tasks import TaskDoc
+from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import ValidationDoc
+from emmet.cli.db import TaskStore
 from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 
 from emmet.cli import SETTINGS
@@ -65,7 +64,7 @@ def ensure_indexes(indexes, colls):
 
 def calcdb_from_mgrant(spec_or_dbfile):
     if os.path.exists(spec_or_dbfile):
-        return VaspCalcDb.from_db_file(spec_or_dbfile)
+        return TaskStore.from_db_file(spec_or_dbfile)
 
     client = Client()
     role = "rw"  # NOTE need write access to source to ensure indexes
@@ -73,14 +72,16 @@ def calcdb_from_mgrant(spec_or_dbfile):
     auth = client.get_auth(host, dbname_or_alias, role)
     if auth is None:
         raise Exception("No valid auth credentials available!")
-    return VaspCalcDb(
-        auth["host"],
-        27017,
-        auth["db"],
-        "tasks",
-        auth["username"],
-        auth["password"],
-        authSource=auth["db"],
+    return TaskStore(
+        store_kwargs={
+            "host": auth["host"],
+            "port": 27017,
+            "database": auth["db"],
+            "collection": "tasks",
+            "user": auth["username"],
+            "password": auth["password"],
+            "authSource": auth["db"],
+        }
     )
 
 
@@ -149,7 +150,7 @@ def get_subdir(dn):
 
 
 def get_timestamp_dir(prefix="launcher"):
-    time_now = datetime.utcnow().strftime(FW_BLOCK_FORMAT)
+    time_now = utcnow().strftime(FW_BLOCK_FORMAT)
     return "_".join([prefix, time_now])
 
 
@@ -382,11 +383,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
     projection = {"tags": 1, "task_id": 1}
     # projection = {"tags": 1, "task_id": 1, "calcs_reversed": 1}
     count = 0
-    drone = VaspDrone(
-        additional_fields={"tags": tags},
-        store_volumetric_data=ctx.params["store_volumetric_data"],
-        runs=ctx.params["runs"],
-    )
+
     # fs_keys = ["bandstructure", "dos", "chgcar", "locpot", "elfcar"]
     # for i in range(3):
     #    fs_keys.append(f"aeccar{i}")
@@ -413,13 +410,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                     logger.warning(f"{name} {launcher} already parsed -> would remove.")
                 continue
 
-        try:
-            task_doc = drone.assimilate(vaspdir)
-        except Exception as ex:
-            logger.error(f"Failed to assimilate {vaspdir}: {ex}")
-            continue
-
-        task_doc["sbxn"] = sbxn
+        additional_fields = {"sbxn": sbxn, "tags": []}
         snl_metas_avail = isinstance(snl_metas, dict)
         task_id = (
             task_ids.get(launcher) if manual_taskid else task_ids[chunk_idx][count]
@@ -429,7 +420,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
             logger.error(f"Unable to determine task_id for {launcher}")
             continue
 
-        task_doc["task_id"] = task_id
+        additional_fields["task_id"] = task_id
         logger.info(f"Using {task_id} for {launcher}.")
 
         if docs:
@@ -437,17 +428,22 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
             # (run through set to implicitly remove duplicate tags)
             if docs[0]["tags"]:
                 existing_tags = list(set(docs[0]["tags"]))
-                task_doc["tags"] += existing_tags
+                additional_fields["tags"] += existing_tags
                 logger.info(f"Adding existing tags {existing_tags} to {tags}.")
 
         try:
-            task_document = TaskDocument(**task_doc)
-        except Exception as exc:
-            logger.error(f"Unable to construct a valid TaskDocument: {exc}")
+            task_doc = TaskDoc.from_directory(
+                dir_name=vaspdir,
+                additional_fields=additional_fields,
+                volumetric_files=ctx.params["store_volumetric_data"],
+                task_names=ctx.params["runs"],
+            )
+        except Exception as ex:
+            logger.error(f"Failed to build a TaskDoc from {vaspdir}: {ex}")
             continue
 
         try:
-            validation_doc = ValidationDoc.from_task_doc(task_document)
+            validation_doc = ValidationDoc.from_task_doc(task_doc)
         except Exception as exc:
             logger.error(f"Unable to construct a valid ValidationDoc: {exc}")
             continue
@@ -461,7 +457,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
 
         try:
             entry = MaterialsProject2020Compatibility().process_entry(
-                task_document.structure_entry
+                task_doc.structure_entry
             )
         except Exception as exc:
             logger.error(f"Unable to apply corrections: {exc}")
@@ -479,7 +475,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                 if references:
                     kwargs["references"] = references
 
-                struct = Structure.from_dict(task_doc["input"]["structure"])
+                struct = task_doc.input.structure
                 snl = StructureNL(struct, authors, **kwargs)
                 snl_dct = snl.as_dict()
                 snl_dct.update(get_meta_from_structure(struct))
@@ -488,7 +484,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                 logger.info(f"Created SNL object for {snl_id}.")
 
         if run:
-            if task_doc["state"] == "successful":
+            if task_doc.state == "successful":
                 if docs and no_dupe_check:
                     # new_calc = task_doc["calcs_reversed"][0]
                     # existing_calc = docs[0]["calcs_reversed"][0]
@@ -515,12 +511,12 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                 # return count  # TODO remove
 
                 try:
-                    target.insert_task(task_doc, use_gridfs=True)
+                    target.insert_task(task_doc.model_dump(), use_gridfs=True)
                 except EndpointConnectionError as exc:
                     logger.error(f"Connection failed for {task_id}: {exc}")
                     continue
                 except DocumentTooLarge:
-                    output = dotty(task_doc["calcs_reversed"][0]["output"])
+                    output = dotty(task_doc.calcs_reversed[0].output.as_dict())
                     pop_keys = [
                         "normalmode_eigenvecs",
                         "force_constants",
