@@ -5,10 +5,9 @@ from pathlib import Path
 import numpy as np
 import pytest
 from bson.objectid import ObjectId
+from emmet.core.utils import DocEnum, ValueEnum, jsanitize
 from monty.json import MSONable
 from monty.serialization import dumpfn
-
-from emmet.core.utils import DocEnum, ValueEnum, jsanitize
 
 
 def test_jsanitize():
@@ -80,10 +79,6 @@ def test_value_enum(monkeypatch, tmp_path):
 
     dumpfn(TempEnum, tmp_path / "temp.json")
     assert Path(tmp_path, "temp.json").is_file()
-
-    # ensure that as_dict method yields str
-    assert hasattr(TempEnum, "as_dict")
-    assert all(isinstance(val.as_dict(), str) for val in TempEnum)
 
 
 def test_doc_enum():

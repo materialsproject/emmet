@@ -248,7 +248,7 @@ def group_entries_with_structure_matcher(
     g,
     struct_matcher: StructureMatcher,
     working_ion: Optional[str] = None,
-) -> Iterable[List[Union[ComputedStructureEntry]]]:
+) -> Iterable[List[Union[ComputedStructureEntry, ComputedEntry]]]:
     """
     Group the entries together based on similarity of the  primitive cells
     Args:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -493,7 +495,7 @@ def generate_derived_fitting_data(
     derived_2nd_pk_stresses = []
 
     for d_strain, op_set in mapping.items():
-        symmops, p_indices = zip(*op_set)
+        symmops, p_indices = zip(*op_set)  # type: ignore[assignment]
 
         p_stresses = [stresses[i] for i in p_indices]
         d_stresses = [s.transform(op) for s, op in zip(p_stresses, symmops)]
@@ -551,7 +553,7 @@ def symmetrize_stresses(
 def fit_elastic_tensor(
     strains: List[Strain],
     stresses: List[Stress],
-    eq_stress: Stress,
+    eq_stress: Stress | None,
     fitting_method: str = "finite_difference",
     order: int = 2,
 ) -> ElasticTensor:
@@ -575,17 +577,17 @@ def fit_elastic_tensor(
             strains, stresses, eq_stress=eq_stress, order=order
         )
         if order == 2:
-            result = ElasticTensor(result[0])
+            result: ElasticTensor = ElasticTensor(result[0])  # type: ignore[no-redef]
     elif fitting_method == "pseudoinverse":
-        result = ElasticTensor.from_pseudoinverse(strains, stresses)
+        result: ElasticTensor = ElasticTensor.from_pseudoinverse(strains, stresses)  # type: ignore[no-redef]
     elif fitting_method == "independent":
-        result = ElasticTensor.from_independent_strains(
+        result: ElasticTensor = ElasticTensor.from_independent_strains(  # type: ignore[no-redef]
             strains, stresses, eq_stress=eq_stress
         )
     else:
         raise ValueError(f"Unsupported elastic fitting method {fitting_method}")
 
-    return result
+    return result  # type: ignore[return-value]
 
 
 def get_derived_properties(
@@ -613,35 +615,35 @@ def get_derived_properties(
     decimals = 3
     derived_prop = {
         "bulk_modulus": BulkModulus(
-            voigt=np.round(prop_dict["k_voigt"], decimals),
-            reuss=np.round(prop_dict["k_reuss"], decimals),
-            vrh=np.round(prop_dict["k_vrh"], decimals),
+            voigt=np.round(prop_dict["k_voigt"], decimals),  # type: ignore[arg-type]
+            reuss=np.round(prop_dict["k_reuss"], decimals),  # type: ignore[arg-type]
+            vrh=np.round(prop_dict["k_vrh"], decimals),  # type: ignore[arg-type]
         ),
         "shear_modulus": ShearModulus(
-            voigt=np.round(prop_dict["g_voigt"], decimals),
-            reuss=np.round(prop_dict["g_reuss"], decimals),
-            vrh=np.round(prop_dict["g_vrh"], decimals),
+            voigt=np.round(prop_dict["g_voigt"], decimals),  # type: ignore[arg-type]
+            reuss=np.round(prop_dict["g_reuss"], decimals),  # type: ignore[arg-type]
+            vrh=np.round(prop_dict["g_vrh"], decimals),  # type: ignore[arg-type]
         ),
-        "young_modulus": np.round(prop_dict["y_mod"], 0),
-        "homogeneous_poisson": np.round(prop_dict["homogeneous_poisson"], decimals),
-        "universal_anisotropy": np.round(prop_dict["universal_anisotropy"], decimals),
+        "young_modulus": np.round(prop_dict["y_mod"], 0),  # type: ignore[arg-type]
+        "homogeneous_poisson": np.round(prop_dict["homogeneous_poisson"], decimals),  # type: ignore[arg-type]
+        "universal_anisotropy": np.round(prop_dict["universal_anisotropy"], decimals),  # type: ignore[arg-type]
     }
 
     if structure_prop_computed:
         derived_prop.update(
             {
                 "sound_velocity": SoundVelocity(
-                    transverse=prop_dict["trans_v"],
-                    longitudinal=prop_dict["long_v"],
-                    snyder_acoustic=prop_dict["snyder_ac"],
-                    snyder_optical=prop_dict["snyder_opt"],
-                    snyder_total=prop_dict["snyder_total"],
+                    transverse=prop_dict["trans_v"],  # type: ignore[arg-type]
+                    longitudinal=prop_dict["long_v"],  # type: ignore[arg-type]
+                    snyder_acoustic=prop_dict["snyder_ac"],  # type: ignore[arg-type]
+                    snyder_optical=prop_dict["snyder_opt"],  # type: ignore[arg-type]
+                    snyder_total=prop_dict["snyder_total"],  # type: ignore[arg-type]
                 ),
                 "thermal_conductivity": ThermalConductivity(
-                    clarke=prop_dict["clarke_thermalcond"],
-                    cahill=prop_dict["cahill_thermalcond"],
+                    clarke=prop_dict["clarke_thermalcond"],  # type: ignore[arg-type]
+                    cahill=prop_dict["cahill_thermalcond"],  # type: ignore[arg-type]
                 ),
-                "debye_temperature": prop_dict["debye_temperature"],
+                "debye_temperature": prop_dict["debye_temperature"],  # type: ignore[arg-type]
             }
         )
 

@@ -1,7 +1,7 @@
-FROM materialsproject/devops:python-3.1013.10 as base
+FROM materialsproject/devops:python-3.1013.13 AS base
 RUN apt-get update && apt-get install -y --no-install-recommends libopenblas-dev libjpeg62 && apt-get clean
 
-FROM base as builder
+FROM base AS builder
 RUN apt-get update && apt-get install -y --no-install-recommends gcc git g++ cmake make libsnappy-dev wget && apt-get clean
 ENV PATH /root/.local/bin:$PATH
 WORKDIR /emmet-api
@@ -41,6 +41,7 @@ ENV PATH=/root/.local/bin:$PATH \
 COPY app.py .
 COPY material_resources.py .
 COPY molecule_resources.py .
+COPY defect_resources.py .
 COPY start.sh .
 RUN chmod +x start.sh
 

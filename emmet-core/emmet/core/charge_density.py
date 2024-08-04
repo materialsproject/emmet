@@ -3,9 +3,9 @@ from datetime import datetime
 from typing import Optional
 
 
-class ChgcarDataDoc(BaseModel):
+class VolumetricDataDoc(BaseModel):
     """
-    Electron charge density metadata for selected materials.
+    Volumetric data metadata for selected materials.
     """
 
     fs_id: Optional[str] = Field(
@@ -22,4 +22,11 @@ class ChgcarDataDoc(BaseModel):
         description="The Materials Project ID of the calculation producing the charge density data. "
         "This comes in the form: mp-******.",
     )
+
     model_config = ConfigDict(extra="allow")
+
+
+class ChgcarDataDoc(VolumetricDataDoc):
+    """
+    Electron charge density metadata for selected materials.
+    """

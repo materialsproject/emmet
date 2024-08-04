@@ -5,6 +5,8 @@ from itertools import groupby
 from typing import Any, Dict, Iterator, List, Optional, Union
 
 import numpy as np
+from emmet.core.mpid import MPculeID
+from emmet.core.settings import EmmetSettings
 from monty.json import MSONable
 from pydantic import BaseModel
 from pymatgen.analysis.elasticity.strain import Deformation
@@ -21,9 +23,6 @@ from pymatgen.transformations.standard_transformations import (
     DeformStructureTransformation,
 )
 from pymatgen.util.graph_hashing import weisfeiler_lehman_graph_hash
-
-from emmet.core.mpid import MPculeID
-from emmet.core.settings import EmmetSettings
 
 try:
     import bson
@@ -339,10 +338,6 @@ class ValueEnum(Enum):
     def __hash__(self):
         """Get a hash of the enum."""
         return hash(str(self))
-
-    def as_dict(self) -> str:
-        """Deserialize in a kludgey way."""
-        return self.__str__()
 
 
 class DocEnum(ValueEnum):
