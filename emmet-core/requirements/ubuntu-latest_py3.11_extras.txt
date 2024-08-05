@@ -6,7 +6,7 @@
 #
 aiohappyeyeballs==2.3.4
     # via aiohttp
-aiohttp==3.10.0
+aiohttp==3.10.1
     # via fsspec
 aioitertools==0.11.0
     # via maggma
@@ -20,7 +20,7 @@ ase==3.23.0
     #   matcalc
     #   matgl
     #   pymatgen-analysis-diffusion
-attrs==23.2.0
+attrs==24.1.0
     # via
     #   aiohttp
     #   jsonlines
@@ -28,13 +28,13 @@ attrs==23.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.34.151
+boto3==1.34.153
     # via maggma
-botocore==1.34.151
+botocore==1.34.153
     # via
     #   boto3
     #   s3transfer
-bracex==2.4
+bracex==2.5
     # via wcmatch
 certifi==2024.7.4
     # via requests
@@ -56,7 +56,7 @@ colorama==0.4.6
     # via griffe
 contourpy==1.2.1
     # via matplotlib
-coverage[toml]==7.6.0
+coverage[toml]==7.6.1
     # via pytest-cov
 cryptography==43.0.0
     # via paramiko
@@ -76,7 +76,7 @@ dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.2rc2
+emmet-core==0.84.2rc3
     # via mp-api
 fasteners==0.19
     # via mdanalysis
@@ -85,7 +85,7 @@ filelock==3.15.4
     #   torch
     #   triton
     #   virtualenv
-flake8==7.1.0
+flake8==7.1.1
     # via emmet-core (setup.py)
 fonttools==4.53.1
     # via matplotlib
@@ -182,7 +182,7 @@ matgl==1.1.2
     # via emmet-core (setup.py)
 matminer==0.9.2
     # via robocrys
-matplotlib==3.9.1
+matplotlib==3.9.0
     # via
     #   ase
     #   mdanalysis
@@ -347,7 +347,7 @@ nvidia-ml-py3==7.352.0
     # via chgnet
 nvidia-nccl-cu12==2.19.3
     # via torch
-nvidia-nvjitlink-cu12==12.5.82
+nvidia-nvjitlink-cu12==12.6.20
     # via
     #   nvidia-cusolver-cu12
     #   nvidia-cusparse-cu12
@@ -419,7 +419,7 @@ pybtex==0.24.0
     #   emmet-core (setup.py)
     #   pymatgen
     #   robocrys
-pycodestyle==2.12.0
+pycodestyle==2.12.1
     # via
     #   emmet-core (setup.py)
     #   flake8
@@ -513,7 +513,7 @@ pyyaml==6.0.1
     #   pyyaml-env-tag
 pyyaml-env-tag==0.1
     # via mkdocs
-pyzmq==26.0.3
+pyzmq==26.1.0
     # via maggma
 rdkit==2024.3.3
     # via solvation-analysis
@@ -614,13 +614,13 @@ torch==2.2.1
     #   torchmetrics
 torchdata==0.8.0
     # via dgl
-torchmetrics==1.4.0.post0
+torchmetrics==1.4.1
     # via
     #   lightning
     #   pytorch-lightning
 tornado==6.4.1
     # via livereload
-tqdm==4.66.4
+tqdm==4.66.5
     # via
     #   dgl
     #   lightning
@@ -665,7 +665,7 @@ virtualenv==20.26.3
     # via pre-commit
 watchdog==4.0.1
     # via mkdocs
-wcmatch==8.5.2
+wcmatch==9.0
     # via mkdocs-awesome-pages-plugin
 wincertstore==0.2.1
     # via emmet-core (setup.py)
