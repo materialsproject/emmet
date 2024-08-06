@@ -383,6 +383,13 @@ class CalculationOutput(BaseModel):
         description="The magnetization density, defined as total_mag/volume "
         "(units of A^-3)",
     )
+    dielectric: Optional[dict[str, list]] = Field(
+        None,
+        description="Energy of incident photons in ev and real and imaginary parts of the dielectric tensor",
+    )
+    optical_absorption_coeff: Optional[list] = Field(
+        None, description="Optical absorption coefficient in cm^-1"
+    )
     epsilon_static: Optional[ListMatrix3D] = Field(
         None, description="The high-frequency dielectric constant"
     )
