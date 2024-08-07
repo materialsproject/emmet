@@ -6,7 +6,7 @@ from maggma.api.utils import STORE_PARAMS
 
 class ThermoCorrectionQuery(QueryOperator):
     """
-    Method to generate a query on thermodynamic.
+    Method to generate a query on corrections to thermodynamic data.
     """
 
     def query(

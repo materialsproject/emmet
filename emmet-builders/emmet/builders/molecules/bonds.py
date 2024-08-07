@@ -40,7 +40,7 @@ class BondingBuilder(Builder):
     data available (based on level of theory and electronic energy) will be used.
 
     The process is as follows:
-        1. Gather MoleculeDocs by formula
+        1. Gather MoleculeDocs by species hash
         2. For each molecule, group all tasks by solvent.
         3. For each solvent, sort tasks by level of theory and electronic energy
         4. For each method:
@@ -85,12 +85,14 @@ class BondingBuilder(Builder):
         self.tasks.ensure_index("last_updated")
         self.tasks.ensure_index("state")
         self.tasks.ensure_index("formula_alphabetical")
+        self.tasks.ensure_index("species_hash")
 
         # Search index for molecules
         self.molecules.ensure_index("molecule_id")
         self.molecules.ensure_index("last_updated")
         self.molecules.ensure_index("task_ids")
         self.molecules.ensure_index("formula_alphabetical")
+        self.molecules.ensure_index("species_hash")
 
         # Search index for bonds
         self.bonds.ensure_index("molecule_id")
@@ -110,23 +112,23 @@ class BondingBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(
-                temp_query, [self.molecules.key, "formula_alphabetical"]
-            )
+            self.molecules.query(temp_query, [self.molecules.key, "species_hash"])
         )
 
         processed_docs = set([e for e in self.bonds.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {
-            d["formula_alphabetical"]
+        to_process_hashes = {
+            d["species_hash"]
             for d in all_mols
             if d[self.molecules.key] in to_process_docs
         }
 
-        N = ceil(len(to_process_forms) / number_splits)
+        N = ceil(len(to_process_hashes) / number_splits)
 
-        for formula_chunk in grouper(to_process_forms, N):
-            yield {"query": {"formula_alphabetical": {"$in": list(formula_chunk)}}}
+        for hash_chunk in grouper(to_process_hashes, N):
+            query = dict(temp_query)
+            query["species_hash"] = {"$in": list(hash_chunk)}
+            yield {"query": query}
 
     def get_items(self) -> Iterator[List[Dict]]:
         """
@@ -151,28 +153,26 @@ class BondingBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(
-                temp_query, [self.molecules.key, "formula_alphabetical"]
-            )
+            self.molecules.query(temp_query, [self.molecules.key, "species_hash"])
         )
 
         processed_docs = set([e for e in self.bonds.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {
-            d["formula_alphabetical"]
+        to_process_hashes = {
+            d["species_hash"]
             for d in all_mols
             if d[self.molecules.key] in to_process_docs
         }
 
         self.logger.info(f"Found {len(to_process_docs)} unprocessed documents")
-        self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
+        self.logger.info(f"Found {len(to_process_hashes)} unprocessed hashes")
 
         # Set total for builder bars to have a total
-        self.total = len(to_process_forms)
+        self.total = len(to_process_hashes)
 
-        for formula in to_process_forms:
+        for shash in to_process_hashes:
             mol_query = dict(temp_query)
-            mol_query["formula_alphabetical"] = formula
+            mol_query["species_hash"] = shash
             molecules = list(self.molecules.query(criteria=mol_query))
 
             yield molecules
@@ -189,9 +189,9 @@ class BondingBuilder(Builder):
         """
 
         mols = [MoleculeDoc(**item) for item in items]
-        formula = mols[0].formula_alphabetical
+        shash = mols[0].species_hash
         mol_ids = [m.molecule_id for m in mols]
-        self.logger.debug(f"Processing {formula} : {mol_ids}")
+        self.logger.debug(f"Processing {shash} : {mol_ids}")
 
         bonding_docs = list()
 
@@ -255,7 +255,7 @@ class BondingBuilder(Builder):
                     tdoc = self.tasks.query_one(
                         {
                             "task_id": task,
-                            "formula_alphabetical": formula,
+                            "species_hash": shash,
                             "orig": {"$exists": True},
                         }
                     )
@@ -265,7 +265,7 @@ class BondingBuilder(Builder):
                             tdoc = self.tasks.query_one(
                                 {
                                     "task_id": int(task),
-                                    "formula_alphabetical": formula,
+                                    "species_hash": shash,
                                     "orig": {"$exists": True},
                                 }
                             )
@@ -288,13 +288,13 @@ class BondingBuilder(Builder):
                     )
                     bonding_docs.append(doc)
 
-        self.logger.debug(f"Produced {len(bonding_docs)} bonding docs for {formula}")
+        self.logger.debug(f"Produced {len(bonding_docs)} bonding docs for {shash}")
 
         return jsanitize([doc.model_dump() for doc in bonding_docs], allow_bson=True)
 
     def update_targets(self, items: List[List[Dict]]):
         """
-        Inserts the new documents into the charges collection
+        Inserts the new documents into the bonds collection
 
         Args:
             items [[dict]]: A list of documents to update
