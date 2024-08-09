@@ -1,18 +1,19 @@
 """ Core definition of a Materials Document """
-from typing import Dict, List, Mapping, Optional
-from emmet.core.base import EmmetMeta
 
-from pydantic import Field, BaseModel
+from typing import Dict, List, Mapping, Optional
+
+from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
+from emmet.core.base import EmmetMeta
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin
 from emmet.core.settings import EmmetSettings
 from emmet.core.structure import StructureMetadata
-from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
 from emmet.core.tasks import TaskDoc
+from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
 
 SETTINGS = EmmetSettings()
 
@@ -206,6 +207,8 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
                 entry.data["task_id"] = entry.entry_id
                 entry.data["material_id"] = material_id
                 entry.entry_id = "{}-{}".format(material_id, rt.value)
+                entry.parameters["is_hubbard"] = best_task_doc.input.is_hubbard
+                entry.parameters["hubbards"] = best_task_doc.input.hubbards
                 entries[rt] = entry
 
         if RunType.GGA not in entries and RunType.GGA_U not in entries:
