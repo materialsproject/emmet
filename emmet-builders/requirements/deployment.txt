@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=emmet/emmet-builders/requirements/deployment.txt emmet/emmet-builders/setup.py python/requirements.txt
 #
-aiohttp==3.9.4
+aiohttp==3.10.2
     # via fsspec
 aioitertools==0.11.0
     # via maggma
