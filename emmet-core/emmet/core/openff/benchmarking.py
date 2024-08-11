@@ -61,15 +61,16 @@ class SolventBenchmarkingDoc(BaseModel, arbitrary_types_allowed=True):
             # TODO: rewrite viscosity data and reconsider names
             viscosity_helfand = ViscosityHelfand(u.atoms, temp_avg=temperature)
             viscosity_helfand.run()
-            # viscosity = viscosity_helfand.results.visc_by_particle.mean()
+            viscosity_function_values = viscosity_helfand.results.timeseries.tolist()
 
         else:
+            viscosity_function_values = None
             pass
 
         return cls(
             density=density,
             # viscosity_values=viscosity_helfand.results.visc_by_particle.tolist(),
-            # viscosity_times=viscosity_helfand.results.timeseries.tolist(),
+            viscosity_function_values=viscosity_function_values,
             # viscosity=viscosity,
             dielectric=eps,
             job_uuid=job_uuid,
