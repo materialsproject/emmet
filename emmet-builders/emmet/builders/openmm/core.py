@@ -255,7 +255,7 @@ class BenchmarkingBuilder(Builder):
     #     for split in grouper(keys, N):
     #         yield {"query": {self.materials.key: {"$in": list(split)}}}
 
-    def get_items(self):
+    def get_items(self, local_trajectories=False):
         self.logger.info("Electrolyte builder started.")
 
         hosts = self.md_docs.query(self.query, ["hosts"])
@@ -273,7 +273,7 @@ class BenchmarkingBuilder(Builder):
             len_calcs = [len(job["output"]["calcs_reversed"] or []) for job in jobs]
             last_job = jobs[np.argmax(len_calcs)]
 
-            insert_blobs(self.blobs, last_job["output"])
+            insert_blobs(self.blobs, last_job["output"], include_traj=not local_trajectories)
 
             items.append(last_job)
 
