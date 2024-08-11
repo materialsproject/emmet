@@ -4,7 +4,7 @@
 #
 #    pip-compile --all-extras --output-file=requirements/ubuntu-latest_py3.10_extras.txt
 #
-aiohappyeyeballs==2.3.2
+aiohappyeyeballs==2.3.4
     # via aiohttp
 aiohttp==3.10.0
     # via fsspec
@@ -272,7 +272,7 @@ multidict==6.0.5
     # via
     #   aiohttp
     #   yarl
-mypy==1.11.0
+mypy==1.11.1
     # via emmet-core (setup.py)
 mypy-extensions==1.0.0
     # via
@@ -623,7 +623,7 @@ torch==2.2.1
     #   pytorch-lightning
     #   torchdata
     #   torchmetrics
-torchdata==0.7.1
+torchdata==0.8.0
     # via dgl
 torchmetrics==1.4.0.post0
     # via
