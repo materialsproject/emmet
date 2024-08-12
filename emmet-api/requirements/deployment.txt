@@ -14,7 +14,7 @@ asgi-logger==0.1.0
     # via emmet-api (emmet/emmet-api/setup.py)
 asgiref==3.8.1
     # via asgi-logger
-attrs==24.1.0
+attrs==24.2.0
     # via
     #   cattrs
     #   ddtrace
@@ -23,11 +23,11 @@ attrs==24.1.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.34.153
+boto3==1.34.158
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.34.153
+botocore==1.34.158
     # via
     #   boto3
     #   s3transfer
@@ -37,7 +37,7 @@ cattrs==23.2.3
     # via ddtrace
 certifi==2024.7.4
     # via requests
-cffi==1.16.0
+cffi==1.17.0
     # via
     #   cryptography
     #   pynacl
@@ -51,7 +51,7 @@ cycler==0.12.1
     # via matplotlib
 ddsketch==3.0.1
     # via ddtrace
-ddtrace==2.10.3
+ddtrace==2.10.4
     # via emmet-api (emmet/emmet-api/setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -59,7 +59,7 @@ dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.2rc3
+emmet-core==0.84.2rc4
     # via emmet-api (emmet/emmet-api/setup.py)
 envier==0.5.2
     # via ddtrace
@@ -71,7 +71,7 @@ fastapi==0.112.0
     # via emmet-api (emmet/emmet-api/setup.py)
 fonttools==4.53.1
     # via matplotlib
-gunicorn==22.0.0
+gunicorn==23.0.0
     # via emmet-api (emmet/emmet-api/setup.py)
 idna==3.7
     # via
@@ -101,7 +101,7 @@ lazy-loader==0.4
     # via scikit-image
 maggma==0.69.1
     # via emmet-api (emmet/emmet-api/setup.py)
-matplotlib==3.9.0
+matplotlib==3.9.1.post1
     # via
     #   -r python/requirements.txt
     #   pymatgen
@@ -141,7 +141,7 @@ numpy==1.26.4
     #   tifffile
 opentelemetry-api==1.26.0
     # via ddtrace
-orjson==3.10.6
+orjson==3.10.7
     # via maggma
 packaging==24.1
     # via
@@ -158,7 +158,7 @@ pandas==2.2.2
     #   -r python/requirements.txt
     #   maggma
     #   pymatgen
-paramiko==3.4.0
+paramiko==3.4.1
     # via sshtunnel
 pillow==10.4.0
     # via
@@ -189,7 +189,7 @@ pydantic-settings==2.4.0
     #   maggma
 pydash==8.0.3
     # via maggma
-pymatgen==2024.7.18
+pymatgen==2024.8.9
     # via
     #   emmet-core
     #   mp-pyrho
@@ -215,7 +215,7 @@ python-dotenv==1.0.1
     # via pydantic-settings
 pytz==2024.1
     # via pandas
-pyyaml==6.0.1
+pyyaml==6.0.2
     # via pybtex
 pyzmq==26.1.0
     # via maggma
@@ -225,7 +225,7 @@ referencing==0.35.1
     #   jsonschema-specifications
 requests==2.32.3
     # via pymatgen
-rpds-py==0.19.1
+rpds-py==0.20.0
     # via
     #   jsonschema
     #   referencing
@@ -266,13 +266,13 @@ sshtunnel==0.4.0
     # via maggma
 starlette==0.37.2
     # via fastapi
-sympy==1.13.1
+sympy==1.13.2
     # via pymatgen
 tabulate==0.9.0
     # via pymatgen
 tenacity==9.0.0
     # via plotly
-tifffile==2024.7.24
+tifffile==2024.8.10
     # via scikit-image
 tqdm==4.66.5
     # via
@@ -301,7 +301,7 @@ wrapt==1.16.0
     # via deprecated
 xmltodict==0.13.0
     # via ddtrace
-zipp==3.19.2
+zipp==3.20.0
     # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
