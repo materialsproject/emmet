@@ -118,10 +118,10 @@ def materials_resource(materials_store):
             LicenseQuery(),
         ],
         header_processor=GlobalHeaderProcessor(),
+        query_to_configure_on_request=LicenseQuery(),
         tags=["Materials"],
         sub_path="/core/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,  # type: ignore
     )
-
     return resource
