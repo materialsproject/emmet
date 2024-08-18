@@ -93,5 +93,7 @@ class SolventBenchmarkingDoc(BaseModel, arbitrary_types_allowed=True):
             dielectric=eps,
             job_uuid=job_uuid,
             flow_uuid=flow_uuid,
+            dielectric_run_kwargs=dielectric_run_kwargs,
+            viscosity_run_kwargs=viscosity_run_kwargs,
             tags=tags,
         )
