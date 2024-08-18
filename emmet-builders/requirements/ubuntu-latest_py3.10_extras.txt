@@ -610,7 +610,7 @@ tqdm==4.66.4
     #   mdanalysis
     #   pymatgen
     #   pytorch-lightning
-transport-analysis==0.1.0
+transport-analysis==0.1.2
     # via emmet-builders (setup.py)
 triton==2.2.0
     # via torch
