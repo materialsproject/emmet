@@ -30,6 +30,18 @@ class SolventBenchmarkingDoc(BaseModel, arbitrary_types_allowed=True):
         None, description="The UUID of the top level host from that job."
     )
 
+    dielectric_run_kwargs: Optional[dict] = Field(
+        None, description="kwargs passed to the DielectricConstant.run method"
+    )
+
+    viscosity_run_kwargs: Optional[dict] = Field(
+        None, description="kwargs passed to the ViscosityHelfand.run method"
+    )
+
+    tags: Optional[list[str]] = Field(
+        [], title="tag", description="Metadata tagged to the parent job."
+    )
+
     @classmethod
     def from_universe(
         cls,
@@ -38,12 +50,16 @@ class SolventBenchmarkingDoc(BaseModel, arbitrary_types_allowed=True):
         density: Optional[float] = None,
         job_uuid: Optional[str] = None,
         flow_uuid: Optional[str] = None,
+        dielectric_run_kwargs: Optional[dict] = None,
+        viscosity_run_kwargs: Optional[dict] = None,
+        tags: Optional[list[str]] = None,
     ) -> "SolventBenchmarkingDoc":
         if temperature is not None:
             dielectric = DielectricConstant(
                 u.atoms, temperature=temperature, make_whole=False
             )
-            dielectric.run()
+            dielectric_run_kwargs = dielectric_run_kwargs or {}
+            dielectric.run(**dielectric_run_kwargs)
             eps = dielectric.results.eps_mean
         else:
             warnings.warn(
@@ -58,7 +74,8 @@ class SolventBenchmarkingDoc(BaseModel, arbitrary_types_allowed=True):
                 temp_avg=temperature,
                 linear_fit_window=(start, stop),
             )
-            viscosity_helfand.run()
+            viscosity_run_kwargs = viscosity_run_kwargs or {}
+            viscosity_helfand.run(**viscosity_run_kwargs)
             viscosity_function_values = viscosity_helfand.results.timeseries.tolist()
             viscosity = viscosity_helfand.results.viscosity
 

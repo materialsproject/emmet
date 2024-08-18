@@ -290,6 +290,7 @@ class BenchmarkingBuilder(Builder):
         items,
         local_trajectories: bool = False,
         rebase_traj_path: tuple[Path, Path] = None,
+        **benchmarking_kwargs,
     ):
         self.logger.info(f"Processing {len(items)} materials for electrolyte builder.")
 
@@ -311,6 +312,8 @@ class BenchmarkingBuilder(Builder):
                 density=task_doc.calcs_reversed[0].output.density[-1],
                 job_uuid=item["uuid"],
                 flow_uuid=item["hosts"][-1],
+                tags=task_doc.tags,
+                **benchmarking_kwargs,
             )
 
             del u
