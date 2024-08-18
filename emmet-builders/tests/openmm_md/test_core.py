@@ -300,6 +300,10 @@ def test_benchmarking_builder(cco_stores, benchmarking_store):
     assert benchmarking_doc["dielectric"] is not None
     assert len(benchmarking_doc["viscosity_function_values"]) == 20
 
+    # test that benchmarking_store has docs
+    docs = benchmarking_store.query()
+    assert len(list(docs)) == 1
+
 
 def test_instantiate_universe(water_stores, solute_store, tmp_path):
     doc_store, blob_store = water_stores
