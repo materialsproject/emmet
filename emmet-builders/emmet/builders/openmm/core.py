@@ -112,7 +112,7 @@ class ElectrolyteBuilder(Builder):
         self,
         items: List,
         local_trajectories: bool = False,
-        rebase_traj_path: tuple[Path, Path] = None,
+        rebase_traj_path: Optional[tuple[Path, Path]] = None,
     ):
         """
 
@@ -289,7 +289,7 @@ class BenchmarkingBuilder(Builder):
         self,
         items,
         local_trajectories: bool = False,
-        rebase_traj_path: tuple[Path, Path] = None,
+        rebase_traj_path: Optional[tuple[Path, Path]] = None,
         **benchmarking_kwargs,
     ):
         self.logger.info(f"Processing {len(items)} materials for electrolyte builder.")
