@@ -16,7 +16,7 @@ def insert_blobs(blobs_store: Store, task_doc: dict, include_traj: bool = True):
     interchange_blob = blobs_store.query_one({"blob_uuid": interchange_uuid})
     task_doc["interchange"] = interchange_blob["data"]
 
-    if len(task_doc["calcs_reversed"]) == 0:
+    if not task_doc["calcs_reversed"] or len(task_doc["calcs_reversed"]) == 0:
         raise ValueError("No calculations found in job output.")
 
     for calc in task_doc["calcs_reversed"]:
@@ -72,6 +72,7 @@ def instantiate_universe(
     traj_path = traj_directory / f"{job_uuid}.{traj_file_type}"
 
     # download and insert blobs if necessary
+    # they must be included before task_doc is instantiated
     new_traj = not traj_path.exists() or overwrite_local_traj
     insert_blobs(blobs, task_doc, include_traj=new_traj)
     task_doc = OpenMMTaskDocument.parse_obj(task_doc)
@@ -104,6 +105,8 @@ def resolve_traj_path(task_doc, local_trajectories, rebase_traj_path):
         traj_file = tempfile.NamedTemporaryFile()
         traj_path = Path(traj_file.name)
         with open(traj_path, "wb") as f:
+            if calc.output.traj_blob is None:
+                raise ValueError("No trajectory blob included in the task doc.")
             f.write(calc.output.traj_blob)
     return traj_path, traj_file
 
