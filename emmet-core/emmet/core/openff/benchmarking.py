@@ -64,7 +64,7 @@ class SolventBenchmarkingDoc(BaseModel, arbitrary_types_allowed=True):
 
         else:
             warnings.warn(
-                "No velocities found in the universe, viscosity will not be calculated"
+                "No velocities found in the universe, viscosity will not be calculated."
             )
             viscosity_function_values = None
             viscosity = None
