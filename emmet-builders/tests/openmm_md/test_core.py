@@ -303,6 +303,7 @@ def test_benchmarking_builder(cco_stores, benchmarking_store):
     # test that benchmarking_store has docs
     docs = benchmarking_store.query()
     assert len(list(docs)) == 1
+    assert processed_docs[0]["benchmarking"]["tags"] == ["test"]
 
 
 def test_instantiate_universe(water_stores, solute_store, tmp_path):

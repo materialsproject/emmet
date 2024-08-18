@@ -93,4 +93,5 @@ class SolventBenchmarkingDoc(BaseModel, arbitrary_types_allowed=True):
             dielectric=eps,
             job_uuid=job_uuid,
             flow_uuid=flow_uuid,
+            tags=tags,
         )
