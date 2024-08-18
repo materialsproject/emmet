@@ -39,7 +39,6 @@ class SolventBenchmarkingDoc(BaseModel, arbitrary_types_allowed=True):
         job_uuid: Optional[str] = None,
         flow_uuid: Optional[str] = None,
     ) -> "SolventBenchmarkingDoc":
-
         if temperature is not None:
             dielectric = DielectricConstant(
                 u.atoms, temperature=temperature, make_whole=False

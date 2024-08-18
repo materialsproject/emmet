@@ -273,7 +273,9 @@ class BenchmarkingBuilder(Builder):
             len_calcs = [len(job["output"]["calcs_reversed"] or []) for job in jobs]
             last_job = jobs[np.argmax(len_calcs)]
 
-            insert_blobs(self.blobs, last_job["output"], include_traj=not local_trajectories)
+            insert_blobs(
+                self.blobs, last_job["output"], include_traj=not local_trajectories
+            )
 
             items.append(last_job)
 
