@@ -12,17 +12,11 @@ from transport_analysis.viscosity import ViscosityHelfand
 class SolventBenchmarkingDoc(BaseModel, arbitrary_types_allowed=True):
     density: Optional[float] = Field(None, description="Density of the solvent")
 
-    viscosity_values: Optional[list[float]] = Field(
+    viscosity_function_values: Optional[list[float]] = Field(
         None, description="Viscosity function over time"
     )
 
-    viscosity_times: Optional[list[float]] = Field(
-        None, description="Timeseries for viscosity function"
-    )
-
-    viscosity_coefficient: Optional[float] = Field(
-        None, description="Viscosity coefficient of the solvent"
-    )
+    viscosity: Optional[float] = Field(None, description="Viscosity of the solvent")
 
     dielectric: Optional[float] = Field(
         None, description="Dielectric constant of the solvent"
@@ -40,11 +34,12 @@ class SolventBenchmarkingDoc(BaseModel, arbitrary_types_allowed=True):
     def from_universe(
         cls,
         u: Universe,
-        temperature: float,
+        temperature: Optional[float] = None,
         density: Optional[float] = None,
         job_uuid: Optional[str] = None,
         flow_uuid: Optional[str] = None,
     ) -> "SolventBenchmarkingDoc":
+
         if temperature is not None:
             dielectric = DielectricConstant(
                 u.atoms, temperature=temperature, make_whole=False
@@ -58,20 +53,27 @@ class SolventBenchmarkingDoc(BaseModel, arbitrary_types_allowed=True):
             eps = None
 
         if u.atoms.ts.has_velocities:
-            # TODO: rewrite viscosity data and reconsider names
-            viscosity_helfand = ViscosityHelfand(u.atoms, temp_avg=temperature)
+            start, stop = int(0.2 * len(u.trajectory)), int(0.8 * len(u.trajectory))
+            viscosity_helfand = ViscosityHelfand(
+                u.atoms,
+                temp_avg=temperature,
+                linear_fit_window=(start, stop),
+            )
             viscosity_helfand.run()
             viscosity_function_values = viscosity_helfand.results.timeseries.tolist()
+            viscosity = viscosity_helfand.results.viscosity
 
         else:
+            warnings.warn(
+                "No velocities found in the universe, viscosity will not be calculated"
+            )
             viscosity_function_values = None
-            pass
+            viscosity = None
 
         return cls(
             density=density,
-            # viscosity_values=viscosity_helfand.results.visc_by_particle.tolist(),
             viscosity_function_values=viscosity_function_values,
-            # viscosity=viscosity,
+            viscosity=viscosity,
             dielectric=eps,
             job_uuid=job_uuid,
             flow_uuid=flow_uuid,

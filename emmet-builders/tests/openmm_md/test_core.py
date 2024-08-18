@@ -296,8 +296,9 @@ def test_benchmarking_builder(cco_stores, benchmarking_store):
 
     benchmarking_doc = benchmarking_store.query_one()
     assert np.isclose(benchmarking_doc["density"], 0.8)
-
-    # TODO: write more robust testing
+    assert benchmarking_doc["viscosity"] is not None
+    assert benchmarking_doc["dielectric"] is not None
+    assert len(benchmarking_doc["viscosity_function_values"]) == 20
 
 
 def test_instantiate_universe(water_stores, solute_store, tmp_path):
