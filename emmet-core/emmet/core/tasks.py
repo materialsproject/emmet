@@ -457,9 +457,9 @@ class TaskDoc(StructureMetadata, extra="allow"):
         # of precedence: calcs_reversed, inputs, orig_inputs
         inp_set = None
         inp_sets_to_check = [self.input, self.orig_inputs]
-        if (calcs_reversed := getattr(self,"calcs_reversed", None)) is not None:
+        if (calcs_reversed := getattr(self, "calcs_reversed", None)) is not None:
             inp_sets_to_check = [calcs_reversed[0].input] + inp_sets_to_check
-            
+
         for inp_set in inp_sets_to_check:
             if inp_set is not None:
                 self.task_type = task_type(inp_set)
