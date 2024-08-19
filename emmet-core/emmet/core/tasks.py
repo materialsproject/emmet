@@ -467,13 +467,13 @@ class TaskDoc(StructureMetadata, extra="allow"):
 
         # calcs_reversed needed below
         if calcs_reversed is not None:
-            self.run_type = self._get_run_type(self.calcs_reversed)
+            self.run_type = self._get_run_type(calcs_reversed)
             if inp_set is not None:
-                self.calc_type = self._get_calc_type(self.calcs_reversed, inp_set)
+                self.calc_type = self._get_calc_type(calcs_reversed, inp_set)
 
             # TODO: remove after imposing TaskDoc schema on older tasks in collection
             if self.structure is None:
-                self.structure = self.calcs_reversed[0].output.structure
+                self.structure = calcs_reversed[0].output.structure
 
     # Make sure that the datetime field is properly formatted
     # (Unclear when this is not the case, please leave comment if observed)
