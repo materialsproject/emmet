@@ -456,13 +456,17 @@ class TaskDoc(StructureMetadata, extra="allow"):
         # To determine task and run type, we search for input sets in this order
         # of precedence: calcs_reversed, inputs, orig_inputs
         inp_set = None
-        for inp_set in [self.calcs_reversed[0].input, self.input, self.orig_inputs]:
+        inp_sets_to_check = [self.input, self.orig_inputs]
+        if (calcs_reversed := getattr(self,"calcs_reversed", None)) is not None:
+            inp_sets_to_check = [calcs_reversed[0].input] + inp_sets_to_check
+            
+        for inp_set in inp_sets_to_check:
             if inp_set is not None:
                 self.task_type = task_type(inp_set)
                 break
 
         # calcs_reversed needed below
-        if hasattr(self, "calcs_reversed") and self.calcs_reversed:
+        if calcs_reversed is not None:
             self.run_type = self._get_run_type(self.calcs_reversed)
             if inp_set is not None:
                 self.calc_type = self._get_calc_type(self.calcs_reversed, inp_set)
