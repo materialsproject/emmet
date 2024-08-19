@@ -448,18 +448,28 @@ class TaskDoc(StructureMetadata, extra="allow"):
         # See, e.g. https://github.com/materialsproject/emmet/issues/960
         # where run_type's were set incorrectly in older versions of TaskDoc
 
+        # only run if attributes containing input sets are available
+        attrs = ["calcs_reversed", "input", "orig_inputs"]
+        if not any(hasattr(self, attr) and getattr(self, attr) for attr in attrs):
+            return
+
         # To determine task and run type, we search for input sets in this order
         # of precedence: calcs_reversed, inputs, orig_inputs
+        inp_set = None
         for inp_set in [self.calcs_reversed[0].input, self.input, self.orig_inputs]:
             if inp_set is not None:
+                self.task_type = task_type(inp_set)
                 break
-        self.task_type = task_type(inp_set)
-        self.run_type = self._get_run_type(self.calcs_reversed)
-        self.calc_type = self._get_calc_type(self.calcs_reversed, inp_set)
 
-        # TODO: remove after imposing TaskDoc schema on older tasks in collection
-        if self.structure is None:
-            self.structure = self.calcs_reversed[0].output.structure
+        # calcs_reversed needed below
+        if hasattr(self, "calcs_reversed") and self.calcs_reversed:
+            self.run_type = self._get_run_type(self.calcs_reversed)
+            if inp_set is not None:
+                self.calc_type = self._get_calc_type(self.calcs_reversed, inp_set)
+
+            # TODO: remove after imposing TaskDoc schema on older tasks in collection
+            if self.structure is None:
+                self.structure = self.calcs_reversed[0].output.structure
 
     # Make sure that the datetime field is properly formatted
     # (Unclear when this is not the case, please leave comment if observed)
@@ -704,9 +714,11 @@ class TaskDoc(StructureMetadata, extra="allow"):
             "parameters": {
                 # Cannot be PotcarSpec document, pymatgen expects a dict
                 # Note that `potcar_spec` is optional
-                "potcar_spec": [dict(d) for d in calcs_reversed[0].input.potcar_spec]
-                if calcs_reversed[0].input.potcar_spec
-                else [],
+                "potcar_spec": (
+                    [dict(d) for d in calcs_reversed[0].input.potcar_spec]
+                    if calcs_reversed[0].input.potcar_spec
+                    else []
+                ),
                 # Required to be compatible with MontyEncoder for the ComputedEntry
                 "run_type": str(calcs_reversed[0].run_type),
                 "is_hubbard": calcs_reversed[0].input.is_hubbard,
