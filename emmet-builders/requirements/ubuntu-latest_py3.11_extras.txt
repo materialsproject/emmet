@@ -4,7 +4,9 @@
 #
 #    pip-compile --all-extras --output-file=requirements/ubuntu-latest_py3.11_extras.txt
 #
-aiohttp==3.9.5
+aiohappyeyeballs==2.3.4
+    # via aiohttp
+aiohttp==3.10.2
     # via fsspec
 aioitertools==0.11.0
     # via maggma
@@ -25,9 +27,9 @@ attrs==23.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.34.146
+boto3==1.34.151
     # via maggma
-botocore==1.34.146
+botocore==1.34.151
     # via
     #   boto3
     #   s3transfer
@@ -154,7 +156,7 @@ lightning-utilities==0.11.6
     #   torchmetrics
 livereload==2.7.0
     # via emmet-builders (setup.py)
-maggma==0.69.0
+maggma==0.69.1
     # via
     #   emmet-builders (setup.py)
     #   mp-api
@@ -195,6 +197,7 @@ mdanalysis==2.7.0
     #   emmet-builders (setup.py)
     #   emmet-core
     #   solvation-analysis
+    #   transport-analysis
 mergedeep==1.3.4
     # via
     #   mkdocs
@@ -210,7 +213,7 @@ mkdocs==1.6.0
     #   mkdocstrings
 mkdocs-autorefs==1.0.1
     # via mkdocstrings
-mkdocs-awesome-pages-plugin==2.9.2
+mkdocs-awesome-pages-plugin==2.9.3
     # via emmet-builders (setup.py)
 mkdocs-get-deps==0.2.0
     # via mkdocs
@@ -224,17 +227,17 @@ mkdocs-material-extensions==1.3.1
     #   mkdocs-material
 mkdocs-minify-plugin==0.8.0
     # via emmet-builders (setup.py)
-mkdocstrings[python]==0.25.1
+mkdocstrings[python]==0.25.2
     # via
     #   emmet-builders (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.10.5
+mkdocstrings-python==1.10.7
     # via mkdocstrings
 mmtf-python==1.1.3
     # via mdanalysis
 mongomock==4.1.2
     # via maggma
-monty==2024.7.12
+monty==2024.7.30
     # via
     #   emmet-core
     #   maggma
@@ -248,7 +251,7 @@ mp-api==0.41.2
     # via robocrys
 mpmath==1.3.0
     # via sympy
-mrcfile==1.5.2
+mrcfile==1.5.3
     # via griddataformats
 msgpack==1.0.8
     # via
@@ -259,7 +262,7 @@ multidict==6.0.5
     # via
     #   aiohttp
     #   yarl
-mypy==1.11.0
+mypy==1.11.1
     # via emmet-builders (setup.py)
 mypy-extensions==1.0.0
     # via
@@ -304,6 +307,7 @@ numpy==1.26.4
     #   solvation-analysis
     #   spglib
     #   statsmodels
+    #   tidynamics
     #   torchmetrics
 nvidia-cublas-cu12==12.1.3.1
     # via
@@ -385,7 +389,7 @@ plotly==5.23.0
     #   solvation-analysis
 pluggy==1.5.0
     # via pytest
-pre-commit==3.7.1
+pre-commit==3.8.0
     # via emmet-builders (setup.py)
 psutil==6.0.0
     # via dgl
@@ -410,7 +414,7 @@ pydantic==2.8.2
     #   pydantic-settings
 pydantic-core==2.20.1
     # via pydantic
-pydantic-settings==2.3.4
+pydantic-settings==2.4.0
     # via
     #   emmet-core
     #   maggma
@@ -437,7 +441,7 @@ pymatgen-analysis-alloys==0.0.6
     # via emmet-core
 pymatgen-analysis-diffusion==2023.8.15
     # via emmet-core
-pymdown-extensions==10.8.1
+pymdown-extensions==10.9
     # via
     #   mkdocs-material
     #   mkdocstrings
@@ -449,7 +453,7 @@ pynacl==1.5.0
     # via paramiko
 pyparsing==3.1.2
     # via matplotlib
-pytest==8.3.1
+pytest==8.3.2
     # via
     #   emmet-builders (setup.py)
     #   pytest-cov
@@ -500,7 +504,7 @@ requests==2.32.3
     #   torchdata
 robocrys==0.2.9
     # via emmet-core
-rpds-py==0.19.0
+rpds-py==0.19.1
     # via
     #   jsonschema
     #   referencing
@@ -562,12 +566,14 @@ sympy==1.13.1
     #   torch
 tabulate==0.9.0
     # via pymatgen
-tenacity==8.5.0
+tenacity==9.0.0
     # via plotly
 threadpoolctl==3.5.0
     # via
     #   mdanalysis
     #   scikit-learn
+tidynamics==1.1.2
+    # via transport-analysis
 torch==2.2.1
     # via
     #   chgnet
@@ -576,7 +582,7 @@ torch==2.2.1
     #   pytorch-lightning
     #   torchdata
     #   torchmetrics
-torchdata==0.7.1
+torchdata==0.8.0
     # via dgl
 torchmetrics==1.4.0.post0
     # via
@@ -593,13 +599,15 @@ tqdm==4.66.4
     #   mdanalysis
     #   pymatgen
     #   pytorch-lightning
+transport-analysis==0.1.0
+    # via emmet-builders (setup.py)
 triton==2.2.0
     # via torch
 typeguard==4.3.0
     # via inflect
 types-requests==2.32.0.20240712
     # via emmet-builders (setup.py)
-types-setuptools==71.1.0.20240723
+types-setuptools==71.1.0.20240726
     # via emmet-builders (setup.py)
 typing-extensions==4.12.2
     # via
