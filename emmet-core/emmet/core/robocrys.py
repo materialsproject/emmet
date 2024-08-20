@@ -1,10 +1,12 @@
-from typing import Union, Optional
+from typing import Optional, Union
 
 from pydantic import BaseModel, Field
 from pymatgen.core.structure import Structure
+from robocrys.condense.mineral import MineralMatcher
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
+from emmet.core.utils import generate_robocrys_condensed_struct_and_description
 
 
 class MineralData(BaseModel):
@@ -73,25 +75,25 @@ class RobocrystallogapherDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_structure(cls, structure: Structure, material_id: MPID, **kwargs):  # type: ignore[override]
-        try:
-            from robocrys import StructureCondenser, StructureDescriber
-            from robocrys import __version__ as __robocrys_version__
-        except ImportError:
-            raise ImportError(
-                "robocrys needs to be installed to generate RobocrystallographerDoc"
+    def from_structure(
+        cls,
+        structure: Structure,
+        material_id: MPID,
+        robocrys_version: str,
+        mineral_matcher: MineralMatcher | None = None,
+        **kwargs
+    ):
+        condensed_structure, description = (
+            generate_robocrys_condensed_struct_and_description(
+                structure=structure, mineral_matcher=mineral_matcher
             )
-
-        condensed_structure = StructureCondenser().condense_structure(structure)
-        description = StructureDescriber(
-            describe_symmetry_labels=False, fmt="unicode", return_parts=False
-        ).describe(condensed_structure=condensed_structure)
+        )
 
         return super().from_structure(
             meta_structure=structure,
             material_id=material_id,
             condensed_structure=condensed_structure,
             description=description,
-            robocrys_version=__robocrys_version__,
+            robocrys_version=robocrys_version,
             **kwargs
         )
