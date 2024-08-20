@@ -437,6 +437,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                 additional_fields=additional_fields,
                 volumetric_files=ctx.params["store_volumetric_data"],
                 task_names=ctx.params["runs"],
+                run_bader = "bader_analysis.json.gz"
             )
         except Exception as ex:
             logger.error(f"Failed to build a TaskDoc from {vaspdir}: {ex}")
