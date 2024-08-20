@@ -5,8 +5,6 @@ from itertools import groupby
 from typing import Any, Dict, Iterator, List, Optional, Union
 
 import numpy as np
-from emmet.core.mpid import MPculeID
-from emmet.core.settings import EmmetSettings
 from monty.json import MSONable
 from pydantic import BaseModel
 from pymatgen.analysis.elasticity.strain import Deformation
@@ -23,6 +21,11 @@ from pymatgen.transformations.standard_transformations import (
     DeformStructureTransformation,
 )
 from pymatgen.util.graph_hashing import weisfeiler_lehman_graph_hash
+from robocrys import StructureCondenser, StructureDescriber
+from robocrys.condense.mineral import MineralMatcher
+
+from emmet.core.mpid import MPculeID
+from emmet.core.settings import EmmetSettings
 
 try:
     import bson
@@ -103,6 +106,19 @@ def undeform_structure(structure: Structure, transformations: Dict) -> Structure
             )
 
     return structure
+
+
+def generate_robocrys_condensed_struct_and_description(
+    structure: Structure, mineral_matcher: MineralMatcher | None = None
+) -> tuple[dict[Any], str]:
+    condenser = StructureCondenser(mineral_matcher=mineral_matcher)
+    describer = StructureDescriber(
+        describe_symmetry_labels=False, fmt="unicode", return_parts=False
+    )
+    condensed_structure = condenser.condense_structure(structure)
+    description = describer.describe(condensed_structure)
+
+    return condensed_structure, description
 
 
 def group_molecules(molecules: List[Molecule]):
