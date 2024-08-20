@@ -21,8 +21,6 @@ from pymatgen.transformations.standard_transformations import (
     DeformStructureTransformation,
 )
 from pymatgen.util.graph_hashing import weisfeiler_lehman_graph_hash
-from robocrys import StructureCondenser, StructureDescriber
-from robocrys.condense.mineral import MineralMatcher
 
 from emmet.core.mpid import MPculeID
 from emmet.core.settings import EmmetSettings
@@ -109,8 +107,15 @@ def undeform_structure(structure: Structure, transformations: Dict) -> Structure
 
 
 def generate_robocrys_condensed_struct_and_description(
-    structure: Structure, mineral_matcher: MineralMatcher | None = None
+    structure: Structure, mineral_matcher=None
 ) -> tuple[dict[Any], str]:
+    try:
+        from robocrys import StructureCondenser, StructureDescriber
+    except ImportError:
+        raise ImportError(
+            "robocrys needs to be installed to generate Robocrystallographer descriptions"
+        )
+
     condenser = StructureCondenser(mineral_matcher=mineral_matcher)
     describer = StructureDescriber(
         describe_symmetry_labels=False, fmt="unicode", return_parts=False
