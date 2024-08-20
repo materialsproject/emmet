@@ -649,7 +649,7 @@ class Calculation(CalculationBaseModel):
         parse_dos: Union[str, bool] = False,
         parse_bandstructure: Union[str, bool] = False,
         average_locpot: bool = True,
-        run_bader: Union[bool,str] = False,
+        run_bader: Union[bool, str] = False,
         run_ddec6: Union[bool, str] = False,
         strip_bandstructure_projections: bool = False,
         strip_dos_projections: bool = False,
@@ -709,11 +709,11 @@ class Calculation(CalculationBaseModel):
         run_ddec6 : Union[bool , str] = False
             If a bool: whether to run DDEC6 on the charge density.
             If a string, it's interpreted as either
-                (1) the path to the atomic densities directory. 
+                (1) the path to the atomic densities directory.
                     Can also be set via the DDEC6_ATOMIC_DENSITIES_DIR
                     environment variable. The files are available at
                     https://sourceforge.net/projects/ddec/files.
-                (2) the path to a file containing the `summary` attr of 
+                (2) the path to a file containing the `summary` attr of
                     `pymatgen.command_line.chargemol_caller.ChargemolAnalysis`
         strip_dos_projections
             Whether to strip the element and site projections from the density of
@@ -776,7 +776,7 @@ class Calculation(CalculationBaseModel):
             vasp_objects[VaspObject.BANDSTRUCTURE] = bandstructure  # type: ignore
 
         bader = None
-        if isinstance(run_bader,(str,Path)) and Path(run_bader).is_file():
+        if isinstance(run_bader, (str, Path)) and Path(run_bader).is_file():
             # Load pre-computed bader analysis from file
             bader = loadfn(str(run_bader))
         elif run_bader and VaspObject.CHGCAR in output_file_paths:
@@ -784,7 +784,7 @@ class Calculation(CalculationBaseModel):
             bader = bader_analysis_from_path(dir_name, suffix=suffix)
 
         ddec6 = None
-        if isinstance(run_ddec6,(str,Path)) and Path(run_ddec6).is_file():
+        if isinstance(run_ddec6, (str, Path)) and Path(run_ddec6).is_file():
             # Load pre-computed DDEC6 analysis from file
             ddec6 = loadfn(str(run_ddec6))
         elif run_ddec6 and VaspObject.CHGCAR in output_file_paths:
@@ -793,7 +793,7 @@ class Calculation(CalculationBaseModel):
             if isinstance(run_ddec6, (str, Path)) and Path(run_ddec6).is_dir():
                 densities_path = run_ddec6
             ddec6 = ChargemolAnalysis(
-                path=dir_name,atomic_densities_path=densities_path
+                path=dir_name, atomic_densities_path=densities_path
             ).summary
 
         locpot = None
