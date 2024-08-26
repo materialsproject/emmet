@@ -29,9 +29,9 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.2
+boto3==1.35.5
     # via maggma
-botocore==1.35.2
+botocore==1.35.5
     # via
     #   boto3
     #   s3transfer
@@ -105,7 +105,7 @@ ghp-import==2.1.0
     # via mkdocs
 griddataformats==1.0.2
     # via mdanalysis
-griffe==1.1.1
+griffe==1.2.0
     # via mkdocstrings-python
 h5py==3.11.0
     # via phonopy
@@ -113,7 +113,7 @@ htmlmin2==0.1.13
     # via mkdocs-minify-plugin
 identify==2.6.0
     # via pre-commit
-idna==3.7
+idna==3.8
     # via
     #   requests
     #   yarl
@@ -160,7 +160,7 @@ lightning-utilities==0.11.6
     #   torchmetrics
 livereload==2.7.0
     # via emmet-builders (setup.py)
-maggma==0.69.2
+maggma==0.69.3
     # via
     #   emmet-builders (setup.py)
     #   mp-api
@@ -221,7 +221,7 @@ mkdocs-awesome-pages-plugin==2.9.3
     # via emmet-builders (setup.py)
 mkdocs-get-deps==0.2.0
     # via mkdocs
-mkdocs-markdownextradata-plugin==0.2.5
+mkdocs-markdownextradata-plugin==0.2.6
     # via emmet-builders (setup.py)
 mkdocs-material==8.2.16
     # via emmet-builders (setup.py)
@@ -266,7 +266,7 @@ multidict==6.0.5
     # via
     #   aiohttp
     #   yarl
-mypy==1.11.1
+mypy==1.11.2
     # via emmet-builders (setup.py)
 mypy-extensions==1.0.0
     # via
@@ -374,7 +374,7 @@ pathspec==0.12.1
     # via mkdocs
 patsy==0.5.6
     # via statsmodels
-phonopy==2.26.7
+phonopy==2.27.0
     # via matcalc
 pillow==10.4.0
     # via
@@ -453,7 +453,7 @@ pymongo==4.8.0
     #   matminer
 pynacl==1.5.0
     # via paramiko
-pyparsing==3.1.2
+pyparsing==3.1.4
     # via matplotlib
 pytest==8.3.2
     # via
@@ -489,7 +489,7 @@ pyyaml==6.0.2
     #   pyyaml-env-tag
 pyyaml-env-tag==0.1
     # via mkdocs
-pyzmq==26.1.1
+pyzmq==26.2.0
     # via maggma
 rdkit==2024.3.5
     # via solvation-analysis
@@ -616,7 +616,7 @@ typeguard==4.3.0
     # via inflect
 types-requests==2.32.0.20240712
     # via emmet-builders (setup.py)
-types-setuptools==71.1.0.20240818
+types-setuptools==73.0.0.20240822
     # via emmet-builders (setup.py)
 typing-extensions==4.12.2
     # via
