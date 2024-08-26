@@ -17,9 +17,9 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.2
+boto3==1.35.5
     # via maggma
-botocore==1.35.2
+botocore==1.35.5
     # via
     #   boto3
     #   s3transfer
@@ -53,7 +53,7 @@ griddataformats==1.0.2
     # via mdanalysis
 h5py==3.11.0
     # via phonopy
-idna==3.7
+idna==3.8
     # via requests
 inflect==7.3.1
     # via robocrys
@@ -80,7 +80,7 @@ kiwisolver==1.4.5
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
-maggma==0.69.2
+maggma==0.69.3
     # via
     #   emmet-builders (setup.py)
     #   mp-api
@@ -181,7 +181,7 @@ paramiko==3.4.1
     # via sshtunnel
 patsy==0.5.6
     # via statsmodels
-phonopy==2.26.7
+phonopy==2.27.0
     # via matcalc
 pillow==10.4.0
     # via
@@ -234,7 +234,7 @@ pymongo==4.8.0
     #   matminer
 pynacl==1.5.0
     # via paramiko
-pyparsing==3.1.2
+pyparsing==3.1.4
     # via matplotlib
 pytest==8.3.2
     # via solvation-analysis
@@ -252,7 +252,7 @@ pyyaml==6.0.2
     # via
     #   phonopy
     #   pybtex
-pyzmq==26.1.1
+pyzmq==26.2.0
     # via maggma
 rdkit==2024.3.5
     # via solvation-analysis
@@ -282,7 +282,7 @@ s3transfer==0.10.2
     # via boto3
 scikit-learn==1.5.1
     # via matminer
-scipy==1.14.0
+scipy==1.14.1
     # via
     #   ase
     #   griddataformats

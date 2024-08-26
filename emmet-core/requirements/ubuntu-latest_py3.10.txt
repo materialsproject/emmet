@@ -16,7 +16,7 @@ cycler==0.12.1
     # via matplotlib
 fonttools==4.53.1
     # via matplotlib
-idna==3.7
+idna==3.8
     # via requests
 joblib==1.4.2
     # via pymatgen
@@ -69,7 +69,7 @@ pydantic-settings==2.4.0
     # via emmet-core (setup.py)
 pymatgen==2024.8.9
     # via emmet-core (setup.py)
-pyparsing==3.1.2
+pyparsing==3.1.4
     # via matplotlib
 python-dateutil==2.9.0.post0
     # via
@@ -87,7 +87,7 @@ ruamel-yaml==0.18.6
     # via pymatgen
 ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
-scipy==1.14.0
+scipy==1.14.1
     # via pymatgen
 six==1.16.0
     # via

@@ -21,11 +21,11 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.2
+boto3==1.35.5
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.35.2
+botocore==1.35.5
     # via
     #   boto3
     #   s3transfer
@@ -61,7 +61,7 @@ envier==0.5.2
     # via ddtrace
 exceptiongroup==1.2.2
     # via anyio
-fastapi==0.112.1
+fastapi==0.112.2
     # via
     #   emmet-api (setup.py)
     #   maggma
@@ -71,7 +71,7 @@ gunicorn==23.0.0
     # via emmet-api (setup.py)
 h11==0.14.0
     # via uvicorn
-idna==3.7
+idna==3.8
     # via
     #   anyio
     #   requests
@@ -97,7 +97,7 @@ latexcodec==3.0.0
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
-maggma[api]==0.69.2
+maggma[api]==0.69.3
     # via emmet-api (setup.py)
 matplotlib==3.9.2
     # via pymatgen
@@ -197,7 +197,7 @@ pymongo==4.8.0
     # via maggma
 pynacl==1.5.0
     # via paramiko
-pyparsing==3.1.2
+pyparsing==3.1.4
     # via matplotlib
 python-dateutil==2.9.0.post0
     # via
@@ -211,7 +211,7 @@ pytz==2024.1
     # via pandas
 pyyaml==6.0.2
     # via pybtex
-pyzmq==26.1.1
+pyzmq==26.2.0
     # via maggma
 referencing==0.35.1
     # via
@@ -233,7 +233,7 @@ s3transfer==0.10.2
     # via boto3
 scikit-image==0.24.0
     # via pymatgen-analysis-defects
-scipy==1.14.0
+scipy==1.14.1
     # via
     #   pymatgen
     #   scikit-image
@@ -263,7 +263,7 @@ tabulate==0.9.0
     # via pymatgen
 tenacity==9.0.0
     # via plotly
-tifffile==2024.8.10
+tifffile==2024.8.24
     # via scikit-image
 tqdm==4.66.5
     # via
