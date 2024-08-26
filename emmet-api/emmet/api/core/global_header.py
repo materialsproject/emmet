@@ -1,7 +1,7 @@
 from maggma.api.resource.core import HeaderProcessor
 from fastapi import Response, Request
-from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
+from emmet.api.routes.materials.query_operators import LicenseQuery
 
 
 class GlobalHeaderProcessor(HeaderProcessor):
@@ -17,7 +17,7 @@ class GlobalHeaderProcessor(HeaderProcessor):
         response.headers["X-Consumer-Id"] = consumer_id
 
     def configure_query_on_request(
-        self, request: Request, query_operator: QueryOperator
+        self, request: Request, query_operator: LicenseQuery
     ) -> STORE_PARAMS:
         groups = request.headers.get("x-consumer-groups", None)
         # groups : None, "admin", "agree to terms", "didn't agree to terms"
