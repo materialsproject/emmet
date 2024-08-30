@@ -186,8 +186,8 @@ def opls_stores(test_dir, tmp_path):
         ]
 
         ff_xmls = [
-            (opls_xmls / "CCO.xml").read_text(),
-            (opls_xmls / "CO.xml").read_text(),
+            (opls_xmls / "CCO.xml"),
+            (opls_xmls / "CO.xml"),
         ]
 
         interchange_job = generate_openmm_interchange(mol_specs, 1.0, ff_xmls)

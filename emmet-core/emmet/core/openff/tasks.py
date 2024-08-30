@@ -55,7 +55,7 @@ class MoleculeSpec(MSONable):
     openff_mol: str  # a tk.Molecule object serialized with to_json
 
 
-class ClassicalMDTaskDocument(BaseModel, extra="allow"):  # type: ignore[call-arg]
+class MDTaskDocument(BaseModel, extra="allow"):  # type: ignore[call-arg]
     """Definition of the OpenMM task document."""
 
     tags: Optional[list[str]] = Field(
@@ -81,12 +81,12 @@ class ClassicalMDTaskDocument(BaseModel, extra="allow"):  # type: ignore[call-ar
 
     interchange: Optional[HexBytes] = Field(
         None,
-        description="A byte serialized OpenFF interchange object. "
-        "To generate, the Interchange is serialized to json and"
+        description="A byte serialized interchange object. "
+        "To generate, the Interchange is serialized to json and "
         "the json is transformed to bytes with a utf-8 encoding. ",
     )
 
-    molecule_specs: Optional[list[MoleculeSpec]] = Field(
+    interchange_meta: Optional[list[MoleculeSpec]] = Field(
         None, description="Molecules within the system."
     )
 
@@ -100,4 +100,12 @@ class ClassicalMDTaskDocument(BaseModel, extra="allow"):  # type: ignore[call-ar
     last_updated: Optional[datetime] = Field(
         None,
         description="Timestamp for the most recent calculation for this task document",
+    )
+
+
+class ClassicalMDTaskDocument(MDTaskDocument):
+    """Definition of the OpenMM task document."""
+
+    interchange_meta: Optional[list[MoleculeSpec]] = Field(
+        None, description="Molecules within the system."
     )

@@ -188,12 +188,15 @@ def create_solute(
     Solute
         The created Solute object.
     """
-    solute = u.select_atoms(f"resname {solute_name}")
+    solute = u.residues[u.residues.resnames == solute_name].atoms
 
     unique_resnames = np.unique(u.atoms.residues.resnames)
-    solvents = {
-        resname: u.select_atoms(f"resname {resname}") for resname in unique_resnames
-    }
+
+    solvents = {}
+    for resname in unique_resnames:
+        atoms = u.residues[u.residues.resnames == resname].atoms
+        solvents[resname] = atoms
+
     if not include_solute_in_solvents:
         solvents.pop(solute_name, None)
 
@@ -332,7 +335,7 @@ def instantiate_universe(
 
     return create_universe(
         interchange,
-        task_doc.molecule_specs,
+        task_doc.interchange_meta,
         traj_path,
         traj_format=traj_file_type,
     )

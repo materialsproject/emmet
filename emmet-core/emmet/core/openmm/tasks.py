@@ -5,16 +5,17 @@ from __future__ import annotations
 import io
 from pathlib import Path
 from typing import Optional, Union
+import pandas as pd  # type: ignore[import-untyped]
 
 import openmm
 from openmm import XmlSerializer
 from openmm.app import Simulation
 from openmm.app.pdbfile import PDBFile
-import pandas as pd  # type: ignore[import-untyped]
 from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
 from pydantic import BaseModel, Field
+from pymatgen.core import Structure
 
-from emmet.core.openff import ClassicalMDTaskDocument  # type: ignore[import-untyped]
+from emmet.core.openff import MoleculeSpec, MDTaskDocument  # type: ignore[import-untyped]
 from emmet.core.openff.tasks import HexBytes  # type: ignore[import-untyped]
 
 
@@ -232,7 +233,7 @@ class Calculation(BaseModel):
     )
 
 
-class OpenMMTaskDocument(ClassicalMDTaskDocument):
+class OpenMMTaskDocument(MDTaskDocument):
     """Definition of the OpenMM task document."""
 
     calcs_reversed: Optional[list[Calculation]] = Field(
@@ -240,6 +241,12 @@ class OpenMMTaskDocument(ClassicalMDTaskDocument):
         title="Calcs reversed data",
         description="Detailed data for each OpenMM calculation contributing to the "
         "task document.",
+    )
+
+    interchange_meta: Optional[list[MoleculeSpec] | Structure] = Field(
+        None,
+        title="Interchange meta data",
+        description="Metadata for the interchange",
     )
 
 

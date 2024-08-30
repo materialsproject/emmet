@@ -86,7 +86,7 @@ def instantiate_universe(
 
     return create_universe(
         interchange,
-        task_doc.molecule_specs,
+        task_doc.interchange_meta,
         traj_path,
         traj_format=traj_file_type,
     )
@@ -124,7 +124,7 @@ def task_doc_to_universe(task_doc, traj_path):
 
     return create_universe(
         interchange,
-        task_doc.molecule_specs,
+        task_doc.interchange_meta,
         traj_path,
         traj_format=calc.input.traj_file_type,
     )
