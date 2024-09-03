@@ -91,7 +91,7 @@ jsonschema==4.23.0
     # via maggma
 jsonschema-specifications==2023.12.1
     # via jsonschema
-kiwisolver==1.4.5
+kiwisolver==1.4.6
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
