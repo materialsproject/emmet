@@ -4,7 +4,7 @@
 #
 #    pip-compile --all-extras --output-file=requirements/ubuntu-latest_py3.10_extras.txt
 #
-aioitertools==0.11.0
+aioitertools==0.12.0
     # via maggma
 annotated-types==0.7.0
     # via pydantic
@@ -21,11 +21,11 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.6
+boto3==1.35.10
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.35.6
+botocore==1.35.10
     # via
     #   boto3
     #   s3transfer
@@ -33,7 +33,7 @@ bracex==2.5
     # via wcmatch
 bytecode==0.15.1
     # via ddtrace
-certifi==2024.7.4
+certifi==2024.8.30
     # via requests
 cffi==1.17.0
     # via
@@ -50,7 +50,7 @@ click==8.1.7
     #   uvicorn
 colorama==0.4.6
     # via griffe
-contourpy==1.2.1
+contourpy==1.3.0
     # via matplotlib
 coverage[toml]==7.6.1
     # via pytest-cov
@@ -60,7 +60,7 @@ csscompressor==0.9.5
     # via mkdocs-minify-plugin
 cycler==0.12.1
     # via matplotlib
-ddtrace==2.11.1
+ddtrace==2.11.2
     # via emmet-api (setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -106,7 +106,7 @@ idna==3.8
     #   requests
 imageio==2.35.1
     # via scikit-image
-importlib-metadata==8.0.0
+importlib-metadata==8.4.0
     # via opentelemetry-api
 iniconfig==2.0.0
     # via pytest
@@ -130,7 +130,7 @@ jsonschema==4.23.0
     # via maggma
 jsonschema-specifications==2023.12.1
     # via jsonschema
-kiwisolver==1.4.5
+kiwisolver==1.4.6
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
@@ -161,7 +161,7 @@ mergedeep==1.3.4
     # via
     #   mkdocs
     #   mkdocs-get-deps
-mkdocs==1.6.0
+mkdocs==1.6.1
     # via
     #   emmet-api (setup.py)
     #   mkdocs-autorefs
@@ -170,8 +170,10 @@ mkdocs==1.6.0
     #   mkdocs-material
     #   mkdocs-minify-plugin
     #   mkdocstrings
-mkdocs-autorefs==1.1.0
-    # via mkdocstrings
+mkdocs-autorefs==1.2.0
+    # via
+    #   mkdocstrings
+    #   mkdocstrings-python
 mkdocs-awesome-pages-plugin==2.9.3
     # via emmet-api (setup.py)
 mkdocs-get-deps==0.2.0
@@ -186,11 +188,11 @@ mkdocs-material-extensions==1.3.1
     #   mkdocs-material
 mkdocs-minify-plugin==0.8.0
     # via emmet-api (setup.py)
-mkdocstrings[python]==0.25.2
+mkdocstrings[python]==0.26.0
     # via
     #   emmet-api (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.10.8
+mkdocstrings-python==1.11.1
     # via mkdocstrings
 mongomock==4.1.2
     # via maggma
@@ -235,7 +237,7 @@ numpy==1.26.4
     #   shapely
     #   spglib
     #   tifffile
-opentelemetry-api==1.26.0
+opentelemetry-api==1.27.0
     # via ddtrace
 orjson==3.10.7
     # via maggma
@@ -269,13 +271,13 @@ platformdirs==4.2.2
     #   mkdocs-get-deps
     #   mkdocstrings
     #   virtualenv
-plotly==5.23.0
+plotly==5.24.0
     # via pymatgen
 pluggy==1.5.0
     # via pytest
 pre-commit==3.8.0
     # via emmet-api (setup.py)
-protobuf==5.27.3
+protobuf==5.28.0
     # via ddtrace
 pybtex==0.24.0
     # via
@@ -401,7 +403,7 @@ spglib==2.5.0
     # via pymatgen
 sshtunnel==0.4.0
     # via maggma
-starlette==0.38.2
+starlette==0.38.4
     # via fastapi
 sympy==1.13.2
     # via pymatgen
@@ -409,7 +411,7 @@ tabulate==0.9.0
     # via pymatgen
 tenacity==9.0.0
     # via plotly
-tifffile==2024.8.24
+tifffile==2024.8.30
     # via scikit-image
 tomli==2.0.1
     # via
@@ -424,7 +426,7 @@ tqdm==4.66.5
     #   pymatgen
 types-requests==2.32.0.20240712
     # via emmet-api (setup.py)
-types-setuptools==73.0.0.20240822
+types-setuptools==74.0.0.20240831
     # via emmet-api (setup.py)
 typing-extensions==4.12.2
     # via
@@ -451,7 +453,7 @@ uvicorn==0.30.6
     # via maggma
 virtualenv==20.26.3
     # via pre-commit
-watchdog==4.0.2
+watchdog==5.0.1
     # via mkdocs
 wcmatch==9.0
     # via mkdocs-awesome-pages-plugin
