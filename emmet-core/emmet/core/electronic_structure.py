@@ -364,8 +364,8 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                     is_gap_direct = False
                 else:
                     band_gap = gap_dict["energy"]
-                    cbm = bs.get_cbm()
-                    vbm = bs.get_vbm()
+                    cbm = bs.get_cbm()  # type: ignore[assignment]
+                    vbm = bs.get_vbm()  # type: ignore[assignment]
                     is_gap_direct = gap_dict["direct"]
 
                 bs_efermi = bs.efermi
