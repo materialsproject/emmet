@@ -243,7 +243,7 @@ class OpenMMTaskDocument(MDTaskDocument):
         "task document.",
     )
 
-    interchange_meta: Optional[list[MoleculeSpec] | Structure] = Field(
+    interchange_meta: Optional[list[MoleculeSpec] | Structure | str] = Field(
         None,
         title="Interchange meta data",
         description="Metadata for the interchange",
@@ -269,7 +269,7 @@ class OpenMMInterchange(BaseModel):
         self,
         integrator: openmm.Integrator,
         platform: openmm.Platform,
-        platformProperties: dict[str, str],
+        platformProperties: Optional[dict[str, str]] = None,
     ):
         system = XmlSerializer.deserialize(self.system)
         state = XmlSerializer.deserialize(self.state)
@@ -282,7 +282,7 @@ class OpenMMInterchange(BaseModel):
             system,
             integrator,
             platform,
-            platformProperties,
+            platformProperties or {},
         )
         simulation.context.setState(state)
         return simulation
