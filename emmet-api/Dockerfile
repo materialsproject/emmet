@@ -1,4 +1,4 @@
-FROM materialsproject/devops:python-3.1013.13 AS base
+FROM materialsproject/devops:python-3.1013.18 AS base
 RUN apt-get update && apt-get install -y --no-install-recommends libopenblas-dev libjpeg62 && apt-get clean
 
 FROM base AS builder
