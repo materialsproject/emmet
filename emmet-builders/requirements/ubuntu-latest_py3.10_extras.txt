@@ -29,9 +29,9 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.10
+boto3==1.35.12
     # via maggma
-botocore==1.35.10
+botocore==1.35.12
     # via
     #   boto3
     #   s3transfer
@@ -96,7 +96,7 @@ frozenlist==1.4.1
     # via
     #   aiohttp
     #   aiosignal
-fsspec[http]==2024.6.1
+fsspec[http]==2024.9.0
     # via
     #   lightning
     #   pytorch-lightning
@@ -147,7 +147,7 @@ jsonschema==4.23.0
     # via maggma
 jsonschema-specifications==2023.12.1
     # via jsonschema
-kiwisolver==1.4.6
+kiwisolver==1.4.7
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
@@ -583,7 +583,7 @@ tomli==2.0.1
     #   coverage
     #   mypy
     #   pytest
-torch==2.4.0
+torch==2.4.1
     # via
     #   chgnet
     #   lightning
@@ -645,7 +645,7 @@ urllib3==2.2.2
     #   types-requests
 virtualenv==20.26.3
     # via pre-commit
-watchdog==5.0.1
+watchdog==5.0.2
     # via mkdocs
 wcmatch==9.0
     # via mkdocs-awesome-pages-plugin
@@ -653,7 +653,7 @@ wincertstore==0.2.1
     # via emmet-builders (setup.py)
 wrapt==1.16.0
     # via smart-open
-yarl==1.9.7
+yarl==1.9.8
     # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
