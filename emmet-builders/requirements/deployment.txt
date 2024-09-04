@@ -53,7 +53,7 @@ click==8.1.7
     #   uvicorn
 contourpy==1.2.0
     # via matplotlib
-cryptography==42.0.4
+cryptography==43.0.1
     # via paramiko
 cycler==0.12.1
     # via matplotlib
