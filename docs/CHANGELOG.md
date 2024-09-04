@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.84.2rc7](https://github.com/materialsproject/emmet/tree/v0.84.2rc7) (2024-09-04)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.84.2rc6...v0.84.2rc7)
+
+**Fixed bugs:**
+
+- \[Bug\]: Hitting Tab or Enter to pop-up suggestion does nothing if HTML tag started with less-than character \(\<\) [\#1081](https://github.com/materialsproject/emmet/issues/1081)
+
+**Merged pull requests:**
+
+- add missing mypy directives for electronic structure [\#1085](https://github.com/materialsproject/emmet/pull/1085) ([tsmathis](https://github.com/tsmathis))
+- Automated dependency upgrades [\#1082](https://github.com/materialsproject/emmet/pull/1082) ([tschaume](https://github.com/tschaume))
+- Automated dependency upgrades [\#1080](https://github.com/materialsproject/emmet/pull/1080) ([tschaume](https://github.com/tschaume))
+- Automated dependency upgrades [\#1079](https://github.com/materialsproject/emmet/pull/1079) ([tschaume](https://github.com/tschaume))
+- Automated dependency upgrades [\#1078](https://github.com/materialsproject/emmet/pull/1078) ([tschaume](https://github.com/tschaume))
+- uvicorn was moved into an optional import in maggma [\#1077](https://github.com/materialsproject/emmet/pull/1077) ([tsmathis](https://github.com/tsmathis))
+- Automated dependency upgrades [\#1069](https://github.com/materialsproject/emmet/pull/1069) ([tschaume](https://github.com/tschaume))
+- \[WIP\] Large structural changes to MPcules [\#926](https://github.com/materialsproject/emmet/pull/926) ([espottesmith](https://github.com/espottesmith))
+
 ## [v0.84.2rc6](https://github.com/materialsproject/emmet/tree/v0.84.2rc6) (2024-08-20)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.84.2rc5...v0.84.2rc6)
@@ -1671,7 +1690,7 @@
 
 ## [v0.39.7](https://github.com/materialsproject/emmet/tree/v0.39.7) (2023-01-09)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.39.5...v0.39.7)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.39.4...v0.39.7)
 
 **Closed issues:**
 
@@ -1688,13 +1707,13 @@
 - Automated dependency upgrades [\#609](https://github.com/materialsproject/emmet/pull/609) ([tschaume](https://github.com/tschaume))
 - Automated dependency upgrades [\#608](https://github.com/materialsproject/emmet/pull/608) ([tschaume](https://github.com/tschaume))
 
-## [v0.39.5](https://github.com/materialsproject/emmet/tree/v0.39.5) (2022-12-14)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.39.4...v0.39.5)
-
 ## [v0.39.4](https://github.com/materialsproject/emmet/tree/v0.39.4) (2022-12-14)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.39.6...v0.39.4)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.39.5...v0.39.4)
+
+## [v0.39.5](https://github.com/materialsproject/emmet/tree/v0.39.5) (2022-12-14)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.39.6...v0.39.5)
 
 ## [v0.39.6](https://github.com/materialsproject/emmet/tree/v0.39.6) (2022-12-14)
 
