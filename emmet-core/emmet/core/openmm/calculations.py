@@ -7,35 +7,39 @@ from emmet.core.openmm.tasks import Calculation
 
 
 class CalculationsDoc(BaseModel):
+    """
+    A document for storing metadata from a list of OpenMM calculations.
+
+    In each field, calculations are listed sequentially, in the order they were run.
+    """
+
     task_names: List[str] = Field(None, description="Names of tasks.")
 
-    calc_types: List[str] = Field(
-        None, description="Types of calculations in order of execution."
-    )
+    calc_types: List[str] = Field(None, description="Types of calculations.")
 
     elapsed_times: List[Union[float, None]] = Field(
-        None, description="Elapsed time for calculations in order of execution."
+        None, description="Elapsed time for calculations."
     )
 
     steps: List[Union[float, None]] = Field(
-        None, description="n_steps for calculations in order of execution."
+        None, description="n_steps for calculations."
     )
 
     step_sizes: List[Union[float, None]] = Field(
-        None, description="Step sizes for each calculations in order of execution."
+        None, description="Step sizes for each calculations."
     )
 
     temperatures: List[Union[float, None]] = Field(
-        None, description="Temperature for each calculations in order of execution."
+        None, description="Temperature for each calculations."
     )
 
     pressures: List[Union[float, None]] = Field(
-        None, description="Pressure for each calculations in order of execution."
+        None, description="Pressure for each calculations."
     )
 
     friction_coefficients: List[Union[float, None]] = Field(
         None,
-        description="Friction coefficients for each calculations in order of execution.",
+        description="Friction coefficients for each calculations.",
     )
 
     completed_at: Optional[datetime] = Field(
