@@ -21,11 +21,11 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.10
+boto3==1.35.12
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.35.10
+botocore==1.35.12
     # via
     #   boto3
     #   s3transfer
@@ -60,7 +60,7 @@ csscompressor==0.9.5
     # via mkdocs-minify-plugin
 cycler==0.12.1
     # via matplotlib
-ddtrace==2.11.2
+ddtrace==2.11.3
     # via emmet-api (setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -70,7 +70,7 @@ dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.2rc6
+emmet-core==0.84.2rc7
     # via emmet-api (setup.py)
 envier==0.5.2
     # via ddtrace
@@ -126,7 +126,7 @@ jsonschema==4.23.0
     # via maggma
 jsonschema-specifications==2023.12.1
     # via jsonschema
-kiwisolver==1.4.6
+kiwisolver==1.4.7
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
@@ -441,7 +441,7 @@ uvicorn==0.30.6
     # via maggma
 virtualenv==20.26.3
     # via pre-commit
-watchdog==5.0.1
+watchdog==5.0.2
     # via mkdocs
 wcmatch==9.0
     # via mkdocs-awesome-pages-plugin
