@@ -1,8 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
-import warnings
-
 from MDAnalysis import Universe
 from MDAnalysis.analysis.dielectric import DielectricConstant
 
@@ -62,9 +60,6 @@ class SolventBenchmarkingDoc(BaseModel, arbitrary_types_allowed=True):
             dielectric.run(**dielectric_run_kwargs)
             eps = dielectric.results.eps_mean
         else:
-            warnings.warn(
-                "Temperature is not provided, dielectric constant will not be calculated"
-            )
             eps = None
 
         if u.atoms.ts.has_velocities:
@@ -80,9 +75,6 @@ class SolventBenchmarkingDoc(BaseModel, arbitrary_types_allowed=True):
             viscosity = viscosity_helfand.results.viscosity
 
         else:
-            warnings.warn(
-                "No velocities found in the universe, viscosity will not be calculated."
-            )
             viscosity_function_values = None
             viscosity = None
 

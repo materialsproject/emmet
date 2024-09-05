@@ -9,30 +9,33 @@ from emmet.core.openmm.tasks import Calculation
 class CalculationsDoc(BaseModel):
     task_names: List[str] = Field(None, description="Names of tasks.")
 
-    calc_types: List[str] = Field(None, description="Types of calculations.")
+    calc_types: List[str] = Field(
+        None, description="Types of calculations in order of execution."
+    )
 
     elapsed_times: List[Union[float, None]] = Field(
-        None, description="Elapsed time for each calculation."
+        None, description="Elapsed time for calculations in order of execution."
     )
 
     steps: List[Union[float, None]] = Field(
-        None, description="n_steps for each calculation."
+        None, description="n_steps for calculations in order of execution."
     )
 
     step_sizes: List[Union[float, None]] = Field(
-        None, description="Step sizes for each calculation."
+        None, description="Step sizes for each calculations in order of execution."
     )
 
     temperatures: List[Union[float, None]] = Field(
-        None, description="Temperature for each calculation."
+        None, description="Temperature for each calculations in order of execution."
     )
 
     pressures: List[Union[float, None]] = Field(
-        None, description="Pressure for each calculation."
+        None, description="Pressure for each calculations in order of execution."
     )
 
     friction_coefficients: List[Union[float, None]] = Field(
-        None, description="Friction coefficients for each calculation."
+        None,
+        description="Friction coefficients for each calculations in order of execution.",
     )
 
     completed_at: Optional[datetime] = Field(
