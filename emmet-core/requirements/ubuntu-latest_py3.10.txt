@@ -59,11 +59,11 @@ pybtex==0.24.0
     # via
     #   emmet-core (setup.py)
     #   pymatgen
-pydantic==2.8.2
+pydantic==2.9.0
     # via
     #   emmet-core (setup.py)
     #   pydantic-settings
-pydantic-core==2.20.1
+pydantic-core==2.23.2
     # via pydantic
 pydantic-settings==2.4.0
     # via emmet-core (setup.py)
@@ -109,7 +109,9 @@ typing-extensions==4.12.2
     #   pydantic
     #   pydantic-core
 tzdata==2024.1
-    # via pandas
+    # via
+    #   pandas
+    #   pydantic
 uncertainties==3.2.2
     # via pymatgen
 urllib3==2.2.2
