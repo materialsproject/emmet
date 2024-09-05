@@ -70,8 +70,10 @@ cycler==0.12.1
     # via matplotlib
 cython==3.0.11
     # via chgnet
-dgl==2.2.0
-    # via matgl
+dgl==2.1.0
+    # via
+    #   emmet-core (setup.py)
+    #   matgl
 distlib==0.3.8
     # via virtualenv
 dnspython==2.6.1
@@ -346,7 +348,6 @@ palettable==3.3.3
     # via pymatgen
 pandas==2.2.2
     # via
-    #   dgl
     #   maggma
     #   matminer
     #   pymatgen
