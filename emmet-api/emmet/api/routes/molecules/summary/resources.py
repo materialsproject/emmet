@@ -13,7 +13,6 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     ChargeSpinQuery,
     HashQuery,
     StringRepQuery,
-    DeprecationQuery,
 )
 from emmet.api.routes.materials.summary.query_operators import HasPropsQuery
 from emmet.api.routes.molecules.summary.hint_scheme import SummaryHintScheme
