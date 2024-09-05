@@ -2,14 +2,21 @@
 
 from __future__ import annotations
 
+import io
 from pathlib import Path
 from typing import Optional, Union
-
 import pandas as pd  # type: ignore[import-untyped]
+
+import openmm
+from openmm import XmlSerializer
+from openmm.app import Simulation
+from openmm.app.pdbfile import PDBFile
 from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
 from pydantic import BaseModel, Field
+from pymatgen.core import Structure
 
-from atomate2.classical_md.schemas import ClassicalMDTaskDocument
+from emmet.core.openff import MoleculeSpec, MDTaskDocument  # type: ignore[import-untyped]
+from emmet.core.openff.tasks import HexBytes  # type: ignore[import-untyped]
 
 
 class CalculationInput(BaseModel, extra="allow"):  # type: ignore[call-arg]
@@ -27,10 +34,14 @@ class CalculationInput(BaseModel, extra="allow"):  # type: ignore[call-arg]
         None, description="The simulation temperature (kelvin)."
     )
 
+    pressure: Optional[float] = Field(
+        None, description="The simulation pressure (atmospheres)."
+    )
+
     friction_coefficient: Optional[float] = Field(
         None,
         description=(
-            "The friction coefficient for the integrator " "(inverse picoseconds)."
+            "The friction coefficient for the integrator (inverse picoseconds)."
         ),
     )
 
@@ -53,7 +64,7 @@ class CalculationInput(BaseModel, extra="allow"):  # type: ignore[call-arg]
     state_interval: Optional[int] = Field(
         None,
         description=(
-            "The interval for saving simulation state. For no state, set to 0."
+            "State is saved every `state_interval` timesteps. For no state, set to 0."
         ),
     )
 
@@ -64,7 +75,7 @@ class CalculationInput(BaseModel, extra="allow"):  # type: ignore[call-arg]
     traj_interval: Optional[int] = Field(
         None,
         description=(
-            "The interval for saving trajectory frames. For no trajectory, set to 0."
+            "The trajectory is saved every `traj_interval` timesteps. For no trajectory, set to 0."
         ),
     )
 
@@ -82,7 +93,12 @@ class CalculationInput(BaseModel, extra="allow"):  # type: ignore[call-arg]
 
     traj_file_type: Optional[str] = Field(
         None,
-        description="The type of trajectory file to save. Options are 'dcd' and 'h5'.",
+        description="The type of trajectory file to save.",
+    )
+
+    embed_traj: Optional[bool] = Field(
+        None,
+        description="Whether to embed the trajectory blob in CalculationOutput.",
     )
 
 
@@ -93,15 +109,19 @@ class CalculationOutput(BaseModel):
         None, description="The directory for this OpenMM task"
     )
 
-    dcd_file: Optional[str] = Field(
-        None, description="Path to the DCD file relative to `dir_name`"
+    traj_file: Optional[str] = Field(
+        None, description="Path to the trajectory file relative to `dir_name`"
+    )
+
+    traj_blob: Optional[HexBytes] = Field(
+        None, description="Trajectory file as a binary blob"
     )
 
     state_file: Optional[str] = Field(
         None, description="Path to the state file relative to `dir_name`"
     )
 
-    steps: Optional[list[int]] = Field(
+    steps_reported: Optional[list[int]] = Field(
         None, description="Steps where outputs are reported"
     )
 
@@ -126,7 +146,7 @@ class CalculationOutput(BaseModel):
     density: Optional[list[float]] = Field(None, description="List of densities")
 
     elapsed_time: Optional[float] = Field(
-        None, description="Elapsed time for the calculation"
+        None, description="Elapsed time for the calculation (seconds)."
     )
 
     @classmethod
@@ -134,15 +154,14 @@ class CalculationOutput(BaseModel):
         cls,
         dir_name: Path | str,
         state_file_name: str,
-        dcd_file_name: str,
+        traj_file_name: str,
         elapsed_time: Optional[float] = None,
-        steps: Optional[int] = None,
-        state_interval: Optional[int] = None,
+        embed_traj: bool = False,
     ) -> CalculationOutput:
         """Extract data from the output files in the directory."""
         state_file = Path(dir_name) / state_file_name
         column_name_map = {
-            '#"Step"': "steps",
+            '#"Step"': "steps_reported",
             "Potential Energy (kJ/mole)": "potential_energy",
             "Kinetic Energy (kJ/mole)": "kinetic_energy",
             "Total Energy (kJ/mole)": "total_energy",
@@ -151,26 +170,34 @@ class CalculationOutput(BaseModel):
             "Density (g/mL)": "density",
         }
         state_is_not_empty = state_file.exists() and state_file.stat().st_size > 0
-        state_steps = state_interval and steps and steps // state_interval or 0
-        if state_is_not_empty and (state_steps > 0):
+        if state_is_not_empty:
             data = pd.read_csv(state_file, header=0)
             data = data.rename(columns=column_name_map)
             data = data.filter(items=column_name_map.values())
-            data = data.iloc[-state_steps:]
             attributes = data.to_dict(orient="list")
         else:
             attributes = {name: None for name in column_name_map.values()}
             state_file_name = None  # type: ignore[assignment]
 
-        dcd_file = Path(dir_name) / dcd_file_name
-        dcd_is_not_empty = dcd_file.exists() and dcd_file.stat().st_size > 0
-        dcd_file_name = dcd_file_name if dcd_is_not_empty else None  # type: ignore
+        traj_file = Path(dir_name) / traj_file_name
+        traj_is_not_empty = traj_file.exists() and traj_file.stat().st_size > 0
+        traj_file_name = traj_file_name if traj_is_not_empty else None  # type: ignore
+
+        if traj_is_not_empty:
+            if embed_traj:
+                with open(traj_file, "rb") as f:
+                    traj_blob = f.read()
+            else:
+                traj_blob = None
+        else:
+            traj_blob = None
 
         return CalculationOutput(
             dir_name=str(dir_name),
             elapsed_time=elapsed_time,
-            dcd_file=dcd_file_name,
+            traj_file=traj_file_name,
             state_file=state_file_name,
+            traj_blob=traj_blob,
             **attributes,
         )
 
@@ -206,7 +233,7 @@ class Calculation(BaseModel):
     )
 
 
-class OpenMMTaskDocument(ClassicalMDTaskDocument):
+class OpenMMTaskDocument(MDTaskDocument):
     """Definition of the OpenMM task document."""
 
     calcs_reversed: Optional[list[Calculation]] = Field(
@@ -215,3 +242,47 @@ class OpenMMTaskDocument(ClassicalMDTaskDocument):
         description="Detailed data for each OpenMM calculation contributing to the "
         "task document.",
     )
+
+    interchange_meta: Optional[list[MoleculeSpec] | Structure | str] = Field(
+        None,
+        title="Interchange meta data",
+        description="Metadata for the interchange",
+    )
+
+
+class OpenMMInterchange(BaseModel):
+    """An object to sit in the place of the Interchance object
+    and serialize the OpenMM system, topology, and state."""
+
+    system: str = Field(None, description="An XML file representing the OpenMM system.")
+    state: str = Field(
+        None,
+        description="An XML file representing the OpenMM state.",
+    )
+    topology: str = Field(
+        None,
+        description="An XML file representing an OpenMM topology object."
+        "This must correspond to the atom ordering in the system.",
+    )
+
+    def to_openmm_simulation(
+        self,
+        integrator: openmm.Integrator,
+        platform: openmm.Platform,
+        platformProperties: Optional[dict[str, str]] = None,
+    ):
+        system = XmlSerializer.deserialize(self.system)
+        state = XmlSerializer.deserialize(self.state)
+        with io.StringIO(self.topology) as s:
+            pdb = PDBFile(s)
+            topology = pdb.getTopology()
+
+        simulation = Simulation(
+            topology,
+            system,
+            integrator,
+            platform,
+            platformProperties or {},
+        )
+        simulation.context.setState(state)
+        return simulation
