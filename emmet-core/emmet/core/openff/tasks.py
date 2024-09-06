@@ -28,6 +28,7 @@ def hex_bytes_validator(o: Any) -> bytes:
     elif isinstance(o, bytearray):
         return bytes(o)
     elif isinstance(o, str):
+        # return None
         return zlib.decompress(bytes.fromhex(o))
     raise errors.BytesError()
 
@@ -40,6 +41,28 @@ HexBytes = Annotated[
     bytes,
     PlainValidator(hex_bytes_validator),
     PlainSerializer(hex_bytes_serializer),
+    WithJsonSchema({"type": "string"}),
+]
+
+
+def compressed_str_validator(s: str) -> str:
+    try:
+        compressed_bytes = bytes.fromhex(s)
+        decompressed_bytes = zlib.decompress(compressed_bytes)
+        return decompressed_bytes.decode("utf-8")
+    except:
+        return s
+
+
+def compressed_str_serializer(s: str) -> str:
+    decompressed_bytes = s.encode("utf-8")
+    return zlib.compress(decompressed_bytes).hex()
+
+
+CompressedStr = Annotated[
+    str,
+    PlainValidator(compressed_str_validator),
+    PlainSerializer(compressed_str_serializer),
     WithJsonSchema({"type": "string"}),
 ]
 
@@ -79,7 +102,7 @@ class MDTaskDocument(BaseModel, extra="allow"):  # type: ignore[call-arg]
         "the task document.",
     )
 
-    interchange: Optional[HexBytes] = Field(
+    interchange: Optional[CompressedStr] = Field(
         None,
         description="A byte serialized interchange object. "
         "To generate, the Interchange is serialized to json and "

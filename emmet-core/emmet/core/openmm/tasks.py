@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 from pymatgen.core import Structure
 
 from emmet.core.openff import MoleculeSpec, MDTaskDocument  # type: ignore[import-untyped]
-from emmet.core.openff.tasks import HexBytes  # type: ignore[import-untyped]
+from emmet.core.openff.tasks import HexBytes, CompressedStr  # type: ignore[import-untyped]
 
 
 class CalculationInput(BaseModel, extra="allow"):  # type: ignore[call-arg]
@@ -113,7 +113,7 @@ class CalculationOutput(BaseModel):
         None, description="Path to the trajectory file relative to `dir_name`"
     )
 
-    traj_blob: Optional[HexBytes] = Field(
+    traj_blob: Optional[CompressedStr] = Field(
         None, description="Trajectory file as a binary blob"
     )
 
@@ -186,7 +186,7 @@ class CalculationOutput(BaseModel):
         if traj_is_not_empty:
             if embed_traj:
                 with open(traj_file, "rb") as f:
-                    traj_blob = f.read()
+                    traj_blob = f.read().hex()
             else:
                 traj_blob = None
         else:
