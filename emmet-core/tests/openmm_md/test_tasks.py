@@ -1,19 +1,17 @@
 from pathlib import Path
 
 import numpy as np
-from emmet.core.classical_md.openmm import CalculationOutput
+from emmet.core.openmm.tasks import CalculationOutput
 
 
 def test_calc_output_from_directory(test_dir):
-    output_dir = test_dir / "classical_md" / "calc_output"
+    output_dir = test_dir / "openmm" / "calc_output"
     # Call the from_directory function
     calc_out = CalculationOutput.from_directory(
         output_dir,
         "state.csv",
         "trajectory.dcd",
         elapsed_time=10.0,
-        n_steps=1500,
-        state_interval=100,
     )
 
     # Assert the expected attributes of the CalculationOutput object
