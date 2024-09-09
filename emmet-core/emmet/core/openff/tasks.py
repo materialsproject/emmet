@@ -7,7 +7,6 @@ from datetime import datetime
 from typing import Optional
 from typing_extensions import Annotated
 import zlib
-from typing import Any
 
 from pydantic import (
     BaseModel,
@@ -15,34 +14,10 @@ from pydantic import (
     PlainValidator,
     PlainSerializer,
     WithJsonSchema,
-    errors,
 )
 from monty.json import MSONable
 
 from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
-
-
-def hex_bytes_validator(o: Any) -> bytes:
-    if isinstance(o, bytes):
-        return o
-    elif isinstance(o, bytearray):
-        return bytes(o)
-    elif isinstance(o, str):
-        # return None
-        return zlib.decompress(bytes.fromhex(o))
-    raise errors.BytesError()
-
-
-def hex_bytes_serializer(b: bytes) -> str:
-    return zlib.compress(b).hex()
-
-
-HexBytes = Annotated[
-    bytes,
-    PlainValidator(hex_bytes_validator),
-    PlainSerializer(hex_bytes_serializer),
-    WithJsonSchema({"type": "string"}),
-]
 
 
 def compressed_str_validator(s: str) -> str:
@@ -50,7 +25,7 @@ def compressed_str_validator(s: str) -> str:
         compressed_bytes = bytes.fromhex(s)
         decompressed_bytes = zlib.decompress(compressed_bytes)
         return decompressed_bytes.decode("utf-8")
-    except:
+    except:  # noqa
         return s
 
 
