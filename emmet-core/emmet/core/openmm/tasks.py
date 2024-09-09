@@ -114,7 +114,7 @@ class CalculationOutput(BaseModel):
     )
 
     traj_blob: Optional[CompressedStr] = Field(
-        None, description="Trajectory file as a binary blob"
+        None, description="Trajectory file bytes blob hex encoded to a string"
     )
 
     state_file: Optional[str] = Field(

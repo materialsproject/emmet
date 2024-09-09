@@ -59,6 +59,8 @@ def compressed_str_serializer(s: str) -> str:
     return zlib.compress(decompressed_bytes).hex()
 
 
+# this type will take a string and automatically compress and
+# decompress it when it is serialized and deserialized
 CompressedStr = Annotated[
     str,
     PlainValidator(compressed_str_validator),
@@ -103,10 +105,7 @@ class MDTaskDocument(BaseModel, extra="allow"):  # type: ignore[call-arg]
     )
 
     interchange: Optional[CompressedStr] = Field(
-        None,
-        description="A byte serialized interchange object. "
-        "To generate, the Interchange is serialized to json and "
-        "the json is transformed to bytes with a utf-8 encoding. ",
+        None, description="An interchange object serialized to json."
     )
 
     interchange_meta: Optional[list[MoleculeSpec]] = Field(
