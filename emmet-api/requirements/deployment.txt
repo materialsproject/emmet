@@ -21,11 +21,11 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.12
+boto3==1.35.14
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.35.12
+botocore==1.35.14
     # via
     #   boto3
     #   s3transfer
@@ -33,7 +33,7 @@ bytecode==0.15.1
     # via ddtrace
 certifi==2024.8.30
     # via requests
-cffi==1.17.0
+cffi==1.17.1
     # via
     #   cryptography
     #   pynacl
@@ -61,7 +61,7 @@ envier==0.5.2
     # via ddtrace
 exceptiongroup==1.2.2
     # via anyio
-fastapi==0.112.2
+fastapi==0.114.0
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
@@ -173,13 +173,13 @@ pybtex==0.24.0
     #   pymatgen
 pycparser==2.22
     # via cffi
-pydantic==2.8.2
+pydantic==2.9.1
     # via
     #   emmet-core
     #   fastapi
     #   maggma
     #   pydantic-settings
-pydantic-core==2.20.1
+pydantic-core==2.23.3
     # via pydantic
 pydantic-settings==2.4.0
     # via
@@ -260,7 +260,7 @@ spglib==2.5.0
     # via pymatgen
 sshtunnel==0.4.0
     # via maggma
-starlette==0.38.4
+starlette==0.38.5
     # via fastapi
 sympy==1.13.2
     # via pymatgen

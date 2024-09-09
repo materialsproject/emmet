@@ -487,11 +487,11 @@ class TaskDoc(StructureMetadata, extra="allow"):
     def _validate_batch_id(cls, v) -> str:
         if v is not None:
             invalid_chars = set(
-                char for char in v if (not char.isalnum()) or (char not in {"-", "_"})
+                char for char in v if (not char.isalnum()) and (char not in {"-", "_"})
             )
             if len(invalid_chars) > 0:
                 raise ValueError(
-                    f"Invalid characters in batch_id:\n{' '.join(invalid_chars)}"
+                    f"Invalid characters in batch_id: {' '.join(invalid_chars)}"
                 )
         return v
 
