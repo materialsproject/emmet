@@ -80,6 +80,30 @@ class LevelOfTheory(ValueEnum):
     B97_D3_def2_QZVPPD_VACUUM = "B97-D3/def2-QZVPPD/VACUUM"
     B97_D3_def2_QZVPPD_PCM = "B97-D3/def2-QZVPPD/PCM"
     B97_D3_def2_QZVPPD_SMD = "B97-D3/def2-QZVPPD/SMD"
+    MN12_L_6_31g_d_VACUUM = "MN12-L/6-31g*/VACUUM"
+    MN12_L_6_31g_d_PCM = "MN12-L/6-31g*/PCM"
+    MN12_L_6_31g_d_SMD = "MN12-L/6-31g*/SMD"
+    MN12_L_def2_SVPD_VACUUM = "MN12-L/def2-SVPD/VACUUM"
+    MN12_L_def2_SVPD_PCM = "MN12-L/def2-SVPD/PCM"
+    MN12_L_def2_SVPD_SMD = "MN12-L/def2-SVPD/SMD"
+    MN12_L_def2_TZVP_VACUUM = "MN12-L/def2-TZVP/VACUUM"
+    MN12_L_def2_TZVP_PCM = "MN12-L/def2-TZVP/PCM"
+    MN12_L_def2_TZVP_SMD = "MN12-L/def2-TZVP/SMD"
+    MN12_L_def2_TZVPD_VACUUM = "MN12-L/def2-TZVPD/VACUUM"
+    MN12_L_def2_TZVPD_PCM = "MN12-L/def2-TZVPD/PCM"
+    MN12_L_def2_TZVPD_SMD = "MN12-L/def2-TZVPD/SMD"
+    MN12_L_def2_TZVPP_VACUUM = "MN12-L/def2-TZVPP/VACUUM"
+    MN12_L_def2_TZVPP_PCM = "MN12-L/def2-TZVPP/PCM"
+    MN12_L_def2_TZVPP_SMD = "MN12-L/def2-TZVPP/SMD"
+    MN12_L_def2_TZVPPD_VACUUM = "MN12-L/def2-TZVPPD/VACUUM"
+    MN12_L_def2_TZVPPD_PCM = "MN12-L/def2-TZVPPD/PCM"
+    MN12_L_def2_TZVPPD_SMD = "MN12-L/def2-TZVPPD/SMD"
+    MN12_L_def2_QZVPD_VACUUM = "MN12-L/def2-QZVPD/VACUUM"
+    MN12_L_def2_QZVPD_PCM = "MN12-L/def2-QZVPD/PCM"
+    MN12_L_def2_QZVPD_SMD = "MN12-L/def2-QZVPD/SMD"
+    MN12_L_def2_QZVPPD_VACUUM = "MN12-L/def2-QZVPPD/VACUUM"
+    MN12_L_def2_QZVPPD_PCM = "MN12-L/def2-QZVPPD/PCM"
+    MN12_L_def2_QZVPPD_SMD = "MN12-L/def2-QZVPPD/SMD"
     B97M_V_6_31g_d_VACUUM = "B97M-V/6-31g*/VACUUM"
     B97M_V_6_31g_d_PCM = "B97M-V/6-31g*/PCM"
     B97M_V_6_31g_d_SMD = "B97M-V/6-31g*/SMD"
@@ -1356,6 +1380,376 @@ class CalcType(ValueEnum):
     )
     B97_D3_def2_QZVPPD_SMD_Frequency_Flattening_Transition_State_Geometry_Optimization = "B97-D3/def2-QZVPPD/SMD Frequency Flattening Transition State Geometry Optimization"
     B97_D3_def2_QZVPPD_SMD_Unknown = "B97-D3/def2-QZVPPD/SMD Unknown"
+    MN12_L_6_31g_d_VACUUM_Single_Point = "MN12-L/6-31g*/VACUUM Single Point"
+    MN12_L_6_31g_d_VACUUM_Force = "MN12-L/6-31g*/VACUUM Force"
+    MN12_L_6_31g_d_VACUUM_Geometry_Optimization = (
+        "MN12-L/6-31g*/VACUUM Geometry Optimization"
+    )
+    MN12_L_6_31g_d_VACUUM_Frequency_Analysis = "MN12-L/6-31g*/VACUUM Frequency Analysis"
+    MN12_L_6_31g_d_VACUUM_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/6-31g*/VACUUM Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_6_31g_d_VACUUM_Transition_State_Geometry_Optimization = (
+        "MN12-L/6-31g*/VACUUM Transition State Geometry Optimization"
+    )
+    MN12_L_6_31g_d_VACUUM_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/6-31g*/VACUUM Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_6_31g_d_VACUUM_Unknown = "MN12-L/6-31g*/VACUUM Unknown"
+    MN12_L_6_31g_d_PCM_Single_Point = "MN12-L/6-31g*/PCM Single Point"
+    MN12_L_6_31g_d_PCM_Force = "MN12-L/6-31g*/PCM Force"
+    MN12_L_6_31g_d_PCM_Geometry_Optimization = "MN12-L/6-31g*/PCM Geometry Optimization"
+    MN12_L_6_31g_d_PCM_Frequency_Analysis = "MN12-L/6-31g*/PCM Frequency Analysis"
+    MN12_L_6_31g_d_PCM_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/6-31g*/PCM Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_6_31g_d_PCM_Transition_State_Geometry_Optimization = (
+        "MN12-L/6-31g*/PCM Transition State Geometry Optimization"
+    )
+    MN12_L_6_31g_d_PCM_Frequency_Flattening_Transition_State_Geometry_Optimization = (
+        "MN12-L/6-31g*/PCM Frequency Flattening Transition State Geometry Optimization"
+    )
+    MN12_L_6_31g_d_PCM_Unknown = "MN12-L/6-31g*/PCM Unknown"
+    MN12_L_6_31g_d_SMD_Single_Point = "MN12-L/6-31g*/SMD Single Point"
+    MN12_L_6_31g_d_SMD_Force = "MN12-L/6-31g*/SMD Force"
+    MN12_L_6_31g_d_SMD_Geometry_Optimization = "MN12-L/6-31g*/SMD Geometry Optimization"
+    MN12_L_6_31g_d_SMD_Frequency_Analysis = "MN12-L/6-31g*/SMD Frequency Analysis"
+    MN12_L_6_31g_d_SMD_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/6-31g*/SMD Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_6_31g_d_SMD_Transition_State_Geometry_Optimization = (
+        "MN12-L/6-31g*/SMD Transition State Geometry Optimization"
+    )
+    MN12_L_6_31g_d_SMD_Frequency_Flattening_Transition_State_Geometry_Optimization = (
+        "MN12-L/6-31g*/SMD Frequency Flattening Transition State Geometry Optimization"
+    )
+    MN12_L_6_31g_d_SMD_Unknown = "MN12-L/6-31g*/SMD Unknown"
+    MN12_L_def2_SVPD_VACUUM_Single_Point = "MN12-L/def2-SVPD/VACUUM Single Point"
+    MN12_L_def2_SVPD_VACUUM_Force = "MN12-L/def2-SVPD/VACUUM Force"
+    MN12_L_def2_SVPD_VACUUM_Geometry_Optimization = (
+        "MN12-L/def2-SVPD/VACUUM Geometry Optimization"
+    )
+    MN12_L_def2_SVPD_VACUUM_Frequency_Analysis = (
+        "MN12-L/def2-SVPD/VACUUM Frequency Analysis"
+    )
+    MN12_L_def2_SVPD_VACUUM_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-SVPD/VACUUM Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_SVPD_VACUUM_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-SVPD/VACUUM Transition State Geometry Optimization"
+    )
+    MN12_L_def2_SVPD_VACUUM_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-SVPD/VACUUM Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_SVPD_VACUUM_Unknown = "MN12-L/def2-SVPD/VACUUM Unknown"
+    MN12_L_def2_SVPD_PCM_Single_Point = "MN12-L/def2-SVPD/PCM Single Point"
+    MN12_L_def2_SVPD_PCM_Force = "MN12-L/def2-SVPD/PCM Force"
+    MN12_L_def2_SVPD_PCM_Geometry_Optimization = (
+        "MN12-L/def2-SVPD/PCM Geometry Optimization"
+    )
+    MN12_L_def2_SVPD_PCM_Frequency_Analysis = "MN12-L/def2-SVPD/PCM Frequency Analysis"
+    MN12_L_def2_SVPD_PCM_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-SVPD/PCM Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_SVPD_PCM_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-SVPD/PCM Transition State Geometry Optimization"
+    )
+    MN12_L_def2_SVPD_PCM_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-SVPD/PCM Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_SVPD_PCM_Unknown = "MN12-L/def2-SVPD/PCM Unknown"
+    MN12_L_def2_SVPD_SMD_Single_Point = "MN12-L/def2-SVPD/SMD Single Point"
+    MN12_L_def2_SVPD_SMD_Force = "MN12-L/def2-SVPD/SMD Force"
+    MN12_L_def2_SVPD_SMD_Geometry_Optimization = (
+        "MN12-L/def2-SVPD/SMD Geometry Optimization"
+    )
+    MN12_L_def2_SVPD_SMD_Frequency_Analysis = "MN12-L/def2-SVPD/SMD Frequency Analysis"
+    MN12_L_def2_SVPD_SMD_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-SVPD/SMD Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_SVPD_SMD_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-SVPD/SMD Transition State Geometry Optimization"
+    )
+    MN12_L_def2_SVPD_SMD_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-SVPD/SMD Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_SVPD_SMD_Unknown = "MN12-L/def2-SVPD/SMD Unknown"
+    MN12_L_def2_TZVP_VACUUM_Single_Point = "MN12-L/def2-TZVP/VACUUM Single Point"
+    MN12_L_def2_TZVP_VACUUM_Force = "MN12-L/def2-TZVP/VACUUM Force"
+    MN12_L_def2_TZVP_VACUUM_Geometry_Optimization = (
+        "MN12-L/def2-TZVP/VACUUM Geometry Optimization"
+    )
+    MN12_L_def2_TZVP_VACUUM_Frequency_Analysis = (
+        "MN12-L/def2-TZVP/VACUUM Frequency Analysis"
+    )
+    MN12_L_def2_TZVP_VACUUM_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-TZVP/VACUUM Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_TZVP_VACUUM_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-TZVP/VACUUM Transition State Geometry Optimization"
+    )
+    MN12_L_def2_TZVP_VACUUM_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-TZVP/VACUUM Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_TZVP_VACUUM_Unknown = "MN12-L/def2-TZVP/VACUUM Unknown"
+    MN12_L_def2_TZVP_PCM_Single_Point = "MN12-L/def2-TZVP/PCM Single Point"
+    MN12_L_def2_TZVP_PCM_Force = "MN12-L/def2-TZVP/PCM Force"
+    MN12_L_def2_TZVP_PCM_Geometry_Optimization = (
+        "MN12-L/def2-TZVP/PCM Geometry Optimization"
+    )
+    MN12_L_def2_TZVP_PCM_Frequency_Analysis = "MN12-L/def2-TZVP/PCM Frequency Analysis"
+    MN12_L_def2_TZVP_PCM_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-TZVP/PCM Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_TZVP_PCM_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-TZVP/PCM Transition State Geometry Optimization"
+    )
+    MN12_L_def2_TZVP_PCM_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-TZVP/PCM Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_TZVP_PCM_Unknown = "MN12-L/def2-TZVP/PCM Unknown"
+    MN12_L_def2_TZVP_SMD_Single_Point = "MN12-L/def2-TZVP/SMD Single Point"
+    MN12_L_def2_TZVP_SMD_Force = "MN12-L/def2-TZVP/SMD Force"
+    MN12_L_def2_TZVP_SMD_Geometry_Optimization = (
+        "MN12-L/def2-TZVP/SMD Geometry Optimization"
+    )
+    MN12_L_def2_TZVP_SMD_Frequency_Analysis = "MN12-L/def2-TZVP/SMD Frequency Analysis"
+    MN12_L_def2_TZVP_SMD_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-TZVP/SMD Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_TZVP_SMD_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-TZVP/SMD Transition State Geometry Optimization"
+    )
+    MN12_L_def2_TZVP_SMD_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-TZVP/SMD Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_TZVP_SMD_Unknown = "MN12-L/def2-TZVP/SMD Unknown"
+    MN12_L_def2_TZVPD_VACUUM_Single_Point = "MN12-L/def2-TZVPD/VACUUM Single Point"
+    MN12_L_def2_TZVPD_VACUUM_Force = "MN12-L/def2-TZVPD/VACUUM Force"
+    MN12_L_def2_TZVPD_VACUUM_Geometry_Optimization = (
+        "MN12-L/def2-TZVPD/VACUUM Geometry Optimization"
+    )
+    MN12_L_def2_TZVPD_VACUUM_Frequency_Analysis = (
+        "MN12-L/def2-TZVPD/VACUUM Frequency Analysis"
+    )
+    MN12_L_def2_TZVPD_VACUUM_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-TZVPD/VACUUM Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_TZVPD_VACUUM_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-TZVPD/VACUUM Transition State Geometry Optimization"
+    )
+    MN12_L_def2_TZVPD_VACUUM_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-TZVPD/VACUUM Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_TZVPD_VACUUM_Unknown = "MN12-L/def2-TZVPD/VACUUM Unknown"
+    MN12_L_def2_TZVPD_PCM_Single_Point = "MN12-L/def2-TZVPD/PCM Single Point"
+    MN12_L_def2_TZVPD_PCM_Force = "MN12-L/def2-TZVPD/PCM Force"
+    MN12_L_def2_TZVPD_PCM_Geometry_Optimization = (
+        "MN12-L/def2-TZVPD/PCM Geometry Optimization"
+    )
+    MN12_L_def2_TZVPD_PCM_Frequency_Analysis = (
+        "MN12-L/def2-TZVPD/PCM Frequency Analysis"
+    )
+    MN12_L_def2_TZVPD_PCM_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-TZVPD/PCM Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_TZVPD_PCM_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-TZVPD/PCM Transition State Geometry Optimization"
+    )
+    MN12_L_def2_TZVPD_PCM_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-TZVPD/PCM Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_TZVPD_PCM_Unknown = "MN12-L/def2-TZVPD/PCM Unknown"
+    MN12_L_def2_TZVPD_SMD_Single_Point = "MN12-L/def2-TZVPD/SMD Single Point"
+    MN12_L_def2_TZVPD_SMD_Force = "MN12-L/def2-TZVPD/SMD Force"
+    MN12_L_def2_TZVPD_SMD_Geometry_Optimization = (
+        "MN12-L/def2-TZVPD/SMD Geometry Optimization"
+    )
+    MN12_L_def2_TZVPD_SMD_Frequency_Analysis = (
+        "MN12-L/def2-TZVPD/SMD Frequency Analysis"
+    )
+    MN12_L_def2_TZVPD_SMD_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-TZVPD/SMD Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_TZVPD_SMD_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-TZVPD/SMD Transition State Geometry Optimization"
+    )
+    MN12_L_def2_TZVPD_SMD_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-TZVPD/SMD Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_TZVPD_SMD_Unknown = "MN12-L/def2-TZVPD/SMD Unknown"
+    MN12_L_def2_TZVPP_VACUUM_Single_Point = "MN12-L/def2-TZVPP/VACUUM Single Point"
+    MN12_L_def2_TZVPP_VACUUM_Force = "MN12-L/def2-TZVPP/VACUUM Force"
+    MN12_L_def2_TZVPP_VACUUM_Geometry_Optimization = (
+        "MN12-L/def2-TZVPP/VACUUM Geometry Optimization"
+    )
+    MN12_L_def2_TZVPP_VACUUM_Frequency_Analysis = (
+        "MN12-L/def2-TZVPP/VACUUM Frequency Analysis"
+    )
+    MN12_L_def2_TZVPP_VACUUM_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-TZVPP/VACUUM Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_TZVPP_VACUUM_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-TZVPP/VACUUM Transition State Geometry Optimization"
+    )
+    MN12_L_def2_TZVPP_VACUUM_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-TZVPP/VACUUM Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_TZVPP_VACUUM_Unknown = "MN12-L/def2-TZVPP/VACUUM Unknown"
+    MN12_L_def2_TZVPP_PCM_Single_Point = "MN12-L/def2-TZVPP/PCM Single Point"
+    MN12_L_def2_TZVPP_PCM_Force = "MN12-L/def2-TZVPP/PCM Force"
+    MN12_L_def2_TZVPP_PCM_Geometry_Optimization = (
+        "MN12-L/def2-TZVPP/PCM Geometry Optimization"
+    )
+    MN12_L_def2_TZVPP_PCM_Frequency_Analysis = (
+        "MN12-L/def2-TZVPP/PCM Frequency Analysis"
+    )
+    MN12_L_def2_TZVPP_PCM_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-TZVPP/PCM Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_TZVPP_PCM_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-TZVPP/PCM Transition State Geometry Optimization"
+    )
+    MN12_L_def2_TZVPP_PCM_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-TZVPP/PCM Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_TZVPP_PCM_Unknown = "MN12-L/def2-TZVPP/PCM Unknown"
+    MN12_L_def2_TZVPP_SMD_Single_Point = "MN12-L/def2-TZVPP/SMD Single Point"
+    MN12_L_def2_TZVPP_SMD_Force = "MN12-L/def2-TZVPP/SMD Force"
+    MN12_L_def2_TZVPP_SMD_Geometry_Optimization = (
+        "MN12-L/def2-TZVPP/SMD Geometry Optimization"
+    )
+    MN12_L_def2_TZVPP_SMD_Frequency_Analysis = (
+        "MN12-L/def2-TZVPP/SMD Frequency Analysis"
+    )
+    MN12_L_def2_TZVPP_SMD_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-TZVPP/SMD Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_TZVPP_SMD_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-TZVPP/SMD Transition State Geometry Optimization"
+    )
+    MN12_L_def2_TZVPP_SMD_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-TZVPP/SMD Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_TZVPP_SMD_Unknown = "MN12-L/def2-TZVPP/SMD Unknown"
+    MN12_L_def2_TZVPPD_VACUUM_Single_Point = "MN12-L/def2-TZVPPD/VACUUM Single Point"
+    MN12_L_def2_TZVPPD_VACUUM_Force = "MN12-L/def2-TZVPPD/VACUUM Force"
+    MN12_L_def2_TZVPPD_VACUUM_Geometry_Optimization = (
+        "MN12-L/def2-TZVPPD/VACUUM Geometry Optimization"
+    )
+    MN12_L_def2_TZVPPD_VACUUM_Frequency_Analysis = (
+        "MN12-L/def2-TZVPPD/VACUUM Frequency Analysis"
+    )
+    MN12_L_def2_TZVPPD_VACUUM_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-TZVPPD/VACUUM Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_TZVPPD_VACUUM_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-TZVPPD/VACUUM Transition State Geometry Optimization"
+    )
+    MN12_L_def2_TZVPPD_VACUUM_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-TZVPPD/VACUUM Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_TZVPPD_VACUUM_Unknown = "MN12-L/def2-TZVPPD/VACUUM Unknown"
+    MN12_L_def2_TZVPPD_PCM_Single_Point = "MN12-L/def2-TZVPPD/PCM Single Point"
+    MN12_L_def2_TZVPPD_PCM_Force = "MN12-L/def2-TZVPPD/PCM Force"
+    MN12_L_def2_TZVPPD_PCM_Geometry_Optimization = (
+        "MN12-L/def2-TZVPPD/PCM Geometry Optimization"
+    )
+    MN12_L_def2_TZVPPD_PCM_Frequency_Analysis = (
+        "MN12-L/def2-TZVPPD/PCM Frequency Analysis"
+    )
+    MN12_L_def2_TZVPPD_PCM_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-TZVPPD/PCM Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_TZVPPD_PCM_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-TZVPPD/PCM Transition State Geometry Optimization"
+    )
+    MN12_L_def2_TZVPPD_PCM_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-TZVPPD/PCM Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_TZVPPD_PCM_Unknown = "MN12-L/def2-TZVPPD/PCM Unknown"
+    MN12_L_def2_TZVPPD_SMD_Single_Point = "MN12-L/def2-TZVPPD/SMD Single Point"
+    MN12_L_def2_TZVPPD_SMD_Force = "MN12-L/def2-TZVPPD/SMD Force"
+    MN12_L_def2_TZVPPD_SMD_Geometry_Optimization = (
+        "MN12-L/def2-TZVPPD/SMD Geometry Optimization"
+    )
+    MN12_L_def2_TZVPPD_SMD_Frequency_Analysis = (
+        "MN12-L/def2-TZVPPD/SMD Frequency Analysis"
+    )
+    MN12_L_def2_TZVPPD_SMD_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-TZVPPD/SMD Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_TZVPPD_SMD_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-TZVPPD/SMD Transition State Geometry Optimization"
+    )
+    MN12_L_def2_TZVPPD_SMD_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-TZVPPD/SMD Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_TZVPPD_SMD_Unknown = "MN12-L/def2-TZVPPD/SMD Unknown"
+    MN12_L_def2_QZVPD_VACUUM_Single_Point = "MN12-L/def2-QZVPD/VACUUM Single Point"
+    MN12_L_def2_QZVPD_VACUUM_Force = "MN12-L/def2-QZVPD/VACUUM Force"
+    MN12_L_def2_QZVPD_VACUUM_Geometry_Optimization = (
+        "MN12-L/def2-QZVPD/VACUUM Geometry Optimization"
+    )
+    MN12_L_def2_QZVPD_VACUUM_Frequency_Analysis = (
+        "MN12-L/def2-QZVPD/VACUUM Frequency Analysis"
+    )
+    MN12_L_def2_QZVPD_VACUUM_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-QZVPD/VACUUM Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_QZVPD_VACUUM_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-QZVPD/VACUUM Transition State Geometry Optimization"
+    )
+    MN12_L_def2_QZVPD_VACUUM_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-QZVPD/VACUUM Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_QZVPD_VACUUM_Unknown = "MN12-L/def2-QZVPD/VACUUM Unknown"
+    MN12_L_def2_QZVPD_PCM_Single_Point = "MN12-L/def2-QZVPD/PCM Single Point"
+    MN12_L_def2_QZVPD_PCM_Force = "MN12-L/def2-QZVPD/PCM Force"
+    MN12_L_def2_QZVPD_PCM_Geometry_Optimization = (
+        "MN12-L/def2-QZVPD/PCM Geometry Optimization"
+    )
+    MN12_L_def2_QZVPD_PCM_Frequency_Analysis = (
+        "MN12-L/def2-QZVPD/PCM Frequency Analysis"
+    )
+    MN12_L_def2_QZVPD_PCM_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-QZVPD/PCM Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_QZVPD_PCM_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-QZVPD/PCM Transition State Geometry Optimization"
+    )
+    MN12_L_def2_QZVPD_PCM_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-QZVPD/PCM Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_QZVPD_PCM_Unknown = "MN12-L/def2-QZVPD/PCM Unknown"
+    MN12_L_def2_QZVPD_SMD_Single_Point = "MN12-L/def2-QZVPD/SMD Single Point"
+    MN12_L_def2_QZVPD_SMD_Force = "MN12-L/def2-QZVPD/SMD Force"
+    MN12_L_def2_QZVPD_SMD_Geometry_Optimization = (
+        "MN12-L/def2-QZVPD/SMD Geometry Optimization"
+    )
+    MN12_L_def2_QZVPD_SMD_Frequency_Analysis = (
+        "MN12-L/def2-QZVPD/SMD Frequency Analysis"
+    )
+    MN12_L_def2_QZVPD_SMD_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-QZVPD/SMD Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_QZVPD_SMD_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-QZVPD/SMD Transition State Geometry Optimization"
+    )
+    MN12_L_def2_QZVPD_SMD_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-QZVPD/SMD Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_QZVPD_SMD_Unknown = "MN12-L/def2-QZVPD/SMD Unknown"
+    MN12_L_def2_QZVPPD_VACUUM_Single_Point = "MN12-L/def2-QZVPPD/VACUUM Single Point"
+    MN12_L_def2_QZVPPD_VACUUM_Force = "MN12-L/def2-QZVPPD/VACUUM Force"
+    MN12_L_def2_QZVPPD_VACUUM_Geometry_Optimization = (
+        "MN12-L/def2-QZVPPD/VACUUM Geometry Optimization"
+    )
+    MN12_L_def2_QZVPPD_VACUUM_Frequency_Analysis = (
+        "MN12-L/def2-QZVPPD/VACUUM Frequency Analysis"
+    )
+    MN12_L_def2_QZVPPD_VACUUM_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-QZVPPD/VACUUM Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_QZVPPD_VACUUM_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-QZVPPD/VACUUM Transition State Geometry Optimization"
+    )
+    MN12_L_def2_QZVPPD_VACUUM_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-QZVPPD/VACUUM Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_QZVPPD_VACUUM_Unknown = "MN12-L/def2-QZVPPD/VACUUM Unknown"
+    MN12_L_def2_QZVPPD_PCM_Single_Point = "MN12-L/def2-QZVPPD/PCM Single Point"
+    MN12_L_def2_QZVPPD_PCM_Force = "MN12-L/def2-QZVPPD/PCM Force"
+    MN12_L_def2_QZVPPD_PCM_Geometry_Optimization = (
+        "MN12-L/def2-QZVPPD/PCM Geometry Optimization"
+    )
+    MN12_L_def2_QZVPPD_PCM_Frequency_Analysis = (
+        "MN12-L/def2-QZVPPD/PCM Frequency Analysis"
+    )
+    MN12_L_def2_QZVPPD_PCM_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-QZVPPD/PCM Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_QZVPPD_PCM_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-QZVPPD/PCM Transition State Geometry Optimization"
+    )
+    MN12_L_def2_QZVPPD_PCM_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-QZVPPD/PCM Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_QZVPPD_PCM_Unknown = "MN12-L/def2-QZVPPD/PCM Unknown"
+    MN12_L_def2_QZVPPD_SMD_Single_Point = "MN12-L/def2-QZVPPD/SMD Single Point"
+    MN12_L_def2_QZVPPD_SMD_Force = "MN12-L/def2-QZVPPD/SMD Force"
+    MN12_L_def2_QZVPPD_SMD_Geometry_Optimization = (
+        "MN12-L/def2-QZVPPD/SMD Geometry Optimization"
+    )
+    MN12_L_def2_QZVPPD_SMD_Frequency_Analysis = (
+        "MN12-L/def2-QZVPPD/SMD Frequency Analysis"
+    )
+    MN12_L_def2_QZVPPD_SMD_Frequency_Flattening_Geometry_Optimization = (
+        "MN12-L/def2-QZVPPD/SMD Frequency Flattening Geometry Optimization"
+    )
+    MN12_L_def2_QZVPPD_SMD_Transition_State_Geometry_Optimization = (
+        "MN12-L/def2-QZVPPD/SMD Transition State Geometry Optimization"
+    )
+    MN12_L_def2_QZVPPD_SMD_Frequency_Flattening_Transition_State_Geometry_Optimization = "MN12-L/def2-QZVPPD/SMD Frequency Flattening Transition State Geometry Optimization"
+    MN12_L_def2_QZVPPD_SMD_Unknown = "MN12-L/def2-QZVPPD/SMD Unknown"
     B97M_V_6_31g_d_VACUUM_Single_Point = "B97M-V/6-31g*/VACUUM Single Point"
     B97M_V_6_31g_d_VACUUM_Force = "B97M-V/6-31g*/VACUUM Force"
     B97M_V_6_31g_d_VACUUM_Geometry_Optimization = (

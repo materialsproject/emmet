@@ -22,8 +22,8 @@ class RunType(ValueEnum):
     HF = "HF"
     HSE03 = "HSE03"
     HSE06 = "HSE06"
-    HFCus = "HFCus"
     PBE0 = "PBE0"
+    HFCus = "HFCus"
     M06L = "M06L"
     MBJL = "MBJL"
     MS0 = "MS0"
@@ -54,8 +54,8 @@ class RunType(ValueEnum):
     HF_U = "HF+U"
     HSE03_U = "HSE03+U"
     HSE06_U = "HSE06+U"
-    HFCus_U = "HFCus+U"
     PBE0_U = "PBE0+U"
+    HFCus_U = "HFCus+U"
     M06L_U = "M06L+U"
     MBJL_U = "MBJL+U"
     MS0_U = "MS0+U"
@@ -75,12 +75,6 @@ class RunType(ValueEnum):
     vdW_DF2_U = "vdW-DF2+U"
     LDA = "LDA"
     LDA_U = "LDA+U"
-
-    @classmethod
-    def _missing_(cls, value):
-        for member in cls:
-            if member.value.upper() == value.upper():
-                return member
 
 
 class TaskType(ValueEnum):
@@ -286,6 +280,19 @@ class CalcType(ValueEnum):
     PBE0_Optic = "PBE0 Optic"
     PBE0_Molecular_Dynamics = "PBE0 Molecular Dynamics"
     PBE0_Unrecognized = "PBE0 Unrecognized"
+    HFCus_NSCF_Line = "HFCus NSCF Line"
+    HFCus_NSCF_Uniform = "HFCus NSCF Uniform"
+    HFCus_Dielectric = "HFCus Dielectric"
+    HFCus_DFPT = "HFCus DFPT"
+    HFCus_DFPT_Dielectric = "HFCus DFPT Dielectric"
+    HFCus_NMR_Nuclear_Shielding = "HFCus NMR Nuclear Shielding"
+    HFCus_NMR_Electric_Field_Gradient = "HFCus NMR Electric Field Gradient"
+    HFCus_Static = "HFCus Static"
+    HFCus_Structure_Optimization = "HFCus Structure Optimization"
+    HFCus_Deformation = "HFCus Deformation"
+    HFCus_Optic = "HFCus Optic"
+    HFCus_Molecular_Dynamics = "HFCus Molecular Dynamics"
+    HFCus_Unrecognized = "HFCus Unrecognized"
     M06L_NSCF_Line = "M06L NSCF Line"
     M06L_NSCF_Uniform = "M06L NSCF Uniform"
     M06L_Dielectric = "M06L Dielectric"
@@ -693,6 +700,19 @@ class CalcType(ValueEnum):
     PBE0_U_Optic = "PBE0+U Optic"
     PBE0_U_Molecular_Dynamics = "PBE0+U Molecular Dynamics"
     PBE0_U_Unrecognized = "PBE0+U Unrecognized"
+    HFCus_U_NSCF_Line = "HFCus+U NSCF Line"
+    HFCus_U_NSCF_Uniform = "HFCus+U NSCF Uniform"
+    HFCus_U_Dielectric = "HFCus+U Dielectric"
+    HFCus_U_DFPT = "HFCus+U DFPT"
+    HFCus_U_DFPT_Dielectric = "HFCus+U DFPT Dielectric"
+    HFCus_U_NMR_Nuclear_Shielding = "HFCus+U NMR Nuclear Shielding"
+    HFCus_U_NMR_Electric_Field_Gradient = "HFCus+U NMR Electric Field Gradient"
+    HFCus_U_Static = "HFCus+U Static"
+    HFCus_U_Structure_Optimization = "HFCus+U Structure Optimization"
+    HFCus_U_Deformation = "HFCus+U Deformation"
+    HFCus_U_Optic = "HFCus+U Optic"
+    HFCus_U_Molecular_Dynamics = "HFCus+U Molecular Dynamics"
+    HFCus_U_Unrecognized = "HFCus+U Unrecognized"
     M06L_U_NSCF_Line = "M06L+U NSCF Line"
     M06L_U_NSCF_Uniform = "M06L+U NSCF Uniform"
     M06L_U_Dielectric = "M06L+U Dielectric"
