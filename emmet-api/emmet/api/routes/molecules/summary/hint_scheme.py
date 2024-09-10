@@ -7,6 +7,7 @@ class SummaryHintScheme(HintScheme):
     """
 
     def generate_hints(self, query):
+        # TODO agg hints vs count hints
         for param in query["criteria"]:
             if "composition" in param:
                 return {"hint": {"composition.$**": 1}}
