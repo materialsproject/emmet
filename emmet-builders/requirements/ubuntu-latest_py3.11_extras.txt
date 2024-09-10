@@ -27,9 +27,9 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.12
+boto3==1.35.15
     # via maggma
-botocore==1.35.12
+botocore==1.35.15
     # via
     #   boto3
     #   s3transfer
@@ -37,7 +37,7 @@ bracex==2.5
     # via wcmatch
 certifi==2024.8.30
     # via requests
-cffi==1.17.0
+cffi==1.17.1
     # via
     #   cryptography
     #   pynacl
@@ -79,7 +79,7 @@ emmet-core[all,ml]==0.84.1
     #   mp-api
 fasteners==0.19
     # via mdanalysis
-filelock==3.15.4
+filelock==3.16.0
     # via
     #   torch
     #   triton
@@ -101,7 +101,7 @@ ghp-import==2.1.0
     # via mkdocs
 griddataformats==1.0.2
     # via mdanalysis
-griffe==1.2.0
+griffe==1.3.0
     # via mkdocstrings-python
 h5py==3.11.0
     # via phonopy
@@ -113,7 +113,7 @@ idna==3.8
     # via
     #   requests
     #   yarl
-inflect==7.3.1
+inflect==7.4.0
     # via robocrys
 iniconfig==2.0.0
     # via pytest
@@ -229,7 +229,7 @@ mkdocs-material-extensions==1.3.1
     #   mkdocs-material
 mkdocs-minify-plugin==0.8.0
     # via emmet-builders (setup.py)
-mkdocstrings[python]==0.26.0
+mkdocstrings[python]==0.26.1
     # via
     #   emmet-builders (setup.py)
     #   mkdocstrings-python
@@ -247,7 +247,7 @@ monty==2024.7.30
     #   mp-api
     #   pymatgen
     #   robocrys
-more-itertools==10.4.0
+more-itertools==10.5.0
     # via inflect
 mp-api==0.42.1
     # via robocrys
@@ -255,12 +255,12 @@ mpmath==1.3.0
     # via sympy
 mrcfile==1.5.3
     # via griddataformats
-msgpack==1.0.8
+msgpack==1.1.0
     # via
     #   maggma
     #   mmtf-python
     #   mp-api
-multidict==6.0.5
+multidict==6.1.0
     # via
     #   aiohttp
     #   yarl
@@ -378,7 +378,7 @@ pillow==10.4.0
     # via
     #   matplotlib
     #   rdkit
-platformdirs==4.2.2
+platformdirs==4.3.2
     # via
     #   mkdocs-get-deps
     #   mkdocstrings
@@ -406,15 +406,15 @@ pycodestyle==2.12.1
     #   flake8
 pycparser==2.22
     # via cffi
-pydantic==2.8.2
+pydantic==2.9.1
     # via
     #   emmet-core
     #   maggma
     #   matgl
     #   pydantic-settings
-pydantic-core==2.20.1
+pydantic-core==2.23.3
     # via pydantic
-pydantic-settings==2.4.0
+pydantic-settings==2.5.0
     # via
     #   emmet-core
     #   maggma
@@ -453,7 +453,7 @@ pynacl==1.5.0
     # via paramiko
 pyparsing==3.1.4
     # via matplotlib
-pytest==8.3.2
+pytest==8.3.3
     # via
     #   emmet-builders (setup.py)
     #   pytest-cov
@@ -607,9 +607,9 @@ triton==3.0.0
     # via torch
 typeguard==4.3.0
     # via inflect
-types-requests==2.32.0.20240712
+types-requests==2.32.0.20240907
     # via emmet-builders (setup.py)
-types-setuptools==74.0.0.20240831
+types-setuptools==74.1.0.20240907
     # via emmet-builders (setup.py)
 typing-extensions==4.12.2
     # via
@@ -634,7 +634,7 @@ urllib3==2.2.2
     #   requests
     #   torchdata
     #   types-requests
-virtualenv==20.26.3
+virtualenv==20.26.4
     # via pre-commit
 watchdog==5.0.2
     # via mkdocs
@@ -644,7 +644,7 @@ wincertstore==0.2.1
     # via emmet-builders (setup.py)
 wrapt==1.16.0
     # via smart-open
-yarl==1.9.8
+yarl==1.11.1
     # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
