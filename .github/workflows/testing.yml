@@ -1,6 +1,8 @@
 name: testing
 
 on:
+  workflow_dispatch: # Allow running on-demand
+
   push:
     branches:
       - main
@@ -42,23 +44,18 @@ jobs:
           python${{ matrix.python-version }} -m pip install --user -r ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
 
       - name: generate Enums
+        id: enums
         shell: bash -l {0}
         if: matrix.package == 'emmet-core'
         run: |
           python${{ matrix.python-version }} emmet-core/emmet/core/qchem/calc_types/generate.py
           python${{ matrix.python-version }} emmet-core/emmet/core/vasp/calc_types/generate.py
           pre-commit run --all-files --show-diff-on-failure
-
-      - name: Detect changes
-        id: changes
-        shell: bash -l {0}
-        if: matrix.package == 'emmet-core'
-        run: |
           echo "count=$(git diff-index HEAD emmet-core/emmet/core/*/calc_types/enums.py | wc -l | xargs)" >> $GITHUB_OUTPUT
           echo "files=$(git ls-files --exclude-standard --others emmet-core/emmet/core/*/calc_types/enums.py | wc -l | xargs)" >> $GITHUB_OUTPUT
 
-      - name: commit & push changes
-        if: matrix.package == 'emmet-core' && (steps.changes.outputs.count > 0 || steps.changes.outputs.files > 0)
+      - name: commit & push enums changes
+        if: matrix.package == 'emmet-core' && (steps.enums.outputs.count > 0 || steps.enums.outputs.files > 0)
         shell: bash -l {0}
         run: |
           git config user.name github-actions
