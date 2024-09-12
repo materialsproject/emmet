@@ -10,7 +10,7 @@ from emmet.core.qchem.calc_types.calc_types import (
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
-
+# TODO : better string translation
 functional_synonyms = {
     "b97mv": "b97m-v",
     "b97mrv": "b97m-rv",
