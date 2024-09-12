@@ -1,7 +1,7 @@
-from pathlib import Path
+import importlib
 
 try:
-    import emmet.core.qchem.calc_types.enums
+    importlib.import_module("emmet.core.qchem.calc_types.enums")
 except ImportError:
     import emmet.core.qchem.calc_types.generate
 
