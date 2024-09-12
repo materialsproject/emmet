@@ -2,7 +2,6 @@ from typing import Optional, Union
 
 from pydantic import BaseModel, Field
 from pymatgen.core.structure import Structure
-from robocrys.condense.mineral import MineralMatcher
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
@@ -80,7 +79,7 @@ class RobocrystallogapherDoc(PropertyDoc):
         structure: Structure,
         material_id: MPID,
         robocrys_version: str,
-        mineral_matcher: MineralMatcher | None = None,
+        mineral_matcher=None,
         **kwargs
     ):
         (

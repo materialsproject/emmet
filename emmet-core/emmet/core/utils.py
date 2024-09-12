@@ -21,7 +21,6 @@ from pymatgen.transformations.standard_transformations import (
     DeformStructureTransformation,
 )
 from pymatgen.util.graph_hashing import weisfeiler_lehman_graph_hash
-from robocrys.condense.mineral import MineralMatcher
 
 from emmet.core.mpid import MPculeID
 from emmet.core.settings import EmmetSettings
@@ -109,7 +108,7 @@ def undeform_structure(structure: Structure, transformations: Dict) -> Structure
 
 def generate_robocrys_condensed_struct_and_description(
     structure: Structure,
-    mineral_matcher: Optional[MineralMatcher] = None,
+    mineral_matcher=None,
     symprecs: list[float] = [0.01, 0.1, 1.0e-3],
 ) -> tuple[dict[Any], str]:
     """
