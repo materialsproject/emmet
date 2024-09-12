@@ -1,4 +1,3 @@
-
 import copy
 import datetime
 from enum import Enum
@@ -110,8 +109,8 @@ def undeform_structure(structure: Structure, transformations: Dict) -> Structure
 
 def generate_robocrys_condensed_struct_and_description(
     structure: Structure,
-    mineral_matcher : Optional[MineralMatcher] = None,
-    symprecs : list[float] = [0.01, 0.1, 1.e-3]
+    mineral_matcher: Optional[MineralMatcher] = None,
+    symprecs: list[float] = [0.01, 0.1, 1.0e-3],
 ) -> tuple[dict[Any], str]:
     """
     Get robocrystallographer description of a structure.
@@ -120,7 +119,7 @@ def generate_robocrys_condensed_struct_and_description(
     ------
     structure : pymatgen .Structure
     mineral_matcher : optional robocrys MineralMatcher object
-        Slightly reduces load time by storing mineral data 
+        Slightly reduces load time by storing mineral data
         in memory, rather than reloading for each structure.
     symprecs : list[float]
         A list of symprec values to try for symmetry identification.
@@ -137,18 +136,20 @@ def generate_robocrys_condensed_struct_and_description(
         raise ImportError(
             "robocrys needs to be installed to generate Robocrystallographer descriptions"
         )
-    
+
     for isymprec, symprec in enumerate(symprecs):
         # occasionally, symmetry detection fails - give a few chances to modify symprec
         try:
-            condenser = StructureCondenser(mineral_matcher=mineral_matcher, symprec=symprec)
+            condenser = StructureCondenser(
+                mineral_matcher=mineral_matcher, symprec=symprec
+            )
             condensed_structure = condenser.condense_structure(structure)
             break
         except ValueError as exc:
             if isymprec == len(symprecs) - 1:
                 raise exc
 
-    for desc_fmt in ["unicode","html","raw"]:
+    for desc_fmt in ["unicode", "html", "raw"]:
         try:
             describer = StructureDescriber(
                 describe_symmetry_labels=False, fmt=desc_fmt, return_parts=False
