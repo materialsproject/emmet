@@ -1,3 +1,4 @@
+
 import copy
 import datetime
 from enum import Enum
@@ -21,6 +22,7 @@ from pymatgen.transformations.standard_transformations import (
     DeformStructureTransformation,
 )
 from pymatgen.util.graph_hashing import weisfeiler_lehman_graph_hash
+from robocrys.condense.mineral import MineralMatcher
 
 from emmet.core.mpid import MPculeID
 from emmet.core.settings import EmmetSettings
@@ -107,21 +109,58 @@ def undeform_structure(structure: Structure, transformations: Dict) -> Structure
 
 
 def generate_robocrys_condensed_struct_and_description(
-    structure: Structure, mineral_matcher=None
+    structure: Structure,
+    mineral_matcher : Optional[MineralMatcher] = None,
+    symprecs : list[float] = [0.01, 0.1, 1.e-3]
 ) -> tuple[dict[Any], str]:
+    """
+    Get robocrystallographer description of a structure.
+
+    Input
+    ------
+    structure : pymatgen .Structure
+    mineral_matcher : optional robocrys MineralMatcher object
+        Slightly reduces load time by storing mineral data 
+        in memory, rather than reloading for each structure.
+    symprecs : list[float]
+        A list of symprec values to try for symmetry identification.
+        The first value is the default used by robocrys, then
+        the default used by emmet (looser), then a tighter symprec.
+
+    Output
+    -------
+    A robocrys condensed structure and description.
+    """
     try:
         from robocrys import StructureCondenser, StructureDescriber
     except ImportError:
         raise ImportError(
             "robocrys needs to be installed to generate Robocrystallographer descriptions"
         )
+    
+    for isymprec, symprec in enumerate(symprecs):
+        # occasionally, symmetry detection fails - give a few chances to modify symprec
+        try:
+            condenser = StructureCondenser(mineral_matcher=mineral_matcher, symprec=symprec)
+            condensed_structure = condenser.condense_structure(structure)
+            break
+        except ValueError as exc:
+            if isymprec == len(symprecs) - 1:
+                raise exc
 
-    condenser = StructureCondenser(mineral_matcher=mineral_matcher)
-    describer = StructureDescriber(
-        describe_symmetry_labels=False, fmt="unicode", return_parts=False
-    )
-    condensed_structure = condenser.condense_structure(structure)
-    description = describer.describe(condensed_structure)
+    for desc_fmt in ["unicode","html","raw"]:
+        try:
+            describer = StructureDescriber(
+                describe_symmetry_labels=False, fmt=desc_fmt, return_parts=False
+            )
+            description = describer.describe(condensed_structure)
+            break
+        except ValueError as exc:
+            # pymatgen won't convert a "subscript period" character to unicode
+            # in these cases, the description is still generated but unicode
+            # parsing failed - use html instead
+            if "subscript period" not in str(exc):
+                raise exc
 
     return condensed_structure, description
 
