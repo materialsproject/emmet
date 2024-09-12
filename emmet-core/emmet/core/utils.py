@@ -419,6 +419,17 @@ class DocEnum(ValueEnum):
             self.__doc__ = doc
         return self
 
+class IgnoreCaseEnum(ValueEnum):
+    """Enum that permits case-insensitve lookup.
+    
+    Reference issue:
+    https://github.com/materialsproject/api/issues/869
+    """
+    @classmethod
+    def _missing_(cls, value):
+        for member in cls:
+            if member.value.upper() == value.upper():
+                return member
 
 def get_enum_source(enum_name, doc, items):
     header = f"""

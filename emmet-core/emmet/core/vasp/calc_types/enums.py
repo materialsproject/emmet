@@ -8,19 +8,7 @@ import sys
 
 from monty.serialization import loadfn
 
-from emmet.core.utils import ValueEnum
-
-class IgnoreCaseEnum(ValueEnum):
-    """Enum that permits case-insensitve lookup.
-    
-    Reference issue:
-    https://github.com/materialsproject/api/issues/869
-    """
-    @classmethod
-    def _missing_(cls, value):
-        for member in cls:
-            if member.value.upper() == value.upper():
-                return member    
+from emmet.core.utils import IgnoreCaseEnum
 
 _BASE_ENUM_PATH = import_resource_files("emmet.core.vasp.calc_types") / "rtc_enums.json.gz"
 for enum_name, elements in loadfn(str(_BASE_ENUM_PATH)).items():
