@@ -1,7 +1,9 @@
 """Module defining vasp calculation types."""
 
+import importlib
+
 try:
-    import emmet.core.vasp.calc_types.enums
+    importlib.import_module("emmet.core.vasp.calc_types.enums")
 except ImportError:
     import emmet.core.vasp.calc_types.generate
 
