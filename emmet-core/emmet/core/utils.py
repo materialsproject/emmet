@@ -110,7 +110,7 @@ def generate_robocrys_condensed_struct_and_description(
     structure: Structure,
     mineral_matcher=None,
     symprecs: list[float] = [0.01, 0.1, 1.0e-3],
-) -> tuple[dict[Any], str]:
+) -> tuple[dict[str, Any], str]:
     """
     Get robocrystallographer description of a structure.
 
