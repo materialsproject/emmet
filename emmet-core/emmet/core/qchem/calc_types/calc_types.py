@@ -35,7 +35,7 @@ FUNCTIONAL_CLASSES = {
         # "SCAN-D3(BJ)",
         # "TPSS",
         # "TPSS-D3(BJ)",
-        # "MN12-L",
+        "MN12-L",
         # "MN12-L-D3(BJ)",
         "B97M-V",
         "B97M-rV",

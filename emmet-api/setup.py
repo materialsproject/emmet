@@ -17,7 +17,7 @@ setup(
         "fastapi",
         "gunicorn",
         "boto3",
-        "maggma",
+        "maggma[api]",
         "ddtrace",
         "setproctitle",
         "shapely",

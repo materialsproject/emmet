@@ -1,5 +1,6 @@
 from maggma.api.resource.core import HeaderProcessor
 from fastapi import Response, Request
+from maggma.api.query_operator import QueryOperator
 
 
 class GlobalHeaderProcessor(HeaderProcessor):
@@ -13,3 +14,8 @@ class GlobalHeaderProcessor(HeaderProcessor):
         # forward Consumer Id header in response
         consumer_id = request.headers.get("X-Consumer-Id", "-")
         response.headers["X-Consumer-Id"] = consumer_id
+
+    def configure_query_on_request(
+        self, request: Request, query_operator: QueryOperator
+    ):
+        pass
