@@ -83,10 +83,11 @@ class RobocrystallogapherDoc(PropertyDoc):
         mineral_matcher: MineralMatcher | None = None,
         **kwargs
     ):
-        condensed_structure, description = (
-            generate_robocrys_condensed_struct_and_description(
-                structure=structure, mineral_matcher=mineral_matcher
-            )
+        (
+            condensed_structure,
+            description,
+        ) = generate_robocrys_condensed_struct_and_description(
+            structure=structure, mineral_matcher=mineral_matcher
         )
 
         return super().from_structure(
