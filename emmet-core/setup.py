@@ -23,6 +23,7 @@ setup(
     packages=find_namespace_packages(include=["emmet.*"]),
     package_data={
         "emmet.core.vasp.calc_types": ["*.yaml", "*.json.gz"],
+        "emmet.core.qchem.calc_types": ["*.yaml", "*.json.gz"],
         "emmet.core.subtrates": ["*.json"],
     },
     include_package_data=True,
