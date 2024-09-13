@@ -9,9 +9,8 @@ _BASE_ENUM_PATH = import_resource_files("emmet.core.vasp.calc_types")
 
 _RUN_TASK_TYPE_DATA = loadfn(str(_BASE_ENUM_PATH / "run_types.yaml"))
 
-def generate_enum_file(
-    enum_file_name : str | None = None
-) -> None:
+
+def generate_enum_file(enum_file_name: str | None = None) -> None:
     """
     Generate VASP enum members from reference yaml data.
 
@@ -21,13 +20,15 @@ def generate_enum_file(
         Name of the file to write the enums to.
         Defaults to _BASE_ENUM_PATH / vasp_enums.json.gz
     """
-    
+
     enum_file_name = enum_file_name or str(_BASE_ENUM_PATH / "vasp_enums.json.gz")
-    
+
     _TASK_TYPES = _RUN_TASK_TYPE_DATA.get("TASK_TYPES")
 
     _RUN_TYPES = set(
-        rt for functionals in _RUN_TASK_TYPE_DATA.get("RUN_TYPES",{}).values() for rt in functionals
+        rt
+        for functionals in _RUN_TASK_TYPE_DATA.get("RUN_TYPES", {}).values()
+        for rt in functionals
     ).union(("LDA",))
     _RUN_TYPES.update(set(f"{rt}+U" for rt in _RUN_TYPES))
 

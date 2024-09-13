@@ -24,9 +24,8 @@ _calc_type_meta["FUNCTIONALS"] = [
     for rt in functionals
 ]
 
-def generate_enum_file(
-    enum_file_name : str | None = None
-) -> None:
+
+def generate_enum_file(enum_file_name: str | None = None) -> None:
     """
     Generate QChem enum members from reference yaml data.
 
@@ -37,7 +36,9 @@ def generate_enum_file(
         Defaults to _BASE_ENUM_PATH / qchem_enums.json.gz
     """
 
-    enum_file_name = enum_file_name or str(import_resource_files("emmet.core.qchem.calc_types") / "qchem_enums.json.gz")
+    enum_file_name = enum_file_name or str(
+        import_resource_files("emmet.core.qchem.calc_types") / "qchem_enums.json.gz"
+    )
 
     _LOTS = list()
 
@@ -46,7 +47,14 @@ def generate_enum_file(
             for solv_model in _calc_type_meta["SOLVENT_MODELS"]:
                 _LOTS.append(f"{funct}/{basis}/{solv_model}")
 
-    _lot_str_replacements = {"+": "_", "-": "_", "(": "_", ")": "_", "/": "_", "*": "_d"}
+    _lot_str_replacements = {
+        "+": "_",
+        "-": "_",
+        "(": "_",
+        ")": "_",
+        "/": "_",
+        "*": "_d",
+    }
 
     _ENUMS = {
         "LevelOfTheory": {
