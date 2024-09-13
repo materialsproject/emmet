@@ -7,7 +7,9 @@ from monty.serialization import loadfn
 
 from emmet.core.vasp.calc_types.enums import CalcType, RunType, TaskType
 
-_RUN_TYPE_DATA = loadfn(str(Path(__file__).parent.joinpath("run_types.yaml").resolve()))
+_RUN_TYPE_DATA = loadfn(
+    str(Path(__file__).parent.joinpath("run_types.yaml").resolve())
+)["RUN_TYPES"]
 
 __all__ = ["run_type", "task_type", "calc_type"]
 
