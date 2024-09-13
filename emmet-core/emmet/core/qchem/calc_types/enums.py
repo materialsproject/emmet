@@ -7,7 +7,9 @@ from importlib.resources import files as import_resource_files
 from monty.serialization import loadfn
 from emmet.core.utils import IgnoreCaseEnum
 
-_BASE_ENUM_PATH = import_resource_files("emmet.core.qchem.calc_types") / "qchem_enums.json.gz"
+_BASE_ENUM_PATH = (
+    import_resource_files("emmet.core.qchem.calc_types") / "qchem_enums.json.gz"
+)
 _QCHEM_ENUMS = loadfn(str(_BASE_ENUM_PATH))
 # Avoiding setattr below for clarity
 LevelOfTheory = IgnoreCaseEnum("LevelOfTheory", _QCHEM_ENUMS.get("LevelOfTheory"))

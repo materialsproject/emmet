@@ -15,8 +15,4 @@ TASK_TYPES = _calc_type_config.get("TASK_TYPES")
 BASIS_SETS = _calc_type_config.get("BASIS_SETS")
 SOLVENT_MODELS = _calc_type_config.get("SOLVENT_MODELS")
 
-FUNCTIONALS = [
-    rt
-    for functionals in FUNCTIONAL_CLASSES.values()
-    for rt in functionals
-]
+FUNCTIONALS = [rt for functionals in FUNCTIONAL_CLASSES.values() for rt in functionals]
