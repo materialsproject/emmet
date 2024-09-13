@@ -17,47 +17,60 @@ def _string_bulk_replace(string: str, rules: dict[str, str]) -> str:
 _calc_type_meta = loadfn(
     str(import_resource_files("emmet.core.qchem.calc_types") / "calc_types.yaml")
 )
+
 _calc_type_meta["FUNCTIONALS"] = [
     rt
     for functionals in _calc_type_meta["FUNCTIONAL_CLASSES"].values()
     for rt in functionals
 ]
 
-_LOTS = list()
+def generate_enum_file(
+    enum_file_name : str | None = None
+) -> None:
+    """
+    Generate QChem enum members from reference yaml data.
 
-for funct in _calc_type_meta["FUNCTIONALS"]:
-    for basis in _calc_type_meta["BASIS_SETS"]:
-        for solv_model in _calc_type_meta["SOLVENT_MODELS"]:
-            _LOTS.append(f"{funct}/{basis}/{solv_model}")
+    Parameters
+    -----------
+    enum_file_name : str
+        Name of the file to write the enums to.
+        Defaults to _BASE_ENUM_PATH / qchem_enums.json.gz
+    """
 
-_lot_str_replacements = {"+": "_", "-": "_", "(": "_", ")": "_", "/": "_", "*": "_d"}
+    enum_file_name = enum_file_name or str(import_resource_files("emmet.core.qchem.calc_types") / "qchem_enums.json.gz")
 
-_ENUMS = {
-    "LevelOfTheory": {
-        "_".join(_string_bulk_replace(lot, _lot_str_replacements).split()): lot
-        for lot in _LOTS
-    },
-    "TaskType": {
-        "_".join(tt.split()).replace("-", "_"): tt
-        for tt in _calc_type_meta["TASK_TYPES"]
-    },
-    "CalcType": {
-        (
-            "_".join(_string_bulk_replace(lot, _lot_str_replacements).split())
-            + f"_{'_'.join(tt.split()).replace('-', '_')}"
-        ): f"{lot} {tt}"
-        for lot, tt in product(_LOTS, _calc_type_meta["TASK_TYPES"])
-    },
-}
+    _LOTS = list()
 
-for enum_name, docstr in {
-    "LevelOfTheory": "Levels of theory for calculations in Q-Chem",
-    "TaskType": "Calculation task types for Q-Chem",
-    "CalcType": "Calculation types (LOT + task type) for Q-Chem",
-}.items():
-    _ENUMS[enum_name]["__doc__"] = docstr
+    for funct in _calc_type_meta["FUNCTIONALS"]:
+        for basis in _calc_type_meta["BASIS_SETS"]:
+            for solv_model in _calc_type_meta["SOLVENT_MODELS"]:
+                _LOTS.append(f"{funct}/{basis}/{solv_model}")
 
-dumpfn(
-    _ENUMS,
-    str(import_resource_files("emmet.core.qchem.calc_types") / "qchem_enums.json.gz"),
-)
+    _lot_str_replacements = {"+": "_", "-": "_", "(": "_", ")": "_", "/": "_", "*": "_d"}
+
+    _ENUMS = {
+        "LevelOfTheory": {
+            "_".join(_string_bulk_replace(lot, _lot_str_replacements).split()): lot
+            for lot in _LOTS
+        },
+        "TaskType": {
+            "_".join(tt.split()).replace("-", "_"): tt
+            for tt in _calc_type_meta["TASK_TYPES"]
+        },
+        "CalcType": {
+            (
+                "_".join(_string_bulk_replace(lot, _lot_str_replacements).split())
+                + f"_{'_'.join(tt.split()).replace('-', '_')}"
+            ): f"{lot} {tt}"
+            for lot, tt in product(_LOTS, _calc_type_meta["TASK_TYPES"])
+        },
+    }
+
+    for enum_name, docstr in {
+        "LevelOfTheory": "Levels of theory for calculations in Q-Chem",
+        "TaskType": "Calculation task types for Q-Chem",
+        "CalcType": "Calculation types (LOT + task type) for Q-Chem",
+    }.items():
+        _ENUMS[enum_name]["__doc__"] = docstr
+
+    dumpfn(_ENUMS, enum_file_name)

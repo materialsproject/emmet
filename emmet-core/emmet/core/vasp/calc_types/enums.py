@@ -8,7 +8,7 @@ from monty.serialization import loadfn
 from emmet.core.utils import IgnoreCaseEnum
 
 _BASE_ENUM_PATH = (
-    import_resource_files("emmet.core.vasp.calc_types") / "rtc_enums.json.gz"
+    import_resource_files("emmet.core.vasp.calc_types") / "vasp_enums.json.gz"
 )
 _VASP_ENUMS = loadfn(str(_BASE_ENUM_PATH))
 # Avoid setattr below for clarity

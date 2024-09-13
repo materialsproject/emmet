@@ -3,7 +3,8 @@ import importlib
 try:
     importlib.import_module("emmet.core.qchem.calc_types.enums")
 except ImportError:
-    import emmet.core.qchem.calc_types.generate
+    from emmet.core.qchem.calc_types.generate import generate_enum_file
+    generate_enum_file()
 
 from emmet.core.qchem.calc_types.enums import CalcType, LevelOfTheory, TaskType
 from emmet.core.qchem.calc_types.utils import (

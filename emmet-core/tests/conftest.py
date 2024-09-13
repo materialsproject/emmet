@@ -1,12 +1,24 @@
+
+import os
 from pathlib import Path
-
 import pytest
-
+from tempfile import mkdtemp
+from shutil import rmtree
 
 @pytest.fixture(scope="session")
 def test_dir():
     return Path(__file__).parent.parent.parent.joinpath("test_files").resolve()
 
+@pytest.fixture
+def tmp_dir():
+    """Make temporary directory for tests."""
+
+    old_cwd = os.getcwd()
+    new_path = mkdtemp()
+    os.chdir(new_path)
+    yield
+    os.chdir(old_cwd)
+    rmtree(new_path)
 
 def assert_schemas_equal(test_schema, valid_schema):
     """
