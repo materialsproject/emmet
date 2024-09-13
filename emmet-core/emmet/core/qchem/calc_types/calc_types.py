@@ -9,10 +9,10 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 for attr, vals in loadfn(
     str(import_resource_files("emmet.core.qchem.calc_types") / "calc_types.yaml")
 ).items():
-    setattr(sys.modules[__name__],attr,vals)
+    setattr(sys.modules[__name__], attr, vals)
 
 FUNCTIONALS = [
     rt
-    for functionals in FUNCTIONAL_CLASSES.values()
+    for functionals in FUNCTIONAL_CLASSES.values()  # noqa: F821
     for rt in functionals
 ]

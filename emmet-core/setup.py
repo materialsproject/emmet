@@ -22,7 +22,7 @@ setup(
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
     package_data={
-        "emmet.core.vasp.calc_types": ["*.yaml","*.json.gz"],
+        "emmet.core.vasp.calc_types": ["*.yaml", "*.json.gz"],
         "emmet.core.subtrates": ["*.json"],
     },
     include_package_data=True,

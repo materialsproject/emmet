@@ -8,10 +8,11 @@ from monty.serialization import dumpfn, loadfn
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
-def _string_bulk_replace(string: str, rules: dict[str,str]) -> str:
+def _string_bulk_replace(string: str, rules: dict[str, str]) -> str:
     for targ_char, rep_char in rules.items():
-        string = string.replace(targ_char,rep_char)
+        string = string.replace(targ_char, rep_char)
     return string
+
 
 _calc_type_meta = loadfn(
     str(import_resource_files("emmet.core.qchem.calc_types") / "calc_types.yaml")
@@ -36,14 +37,17 @@ _ENUMS = {
         "_".join(_string_bulk_replace(lot, _lot_str_replacements).split()): lot
         for lot in _LOTS
     },
-    "TaskType": {"_".join(tt.split()).replace("-", "_"): tt for tt in _calc_type_meta["TASK_TYPES"]},
+    "TaskType": {
+        "_".join(tt.split()).replace("-", "_"): tt
+        for tt in _calc_type_meta["TASK_TYPES"]
+    },
     "CalcType": {
         (
             "_".join(_string_bulk_replace(lot, _lot_str_replacements).split())
             + f"_{'_'.join(tt.split()).replace('-', '_')}"
         ): f"{lot} {tt}"
         for lot, tt in product(_LOTS, _calc_type_meta["TASK_TYPES"])
-    }
+    },
 }
 
 for enum_name, docstr in {
@@ -55,5 +59,5 @@ for enum_name, docstr in {
 
 dumpfn(
     _ENUMS,
-    str(import_resource_files("emmet.core.qchem.calc_types") / "qchem_enums.json.gz")
+    str(import_resource_files("emmet.core.qchem.calc_types") / "qchem_enums.json.gz"),
 )

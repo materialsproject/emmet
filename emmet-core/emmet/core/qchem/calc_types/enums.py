@@ -10,6 +10,8 @@ from monty.serialization import loadfn
 
 from emmet.core.utils import IgnoreCaseEnum
 
-_BASE_ENUM_PATH = import_resource_files("emmet.core.qchem.calc_types") / "qchem_enums.json.gz"
+_BASE_ENUM_PATH = (
+    import_resource_files("emmet.core.qchem.calc_types") / "qchem_enums.json.gz"
+)
 for enum_name, elements in loadfn(str(_BASE_ENUM_PATH)).items():
-    setattr(sys.modules[__name__], enum_name, IgnoreCaseEnum(enum_name,elements) )
+    setattr(sys.modules[__name__], enum_name, IgnoreCaseEnum(enum_name, elements))
