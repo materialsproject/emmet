@@ -748,7 +748,10 @@ class Calculation(CalculationBaseModel):
         volumetric_files = [] if volumetric_files is None else volumetric_files
         vasprun = Vasprun(vasprun_file, **vasprun_kwargs)
         outcar = Outcar(outcar_file)
-        contcar = Poscar.from_file(contcar_file)
+        try:
+            contcar = Poscar.from_file(contcar_file)
+        except ValueError:
+            contcar = Poscar(vasprun.final_structure)
         completed_at = str(datetime.fromtimestamp(vasprun_file.stat().st_mtime))
 
         output_file_paths = _get_output_file_paths(volumetric_files)
@@ -852,7 +855,7 @@ class Calculation(CalculationBaseModel):
                 },
                 bader=bader,
                 ddec6=ddec6,
-                run_type=run_type(input_doc.parameters),
+                run_type=run_type(input_doc.parameters, input_doc.model_dump()),
                 task_type=task_type(input_doc.model_dump()),
                 calc_type=calc_type(input_doc.model_dump(), input_doc.parameters),
             ),

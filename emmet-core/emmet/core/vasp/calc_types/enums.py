@@ -75,6 +75,8 @@ class RunType(ValueEnum):
     vdW_DF2_U = "vdW-DF2+U"
     LDA = "LDA"
     LDA_U = "LDA+U"
+    G0W0_PBE = "G0W0-PBE"
+    G0W0_GGA = "G0W0-GGA"
 
     @classmethod
     def _missing_(cls, value):
@@ -98,6 +100,7 @@ class TaskType(ValueEnum):
     Deformation = "Deformation"
     Optic = "Optic"
     Molecular_Dynamics = "Molecular Dynamics"
+    GW_Band_Structure = "GW Band Structure"
     Unrecognized = "Unrecognized"
 
 
@@ -954,3 +957,5 @@ class CalcType(ValueEnum):
     LDA_U_Optic = "LDA+U Optic"
     LDA_U_Molecular_Dynamics = "LDA+U Molecular Dynamics"
     LDA_U_Unrecognized = "LDA+U Unrecognized"
+    G0W0_GGA_Band_Structure = "G0W0-GGA GW Band Structure"
+    G0W0_PBE_Band_Structure = "G0W0-PBE GW Band Structure"

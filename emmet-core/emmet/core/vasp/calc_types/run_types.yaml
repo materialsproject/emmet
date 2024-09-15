@@ -120,3 +120,12 @@ VDW:
     LASPH: true
     LUSE_VDW: true
     Zab_vdW: -1.8867
+GW:
+  G0W0-GGA:
+    ALGO: Gw0
+    NELM: 1
+    GGA: --
+  G0W0-PBE:
+    ALGO: Gw0
+    NELM: 1
+    GGA: PE
