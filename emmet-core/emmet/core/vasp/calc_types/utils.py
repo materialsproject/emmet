@@ -12,7 +12,10 @@ _RUN_TYPE_DATA = loadfn(str(Path(__file__).parent.joinpath("run_types.yaml").res
 __all__ = ["run_type", "task_type", "calc_type"]
 
 
-def run_type(parameters: Dict) -> RunType:
+def run_type(
+    parameters: Dict,
+    inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict] = None,
+) -> RunType:
     """
     Determine run type from the VASP parameters dict.
 
@@ -20,6 +23,7 @@ def run_type(parameters: Dict) -> RunType:
 
     Args:
         parameters: Dictionary of VASP parameters from vasprun.xml.
+        inputs: inputs dict with an incar, kpoints, potcar, and poscar dictionaries.
 
     Returns:
         The run type.
@@ -29,6 +33,10 @@ def run_type(parameters: Dict) -> RunType:
         TaskDocument.run_type, copy over LDAU* fields from the incar rather than trust
         parameters.
     """
+    incar = {}
+    if inputs is not None:
+        incar = inputs.get("incar", {})
+
     is_hubbard = "+U" if parameters.get("LDAU", False) else ""
 
     def _variant_equal(v1, v2) -> bool:
@@ -38,10 +46,11 @@ def run_type(parameters: Dict) -> RunType:
         return v1 == v2
 
     # This is to force an order of evaluation
-    for functional_class in ["HF", "VDW", "METAGGA", "GGA"]:
+    for functional_class in ["GW", "HF", "VDW", "METAGGA", "GGA"]:
         for special_type, params in _RUN_TYPE_DATA[functional_class].items():
             if all(
                 _variant_equal(parameters.get(param, None), value)
+                or (param in incar and _variant_equal(incar.get(param, None), value))
                 for param, value in params.items()
             ):
                 return RunType(f"{special_type}{is_hubbard}")
@@ -116,6 +125,9 @@ def task_type(
     elif incar.get("IBRION", 1) == 0:
         calc_type.append("Molecular Dynamics")
 
+    elif incar.get("ALGO").upper() == "GW0":
+        calc_type.append("GW Band Structure")
+
     if len(calc_type) == 0:
         return TaskType("Unrecognized")
 
@@ -136,6 +148,6 @@ def calc_type(
     Returns:
         The calc type.
     """
-    rt = run_type(parameters).value
+    rt = run_type(parameters, inputs).value
     tt = task_type(inputs).value
     return CalcType(f"{rt} {tt}")
