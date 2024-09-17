@@ -9,8 +9,9 @@ and/or
 """
 from emmet.core.utils import ValueEnum, IgnoreCaseEnum
 
+
 class RunType(IgnoreCaseEnum):
-    """ VASP calculation run types. """
+    """VASP calculation run types."""
 
     AM05 = "AM05"
     AM05_U = "AM05+U"
@@ -79,8 +80,9 @@ class RunType(IgnoreCaseEnum):
     vdW_DF2 = "vdW-DF2"
     vdW_DF2_U = "vdW-DF2+U"
 
+
 class TaskType(ValueEnum):
-    """ VASP calculation task types. """
+    """VASP calculation task types."""
 
     DFPT = "DFPT"
     DFPT_Dielectric = "DFPT Dielectric"
@@ -96,8 +98,9 @@ class TaskType(ValueEnum):
     Structure_Optimization = "Structure Optimization"
     Unrecognized = "Unrecognized"
 
+
 class CalcType(ValueEnum):
-    """ VASP calculation types. """
+    """VASP calculation types."""
 
     AM05_DFPT = "AM05 DFPT"
     AM05_DFPT_Dielectric = "AM05 DFPT Dielectric"
@@ -584,7 +587,9 @@ class CalcType(ValueEnum):
     SCAN_rVV10_U_Deformation = "SCAN-rVV10+U Deformation"
     SCAN_rVV10_U_Dielectric = "SCAN-rVV10+U Dielectric"
     SCAN_rVV10_U_Molecular_Dynamics = "SCAN-rVV10+U Molecular Dynamics"
-    SCAN_rVV10_U_NMR_Electric_Field_Gradient = "SCAN-rVV10+U NMR Electric Field Gradient"
+    SCAN_rVV10_U_NMR_Electric_Field_Gradient = (
+        "SCAN-rVV10+U NMR Electric Field Gradient"
+    )
     SCAN_rVV10_U_NMR_Nuclear_Shielding = "SCAN-rVV10+U NMR Nuclear Shielding"
     SCAN_rVV10_U_NSCF_Line = "SCAN-rVV10+U NSCF Line"
     SCAN_rVV10_U_NSCF_Uniform = "SCAN-rVV10+U NSCF Uniform"
@@ -662,7 +667,9 @@ class CalcType(ValueEnum):
     optB86b_vdW_U_Deformation = "optB86b-vdW+U Deformation"
     optB86b_vdW_U_Dielectric = "optB86b-vdW+U Dielectric"
     optB86b_vdW_U_Molecular_Dynamics = "optB86b-vdW+U Molecular Dynamics"
-    optB86b_vdW_U_NMR_Electric_Field_Gradient = "optB86b-vdW+U NMR Electric Field Gradient"
+    optB86b_vdW_U_NMR_Electric_Field_Gradient = (
+        "optB86b-vdW+U NMR Electric Field Gradient"
+    )
     optB86b_vdW_U_NMR_Nuclear_Shielding = "optB86b-vdW+U NMR Nuclear Shielding"
     optB86b_vdW_U_NSCF_Line = "optB86b-vdW+U NSCF Line"
     optB86b_vdW_U_NSCF_Uniform = "optB86b-vdW+U NSCF Uniform"
@@ -714,7 +721,9 @@ class CalcType(ValueEnum):
     optB88_vdW_U_Deformation = "optB88-vdW+U Deformation"
     optB88_vdW_U_Dielectric = "optB88-vdW+U Dielectric"
     optB88_vdW_U_Molecular_Dynamics = "optB88-vdW+U Molecular Dynamics"
-    optB88_vdW_U_NMR_Electric_Field_Gradient = "optB88-vdW+U NMR Electric Field Gradient"
+    optB88_vdW_U_NMR_Electric_Field_Gradient = (
+        "optB88-vdW+U NMR Electric Field Gradient"
+    )
     optB88_vdW_U_NMR_Nuclear_Shielding = "optB88-vdW+U NMR Nuclear Shielding"
     optB88_vdW_U_NSCF_Line = "optB88-vdW+U NSCF Line"
     optB88_vdW_U_NSCF_Uniform = "optB88-vdW+U NSCF Uniform"
@@ -766,7 +775,9 @@ class CalcType(ValueEnum):
     optPBE_vdW_U_Deformation = "optPBE-vdW+U Deformation"
     optPBE_vdW_U_Dielectric = "optPBE-vdW+U Dielectric"
     optPBE_vdW_U_Molecular_Dynamics = "optPBE-vdW+U Molecular Dynamics"
-    optPBE_vdW_U_NMR_Electric_Field_Gradient = "optPBE-vdW+U NMR Electric Field Gradient"
+    optPBE_vdW_U_NMR_Electric_Field_Gradient = (
+        "optPBE-vdW+U NMR Electric Field Gradient"
+    )
     optPBE_vdW_U_NMR_Nuclear_Shielding = "optPBE-vdW+U NMR Nuclear Shielding"
     optPBE_vdW_U_NSCF_Line = "optPBE-vdW+U NSCF Line"
     optPBE_vdW_U_NSCF_Uniform = "optPBE-vdW+U NSCF Uniform"
@@ -806,7 +817,9 @@ class CalcType(ValueEnum):
     r2SCAN_rVV10_Deformation = "r2SCAN-rVV10 Deformation"
     r2SCAN_rVV10_Dielectric = "r2SCAN-rVV10 Dielectric"
     r2SCAN_rVV10_Molecular_Dynamics = "r2SCAN-rVV10 Molecular Dynamics"
-    r2SCAN_rVV10_NMR_Electric_Field_Gradient = "r2SCAN-rVV10 NMR Electric Field Gradient"
+    r2SCAN_rVV10_NMR_Electric_Field_Gradient = (
+        "r2SCAN-rVV10 NMR Electric Field Gradient"
+    )
     r2SCAN_rVV10_NMR_Nuclear_Shielding = "r2SCAN-rVV10 NMR Nuclear Shielding"
     r2SCAN_rVV10_NSCF_Line = "r2SCAN-rVV10 NSCF Line"
     r2SCAN_rVV10_NSCF_Uniform = "r2SCAN-rVV10 NSCF Uniform"
@@ -818,7 +831,9 @@ class CalcType(ValueEnum):
     r2SCAN_rVV10_U_Deformation = "r2SCAN-rVV10+U Deformation"
     r2SCAN_rVV10_U_Dielectric = "r2SCAN-rVV10+U Dielectric"
     r2SCAN_rVV10_U_Molecular_Dynamics = "r2SCAN-rVV10+U Molecular Dynamics"
-    r2SCAN_rVV10_U_NMR_Electric_Field_Gradient = "r2SCAN-rVV10+U NMR Electric Field Gradient"
+    r2SCAN_rVV10_U_NMR_Electric_Field_Gradient = (
+        "r2SCAN-rVV10+U NMR Electric Field Gradient"
+    )
     r2SCAN_rVV10_U_NMR_Nuclear_Shielding = "r2SCAN-rVV10+U NMR Nuclear Shielding"
     r2SCAN_rVV10_U_NSCF_Line = "r2SCAN-rVV10+U NSCF Line"
     r2SCAN_rVV10_U_NSCF_Uniform = "r2SCAN-rVV10+U NSCF Uniform"
@@ -854,7 +869,9 @@ class CalcType(ValueEnum):
     revPBE_PADE_U_Deformation = "revPBE+PADE+U Deformation"
     revPBE_PADE_U_Dielectric = "revPBE+PADE+U Dielectric"
     revPBE_PADE_U_Molecular_Dynamics = "revPBE+PADE+U Molecular Dynamics"
-    revPBE_PADE_U_NMR_Electric_Field_Gradient = "revPBE+PADE+U NMR Electric Field Gradient"
+    revPBE_PADE_U_NMR_Electric_Field_Gradient = (
+        "revPBE+PADE+U NMR Electric Field Gradient"
+    )
     revPBE_PADE_U_NMR_Nuclear_Shielding = "revPBE+PADE+U NMR Nuclear Shielding"
     revPBE_PADE_U_NSCF_Line = "revPBE+PADE+U NSCF Line"
     revPBE_PADE_U_NSCF_Uniform = "revPBE+PADE+U NSCF Uniform"
@@ -896,7 +913,9 @@ class CalcType(ValueEnum):
     revPBE_vdW_U_Deformation = "revPBE-vdW+U Deformation"
     revPBE_vdW_U_Dielectric = "revPBE-vdW+U Dielectric"
     revPBE_vdW_U_Molecular_Dynamics = "revPBE-vdW+U Molecular Dynamics"
-    revPBE_vdW_U_NMR_Electric_Field_Gradient = "revPBE-vdW+U NMR Electric Field Gradient"
+    revPBE_vdW_U_NMR_Electric_Field_Gradient = (
+        "revPBE-vdW+U NMR Electric Field Gradient"
+    )
     revPBE_vdW_U_NMR_Nuclear_Shielding = "revPBE-vdW+U NMR Nuclear Shielding"
     revPBE_vdW_U_NSCF_Line = "revPBE-vdW+U NSCF Line"
     revPBE_vdW_U_NSCF_Uniform = "revPBE-vdW+U NSCF Uniform"
@@ -922,7 +941,9 @@ class CalcType(ValueEnum):
     rev_vdW_DF2_U_Deformation = "rev-vdW-DF2+U Deformation"
     rev_vdW_DF2_U_Dielectric = "rev-vdW-DF2+U Dielectric"
     rev_vdW_DF2_U_Molecular_Dynamics = "rev-vdW-DF2+U Molecular Dynamics"
-    rev_vdW_DF2_U_NMR_Electric_Field_Gradient = "rev-vdW-DF2+U NMR Electric Field Gradient"
+    rev_vdW_DF2_U_NMR_Electric_Field_Gradient = (
+        "rev-vdW-DF2+U NMR Electric Field Gradient"
+    )
     rev_vdW_DF2_U_NMR_Nuclear_Shielding = "rev-vdW-DF2+U NMR Nuclear Shielding"
     rev_vdW_DF2_U_NSCF_Line = "rev-vdW-DF2+U NSCF Line"
     rev_vdW_DF2_U_NSCF_Uniform = "rev-vdW-DF2+U NSCF Uniform"

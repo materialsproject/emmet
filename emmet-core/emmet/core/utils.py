@@ -433,6 +433,7 @@ class IgnoreCaseEnum(ValueEnum):
             if member.value.upper() == value.upper():
                 return member
 
+
 def utcnow() -> datetime.datetime:
     """Get UTC time right now."""
     return datetime.datetime.now(datetime.timezone.utc)

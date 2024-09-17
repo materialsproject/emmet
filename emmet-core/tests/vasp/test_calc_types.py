@@ -1,14 +1,13 @@
-
 from importlib.resources import files as import_resource_file
 from ruamel.yaml import YAML
 
-with open(import_resource_file("emmet.core.vasp.calc_types") / "calc_types.yaml","r") as f:
+with open(
+    import_resource_file("emmet.core.vasp.calc_types") / "calc_types.yaml", "r"
+) as f:
     config = YAML().load(f)
-    
+
 _REFERENCE_MEMBER_COUNT = {
-    "RunType": 2*sum(
-        len(rtypes) for rtypes in config["RUN_TYPES"].values()
-    ),
+    "RunType": 2 * sum(len(rtypes) for rtypes in config["RUN_TYPES"].values()),
     "TaskType": len(config["TASK_TYPES"]),
 }
 _REFERENCE_MEMBER_COUNT["CalcType"] = (
