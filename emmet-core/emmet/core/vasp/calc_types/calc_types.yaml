@@ -1,4 +1,8 @@
 RUN_TYPES:
+  LDA:
+    # Note that GGA = CA is the same as GGA = PZ for VASP
+    LDA:
+      GGA: CA
   GGA:
     AM05:
       GGA: AM
@@ -6,9 +10,9 @@ RUN_TYPES:
       GGA: --
     PBE:
       GGA: PE
-    PBESol:
+    PBEsol:
       GGA: PS
-    RevPBE+PADE:
+    revPBE+PADE:
       GGA: RP
     optB86b:
       GGA: MK
@@ -52,6 +56,8 @@ RUN_TYPES:
       AGGAX: 0.75
       ALDAC: 1.0
       LHFCALC: true
+    # From the VASP manual, the default for setting LHFCALC = True is PBE0
+    # HFCus is the same as PBE0
     HFCus:
       LHFCALC: true
   METAGGA:
@@ -69,12 +75,12 @@ RUN_TYPES:
       METAGGA: RTPSS
     SCAN:
       METAGGA: SCAN
-    R2SCAN:
+    r2SCAN:
       METAGGA: R2SCAN
     TPSS:
       METAGGA: TPSS
   VDW:
-    R2SCAN-rVV10:
+    r2SCAN-rVV10:
       BPARAM: 15.7
       LASPH: true
       LUSE_VDW: true

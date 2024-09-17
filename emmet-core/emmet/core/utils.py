@@ -433,17 +433,6 @@ class IgnoreCaseEnum(ValueEnum):
             if member.value.upper() == value.upper():
                 return member
 
-
-def get_enum_source(enum_name, doc, items):
-    header = f"""
-class {enum_name}(ValueEnum):
-    \"\"\" {doc} \"\"\"\n
-"""
-    items = [f'    {const} = "{val}"' for const, val in items.items()]
-
-    return header + "\n".join(items)
-
-
 def utcnow() -> datetime.datetime:
     """Get UTC time right now."""
     return datetime.datetime.now(datetime.timezone.utc)
