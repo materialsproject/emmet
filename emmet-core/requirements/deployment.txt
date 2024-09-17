@@ -64,15 +64,15 @@ pybtex==0.24.0
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pymatgen
-pydantic==2.9.1
+pydantic==2.9.2
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pydantic-settings
-pydantic-core==2.23.3
+pydantic-core==2.23.4
     # via pydantic
 pydantic-settings==2.5.2
     # via emmet-core (emmet/emmet-core/setup.py)
-pymatgen==2024.9.10
+pymatgen==2024.9.17
     # via emmet-core (emmet/emmet-core/setup.py)
 pyparsing==3.1.4
     # via matplotlib
