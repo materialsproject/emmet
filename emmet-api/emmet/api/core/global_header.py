@@ -24,10 +24,6 @@ class GlobalHeaderProcessor(HeaderProcessor):
         # agree to terms can access all data, license = None
         # else, license = BY-C
         privileged_groups = {"TERMS:ACCEPT-NC", "admin"}
-
-        if groups and any(group in groups for group in privileged_groups):
-            license_type = None
-        else:
-            license_type = "BY-C"
-
+        is_privileged = groups and any(group in groups for group in privileged_groups)
+        license_type = None if is_privileged else "BY-C"
         return query_operator.query(license=license_type)
