@@ -448,18 +448,32 @@ class TaskDoc(StructureMetadata, extra="allow"):
         # See, e.g. https://github.com/materialsproject/emmet/issues/960
         # where run_type's were set incorrectly in older versions of TaskDoc
 
+        # only run if attributes containing input sets are available
+        attrs = ["calcs_reversed", "input", "orig_inputs"]
+        if not any(hasattr(self, attr) and getattr(self, attr) for attr in attrs):
+            return
+
         # To determine task and run type, we search for input sets in this order
         # of precedence: calcs_reversed, inputs, orig_inputs
-        for inp_set in [self.calcs_reversed[0].input, self.input, self.orig_inputs]:
-            if inp_set is not None:
-                break
-        self.task_type = task_type(inp_set)
-        self.run_type = self._get_run_type(self.calcs_reversed)
-        self.calc_type = self._get_calc_type(self.calcs_reversed, inp_set)
+        inp_set = None
+        inp_sets_to_check = [self.input, self.orig_inputs]
+        if (calcs_reversed := getattr(self, "calcs_reversed", None)) is not None:
+            inp_sets_to_check = [calcs_reversed[0].input] + inp_sets_to_check
 
-        # TODO: remove after imposing TaskDoc schema on older tasks in collection
-        if self.structure is None:
-            self.structure = self.calcs_reversed[0].output.structure
+        for inp_set in inp_sets_to_check:
+            if inp_set is not None:
+                self.task_type = task_type(inp_set)
+                break
+
+        # calcs_reversed needed below
+        if calcs_reversed is not None:
+            self.run_type = self._get_run_type(calcs_reversed)
+            if inp_set is not None:
+                self.calc_type = self._get_calc_type(calcs_reversed, inp_set)
+
+            # TODO: remove after imposing TaskDoc schema on older tasks in collection
+            if self.structure is None:
+                self.structure = calcs_reversed[0].output.structure
 
     # Make sure that the datetime field is properly formatted
     # (Unclear when this is not the case, please leave comment if observed)
@@ -473,11 +487,11 @@ class TaskDoc(StructureMetadata, extra="allow"):
     def _validate_batch_id(cls, v) -> str:
         if v is not None:
             invalid_chars = set(
-                char for char in v if (not char.isalnum()) or (char not in {"-", "_"})
+                char for char in v if (not char.isalnum()) and (char not in {"-", "_"})
             )
             if len(invalid_chars) > 0:
                 raise ValueError(
-                    f"Invalid characters in batch_id:\n{' '.join(invalid_chars)}"
+                    f"Invalid characters in batch_id: {' '.join(invalid_chars)}"
                 )
         return v
 
@@ -704,9 +718,11 @@ class TaskDoc(StructureMetadata, extra="allow"):
             "parameters": {
                 # Cannot be PotcarSpec document, pymatgen expects a dict
                 # Note that `potcar_spec` is optional
-                "potcar_spec": [dict(d) for d in calcs_reversed[0].input.potcar_spec]
-                if calcs_reversed[0].input.potcar_spec
-                else [],
+                "potcar_spec": (
+                    [dict(d) for d in calcs_reversed[0].input.potcar_spec]
+                    if calcs_reversed[0].input.potcar_spec
+                    else []
+                ),
                 # Required to be compatible with MontyEncoder for the ComputedEntry
                 "run_type": str(calcs_reversed[0].run_type),
                 "is_hubbard": calcs_reversed[0].input.is_hubbard,

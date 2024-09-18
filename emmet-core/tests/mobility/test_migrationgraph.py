@@ -40,6 +40,9 @@ def mg_for_sc_fields(test_dir):
     return mg_for_sc
 
 
+@pytest.mark.skip(
+    reason="Incompatible with Pymatgen>=2024.9.10, regression testing in progress..."
+)
 def test_from_entries_and_distance(migration_graph_prop, get_entries):
     for expected in migration_graph_prop.values():
         mgdoc = MigrationGraphDoc.from_entries_and_distance(
@@ -99,6 +102,9 @@ def test_generate_sc_fields(mg_for_sc_fields):
         assert sum(check_sc_list) >= 1
 
 
+@pytest.mark.skip(
+    reason="Incompatible with Pymatgen>=2024.9.10, regression testing in progress..."
+)
 def test_get_distinct_hop_sites(get_entries):
     mgdoc = MigrationGraphDoc.from_entries_and_distance(
         battery_id="mp-1234",

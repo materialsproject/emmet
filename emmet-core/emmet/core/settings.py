@@ -5,7 +5,7 @@ Settings for defaults in the core definitions of Materials Project Documents
 """
 import json
 from pathlib import Path
-from typing import Dict, List, Type, TypeVar, Union
+from typing import Type, TypeVar, Union, List, Dict
 
 import requests
 from monty.json import MontyDecoder
@@ -120,7 +120,7 @@ class EmmetSettings(BaseSettings):
         description="Relative tolerance for kspacing to still be a valid task document",
     )
 
-    VASP_MAX_MAGMOM: dict[str, float] = Field(
+    VASP_MAX_MAGMOM: Dict[str, float] = Field(
         {"Cr": 5}, description="Maximum permitted magnetic moments by element type."
     )
 

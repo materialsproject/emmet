@@ -6,25 +6,25 @@
 #
 annotated-types==0.7.0
     # via pydantic
-certifi==2024.7.4
+certifi==2024.8.30
     # via requests
 charset-normalizer==3.3.2
     # via requests
-contourpy==1.2.1
+contourpy==1.3.0
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
 fonttools==4.53.1
     # via matplotlib
-idna==3.7
+idna==3.10
     # via requests
 joblib==1.4.2
     # via pymatgen
-kiwisolver==1.4.5
+kiwisolver==1.4.7
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
-matplotlib==3.9.1.post1
+matplotlib==3.9.2
     # via
     #   -r python/requirements.txt
     #   pymatgen
@@ -58,23 +58,23 @@ pandas==2.2.2
     #   pymatgen
 pillow==10.4.0
     # via matplotlib
-plotly==5.23.0
+plotly==5.24.1
     # via pymatgen
 pybtex==0.24.0
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pymatgen
-pydantic==2.8.2
+pydantic==2.9.2
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pydantic-settings
-pydantic-core==2.20.1
+pydantic-core==2.23.4
     # via pydantic
-pydantic-settings==2.4.0
+pydantic-settings==2.5.2
     # via emmet-core (emmet/emmet-core/setup.py)
-pymatgen==2024.8.9
+pymatgen==2024.9.17
     # via emmet-core (emmet/emmet-core/setup.py)
-pyparsing==3.1.2
+pyparsing==3.1.4
     # via matplotlib
 python-dateutil==2.9.0.post0
     # via
@@ -82,7 +82,7 @@ python-dateutil==2.9.0.post0
     #   pandas
 python-dotenv==1.0.1
     # via pydantic-settings
-pytz==2024.1
+pytz==2024.2
     # via pandas
 pyyaml==6.0.2
     # via pybtex
@@ -92,7 +92,7 @@ ruamel-yaml==0.18.6
     # via pymatgen
 ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
-scipy==1.14.0
+scipy==1.14.1
     # via
     #   -r python/requirements.txt
     #   pymatgen
@@ -119,5 +119,5 @@ tzdata==2024.1
     # via pandas
 uncertainties==3.2.2
     # via pymatgen
-urllib3==2.2.2
+urllib3==2.2.3
     # via requests
