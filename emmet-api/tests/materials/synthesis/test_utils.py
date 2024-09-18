@@ -23,7 +23,7 @@ def test_mask_paragraphs():
         synth_doc = load(file)
 
     doc = SynthesisSearchResultModel(**synth_doc)
-    new_doc = mask_paragraphs(doc.dict(), limit=10)
+    new_doc = mask_paragraphs(doc.model_dump(), limit=10)
 
     assert new_doc["paragraph_string"] == "Lorem ..."
 
@@ -33,5 +33,5 @@ def test_mask_highlights():
         synth_doc = load(file)
 
     doc = SynthesisSearchResultModel(**synth_doc)
-    new_doc = mask_highlights(doc.dict(), limit=10)
+    new_doc = mask_highlights(doc.model_dump(), limit=10)
     assert new_doc["highlights"][0]["texts"][0]["value"] == "... anim ..."

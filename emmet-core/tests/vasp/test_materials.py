@@ -21,7 +21,7 @@ def test_make_mat(test_tasks):
     material = MaterialsDoc.from_tasks(test_tasks)
     assert material.formula_pretty == "Si"
     assert len(material.task_ids) == 4
-    assert len(material.entries) == 1
+    assert len(material.entries.model_dump(exclude_none=True)) == 1
 
     bad_task_group = [
         task for task in test_tasks if task.task_type != TaskType.Structure_Optimization

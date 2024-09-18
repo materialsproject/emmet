@@ -1,10 +1,11 @@
-from typing import Union
+from typing import Optional, Union
 
 from pydantic import BaseModel, Field
 from pymatgen.core.structure import Structure
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
+from emmet.core.utils import generate_robocrys_condensed_struct_and_description
 
 
 class MineralData(BaseModel):
@@ -16,7 +17,7 @@ class MineralData(BaseModel):
         description="Mineral type.",
     )
 
-    name: str = Field(None, description="The mineral name if found.")
+    name: Optional[str] = Field(None, description="The mineral name if found.")
 
 
 class CondensedStructureData(BaseModel):
@@ -33,17 +34,17 @@ class CondensedStructureData(BaseModel):
         description="Dimensionality of the material.",
     )
 
-    formula: str = Field(
+    formula: Optional[str] = Field(
         None,
         description="Formula for the material.",
     )
 
-    spg_symbol: str = Field(
+    spg_symbol: Optional[str] = Field(
         None,
         description="Space group symbol of the material.",
     )
 
-    crystal_system: str = Field(
+    crystal_system: Optional[str] = Field(
         None,
         description="Crystal system of the material.",
     )
@@ -57,10 +58,10 @@ class RobocrystallogapherDoc(PropertyDoc):
 
     """
 
-    property_name = "robocrys"
+    property_name: str = "robocrys"
 
     description: str = Field(
-        description="Decription text from robocrytallographer.",
+        description="Description text from robocrytallographer.",
     )
 
     condensed_structure: CondensedStructureData = Field(
@@ -73,25 +74,26 @@ class RobocrystallogapherDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_structure(cls, structure: Structure, material_id: MPID, **kwargs):  # type: ignore[override]
-        try:
-            from robocrys import StructureCondenser, StructureDescriber
-            from robocrys import __version__ as __robocrys_version__
-        except ImportError:
-            raise ImportError(
-                "robocrys needs to be installed to generate RobocrystallographerDoc"
-            )
-
-        condensed_structure = StructureCondenser().condense_structure(structure)
-        description = StructureDescriber(
-            describe_symmetry_labels=False, fmt="unicode", return_parts=False
-        ).describe(condensed_structure=condensed_structure)
+    def from_structure(
+        cls,
+        structure: Structure,
+        material_id: MPID,
+        robocrys_version: str,
+        mineral_matcher=None,
+        **kwargs
+    ):
+        (
+            condensed_structure,
+            description,
+        ) = generate_robocrys_condensed_struct_and_description(
+            structure=structure, mineral_matcher=mineral_matcher
+        )
 
         return super().from_structure(
             meta_structure=structure,
             material_id=material_id,
             condensed_structure=condensed_structure,
             description=description,
-            robocrys_version=__robocrys_version__,
+            robocrys_version=robocrys_version,
             **kwargs
         )

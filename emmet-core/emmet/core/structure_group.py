@@ -4,12 +4,13 @@ from datetime import datetime
 from itertools import groupby
 from typing import Iterable, List, Optional, Union
 
-from monty.json import MontyDecoder
-from pydantic import BaseModel, Field, validator
+from pydantic import field_validator, BaseModel, Field
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 from pymatgen.core.composition import Composition
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from emmet.core.mpid import MPID
+from emmet.core.common import convert_datetime
 
 logger = logging.getLogger(__name__)
 
@@ -49,56 +50,57 @@ class StructureGroupDoc(BaseModel):
     Group of structure
     """
 
-    group_id: str = Field(
+    group_id: Optional[str] = Field(
         None,
         description="The combined material_id of the grouped document is given by the numerically smallest "
         "material_id, you can also append the followed by the ignored species at the end.",
     )
 
-    has_distinct_compositions: bool = Field(
+    has_distinct_compositions: Optional[bool] = Field(
         None, description="True if multiple compositions are present in the group."
     )
 
-    material_ids: list = Field(
+    material_ids: Optional[list] = Field(
         None,
         description="A list of materials ids for all of the materials that were grouped together.",
     )
 
-    host_material_ids: list = Field(
+    host_material_ids: Optional[list] = Field(
         None,
         description="Material id(s) that correspond(s) to the host structure(s), which has/have the lowest"
         "concentration of ignored specie.",
     )
 
-    insertion_material_ids: list = Field(
+    insertion_material_ids: Optional[list] = Field(
         None,
         description="Material ids that correspond to the non-host structures identified in a given structure group.",
     )
 
-    framework_formula: str = Field(
+    framework_formula: Optional[str] = Field(
         None,
         description="The chemical formula for the framework (the materials system without the ignored species).",
     )
 
-    ignored_specie: str = Field(
+    ignored_specie: Optional[str] = Field(
         None,
         description="Ignored atomic specie which is usually the working ion (ex: Li, Mg, or Ca).",
     )
 
-    chemsys: str = Field(
+    chemsys: Optional[str] = Field(
         None,
         description="The chemical system this group belongs to, if the atoms for the ignored species is "
         "present the chemsys will also include the ignored species.",
     )
 
-    last_updated: datetime = Field(
+    last_updated: Optional[datetime] = Field(
         None, description="Timestamp when this document was built."
     )
 
     # Make sure that the datetime field is properly formatted
-    @validator("last_updated", pre=True)
-    def last_updated_dict_ok(cls, v):
-        return MontyDecoder().process_decoded(v)
+    @field_validator("last_updated", mode="before")
+    @classmethod
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)
 
     @classmethod
     def from_grouped_entries(
@@ -126,7 +128,7 @@ class StructureGroupDoc(BaseModel):
             framework_comp = Composition.from_dict(comp_d)
             framework_str = framework_comp.reduced_formula
         ids = [ient.data["material_id"] for ient in entries]
-        lowest_id = min(ids, key=_get_id_num)
+        lowest_id = min(ids, key=_get_id_lexi)
         sub_script = "_".join([ignored_specie])
         host_and_insertion_ids = StructureGroupDoc.get_host_and_insertion_ids(
             entries=entries, ignored_specie=ignored_specie
@@ -192,7 +194,7 @@ class StructureGroupDoc(BaseModel):
                 struct_group = cls.from_grouped_entries(
                     f_group_l, ignored_specie=ignored_specie
                 )
-                cnt_ += len(struct_group.material_ids)
+                cnt_ += len(struct_group.material_ids)  # type: ignore
                 continue
 
             logger.debug(
@@ -202,7 +204,7 @@ class StructureGroupDoc(BaseModel):
                 struct_group = cls.from_grouped_entries(
                     g, ignored_specie=ignored_specie
                 )
-                cnt_ += len(struct_group.material_ids)
+                cnt_ += len(struct_group.material_ids)  # type: ignore
                 results.append(struct_group)
         if cnt_ != len(entries):
             raise RuntimeError(
@@ -246,7 +248,7 @@ def group_entries_with_structure_matcher(
     g,
     struct_matcher: StructureMatcher,
     working_ion: Optional[str] = None,
-) -> Iterable[List[Union[ComputedStructureEntry]]]:
+) -> Iterable[List[Union[ComputedStructureEntry, ComputedEntry]]]:
     """
     Group the entries together based on similarity of the  primitive cells
     Args:
@@ -277,13 +279,11 @@ def group_entries_with_structure_matcher(
         yield [el for el in sub_g]
 
 
-def _get_id_num(task_id) -> Union[int, str]:
-    if isinstance(task_id, int):
-        return task_id
-    if isinstance(task_id, str):
-        return int(task_id.split("-")[-1])
-    else:
-        raise ValueError("TaskID needs to be either a number or of the form xxx-#####")
+def _get_id_lexi(task_id) -> Union[int, str]:
+    """Get a lexicographic representation for a task ID"""
+    # matches "mp-1234" or "1234" followed by and optional "-(Alphanumeric)"
+    mpid = MPID(task_id)
+    return mpid.parts
 
 
 def _get_framework(formula, ignored_specie) -> str:

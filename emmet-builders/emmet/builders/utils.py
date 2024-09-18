@@ -1,9 +1,22 @@
-from typing import Set, Union
-import sys
+from __future__ import annotations
+
+import json
 import os
+import sys
+from gzip import GzipFile
+from io import BytesIO
 from itertools import chain, combinations
-from pymatgen.core import Structure
+from pathlib import Path
+from typing import Any, Literal, Optional, Set, Union
+
+import orjson
+from botocore.exceptions import ClientError
+from monty.serialization import MontyDecoder
 from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
+from pymatgen.core import Structure
+from pymatgen.io.vasp.inputs import PotcarSingle
+
+from emmet.builders.settings import EmmetBuildSettings
 
 
 def maximal_spanning_non_intersecting_subsets(sets) -> Set[Set]:
@@ -146,6 +159,56 @@ def get_hop_cutoff(
         return None
 
 
+def query_open_data(
+    bucket: str,
+    prefix: str,
+    key: str,
+    monty_decode: bool = True,
+    s3_resource: Any = None,
+) -> Union[dict, None]:
+    """Query a Materials Project AWS S3 Open Data bucket directly with boto3
+
+    Args:
+        bucket (str): Materials project bucket name
+        prefix (str): Full set of file prefixes
+        key (str): Key for file
+        monty_decode (bool): Whether to monty decode or keep as dictionary. Defaults to True.
+        s3_resource (Optional[Any]): S3 resource. One will be instantiated if none are provided
+
+    Returns:
+        dict: MontyDecoded data or None
+    """
+
+    def decode(content, monty_decode):
+        if monty_decode:
+            result = MontyDecoder().decode(content)
+        else:
+            result = orjson.loads(content)
+        return result
+
+    try:
+        file_key = f"{prefix}/{key}.json.gz"
+        ref = s3_resource.Object(bucket, file_key)  # type: ignore
+        bytes = ref.get()["Body"]  # type: ignore
+
+        with GzipFile(fileobj=bytes, mode="r") as gzipfile:
+            content = gzipfile.read()
+
+        try:
+            result = decode(content, monty_decode)
+        except (orjson.JSONDecodeError, json.JSONDecodeError):
+            try:
+                with GzipFile(fileobj=BytesIO(content), mode="r") as gzipfile_nested:
+                    result = decode(gzipfile_nested.read(), monty_decode)
+            except Exception:
+                print(f"Issue decoding {file_key} from bucket {bucket}")
+                return None
+    except ClientError:
+        return None
+
+    return result
+
+
 # From: https://stackoverflow.com/a/45669280
 class HiddenPrints:
     def __enter__(self):
@@ -155,3 +218,80 @@ class HiddenPrints:
     def __exit__(self, exc_type, exc_val, exc_tb):
         sys.stdout.close()
         sys.stdout = self._original_stdout
+
+
+def get_potcar_stats(
+    method: Literal["potcar", "pymatgen", "stored"] = "potcar",
+    path_to_stored_stats: Optional[Union[str, os.PathLike, Path]] = None,
+) -> dict[str, Any]:
+    """
+    Get the POTCAR stats used in MP calculations to validate POTCARs.
+
+    Args:
+        method : Literal[str : "potcar","pymatgen","stored"] = "potcar"
+            Method to generate the POTCAR stats:
+            - "potcar": regenerate stats from a user's POTCAR library.
+            - "pymatgen": regenerate stats from the stored pymatgen
+              summary stats dict. This has the downside of the possibility
+              of finding multiple matching POTCAR stats for older POTCAR
+              releases. As of 25 March, 2024, it does not appear that the
+              MP POTCARs have duplicates
+            - "stored": load a stored dict of POTCAR stats.
+        path_to_stored_stats : str, os.Pathlike, Path, or None
+            If a str, the path to the stored summary stats file.
+            If None, defaults to
+              `importlib.resources.file("emmet.builders.vasp") / "mp_potcar_stats.json.gz"`
+    Returns:
+        dict, of POTCAR summary stats.
+    """
+    default_settings = EmmetBuildSettings()
+
+    stats: dict[str, dict] = {}  # type: ignore
+
+    if method == "stored":
+        from monty.serialization import loadfn
+
+        if path_to_stored_stats is None:
+            from importlib.resources import files
+
+            path_to_stored_stats = str(
+                files("emmet.builders.vasp") / "mp_potcar_stats.json.gz"
+            )
+        return loadfn(path_to_stored_stats)  # type: ignore
+
+    for (
+        calc_type,
+        input_set,
+    ) in default_settings.VASP_DEFAULT_INPUT_SETS.items():
+        _input = input_set()
+
+        stats[calc_type] = {}
+        functional = _input._config_dict["POTCAR_FUNCTIONAL"]
+
+        for potcar_symbol in _input.CONFIG["POTCAR"].values():
+            if method == "potcar":
+                potcar = PotcarSingle.from_symbol_and_functional(
+                    symbol=potcar_symbol, functional=functional
+                )
+                summary_stats = potcar._summary_stats.copy()
+                # fallback method for validation - use header hash and symbol
+                # note that the potcar_spec assigns PotcarSingle.symbol to "titel"
+                # whereas the ***correct*** field is `header`
+                summary_stats["titel"] = potcar.header  # type: ignore[assignment]
+                summary_stats["hash"] = potcar.md5_header_hash  # type: ignore[assignment]
+                summary_stats = [summary_stats]  # type: ignore[assignment]
+
+            elif method == "pymatgen":
+                summary_stats = []  # type: ignore[assignment]
+                for _, entries in PotcarSingle._potcar_summary_stats[
+                    functional
+                ].items():
+                    summary_stats += [  # type: ignore[operator]
+                        {**entry, "titel": None, "hash": None}
+                        for entry in entries
+                        if entry["symbol"] == potcar_symbol
+                    ]
+
+            stats[calc_type].update({potcar_symbol: summary_stats})
+
+    return stats

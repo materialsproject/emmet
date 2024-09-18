@@ -1,9 +1,8 @@
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 from maggma.api.resource import ReadOnlyResource
 
 from emmet.api.routes.molecules.molecules.query_operators import (
     ChemsysQuery,
-    ElementsQuery,
     FormulaQuery,
 )
 from emmet.api.routes.molecules.tasks.hint_scheme import TasksHintScheme
@@ -28,9 +27,7 @@ def task_resource(task_store):
         query_operators=[
             FormulaQuery(),
             ChemsysQuery(),
-            ElementsQuery(),
             MultipleTaskIDsQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 TaskDocument,
@@ -54,7 +51,6 @@ def task_deprecation_resource(task_store):
         DeprecationDoc,
         query_operators=[DeprecationQuery(), PaginationQuery()],
         tags=["Molecules Tasks"],
-        enable_get_by_key=False,
         enable_default_search=True,
         sub_path="/tasks/deprecation/",
         header_processor=GlobalHeaderProcessor(),

@@ -30,6 +30,10 @@ class EmmetBuildSettings(EmmetSettings):
         [], description="Tags for calculations to deprecate"
     )
 
+    NON_COMMERCIAL_TAGS: List[str] = Field(
+        [], description="Tages for which to add BY-NC as license data in builder_meta"
+    )
+
     VASP_ALLOWED_VASP_TYPES: List[VaspTaskType] = Field(
         [t.value for t in VaspTaskType],
         description="Allowed task_types to build materials from",

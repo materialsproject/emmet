@@ -2,9 +2,9 @@ from emmet.core.summary import SummaryDoc
 
 from maggma.api.query_operator import (
     PaginationQuery,
-    SortQuery,
     SparseFieldsQuery,
     NumericQuery,
+    SortQuery,
 )
 from maggma.api.resource import ReadOnlyResource, AggregationResource
 from emmet.api.routes.materials.materials.query_operators import (
@@ -13,6 +13,7 @@ from emmet.api.routes.materials.materials.query_operators import (
     FormulaQuery,
     ChemsysQuery,
     SymmetryQuery,
+    LicenseQuery,
 )
 from emmet.api.routes.materials.oxidation_states.query_operators import (
     PossibleOxiStateQuery,
@@ -29,11 +30,17 @@ from emmet.api.routes.materials.summary.query_operators import (
     SearchStatsQuery,
     SearchESQuery,
 )
+from emmet.api.routes.materials.elasticity.query_operators import (
+    BulkModulusQuery,
+    ShearModulusQuery,
+)
 
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 
-timeout = MAPISettings().TIMEOUT
+settings = MAPISettings()  # type: ignore
+timeout = settings.TIMEOUT
+sort_fields = settings.SORT_FIELDS
 
 
 def summary_resource(summary_store):
@@ -52,12 +59,15 @@ def summary_resource(summary_store):
             SearchMagneticQuery(),
             SearchESQuery(),
             NumericQuery(model=SummaryDoc, excluded_fields=["composition"]),
+            BulkModulusQuery(),
+            ShearModulusQuery(),
             SearchHasReconstructedQuery(),
             HasPropsQuery(),
             DeprecationQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(SummaryDoc, default_fields=["material_id"]),
+            LicenseQuery(),
+            SortQuery(fields=sort_fields, max_num=1),
         ],
         hint_scheme=SummaryHintScheme(),
         header_processor=GlobalHeaderProcessor(),

@@ -1,8 +1,8 @@
-from typing import List
-from pydantic import BaseModel, Field, validator
+from typing import List, Optional
+from pydantic import field_validator, BaseModel, Field
 from enum import Enum
 from datetime import datetime
-from monty.json import MontyDecoder
+from emmet.core.common import convert_datetime
 
 from pymatgen.analysis.gb.grain import GrainBoundary
 
@@ -21,65 +21,68 @@ class GrainBoundaryDoc(BaseModel):
     Grain boundary energies, work of separation...
     """
 
-    task_id: str = Field(
+    material_id: Optional[str] = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )
 
-    sigma: int = Field(
+    sigma: Optional[int] = Field(
         None,
         description="Sigma value of the boundary.",
     )
 
-    type: GBTypeEnum = Field(
+    type: Optional[GBTypeEnum] = Field(
         None,
         description="Grain boundary type.",
     )
 
-    rotation_axis: List[int] = Field(
+    rotation_axis: Optional[List[int]] = Field(
         None,
         description="Rotation axis.",
     )
 
-    gb_plane: List[int] = Field(
+    gb_plane: Optional[List[int]] = Field(
         None,
         description="Grain boundary plane.",
     )
 
-    rotation_angle: float = Field(
+    rotation_angle: Optional[float] = Field(
         None,
         description="Rotation angle in degrees.",
     )
 
-    gb_energy: float = Field(
+    gb_energy: Optional[float] = Field(
         None,
         description="Grain boundary energy in J/m^2.",
     )
 
-    initial_structure: GrainBoundary = Field(
+    initial_structure: Optional[GrainBoundary] = Field(
         None, description="Initial grain boundary structure."
     )
 
-    final_structure: GrainBoundary = Field(
+    final_structure: Optional[GrainBoundary] = Field(
         None, description="Final grain boundary structure."
     )
 
-    pretty_formula: str = Field(None, description="Reduced formula of the material.")
+    pretty_formula: Optional[str] = Field(
+        None, description="Reduced formula of the material."
+    )
 
-    w_sep: float = Field(None, description="Work of separation in J/m^2.")
+    w_sep: Optional[float] = Field(None, description="Work of separation in J/m^2.")
 
-    cif: str = Field(None, description="CIF file of the structure.")
+    cif: Optional[str] = Field(None, description="CIF file of the structure.")
 
-    chemsys: str = Field(
+    chemsys: Optional[str] = Field(
         None, description="Dash-delimited string of elements in the material."
     )
 
-    last_updated: datetime = Field(
+    last_updated: Optional[datetime] = Field(
         None,
         description="Timestamp for the most recent calculation for this Material document.",
     )
 
     # Make sure that the datetime field is properly formatted
-    @validator("last_updated", pre=True)
-    def last_updated_dict_ok(cls, v):
-        return MontyDecoder().process_decoded(v)
+    @field_validator("last_updated", mode="before")
+    @classmethod
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)

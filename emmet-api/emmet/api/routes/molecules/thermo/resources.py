@@ -4,7 +4,6 @@ from emmet.core.molecules.thermo import MoleculeThermoDoc
 from maggma.api.query_operator import (
     NumericQuery,
     PaginationQuery,
-    SortQuery,
     SparseFieldsQuery,
 )
 
@@ -16,7 +15,7 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     ExactCalcMethodQuery,
     FormulaQuery,
     ChemsysQuery,
-    ElementsQuery,
+    CompositionElementsQuery,
     ChargeSpinQuery,
 )
 from emmet.api.routes.molecules.utils import MultiPropertyIDQuery
@@ -33,7 +32,7 @@ def thermo_resource(thermo_store):
             ExactCalcMethodQuery(),
             FormulaQuery(),
             ChemsysQuery(),
-            ElementsQuery(),
+            CompositionElementsQuery(),
             ChargeSpinQuery(),
             MultiPropertyIDQuery(),
             ThermoCorrectionQuery(),
@@ -48,7 +47,6 @@ def thermo_resource(thermo_store):
                     "rt",
                 ],
             ),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 MoleculeThermoDoc,

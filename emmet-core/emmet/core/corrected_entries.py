@@ -16,7 +16,7 @@ class CorrectedEntriesDoc(EmmetBaseModel):
     A corrected entries document
     """
 
-    property_name = "corrected_entries"
+    property_name: str = "corrected_entries"
 
     chemsys: str = Field(
         ...,

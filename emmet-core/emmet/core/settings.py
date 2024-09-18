@@ -5,13 +5,12 @@ Settings for defaults in the core definitions of Materials Project Documents
 """
 import json
 from pathlib import Path
-from typing import Dict, List, Type, TypeVar, Union
+from typing import Type, TypeVar, Union, List, Dict
 
 import requests
 from monty.json import MontyDecoder
-from pydantic import BaseSettings, Field, root_validator
-from pydantic.class_validators import validator
-from pydantic.types import PyObject
+from pydantic import field_validator, model_validator, Field, ImportString
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_CONFIG_FILE_PATH = str(Path.home().joinpath(".emmet.json"))
 
@@ -121,7 +120,11 @@ class EmmetSettings(BaseSettings):
         description="Relative tolerance for kspacing to still be a valid task document",
     )
 
-    VASP_DEFAULT_INPUT_SETS: Dict[str, PyObject] = Field(
+    VASP_MAX_MAGMOM: Dict[str, float] = Field(
+        {"Cr": 5}, description="Maximum permitted magnetic moments by element type."
+    )
+
+    VASP_DEFAULT_INPUT_SETS: Dict[str, ImportString] = Field(
         {
             "GGA Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
             "GGA+U Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
@@ -150,8 +153,8 @@ class EmmetSettings(BaseSettings):
         description="Default input sets for task validation",
     )
 
-    VASP_VALIDATE_POTCAR_HASHES: bool = Field(
-        True, description="Whether to validate POTCAR hash values."
+    VASP_VALIDATE_POTCAR_STATS: bool = Field(
+        True, description="Whether to validate POTCAR stat values."
     )
 
     VASP_CHECKED_LDAU_FIELDS: List[str] = Field(
@@ -167,12 +170,10 @@ class EmmetSettings(BaseSettings):
         True,
         description="Use static calculations for structure and energy along with structure optimizations",
     )
+    model_config = SettingsConfigDict(env_prefix="emmet_", extra="ignore")
 
-    class Config:
-        env_prefix = "emmet_"
-        extra = "ignore"
-
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def load_default_settings(cls, values):
         """
         Loads settings from a root file if available and uses that as defaults in
@@ -200,7 +201,8 @@ class EmmetSettings(BaseSettings):
             return cls(**settings)
         return settings
 
-    @validator("VASP_DEFAULT_INPUT_SETS", pre=True)
+    @field_validator("VASP_DEFAULT_INPUT_SETS", mode="before")
+    @classmethod
     def convert_input_sets(cls, value):
         if isinstance(value, dict):
             return {k: MontyDecoder().process_decoded(v) for k, v in value.items()}

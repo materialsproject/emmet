@@ -18,11 +18,13 @@ def validation_store():
 
 
 def test_validator(tasks_store, validation_store):
-    settings = EmmetBuildSettings(VASP_VALIDATE_POTCAR_HASHES=False)
+    settings = EmmetBuildSettings(VASP_VALIDATE_POTCAR_STATS=False)
     builder = TaskValidator(
         tasks=tasks_store, task_validation=validation_store, settings=settings
     )
     builder.run()
     assert validation_store.count() == tasks_store.count()
     assert validation_store.count({"valid": True}) == tasks_store.count()
-    assert all(list(d["run_type"] == "GGA" for d in validation_store.query()))
+    assert all(
+        list(d["run_type"]["value"] == "GGA" for d in list(validation_store.query()))
+    )

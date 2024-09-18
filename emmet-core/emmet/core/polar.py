@@ -1,5 +1,5 @@
 """ Core definition for Polar property Document """
-from typing import List
+from typing import List, Optional
 from emmet.core.mpid import MPID
 
 import numpy as np
@@ -24,7 +24,7 @@ class DielectricDoc(PropertyDoc):
     A dielectric property block
     """
 
-    property_name = "dielectric"
+    property_name: str = "dielectric"
 
     total: Matrix3D = Field(description="Total dielectric tensor.")
     ionic: Matrix3D = Field(description="Ionic contribution to dielectric tensor.")
@@ -77,7 +77,7 @@ class PiezoelectricDoc(PropertyDoc):
     A dielectric package block
     """
 
-    property_name = "piezoelectric"
+    property_name: str = "piezoelectric"
 
     total: PiezoTensor = Field(description="Total piezoelectric tensor in C/m²")
     ionic: PiezoTensor = Field(
@@ -106,7 +106,7 @@ class PiezoelectricDoc(PropertyDoc):
     ):
         ionic_tensor = BasePiezoTensor.from_vasp_voigt(ionic)
         electronic_tensor = BasePiezoTensor.from_vasp_voigt(electronic)
-        total = ionic_tensor + electronic_tensor
+        total: BasePiezoTensor = ionic_tensor + electronic_tensor  # type: ignore[assignment]
 
         # Symmeterize Convert to IEEE orientation
         total = total.convert_to_ieee(structure)
@@ -143,17 +143,17 @@ class BornEffectiveCharges(BaseModel):
     A block for the Born effective charges
     """
 
-    value: List[Matrix3D] = Field(
+    value: Optional[List[Matrix3D]] = Field(
         None, description="Value of the Born effective charges."
     )
 
-    symmetrized_value: List[Matrix3D] = Field(
+    symmetrized_value: Optional[List[Matrix3D]] = Field(
         None,
         description="Value of the Born effective charges after symmetrization to obey the"
         "charge neutrality sum rule.",
     )
 
-    cnsr_break: float = Field(
+    cnsr_break: Optional[float] = Field(
         None,
         description="The maximum breaking of the charge neutrality sum "
         "rule (CNSR) in the Born effective charges.",
@@ -165,6 +165,6 @@ class IRDielectric(BaseModel):
     A block for the pymatgen IRDielectricTensor object
     """
 
-    ir_dielectric_tensor: dict = Field(
+    ir_dielectric_tensor: Optional[dict] = Field(
         None, description="Serialized version of a pymatgen IRDielectricTensor object."
     )

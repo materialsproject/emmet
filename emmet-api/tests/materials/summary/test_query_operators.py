@@ -22,14 +22,17 @@ def test_has_props_query():
     op = HasPropsQuery()
 
     assert op.query(has_props="electronic_structure, thermo") == {
-        "criteria": {"has_props": {"$all": ["electronic_structure", "thermo"]}}
+        "criteria": {"has_props.electronic_structure": True, "has_props.thermo": True}
     }
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
         assert new_op.query(has_props="electronic_structure, thermo") == {
-            "criteria": {"has_props": {"$all": ["electronic_structure", "thermo"]}}
+            "criteria": {
+                "has_props.electronic_structure": True,
+                "has_props.thermo": True,
+            }
         }
 
 

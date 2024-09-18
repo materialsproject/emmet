@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Union, Dict, Tuple, Sequence
+from typing import List, Union, Dict, Tuple, Sequence, Optional
 
 from pydantic import Field
 import numpy as np
@@ -29,7 +29,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         ..., description="The battery id for this MigrationGraphDoc"
     )
 
-    last_updated: datetime = Field(
+    last_updated: Optional[datetime] = Field(
         None,
         description="Timestamp for the most recent calculation for this MigrationGraph document.",
     )
@@ -43,21 +43,21 @@ class MigrationGraphDoc(EmmetBaseModel):
         description="Indicates whether a migration graph fails to be constructed from the provided entries. Defaults to False, indicating mg can be constructed from entries.",  # noqa: E501
     )
 
-    hop_cutoff: float = Field(
+    hop_cutoff: Optional[float] = Field(
         None,
         description="The numerical value in angstroms used to cap the maximum length of a hop.",
     )
 
-    entries_for_generation: List[ComputedStructureEntry] = Field(
+    entries_for_generation: Optional[List[ComputedStructureEntry]] = Field(
         None,
         description="A list of ComputedStructureEntries used to generate the structure with all working ion sites.",
     )
 
-    working_ion_entry: Union[ComputedEntry, ComputedStructureEntry] = Field(
+    working_ion_entry: Optional[Union[ComputedEntry, ComputedStructureEntry]] = Field(
         None, description="The ComputedStructureEntry of the working ion."
     )
 
-    migration_graph: MigrationGraph = Field(
+    migration_graph: Optional[MigrationGraph] = Field(
         None,
         description="The MigrationGraph object as defined in pymatgen.analysis.diffusion.",
     )
@@ -67,32 +67,34 @@ class MigrationGraphDoc(EmmetBaseModel):
         description="Flag indicating whether this document has populated the supercell fields",
     )
 
-    min_length_sc: float = Field(
+    min_length_sc: Optional[float] = Field(
         None,
         description="The minimum length used to generate supercell using pymatgen.",
     )
 
-    minmax_num_atoms: Tuple[int, int] = Field(
+    minmax_num_atoms: Optional[Tuple[int, int]] = Field(
         None,
         description="The min/max number of atoms used to genreate supercell using pymatgen.",
     )
 
-    matrix_supercell_structure: Structure = Field(
+    matrix_supercell_structure: Optional[Structure] = Field(
         None,
         description="The matrix suprcell structure that does not contain the mobile ions for the purpose of migration analysis.",  # noqa: E501
     )
 
-    conversion_matrix: List[List[Union[int, float]]] = Field(
+    conversion_matrix: Optional[List[List[Union[int, float]]]] = Field(
         None,
         description="The conversion matrix used to convert unit cell to supercell.",
     )
 
-    inserted_ion_coords: List[Dict[str, Union[List[float], str, int]]] = Field(
+    inserted_ion_coords: Optional[
+        List[Dict[str, Union[List[float], str, int]]]
+    ] = Field(
         None,
         description="A dictionary containing all mobile ion fractional coordinates in terms of supercell.",
     )
 
-    insert_coords_combo: List[str] = Field(
+    insert_coords_combo: Optional[List[str]] = Field(
         None,
         description="A list of combinations 'a+b' to designate hops in the supercell. Each combo should correspond to one unique hop in MigrationGraph.",  # noqa: E501
     )
@@ -191,7 +193,7 @@ class MigrationGraphDoc(EmmetBaseModel):
             min_length=min_length_sc,
         )
 
-        sc_mat = sc_mat.tolist()
+        sc_mat = sc_mat.tolist()  # type: ignore[attr-defined]
         host_sc = mg.host_structure * sc_mat
         working_ion = mg.only_sites[0].species_string
 
@@ -203,9 +205,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         return host_sc, sc_mat, min_length_sc, minmax_num_atoms, coords_list, combo
 
     @staticmethod
-    def ordered_sc_site_list(
-        uc_sites_only: Structure, sc_mat: List[List[Union[int, float]]]
-    ):
+    def ordered_sc_site_list(uc_sites_only: Structure, sc_mat: List[List[int]]):
         uc_no_site = uc_sites_only.copy()
         uc_no_site.remove_sites(range(len(uc_sites_only)))
         working_ion = uc_sites_only[0].species_string
@@ -236,7 +236,7 @@ class MigrationGraphDoc(EmmetBaseModel):
     @staticmethod
     def get_hop_sc_combo(
         unique_hops: Dict,
-        sc_mat: List[List[Union[int, float]]],
+        sc_mat: List[List[int]],
         sm: StructureMatcher,
         host_sc: Structure,
         working_ion: str,
@@ -319,7 +319,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         host_sc: Structure,
         ordered_sc_site_list: list,
         one_hop: Dict,
-        sc_mat: List[List[Union[int, float]]],
+        sc_mat: List[List[int]],
         working_ion: str,
     ):
         sc_mat_inv = np.linalg.inv(sc_mat)

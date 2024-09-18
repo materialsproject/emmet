@@ -1,14 +1,14 @@
 from maggma.api.resource import ReadOnlyResource
 from emmet.core.molecules.atomic import PartialSpinsDoc
 
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 
 from emmet.api.routes.molecules.molecules.query_operators import (
     MultiMPculeIDQuery,
     ExactCalcMethodQuery,
     FormulaQuery,
     ChemsysQuery,
-    ElementsQuery,
+    CompositionElementsQuery,
     ChargeSpinQuery,
 )
 from emmet.api.routes.molecules.utils import MethodQuery, MultiPropertyIDQuery
@@ -25,11 +25,10 @@ def spins_resource(spins_store):
             ExactCalcMethodQuery(),
             FormulaQuery(),
             ChemsysQuery(),
-            ElementsQuery(),
+            CompositionElementsQuery(),
             ChargeSpinQuery(),
             MethodQuery(),
             MultiPropertyIDQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 PartialSpinsDoc,

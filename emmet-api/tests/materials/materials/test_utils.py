@@ -31,7 +31,10 @@ def test_formula_to_criteria():
 def test_chemsys_to_criteria():
     # Chemsys
     assert chemsys_to_criteria("Si-O") == {"chemsys": "O-Si"}
-    assert chemsys_to_criteria("Si-*") == {"elements": {"$all": ["Si"]}, "nelements": 2}
+    assert chemsys_to_criteria("Si-*") == {
+        "composition_reduced.Si": {"$exists": True},
+        "nelements": 2,
+    }
     assert chemsys_to_criteria("*-*-*") == {"nelements": 3}
 
     assert chemsys_to_criteria("Si-O, P-Li-Fe") == {

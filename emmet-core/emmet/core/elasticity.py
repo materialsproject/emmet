@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -19,58 +21,72 @@ SETTINGS = EmmetSettings()
 
 
 class ElasticTensorDoc(BaseModel):
-    raw: MatrixVoigt = Field(
+    raw: Optional[MatrixVoigt] = Field(
         None,
         description="Elastic tensor corresponding to structure orientation (GPa)",
     )
-    ieee_format: MatrixVoigt = Field(
+    ieee_format: Optional[MatrixVoigt] = Field(
         None,
         description="Elastic tensor corresponding to IEEE orientation (GPa)",
     )
 
 
 class ComplianceTensorDoc(BaseModel):
-    raw: MatrixVoigt = Field(
+    raw: Optional[MatrixVoigt] = Field(
         None,
         description="Compliance tensor corresponding to structure orientation (TPa^-1)",
     )
-    ieee_format: MatrixVoigt = Field(
+    ieee_format: Optional[MatrixVoigt] = Field(
         None,
         description="Compliance tensor corresponding to IEEE orientation (TPa^-1)",
     )
 
 
 class BulkModulus(BaseModel):
-    voigt: float = Field(None, description="Bulk modulus Voigt average (GPa)")
-    reuss: float = Field(None, description="Bulk modulus Reuss average (Gpa)")
-    vrh: float = Field(None, description="Bulk modulus Voigt-Reuss-Hill average (GPa)")
+    voigt: Optional[float] = Field(None, description="Bulk modulus Voigt average (GPa)")
+    reuss: Optional[float] = Field(None, description="Bulk modulus Reuss average (GPa)")
+    vrh: Optional[float] = Field(
+        None, description="Bulk modulus Voigt-Reuss-Hill average (GPa)"
+    )
 
 
 class ShearModulus(BaseModel):
-    voigt: float = Field(None, description="Shear modulus Voigt average (GPa)")
-    reuss: float = Field(None, description="Shear modulus Reuss average (GPa)")
-    vrh: float = Field(None, description="Shear modulus Voigt-Reuss-Hill average (GPa)")
+    voigt: Optional[float] = Field(
+        None, description="Shear modulus Voigt average (GPa)"
+    )
+    reuss: Optional[float] = Field(
+        None, description="Shear modulus Reuss average (GPa)"
+    )
+    vrh: Optional[float] = Field(
+        None, description="Shear modulus Voigt-Reuss-Hill average (GPa)"
+    )
 
 
 class SoundVelocity(BaseModel):
-    transverse: float = Field(None, description="Transverse sound velocity (SI units)")
-    longitudinal: float = Field(
+    transverse: Optional[float] = Field(
+        None, description="Transverse sound velocity (SI units)"
+    )
+    longitudinal: Optional[float] = Field(
         None, description="Longitudinal sound velocity (SI units)"
     )
-    snyder_acoustic: float = Field(
+    snyder_acoustic: Optional[float] = Field(
         None, description="Snyder's acoustic sound velocity (SI units)"
     )
-    snyder_optical: float = Field(
+    snyder_optical: Optional[float] = Field(
         None, description="Snyder's optical sound velocity (SI units)"
     )
-    snyder_total: float = Field(
+    snyder_total: Optional[float] = Field(
         None, description="Snyder's total sound velocity (SI units)"
     )
 
 
 class ThermalConductivity(BaseModel):
-    clarke: float = Field(None, description="Clarke's thermal conductivity (SI units)")
-    cahill: float = Field(None, description="Cahill's thermal conductivity (SI units)")
+    clarke: Optional[float] = Field(
+        None, description="Clarke's thermal conductivity (SI units)"
+    )
+    cahill: Optional[float] = Field(
+        None, description="Cahill's thermal conductivity (SI units)"
+    )
 
 
 class FittingData(BaseModel):
@@ -93,29 +109,29 @@ class FittingData(BaseModel):
         description="Cauchy stress tensors on strained structures"
     )
     second_pk_stresses: List[Matrix3D] = Field(
-        description="Second Piola–Kirchhoff stress tensors on structures"
+        description="Second Piola-Kirchhoff stress tensors on structures"
     )
-    deformation_tasks: List[MPID] = Field(
+    deformation_tasks: Optional[List[MPID]] = Field(
         None,
         description="Deformation task ids corresponding to the strained structures",
     )
-    deformation_dir_names: List[str] = Field(
+    deformation_dir_names: Optional[List[str]] = Field(
         None, description="Paths to the running directories of deformation tasks"
     )
 
     # data of equilibrium structure
-    equilibrium_cauchy_stress: Matrix3D = Field(
+    equilibrium_cauchy_stress: Optional[Matrix3D] = Field(
         None, description="Cauchy stress tensor of the relaxed structure"
     )
-    optimization_task: MPID = Field(
+    optimization_task: Optional[MPID] = Field(
         None, description="Optimization task corresponding to the relaxed structure"
     )
-    optimization_dir_name: str = Field(
+    optimization_dir_name: Optional[str] = Field(
         None, description="Path to the running directory of the optimization task"
     )
 
     # derived strains stresses
-    num_total_strain_stress_states: int = Field(
+    num_total_strain_stress_states: Optional[int] = Field(
         None,
         description="Number of total strain--stress states used for fitting, i.e. the "
         "sum of explicitly calculated deformations and derived deformations from "
@@ -124,39 +140,39 @@ class FittingData(BaseModel):
 
 
 class CriticalMessage(BaseModel):
-    FITTING = "Critical: cannot fit elastic tensor. Error: {}."
-    COMPLIANCE = (
+    FITTING: str = "Critical: cannot fit elastic tensor. Error: {}."
+    COMPLIANCE: str = (
         "Critical: cannot invert elastic tensor to get compliance tensor. Error: {}."
     )
-    STRAIN_RANK = (
+    STRAIN_RANK: str = (
         "Critical: insufficient number of valid strains. Expect the matrix of all "
         "strains to be of rank 6; got rank {}."
     )
-    N_STATES = (
+    N_STATES: str = (
         "Critical: Expect 24 total (primary plus derived) strain--stress states "
         "to fit the data; got {}."
     )
 
 
 class WarningMessage(BaseModel):
-    NEGATIVE_EIGVAL = (
+    NEGATIVE_EIGVAL: str = (
         "Elastic tensor has negative eigenvalue(s), indicating that the structure is "
         "mechanically unstable."
     )  # https://doi.org/10.1103/PhysRevB.90.224104
-    NEGATIVE_MODULUS = (
+    NEGATIVE_MODULUS: str = (
         "Negative modulus: {} {} is {}, indicating that the structure is mechanically "
         "unstable."
     )
-    SMALL_MODULUS = "Small modulus. {} {} is {}; smaller than {}."
-    LARGE_MODULUS = "Large modulus. {} {} is {}; larger than {}."
-    LARGE_YOUNG_MODULUS = "Large Young's modulus {}; larger than {}."
-    LARGE_COMPONENT = "Elastic tensor has component larger than {}."
+    SMALL_MODULUS: str = "Small modulus. {} {} is {}; smaller than {}."
+    LARGE_MODULUS: str = "Large modulus. {} {} is {}; larger than {}."
+    LARGE_YOUNG_MODULUS: str = "Large Young's modulus {}; larger than {}."
+    LARGE_COMPONENT: str = "Elastic tensor has component larger than {}."
 
 
 class ElasticityDoc(PropertyDoc):
     property_name: str = "elasticity"
 
-    structure: Structure = Field(
+    structure: Optional[Structure] = Field(
         None, description="Structure to compute the elasticity"
     )
 
@@ -164,35 +180,43 @@ class ElasticityDoc(PropertyDoc):
         default=2, description="Order of the expansion of the elastic tensor"
     )
 
-    elastic_tensor: ElasticTensorDoc = Field(None, description="Elastic tensor")
+    elastic_tensor: Optional[ElasticTensorDoc] = Field(
+        None, description="Elastic tensor"
+    )
 
-    compliance_tensor: ComplianceTensorDoc = Field(
+    compliance_tensor: Optional[ComplianceTensorDoc] = Field(
         None, description="Compliance tensor"
     )
 
     # derived properties
-    bulk_modulus: BulkModulus = Field(None, description="Bulk modulus")
-    shear_modulus: ShearModulus = Field(None, description="Shear modulus")
-    sound_velocity: SoundVelocity = Field(None, description="Sound velocity")
-    thermal_conductivity: ThermalConductivity = Field(
+    bulk_modulus: Optional[BulkModulus] = Field(None, description="Bulk modulus")
+    shear_modulus: Optional[ShearModulus] = Field(None, description="Shear modulus")
+    sound_velocity: Optional[SoundVelocity] = Field(None, description="Sound velocity")
+    thermal_conductivity: Optional[ThermalConductivity] = Field(
         None, description="Thermal conductivity"
     )
-    young_modulus: float = Field(None, description="Young's modulus (SI units)")
+    young_modulus: float = Field(
+        None, description="Young's modulus (SI units)", alias="youngs_modulus"
+    )
     universal_anisotropy: float = Field(
         None, description="Universal elastic anisotropy"
     )
-    homogeneous_poisson: float = Field(None, description="Homogeneous Poisson ratio")
-    debye_temperature: float = Field(None, description="Debye temperature (SI units)")
+    homogeneous_poisson: Optional[float] = Field(
+        None, description="Homogeneous Poisson ratio"
+    )
+    debye_temperature: Optional[float] = Field(
+        None, description="Debye temperature (SI units)"
+    )
 
-    fitting_data: FittingData = Field(
+    fitting_data: Optional[FittingData] = Field(
         None, description="Data used to fit the elastic tensor"
     )
 
-    fitting_method: str = Field(
+    fitting_method: Optional[str] = Field(
         None, description="Method used to fit the elastic tensor"
     )
 
-    state: Status = Field(
+    state: Optional[Status] = Field(
         None,
         description="State of the fitting/analysis: `successful` or `failed`",
     )
@@ -236,7 +260,6 @@ class ElasticityDoc(PropertyDoc):
             fitting_method: method used to fit the elastic tensor:
                 {`finite_difference`, `pseudoinverse`, `independent`}.
         """
-
         CM = CriticalMessage()
 
         # primary fitting data
@@ -433,7 +456,6 @@ def generate_derived_fitting_data(
         derived_stresses: derived Cauchy stresses
         derived_2nd_pk_stresses: derived second Piola-Kirchhoff stresses
     """
-
     sga = SpacegroupAnalyzer(structure, symprec=symprec)
     symmops = sga.get_symmetry_operations(cartesian=True)
 
@@ -469,7 +491,7 @@ def generate_derived_fitting_data(
     derived_2nd_pk_stresses = []
 
     for d_strain, op_set in mapping.items():
-        symmops, p_indices = zip(*op_set)
+        symmops, p_indices = zip(*op_set)  # type: ignore[assignment]
 
         p_stresses = [stresses[i] for i in p_indices]
         d_stresses = [s.transform(op) for s, op in zip(p_stresses, symmops)]
@@ -512,7 +534,7 @@ def symmetrize_stresses(
 
     # for each strain, get the stresses from other strain states related by symmetry
     symmmetrized_stresses = []  # type: List[Stress]
-    for strain, stress in zip(strains, stresses):
+    for strain, _stress in zip(strains, stresses):
         mapping = TensorMapping([strain], [[]], tol=tol)
         for strain2, stress2 in zip(strains, stresses):
             for op in symmops:
@@ -527,7 +549,7 @@ def symmetrize_stresses(
 def fit_elastic_tensor(
     strains: List[Strain],
     stresses: List[Stress],
-    eq_stress: Stress,
+    eq_stress: Stress | None,
     fitting_method: str = "finite_difference",
     order: int = 2,
 ) -> ElasticTensor:
@@ -545,24 +567,23 @@ def fit_elastic_tensor(
     Returns:
         fitted elastic tensor
     """
-
     if order > 2 or fitting_method == "finite_difference":
         # force finite diff if order > 2
         result = ElasticTensorExpansion.from_diff_fit(
             strains, stresses, eq_stress=eq_stress, order=order
         )
         if order == 2:
-            result = ElasticTensor(result[0])
+            result: ElasticTensor = ElasticTensor(result[0])  # type: ignore[no-redef]
     elif fitting_method == "pseudoinverse":
-        result = ElasticTensor.from_pseudoinverse(strains, stresses)
+        result: ElasticTensor = ElasticTensor.from_pseudoinverse(strains, stresses)  # type: ignore[no-redef]
     elif fitting_method == "independent":
-        result = ElasticTensor.from_independent_strains(
+        result: ElasticTensor = ElasticTensor.from_independent_strains(  # type: ignore[no-redef]
             strains, stresses, eq_stress=eq_stress
         )
     else:
         raise ValueError(f"Unsupported elastic fitting method {fitting_method}")
 
-    return result
+    return result  # type: ignore[return-value]
 
 
 def get_derived_properties(
@@ -578,7 +599,6 @@ def get_derived_properties(
     Returns:
         a dict of derived elasticity properties
     """
-
     try:
         prop_dict = tensor.get_structure_property_dict(structure)
         prop_dict.pop("structure")
@@ -591,35 +611,35 @@ def get_derived_properties(
     decimals = 3
     derived_prop = {
         "bulk_modulus": BulkModulus(
-            voigt=np.round(prop_dict["k_voigt"], decimals),
-            reuss=np.round(prop_dict["k_reuss"], decimals),
-            vrh=np.round(prop_dict["k_vrh"], decimals),
+            voigt=np.round(prop_dict["k_voigt"], decimals),  # type: ignore[arg-type]
+            reuss=np.round(prop_dict["k_reuss"], decimals),  # type: ignore[arg-type]
+            vrh=np.round(prop_dict["k_vrh"], decimals),  # type: ignore[arg-type]
         ),
         "shear_modulus": ShearModulus(
-            voigt=np.round(prop_dict["g_voigt"], decimals),
-            reuss=np.round(prop_dict["g_reuss"], decimals),
-            vrh=np.round(prop_dict["g_vrh"], decimals),
+            voigt=np.round(prop_dict["g_voigt"], decimals),  # type: ignore[arg-type]
+            reuss=np.round(prop_dict["g_reuss"], decimals),  # type: ignore[arg-type]
+            vrh=np.round(prop_dict["g_vrh"], decimals),  # type: ignore[arg-type]
         ),
-        "young_modulus": np.round(prop_dict["y_mod"], 0),
-        "homogeneous_poisson": np.round(prop_dict["homogeneous_poisson"], decimals),
-        "universal_anisotropy": np.round(prop_dict["universal_anisotropy"], decimals),
+        "young_modulus": np.round(prop_dict["y_mod"], 0),  # type: ignore[arg-type]
+        "homogeneous_poisson": np.round(prop_dict["homogeneous_poisson"], decimals),  # type: ignore[arg-type]
+        "universal_anisotropy": np.round(prop_dict["universal_anisotropy"], decimals),  # type: ignore[arg-type]
     }
 
     if structure_prop_computed:
         derived_prop.update(
             {
                 "sound_velocity": SoundVelocity(
-                    transverse=prop_dict["trans_v"],
-                    longitudinal=prop_dict["long_v"],
-                    snyder_acoustic=prop_dict["snyder_ac"],
-                    snyder_optical=prop_dict["snyder_opt"],
-                    snyder_total=prop_dict["snyder_total"],
+                    transverse=prop_dict["trans_v"],  # type: ignore[arg-type]
+                    longitudinal=prop_dict["long_v"],  # type: ignore[arg-type]
+                    snyder_acoustic=prop_dict["snyder_ac"],  # type: ignore[arg-type]
+                    snyder_optical=prop_dict["snyder_opt"],  # type: ignore[arg-type]
+                    snyder_total=prop_dict["snyder_total"],  # type: ignore[arg-type]
                 ),
                 "thermal_conductivity": ThermalConductivity(
-                    clarke=prop_dict["clarke_thermalcond"],
-                    cahill=prop_dict["cahill_thermalcond"],
+                    clarke=prop_dict["clarke_thermalcond"],  # type: ignore[arg-type]
+                    cahill=prop_dict["cahill_thermalcond"],  # type: ignore[arg-type]
                 ),
-                "debye_temperature": prop_dict["debye_temperature"],
+                "debye_temperature": prop_dict["debye_temperature"],  # type: ignore[arg-type]
             }
         )
 
@@ -653,7 +673,7 @@ def sanity_check(
         warnings.append(CM.STRAIN_RANK.format(rank))
 
     # elastic tensor eigenvalues
-    eig_vals, _ = np.linalg.eig(elastic_doc.raw)
+    eig_vals, _ = np.linalg.eig(elastic_doc.raw)  # type: ignore
     if np.any(eig_vals < 0.0):
         warnings.append(WM.NEGATIVE_EIGVAL)
 
@@ -669,7 +689,7 @@ def sanity_check(
     high = 1000.0
     for p in ["bulk_modulus", "shear_modulus"]:
         doc = derived_props[p]
-        doc = doc.dict()
+        doc = doc.model_dump()
         p = p.replace("_", " ")
         for name in ["voigt", "reuss", "vrh"]:
             v = doc[name]
@@ -687,9 +707,6 @@ def sanity_check(
     if v > high:
         warnings.append(WM.LARGE_YOUNG_MODULUS.format(v, high))
 
-    if failed:
-        state = Status("failed")
-    else:
-        state = Status("successful")
+    state = Status("failed") if failed else Status("successful")
 
     return state, warnings

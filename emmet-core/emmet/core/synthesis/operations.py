@@ -5,8 +5,8 @@ from pydantic import BaseModel, Field
 
 
 class Value(BaseModel):
-    min_value: float = Field(None, description="Minimal value.")
-    max_value: float = Field(None, description="Maximal value.")
+    min_value: Optional[float] = Field(None, description="Minimal value.")
+    max_value: Optional[float] = Field(None, description="Maximal value.")
     values: List[float] = Field([], description="Enumerated values in the literature.")
     units: str = Field(..., description="Unit of this value.")
 

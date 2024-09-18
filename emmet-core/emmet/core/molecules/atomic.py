@@ -18,7 +18,7 @@ SPINS_METHODS = ["nbo", "mulliken"]
 class PartialChargesDoc(PropertyDoc):
     """Atomic partial charges of a molecule"""
 
-    property_name = "partial_charges"
+    property_name: str = "partial_charges"
 
     method: str = Field(
         ..., description="Method used to compute atomic partial charges"
@@ -107,7 +107,7 @@ class PartialChargesDoc(PropertyDoc):
 class PartialSpinsDoc(PropertyDoc):
     """Atomic partial charges of a molecule"""
 
-    property_name = "partial_spins"
+    property_name: str = "partial_spins"
 
     method: str = Field(..., description="Method used to compute atomic partial spins")
 

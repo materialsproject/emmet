@@ -75,3 +75,31 @@ class MultiThermoTypeQuery(QueryOperator):
                 crit.update({"thermo_type": {"$in": thermo_type_list}})
 
         return {"criteria": crit}
+
+
+class MultiPhaseDiagramIDQuery(QueryOperator):
+    """
+    Method to generate a query for different root-level phase_diagram_id values
+    """
+
+    def query(
+        self,
+        phase_diagram_ids: Optional[str] = Query(
+            None,
+            description="Comma-separated list of phase_diagram_id values to query on",
+        ),
+    ) -> STORE_PARAMS:
+        crit = {}  # type: dict
+
+        if phase_diagram_ids:
+            phase_diagram_id_list = [
+                phase_diagram_id.strip()
+                for phase_diagram_id in phase_diagram_ids.split(",")
+            ]
+
+            if len(phase_diagram_id_list) == 1:
+                crit.update({"phase_diagram_id": phase_diagram_id_list[0]})
+            else:
+                crit.update({"phase_diagram_id": {"$in": phase_diagram_id_list}})
+
+        return {"criteria": crit}

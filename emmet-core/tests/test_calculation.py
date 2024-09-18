@@ -1,4 +1,5 @@
 import pytest
+
 from tests.conftest import assert_schemas_equal, get_test_object
 
 
@@ -10,17 +11,17 @@ def test_init():
         RunStatistics,
     )
 
-    c = CalculationInput()
-    assert c is not None
+    calc_input = CalculationInput()
+    assert calc_input is not None
 
-    c = CalculationOutput()
-    assert c is not None
+    calc_input = CalculationOutput()
+    assert calc_input is not None
 
-    c = RunStatistics()
-    assert c is not None
+    calc_input = RunStatistics()
+    assert calc_input is not None
 
-    c = Calculation()
-    assert c is not None
+    calc_input = Calculation()
+    assert calc_input is not None
 
 
 @pytest.mark.parametrize(
@@ -97,7 +98,7 @@ def test_mag_calculation_output(test_dir):
         Outcar(dir_name / "OUTCAR.gz"),
         Poscar.from_file(dir_name / "CONTCAR.gz"),
     )
-    assert d.dict()["mag_density"] == pytest.approx(0.19384725901794095)
+    assert d.model_dump()["mag_density"] == pytest.approx(0.19384725901794095)
 
 
 @pytest.mark.parametrize(
@@ -151,8 +152,55 @@ def test_calculation(test_dir, object_name, task_name):
     assert_schemas_equal(test_doc, valid_doc)
     assert set(objects.keys()) == set(test_object.objects[task_name])
 
+    # check bader and ddec6 keys exist
+    assert test_doc.bader is None
+    assert test_doc.ddec6 is None
+
     # test document can be jsanitized
     d = jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)
 
     # and decoded
     MontyDecoder().process_decoded(d)
+
+
+def test_calculation_run_type_metagga(test_dir):
+    # Test to ensure that meta-GGA calculations are correctly identified
+    # The VASP files were kindly provided by @Andrew-S-Rosen in issue #960
+    from emmet.core.vasp.calculation import Calculation
+
+    calc_input, _ = Calculation.from_vasp_files(
+        dir_name=test_dir / "vasp" / "r2scan_relax",
+        task_name="relax",
+        vasprun_file="vasprun.xml.gz",
+        outcar_file="OUTCAR.gz",
+        contcar_file="CONTCAR.gz",
+    )
+    assert "R2SCAN" in repr(calc_input.run_type)
+    assert "R2SCAN" in repr(calc_input.calc_type)
+
+
+def test_PotcarSpec(test_dir):
+    from emmet.core.vasp.calculation import PotcarSpec
+    from pymatgen.io.vasp import PotcarSingle, Potcar
+
+    try:
+        # First test, PotcarSingle object
+        potcar = PotcarSingle.from_symbol_and_functional(symbol="Si", functional="PBE")
+        ps_spec = PotcarSpec.from_potcar_single(potcar_single=potcar)
+
+        assert ps_spec.titel == potcar.symbol
+        assert ps_spec.hash == potcar.md5_header_hash
+        assert ps_spec.summary_stats == potcar._summary_stats
+
+        # Second test, Potcar object containing mulitple PotcarSingle obejcts
+        potcars = Potcar(symbols=["Ga_d", "As"], functional="PBE")
+        ps_spec = PotcarSpec.from_potcar(potcar=potcars)
+
+        for ips, ps in enumerate(ps_spec):
+            assert ps.titel == potcars[ips].symbol
+            assert ps.hash == potcars[ips].md5_header_hash
+            assert ps.summary_stats == potcars[ips]._summary_stats
+
+    except (OSError, ValueError):
+        # missing Pymatgen POTCARs, cannot perform test
+        assert True

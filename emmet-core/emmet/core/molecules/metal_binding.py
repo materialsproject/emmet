@@ -34,44 +34,46 @@ class MetalBindingData(BaseModel):
         ..., description="The MPculeID of the molecule with the metal atom/ion removed"
     )
 
-    metal_index: int = Field(
+    metal_index: Optional[int] = Field(
         None,
         description="Index of the metal in this Molecule (in case of a molecule with multiple identical "
         "metal atoms/ions)",
     )
 
-    metal_element: Union[str, Species, Element] = Field(
+    metal_element: Optional[Union[str, Species, Element]] = Field(
         None, description="The metal bound to the molecule"
     )
 
-    metal_partial_charge: float = Field(
+    metal_partial_charge: Optional[float] = Field(
         None, description="The exact calculated partial charge of the metal"
     )
 
-    metal_partial_spin: float = Field(
+    metal_partial_spin: Optional[float] = Field(
         None, description="The exact calculated partial spin on the metal"
     )
 
-    metal_assigned_charge: float = Field(
+    metal_assigned_charge: Optional[float] = Field(
         None,
         description="The integral charge assigned to this metal based on partial charge/spin data",
     )
 
-    metal_assigned_spin: float = Field(
+    metal_assigned_spin: Optional[float] = Field(
         None,
         description="The integral spin multiplicity assigned to this metal based on partial spin data",
     )
 
-    number_coordinate_bonds: int = Field(
+    number_coordinate_bonds: Optional[int] = Field(
         None,
         description="The number of atoms neighboring the metal atom or ion of interest",
     )
 
-    coordinating_atoms: List[Union[str, Species]] = Field(
+    coordinating_atoms: Optional[List[str]] = Field(
         None, description="The elements/species coordinating the metal."
     )
 
-    coordinate_bond_lengths: Dict[str, Dict[str, Union[float, List[float]]]] = Field(
+    coordinate_bond_lengths: Optional[
+        Dict[str, Dict[str, Union[float, List[float]]]]
+    ] = Field(
         None,
         description="Bond lengths and statistics broken down by the coordinating atoms",
     )
@@ -92,12 +94,12 @@ class MetalBindingData(BaseModel):
         None, description="The free energy change (∆G) of binding (units: eV)"
     )
 
-    metal_thermo_property_id: str = Field(
+    metal_thermo_property_id: Optional[str] = Field(
         None,
         description="ID of MoleculeThermoDoc used to obtain the thermochemistry of the metal atom/ion",
     )
 
-    nometal_thermo_property_id: str = Field(
+    nometal_thermo_property_id: Optional[str] = Field(
         None,
         description="ID of MoleculeThermoDoc used to obtain the thermochemistry of of the molecule with the "
         "metal atom/ion removed",
@@ -115,75 +117,75 @@ class MetalBindingData(BaseModel):
 class MetalBindingDoc(PropertyDoc):
     """Metal binding properties of a molecule"""
 
-    property_name = "metal_binding"
+    property_name: str = "metal_binding"
 
     method: str = Field(
         ...,
         description="Method used to determine the charge, spin, and coordination environment of a metal",
     )
 
-    binding_partial_charges_property_id: str = Field(
+    binding_partial_charges_property_id: Optional[str] = Field(
         None,
         description="ID of PartialChargesDoc used to estimate metal charge",
     )
 
-    binding_partial_spins_property_id: str = Field(
+    binding_partial_spins_property_id: Optional[str] = Field(
         None,
         description="ID of PartialSpinsDoc used to estimate metal spin",
     )
 
-    binding_partial_charges_lot_solvent: str = Field(
+    binding_partial_charges_lot_solvent: Optional[str] = Field(
         None,
         description="Combination of level of theory and solvent used to calculate atomic partial charges",
     )
 
-    binding_partial_spins_lot_solvent: str = Field(
+    binding_partial_spins_lot_solvent: Optional[str] = Field(
         None,
         description="Combination of level of theory and solvent used to calculate atomic partial spins",
     )
 
-    binding_charge_spin_method: str = Field(
+    binding_charge_spin_method: Optional[str] = Field(
         None,
         description="The method used for partial charges and spins (must be the same).",
     )
 
-    binding_bonding_property_id: str = Field(
+    binding_bonding_property_id: Optional[str] = Field(
         None,
         description="ID of MoleculeBondingDoc used to detect bonding in this molecule",
     )
 
-    binding_bonding_lot_solvent: str = Field(
+    binding_bonding_lot_solvent: Optional[str] = Field(
         None,
         description="Combination of level of theory and solvent used to determine the coordination environment "
         "of the metal atom or ion",
     )
 
-    binding_bonding_method: str = Field(
+    binding_bonding_method: Optional[str] = Field(
         None, description="The method used for to define bonding."
     )
 
-    binding_thermo_property_id: str = Field(
+    binding_thermo_property_id: Optional[str] = Field(
         None,
         description="ID of MoleculeThermoDoc used to obtain this molecule's thermochemistry",
     )
 
-    binding_thermo_lot_solvent: str = Field(
+    binding_thermo_lot_solvent: Optional[str] = Field(
         None,
         description="Combination of level of theory and solvent used for uncorrected thermochemistry",
     )
 
-    binding_thermo_correction_lot_solvent: str = Field(
+    binding_thermo_correction_lot_solvent: Optional[str] = Field(
         None,
         description="Combination of level of theory and solvent used to correct the electronic energy",
     )
 
-    binding_thermo_combined_lot_solvent: str = Field(
+    binding_thermo_combined_lot_solvent: Optional[str] = Field(
         None,
-        descrption="Combination of level of theory and solvent used for molecular thermochemistry, combining "
+        description="Combination of level of theory and solvent used for molecular thermochemistry, combining "
         "both the frequency calculation and (potentially) the single-point energy correction.",
     )
 
-    binding_data: List[MetalBindingData] = Field(
+    binding_data: Optional[List[MetalBindingData]] = Field(
         None, description="Binding data for each metal atom or ion in the molecule"
     )
 

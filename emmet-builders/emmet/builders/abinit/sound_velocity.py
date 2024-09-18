@@ -63,7 +63,9 @@ class SoundVelocityBuilder(Builder):
         # All relevant materials that have been updated since phonon props were last calculated
         q = dict(self.query)
 
-        mats = self.phonon.newer_in(self.phonon_materials, exhaustive=True, criteria=q)
+        mats = self.sound_vel.newer_in(
+            self.phonon_materials, exhaustive=True, criteria=q
+        )
 
         N = ceil(len(mats) / number_splits)
 
@@ -141,7 +143,7 @@ class SoundVelocityBuilder(Builder):
 
             self.logger.debug("Item generated for {}".format(item["mp_id"]))
 
-            return jsanitize(sv.dict())
+            return jsanitize(sv.model_dump())
         except Exception:
             self.logger.warning(
                 "Error generating the sound velocity for {}: {}".format(

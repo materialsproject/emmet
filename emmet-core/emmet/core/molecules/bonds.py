@@ -337,7 +337,7 @@ def nbo_molecule_graph(mol: Molecule, nbo: Dict[str, Any]):
 class MoleculeBondingDoc(PropertyDoc):
     """Representation of molecular bonding."""
 
-    property_name = "bonding"
+    property_name: str = "bonding"
 
     molecule_graph: MoleculeGraph = Field(..., description="Molecule graph")
 

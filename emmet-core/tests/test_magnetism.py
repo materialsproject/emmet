@@ -1,20 +1,14 @@
 import pytest
-from pymatgen.core import Structure
-from monty.serialization import loadfn
-
 from emmet.core.magnetism import MagnetismDoc
 from emmet.core.utils import jsanitize
+from monty.serialization import loadfn
+from pymatgen.core import Structure
 
 
-@pytest.fixture(scope="session")
-def magnetism_test_data(test_dir):
-    return loadfn(test_dir / "magnetism/magnetism_mats_sample.json")
-
-
-def test_magnetism_doc(magnetism_test_data):
+def test_magnetism_doc(test_dir):
     test_orderings = {"mp-1034331": "FM", "mp-753472": "NM"}
 
-    for material in magnetism_test_data:
+    for material in loadfn(test_dir / "magnetism/magnetism_mats_sample.json"):
         structure = Structure.from_dict(jsanitize(material["structure"]))
         total_magnetization = material["magnetism"]["total_magnetization"]
         material_id = material["task_id"]

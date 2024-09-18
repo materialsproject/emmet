@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic import Field
 from emmet.core.material_property import PropertyDoc
 import numpy as np
@@ -9,7 +9,7 @@ from pymatgen.core import Structure
 class AbsorptionDoc(PropertyDoc):
     """Absorption spectrum based on frequency dependent dielectric function calculations."""
 
-    property_name = "Optical absorption spectrum"
+    property_name: str = "Optical absorption spectrum"
 
     task_id: str = Field(..., description="Calculation id")
 
@@ -34,9 +34,9 @@ class AbsorptionDoc(PropertyDoc):
         description="Real part of the dielectric function corresponding to the energies",
     )
 
-    bandgap: float = Field(None, description="The electronic band gap")
+    bandgap: Optional[float] = Field(None, description="The electronic band gap")
 
-    nkpoints: float = Field(
+    nkpoints: Optional[float] = Field(
         None, description="The number of kpoints used in the calculation"
     )
 

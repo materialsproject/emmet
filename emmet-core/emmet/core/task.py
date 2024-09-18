@@ -1,6 +1,6 @@
 """ Core definition of a Task Document which represents a calculation from some program"""
 from datetime import datetime
-from typing import Union
+from typing import Union, Optional
 
 from pydantic import Field
 
@@ -14,14 +14,16 @@ class BaseTaskDocument(EmmetBaseModel):
     """
 
     calc_code: str = Field(description="The calculation code used to compute this task")
-    version: str = Field(None, description="The version of the calculation code")
-    dir_name: str = Field(None, description="The directory for this task")
-    task_id: Union[MPID, MPculeID] = Field(
+    version: Optional[str] = Field(
+        None, description="The version of the calculation code"
+    )
+    dir_name: Optional[str] = Field(None, description="The directory for this task")
+    task_id: Optional[Union[MPID, MPculeID]] = Field(
         None, description="the Task ID For this document"
     )
 
     completed: bool = Field(False, description="Whether this calcuation completed")
-    completed_at: datetime = Field(
+    completed_at: Optional[datetime] = Field(
         None, description="Timestamp for when this task was completed"
     )
     last_updated: datetime = Field(

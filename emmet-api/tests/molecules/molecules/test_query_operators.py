@@ -4,7 +4,7 @@ from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.molecules.molecules.query_operators import (
     FormulaQuery,
     ChemsysQuery,
-    ElementsQuery,
+    CompositionElementsQuery,
     ChargeSpinQuery,
     DeprecationQuery,
     MultiTaskIDQuery,
@@ -12,6 +12,7 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     FindMoleculeQuery,
     CalcMethodQuery,
     HashQuery,
+    StringRepQuery,
 )
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
@@ -36,7 +37,7 @@ def test_chemsys_query():
     assert op.query("O-C") == {"criteria": {"chemsys": "C-O"}}
 
     assert op.query("C-*") == {
-        "criteria": {"nelements": 2, "elements": {"$all": ["C"]}}
+        "criteria": {"nelements": 2, "composition_reduced.C": {"$exists": True}}
     }
 
     with ScratchDir("."):
@@ -45,13 +46,18 @@ def test_chemsys_query():
         assert new_op.query("O-C") == {"criteria": {"chemsys": "C-O"}}
 
 
-def test_elements_query():
+def test_composition_query():
     eles = ["C", "O"]
-    neles = ["N ", "P"]
+    neles = ["N", "P"]
 
-    op = ElementsQuery()
+    op = CompositionElementsQuery()
     assert op.query(elements=",".join(eles), exclude_elements=",".join(neles)) == {
-        "criteria": {"elements": {"$all": ["C", "O"], "$nin": ["N", "P"]}}
+        "criteria": {
+            "composition.C": {"$exists": True},
+            "composition.O": {"$exists": True},
+            "composition.N": {"$exists": False},
+            "composition.P": {"$exists": False},
+        }
     }
 
     with ScratchDir("."):
@@ -59,7 +65,14 @@ def test_elements_query():
         new_op = loadfn("temp.json")
         assert new_op.query(
             elements=",".join(eles), exclude_elements=",".join(neles)
-        ) == {"criteria": {"elements": {"$all": ["C", "O"], "$nin": ["N", "P"]}}}
+        ) == {
+            "criteria": {
+                "composition.C": {"$exists": True},
+                "composition.O": {"$exists": True},
+                "composition.N": {"$exists": False},
+                "composition.P": {"$exists": False},
+            }
+        }
 
 
 def test_charge_spin_query():
@@ -239,4 +252,19 @@ def test_hash_query():
                 "species_hash": "ea83c62377feef8c8c3190562e13ffd6",
                 "coord_hash": "5a0282381090c5c9646d03891133d8c9",
             }
+        }
+
+
+def test_string_rep_query():
+    op = StringRepQuery()
+
+    assert op.query(inchi="InChI=1S/C2H3NO3/c3-1(4)2(5)6/h(H2,3,4)(H,5,6)") == {
+        "criteria": {"inchi": "InChI=1S/C2H3NO3/c3-1(4)2(5)6/h(H2,3,4)(H,5,6)"}
+    }
+
+    with ScratchDir("."):
+        dumpfn(op, "temp.json")
+        new_op = loadfn("temp.json")
+        assert new_op.query(inchi_key="SOWBFZRMHSNYGE-UHFFFAOYSA-N") == {
+            "criteria": {"inchi_key": "SOWBFZRMHSNYGE-UHFFFAOYSA-N"}
         }

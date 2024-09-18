@@ -1,4 +1,3 @@
-# Do not edit manually, use "generate.py"
 GGA:
   AM05:
     GGA: AM
@@ -51,6 +50,8 @@ HF:
     AGGAC: 1.0
     AGGAX: 0.75
     ALDAC: 1.0
+    LHFCALC: true
+  HFCus:
     LHFCALC: true
 METAGGA:
   M06L:

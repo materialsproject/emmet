@@ -1,4 +1,5 @@
 from emmet.core.mpid import MPID, MPculeID
+import pytest
 
 
 def test_mpid():
@@ -24,6 +25,10 @@ def test_mpid():
     )
 
     MPID(3)
+    ulid_mpid = MPID("01HMVV88CCQ6JQ2Y1N8F3ZTVWP-Li")
+    assert ulid_mpid.parts == ("01HMVV88CCQ6JQ2Y1N8F3ZTVWP", 0)
+    with pytest.raises(ValueError, match="MPID string representation must follow"):
+        MPID("GGIRADF")
 
 
 def test_mpculeid():

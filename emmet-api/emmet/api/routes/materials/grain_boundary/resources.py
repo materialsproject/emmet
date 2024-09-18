@@ -5,9 +5,9 @@ from emmet.api.routes.materials.grain_boundary.query_operators import (
     GBStructureQuery,
     GBTaskIDQuery,
 )
+from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery
 from maggma.api.query_operator import (
     PaginationQuery,
-    SortQuery,
     SparseFieldsQuery,
     NumericQuery,
 )
@@ -20,12 +20,12 @@ def gb_resource(gb_store):
         gb_store,
         GrainBoundaryDoc,
         query_operators=[
+            MultiMaterialIDQuery(),
             GBTaskIDQuery(),
             NumericQuery(
                 model=GrainBoundaryDoc, excluded_fields=["rotation_axis", "gb_plane"]
             ),
             GBStructureQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 GrainBoundaryDoc, default_fields=["task_id", "last_updated"]
@@ -33,10 +33,9 @@ def gb_resource(gb_store):
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Grain Boundaries"],
-        sub_path="/grain_boundary/",
-        enable_get_by_key=False,
+        sub_path="/grain_boundaries/",
         disable_validation=True,
-        timeout=MAPISettings().TIMEOUT,
+        timeout=MAPISettings().TIMEOUT,  # type: ignore
     )
 
     return resource

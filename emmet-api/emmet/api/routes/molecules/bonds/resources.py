@@ -1,7 +1,7 @@
 from maggma.api.resource import ReadOnlyResource
 from emmet.core.molecules.bonds import MoleculeBondingDoc
 
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 
 from emmet.api.routes.molecules.bonds.query_operators import (
     BondTypeLengthQuery,
@@ -11,7 +11,7 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     ExactCalcMethodQuery,
     FormulaQuery,
     ChemsysQuery,
-    ElementsQuery,
+    CompositionElementsQuery,
     ChargeSpinQuery,
 )
 from emmet.api.routes.molecules.utils import MethodQuery, MultiPropertyIDQuery
@@ -28,12 +28,11 @@ def bonding_resource(bonds_store):
             ExactCalcMethodQuery(),
             FormulaQuery(),
             ChemsysQuery(),
-            ElementsQuery(),
+            CompositionElementsQuery(),
             ChargeSpinQuery(),
             MethodQuery(),
             MultiPropertyIDQuery(),
             BondTypeLengthQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 MoleculeBondingDoc,

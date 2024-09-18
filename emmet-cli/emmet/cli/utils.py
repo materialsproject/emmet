@@ -55,7 +55,7 @@ def ensure_indexes(indexes, colls):
         for coll in colls:
             keys = [k.rsplit("_", 1)[0] for k in coll.index_information().keys()]
             if index not in keys:
-                coll.ensure_index(index)
+                coll.create_index(index)
                 created[coll.full_name].append(index)
 
     if created:

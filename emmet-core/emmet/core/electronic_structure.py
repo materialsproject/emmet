@@ -1,10 +1,12 @@
 """ Core definition of an Electronic Structure """
+
 from __future__ import annotations
 
 from collections import defaultdict
 from datetime import datetime
+from enum import Enum
 from math import isnan
-from typing import Dict, Optional, Type, TypeVar, Union, List
+from typing import Dict, List, Optional, Type, TypeVar, Union
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -20,11 +22,10 @@ from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 from typing_extensions import Literal
-from enum import Enum
 
-from emmet.core.settings import EmmetSettings
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
+from emmet.core.settings import EmmetSettings
 
 SETTINGS = EmmetSettings()
 
@@ -46,7 +47,7 @@ class BSObjectDoc(BaseModel):
     Band object document.
     """
 
-    task_id: MPID = Field(
+    task_id: Optional[MPID] = Field(
         None,
         description="The source calculation (task) ID that this band structure comes from. "
         "This has the same form as a Materials Project ID.",
@@ -57,7 +58,7 @@ class BSObjectDoc(BaseModel):
         default_factory=datetime.utcnow,
     )
 
-    data: Union[Dict, BandStructureSymmLine] = Field(
+    data: Optional[Union[Dict, BandStructureSymmLine]] = Field(
         None, description="The band structure object for the given calculation ID"
     )
 
@@ -67,7 +68,7 @@ class DOSObjectDoc(BaseModel):
     DOS object document.
     """
 
-    task_id: MPID = Field(
+    task_id: Optional[MPID] = Field(
         None,
         description="The source calculation (task) ID that this density of states comes from. "
         "This has the same form as a Materials Project ID.",
@@ -78,7 +79,7 @@ class DOSObjectDoc(BaseModel):
         default_factory=datetime.utcnow,
     )
 
-    data: CompleteDos = Field(
+    data: Optional[CompleteDos] = Field(
         None, description="The density of states object for the given calculation ID."
     )
 
@@ -92,11 +93,15 @@ class ElectronicStructureBaseData(BaseModel):
 
     band_gap: float = Field(..., description="Band gap energy in eV.")
 
-    cbm: Union[float, Dict] = Field(None, description="Conduction band minimum data.")
+    cbm: Optional[Union[float, Dict]] = Field(
+        None, description="Conduction band minimum data."
+    )
 
-    vbm: Union[float, Dict] = Field(None, description="Valence band maximum data.")
+    vbm: Optional[Union[float, Dict]] = Field(
+        None, description="Valence band maximum data."
+    )
 
-    efermi: float = Field(None, description="Fermi energy in eV.")
+    efermi: Optional[float] = Field(None, description="Fermi energy in eV.")
 
 
 class ElectronicStructureSummary(ElectronicStructureBaseData):
@@ -120,53 +125,57 @@ class BandStructureSummaryData(ElectronicStructureSummary):
 
 
 class DosSummaryData(ElectronicStructureBaseData):
-    spin_polarization: float = Field(
+    spin_polarization: Optional[float] = Field(
         None, description="Spin polarization at the fermi level."
     )
 
 
 class BandstructureData(BaseModel):
-    setyawan_curtarolo: BandStructureSummaryData = Field(
+    setyawan_curtarolo: Optional[BandStructureSummaryData] = Field(
         None,
         description="Band structure summary data using the Setyawan-Curtarolo path convention.",
     )
 
-    hinuma: BandStructureSummaryData = Field(
+    hinuma: Optional[BandStructureSummaryData] = Field(
         None,
         description="Band structure summary data using the Hinuma et al. path convention.",
     )
 
-    latimer_munro: BandStructureSummaryData = Field(
+    latimer_munro: Optional[BandStructureSummaryData] = Field(
         None,
         description="Band structure summary data using the Latimer-Munro path convention.",
     )
 
 
 class DosData(BaseModel):
-    total: Dict[Union[Spin, str], DosSummaryData] = Field(
+    total: Optional[Dict[Union[Spin, str], DosSummaryData]] = Field(
         None, description="Total DOS summary data."
     )
 
-    elemental: Dict[
-        Element,
+    elemental: Optional[
         Dict[
-            Union[Literal["total", "s", "p", "d", "f"], OrbitalType],
-            Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
-        ],
+            Element,
+            Dict[
+                Union[Literal["total", "s", "p", "d", "f"], OrbitalType],
+                Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
+            ],
+        ]
     ] = Field(
         None,
         description="Band structure summary data using the Hinuma et al. path convention.",
     )
 
-    orbital: Dict[
-        Union[Literal["total", "s", "p", "d", "f"], OrbitalType],
-        Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
+    orbital: Optional[
+        Dict[
+            Union[Literal["total", "s", "p", "d", "f"], OrbitalType],
+            Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
+        ]
     ] = Field(
         None,
         description="Band structure summary data using the Latimer-Munro path convention.",
     )
 
-    magnetic_ordering: Union[str, Ordering] = Field(
+    magnetic_ordering: Optional[Union[Ordering, str]] = Field(
         None, description="Magnetic ordering of the calculation."
     )
 
@@ -179,13 +188,15 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
     Definition for a core Electronic Structure Document
     """
 
-    property_name = "electronic_structure"
+    property_name: str = "electronic_structure"
 
-    bandstructure: BandstructureData = Field(
+    bandstructure: Optional[BandstructureData] = Field(
         None, description="Band structure data for the material."
     )
 
-    dos: DosData = Field(None, description="Density of states data for the material.")
+    dos: Optional[DosData] = Field(
+        None, description="Density of states data for the material."
+    )
 
     last_updated: datetime = Field(
         description="Timestamp for when this document was last updated.",
@@ -269,7 +280,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             except KeyError:
                 spin_polarization = None
 
-            dos_data["total"][spin] = DosSummaryData(
+            dos_data["total"][spin] = DosSummaryData(  # type: ignore[index]
                 task_id=dos_task,
                 band_gap=band_gap,
                 cbm=cbm,
@@ -286,7 +297,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
                 spin_polarization = None
 
-                dos_data["orbital"][orbital][spin] = DosSummaryData(
+                dos_data["orbital"][orbital][spin] = DosSummaryData(  # type: ignore[index]
                     task_id=dos_task,
                     band_gap=band_gap,
                     cbm=cbm,
@@ -299,7 +310,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         for ele in ele_dos:
             orb_dos = dos_obj.get_element_spd_dos(ele)
 
-            for orbital in ["total"] + list(orb_dos.keys()):
+            for orbital in ["total"] + list(orb_dos.keys()):  # type: ignore[assignment]
                 if orbital == "total":
                     proj_dos = ele_dos
                     label = ele
@@ -313,7 +324,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
                     spin_polarization = None
 
-                    dos_data["elemental"][ele][orbital][spin] = DosSummaryData(
+                    dos_data["elemental"][ele][orbital][spin] = DosSummaryData(  # type: ignore[index]
                         task_id=dos_task,
                         band_gap=band_gap,
                         cbm=cbm,
@@ -339,7 +350,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                     ).ordering
                 else:
                     bs_mag_ordering = CollinearMagneticStructureAnalyzer(
-                        bs.structure
+                        bs.structure  # type: ignore[arg-type]
                     ).ordering
 
                 gap_dict = bs.get_band_gap()
@@ -348,13 +359,13 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
                 if is_metal:
                     band_gap = 0.0
-                    cbm = None
-                    vbm = None
+                    cbm = None  # type: ignore[assignment]
+                    vbm = None  # type: ignore[assignment]
                     is_gap_direct = False
                 else:
                     band_gap = gap_dict["energy"]
-                    cbm = bs.get_cbm()
-                    vbm = bs.get_vbm()
+                    cbm = bs.get_cbm()  # type: ignore[assignment]
+                    vbm = bs.get_vbm()  # type: ignore[assignment]
                     is_gap_direct = gap_dict["direct"]
 
                 bs_efermi = bs.efermi
@@ -389,7 +400,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
                     if not gen_labels.issubset(kpath_labels):
                         new_structure = SpacegroupAnalyzer(
-                            bs.structure
+                            bs.structure  # type: ignore[arg-type]
                         ).get_primitive_standard_structure(
                             international_monoclinic=False
                         )
@@ -418,7 +429,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                 )
 
         bs_entry = BandstructureData(**bs_data)  # type: ignore
-        dos_entry = DosData(**dos_data)
+        dos_entry = DosData(**dos_data)  # type: ignore[arg-type]
 
         # Obtain summary data
 
@@ -434,22 +445,22 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         new_origin_task_id = None
 
         if bs_gap is not None and bs_gap <= dos_gap + 0.2:
-            summary_task = bs_entry.setyawan_curtarolo.task_id
+            summary_task = bs_entry.setyawan_curtarolo.task_id  # type: ignore
             summary_band_gap = bs_gap
             summary_cbm = (
                 bs_entry.setyawan_curtarolo.cbm.get("energy", None)  # type: ignore
-                if bs_entry.setyawan_curtarolo.cbm is not None
+                if bs_entry.setyawan_curtarolo.cbm is not None  # type: ignore
                 else None
             )
             summary_vbm = (
                 bs_entry.setyawan_curtarolo.vbm.get("energy", None)  # type: ignore
-                if bs_entry.setyawan_curtarolo.cbm is not None
+                if bs_entry.setyawan_curtarolo.cbm is not None  # type: ignore
                 else None
             )  # type: ignore
-            summary_efermi = bs_entry.setyawan_curtarolo.efermi
-            is_gap_direct = bs_entry.setyawan_curtarolo.is_gap_direct
-            is_metal = bs_entry.setyawan_curtarolo.is_metal
-            summary_magnetic_ordering = bs_entry.setyawan_curtarolo.magnetic_ordering
+            summary_efermi = bs_entry.setyawan_curtarolo.efermi  # type: ignore
+            is_gap_direct = bs_entry.setyawan_curtarolo.is_gap_direct  # type: ignore
+            is_metal = bs_entry.setyawan_curtarolo.is_metal  # type: ignore
+            summary_magnetic_ordering = bs_entry.setyawan_curtarolo.magnetic_ordering  # type: ignore
 
             for origin in origins:
                 if origin["name"] == "setyawan_curtarolo":
@@ -457,7 +468,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                     new_origin_task_id = origin["task_id"]
 
         else:
-            summary_task = dos_entry.dict()["total"][Spin.up]["task_id"]
+            summary_task = dos_entry.model_dump()["total"][Spin.up]["task_id"]
             summary_band_gap = dos_gap
             summary_cbm = dos_cbm
             summary_vbm = dos_vbm

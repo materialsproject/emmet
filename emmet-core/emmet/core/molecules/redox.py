@@ -27,69 +27,69 @@ class RedoxDoc(PropertyDoc):
     and oxidation potentials
     """
 
-    property_name = "redox"
+    property_name: str = "redox"
 
     base_property_id: str = Field(
         description="Property ID for the thermodynamic data of the " "base molecule"
     )
 
-    electron_affinity: float = Field(
+    electron_affinity: Optional[float] = Field(
         None, description="Vertical electron affinity (units: eV)"
     )
 
-    ea_task_id: MPID = Field(
+    ea_task_id: Optional[MPID] = Field(
         None, description="Task ID for the electron affinity calculation"
     )
 
-    ionization_energy: float = Field(
+    ionization_energy: Optional[float] = Field(
         None, description="Vertical ionization energy (units: eV)"
     )
 
-    ie_task_id: MPID = Field(
+    ie_task_id: Optional[MPID] = Field(
         None, description="Task ID for the ionization energy calculation"
     )
 
-    reduction_energy: float = Field(
+    reduction_energy: Optional[float] = Field(
         None, description="Adiabatic electronic energy of reduction (units: eV)"
     )
 
-    reduction_free_energy: float = Field(
+    reduction_free_energy: Optional[float] = Field(
         None, description="Adiabatic free energy of reduction (units: eV)"
     )
 
-    red_molecule_id: MPculeID = Field(
+    red_molecule_id: Optional[MPculeID] = Field(
         None, description="Molecule ID for adiabatic reduction"
     )
 
-    red_property_id: str = Field(
+    red_property_id: Optional[str] = Field(
         None,
         description="Property ID for the thermodynamic data of the " "reduced molecule",
     )
 
-    oxidation_energy: float = Field(
+    oxidation_energy: Optional[float] = Field(
         None, description="Adiabatic electronic energy of oxidation (units: eV)"
     )
 
-    oxidation_free_energy: float = Field(
+    oxidation_free_energy: Optional[float] = Field(
         None, description="Adiabatic free energy of oxidation (units: eV)"
     )
 
-    ox_molecule_id: MPculeID = Field(
+    ox_molecule_id: Optional[MPculeID] = Field(
         None, description="Molecule ID for adiabatic oxidation"
     )
 
-    ox_property_id: str = Field(
+    ox_property_id: Optional[str] = Field(
         None,
         description="Property ID for the thermodynamic data of the "
         "oxidized molecule",
     )
 
-    reduction_potential: float = Field(
+    reduction_potential: Optional[float] = Field(
         None,
         description="Reduction potential referenced to the standard hydrogen electrode (SHE) (units: V)",
     )
 
-    oxidation_potential: float = Field(
+    oxidation_potential: Optional[float] = Field(
         None,
         description="Oxidation potential referenced to the standard hydrogen electrode (SHE) (units: V)",
     )

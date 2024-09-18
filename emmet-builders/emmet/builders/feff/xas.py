@@ -37,7 +37,7 @@ class XASBuilder(GroupBuilder):
 
         try:
             docs = XASDoc.from_task_docs(tasks, material_id=mpid)
-            processed = [d.dict() for d in docs]
+            processed = [d.model_dump() for d in docs]
 
             for d in processed:
                 d.update({"state": "successful"})

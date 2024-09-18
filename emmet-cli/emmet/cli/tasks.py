@@ -91,8 +91,14 @@ def make_comment(ctx, txt):
 @tasks.command()
 @sbatch
 @click.option("--clean", is_flag=True, help="Remove original launchers.")
+@click.option(
+    "--exhaustive",
+    is_flag=True,
+    help="Check backup consistency for each block/launcher individually",
+)
+@click.option("--tar", is_flag=True, help="tar blocks after backup and clean")
 @click.pass_context
-def backups(ctx, clean):
+def backups(ctx, clean, tar):
     """Scan root directory and submit separate backup jobs for subdirectories containing blocks"""
     ctx.parent.params["nmax"] = sys.maxsize  # disable maximum launchers for backup
     subdir_block_launchers = defaultdict(lambda: defaultdict(list))
@@ -123,7 +129,7 @@ def backups(ctx, clean):
 
         if run:
             ctx.parent.params["directory"] = subdir
-            ret = ctx.parent.invoke(backup, clean=clean, check=True)
+            ret = ctx.parent.invoke(backup, clean=clean, check=True, tar=tar)
             msg += f" -> {ret.value}"
             comment_txt.append(msg)
         else:
@@ -219,9 +225,15 @@ def extract_filename(line):
 @click.option("--reorg", is_flag=True, help="Reorganize directory in block/launchers.")
 @click.option("--clean", is_flag=True, help="Remove original launchers.")
 @click.option("--check", is_flag=True, help="Check backup consistency.")
+@click.option(
+    "--exhaustive",
+    is_flag=True,
+    help="Check backup consistency for each block/launcher individually",
+)
 @click.option("--force-new", is_flag=True, help="Generate new backup.")
+@click.option("--tar", is_flag=True, help="tar blocks after backup and clean")
 @click.pass_context
-def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
+def backup(ctx, reorg, clean, check, exhaustive, force_new, tar):  # noqa: C901
     """Backup directory to HPSS"""
     run = ctx.parent.parent.params["run"]
     ctx.params["nmax"] = sys.maxsize  # disable maximum launchers for backup
@@ -229,6 +241,10 @@ def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
     directory = ctx.parent.params["directory"]
     if not check and clean:
         logger.error("Not running --clean without --check enabled.")
+        return ReturnCodes.ERROR
+
+    if not clean and tar:
+        logger.error("Not running --tar wihout --clean enabled.")
         return ReturnCodes.ERROR
 
     if not reorg:
@@ -243,7 +259,7 @@ def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
         nlaunchers = len(launchers)
         logger.info(f"{block} with {nlaunchers} launcher(s)")
         filelist = [os.path.join(block, l) for l in launchers]
-        already_in_hpss = False
+
         try:
             isfile(f"{GARDEN}/{block}.tar")
             if force_new and run:
@@ -278,40 +294,78 @@ def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
                     return ReturnCodes.ERROR
                 counter += 1
         else:
-            already_in_hpss = True
             logger.warning(f"Skip {block} - already in HPSS")
 
         # Check backup here to allow running it separately
-        if check and not already_in_hpss:
+        if check:
             logger.info(f"Verify {block}.tar ...")
             args = shlex.split(
                 f"htar -K -Hrelpaths -Hverify=all -f {GARDEN}/{block}.tar"
             )
-            try:
-                for line in run_command(args, []):
-                    logger.info(line.strip())
-            except subprocess.CalledProcessError as e:
-                logger.error(str(e))
-                return ReturnCodes.ERROR
 
-            if clean:
-                nremove_total += nlaunchers
-                if run:
-                    with click.progressbar(
-                        filelist, label="Removing launchers ..."
-                    ) as bar:
-                        for fn in bar:
-                            if os.path.exists(fn):
-                                shutil.rmtree(fn)
-                    logger.info(
-                        f"Removed {nlaunchers} launchers from disk for {block}."
-                    )
-                else:
-                    logger.info(
-                        f"Would remove {nlaunchers} launchers from disk for {block}."
-                    )
+            failed_verification = []
+
+            if exhaustive:
+                for launcher in launchers:
+                    try:
+                        for line in run_command(args, [f"{block}/{launcher}"]):
+                            logger.info(line.strip())
+                    except subprocess.CalledProcessError as e:
+                        logger.error(str(e))
+                        click.secho(
+                            f"Failed to verify {block}/{launcher}",
+                            fg="red",
+                        )
+                        failed_verification.append(f"{block}/{launcher}")
+                        continue
+            else:
+                try:
+                    for line in run_command(args, []):
+                        logger.info(line.strip())
+                except subprocess.CalledProcessError as e:
+                    logger.error(str(e))
+                    return ReturnCodes.ERROR
+
+        if clean:
+            safe_to_remove = [f for f in filelist if f not in failed_verification]
+            nremove_block = len(safe_to_remove)
+            n_skip = len(failed_verification)
+            nremove_total += nremove_block
+
+            if run:
+                with click.progressbar(
+                    safe_to_remove, label=f"removing {nremove_block} launchers..."
+                ) as bar:
+                    for fn in bar:
+                        if os.path.exists(fn):
+                            shutil.rmtree(fn)
+                logger.info(
+                    f"Verified and removed a total of {nremove_block} launchers from disk for {block},"
+                    f"skipped {n_skip} launchers that failed HPSS verification."
+                )
+
+                if tar:
+                    args = shlex.split(f"tar czf {block}.tar.gz --remove-files {block}")
+                    try:
+                        for line in run_command(args, []):
+                            logger.info(line.strip())
+                    except subprocess.calledprocesserror as e:
+                        logger.error(str(e))
+                        return ReturnCodes.ERROR
+
+                    logger.info(f"Successfully compressed {block} to {block}.tar.gz")
+
+            else:
+                logger.info(
+                    f"Would verify and remove a total of {nremove_block} launchers for {block} and skip {n_skip}"
+                    f"launchers that failed HPSS verfication."
+                )
+
+                if tar:
+                    logger.info(f"Would compress {block} to {block}.tar.gz")
 
     logger.info(f"{counter}/{len(block_launchers)} blocks newly backed up to HPSS.")
+
     if clean:
         if run:
             logger.info(f"Verified and removed a total of {nremove_total} launchers.")
@@ -610,8 +664,9 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
             {"$addFields": {"num_int": {"$toInt": "$num"}}},
             {"$group": {"_id": None, "num_max": {"$max": "$num_int"}}},
         ]
-        result = list(client.collection.aggregate(pipeline))
-        next_tid = result[0]["num_max"] + 1
+        result = list(target.collection.aggregate(pipeline))
+        # Manually set next_tid when parsing into an empty task collection for testing
+        next_tid = result[0]["num_max"] + 1 if result else 1000001
         lst = [f"mp-{next_tid + n}" for n in range(nmax)]
         task_ids = chunks(lst, chunk_size)
 
@@ -686,3 +741,47 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
     else:
         logger.info(f"Would parse and insert {count}/{gen.value} tasks in {directory}.")
     return ReturnCodes.SUCCESS if count and gen.value else ReturnCodes.WARNING
+
+
+@tasks.command()
+@sbatch
+@click.pass_context
+def survey(ctx):
+    """
+    Recursively search root directory for blocks containing VASP files.
+    Requires GNU Parallel to be installed and on path.
+    """
+
+    if not shutil.which("parallel"):
+        logger.error(
+            """
+              Survey requires GNU Parallel, if you are on NERSC run 'module load parallel' and retry.
+              Consider adding 'module load parallel' to your .bashrc to avoid this error in the future.
+
+              For use outside of NERSC, GNU Parallel can be installed from the Free Software Foundation
+              at gnu.org/software/parallel/
+           """
+        )
+        return ReturnCodes.ERROR
+
+    run = ctx.parent.parent.params["run"]
+    root_dir = ctx.parent.params["directory"]
+
+    if run:
+        ts = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
+        args = shlex.split(
+            f"launcher_finder -d {root_dir} -f emmet-launcher-report-{ts}.txt"
+        )
+        for line in run_command(args, []):
+            logger.info(line.strip())
+
+        logger.info(f"launcher search results stored in {root_dir}/.emmet/")
+    else:
+        logger.info(
+            f"Would recursively search for directories containing VASP files in {root_dir}"
+        )
+        logger.info(
+            f"Run 'launcher_finder {root_dir}' if you want to search without GH issue tracking"
+        )
+
+    return ReturnCodes.SUCCESS

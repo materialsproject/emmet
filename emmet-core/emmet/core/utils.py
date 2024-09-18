@@ -5,11 +5,9 @@ from itertools import groupby
 from typing import Any, Dict, Iterator, List, Optional, Union
 
 import numpy as np
-
 from monty.json import MSONable
-
 from pydantic import BaseModel
-
+from pymatgen.analysis.elasticity.strain import Deformation
 from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
@@ -19,6 +17,9 @@ from pymatgen.analysis.structure_matcher import (
     StructureMatcher,
 )
 from pymatgen.core.structure import Molecule, Structure
+from pymatgen.transformations.standard_transformations import (
+    DeformStructureTransformation,
+)
 from pymatgen.util.graph_hashing import weisfeiler_lehman_graph_hash
 
 from emmet.core.mpid import MPculeID
@@ -77,6 +78,91 @@ def group_structures(
     for _, pregroup in groupby(sorted(structures, key=_get_sg), key=_get_sg):
         for group in sm.group_structures(list(pregroup)):
             yield group
+
+
+def undeform_structure(structure: Structure, transformations: Dict) -> Structure:
+    """
+    Get an undeformed structure by applying transformations in a reverse order.
+
+    Args:
+        structure: deformed structure
+        transformation: transformation that deforms the structure
+
+    Returns:
+        undeformed structure
+    """
+
+    for transformation in reversed(transformations.get("history", [])):
+        if transformation["@class"] == "DeformStructureTransformation":
+            deform = Deformation(transformation["deformation"])
+            dst = DeformStructureTransformation(deform.inv)
+            structure = dst.apply_transformation(structure)
+        else:
+            raise RuntimeError(
+                "Expect transformation to be `DeformStructureTransformation`; "
+                f"got {transformation['@class']}"
+            )
+
+    return structure
+
+
+def generate_robocrys_condensed_struct_and_description(
+    structure: Structure,
+    mineral_matcher=None,
+    symprecs: list[float] = [0.01, 0.1, 1.0e-3],
+) -> tuple[dict[str, Any], str]:
+    """
+    Get robocrystallographer description of a structure.
+
+    Input
+    ------
+    structure : pymatgen .Structure
+    mineral_matcher : optional robocrys MineralMatcher object
+        Slightly reduces load time by storing mineral data
+        in memory, rather than reloading for each structure.
+    symprecs : list[float]
+        A list of symprec values to try for symmetry identification.
+        The first value is the default used by robocrys, then
+        the default used by emmet (looser), then a tighter symprec.
+
+    Output
+    -------
+    A robocrys condensed structure and description.
+    """
+    try:
+        from robocrys import StructureCondenser, StructureDescriber
+    except ImportError:
+        raise ImportError(
+            "robocrys needs to be installed to generate Robocrystallographer descriptions"
+        )
+
+    for isymprec, symprec in enumerate(symprecs):
+        # occasionally, symmetry detection fails - give a few chances to modify symprec
+        try:
+            condenser = StructureCondenser(
+                mineral_matcher=mineral_matcher, symprec=symprec
+            )
+            condensed_structure = condenser.condense_structure(structure)
+            break
+        except ValueError as exc:
+            if isymprec == len(symprecs) - 1:
+                raise exc
+
+    for desc_fmt in ["unicode", "html", "raw"]:
+        try:
+            describer = StructureDescriber(
+                describe_symmetry_labels=False, fmt=desc_fmt, return_parts=False
+            )
+            description = describer.describe(condensed_structure)
+            break
+        except ValueError as exc:
+            # pymatgen won't convert a "subscript period" character to unicode
+            # in these cases, the description is still generated but unicode
+            # parsing failed - use html instead
+            if "subscript period" not in str(exc):
+                raise exc
+
+    return condensed_structure, description
 
 
 def group_molecules(molecules: List[Molecule]):
@@ -268,7 +354,7 @@ def jsanitize(obj, strict=False, allow_bson=False):
     if isinstance(obj, BaseModel):
         return {
             k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson)
-            for k, v in obj.dict().items()
+            for k, v in obj.model_dump().items()
         }
     if isinstance(obj, (int, float)):
         if np.isnan(obj):
@@ -289,27 +375,29 @@ def jsanitize(obj, strict=False, allow_bson=False):
 
 class ValueEnum(Enum):
     """
-    Enum that serializes to string as the value
+    Enum that serializes to string as the value.
+
+    While this method has an `as_dict` method, this
+    returns a `str`. This is to ensure deserialization
+    to a `str` when functions like `monty.json.jsanitize`
+    are called on a ValueEnum with `strict = True` and
+    `enum_values = False` (occurs often in jobflow).
     """
 
     def __str__(self):
         return str(self.value)
 
-    def __eq__(self, o: object) -> bool:
+    def __eq__(self, obj: object) -> bool:
         """Special Equals to enable converting strings back to the enum"""
-        if isinstance(o, str):
-            return super().__eq__(self.__class__(o))
-        elif isinstance(o, self.__class__):
-            return super().__eq__(o)
+        if isinstance(obj, str):
+            return super().__eq__(self.__class__(obj))
+        elif isinstance(obj, self.__class__):
+            return super().__eq__(obj)
         return False
 
     def __hash__(self):
         """Get a hash of the enum."""
         return hash(str(self))
-
-    def as_dict(self):
-        """Create a serializable representation of the enum."""
-        return str(self.value)
 
 
 class DocEnum(ValueEnum):
@@ -340,3 +428,8 @@ class {enum_name}(ValueEnum):
     items = [f'    {const} = "{val}"' for const, val in items.items()]
 
     return header + "\n".join(items)
+
+
+def utcnow() -> datetime.datetime:
+    """Get UTC time right now."""
+    return datetime.datetime.now(datetime.timezone.utc)

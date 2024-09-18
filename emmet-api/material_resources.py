@@ -6,7 +6,7 @@ from emmet.api.core.settings import MAPISettings
 
 resources = {}
 
-default_settings = MAPISettings()
+default_settings = MAPISettings()  # type: ignore
 
 db_uri = os.environ.get("MPCONTRIBS_MONGO_HOST", None)
 db_version = default_settings.DB_VERSION
@@ -129,11 +129,14 @@ if db_uri:
     )
 
     elasticity_store = MongoURIStore(
-        uri=db_uri, database="mp_core", key="task_id", collection_name="elasticity"
+        uri=db_uri,
+        database=f"mp_core_{db_suffix}",
+        key="material_id",
+        collection_name="elasticity",
     )
 
     doi_store = MongoURIStore(
-        uri=db_uri, database="mp_core", key="task_id", collection_name="dois"
+        uri=db_uri, database="mp_core", key="material_id", collection_name="dois"
     )
 
     substrates_store = MongoURIStore(
@@ -165,6 +168,13 @@ if db_uri:
         collection_name="insertion_electrodes",
     )
 
+    conversion_electrodes_store = MongoURIStore(
+        uri=db_uri,
+        database=f"mp_core_{db_suffix}",
+        key="battery_id",
+        collection_name="conversion_electrodes",
+    )
+
     oxi_states_store = MongoURIStore(
         uri=db_uri,
         database=f"mp_core_{db_suffix}",
@@ -183,7 +193,7 @@ if db_uri:
         uri=db_uri,
         database=f"mp_core_{db_suffix}",
         key="pair_id",
-        collection_name="alloy_pairs",
+        collection_name="alloys",
     )
 
     summary_store = MongoURIStore(
@@ -284,6 +294,7 @@ else:
 from emmet.api.routes.materials.materials.resources import (
     find_structure_resource,
     formula_autocomplete_resource,
+    blessed_tasks_resource,
     materials_resource,
 )
 
@@ -291,6 +302,7 @@ materials_resources = list()
 
 materials_resources.extend(
     [
+        blessed_tasks_resource(materials_store),
         find_structure_resource(materials_store),
         formula_autocomplete_resource(formula_autocomplete_store),
         materials_resource(materials_store),
@@ -418,11 +430,20 @@ from emmet.api.routes.materials.synthesis.resources import synth_resource
 materials_resources.extend([synth_resource(synth_store)])
 
 # Electrodes
-from emmet.api.routes.materials.electrodes.resources import (
+from emmet.api.routes.materials.insertion_electrodes.resources import (
     insertion_electrodes_resource,
 )
 
 materials_resources.extend([insertion_electrodes_resource(insertion_electrodes_store)])
+
+
+from emmet.api.routes.materials.conversion_electrodes.resources import (
+    conversion_electrodes_resource,
+)
+
+materials_resources.extend(
+    [conversion_electrodes_resource(conversion_electrodes_store)]
+)
 
 # Oxidation States
 from emmet.api.routes.materials.oxidation_states.resources import oxi_states_resource

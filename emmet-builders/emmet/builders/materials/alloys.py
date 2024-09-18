@@ -1,19 +1,19 @@
-from itertools import combinations, chain
-from typing import Tuple, List, Dict, Union
+from itertools import chain, combinations
+from typing import Dict, List, Tuple, Union
 
-from tqdm import tqdm
 from maggma.builders import Builder
-from pymatgen.core.structure import Structure
 from matminer.datasets import load_dataset
-from emmet.core.thermo import ThermoType
-
 from pymatgen.analysis.alloys.core import (
-    AlloyPair,
-    InvalidAlloy,
     KNOWN_ANON_FORMULAS,
     AlloyMember,
+    AlloyPair,
     AlloySystem,
+    InvalidAlloy,
 )
+from pymatgen.core.structure import Structure
+from tqdm import tqdm
+
+from emmet.core.thermo import ThermoType
 
 # rough sort of ANON_FORMULAS by "complexity"
 ANON_FORMULAS = sorted(KNOWN_ANON_FORMULAS, key=lambda af: len(af))
@@ -78,26 +78,31 @@ class AlloyPairBuilder(Builder):
             # if af != "AB":
             #     continue
 
-            docs = self.materials.query(
+            thermo_docs = self.thermo.query(
                 criteria={
                     "formula_anonymous": af,
                     "deprecated": False,
-                },  # , "material_id": {"$in": ["mp-804", "mp-661"]}},
-                properties=["structure", "material_id", "symmetry.number"],
-            )
-            docs = {d["material_id"]: d for d in docs}
-
-            mpids = list(docs.keys())
-
-            thermo_docs = self.thermo.query(
-                {"material_id": {"$in": mpids}, "thermo_type": self.thermo_type},
+                    "thermo_type": self.thermo_type,
+                },
                 properties=[
                     "material_id",
                     "energy_above_hull",
                     "formation_energy_per_atom",
                 ],
             )
+
             thermo_docs = {d["material_id"]: d for d in thermo_docs}
+
+            mpids = list(thermo_docs.keys())
+
+            docs = self.materials.query(
+                criteria={
+                    "material_id": {"$in": mpids},
+                    "deprecated": False,
+                },  # , "material_id": {"$in": ["mp-804", "mp-661"]}},
+                properties=["structure", "material_id", "symmetry.number"],
+            )
+            docs = {d["material_id"]: d for d in docs}
 
             electronic_structure_docs = self.electronic_structure.query(
                 {"material_id": {"$in": mpids}},
@@ -119,7 +124,9 @@ class AlloyPairBuilder(Builder):
             )
             oxi_states_docs = {d["material_id"]: d for d in oxi_states_docs}
 
-            for material_id, d in docs.items():
+            for material_id in mpids:
+                d = docs[material_id]
+
                 d["structure"] = Structure.from_dict(d["structure"])
 
                 if material_id in oxi_states_docs:
@@ -284,7 +291,7 @@ class AlloyPairMemberBuilder(Builder):
                             is_ordered=structure.is_ordered,
                             x=pair.get_x(structure.composition),
                         )
-                        pair_members["members"].append(member.as_dict())
+                        pair_members["members"].append(member.as_dict())  # type: ignore[attr-defined]
                 except Exception as exc:
                     print(f"Exception for {db_id}: {exc}")
             if pair_members["members"]:

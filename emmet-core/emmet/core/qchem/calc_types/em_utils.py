@@ -1,0 +1,209 @@
+""" Utilities to determine level of theory, task type, and calculation type for Q-Chem calculations in the pydantic Docs paradigm"""
+from typing import Optional
+
+from emmet.core.qchem.calc_types import LevelOfTheory, CalcType, TaskType
+from emmet.core.qchem.calculation import CalculationInput
+from emmet.core.qchem.calc_types.calc_types import (
+    FUNCTIONALS,
+    BASIS_SETS,
+)
+
+
+__author__ = (
+    "Evan Spotte-Smith <ewcspottesmith@lbl.gov>, Rishabh Debraj Guha <rdguha@lbl.gov>"
+)
+
+
+functional_synonyms = {
+    "b97mv": "b97m-v",
+    "b97mrv": "b97m-rv",
+    "wb97xd": "wb97x-d",
+    "wb97xd3": "wb97x-d3",
+    "wb97xv": "wb97x-v",
+    "wb97mv": "wb97m-v",
+}
+
+smd_synonyms = {
+    "DIELECTRIC=7,230;N=1,410;ALPHA=0,000;BETA=0,859;GAMMA=36,830;PHI=0,000;PSI=0,000": "diglyme",
+    "DIELECTRIC=18,500;N=1,415;ALPHA=0,000;BETA=0,735;GAMMA=20,200;PHI=0,000;PSI=0,000": "3:7 EC:EMC",
+}
+
+
+def level_of_theory(parameters: CalculationInput) -> LevelOfTheory:
+    """
+
+    Returns the level of theory for a calculation,
+    based on the input parameters given to Q-Chem
+
+    Args:
+        parameters: Dict of Q-Chem input parameters
+
+    """
+
+    funct_raw = parameters.rem.get("method")
+    basis_raw = parameters.rem.get("basis")
+
+    if funct_raw is None or basis_raw is None:
+        raise ValueError(
+            'Method and basis must be included in "rem" section ' "of parameters!"
+        )
+
+    disp_corr = parameters.rem.get("dft_d")
+
+    if disp_corr is None:
+        funct_lower = funct_raw.lower()
+        funct_lower = functional_synonyms.get(funct_lower, funct_lower)
+    else:
+        # Replace Q-Chem terms for D3 tails with more common expressions
+        disp_corr = disp_corr.replace("_bj", "(bj)").replace("_zero", "(0)")
+        funct_lower = f"{funct_raw}-{disp_corr}"
+
+    basis_lower = basis_raw.lower()
+
+    functional = [f for f in FUNCTIONALS if f.lower() == funct_lower]
+    if not functional:
+        raise ValueError(f"Unexpected functional {funct_lower}!")
+
+    functional = functional[0]
+
+    basis = [b for b in BASIS_SETS if b.lower() == basis_lower]
+    if not basis:
+        raise ValueError(f"Unexpected basis set {basis_lower}!")
+
+    basis = basis[0]
+
+    solvent_method = parameters.rem.get("solvent_method", "").lower()
+    if solvent_method == "":
+        solvation = "VACUUM"
+    elif solvent_method in ["pcm", "cosmo"]:
+        solvation = "PCM"
+    # TODO: Add this once added into pymatgen and atomate
+    # elif solvent_method == "isosvp":
+    #     if parameters.get("svp", {}).get("idefesr", 0):
+    #         solvation = "CMIRS"
+    #     else:
+    #         solvation = "ISOSVP"
+    elif solvent_method == "smd":
+        solvation = "SMD"
+    else:
+        raise ValueError(f"Unexpected implicit solvent method {solvent_method}!")
+
+    lot = f"{functional}/{basis}/{solvation}"
+
+    return LevelOfTheory(lot)
+
+
+def solvent(parameters: CalculationInput, custom_smd: Optional[str] = None) -> str:
+    """
+    Returns the solvent used for this calculation.
+
+    Args:
+        parameters: Dict of Q-Chem input parameters
+        custom_smd: (Optional) string representing SMD parameters for a
+        non-standard solvent
+    """
+
+    lot = level_of_theory(parameters)
+    solvation = lot.value.split("/")[-1]
+
+    if solvation == "PCM":
+        dielectric = float(parameters.get("solvent", {}).get("dielectric", 78.39))
+        dielectric_string = f"{dielectric:.2f}".replace(".", ",")
+        return f"DIELECTRIC={dielectric_string}"
+    # TODO: Add this once added into pymatgen and atomate
+    # elif solvation == "ISOSVP":
+    #     dielectric = float(parameters.get("svp", {}).get("dielst", 78.39))
+    #     rho = float(parameters.get("svp", {}).get("rhoiso", 0.001))
+    #     return f"DIELECTRIC={round(dielectric, 2)},RHO={round(rho, 4)}"
+    # elif solvation == "CMIRS":
+    #     dielectric = float(parameters.get("svp", {}).get("dielst", 78.39))
+    #     rho = float(parameters.get("svp", {}).get("rhoiso", 0.001))
+    #     a = parameters.get("pcm_nonels", {}).get("a")
+    #     b = parameters.get("pcm_nonels", {}).get("b")
+    #     c = parameters.get("pcm_nonels", {}).get("c")
+    #     d = parameters.get("pcm_nonels", {}).get("d")
+    #     solvrho = parameters.get("pcm_nonels", {}).get("solvrho")
+    #     gamma = parameters.get("pcm_nonels", {}).get("gamma")
+    #
+    #     string = f"DIELECTRIC={round(dielectric, 2)},RHO={round(rho, 4)}"
+    #     for name, (piece, digits) in {"A": (a, 6), "B": (b, 6), "C": (c, 1), "D": (d, 3),
+    #                                   "SOLVRHO": (solvrho, 2), "GAMMA": (gamma, 1)}.items():
+    #         if piece is None:
+    #             piecestring = "NONE"
+    #         else:
+    #             piecestring = f"{name}={round(float(piece), digits)}"
+    #         string += "," + piecestring
+    #     return string
+    elif solvation == "SMD":
+        solvent = parameters.get("smx", {}).get("solvent", "water")
+        if solvent == "other":
+            if custom_smd is None:
+                raise ValueError(
+                    "SMD calculation with solvent=other requires custom_smd!"
+                )
+
+            names = ["DIELECTRIC", "N", "ALPHA", "BETA", "GAMMA", "PHI", "PSI"]
+            numbers = [float(x) for x in custom_smd.split(",")]
+
+            string = ""
+            for name, number in zip(names, numbers):
+                string += f"{name}={number:.3f};"
+            return string.rstrip(",").rstrip(";").replace(".", ",")
+        else:
+            return f"SOLVENT={solvent.upper()}"
+    else:
+        return "NONE"
+
+
+def lot_solvent_string(
+    parameters: CalculationInput, custom_smd: Optional[str] = None
+) -> str:
+    """
+    Returns a string representation of the level of theory and solvent used for this calculation.
+
+    Args:
+        parameters: Dict of Q-Chem input parameters
+        custom_smd: (Optional) string representing SMD parameters for a
+        non-standard solvent
+    """
+
+    lot = level_of_theory(parameters).value
+    solv = solvent(parameters, custom_smd=custom_smd)
+    return f"{lot}({solv})"
+
+
+def task_type(
+    parameters: CalculationInput, special_run_type: Optional[str] = None
+) -> TaskType:
+    if special_run_type == "frequency_flattener":
+        return TaskType("Frequency Flattening Geometry Optimization")
+    elif special_run_type == "ts_frequency_flattener":
+        return TaskType("Frequency Flattening Transition State Geometry Optimization")
+
+    if parameters.job_type == "sp":
+        return TaskType("Single Point")
+    elif parameters.job_type == "force":
+        return TaskType("Force")
+    elif parameters.job_type == "opt":
+        return TaskType("Geometry Optimization")
+    elif parameters.job_type == "ts":
+        return TaskType("Transition State Geometry Optimization")
+    elif parameters.job_type == "freq":
+        return TaskType("Frequency Analysis")
+
+    return TaskType("Unknown")
+
+
+def calc_type(
+    parameters: CalculationInput, special_run_type: Optional[str] = None
+) -> CalcType:
+    """
+    Determines the calc type
+
+    Args:
+        inputs: inputs dict with an incar, kpoints, potcar, and poscar dictionaries
+        parameters: Dictionary of VASP parameters from Vasprun.xml
+    """
+    rt = level_of_theory(parameters).value
+    tt = task_type(parameters, special_run_type=special_run_type).value
+    return CalcType(f"{rt} {tt}")

@@ -1,22 +1,22 @@
 import operator
+from collections import defaultdict
 from datetime import datetime
 from functools import lru_cache
 from itertools import chain
 from math import ceil
-from typing import Any, Iterator, Dict, List, Optional
-from collections import defaultdict
+from typing import Any, Dict, Iterator, List, Optional
 
 from maggma.builders import Builder
 from maggma.stores import MongoStore
 from maggma.utils import grouper
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from pymatgen.analysis.phase_diagram import Composition, PhaseDiagram
 from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
-from pymatgen.analysis.phase_diagram import PhaseDiagram, Composition
+from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
-from emmet.core.electrode import InsertionElectrodeDoc, ConversionElectrodeDoc
-from emmet.core.structure_group import StructureGroupDoc, _get_id_num
-from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
+from emmet.core.electrode import ConversionElectrodeDoc, InsertionElectrodeDoc
+from emmet.core.structure_group import StructureGroupDoc, _get_id_lexi
+from emmet.core.utils import jsanitize
 
 
 def s_hash(el):
@@ -307,7 +307,7 @@ class StructureGroupBuilder(Builder):
             stol=self.stol,
             angle_tol=self.angle_tol,
         )
-        return [sg.dict() for sg in s_groups]
+        return [sg.model_dump() for sg in s_groups]
 
     def _remove_targets(self, rm_ids):
         self.sgroups.remove_docs({"material_ids": {"$in": rm_ids}})
@@ -458,7 +458,7 @@ class InsertionElectrodeBuilder(Builder):
         if ie is None:
             return None  # type: ignore
             # {"failed_reason": "unable to create InsertionElectrode document"}
-        return jsanitize(ie.dict())
+        return jsanitize(ie.model_dump())
 
     def update_targets(self, items: List):
         items = list(filter(None, items))
@@ -513,11 +513,23 @@ class ConversionElectrodeBuilder(Builder):
 
     def get_items(self):
         """
-        Get items. The phase diagrams are prefiltered by "thermo_type" or the functional.
+        Get items. Phase diagrams are filtered such that only PDs with chemical systems containing
+        the working ion and the specified "thermo_type", or functional, are chosen.
         """
-        q = dict(self.query)
-        q.update({"thermo_type": self.thermo_type})
-        for phase_diagram_doc in self.phase_diagram_store.query(q):
+
+        all_chemsys = self.phase_diagram_store.distinct("chemsys")
+
+        chemsys_w_wion = [c for c in all_chemsys if self.working_ion in c]
+
+        q = {
+            "$and": [
+                dict(self.query),
+                {"thermo_type": self.thermo_type},
+                {"chemsys": {"$in": chemsys_w_wion}},
+            ]
+        }
+
+        for phase_diagram_doc in self.phase_diagram_store.query(criteria=q):
             yield phase_diagram_doc
 
     def process_item(self, item) -> Dict:
@@ -552,14 +564,16 @@ class ConversionElectrodeBuilder(Builder):
                 # Get lowest material_id with matching composition
                 material_ids = [
                     (
-                        lambda x: x.data["material_id"]
-                        if x.composition.reduced_formula == v[1].reduced_formula
-                        else None
+                        lambda x: (
+                            x.data["material_id"]  # type: ignore[attr-defined]
+                            if x.composition.reduced_formula == v[1].reduced_formula
+                            else None
+                        )
                     )(e)
                     for e in pd.entries
                 ]
                 material_ids = list(filter(None, material_ids))
-                lowest_id = min(material_ids, key=_get_id_num)
+                lowest_id = min(material_ids, key=_get_id_lexi)
                 conversion_electrode_doc = (
                     ConversionElectrodeDoc.from_composition_and_pd(
                         comp=v[1],
@@ -578,14 +592,14 @@ class ConversionElectrodeBuilder(Builder):
                     comps.add(c)
                     unique_reaction_compositions.add(c)
                 reaction_compositions.append(comps)
-                new_docs.append(jsanitize(conversion_electrode_doc.dict()))
+                new_docs.append(jsanitize(conversion_electrode_doc.model_dump()))
 
         entry_id_mapping = {}
         for c in unique_reaction_compositions:
             relevant_entry_data = []
             for e in pd.entries:
                 if e.composition == Composition(c):
-                    relevant_entry_data.append((e.energy_per_atom, e.entry_id))
+                    relevant_entry_data.append((e.energy_per_atom, e.entry_id))  # type: ignore[attr-defined]
             relevant_entry_data.sort(key=lambda x: x[0])
             entry_id_mapping[c] = relevant_entry_data[0][1]
 

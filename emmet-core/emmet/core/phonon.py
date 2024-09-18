@@ -1,7 +1,6 @@
 from datetime import datetime
-from monty.json import MontyDecoder
 
-from pydantic import BaseModel, Field, validator
+from pydantic import field_validator, BaseModel, Field
 from emmet.core.mpid import MPID
 from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
 from pymatgen.phonon.dos import PhononDos as PhononDosObject
@@ -12,6 +11,7 @@ from pymatgen.core import Structure
 from emmet.core.math import Vector3D, Tensor4R
 from emmet.core.polar import DielectricDoc, BornEffectiveCharges, IRDielectric
 from emmet.core.structure import StructureMetadata
+from emmet.core.common import convert_datetime
 from typing_extensions import Literal
 
 
@@ -20,30 +20,31 @@ class PhononBSDOSDoc(BaseModel):
     Phonon band structures and density of states data.
     """
 
-    material_id: MPID = Field(
+    material_id: Optional[MPID] = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )
 
-    ph_bs: PhononBandStructureSymmLine = Field(
+    ph_bs: Optional[PhononBandStructureSymmLine] = Field(
         None,
         description="Phonon band structure object.",
     )
 
-    ph_dos: PhononDosObject = Field(
+    ph_dos: Optional[PhononDosObject] = Field(
         None,
         description="Phonon density of states object.",
     )
 
-    last_updated: datetime = Field(
+    last_updated: Optional[datetime] = Field(
         None,
         description="Timestamp for the most recent calculation for this Material document.",
     )
 
     # Make sure that the datetime field is properly formatted
-    @validator("last_updated", pre=True)
-    def last_updated_dict_ok(cls, v):
-        return MontyDecoder().process_decoded(v)
+    @field_validator("last_updated", mode="before")
+    @classmethod
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)
 
 
 class PhononWarnings(DocEnum):
@@ -77,7 +78,7 @@ class PhononBandStructure(BaseModel):
         "bs", description="The type of the document: a phonon band structure."
     )
 
-    band_structure: dict = Field(
+    band_structure: Optional[dict] = Field(
         None,
         description="Serialized version of a pymatgen "
         "PhononBandStructureSymmLine object.",
@@ -109,11 +110,11 @@ class PhononDos(BaseModel):
         "dos", description="The type of the document: a phonon density of states."
     )
 
-    dos: dict = Field(
+    dos: Optional[dict] = Field(
         None, description="Serialized version of a pymatgen CompletePhononDos object."
     )
 
-    dos_method: str = Field(
+    dos_method: Optional[str] = Field(
         None, description="The method used to calculate the phonon DOS."
     )
 
@@ -145,7 +146,7 @@ class PhononWebsiteBS(BaseModel):
         description="The type of the document: a phonon band structure for the phononwebsite.",
     )
 
-    phononwebsite: dict = Field(
+    phononwebsite: Optional[dict] = Field(
         None,
         description="Phononwebsite dictionary to plot the animated " "phonon modes.",
     )
@@ -176,7 +177,7 @@ class Ddb(BaseModel):
         "ddb", description="The type of the document: a DDB file."
     )
 
-    ddb: str = Field(None, description="The string of the DDB file.")
+    ddb: Optional[str] = Field(None, description="The string of the DDB file.")
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property",
@@ -201,7 +202,9 @@ class ThermodynamicProperties(BaseModel):
     )
 
     cv: List[float] = Field(
-        ..., description="The values of the constant-volume specific heat."
+        ...,
+        description="The values of the constant-volume specific heat.",
+        alias="heat_capacity",
     )
 
     entropy: List[float] = Field(
@@ -249,31 +252,33 @@ class Phonon(StructureMetadata):
         ..., description="The relaxed structure for the phonon calculation."
     )
 
-    asr_break: float = Field(
+    asr_break: Optional[float] = Field(
         None, description="The maximum breaking of the acoustic sum rule (ASR)."
     )
 
-    warnings: List[PhononWarnings] = Field(
+    warnings: Optional[List[PhononWarnings]] = Field(
         None, description="List of warnings associated to the phonon calculation."
     )
 
-    dielectric: DielectricDoc = Field(
+    dielectric: Optional[DielectricDoc] = Field(
         None, description="Dielectric properties obtained during a phonon calculations."
     )
 
-    becs: BornEffectiveCharges = Field(
+    becs: Optional[BornEffectiveCharges] = Field(
         None, description="Born effective charges obtained for a phonon calculation."
     )
 
-    ir_spectra: IRDielectric = Field(None, description="The IRDielectricTensor.")
+    ir_spectra: Optional[IRDielectric] = Field(
+        None, description="The IRDielectricTensor."
+    )
 
-    thermodynamic: ThermodynamicProperties = Field(
+    thermodynamic: Optional[ThermodynamicProperties] = Field(
         None,
         description="The thermodynamic properties extracted from the phonon "
         "frequencies.",
     )
 
-    vibrational_energy: VibrationalEnergy = Field(
+    vibrational_energy: Optional[VibrationalEnergy] = Field(
         None, description="The vibrational contributions to the total energy."
     )
 
@@ -294,7 +299,7 @@ class AbinitPhonon(Phonon):
     with Abinit.
     """
 
-    abinit_input_vars: dict = Field(
+    abinit_input_vars: Optional[dict] = Field(
         None,
         description="Dict representation of the inputs used to obtain the phonon"
         "properties and the main general options (e.g. number of "

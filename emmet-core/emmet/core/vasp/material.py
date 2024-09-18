@@ -1,19 +1,30 @@
 """ Core definition of a Materials Document """
-from typing import Dict, List, Mapping
 
-from pydantic import Field
+from typing import Dict, List, Mapping, Optional
+
+from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
+from emmet.core.base import EmmetMeta
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin
 from emmet.core.settings import EmmetSettings
 from emmet.core.structure import StructureMetadata
+from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
-from emmet.core.vasp.task_valid import TaskDocument
 
 SETTINGS = EmmetSettings()
+
+
+class BlessedCalcs(BaseModel):
+    GGA: Optional[ComputedStructureEntry] = None
+    GGA_U: Optional[ComputedStructureEntry] = Field(None, alias="GGA+U")
+    PBESol: Optional[ComputedStructureEntry] = None
+    SCAN: Optional[ComputedStructureEntry] = None
+    R2SCAN: Optional[ComputedStructureEntry] = None
+    HSE: Optional[ComputedStructureEntry] = None
 
 
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
@@ -21,31 +32,32 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         None,
         description="Calculation types for all the calculations that make up this material",
     )
-    task_types: Mapping[str, TaskType] = Field(
+    task_types: Optional[Mapping[str, TaskType]] = Field(
         None,
         description="Task types for all the calculations that make up this material",
     )
-    run_types: Mapping[str, RunType] = Field(
+    run_types: Optional[Mapping[str, RunType]] = Field(
         None,
         description="Run types for all the calculations that make up this material",
     )
 
-    origins: List[PropertyOrigin] = Field(
+    origins: Optional[List[PropertyOrigin]] = Field(
         None, description="Mappingionary for tracking the provenance of properties"
     )
 
-    entries: Mapping[RunType, ComputedStructureEntry] = Field(
+    entries: Optional[BlessedCalcs] = Field(
         None, description="Dictionary for tracking entries for VASP calculations"
     )
 
     @classmethod
     def from_tasks(
         cls,
-        task_group: List[TaskDocument],
+        task_group: List[TaskDoc],
         structure_quality_scores: Dict[
             str, int
         ] = SETTINGS.VASP_STRUCTURE_QUALITY_SCORES,
         use_statics: bool = SETTINGS.VASP_USE_STATICS,
+        commercial_license: bool = True,
     ) -> "MaterialsDoc":
         """
         Converts a group of tasks into one material
@@ -54,6 +66,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             task_group: List of task document
             structure_quality_scores: quality scores for various calculation types
             use_statics: Use statics to define a material
+            commercial_license: Whether the data should be licensed with BY-C (otherwise BY-NC).
         """
         if len(task_group) == 0:
             raise Exception("Must have more than one task in the group.")
@@ -78,6 +91,10 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             else structure_optimizations
         )
 
+        validity_check = [doc for doc in structure_calcs if doc.is_valid]
+        if not validity_check:
+            raise ValueError("Group must contain at least one valid task")
+
         # Material ID
         possible_mat_ids = [task.task_id for task in structure_optimizations]
 
@@ -89,7 +106,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         # Always prefer a static over a structure opt
         structure_task_quality_scores = {"Structure Optimization": 1, "Static": 2}
 
-        def _structure_eval(task: TaskDocument):
+        def _structure_eval(task: TaskDoc):
             """
             Helper function to order structures optimization and statics calcs by
             - Functional Type
@@ -101,7 +118,12 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             task_run_type = task.run_type
             _SPECIAL_TAGS = ["LASPH", "ISPIN"]
             special_tags = sum(
-                task.input.parameters.get(tag, False) for tag in _SPECIAL_TAGS
+                (
+                    task.input.parameters.get(tag, False)
+                    if task.input.parameters
+                    else False
+                )
+                for tag in _SPECIAL_TAGS
             )
 
             return (
@@ -143,7 +165,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         # Always prefer a static over a structure opt
         entry_task_quality_scores = {"Structure Optimization": 1, "Static": 2}
 
-        def _entry_eval(task: TaskDocument):
+        def _entry_eval(task: TaskDoc):
             """
             Helper function to order entries and statics calcs by
             - Spin polarization
@@ -153,7 +175,12 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
             _SPECIAL_TAGS = ["LASPH", "ISPIN"]
             special_tags = sum(
-                task.input.parameters.get(tag, False) for tag in _SPECIAL_TAGS
+                (
+                    task.input.parameters.get(tag, False)
+                    if task.input.parameters
+                    else False
+                )
+                for tag in _SPECIAL_TAGS
             )
 
             return (
@@ -180,12 +207,17 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
                 entry.data["task_id"] = entry.entry_id
                 entry.data["material_id"] = material_id
                 entry.entry_id = "{}-{}".format(material_id, rt.value)
+                entry.parameters["is_hubbard"] = best_task_doc.input.is_hubbard
+                entry.parameters["hubbards"] = best_task_doc.input.hubbards
                 entries[rt] = entry
 
         if RunType.GGA not in entries and RunType.GGA_U not in entries:
             raise ValueError(
                 "Individual material entry must contain at least one GGA or GGA+U calculation"
             )
+
+        # Builder meta and license
+        builder_meta = EmmetMeta(license="BY-C" if commercial_license else "BY-NC")
 
         return cls.from_structure(
             structure=structure,
@@ -201,17 +233,21 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             deprecated_tasks=deprecated_tasks,
             origins=origins,
             entries=entries,
+            builder_meta=builder_meta,
         )
 
     @classmethod
     def construct_deprecated_material(
-        cls, task_group: List[TaskDocument]
+        cls,
+        task_group: List[TaskDoc],
+        commercial_license: bool = True,
     ) -> "MaterialsDoc":
         """
         Converts a group of tasks into a deprecated material
 
         Args:
             task_group: List of task document
+            commercial_license: Whether the data should be licensed with BY-C (otherwise BY-NC).
         """
         if len(task_group) == 0:
             raise Exception("Must have more than one task in the group.")
@@ -237,6 +273,9 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         # Deprecated
         deprecated = True
 
+        # Builder meta and license
+        builder_meta = EmmetMeta(license="BY-C" if commercial_license else "BY-NC")
+
         return cls.from_structure(
             structure=structure,
             material_id=material_id,
@@ -248,4 +287,5 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             task_types=task_types,
             deprecated=deprecated,
             deprecated_tasks=deprecated_tasks,
+            builder_meta=builder_meta,
         )

@@ -1,12 +1,13 @@
 import datetime
 import json
+from pathlib import Path
 
 import numpy as np
 import pytest
 from bson.objectid import ObjectId
-from monty.json import MSONable
-
 from emmet.core.utils import DocEnum, ValueEnum, jsanitize
+from monty.json import MSONable
+from monty.serialization import dumpfn
 
 
 def test_jsanitize():
@@ -68,13 +69,16 @@ class GoodMSONClass(MSONable):
         )
 
 
-def test_value_enum():
+def test_value_enum(monkeypatch, tmp_path):
     class TempEnum(ValueEnum):
         A = "A"
         B = "B"
 
     assert str(TempEnum.A) == "A"
     assert str(TempEnum.B) == "B"
+
+    dumpfn(TempEnum, tmp_path / "temp.json")
+    assert Path(tmp_path, "temp.json").is_file()
 
 
 def test_doc_enum():

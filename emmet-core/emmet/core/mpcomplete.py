@@ -2,6 +2,7 @@ from pydantic import Field
 from pydantic.main import BaseModel
 from pymatgen.core.structure import Structure
 from enum import Enum
+from typing import Optional
 
 
 class MPCompleteDoc(BaseModel):
@@ -9,17 +10,17 @@ class MPCompleteDoc(BaseModel):
     Defines data for MPComplete structure submissions
     """
 
-    structure: Structure = Field(
+    structure: Optional[Structure] = Field(
         None,
         description="Structure submitted by the user.",
     )
 
-    public_name: str = Field(
+    public_name: Optional[str] = Field(
         None,
         description="Public name of submitter.",
     )
 
-    public_email: str = Field(
+    public_email: Optional[str] = Field(
         None,
         description="Public email of submitter.",
     )

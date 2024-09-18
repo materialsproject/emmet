@@ -76,7 +76,7 @@ def test_InsertionDocs(insertion_elec):
             vp = InsertionVoltagePairDoc.from_sub_electrode(sub_electrode=sub_elec)
             assert vp.average_voltage == sub_elec.get_average_voltage()
             assert "mp" in vp.id_charge
-        # assert type(ie.dict()["host_structure"]) == dict # This might be a requirement in the future
+        # assert type(ie.model_dump()["host_structure"]) == dict # This might be a requirement in the future
 
 
 def test_ConversionDocs_from_entries(conversion_elec):
@@ -88,7 +88,7 @@ def test_ConversionDocs_from_entries(conversion_elec):
             battery_id="mp-1234",
             thermo_type="GGA_GGA+U",
         )
-        res_d = vp.dict()
+        res_d = vp.model_dump()
         for k, v in expected.items():
             assert res_d[k] == pytest.approx(v, 0.01)
 
@@ -104,7 +104,7 @@ def test_ConversionDocs_from_composition_and_pd(conversion_elec, test_dir):
             battery_id="mp-1234",
             thermo_type="GGA_GGA+U",
         )
-        res_d = vp.dict()
+        res_d = vp.model_dump()
         for k, v in expected.items():
             assert res_d[k] == pytest.approx(v, 0.01)
 

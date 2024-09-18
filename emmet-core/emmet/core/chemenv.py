@@ -1,4 +1,4 @@
-from typing import Literal, List, Union
+from typing import Literal, List, Union, Optional
 
 from pydantic import Field
 from pymatgen.analysis.chemenv.coordination_environments.chemenv_strategies import (
@@ -315,14 +315,14 @@ class ChemEnvDoc(PropertyDoc):
     If no oxidation states are available, all bonds will be considered as a fall-back.
     """
 
-    property_name = "coord_environment"
+    property_name: str = "coord_environment"
 
     structure: Structure = Field(
         ...,
         description="The structure used in the generation of the chemical environment data",
     )
 
-    valences: List[int] = Field(
+    valences: List[Union[int, float]] = Field(
         description="List of valences for each site in this material to determine cations"
     )
 
@@ -371,7 +371,7 @@ class ChemEnvDoc(PropertyDoc):
         description="List of Wyckoff positions for unique (cationic) species in structure."
     )
 
-    warnings: Union[str, None] = Field(None, description="Warning")
+    warnings: Optional[str] = Field(None, description="Warning")
 
     @classmethod
     def from_structure(
@@ -406,124 +406,124 @@ class ChemEnvDoc(PropertyDoc):
             # "structure_environment": None,
         }  # type: dict
 
-        try:
-            list_mol = []
-            list_chemenv = []
-            list_chemenv_iupac = []
-            list_chemenv_iucr = []
-            list_chemenv_text = []
-            list_chemenv_text_with_alternatives = []
-            list_csm = []
-            list_wyckoff = []
-            list_species = []
+        # try:
+        list_mol = []
+        list_chemenv = []
+        list_chemenv_iupac = []
+        list_chemenv_iucr = []
+        list_chemenv_text = []
+        list_chemenv_text_with_alternatives = []
+        list_csm = []
+        list_wyckoff = []
+        list_species = []
 
-            valences = [getattr(site.specie, "oxi_state", None) for site in structure]
-            valences = [v for v in valences if v is not None]
-            sga = SpacegroupAnalyzer(structure)
-            symm_struct = sga.get_symmetrized_structure()
-            # We still need the whole list of indices
-            inequivalent_indices = [
-                indices[0] for indices in symm_struct.equivalent_indices
+        valences = [getattr(site.specie, "oxi_state", None) for site in structure]
+        valences = [v for v in valences if v is not None]
+        sga = SpacegroupAnalyzer(structure)
+        symm_struct = sga.get_symmetrized_structure()
+        # We still need the whole list of indices
+        inequivalent_indices = [
+            indices[0] for indices in symm_struct.equivalent_indices
+        ]
+        # if len(inequivalent_indices)>5:
+        #    print("Too many sites")
+        #    raise Exception
+        # wyckoff symbols for all inequivalent indices
+        wyckoffs_unique = symm_struct.wyckoff_symbols
+        # use the local geometry finder to get the important information
+        lgf = LocalGeometryFinder()
+        lgf.setup_structure(structure=structure)
+        all_ce = AllCoordinationGeometries()
+        if len(valences) == len(structure):
+            # Standard alorithm will only focus on cations and cation-anion bonds!
+            method_description = "DefaultSimplestChemenvStrategy"
+            method = AVAILABLE_METHODS[method_description]
+            # We will only focus on cations!
+            inequivalent_indices_cations = [
+                indices[0]
+                for indices in symm_struct.equivalent_indices
+                if valences[indices[0]] > 0.0  # type: ignore[operator]
             ]
-            # if len(inequivalent_indices)>5:
-            #    print("Too many sites")
-            #    raise Exception
-            # wyckoff symbols for all inequivalent indices
-            wyckoffs_unique = symm_struct.wyckoff_symbols
-            # use the local geometry finder to get the important information
-            lgf = LocalGeometryFinder()
-            lgf.setup_structure(structure=structure)
-            all_ce = AllCoordinationGeometries()
-            if len(valences) == len(structure):
-                # Standard alorithm will only focus on cations and cation-anion bonds!
-                method_description = "DefaultSimplestChemenvStrategy"
-                method = AVAILABLE_METHODS[method_description]
-                # We will only focus on cations!
-                inequivalent_indices_cations = [
-                    indices[0]
-                    for indices in symm_struct.equivalent_indices
-                    if valences[indices[0]] > 0.0
-                ]
 
-                se = lgf.compute_structure_environments(
-                    only_indices=inequivalent_indices_cations,
-                    valences=valences,
-                    maximum_distance_factor=DEFAULT_DISTANCE_CUTOFF,
-                    minimum_angle_factor=DEFAULT_ANGLE_CUTOFF,
-                )
-                lse = LightStructureEnvironments.from_structure_environments(
-                    strategy=method, structure_environments=se
-                )
-                warnings = None
-            else:
-                d.update(
-                    {
-                        "warnings": "No oxidation states available. Cation-anion bonds cannot be identified."
-                    }
-                )
-                return super().from_structure(
-                    meta_structure=structure,
-                    material_id=material_id,
-                    structure=structure,
-                    **d,
-                    **kwargs,
-                )
-                # method_description = "DefaultSimplestChemenvStrategy_all_bonds"
-                # method = AVAILABLE_METHODS[method_description]
+            se = lgf.compute_structure_environments(
+                only_indices=inequivalent_indices_cations,
+                valences=valences,
+                maximum_distance_factor=DEFAULT_DISTANCE_CUTOFF,
+                minimum_angle_factor=DEFAULT_ANGLE_CUTOFF,
+            )
+            lse = LightStructureEnvironments.from_structure_environments(
+                strategy=method, structure_environments=se
+            )
+            warnings = None
+        else:
+            d.update(
+                {
+                    "warnings": "No oxidation states available. Cation-anion bonds cannot be identified."
+                }
+            )
+            return super().from_structure(
+                meta_structure=structure,
+                material_id=material_id,
+                structure=structure,
+                **d,
+                **kwargs,
+            )
+            # method_description = "DefaultSimplestChemenvStrategy_all_bonds"
+            # method = AVAILABLE_METHODS[method_description]
 
-                # se = lgf.compute_structure_environments(
-                #     only_indices=inequivalent_indices,
-                # )
-                # lse = LightStructureEnvironments.from_structure_environments(strategy=method,
-                #     structure_environments=se)
-                # Trick to get rid of duplicate code
-                # inequivalent_indices_cations = inequivalent_indices
-                # warnings = "No oxidation states. Analysis will now include all bonds"
+            # se = lgf.compute_structure_environments(
+            #     only_indices=inequivalent_indices,
+            # )
+            # lse = LightStructureEnvironments.from_structure_environments(strategy=method,
+            #     structure_environments=se)
+            # Trick to get rid of duplicate code
+            # inequivalent_indices_cations = inequivalent_indices
+            # warnings = "No oxidation states. Analysis will now include all bonds"
 
-            for index, wyckoff in zip(inequivalent_indices, wyckoffs_unique):
-                # ONLY CATIONS
-                if index in inequivalent_indices_cations:
-                    # Coordinaton environment will be saved as a molecule!
-                    mol = Molecule.from_sites(
-                        [structure[index]] + lse.neighbors_sets[index][0].neighb_sites
-                    )
-                    mol = mol.get_centered_molecule()
-                    env = lse.coordination_environments[index]
-                    co = all_ce.get_geometry_from_mp_symbol(env[0]["ce_symbol"])
-                    name = co.name
-                    if co.alternative_names:
-                        name += f" (also known as {', '.join(co.alternative_names)})"
-                    # save everything in a list
-                    list_chemenv_text.append(co.name)
-                    list_chemenv_text_with_alternatives.append(name)
-                    list_chemenv.append(co.ce_symbol)
-                    list_chemenv_iucr.append(co.IUCr_symbol_str)
-                    list_chemenv_iupac.append(co.IUPAC_symbol_str)
-                    list_mol.append(mol)
-                    list_wyckoff.append(wyckoff)
-                    list_species.append(structure[index].species_string)
-                    list_csm.append(env[0]["csm"])
-
-                d.update(
-                    {
-                        "valences": valences,
-                        "species": list_species,
-                        "chemenv_symbol": list_chemenv,
-                        "chemenv_iupac": list_chemenv_iupac,
-                        "chemenv_iucr": list_chemenv_iucr,
-                        "chemenv_name": list_chemenv_text,
-                        "chemenv_name_with_alternatives": list_chemenv_text_with_alternatives,
-                        "csm": list_csm,
-                        "mol_from_site_environments": list_mol,
-                        "wyckoff_positions": list_wyckoff,
-                        # "structure_environment": se.as_dict(),
-                        "method": METHODS_DESCRIPTION[method_description],
-                        "warnings": warnings,
-                    }
+        for index, wyckoff in zip(inequivalent_indices, wyckoffs_unique):
+            # ONLY CATIONS
+            if index in inequivalent_indices_cations:
+                # Coordinaton environment will be saved as a molecule!
+                mol = Molecule.from_sites(
+                    [structure[index]] + lse.neighbors_sets[index][0].neighb_sites
                 )
+                mol = mol.get_centered_molecule()
+                env = lse.coordination_environments[index]
+                co = all_ce.get_geometry_from_mp_symbol(env[0]["ce_symbol"])
+                name = co.name
+                if co.alternative_names:
+                    name += f" (also known as {', '.join(co.alternative_names)})"
+                # save everything in a list
+                list_chemenv_text.append(co.name)
+                list_chemenv_text_with_alternatives.append(name)
+                list_chemenv.append(co.ce_symbol)
+                list_chemenv_iucr.append(co.IUCr_symbol_str)
+                list_chemenv_iupac.append(co.IUPAC_symbol_str)
+                list_mol.append(mol)
+                list_wyckoff.append(wyckoff)
+                list_species.append(structure[index].species_string)
+                list_csm.append(env[0]["csm"])
 
-        except Exception:
-            d.update({"warnings": "ChemEnv algorithm failed."})
+            d.update(
+                {
+                    "valences": valences,
+                    "species": list_species,
+                    "chemenv_symbol": list_chemenv,
+                    "chemenv_iupac": list_chemenv_iupac,
+                    "chemenv_iucr": list_chemenv_iucr,
+                    "chemenv_name": list_chemenv_text,
+                    "chemenv_name_with_alternatives": list_chemenv_text_with_alternatives,
+                    "csm": list_csm,
+                    "mol_from_site_environments": list_mol,
+                    "wyckoff_positions": list_wyckoff,
+                    # "structure_environment": se.as_dict(),
+                    "method": METHODS_DESCRIPTION[method_description],
+                    "warnings": warnings,
+                }
+            )
+
+        # except Exception:
+        #     d.update({"warnings": "ChemEnv algorithm failed."})
 
         return super().from_structure(
             meta_structure=structure,

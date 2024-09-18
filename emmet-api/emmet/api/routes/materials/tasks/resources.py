@@ -1,4 +1,4 @@
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 from maggma.api.resource import ReadOnlyResource
 
 from emmet.api.routes.materials.materials.query_operators import (
@@ -12,6 +12,7 @@ from emmet.api.routes.materials.tasks.query_operators import (
     MultipleTaskIDsQuery,
     TrajectoryQuery,
     EntryQuery,
+    LastUpdatedQuery,
 )
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
@@ -29,7 +30,7 @@ def task_resource(task_store):
             ChemsysQuery(),
             ElementsQuery(),
             MultipleTaskIDsQuery(),
-            SortQuery(),
+            LastUpdatedQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 TaskDoc,
@@ -53,7 +54,6 @@ def task_deprecation_resource(materials_store):
         DeprecationDoc,
         query_operators=[DeprecationQuery(), PaginationQuery()],
         tags=["Materials Tasks"],
-        enable_get_by_key=False,
         enable_default_search=True,
         sub_path="/tasks/deprecation/",
         header_processor=GlobalHeaderProcessor(),

@@ -1,7 +1,7 @@
 # mypy: ignore-errors
 
 """ Core definition of a VASP Task Document """
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Optional
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_analyzer import oxide_type
@@ -30,7 +30,9 @@ class InputSummary(BaseModel):
     Summary of inputs for a VASP calculation
     """
 
-    structure: Structure = Field(None, description="The input structure object")
+    structure: Optional[Structure] = Field(
+        None, description="The input structure object"
+    )
     parameters: Dict = Field(
         {},
         description="Input parameters from VASPRUN for the last calculation in the series",
@@ -53,19 +55,23 @@ class OutputSummary(BaseModel):
     Summary of the outputs for a VASP calculation
     """
 
-    structure: Structure = Field(None, description="The output structure object")
-    energy: float = Field(
+    structure: Optional[Structure] = Field(
+        None, description="The output structure object"
+    )
+    energy: Optional[float] = Field(
         None, description="The final total DFT energy for the last calculation"
     )
-    energy_per_atom: float = Field(
+    energy_per_atom: Optional[float] = Field(
         None, description="The final DFT energy per atom for the last calculation"
     )
-    bandgap: float = Field(None, description="The DFT bandgap for the last calculation")
-    forces: List[Vector3D] = Field(
-        [], description="Forces on atoms from the last calculation"
+    bandgap: Optional[float] = Field(
+        None, description="The DFT bandgap for the last calculation"
     )
-    stress: Matrix3D = Field(
-        [], description="Stress on the unitcell from the last calculation"
+    forces: Optional[List[Vector3D]] = Field(
+        None, description="Forces on atoms from the last calculation"
+    )
+    stress: Optional[Matrix3D] = Field(
+        None, description="Stress on the unitcell from the last calculation"
     )
 
 
@@ -74,17 +80,25 @@ class RunStatistics(BaseModel):
     Summary of the Run statistics for a VASP calculation
     """
 
-    average_memory: float = Field(None, description="The average memory used in kb")
-    max_memory: float = Field(None, description="The maximum memory used in kb")
-    elapsed_time: float = Field(None, description="The real time elapsed in seconds")
-    system_time: float = Field(None, description="The system CPU time in seconds")
-    user_time: float = Field(
+    average_memory: Optional[float] = Field(
+        None, description="The average memory used in kb"
+    )
+    max_memory: Optional[float] = Field(
+        None, description="The maximum memory used in kb"
+    )
+    elapsed_time: Optional[float] = Field(
+        None, description="The real time elapsed in seconds"
+    )
+    system_time: Optional[float] = Field(
+        None, description="The system CPU time in seconds"
+    )
+    user_time: Optional[float] = Field(
         None, description="The user CPU time spent by VASP in seconds"
     )
-    total_time: float = Field(
+    total_time: Optional[float] = Field(
         None, description="The total CPU time for this calculation"
     )
-    cores: Union[int, str] = Field(
+    cores: Optional[Union[int, str]] = Field(
         None,
         description="The number of cores used by VASP (some clusters print `mpi-ranks` here)",
     )
@@ -95,7 +109,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
     Definition of VASP Task Document
     """
 
-    calc_code = "VASP"
+    calc_code: str = "VASP"
     run_stats: Dict[str, RunStatistics] = Field(
         {},
         description="Summary of runtime statistics for each calculation in this task",
@@ -108,7 +122,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
     input: InputSummary = Field(InputSummary())
     output: OutputSummary = Field(OutputSummary())
 
-    state: TaskState = Field(None, description="State of this calculation")
+    state: Optional[TaskState] = Field(None, description="State of this calculation")
 
     orig_inputs: Dict[str, Any] = Field(
         {}, description="Summary of the original VASP inputs"
@@ -122,7 +136,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
         [], description="Metadata tags for this task document"
     )
 
-    warnings: List[str] = Field(
+    warnings: Optional[List[str]] = Field(
         None, description="Any warnings related to this property"
     )
 

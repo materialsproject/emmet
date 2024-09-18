@@ -1,22 +1,22 @@
 import os
 
+from monty.serialization import dumpfn, loadfn
+from monty.tempfile import ScratchDir
+from pymatgen.core.structure import Structure
+
 from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.materials.query_operators import (
-    FormulaQuery,
     ChemsysQuery,
-    ElementsQuery,
     DeprecationQuery,
-    SymmetryQuery,
-    MultiTaskIDQuery,
-    MultiMaterialIDQuery,
+    ElementsQuery,
     FindStructureQuery,
     FormulaAutoCompleteQuery,
+    FormulaQuery,
+    MultiMaterialIDQuery,
+    MultiTaskIDQuery,
+    SymmetryQuery,
 )
-from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
-
 from emmet.core.symmetry import CrystalSystem
-from pymatgen.core.structure import Structure
 
 
 def test_formula_query():
@@ -46,7 +46,7 @@ def test_chemsys_query():
     assert op.query("Si-O") == {"criteria": {"chemsys": "O-Si"}}
 
     assert op.query("Si-*") == {
-        "criteria": {"nelements": 2, "elements": {"$all": ["Si"]}}
+        "criteria": {"nelements": 2, "composition_reduced.Si": {"$exists": True}}
     }
 
     with ScratchDir("."):
@@ -61,7 +61,12 @@ def test_elements_query():
 
     op = ElementsQuery()
     assert op.query(elements=",".join(eles), exclude_elements=",".join(neles)) == {
-        "criteria": {"elements": {"$all": ["Si", "O"], "$nin": ["N", "P"]}}
+        "criteria": {
+            "composition_reduced.Si": {"$exists": True},
+            "composition_reduced.O": {"$exists": True},
+            "composition_reduced.N": {"$exists": False},
+            "composition_reduced.P": {"$exists": False},
+        }
     }
 
     with ScratchDir("."):
@@ -69,7 +74,14 @@ def test_elements_query():
         new_op = loadfn("temp.json")
         assert new_op.query(
             elements=",".join(eles), exclude_elements=",".join(neles)
-        ) == {"criteria": {"elements": {"$all": ["Si", "O"], "$nin": ["N", "P"]}}}
+        ) == {
+            "criteria": {
+                "composition_reduced.Si": {"$exists": True},
+                "composition_reduced.O": {"$exists": True},
+                "composition_reduced.N": {"$exists": False},
+                "composition_reduced.P": {"$exists": False},
+            }
+        }
 
 
 def test_deprecation_query():
@@ -150,7 +162,7 @@ def test_find_structure_query():
     op = FindStructureQuery()
 
     structure = Structure.from_file(
-        os.path.join(MAPISettings().TEST_FILES, "Si_mp_149.cif")
+        os.path.join(MAPISettings().TEST_FILES, "Si_mp_149.cif"), primitive=True
     )
     query = {
         "criteria": {"composition_reduced": dict(structure.composition.to_reduced_dict)}

@@ -14,7 +14,7 @@ def formula_to_criteria(formulas: str) -> Dict:
     Returns:
         Mongo style search criteria for this formula
     """
-    dummies = "ADEGJLMQRXZ"
+    dummies = "AEGJLMQRXZ"
 
     formula_list = [formula.strip() for formula in formulas.split(",")]
 
@@ -128,10 +128,10 @@ def chemsys_to_criteria(chemsys: str) -> Dict:
             eles = chemsys_list[0].split("-")
 
             crit["nelements"] = len(eles)
-            crit["elements"] = {"$all": [ele for ele in eles if ele != "*"]}
 
-            if crit["elements"]["$all"] == []:
-                del crit["elements"]
+            for el in eles:
+                if el != "*":
+                    crit[f"composition_reduced.{el}"] = {"$exists": True}
 
             return crit
     else:

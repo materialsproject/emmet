@@ -5,11 +5,12 @@ from typing import Dict, List, Optional
 
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
-from pydantic import BaseModel, Field, root_validator, validator
+from pydantic import field_validator, model_validator, BaseModel, Field
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
 from emmet.core.utils import ValueEnum
+from emmet.core.common import convert_datetime
 from pymatgen.core.structure import Structure
 
 
@@ -28,8 +29,8 @@ class Author(BaseModel):
     Author information
     """
 
-    name: str = Field(None)
-    email: str = Field(None)
+    name: Optional[str] = Field(None)
+    email: Optional[str] = Field(None)
 
 
 class History(BaseModel):
@@ -40,10 +41,11 @@ class History(BaseModel):
     name: str
     url: str
     description: Optional[Dict] = Field(
-        None, description="Dictionary of exra data for this history node."
+        None, description="Dictionary of extra data for this history node."
     )
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def str_to_dict(cls, values):
         if isinstance(values.get("description"), str):
             values["description"] = {"string": values.get("description")}
@@ -51,7 +53,7 @@ class History(BaseModel):
 
 
 class SNLAbout(BaseModel):
-    """A data dictionary definining extra fields in a SNL"""
+    """A data dictionary defining extra fields in a SNL"""
 
     references: str = Field(
         "", description="Bibtex reference strings for this material."
@@ -79,13 +81,10 @@ class SNLAbout(BaseModel):
         default_factory=datetime.utcnow, description="The creation date for this SNL."
     )
 
-    @validator("created_at", pre=True)
-    def convert_monty_date(cls, v):
-        if isinstance(v, dict):
-            if v.get("@module", "datetime") and v.get("@class", "datetime"):
-                return datetime.fromisoformat(v["string"])
-            raise ValueError("Improper monty dict datetime")
-        return v
+    @field_validator("created_at", mode="before")
+    @classmethod
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)
 
 
 class SNLDict(BaseModel):
@@ -101,7 +100,7 @@ class ProvenanceDoc(PropertyDoc):
     A provenance property block
     """
 
-    property_name = "provenance"
+    property_name: str = "provenance"
 
     created_at: datetime = Field(
         ...,
@@ -134,7 +133,13 @@ class ProvenanceDoc(PropertyDoc):
         " of this material for the entry closest matching the material input",
     )
 
-    @validator("authors")
+    @field_validator("created_at", mode="before")
+    @classmethod
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)
+
+    @field_validator("authors")
+    @classmethod
     def remove_duplicate_authors(cls, authors):
         authors_dict = {entry.name.lower(): entry for entry in authors}
         return list(authors_dict.values())

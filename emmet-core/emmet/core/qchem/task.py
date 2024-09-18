@@ -29,7 +29,7 @@ class QChemStatus(ValueEnum):
     Q-Chem Calculation State
     """
 
-    SUCESS = "successful"
+    SUCCESS = "successful"
     FAILED = "unsuccessful"
 
 
@@ -38,32 +38,60 @@ class OutputSummary(BaseModel):
     Summary of an output for a Q-Chem calculation
     """
 
-    initial_molecule: Molecule = Field(None, description="Input Molecule object")
-    optimized_molecule: Molecule = Field(None, description="Optimized Molecule object")
+    initial_molecule: Optional[Molecule] = Field(
+        None, description="Input Molecule object"
+    )
+    optimized_molecule: Optional[Molecule] = Field(
+        None, description="Optimized Molecule object"
+    )
 
-    final_energy: float = Field(
+    final_energy: Optional[float] = Field(
         None, description="Final electronic energy for the calculation (units: Hartree)"
     )
-    enthalpy: float = Field(
+    enthalpy: Optional[float] = Field(
         None, description="Total enthalpy of the molecule (units: kcal/mol)"
     )
-    entropy: float = Field(
+    entropy: Optional[float] = Field(
         None, description="Total entropy of the molecule (units: cal/mol-K"
     )
 
-    mulliken: List[Any] = Field(
+    mulliken: Optional[List[Any]] = Field(
         None, description="Mulliken atomic partial charges and partial spins"
     )
-    resp: List[float] = Field(
+    resp: Optional[List[float]] = Field(
         None,
         description="Restrained Electrostatic Potential (RESP) atomic partial charges",
     )
-    nbo: Dict[str, Any] = Field(
+    nbo: Optional[Dict[str, Any]] = Field(
         None, description="Natural Bonding Orbital (NBO) output"
     )
 
-    frequencies: List[float] = Field(
+    frequencies: Optional[List[float]] = Field(
         None, description="Vibrational frequencies of the molecule (units: cm^-1)"
+    )
+
+    dipoles: Optional[Dict[str, Any]] = Field(
+        None, description="Electric dipole information for the molecule"
+    )
+
+    gradients: Optional[List[List[float]]] = Field(
+        None, description="Atomic forces, in atomic units (Ha/Bohr)"
+    )
+
+    precise_gradients: Optional[List[List[float]]] = Field(
+        None, description="High-precision atomic forces, in atomic units (Ha/Bohr)"
+    )
+
+    pcm_gradients: Optional[List[List[float]]] = Field(
+        None,
+        description="Electrostatic atomic forces from polarizable continuum model (PCM) implicit solvation,"
+        "in atomic units (Ha/Bohr).",
+    )
+
+    CDS_gradients: Optional[List[List[float]]] = Field(
+        None,
+        description="Atomic force contributions from cavitation, dispersion, and structural rearrangement in the SMx"
+        "family of implicit solvent models, in atomic units (Ha/Bohr)",
     )
 
     def as_dict(self) -> Dict[str, Any]:
@@ -79,6 +107,9 @@ class OutputSummary(BaseModel):
             "resp": self.resp,
             "nbo": self.nbo,
             "frequencies": self.frequencies,
+            "dipoles": self.dipoles,
+            "gradients": self.gradients,
+            "precise_gradients": self.precise_gradients,
         }
 
 
@@ -87,16 +118,18 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     Definition of a Q-Chem task document
     """
 
-    calc_code = "Q-Chem"
-    completed = True
+    calc_code: str = "Q-Chem"
+    completed: bool = True
 
     is_valid: bool = Field(
         True, description="Whether this task document passed validation or not"
     )
-    state: QChemStatus = Field(None, description="State of this calculation")
+    state: Optional[QChemStatus] = Field(None, description="State of this calculation")
 
-    cputime: float = Field(None, description="The system CPU time in seconds")
-    walltime: float = Field(None, description="The real elapsed time in seconds")
+    cputime: Optional[float] = Field(None, description="The system CPU time in seconds")
+    walltime: Optional[float] = Field(
+        None, description="The real elapsed time in seconds"
+    )
 
     calcs_reversed: List[Dict] = Field(
         [], description="The 'raw' calculation docs used to assembled this task"
@@ -105,31 +138,31 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     orig: Dict[str, Any] = Field(
         {}, description="Summary of the original Q-Chem inputs"
     )
-    output = Field(OutputSummary())
+    output: OutputSummary = Field(OutputSummary())
 
-    critic2: Dict[str, Any] = Field(
+    critic2: Optional[Dict[str, Any]] = Field(
         None, description="Output from Critic2 critical point analysis code"
     )
-    custom_smd: str = Field(
+    custom_smd: Optional[str] = Field(
         None, description="Parameter string for SMD implicit solvent model"
     )
 
-    special_run_type: str = Field(
+    special_run_type: Optional[str] = Field(
         None, description="Special workflow name (if applicable)"
     )
 
-    smiles: str = Field(
+    smiles: Optional[str] = Field(
         None,
         description="Simplified molecular-input line-entry system (SMILES) string for the molecule involved "
         "in this calculation.",
     )
 
-    species_hash: str = Field(
+    species_hash: Optional[str] = Field(
         None,
         description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph "
         "node attribute.",
     )
-    coord_hash: str = Field(
+    coord_hash: Optional[str] = Field(
         None,
         description="Weisfeiler Lehman (WL) graph hash using the atom coordinates as the graph "
         "node attribute.",
@@ -138,9 +171,9 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     # TODO - type of `tags` field seems to differ among task databases
     # sometimes List, sometimes Dict
     # left as Any here to ensure tags don't cause validation to fail.
-    tags: Any = Field(None, description="Metadata tags")
+    tags: Optional[Any] = Field(None, description="Metadata tags")
 
-    warnings: Dict[str, bool] = Field(
+    warnings: Optional[Dict[str, bool]] = Field(
         None, description="Any warnings related to this task document"
     )
 

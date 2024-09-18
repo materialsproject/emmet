@@ -15,7 +15,7 @@ class BondingDoc(PropertyDoc):
     """Structure graphs representing chemical bonds calculated from structure
     using near neighbor strategies as defined in pymatgen."""
 
-    property_name = "bonding"
+    property_name: str = "bonding"
 
     structure_graph: StructureGraph = Field(
         description="Structure graph",

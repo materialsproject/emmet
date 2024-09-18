@@ -1,5 +1,5 @@
 """ Core definition of a Molecule Document """
-from typing import Any, Dict, List, Mapping, Union
+from typing import Any, Dict, List, Mapping, Union, Optional
 
 from pydantic import Field
 
@@ -8,7 +8,7 @@ from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 from pymatgen.io.babel import BabelMolAdaptor
 
 from emmet.core.mpid import MPculeID
-from emmet.core.utils import get_graph_hash, get_molecule_id
+from emmet.core.utils import get_molecule_id
 from emmet.core.settings import EmmetSettings
 from emmet.core.material import CoreMoleculeDoc, PropertyOrigin
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
@@ -140,35 +140,24 @@ def evaluate_task_entry(
 
 
 class MoleculeDoc(CoreMoleculeDoc):
-    species: List[str] = Field(
+    species: Optional[List[str]] = Field(
         None, description="Ordered list of elements/species in this Molecule."
     )
 
-    molecules: Dict[str, Molecule] = Field(
+    molecules: Optional[Dict[str, Molecule]] = Field(
         None,
         description="The lowest energy optimized structures for this molecule for each solvent.",
     )
 
-    molecule_levels_of_theory: Dict[str, str] = Field(
+    molecule_levels_of_theory: Optional[Dict[str, str]] = Field(
         None,
         description="Level of theory used to optimize the best molecular structure for each solvent.",
     )
 
-    species_hash: str = Field(
-        None,
-        description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph "
-        "node attribute.",
-    )
-    coord_hash: str = Field(
-        None,
-        description="Weisfeiler Lehman (WL) graph hash using the atom coordinates as the graph "
-        "node attribute.",
-    )
-
-    inchi: str = Field(
+    inchi: Optional[str] = Field(
         None, description="International Chemical Identifier (InChI) for this molecule"
     )
-    inchi_key: str = Field(
+    inchi_key: Optional[str] = Field(
         None, description="Standardized hash of the InChI for this molecule"
     )
 
@@ -176,70 +165,70 @@ class MoleculeDoc(CoreMoleculeDoc):
         None,
         description="Calculation types for all the calculations that make up this molecule",
     )
-    task_types: Mapping[str, TaskType] = Field(
+    task_types: Optional[Mapping[str, TaskType]] = Field(
         None,
         description="Task types for all the calculations that make up this molecule",
     )
-    levels_of_theory: Mapping[str, LevelOfTheory] = Field(
+    levels_of_theory: Optional[Mapping[str, LevelOfTheory]] = Field(
         None,
         description="Levels of theory types for all the calculations that make up this molecule",
     )
-    solvents: Mapping[str, str] = Field(
+    solvents: Optional[Mapping[str, str]] = Field(
         None,
         description="Solvents (solvent parameters) for all the calculations that make up this molecule",
     )
-    lot_solvents: Mapping[str, str] = Field(
+    lot_solvents: Optional[Mapping[str, str]] = Field(
         None,
         description="Combinations of level of theory and solvent for all calculations that make up this molecule",
     )
 
-    unique_calc_types: List[CalcType] = Field(
+    unique_calc_types: Optional[List[CalcType]] = Field(
         None,
         description="Collection of all unique calculation types used for this molecule",
     )
 
-    unique_task_types: List[TaskType] = Field(
+    unique_task_types: Optional[List[TaskType]] = Field(
         None,
         description="Collection of all unique task types used for this molecule",
     )
 
-    unique_levels_of_theory: List[LevelOfTheory] = Field(
+    unique_levels_of_theory: Optional[List[LevelOfTheory]] = Field(
         None,
         description="Collection of all unique levels of theory used for this molecule",
     )
 
-    unique_solvents: List[str] = Field(
+    unique_solvents: Optional[List[str]] = Field(
         None,
         description="Collection of all unique solvents (solvent parameters) used for this molecule",
     )
 
-    unique_lot_solvents: List[str] = Field(
+    unique_lot_solvents: Optional[List[str]] = Field(
         None,
         description="Collection of all unique combinations of level of theory and solvent used for this molecule",
     )
 
-    origins: List[PropertyOrigin] = Field(
+    origins: Optional[List[PropertyOrigin]] = Field(
         None,
         description="List of property origins for tracking the provenance of properties",
     )
 
-    entries: List[Dict[str, Any]] = Field(
+    entries: Optional[List[Dict[str, Any]]] = Field(
         None,
         description="Dictionary representations of all task documents for this molecule",
     )
 
-    best_entries: Mapping[str, Dict[str, Any]] = Field(
+    best_entries: Optional[Mapping[str, Dict[str, Any]]] = Field(
         None,
         description="Mapping for tracking the best entries at each level of theory (+ solvent) for Q-Chem calculations",
     )
 
-    constituent_molecules: List[MPculeID] = Field(
+    constituent_molecules: Optional[List[MPculeID]] = Field(
         None,
         description="For cases where data from multiple MoleculeDocs have been compiled, a list of "
         "MPculeIDs of documents used to construct this document",
     )
 
-    similar_molecules: List[MPculeID] = Field(
+    similar_molecules: Optional[List[MPculeID]] = Field(
         None,
         description="List of MPculeIDs with of molecules similar (by e.g. structure) to this one",
     )
@@ -399,21 +388,16 @@ class MoleculeDoc(CoreMoleculeDoc):
         for entry in entries:
             entry["entry_id"] = molecule_id
 
-        species_hash = get_graph_hash(molecule, "specie")
-        coord_hash = get_graph_hash(molecule, "coords")
-
         ad = BabelMolAdaptor(molecule)
         openbabel.StereoFrom3D(ad.openbabel_mol)
 
-        inchi = ad.pybel_mol.write("inchi").strip()
-        inchikey = ad.pybel_mol.write("inchikey").strip()
+        inchi = ad.pybel_mol.write("inchi").strip()  # type: ignore[attr-defined]
+        inchikey = ad.pybel_mol.write("inchikey").strip()  # type: ignore[attr-defined]
 
         return cls.from_molecule(
             molecule=molecule,
             molecule_id=molecule_id,
             species=species,
-            species_hash=species_hash,
-            coord_hash=coord_hash,
             inchi=inchi,
             inchi_key=inchikey,
             initial_molecules=initial_molecules,
@@ -478,21 +462,16 @@ class MoleculeDoc(CoreMoleculeDoc):
         # Molecule ID
         molecule_id = get_molecule_id(molecule, "coords")
 
-        species_hash = get_graph_hash(molecule, "specie")
-        coord_hash = get_graph_hash(molecule, "coords")
-
         ad = BabelMolAdaptor(molecule)
         openbabel.StereoFrom3D(ad.openbabel_mol)
 
-        inchi = ad.pybel_mol.write("inchi").strip()
-        inchikey = ad.pybel_mol.write("inchikey").strip()
+        inchi = ad.pybel_mol.write("inchi").strip()  # type: ignore[attr-defined]
+        inchikey = ad.pybel_mol.write("inchikey").strip()  # type: ignore[attr-defined]
 
         return cls.from_molecule(
             molecule=molecule,
             molecule_id=molecule_id,
             species=species,
-            species_hash=species_hash,
-            coord_hash=coord_hash,
             inchi=inchi,
             inchi_key=inchikey,
             last_updated=last_updated,
@@ -532,7 +511,7 @@ def best_lot(
     """
 
     sorted_lots = sorted(
-        mol_doc.best_entries.keys(),
+        mol_doc.best_entries.keys(),  # type: ignore
         key=lambda x: evaluate_lot(x, funct_scores, basis_scores, solvent_scores),
     )
 

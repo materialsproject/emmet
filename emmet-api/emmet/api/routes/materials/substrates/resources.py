@@ -1,7 +1,6 @@
 from maggma.api.query_operator import (
     NumericQuery,
     PaginationQuery,
-    SortQuery,
     SparseFieldsQuery,
     StringQueryOperator,
 )
@@ -25,14 +24,12 @@ def substrates_resource(substrates_store):
             StringQueryOperator(
                 model=SubstratesDoc, excluded_fields=["film_orient", "orient"]
             ),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(SubstratesDoc, default_fields=["film_id", "sub_id"]),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Substrates"],
         sub_path="/substrates/",
-        enable_get_by_key=False,
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,
     )

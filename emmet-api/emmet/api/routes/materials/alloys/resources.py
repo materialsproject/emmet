@@ -1,6 +1,6 @@
 from maggma.api.resource import ReadOnlyResource
 
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 
 from emmet.core.alloys import AlloyPairDoc
 
@@ -18,7 +18,6 @@ def alloy_pairs_resource(alloy_pairs_store):
         query_operators=[
             MaterialIDsSearchQuery(),
             FormulaSearchQuery(),
-            SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 AlloyPairDoc,
