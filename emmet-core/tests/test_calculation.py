@@ -175,8 +175,8 @@ def test_calculation_run_type_metagga(test_dir):
         outcar_file="OUTCAR.gz",
         contcar_file="CONTCAR.gz",
     )
-    assert "R2SCAN" in repr(calc_input.run_type)
-    assert "R2SCAN" in repr(calc_input.calc_type)
+    assert "r2SCAN" in repr(calc_input.run_type)
+    assert "r2SCAN" in repr(calc_input.calc_type)
 
 
 def test_PotcarSpec(test_dir):
