@@ -152,7 +152,7 @@ class CalculationOutput(BaseModel):
     @classmethod
     def from_directory(
         cls,
-        dir_name: Path | str,
+        dir_name: Union[Path, str],
         state_file_name: str,
         traj_file_name: str,
         elapsed_time: Optional[float] = None,
@@ -243,7 +243,7 @@ class OpenMMTaskDocument(MDTaskDocument):
         "task document.",
     )
 
-    interchange_meta: Optional[list[MoleculeSpec] | Structure | str] = Field(
+    interchange_meta: Optional[Union[list[MoleculeSpec], Structure, str]] = Field(
         None,
         title="Interchange meta data",
         description="Metadata for the interchange",
