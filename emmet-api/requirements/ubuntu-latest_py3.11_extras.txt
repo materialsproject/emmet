@@ -305,7 +305,7 @@ pyflakes==3.2.0
     # via flake8
 pygments==2.18.0
     # via mkdocs-material
-pymatgen==2024.9.17
+pymatgen==2024.9.17.1
     # via
     #   emmet-core
     #   mp-pyrho
@@ -319,7 +319,7 @@ pymdown-extensions==10.9
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.8.0
+pymongo==4.9
     # via maggma
 pynacl==1.5.0
     # via paramiko
@@ -441,7 +441,7 @@ urllib3==2.2.3
     #   types-requests
 uvicorn==0.30.6
     # via maggma
-virtualenv==20.26.4
+virtualenv==20.26.5
     # via pre-commit
 watchdog==5.0.2
     # via mkdocs
