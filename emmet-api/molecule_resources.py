@@ -30,7 +30,10 @@ from emmet.api.routes.legacy.jcesr.resources import jcesr_resource
 resources = {}
 
 default_settings = MAPISettings()
-db_uri = os.environ.get("MPMOLECULES_MONGO_HOST", None)
+
+db_uri = os.environ.get("MPCONTRIBS_MONGO_HOST", None)
+db_version = default_settings.DB_VERSION
+db_suffix = os.environ["MAPI_DB_NAME_SUFFIX"]
 
 if db_uri:
     # allow db_uri to be set with a different protocol scheme
