@@ -17,9 +17,9 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.21
+boto3==1.35.22
     # via maggma
-botocore==1.35.21
+botocore==1.35.22
     # via
     #   boto3
     #   s3transfer
@@ -228,7 +228,7 @@ pymatgen-analysis-alloys==0.0.6
     # via emmet-core
 pymatgen-analysis-diffusion==2023.8.15
     # via emmet-core
-pymongo==4.9
+pymongo==4.9.1
     # via
     #   maggma
     #   matminer
@@ -321,7 +321,7 @@ sshtunnel==0.4.0
     # via maggma
 statsmodels==0.14.3
     # via solvation-analysis
-sympy==1.13.2
+sympy==1.13.3
     # via
     #   matminer
     #   pymatgen
