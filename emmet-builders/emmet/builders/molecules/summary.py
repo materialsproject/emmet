@@ -36,7 +36,6 @@ class SummaryBuilder(Builder):
         charges: Store,
         spins: Store,
         bonds: Store,
-        multipoles: Store,
         metal_binding: Store,
         orbitals: Store,
         redox: Store,
@@ -51,7 +50,6 @@ class SummaryBuilder(Builder):
         self.charges = charges
         self.spins = spins
         self.bonds = bonds
-        self.multipoles = multipoles
         self.metal_binding = metal_binding
         self.orbitals = orbitals
         self.redox = redox
@@ -68,7 +66,6 @@ class SummaryBuilder(Builder):
                 charges,
                 spins,
                 bonds,
-                multipoles,
                 metal_binding,
                 orbitals,
                 redox,
@@ -84,7 +81,6 @@ class SummaryBuilder(Builder):
         #     self.charges,
         #     self.spins,
         #     self.bonds,
-        #     self.multipoles,
         #     self.metal_binding,
         #     self.orbitals,
         #     self.redox,
@@ -107,7 +103,6 @@ class SummaryBuilder(Builder):
         self.molecules.ensure_index("last_updated")
         self.molecules.ensure_index("task_ids")
         self.molecules.ensure_index("formula_alphabetical")
-        self.molecules.ensure_index("species_hash")
 
         # Search index for charges
         self.charges.ensure_index("molecule_id")
@@ -138,15 +133,6 @@ class SummaryBuilder(Builder):
         self.bonds.ensure_index("property_id")
         self.bonds.ensure_index("last_updated")
         self.bonds.ensure_index("formula_alphabetical")
-
-        # Search index for multipoles
-        self.multipoles.ensure_index("molecule_id")
-        self.multipoles.ensure_index("task_id")
-        self.multipoles.ensure_index("solvent")
-        self.multipoles.ensure_index("lot_solvent")
-        self.multipoles.ensure_index("property_id")
-        self.multipoles.ensure_index("last_updated")
-        self.multipoles.ensure_index("formula_alphabetical")
 
         # Search index for metal_binding
         self.metal_binding.ensure_index("molecule_id")
@@ -206,23 +192,23 @@ class SummaryBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(temp_query, [self.molecules.key, "species_hash"])
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
         )
 
         processed_docs = set([e for e in self.summary.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_hashes = {
-            d["species_hash"]
+        to_process_forms = {
+            d["formula_alphabetical"]
             for d in all_mols
             if d[self.molecules.key] in to_process_docs
         }
 
-        N = ceil(len(to_process_hashes) / number_splits)
+        N = ceil(len(to_process_forms) / number_splits)
 
-        for hash_chunk in grouper(to_process_hashes, N):
-            query = dict(temp_query)
-            query["species_hash"] = {"$in": list(hash_chunk)}
-            yield {"query": query}
+        for formula_chunk in grouper(to_process_forms, N):
+            yield {"query": {"formula_alphabetical": {"$in": list(formula_chunk)}}}
 
     def get_items(self) -> Iterator[List[Dict]]:
         """
@@ -247,26 +233,28 @@ class SummaryBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(temp_query, [self.molecules.key, "species_hash"])
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
         )
 
         processed_docs = set([e for e in self.summary.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_hashes = {
-            d["species_hash"]
+        to_process_forms = {
+            d["formula_alphabetical"]
             for d in all_mols
             if d[self.molecules.key] in to_process_docs
         }
 
         self.logger.info(f"Found {len(to_process_docs)} unprocessed documents")
-        self.logger.info(f"Found {len(to_process_hashes)} unprocessed hashes")
+        self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
 
         # Set total for builder bars to have a total
-        self.total = len(to_process_hashes)
+        self.total = len(to_process_forms)
 
-        for shash in to_process_hashes:
+        for formula in to_process_forms:
             mol_query = dict(temp_query)
-            mol_query["species_hash"] = shash
+            mol_query["formula_alphabetical"] = formula
             molecules = list(self.molecules.query(criteria=mol_query))
 
             yield molecules
@@ -304,12 +292,12 @@ class SummaryBuilder(Builder):
                     else:
                         grouped[solvent][method] = doc
 
-            return grouped
+            return (grouped, by_method)
 
         mols = items
-        shash = mols[0]["species_hash"]
+        formula = mols[0]["formula_alphabetical"]
         mol_ids = [m["molecule_id"] for m in mols]
-        self.logger.debug(f"Processing {shash} : {mol_ids}")
+        self.logger.debug(f"Processing {formula} : {mol_ids}")
 
         summary_docs = list()
 
@@ -329,9 +317,6 @@ class SummaryBuilder(Builder):
                 ),
                 "metal_binding": _group_docs(
                     list(self.metal_binding.query({"molecule_id": mol_id})), True
-                ),
-                "multipole_moments": _group_docs(
-                    list(self.multipoles.query({"molecule_id": mol_id})), False
                 ),
                 "orbitals": _group_docs(
                     list(self.orbitals.query({"molecule_id": mol_id})), False
@@ -363,7 +348,7 @@ class SummaryBuilder(Builder):
             summary_doc = MoleculeSummaryDoc.from_docs(molecule_id=mol_id, docs=d)
             summary_docs.append(summary_doc)
 
-        self.logger.debug(f"Produced {len(summary_docs)} summary docs for {shash}")
+        self.logger.debug(f"Produced {len(summary_docs)} summary docs for {formula}")
 
         return jsanitize([doc.model_dump() for doc in summary_docs], allow_bson=True)
 

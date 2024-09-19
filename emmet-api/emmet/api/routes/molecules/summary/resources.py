@@ -9,7 +9,7 @@ from maggma.api.resource import ReadOnlyResource
 from emmet.api.routes.molecules.molecules.query_operators import (
     FormulaQuery,
     ChemsysQuery,
-    CompositionElementsQuery,
+    ElementsQuery,
     ChargeSpinQuery,
     HashQuery,
     StringRepQuery,
@@ -31,7 +31,7 @@ def summary_resource(summary_store):
             MPculeIDsSearchQuery(),
             FormulaQuery(),
             ChemsysQuery(),
-            CompositionElementsQuery(),
+            ElementsQuery(),
             HasPropsQuery(),
             ChargeSpinQuery(),
             StringRepQuery(),
@@ -41,6 +41,10 @@ def summary_resource(summary_store):
                 model=MoleculeSummaryDoc,
                 fields=[
                     "nelements",
+                    "ionization_energy",
+                    "electron_affinity",
+                    "reduction_free_energy",
+                    "oxidation_free_energy",
                 ],
             ),
             SparseFieldsQuery(MoleculeSummaryDoc, default_fields=["molecule_id"]),

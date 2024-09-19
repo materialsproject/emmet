@@ -13,7 +13,7 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     ExactCalcMethodQuery,
     FormulaQuery,
     ChemsysQuery,
-    CompositionElementsQuery,
+    ElementsQuery,
     ChargeSpinQuery,
 )
 from emmet.api.routes.molecules.utils import MultiPropertyIDQuery
@@ -30,7 +30,7 @@ def redox_resource(redox_store):
             ExactCalcMethodQuery(),
             FormulaQuery(),
             ChemsysQuery(),
-            CompositionElementsQuery(),
+            ElementsQuery(),
             ChargeSpinQuery(),
             MultiPropertyIDQuery(),
             RedoxPotentialQuery(),

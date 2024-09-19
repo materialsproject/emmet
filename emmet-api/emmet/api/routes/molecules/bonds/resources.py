@@ -11,7 +11,7 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     ExactCalcMethodQuery,
     FormulaQuery,
     ChemsysQuery,
-    CompositionElementsQuery,
+    ElementsQuery,
     ChargeSpinQuery,
 )
 from emmet.api.routes.molecules.utils import MethodQuery, MultiPropertyIDQuery
@@ -28,7 +28,7 @@ def bonding_resource(bonds_store):
             ExactCalcMethodQuery(),
             FormulaQuery(),
             ChemsysQuery(),
-            CompositionElementsQuery(),
+            ElementsQuery(),
             ChargeSpinQuery(),
             MethodQuery(),
             MultiPropertyIDQuery(),

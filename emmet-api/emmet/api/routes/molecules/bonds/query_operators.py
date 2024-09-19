@@ -14,11 +14,11 @@ class BondTypeLengthQuery(QueryOperator):
         bond_type: Optional[str] = Query(
             None, description="Bond type of interest; e.g. C-O for carbon-oxygen bonds."
         ),
-        bond_length_max: Optional[float] = Query(
+        max_bond_length: Optional[float] = Query(
             None,
             description="Maximum value for the bond lengths in the molecule.",
         ),
-        bond_length_min: Optional[float] = Query(
+        min_bond_length: Optional[float] = Query(
             None,
             description="Minimum value for the bond lengths in the molecule.",
         ),
@@ -39,10 +39,10 @@ class BondTypeLengthQuery(QueryOperator):
             key: dict()  # type: ignore
         }  # type: ignore
 
-        if bond_length_max is not None:
-            crit[key]["$lte"] = bond_length_max
-        if bond_length_min is not None:
-            crit[key]["$gte"] = bond_length_min
+        if max_bond_length is not None:
+            crit[key]["$lte"] = max_bond_length
+        if min_bond_length is not None:
+            crit[key]["$gte"] = min_bond_length
 
         # If no max or min, just make sure bond type exists
         if len(crit[key]) == 0:
