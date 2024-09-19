@@ -102,6 +102,3 @@ def test_partial_spins(open_shell):
         for i in range(11)
     ]
     assert psd.partial_spins == spins
-
-    # Sanity check - do properties have hashes
-    assert psd.species_hash is not None

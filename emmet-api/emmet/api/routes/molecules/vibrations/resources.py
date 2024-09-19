@@ -8,7 +8,7 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     ExactCalcMethodQuery,
     FormulaQuery,
     ChemsysQuery,
-    CompositionElementsQuery,
+    ElementsQuery,
     ChargeSpinQuery,
 )
 from emmet.api.routes.molecules.utils import MultiPropertyIDQuery
@@ -25,7 +25,7 @@ def vibration_resource(vibes_store):
             ExactCalcMethodQuery(),
             FormulaQuery(),
             ChemsysQuery(),
-            CompositionElementsQuery(),
+            ElementsQuery(),
             ChargeSpinQuery(),
             MultiPropertyIDQuery(),
             PaginationQuery(),

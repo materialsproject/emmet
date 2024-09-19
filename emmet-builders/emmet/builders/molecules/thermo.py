@@ -84,7 +84,7 @@ class ThermoBuilder(Builder):
     single-point energy corrections.
 
     Before any documents are constructed, the following steps are taken:
-        1. Gather MoleculeDocs by species hash
+        1. Gather MoleculeDocs by formula
         2. For each doc, identify tasks with thermodynamic information such as
             zero-point energy, enthalpy, and entropy. Collect these "documents
              including complete thermodynamics" (DICTs).
@@ -148,14 +148,12 @@ class ThermoBuilder(Builder):
         self.tasks.ensure_index("last_updated")
         self.tasks.ensure_index("state")
         self.tasks.ensure_index("formula_alphabetical")
-        self.tasks.ensure_index("species_hash")
 
         # Search index for molecules
         self.molecules.ensure_index("molecule_id")
         self.molecules.ensure_index("last_updated")
         self.molecules.ensure_index("task_ids")
         self.molecules.ensure_index("formula_alphabetical")
-        self.molecules.ensure_index("species_hash")
 
         # Search index for thermo
         self.thermo.ensure_index("molecule_id")
@@ -174,23 +172,23 @@ class ThermoBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(temp_query, [self.molecules.key, "species_hash"])
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
         )
 
         processed_docs = set([e for e in self.thermo.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_hashes = {
-            d["species_hash"]
+        to_process_forms = {
+            d["formula_alphabetical"]
             for d in all_mols
             if d[self.molecules.key] in to_process_docs
         }
 
-        N = ceil(len(to_process_hashes) / number_splits)
+        N = ceil(len(to_process_forms) / number_splits)
 
-        for hash_chunk in grouper(to_process_hashes, N):
-            query = dict(temp_query)
-            query["species_hash"] = {"$in": list(hash_chunk)}
-            yield {"query": query}
+        for formula_chunk in grouper(to_process_forms, N):
+            yield {"query": {"formula_alphabetical": {"$in": list(formula_chunk)}}}
 
     def get_items(self) -> Iterator[List[Dict]]:
         """
@@ -215,26 +213,28 @@ class ThermoBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(temp_query, [self.molecules.key, "species_hash"])
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
         )
 
         processed_docs = set([e for e in self.thermo.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_hashes = {
-            d["species_hash"]
+        to_process_forms = {
+            d["formula_alphabetical"]
             for d in all_mols
             if d[self.molecules.key] in to_process_docs
         }
 
         self.logger.info(f"Found {len(to_process_docs)} unprocessed documents")
-        self.logger.info(f"Found {len(to_process_hashes)} unprocessed hashes")
+        self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
 
         # Set total for builder bars to have a total
-        self.total = len(to_process_hashes)
+        self.total = len(to_process_forms)
 
-        for shash in to_process_hashes:
+        for formula in to_process_forms:
             mol_query = dict(temp_query)
-            mol_query["species_hash"] = shash
+            mol_query["formula_alphabetical"] = formula
             molecules = list(self.molecules.query(criteria=mol_query))
 
             yield molecules
@@ -273,9 +273,9 @@ class ThermoBuilder(Builder):
             return doc
 
         mols = [MoleculeDoc(**item) for item in items]
-        shash = mols[0].species_hash
+        formula = mols[0].formula_alphabetical
         mol_ids = [m.molecule_id for m in mols]
-        self.logger.debug(f"Processing {shash} : {mol_ids}")
+        self.logger.debug(f"Processing {formula} : {mol_ids}")
 
         thermo_docs = list()
 
@@ -334,7 +334,7 @@ class ThermoBuilder(Builder):
                 tdoc = self.tasks.query_one(
                     {
                         "task_id": task,
-                        "species_hash": shash,
+                        "formula_alphabetical": formula,
                         "orig": {"$exists": True},
                     }
                 )
@@ -344,7 +344,7 @@ class ThermoBuilder(Builder):
                         tdoc = self.tasks.query_one(
                             {
                                 "task_id": int(task),
-                                "species_hash": shash,
+                                "formula_alphabetical": formula,
                                 "orig": {"$exists": True},
                             }
                         )
@@ -465,7 +465,7 @@ class ThermoBuilder(Builder):
                     sorted(with_eval_e, key=lambda x: (x[1], x[2]))[0][0]
                 )
 
-        self.logger.debug(f"Produced {len(thermo_docs)} thermo docs for {shash}")
+        self.logger.debug(f"Produced {len(thermo_docs)} thermo docs for {formula}")
 
         return jsanitize([doc.model_dump() for doc in thermo_docs], allow_bson=True)
 

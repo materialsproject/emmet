@@ -8,7 +8,7 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     ExactCalcMethodQuery,
     FormulaQuery,
     ChemsysQuery,
-    CompositionElementsQuery,
+    ElementsQuery,
     ChargeSpinQuery,
 )
 from emmet.api.routes.molecules.metal_binding.query_operators import BindingDataQuery
@@ -26,7 +26,7 @@ def metal_binding_resource(metal_binding_store):
             ExactCalcMethodQuery(),
             FormulaQuery(),
             ChemsysQuery(),
-            CompositionElementsQuery(),
+            ElementsQuery(),
             ChargeSpinQuery(),
             MethodQuery(),
             BindingDataQuery(),

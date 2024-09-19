@@ -93,7 +93,6 @@ class DeprecationQuery(QueryOperator):
         return d
 
 
-# TODO: test!
 class TrajectoryQuery(QueryOperator):
     """
     Method to generate a query on calculation trajectory data from task documents
