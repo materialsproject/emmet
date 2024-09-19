@@ -140,4 +140,5 @@ TASK_TYPES:
   - Deformation
   - Optic
   - Molecular Dynamics
+  - GW Band Structure
   - Unrecognized
