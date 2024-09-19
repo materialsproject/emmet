@@ -28,9 +28,9 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.21
+boto3==1.35.22
     # via maggma
-botocore==1.35.21
+botocore==1.35.22
     # via
     #   boto3
     #   s3transfer
@@ -78,7 +78,7 @@ dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.2rc7
+emmet-core==0.84.2rc9
     # via mp-api
 fasteners==0.19
     # via mdanalysis
@@ -473,7 +473,7 @@ pymdown-extensions==10.9
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.9
+pymongo==4.9.1
     # via
     #   maggma
     #   matminer
@@ -593,7 +593,7 @@ sshtunnel==0.4.0
     # via maggma
 statsmodels==0.14.3
     # via solvation-analysis
-sympy==1.13.2
+sympy==1.13.3
     # via
     #   matminer
     #   pymatgen
