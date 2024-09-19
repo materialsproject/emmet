@@ -13,7 +13,7 @@ __author__ = (
     "Evan Spotte-Smith <ewcspottesmith@lbl.gov>, Rishabh Debraj Guha <rdguha@lbl.gov>"
 )
 
-
+# TODO: better way of translating names
 functional_synonyms = {
     "b97mv": "b97m-v",
     "b97mrv": "b97m-rv",
@@ -60,6 +60,7 @@ def level_of_theory(parameters: CalculationInput) -> LevelOfTheory:
 
     basis_lower = basis_raw.lower()
 
+    # --> TODO: replace with enums
     functional = [f for f in FUNCTIONALS if f.lower() == funct_lower]
     if not functional:
         raise ValueError(f"Unexpected functional {funct_lower}!")
@@ -69,6 +70,7 @@ def level_of_theory(parameters: CalculationInput) -> LevelOfTheory:
     basis = [b for b in BASIS_SETS if b.lower() == basis_lower]
     if not basis:
         raise ValueError(f"Unexpected basis set {basis_lower}!")
+    # <--
 
     basis = basis[0]
 
