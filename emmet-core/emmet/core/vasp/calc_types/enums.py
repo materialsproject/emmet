@@ -100,7 +100,7 @@ class TaskType(ValueEnum):
     Unrecognized = "Unrecognized"
 
 
-class CalcType(ValueEnum):
+class CalcType(IgnoreCaseEnum):
     """VASP calculation types."""
 
     AM05_DFPT = "AM05 DFPT"
