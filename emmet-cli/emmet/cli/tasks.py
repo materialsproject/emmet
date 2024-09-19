@@ -98,7 +98,7 @@ def make_comment(ctx, txt):
 )
 @click.option("--tar", is_flag=True, help="tar blocks after backup and clean")
 @click.pass_context
-def backups(ctx, clean, tar):
+def backups(ctx, clean, exhaustive, tar):
     """Scan root directory and submit separate backup jobs for subdirectories containing blocks"""
     ctx.parent.params["nmax"] = sys.maxsize  # disable maximum launchers for backup
     subdir_block_launchers = defaultdict(lambda: defaultdict(list))
@@ -626,6 +626,7 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
     target = ctx.obj["CLIENT"]
     snl_collection = target.db.snls_user
     collection_count = target.collection.estimated_document_count()
+    logger.info(f"Database: {target.collection.database.name}, Collection: {target.collection.name}")
     logger.info(
         f"Connected to {target.collection.full_name} with {collection_count} tasks."
     )

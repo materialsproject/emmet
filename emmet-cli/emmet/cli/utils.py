@@ -4,7 +4,7 @@ import multiprocessing
 import os
 import shutil
 import stat
-from collections import defaultdict
+from collections import abc, defaultdict
 from enum import Enum
 from fnmatch import fnmatch
 from glob import glob
@@ -17,16 +17,15 @@ from dotty_dict import dotty
 from fireworks.fw_config import FW_BLOCK_FORMAT
 from mongogrant.client import Client
 from pymatgen.core import Structure
+from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 from pymatgen.util.provenance import StructureNL
 from pymongo.errors import DocumentTooLarge
-from emmet.core.tasks import TaskDoc
-from emmet.core.utils import utcnow
-from emmet.core.vasp.validation import ValidationDoc
-from emmet.cli.db import TaskStore
-from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 
 from emmet.cli import SETTINGS
-from emmet.core.utils import group_structures
+from emmet.cli.db import TaskStore
+from emmet.core.tasks import TaskDoc
+from emmet.core.utils import group_structures, jsanitize, utcnow
+from emmet.core.vasp.validation import ValidationDoc
 
 logger = logging.getLogger("emmet")
 perms = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP
@@ -34,6 +33,35 @@ perms = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP
 
 class EmmetCliError(Exception):
     pass
+
+
+def recurse_list(seq):
+    for item in seq:
+        if isinstance(item, abc.Mapping):
+            recurse_dict(item)
+        elif isinstance(item, list):
+            recurse_list(item)
+
+
+def recurse_dict(nested):
+    for key, value in nested.items():
+        if isinstance(value, abc.Mapping):
+            if not value:
+                nested[key] = None
+            else:
+                recurse_dict(value)
+        elif isinstance(value, str):
+            if value == "None" or value == "":
+                nested[key] = None
+        elif isinstance(value, list):
+            if len(value) == 0:
+                nested[key] = None
+            else:
+                recurse_list(value)
+
+
+def scrub_dict(entry):
+    recurse_dict(entry)
 
 
 class ReturnCodes(Enum):
@@ -437,7 +465,12 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                 additional_fields=additional_fields,
                 volumetric_files=ctx.params["store_volumetric_data"],
                 task_names=ctx.params["runs"],
+                store_additional_json=False,
             )
+
+            task_doc.tags.append(tag)
+            task_doc.batch_id = tag
+
         except Exception as ex:
             logger.error(f"Failed to build a TaskDoc from {vaspdir}: {ex}")
             continue
@@ -511,7 +544,21 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                 # return count  # TODO remove
 
                 try:
-                    target.insert_task(task_doc.model_dump(), use_gridfs=True)
+                    td = jsanitize(
+                        task_doc.model_dump(
+                            include=set(TaskDoc.model_fields),
+                            exclude={
+                                "additional_json",
+                                "builder_meta",
+                                "custodian",
+                                "entry",
+                            },
+                        )
+                    )
+
+                    scrub_dict(td)
+                    target.insert(td)
+
                 except EndpointConnectionError as exc:
                     logger.error(f"Connection failed for {task_id}: {exc}")
                     continue
@@ -530,7 +577,20 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                         logger.warning(f"{name} Remove {k} and retry ...")
                         output.pop(k)
                         try:
-                            target.insert_task(task_doc, use_gridfs=True)
+                            td = jsanitize(
+                                task_doc.model_dump(
+                                    include=set(TaskDoc.model_fields),
+                                    exclude={
+                                        "additional_json",
+                                        "builder_meta",
+                                        "custodian",
+                                        "entry",
+                                    },
+                                )
+                            )
+
+                            scrub_dict(td)
+                            target.insert(td)
                             break
                         except DocumentTooLarge:
                             continue
