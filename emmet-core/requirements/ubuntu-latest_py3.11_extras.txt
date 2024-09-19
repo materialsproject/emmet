@@ -28,9 +28,9 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.22
+boto3==1.35.23
     # via maggma
-botocore==1.35.22
+botocore==1.35.23
     # via
     #   boto3
     #   s3transfer
@@ -78,7 +78,7 @@ dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.2rc9
+emmet-core==0.84.2rc10
     # via mp-api
 fasteners==0.19
     # via mdanalysis
