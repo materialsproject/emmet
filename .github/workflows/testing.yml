@@ -40,7 +40,7 @@ jobs:
         shell: bash -l {0}
         run: |
           set -e
-          if [[ "${{ steps.enums.outputs.count }}" != "0" || "${{ steps.enums.outputs.files }}" != "0" ]]; then
+          if [[ "${{ steps.enums.outputs.count }}" != "" || "${{ steps.enums.outputs.files }}" != "0" ]]; then
             git config user.name github-actions
             git config user.email github-actions@github.com
             git add emmet-core/emmet/core/*/calc_types/enums.py
