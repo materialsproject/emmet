@@ -554,6 +554,7 @@ def level_of_theory(
         raise ValueError(f"Unexpected implicit solvent method {solvent_method}!")
 
     if validate_lot:
+        # --> TODO: replace with enums
         functional = [f for f in FUNCTIONALS if f.lower() == funct_lower]
         if not functional:
             raise ValueError(f"Unexpected functional {funct_lower}!")
@@ -565,6 +566,7 @@ def level_of_theory(
             raise ValueError(f"Unexpected basis set {basis_lower}!")
 
         basis = basis[0]
+        # <--
 
         lot = f"{functional}/{basis}/{solvation}"
 
