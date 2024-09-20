@@ -13,9 +13,8 @@ from openmm.app import Simulation
 from openmm.app.pdbfile import PDBFile
 from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
 from pydantic import BaseModel, Field
-from pymatgen.core import Structure
 
-from emmet.core.openff import MoleculeSpec, MDTaskDocument  # type: ignore[import-untyped]
+from emmet.core.openff import MDTaskDocument  # type: ignore[import-untyped]
 from emmet.core.openff.tasks import CompressedStr  # type: ignore[import-untyped]
 
 
