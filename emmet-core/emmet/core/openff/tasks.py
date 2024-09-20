@@ -17,6 +17,7 @@ from pydantic import (
 )
 from monty.json import MSONable
 
+from pymatgen.core import Structure
 from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
 
 
@@ -83,8 +84,17 @@ class MDTaskDocument(BaseModel, extra="allow"):  # type: ignore[call-arg]
         None, description="An interchange object serialized to json."
     )
 
-    interchange_meta: Optional[list[MoleculeSpec]] = Field(
-        None, description="Molecules within the system."
+    mol_specs: Optional[list[MoleculeSpec]] = Field(
+        None,
+        description="Molecules within the system. Only makes sense "
+        "for molecular systems.",
+    )
+
+    structure: Optional[Structure] = Field(
+        None,
+        title="Structure",
+        description="The final structure for the simulation. Saved only "
+        "if specified by job.",
     )
 
     force_field: Optional[str] = Field(None, description="The classical MD forcefield.")
@@ -103,6 +113,6 @@ class MDTaskDocument(BaseModel, extra="allow"):  # type: ignore[call-arg]
 class ClassicalMDTaskDocument(MDTaskDocument):
     """Definition of the OpenMM task document."""
 
-    interchange_meta: Optional[list[MoleculeSpec]] = Field(
+    mol_specs: Optional[list[MoleculeSpec]] = Field(
         None, description="Molecules within the system."
     )
