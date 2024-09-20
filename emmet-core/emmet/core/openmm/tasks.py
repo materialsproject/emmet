@@ -243,12 +243,6 @@ class OpenMMTaskDocument(MDTaskDocument):
         "task document.",
     )
 
-    interchange_meta: Optional[Union[list[MoleculeSpec], Structure, str]] = Field(
-        None,
-        title="Interchange meta data",
-        description="Metadata for the interchange",
-    )
-
 
 class OpenMMInterchange(BaseModel):
     """An object to sit in the place of the Interchance object
