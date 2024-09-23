@@ -627,7 +627,9 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
     snl_collection = storage_gateway.db.snls_user
     collection_count = storage_gateway._coll.estimated_document_count()
 
-    logger.info(f"Connected to {storage_gateway._coll} with {collection_count} tasks.")
+    logger.info(
+        f"Connected to {storage_gateway._coll.full_name} with {collection_count} tasks."
+    )
     ensure_indexes(
         ["task_id", "tags", "dir_name", "batch_id"],
         [storage_gateway._coll],
