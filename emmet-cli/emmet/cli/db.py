@@ -32,7 +32,7 @@ class StorageGateway:
         object_store_auth={},
     ) -> None:
         mongo_uri = f"{protocol}://{username}:{password}@{host}"
-        self.client = pymongo.MongoClient(mongo_uri, authSource=authSource)
+        self.client = pymongo.MongoClient(mongo_uri, authSource=authSource or database)
         self.db = self.client[database]
         self._coll = self.db[collection]
 

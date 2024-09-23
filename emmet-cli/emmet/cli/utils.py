@@ -492,19 +492,18 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                     logger.warning(f"Removed previously parsed task {task_id}!")
 
                 try:
-                    td = scrub_dict(
-                        jsanitize(
-                            task_doc.model_dump(
-                                include=set(TaskDoc.model_fields),
-                                exclude={
-                                    "additional_json",
-                                    "builder_meta",
-                                    "custodian",
-                                    "entry",
-                                },
-                            )
+                    td = jsanitize(
+                        task_doc.model_dump(
+                            include=set(TaskDoc.model_fields),
+                            exclude={
+                                "additional_json",
+                                "builder_meta",
+                                "custodian",
+                                "entry",
+                            },
                         )
                     )
+                    scrub_dict(td)
                     storage_gateway.insert(td)
 
                 except EndpointConnectionError as exc:
@@ -525,19 +524,18 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                         logger.warning(f"{name} Remove {k} and retry ...")
                         output.pop(k)
                         try:
-                            td = scrub_dict(
-                                jsanitize(
-                                    task_doc.model_dump(
-                                        include=set(TaskDoc.model_fields),
-                                        exclude={
-                                            "additional_json",
-                                            "builder_meta",
-                                            "custodian",
-                                            "entry",
-                                        },
-                                    )
+                            td = jsanitize(
+                                task_doc.model_dump(
+                                    include=set(TaskDoc.model_fields),
+                                    exclude={
+                                        "additional_json",
+                                        "builder_meta",
+                                        "custodian",
+                                        "entry",
+                                    },
                                 )
                             )
+                            scrub_dict(td)
                             storage_gateway.insert(td)
                             break
                         except DocumentTooLarge:
