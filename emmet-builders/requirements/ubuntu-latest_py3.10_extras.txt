@@ -19,6 +19,7 @@ ase==3.23.0
     #   chgnet
     #   matcalc
     #   matgl
+    #   pymatgen-analysis-diffusion
 async-timeout==4.0.3
     # via aiohttp
 attrs==24.2.0
@@ -29,9 +30,9 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.23
+boto3==1.35.25
     # via maggma
-botocore==1.35.23
+botocore==1.35.25
     # via
     #   boto3
     #   s3transfer
@@ -47,7 +48,7 @@ cfgv==3.4.0
     # via pre-commit
 charset-normalizer==3.3.2
     # via requests
-chgnet==0.3.8
+chgnet==0.4.0
     # via emmet-core
 click==8.1.7
     # via
@@ -68,14 +69,16 @@ cycler==0.12.1
 cython==3.0.11
     # via chgnet
 dgl==2.1.0
-    # via matgl
+    # via
+    #   emmet-core
+    #   matgl
 distlib==0.3.8
     # via virtualenv
 dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
-emmet-core[all,ml]==0.84.1
+emmet-core[all,ml]==0.84.2
     # via
     #   emmet-builders (setup.py)
     #   mp-api
@@ -90,7 +93,7 @@ filelock==3.16.1
     #   virtualenv
 flake8==7.1.1
     # via emmet-builders (setup.py)
-fonttools==4.53.1
+fonttools==4.54.0
     # via matplotlib
 frozenlist==1.4.1
     # via
@@ -117,6 +120,8 @@ idna==3.10
     # via
     #   requests
     #   yarl
+imageio==2.35.1
+    # via scikit-image
 inflect==7.4.0
     # via robocrys
 iniconfig==2.0.0
@@ -151,6 +156,8 @@ kiwisolver==1.4.7
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
+lazy-loader==0.4
+    # via scikit-image
 lightning==2.4.0
     # via matgl
 lightning-utilities==0.11.7
@@ -191,6 +198,7 @@ matplotlib==3.9.2
     #   mdanalysis
     #   phonopy
     #   pymatgen
+    #   seaborn
     #   solvation-analysis
 mccabe==0.7.0
     # via flake8
@@ -255,6 +263,8 @@ more-itertools==10.5.0
     # via inflect
 mp-api==0.42.2
     # via robocrys
+mp-pyrho==0.4.4
+    # via pymatgen-analysis-defects
 mpmath==1.3.0
     # via sympy
 mrcfile==1.5.3
@@ -281,6 +291,7 @@ networkx==3.3
     #   dgl
     #   pymatgen
     #   robocrys
+    #   scikit-image
     #   torch
 nodeenv==1.9.1
     # via pre-commit
@@ -293,6 +304,7 @@ numpy==1.26.4
     #   emmet-core
     #   griddataformats
     #   h5py
+    #   imageio
     #   maggma
     #   matminer
     #   matplotlib
@@ -302,16 +314,21 @@ numpy==1.26.4
     #   patsy
     #   phonopy
     #   pymatgen
+    #   pymatgen-analysis-defects
+    #   pymatgen-analysis-diffusion
     #   rdkit
     #   robocrys
+    #   scikit-image
     #   scikit-learn
     #   scipy
+    #   seaborn
     #   seekpath
     #   shapely
     #   solvation-analysis
     #   spglib
     #   statsmodels
     #   tidynamics
+    #   tifffile
     #   torchmetrics
 nvidia-cublas-cu12==12.1.3.1
     # via
@@ -350,6 +367,7 @@ orjson==3.10.7
     # via maggma
 packaging==24.1
     # via
+    #   lazy-loader
     #   lightning
     #   lightning-utilities
     #   matplotlib
@@ -359,15 +377,17 @@ packaging==24.1
     #   plotly
     #   pytest
     #   pytorch-lightning
+    #   scikit-image
     #   statsmodels
     #   torchmetrics
 palettable==3.3.3
     # via pymatgen
-pandas==2.2.2
+pandas==2.2.3
     # via
     #   maggma
     #   matminer
     #   pymatgen
+    #   seaborn
     #   solvation-analysis
     #   statsmodels
 paramiko==3.5.0
@@ -380,8 +400,10 @@ phonopy==2.28.0
     # via matcalc
 pillow==10.4.0
     # via
+    #   imageio
     #   matplotlib
     #   rdkit
+    #   scikit-image
 platformdirs==4.3.6
     # via
     #   mkdocs-get-deps
@@ -430,7 +452,7 @@ pyflakes==3.2.0
     # via flake8
 pygments==2.18.0
     # via mkdocs-material
-pymatgen==2024.4.13
+pymatgen==2024.9.17.1
     # via
     #   chgnet
     #   emmet-core
@@ -438,14 +460,18 @@ pymatgen==2024.4.13
     #   matgl
     #   matminer
     #   mp-api
+    #   mp-pyrho
     #   pymatgen-analysis-alloys
+    #   pymatgen-analysis-defects
     #   pymatgen-analysis-diffusion
     #   robocrys
 pymatgen-analysis-alloys==0.0.6
     # via emmet-core
-pymatgen-analysis-diffusion==2023.8.15
+pymatgen-analysis-defects==2024.7.19
     # via emmet-core
-pymdown-extensions==10.9
+pymatgen-analysis-diffusion==2024.7.15
+    # via emmet-core
+pymdown-extensions==10.10.1
     # via
     #   mkdocs-material
     #   mkdocstrings
@@ -523,6 +549,8 @@ ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
 s3transfer==0.10.2
     # via boto3
+scikit-image==0.24.0
+    # via pymatgen-analysis-defects
 scikit-learn==1.5.2
     # via matminer
 scipy==1.14.1
@@ -533,9 +561,12 @@ scipy==1.14.1
     #   mdanalysis
     #   pymatgen
     #   robocrys
+    #   scikit-image
     #   scikit-learn
     #   solvation-analysis
     #   statsmodels
+seaborn==0.13.2
+    # via pymatgen-analysis-diffusion
 seekpath==2.1.0
     # via emmet-core
 sentinels==1.0.0
@@ -580,6 +611,8 @@ threadpoolctl==3.5.0
     #   scikit-learn
 tidynamics==1.1.2
     # via transport-analysis
+tifffile==2024.9.20
+    # via scikit-image
 tomli==2.0.1
     # via
     #   coverage
@@ -624,6 +657,7 @@ types-setuptools==75.1.0.20240917
     # via emmet-builders (setup.py)
 typing-extensions==4.12.2
     # via
+    #   chgnet
     #   emmet-core
     #   lightning
     #   lightning-utilities
@@ -636,7 +670,7 @@ typing-extensions==4.12.2
     #   pytorch-lightning
     #   torch
     #   typeguard
-tzdata==2024.1
+tzdata==2024.2
     # via pandas
 uncertainties==3.2.2
     # via pymatgen
@@ -656,7 +690,7 @@ wincertstore==0.2.1
     # via emmet-builders (setup.py)
 wrapt==1.16.0
     # via smart-open
-yarl==1.11.1
+yarl==1.12.1
     # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:

@@ -28,9 +28,9 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.23
+boto3==1.35.25
     # via maggma
-botocore==1.35.23
+botocore==1.35.25
     # via
     #   boto3
     #   s3transfer
@@ -78,7 +78,7 @@ dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.2rc10
+emmet-core==0.84.2
     # via mp-api
 fasteners==0.19
     # via mdanalysis
@@ -89,7 +89,7 @@ filelock==3.16.1
     #   virtualenv
 flake8==7.1.1
     # via emmet-core (setup.py)
-fonttools==4.53.1
+fonttools==4.54.0
     # via matplotlib
 frozenlist==1.4.1
     # via
@@ -374,7 +374,7 @@ packaging==24.1
     #   torchmetrics
 palettable==3.3.3
     # via pymatgen
-pandas==2.2.2
+pandas==2.2.3
     # via
     #   maggma
     #   matminer
@@ -469,7 +469,7 @@ pymatgen-analysis-defects==2024.7.19
     # via emmet-core (setup.py)
 pymatgen-analysis-diffusion==2024.7.15
     # via emmet-core (setup.py)
-pymdown-extensions==10.9
+pymdown-extensions==10.10.1
     # via
     #   mkdocs-material
     #   mkdocstrings
@@ -606,7 +606,7 @@ threadpoolctl==3.5.0
     # via
     #   mdanalysis
     #   scikit-learn
-tifffile==2024.8.30
+tifffile==2024.9.20
     # via scikit-image
 torch==2.4.1
     # via
@@ -658,7 +658,7 @@ typing-extensions==4.12.2
     #   pytorch-lightning
     #   torch
     #   typeguard
-tzdata==2024.1
+tzdata==2024.2
     # via pandas
 uncertainties==3.2.2
     # via pymatgen
@@ -678,7 +678,7 @@ wincertstore==0.2.1
     # via emmet-core (setup.py)
 wrapt==1.16.0
     # via smart-open
-yarl==1.11.1
+yarl==1.12.1
     # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
