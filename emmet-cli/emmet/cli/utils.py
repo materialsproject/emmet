@@ -15,14 +15,13 @@ import mgzip
 from botocore.exceptions import EndpointConnectionError
 from dotty_dict import dotty
 from fireworks.fw_config import FW_BLOCK_FORMAT
-from mongogrant.client import Client
 from pymatgen.core import Structure
 from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 from pymatgen.util.provenance import StructureNL
 from pymongo.errors import DocumentTooLarge
 
 from emmet.cli import SETTINGS
-from emmet.cli.db import TaskStore
+from emmet.cli.db import StorageGateway
 from emmet.core.tasks import TaskDoc
 from emmet.core.utils import group_structures, jsanitize, utcnow
 from emmet.core.vasp.validation import ValidationDoc
@@ -88,29 +87,6 @@ def ensure_indexes(indexes, colls):
     if created:
         indexes = ", ".join(created[coll.full_name])
         logger.debug(f"Created the following index(es) on {coll.full_name}:\n{indexes}")
-
-
-def calcdb_from_mgrant(spec_or_dbfile):
-    if os.path.exists(spec_or_dbfile):
-        return TaskStore.from_db_file(spec_or_dbfile)
-
-    client = Client()
-    role = "rw"  # NOTE need write access to source to ensure indexes
-    host, dbname_or_alias = spec_or_dbfile.split("/", 1)
-    auth = client.get_auth(host, dbname_or_alias, role)
-    if auth is None:
-        raise Exception("No valid auth credentials available!")
-    return TaskStore(
-        store_kwargs={
-            "host": auth["host"],
-            "port": 27017,
-            "database": auth["db"],
-            "collection": "tasks",
-            "user": auth["username"],
-            "password": auth["password"],
-            "authSource": auth["db"],
-        }
-    )
 
 
 def get_meta_from_structure(struct):
@@ -400,21 +376,16 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
     chunk_idx = int(name.rsplit("-")[1]) - 1
     logger.info(f"{name} starting.")
     tags = [tag, SETTINGS.year_tags[-1]]
-    ctx = click.get_current_context()
-    spec_or_dbfile = ctx.parent.parent.params["spec_or_dbfile"]
-    target = calcdb_from_mgrant(spec_or_dbfile)
-    snl_collection = target.db.snls_user
-    sbxn = list(filter(None, target.collection.distinct("sbxn")))
-    logger.info(f"Using sandboxes {sbxn}.")
-    no_dupe_check = ctx.parent.parent.params["no_dupe_check"]
-    run = ctx.parent.parent.params["run"]
-    projection = {"tags": 1, "task_id": 1}
-    # projection = {"tags": 1, "task_id": 1, "calcs_reversed": 1}
-    count = 0
 
-    # fs_keys = ["bandstructure", "dos", "chgcar", "locpot", "elfcar"]
-    # for i in range(3):
-    #    fs_keys.append(f"aeccar{i}")
+    ctx = click.get_current_context()
+    run = ctx.parent.parent.params["run"]
+    spec_or_dbfile = ctx.parent.parent.params["spec_or_dbfile"]
+    no_dupe_check = ctx.parent.parent.params["no_dupe_check"]
+
+    storage_gateway = StorageGateway.from_db_file(spec_or_dbfile)
+    snl_collection = storage_gateway.db.snls_user
+    projection = {"tags": 1, "task_id": 1}
+    count = 0
 
     for vaspdir in vaspdirs:
         logger.info(f"{name} VaspDir: {vaspdir}")
@@ -422,7 +393,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
         query = {"dir_name": {"$regex": launcher}}
         manual_taskid = isinstance(task_ids, dict)
         docs = list(
-            target.collection.find(query, projection).sort([("_id", -1)]).limit(1)
+            storage_gateway._coll.find(query, projection).sort([("_id", -1)]).limit(1)
         )
 
         if docs:
@@ -438,7 +409,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                     logger.warning(f"{name} {launcher} already parsed -> would remove.")
                 continue
 
-        additional_fields = {"sbxn": sbxn, "tags": []}
+        additional_fields = {"tags": []}
         snl_metas_avail = isinstance(snl_metas, dict)
         task_id = (
             task_ids.get(launcher) if manual_taskid else task_ids[chunk_idx][count]
@@ -452,8 +423,6 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
         logger.info(f"Using {task_id} for {launcher}.")
 
         if docs:
-            # make sure that task gets the same tags as the previously parsed task
-            # (run through set to implicitly remove duplicate tags)
             if docs[0]["tags"]:
                 existing_tags = list(set(docs[0]["tags"]))
                 additional_fields["tags"] += existing_tags
@@ -468,7 +437,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                 store_additional_json=False,
             )
 
-            task_doc.tags.append(tag)
+            task_doc.tags = tags
             task_doc.batch_id = tag
 
         except Exception as ex:
@@ -519,45 +488,24 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
         if run:
             if task_doc.state == "successful":
                 if docs and no_dupe_check:
-                    # new_calc = task_doc["calcs_reversed"][0]
-                    # existing_calc = docs[0]["calcs_reversed"][0]
-                    # print(existing_calc.keys())
-
-                    # for fs_key in fs_keys:
-                    #    print(fs_key)
-                    #    fs_id_key = f"{fs_key}_fs_id"
-                    #    if fs_id_key in existing_calc:
-                    #        if fs_id_key in new_calc:
-                    #            # NOTE the duplicate fs_id / s3 object has already been
-                    #            # created in the drone though
-                    #            raise NotImplementedError(
-                    #                f"Missing duplicate check to decide on overwriting {key}_fs_id"
-                    #            )
-
-                    #        for k in [fs_id_key, f"{key}_compression"]:
-                    #            new_calc[k] = existing_calc[k]
-
-                    #        print(fs_id_key, task_doc["calcs_reversed"][0][fs_id_key])  # TODO CHECK
-                    target.collection.delete_one({"task_id": task_id})
+                    storage_gateway._coll.delete_one({"task_id": task_id})
                     logger.warning(f"Removed previously parsed task {task_id}!")
 
-                # return count  # TODO remove
-
                 try:
-                    td = jsanitize(
-                        task_doc.model_dump(
-                            include=set(TaskDoc.model_fields),
-                            exclude={
-                                "additional_json",
-                                "builder_meta",
-                                "custodian",
-                                "entry",
-                            },
+                    td = scrub_dict(
+                        jsanitize(
+                            task_doc.model_dump(
+                                include=set(TaskDoc.model_fields),
+                                exclude={
+                                    "additional_json",
+                                    "builder_meta",
+                                    "custodian",
+                                    "entry",
+                                },
+                            )
                         )
                     )
-
-                    scrub_dict(td)
-                    target.insert(td)
+                    storage_gateway.insert(td)
 
                 except EndpointConnectionError as exc:
                     logger.error(f"Connection failed for {task_id}: {exc}")
@@ -577,20 +525,20 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                         logger.warning(f"{name} Remove {k} and retry ...")
                         output.pop(k)
                         try:
-                            td = jsanitize(
-                                task_doc.model_dump(
-                                    include=set(TaskDoc.model_fields),
-                                    exclude={
-                                        "additional_json",
-                                        "builder_meta",
-                                        "custodian",
-                                        "entry",
-                                    },
+                            td = scrub_dict(
+                                jsanitize(
+                                    task_doc.model_dump(
+                                        include=set(TaskDoc.model_fields),
+                                        exclude={
+                                            "additional_json",
+                                            "builder_meta",
+                                            "custodian",
+                                            "entry",
+                                        },
+                                    )
                                 )
                             )
-
-                            scrub_dict(td)
-                            target.insert(td)
+                            storage_gateway.insert(td)
                             break
                         except DocumentTooLarge:
                             continue
@@ -601,7 +549,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                     logger.error(f"{name} failed to insert: {ex}")
                     continue
 
-                if target.collection.count_documents(query):
+                if storage_gateway._coll.count_documents(query):
                     if snl_dct:
                         result = snl_collection.insert_one(snl_dct)
                         logger.info(

@@ -13,7 +13,7 @@ logger = logging.getLogger("emmet")
 @click.pass_context
 def admin(ctx):
     """Administrative and utility commands"""
-    if "CLIENT" not in ctx.obj:
+    if "GATEWAY" not in ctx.obj:
         raise EmmetCliError("--spec option required with admin sub-command!")
 
 
@@ -41,7 +41,7 @@ def clean_ensure_indexes(run, fields, coll):
 @click.pass_context
 def index(ctx, fields, collection):
     """Create index(es) for fields of a collection"""
-    coll = ctx.obj["CLIENT"].db[collection]
+    coll = ctx.obj["GATEWAY"].db[collection]
     clean_ensure_indexes(ctx.obj["RUN"], fields, coll)
 
 
@@ -50,7 +50,7 @@ def index(ctx, fields, collection):
 @click.pass_context
 def meta(ctx, collection):
     """Create meta-data fields and indexes for SNL collection"""
-    coll = ctx.obj["CLIENT"].db[collection]
+    coll = ctx.obj["GATEWAY"].db[collection]
     q = {"$or": [{k: {"$exists": 0}} for k in SETTINGS.meta_keys]}
     docs = coll.find(q)
 

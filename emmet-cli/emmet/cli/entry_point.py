@@ -1,15 +1,15 @@
 import logging
 import os
-import click
-
 from io import StringIO
+
+import click
 from github3 import GitHub
 from github3.session import GitHubSession
 
 from emmet.cli.admin import admin
 from emmet.cli.calc import calc
 from emmet.cli.tasks import tasks
-from emmet.cli.utils import EmmetCliError, calcdb_from_mgrant
+from emmet.cli.utils import EmmetCliError, StorageGateway
 
 logger = logging.getLogger("")
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
@@ -49,22 +49,8 @@ def emmet(spec_or_dbfile, run, issue, sbatch, ntries, bb, no_dupe_check, verbose
         raise EmmetCliError("Burst buffer only available in SBatch mode (--sbatch).")
 
     if spec_or_dbfile:
-        client = calcdb_from_mgrant(spec_or_dbfile)
-        ctx.obj["CLIENT"] = client
-        # ctx.obj["MONGO_HANDLER"] = BufferedMongoHandler(
-        #    host=client.host,
-        #    port=client.port,
-        #    database_name=client.db_name,
-        #    username=client.user,
-        #    password=client.password,
-        #    level=logging.WARNING,
-        #    authentication_db=client.db_name,
-        #    collection="emmet_logs",
-        #    buffer_periodical_flush_timing=False,  # flush manually
-        # )
-        # logger.addHandler(ctx.obj["MONGO_HANDLER"])
-        # coll = ctx.obj["MONGO_HANDLER"].collection
-        # ensure_indexes(SETTINGS.log_fields, [coll])
+        gateway = StorageGateway.from_db_file(spec_or_dbfile)
+        ctx.obj["GATEWAY"] = gateway
 
     if run:
         if not issue:

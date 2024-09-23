@@ -8,11 +8,10 @@ import shutil
 import subprocess
 import sys
 import time
-
 from collections import defaultdict, deque
+from datetime import datetime
 from fnmatch import fnmatch
 from pathlib import Path
-from datetime import datetime
 
 import click
 from hpsspy import HpssOSError
@@ -26,9 +25,9 @@ from emmet.cli.utils import (
     VaspDirsGenerator,
     chunks,
     ensure_indexes,
+    get_symlinked_path,
     iterator_slice,
     parse_vasp_dirs,
-    get_symlinked_path,
 )
 
 logger = logging.getLogger("emmet")
@@ -528,9 +527,9 @@ def group_strings_by_prefix(strings, prefix_length):
 @click.pass_context
 def parsers(ctx, task_ids):
     """Scan root directory and submit separate parser jobs"""
-    ctx.parent.params[
-        "nmax"
-    ] = sys.maxsize  # disable maximum launchers to determine parser jobs
+    ctx.parent.params["nmax"] = (
+        sys.maxsize
+    )  # disable maximum launchers to determine parser jobs
     run = ctx.parent.parent.params["run"]
     directory = ctx.parent.params["directory"]
     check_pattern()
@@ -616,22 +615,22 @@ def parsers(ctx, task_ids):
 def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C901
     """Parse VASP launchers into tasks"""
     ctx = click.get_current_context()
-    if "CLIENT" not in ctx.obj:
-        raise EmmetCliError("Use --spec to set target DB for tasks!")
+    if "GATEWAY" not in ctx.obj:
+        raise EmmetCliError("Use --spec to set storage_gateway DB for tasks!")
 
     run = ctx.parent.parent.params["run"]
     nmax = ctx.parent.params["nmax"]
     directory = ctx.parent.params["directory"].rstrip(os.sep)
     tag = os.path.basename(directory)
-    target = ctx.obj["CLIENT"]
-    snl_collection = target.db.snls_user
-    collection_count = target.collection.estimated_document_count()
-    logger.info(f"Database: {target.collection.database.name}, Collection: {target.collection.name}")
-    logger.info(
-        f"Connected to {target.collection.full_name} with {collection_count} tasks."
-    )
+    storage_gateway = ctx.obj["GATEWAY"]
+
+    snl_collection = storage_gateway.db.snls_user
+    collection_count = storage_gateway._coll.estimated_document_count()
+
+    logger.info(f"Connected to {storage_gateway._coll} with {collection_count} tasks.")
     ensure_indexes(
-        ["task_id", "tags", "dir_name", "retired_task_id"], [target.collection]
+        ["task_id", "tags", "dir_name", "batch_id"],
+        [storage_gateway._coll],
     )
 
     chunk_size = math.ceil(nmax / nproc)
@@ -657,7 +656,7 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
             task_ids = json.load(f)
     else:
         # reserve list of task_ids to avoid collisions during multiprocessing
-        # insert empty doc with max ID + 1 into target collection for parallel SLURM jobs
+        # insert empty doc with max ID + 1 into storage_gateway._coll for parallel SLURM jobs
         pipeline = [
             {"$match": {"task_id": {"$regex": r"^mp-\d{7,}$"}}},
             {"$project": {"task_id": 1, "prefix_num": {"$split": ["$task_id", "-"]}}},
@@ -665,7 +664,7 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
             {"$addFields": {"num_int": {"$toInt": "$num"}}},
             {"$group": {"_id": None, "num_max": {"$max": "$num_int"}}},
         ]
-        result = list(target.collection.aggregate(pipeline))
+        result = list(storage_gateway._coll.aggregate(pipeline))
         # Manually set next_tid when parsing into an empty task collection for testing
         next_tid = result[0]["num_max"] + 1 if result else 1000001
         lst = [f"mp-{next_tid + n}" for n in range(nmax)]
@@ -673,7 +672,7 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
 
         if run:
             sep_tid = f"mp-{next_tid + nmax}"
-            target.collection.insert_one({"task_id": sep_tid})
+            storage_gateway._coll.insert_one({"task_id": sep_tid})
             logger.info(f"Inserted separator task with task_id {sep_tid}.")
             logger.info(f"Reserved {len(lst)} task ID(s).")
         else:
@@ -685,7 +684,7 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
             snl_metas = json.load(f)
 
         # reserve list of snl_ids to avoid collisions during multiprocessing
-        # insert empty doc with max ID + 1 into target collection for parallel SLURM jobs
+        # insert empty doc with max ID + 1 into storage_gateway._coll for parallel SLURM jobs
         all_snl_ids = snl_collection.distinct("snl_id")
         prefixes = set()
         next_snlid = -1
@@ -734,7 +733,7 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
             f"Successfully parsed and inserted {count}/{gen.value} tasks in {directory}."
         )
         if sep_tid:
-            target.collection.delete_one({"task_id": sep_tid})
+            storage_gateway._coll.delete_one({"task_id": sep_tid})
             logger.info(f"Removed separator task {sep_tid}.")
         if sep_snlid:
             snl_collection.remove({"snl_id": sep_snlid})

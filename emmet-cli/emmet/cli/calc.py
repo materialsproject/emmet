@@ -16,8 +16,8 @@ from pymatgen.util.provenance import Author, StructureNL
 from emmet.cli import SETTINGS
 from emmet.cli.utils import (
     EmmetCliError,
+    StorageGateway,
     aggregate_by_formula,
-    calcdb_from_mgrant,
     get_meta_from_structure,
     load_structure,
     structures_match,
@@ -91,7 +91,7 @@ def save_logs(ctx):
 def insert_snls(ctx, snls):
     if ctx.obj["RUN"] and snls:
         logger.info(f"add {len(snls)} SNLs ...")
-        result = ctx.obj["CLIENT"].db.snls.insert_many(snls)
+        result = ctx.obj["GATEWAY"].db.snls.insert_many(snls)
         logger.info(
             click.style(f"#SNLs inserted: {len(result.inserted_ids)}", fg="green")
         )
@@ -138,20 +138,20 @@ def count_file_documents(file_obj):
 @click.pass_context
 def calc(ctx, specs, nmax, skip):
     """Set up calculations to optimize structures using VASP"""
-    if "CLIENT" not in ctx.obj:
+    if "GATEWAY" not in ctx.obj:
         raise EmmetCliError("--spec option required with calc sub-command!")
 
     collections = {}
-    for coll in [ctx.obj["CLIENT"].db.snls, ctx.obj["CLIENT"].db.tasks]:
+    for coll in [ctx.obj["GATEWAY"].db.snls, ctx.obj["GATEWAY"].db.tasks]:
         collections[coll.full_name] = coll  # user collections
 
     for spec in specs:
-        client = calcdb_from_mgrant(spec)
-        names = client.db.list_collection_names(
+        storage_gateway = StorageGateway.from_db_file(spec)
+        names = storage_gateway.database.list_collection_names(
             filter={"name": {"$regex": r"(snl|tasks)"}}
         )
         for name in names:
-            collections[client.db[name].full_name] = client.db[name]
+            collections[storage_gateway.db[name].full_name] = storage_gateway.db[name]
 
     for full_name, coll in collections.items():
         logger.debug(f"{coll.count()} docs in {full_name}")
@@ -177,7 +177,7 @@ def prep(ctx, archive, authors):  # noqa: C901
     """prep structures from an archive for submission"""
     run = ctx.obj["RUN"]
     collections = ctx.obj["COLLECTIONS"]
-    snl_collection = ctx.obj["CLIENT"].db.snls
+    snl_collection = ctx.obj["GATEWAY"].database.snls
     handler = ctx.obj["MONGO_HANDLER"]
     nmax = ctx.obj["NMAX"]
     skip = ctx.obj["SKIP"]
@@ -373,7 +373,7 @@ def add(tag):
 #            q = {'tags': tag}
 #            if not skip_all_scanned:
 #                q['level'] = 'WARNING'
-#            to_scan = total - lpad.db.add_wflows_logs.count(q)
+#            to_scan = total - lpad.database.add_wflows_logs.count(q)
 #            tags[tag] = [total, to_scan, [snl_coll for idx, snl_coll in enumerate(snl_collections) if cnts[idx]]]
 #
 #    print('\n'.join(['{} ({}) --> {} TO SCAN'.format(k, v[0], v[1]) for k, v in tags.items()]))
@@ -428,11 +428,11 @@ def add(tag):
 #                                    print(log_entry)
 #                                    continue
 #                            else:
-#                                lpad.db.add_wflows_logs.update(q, {'$addToSet': {'tags': tag}})
+#                                lpad.database.add_wflows_logs.update(q, {'$addToSet': {'tags': tag}})
 #                                continue # already checked
 #                        q = {'level': 'ERROR', 'formula': formula, 'snl_id': dct['snl_id']}
 #                        if skip_all_scanned and mongo_handler.collection.find_one(q):
-#                            lpad.db.add_wflows_logs.update(q, {'$addToSet': {'tags': tag}})
+#                            lpad.database.add_wflows_logs.update(q, {'$addToSet': {'tags': tag}})
 #                            continue
 #                        mongo_handler.collection.remove(q) # avoid dups
 #                        counter['structures'] += 1
@@ -556,7 +556,7 @@ def add(tag):
 #                                                    fw = lpad.fireworks.find_one({'fw_id': s.fw_id}, {'state': 1})
 #                                                    print('  -->', s.fw_id, fw['state'])
 #                                                    if fw['state'] == 'COMPLETED':
-#                                                        # the task is in lpad.db.tasks with different integer task_id
+#                                                        # the task is in lpad.database.tasks with different integer task_id
 #                                                        #    => find task => overwrite task_id => add_tasks will pick it up
 #                                                        full_name = list(tasks_collections.keys())[0]
 #                                                        load_canonical_task_structures(formula, full_name)
@@ -663,7 +663,7 @@ def add(tag):
 #    """checks status of calculations by submitter or author email in SNLs"""
 #    lpad = get_lpad()
 #
-#    snl_collections = [lpad.db.snls]
+#    snl_collections = [lpad.database.snls]
 #    if add_snlcolls is not None:
 #        for snl_db_config in yaml.load_all(open(add_snlcolls, 'r')):
 #            snl_db_conn = MongoClient(snl_db_config['host'], snl_db_config['port'], j=False, connect=False)
@@ -674,15 +674,15 @@ def add(tag):
 #        print(snl_coll.count(exclude), 'SNLs in', snl_coll.full_name)
 #
 #    tasks_collections = OrderedDict()
-#    tasks_collections[lpad.db.tasks.full_name] = lpad.db.tasks
+#    tasks_collections[lpad.database.tasks.full_name] = lpad.database.tasks
 #    if add_tasks_db is not None: # TODO multiple alt_task_db_files?
-#        target = VaspCalcDb.from_db_file(add_tasks_db, admin=True)
-#        tasks_collections[target.collection.full_name] = target.collection
+#        client = VaspCalcDb.from_db_file(add_tasks_db, admin=True)
+#        tasks_collections[client.collection.full_name] = client.collection
 #    for full_name, tasks_coll in tasks_collections.items():
 #        print(tasks_coll.count(), 'tasks in', full_name)
 #
 #    #ensure_indexes(['snl_id', 'about.remarks', 'submitter_email', 'about.authors.email'], snl_collections)
-#    ensure_indexes(['snl_id', 'fw_id'], [lpad.db.add_wflows_logs])
+#    ensure_indexes(['snl_id', 'fw_id'], [lpad.database.add_wflows_logs])
 #    ensure_indexes(['fw_id'], [lpad.fireworks])
 #    ensure_indexes(['launch_id'], [lpad.launches])
 #    ensure_indexes(['dir_name', 'task_id'], tasks_collections.values())
@@ -694,7 +694,7 @@ def add(tag):
 #        snl_ids.extend(snl_coll.distinct('snl_id', query))
 #    print(len(snl_ids), 'SNLs')
 #
-#    fw_ids = lpad.db.add_wflows_logs.distinct('fw_id', {'snl_id': {'$in': snl_ids}})
+#    fw_ids = lpad.database.add_wflows_logs.distinct('fw_id', {'snl_id': {'$in': snl_ids}})
 #    print(len(fw_ids), 'FWs')
 #
 #    launch_ids = lpad.fireworks.distinct('launches', {'fw_id': {'$in': fw_ids}})
@@ -731,10 +731,10 @@ def add(tag):
 #    tags = [tag]
 #    if tag is None:
 #        tags = [t for t in lpad.workflows.distinct('metadata.tags') if t is not None and t not in year_tags]
-#        tags += [t for t in lpad.db.add_wflows_logs.distinct('tags') if t is not None and t not in tags]
+#        tags += [t for t in lpad.database.add_wflows_logs.distinct('tags') if t is not None and t not in tags]
 #        all_tags = []
 #        for t in tags:
-#            all_tags.append((t, lpad.db.add_wflows_logs.count({'tags': t})))
+#            all_tags.append((t, lpad.database.add_wflows_logs.count({'tags': t})))
 #        tags = [t[0] for t in sorted(all_tags, key=lambda x: x[1], reverse=True)]
 #        print(len(tags), 'tags in WFs and logs collections')
 #
@@ -744,8 +744,8 @@ def add(tag):
 #
 #    for t in tags:
 #        wflows = lpad.workflows.find({'metadata.tags': t}, {'state': 1})
-#        nr_snls = lpad.db.add_wflows_logs.count({'tags': t})
-#        wflows_to_add = lpad.db.add_wflows_logs.count({'tags': t, 'level': 'ERROR', 'error': {'$exists': 0}})
+#        nr_snls = lpad.database.add_wflows_logs.count({'tags': t})
+#        wflows_to_add = lpad.database.add_wflows_logs.count({'tags': t, 'level': 'ERROR', 'error': {'$exists': 0}})
 #        counter = Counter([wf['state'] for wf in wflows])
 #        total = sum(v for k, v in counter.items() if k in states)
 #        tc, progress = t, '-'
