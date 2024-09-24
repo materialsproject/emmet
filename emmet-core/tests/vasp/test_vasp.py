@@ -3,8 +3,8 @@ import json
 import pytest
 from monty.io import zopen
 
-from emmet.core.vasp.calc_types import RunType, TaskType, run_type, task_type
 from emmet.core.tasks import TaskDoc
+from emmet.core.vasp.calc_types import RunType, TaskType, run_type, task_type
 from emmet.core.vasp.task_valid import TaskDocument
 from emmet.core.vasp.validation import ValidationDoc, _potcar_stats_check
 
@@ -32,8 +32,8 @@ def test_run_type():
         ("GGA+U", {"GGA": "--", "LDAU": True}),
         ("SCAN", {"METAGGA": "Scan"}),
         ("SCAN+U", {"METAGGA": "Scan", "LDAU": True}),
-        ("R2SCAN", {"METAGGA": "R2SCAN"}),
-        ("R2SCAN+U", {"METAGGA": "R2SCAN", "LDAU": True}),
+        ("r2SCAN", {"METAGGA": "R2SCAN"}),
+        ("r2SCAN+U", {"METAGGA": "R2SCAN", "LDAU": True}),
         ("HFCus", {"LHFCALC": True}),
     ]
 

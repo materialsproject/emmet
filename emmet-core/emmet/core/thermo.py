@@ -151,7 +151,7 @@ class ThermoDoc(PropertyDoc):
         for e in entries:
             entries_by_mpid[e.data["material_id"]].append(e)
 
-        entry_quality_scores = {"GGA": 1, "GGA+U": 2, "SCAN": 3, "R2SCAN": 4}
+        entry_quality_scores = {"GGA": 1, "GGA+U": 2, "SCAN": 3, "r2SCAN": 4}
 
         def _energy_eval(entry: Union[ComputedStructureEntry, ComputedEntry]):
             """
