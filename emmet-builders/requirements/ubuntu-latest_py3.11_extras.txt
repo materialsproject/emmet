@@ -6,7 +6,7 @@
 #
 aiohappyeyeballs==2.4.0
     # via aiohttp
-aiohttp==3.10.5
+aiohttp==3.10.6
     # via fsspec
 aioitertools==0.12.0
     # via maggma
@@ -28,9 +28,9 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.25
+boto3==1.35.26
     # via maggma
-botocore==1.35.25
+botocore==1.35.26
     # via
     #   boto3
     #   s3transfer
@@ -89,7 +89,7 @@ filelock==3.16.1
     #   virtualenv
 flake8==7.1.1
     # via emmet-builders (setup.py)
-fonttools==4.54.0
+fonttools==4.54.1
     # via matplotlib
 frozenlist==1.4.1
     # via
