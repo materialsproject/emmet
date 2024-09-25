@@ -24,6 +24,7 @@ setup(
         "asgi-logger",
         "pymatgen-analysis-alloys>=0.0.3",
         "pymatgen-analysis-defects>=2024.7.18",
+        "pymongo<4.9.1",
     ],
     extras_require={
         "test": [
