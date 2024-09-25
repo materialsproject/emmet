@@ -319,7 +319,7 @@ pymdown-extensions==10.10.1
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.9
+pymongo==4.8.0
     # via
     #   emmet-api (setup.py)
     #   maggma
