@@ -68,7 +68,9 @@ def test_get_potcar_stats(method: str, tmp_path):
     try:
         potcar_stats = get_potcar_stats(method=method)
     except Exception as exc:
-        if "No POTCAR for" in str(exc):
+        if any(
+            exc_str in str(exc) for exc_str in ("Set PMG_VASP_PSP_DIR", "No POTCAR for")
+        ):
             # No Potcar library available, skip test
             return
         else:
