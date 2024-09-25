@@ -21,11 +21,11 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.26
+boto3==1.35.27
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.35.26
+botocore==1.35.27
     # via
     #   boto3
     #   s3transfer
@@ -55,7 +55,7 @@ dnspython==2.6.1
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.2
+emmet-core==0.84.3rc0
     # via emmet-api (emmet/emmet-api/setup.py)
 envier==0.5.2
     # via ddtrace
@@ -197,8 +197,10 @@ pymatgen-analysis-alloys==0.0.6
     # via emmet-api (emmet/emmet-api/setup.py)
 pymatgen-analysis-defects==2024.7.19
     # via emmet-api (emmet/emmet-api/setup.py)
-pymongo==4.9.1
-    # via maggma
+pymongo==4.9
+    # via
+    #   emmet-api (emmet/emmet-api/setup.py)
+    #   maggma
 pynacl==1.5.0
     # via paramiko
 pyparsing==3.1.4
