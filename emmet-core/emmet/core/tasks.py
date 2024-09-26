@@ -434,6 +434,11 @@ class TaskDoc(StructureMetadata, extra="allow"):
         description="Identifier for this calculation; should provide rough information about the calculation origin and purpose.",
     )
 
+    run_stats: Optional[RunStatistics] = Field(
+        None,
+        description="Summary of runtime statistics for each calculation in this task",
+    )
+
     # Note that private fields are needed because TaskDoc permits extra info
     # added to the model, unlike TaskDocument. Because of this, when pydantic looks up
     # attrs on the model, it searches for them in the model extra dict first, and if it
