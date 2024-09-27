@@ -20,8 +20,8 @@ MAIN_ARGS="$BIND_ARG $WORKER_ARGS $LOG_ARGS $REQS_ARGS $OTHER_ARGS"
 
 ACCESS_LOG_FORMAT=(--access-logformat '%(h)s %(t)s %(m)s %(U)s?%(q)s %(H)s %(s)s %(b)s "%(f)s" "%(a)s" %(D)s %(p)s %({x-consumer-id}i)s %({x-callback-name}o)s %({x-consumer-groups}o)s')
 
-if [[ -n "$STATS_ARG" ]]; then
-	exec ddtrace-run gunicorn $STATS_ARG $MAIN_ARGS "${ACCESS_LOG_FORMAT[@]}" $SERVER_APP
-else
-	exec gunicorn $MAIN_ARGS "${ACCESS_LOG_FORMAT[@]}" $SERVER_APP
-fi
+#if [[ -n "$STATS_ARG" ]]; then
+#	exec ddtrace-run gunicorn $STATS_ARG $MAIN_ARGS "${ACCESS_LOG_FORMAT[@]}" $SERVER_APP
+#else
+exec gunicorn $MAIN_ARGS "${ACCESS_LOG_FORMAT[@]}" $SERVER_APP
+#fi
