@@ -500,6 +500,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                                 "builder_meta",
                                 "custodian",
                                 "entry",
+                                "run_stats",
                             },
                         )
                     )
