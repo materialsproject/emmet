@@ -22,5 +22,5 @@ class GlobalHeaderProcessor(HeaderProcessor):
         groups = request.headers.get("x-consumer-groups", None)
         privileged_groups = {"TERMS:ACCEPT-NC", "admin"}
         is_privileged = groups and any(group in groups for group in privileged_groups)
-        license_type = None if is_privileged else "BY-C"
+        license_type = "All" if is_privileged else None
         return query_operator.query(license=license_type)
