@@ -36,7 +36,10 @@ ENV PATH=/root/.local/bin:$PATH \
   DD_TRACE_HOST=localhost:8126 \
   DD_SERVICE=next-gen-api \
   DD_ENV=prod \
-  DD_VERSION=$VERSION
+  DD_VERSION=$VERSION \
+  DD_PROFILING_ENABLED=true \
+  DD_LOGS_INJECTION=true \
+  DD_TRACE_SAMPLE_RATE=1
 
 COPY app.py .
 COPY material_resources.py .
