@@ -157,7 +157,6 @@ class SymmetryData(BaseModel):
 
     @classmethod
     def from_structure(cls, structure: Structure) -> "SymmetryData":
-
         symmetry: Dict[str, Any] = {
             "source": "spglib",
             "symbol": None,
