@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional
 from pydantic import BaseModel, Field
 from pymatgen.core import Structure
 from pymatgen.core.structure import Molecule
-from pymatgen.symmetry.analyzer import PointGroupAnalyzer, SpacegroupAnalyzer, spglib
+from pymatgen.symmetry.analyzer import PointGroupAnalyzer, SpacegroupAnalyzer, spglib, SymmetryUndeterminedError
 
 from emmet.core.settings import EmmetSettings
 from emmet.core.utils import ValueEnum
@@ -139,29 +139,49 @@ class SymmetryData(BaseModel):
     symprec: Optional[float] = Field(
         None,
         title="Symmetry Finding Precision",
-        description="The precision given to spglib to determine the symmetry of this lattice.",
+        description="The precision provide to spglib to determine the symmetry of this structure.",
     )
 
-    version: Optional[str] = Field(None, title="SPGLib version")
+    angle_tolerance: Optional[float] = Field(
+        None,
+        title="Angle Tolerance",
+        description="Angle tolerance provided to spglib to determine the symmetry of this structure."
+    )
+
+    version: Optional[str] = Field(None, title="spglib version")
 
     @classmethod
     def from_structure(cls, structure: Structure) -> "SymmetryData":
-        symprec = SETTINGS.SYMPREC
-        sg = SpacegroupAnalyzer(structure, symprec=symprec)
-        symmetry: Dict[str, Any] = {"symprec": symprec}
-        if not sg.get_symmetry_dataset():
-            sg = SpacegroupAnalyzer(structure, 1e-3, 1)
-            symmetry["symprec"] = 1e-3
+
+        symmetry: Dict[str, Any] = {
+            "source": "spglib",
+            "symbol": None,
+            "number": None,
+            "point_group": None,
+            "crystal_system": None,
+            "hall": None,
+            "version": spglib.__version__,
+            "symprec": SETTINGS.SYMPREC,
+            "angle_tolerance": SETTINGS.ANGLE_TOL
+        }
+
+        try:
+            sg = SpacegroupAnalyzer(structure, symprec=symmetry["symprec"], angle_tolerance=symmetry["angle_tolerance"])
+        except SymmetryUndeterminedError:
+            try:
+                symmetry["symprec"] = 1e-3
+                symmetry["angle_tolerance"] = 1
+                sg = SpacegroupAnalyzer(structure, symmetry["symprec"], 1)
+            except SymmetryUndeterminedError:
+                return SymmetryData(**symmetry)
 
         symmetry.update(
             {
-                "source": "spglib",
                 "symbol": sg.get_space_group_symbol(),
                 "number": sg.get_space_group_number(),
                 "point_group": sg.get_point_group_symbol(),
                 "crystal_system": CrystalSystem(sg.get_crystal_system().title()),
                 "hall": sg.get_hall(),
-                "version": spglib.__version__,
             }
         )
 
