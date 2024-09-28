@@ -3,7 +3,12 @@ from typing import Any, Dict, Optional
 from pydantic import BaseModel, Field
 from pymatgen.core import Structure
 from pymatgen.core.structure import Molecule
-from pymatgen.symmetry.analyzer import PointGroupAnalyzer, SpacegroupAnalyzer, spglib, SymmetryUndeterminedError
+from pymatgen.symmetry.analyzer import (
+    PointGroupAnalyzer,
+    SpacegroupAnalyzer,
+    spglib,
+    SymmetryUndeterminedError,
+)
 
 from emmet.core.settings import EmmetSettings
 from emmet.core.utils import ValueEnum
@@ -145,7 +150,7 @@ class SymmetryData(BaseModel):
     angle_tolerance: Optional[float] = Field(
         None,
         title="Angle Tolerance",
-        description="Angle tolerance provided to spglib to determine the symmetry of this structure."
+        description="Angle tolerance provided to spglib to determine the symmetry of this structure.",
     )
 
     version: Optional[str] = Field(None, title="spglib version")
@@ -162,16 +167,24 @@ class SymmetryData(BaseModel):
             "hall": None,
             "version": spglib.__version__,
             "symprec": SETTINGS.SYMPREC,
-            "angle_tolerance": SETTINGS.ANGLE_TOL
+            "angle_tolerance": SETTINGS.ANGLE_TOL,
         }
 
         try:
-            sg = SpacegroupAnalyzer(structure, symprec=symmetry["symprec"], angle_tolerance=symmetry["angle_tolerance"])
+            sg = SpacegroupAnalyzer(
+                structure,
+                symprec=symmetry["symprec"],
+                angle_tolerance=symmetry["angle_tolerance"],
+            )
         except SymmetryUndeterminedError:
             try:
                 symmetry["symprec"] = 1e-3
                 symmetry["angle_tolerance"] = 1
-                sg = SpacegroupAnalyzer(structure, symprec=symmetry["symprec"], angle_tolerance=symmetry["angle_tolerance"])
+                sg = SpacegroupAnalyzer(
+                    structure,
+                    symprec=symmetry["symprec"],
+                    angle_tolerance=symmetry["angle_tolerance"],
+                )
             except SymmetryUndeterminedError:
                 return SymmetryData(**symmetry)
 
