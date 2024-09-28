@@ -144,7 +144,7 @@ class SymmetryData(BaseModel):
     symprec: Optional[float] = Field(
         None,
         title="Symmetry Finding Precision",
-        description="The precision provide to spglib to determine the symmetry of this structure.",
+        description="The precision provided to spglib to determine the symmetry of this structure.",
     )
 
     angle_tolerance: Optional[float] = Field(
