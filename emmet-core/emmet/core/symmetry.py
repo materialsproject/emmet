@@ -171,7 +171,7 @@ class SymmetryData(BaseModel):
             try:
                 symmetry["symprec"] = 1e-3
                 symmetry["angle_tolerance"] = 1
-                sg = SpacegroupAnalyzer(structure, symmetry["symprec"], 1)
+                sg = SpacegroupAnalyzer(structure, symprec=symmetry["symprec"], angle_tolerance=symmetry["angle_tolerance"])
             except SymmetryUndeterminedError:
                 return SymmetryData(**symmetry)
 
