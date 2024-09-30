@@ -5,20 +5,20 @@ from __future__ import annotations
 import io
 from pathlib import Path
 from typing import Optional, Union
-import pandas as pd  # type: ignore[import-untyped]
 
 import openmm
+import pandas as pd  # type: ignore[import-untyped]
 from openmm import XmlSerializer
 from openmm.app import Simulation
 from openmm.app.pdbfile import PDBFile
-from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from emmet.core.openff import MDTaskDocument  # type: ignore[import-untyped]
 from emmet.core.openff.tasks import CompressedStr  # type: ignore[import-untyped]
+from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
 
 
-class CalculationInput(BaseModel, extra="allow"):  # type: ignore[call-arg]
+class CalculationInput(BaseModel):  # type: ignore[call-arg]
     """OpenMM input settings for a job, these are the attributes of the OpenMMMaker."""
 
     n_steps: Optional[int] = Field(
@@ -99,6 +99,8 @@ class CalculationInput(BaseModel, extra="allow"):  # type: ignore[call-arg]
         None,
         description="Whether to embed the trajectory blob in CalculationOutput.",
     )
+
+    model_config = ConfigDict(extra="allow")
 
 
 class CalculationOutput(BaseModel):

@@ -2,22 +2,23 @@
 
 from __future__ import annotations
 
+import zlib
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
-from typing_extensions import Annotated
-import zlib
 
+from monty.json import MSONable
 from pydantic import (
     BaseModel,
+    ConfigDict,
     Field,
-    PlainValidator,
     PlainSerializer,
+    PlainValidator,
     WithJsonSchema,
 )
-from monty.json import MSONable
-
 from pymatgen.core import Structure
+from typing_extensions import Annotated
+
 from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
 
 
@@ -56,7 +57,7 @@ class MoleculeSpec(MSONable):
     openff_mol: str  # a tk.Molecule object serialized with to_json
 
 
-class MDTaskDocument(BaseModel, extra="allow"):  # type: ignore[call-arg]
+class MDTaskDocument(BaseModel):  # type: ignore[call-arg]
     """Definition of the OpenMM task document."""
 
     tags: Optional[list[str]] = Field(
@@ -108,6 +109,8 @@ class MDTaskDocument(BaseModel, extra="allow"):  # type: ignore[call-arg]
         None,
         description="Timestamp for the most recent calculation for this task document",
     )
+
+    model_config = ConfigDict(extra="allow")
 
 
 class ClassicalMDTaskDocument(MDTaskDocument):
