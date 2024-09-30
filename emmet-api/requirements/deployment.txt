@@ -21,11 +21,11 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.27
+boto3==1.35.29
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.35.27
+botocore==1.35.29
     # via
     #   boto3
     #   s3transfer
@@ -47,7 +47,7 @@ cryptography==43.0.1
     # via paramiko
 cycler==0.12.1
     # via matplotlib
-ddtrace==2.13.0
+ddtrace==2.14.0
     # via emmet-api (emmet/emmet-api/setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -97,7 +97,7 @@ latexcodec==3.0.0
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
-maggma[api]==0.69.3
+maggma[api]==0.69.4
     # via emmet-api (emmet/emmet-api/setup.py)
 matplotlib==3.9.2
     # via
@@ -297,7 +297,7 @@ urllib3==2.2.3
     # via
     #   botocore
     #   requests
-uvicorn==0.30.6
+uvicorn==0.31.0
     # via maggma
 wrapt==1.16.0
     # via
