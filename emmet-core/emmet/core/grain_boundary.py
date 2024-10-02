@@ -4,7 +4,7 @@ from enum import Enum
 from datetime import datetime
 from emmet.core.common import convert_datetime
 
-from pymatgen.analysis.gb.grain import GrainBoundary
+from pymatgen.core.interface import GrainBoundary
 
 
 class GBTypeEnum(Enum):
