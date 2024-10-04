@@ -848,6 +848,7 @@ class DeprecationDoc(BaseModel):
         description="Reason for deprecation.",
     )
 
+
 def get_uri(dir_name: Union[str, Path]) -> str:
     """
     Return the URI path for a directory.
@@ -929,8 +930,7 @@ def _parse_custodian(dir_name: Path) -> Optional[Dict]:
 
 
 def _parse_orig_inputs(
-    dir_name: Path,
-    suffix : str | None = ".orig"
+    dir_name: Path, suffix: str | None = ".orig"
 ) -> Dict[str, Union[Kpoints, Poscar, PotcarSpec, Incar]]:
     """
     Parse original input files.
