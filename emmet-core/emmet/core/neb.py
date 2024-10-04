@@ -1,9 +1,8 @@
 """Schemas and utils for NEB calculations."""
 
-from glob import glob
 from pathlib import Path
 from pydantic import BaseModel, Field
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 from typing_extensions import Self
 
 from monty.os.path import zpath
@@ -81,11 +80,15 @@ class NebTaskDoc(BaseModel, extra="allow"):
     @classmethod
     def from_directory(
         cls,
-        dir_name: str,
+        dir_name: Union[Path, str],
         volumetric_files: Tuple[str, ...] = _VOLUMETRIC_FILES,
         **neb_task_doc_kwargs,
     ) -> Self:
-        neb_directories = sorted(glob(f"{dir_name}/[0-9][0-9]"))
+        
+        if isinstance(dir_name, str):
+            dir_name = Path(dir_name)
+        
+        neb_directories = sorted(dir_name.glob("[0-9][0-9]"))
 
         endpoint_directories = [neb_directories[0], neb_directories[-1]]
         endpoint_structures = [
@@ -123,12 +126,11 @@ class NebTaskDoc(BaseModel, extra="allow"):
             else TaskState.FAILED
         )
 
-        dir_path = Path(dir_name)
         inputs = {}
         for suffix in (None, ".orig"):
             vis = {
                 k.lower(): v
-                for k, v in _parse_orig_inputs(dir_path, suffix=suffix).items()
+                for k, v in _parse_orig_inputs(dir_name, suffix=suffix).items()
             }
             if (potcar_spec := vis.get("potcar")) is not None:
                 vis["potcar_spec"] = potcar_spec
@@ -144,7 +146,7 @@ class NebTaskDoc(BaseModel, extra="allow"):
         return cls(
             endpoint_structures=endpoint_structures,
             image_calculations=image_calculations,
-            dir_name=dir_name,
+            dir_name=str(dir_name),
             image_directories=image_directories,
             orig_inputs=inputs["orig_inputs"],
             inputs=inputs["inputs"],
@@ -156,6 +158,6 @@ class NebTaskDoc(BaseModel, extra="allow"):
             ),
             state=task_state,
             image_energies=[calc.output.energy for calc in image_calculations],
-            custodian=_parse_custodian(dir_path),
+            custodian=_parse_custodian(dir_name),
             **neb_task_doc_kwargs,
         )
