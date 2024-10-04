@@ -1,5 +1,6 @@
 """Schemas and utils for NEB calculations."""
 
+from datetime import datetime
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import Optional, Tuple, Union
@@ -17,7 +18,7 @@ from emmet.core.tasks import (
     CustodianDoc,
     OrigInputs,
 )
-from emmet.core.utils import ValueEnum
+from emmet.core.utils import ValueEnum, utcnow
 from emmet.core.vasp.calculation import Calculation
 from emmet.core.vasp.task_valid import TaskState
 
@@ -75,6 +76,15 @@ class NebTaskDoc(BaseModel, extra="allow"):
     custodian: Optional[list[CustodianDoc]] = Field(
         None,
         description="Detailed custodian data for each VASP calculation contributing to the task document.",
+    )
+
+    last_updated: Optional[datetime] = Field(
+        utcnow(),
+        description="Timestamp for the most recent calculation for this task document",
+    )
+
+    completed_at: Optional[datetime] = Field(
+        None, description="Timestamp for when this task was completed"
     )
 
     @classmethod
@@ -158,5 +168,6 @@ class NebTaskDoc(BaseModel, extra="allow"):
             state=task_state,
             image_energies=[calc.output.energy for calc in image_calculations],
             custodian=_parse_custodian(dir_name),
+            completed_at=max(calc.completed_at for calc in image_calculations),
             **neb_task_doc_kwargs,
         )
