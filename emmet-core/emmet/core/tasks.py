@@ -6,6 +6,7 @@ from collections import OrderedDict
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
+from typing_extensions import Self
 
 import numpy as np
 from monty.json import MontyDecoder
@@ -844,7 +845,6 @@ class DeprecationDoc(BaseModel):
         description="Reason for deprecation.",
     )
 
-
 def get_uri(dir_name: Union[str, Path]) -> str:
     """
     Return the URI path for a directory.
@@ -927,6 +927,7 @@ def _parse_custodian(dir_name: Path) -> Optional[Dict]:
 
 def _parse_orig_inputs(
     dir_name: Path,
+    suffix : str | None = ".orig"
 ) -> Dict[str, Union[Kpoints, Poscar, PotcarSpec, Incar]]:
     """
     Parse original input files.
@@ -938,6 +939,8 @@ def _parse_orig_inputs(
     ----------
     dir_name
         Path to calculation directory.
+    suffix : str or None = ".orig"
+        The suffix of the original input files to use.
 
     Returns
     -------
@@ -951,9 +954,10 @@ def _parse_orig_inputs(
         "POTCAR": VaspPotcar,
         "POSCAR": Poscar,
     }
-    for filename in dir_name.glob("*.orig*"):
+    suffix = suffix or ""
+    for filename in dir_name.glob("*".join(f"{suffix}.".split("."))):
         for name, vasp_input in input_mapping.items():
-            if f"{name}.orig" in str(filename):
+            if f"{name}{suffix}" in str(filename):
                 if name == "POTCAR":
                     # can't serialize POTCAR
                     orig_inputs[name.lower()] = PotcarSpec.from_potcar(
