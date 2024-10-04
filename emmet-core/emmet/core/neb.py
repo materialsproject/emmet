@@ -84,10 +84,9 @@ class NebTaskDoc(BaseModel, extra="allow"):
         volumetric_files: Tuple[str, ...] = _VOLUMETRIC_FILES,
         **neb_task_doc_kwargs,
     ) -> Self:
-        
         if isinstance(dir_name, str):
             dir_name = Path(dir_name)
-        
+
         neb_directories = sorted(dir_name.glob("[0-9][0-9]"))
 
         endpoint_directories = [neb_directories[0], neb_directories[-1]]
