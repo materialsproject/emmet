@@ -127,6 +127,9 @@ RUN_TYPES:
       LASPH: true
       LUSE_VDW: true
       Zab_vdW: -1.8867
+  GW:
+    G0W0:
+      ALGO: Gw0
 TASK_TYPES:
   - NSCF Line
   - NSCF Uniform
@@ -140,5 +143,4 @@ TASK_TYPES:
   - Deformation
   - Optic
   - Molecular Dynamics
-  - GW Band Structure
   - Unrecognized
