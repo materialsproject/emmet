@@ -19,9 +19,9 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.27
+boto3==1.35.34
     # via maggma
-botocore==1.35.27
+botocore==1.35.34
     # via
     #   boto3
     #   s3transfer
@@ -39,7 +39,7 @@ cryptography==43.0.1
     # via paramiko
 cycler==0.12.1
     # via matplotlib
-dnspython==2.6.1
+dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
@@ -55,7 +55,7 @@ fonttools==4.54.1
     # via matplotlib
 griddataformats==1.0.2
     # via mdanalysis
-h5py==3.12.0
+h5py==3.12.1
     # via phonopy
 idna==3.10
     # via requests
@@ -88,13 +88,13 @@ latexcodec==3.0.0
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
-maggma==0.69.3
+maggma==0.69.4
     # via
     #   emmet-builders (setup.py)
     #   mp-api
 matcalc==0.0.4
     # via emmet-core
-matminer==0.9.2
+matminer==0.9.3
     # via
     #   emmet-builders (setup.py)
     #   robocrys
@@ -238,7 +238,7 @@ pydantic-settings==2.5.2
     #   maggma
 pydash==8.0.3
     # via maggma
-pymatgen==2024.9.17.1
+pymatgen==2024.10.3
     # via
     #   emmet-core
     #   matcalc
@@ -255,7 +255,7 @@ pymatgen-analysis-defects==2024.7.19
     # via emmet-core
 pymatgen-analysis-diffusion==2024.7.15
     # via emmet-core
-pymongo==4.9.1
+pymongo==4.10.1
     # via
     #   maggma
     #   matminer
@@ -294,7 +294,7 @@ requests==2.32.3
     #   matminer
     #   mp-api
     #   pymatgen
-robocrys==0.2.9
+robocrys==0.2.10
     # via emmet-core
 rpds-py==0.20.0
     # via
@@ -337,7 +337,7 @@ six==1.16.0
     #   patsy
     #   pybtex
     #   python-dateutil
-smart-open==7.0.4
+smart-open==7.0.5
     # via mp-api
 solvation-analysis==0.4.1
     # via
@@ -351,7 +351,7 @@ spglib==2.5.0
     #   seekpath
 sshtunnel==0.4.0
     # via maggma
-statsmodels==0.14.3
+statsmodels==0.14.4
     # via solvation-analysis
 sympy==1.13.3
     # via
@@ -367,7 +367,7 @@ threadpoolctl==3.5.0
     #   scikit-learn
 tifffile==2024.9.20
     # via scikit-image
-tomli==2.0.1
+tomli==2.0.2
     # via pytest
 tqdm==4.66.5
     # via
