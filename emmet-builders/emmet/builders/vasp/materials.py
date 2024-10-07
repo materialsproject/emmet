@@ -238,8 +238,8 @@ class MaterialsBuilder(Builder):
         grouped_tasks = self.filter_and_group_tasks(tasks, task_transformations)
         materials = []
         for group in grouped_tasks:
-            # commercial_license = True means that the default CC-BY license is applied
-            # commercial_license = True means that a CC-BY-NC license is applied
+            # commercial_license == True means that the default CC-BY license is applied
+            # commercial_license == False means that a CC-BY-NC license is applied
             commercial_license = True
             for task_doc in group:
                 if task_dog.tags and set(task_doc.tags).intersection(
