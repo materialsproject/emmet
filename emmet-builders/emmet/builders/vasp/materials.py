@@ -242,7 +242,7 @@ class MaterialsBuilder(Builder):
             # commercial_license == False means that a CC-BY-NC license is applied
             commercial_license = True
             for task_doc in group:
-                if task_dog.tags and set(task_doc.tags).intersection(
+                if task_doc.tags and set(task_doc.tags).intersection(
                     set(self.settings.NON_COMMERCIAL_TAGS)
                 ):
                     commercial_license = False
