@@ -21,11 +21,11 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.29
+boto3==1.35.34
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.35.29
+botocore==1.35.34
     # via
     #   boto3
     #   s3transfer
@@ -47,11 +47,11 @@ cryptography==43.0.1
     # via paramiko
 cycler==0.12.1
     # via matplotlib
-ddtrace==2.14.0
+ddtrace==2.14.2
     # via emmet-api (emmet/emmet-api/setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
-dnspython==2.6.1
+dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
@@ -187,7 +187,7 @@ pydantic-settings==2.5.2
     #   maggma
 pydash==8.0.3
     # via maggma
-pymatgen==2024.9.17.1
+pymatgen==2024.10.3
     # via
     #   emmet-core
     #   mp-pyrho
