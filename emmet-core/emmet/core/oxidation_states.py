@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Literal
 
 import numpy as np
 from pydantic import Field
@@ -30,13 +30,48 @@ class OxidationStateDoc(PropertyDoc):
     average_oxidation_states: Dict[str, float] = Field(
         description="Average oxidation states for each unique species."
     )
-    method: Optional[str] = Field(
+    method: Optional[Literal["Already Assigned", "Bond Valence Analysis", "Oxidation State Guess"]] = Field(
         None, description="Method used to compute oxidation states."
     )
 
     @classmethod
     def from_structure(cls, structure: Structure, material_id: MPID, **kwargs):  # type: ignore[override]
-        # TODO: add check for if it already has oxidation states, if so pass this along unchanged ("method": "manual")
+        
+        # Check if structure already has oxidation states,
+        # if so pass this along unchanged with "method" == "Already Assigned"        
+        valences = []
+        species = []
+
+        site_oxidation_list = defaultdict(list)
+        for site in structure:
+            oxi_state = getattr(site.species, "oxi_state")
+            if oxi_state:
+                site_oxidation_list[site.species.element].append(oxi_state)
+                species.append(site.species)
+            valences.append(oxi_state)
+
+        average_oxidation_states = {
+            str(el): np.mean(oxi_states) for el, oxi_states in site_oxidation_list.items()  # type: ignore
+        }
+
+        if any(valences):
+            d = {
+                "possible_species": species,
+                "possible_valences": valences,
+                "average_oxidation_states": average_oxidation_states,
+                "method": "Already Assigned"
+                "state": "successful"
+            }
+            return super().from_structure(
+                meta_structure=structure,
+                material_id=material_id,
+                structure=structure,
+                **d,
+                **kwargs
+            )
+
+        # otherwise, continue with assignment
+        
         structure.remove_oxidation_states()
 
         # Null document
@@ -77,7 +112,7 @@ class OxidationStateDoc(PropertyDoc):
             }
 
         except Exception as e:
-            logging.error("BVAnalyzer failed with: {}".format(e))
+            logging.debug("BVAnalyzer failed for {structure.composition.reduced_composition} with: {}. Trying oxi_state_guesses.".format(e))
 
             try:
                 first_oxi_state_guess = structure.composition.oxi_state_guesses(
