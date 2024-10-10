@@ -78,7 +78,11 @@ def task_type(
         except Exception as e:
             raise Exception("Couldn't identify total number of kpt labels") from e
 
-        if num_kpt_labels > 0:
+        if num_kpt_labels > 0 or kpts.get("nkpoints", 0) > 0:
+            # calcs_reversed kpoints are read from vasprun.xml, which
+            # removes k-points labels --> check that nkpoints > 0
+            # orig_inputs are read from KPOINTS and retain
+            # user-input labels --> check num_kpt_labels > 0
             calc_type.append("NSCF Line")
         else:
             calc_type.append("NSCF Uniform")
