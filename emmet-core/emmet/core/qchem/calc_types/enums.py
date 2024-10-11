@@ -7,6 +7,7 @@ Instead, edit
 and/or
     emmet/core/qchem/calc_types/calc_types.yaml
 """
+
 from emmet.core.utils import ValueEnum
 
 
