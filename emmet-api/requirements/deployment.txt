@@ -8,7 +8,7 @@ aioitertools==0.12.0
     # via maggma
 annotated-types==0.7.0
     # via pydantic
-anyio==4.4.0
+anyio==4.6.0
     # via starlette
 asgi-logger==0.1.0
     # via emmet-api (emmet/emmet-api/setup.py)
@@ -21,11 +21,11 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.21
+boto3==1.35.34
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.35.21
+botocore==1.35.34
     # via
     #   boto3
     #   s3transfer
@@ -47,15 +47,15 @@ cryptography==43.0.1
     # via paramiko
 cycler==0.12.1
     # via matplotlib
-ddtrace==2.12.2
+ddtrace==2.14.2
     # via emmet-api (emmet/emmet-api/setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
-dnspython==2.6.1
+dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.2rc7
+emmet-core==0.84.3rc0
     # via emmet-api (emmet/emmet-api/setup.py)
 envier==0.5.2
     # via ddtrace
@@ -65,7 +65,7 @@ fastapi==0.115.0
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-fonttools==4.53.1
+fonttools==4.54.1
     # via matplotlib
 gunicorn==23.0.0
     # via emmet-api (emmet/emmet-api/setup.py)
@@ -97,7 +97,7 @@ latexcodec==3.0.0
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
-maggma[api]==0.69.3
+maggma[api]==0.69.4
     # via emmet-api (emmet/emmet-api/setup.py)
 matplotlib==3.9.2
     # via
@@ -151,7 +151,7 @@ packaging==24.1
     #   scikit-image
 palettable==3.3.3
     # via pymatgen
-pandas==2.2.2
+pandas==2.2.3
     # via
     #   -r python/requirements.txt
     #   maggma
@@ -165,7 +165,7 @@ pillow==10.4.0
     #   scikit-image
 plotly==5.24.1
     # via pymatgen
-protobuf==5.28.1
+protobuf==5.28.2
     # via ddtrace
 pybtex==0.24.0
     # via
@@ -187,7 +187,7 @@ pydantic-settings==2.5.2
     #   maggma
 pydash==8.0.3
     # via maggma
-pymatgen==2024.9.17
+pymatgen==2024.10.3
     # via
     #   emmet-core
     #   mp-pyrho
@@ -198,7 +198,9 @@ pymatgen-analysis-alloys==0.0.6
 pymatgen-analysis-defects==2024.7.19
     # via emmet-api (emmet/emmet-api/setup.py)
 pymongo==4.8.0
-    # via maggma
+    # via
+    #   emmet-api (emmet/emmet-api/setup.py)
+    #   maggma
 pynacl==1.5.0
     # via paramiko
 pyparsing==3.1.4
@@ -262,15 +264,15 @@ spglib==2.5.0
     # via pymatgen
 sshtunnel==0.4.0
     # via maggma
-starlette==0.38.5
+starlette==0.38.6
     # via fastapi
-sympy==1.13.2
+sympy==1.13.3
     # via pymatgen
 tabulate==0.9.0
     # via pymatgen
 tenacity==9.0.0
     # via plotly
-tifffile==2024.8.30
+tifffile==2024.9.20
     # via scikit-image
 tqdm==4.66.5
     # via
@@ -287,7 +289,7 @@ typing-extensions==4.12.2
     #   pydantic-core
     #   pydash
     #   uvicorn
-tzdata==2024.1
+tzdata==2024.2
     # via pandas
 uncertainties==3.2.2
     # via pymatgen
@@ -295,7 +297,7 @@ urllib3==2.2.3
     # via
     #   botocore
     #   requests
-uvicorn==0.30.6
+uvicorn==0.31.0
     # via maggma
 wrapt==1.16.0
     # via

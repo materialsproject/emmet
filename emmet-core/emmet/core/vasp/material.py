@@ -21,9 +21,9 @@ SETTINGS = EmmetSettings()
 class BlessedCalcs(BaseModel):
     GGA: Optional[ComputedStructureEntry] = None
     GGA_U: Optional[ComputedStructureEntry] = Field(None, alias="GGA+U")
-    PBESol: Optional[ComputedStructureEntry] = None
+    PBESol: Optional[ComputedStructureEntry] = Field(None, alias="PBEsol")
     SCAN: Optional[ComputedStructureEntry] = None
-    R2SCAN: Optional[ComputedStructureEntry] = None
+    R2SCAN: Optional[ComputedStructureEntry] = Field(None, alias="r2SCAN")
     HSE: Optional[ComputedStructureEntry] = None
 
 

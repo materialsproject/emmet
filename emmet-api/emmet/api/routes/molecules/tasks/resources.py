@@ -3,6 +3,7 @@ from maggma.api.resource import ReadOnlyResource
 
 from emmet.api.routes.molecules.molecules.query_operators import (
     ChemsysQuery,
+    ElementsQuery,
     FormulaQuery,
 )
 from emmet.api.routes.molecules.tasks.hint_scheme import TasksHintScheme
@@ -27,6 +28,7 @@ def task_resource(task_store):
         query_operators=[
             FormulaQuery(),
             ChemsysQuery(),
+            ElementsQuery(),
             MultipleTaskIDsQuery(),
             PaginationQuery(),
             SparseFieldsQuery(

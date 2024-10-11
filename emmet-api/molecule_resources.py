@@ -18,7 +18,6 @@ from emmet.api.routes.molecules.molecules.resources import (
 from emmet.api.routes.molecules.partial_charges.resources import charges_resource
 from emmet.api.routes.molecules.partial_spins.resources import spins_resource
 from emmet.api.routes.molecules.bonds.resources import bonding_resource
-from emmet.api.routes.molecules.electric.resources import electric_multipole_resource
 from emmet.api.routes.molecules.metal_binding.resources import metal_binding_resource
 from emmet.api.routes.molecules.orbitals.resources import orbitals_resource
 from emmet.api.routes.molecules.redox.resources import redox_resource
@@ -31,7 +30,10 @@ from emmet.api.routes.legacy.jcesr.resources import jcesr_resource
 resources = {}
 
 default_settings = MAPISettings()
-db_uri = os.environ.get("MPMOLECULES_MONGO_HOST", None)
+
+db_uri = os.environ.get("MPCONTRIBS_MONGO_HOST", None)
+db_version = default_settings.DB_VERSION
+db_suffix = os.environ["MAPI_DB_NAME_SUFFIX"]
 
 if db_uri:
     # allow db_uri to be set with a different protocol scheme
@@ -79,13 +81,6 @@ if db_uri:
         database="mp_molecules",
         key="property_id",
         collection_name="molecules_bonds",
-    )
-
-    multipole_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_molecules",
-        key="property_id",
-        collection_name="molecules_multipole",
     )
 
     metal_binding_store = MongoURIStore(

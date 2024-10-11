@@ -18,18 +18,6 @@ def open_shell(test_dir):
     return task
 
 
-@pytest.fixture(scope="session")
-def new_closed(test_dir):
-    task = TaskDocument(**loadfn((test_dir / "closed_shell_with3c.json.gz")))
-    return task
-
-
-@pytest.fixture(scope="session")
-def new_open(test_dir):
-    task = TaskDocument(**loadfn((test_dir / "open_shell_with3c.json.gz")))
-    return task
-
-
 def test_orbital(closed_shell, open_shell):
     # Test closed-shell NBO parsing
     doc = OrbitalDoc.from_task(
@@ -67,26 +55,3 @@ def test_orbital(closed_shell, open_shell):
     assert doc.beta_population is not None
     assert doc.nbo_lone_pairs is None
     assert doc.nbo_bonds is None
-
-
-def test_new_parser(new_closed, new_open):
-    # Test closed-shell parsing including 3-center bonds and hyperbonds
-    cs_doc = OrbitalDoc.from_task(
-        new_closed, "b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2", deprecated=False
-    )
-
-    assert cs_doc.open_shell is False
-    assert len(cs_doc.nbo_three_center_bonds) == 3
-    assert cs_doc.nbo_three_center_bonds[1].atom1_polarization == pytest.approx(34.47)
-    assert cs_doc.nbo_hyperbonds[2].hybrid_index_2 == 184
-
-    # Test open-shell parsing including 3-center bonds and hyperbonds
-    os_doc = OrbitalDoc.from_task(
-        new_open, "b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2", deprecated=False
-    )
-
-    assert os_doc.open_shell is True
-    assert len(os_doc.alpha_three_center_bonds) == 3
-    assert os_doc.alpha_three_center_bonds[0].atom3_index == 14
-    assert len(os_doc.beta_hyperbonds) == 2
-    assert os_doc.beta_hyperbonds[0].fraction_12 == pytest.approx(41.2)

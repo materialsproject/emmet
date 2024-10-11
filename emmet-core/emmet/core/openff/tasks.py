@@ -2,20 +2,22 @@
 
 from __future__ import annotations
 
+import zlib
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
-from typing_extensions import Annotated
-import zlib
 
+from monty.json import MSONable
 from pydantic import (
     BaseModel,
+    ConfigDict,
     Field,
-    PlainValidator,
     PlainSerializer,
+    PlainValidator,
     WithJsonSchema,
 )
-from monty.json import MSONable
+from pymatgen.core import Structure
+from typing_extensions import Annotated
 
 from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
 
@@ -55,7 +57,7 @@ class MoleculeSpec(MSONable):
     openff_mol: str  # a tk.Molecule object serialized with to_json
 
 
-class MDTaskDocument(BaseModel, extra="allow"):  # type: ignore[call-arg]
+class MDTaskDocument(BaseModel):  # type: ignore[call-arg]
     """Definition of the OpenMM task document."""
 
     tags: Optional[list[str]] = Field(
@@ -83,8 +85,17 @@ class MDTaskDocument(BaseModel, extra="allow"):  # type: ignore[call-arg]
         None, description="An interchange object serialized to json."
     )
 
-    interchange_meta: Optional[list[MoleculeSpec]] = Field(
-        None, description="Molecules within the system."
+    mol_specs: Optional[list[MoleculeSpec]] = Field(
+        None,
+        description="Molecules within the system. Only makes sense "
+        "for molecular systems.",
+    )
+
+    structure: Optional[Structure] = Field(
+        None,
+        title="Structure",
+        description="The final structure for the simulation. Saved only "
+        "if specified by job.",
     )
 
     force_field: Optional[str] = Field(None, description="The classical MD forcefield.")
@@ -99,10 +110,12 @@ class MDTaskDocument(BaseModel, extra="allow"):  # type: ignore[call-arg]
         description="Timestamp for the most recent calculation for this task document",
     )
 
+    model_config = ConfigDict(extra="allow")
+
 
 class ClassicalMDTaskDocument(MDTaskDocument):
     """Definition of the OpenMM task document."""
 
-    interchange_meta: Optional[list[MoleculeSpec]] = Field(
+    mol_specs: Optional[list[MoleculeSpec]] = Field(
         None, description="Molecules within the system."
     )

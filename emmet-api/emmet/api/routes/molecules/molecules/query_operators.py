@@ -74,9 +74,9 @@ Wildcards for unknown elements only supported for single chemsys queries",
         return [(key, False) for key in keys]
 
 
-class CompositionElementsQuery(QueryOperator):
+class ElementsQuery(QueryOperator):
     """
-    Factory method to generate a dependency for querying by elements present in a composition.
+    Factory method to generate a dependency for querying by element data
     """
 
     def query(
@@ -90,7 +90,10 @@ class CompositionElementsQuery(QueryOperator):
             description="Query by excluded elements in the material composition as a comma-separated list",
         ),
     ) -> STORE_PARAMS:
-        crit = dict()  # type: dict
+        crit = {}  # type: dict
+
+        if elements or exclude_elements:
+            crit["elements"] = {}
 
         if elements:
             try:
@@ -101,8 +104,7 @@ class CompositionElementsQuery(QueryOperator):
                     detail="Please provide a comma-seperated list of elements",
                 )
 
-            for el in element_list:
-                crit[f"composition.{str(el)}"] = {"$exists": True}
+            crit["elements"]["$all"] = [str(el) for el in element_list]
 
         if exclude_elements:
             try:
@@ -114,14 +116,12 @@ class CompositionElementsQuery(QueryOperator):
                     status_code=400,
                     detail="Please provide a comma-seperated list of elements",
                 )
-
-            for el in element_list:
-                crit[f"composition.{str(el)}"] = {"$exists": False}
+            crit["elements"]["$nin"] = [str(el) for el in element_list]
 
         return {"criteria": crit}
 
     def ensure_indexes(self):  # pragma: no cover
-        return [("composition.$**", False)]
+        return [("elements", False)]
 
 
 class ChargeSpinQuery(QueryOperator):
@@ -465,35 +465,3 @@ class HashQuery(QueryOperator):
 
     def ensure_indexes(self):  # pragma: no cover
         return [("species_hash", False), ("coord_hash", False)]
-
-
-class StringRepQuery(QueryOperator):
-    """
-    Method to generate a query based on molecular string representations,
-        such as international chemical identifier (InChI) strings.
-    """
-
-    def query(
-        self,
-        inchi: Optional[str] = Query(
-            None,
-            description="International chemical identifier (InChI) string for this molecule",
-        ),
-        inchi_key: Optional[str] = Query(
-            None, description="Hash of the InChI, also known as the InChI-key"
-        ),
-    ):
-        crit = dict()
-
-        self.inchi = inchi
-        self.inchi_key = inchi_key
-
-        if self.inchi is not None and isinstance(self.inchi, str):
-            crit.update({"inchi": self.inchi})
-        if self.inchi_key is not None and isinstance(self.inchi_key, str):
-            crit.update({"inchi_key": self.inchi_key})
-
-        return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        return [("inchi", False), ("inchi_key", False)]

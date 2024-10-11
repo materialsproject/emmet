@@ -1,4 +1,5 @@
 """Module to define various calculation types as Enums for VASP."""
+
 from __future__ import annotations
 from importlib.resources import files as import_resource_files
 from itertools import product
@@ -130,7 +131,11 @@ from emmet.core.utils import ValueEnum, IgnoreCaseEnum
                     enum_name,
                     docstr[enum_name],
                     sorted_enums,
-                    enum_class=("IgnoreCase" if enum_name == "RunType" else "Value")
+                    enum_class=(
+                        "IgnoreCase"
+                        if enum_name in ["RunType", "CalcType"]
+                        else "Value"
+                    )
                     + "Enum",
                 )
             )

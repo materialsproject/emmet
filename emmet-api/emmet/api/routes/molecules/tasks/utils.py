@@ -30,17 +30,13 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
         cds_gradients = calculation.get("CDS_gradients")
         mulliken = calculation.get("Mulliken")
         resp = calculation.get("RESP")
-        dipoles = calculation.get("dipoles")
-        multipoles = calculation.get("multipoles")
 
         valid_trajectory = True
         if geometries is None or energies is None:
             # No valid geometry optimization found
-            print("NO GEOM OR NO ENERGIES!")
             valid_trajectory = False
         elif len(geometries) != len(energies):
             # Ambiguous - no one-to-one mapping of molecule structure and energy
-            print("GEOMS NOT EQUAL ENERGIES")
             valid_trajectory = False
 
         if not valid_trajectory:
@@ -58,60 +54,11 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
 
         mols = [Molecule(species, g, charge=charge, spin_multiplicity=multiplicity) for g in geometries]  # type: ignore
 
-        # Frame (molecule) properties
         frame_props = {"electronic_energy": energies}
         num_steps = len(mols)
 
-        # electric dipoles
-        if dipoles is not None:
-            if (
-                isinstance(dipoles.get("total"), list)
-                and len(dipoles["total"]) == num_steps
-            ):
-                frame_props["total_dipole"] = dipoles["total"]
-            if (
-                isinstance(dipoles.get("RESP_total"), list)
-                and len(dipoles["RESP_total"]) == num_steps
-            ):
-                frame_props["resp_total_dipole"] = dipoles["RESP_total"]
-            if dipoles.get("dipole") is not None and len(dipoles["dipole"]) > 0:
-                if (
-                    isinstance(dipoles["dipole"][0], list)
-                    and len(dipoles["dipole"]) == num_steps
-                ):
-                    frame_props["dipole_moment"] = dipoles["dipole"]
-            if (
-                dipoles.get("RESP_dipole") is not None
-                and len(dipoles["RESP_dipole"]) > 0
-            ):
-                if (
-                    isinstance(dipoles["RESP_dipole"][0], list)
-                    and len(dipoles["RESP_dipole"]) == num_steps
-                ):
-                    frame_props["resp_dipole_moment"] = dipoles["RESP_dipole"]
-
-        # electric multipoles
-        if multipoles is not None:
-            if (
-                isinstance(multipoles.get("quadrupole"), list)
-                and len(multipoles["quadrupole"]) == num_steps
-            ):
-                frame_props["quadrupole_moment"] = multipoles["quadrupole"]
-            if (
-                isinstance(multipoles.get("octopole"), list)
-                and len(multipoles["octopole"]) == num_steps
-            ):
-                frame_props["octopole_moment"] = multipoles["octopole"]
-            if (
-                isinstance(multipoles.get("hexadecapole"), list)
-                and len(multipoles["hexadecapole"]) == num_steps
-            ):
-                frame_props["hexadecapole_moment"] = multipoles["hexadecapole"]
-
-        # Site (atomic) properties
         site_props = dict()
 
-        # Gradients
         if total_gradients is not None and len(total_gradients) == num_steps:
             site_props["total_gradient"] = total_gradients
         if pcm_gradients is not None and len(pcm_gradients) == num_steps:
@@ -119,7 +66,6 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
         if cds_gradients is not None and len(cds_gradients) == num_steps:
             site_props["cds_gradient"] = cds_gradients
 
-        # Partial charges/spins
         if mulliken is not None:
             if len(mulliken) == num_steps:
                 site_props["mulliken"] = mulliken
@@ -138,7 +84,6 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
                 if np.allclose(last, seclast):
                     site_props["resp"] = resp[:-1]
 
-        # Convert into a Trajectory object
         traj_frame_props = list()
         traj_mols = list()
         for i in range(num_steps):
