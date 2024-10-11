@@ -40,7 +40,7 @@ def run_type(parameters: Dict) -> RunType:
         return v1 == v2
 
     # This is to force an order of evaluation
-    for functional_class in ["HF", "VDW", "METAGGA", "GGA"]:
+    for functional_class in ["GW", "HF", "VDW", "METAGGA", "GGA"]:
         for special_type, params in _RUN_TYPE_DATA[functional_class].items():
             if all(
                 _variant_equal(parameters.get(param, None), value)
@@ -121,6 +121,9 @@ def task_type(
 
     elif incar.get("IBRION", 1) == 0:
         calc_type.append("Molecular Dynamics")
+
+    elif incar.get("ALGO", "Normal").lower() == "gw0":
+        calc_type.append("NSCF Uniform")
 
     if len(calc_type) == 0:
         return TaskType("Unrecognized")

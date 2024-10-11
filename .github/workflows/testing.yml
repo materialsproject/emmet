@@ -52,7 +52,8 @@ jobs:
           fi
 
   test:
-    needs: check-enums
+    # to-do: add check-enums req after finding solution for pushing to external forks
+    #needs: check-enums
     strategy:
       matrix:
         os: ["ubuntu-latest"] # TODO openbabel for windows and mac
