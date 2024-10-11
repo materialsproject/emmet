@@ -118,7 +118,7 @@ def task_type(
     elif incar.get("IBRION", 1) == 0:
         calc_type.append("Molecular Dynamics")
 
-    elif incar.get("ALGO", "").lower() == "gw0":
+    elif incar.get("ALGO", "Normal").lower() == "gw0":
         calc_type.append("NSCF Uniform")
 
     if len(calc_type) == 0:
