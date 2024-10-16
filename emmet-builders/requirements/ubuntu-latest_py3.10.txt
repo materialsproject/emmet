@@ -19,9 +19,9 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.39
+boto3==1.35.42
     # via maggma
-botocore==1.35.39
+botocore==1.35.42
     # via
     #   boto3
     #   s3transfer
@@ -204,7 +204,7 @@ patsy==0.5.6
     # via statsmodels
 phonopy==2.28.0
     # via matcalc
-pillow==10.4.0
+pillow==11.0.0
     # via
     #   imageio
     #   matplotlib
