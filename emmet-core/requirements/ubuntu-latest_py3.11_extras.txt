@@ -28,9 +28,9 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.39
+boto3==1.35.42
     # via maggma
-botocore==1.35.39
+botocore==1.35.42
     # via
     #   boto3
     #   s3transfer
@@ -62,7 +62,7 @@ cryptography==43.0.1
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
-custodian==2024.6.24
+custodian==2024.10.16
     # via emmet-core (setup.py)
 cycler==0.12.1
     # via matplotlib
@@ -156,7 +156,7 @@ lazy-loader==0.4
     # via scikit-image
 lightning==2.4.0
     # via matgl
-lightning-utilities==0.11.7
+lightning-utilities==0.11.8
     # via
     #   lightning
     #   pytorch-lightning
@@ -235,7 +235,7 @@ mkdocstrings[python]==0.26.2
     # via
     #   emmet-core (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.12.0
+mkdocstrings-python==1.12.1
     # via mkdocstrings
 mmtf-python==1.1.3
     # via mdanalysis
@@ -270,7 +270,7 @@ multidict==6.1.0
     # via
     #   aiohttp
     #   yarl
-mypy==1.11.2
+mypy==1.12.0
     # via emmet-core (setup.py)
 mypy-extensions==1.0.0
     # via
@@ -390,7 +390,7 @@ patsy==0.5.6
     # via statsmodels
 phonopy==2.28.0
     # via matcalc
-pillow==10.4.0
+pillow==11.0.0
     # via
     #   imageio
     #   matplotlib
@@ -641,7 +641,7 @@ triton==3.0.0
     # via torch
 typeguard==4.3.0
     # via inflect
-types-requests==2.32.0.20240914
+types-requests==2.32.0.20241016
     # via emmet-core (setup.py)
 types-setuptools==75.1.0.20241014
     # via emmet-core (setup.py)
@@ -680,7 +680,7 @@ wincertstore==0.2.1
     # via emmet-core (setup.py)
 wrapt==1.16.0
     # via smart-open
-yarl==1.15.2
+yarl==1.15.4
     # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
