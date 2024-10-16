@@ -8,7 +8,7 @@ aioitertools==0.12.0
     # via maggma
 annotated-types==0.7.0
     # via pydantic
-anyio==4.6.2
+anyio==4.6.2.post1
     # via starlette
 asgi-logger==0.1.0
     # via emmet-api (setup.py)
@@ -21,11 +21,11 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.39
+boto3==1.35.42
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.35.39
+botocore==1.35.42
     # via
     #   boto3
     #   s3transfer
@@ -152,7 +152,7 @@ pandas==2.2.3
     #   pymatgen
 paramiko==3.5.0
     # via sshtunnel
-pillow==10.4.0
+pillow==11.0.0
     # via
     #   imageio
     #   matplotlib
@@ -257,7 +257,7 @@ spglib==2.5.0
     # via pymatgen
 sshtunnel==0.4.0
     # via maggma
-starlette==0.39.2
+starlette==0.40.0
     # via fastapi
 sympy==1.13.3
     # via pymatgen
@@ -287,13 +287,13 @@ urllib3==2.2.3
     # via
     #   botocore
     #   requests
-uvicorn==0.31.1
+uvicorn==0.32.0
     # via maggma
 wrapt==1.16.0
     # via
     #   ddtrace
     #   deprecated
-xmltodict==0.14.1
+xmltodict==0.14.2
     # via ddtrace
 zipp==3.20.2
     # via importlib-metadata
