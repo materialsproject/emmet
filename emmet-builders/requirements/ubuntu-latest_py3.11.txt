@@ -19,9 +19,9 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.42
+boto3==1.35.44
     # via maggma
-botocore==1.35.42
+botocore==1.35.44
     # via
     #   boto3
     #   s3transfer
@@ -35,7 +35,7 @@ charset-normalizer==3.4.0
     # via requests
 contourpy==1.3.0
     # via matplotlib
-cryptography==43.0.1
+cryptography==43.0.3
     # via paramiko
 cycler==0.12.1
     # via matplotlib
@@ -230,7 +230,7 @@ pydantic==2.9.2
     #   pydantic-settings
 pydantic-core==2.23.4
     # via pydantic
-pydantic-settings==2.5.2
+pydantic-settings==2.6.0
     # via
     #   emmet-core
     #   maggma
