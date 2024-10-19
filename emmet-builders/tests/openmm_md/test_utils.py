@@ -19,7 +19,7 @@ def test_create_universe_and_solute(test_dir):
 
     water_taskdoc = ClassicalMDTaskDocument.parse_file(system_dir / "taskdoc.json")
     interchange = Interchange.parse_raw(water_taskdoc.interchange)
-    mol_specs = water_taskdoc.interchange_meta
+    mol_specs = water_taskdoc.mol_specs
     assert mol_specs is not None
 
     u = create_universe(

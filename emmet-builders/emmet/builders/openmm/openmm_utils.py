@@ -78,15 +78,15 @@ def instantiate_universe(
     task_doc = OpenMMTaskDocument.parse_obj(task_doc)
     if new_traj:
         with open(traj_path, "wb") as f:
-            f.write(task_doc.calcs_reversed[0].output.traj_blob)
+            f.write(bytes.fromhex(task_doc.calcs_reversed[0].output.traj_blob))
 
     # create interchange
-    interchange_str = task_doc.interchange.decode("utf-8")
-    interchange = Interchange.parse_raw(interchange_str)
+    # interchange_str = task_doc.interchange.decode("utf-8")
+    interchange = Interchange.parse_raw(task_doc.interchange)
 
     return create_universe(
         interchange,
-        task_doc.interchange_meta,
+        task_doc.mol_specs,
         traj_path,
         traj_format=traj_file_type,
     )
@@ -107,7 +107,7 @@ def resolve_traj_path(task_doc, local_trajectories, rebase_traj_path):
         with open(traj_path, "wb") as f:
             if calc.output.traj_blob is None:
                 raise ValueError("No trajectory blob included in the task doc.")
-            f.write(calc.output.traj_blob)
+            f.write(bytes.fromhex(calc.output.traj_blob))
     return traj_path, traj_file
 
 
@@ -115,16 +115,15 @@ def task_doc_to_universe(task_doc, traj_path):
     calc = task_doc.calcs_reversed[0]
 
     # create interchange
-    interchange_str = task_doc.interchange.decode("utf-8")
     try:
-        interchange = Interchange.parse_raw(interchange_str)
+        interchange = Interchange.parse_raw(task_doc.interchange)
     except:  # noqa: E722
         # parse with openmm instead
-        interchange = OpenMMInterchange.parse_raw(interchange_str)
+        interchange = OpenMMInterchange.parse_raw(task_doc.interchange)
 
     return create_universe(
         interchange,
-        task_doc.interchange_meta,
+        task_doc.mol_specs,
         traj_path,
         traj_format=calc.input.traj_file_type,
     )

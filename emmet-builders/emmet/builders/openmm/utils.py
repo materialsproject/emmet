@@ -335,7 +335,7 @@ def instantiate_universe(
 
     return create_universe(
         interchange,
-        task_doc.interchange_meta,
+        task_doc.mol_specs,
         traj_path,
         traj_format=traj_file_type,
     )

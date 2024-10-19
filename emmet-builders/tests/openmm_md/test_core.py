@@ -34,7 +34,7 @@ def benchmarking_store():
 @pytest.fixture()
 def water_stores(test_dir, tmp_path):
     # intended to only be run locally in a dev environment
-    recreate_input = False
+    recreate_input = True
 
     stores_dir = test_dir / "openmm" / "water_stores"
 
@@ -92,7 +92,7 @@ def water_stores(test_dir, tmp_path):
 @pytest.fixture()
 def cco_stores(test_dir, tmp_path):
     # intended to only be run locally in a dev environment
-    recreate_input = False
+    recreate_input = True
 
     stores_dir = test_dir / "openmm" / "cco_stores"
 
@@ -155,7 +155,7 @@ def cco_stores(test_dir, tmp_path):
 @pytest.fixture
 def opls_stores(test_dir, tmp_path):
     # intended to only be run locally in a dev environment
-    recreate_input = False
+    recreate_input = True
 
     stores_dir = test_dir / "openmm" / "opls_stores"
 
@@ -168,7 +168,7 @@ def opls_stores(test_dir, tmp_path):
     )
 
     if recreate_input:
-        from atomate2.openmm.jobs.opls import generate_openmm_interchange
+        from atomate2.openmm.jobs.generate import generate_openmm_interchange
         from atomate2.openff.utils import create_mol_spec
         from atomate2.openmm.flows import OpenMMFlowMaker
         from atomate2.openmm.jobs import NVTMaker, EnergyMinimizationMaker
@@ -186,8 +186,8 @@ def opls_stores(test_dir, tmp_path):
         ]
 
         ff_xmls = [
-            (opls_xmls / "CCO.xml"),
-            (opls_xmls / "CO.xml"),
+            (opls_xmls / "CCO.xml").read_text(),
+            (opls_xmls / "CO.xml").read_text(),
         ]
 
         interchange_job = generate_openmm_interchange(mol_specs, 1.0, ff_xmls)
@@ -282,6 +282,8 @@ def test_electrolyte_builder_local(
 
 
 def test_benchmarking_builder(cco_stores, benchmarking_store):
+    # TODO: test is failing because H5MD file is not being properly deserialized
+
     doc_store, blob_store = cco_stores
     builder = BenchmarkingBuilder(
         doc_store,

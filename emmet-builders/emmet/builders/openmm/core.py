@@ -299,8 +299,9 @@ class BenchmarkingBuilder(Builder):
             # create task_doc
             task_doc = OpenMMTaskDocument.parse_obj(item["output"])
 
-            # _ is needed bc traj_path may be a tmpfile and a reference must be in scope
-            traj_path, _ = resolve_traj_path(
+            # _tmp_file is needed bc traj_path may be a tmpfile and a
+            # reference must be in scope
+            traj_path, _tmp_file = resolve_traj_path(
                 task_doc, local_trajectories, rebase_traj_path
             )
 
