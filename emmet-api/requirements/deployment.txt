@@ -55,7 +55,7 @@ dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.3rc2
+emmet-core==0.84.3rc3
     # via emmet-api (emmet/emmet-api/setup.py)
 envier==0.5.2
     # via ddtrace
@@ -105,7 +105,7 @@ matplotlib==3.9.2
     #   pymatgen
 mongomock==4.2.0.post1
     # via maggma
-monty==2024.7.30
+monty==2024.10.21
     # via
     #   emmet-core
     #   maggma
@@ -116,7 +116,7 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.1.0
     # via maggma
-networkx==3.4.1
+networkx==3.4.2
     # via
     #   pymatgen
     #   scikit-image
@@ -129,6 +129,7 @@ numpy==1.26.4
     #   imageio
     #   maggma
     #   matplotlib
+    #   monty
     #   pandas
     #   pymatgen
     #   pymatgen-analysis-defects
@@ -139,7 +140,7 @@ numpy==1.26.4
     #   tifffile
 opentelemetry-api==1.27.0
     # via ddtrace
-orjson==3.10.7
+orjson==3.10.9
     # via maggma
 packaging==24.1
     # via
@@ -232,8 +233,9 @@ rpds-py==0.20.0
 ruamel-yaml==0.18.6
     # via
     #   maggma
+    #   monty
     #   pymatgen
-ruamel-yaml-clib==0.2.8
+ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
 s3transfer==0.10.3
     # via boto3

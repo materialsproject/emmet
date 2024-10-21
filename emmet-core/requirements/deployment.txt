@@ -28,13 +28,13 @@ matplotlib==3.9.2
     # via
     #   -r python/requirements.txt
     #   pymatgen
-monty==2024.7.30
+monty==2024.10.21
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pymatgen
 mpmath==1.3.0
     # via sympy
-networkx==3.4.1
+networkx==3.4.2
     # via pymatgen
 numpy==1.26.4
     # via
@@ -42,6 +42,7 @@ numpy==1.26.4
     #   contourpy
     #   emmet-core (emmet/emmet-core/setup.py)
     #   matplotlib
+    #   monty
     #   pandas
     #   pymatgen
     #   scipy
@@ -89,8 +90,10 @@ pyyaml==6.0.2
 requests==2.32.3
     # via pymatgen
 ruamel-yaml==0.18.6
-    # via pymatgen
-ruamel-yaml-clib==0.2.8
+    # via
+    #   monty
+    #   pymatgen
+ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
 scipy==1.14.1
     # via
