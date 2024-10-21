@@ -948,6 +948,11 @@
 
 
 
+
+
+
+
+
   <div class="doc doc-children">
 
 
@@ -970,25 +975,30 @@
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><span title="emmet.core.utils.ValueEnum">ValueEnum</span></code></p>
+              Bases: <code>ValueEnum</code></p>
 
 
         <p>The crystal system of the lattice</p>
 
+
+
+
+
+
               <details class="quote">
                 <summary>Source code in <code>emmet/core/symmetry.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">19</span>
 <span class="normal">20</span>
 <span class="normal">21</span>
 <span class="normal">22</span>
 <span class="normal">23</span>
 <span class="normal">24</span>
-<span class="normal">25</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">CrystalSystem</span><span class="p">(</span><span class="n">ValueEnum</span><span class="p">):</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">CrystalSystem</span><span class="p">(</span><span class="n">ValueEnum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The crystal system of the lattice</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1036,19 +1046,19 @@
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><span title="pydantic.BaseModel">BaseModel</span></code></p>
+              Bases: <code>BaseModel</code></p>
 
 
         <p>Defines symmetry for a molecule document</p>
 
+
+
+
+
+
               <details class="quote">
                 <summary>Source code in <code>emmet/core/symmetry.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 28</span>
-<span class="normal"> 29</span>
-<span class="normal"> 30</span>
-<span class="normal"> 31</span>
-<span class="normal"> 32</span>
-<span class="normal"> 33</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 33</span>
 <span class="normal"> 34</span>
 <span class="normal"> 35</span>
 <span class="normal"> 36</span>
@@ -1126,7 +1136,12 @@
 <span class="normal">108</span>
 <span class="normal">109</span>
 <span class="normal">110</span>
-<span class="normal">111</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">PointGroupData</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">PointGroupData</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Defines symmetry for a molecule document</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1246,19 +1261,19 @@
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><span title="pydantic.BaseModel">BaseModel</span></code></p>
+              Bases: <code>BaseModel</code></p>
 
 
         <p>Defines a symmetry data set for materials documents</p>
 
+
+
+
+
+
               <details class="quote">
                 <summary>Source code in <code>emmet/core/symmetry.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">119</span>
 <span class="normal">120</span>
 <span class="normal">121</span>
 <span class="normal">122</span>
@@ -1307,7 +1322,39 @@
 <span class="normal">165</span>
 <span class="normal">166</span>
 <span class="normal">167</span>
-<span class="normal">168</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SymmetryData</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SymmetryData</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Defines a symmetry data set for materials documents</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1335,29 +1382,56 @@
     <span class="n">symprec</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Symmetry Finding Precision&quot;</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The precision given to spglib to determine the symmetry of this lattice.&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The precision provided to spglib to determine the symmetry of this structure.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;SPGLib version&quot;</span><span class="p">)</span>
+    <span class="n">angle_tolerance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Angle Tolerance&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Angle tolerance provided to spglib to determine the symmetry of this structure.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;spglib version&quot;</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_structure</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">structure</span><span class="p">:</span> <span class="n">Structure</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SymmetryData&quot;</span><span class="p">:</span>
-        <span class="n">symprec</span> <span class="o">=</span> <span class="n">SETTINGS</span><span class="o">.</span><span class="n">SYMPREC</span>
-        <span class="n">sg</span> <span class="o">=</span> <span class="n">SpacegroupAnalyzer</span><span class="p">(</span><span class="n">structure</span><span class="p">,</span> <span class="n">symprec</span><span class="o">=</span><span class="n">symprec</span><span class="p">)</span>
-        <span class="n">symmetry</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;symprec&quot;</span><span class="p">:</span> <span class="n">symprec</span><span class="p">}</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">sg</span><span class="o">.</span><span class="n">get_symmetry_dataset</span><span class="p">():</span>
-            <span class="n">sg</span> <span class="o">=</span> <span class="n">SpacegroupAnalyzer</span><span class="p">(</span><span class="n">structure</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">symmetry</span><span class="p">[</span><span class="s2">&quot;symprec&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-3</span>
+        <span class="n">symmetry</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="s2">&quot;spglib&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;symbol&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;number&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;point_group&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;crystal_system&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;hall&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="n">spglib</span><span class="o">.</span><span class="n">__version__</span><span class="p">,</span>
+            <span class="s2">&quot;symprec&quot;</span><span class="p">:</span> <span class="n">SETTINGS</span><span class="o">.</span><span class="n">SYMPREC</span><span class="p">,</span>
+            <span class="s2">&quot;angle_tolerance&quot;</span><span class="p">:</span> <span class="n">SETTINGS</span><span class="o">.</span><span class="n">ANGLE_TOL</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sg</span> <span class="o">=</span> <span class="n">SpacegroupAnalyzer</span><span class="p">(</span>
+                <span class="n">structure</span><span class="p">,</span>
+                <span class="n">symprec</span><span class="o">=</span><span class="n">symmetry</span><span class="p">[</span><span class="s2">&quot;symprec&quot;</span><span class="p">],</span>
+                <span class="n">angle_tolerance</span><span class="o">=</span><span class="n">symmetry</span><span class="p">[</span><span class="s2">&quot;angle_tolerance&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="n">SymmetryUndeterminedError</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">symmetry</span><span class="p">[</span><span class="s2">&quot;symprec&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-3</span>
+                <span class="n">symmetry</span><span class="p">[</span><span class="s2">&quot;angle_tolerance&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">sg</span> <span class="o">=</span> <span class="n">SpacegroupAnalyzer</span><span class="p">(</span>
+                    <span class="n">structure</span><span class="p">,</span>
+                    <span class="n">symprec</span><span class="o">=</span><span class="n">symmetry</span><span class="p">[</span><span class="s2">&quot;symprec&quot;</span><span class="p">],</span>
+                    <span class="n">angle_tolerance</span><span class="o">=</span><span class="n">symmetry</span><span class="p">[</span><span class="s2">&quot;angle_tolerance&quot;</span><span class="p">],</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="n">SymmetryUndeterminedError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">SymmetryData</span><span class="p">(</span><span class="o">**</span><span class="n">symmetry</span><span class="p">)</span>
 
         <span class="n">symmetry</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
             <span class="p">{</span>
-                <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="s2">&quot;spglib&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;symbol&quot;</span><span class="p">:</span> <span class="n">sg</span><span class="o">.</span><span class="n">get_space_group_symbol</span><span class="p">(),</span>
                 <span class="s2">&quot;number&quot;</span><span class="p">:</span> <span class="n">sg</span><span class="o">.</span><span class="n">get_space_group_number</span><span class="p">(),</span>
                 <span class="s2">&quot;point_group&quot;</span><span class="p">:</span> <span class="n">sg</span><span class="o">.</span><span class="n">get_point_group_symbol</span><span class="p">(),</span>
                 <span class="s2">&quot;crystal_system&quot;</span><span class="p">:</span> <span class="n">CrystalSystem</span><span class="p">(</span><span class="n">sg</span><span class="o">.</span><span class="n">get_crystal_system</span><span class="p">()</span><span class="o">.</span><span class="n">title</span><span class="p">()),</span>
                 <span class="s2">&quot;hall&quot;</span><span class="p">:</span> <span class="n">sg</span><span class="o">.</span><span class="n">get_hall</span><span class="p">(),</span>
-                <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="n">spglib</span><span class="o">.</span><span class="n">__version__</span><span class="p">,</span>
             <span class="p">}</span>
         <span class="p">)</span>
 
@@ -1405,6 +1479,11 @@
 
 
 
+
+
+
+
+
   <div class="doc doc-children">
 
 
@@ -1427,10 +1506,15 @@
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><span title="emmet.core.base.EmmetBaseModel">EmmetBaseModel</span></code></p>
+              Bases: <code>EmmetBaseModel</code></p>
 
 
         <p>Mix-in class for molecule metadata.</p>
+
+
+
+
+
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/structure.py</code></summary>
@@ -1909,10 +1993,15 @@ fields : list of str or None
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><span title="emmet.core.base.EmmetBaseModel">EmmetBaseModel</span></code></p>
+              Bases: <code>EmmetBaseModel</code></p>
 
 
         <p>Mix-in class for structure metadata.</p>
+
+
+
+
+
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/structure.py</code></summary>
@@ -2228,6 +2317,11 @@ fields : list of str or None
 
 
 
+
+
+
+
+
   <div class="doc doc-children">
 
 
@@ -2250,10 +2344,15 @@ fields : list of str or None
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="emmet.core.structure.MoleculeMetadata" href="#emmet.core.structure.MoleculeMetadata">MoleculeMetadata</a></code></p>
+              Bases: <code>MoleculeMetadata</code></p>
 
 
         <p>Definition for a core Molecule Document</p>
+
+
+
+
+
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/material.py</code></summary>
@@ -2486,10 +2585,15 @@ fields : list of str or None
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="emmet.core.structure.StructureMetadata" href="#emmet.core.structure.StructureMetadata">StructureMetadata</a></code></p>
+              Bases: <code>StructureMetadata</code></p>
 
 
         <p>Definition for a core Materials Document</p>
+
+
+
+
+
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/material.py</code></summary>
@@ -2732,10 +2836,15 @@ fields : list of str or None
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><span title="pydantic.BaseModel">BaseModel</span></code></p>
+              Bases: <code>BaseModel</code></p>
 
 
         <p>Provenance document for the origin of properties in a material document</p>
+
+
+
+
+
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/material.py</code></summary>
@@ -2817,6 +2926,11 @@ fields : list of str or None
 
 
 
+
+
+
+
+
   <div class="doc doc-children">
 
 
@@ -2839,10 +2953,15 @@ fields : list of str or None
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><span title="pydantic.BaseModel">BaseModel</span></code></p>
+              Bases: <code>BaseModel</code></p>
 
 
         <p>Entry metadata for a decomposition process</p>
+
+
+
+
+
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/thermo.py</code></summary>
@@ -2915,10 +3034,15 @@ fields : list of str or None
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><span title="pydantic.BaseModel">BaseModel</span></code></p>
+              Bases: <code>BaseModel</code></p>
 
 
         <p>A phase diagram document</p>
+
+
+
+
+
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/thermo.py</code></summary>
@@ -3019,10 +3143,15 @@ fields : list of str or None
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><span title="emmet.core.material_property.PropertyDoc">PropertyDoc</span></code></p>
+              Bases: <code>PropertyDoc</code></p>
 
 
         <p>A thermo entry document</p>
+
+
+
+
+
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/thermo.py</code></summary>
@@ -3573,9 +3702,11 @@ represented in the entry data passed.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code>entries</code></td>
             <td>
-                  <code><span title="typing.List">List</span>[<span title="pymatgen.entries.computed_entries.ComputedStructureEntry">ComputedStructureEntry</span>]</code>
+                <code>entries</code>
+            </td>
+            <td>
+                  <code>List[ComputedStructureEntry]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3601,7 +3732,7 @@ represented in the entry data passed.</p>
       <tbody>
           <tr class="doc-section-item">
 <td><code>PhaseDiagram</code></td>            <td>
-                  <code><span title="pymatgen.analysis.phase_diagram.PhaseDiagram">PhaseDiagram</span></code>
+                  <code>PhaseDiagram</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3709,9 +3840,11 @@ represented in the entry data passed.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code>entries</code></td>
             <td>
-                  <code><span title="typing.List">List</span>[<span title="typing.Union">Union</span>[<span title="pymatgen.entries.computed_entries.ComputedEntry">ComputedEntry</span>, <span title="pymatgen.entries.computed_entries.ComputedStructureEntry">ComputedStructureEntry</span>]]</code>
+                <code>entries</code>
+            </td>
+            <td>
+                  <code>List[Union[ComputedEntry, ComputedStructureEntry]]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3723,9 +3856,11 @@ represented in the entry data passed.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code>thermo_type</code></td>
             <td>
-                  <code><span title="typing.Union">Union</span>[<span title="emmet.core.thermo.ThermoType">ThermoType</span>, <span title="emmet.core.vasp.calc_types.enums.RunType">RunType</span>]</code>
+                <code>thermo_type</code>
+            </td>
+            <td>
+                  <code>Union[ThermoType, RunType]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3737,9 +3872,11 @@ represented in the entry data passed.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code>phase_diagram</code></td>
             <td>
-                  <code><span title="typing.Optional">Optional</span>[<span title="pymatgen.analysis.phase_diagram.PhaseDiagram">PhaseDiagram</span>]</code>
+                <code>phase_diagram</code>
+            </td>
+            <td>
+                  <code>Optional[PhaseDiagram]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3751,7 +3888,9 @@ represented in the entry data passed.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code>use_max_chemsys</code></td>
+            <td>
+                <code>use_max_chemsys</code>
+            </td>
             <td>
                   <code>bool</code>
             </td>
@@ -4111,6 +4250,11 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
 
 
+
+
+
+
+
   <div class="doc doc-children">
 
 
@@ -4133,10 +4277,15 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><span title="pydantic.BaseModel">BaseModel</span></code></p>
+              Bases: <code>BaseModel</code></p>
 
 
         <p>Author information</p>
+
+
+
+
+
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/provenance.py</code></summary>
@@ -4189,10 +4338,15 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><span title="emmet.core.utils.ValueEnum">ValueEnum</span></code></p>
+              Bases: <code>ValueEnum</code></p>
 
 
         <p>Database identifiers for provenance IDs</p>
+
+
+
+
+
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/provenance.py</code></summary>
@@ -4247,10 +4401,15 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><span title="pydantic.BaseModel">BaseModel</span></code></p>
+              Bases: <code>BaseModel</code></p>
 
 
         <p>History of the material provenance</p>
+
+
+
+
+
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/provenance.py</code></summary>
@@ -4323,10 +4482,15 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><span title="emmet.core.material_property.PropertyDoc">PropertyDoc</span></code></p>
+              Bases: <code>PropertyDoc</code></p>
 
 
         <p>A provenance property block</p>
+
+
+
+
+
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/provenance.py</code></summary>
@@ -4791,10 +4955,15 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><span title="pydantic.BaseModel">BaseModel</span></code></p>
+              Bases: <code>BaseModel</code></p>
 
 
         <p>A data dictionary defining extra fields in a SNL</p>
+
+
+
+
+
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/provenance.py</code></summary>
@@ -4899,10 +5068,15 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><span title="pydantic.BaseModel">BaseModel</span></code></p>
+              Bases: <code>BaseModel</code></p>
 
 
         <p>Pydantic validated dictionary for SNL</p>
+
+
+
+
+
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/provenance.py</code></summary>
@@ -4960,6 +5134,11 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
 
 
+
+
+
+
+
   <div class="doc doc-children">
 
 
@@ -4982,10 +5161,15 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><span title="pydantic.BaseModel">BaseModel</span></code></p>
+              Bases: <code>BaseModel</code></p>
 
 
         <p>A block for the Born effective charges</p>
+
+
+
+
+
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/polar.py</code></summary>
@@ -5064,10 +5248,15 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><span title="emmet.core.material_property.PropertyDoc">PropertyDoc</span></code></p>
+              Bases: <code>PropertyDoc</code></p>
 
 
         <p>A dielectric property block</p>
+
+
+
+
+
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/polar.py</code></summary>
@@ -5208,10 +5397,15 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><span title="pydantic.BaseModel">BaseModel</span></code></p>
+              Bases: <code>BaseModel</code></p>
 
 
         <p>A block for the pymatgen IRDielectricTensor object</p>
+
+
+
+
+
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/polar.py</code></summary>
@@ -5266,10 +5460,15 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><span title="emmet.core.material_property.PropertyDoc">PropertyDoc</span></code></p>
+              Bases: <code>PropertyDoc</code></p>
 
 
         <p>A dielectric package block</p>
+
+
+
+
+
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/polar.py</code></summary>
