@@ -255,7 +255,7 @@ more-itertools==10.5.0
     # via inflect
 mp-api==0.42.2
     # via robocrys
-mp-pyrho==0.4.4
+mp-pyrho==0.4.5
     # via pymatgen-analysis-defects
 mpmath==1.3.0
     # via sympy
@@ -270,7 +270,7 @@ multidict==6.1.0
     # via
     #   aiohttp
     #   yarl
-mypy==1.12.1
+mypy==1.13.0
     # via emmet-core (setup.py)
 mypy-extensions==1.0.0
     # via
@@ -469,7 +469,7 @@ pymatgen==2024.10.22
     #   robocrys
 pymatgen-analysis-alloys==0.0.7
     # via emmet-core (setup.py)
-pymatgen-analysis-defects==2024.7.19
+pymatgen-analysis-defects==2024.10.22
     # via emmet-core (setup.py)
 pymatgen-analysis-diffusion==2024.7.15
     # via emmet-core (setup.py)

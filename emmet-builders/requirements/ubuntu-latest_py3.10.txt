@@ -252,7 +252,7 @@ pymatgen==2024.10.22
     #   robocrys
 pymatgen-analysis-alloys==0.0.7
     # via emmet-core
-pymatgen-analysis-defects==2024.7.19
+pymatgen-analysis-defects==2024.10.22
     # via emmet-core
 pymatgen-analysis-diffusion==2024.7.15
     # via emmet-core
