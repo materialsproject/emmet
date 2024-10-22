@@ -21,11 +21,11 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.44
+boto3==1.35.46
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.35.44
+botocore==1.35.46
     # via
     #   boto3
     #   s3transfer
@@ -47,7 +47,7 @@ cryptography==43.0.3
     # via paramiko
 cycler==0.12.1
     # via matplotlib
-ddtrace==2.14.2
+ddtrace==2.14.4
     # via emmet-api (emmet/emmet-api/setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -57,11 +57,11 @@ dnspython==2.7.0
     #   pymongo
 emmet-core==0.84.3rc3
     # via emmet-api (emmet/emmet-api/setup.py)
-envier==0.5.2
+envier==0.6.1
     # via ddtrace
 exceptiongroup==1.2.2
     # via anyio
-fastapi==0.115.2
+fastapi==0.115.3
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
@@ -140,7 +140,7 @@ numpy==1.26.4
     #   tifffile
 opentelemetry-api==1.27.0
     # via ddtrace
-orjson==3.10.9
+orjson==3.10.10
     # via maggma
 packaging==24.1
     # via
@@ -188,7 +188,7 @@ pydantic-settings==2.6.0
     #   maggma
 pydash==8.0.3
     # via maggma
-pymatgen==2024.10.3
+pymatgen==2024.10.22
     # via
     #   emmet-core
     #   mp-pyrho
@@ -264,7 +264,7 @@ spglib==2.5.0
     # via pymatgen
 sshtunnel==0.4.0
     # via maggma
-starlette==0.40.0
+starlette==0.41.0
     # via fastapi
 sympy==1.13.3
     # via pymatgen
