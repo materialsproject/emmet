@@ -26,19 +26,20 @@ latexcodec==3.0.0
     # via pybtex
 matplotlib==3.9.2
     # via pymatgen
-monty==2024.7.30
+monty==2024.10.21
     # via
     #   emmet-core (setup.py)
     #   pymatgen
 mpmath==1.3.0
     # via sympy
-networkx==3.4.1
+networkx==3.4.2
     # via pymatgen
 numpy==1.26.4
     # via
     #   contourpy
     #   emmet-core (setup.py)
     #   matplotlib
+    #   monty
     #   pandas
     #   pymatgen
     #   scipy
@@ -67,7 +68,7 @@ pydantic-core==2.23.4
     # via pydantic
 pydantic-settings==2.6.0
     # via emmet-core (setup.py)
-pymatgen==2024.10.3
+pymatgen==2024.10.22
     # via emmet-core (setup.py)
 pyparsing==3.2.0
     # via matplotlib
@@ -84,8 +85,10 @@ pyyaml==6.0.2
 requests==2.32.3
     # via pymatgen
 ruamel-yaml==0.18.6
-    # via pymatgen
-ruamel-yaml-clib==0.2.8
+    # via
+    #   monty
+    #   pymatgen
+ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
 scipy==1.14.1
     # via pymatgen
