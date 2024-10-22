@@ -28,9 +28,9 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.44
+boto3==1.35.46
     # via maggma
-botocore==1.35.44
+botocore==1.35.46
     # via
     #   boto3
     #   s3transfer
@@ -56,7 +56,7 @@ colorama==0.4.6
     # via griffe
 contourpy==1.3.0
     # via matplotlib
-coverage[toml]==7.6.3
+coverage[toml]==7.6.4
     # via pytest-cov
 cryptography==43.0.3
     # via paramiko
@@ -78,7 +78,7 @@ dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.3rc2
+emmet-core==0.84.3rc3
     # via mp-api
 fasteners==0.19
     # via mdanalysis
@@ -95,7 +95,7 @@ frozenlist==1.4.1
     # via
     #   aiohttp
     #   aiosignal
-fsspec[http]==2024.9.0
+fsspec[http]==2024.10.0
     # via
     #   lightning
     #   pytorch-lightning
@@ -235,13 +235,13 @@ mkdocstrings[python]==0.26.2
     # via
     #   emmet-core (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.12.1
+mkdocstrings-python==1.12.2
     # via mkdocstrings
 mmtf-python==1.1.3
     # via mdanalysis
 mongomock==4.2.0.post1
     # via maggma
-monty==2024.7.30
+monty==2024.10.21
     # via
     #   custodian
     #   emmet-core
@@ -270,7 +270,7 @@ multidict==6.1.0
     # via
     #   aiohttp
     #   yarl
-mypy==1.12.0
+mypy==1.12.1
     # via emmet-core (setup.py)
 mypy-extensions==1.0.0
     # via
@@ -278,7 +278,7 @@ mypy-extensions==1.0.0
     #   mypy
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
-networkx==3.4.1
+networkx==3.4.2
     # via
     #   dgl
     #   pymatgen
@@ -302,6 +302,7 @@ numpy==1.26.4
     #   matminer
     #   matplotlib
     #   mdanalysis
+    #   monty
     #   mrcfile
     #   pandas
     #   patsy
@@ -356,7 +357,7 @@ nvidia-nvjitlink-cu12==12.4.127
     #   torch
 nvidia-nvtx-cu12==12.4.127
     # via torch
-orjson==3.10.7
+orjson==3.10.10
     # via maggma
 packaging==24.1
     # via
@@ -389,7 +390,7 @@ pathspec==0.12.1
     # via mkdocs
 patsy==0.5.6
     # via statsmodels
-phonopy==2.28.0
+phonopy==2.29.0
     # via matcalc
 pillow==11.0.0
     # via
@@ -452,7 +453,7 @@ pyflakes==3.2.0
     # via flake8
 pygments==2.18.0
     # via mkdocs-material
-pymatgen==2024.10.3
+pymatgen==2024.10.22
     # via
     #   chgnet
     #   emmet-core
@@ -545,9 +546,10 @@ ruamel-yaml==0.18.6
     # via
     #   custodian
     #   maggma
+    #   monty
     #   pymatgen
     #   robocrys
-ruamel-yaml-clib==0.2.8
+ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
 s3transfer==0.10.3
     # via boto3
@@ -561,6 +563,7 @@ scipy==1.14.1
     #   dgl
     #   griddataformats
     #   mdanalysis
+    #   phonopy
     #   pymatgen
     #   robocrys
     #   scikit-image
@@ -644,7 +647,7 @@ typeguard==4.3.0
     # via inflect
 types-requests==2.32.0.20241016
     # via emmet-core (setup.py)
-types-setuptools==75.2.0.20241018
+types-setuptools==75.2.0.20241019
     # via emmet-core (setup.py)
 typing-extensions==4.12.2
     # via
@@ -681,7 +684,7 @@ wincertstore==0.2.1
     # via emmet-core (setup.py)
 wrapt==1.16.0
     # via smart-open
-yarl==1.15.5
+yarl==1.16.0
     # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
