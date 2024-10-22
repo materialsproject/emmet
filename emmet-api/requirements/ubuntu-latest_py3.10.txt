@@ -108,7 +108,7 @@ monty==2024.10.21
     #   emmet-core
     #   maggma
     #   pymatgen
-mp-pyrho==0.4.4
+mp-pyrho==0.4.5
     # via pymatgen-analysis-defects
 mpmath==1.3.0
     # via sympy
@@ -192,7 +192,7 @@ pymatgen==2024.10.22
     #   pymatgen-analysis-defects
 pymatgen-analysis-alloys==0.0.7
     # via emmet-api (setup.py)
-pymatgen-analysis-defects==2024.7.19
+pymatgen-analysis-defects==2024.10.22
     # via emmet-api (setup.py)
 pymongo==4.10.1
     # via maggma
