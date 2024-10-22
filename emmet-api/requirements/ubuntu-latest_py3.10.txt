@@ -21,11 +21,11 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.44
+boto3==1.35.46
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.35.44
+botocore==1.35.46
     # via
     #   boto3
     #   s3transfer
@@ -47,7 +47,7 @@ cryptography==43.0.3
     # via paramiko
 cycler==0.12.1
     # via matplotlib
-ddtrace==2.14.2
+ddtrace==2.14.4
     # via emmet-api (setup.py)
 deprecated==1.2.14
     # via opentelemetry-api
@@ -55,13 +55,13 @@ dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.3rc2
+emmet-core==0.84.3rc3
     # via emmet-api (setup.py)
-envier==0.5.2
+envier==0.6.1
     # via ddtrace
 exceptiongroup==1.2.2
     # via anyio
-fastapi==0.115.2
+fastapi==0.115.3
     # via
     #   emmet-api (setup.py)
     #   maggma
@@ -103,7 +103,7 @@ matplotlib==3.9.2
     # via pymatgen
 mongomock==4.2.0.post1
     # via maggma
-monty==2024.7.30
+monty==2024.10.21
     # via
     #   emmet-core
     #   maggma
@@ -114,7 +114,7 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.1.0
     # via maggma
-networkx==3.4.1
+networkx==3.4.2
     # via
     #   pymatgen
     #   scikit-image
@@ -126,6 +126,7 @@ numpy==1.26.4
     #   imageio
     #   maggma
     #   matplotlib
+    #   monty
     #   pandas
     #   pymatgen
     #   pymatgen-analysis-defects
@@ -136,7 +137,7 @@ numpy==1.26.4
     #   tifffile
 opentelemetry-api==1.27.0
     # via ddtrace
-orjson==3.10.7
+orjson==3.10.10
     # via maggma
 packaging==24.1
     # via
@@ -183,7 +184,7 @@ pydantic-settings==2.6.0
     #   maggma
 pydash==8.0.3
     # via maggma
-pymatgen==2024.10.3
+pymatgen==2024.10.22
     # via
     #   emmet-core
     #   mp-pyrho
@@ -228,8 +229,9 @@ rpds-py==0.20.0
 ruamel-yaml==0.18.6
     # via
     #   maggma
+    #   monty
     #   pymatgen
-ruamel-yaml-clib==0.2.8
+ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
 s3transfer==0.10.3
     # via boto3
@@ -257,7 +259,7 @@ spglib==2.5.0
     # via pymatgen
 sshtunnel==0.4.0
     # via maggma
-starlette==0.40.0
+starlette==0.41.0
     # via fastapi
 sympy==1.13.3
     # via pymatgen
