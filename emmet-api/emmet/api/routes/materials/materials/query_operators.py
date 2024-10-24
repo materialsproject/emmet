@@ -456,11 +456,25 @@ class LicenseQuery(QueryOperator):
         license information in builder meta
     """
 
+    # def query(
+    #     self,
+    #     license: Optional[Literal["BY-C", "BY-NC"]] = Query(
+    #         "BY-C",
+    #         description="Query by license. Either commercial or non-commercial CC-BY",
+    #     ),
+    # ) -> STORE_PARAMS:
+    #     return {"criteria": {"builder_meta.license": license}}
+
     def query(
         self,
-        license: Optional[Literal["BY-C", "BY-NC"]] = Query(
+        license: Optional[Literal["BY-C", "BY-NC", "All"]] = Query(
             "BY-C",
-            description="Query by license. Either commercial or non-commercial CC-BY",
+            description="Query by license. Can be commercial or non-commercial, or both",
         ),
     ) -> STORE_PARAMS:
-        return {"criteria": {"builder_meta.license": license}}
+        criteria = (
+            {"builder_meta.license": {"$in": ["BY-C", "BY-NC"]}}
+            if license == "All"
+            else {"builder_meta.license": license}
+        )
+        return {"criteria": criteria}
