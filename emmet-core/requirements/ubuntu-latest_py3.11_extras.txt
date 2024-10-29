@@ -28,9 +28,9 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.46
+boto3==1.35.51
     # via maggma
-botocore==1.35.46
+botocore==1.35.51
     # via
     #   boto3
     #   s3transfer
@@ -91,7 +91,7 @@ flake8==7.1.1
     # via emmet-core (setup.py)
 fonttools==4.54.1
     # via matplotlib
-frozenlist==1.4.1
+frozenlist==1.5.0
     # via
     #   aiohttp
     #   aiosignal
@@ -390,7 +390,7 @@ pathspec==0.12.1
     # via mkdocs
 patsy==0.5.6
     # via statsmodels
-phonopy==2.29.0
+phonopy==2.29.1
     # via matcalc
 pillow==11.0.0
     # via
@@ -453,7 +453,7 @@ pyflakes==3.2.0
     # via flake8
 pygments==2.18.0
     # via mkdocs-material
-pymatgen==2024.10.22
+pymatgen==2024.10.29
     # via
     #   chgnet
     #   emmet-core
@@ -473,7 +473,7 @@ pymatgen-analysis-defects==2024.10.22
     # via emmet-core (setup.py)
 pymatgen-analysis-diffusion==2024.7.15
     # via emmet-core (setup.py)
-pymdown-extensions==10.11.2
+pymdown-extensions==10.12
     # via
     #   mkdocs-material
     #   mkdocstrings
@@ -490,7 +490,7 @@ pytest==8.3.3
     #   emmet-core (setup.py)
     #   pytest-cov
     #   solvation-analysis
-pytest-cov==5.0.0
+pytest-cov==6.0.0
     # via emmet-core (setup.py)
 python-dateutil==2.9.0.post0
     # via
@@ -614,7 +614,7 @@ threadpoolctl==3.5.0
     #   scikit-learn
 tifffile==2024.9.20
     # via scikit-image
-torch==2.5.0
+torch==2.5.1
     # via
     #   chgnet
     #   lightning
@@ -626,13 +626,13 @@ torchdata==0.7.1
     # via
     #   dgl
     #   matgl
-torchmetrics==1.5.0
+torchmetrics==1.5.1
     # via
     #   lightning
     #   pytorch-lightning
 tornado==6.4.1
     # via livereload
-tqdm==4.66.5
+tqdm==4.66.6
     # via
     #   dgl
     #   lightning
@@ -643,11 +643,11 @@ tqdm==4.66.5
     #   pytorch-lightning
 triton==3.1.0
     # via torch
-typeguard==4.3.0
+typeguard==4.4.0
     # via inflect
 types-requests==2.32.0.20241016
     # via emmet-core (setup.py)
-types-setuptools==75.2.0.20241019
+types-setuptools==75.2.0.20241025
     # via emmet-core (setup.py)
 typing-extensions==4.12.2
     # via
@@ -674,7 +674,7 @@ urllib3==2.2.3
     #   requests
     #   torchdata
     #   types-requests
-virtualenv==20.27.0
+virtualenv==20.27.1
     # via pre-commit
 watchdog==5.0.3
     # via mkdocs
@@ -684,7 +684,7 @@ wincertstore==0.2.1
     # via emmet-core (setup.py)
 wrapt==1.16.0
     # via smart-open
-yarl==1.16.0
+yarl==1.17.0
     # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
