@@ -21,17 +21,17 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.46
+boto3==1.35.51
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.35.46
+botocore==1.35.51
     # via
     #   boto3
     #   s3transfer
 bracex==2.5.post1
     # via wcmatch
-bytecode==0.15.1
+bytecode==0.16.0
     # via ddtrace
 certifi==2024.8.30
     # via requests
@@ -78,7 +78,7 @@ exceptiongroup==1.2.2
     # via
     #   anyio
     #   pytest
-fastapi==0.115.3
+fastapi==0.115.4
     # via
     #   emmet-api (setup.py)
     #   maggma
@@ -278,7 +278,7 @@ pluggy==1.5.0
     # via pytest
 pre-commit==4.0.1
     # via emmet-api (setup.py)
-protobuf==5.28.2
+protobuf==5.28.3
     # via ddtrace
 pybtex==0.24.0
     # via
@@ -310,7 +310,7 @@ pyflakes==3.2.0
     # via flake8
 pygments==2.18.0
     # via mkdocs-material
-pymatgen==2024.10.22
+pymatgen==2024.10.29
     # via
     #   emmet-core
     #   mp-pyrho
@@ -320,7 +320,7 @@ pymatgen-analysis-alloys==0.0.7
     # via emmet-api (setup.py)
 pymatgen-analysis-defects==2024.10.22
     # via emmet-api (setup.py)
-pymdown-extensions==10.11.2
+pymdown-extensions==10.12
     # via
     #   mkdocs-material
     #   mkdocstrings
@@ -334,7 +334,7 @@ pytest==8.3.3
     # via
     #   emmet-api (setup.py)
     #   pytest-cov
-pytest-cov==5.0.0
+pytest-cov==6.0.0
     # via emmet-api (setup.py)
 python-dateutil==2.9.0.post0
     # via
@@ -407,7 +407,7 @@ spglib==2.5.0
     # via pymatgen
 sshtunnel==0.4.0
     # via maggma
-starlette==0.41.0
+starlette==0.41.2
     # via fastapi
 sympy==1.13.3
     # via pymatgen
@@ -424,13 +424,13 @@ tomli==2.0.2
     #   pytest
 tornado==6.4.1
     # via livereload
-tqdm==4.66.5
+tqdm==4.66.6
     # via
     #   maggma
     #   pymatgen
 types-requests==2.32.0.20241016
     # via emmet-api (setup.py)
-types-setuptools==75.2.0.20241019
+types-setuptools==75.2.0.20241025
     # via emmet-api (setup.py)
 typing-extensions==4.12.2
     # via
@@ -455,7 +455,7 @@ urllib3==2.2.3
     #   types-requests
 uvicorn==0.32.0
     # via maggma
-virtualenv==20.27.0
+virtualenv==20.27.1
     # via pre-commit
 watchdog==5.0.3
     # via mkdocs
