@@ -21,15 +21,15 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.46
+boto3==1.35.51
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.35.46
+botocore==1.35.51
     # via
     #   boto3
     #   s3transfer
-bytecode==0.15.1
+bytecode==0.16.0
     # via ddtrace
 certifi==2024.8.30
     # via requests
@@ -59,7 +59,7 @@ emmet-core==0.84.3rc3
     # via emmet-api (setup.py)
 envier==0.6.1
     # via ddtrace
-fastapi==0.115.3
+fastapi==0.115.4
     # via
     #   emmet-api (setup.py)
     #   maggma
@@ -160,7 +160,7 @@ pillow==11.0.0
     #   scikit-image
 plotly==5.24.1
     # via pymatgen
-protobuf==5.28.2
+protobuf==5.28.3
     # via ddtrace
 pybtex==0.24.0
     # via
@@ -182,7 +182,7 @@ pydantic-settings==2.6.0
     #   maggma
 pydash==8.0.3
     # via maggma
-pymatgen==2024.10.22
+pymatgen==2024.10.29
     # via
     #   emmet-core
     #   mp-pyrho
@@ -257,7 +257,7 @@ spglib==2.5.0
     # via pymatgen
 sshtunnel==0.4.0
     # via maggma
-starlette==0.41.0
+starlette==0.41.2
     # via fastapi
 sympy==1.13.3
     # via pymatgen
@@ -267,7 +267,7 @@ tenacity==9.0.0
     # via plotly
 tifffile==2024.9.20
     # via scikit-image
-tqdm==4.66.5
+tqdm==4.66.6
     # via
     #   maggma
     #   pymatgen
