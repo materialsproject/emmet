@@ -118,8 +118,8 @@ class NebTaskDoc(BaseModel, extra="allow"):
                 vasprun_file=vasp_files["standard"]["vasprun_file"],
                 outcar_file=vasp_files["standard"]["outcar_file"],
                 contcar_file=vasp_files["standard"]["contcar_file"],
-                volumetric_files=vasp_files["standard"].get("volumetric_files",[]),
-                oszicar_file=vasp_files["standard"].get("oszicar_file",None),
+                volumetric_files=vasp_files["standard"].get("volumetric_files", []),
+                oszicar_file=vasp_files["standard"].get("oszicar_file", None),
                 vasprun_kwargs={
                     "parse_potcar_file": False,
                 },
