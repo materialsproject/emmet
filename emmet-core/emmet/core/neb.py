@@ -3,7 +3,7 @@
 from datetime import datetime
 from pathlib import Path
 from pydantic import BaseModel, Field
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Union, Sequence
 from typing_extensions import Self
 
 from monty.os.path import zpath
@@ -37,7 +37,7 @@ class NebMethod(ValueEnum):
 class NebTaskDoc(BaseModel, extra="allow"):
     """Define schema for VASP NEB tasks."""
 
-    endpoint_structures: tuple[Structure, Structure] = Field(
+    endpoint_structures: Sequence[Structure] = Field(
         None,
         description="The initial and final configurations (reactants and products) of the barrier.",
     )
@@ -152,6 +152,12 @@ class NebTaskDoc(BaseModel, extra="allow"):
             else:
                 inputs["orig_inputs"] = OrigInputs(**vis)
 
+        neb_method = (
+            NebMethod.CLIMBING_IMAGE
+            if inputs["inputs"].incar.get("LCLIMB", False)
+            else NebMethod.STANDARD
+        )
+
         return cls(
             endpoint_structures=endpoint_structures,
             image_calculations=image_calculations,
@@ -160,11 +166,7 @@ class NebTaskDoc(BaseModel, extra="allow"):
             orig_inputs=inputs["orig_inputs"],
             inputs=inputs["inputs"],
             image_objects=image_objects,
-            neb_method=(
-                NebMethod.CLIMBING_IMAGE
-                if inputs["inputs"].incar.get("LCLIMB")
-                else NebMethod.STANDARD
-            ),
+            neb_method=neb_method,
             state=task_state,
             image_energies=[calc.output.energy for calc in image_calculations],
             custodian=_parse_custodian(dir_name),
