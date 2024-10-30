@@ -959,6 +959,9 @@ def _parse_orig_inputs(
     }
     suffix = suffix or ""
     for filename in dir_name.glob("*".join(f"{suffix}.".split("."))):
+        if "POTCAR.spec" in str(filename):
+            # Can't parse POTCAR.spec files
+            continue
         for name, vasp_input in input_mapping.items():
             if f"{name}{suffix}" in str(filename):
                 if name == "POTCAR":
