@@ -28,9 +28,9 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.0
     # via paramiko
-boto3==1.35.51
+boto3==1.35.54
     # via maggma
-botocore==1.35.51
+botocore==1.35.54
     # via
     #   boto3
     #   s3transfer
@@ -357,7 +357,7 @@ nvidia-nvjitlink-cu12==12.4.127
     #   torch
 nvidia-nvtx-cu12==12.4.127
     # via torch
-orjson==3.10.10
+orjson==3.10.11
     # via maggma
 packaging==24.1
     # via
@@ -440,12 +440,12 @@ pydantic==2.9.2
     #   pydantic-settings
 pydantic-core==2.23.4
     # via pydantic
-pydantic-settings==2.6.0
+pydantic-settings==2.6.1
     # via
     #   emmet-core
     #   emmet-core (setup.py)
     #   maggma
-pydash==8.0.3
+pydash==8.0.4
     # via maggma
 pydocstyle==6.3.0
     # via emmet-core (setup.py)
@@ -538,7 +538,7 @@ requests==2.32.3
     #   torchdata
 robocrys==0.2.10
     # via emmet-core (setup.py)
-rpds-py==0.20.0
+rpds-py==0.20.1
     # via
     #   jsonschema
     #   referencing
@@ -643,11 +643,11 @@ tqdm==4.66.6
     #   pytorch-lightning
 triton==3.1.0
     # via torch
-typeguard==4.4.0
+typeguard==4.4.1
     # via inflect
 types-requests==2.32.0.20241016
     # via emmet-core (setup.py)
-types-setuptools==75.2.0.20241025
+types-setuptools==75.3.0.20241105
     # via emmet-core (setup.py)
 typing-extensions==4.12.2
     # via
@@ -676,7 +676,7 @@ urllib3==2.2.3
     #   types-requests
 virtualenv==20.27.1
     # via pre-commit
-watchdog==5.0.3
+watchdog==6.0.0
     # via mkdocs
 wcmatch==10.0
     # via mkdocs-awesome-pages-plugin
@@ -684,7 +684,7 @@ wincertstore==0.2.1
     # via emmet-core (setup.py)
 wrapt==1.16.0
     # via smart-open
-yarl==1.17.0
+yarl==1.17.1
     # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
