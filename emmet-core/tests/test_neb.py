@@ -8,15 +8,17 @@ from pymatgen.core import Structure
 
 from emmet.core.neb import NebTaskDoc, NebMethod
 from emmet.core.tasks import InputDoc
-from emmet.core.utils import jsanitize
 from emmet.core.vasp.calculation import Calculation
 
 from tests.conftest import assert_schemas_equal
 
-def test_neb_doc(test_dir):
 
-    neb_doc_dict = loadfn(test_dir / "Si_neb_doc.json.bz2",cls=None)
-    for k in ("completed_at","last_updated",):
+def test_neb_doc(test_dir):
+    neb_doc_dict = loadfn(test_dir / "Si_neb_doc.json.bz2", cls=None)
+    for k in (
+        "completed_at",
+        "last_updated",
+    ):
         neb_doc_dict[k] = datetime.fromisoformat(neb_doc_dict[k]["string"])
     neb_doc = NebTaskDoc(**neb_doc_dict)
 
@@ -28,7 +30,7 @@ def test_neb_doc(test_dir):
         assert_schemas_equal(image_calc, neb_doc_dict["image_calculations"][image_idx])
         assert isinstance(image_calc, Calculation)
 
-    assert isinstance(neb_doc.inputs,InputDoc)
+    assert isinstance(neb_doc.inputs, InputDoc)
 
     # check NEB method parsing
     if neb_doc.inputs.incar.get("LCLIMB", False):
@@ -37,13 +39,12 @@ def test_neb_doc(test_dir):
         assert neb_doc.neb_method == NebMethod.STANDARD
 
     # check that endpoint structures exist
-    assert all(
-        isinstance(ep,Structure) for ep in neb_doc.endpoint_structures
-    )
+    assert all(isinstance(ep, Structure) for ep in neb_doc.endpoint_structures)
 
     # Check that image calculation dirs all have common root:
     assert all(
-        image_dir.startswith(neb_doc.dir_name) for image_dir in neb_doc.image_directories
+        image_dir.startswith(neb_doc.dir_name)
+        for image_dir in neb_doc.image_directories
     )
 
     # Check that VASP objects pre-allocated for each image calc
