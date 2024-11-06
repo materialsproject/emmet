@@ -173,3 +173,8 @@ class NebTaskDoc(BaseModel, extra="allow"):
             completed_at=max(calc.completed_at for calc in image_calculations),
             **neb_task_doc_kwargs,
         )
+
+    @property
+    def num_images(self) -> int:
+        """Return the number of VASP calculations / number of images performed."""
+        return len(self.image_directories)
