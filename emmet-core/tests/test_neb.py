@@ -1,28 +1,43 @@
 """Test NEB document class."""
 
 from datetime import datetime
+from pathlib import Path
 import pytest
+import shutil
+from tempfile import TemporaryDirectory
 
 from monty.serialization import loadfn
 from pymatgen.core import Structure
 
 from emmet.core.neb import NebTaskDoc, NebMethod
-from emmet.core.tasks import InputDoc
+from emmet.core.tasks import InputDoc, OrigInputs
+from emmet.core.utils import jsanitize
 from emmet.core.vasp.calculation import Calculation
 
 from tests.conftest import assert_schemas_equal
 
 
-def test_neb_doc(test_dir):
-    neb_doc_dict = loadfn(test_dir / "Si_neb_doc.json.bz2", cls=None)
-    for k in (
-        "completed_at",
-        "last_updated",
-    ):
-        neb_doc_dict[k] = datetime.fromisoformat(neb_doc_dict[k]["string"])
-    neb_doc = NebTaskDoc(**neb_doc_dict)
+@pytest.mark.parametrize("from_dir", [True,False])
+def test_neb_doc(test_dir, from_dir : bool ):
+    
+    if from_dir:
+        with TemporaryDirectory() as tmpdir:
+            shutil.unpack_archive(test_dir / "neb_sample_calc.zip", tmpdir, "zip")
+            neb_doc = NebTaskDoc.from_directory(tmpdir)
+        neb_doc_dict = jsanitize(neb_doc)
+    else:
+
+        neb_doc_dict = loadfn(test_dir / "Si_neb_doc.json.bz2", cls=None)
+        for k in (
+            "completed_at",
+            "last_updated",
+        ):
+            neb_doc_dict[k] = datetime.fromisoformat(neb_doc_dict[k]["string"])
+
+        neb_doc = NebTaskDoc(**neb_doc_dict)
 
     assert neb_doc.num_images == 3
+    assert isinstance(neb_doc.orig_inputs,OrigInputs)
 
     # test that NEB image calculations are all VASP Calculation objects
     assert len(neb_doc.image_calculations) == neb_doc.num_images
@@ -41,10 +56,13 @@ def test_neb_doc(test_dir):
     # check that endpoint structures exist
     assert all(isinstance(ep, Structure) for ep in neb_doc.endpoint_structures)
 
-    # Check that image calculation dirs all have common root:
+    # Check that image calculation dirs all have common root / expected format
     assert all(
-        image_dir.startswith(neb_doc.dir_name)
-        for image_dir in neb_doc.image_directories
+        image_dir.startswith(neb_doc.dir_name) for image_dir in neb_doc.image_directories
+    )
+    assert all(
+        Path(neb_doc.image_directories[image_idx]) == Path(neb_doc.dir_name) / f"{image_idx+1:02}"
+        for image_idx in range(neb_doc.num_images)
     )
 
     # Check that VASP objects pre-allocated for each image calc
