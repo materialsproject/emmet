@@ -43,18 +43,16 @@ class NebTaskDoc(BaseModel, extra="allow"):
         None,
         description="The initial and final configurations (reactants and products) of the barrier.",
     )
-    endpoint_energies : Optional[Sequence[float]] = Field(
-        None,
-        description="Energies of the endpoint structures."
+    endpoint_energies: Optional[Sequence[float]] = Field(
+        None, description="Energies of the endpoint structures."
     )
-    endpoint_calculations : Optional[list[Calculation]] = Field(
-        None,
-        description = "Calculation information for the endpoint structures"
+    endpoint_calculations: Optional[list[Calculation]] = Field(
+        None, description="Calculation information for the endpoint structures"
     )
-    endpoint_objects : Optional[list[dict]] = Field(
+    endpoint_objects: Optional[list[dict]] = Field(
         None, description="VASP objects for each endpoint calculation."
     )
-    endpoint_directories : Optional[list[str]] = Field(
+    endpoint_directories: Optional[list[str]] = Field(
         None, description="List of the directories for the endpoint calculations."
     )
 
@@ -140,25 +138,33 @@ class NebTaskDoc(BaseModel, extra="allow"):
     def num_images(self) -> int:
         """Return the number of VASP calculations / number of images performed."""
         return len(self.image_directories)
-    
+
     @property
     def energies(self) -> list[float]:
         """Return the endpoint (optional) and image energies."""
         if self.endpoint_energies is not None:
-            return [self.endpoint_energies[0], *self.image_energies, self.endpoint_energies[1]]
+            return [
+                self.endpoint_energies[0],
+                *self.image_energies,
+                self.endpoint_energies[1],
+            ]
         return self.image_energies
 
     @property
     def structures(self) -> list[Structure]:
         """Return the endpoint and image structures."""
-        return [self.endpoint_structures[0], *self.image_structures, self.endpoint_structures[1]]
-   
+        return [
+            self.endpoint_structures[0],
+            *self.image_structures,
+            self.endpoint_structures[1],
+        ]
+
     @classmethod
     def from_directory(
         cls,
         dir_name: Union[Path, str],
         volumetric_files: Tuple[str, ...] = _VOLUMETRIC_FILES,
-        store_calculations : bool = True,
+        store_calculations: bool = True,
         **neb_task_doc_kwargs,
     ) -> Self:
         """
@@ -172,7 +178,7 @@ class NebTaskDoc(BaseModel, extra="allow"):
 
         neb_directories = sorted(dir_name.glob("[0-9][0-9]"))
 
-        if (ep_calcs := neb_task_doc_kwargs.pop("endpoint_calculations", None) ) is None:
+        if (ep_calcs := neb_task_doc_kwargs.pop("endpoint_calculations", None)) is None:
             endpoint_directories = [neb_directories[0], neb_directories[-1]]
             endpoint_structures = [
                 Structure.from_file(zpath(f"{endpoint_dir}/POSCAR"))
@@ -181,12 +187,8 @@ class NebTaskDoc(BaseModel, extra="allow"):
             endpoint_energies = None
         else:
             endpoint_directories = neb_task_doc_kwargs.pop("endpoint_directories")
-            endpoint_structures = [
-                ep_calc.output.structure for ep_calc in ep_calcs
-            ]
-            endpoint_energies = [
-                ep_calc.output.energy for ep_calc in ep_calcs
-            ]
+            endpoint_structures = [ep_calc.output.structure for ep_calc in ep_calcs]
+            endpoint_energies = [ep_calc.output.energy for ep_calc in ep_calcs]
 
         image_directories = neb_directories[1:-1]
 
@@ -216,8 +218,7 @@ class NebTaskDoc(BaseModel, extra="allow"):
         task_state = (
             TaskState.SUCCESS
             if all(
-                calc.has_vasp_completed == TaskState.SUCCESS
-                for calc in calcs_to_check
+                calc.has_vasp_completed == TaskState.SUCCESS for calc in calcs_to_check
             )
             else TaskState.FAILED
         )
@@ -247,11 +248,11 @@ class NebTaskDoc(BaseModel, extra="allow"):
 
         return cls(
             endpoint_structures=endpoint_structures,
-            endpoint_energies = endpoint_energies,
-            endpoint_directories = [str(ep_dir) for ep_dir in endpoint_directories],
-            endpoint_calculations = ep_calcs if store_calculations else None,
+            endpoint_energies=endpoint_energies,
+            endpoint_directories=[str(ep_dir) for ep_dir in endpoint_directories],
+            endpoint_calculations=ep_calcs if store_calculations else None,
             image_calculations=image_calculations if store_calculations else None,
-            image_structures = image_structures,
+            image_structures=image_structures,
             dir_name=str(dir_name),
             image_directories=[str(img_dir) for img_dir in image_directories],
             orig_inputs=inputs["orig_inputs"],
@@ -271,7 +272,7 @@ class NebTaskDoc(BaseModel, extra="allow"):
         endpoint_directories: list[str | Path],
         neb_directory: str | Path,
         volumetric_files: Tuple[str, ...] = _VOLUMETRIC_FILES,
-        **neb_task_doc_kwargs
+        **neb_task_doc_kwargs,
     ) -> Self:
         """
         Return an NebTaskDoc from endpoint and NEB calculation directories.
@@ -282,12 +283,26 @@ class NebTaskDoc(BaseModel, extra="allow"):
         endpoint_calculations = [None for _ in range(2)]
         endpoint_objects = [None for _ in range(2)]
         for idx, endpoint_dir in enumerate(endpoint_directories):
-            vasp_files = _find_vasp_files(endpoint_dir, volumetric_files=volumetric_files)
-            ep_key = "standard" if vasp_files.get("standard") else "relax" + str(max(
-                int(k.split("relax")[-1]) for k in vasp_files if k.startswith("relax")
-            ))
+            vasp_files = _find_vasp_files(
+                endpoint_dir, volumetric_files=volumetric_files
+            )
+            ep_key = (
+                "standard"
+                if vasp_files.get("standard")
+                else "relax"
+                + str(
+                    max(
+                        int(k.split("relax")[-1])
+                        for k in vasp_files
+                        if k.startswith("relax")
+                    )
+                )
+            )
 
-            endpoint_calculations[idx], endpoint_objects[idx] = Calculation.from_vasp_files(
+            (
+                endpoint_calculations[idx],
+                endpoint_objects[idx],
+            ) = Calculation.from_vasp_files(
                 dir_name=endpoint_dir,
                 task_name=f"NEB endpoint {idx + 1}",
                 vasprun_file=vasp_files[ep_key]["vasprun_file"],
@@ -299,16 +314,17 @@ class NebTaskDoc(BaseModel, extra="allow"):
                     "parse_potcar_file": False,
                 },
             )
-        
+
         return cls.from_directory(
             neb_directory,
             volumetric_files=volumetric_files,
-            endpoint_calculations = endpoint_calculations,
-            endpoint_objects = endpoint_objects,
-            endpoint_directories = endpoint_directories,
-            **neb_task_doc_kwargs
+            endpoint_calculations=endpoint_calculations,
+            endpoint_objects=endpoint_objects,
+            endpoint_directories=endpoint_directories,
+            **neb_task_doc_kwargs,
         )
-    
+
+
 def neb_barrier_spline_fit(
     energies: Sequence[float],
     spline_kwargs: dict | None = None,
