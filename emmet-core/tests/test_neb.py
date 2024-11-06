@@ -17,16 +17,14 @@ from emmet.core.vasp.calculation import Calculation
 from tests.conftest import assert_schemas_equal
 
 
-@pytest.mark.parametrize("from_dir", [True,False])
-def test_neb_doc(test_dir, from_dir : bool ):
-    
+@pytest.mark.parametrize("from_dir", [True, False])
+def test_neb_doc(test_dir, from_dir: bool):
     if from_dir:
         with TemporaryDirectory() as tmpdir:
             shutil.unpack_archive(test_dir / "neb_sample_calc.zip", tmpdir, "zip")
             neb_doc = NebTaskDoc.from_directory(tmpdir)
         neb_doc_dict = jsanitize(neb_doc)
     else:
-
         neb_doc_dict = loadfn(test_dir / "Si_neb_doc.json.bz2", cls=None)
         for k in (
             "completed_at",
@@ -37,7 +35,7 @@ def test_neb_doc(test_dir, from_dir : bool ):
         neb_doc = NebTaskDoc(**neb_doc_dict)
 
     assert neb_doc.num_images == 3
-    assert isinstance(neb_doc.orig_inputs,OrigInputs)
+    assert isinstance(neb_doc.orig_inputs, OrigInputs)
 
     # test that NEB image calculations are all VASP Calculation objects
     assert len(neb_doc.image_calculations) == neb_doc.num_images
@@ -58,10 +56,12 @@ def test_neb_doc(test_dir, from_dir : bool ):
 
     # Check that image calculation dirs all have common root / expected format
     assert all(
-        image_dir.startswith(neb_doc.dir_name) for image_dir in neb_doc.image_directories
+        image_dir.startswith(neb_doc.dir_name)
+        for image_dir in neb_doc.image_directories
     )
     assert all(
-        Path(neb_doc.image_directories[image_idx]) == Path(neb_doc.dir_name) / f"{image_idx+1:02}"
+        Path(neb_doc.image_directories[image_idx])
+        == Path(neb_doc.dir_name) / f"{image_idx+1:02}"
         for image_idx in range(neb_doc.num_images)
     )
 
