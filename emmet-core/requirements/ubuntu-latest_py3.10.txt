@@ -44,7 +44,7 @@ numpy==1.26.4
     #   pymatgen
     #   scipy
     #   spglib
-packaging==24.1
+packaging==24.2
     # via
     #   matplotlib
     #   plotly
@@ -104,7 +104,7 @@ tabulate==0.9.0
     # via pymatgen
 tenacity==9.0.0
     # via plotly
-tqdm==4.66.6
+tqdm==4.67.0
     # via pymatgen
 typing-extensions==4.12.2
     # via
