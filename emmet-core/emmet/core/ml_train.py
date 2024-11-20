@@ -48,6 +48,7 @@ class MLTrainDoc(StructureMetadata, extra="allow"):
 
 class MatPESTrainDoc(MLTrainDoc):
     """Schema for VASP data in the Materials Potential Energy Surface set."""
+
     matpes_id: Optional[str] = Field(None, description="MatPES identifier.")
     mp_id: Optional[MPID | str] = Field(None, description="MP identifier.")
 
