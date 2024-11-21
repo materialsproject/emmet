@@ -129,10 +129,8 @@ class NebTaskDoc(BaseModel, extra="allow"):
     def set_barriers(self) -> Self:
         """Perform analysis on barrier if needed."""
         if (
-            not self.forward_barrier
-            or not self.reverse_barrier
-            and self.energies is not None
-        ):
+            not self.forward_barrier or not self.reverse_barrier
+        ) and self.energies is not None:
             self.barrier_analysis = neb_barrier_spline_fit(self.energies)  # type: ignore[arg-type]
             for k in ("forward", "reverse"):
                 setattr(self, f"{k}_barrier", self.barrier_analysis[f"{k}_barrier"])
