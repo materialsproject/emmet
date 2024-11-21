@@ -211,9 +211,12 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
                 entry.parameters["hubbards"] = best_task_doc.input.hubbards
                 entries[rt] = entry
 
-        if RunType.GGA not in entries and RunType.GGA_U not in entries:
+        if not any(
+            run_type in entries
+            for run_type in (RunType.GGA, RunType.GGA_U, RunType.r2SCAN)
+        ):
             raise ValueError(
-                "Individual material entry must contain at least one GGA or GGA+U calculation"
+                "Individual material entry must contain at least one GGA, GGA+U, or r2SCAN calculation"
             )
 
         # Builder meta and license
