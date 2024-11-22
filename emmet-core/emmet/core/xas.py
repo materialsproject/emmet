@@ -66,15 +66,18 @@ class XASDoc(SpectrumDoc):
         ..., title="Absorption Edge", description="The interaction edge for XAS."
     )
 
-    @field_validator("spectrum",mode="before")
+    @field_validator("spectrum", mode="before")
     @classmethod
-    def check_spectrum_non_positive_values(cls,v,eps=1.e-12) -> XAS:
-        if isinstance(v,dict):
+    def check_spectrum_non_positive_values(cls, v, eps=1.0e-12) -> XAS:
+        if isinstance(v, dict):
             try:
                 v = XAS.from_dict(v)
             except ValueError as exc:
-                if "Double check the intensities. Most of them are non-positive." in str(exc):
-                    v["y"] = [y if y > 0. else abs(eps) for y in v["y"]]
+                if (
+                    "Double check the intensities. Most of them are non-positive."
+                    in str(exc)
+                ):
+                    v["y"] = [y if y > 0.0 else abs(eps) for y in v["y"]]
                     v = XAS.from_dict(v)
         return v
 
