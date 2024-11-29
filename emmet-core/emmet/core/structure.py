@@ -20,6 +20,7 @@ try:
 except Exception:
     openbabel = None
 
+
 class StructureMetadata(EmmetBaseModel):
     """Mix-in class for structure metadata."""
 
