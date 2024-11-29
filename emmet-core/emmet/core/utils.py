@@ -9,7 +9,7 @@ from monty.json import MSONable
 from pydantic import BaseModel
 from pymatgen.analysis.elasticity.strain import Deformation
 from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.analysis.local_env import JMolNN, OpenBabelNN, metal_edge_extender
+from pymatgen.analysis.local_env import JmolNN, OpenBabelNN, metal_edge_extender
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 from pymatgen.analysis.structure_matcher import (
     AbstractComparator,
