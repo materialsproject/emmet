@@ -9,7 +9,7 @@ from monty.json import MSONable
 from pydantic import BaseModel
 from pymatgen.analysis.elasticity.strain import Deformation
 from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
+from pymatgen.analysis.local_env import JMolNN, OpenBabelNN, metal_edge_extender
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 from pymatgen.analysis.structure_matcher import (
     AbstractComparator,
@@ -29,6 +29,11 @@ try:
     import bson
 except ImportError:
     bson = None  # type: ignore
+
+try:
+    from openbabel import openbabel
+except Exception:
+    openbabel = None  # type: ignore
 
 SETTINGS = EmmetSettings()
 
@@ -240,8 +245,8 @@ def make_mol_graph(
     mol: Molecule, critic_bonds: Optional[List[List[int]]] = None
 ) -> MoleculeGraph:
     """
-    Construct a MoleculeGraph using OpenBabelNN with metal_edge_extender and
-    (optionally) Critic2 bonding information.
+    Construct a MoleculeGraph using OpenBabelNN (or JMolNN if open babel not
+    installed) with metal_edge_extender and (optionally) Critic2 bonding information.
 
     This bonding scheme was used to define bonding for the Lithium-Ion Battery
     Electrolyte (LIBE) dataset (DOI: 10.1038/s41597-021-00986-9)
@@ -252,7 +257,11 @@ def make_mol_graph(
 
     :return: mol_graph, a MoleculeGraph
     """
-    mol_graph = MoleculeGraph.with_local_env_strategy(mol, OpenBabelNN())
+    if openbabel:
+        env_strategy = OpenBabelNN()
+    else:
+        env_strategy = JMolNN()
+    mol_graph = MoleculeGraph.with_local_env_strategy(mol, env_strategy)
     mol_graph = metal_edge_extender(mol_graph)
     if critic_bonds:
         mg_edges = mol_graph.graph.edges()
@@ -268,7 +277,7 @@ def make_mol_graph(
 def get_graph_hash(mol: Molecule, node_attr: Optional[str] = None):
     """
     Return the Weisfeiler Lehman (WL) graph hash of the MoleculeGraph described
-    by this molecule, using the OpenBabelNN strategy with extension for
+    by this molecule, using the make_mol_graph env strategy with extension for
     metal coordinate bonds
 
     :param mol: Molecule
