@@ -21,11 +21,11 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.35.72
+boto3==1.35.74
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.35.72
+botocore==1.35.74
     # via
     #   boto3
     #   s3transfer
@@ -55,7 +55,7 @@ dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.3rc4
+emmet-core==0.84.3rc6
     # via emmet-api (emmet/emmet-api/setup.py)
 envier==0.6.1
     # via ddtrace
@@ -63,7 +63,7 @@ fastapi==0.115.5
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-fonttools==4.55.0
+fonttools==4.55.1
     # via matplotlib
 gunicorn==23.0.0
     # via emmet-api (emmet/emmet-api/setup.py)
@@ -172,7 +172,7 @@ pybtex==0.24.0
     #   pymatgen
 pycparser==2.22
     # via cffi
-pydantic==2.10.2
+pydantic==2.10.3
     # via
     #   emmet-core
     #   fastapi
@@ -224,7 +224,7 @@ referencing==0.35.1
     #   jsonschema-specifications
 requests==2.32.3
     # via pymatgen
-rpds-py==0.21.0
+rpds-py==0.22.1
     # via
     #   jsonschema
     #   referencing
