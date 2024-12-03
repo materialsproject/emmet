@@ -29,7 +29,7 @@ jobs:
         working-directory: ./${{ matrix.package }}/
 
       - name: Publish package
-        uses: pypa/gh-action-pypi-publish@master
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.PYPY_API_TOKEN }}
