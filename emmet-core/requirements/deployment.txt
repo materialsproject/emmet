@@ -24,7 +24,7 @@ kiwisolver==1.4.7
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
-matplotlib==3.9.2
+matplotlib==3.9.3
     # via
     #   -r python/requirements.txt
     #   pymatgen
@@ -65,7 +65,7 @@ pybtex==0.24.0
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pymatgen
-pydantic==2.10.1
+pydantic==2.10.2
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pydantic-settings

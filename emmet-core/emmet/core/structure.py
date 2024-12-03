@@ -15,6 +15,11 @@ from emmet.core.symmetry import PointGroupData, SymmetryData
 T = TypeVar("T", bound="StructureMetadata")
 S = TypeVar("S", bound="MoleculeMetadata")
 
+try:
+    from openbabel import openbabel
+except Exception:
+    openbabel = None
+
 
 class StructureMetadata(EmmetBaseModel):
     """Mix-in class for structure metadata."""
@@ -313,8 +318,9 @@ class MoleculeMetadata(EmmetBaseModel):
             "formula_anonymous": comp.anonymized_formula,
             "chemsys": "-".join(elsyms),
             "symmetry": symmetry,
-            "species_hash": get_graph_hash(meta_molecule, "specie"),
-            "coord_hash": get_graph_hash(meta_molecule, "coords"),
         }
+        if openbabel:
+            data["species_hash"] = get_graph_hash(meta_molecule, "specie")
+            data["coord_hash"] = get_graph_hash(meta_molecule, "coords")
 
         return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)
