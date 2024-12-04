@@ -19,9 +19,9 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.35.74
+boto3==1.35.75
     # via maggma
-botocore==1.35.74
+botocore==1.35.75
     # via
     #   boto3
     #   s3transfer
@@ -308,7 +308,7 @@ requests==2.32.3
     #   pymatgen
 robocrys==0.2.10
     # via emmet-core
-rpds-py==0.22.1
+rpds-py==0.22.3
     # via
     #   jsonschema
     #   referencing
@@ -348,7 +348,7 @@ sentinels==1.0.0
     # via mongomock
 shapely==2.0.6
     # via pymatgen-analysis-alloys
-six==1.16.0
+six==1.17.0
     # via
     #   pybtex
     #   python-dateutil

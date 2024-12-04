@@ -92,7 +92,7 @@ ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
 scipy==1.14.1
     # via pymatgen
-six==1.16.0
+six==1.17.0
     # via
     #   pybtex
     #   python-dateutil

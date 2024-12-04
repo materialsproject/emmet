@@ -21,11 +21,11 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.35.74
+boto3==1.35.75
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.35.74
+botocore==1.35.75
     # via
     #   boto3
     #   s3transfer
@@ -74,7 +74,7 @@ emmet-core==0.84.3rc6
     # via emmet-api (setup.py)
 envier==0.6.1
     # via ddtrace
-fastapi==0.115.5
+fastapi==0.115.6
     # via
     #   emmet-api (setup.py)
     #   maggma
@@ -274,7 +274,7 @@ pluggy==1.5.0
     # via pytest
 pre-commit==4.0.1
     # via emmet-api (setup.py)
-protobuf==5.29.0
+protobuf==5.29.1
     # via ddtrace
 pybtex==0.24.0
     # via
@@ -364,7 +364,7 @@ referencing==0.35.1
     #   jsonschema-specifications
 requests==2.32.3
     # via pymatgen
-rpds-py==0.22.1
+rpds-py==0.22.3
     # via
     #   jsonschema
     #   referencing
@@ -391,7 +391,7 @@ shapely==2.0.6
     # via
     #   emmet-api (setup.py)
     #   pymatgen-analysis-alloys
-six==1.16.0
+six==1.17.0
     # via
     #   pybtex
     #   python-dateutil
