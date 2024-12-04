@@ -59,7 +59,7 @@ emmet-core==0.84.3rc6
     # via emmet-api (emmet/emmet-api/setup.py)
 envier==0.6.1
     # via ddtrace
-fastapi==0.115.5
+fastapi==0.115.6
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
