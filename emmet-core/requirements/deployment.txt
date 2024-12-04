@@ -99,7 +99,7 @@ scipy==1.14.1
     # via
     #   -r python/requirements.txt
     #   pymatgen
-six==1.16.0
+six==1.17.0
     # via
     #   pybtex
     #   python-dateutil
