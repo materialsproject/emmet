@@ -8,7 +8,7 @@ aioitertools==0.12.0
     # via maggma
 annotated-types==0.7.0
     # via pydantic
-anyio==4.6.2.post1
+anyio==4.7.0
     # via starlette
 asgi-logger==0.1.0
     # via emmet-api (emmet/emmet-api/setup.py)
@@ -21,11 +21,11 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.35.75
+boto3==1.35.76
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.35.75
+botocore==1.35.76
     # via
     #   boto3
     #   s3transfer
@@ -63,7 +63,7 @@ fastapi==0.115.6
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-fonttools==4.55.1
+fonttools==4.55.2
     # via matplotlib
 gunicorn==23.0.0
     # via emmet-api (emmet/emmet-api/setup.py)
@@ -278,6 +278,7 @@ tqdm==4.67.1
     #   pymatgen
 typing-extensions==4.12.2
     # via
+    #   anyio
     #   ddtrace
     #   emmet-core
     #   fastapi
