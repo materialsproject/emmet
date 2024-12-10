@@ -6,7 +6,7 @@
 #
 aiohappyeyeballs==2.4.4
     # via aiohttp
-aiohttp==3.11.9
+aiohttp==3.11.10
     # via fsspec
 aioitertools==0.12.0
     # via maggma
@@ -30,9 +30,9 @@ attrs==24.2.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.35.75
+boto3==1.35.78
     # via maggma
-botocore==1.35.75
+botocore==1.35.78
     # via
     #   boto3
     #   s3transfer
@@ -58,7 +58,7 @@ colorama==0.4.6
     # via griffe
 contourpy==1.3.1
     # via matplotlib
-coverage[toml]==7.6.8
+coverage[toml]==7.6.9
     # via pytest-cov
 cryptography==44.0.0
     # via paramiko
@@ -93,7 +93,7 @@ filelock==3.16.1
     #   virtualenv
 flake8==7.1.1
     # via emmet-builders (setup.py)
-fonttools==4.55.1
+fonttools==4.55.3
     # via matplotlib
 frozenlist==1.5.0
     # via
@@ -257,7 +257,7 @@ mmtf-python==1.1.3
     # via mdanalysis
 mongomock==4.3.0
     # via maggma
-monty==2024.10.21
+monty==2024.12.10
     # via
     #   emmet-core
     #   maggma
@@ -409,7 +409,7 @@ pathspec==0.12.1
     # via mkdocs
 patsy==1.0.1
     # via statsmodels
-phonopy==2.31.2
+phonopy==2.32.0
     # via matcalc
 pillow==11.0.0
     # via
@@ -569,7 +569,7 @@ s3transfer==0.10.4
     # via boto3
 scikit-image==0.24.0
     # via pymatgen-analysis-defects
-scikit-learn==1.5.2
+scikit-learn==1.6.0
     # via matminer
 scipy==1.14.1
     # via
@@ -578,7 +578,6 @@ scipy==1.14.1
     #   griddataformats
     #   mdanalysis
     #   pathsimanalysis
-    #   phonopy
     #   pymatgen
     #   robocrys
     #   scikit-image
