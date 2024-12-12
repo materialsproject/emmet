@@ -34,7 +34,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
-          packages_dir: ./${{ matrix.package }}/dist/
+          packages-dir: ./${{ matrix.package }}/dist/
 
   docs:
     runs-on: ubuntu-latest
