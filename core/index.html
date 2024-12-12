@@ -1518,12 +1518,7 @@
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/structure.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">156</span>
-<span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">161</span>
 <span class="normal">162</span>
 <span class="normal">163</span>
 <span class="normal">164</span>
@@ -1682,7 +1677,13 @@
 <span class="normal">317</span>
 <span class="normal">318</span>
 <span class="normal">319</span>
-<span class="normal">320</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">MoleculeMetadata</span><span class="p">(</span><span class="n">EmmetBaseModel</span><span class="p">):</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">MoleculeMetadata</span><span class="p">(</span><span class="n">EmmetBaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Mix-in class for molecule metadata.&quot;&quot;&quot;</span>
 
     <span class="n">charge</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Charge of the molecule&quot;</span><span class="p">)</span>
@@ -1842,9 +1843,10 @@
             <span class="s2">&quot;formula_anonymous&quot;</span><span class="p">:</span> <span class="n">comp</span><span class="o">.</span><span class="n">anonymized_formula</span><span class="p">,</span>
             <span class="s2">&quot;chemsys&quot;</span><span class="p">:</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elsyms</span><span class="p">),</span>
             <span class="s2">&quot;symmetry&quot;</span><span class="p">:</span> <span class="n">symmetry</span><span class="p">,</span>
-            <span class="s2">&quot;species_hash&quot;</span><span class="p">:</span> <span class="n">get_graph_hash</span><span class="p">(</span><span class="n">meta_molecule</span><span class="p">,</span> <span class="s2">&quot;specie&quot;</span><span class="p">),</span>
-            <span class="s2">&quot;coord_hash&quot;</span><span class="p">:</span> <span class="n">get_graph_hash</span><span class="p">(</span><span class="n">meta_molecule</span><span class="p">,</span> <span class="s2">&quot;coords&quot;</span><span class="p">),</span>
         <span class="p">}</span>
+        <span class="k">if</span> <span class="n">openbabel</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;species_hash&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_graph_hash</span><span class="p">(</span><span class="n">meta_molecule</span><span class="p">,</span> <span class="s2">&quot;specie&quot;</span><span class="p">)</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;coord_hash&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_graph_hash</span><span class="p">(</span><span class="n">meta_molecule</span><span class="p">,</span> <span class="s2">&quot;coords&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -1891,12 +1893,7 @@ fields : list of str or None
 
             <details class="quote">
               <summary>Source code in <code>emmet/core/structure.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
-<span class="normal">221</span>
-<span class="normal">222</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">222</span>
 <span class="normal">223</span>
 <span class="normal">224</span>
 <span class="normal">225</span>
@@ -1942,7 +1939,12 @@ fields : list of str or None
 <span class="normal">265</span>
 <span class="normal">266</span>
 <span class="normal">267</span>
-<span class="normal">268</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span> <span class="nf">from_composition</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">S</span><span class="p">],</span>
     <span class="n">comp</span><span class="p">:</span> <span class="n">Composition</span><span class="p">,</span>
@@ -2033,12 +2035,7 @@ fields : list of str or None
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/structure.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 19</span>
-<span class="normal"> 20</span>
-<span class="normal"> 21</span>
-<span class="normal"> 22</span>
-<span class="normal"> 23</span>
-<span class="normal"> 24</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 24</span>
 <span class="normal"> 25</span>
 <span class="normal"> 26</span>
 <span class="normal"> 27</span>
@@ -2167,7 +2164,12 @@ fields : list of str or None
 <span class="normal">150</span>
 <span class="normal">151</span>
 <span class="normal">152</span>
-<span class="normal">153</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">StructureMetadata</span><span class="p">(</span><span class="n">EmmetBaseModel</span><span class="p">):</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">StructureMetadata</span><span class="p">(</span><span class="n">EmmetBaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Mix-in class for structure metadata.&quot;&quot;&quot;</span>
 
     <span class="c1"># Structure metadata</span>
