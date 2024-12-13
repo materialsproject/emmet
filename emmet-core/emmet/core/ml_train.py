@@ -52,16 +52,16 @@ class MatPESTrainDoc(MLTrainDoc):
     matpes_id: Optional[str] = Field(None, description="MatPES identifier.")
     mp_id: Optional[MPID | str] = Field(None, description="MP identifier.")
 
-    bandgap: float = Field(None, description="The DFT bandgap.")
-    functional: VaspRunType = Field(
+    bandgap: Optional[float] = Field(None, description="The DFT bandgap.")
+    functional: Optional[VaspRunType] = Field(
         None, description="The approximate functional used to generate this entry."
     )
 
-    formation_energy_per_atom: float = Field(
+    formation_energy_per_atom: Optional[float] = Field(
         None,
         description="The formation enthalpy per atom at zero pressure and temperature.",
     )
-    cohesive_energy_per_atom: float = Field(
+    cohesive_energy_per_atom: Optional[float] = Field(
         None, description="The cohesive energy per atom."
     )
 
