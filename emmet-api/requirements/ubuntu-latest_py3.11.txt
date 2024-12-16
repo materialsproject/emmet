@@ -14,24 +14,24 @@ asgi-logger==0.1.0
     # via emmet-api (setup.py)
 asgiref==3.8.1
     # via asgi-logger
-attrs==24.2.0
+attrs==24.3.0
     # via
     #   jsonlines
     #   jsonschema
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.35.78
+boto3==1.35.81
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.35.78
+botocore==1.35.81
     # via
     #   boto3
     #   s3transfer
 bytecode==0.16.0
     # via ddtrace
-certifi==2024.8.30
+certifi==2024.12.14
     # via requests
 cffi==1.17.1
     # via
@@ -47,7 +47,7 @@ cryptography==44.0.0
     # via paramiko
 cycler==0.12.1
     # via matplotlib
-ddtrace==2.17.2
+ddtrace==2.17.3
     # via emmet-api (setup.py)
 deprecated==1.2.15
     # via opentelemetry-api
@@ -55,7 +55,7 @@ dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.3rc6
+emmet-core==0.84.4
     # via emmet-api (setup.py)
 envier==0.6.1
     # via ddtrace
@@ -97,7 +97,7 @@ lazy-loader==0.4
     # via scikit-image
 maggma[api]==0.70.0
     # via emmet-api (setup.py)
-matplotlib==3.9.3
+matplotlib==3.10.0
     # via pymatgen
 mongomock==4.3.0
     # via maggma
@@ -133,7 +133,7 @@ numpy==1.26.4
     #   shapely
     #   spglib
     #   tifffile
-opentelemetry-api==1.28.2
+opentelemetry-api==1.29.0
     # via ddtrace
 orjson==3.10.12
     # via maggma
@@ -176,7 +176,7 @@ pydantic==2.10.3
     #   pydantic-settings
 pydantic-core==2.27.1
     # via pydantic
-pydantic-settings==2.6.1
+pydantic-settings==2.7.0
     # via
     #   emmet-core
     #   maggma
@@ -233,7 +233,7 @@ ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
 s3transfer==0.10.4
     # via boto3
-scikit-image==0.24.0
+scikit-image==0.25.0
     # via pymatgen-analysis-defects
 scipy==1.14.1
     # via
@@ -265,7 +265,7 @@ tabulate==0.9.0
     # via pymatgen
 tenacity==9.0.0
     # via plotly
-tifffile==2024.9.20
+tifffile==2024.12.12
     # via scikit-image
 tqdm==4.67.1
     # via
@@ -288,7 +288,7 @@ urllib3==2.2.3
     # via
     #   botocore
     #   requests
-uvicorn==0.32.1
+uvicorn==0.34.0
     # via maggma
 wrapt==1.17.0
     # via
