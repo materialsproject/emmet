@@ -8,7 +8,8 @@ resources = {}
 
 default_settings = MAPISettings()  # type: ignore
 
-db_uri = os.environ.get("MPCONTRIBS_MONGO_HOST", None)
+db_uri = os.environ.get("MPMATERIALS_MONGO_HOST", None)
+db_uri_tasks = os.environ.get("MPTASKS_MONGO_HOST", db_uri)
 db_version = default_settings.DB_VERSION
 db_suffix = os.environ["MAPI_DB_NAME_SUFFIX"]
 
@@ -17,6 +18,9 @@ if db_uri:
     # but prepend with mongodb+srv:// if not otherwise specified
     if len(db_uri.split("://", 1)) < 2:
         db_uri = "mongodb+srv://" + db_uri
+
+    if len(db_uri_tasks.split("://", 1)) < 2:
+        db_uri_tasks = "mongodb+srv://" + db_uri_tasks
 
     materials_store = MongoURIStore(
         uri=db_uri,
@@ -54,7 +58,7 @@ if db_uri:
     )
 
     task_store = MongoURIStore(
-        uri=db_uri, database="mp_core", key="task_id", collection_name="tasks"
+        uri=db_uri_tasks, database="mp_core", key="task_id", collection_name="tasks"
     )
 
     thermo_store = MongoURIStore(

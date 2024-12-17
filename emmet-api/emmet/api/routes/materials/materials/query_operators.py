@@ -79,12 +79,12 @@ class ElementsQuery(QueryOperator):
         elements: Optional[str] = Query(
             None,
             description="Query by elements in the material composition as a comma-separated list",
-            max_length=15,
+            max_length=60,
         ),
         exclude_elements: Optional[str] = Query(
             None,
             description="Query by excluded elements in the material composition as a comma-separated list",
-            max_length=15,
+            max_length=60,
         ),
     ) -> STORE_PARAMS:
         crit = {}  # type: dict

@@ -8,41 +8,36 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
 import numpy as np
-from emmet.core.common import convert_datetime
-from emmet.core.mpid import MPID
-from emmet.core.structure import StructureMetadata
-from emmet.core.utils import utcnow
-from emmet.core.vasp.calc_types import (
-    CalcType,
-    calc_type,
-    TaskType,
-    run_type,
-    RunType,
-    task_type,
-)
-from emmet.core.vasp.calculation import (
-    CalculationInput,
-    Calculation,
-    PotcarSpec,
-    RunStatistics,
-    VaspObject,
-)
-from emmet.core.vasp.task_valid import TaskState
 from monty.json import MontyDecoder
 from monty.serialization import loadfn
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    Field,
-    field_validator,
-    model_validator,
-)
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core.structure import Structure
 from pymatgen.core.trajectory import Trajectory
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.io.vasp import Incar, Kpoints, Poscar
 from pymatgen.io.vasp import Potcar as VaspPotcar
+
+from emmet.core.common import convert_datetime
+from emmet.core.mpid import MPID
+from emmet.core.structure import StructureMetadata
+from emmet.core.utils import utcnow
+from emmet.core.vasp.calc_types import (
+    CalcType,
+    RunType,
+    TaskType,
+    calc_type,
+    run_type,
+    task_type,
+)
+from emmet.core.vasp.calculation import (
+    Calculation,
+    CalculationInput,
+    PotcarSpec,
+    RunStatistics,
+    VaspObject,
+)
+from emmet.core.vasp.task_valid import TaskState
 
 monty_decoder = MontyDecoder()
 logger = logging.getLogger(__name__)
@@ -430,9 +425,18 @@ class TaskDoc(StructureMetadata, extra="allow"):
         description="Timestamp for the most recent calculation for this task document",
     )
 
+    completed_at: Optional[datetime] = Field(
+        None, description="Timestamp for when this task was completed"
+    )
+
     batch_id: Optional[str] = Field(
         None,
         description="Identifier for this calculation; should provide rough information about the calculation origin and purpose.",
+    )
+
+    run_stats: Optional[RunStatistics] = Field(
+        None,
+        description="Summary of runtime statistics for each calculation in this task",
     )
 
     # Note that private fields are needed because TaskDoc permits extra info

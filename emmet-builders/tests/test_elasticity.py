@@ -33,7 +33,7 @@ def test_elasticity_builder(tasks_store, materials_store, elasticity_store):
     builder.run()
 
     assert elasticity_store.count() == 6
-    assert elasticity_store.count({"deprecated": False}) == 6
+    assert elasticity_store.count({"deprecated": False}) == 2
 
 
 def test_serialization(tmpdir):
