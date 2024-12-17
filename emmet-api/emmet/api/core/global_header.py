@@ -19,8 +19,11 @@ class GlobalHeaderProcessor(HeaderProcessor):
     def configure_query_on_request(
         self, request: Request, query_operator: LicenseQuery
     ) -> STORE_PARAMS:
-        groups = request.headers.get("x-consumer-groups", None)
-        privileged_groups = {"TERMS:ACCEPT-NC", "admin"}
-        is_privileged = groups and any(group in groups for group in privileged_groups)
+        groups = request.headers.get("x-consumer-groups", "")
+        if not groups:
+            return query_operator.query(license=None)
+
+        groups = set(group.strip() for group in groups.split(","))
+        is_privileged = groups & {"TERMS:ACCEPT-NC", "admin"}
         license_type = "All" if is_privileged else None
         return query_operator.query(license=license_type)
