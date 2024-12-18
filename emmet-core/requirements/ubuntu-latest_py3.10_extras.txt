@@ -30,9 +30,9 @@ attrs==24.3.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.35.81
+boto3==1.35.83
     # via maggma
-botocore==1.35.81
+botocore==1.35.83
     # via
     #   boto3
     #   s3transfer
@@ -165,7 +165,7 @@ lightning-utilities==0.11.9
     #   lightning
     #   pytorch-lightning
     #   torchmetrics
-livereload==2.7.0
+livereload==2.7.1
     # via emmet-core (setup.py)
 maggma==0.70.0
     # via mp-api
@@ -332,7 +332,6 @@ numpy==1.26.4
     #   solvation-analysis
     #   spglib
     #   statsmodels
-    #   symfc
     #   tifffile
     #   torchmetrics
     #   waterdynamics
@@ -405,7 +404,7 @@ pathspec==0.12.1
     # via mkdocs
 patsy==1.0.1
     # via statsmodels
-phonopy==2.33.2
+phonopy==2.33.3
     # via matcalc
 pillow==11.0.0
     # via
@@ -448,14 +447,14 @@ pycodestyle==2.12.1
     #   flake8
 pycparser==2.22
     # via cffi
-pydantic==2.10.3
+pydantic==2.10.4
     # via
     #   emmet-core
     #   emmet-core (setup.py)
     #   maggma
     #   matgl
     #   pydantic-settings
-pydantic-core==2.27.1
+pydantic-core==2.27.2
     # via pydantic
 pydantic-settings==2.7.0
     # via
@@ -587,7 +586,6 @@ scipy==1.14.1
     #   scikit-learn
     #   solvation-analysis
     #   statsmodels
-    #   symfc
 seaborn==0.13.2
     # via pymatgen-analysis-diffusion
 seekpath==2.1.0
@@ -600,7 +598,7 @@ six==1.17.0
     # via
     #   pybtex
     #   python-dateutil
-smart-open==7.0.5
+smart-open==7.1.0
     # via mp-api
 snowballstemmer==2.2.0
     # via pydocstyle
@@ -612,13 +610,10 @@ spglib==2.5.0
     #   pymatgen
     #   robocrys
     #   seekpath
-    #   symfc
 sshtunnel==0.4.0
     # via maggma
 statsmodels==0.14.4
     # via solvation-analysis
-symfc==1.1.7
-    # via phonopy
 sympy==1.13.1
     # via
     #   matminer
