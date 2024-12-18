@@ -21,11 +21,11 @@ attrs==24.3.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.35.81
+boto3==1.35.83
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.35.81
+botocore==1.35.83
     # via
     #   boto3
     #   s3transfer
@@ -132,7 +132,7 @@ latexcodec==3.0.0
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
-livereload==2.7.0
+livereload==2.7.1
     # via emmet-api (setup.py)
 maggma[api]==0.70.0
     # via emmet-api (setup.py)
@@ -274,7 +274,7 @@ pluggy==1.5.0
     # via pytest
 pre-commit==4.0.1
     # via emmet-api (setup.py)
-protobuf==5.29.1
+protobuf==5.29.2
     # via ddtrace
 pybtex==0.24.0
     # via
@@ -286,13 +286,13 @@ pycodestyle==2.12.1
     #   flake8
 pycparser==2.22
     # via cffi
-pydantic==2.10.3
+pydantic==2.10.4
     # via
     #   emmet-core
     #   fastapi
     #   maggma
     #   pydantic-settings
-pydantic-core==2.27.1
+pydantic-core==2.27.2
     # via pydantic
 pydantic-settings==2.7.0
     # via
