@@ -29,6 +29,11 @@ class EmmetMeta(BaseModel):
         None, description="The run id associated with this data build."
     )
 
+    batch_id: Optional[str] = Field(
+        None,
+        description="Identifier corresponding to the origin of this document's blessed task.",
+    )
+
     database_version: Optional[str] = Field(
         None, description="The database version for the built data."
     )
