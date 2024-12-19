@@ -25,6 +25,7 @@ from emmet.api.routes.materials.materials.query_operators import (
     MultiMaterialIDQuery,
     LicenseQuery,
     BlessedCalcsQuery,
+    BatchIdQuery,
 )
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
@@ -116,6 +117,7 @@ def materials_resource(materials_store):
                 default_fields=["material_id", "formula_pretty", "last_updated"],
             ),
             LicenseQuery(),
+            BatchIdQuery(),
         ],
         header_processor=GlobalHeaderProcessor(),
         query_to_configure_on_request=LicenseQuery(),

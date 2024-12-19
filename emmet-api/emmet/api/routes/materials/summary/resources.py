@@ -14,6 +14,7 @@ from emmet.api.routes.materials.materials.query_operators import (
     ChemsysQuery,
     SymmetryQuery,
     LicenseQuery,
+    BatchIdQuery,
 )
 from emmet.api.routes.materials.oxidation_states.query_operators import (
     PossibleOxiStateQuery,
@@ -68,6 +69,7 @@ def summary_resource(summary_store):
             SparseFieldsQuery(SummaryDoc, default_fields=["material_id"]),
             LicenseQuery(),
             SortQuery(fields=sort_fields, max_num=1),
+            BatchIdQuery(),
         ],
         hint_scheme=SummaryHintScheme(),
         header_processor=GlobalHeaderProcessor(),
