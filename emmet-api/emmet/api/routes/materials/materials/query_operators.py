@@ -464,3 +464,35 @@ class LicenseQuery(QueryOperator):
         ),
     ) -> STORE_PARAMS:
         return {"criteria": {"builder_meta.license": license}}
+
+
+class BatchIdQuery(QueryOperator):
+    """Method to generate a query on batch_id"""
+
+    def query(
+        self,
+        batch_id: Optional[str] = Query(
+            None,
+            description="Query by batch identifier",
+        ),
+        batch_id_not_eq: Optional[str] = Query(
+            None,
+            description="Exclude batch identifier",
+        ),
+    ) -> STORE_PARAMS:
+        if batch_id and batch_id_not_eq:
+            raise HTTPException(
+                status_code=400,
+                detail="Please only choose one of `batch_id` and `batch_id_not_eq`.",
+            )
+
+        crit = {}  # type: dict
+        if batch_id:
+            crit["builder_meta.batch_id"] = batch_id
+        elif batch_id_not_eq:
+            crit["builder_meta.batch_id"] = {"$ne": batch_id_not_eq}
+
+        return {"criteria": crit}
+
+    def ensure_indexes(self):  # pragma: no cover
+        return [("builder_meta.batch_id", False)]
