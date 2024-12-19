@@ -21,11 +21,11 @@ attrs==24.3.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.35.84
+boto3==1.35.85
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.35.84
+botocore==1.35.85
     # via
     #   boto3
     #   s3transfer
@@ -55,7 +55,7 @@ dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.5
+emmet-core==0.84.6rc0
     # via emmet-api (setup.py)
 envier==0.6.1
     # via ddtrace
