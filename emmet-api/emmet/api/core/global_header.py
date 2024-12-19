@@ -23,8 +23,8 @@ class GlobalHeaderProcessor(HeaderProcessor):
         if not groups:
             return query_operator.query(license="BY-C")
 
-        groups = set(group.strip() for group in groups.split(","))
-        if groups & {"TERMS:ACCEPT-NC", "admin"}:
+        grps = set(group.strip() for group in groups.split(","))
+        if grps & {"TERMS:ACCEPT-NC", "admin"}:
             return query_operator.query(license="All")
 
         return query_operator.query(license="BY-C")
