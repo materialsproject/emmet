@@ -458,12 +458,13 @@ class LicenseQuery(QueryOperator):
 
     def query(
         self,
-        license: Optional[Literal["BY-C", "BY-NC"]] = Query(
+        license: Optional[Literal["BY-C", "BY-NC", "All"]] = Query(
             "BY-C",
-            description="Query by license. Either commercial or non-commercial CC-BY",
+            description="Query by license. Can be commercial or non-commercial, or both",
         ),
     ) -> STORE_PARAMS:
-        return {"criteria": {"builder_meta.license": license}}
+        q = {"$in": ["BY-C", "BY-NC"]} if license == "All" else license
+        return {"criteria": {"builder_meta.license": q}}
 
 
 class BatchIdQuery(QueryOperator):

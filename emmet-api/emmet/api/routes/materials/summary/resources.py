@@ -73,6 +73,7 @@ def summary_resource(summary_store):
         ],
         hint_scheme=SummaryHintScheme(),
         header_processor=GlobalHeaderProcessor(),
+        query_to_configure_on_request=LicenseQuery(),
         tags=["Materials Summary"],
         sub_path="/summary/",
         disable_validation=True,
