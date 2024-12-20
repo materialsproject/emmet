@@ -480,18 +480,35 @@ class BatchIdQuery(QueryOperator):
             None,
             description="Exclude batch identifier",
         ),
+        batch_id_eq_any: Optional[str] = Query(
+            None,
+            description="Query by a comma-separated list of batch identifiers",
+        ),
+        batch_id_neq_any: Optional[str] = Query(
+            None,
+            description="Exclude a comma-separated list of batch identifiers",
+        ),
     ) -> STORE_PARAMS:
-        if batch_id and batch_id_not_eq:
+        # NOTE: maggma's StringQueryOperator doesn't work for nested fields?
+        all_kwargs = [batch_id, batch_id_not_eq, batch_id_eq_any, batch_id_neq_any]
+        if sum(bool(kwarg) for kwarg in all_kwargs) > 1:
             raise HTTPException(
                 status_code=400,
-                detail="Please only choose one of `batch_id` and `batch_id_not_eq`.",
+                detail="Please only choose one of `batch_id` parameters to filter.",
             )
 
-        crit = {}  # type: dict
+        crit, k = {}, "builder_meta.batch_id"
         if batch_id:
-            crit["builder_meta.batch_id"] = batch_id
+            crit[k] = batch_id
         elif batch_id_not_eq:
-            crit["builder_meta.batch_id"] = {"$ne": batch_id_not_eq}
+            crit[k] = {"$ne": batch_id_not_eq}
+        elif batch_id_eq_any or batch_id_neq_any:
+            value = batch_id_eq_any if batch_id_eq_any else batch_id_neq_any
+            batch_ids = [batch_id.strip() for batch_id in value.split(",")]
+            if len(batch_ids) > 1:
+                crit[k] = {"$in" if batch_id_eq_any else "$nin": batch_ids}
+            else:
+                crit[k] = batch_ids[0] if batch_id_eq_any else {"$ne": batch_ids[0]}
 
         return {"criteria": crit}
 
