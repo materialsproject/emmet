@@ -497,7 +497,8 @@ class BatchIdQuery(QueryOperator):
                 detail="Please only choose one of `batch_id` parameters to filter.",
             )
 
-        crit, k = {}, "builder_meta.batch_id"
+        crit = {}  # type: dict
+        k = "builder_meta.batch_id"
         if batch_id:
             crit[k] = batch_id
         elif batch_id_not_eq:
