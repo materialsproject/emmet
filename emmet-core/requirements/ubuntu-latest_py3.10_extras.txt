@@ -30,9 +30,9 @@ attrs==24.3.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.35.85
+boto3==1.35.86
     # via maggma
-botocore==1.35.85
+botocore==1.35.86
     # via
     #   boto3
     #   s3transfer
@@ -80,7 +80,7 @@ dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.6rc0
+emmet-core==0.84.6rc2
     # via mp-api
 exceptiongroup==1.2.2
     # via pytest
@@ -158,7 +158,7 @@ latexcodec==3.0.0
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
-lightning==2.4.0
+lightning==2.5.0
     # via matgl
 lightning-utilities==0.11.9
     # via
@@ -280,7 +280,7 @@ multidict==6.1.0
     # via
     #   aiohttp
     #   yarl
-mypy==1.13.0
+mypy==1.14.0
     # via emmet-core (setup.py)
 mypy-extensions==1.0.0
     # via
@@ -517,7 +517,7 @@ python-dateutil==2.9.0.post0
     #   pandas
 python-dotenv==1.0.1
     # via pydantic-settings
-pytorch-lightning==2.4.0
+pytorch-lightning==2.5.0
     # via lightning
 pytz==2024.2
     # via
