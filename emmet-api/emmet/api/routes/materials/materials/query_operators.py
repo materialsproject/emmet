@@ -505,7 +505,7 @@ class BatchIdQuery(QueryOperator):
             crit[k] = {"$ne": batch_id_not_eq}
         elif batch_id_eq_any or batch_id_neq_any:
             value = batch_id_eq_any if batch_id_eq_any else batch_id_neq_any
-            batch_ids = [batch_id.strip() for batch_id in value.split(",")]
+            batch_ids = [batch_id.strip() for batch_id in value.split(",")]  # type: ignore
             if len(batch_ids) > 1:
                 crit[k] = {"$in" if batch_id_eq_any else "$nin": batch_ids}
             else:
