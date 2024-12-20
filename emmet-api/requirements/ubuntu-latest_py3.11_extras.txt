@@ -403,7 +403,7 @@ spglib==2.5.0
     # via pymatgen
 sshtunnel==0.4.0
     # via maggma
-starlette==0.41.3
+starlette==0.42.0
     # via fastapi
 sympy==1.13.3
     # via pymatgen
