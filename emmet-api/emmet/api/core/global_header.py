@@ -19,7 +19,9 @@ class GlobalHeaderProcessor(HeaderProcessor):
     def configure_query_on_request(
         self, request: Request, query_operator: LicenseQuery
     ) -> STORE_PARAMS:
-        groups = request.headers.get("x-consumer-groups", "")
+        groups = request.headers.get(
+            "x-consumer-groups", request.headers.get("x-authenticated-groups", "")
+        )
         if not groups:
             return query_operator.query(license="BY-C")
 
