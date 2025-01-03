@@ -24,7 +24,7 @@ class ForcesDoc(PropertyDoc):
     forces: List[List[float]] = Field(..., description="Atomic forces (units: Ha/Bohr)")
 
     precise_forces: List[Optional[List[float]]] = Field(
-        None, description="High-precision atomic forces (units: Ha/Bohr)"
+        default_factory=list, description="High-precision atomic forces (units: Ha/Bohr)"
     )
 
     pcm_forces: Optional[List[List[List[List[float]]]]] = Field(
