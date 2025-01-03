@@ -249,12 +249,14 @@ class OpenMMInterchange(BaseModel):
     """An object to sit in the place of the Interchance object
     and serialize the OpenMM system, topology, and state."""
 
-    system: str = Field(None, description="An XML file representing the OpenMM system.")
-    state: str = Field(
+    system: Optional[str] = Field(
+        None, description="An XML file representing the OpenMM system."
+    )
+    state: Optional[str] = Field(
         None,
         description="An XML file representing the OpenMM state.",
     )
-    topology: str = Field(
+    topology: Optional[str] = Field(
         None,
         description="An XML file representing an OpenMM topology object."
         "This must correspond to the atom ordering in the system.",

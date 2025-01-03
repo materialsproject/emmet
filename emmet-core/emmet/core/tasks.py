@@ -434,7 +434,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         description="Identifier for this calculation; should provide rough information about the calculation origin and purpose.",
     )
 
-    run_stats: Optional[RunStatistics] = Field(
+    run_stats: Optional[dict[str, RunStatistics]] = Field(
         None,
         description="Summary of runtime statistics for each calculation in this task",
     )
@@ -982,9 +982,10 @@ def _parse_additional_json(dir_name: Path) -> Dict[str, Any]:
 def _get_max_force(calc_doc: Calculation) -> Optional[float]:
     """Get max force acting on atoms from a calculation document."""
     if calc_doc.output.ionic_steps:
-        forces: Optional[Union[np.ndarray, List]] = calc_doc.output.ionic_steps[
-            -1
-        ].forces
+        forces: Optional[Union[np.ndarray, List]] = None
+        if calc_doc.output.ionic_steps is not None:
+            forces = calc_doc.output.ionic_steps[-1].forces
+
         structure = calc_doc.output.structure
         if forces:
             forces = np.array(forces)

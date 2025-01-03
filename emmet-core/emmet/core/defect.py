@@ -3,13 +3,13 @@ from __future__ import annotations
 from pydantic import Field
 
 from emmet.core.tasks import TaskDoc, _VOLUMETRIC_FILES
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from pymatgen.analysis.defects.core import Defect
 from monty.json import MontyDecoder
 from pydantic import BaseModel
 
 if TYPE_CHECKING:
-    from typing import Any, Dict, Optional, Tuple, Union
+    from typing import Any, Dict, Tuple, Union
     from pathlib import Path
 
 mdecoder = MontyDecoder().process_decoded
@@ -32,13 +32,13 @@ class DefectInfo(BaseModel):
         description="Unit cell representation of the defect object.",
     )
 
-    charge_state: int = Field(
+    charge_state: Optional[int] = Field(
         None,
         title="Charge State",
         description="Charge state of the defect.",
     )
 
-    supercell_matrix: list = Field(
+    supercell_matrix: Optional[list] = Field(
         None,
         title="Supercell Matrix",
         description="Supercell matrix used to construct the defect supercell.",

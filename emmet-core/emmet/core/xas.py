@@ -245,7 +245,7 @@ def _is_missing_sites(spectra: List[XAS]):
     Determines if the collection of spectra are missing any indicies for the given element
     """
     structure = spectra[0].structure
-    element = spectra[0].absorbing_element
+    element = spectra[0].absorbing_element.symbol
 
     # Find missing symmeterically inequivalent sites
     symm_sites = SymmSites(structure)

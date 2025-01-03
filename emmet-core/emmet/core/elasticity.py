@@ -195,10 +195,10 @@ class ElasticityDoc(PropertyDoc):
     thermal_conductivity: Optional[ThermalConductivity] = Field(
         None, description="Thermal conductivity"
     )
-    young_modulus: float = Field(
+    young_modulus: Optional[float] = Field(
         None, description="Young's modulus (SI units)", alias="youngs_modulus"
     )
-    universal_anisotropy: float = Field(
+    universal_anisotropy: Optional[float] = Field(
         None, description="Universal elastic anisotropy"
     )
     homogeneous_poisson: Optional[float] = Field(
