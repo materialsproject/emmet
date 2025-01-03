@@ -341,7 +341,7 @@ class IonicStep(BaseModel):  # type: ignore
     electronic_steps: Optional[List[ElectronicStep]] = Field(
         None, description="The electronic convergence steps."
     )
-    num_electronic_steps : Optional[int] = Field(
+    num_electronic_steps: Optional[int] = Field(
         None, description="The number of electronic steps needed to reach convergence."
     )
     structure: Optional[Structure] = Field(
@@ -355,6 +355,7 @@ class IonicStep(BaseModel):  # type: ignore
         if self.electronic_steps is not None and self.num_electronic_steps is None:
             self.num_electronic_steps = len(self.electronic_steps)
         return self
+
 
 class CalculationOutput(BaseModel):
     """Document defining VASP calculation outputs."""
@@ -421,8 +422,8 @@ class CalculationOutput(BaseModel):
     ionic_steps: Optional[List[IonicStep]] = Field(
         None, description="Energy, forces, structure, etc. for each ionic step"
     )
-    num_electronic_steps : Optional[List[int]] = Field(
-        None, description= "The number of electronic steps in each ionic step."
+    num_electronic_steps: Optional[List[int]] = Field(
+        None, description="The number of electronic steps in each ionic step."
     )
     locpot: Optional[Dict[int, List[float]]] = Field(
         None, description="Average of the local potential along the crystal axes"
@@ -595,8 +596,11 @@ class CalculationOutput(BaseModel):
         )
         num_elec_steps = None
         if ionic_steps is not None:
-            num_elec_steps = [len(ionic_step.get("electronic_steps",[]) or []) for ionic_step in ionic_steps]
-            
+            num_elec_steps = [
+                len(ionic_step.get("electronic_steps", []) or [])
+                for ionic_step in ionic_steps
+            ]
+
         return cls(
             structure=structure,
             energy=vasprun.final_energy,
@@ -609,7 +613,7 @@ class CalculationOutput(BaseModel):
             elph_displaced_structures=elph_structures,
             dos_properties=dosprop_dict,
             ionic_steps=ionic_steps,
-            num_electronic_steps = num_elec_steps,
+            num_electronic_steps=num_elec_steps,
             locpot=locpot_avg,
             outcar=outcar_dict,
             run_stats=RunStatistics.from_outcar(outcar) if outcar else None,
