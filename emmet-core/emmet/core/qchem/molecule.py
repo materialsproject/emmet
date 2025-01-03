@@ -161,7 +161,7 @@ class MoleculeDoc(CoreMoleculeDoc):
         None, description="Standardized hash of the InChI for this molecule"
     )
 
-    calc_types: Mapping[str, CalcType] = Field(  # type: ignore
+    calc_types: Optional[Mapping[str, CalcType]] = Field(  # type: ignore
         None,
         description="Calculation types for all the calculations that make up this molecule",
     )

@@ -32,13 +32,13 @@ class DefectInfo(BaseModel):
         description="Unit cell representation of the defect object.",
     )
 
-    charge_state: int = Field(
+    charge_state: Optional[int] = Field(
         None,
         title="Charge State",
         description="Charge state of the defect.",
     )
 
-    supercell_matrix: list = Field(
+    supercell_matrix: Optional[list] = Field(
         None,
         title="Supercell Matrix",
         description="Supercell matrix used to construct the defect supercell.",
