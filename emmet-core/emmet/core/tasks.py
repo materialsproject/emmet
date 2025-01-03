@@ -434,7 +434,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         description="Identifier for this calculation; should provide rough information about the calculation origin and purpose.",
     )
 
-    run_stats: Optional[RunStatistics] = Field(
+    run_stats: Optional[dict[str,RunStatistics]] = Field(
         None,
         description="Summary of runtime statistics for each calculation in this task",
     )
