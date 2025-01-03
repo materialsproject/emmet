@@ -985,7 +985,7 @@ def _get_max_force(calc_doc: Calculation) -> Optional[float]:
         forces: Optional[Union[np.ndarray, List]] = None
         if calc_doc.output.ionic_steps is not None:
             forces = calc_doc.output.ionic_steps[-1].forces
-            
+
         structure = calc_doc.output.structure
         if forces:
             forces = np.array(forces)
