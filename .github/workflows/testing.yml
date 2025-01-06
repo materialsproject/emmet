@@ -81,13 +81,13 @@ jobs:
 
       - name: Install Python dependencies
         shell: bash -l {0}
+        env:
+          CC: gcc-10
+          CXX: g++-10
         run: |
           python${{ matrix.python-version }} -m pip install --upgrade pip pip-tools
           python${{ matrix.python-version }} -m pip install --user `grep numpy ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt`
           python${{ matrix.python-version }} -m pip install --user -r ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
-        env:
-          CC: gcc-10
-          CXX: g++-10
 
       - name: Install editable emmet-core if needed
         shell: bash -l {0}
