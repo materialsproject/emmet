@@ -99,7 +99,7 @@ class OutputDoc(BaseModel):
     density: Optional[float] = Field(None, description="Density of in units of g/cc.")
     energy: Optional[float] = Field(None, description="Total Energy in units of eV.")
     forces: Optional[List[List[float]]] = Field(
-        None, description="The force on each atom in units of eV/A^2."
+        None, description="The force on each atom in units of eV/A."
     )
     stress: Optional[List[List[float]]] = Field(
         None, description="The stress on the cell in units of kB."
