@@ -28,13 +28,13 @@ class ForcesDoc(PropertyDoc):
         description="High-precision atomic forces (units: Ha/Bohr)",
     )
 
-    pcm_forces: Optional[List[List[List[List[float]]]]] = Field(
+    pcm_forces: Optional[List[List[float]]] = Field(
         None,
         description="Electrostatic atomic forces from polarizable continuum model (PCM) implicit solvation "
         "(units: Ha/Bohr).",
     )
 
-    cds_forces: Optional[List[List[List[List[float]]]]] = Field(
+    cds_forces: Optional[List[List[float]]] = Field(
         None,
         description="Atomic force contributions from cavitation, dispersion, and structural rearrangement in the SMx "
         "family of implicit solvent models (units: Ha/Bohr)",
