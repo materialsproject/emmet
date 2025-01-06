@@ -8,7 +8,7 @@ aioitertools==0.12.0
     # via maggma
 annotated-types==0.7.0
     # via pydantic
-anyio==4.7.0
+anyio==4.8.0
     # via starlette
 asgi-logger==0.1.0
     # via emmet-api (setup.py)
@@ -21,11 +21,11 @@ attrs==24.3.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.35.86
+boto3==1.35.92
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.35.86
+botocore==1.35.92
     # via
     #   boto3
     #   s3transfer
@@ -41,9 +41,9 @@ cffi==1.17.1
     #   pynacl
 cfgv==3.4.0
     # via pre-commit
-charset-normalizer==3.4.0
+charset-normalizer==3.4.1
     # via requests
-click==8.1.7
+click==8.1.8
     # via
     #   mkdocs
     #   mkdocstrings
@@ -52,7 +52,7 @@ colorama==0.4.6
     # via griffe
 contourpy==1.3.1
     # via matplotlib
-coverage[toml]==7.6.9
+coverage[toml]==7.6.10
     # via pytest-cov
 cryptography==44.0.0
     # via paramiko
@@ -86,7 +86,7 @@ fonttools==4.55.3
     # via matplotlib
 ghp-import==2.1.0
     # via mkdocs
-griffe==1.5.1
+griffe==1.5.4
     # via mkdocstrings-python
 gunicorn==23.0.0
     # via emmet-api (setup.py)
@@ -94,7 +94,7 @@ h11==0.14.0
     # via uvicorn
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
-identify==2.6.3
+identify==2.6.5
     # via pre-commit
 idna==3.10
     # via
@@ -106,7 +106,7 @@ importlib-metadata==8.5.0
     # via opentelemetry-api
 iniconfig==2.0.0
     # via pytest
-jinja2==3.1.4
+jinja2==3.1.5
     # via
     #   emmet-api (setup.py)
     #   mkdocs
@@ -126,7 +126,7 @@ jsonschema==4.23.0
     # via maggma
 jsonschema-specifications==2024.10.1
     # via jsonschema
-kiwisolver==1.4.7
+kiwisolver==1.4.8
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
@@ -134,7 +134,7 @@ lazy-loader==0.4
     # via scikit-image
 livereload==2.7.1
     # via emmet-api (setup.py)
-maggma[api]==0.70.0
+maggma[api]==0.71.1
     # via emmet-api (setup.py)
 markdown==3.7
     # via
@@ -170,7 +170,7 @@ mkdocs-autorefs==1.2.0
     # via
     #   mkdocstrings
     #   mkdocstrings-python
-mkdocs-awesome-pages-plugin==2.9.3
+mkdocs-awesome-pages-plugin==2.10.1
     # via emmet-api (setup.py)
 mkdocs-get-deps==0.2.0
     # via mkdocs
@@ -188,11 +188,11 @@ mkdocstrings[python]==0.27.0
     # via
     #   emmet-api (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.12.2
+mkdocstrings-python==1.13.0
     # via mkdocstrings
 mongomock==4.3.0
     # via maggma
-monty==2024.12.10
+monty==2025.1.3
     # via
     #   emmet-core
     #   maggma
@@ -203,7 +203,7 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.1.0
     # via maggma
-mypy==1.14.0
+mypy==1.14.1
     # via emmet-api (setup.py)
 mypy-extensions==1.0.0
     # via
@@ -236,7 +236,7 @@ numpy==1.26.4
     #   tifffile
 opentelemetry-api==1.29.0
     # via ddtrace
-orjson==3.10.12
+orjson==3.10.13
     # via maggma
 packaging==24.2
     # via
@@ -258,7 +258,7 @@ paramiko==3.5.0
     # via sshtunnel
 pathspec==0.12.1
     # via mkdocs
-pillow==11.0.0
+pillow==11.1.0
     # via
     #   imageio
     #   matplotlib
@@ -294,7 +294,7 @@ pydantic==2.10.4
     #   pydantic-settings
 pydantic-core==2.27.2
     # via pydantic
-pydantic-settings==2.7.0
+pydantic-settings==2.7.1
     # via
     #   emmet-core
     #   maggma
@@ -304,7 +304,7 @@ pydocstyle==6.3.0
     # via emmet-api (setup.py)
 pyflakes==3.2.0
     # via flake8
-pygments==2.18.0
+pygments==2.19.0
     # via mkdocs-material
 pymatgen==2024.11.13
     # via
@@ -316,7 +316,7 @@ pymatgen-analysis-alloys==0.0.7
     # via emmet-api (setup.py)
 pymatgen-analysis-defects==2024.10.22
     # via emmet-api (setup.py)
-pymdown-extensions==10.12
+pymdown-extensions==10.13
     # via
     #   mkdocs-material
     #   mkdocstrings
@@ -324,7 +324,7 @@ pymongo==4.10.1
     # via maggma
 pynacl==1.5.0
     # via paramiko
-pyparsing==3.2.0
+pyparsing==3.2.1
     # via matplotlib
 pytest==8.3.4
     # via
@@ -368,7 +368,7 @@ rpds-py==0.22.3
     # via
     #   jsonschema
     #   referencing
-ruamel-yaml==0.18.6
+ruamel-yaml==0.18.9
     # via
     #   maggma
     #   monty
@@ -379,7 +379,7 @@ s3transfer==0.10.4
     # via boto3
 scikit-image==0.25.0
     # via pymatgen-analysis-defects
-scipy==1.14.1
+scipy==1.15.0
     # via
     #   pymatgen
     #   scikit-image
@@ -421,7 +421,7 @@ tqdm==4.67.1
     #   pymatgen
 types-requests==2.32.0.20241016
     # via emmet-api (setup.py)
-types-setuptools==75.6.0.20241126
+types-setuptools==75.6.0.20241223
     # via emmet-api (setup.py)
 typing-extensions==4.12.2
     # via
@@ -437,14 +437,14 @@ tzdata==2024.2
     # via pandas
 uncertainties==3.2.2
     # via pymatgen
-urllib3==2.2.3
+urllib3==2.3.0
     # via
     #   botocore
     #   requests
     #   types-requests
 uvicorn==0.34.0
     # via maggma
-virtualenv==20.28.0
+virtualenv==20.28.1
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
