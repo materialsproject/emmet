@@ -5,7 +5,7 @@ import re
 from collections import OrderedDict
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Dict, List, Mapping, Optional, Tuple, Type, TypeVar, Union
 
 import numpy as np
 from monty.json import MontyDecoder
@@ -434,7 +434,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         description="Identifier for this calculation; should provide rough information about the calculation origin and purpose.",
     )
 
-    run_stats: Optional[dict[str, RunStatistics]] = Field(
+    run_stats: Optional[Mapping[str, RunStatistics]] = Field(
         None,
         description="Summary of runtime statistics for each calculation in this task",
     )
