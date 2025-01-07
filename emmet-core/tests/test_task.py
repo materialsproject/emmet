@@ -147,6 +147,10 @@ def test_task_doc(test_dir, object_name, tmpdir):
             len(ionic_step.electronic_steps) for ionic_step in cr.output.ionic_steps
         ]
 
+    # ensure that run stats are not all identically zero (i.e., they are parsed correctly)
+    for run_stats in test_doc.run_stats.values():
+        assert any(abs(time) > 1e-6 for time in run_stats.model_dump().values())
+
     # Check that entry is populated when calcs_reversed is not None
     if test_doc.calcs_reversed:
         assert isinstance(
