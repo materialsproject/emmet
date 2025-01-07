@@ -147,10 +147,10 @@ class OutputDoc(BaseModel):
         OutputDoc
             The calculation output summary.
         """
-        if calc_doc.output.ionic_steps is not None:
+        if calc_doc.output.ionic_steps:
             forces = calc_doc.output.ionic_steps[-1].forces
             stress = calc_doc.output.ionic_steps[-1].stress
-        elif trajectory is not None:
+        elif trajectory:
             ionic_steps = trajectory.frame_properties
             forces = ionic_steps[-1]["forces"]
             stress = ionic_steps[-1]["stress"]
@@ -983,7 +983,7 @@ def _get_max_force(calc_doc: Calculation) -> Optional[float]:
     """Get max force acting on atoms from a calculation document."""
     if calc_doc.output.ionic_steps:
         forces: Optional[Union[np.ndarray, List]] = None
-        if calc_doc.output.ionic_steps is not None:
+        if calc_doc.output.ionic_steps:
             forces = calc_doc.output.ionic_steps[-1].forces
 
         structure = calc_doc.output.structure
