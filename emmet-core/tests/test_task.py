@@ -140,6 +140,13 @@ def test_task_doc(test_dir, object_name, tmpdir):
 
     assert len(test_doc.calcs_reversed) == len(test_object.task_files)
 
+    # ensure that number of electronic steps are correctly populated
+    for cr in test_doc.calcs_reversed:
+        assert len(cr.output.ionic_steps) == len(cr.output.num_electronic_steps)
+        assert cr.output.num_electronic_steps == [
+            len(ionic_step.electronic_steps) for ionic_step in cr.output.ionic_steps
+        ]
+
     # Check that entry is populated when calcs_reversed is not None
     if test_doc.calcs_reversed:
         assert isinstance(

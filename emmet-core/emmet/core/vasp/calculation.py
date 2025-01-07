@@ -352,7 +352,7 @@ class IonicStep(BaseModel):  # type: ignore
 
     @model_validator(mode="after")
     def set_elec_step_count(self):
-        if self.electronic_steps is not None and self.num_electronic_steps is None:
+        if self.electronic_steps is not None:
             self.num_electronic_steps = len(self.electronic_steps)
         return self
 
