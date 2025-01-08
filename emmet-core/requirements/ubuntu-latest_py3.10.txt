@@ -84,7 +84,7 @@ pyyaml==6.0.2
     # via pybtex
 requests==2.32.3
     # via pymatgen
-ruamel-yaml==0.18.9
+ruamel-yaml==0.18.10
     # via
     #   monty
     #   pymatgen
