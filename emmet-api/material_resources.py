@@ -1,6 +1,6 @@
 import os
 
-from maggma.stores import MongoURIStore, S3Store
+from maggma.stores import MongoURIStore
 
 from emmet.api.core.settings import MAPISettings
 
@@ -66,22 +66,6 @@ if db_uri:
         database=f"mp_core_{db_suffix}",
         key="thermo_id",
         collection_name="thermo",
-    )
-
-    s3_phase_diagram_index = MongoURIStore(
-        uri=db_uri,
-        database="mp_core",
-        key="phase_diagram_id",
-        collection_name="s3_phase_diagram_index",
-    )
-
-    phase_diagram_store = S3Store(
-        index=s3_phase_diagram_index,
-        bucket="mp-phase-diagrams",
-        s3_workers=24,
-        key="phase_diagram_id",
-        searchable_fields=["chemsys", "thermo_type", "phase_diagram_id"],
-        compress=True,
     )
 
     dielectric_store = MongoURIStore(
@@ -214,56 +198,6 @@ if db_uri:
         collection_name="electronic_structure",
     )
 
-    s3_bs_index = MongoURIStore(
-        uri=db_uri,
-        database="mp_core",
-        key="fs_id",
-        collection_name="s3_bandstructure_index",
-    )
-
-    s3_dos_index = MongoURIStore(
-        uri=db_uri, database="mp_core", key="fs_id", collection_name="s3_dos_index"
-    )
-
-    s3_bs = S3Store(
-        index=s3_bs_index,
-        bucket="mp-bandstructures",
-        compress=True,
-        key="fs_id",
-        unpack_data=False,
-        searchable_fields=["task_id", "fs_id"],
-    )
-
-    s3_dos = S3Store(
-        index=s3_dos_index,
-        bucket="mp-dos",
-        compress=True,
-        key="fs_id",
-        unpack_data=False,
-        searchable_fields=["task_id", "fs_id"],
-    )
-
-    s3_chgcar_index = MongoURIStore(
-        uri=db_uri,
-        database="mp_core",
-        key="fs_id",
-        collection_name="atomate_chgcar_fs_index",
-    )
-
-    s3_chgcar = S3Store(
-        index=s3_chgcar_index,
-        bucket="mp-volumetric",
-        sub_dir="atomate_chgcar_fs/",
-        compress=True,
-        key="fs_id",
-        unpack_data=False,
-        searchable_fields=["task_id", "fs_id"],
-    )
-
-    chgcar_url = MongoURIStore(
-        uri=db_uri, database="mp_core", key="fs_id", collection_name="chgcar_s3_urls"
-    )
-
     mpcomplete_store = MongoURIStore(
         uri=db_uri,
         database="mp_consumers",
@@ -346,14 +280,9 @@ materials_resources.extend(
 )
 
 # Thermo
-from emmet.api.routes.materials.thermo.resources import (
-    phase_diagram_resource,
-    thermo_resource,
-)
+from emmet.api.routes.materials.thermo.resources import thermo_resource
 
-materials_resources.extend(
-    [phase_diagram_resource(phase_diagram_store), thermo_resource(thermo_store)]
-)
+materials_resources.extend([thermo_resource(thermo_store)])
 
 # Dielectric
 from emmet.api.routes.materials.dielectric.resources import dielectric_resource
@@ -464,16 +393,6 @@ from emmet.api.routes.materials.provenance.resources import provenance_resource
 
 materials_resources.extend([provenance_resource(provenance_store)])
 
-# Charge Density
-from emmet.api.routes.materials.charge_density.resources import (
-    charge_density_resource,
-    charge_density_url_resource,
-)
-
-materials_resources.extend(
-    [charge_density_resource(s3_chgcar), charge_density_url_resource(chgcar_url)]
-)
-
 # Summary
 from emmet.api.routes.materials.summary.resources import (
     summary_resource,
@@ -486,9 +405,7 @@ materials_resources.extend(
 
 # Electronic Structure
 from emmet.api.routes.materials.electronic_structure.resources import (
-    bs_obj_resource,
     bs_resource,
-    dos_obj_resource,
     dos_resource,
     es_resource,
 )
@@ -498,8 +415,6 @@ materials_resources.extend(
         bs_resource(es_store),
         dos_resource(es_store),
         es_resource(es_store),
-        bs_obj_resource(s3_bs),
-        dos_obj_resource(s3_dos),
     ]
 )
 
