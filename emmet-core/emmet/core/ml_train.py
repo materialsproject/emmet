@@ -28,7 +28,7 @@ class MLTrainDoc(StructureMetadata, extra="allow"):
 
     stress: Optional[Tuple[float, float, float, float, float, float]] = Field(
         None,
-        description="The components of the stress tensor in Voigt notation (xx, yy, zz, yz, xz, xy).",
+        description="The components of the symmetric stress tensor in Voigt notation (xx, yy, zz, yz, xz, xy).",
     )
 
     @classmethod
@@ -59,10 +59,10 @@ class MatPESTrainDoc(MLTrainDoc):
 
     formation_energy_per_atom: Optional[float] = Field(
         None,
-        description="The formation enthalpy per atom at zero pressure and temperature.",
+        description="The uncorrected formation enthalpy per atom at zero pressure and temperature.",
     )
     cohesive_energy_per_atom: Optional[float] = Field(
-        None, description="The cohesive energy per atom."
+        None, description="The uncorrected cohesive energy per atom."
     )
 
     bader_charges: Optional[list[float]] = Field(
@@ -76,3 +76,8 @@ class MatPESTrainDoc(MLTrainDoc):
     @property
     def pressure(self) -> float:
         return sum(self.stress[:3]) / 3.0
+
+    @property
+    def magmoms(self) -> list[float] | None:
+        if self.structure and (magmom := self.structure.site_properties.get("magmom")):
+            return magmom
