@@ -21,11 +21,11 @@ attrs==24.3.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.35.92
+boto3==1.35.94
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.35.92
+botocore==1.35.94
     # via
     #   boto3
     #   s3transfer
@@ -304,7 +304,7 @@ pydocstyle==6.3.0
     # via emmet-api (setup.py)
 pyflakes==3.2.0
     # via flake8
-pygments==2.19.0
+pygments==2.19.1
     # via mkdocs-material
 pymatgen==2024.11.13
     # via
@@ -316,7 +316,7 @@ pymatgen-analysis-alloys==0.0.7
     # via emmet-api (setup.py)
 pymatgen-analysis-defects==2024.10.22
     # via emmet-api (setup.py)
-pymdown-extensions==10.13
+pymdown-extensions==10.14
     # via
     #   mkdocs-material
     #   mkdocstrings
@@ -368,7 +368,7 @@ rpds-py==0.22.3
     # via
     #   jsonschema
     #   referencing
-ruamel-yaml==0.18.9
+ruamel-yaml==0.18.10
     # via
     #   maggma
     #   monty
