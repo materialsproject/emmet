@@ -342,10 +342,10 @@
 <h1 id="settings-management">Settings Management<a class="headerlink" href="#settings-management" title="Permanent link">&para;</a></h1>
 <p><code>emmet</code> has a flexible settings management system based on Pydantic's <code>BaseSetting</code>. A core <code>EmmetSettings</code> class is used to define a data model for settings. <code>EmmetSettings</code> will automatically use the <code>emmet_config_path</code> environment variable (defaults to <code>$HOME/.emmet.json</code>) to load the settings for the whole <code>emmet</code> system. By inheriting from this class, any subpackage automatically gets this core loading feature.</p>
 <p>Example:
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">Field</span>
-<span class="kn">from</span> <span class="nn">emmet.core.settings</span> <span class="kn">import</span> <span class="n">EmmetSettings</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">emmet.core.settings</span><span class="w"> </span><span class="kn">import</span> <span class="n">EmmetSettings</span>
 
-<span class="k">class</span> <span class="nc">MySettings</span><span class="p">(</span><span class="n">EmmetSettings</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MySettings</span><span class="p">(</span><span class="n">EmmetSettings</span><span class="p">):</span>
     <span class="n">my_new_setting</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;A custom setting&quot;</span><span class="p">)</span>
 </code></pre></div></p>
 <p>Now any instance of <code>MySettings</code> will automatically load the configuration file and use that to initialize this setting. Using the magic of <code>pydantic</code> <code>BaseSettings</code>, these settings can also be set using environment variables prefixed by <code>EMMET_</code>.</p>
