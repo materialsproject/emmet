@@ -33,9 +33,9 @@ def test_structure_metadata(structure):
     assert meta_doc.formula_pretty == "Fe"
     assert meta_doc.formula_anonymous == "A"
     assert meta_doc.chemsys == "Fe"
-    assert meta_doc.volume == 27.0
-    assert meta_doc.density == 3.4345483027509993
-    assert meta_doc.density_atomic == 27.0
+    assert meta_doc.volume == pytest.approx(27.0)
+    assert meta_doc.density == pytest.approx(3.4345483027509993)
+    assert meta_doc.density_atomic == pytest.approx(27.0)
 
 
 def test_structure_metadata_fewer_fields(structure):
@@ -45,7 +45,7 @@ def test_structure_metadata_fewer_fields(structure):
 
     assert meta_doc.nsites == 1
     assert meta_doc.nelements == 1
-    assert meta_doc.volume == 27.0
+    assert meta_doc.volume == pytest.approx(27.0)
 
 
 def test_composition(structure):

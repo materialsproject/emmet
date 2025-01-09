@@ -23,8 +23,9 @@ class ForcesDoc(PropertyDoc):
 
     forces: List[List[float]] = Field(..., description="Atomic forces (units: Ha/Bohr)")
 
-    precise_forces: Optional[List[List[float]]] = Field(
-        None, description="High-precision atomic forces (units: Ha/Bohr)"
+    precise_forces: List[Optional[List[float]]] = Field(
+        default_factory=list,
+        description="High-precision atomic forces (units: Ha/Bohr)",
     )
 
     pcm_forces: Optional[List[List[float]]] = Field(
@@ -159,44 +160,44 @@ class TrajectoryDoc(PropertyDoc):
     )
 
     pcm_forces: List[Optional[List[List[List[float]]]]] = Field(
-        None,
+        default_factory=list,
         description="Electrostatic atomic forces from polarizable continuum model (PCM) implicit solvation "
         "for each optimization step for each optimization trajectory (units: Ha/Bohr).",
     )
 
     cds_forces: List[Optional[List[List[List[float]]]]] = Field(
-        None,
+        default_factory=list,
         description="Atomic force contributions from cavitation, dispersion, and structural rearrangement in the SMx "
         "family of implicit solvent models, for each optimization step for each optimization trajectory "
         "(units: Ha/Bohr)",
     )
 
     mulliken_partial_charges: List[Optional[List[List[float]]]] = Field(
-        None,
+        default_factory=list,
         description="Partial charges of each atom for each optimization step for each optimization trajectory, using "
         "the Mulliken method",
     )
 
     mulliken_partial_spins: List[Optional[List[List[float]]]] = Field(
-        None,
+        default_factory=list,
         description="Partial spins of each atom for each optimization step for each optimization trajectory, using "
         "the Mulliken method",
     )
 
     resp_partial_charges: List[Optional[List[List[float]]]] = Field(
-        None,
+        default_factory=list,
         description="Partial charges of each atom for each optimization step for each optimization trajectory, using "
         "the restrained electrostatic potential (RESP) method",
     )
 
     dipole_moments: List[Optional[List[List[float]]]] = Field(
-        None,
+        default_factory=list,
         description="Molecular dipole moment for each optimization step for each optimization trajectory, "
         "(units: Debye)",
     )
 
     resp_dipole_moments: List[Optional[List[List[float]]]] = Field(
-        None,
+        default_factory=list,
         description="Molecular dipole moment for each optimization step for each optimization trajectory, "
         "using the restrainted electrostatic potential (RESP) method (units: Debye)",
     )
@@ -247,21 +248,27 @@ class TrajectoryDoc(PropertyDoc):
             num_steps = len(mols)
 
             # Frame (structure) properties
-            frame_props = {
-                "energies": self.energies[ii],
-                "dipole_moments": self.dipole_moments[ii],
-                "resp_dipole_moments": self.resp_dipole_moments[ii],
-            }
+            frame_props = {"energies": self.energies[ii]}
+            for prop in (
+                "dipole_moments",
+                "resp_dipole_moments",
+            ):
+                frame_props[prop] = []
+                if (vals := getattr(self, prop, None)) is not None:
+                    frame_props[prop] = vals[ii]
 
             # Site (atomic) properties
-            site_props = {
-                "forces": self.forces[ii],
-                "pcm_forces": self.pcm_forces[ii],
-                "cds_forces": self.cds_forces[ii],
-                "mulliken_partial_charges": self.mulliken_partial_charges[ii],
-                "mulliken_partial_spins": self.mulliken_partial_spins[ii],
-                "resp_partial_charges": self.resp_partial_charges[ii],
-            }
+            site_props = {"forces": self.forces[ii]}
+            for prop in (
+                "pcm_forces",
+                "cds_forces",
+                "mulliken_partial_charges",
+                "mulliken_partial_spins",
+                "resp_partial_charges",
+            ):
+                site_props[prop] = []
+                if (vals := getattr(self, prop, None)) is not None:
+                    site_props[prop] = vals[ii]
 
             # Convert into a Trajectory object
             traj_frame_props = list()

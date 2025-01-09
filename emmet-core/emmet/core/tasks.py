@@ -5,7 +5,7 @@ import re
 from collections import OrderedDict
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Dict, List, Mapping, Optional, Tuple, Type, TypeVar, Union
 
 import numpy as np
 from monty.json import MontyDecoder
@@ -99,7 +99,7 @@ class OutputDoc(BaseModel):
     density: Optional[float] = Field(None, description="Density of in units of g/cc.")
     energy: Optional[float] = Field(None, description="Total Energy in units of eV.")
     forces: Optional[List[List[float]]] = Field(
-        None, description="The force on each atom in units of eV/A^2."
+        None, description="The force on each atom in units of eV/A."
     )
     stress: Optional[List[List[float]]] = Field(
         None, description="The stress on the cell in units of kB."
@@ -147,10 +147,10 @@ class OutputDoc(BaseModel):
         OutputDoc
             The calculation output summary.
         """
-        if calc_doc.output.ionic_steps is not None:
+        if calc_doc.output.ionic_steps:
             forces = calc_doc.output.ionic_steps[-1].forces
             stress = calc_doc.output.ionic_steps[-1].stress
-        elif trajectory is not None:
+        elif trajectory:
             ionic_steps = trajectory.frame_properties
             forces = ionic_steps[-1]["forces"]
             stress = ionic_steps[-1]["stress"]
@@ -434,7 +434,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         description="Identifier for this calculation; should provide rough information about the calculation origin and purpose.",
     )
 
-    run_stats: Optional[RunStatistics] = Field(
+    run_stats: Optional[Mapping[str, RunStatistics]] = Field(
         None,
         description="Summary of runtime statistics for each calculation in this task",
     )
@@ -982,9 +982,10 @@ def _parse_additional_json(dir_name: Path) -> Dict[str, Any]:
 def _get_max_force(calc_doc: Calculation) -> Optional[float]:
     """Get max force acting on atoms from a calculation document."""
     if calc_doc.output.ionic_steps:
-        forces: Optional[Union[np.ndarray, List]] = calc_doc.output.ionic_steps[
-            -1
-        ].forces
+        forces: Optional[Union[np.ndarray, List]] = None
+        if calc_doc.output.ionic_steps:
+            forces = calc_doc.output.ionic_steps[-1].forces
+
         structure = calc_doc.output.structure
         if forces:
             forces = np.array(forces)

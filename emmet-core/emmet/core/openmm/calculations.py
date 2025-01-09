@@ -13,31 +13,31 @@ class CalculationsDoc(BaseModel):
     In each field, calculations are listed sequentially, in the order they were run.
     """
 
-    task_names: List[str] = Field(None, description="Names of tasks.")
+    task_names: Optional[List[str]] = Field(None, description="Names of tasks.")
 
-    calc_types: List[str] = Field(None, description="Types of calculations.")
+    calc_types: Optional[List[str]] = Field(None, description="Types of calculations.")
 
-    elapsed_times: List[Union[float, None]] = Field(
+    elapsed_times: Optional[List[Union[float, None]]] = Field(
         None, description="Elapsed time for calculations."
     )
 
-    steps: List[Union[float, None]] = Field(
+    steps: Optional[List[Union[float, None]]] = Field(
         None, description="n_steps for calculations."
     )
 
-    step_sizes: List[Union[float, None]] = Field(
+    step_sizes: Optional[List[Union[float, None]]] = Field(
         None, description="Step sizes for each calculations."
     )
 
-    temperatures: List[Union[float, None]] = Field(
+    temperatures: Optional[List[Union[float, None]]] = Field(
         None, description="Temperature for each calculations."
     )
 
-    pressures: List[Union[float, None]] = Field(
+    pressures: Optional[List[Union[float, None]]] = Field(
         None, description="Pressure for each calculations."
     )
 
-    friction_coefficients: List[Union[float, None]] = Field(
+    friction_coefficients: Optional[List[Union[float, None]]] = Field(
         None,
         description="Friction coefficients for each calculations.",
     )

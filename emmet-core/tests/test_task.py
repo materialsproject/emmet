@@ -140,6 +140,17 @@ def test_task_doc(test_dir, object_name, tmpdir):
 
     assert len(test_doc.calcs_reversed) == len(test_object.task_files)
 
+    # ensure that number of electronic steps are correctly populated
+    for cr in test_doc.calcs_reversed:
+        assert len(cr.output.ionic_steps) == len(cr.output.num_electronic_steps)
+        assert cr.output.num_electronic_steps == [
+            len(ionic_step.electronic_steps) for ionic_step in cr.output.ionic_steps
+        ]
+
+    # ensure that run stats are not all identically zero (i.e., they are parsed correctly)
+    for run_stats in test_doc.run_stats.values():
+        assert any(abs(time) > 1e-6 for time in run_stats.model_dump().values())
+
     # Check that entry is populated when calcs_reversed is not None
     if test_doc.calcs_reversed:
         assert isinstance(

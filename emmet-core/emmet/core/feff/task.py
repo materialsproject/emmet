@@ -69,6 +69,9 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
             structure = self.structure
             absorbing_index = self.absorbing_atom
             absorbing_element = self.absorbing_element
+            if isinstance(absorbing_element, Species):
+                absorbing_element = absorbing_element.element
+
             edge = self.edge
             spectrum_type = str(self.spectrum_type)
 

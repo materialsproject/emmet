@@ -28,7 +28,7 @@ class BlessedCalcs(BaseModel):
 
 
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
-    calc_types: Mapping[str, CalcType] = Field(  # type: ignore
+    calc_types: Optional[Mapping[str, CalcType]] = Field(  # type: ignore
         None,
         description="Calculation types for all the calculations that make up this material",
     )
