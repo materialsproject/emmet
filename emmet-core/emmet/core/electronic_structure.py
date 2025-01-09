@@ -460,7 +460,6 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             summary_efermi = bs_entry.setyawan_curtarolo.efermi  # type: ignore
             is_gap_direct = bs_entry.setyawan_curtarolo.is_gap_direct  # type: ignore
             is_metal = bs_entry.setyawan_curtarolo.is_metal  # type: ignore
-            summary_magnetic_ordering = bs_entry.setyawan_curtarolo.magnetic_ordering  # type: ignore
 
             for origin in origins:
                 if origin["name"] == "setyawan_curtarolo":
@@ -473,7 +472,6 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             summary_cbm = dos_cbm
             summary_vbm = dos_vbm
             summary_efermi = dos_efermi
-            summary_magnetic_ordering = dos_mag_ordering
             is_metal = True if np.isclose(dos_gap, 0.0, atol=0.01, rtol=0) else False
 
             for origin in origins:
@@ -487,10 +485,16 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                     origin["last_updated"] = new_origin_last_updated
                     origin["task_id"] = new_origin_task_id
 
+        summary_magnetic_ordering = CollinearMagneticStructureAnalyzer(
+            kwargs["meta_structure"],
+            round_magmoms=True,
+            threshold_nonmag=0.2,
+            threshold=0,
+        ).ordering
+
         return cls.from_structure(
             material_id=MPID(material_id),
             task_id=summary_task,
-            meta_structure=structure,
             band_gap=summary_band_gap,
             cbm=summary_cbm,
             vbm=summary_vbm,
