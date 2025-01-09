@@ -40,6 +40,7 @@ def test_from_bsdos_1(bandstructure, dos, structure):
         deprecated=False,
         setyawan_curtarolo={"mp-1056141": bandstructure},
         structures={"mp-1671247": structure, "mp-1056141": structure},
+        meta_structure=structure,
     )
 
     assert str(es_doc.material_id) == "mp-13"
@@ -80,6 +81,7 @@ def test_from_bsdos_2(bandstructure_fs, dos_fs):
         is_metal=True,
         deprecated=False,
         setyawan_curtarolo={"mp-1612487": bs},
+        meta_structure=dos.structure,
     )
 
     assert str(es_doc.material_id) == "mp-25375"
