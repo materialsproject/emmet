@@ -2,8 +2,8 @@
 
 # mypy: ignore-errors
 
-import os
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -396,10 +396,6 @@ class CalculationOutput(BaseModel):
         None,
         description="The magnetization density, defined as total_mag/volume "
         "(units of A^-3)",
-    )
-    dielectric: Optional[dict[str, list]] = Field(
-        None,
-        description="Energy of incident photons in ev and real and imaginary parts of the dielectric tensor",
     )
     optical_absorption_coeff: Optional[list] = Field(
         None, description="Optical absorption coefficient in cm^-1"
