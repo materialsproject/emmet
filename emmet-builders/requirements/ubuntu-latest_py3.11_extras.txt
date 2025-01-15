@@ -28,9 +28,9 @@ attrs==24.3.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.35.95
+boto3==1.35.99
     # via maggma
-botocore==1.35.95
+botocore==1.35.99
     # via
     #   boto3
     #   s3transfer
@@ -225,7 +225,7 @@ mkdocs==1.6.1
     #   mkdocs-material
     #   mkdocs-minify-plugin
     #   mkdocstrings
-mkdocs-autorefs==1.2.0
+mkdocs-autorefs==1.3.0
     # via
     #   mkdocstrings
     #   mkdocstrings-python
@@ -253,7 +253,7 @@ mmtf-python==1.1.3
     # via mdanalysis
 mongomock==4.3.0
     # via maggma
-monty==2025.1.3
+monty==2025.1.9
     # via
     #   emmet-core
     #   maggma
@@ -261,7 +261,7 @@ monty==2025.1.3
     #   mp-api
     #   pymatgen
     #   robocrys
-more-itertools==10.5.0
+more-itertools==10.6.0
     # via inflect
 mp-api==0.45.1
     # via robocrys
@@ -445,7 +445,7 @@ pycodestyle==2.12.1
     #   flake8
 pycparser==2.22
     # via cffi
-pydantic==2.10.4
+pydantic==2.10.5
     # via
     #   emmet-core
     #   maggma
@@ -465,7 +465,7 @@ pyflakes==3.2.0
     # via flake8
 pygments==2.19.1
     # via mkdocs-material
-pymatgen==2024.11.13
+pymatgen==2025.1.9
     # via
     #   chgnet
     #   emmet-core
@@ -565,9 +565,9 @@ s3transfer==0.10.4
     # via boto3
 scikit-image==0.25.0
     # via pymatgen-analysis-defects
-scikit-learn==1.6.0
+scikit-learn==1.6.1
     # via matminer
-scipy==1.15.0
+scipy==1.15.1
     # via
     #   ase
     #   dgl
@@ -612,7 +612,7 @@ sshtunnel==0.4.0
     # via maggma
 statsmodels==0.14.4
     # via solvation-analysis
-symfc==1.2.1
+symfc==1.2.2
     # via phonopy
 sympy==1.13.1
     # via
@@ -629,7 +629,7 @@ threadpoolctl==3.5.0
     #   scikit-learn
 tidynamics==1.1.2
     # via transport-analysis
-tifffile==2024.12.12
+tifffile==2025.1.10
     # via scikit-image
 torch==2.5.1
     # via
@@ -666,7 +666,7 @@ typeguard==4.4.1
     # via inflect
 types-requests==2.32.0.20241016
     # via emmet-builders (setup.py)
-types-setuptools==75.6.0.20241223
+types-setuptools==75.8.0.20250110
     # via emmet-builders (setup.py)
 typing-extensions==4.12.2
     # via
@@ -702,7 +702,7 @@ wcmatch==10.0
     # via mkdocs-awesome-pages-plugin
 wincertstore==0.2.1
     # via emmet-builders (setup.py)
-wrapt==1.17.0
+wrapt==1.17.2
     # via smart-open
 yarl==1.18.3
     # via aiohttp
