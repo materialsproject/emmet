@@ -325,61 +325,62 @@ class AnalysisDoc(BaseModel):
             max_force=max_force,
             warnings=warnings,
             errors=errors,
-        )    
+        )
+
 
 class EmmetComputedEntry(BaseModel):
     """Fixed-schema version of pymatgen ComputedEntry."""
 
-    energy : float
-    composition: dict[str,float]
-    entry_id : MPID | None = None
-    correction : float | None = None
-    energy_adjustments : list[float] | None = None
-    potcar_spec : list[PotcarSpec] | None = None
-    run_type : RunType | None = None
-    is_hubbard : bool = False
-    hubbards : dict[str,float] | None = None
-    oxide_type : str | None = None
-    aspherical : bool = False
-    last_updated : datetime | None = None
+    energy: float
+    composition: dict[str, float]
+    entry_id: MPID | None = None
+    correction: float | None = None
+    energy_adjustments: list[float] | None = None
+    potcar_spec: list[PotcarSpec] | None = None
+    run_type: RunType | None = None
+    is_hubbard: bool = False
+    hubbards: dict[str, float] | None = None
+    oxide_type: str | None = None
+    aspherical: bool = False
+    last_updated: datetime | None = None
 
     def get_computed_entry(self) -> ComputedEntry:
         """Get pymatgen computed entry."""
-        return ComputedEntry.from_dict({
-            "correction": self.correction,
-            "entry_id": self.entry_id,
-            "composition": self.composition,
-            "energy": self.energy,
-            "parameters": {
-                "potcar_spec": (
-                    [ps.model_dump() for ps in self.potcar_spec] if self.potcar_spec is not None
-                    else []
-                ),
-                "run_type": str(self.run_type),
-                "is_hubbard": self.is_hubbard,
-                "hubbards": self.hubbards,
-            },
-            "data": {
-                "oxide_type": self.oxide_type,
-                "aspherical": self.aspherical,
-                "last_updated": str(self.last_updated),
-            },
-        })
-
+        return ComputedEntry.from_dict(
+            {
+                "correction": self.correction,
+                "entry_id": self.entry_id,
+                "composition": self.composition,
+                "energy": self.energy,
+                "parameters": {
+                    "potcar_spec": (
+                        [ps.model_dump() for ps in self.potcar_spec]
+                        if self.potcar_spec is not None
+                        else []
+                    ),
+                    "run_type": str(self.run_type),
+                    "is_hubbard": self.is_hubbard,
+                    "hubbards": self.hubbards,
+                },
+                "data": {
+                    "oxide_type": self.oxide_type,
+                    "aspherical": self.aspherical,
+                    "last_updated": str(self.last_updated),
+                },
+            }
+        )
 
 
 class DbTaskDoc(StructureMetadata):
     """Calculation-level details about VASP calculations that power Materials Project.
-    
+
     This schema is intended to be fixed for database best practices.
     """
 
     tags: list[str] | None = Field(
         None, title="tag", description="Metadata tagged to a given task."
     )
-    dir_name: str | None = Field(
-        None, description="The directory for this VASP task"
-    )
+    dir_name: str | None = Field(None, description="The directory for this VASP task")
 
     calcs_reversed: list[Calculation] | None = Field(
         None,
@@ -391,9 +392,7 @@ class DbTaskDoc(StructureMetadata):
         None, description="Final output structure from the task"
     )
 
-    task_type: TaskType | None = Field(
-        None, description="The type of calculation."
-    )
+    task_type: TaskType | None = Field(None, description="The type of calculation.")
 
     run_type: RunType | None = Field(
         None, description="The functional used in the calculation."
@@ -508,7 +507,7 @@ class DbTaskDoc(StructureMetadata):
             # TODO: remove after imposing TaskDoc schema on older tasks in collection
             if self.structure is None:
                 self.structure = calcs_reversed[0].output.structure
-        
+
         # Set the computed entry if not set
         if (
             not self.entry
@@ -516,7 +515,9 @@ class DbTaskDoc(StructureMetadata):
             and getattr(self.calcs_reversed[0].output, "structure", None)
         ):
             use_pymatgen_rep = getattr(self, "_use_pymatgen_rep", False)
-            self.entry = self.get_entry(self.calcs_reversed, self.task_id, use_pymatgen_rep=use_pymatgen_rep)
+            self.entry = self.get_entry(
+                self.calcs_reversed, self.task_id, use_pymatgen_rep=use_pymatgen_rep
+            )
 
     # Make sure that the datetime field is properly formatted
     # (Unclear when this is not the case, please leave comment if observed)
@@ -722,7 +723,7 @@ class DbTaskDoc(StructureMetadata):
     def get_entry(
         calcs_reversed: list[Calculation],
         task_id: Optional[Union[MPID, str]] = None,
-        use_pymatgen_rep : bool = False
+        use_pymatgen_rep: bool = False,
     ) -> EmmetComputedEntry | ComputedEntry:
         """
         Get a computed entry from a list of VASP calculation documents.
@@ -741,17 +742,20 @@ class DbTaskDoc(StructureMetadata):
         ComputedEntry
             A computed entry.
         """
-        inp_kwargs = {k : getattr(calcs_reversed[0].input,k,None) for k in ("potcar_spec","is_hubbard","hubbards")}
+        inp_kwargs = {
+            k: getattr(calcs_reversed[0].input, k, None)
+            for k in ("potcar_spec", "is_hubbard", "hubbards")
+        }
         ce = EmmetComputedEntry(
-            energy = calcs_reversed[0].output.energy,
+            energy=calcs_reversed[0].output.energy,
             composition=calcs_reversed[0].output.structure.composition.as_dict(),
             entry_id=task_id,
-            correction=0.,
+            correction=0.0,
             run_type=calcs_reversed[0].run_type,
             oxide_type=oxide_type(calcs_reversed[0].output.structure),
             aspherical=calcs_reversed[0].input.parameters.get("LASPH", False),
             last_updated=utcnow(),
-            **inp_kwargs
+            **inp_kwargs,
         )
         if use_pymatgen_rep:
             return ce.get_computed_entry()
@@ -812,6 +816,7 @@ class DbTaskDoc(StructureMetadata):
             entry_id=ce.entry_id,
         )
 
+
 class TaskDoc(DbTaskDoc, extra="allow"):
     """Calculation-level details about VASP calculations that power Materials Project."""
 
@@ -835,7 +840,7 @@ class TaskDoc(DbTaskDoc, extra="allow"):
         None, description="The ComputedEntry from the task doc"
     )
 
-    _use_pymatgen_rep : bool = True
+    _use_pymatgen_rep: bool = True
 
     @classmethod
     def from_directory(
@@ -883,18 +888,19 @@ class TaskDoc(DbTaskDoc, extra="allow"):
 
         db_task = DbTaskDoc.from_directory(
             dir_name,
-            volumetric_files = volumetric_files,
-            additional_fields = additional_fields,
-            volume_change_warning_tol = volume_change_warning_tol,
-            task_names = task_names,
+            volumetric_files=volumetric_files,
+            additional_fields=additional_fields,
+            volume_change_warning_tol=volume_change_warning_tol,
+            task_names=task_names,
             **vasp_calculation_kwargs,
         )
         config = db_task.model_dump()
         config["entry"] = db_task.entry.get_computed_entry()
         if additional_json:
-            config.update(additional_json= additional_json)
+            config.update(additional_json=additional_json)
         return cls(**config)
-            
+
+
 class TrajectoryDoc(BaseModel):
     """Model for task trajectory data."""
 

@@ -49,6 +49,7 @@ logger = logging.getLogger(__name__)
 
 VaspObjectTypes = BandStructure | Dos | VolumetricData | Trajectory | Wavecar | Procar
 
+
 class VaspObject(ValueEnum):
     """Types of VASP data objects."""
 
@@ -78,21 +79,25 @@ class CalculationBaseModel(BaseModel):
     def get(self, key: Any, default_value: Optional[Any] = None) -> Any:
         return getattr(self, key, default_value)
 
+
 class PotcarSummaryStats(BaseModel):
     """Specific format of the POTCAR summary statistics used for POTCAR matching."""
 
-    keywords : dict[str, list[str]] | None = Field(
-        None, description=(
+    keywords: dict[str, list[str]] | None = Field(
+        None,
+        description=(
             "dict of the form `{'header': [list of POTCAR header keywords],"
             "'data': [list of POTCAR body keywords]}`"
-        )
+        ),
     )
-    stats : dict[str,dict[str,float]] | None = Field(
-        None, description=(
+    stats: dict[str, dict[str, float]] | None = Field(
+        None,
+        description=(
             "dict of the form `{'header': {statistic: value}, 'data': {...}}` "
             "based on the data in the POTCAR"
-        )
+        ),
     )
+
 
 class PotcarSpec(BaseModel):
     """Document defining a VASP POTCAR specification."""
@@ -219,14 +224,16 @@ class CalculationInput(CalculationBaseModel):
 class RunStatistics(BaseModel):
     """Summary of the run statistics for a VASP calculation."""
 
-    average_memory: float = Field(0., description="The average memory used in kb")
-    max_memory: float = Field(0., description="The maximum memory used in kb")
-    elapsed_time: float = Field(0., description="The real time elapsed in seconds")
-    system_time: float = Field(0., description="The system CPU time in seconds")
+    average_memory: float = Field(0.0, description="The average memory used in kb")
+    max_memory: float = Field(0.0, description="The maximum memory used in kb")
+    elapsed_time: float = Field(0.0, description="The real time elapsed in seconds")
+    system_time: float = Field(0.0, description="The system CPU time in seconds")
     user_time: float = Field(
-        0., description="The user CPU time spent by VASP in seconds"
+        0.0, description="The user CPU time spent by VASP in seconds"
     )
-    total_time: float = Field(0., description="The total CPU time for this calculation")
+    total_time: float = Field(
+        0.0, description="The total CPU time for this calculation"
+    )
     cores: int = Field(0, description="The number of cores used by VASP")
 
     @classmethod
