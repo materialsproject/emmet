@@ -454,7 +454,7 @@ class DbTaskDoc(StructureMetadata):
         description="Some analysis of calculation data after collection.",
     )
 
-    last_updated: datetime = Field(
+    last_updated: datetime | None = Field(
         utcnow(),
         description="Timestamp for the most recent calculation for this task document",
     )
@@ -634,8 +634,6 @@ class DbTaskDoc(StructureMetadata):
                 calcs_reversed[0],
                 vasp_objects.get(VaspObject.TRAJECTORY),  # type: ignore
             ),
-            state=_get_state(calcs_reversed, analysis),
-            run_stats=_get_run_stats(calcs_reversed),
             vasp_objects=vasp_objects,
             included_objects=included_objects,
             task_type=calcs_reversed[0].task_type,
@@ -709,8 +707,6 @@ class DbTaskDoc(StructureMetadata):
             completed_at=calcs_reversed[0].completed_at,
             input=InputDoc.from_vasp_calc_doc(calcs_reversed[-1]),
             output=OutputDoc.from_vasp_calc_doc(calcs_reversed[0]),
-            state=_get_state(calcs_reversed, analysis),
-            run_stats=None,
             vasp_objects={},
             included_objects=[],
             task_type=calcs_reversed[0].task_type,
@@ -842,6 +838,16 @@ class TaskDoc(DbTaskDoc, extra="allow"):
 
     _use_pymatgen_rep: bool = True
 
+    def model_post_init(self, __context: Any) -> None:
+        """Ensure fields are set correctly that are not defined in DbTaskDoc."""
+        super().model_post_init(__context)
+
+        if self.calcs_reversed:
+            if self.run_stats is None:
+                self.run_stats = _get_run_stats(self.calcs_reversed)
+            if self.state is None and self.analysis:
+                self.state = _get_state(self.calcs_reversed, self.analysis)
+
     @classmethod
     def from_directory(
         cls: Type[_T],
@@ -889,7 +895,6 @@ class TaskDoc(DbTaskDoc, extra="allow"):
         db_task = DbTaskDoc.from_directory(
             dir_name,
             volumetric_files=volumetric_files,
-            additional_fields=additional_fields,
             volume_change_warning_tol=volume_change_warning_tol,
             task_names=task_names,
             **vasp_calculation_kwargs,
@@ -898,9 +903,13 @@ class TaskDoc(DbTaskDoc, extra="allow"):
         config["entry"] = db_task.entry.get_computed_entry()
         if additional_json:
             config.update(additional_json=additional_json)
+
+        # NB: additional_fields populated here because they may not be
+        # part of the DbTaskDoc model
+        if additional_fields:
+            config.update(**additional_fields)
         return cls(**config)
-
-
+    
 class TrajectoryDoc(BaseModel):
     """Model for task trajectory data."""
 
@@ -1140,7 +1149,7 @@ def _get_run_stats(calcs_reversed: list[Calculation]) -> dict[str, RunStatistics
         total_time=0.0,
         cores=0,
     )
-    for calc_doc in calcs_reversed:
+    for calc_doc in [cr for cr in calcs_reversed if cr.output.run_stats]:
         stats = calc_doc.output.run_stats
         run_stats[calc_doc.task_name] = stats
         total["average_memory"] = max(total["average_memory"], stats.average_memory)
