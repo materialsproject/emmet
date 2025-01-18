@@ -909,7 +909,8 @@ class TaskDoc(DbTaskDoc, extra="allow"):
         if additional_fields:
             config.update(**additional_fields)
         return cls(**config)
-    
+
+
 class TrajectoryDoc(BaseModel):
     """Model for task trajectory data."""
 
