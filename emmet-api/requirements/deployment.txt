@@ -21,11 +21,11 @@ attrs==24.3.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.35.99
+boto3==1.36.2
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.35.99
+botocore==1.36.2
     # via
     #   boto3
     #   s3transfer
@@ -47,7 +47,7 @@ cryptography==44.0.0
     # via paramiko
 cycler==0.12.1
     # via matplotlib
-ddtrace==2.18.1
+ddtrace==2.19.1
     # via emmet-api (emmet/emmet-api/setup.py)
 deprecated==1.2.15
     # via opentelemetry-api
@@ -73,7 +73,7 @@ idna==3.10
     # via
     #   anyio
     #   requests
-imageio==2.36.1
+imageio==2.37.0
     # via scikit-image
 importlib-metadata==8.5.0
     # via opentelemetry-api
@@ -138,7 +138,7 @@ numpy==1.26.4
     #   tifffile
 opentelemetry-api==1.29.0
     # via ddtrace
-orjson==3.10.14
+orjson==3.10.15
     # via maggma
 packaging==24.2
     # via
@@ -184,7 +184,7 @@ pydantic-settings==2.7.1
     # via
     #   emmet-core
     #   maggma
-pydash==8.0.4
+pydash==8.0.5
     # via maggma
 pymatgen==2025.1.9
     # via
@@ -194,7 +194,7 @@ pymatgen==2025.1.9
     #   pymatgen-analysis-defects
 pymatgen-analysis-alloys==0.0.7
     # via emmet-api (emmet/emmet-api/setup.py)
-pymatgen-analysis-defects==2024.10.22
+pymatgen-analysis-defects==2025.1.18
     # via emmet-api (emmet/emmet-api/setup.py)
 pymongo==4.10.1
     # via maggma
@@ -218,7 +218,7 @@ pyyaml==6.0.2
     # via pybtex
 pyzmq==26.2.0
     # via maggma
-referencing==0.35.1
+referencing==0.36.1
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -235,7 +235,7 @@ ruamel-yaml==0.18.10
     #   pymatgen
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-s3transfer==0.10.4
+s3transfer==0.11.1
     # via boto3
 scikit-image==0.25.0
     # via pymatgen-analysis-defects
@@ -285,6 +285,7 @@ typing-extensions==4.12.2
     #   pydantic
     #   pydantic-core
     #   pydash
+    #   referencing
 tzdata==2024.2
     # via pandas
 uncertainties==3.2.2
