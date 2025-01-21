@@ -804,7 +804,9 @@ class DbTaskDoc(StructureMetadata):
         ComputedStructureEntry
             The TaskDoc.entry with corresponding TaskDoc.structure added.
         """
-        ce = self.entry.get_computed_entry()
+        ce = self.entry
+        if not getattr(self, "_use_pymatgen_rep", False):
+            ce = ce.get_computed_entry()
         return ComputedStructureEntry(
             structure=self.structure,
             energy=ce.energy,
