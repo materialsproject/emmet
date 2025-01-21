@@ -19,24 +19,25 @@ if TYPE_CHECKING:
     from typing import Any
     from typing_extensions import Self
 
+
 class EmmetReplica(BaseModel):
     """Define strongly typed, fixed schema versions of generic pymatgen objects."""
 
     @classmethod
-    def from_pymatgen(cls, pmg_obj : Any) -> Self:
+    def from_pymatgen(cls, pmg_obj: Any) -> Self:
         """Convert pymatgen objects to an EmmetReplica representation."""
         raise NotImplementedError
 
     def to_pymatgen(self) -> Any:
         """Convert EmmetReplica object to pymatgen equivalent."""
         raise NotImplementedError
-    
+
     @classmethod
-    def from_dict(cls, dct : dict[str,Any]) -> Self:
+    def from_dict(cls, dct: dict[str, Any]) -> Self:
         """MSONable-like function to create this object from a dict."""
         raise NotImplementedError
 
-    def as_dict(self) -> dict[str,Any]:
+    def as_dict(self) -> dict[str, Any]:
         """MSONable-like function to create dict representation of this object."""
         raise NotImplementedError
 
@@ -48,6 +49,7 @@ class SiteProperties(Enum):
     charge = "charge"
     velocities = "velocities"
     selective_dynamics = "selective_dynamics"
+
 
 class ElementSymbol(Enum):
     """Lightweight representation of a chemical element."""
@@ -180,6 +182,7 @@ class ElementSymbol(Enum):
         """Get element name."""
         return self.name
 
+
 class LightLattice(tuple):
     """Low memory representation of a Lattice as a tuple of a 3x3 matrix."""
 
@@ -188,7 +191,9 @@ class LightLattice(tuple):
         lattice_matrix = np.array(matrix)
         if lattice_matrix.shape != (3, 3):
             raise ValueError("Lattice matrix must be 3x3.")
-        return super(LightLattice,cls).__new__(cls,tuple([tuple(v) for v in lattice_matrix.tolist()]))
+        return super(LightLattice, cls).__new__(
+            cls, tuple([tuple(v) for v in lattice_matrix.tolist()])
+        )
 
     def as_dict(self) -> dict[str, list | str]:
         """Define MSONable-like as_dict."""
@@ -211,7 +216,7 @@ class LightLattice(tuple):
 
 class ElementReplica(EmmetReplica):
     """Define a flexible schema for elements and periodic sites.
-    
+
     The only required field in this model is `element`.
     This is intended to mimic a `pymatgen` `.Element` object.
     Additionally, the `lattice` and coordinates of the site can be specified
@@ -239,43 +244,59 @@ class ElementReplica(EmmetReplica):
         was allowed to relax on.
     """
 
-    element : ElementSymbol = Field(description="The element.")
-    lattice : Matrix3D | None = Field(default = None, description="The lattice in 3x3 matrix form.")
-    cart_coords : Vector3D | None = Field(default = None, description="The postion of the site in Cartesian coordinates.")
-    frac_coords : Vector3D | None = Field(default = None, description="The postion of the site in direct lattice vector coordinates.")
-    charge : float | None = Field(default = None, description="The on-site charge.")
-    magmom : float | None = Field(default = None, description="The on-site magnetic moment.")
-    velocities : Vector3D | None = Field(default = None, description="The Cartesian components of the site velocity.")
-    selective_dynamics : tuple[bool, bool, bool] | None = Field(default = None, description="The degrees of freedom which are allowed to relax on the site.")
+    element: ElementSymbol = Field(description="The element.")
+    lattice: Matrix3D | None = Field(
+        default=None, description="The lattice in 3x3 matrix form."
+    )
+    cart_coords: Vector3D | None = Field(
+        default=None, description="The postion of the site in Cartesian coordinates."
+    )
+    frac_coords: Vector3D | None = Field(
+        default=None,
+        description="The postion of the site in direct lattice vector coordinates.",
+    )
+    charge: float | None = Field(default=None, description="The on-site charge.")
+    magmom: float | None = Field(
+        default=None, description="The on-site magnetic moment."
+    )
+    velocities: Vector3D | None = Field(
+        default=None, description="The Cartesian components of the site velocity."
+    )
+    selective_dynamics: tuple[bool, bool, bool] | None = Field(
+        default=None,
+        description="The degrees of freedom which are allowed to relax on the site.",
+    )
 
-    def model_post_init(self, __context : Any) -> None:
+    def model_post_init(self, __context: Any) -> None:
         """Ensure both Cartesian and direct coordinates are set, if necessary."""
         if self.lattice:
             if self.cart_coords is not None:
                 self.frac_coords = self.frac_coords or np.linalg.solve(
-                        np.array(self.lattice).T, np.array(self.cart_coords)
-                    )
+                    np.array(self.lattice).T, np.array(self.cart_coords)
+                )
             elif self.frac_coords is not None:
                 self.cart_coords = self.cart_coords or tuple(
                     np.matmul(np.array(self.lattice).T, np.array(self.frac_coords))
                 )
-        
+
     @classmethod
-    def from_pymatgen(cls, pmg_obj : Element | PeriodicSite) -> Self:
+    def from_pymatgen(cls, pmg_obj: Element | PeriodicSite) -> Self:
         """Convert a pymatgen .PeriodicSite or .Element to .ElementReplica.
-        
+
         Parameters
         -----------
         site : pymatgen .Element or .PeriodicSite
         """
         if isinstance(pmg_obj, Element):
-            return cls(element = ElementSymbol(pmg_obj.name))
+            return cls(element=ElementSymbol(pmg_obj.name))
 
         return cls(
-            element = ElementSymbol(next(iter(pmg_obj.species.remove_charges().as_dict()))),
-            lattice = LightLattice(pmg_obj.lattice.matrix),
-            frac_coords = pmg_obj.frac_coords,
-            cart_coords = pmg_obj.coords,
+            element=ElementSymbol(
+                next(iter(pmg_obj.species.remove_charges().as_dict()))
+            ),
+            lattice=LightLattice(pmg_obj.lattice.matrix),
+            frac_coords=pmg_obj.frac_coords,
+            cart_coords=pmg_obj.coords,
         )
 
     def to_pymatgen(self) -> PeriodicSite:
@@ -285,20 +306,20 @@ class ElementReplica(EmmetReplica):
             self.frac_coords,
             Lattice(self.lattice),
             coords_are_cartesian=False,
-            properties = self.properties
+            properties=self.properties,
         )
 
     @property
-    def species(self) -> dict[str,int]:
+    def species(self) -> dict[str, int]:
         """Composition-like representation of site."""
-        return {self.element.name : 1}
+        return {self.element.name: 1}
 
     @property
-    def properties(self) -> dict[str,float]:
+    def properties(self) -> dict[str, float]:
         """Aggregate optional properties defined on the site."""
         props = {}
         for k in SiteProperties.__members__:
-            if (prop := getattr(self,k,None)) is not None:
+            if (prop := getattr(self, k, None)) is not None:
                 props[k] = prop
         return props
 
@@ -324,7 +345,7 @@ class ElementReplica(EmmetReplica):
     def name(self) -> str:
         """Ensure compatibility with PeriodicSite."""
         return self.element.name
-    
+
     @property
     def species_string(self) -> str:
         """Ensure compatibility with PeriodicSite."""
@@ -337,10 +358,10 @@ class ElementReplica(EmmetReplica):
 
     def __str__(self):
         return self.label
-    
+
     def add_attrs(self, **kwargs) -> ElementReplica:
         """Rapidly create a copy of this instance with additional fields set.
-        
+
         Parameters
         -----------
         **kwargs
@@ -348,7 +369,7 @@ class ElementReplica(EmmetReplica):
             add lattice and coordinate information to each site, and thereby
             not store it in the StructureReplica object itself in addition to
             each site.
-        
+
         Returns
         -----------
             ElementReplica
@@ -356,6 +377,7 @@ class ElementReplica(EmmetReplica):
         config = self.model_dump()
         config.update(**kwargs)
         return ElementReplica(**config)
+
 
 class StructureReplica(BaseModel):
     """Define a fixed schema structure.
@@ -367,10 +389,10 @@ class StructureReplica(BaseModel):
     When the `.sites` attr of `StructureReplica` is accessed, all prior attributes
     (respective aliases: `lattice`, `frac_coords`, and `coords`) are assigned to the
     retrieved sites.
-    Compare this to pymatgen's .Structure, which stores the `lattice`, `frac_coords`, 
+    Compare this to pymatgen's .Structure, which stores the `lattice`, `frac_coords`,
     and `cart_coords` both in the .Structure object and each .PeriodicSite within it.
 
-    
+
     Parameters
     -----------
     lattice : LightLattice
@@ -385,21 +407,25 @@ class StructureReplica(BaseModel):
     charge (optional) : float
         The total charge on the structure.
     """
-    
-    lattice : LightLattice = Field(description="The lattice in 3x3 matrix form.")
-    species : list[ElementReplica] = Field(description="The elements in the structure.")
-    frac_coords : ListMatrix3D = Field(description="The direct coordinates of the sites in the structure.")
-    cart_coords : ListMatrix3D = Field(description="The Cartesian coordinates of the sites in the structure.")
-    charge : float | None = Field(None, description="The net charge on the structure.")
+
+    lattice: LightLattice = Field(description="The lattice in 3x3 matrix form.")
+    species: list[ElementReplica] = Field(description="The elements in the structure.")
+    frac_coords: ListMatrix3D = Field(
+        description="The direct coordinates of the sites in the structure."
+    )
+    cart_coords: ListMatrix3D = Field(
+        description="The Cartesian coordinates of the sites in the structure."
+    )
+    charge: float | None = Field(None, description="The net charge on the structure.")
 
     @property
     def sites(self) -> list[ElementReplica]:
         """Return a list of sites in the structure with lattice and coordinate info."""
         return [
             species.add_attrs(
-                lattice = self.lattice,
-                cart_coords = self.cart_coords[idx],
-                frac_coords = self.frac_coords[idx],
+                lattice=self.lattice,
+                cart_coords=self.cart_coords[idx],
+                frac_coords=self.frac_coords[idx],
             )
             for idx, species in enumerate(self.species)
         ]
@@ -431,7 +457,7 @@ class StructureReplica(BaseModel):
     @classmethod
     def from_pymatgen(cls, pmg_obj: Structure) -> Self:
         """Create a StructureReplica from a pymatgen .Structure.
-        
+
         Parameters
         -----------
         pmg_obj : pymatgen .Structure
@@ -444,34 +470,38 @@ class StructureReplica(BaseModel):
             raise ValueError(
                 "Currently, `StructureReplica` is intended to represent only ordered materials."
             )
-        
+
         lattice = LightLattice(pmg_obj.lattice.matrix)
         properties = [{} for _ in range(len(pmg_obj))]
         for idx, site in enumerate(pmg_obj):
-            for k in ("charge","magmom","velocities","selective_dynamics"):
+            for k in ("charge", "magmom", "velocities", "selective_dynamics"):
                 if (prop := site.properties.get(k)) is not None:
                     properties[idx][k] = prop
 
         species = [
             ElementReplica(
-                element = ElementSymbol[next(iter(site.species.remove_charges().as_dict()))],
-                **properties[idx]
+                element=ElementSymbol[
+                    next(iter(site.species.remove_charges().as_dict()))
+                ],
+                **properties[idx],
             )
             for idx, site in enumerate(pmg_obj)
         ]
 
         return cls(
             lattice=lattice,
-            species = species,
-            frac_coords = [site.frac_coords for site in pmg_obj],
-            cart_coords = [site.coords for site in pmg_obj],
-            charge = pmg_obj.charge,
+            species=species,
+            frac_coords=[site.frac_coords for site in pmg_obj],
+            cart_coords=[site.coords for site in pmg_obj],
+            charge=pmg_obj.charge,
         )
-    
+
     def to_pymatgen(self) -> Structure:
         """Convert to a pymatgen .Structure."""
-        return Structure.from_sites([site.to_periodic_site() for site in self], charge = self.charge)
-            
+        return Structure.from_sites(
+            [site.to_periodic_site() for site in self], charge=self.charge
+        )
+
     @classmethod
     def from_poscar(cls, poscar_path: str | Path) -> Self:
         """Define convenience method to create a StructureReplica from a VASP POSCAR."""
@@ -479,6 +509,7 @@ class StructureReplica(BaseModel):
 
     def __str__(self):
         """Define format for printing a Structure."""
+
         def _format_float(val: float | int) -> str:
             nspace = 2 if val >= 0.0 else 1
             return " " * nspace + f"{val:.8f}"
