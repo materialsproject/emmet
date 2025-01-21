@@ -143,7 +143,6 @@ class CorrectedEntriesBuilder(Builder):
         self.logger.debug(f"Processing {len(entries)} entries for {chemsys}")
 
         all_entry_types = {str(e.data["run_type"]) for e in entries}
-
         corrected_entries = {}
 
         for compatibility in self.compatibility:
