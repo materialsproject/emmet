@@ -477,6 +477,10 @@ class DbTaskDoc(StructureMetadata):
     # _structure_entry: Optional[ComputedStructureEntry] = PrivateAttr(None)
 
     def model_post_init(self, __context: Any) -> None:
+        """Ensure that attrs are properly instantiated."""
+
+        self.tags = self.tags or []
+
         # Always refresh task_type, calc_type, run_type
         # See, e.g. https://github.com/materialsproject/emmet/issues/960
         # where run_type's were set incorrectly in older versions of TaskDoc
