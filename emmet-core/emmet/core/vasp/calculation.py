@@ -98,6 +98,10 @@ class PotcarSummaryStats(BaseModel):
         ),
     )
 
+    def __getitem__(self, name: str) -> Any:
+        """Make attributes subscriptable."""
+        return getattr(self, name)
+
 
 class PotcarSpec(BaseModel):
     """Document defining a VASP POTCAR specification."""
