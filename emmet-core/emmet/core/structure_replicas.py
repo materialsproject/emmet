@@ -35,11 +35,11 @@ class EmmetReplica(BaseModel):
     @classmethod
     def from_dict(cls, dct: dict[str, Any]) -> Self:
         """MSONable-like function to create this object from a dict."""
-        raise NotImplementedError
+        return cls(**dct)
 
     def as_dict(self) -> dict[str, Any]:
         """MSONable-like function to create dict representation of this object."""
-        raise NotImplementedError
+        return self.model_dump()
 
 
 class SiteProperties(Enum):
@@ -183,35 +183,26 @@ class ElementSymbol(Enum):
         return self.name
 
 
-class LightLattice(tuple):
+class LatticeReplica(EmmetReplica):
     """Low memory representation of a Lattice as a tuple of a 3x3 matrix."""
 
-    def __new__(cls, matrix):
-        """Overset __new__ to define new tuple instance."""
-        lattice_matrix = np.array(matrix)
-        if lattice_matrix.shape != (3, 3):
-            raise ValueError("Lattice matrix must be 3x3.")
-        return super(LightLattice, cls).__new__(
-            cls, tuple([tuple(v) for v in lattice_matrix.tolist()])
-        )
-
-    def as_dict(self) -> dict[str, list | str]:
-        """Define MSONable-like as_dict."""
-        return {"@class": self.__class__, "@module": self.__module__, "matrix": self}
+    matrix: Matrix3D = Field(
+        description="The matrix represenation of the lattice, with a, b, and c as rows."
+    )
 
     @classmethod
-    def from_dict(cls, dct: dict) -> Self:
-        """Define MSONable-like from_dict."""
-        return cls(dct["matrix"])
+    def from_pymatgen(cls, pmg_obj: Lattice) -> Self:
+        """Create a LatticeReplica from a pymatgen .Lattice."""
+        return cls(matrix=pmg_obj.matrix)
 
-    def copy(self) -> Self:
-        """Return a new copy of LightLattice."""
-        return LightLattice(self)
+    def to_pymatgen(self) -> Lattice:
+        """Create a pymatgen .Lattice."""
+        return Lattice(self.matrix)
 
     @property
     def volume(self) -> float:
         """Get the volume enclosed by the direct lattice vectors."""
-        return abs(np.linalg.det(self))
+        return abs(np.linalg.det(self.matrix))
 
 
 class ElementReplica(EmmetReplica):
@@ -294,20 +285,23 @@ class ElementReplica(EmmetReplica):
             element=ElementSymbol(
                 next(iter(pmg_obj.species.remove_charges().as_dict()))
             ),
-            lattice=LightLattice(pmg_obj.lattice.matrix),
+            lattice=LatticeReplica.from_pymatgen(pmg_obj.lattice),
             frac_coords=pmg_obj.frac_coords,
             cart_coords=pmg_obj.coords,
         )
 
-    def to_pymatgen(self) -> PeriodicSite:
-        """Create a PeriodicSite from a ElementReplica."""
-        return PeriodicSite(
-            self.element.name,
-            self.frac_coords,
-            Lattice(self.lattice),
-            coords_are_cartesian=False,
-            properties=self.properties,
-        )
+    def to_pymatgen(self) -> PeriodicSite | Element:
+        """Create an Element or PeriodicSite from a ElementReplica."""
+
+        if self.lattice and self.frac_coords:
+            return PeriodicSite(
+                self.element.name,
+                self.frac_coords,
+                Lattice(self.lattice),
+                coords_are_cartesian=False,
+                properties=self.properties,
+            )
+        return Element(self.element.name)
 
     @property
     def species(self) -> dict[str, int]:
@@ -395,7 +389,7 @@ class StructureReplica(BaseModel):
 
     Parameters
     -----------
-    lattice : LightLattice
+    lattice : LatticeReplica
         A 3x3 tuple of the lattice vectors, with a, b, and c as subsequent rows.
     species : list[ElementReplica]
         A list of elements in the structure
@@ -408,7 +402,7 @@ class StructureReplica(BaseModel):
         The total charge on the structure.
     """
 
-    lattice: LightLattice = Field(description="The lattice in 3x3 matrix form.")
+    lattice: LatticeReplica = Field(description="The lattice in 3x3 matrix form.")
     species: list[ElementReplica] = Field(description="The elements in the structure.")
     frac_coords: ListMatrix3D = Field(
         description="The direct coordinates of the sites in the structure."
@@ -436,7 +430,7 @@ class StructureReplica(BaseModel):
             return self.sites[idx]
         raise IndexError("Index must be an integer or slice!")
 
-    def __iter__(self) -> Iterator[ElementReplica]:
+    def __iter__(self) -> Iterator[ElementReplica]:  # type: ignore[override]
         """Permit list-like iteration on the sites in StructureReplica."""
         yield from self.sites
 
@@ -471,8 +465,8 @@ class StructureReplica(BaseModel):
                 "Currently, `StructureReplica` is intended to represent only ordered materials."
             )
 
-        lattice = LightLattice(pmg_obj.lattice.matrix)
-        properties = [{} for _ in range(len(pmg_obj))]
+        lattice = LatticeReplica.from_pymatgen(pmg_obj.lattice)
+        properties: list[dict[str, Any]] = [{} for _ in range(len(pmg_obj))]
         for idx, site in enumerate(pmg_obj):
             for k in ("charge", "magmom", "velocities", "selective_dynamics"):
                 if (prop := site.properties.get(k)) is not None:
@@ -499,13 +493,13 @@ class StructureReplica(BaseModel):
     def to_pymatgen(self) -> Structure:
         """Convert to a pymatgen .Structure."""
         return Structure.from_sites(
-            [site.to_periodic_site() for site in self], charge=self.charge
+            [site.to_pymatgen() for site in self], charge=self.charge  # type: ignore[misc]
         )
 
     @classmethod
     def from_poscar(cls, poscar_path: str | Path) -> Self:
         """Define convenience method to create a StructureReplica from a VASP POSCAR."""
-        return cls.from_structure(Poscar.from_file(poscar_path).structure)
+        return cls.from_pymatgen(Poscar.from_file(poscar_path).structure)
 
     def __str__(self):
         """Define format for printing a Structure."""
