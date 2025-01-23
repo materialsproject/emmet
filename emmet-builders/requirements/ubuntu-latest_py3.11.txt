@@ -19,9 +19,9 @@ attrs==24.3.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.35.99
+boto3==1.36.4
     # via maggma
-botocore==1.35.99
+botocore==1.36.4
     # via
     #   boto3
     #   s3transfer
@@ -49,7 +49,7 @@ emmet-core[all]==0.84.5
     #   mp-api
 fasteners==0.19
     # via mdanalysis
-fonttools==4.55.3
+fonttools==4.55.4
     # via matplotlib
 griddataformats==1.0.2
     # via mdanalysis
@@ -57,7 +57,7 @@ h5py==3.12.1
     # via phonopy
 idna==3.10
     # via requests
-imageio==2.36.1
+imageio==2.37.0
     # via scikit-image
 inflect==7.5.0
     # via robocrys
@@ -86,7 +86,7 @@ latexcodec==3.0.0
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
-maggma==0.71.1
+maggma==0.71.2
     # via
     #   emmet-builders (setup.py)
     #   mp-api
@@ -137,7 +137,7 @@ mp-pyrho==0.4.5
     # via pymatgen-analysis-defects
 mpmath==1.3.0
     # via sympy
-mrcfile==1.5.3
+mrcfile==1.5.4
     # via griddataformats
 msgpack==1.1.0
     # via
@@ -184,7 +184,7 @@ numpy==1.26.4
     #   symfc
     #   tifffile
     #   waterdynamics
-orjson==3.10.14
+orjson==3.10.15
     # via maggma
 packaging==24.2
     # via
@@ -212,7 +212,7 @@ pathsimanalysis==1.2.0
     # via mdanalysis
 patsy==1.0.1
     # via statsmodels
-phonopy==2.34.0
+phonopy==2.34.1
     # via matcalc
 pillow==11.1.0
     # via
@@ -246,7 +246,7 @@ pydantic-settings==2.7.1
     # via
     #   emmet-core
     #   maggma
-pydash==8.0.4
+pydash==8.0.5
     # via maggma
 pymatgen==2025.1.9
     # via
@@ -261,7 +261,7 @@ pymatgen==2025.1.9
     #   robocrys
 pymatgen-analysis-alloys==0.0.7
     # via emmet-core
-pymatgen-analysis-defects==2024.10.22
+pymatgen-analysis-defects==2025.1.18
     # via emmet-core
 pymatgen-analysis-diffusion==2024.7.15
     # via emmet-core
@@ -295,7 +295,7 @@ pyzmq==26.2.0
     # via maggma
 rdkit==2024.9.4
     # via solvation-analysis
-referencing==0.35.1
+referencing==0.36.1
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -318,7 +318,7 @@ ruamel-yaml==0.18.10
     #   robocrys
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-s3transfer==0.10.4
+s3transfer==0.11.1
     # via boto3
 scikit-image==0.25.0
     # via pymatgen-analysis-defects
@@ -397,8 +397,9 @@ typing-extensions==4.12.2
     #   pydantic
     #   pydantic-core
     #   pydash
+    #   referencing
     #   typeguard
-tzdata==2024.2
+tzdata==2025.1
     # via pandas
 uncertainties==3.2.2
     # via pymatgen
