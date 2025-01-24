@@ -240,8 +240,16 @@ class AlphaID(str):
 
     Args:
         _alphabet (str) : The alphabet to use, defaults to lowercase Roman.
+        _identifier (str) : The alphabetical string identifier.
+        _padlen (int) : The minimum length of an identifier to pad left with zeroes.
+        _prefix (str) : The ID prefix, ex. "mp"
+        _separator (str) : The separator between `_prefix` and `_identifier`, ex: "-"
     """
 
+    _identifier: str
+    _padlen: int
+    _prefix: str
+    _separator: str
     _alphabet: str = ascii_lowercase
 
     def __new__(
