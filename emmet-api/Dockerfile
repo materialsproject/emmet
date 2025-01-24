@@ -1,5 +1,5 @@
 FROM materialsproject/devops:python-3.1110.6 AS base
-RUN apt-get update && apt-get install -y --no-install-recommends libopenblas-dev libjpeg62 && apt-get clean
+RUN apt-get update && apt-get install -y --no-install-recommends libopenblas-dev libjpeg62 curl && apt-get clean
 
 FROM base AS builder
 RUN apt-get update && apt-get install -y --no-install-recommends gcc git g++ cmake make libsnappy-dev wget && apt-get clean
@@ -46,7 +46,8 @@ COPY material_resources.py .
 COPY molecule_resources.py .
 COPY defect_resources.py .
 COPY start.sh .
-RUN chmod +x start.sh
+COPY healthcheck.sh .
+RUN chmod +x start.sh healthcheck.sh
 
 LABEL com.datadoghq.ad.logs='[{"source": "gunicorn", "service": "next-gen-api"}]'
 
