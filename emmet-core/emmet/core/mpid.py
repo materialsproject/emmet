@@ -240,8 +240,6 @@ class AlphaID(str):
 
     Args:
         _alphabet (str) : The alphabet to use, defaults to lowercase Roman.
-        _default_separator (str) : The separator between prefix and identifier
-            string, if a prefix is used.
     """
 
     _alphabet: str = ascii_lowercase
@@ -259,7 +257,15 @@ class AlphaID(str):
             identifier (str or int) : the identifier, either a string with characters belonging
                 to AlphaID._alphabet, or an integer to represent as a string.
             padlen (int, default = 0) : the amount of characters to pad to if a character
-                string is too short. For example,
+                string is too short. For example, the integer 149 has alpha representation "ft",
+                and thus `AlphaID(149, padlen = 6)` would present as "aaaaft".
+                Both "ft" and "aaaaft" have the same integer value.
+            prefix (str or None, default = None) : if a str, the prefix to use.
+                For example, `AlphaID(149, padlen = 6, prefix="mp")` would present as "mp-aaaaft".
+            separator (str, default = "-") : the separator to use between the prefix and the
+                string representation of the integer, if the prefix is non-empty.
+                For example, `AlphaID(149, padlen = 6, prefix="mp", prefix = ":")` would
+                present as "mp:aaaaft".
         """
 
         if isinstance(identifier, int):
@@ -278,6 +284,7 @@ class AlphaID(str):
 
     @classmethod
     def _string_to_base_10_value(cls, string: str) -> int:
+        """Obtain the integer value of an alphabetical string."""
         value = 0
         rev_codex = {letter: idx for idx, letter in enumerate(cls._alphabet)}
         base = len(cls._alphabet)
@@ -287,6 +294,7 @@ class AlphaID(str):
 
     @classmethod
     def _integer_to_alpha_rep(cls, integer: int) -> str:
+        """Obtain the string representation of an integer."""
         if integer == 0:
             return cls._alphabet[0]
 
@@ -307,16 +315,18 @@ class AlphaID(str):
         return string
 
     def __int__(self) -> int:
+        """Get the current AlphaID's integer value."""
         return self._string_to_base_10_value(self._identifier)
 
     def __repr__(self):
+        """Set AlphaID display name to distinguish from base string class."""
         return "AlphaID(" + self + ")"
 
     def __add__(self, other: str | int) -> "AlphaID":
         """Define addition of AlphaID.
 
-        Returns an AlphaID with the equal or greater length than the current
-        instance and the same prefix.
+        Returns an AlphaID with the same `padlen`, `prefix`, and `separator`
+        as the current instance, not `other`. Thus the order of addition matters.
 
         Args:
             other (str or int) : the value to add to the current identifier.
@@ -339,6 +349,12 @@ class AlphaID(str):
         )
 
     def __sub__(self, other: str | int) -> "AlphaID":
+        """Define subtraction of AlphaID.
+
+        See the docstring for `__add__`. The order of subtraction
+        matters, as the `padlen`, `prefix`, and `separator` are taken
+        from the current instance, not `other`.
+        """
         if isinstance(other, AlphaID):
             other = self._string_to_base_10_value(other._identifier)
         elif isinstance(other, str):
