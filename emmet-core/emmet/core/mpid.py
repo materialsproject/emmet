@@ -232,80 +232,87 @@ class MPculeID(str):
         raise ValueError("Invalid MPculeID Format")
 
 
-#%%
+# %%
+
 
 class AlphaID(str):
     """Identifier based on representing an integer as an alphabetical string.
-    
+
     Args:
         _alphabet (str) : The alphabet to use, defaults to lowercase Roman.
-        _default_separator (str) : The separator between prefix and identifier 
+        _default_separator (str) : The separator between prefix and identifier
             string, if a prefix is used.
     """
 
-    _alphabet : str = ascii_lowercase
-    
-    def __new__(cls, identifier : str | int , padlen : int = 0, prefix : str | None = None, separator : str = "-") -> Self:
+    _alphabet: str = ascii_lowercase
+
+    def __new__(
+        cls,
+        identifier: str | int,
+        padlen: int = 0,
+        prefix: str | None = None,
+        separator: str = "-",
+    ) -> Self:
         """Define a new instance of AlphaID.
-        
+
         Args:
             identifier (str or int) : the identifier, either a string with characters belonging
                 to AlphaID._alphabet, or an integer to represent as a string.
             padlen (int, default = 0) : the amount of characters to pad to if a character
-                string is too short. For example, 
+                string is too short. For example,
         """
 
-        if isinstance(identifier,int):
+        if isinstance(identifier, int):
             identifier = cls._integer_to_alpha_rep(identifier)
-        padded = max(0,padlen - len(identifier))*cls._alphabet[0]
+        padded = max(0, padlen - len(identifier)) * cls._alphabet[0]
         prefix = prefix or ""
         if len(prefix) == 0:
             separator = ""
-            
+
         new_cls = str.__new__(cls, prefix + separator + padded + identifier)
         new_cls._identifier = identifier
         new_cls._padlen = padlen
         new_cls._prefix = prefix
         new_cls._separator = separator
         return new_cls
-    
+
     @classmethod
-    def _string_to_base_10_value(cls, string : str) -> int:
+    def _string_to_base_10_value(cls, string: str) -> int:
         value = 0
-        rev_codex = {letter : idx for idx,letter in enumerate(cls._alphabet)}
+        rev_codex = {letter: idx for idx, letter in enumerate(cls._alphabet)}
         base = len(cls._alphabet)
         for ipow, char in enumerate(string[::-1]):
             value += rev_codex[char] * base**ipow
         return value
 
     @classmethod
-    def _integer_to_alpha_rep(cls, integer : int) -> str:
+    def _integer_to_alpha_rep(cls, integer: int) -> str:
         if integer == 0:
             return cls._alphabet[0]
 
         base = len(cls._alphabet)
         max_pow = floor(log(integer) / log(base))
-        string : str = ""
+        string: str = ""
         rem = integer
-        for pow in range(max_pow,-1,-1):
+        for pow in range(max_pow, -1, -1):
             if rem == 0:
                 string += cls._alphabet[0]
                 continue
             mult = base**pow
-            for coeff in range(base-1,-1,-1):
-                if coeff*mult <= rem:
+            for coeff in range(base - 1, -1, -1):
+                if coeff * mult <= rem:
                     string += cls._alphabet[coeff]
-                    rem -= coeff*mult
+                    rem -= coeff * mult
                     break
         return string
 
     def __int__(self) -> int:
         return self._string_to_base_10_value(self._identifier)
-    
+
     def __repr__(self):
-        return f"AlphaID("+ self + ")"
-    
-    def __add__(self, other : str | int) -> "AlphaID":
+        return "AlphaID(" + self + ")"
+
+    def __add__(self, other: str | int) -> "AlphaID":
         """Define addition of AlphaID.
 
         Returns an AlphaID with the equal or greater length than the current
@@ -323,16 +330,16 @@ class AlphaID(str):
             other = self._string_to_base_10_value(other._identifier)
         elif isinstance(other, str):
             other = self._string_to_base_10_value(other)
-        
+
         return AlphaID(
             int(self) + other,
             padlen=self._padlen,
             prefix=self._prefix,
             separator=self._separator,
         )
-    
-    def __sub__(self, other : str | int) -> "AlphaID":
-        if isinstance(other,AlphaID):
+
+    def __sub__(self, other: str | int) -> "AlphaID":
+        if isinstance(other, AlphaID):
             other = self._string_to_base_10_value(other._identifier)
         elif isinstance(other, str):
             other = self._string_to_base_10_value(other)

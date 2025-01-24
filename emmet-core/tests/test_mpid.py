@@ -57,8 +57,8 @@ def test_to_str():
         == "b9ba54febc77d2a9177accf4605767db-F6Li1P1-1-2"
     )
 
-def test_alphaid():
 
+def test_alphaid():
     # test roundtrip, addition, and subtraction
     last_val = None
     next_val = None
@@ -69,17 +69,17 @@ def test_alphaid():
             assert alpha - 1 == last_val
             assert alpha - AlphaID(1) == last_val
             assert alpha == next_val
-            
+
         last_val = alpha
         next_val = alpha + 1
 
-        w_prefix = AlphaID(i,prefix="mp")
+        w_prefix = AlphaID(i, prefix="mp")
         assert int(w_prefix) == int(alpha)
         assert w_prefix != alpha
         assert (alpha + w_prefix)._prefix == ""
         assert (w_prefix + alpha)._prefix == "mp"
 
-        w_prefix_and_pad = AlphaID(i,prefix="mvc",padlen = 8)
+        w_prefix_and_pad = AlphaID(i, prefix="mvc", padlen=8)
         assert int(w_prefix_and_pad) == int(alpha)
         assert w_prefix_and_pad != alpha
         assert (alpha + w_prefix_and_pad)._prefix == ""
