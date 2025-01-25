@@ -21,11 +21,11 @@ attrs==24.3.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.36.4
+boto3==1.36.6
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.36.4
+botocore==1.36.6
     # via
     #   boto3
     #   s3transfer
@@ -60,9 +60,9 @@ csscompressor==0.9.5
     # via mkdocs-minify-plugin
 cycler==0.12.1
     # via matplotlib
-ddtrace==2.19.1
+ddtrace==2.20.0
     # via emmet-api (setup.py)
-deprecated==1.2.15
+deprecated==1.2.17
     # via opentelemetry-api
 distlib==0.3.9
     # via virtualenv
@@ -86,7 +86,7 @@ filelock==3.17.0
     # via virtualenv
 flake8==7.1.1
     # via emmet-api (setup.py)
-fonttools==4.55.4
+fonttools==4.55.6
     # via matplotlib
 ghp-import==2.1.0
     # via mkdocs
@@ -290,7 +290,7 @@ pycodestyle==2.12.1
     #   flake8
 pycparser==2.22
     # via cffi
-pydantic==2.10.5
+pydantic==2.10.6
     # via
     #   emmet-core
     #   fastapi
@@ -310,7 +310,7 @@ pyflakes==3.2.0
     # via flake8
 pygments==2.19.1
     # via mkdocs-material
-pymatgen==2025.1.9
+pymatgen==2025.1.24
     # via
     #   emmet-core
     #   mp-pyrho
@@ -379,7 +379,7 @@ ruamel-yaml==0.18.10
     #   pymatgen
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-s3transfer==0.11.1
+s3transfer==0.11.2
     # via boto3
 scikit-image==0.25.0
     # via pymatgen-analysis-defects
@@ -407,7 +407,7 @@ spglib==2.5.0
     # via pymatgen
 sshtunnel==0.4.0
     # via maggma
-starlette==0.45.2
+starlette==0.45.3
     # via fastapi
 sympy==1.13.3
     # via pymatgen
