@@ -7,7 +7,7 @@ outside the standard MSONable model
 from typing import Dict
 
 import pymatgen.core.composition
-from pydantic import BaseModel
+from pydantic import RootModel
 from pymatgen.core.periodic_table import Element
 
 """
@@ -17,10 +17,10 @@ in as Stubbed classes to prevent name clashing
 """
 
 
-class StubComposition(BaseModel):
+class StubComposition(RootModel):
     """A dictionary mapping element to total quantity"""
 
-    __root__: Dict[Element, float]
+    root: Dict[Element, float]
 
 
 @classmethod  # type: ignore
