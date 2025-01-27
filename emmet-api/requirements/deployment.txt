@@ -14,7 +14,7 @@ asgi-logger==0.1.0
     # via emmet-api (emmet/emmet-api/setup.py)
 asgiref==3.8.1
     # via asgi-logger
-attrs==24.3.0
+attrs==25.1.0
     # via
     #   jsonlines
     #   jsonschema
@@ -49,7 +49,7 @@ cycler==0.12.1
     # via matplotlib
 ddtrace==2.20.0
     # via emmet-api (emmet/emmet-api/setup.py)
-deprecated==1.2.17
+deprecated==1.2.18
     # via opentelemetry-api
 dnspython==2.7.0
     # via
@@ -218,7 +218,7 @@ pyyaml==6.0.2
     # via pybtex
 pyzmq==26.2.0
     # via maggma
-referencing==0.36.1
+referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -237,7 +237,7 @@ ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
 s3transfer==0.11.2
     # via boto3
-scikit-image==0.25.0
+scikit-image==0.25.1
     # via pymatgen-analysis-defects
 scipy==1.15.1
     # via
