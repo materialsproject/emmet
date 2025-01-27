@@ -20,7 +20,7 @@ ase==3.24.0
     #   matcalc
     #   matgl
     #   pymatgen-analysis-diffusion
-attrs==24.3.0
+attrs==25.1.0
     # via
     #   aiohttp
     #   jsonlines
@@ -405,7 +405,7 @@ pathspec==0.12.1
     # via mkdocs
 patsy==1.0.1
     # via statsmodels
-phonopy==2.34.1
+phonopy==2.35.0
     # via matcalc
 pillow==11.1.0
     # via
@@ -536,7 +536,7 @@ pyzmq==26.2.0
     # via maggma
 rdkit==2024.9.4
     # via solvation-analysis
-referencing==0.36.1
+referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -563,7 +563,7 @@ ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
 s3transfer==0.11.2
     # via boto3
-scikit-image==0.25.0
+scikit-image==0.25.1
     # via pymatgen-analysis-defects
 scikit-learn==1.6.1
     # via matminer
