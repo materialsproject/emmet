@@ -46,6 +46,8 @@ setup(
             "solvation-analysis>=0.4.1",
             "MDAnalysis>=2.7.0",
         ],
+        "arrow": ["pyarrow"],
+        "optimade": ["optimade"],
         "ml": ["chgnet", "matgl", "dgl<=2.1"],
         "test": [
             "pre-commit",
