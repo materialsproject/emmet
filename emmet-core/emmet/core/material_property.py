@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import List, Optional, Sequence, Type, TypeVar, Union
+from typing import List, Optional, Type, TypeVar, Union
 
 from pydantic import Field, field_validator
 from pymatgen.core import Structure
@@ -46,11 +45,11 @@ class PropertyDoc(StructureMetadata):
         default_factory=datetime.utcnow,
     )
 
-    origins: Sequence[PropertyOrigin] = Field(
+    origins: list[PropertyOrigin] = Field(
         [], description="Dictionary for tracking the provenance of properties."
     )
 
-    warnings: Sequence[str] = Field(
+    warnings: list[str] = Field(
         [], description="Any warnings related to this property."
     )
 

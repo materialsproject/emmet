@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Union, Dict, Tuple, Sequence, Optional
+from typing import Dict, List, Optional, Tuple, Union
 
 from pydantic import Field
 import numpy as np
@@ -34,7 +34,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         description="Timestamp for the most recent calculation for this MigrationGraph document.",
     )
 
-    warnings: Sequence[str] = Field(
+    warnings: list[str] = Field(
         [], description="Any warnings related to this property."
     )
 
