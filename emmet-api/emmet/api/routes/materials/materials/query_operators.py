@@ -409,12 +409,16 @@ class FormulaAutoCompleteQuery(QueryOperator):
             comp_red = comp.reduced_composition.items()
 
             for i, j in comp_red:
+                # The keys of pymatgen's Composition can be Element, Species, or DummySpecies
+                # Element and Species both have a name attr, DummySpecies doesn't by default
+                # This bothers mypy a lot, so we placate it here - all three have __str__ methods:
+                spec_name = str(getattr(i, "name", None) or i)
                 if j != 1:
-                    ind_str.append(i.name + str(int(j)))
+                    ind_str.append(spec_name + str(int(j)))
                 else:
-                    ind_str.append(i.name)
+                    ind_str.append(spec_name)
 
-                eles.append(i.name)
+                eles.append(spec_name)
 
         final_terms = ["".join(entry) for entry in permutations(ind_str)]
 
