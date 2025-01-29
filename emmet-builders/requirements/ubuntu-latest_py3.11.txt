@@ -248,7 +248,7 @@ pydantic-settings==2.7.1
     #   maggma
 pydash==8.0.5
     # via maggma
-pymatgen==2025.1.24
+pymatgen==2024.11.13
     # via
     #   emmet-core
     #   matcalc
