@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, Type, TypeVar, Union
+from datetime import datetime
+from typing import Type, TypeVar
 
 from pydantic import Field, field_validator
 from pymatgen.core import Structure
@@ -35,7 +36,7 @@ class PropertyDoc(StructureMetadata):
         description="Whether this property document is deprecated.",
     )
 
-    deprecation_reasons: Optional[List[Union[DeprecationMessage, str]]] = Field(
+    deprecation_reasons: list[DeprecationMessage] | None = Field(
         None,
         description="List of deprecation tags detailing why this document isn't valid.",
     )
@@ -45,12 +46,12 @@ class PropertyDoc(StructureMetadata):
         default_factory=datetime.utcnow,
     )
 
-    origins: list[PropertyOrigin] = Field(
-        [], description="Dictionary for tracking the provenance of properties."
+    origins: list[PropertyOrigin] | None = Field(
+        None, description="Dictionary for tracking the provenance of properties."
     )
 
-    warnings: list[str] = Field(
-        [], description="Any warnings related to this property."
+    warnings: list[str] | None = Field(
+        None, description="Any warnings related to this property."
     )
 
     @field_validator("last_updated", mode="before")
