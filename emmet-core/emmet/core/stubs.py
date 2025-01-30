@@ -28,5 +28,5 @@ def validate_composition(cls, v):
     return pymatgen.core.composition.Composition(**v)
 
 
-setattr(pymatgen.core.composition.Composition,"__pydantic_model__", StubComposition)
-setattr(pymatgen.core.composition.Composition,"__get_validators__", get_validators)
+setattr(pymatgen.core.composition.Composition, "__pydantic_model__", StubComposition)
+setattr(pymatgen.core.composition.Composition, "__get_validators__", get_validators)

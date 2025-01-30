@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 from collections.abc import Iterator
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, RootModel, Field
+import re
 
 from enum import Enum
 from typing import TYPE_CHECKING
 
 import numpy as np
 
-from pymatgen.core import Structure, PeriodicSite, Lattice, Element
+from pymatgen.core import Structure, PeriodicSite, Lattice, Element, Species, Composition
 from pymatgen.io.vasp import Poscar
 
 from emmet.core.math import Vector3D, Matrix3D, ListMatrix3D
@@ -40,7 +41,6 @@ class EmmetReplica(BaseModel):
     def as_dict(self) -> dict[str, Any]:
         """MSONable-like function to create dict representation of this object."""
         return self.model_dump()
-
 
 class SiteProperties(Enum):
     """Define a restricted set of structure site properties."""
@@ -204,7 +204,6 @@ class LatticeReplica(EmmetReplica):
         """Get the volume enclosed by the direct lattice vectors."""
         return abs(np.linalg.det(self.matrix))
 
-
 class ElementReplica(EmmetReplica):
     """Define a flexible schema for elements and periodic sites.
 
@@ -217,7 +216,7 @@ class ElementReplica(EmmetReplica):
     -----------
     element (required) : ElementSymbol
         The symbol of the element.
-    lattice (optional) : Matrix3D
+    lattice (optional) : LatticeReplica
         The 3x3 representation of the lattice the site exists in.
     cart_coords (optional) : Vector3D
         A tuple of 3 floats specifying the position of the site in Cartesian space.
@@ -236,7 +235,7 @@ class ElementReplica(EmmetReplica):
     """
 
     element: ElementSymbol = Field(description="The element.")
-    lattice: Matrix3D | None = Field(
+    lattice: LatticeReplica | None = Field(
         default=None, description="The lattice in 3x3 matrix form."
     )
     cart_coords: Vector3D | None = Field(
@@ -271,7 +270,7 @@ class ElementReplica(EmmetReplica):
                 )
 
     @classmethod
-    def from_pymatgen(cls, pmg_obj: Element | PeriodicSite) -> Self:
+    def from_pymatgen(cls, pmg_obj: Element | Species | PeriodicSite) -> Self:
         """Convert a pymatgen .PeriodicSite or .Element to .ElementReplica.
 
         Parameters
@@ -281,32 +280,37 @@ class ElementReplica(EmmetReplica):
         if isinstance(pmg_obj, Element):
             return cls(element=ElementSymbol(pmg_obj.name))
 
+        elif isinstance(pmg_obj, Species):
+            return cls(
+                element=ElementSymbol(pmg_obj._el),
+                charge=getattr(pmg_obj, "_oxi_state", None),
+            )
+
         return cls(
-            element=ElementSymbol(
-                next(iter(pmg_obj.species.remove_charges().as_dict()))
-            ),
+            element=ElementSymbol[pmg_obj.specie.name],
             lattice=LatticeReplica.from_pymatgen(pmg_obj.lattice),
             frac_coords=pmg_obj.frac_coords,
             cart_coords=pmg_obj.coords,
+            charge=getattr(pmg_obj.specie, "_oxi_state", None),
         )
 
-    def to_pymatgen(self) -> PeriodicSite | Element:
+    def to_pymatgen(self) -> Element | Species | PeriodicSite:
         """Create an Element or PeriodicSite from a ElementReplica."""
 
         if self.lattice and self.frac_coords:
             return PeriodicSite(
                 self.element.name,
                 self.frac_coords,
-                Lattice(self.lattice),
+                Lattice(self.lattice.matrix),
                 coords_are_cartesian=False,
                 properties=self.properties,
             )
+        elif self.charge is not None:
+            return Species(
+                symbol=self.element.name,
+                oxidation_state=self.charge,
+            )
         return Element(self.element.name)
-
-    @property
-    def species(self) -> dict[str, int]:
-        """Composition-like representation of site."""
-        return {self.element.name: 1}
 
     @property
     def properties(self) -> dict[str, float]:
@@ -324,6 +328,23 @@ class ElementReplica(EmmetReplica):
     def __float__(self) -> float:
         """Ensure pymatgen's get_el_sp recognizes this class as an element."""
         return float(self.element.Z)
+    
+    @classmethod
+    def from_str(self,string) -> Self:
+        """Create an ElementReplica from the element symbol and optional charge."""
+        parsed = re.match("([A-Z][a-z]?)([0-9.0-9]+)?([+-])?",string).groups()
+        charge_str = parsed[1]
+        
+        charge_sign = "+"
+        if parsed[2] is not None:
+            charge_sign = parsed[2]
+            if charge_str is None:
+                charge_str = "1"
+        
+        charge = None
+        if charge_str is not None:
+            charge = float(charge_sign + charge_str)
+        return ElementReplica(element=ElementSymbol[parsed[0]],charge=charge)
 
     @property
     def elements(self) -> list[ElementSymbol]:
@@ -350,9 +371,41 @@ class ElementReplica(EmmetReplica):
         """Ensure compatibility with PeriodicSite."""
         return self.name
 
-    def __str__(self):
-        return self.label
+    @property
+    def specie(self) -> str:
+        """The element with its optional charge/oxidation state."""
+        charge_sign = ""
+        chg_str = ""
+        if self.charge is not None:
+            # specifically want to check if charge is set and zero here
+            if self.charge > 0:
+                charge_sign = "+"
+            elif self.charge < 0:
+                charge_sign = "-"
+            chg_str = f"{abs(self.charge)}"
+        return f"{self.label}{chg_str}{charge_sign}"
 
+    @property
+    def species(self) -> CompositionReplica:
+        """Composition-like representation of site."""
+        return CompositionReplica.from_dict({self.specie: 1})
+
+    def __str__(self):
+        coord_str = ""
+        if self.frac_coords is not None:
+            coord_str += (
+                "    : "
+                f"xyz({', '.join([f'{pos:.8f}' for pos in self.cart_coords])}) "
+                f"abc[{', '.join([f'{pos:.8f}' for pos in self.frac_coords])}]"
+            )
+        return f"{self.specie}{coord_str}"
+
+    def __repr__(self) -> str:
+        return self.__str__()
+    
+    def __hash__(self) -> int:
+        return hash(str(self))
+    
     def add_attrs(self, **kwargs) -> ElementReplica:
         """Rapidly create a copy of this instance with additional fields set.
 
@@ -372,6 +425,65 @@ class ElementReplica(EmmetReplica):
         config.update(**kwargs)
         return ElementReplica(**config)
 
+class CompositionReplica(RootModel):
+    """Strict format representation of a Composition."""
+    root : dict[ElementReplica,float]
+
+    @property
+    def formula(self) -> str:
+        """The formula sorted by ascending Z."""
+        sorted_ele = sorted(self.root,key = lambda k : k.Z)
+        return " ".join([f"{ele.species_string}{self.root[ele]}" for ele in sorted_ele])
+    
+    @property
+    def chemical_system(self) -> str:
+        """The chemical system in alphabetical order, dash separated."""
+        eles = [ele.name for ele in self.root]
+        return "-".join(sorted(eles))
+    
+    def __getitem__(self, item) -> int:
+        return self.root[item]
+    
+    @classmethod
+    def from_dict(cls,dct : dict[str | ElementSymbol | ElementReplica, int]) -> Self:
+        """Create a CompositionReplica from a dict representation.
+        
+        Parameters
+        -----------
+        dct : dict[str or ElementSymbol or ElementReplica, int]
+            Dictionary mapping element symbols (with or without charges) to their
+            stoichiometry.
+        """
+        new_dct = {}
+        for k, v in dct.items():
+            if isinstance(k,str):
+                symb = ElementReplica.from_str(k)
+            elif isinstance(k, ElementSymbol):
+                symb = ElementReplica(element=k)
+            elif isinstance(k, ElementReplica):
+                symb = k
+            else:
+                raise ValueError(f"Expected str, ElementSymbol, or ElementReplica, not {type(k)}")
+            new_dct[symb] = v
+        return cls(root = new_dct)
+    
+    @classmethod
+    def from_pymatgen(cls, pmg_obj : Composition) -> Self:
+        """Create a CompositionReplica from a pymatgen Composition.
+        
+        Parameters
+        -----------
+        pmg_obj : Composition
+        """
+        return cls.from_dict(pmg_obj.as_dict())
+    
+    def to_pymatgen(self) -> Composition:
+        """Create a pymatgen Composition."""
+        return Composition({k.specie : v for k, v in self.root.items()})
+    
+    def __hash__(self) -> int:
+        return hash(frozenset(self.root))
+    
 
 class StructureReplica(BaseModel):
     """Define a fixed schema structure.
@@ -423,6 +535,11 @@ class StructureReplica(BaseModel):
             )
             for idx, species in enumerate(self.species)
         ]
+    
+    @property
+    def composition(self) -> CompositionReplica:
+        dct = {spec: len([s for s in self.species if s == spec]) for spec in set(self.species)}
+        return CompositionReplica.from_dict(dct)
 
     def __getitem__(self, idx: int | slice) -> ElementReplica | list[ElementReplica]:
         """Permit list-like access of the sites in StructureReplica."""
@@ -471,6 +588,8 @@ class StructureReplica(BaseModel):
             for k in ("charge", "magmom", "velocities", "selective_dynamics"):
                 if (prop := site.properties.get(k)) is not None:
                     properties[idx][k] = prop
+            if hasattr(site.specie, "_oxi_state"):
+                properties[idx]["charge"] = site.specie._oxi_state
 
         species = [
             ElementReplica(
@@ -509,7 +628,8 @@ class StructureReplica(BaseModel):
             return " " * nspace + f"{val:.8f}"
 
         lattice_str = [
-            [_format_float(self.lattice[i][j]) for j in range(3)] for i in range(3)
+            [_format_float(self.lattice.matrix[i][j]) for j in range(3)]
+            for i in range(3)
         ]
         coords_str = [
             [_format_float(self.cart_coords[i][j]) for j in range(3)]
@@ -522,9 +642,13 @@ class StructureReplica(BaseModel):
         )
         as_str += "\nCartesian Coordinates\n"
 
+        max_ele_len = max(len(str(_site)) for _site in self.sites)
         as_str += "\n".join(
-            f"{self[idx].element}{' '*(3-len(str(self[idx].element)))}: "
-            + ",".join(site_str)
-            for idx, site_str in enumerate(coords_str)
+            f"{str(_site)}{' '*(max_ele_len+3-len(str(_site)))}: "
+            + ",".join(coords_str[idx])
+            for idx, _site in enumerate(self.sites)
         )
         return as_str
+
+    def __repr__(self) -> str:
+        return self.__str__()
