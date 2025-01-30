@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 from collections.abc import Iterator
+from math import gcd
 from pydantic import BaseModel, RootModel, Field
 import re
 
@@ -48,6 +49,10 @@ class EmmetReplica(BaseModel):
     def as_dict(self) -> dict[str, Any]:
         """MSONable-like function to create dict representation of this object."""
         return self.model_dump()
+
+    def __getattr__(self, name: str) -> Any:
+        """If __getattribute__ fails, try the pymatgen object."""
+        return getattr(self.to_pymatgen(), name)
 
 
 class SiteProperties(Enum):
@@ -500,8 +505,29 @@ class CompositionReplica(RootModel):
     def __hash__(self) -> int:
         return hash(frozenset(self.root))
 
+    def remove_charges(self) -> CompositionReplica:
+        """Return a copy of the current composition without charges/oxidation states."""
+        return CompositionReplica(
+            root={
+                ElementReplica(element=spec.element): coeff
+                for spec, coeff in self.root.items()
+            }
+        )
 
-class StructureReplica(BaseModel):
+    @property
+    def reduced_composition(self) -> CompositionReplica:
+        """Return a copy of the current composition reduced by the greatest common divisor."""
+        _gcd = gcd(*[int(v) for v in self.root.values()])
+        return CompositionReplica(
+            root={spec: coeff / _gcd for spec, coeff in self.root.items()}
+        )
+
+    def __getattr__(self, name: str) -> Any:
+        """If __getattribute__ fails, try the pymatgen object."""
+        return getattr(self.to_pymatgen(), name)
+
+
+class StructureReplica(EmmetReplica):
     """Define a fixed schema structure.
 
     This class is intended to provide both a fixed schema for a generic structure,
