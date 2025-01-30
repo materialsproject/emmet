@@ -1,13 +1,14 @@
 """ Core definition of a CorrectedEntriesDoc Document """
 
-from typing import Dict, Union, List, Optional
 from datetime import datetime
+from typing import Dict, List, Optional, Union
 
 from pydantic import Field
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.base import EmmetBaseModel
 from emmet.core.thermo import ThermoType
+from emmet.core.utils import utcnow
 from emmet.core.vasp.calc_types.enums import RunType
 
 
@@ -34,5 +35,5 @@ class CorrectedEntriesDoc(EmmetBaseModel):
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property.",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )

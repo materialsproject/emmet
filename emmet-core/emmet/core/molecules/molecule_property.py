@@ -1,4 +1,5 @@
 """ Core definition of a Materials Document """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -7,11 +8,11 @@ from typing import List, Optional, Type, TypeVar
 from pydantic import Field
 from pymatgen.core.structure import Molecule
 
-from emmet.core.qchem.calc_types import LevelOfTheory
 from emmet.core.material import PropertyOrigin
 from emmet.core.mpid import MPculeID
+from emmet.core.qchem.calc_types import LevelOfTheory
 from emmet.core.structure import MoleculeMetadata
-
+from emmet.core.utils import utcnow
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -66,7 +67,7 @@ class PropertyDoc(MoleculeMetadata):
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     origins: list[PropertyOrigin] = Field(

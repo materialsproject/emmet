@@ -12,6 +12,7 @@ from emmet.core.common import convert_datetime
 from emmet.core.material import PropertyOrigin
 from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
+from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
 
 S = TypeVar("S", bound="PropertyDoc")
@@ -43,7 +44,7 @@ class PropertyDoc(StructureMetadata):
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property.",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     origins: list[PropertyOrigin] | None = Field(

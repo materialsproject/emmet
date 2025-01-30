@@ -16,7 +16,7 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
-from emmet.core.utils import ValueEnum
+from emmet.core.utils import ValueEnum, utcnow
 
 
 class BatteryType(str, ValueEnum):
@@ -301,7 +301,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
             return None
 
         d = cls.get_elec_doc(ie)
-        d["last_updated"] = datetime.utcnow()
+        d["last_updated"] = utcnow()
 
         stripped_host = ie.fully_charged_entry.structure.copy()
         stripped_host.remove_species([d["working_ion"]])
@@ -537,7 +537,7 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
                 "formula_charge": comp_charge.reduced_formula,
                 "formula_discharge": comp_discharge.reduced_formula,
                 "reaction": ce.voltage_pairs[0].rxn.as_dict(),
-                "last_updated": datetime.utcnow(),
+                "last_updated": utcnow(),
             }
             return d
 

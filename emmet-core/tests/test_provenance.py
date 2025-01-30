@@ -5,6 +5,7 @@ from pymatgen.core import Lattice, Structure
 from pymatgen.util.provenance import Author, HistoryNode, StructureNL
 
 from emmet.core.provenance import Database, ProvenanceDoc, SNLDict
+from emmet.core.utils import utcnow
 
 
 @pytest.fixture
@@ -21,7 +22,7 @@ def snls(structure):
             structure,
             authors=[Author("test{i}", "test@test.com").as_dict()],
             history=[HistoryNode("nothing", "url.com", {})],
-            created_at=datetime.utcnow(),
+            created_at=utcnow(),
             references="",
         ).as_dict()
         for i in range(3)

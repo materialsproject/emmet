@@ -1,18 +1,18 @@
 from datetime import datetime
+from typing import List, Optional, Tuple
 
-from pydantic import field_validator, BaseModel, Field
-from emmet.core.mpid import MPID
+from pydantic import BaseModel, Field, field_validator
+from pymatgen.core import Structure
 from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
 from pymatgen.phonon.dos import PhononDos as PhononDosObject
-
-from typing import List, Tuple, Optional
-from emmet.core.utils import DocEnum
-from pymatgen.core import Structure
-from emmet.core.math import Vector3D, Tensor4R
-from emmet.core.polar import DielectricDoc, BornEffectiveCharges, IRDielectric
-from emmet.core.structure import StructureMetadata
-from emmet.core.common import convert_datetime
 from typing_extensions import Literal
+
+from emmet.core.common import convert_datetime
+from emmet.core.math import Tensor4R, Vector3D
+from emmet.core.mpid import MPID
+from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
+from emmet.core.structure import StructureMetadata
+from emmet.core.utils import DocEnum, utcnow
 
 
 class PhononBSDOSDoc(BaseModel):
@@ -86,12 +86,12 @@ class PhononBandStructure(BaseModel):
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
 
@@ -120,12 +120,12 @@ class PhononDos(BaseModel):
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
 
@@ -153,12 +153,12 @@ class PhononWebsiteBS(BaseModel):
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
 
@@ -181,12 +181,12 @@ class Ddb(BaseModel):
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
 
@@ -284,12 +284,12 @@ class Phonon(StructureMetadata):
 
     last_updated: datetime = Field(
         description="Timestamp for when this document was last updated",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
 
@@ -343,12 +343,12 @@ class SoundVelocity(BaseModel):
 
     last_updated: datetime = Field(
         description="Timestamp for when this document was last updated",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
 
@@ -366,12 +366,12 @@ class ThermalDisplacement(BaseModel):
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     nsites: int = Field(

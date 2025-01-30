@@ -12,7 +12,7 @@ from pymatgen.core.structure import Structure
 from emmet.core.common import convert_datetime
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
-from emmet.core.utils import ValueEnum
+from emmet.core.utils import ValueEnum, utcnow
 
 
 class Database(ValueEnum):
@@ -79,7 +79,7 @@ class SNLAbout(BaseModel):
     )
 
     created_at: datetime = Field(
-        default_factory=datetime.utcnow, description="The creation date for this SNL."
+        default_factory=utcnow, description="The creation date for this SNL."
     )
 
     @field_validator("created_at", mode="before")

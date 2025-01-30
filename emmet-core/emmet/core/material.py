@@ -12,6 +12,7 @@ from pymatgen.core.structure import Molecule
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID, MPculeID
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
+from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
 
 
@@ -26,7 +27,7 @@ class PropertyOrigin(BaseModel):
     )
     last_updated: datetime = Field(  # type: ignore
         description="The timestamp when this calculation was last updated",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     @field_validator("last_updated", mode="before")
@@ -84,12 +85,12 @@ class MaterialsDoc(StructureMetadata):
 
     last_updated: datetime = Field(
         description="Timestamp for when this document was last updated.",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created.",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     origins: Optional[List[PropertyOrigin]] = Field(
@@ -165,12 +166,12 @@ class CoreMoleculeDoc(MoleculeMetadata):
 
     last_updated: datetime = Field(
         description="Timestamp for when this document was last updated",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     origins: Optional[List[PropertyOrigin]] = Field(

@@ -1,11 +1,13 @@
 """ Core definition of a Task Document which represents a calculation from some program"""
+
 from datetime import datetime
-from typing import Union, Optional
+from typing import Optional, Union
 
 from pydantic import Field
 
 from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID, MPculeID
+from emmet.core.utils import utcnow
 
 
 class BaseTaskDocument(EmmetBaseModel):
@@ -27,6 +29,6 @@ class BaseTaskDocument(EmmetBaseModel):
         None, description="Timestamp for when this task was completed"
     )
     last_updated: datetime = Field(
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
         description="Timestamp for when this task document was last updated",
     )
