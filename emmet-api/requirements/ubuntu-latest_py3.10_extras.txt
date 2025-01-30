@@ -310,7 +310,7 @@ pyflakes==3.2.0
     # via flake8
 pygments==2.19.1
     # via mkdocs-material
-pymatgen==2025.1.24
+pymatgen==2024.11.13
     # via
     #   emmet-core
     #   mp-pyrho
