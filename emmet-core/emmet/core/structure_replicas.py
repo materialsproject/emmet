@@ -10,7 +10,14 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from pymatgen.core import Structure, PeriodicSite, Lattice, Element, Species, Composition
+from pymatgen.core import (
+    Structure,
+    PeriodicSite,
+    Lattice,
+    Element,
+    Species,
+    Composition,
+)
 from pymatgen.io.vasp import Poscar
 
 from emmet.core.math import Vector3D, Matrix3D, ListMatrix3D
@@ -41,6 +48,7 @@ class EmmetReplica(BaseModel):
     def as_dict(self) -> dict[str, Any]:
         """MSONable-like function to create dict representation of this object."""
         return self.model_dump()
+
 
 class SiteProperties(Enum):
     """Define a restricted set of structure site properties."""
@@ -204,6 +212,7 @@ class LatticeReplica(EmmetReplica):
         """Get the volume enclosed by the direct lattice vectors."""
         return abs(np.linalg.det(self.matrix))
 
+
 class ElementReplica(EmmetReplica):
     """Define a flexible schema for elements and periodic sites.
 
@@ -328,23 +337,26 @@ class ElementReplica(EmmetReplica):
     def __float__(self) -> float:
         """Ensure pymatgen's get_el_sp recognizes this class as an element."""
         return float(self.element.Z)
-    
+
     @classmethod
-    def from_str(self,string) -> Self:
+    def from_str(cls, string) -> Self:
         """Create an ElementReplica from the element symbol and optional charge."""
-        parsed = re.match("([A-Z][a-z]?)([0-9.0-9]+)?([+-])?",string).groups()
+        _parsed = re.match("([A-Z][a-z]?)([0-9.0-9]+)?([+-])?", string)
+        if not _parsed:
+            raise ValueError(f"Unknown element symbol {string}")
+        parsed = _parsed.groups()
         charge_str = parsed[1]
-        
+
         charge_sign = "+"
         if parsed[2] is not None:
             charge_sign = parsed[2]
             if charge_str is None:
                 charge_str = "1"
-        
+
         charge = None
         if charge_str is not None:
             charge = float(charge_sign + charge_str)
-        return ElementReplica(element=ElementSymbol[parsed[0]],charge=charge)
+        return cls(element=ElementSymbol[parsed[0]], charge=charge)
 
     @property
     def elements(self) -> list[ElementSymbol]:
@@ -402,10 +414,10 @@ class ElementReplica(EmmetReplica):
 
     def __repr__(self) -> str:
         return self.__str__()
-    
+
     def __hash__(self) -> int:
         return hash(str(self))
-    
+
     def add_attrs(self, **kwargs) -> ElementReplica:
         """Rapidly create a copy of this instance with additional fields set.
 
@@ -425,29 +437,31 @@ class ElementReplica(EmmetReplica):
         config.update(**kwargs)
         return ElementReplica(**config)
 
+
 class CompositionReplica(RootModel):
     """Strict format representation of a Composition."""
-    root : dict[ElementReplica,float]
+
+    root: dict[ElementReplica, float]
 
     @property
     def formula(self) -> str:
         """The formula sorted by ascending Z."""
-        sorted_ele = sorted(self.root,key = lambda k : k.Z)
+        sorted_ele = sorted(self.root, key=lambda k: k.Z)
         return " ".join([f"{ele.species_string}{self.root[ele]}" for ele in sorted_ele])
-    
+
     @property
     def chemical_system(self) -> str:
         """The chemical system in alphabetical order, dash separated."""
         eles = [ele.name for ele in self.root]
         return "-".join(sorted(eles))
-    
-    def __getitem__(self, item) -> int:
+
+    def __getitem__(self, item) -> float:
         return self.root[item]
-    
+
     @classmethod
-    def from_dict(cls,dct : dict[str | ElementSymbol | ElementReplica, int]) -> Self:
+    def from_dict(cls, dct: dict[str | ElementSymbol | ElementReplica, float]) -> Self:
         """Create a CompositionReplica from a dict representation.
-        
+
         Parameters
         -----------
         dct : dict[str or ElementSymbol or ElementReplica, int]
@@ -456,34 +470,36 @@ class CompositionReplica(RootModel):
         """
         new_dct = {}
         for k, v in dct.items():
-            if isinstance(k,str):
+            if isinstance(k, str):
                 symb = ElementReplica.from_str(k)
             elif isinstance(k, ElementSymbol):
                 symb = ElementReplica(element=k)
             elif isinstance(k, ElementReplica):
                 symb = k
             else:
-                raise ValueError(f"Expected str, ElementSymbol, or ElementReplica, not {type(k)}")
+                raise ValueError(
+                    f"Expected str, ElementSymbol, or ElementReplica, not {type(k)}"
+                )
             new_dct[symb] = v
-        return cls(root = new_dct)
-    
+        return cls(root=new_dct)
+
     @classmethod
-    def from_pymatgen(cls, pmg_obj : Composition) -> Self:
+    def from_pymatgen(cls, pmg_obj: Composition) -> Self:
         """Create a CompositionReplica from a pymatgen Composition.
-        
+
         Parameters
         -----------
         pmg_obj : Composition
         """
-        return cls.from_dict(pmg_obj.as_dict())
-    
+        return cls.from_dict(pmg_obj.as_dict())  # type: ignore[arg-type]
+
     def to_pymatgen(self) -> Composition:
         """Create a pymatgen Composition."""
-        return Composition({k.specie : v for k, v in self.root.items()})
-    
+        return Composition({k.specie: v for k, v in self.root.items()})
+
     def __hash__(self) -> int:
         return hash(frozenset(self.root))
-    
+
 
 class StructureReplica(BaseModel):
     """Define a fixed schema structure.
@@ -535,11 +551,14 @@ class StructureReplica(BaseModel):
             )
             for idx, species in enumerate(self.species)
         ]
-    
+
     @property
     def composition(self) -> CompositionReplica:
-        dct = {spec: len([s for s in self.species if s == spec]) for spec in set(self.species)}
-        return CompositionReplica.from_dict(dct)
+        dct = {
+            spec: len([s for s in self.species if s == spec])
+            for spec in set(self.species)
+        }
+        return CompositionReplica.from_dict(dct)  # type: ignore[arg-type]
 
     def __getitem__(self, idx: int | slice) -> ElementReplica | list[ElementReplica]:
         """Permit list-like access of the sites in StructureReplica."""
