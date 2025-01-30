@@ -19,6 +19,7 @@ from pydantic import (
 from pymatgen.core import Structure
 from typing_extensions import Annotated
 
+from emmet.core.utils import utcnow
 from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
 
 
@@ -105,8 +106,8 @@ class MDTaskDocument(BaseModel):  # type: ignore[call-arg]
     # task_label: Optional[str] = Field(None, description="A description of the task")
     # TODO: where does task_label get added
 
-    last_updated: Optional[datetime] = Field(
-        None,
+    last_updated: datetime = Field(
+        default_factory=utcnow,
         description="Timestamp for the most recent calculation for this task document",
     )
 

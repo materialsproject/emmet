@@ -35,8 +35,8 @@ class PhononBSDOSDoc(BaseModel):
         description="Phonon density of states object.",
     )
 
-    last_updated: Optional[datetime] = Field(
-        None,
+    last_updated: datetime = Field(
+        default_factory=utcnow,
         description="Timestamp for the most recent calculation for this Material document.",
     )
 

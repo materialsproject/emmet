@@ -210,8 +210,8 @@ class BaseElectrode(BaseModel):
         None, description="Maximum absolute difference in adjacent voltage steps."
     )
 
-    last_updated: Optional[datetime] = Field(
-        None,
+    last_updated: datetime = Field(
+        default_factory=utcnow,
         description="Timestamp for the most recent calculation for this Material document.",
     )
 
