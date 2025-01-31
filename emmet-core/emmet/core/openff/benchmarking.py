@@ -62,7 +62,7 @@ class SolventBenchmarkingDoc(BaseModel, arbitrary_types_allowed=True):
         else:
             eps = None
 
-        if u.atoms.ts.has_velocities:
+        if u.atoms.ts.has_velocities and temperature is not None:
             start, stop = int(0.2 * len(u.trajectory)), int(0.8 * len(u.trajectory))
             viscosity_helfand = ViscosityHelfand(
                 u.atoms,
