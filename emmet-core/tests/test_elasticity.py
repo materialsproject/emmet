@@ -1,6 +1,7 @@
 from typing import List
 
 import numpy as np
+import pyarrow as pa
 import pytest
 from monty.serialization import loadfn
 from pymatgen.analysis.elasticity import Deformation, Strain, Stress
@@ -11,6 +12,7 @@ from emmet.core.elasticity import (
     generate_derived_fitting_data,
     generate_primary_fitting_data,
 )
+from emmet.core.utils import jsanitize
 
 
 @pytest.fixture(scope="session")
@@ -73,3 +75,24 @@ def test_from_deformations_and_stresses(fitting_data, reference_data):
     )
 
     assert np.allclose(doc.elastic_tensor.raw, ref_elastic_tensor, atol=1e-6)
+
+
+def test_elasticity_arrow_round_trip_serialization(fitting_data):
+    structure, deformations, stresses, equilibrium_stress = fitting_data
+
+    doc = ElasticityDoc.from_deformations_and_stresses(
+        structure=structure,
+        deformations=deformations,
+        stresses=stresses,
+        equilibrium_stress=equilibrium_stress,
+        material_id=1,
+    )
+
+    sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
+    test_arrow_doc = ElasticityDoc(
+        **pa.array([sanitized_doc], type=ElasticityDoc.as_arrow())
+        .to_pandas(maps_as_pydicts="strict")
+        .iloc[0]
+    )
+
+    assert doc == test_arrow_doc

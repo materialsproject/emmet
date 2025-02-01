@@ -1,5 +1,4 @@
 import pytest
-
 from tests.conftest import assert_schemas_equal, get_test_object
 
 
@@ -110,15 +109,16 @@ def test_output_summary(test_dir, object_name, task_name):
     ],
 )
 def test_task_doc(test_dir, object_name, tmpdir):
+    import os
+    import shutil
+
     from monty.json import jsanitize
     from monty.serialization import dumpfn
-    import os
     from pymatgen.alchemy.materials import TransformedStructure
     from pymatgen.entries.computed_entries import ComputedEntry
     from pymatgen.transformations.standard_transformations import (
         DeformStructureTransformation,
     )
-    import shutil
 
     from emmet.core.tasks import TaskDoc
 
@@ -227,3 +227,29 @@ def test_lda_and_pseudo_format(test_dir, tmpdir):
         getattr(task.input.pseudo_potentials, k) == v
         for k, v in expected_pseudo.items()
     )
+
+
+@pytest.mark.parametrize(
+    "object_name",
+    [
+        pytest.param("SiStatic", id="SiStatic"),
+    ],
+)
+def test_task_doc_arrow_round_trip_serialization(test_dir, object_name, tmpdir):
+    import pyarrow as pa
+
+    from emmet.core.tasks import TaskDoc
+    from emmet.core.utils import jsanitize
+
+    test_object = get_test_object(object_name)
+    dir_name = test_dir / "vasp" / test_object.folder
+    doc = TaskDoc.from_directory(dir_name)
+
+    sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
+    test_arrow_doc = TaskDoc(
+        **pa.array([sanitized_doc], type=TaskDoc.as_arrow())
+        .to_pandas(maps_as_pydicts="strict")
+        .iloc[0]
+    )
+
+    assert doc == test_arrow_doc

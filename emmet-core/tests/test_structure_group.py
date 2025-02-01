@@ -1,8 +1,10 @@
+import pyarrow as pa
 import pytest
 from monty.serialization import loadfn
 from pymatgen.core import Composition
 
 from emmet.core.structure_group import StructureGroupDoc, _get_id_lexi
+from emmet.core.utils import jsanitize
 
 
 @pytest.fixture(scope="session")
@@ -64,3 +66,22 @@ def test_lexi_id():
     )
     assert _get_id_lexi("mp-123") == ("mp", 123)
     assert _get_id_lexi("123") == ("", 123)
+
+
+def test_structure_group_arrow_round_trip_serialization(entries_lto):
+    from emmet.core.arrow import arrowize
+
+    doc = StructureGroupDoc.from_grouped_entries(
+        entries_lto,
+        ignored_specie="Li",
+    )
+
+    sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
+    test_arrow_doc = StructureGroupDoc(
+        # **pa.array([sanitized_doc], type=StructureGroupDoc.as_arrow())
+        **pa.array([sanitized_doc], type=arrowize(StructureGroupDoc))
+        .to_pandas(maps_as_pydicts="strict")
+        .iloc[0]
+    )
+
+    assert doc == test_arrow_doc

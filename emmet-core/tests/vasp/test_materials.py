@@ -1,8 +1,10 @@
 import json
 
+import pyarrow as pa
 import pytest
 from monty.io import zopen
 
+from emmet.core.utils import jsanitize
 from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
 from emmet.core.vasp.task_valid import TaskDocument
@@ -46,3 +48,16 @@ def test_make_deprecated_mat(test_tasks):
 
 def test_schema():
     MaterialsDoc.schema()
+
+
+def test_material_arrow_round_trip_serialization(test_tasks):
+    doc = MaterialsDoc.from_tasks(test_tasks)
+
+    sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
+    test_arrow_doc = MaterialsDoc(
+        **pa.array([sanitized_doc], type=MaterialsDoc.as_arrow())
+        .to_pandas(maps_as_pydicts="strict")
+        .iloc[0]
+    )
+
+    assert doc == test_arrow_doc

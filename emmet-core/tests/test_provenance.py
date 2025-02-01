@@ -1,11 +1,10 @@
-from datetime import datetime
-
+import pyarrow as pa
 import pytest
 from pymatgen.core import Lattice, Structure
 from pymatgen.util.provenance import Author, HistoryNode, StructureNL
 
 from emmet.core.provenance import Database, ProvenanceDoc, SNLDict
-from emmet.core.utils import utcnow
+from emmet.core.utils import jsanitize, utcnow
 
 
 @pytest.fixture
@@ -57,3 +56,18 @@ def test_from_snls(snls, structure):
         is False
     )
     assert doc.dict(exclude_none=True)["property_name"] == "provenance"
+
+
+def test_provenance_arrow_round_trip_serialization(snls, structure):
+    doc = ProvenanceDoc.from_SNLs(
+        material_id="mp-3", structure=structure, snls=snls, deprecated=False
+    )
+
+    sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
+    test_arrow_doc = ProvenanceDoc(
+        **pa.array([sanitized_doc], type=ProvenanceDoc.as_arrow())
+        .to_pandas(maps_as_pydicts="strict")
+        .iloc[0]
+    )
+
+    assert doc == test_arrow_doc

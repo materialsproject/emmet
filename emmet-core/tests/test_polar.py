@@ -1,28 +1,37 @@
+import pyarrow as pa
 import pytest
 from pymatgen.core import Lattice, Structure
+
 from emmet.core.polar import DielectricDoc, PiezoelectricDoc
+from emmet.core.utils import jsanitize
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def dielectric_structure():
     test_latt = Lattice.cubic(3.0)
     test_struc = Structure(lattice=test_latt, species=["Fe"], coords=[[0, 0, 0]])
     return test_struc
 
 
-def test_dielectric(dielectric_structure):
-    epsilon_static = [
+@pytest.fixture(scope="module")
+def epsilon_static():
+    return [
         [10.81747665, -0.00378371, 0.0049036],
         [-0.00373185, 10.82629335, -0.00432847],
         [0.0036548, -0.00479139, 8.68204827],
     ]
 
-    epsilon_ionic = [
+
+@pytest.fixture(scope="module")
+def epsilon_ionic():
+    return [
         [30.98960925, -0.09107371, 0.00226948],
         [-0.09107371, 31.44264572, -0.00427919],
         [0.00226948, -0.00427919, 29.21747234],
     ]
 
+
+def test_dielectric(dielectric_structure, epsilon_static, epsilon_ionic):
     doc = DielectricDoc.from_ionic_and_electronic(
         material_id="mp-149",
         structure=dielectric_structure,
@@ -39,7 +48,28 @@ def test_dielectric(dielectric_structure):
     assert doc.e_ionic == pytest.approx(30.5498978544694)
 
 
-@pytest.fixture
+def test_dielectric_arrow_round_trip_serialization(
+    dielectric_structure, epsilon_static, epsilon_ionic
+):
+    doc = DielectricDoc.from_ionic_and_electronic(
+        material_id="mp-149",
+        structure=dielectric_structure,
+        electronic=epsilon_static,
+        ionic=epsilon_ionic,
+        deprecated=False,
+    )
+
+    sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
+    test_arrow_doc = DielectricDoc(
+        **pa.array([sanitized_doc], type=DielectricDoc.as_arrow())
+        .to_pandas(maps_as_pydicts="strict")
+        .iloc[0]
+    )
+
+    assert doc == test_arrow_doc
+
+
+@pytest.fixture(scope="module")
 def piezoelectric_structure():
     d = {
         "@module": "pymatgen.core.structure",
@@ -234,19 +264,25 @@ def piezoelectric_structure():
     return test_struc
 
 
-def test_piezoelectric(piezoelectric_structure):
-    piezo_static = [
+@pytest.fixture(scope="module")
+def piezo_static():
+    return [
         [0.07886, -0.07647, -0.01902, 0.0, -0.18077, 0.0],
         [0.0, 0.0, 0.0, -0.10377, 0.0, 0.18109],
         [0.0, 0.0, 0.0, -0.07831, 0.0, 0.04849],
     ]
 
-    piezo_ionic = [
+
+@pytest.fixture(scope="module")
+def piezo_ionic():
+    return [
         [-0.53096, 0.12789, -0.01236, 0.0, 0.09352, 0.0],
         [-0.00013, 9e-05, 3e-05, 0.2681, 0.00042, -0.09373],
         [-0.00018, -9e-05, -0.00029, 0.15863, 0.0001, -0.22751],
     ]
 
+
+def test_piezoelectric(piezoelectric_structure, piezo_static, piezo_ionic):
     doc = PiezoelectricDoc.from_ionic_and_electronic(
         material_id="mp-149",
         structure=piezoelectric_structure,
@@ -278,3 +314,24 @@ def test_piezoelectric(piezoelectric_structure):
 
     for i in range(3):
         assert doc.total[i] == pytest.approx(total[i])
+
+
+def test_piezoelectric_arrow_round_trip_serialization(
+    piezoelectric_structure, piezo_static, piezo_ionic
+):
+    doc = PiezoelectricDoc.from_ionic_and_electronic(
+        material_id="mp-149",
+        structure=piezoelectric_structure,
+        electronic=piezo_static,
+        ionic=piezo_ionic,
+        deprecated=False,
+    )
+
+    sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
+    test_arrow_doc = PiezoelectricDoc(
+        **pa.array([sanitized_doc], type=PiezoelectricDoc.as_arrow())
+        .to_pandas(maps_as_pydicts="strict")
+        .iloc[0]
+    )
+
+    assert doc == test_arrow_doc

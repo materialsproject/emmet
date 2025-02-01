@@ -1,7 +1,9 @@
+import pyarrow as pa
 import pytest
 from monty.serialization import loadfn
 
 from emmet.core.electronic_structure import ElectronicStructureDoc
+from emmet.core.utils import jsanitize
 
 
 @pytest.fixture(scope="session")
@@ -97,3 +99,27 @@ def test_from_bsdos_2(bandstructure_fs, dos_fs):
     assert es_doc.bandstructure.setyawan_curtarolo.band_gap == 1.9916
     assert es_doc.bandstructure.setyawan_curtarolo.efermi == 2.49084067
     assert es_doc.bandstructure.setyawan_curtarolo.nbands == 64.0
+
+
+def test_electronic_structure_arrow_round_trip_serialization(bandstructure_fs, dos_fs):
+    dos = dos_fs[0]["data"]
+    bs = bandstructure_fs[0]["data"]
+
+    doc = ElectronicStructureDoc.from_bsdos(
+        material_id="mp-25375",
+        dos={"mp-823888": dos},
+        is_gap_direct=False,
+        is_metal=True,
+        deprecated=False,
+        setyawan_curtarolo={"mp-1612487": bs},
+        meta_structure=dos.structure,
+    )
+
+    sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
+    test_arrow_doc = ElectronicStructureDoc(
+        **pa.array([sanitized_doc], type=ElectronicStructureDoc.as_arrow())
+        .to_pandas(maps_as_pydicts="strict")
+        .iloc[0]
+    )
+
+    assert doc == test_arrow_doc

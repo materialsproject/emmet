@@ -1,8 +1,10 @@
+import pyarrow as pa
 import pytest
-from emmet.core.chemenv import ChemEnvDoc
 from pymatgen.core import Structure
 
 from . import test_structures
+from emmet.core.chemenv import ChemEnvDoc
+from emmet.core.utils import jsanitize
 
 
 @pytest.mark.parametrize("structure", test_structures.values())
@@ -25,3 +27,20 @@ def test_chemenv(structure: Structure):
             doc.model_dump()["warnings"]
             == "No oxidation states available. Cation-anion bonds cannot be identified."
         )
+
+
+def test_chemenv_arrow_round_trip_serialization(
+    structure=next(iter(test_structures.values())),
+):
+    doc = ChemEnvDoc.from_structure(
+        structure=structure, material_id=33, deprecated=False
+    )
+
+    sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
+    test_arrow_doc = ChemEnvDoc(
+        **pa.array([sanitized_doc], type=ChemEnvDoc.as_arrow())
+        .to_pandas(maps_as_pydicts="strict")
+        .iloc[0]
+    )
+
+    assert doc == test_arrow_doc

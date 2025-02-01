@@ -1,7 +1,9 @@
+import pyarrow as pa
 import pytest
-from monty.serialization import MontyDecoder
-from monty.serialization import loadfn
+from monty.serialization import MontyDecoder, loadfn
+
 from emmet.core.thermo import ThermoDoc
+from emmet.core.utils import jsanitize
 
 
 @pytest.fixture(scope="session")
@@ -138,3 +140,16 @@ def test_from_entries(entries):
     unstable_doc = next(d for d in docs if d.material_id == "mp-5")
     assert unstable_doc.is_stable is False
     assert all([d.is_stable for d in docs if d != unstable_doc])
+
+
+def test_thermo_arrow_round_trip_serialization(entries):
+    doc = ThermoDoc.from_entries(entries, thermo_type="UNKNOWN", deprecated=False)[0]
+
+    sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
+    test_arrow_doc = ThermoDoc(
+        **pa.array([sanitized_doc], type=ThermoDoc.as_arrow())
+        .to_pandas(maps_as_pydicts="strict")
+        .iloc[0]
+    )
+
+    assert doc == test_arrow_doc
