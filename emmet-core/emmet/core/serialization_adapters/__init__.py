@@ -1,0 +1,1 @@
+from emmet.core.serialization_adapters import composition_adapter
