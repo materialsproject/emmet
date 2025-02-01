@@ -60,3 +60,9 @@ class EmmetBaseModel(BaseModel):
         default_factory=EmmetMeta,  # type: ignore
         description="Builder metadata.",
     )
+
+    @classmethod
+    def as_arrow(cls):
+        from emmet.core.arrow import arrowize
+
+        return arrowize(cls)
