@@ -3,7 +3,6 @@ from __future__ import annotations
 import re
 from collections import defaultdict
 from datetime import datetime
-from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
 from pymatgen.analysis.phase_diagram import PhaseDiagram
@@ -37,45 +36,45 @@ class VoltagePairDoc(BaseModel):
         object to gain access to some basic statistics about the voltage step
     """
 
-    formula_charge: Optional[str] = Field(
+    formula_charge: str | None = Field(
         None, description="The chemical formula of the charged material."
     )
 
-    formula_discharge: Optional[str] = Field(
+    formula_discharge: str | None = Field(
         None, description="The chemical formula of the discharged material."
     )
 
-    max_delta_volume: Optional[float] = Field(
+    max_delta_volume: float | None = Field(
         None,
         description="Volume changes in % for a particular voltage step using: "
         "max(charge, discharge) / min(charge, discharge) - 1.",
     )
 
-    average_voltage: Optional[float] = Field(
+    average_voltage: float | None = Field(
         None, description="The average voltage in V for a particular voltage step."
     )
 
-    capacity_grav: Optional[float] = Field(
+    capacity_grav: float | None = Field(
         None, description="Gravimetric capacity in mAh/g."
     )
 
-    capacity_vol: Optional[float] = Field(
+    capacity_vol: float | None = Field(
         None, description="Volumetric capacity in mAh/cc."
     )
 
-    energy_grav: Optional[float] = Field(
+    energy_grav: float | None = Field(
         None, description="Gravimetric energy (Specific energy) in Wh/kg."
     )
 
-    energy_vol: Optional[float] = Field(
+    energy_vol: float | None = Field(
         None, description="Volumetric energy (Energy Density) in Wh/l."
     )
 
-    fracA_charge: Optional[float] = Field(
+    fracA_charge: float | None = Field(
         None, description="Atomic fraction of the working ion in the charged state."
     )
 
-    fracA_discharge: Optional[float] = Field(
+    fracA_discharge: float | None = Field(
         None, description="Atomic fraction of the working ion in the discharged state."
     )
 
@@ -92,19 +91,19 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
     Features specific to insertion electrode
     """
 
-    stability_charge: Optional[float] = Field(
+    stability_charge: float | None = Field(
         None, description="The energy above hull of the charged material in eV/atom."
     )
 
-    stability_discharge: Optional[float] = Field(
+    stability_discharge: float | None = Field(
         None, description="The energy above hull of the discharged material in eV/atom."
     )
 
-    id_charge: Optional[Union[MPID, int, None]] = Field(
+    id_charge: MPID | None = Field(
         None, description="The Materials Project ID of the charged structure."
     )
 
-    id_discharge: Optional[Union[MPID, int, None]] = Field(
+    id_discharge: MPID | None = Field(
         None, description="The Materials Project ID of the discharged structure."
     )
 
@@ -126,33 +125,33 @@ class EntriesCompositionSummary(BaseModel):
     Included to enable better searching via the API.
     """
 
-    all_formulas: Optional[List[str]] = Field(
+    all_formulas: list[str] | None = Field(
         None,
         description="Reduced formulas for material entries across all voltage pairs.",
     )
 
-    all_chemsys: Optional[List[str]] = Field(
+    all_chemsys: list[str] | None = Field(
         None,
         description="Chemical systems for material entries across all voltage pairs.",
     )
 
-    all_formula_anonymous: Optional[List[str]] = Field(
+    all_formula_anonymous: list[str] | None = Field(
         None,
         description="Anonymous formulas for material entries across all voltage pairs.",
     )
 
-    all_elements: Optional[List[Union[Element, Species, DummySpecies]]] = Field(
+    all_elements: list[Element | Species | DummySpecies] | None = Field(
         None,
         description="Elements in material entries across all voltage pairs.",
     )
 
-    all_composition_reduced: Optional[Dict] = Field(
+    all_composition_reduced: dict | None = Field(
         None,
         description="Composition reduced data for entries across all voltage pairs.",
     )
 
     @classmethod
-    def from_compositions(cls, compositions: List[Composition]):
+    def from_compositions(cls, compositions: list[Composition]):
         all_formulas = list({comp.reduced_formula for comp in compositions})
         all_chemsys = list({comp.chemical_system for comp in compositions})
         all_formula_anonymous = list({comp.anonymized_formula for comp in compositions})
@@ -177,38 +176,38 @@ class EntriesCompositionSummary(BaseModel):
         )
 
 
-    battery_type: Optional[BatteryType] = Field(
 class BaseElectrode(EmmetBaseModel):
+    battery_type: BatteryType | None = Field(
         None, description="The type of battery (insertion or conversion)."
     )
 
-    battery_id: Optional[str] = Field(
+    battery_id: str | None = Field(
         None,
         description="The id for this battery document is the numerically smallest material_id followed by "
         "the working ion.",
     )
 
-    thermo_type: Optional[str] = Field(
+    thermo_type: str | None = Field(
         None,
         description="The functional type used to compute the thermodynamics of this electrode document.",
     )
 
-    battery_formula: Optional[str] = Field(
+    battery_formula: str | None = Field(
         None,
         description="Reduced formula with working ion range produced by combining the charge and discharge formulas.",
     )
 
-    working_ion: Optional[Element] = Field(
+    working_ion: Element | None = Field(
         None, description="The working ion as an Element object."
     )
 
-    num_steps: Optional[int] = Field(
+    num_steps: int | None = Field(
         None,
         description="The number of distinct voltage steps in from fully charge to "
         "discharge based on the stable intermediate states.",
     )
 
-    max_voltage_step: Optional[float] = Field(
+    max_voltage_step: float | None = Field(
         None, description="Maximum absolute difference in adjacent voltage steps."
     )
 
@@ -217,36 +216,36 @@ class BaseElectrode(EmmetBaseModel):
         description="Timestamp for the most recent calculation for this Material document.",
     )
 
-    framework: Optional[Composition] = Field(
+    framework: Composition | None = Field(
         None, description="The chemical compositions of the host framework."
     )
 
-    framework_formula: Optional[str] = Field(
+    framework_formula: str | None = Field(
         None, description="The id for this battery document."
     )
 
-    elements: Optional[List[Element]] = Field(
+    elements: list[Element] | None = Field(
         None,
         description="The atomic species contained in this electrode (not including the working ion).",
     )
 
-    nelements: Optional[int] = Field(
+    nelements: int | None = Field(
         None,
         description="The number of elements in the material (not including the working ion).",
     )
 
-    chemsys: Optional[str] = Field(
+    chemsys: str | None = Field(
         None,
         description="The chemical system this electrode belongs to (not including the working ion).",
     )
 
-    formula_anonymous: Optional[str] = Field(
+    formula_anonymous: str | None = Field(
         None,
         title="Anonymous Formula",
         description="Anonymized representation of the formula (not including the working ion).",
     )
 
-    warnings: List[str] = Field(
+    warnings: list[str] = Field(
         [], description="Any warnings related to this electrode data."
     )
 
@@ -262,37 +261,37 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
     Insertion electrode
     """
 
-    host_structure: Optional[Structure] = Field(
+    host_structure: Structure | None = Field(
         None, description="Host structure (structure without the working ion)."
     )
 
-    adj_pairs: Optional[List[InsertionVoltagePairDoc]] = Field(
+    adj_pairs: list[InsertionVoltagePairDoc] | None = Field(
         None, description="Returns all of the voltage steps material pairs."
     )
 
-    material_ids: Optional[List[MPID]] = Field(
+    material_ids: list[MPID] | None = Field(
         None,
         description="The ids of all structures that matched to the present host lattice, regardless of stability. "
         "The stable entries can be found in the adjacent pairs.",
     )
 
-    entries_composition_summary: Optional[EntriesCompositionSummary] = Field(
+    entries_composition_summary: EntriesCompositionSummary | None = Field(
         None,
         description="Composition summary data for all material in entries across all voltage pairs.",
     )
 
-    electrode_object: Optional[InsertionElectrode] = Field(
+    electrode_object: InsertionElectrode | None = Field(
         None, description="The Pymatgen electrode object."
     )
 
     @classmethod
     def from_entries(
         cls,
-        grouped_entries: List[ComputedStructureEntry],
+        grouped_entries: list[ComputedStructureEntry],
         working_ion_entry: ComputedEntry,
         battery_id: str,
         strip_structures: bool = False,
-    ) -> Union["InsertionElectrodeDoc", None]:
+    ) -> InsertionElectrodeDoc | None:
         try:
             ie = InsertionElectrode.from_entries(
                 entries=grouped_entries,
@@ -441,16 +440,16 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
     Conversion electrode
     """
 
-    initial_comp_formula: Optional[str] = Field(
+    initial_comp_formula: str | None = Field(
         None,
         description="The starting composition for the ConversionElectrode represented as a string/formula.",
     )
 
-    adj_pairs: Optional[List[ConversionVoltagePairDoc]] = Field(
+    adj_pairs: list[ConversionVoltagePairDoc] | None = Field(
         None, description="Returns all of the voltage steps material pairs."
     )
 
-    electrode_object: Optional[ConversionElectrode] = Field(
+    electrode_object: ConversionElectrode | None = Field(
         None, description="The Pymatgen conversion electrode object."
     )
 
@@ -458,7 +457,7 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
     def from_composition_and_entries(
         cls,
         composition: Composition,
-        entries: List[ComputedEntry],
+        entries: list[ComputedEntry],
         working_ion_symbol: str,
         battery_id: str,
         thermo_type: str,
