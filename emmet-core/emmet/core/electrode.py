@@ -11,7 +11,7 @@ from pymatgen.apps.battery.battery_abc import AbstractElectrode
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 from pymatgen.core import Composition, Structure
-from pymatgen.core.periodic_table import DummySpecies, Element, Species
+from pymatgen.core.periodic_table import Element
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.base import EmmetBaseModel
@@ -140,12 +140,12 @@ class EntriesCompositionSummary(BaseModel):
         description="Anonymous formulas for material entries across all voltage pairs.",
     )
 
-    all_elements: list[Element | Species | DummySpecies] | None = Field(
+    all_elements: list[Element] | None = Field(
         None,
         description="Elements in material entries across all voltage pairs.",
     )
 
-    all_composition_reduced: dict | None = Field(
+    all_composition_reduced: dict[str, list[float]] | None = Field(
         None,
         description="Composition reduced data for entries across all voltage pairs.",
     )
