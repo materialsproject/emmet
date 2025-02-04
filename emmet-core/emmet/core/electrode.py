@@ -14,6 +14,7 @@ from pymatgen.core import Composition, Structure
 from pymatgen.core.periodic_table import DummySpecies, Element, Species
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
+from emmet.core.base import EmmetBaseModel
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
 from emmet.core.utils import ValueEnum, utcnow
@@ -175,8 +176,8 @@ class EntriesCompositionSummary(BaseModel):
         )
 
 
-class BaseElectrode(BaseModel):
     battery_type: Optional[BatteryType] = Field(
+class BaseElectrode(EmmetBaseModel):
         None, description="The type of battery (insertion or conversion)."
     )
 
