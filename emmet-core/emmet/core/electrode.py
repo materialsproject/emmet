@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
 from pymatgen.analysis.phase_diagram import PhaseDiagram
+from pymatgen.analysis.reaction_calculator import BalancedReaction
 from pymatgen.apps.battery.battery_abc import AbstractElectrode
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
@@ -113,7 +114,7 @@ class ConversionVoltagePairDoc(VoltagePairDoc):
     Features specific to conversion electrode
     """
 
-    reaction: Optional[dict] = Field(
+    reaction: BalancedReaction | None = Field(
         None,
         description="The reaction that characterizes that particular voltage step.",
     )
