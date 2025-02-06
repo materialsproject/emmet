@@ -16,12 +16,12 @@ from pymatgen.analysis.magnetism.analyzer import (
 )
 from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
-from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
+from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine, Kpoint
 from pymatgen.electronic_structure.core import OrbitalType, Spin
 from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.symmetry.bandstructure import HighSymmKpath
-from typing_extensions import Literal
+from typing_extensions import Literal, TypedDict
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
@@ -59,7 +59,7 @@ class BSObjectDoc(BaseModel):
         default_factory=utcnow,
     )
 
-    data: Optional[Union[Dict, BandStructureSymmLine]] = Field(
+    data: BandStructureSymmLine | None = Field(
         None, description="The band structure object for the given calculation ID"
     )
 
@@ -93,21 +93,13 @@ class ElectronicStructureBaseData(BaseModel):
     )
 
     band_gap: float = Field(..., description="Band gap energy in eV.")
-
-    cbm: Optional[Union[float, Dict]] = Field(
-        None, description="Conduction band minimum data."
-    )
-
-    vbm: Optional[Union[float, Dict]] = Field(
-        None, description="Valence band maximum data."
-    )
-
+    cbm: float | None = Field(None, description="Conduction band minimum data.")
+    vbm: float | None = Field(None, description="Valence band maximum data.")
     efermi: Optional[float] = Field(None, description="Fermi energy in eV.")
 
 
 class ElectronicStructureSummary(ElectronicStructureBaseData):
     is_gap_direct: bool = Field(..., description="Whether the band gap is direct.")
-
     is_metal: bool = Field(..., description="Whether the material is a metal.")
 
     magnetic_ordering: Union[str, Ordering] = Field(
@@ -115,14 +107,23 @@ class ElectronicStructureSummary(ElectronicStructureBaseData):
     )
 
 
-class BandStructureSummaryData(ElectronicStructureSummary):
-    nbands: float = Field(..., description="Number of bands.")
+class TypedBandDict(TypedDict):
+    band_index: dict[str, list[int]]
+    kpoint_index: list[int]
+    kpoint: Kpoint
+    energy: float
+    projections: dict[str, list[list[float]]]
 
-    equivalent_labels: Dict = Field(
+
+class BandStructureSummaryData(ElectronicStructureSummary):
+    equivalent_labels: dict[str, dict[str, dict[str, str]]] = Field(
         ..., description="Equivalent k-point labels in other k-path conventions."
     )
 
+    nbands: float = Field(..., description="Number of bands.")
     direct_gap: float = Field(..., description="Direct gap energy in eV.")
+    cbm: TypedBandDict | None = Field(None, description="Conduction band minimum data.")
+    vbm: TypedBandDict | None = Field(None, description="Valence band maximum data.")
 
 
 class DosSummaryData(ElectronicStructureBaseData):
