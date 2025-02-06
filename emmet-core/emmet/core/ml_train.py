@@ -11,13 +11,13 @@ from emmet.core.vasp.calc_types import RunType as VaspRunType
 
 if TYPE_CHECKING:
     from typing import Any
+    from typing_extensions import Self
+
 
 class MLTrainDoc(StructureMetadata):
     """Generic schema for ML training data."""
 
-    structure: Structure | None = Field(
-        None, description="Structure for this entry."
-    )
+    structure: Structure | None = Field(None, description="Structure for this entry.")
 
     energy: float | None = Field(
         None, description="The total energy associated with this structure."
@@ -34,7 +34,8 @@ class MLTrainDoc(StructureMetadata):
     )
 
     elements: list[str] | None = Field(
-        None, description="List of unique elements in the material sorted alphabetically."
+        None,
+        description="List of unique elements in the material sorted alphabetically.",
     )
 
     composition: dict[str, float] | None = Field(
@@ -48,17 +49,36 @@ class MLTrainDoc(StructureMetadata):
     )
 
     @model_validator(mode="before")
-    def deserialize(cls, values : dict[str,Any]) -> dict[str,Any]:
+    def deserialize(cls, values: dict[str, Any]) -> dict[str, Any]:
         """Ensure some pymatgen objects are deserialized for easier querying."""
 
         if values.get("elements"):
             values["elements"] = [str(ele) for ele in values["elements"]]
 
-        for attr in ("composition","composition_reduced",):
-            if (v := values.get(attr) ) and isinstance(v,Composition):
+        for attr in (
+            "composition",
+            "composition_reduced",
+        ):
+            if (v := values.get(attr)) and isinstance(v, Composition):
                 values[attr] = v.as_dict()
 
         return values
+
+    @classmethod
+    def from_structure(
+        cls,
+        meta_structure: Structure,
+        fields: list[str] | None = None,
+        **kwargs,
+    ) -> Self:
+        """Ensure structure field is populated."""
+        return super().from_structure(
+            meta_structure=meta_structure,
+            fields=fields,
+            structure=meta_structure,
+            **kwargs,
+        )
+
 
 class MatPESTrainDoc(MLTrainDoc):
     """Schema for VASP data in the Materials Potential Energy Surface (MatPES) effort."""
