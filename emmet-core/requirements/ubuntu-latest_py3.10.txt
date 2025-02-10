@@ -6,7 +6,7 @@
 #
 annotated-types==0.7.0
     # via pydantic
-certifi==2024.12.14
+certifi==2025.1.31
     # via requests
 charset-normalizer==3.4.1
     # via requests
@@ -14,7 +14,7 @@ contourpy==1.3.1
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-fonttools==4.55.6
+fonttools==4.56.0
     # via matplotlib
 idna==3.10
     # via requests
@@ -32,6 +32,8 @@ monty==2025.1.9
     #   pymatgen
 mpmath==1.3.0
     # via sympy
+narwhals==1.26.0
+    # via plotly
 networkx==3.4.2
     # via pymatgen
 numpy==1.26.4
@@ -54,7 +56,7 @@ pandas==2.2.3
     # via pymatgen
 pillow==11.1.0
     # via matplotlib
-plotly==5.24.1
+plotly==6.0.0
     # via pymatgen
 pybtex==0.24.0
     # via
@@ -68,7 +70,7 @@ pydantic-core==2.27.2
     # via pydantic
 pydantic-settings==2.7.1
     # via emmet-core (setup.py)
-pymatgen==2024.11.13
+pymatgen==2025.1.24
     # via emmet-core (setup.py)
 pyparsing==3.2.1
     # via matplotlib
@@ -78,7 +80,7 @@ python-dateutil==2.9.0.post0
     #   pandas
 python-dotenv==1.0.1
     # via pydantic-settings
-pytz==2024.2
+pytz==2025.1
     # via pandas
 pyyaml==6.0.2
     # via pybtex
@@ -102,8 +104,6 @@ sympy==1.13.3
     # via pymatgen
 tabulate==0.9.0
     # via pymatgen
-tenacity==9.0.0
-    # via plotly
 tqdm==4.67.1
     # via pymatgen
 typing-extensions==4.12.2
