@@ -21,11 +21,11 @@ attrs==25.1.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.36.17
+boto3==1.36.18
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.36.17
+botocore==1.36.18
     # via
     #   boto3
     #   s3transfer
@@ -51,9 +51,9 @@ colorama==0.4.6
     # via griffe
 contourpy==1.3.1
     # via matplotlib
-coverage[toml]==7.6.11
+coverage[toml]==7.6.12
     # via pytest-cov
-cryptography==44.0.0
+cryptography==44.0.1
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -85,7 +85,7 @@ fonttools==4.56.0
     # via matplotlib
 ghp-import==2.1.0
     # via mkdocs
-griffe==1.5.6
+griffe==1.5.7
     # via mkdocstrings-python
 gunicorn==23.0.0
     # via emmet-api (setup.py)
@@ -165,7 +165,7 @@ mkdocs==1.6.1
     #   mkdocs-material
     #   mkdocs-minify-plugin
     #   mkdocstrings
-mkdocs-autorefs==1.3.0
+mkdocs-autorefs==1.3.1
     # via
     #   mkdocstrings
     #   mkdocstrings-python
@@ -189,7 +189,7 @@ mkdocstrings[python]==0.28.0
     # via
     #   emmet-api (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.14.6
+mkdocstrings-python==1.15.0
     # via mkdocstrings
 mongomock==4.3.0
     # via maggma
