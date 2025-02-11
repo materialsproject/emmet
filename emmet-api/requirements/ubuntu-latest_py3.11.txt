@@ -21,11 +21,11 @@ attrs==25.1.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.36.17
+boto3==1.36.18
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.36.17
+botocore==1.36.18
     # via
     #   boto3
     #   s3transfer
@@ -43,7 +43,7 @@ click==8.1.8
     # via uvicorn
 contourpy==1.3.1
     # via matplotlib
-cryptography==44.0.0
+cryptography==44.0.1
     # via paramiko
 cycler==0.12.1
     # via matplotlib
