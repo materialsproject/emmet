@@ -28,9 +28,9 @@ attrs==25.1.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.36.17
+boto3==1.36.18
     # via maggma
-botocore==1.36.17
+botocore==1.36.18
     # via
     #   boto3
     #   s3transfer
@@ -54,9 +54,9 @@ colorama==0.4.6
     # via griffe
 contourpy==1.3.1
     # via matplotlib
-coverage[toml]==7.6.11
+coverage[toml]==7.6.12
     # via pytest-cov
-cryptography==44.0.0
+cryptography==44.0.1
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -64,7 +64,7 @@ custodian==2024.10.16
     # via emmet-core (setup.py)
 cycler==0.12.1
     # via matplotlib
-cython==3.0.11
+cython==3.0.12
     # via chgnet
 dgl==2.1.0
     # via
@@ -101,7 +101,7 @@ ghp-import==2.1.0
     # via mkdocs
 griddataformats==1.0.2
     # via mdanalysis
-griffe==1.5.6
+griffe==1.5.7
     # via mkdocstrings-python
 h5py==3.12.1
     # via phonopy
@@ -216,7 +216,7 @@ mkdocs==1.6.1
     #   mkdocs-material
     #   mkdocs-minify-plugin
     #   mkdocstrings
-mkdocs-autorefs==1.3.0
+mkdocs-autorefs==1.3.1
     # via
     #   mkdocstrings
     #   mkdocstrings-python
@@ -240,7 +240,7 @@ mkdocstrings[python]==0.28.0
     # via
     #   emmet-core (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.14.6
+mkdocstrings-python==1.15.0
     # via mkdocstrings
 mmtf-python==1.1.3
     # via mdanalysis
@@ -615,7 +615,7 @@ sshtunnel==0.4.0
     # via maggma
 statsmodels==0.14.4
     # via solvation-analysis
-symfc==1.3.2
+symfc==1.3.3
     # via phonopy
 sympy==1.13.1
     # via
