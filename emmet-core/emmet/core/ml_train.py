@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from pydantic import Field, model_validator
-from pymatgen.core import Composition, Structure
+from pydantic import Field, BaseModel
+from pymatgen.core import Composition, Element, Structure
 
 from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
@@ -33,36 +33,20 @@ class MLTrainDoc(StructureMetadata):
         description="The components of the symmetric stress tensor in Voigt notation (xx, yy, zz, yz, xz, xy).",
     )
 
-    elements: list[str] | None = Field(
+    elements: list[Element] | None = Field(
         None,
         description="List of unique elements in the material sorted alphabetically.",
     )
 
-    composition: dict[str, float] | None = Field(
+    composition: Composition | None = Field(
         None, description="Full composition for the material."
     )
 
-    composition_reduced: dict[str, float] | None = Field(
+    composition_reduced: Composition | None = Field(
         None,
         title="Reduced Composition",
         description="Simplified representation of the composition.",
     )
-
-    @model_validator(mode="before")
-    def deserialize(cls, values: dict[str, Any]) -> dict[str, Any]:
-        """Ensure some pymatgen objects are deserialized for easier querying."""
-
-        if values.get("elements"):
-            values["elements"] = [str(ele) for ele in values["elements"]]
-
-        for attr in (
-            "composition",
-            "composition_reduced",
-        ):
-            if (v := values.get(attr)) and isinstance(v, Composition):
-                values[attr] = v.as_dict()
-
-        return values
 
     @classmethod
     def from_structure(
@@ -79,12 +63,20 @@ class MLTrainDoc(StructureMetadata):
             **kwargs,
         )
 
+class MatPESProvenanceDoc(BaseModel):
+
+    original_mp_id: MPID | str | None = Field(None, description="MP identifier corresponding to the Materials Project structure from which this entry was sourced from.")
+    materials_project_version : str | None = Field(None, description="The version of the Materials Project from which the struture was sourced.")
+    md_ensemble : str = Field(None, description = "The molecular dynamics ensemble used to generate this structure.")
+    md_temperature : float | None = Field(None, description="If a float, the temperature in Kelvin at which MLMD was performed.")
+    md_pressure : float | None = Field(None, description="If a float, the pressure in atmosphere at which MLMD was performed.")
+    md_step : int | None = Field(None, description="The step in the MD simulation from which the structure was sampled.")
+    mlip_name : str | None = Field(None, description="The name of the ML potential used to perform MLMD.")
 
 class MatPESTrainDoc(MLTrainDoc):
     """Schema for VASP data in the Materials Potential Energy Surface (MatPES) effort."""
 
     matpes_id: str | None = Field(None, description="MatPES identifier.")
-    mp_id: MPID | str | None = Field(None, description="MP identifier.")
 
     bandgap: float | None = Field(None, description="The DFT bandgap.")
     functional: VaspRunType | None = Field(
@@ -105,6 +97,10 @@ class MatPESTrainDoc(MLTrainDoc):
     bader_magmoms: list[float] | None = Field(
         None,
         description="Bader on-site magnetic moments for each site of the structure.",
+    )
+
+    provenance : MatPESProvenanceDoc | None = Field(
+        None, description = "Information about the provenance of the structure."
     )
 
     @property
