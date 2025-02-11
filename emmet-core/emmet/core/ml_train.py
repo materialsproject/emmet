@@ -10,7 +10,6 @@ from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import RunType as VaspRunType
 
 if TYPE_CHECKING:
-    from typing import Any
     from typing_extensions import Self
 
 
@@ -63,15 +62,38 @@ class MLTrainDoc(StructureMetadata):
             **kwargs,
         )
 
-class MatPESProvenanceDoc(BaseModel):
 
-    original_mp_id: MPID | str | None = Field(None, description="MP identifier corresponding to the Materials Project structure from which this entry was sourced from.")
-    materials_project_version : str | None = Field(None, description="The version of the Materials Project from which the struture was sourced.")
-    md_ensemble : str = Field(None, description = "The molecular dynamics ensemble used to generate this structure.")
-    md_temperature : float | None = Field(None, description="If a float, the temperature in Kelvin at which MLMD was performed.")
-    md_pressure : float | None = Field(None, description="If a float, the pressure in atmosphere at which MLMD was performed.")
-    md_step : int | None = Field(None, description="The step in the MD simulation from which the structure was sampled.")
-    mlip_name : str | None = Field(None, description="The name of the ML potential used to perform MLMD.")
+class MatPESProvenanceDoc(BaseModel):
+    """Information regarding the origins of a MatPES structure."""
+
+    original_mp_id: MPID | str | None = Field(
+        None,
+        description="MP identifier corresponding to the Materials Project structure from which this entry was sourced from.",
+    )
+    materials_project_version: str | None = Field(
+        None,
+        description="The version of the Materials Project from which the struture was sourced.",
+    )
+    md_ensemble: str = Field(
+        None,
+        description="The molecular dynamics ensemble used to generate this structure.",
+    )
+    md_temperature: float | None = Field(
+        None,
+        description="If a float, the temperature in Kelvin at which MLMD was performed.",
+    )
+    md_pressure: float | None = Field(
+        None,
+        description="If a float, the pressure in atmosphere at which MLMD was performed.",
+    )
+    md_step: int | None = Field(
+        None,
+        description="The step in the MD simulation from which the structure was sampled.",
+    )
+    mlip_name: str | None = Field(
+        None, description="The name of the ML potential used to perform MLMD."
+    )
+
 
 class MatPESTrainDoc(MLTrainDoc):
     """Schema for VASP data in the Materials Potential Energy Surface (MatPES) effort."""
@@ -99,8 +121,8 @@ class MatPESTrainDoc(MLTrainDoc):
         description="Bader on-site magnetic moments for each site of the structure.",
     )
 
-    provenance : MatPESProvenanceDoc | None = Field(
-        None, description = "Information about the provenance of the structure."
+    provenance: MatPESProvenanceDoc | None = Field(
+        None, description="Information about the provenance of the structure."
     )
 
     @property
