@@ -18,7 +18,7 @@ from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
 SETTINGS = EmmetSettings()
 
 
-class BlessedCalcs(BaseModel):
+class BlessedCalcs(BaseModel, populate_by_name=True):
     GGA: Optional[ComputedStructureEntry] = None
     GGA_U: Optional[ComputedStructureEntry] = Field(None, alias="GGA+U")
     PBESol: Optional[ComputedStructureEntry] = Field(None, alias="PBEsol")
