@@ -59,11 +59,17 @@ class TrajArchive(Archiver):
         super().__post_init__()
 
         use_from_dict_rep = all(
-            TrajectoryProperty(prop) in self.parsed_objects for prop in ("lattice","species","fractional_coordinates")
+            TrajectoryProperty(prop) in self.parsed_objects
+            for prop in ("lattice", "species", "fractional_coordinates")
         )
 
-        if not use_from_dict_rep and TrajectoryProperty.structure not in self.parsed_objects:
-            raise ValueError("You must specify a set of structures, or identically a set of lattices, species, and atomic coordinates!")
+        if (
+            not use_from_dict_rep
+            and TrajectoryProperty.structure not in self.parsed_objects
+        ):
+            raise ValueError(
+                "You must specify a set of structures, or identically a set of lattices, species, and atomic coordinates!"
+            )
 
         if use_from_dict_rep:
             self.num_sites = len(self.species)
@@ -378,7 +384,7 @@ class TrajArchive(Archiver):
     def from_archive(cls, archive_path: str | Path, **kwargs) -> Self:
         data = cls.to_dict(archive_path)
         constant_lattice = data.pop("constant_lattice")
-        return cls(parsed_objects=data, all_lattices_equal = constant_lattice, **kwargs)
+        return cls(parsed_objects=data, all_lattices_equal=constant_lattice, **kwargs)
 
     @classmethod
     def to_pymatgen_trajectory(
