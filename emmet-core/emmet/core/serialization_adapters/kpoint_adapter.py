@@ -8,7 +8,6 @@ TypedKpointDict = TypedDict(
     {
         "@module": str,
         "@class": str,
-        "@version": str,
         "lattice": Lattice,
         "fcoords": list[float, float, float],
         "ccoords": list[float, float, float],

@@ -13,7 +13,6 @@ TypedDiffractionPattern = TypedDict(
     {
         "@module": str,
         "@class": str,
-        "@version": str,
         "x": list[float],
         "y": list[float],
         "hkls": list[list[TypedHKLDict]],
