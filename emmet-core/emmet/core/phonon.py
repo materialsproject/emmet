@@ -1,11 +1,11 @@
 from datetime import datetime
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 from pydantic import BaseModel, Field, field_validator
 from pymatgen.core import Structure
 from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
 from pymatgen.phonon.dos import PhononDos as PhononDosObject
-from typing_extensions import Literal
+from typing_extensions import Literal, TypedDict
 
 from emmet.core.common import convert_datetime
 from emmet.core.math import Tensor4R, Vector3D
@@ -20,7 +20,7 @@ class PhononBSDOSDoc(BaseModel):
     Phonon band structures and density of states data.
     """
 
-    material_id: Optional[MPID] = Field(
+    material_id: MPID | None = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )
@@ -78,7 +78,7 @@ class PhononBandStructure(BaseModel):
         "bs", description="The type of the document: a phonon band structure."
     )
 
-    band_structure: Optional[dict] = Field(
+    band_structure: PhononBandStructureSymmLine | None = Field(
         None,
         description="Serialized version of a pymatgen "
         "PhononBandStructureSymmLine object.",
@@ -110,7 +110,7 @@ class PhononDos(BaseModel):
         "dos", description="The type of the document: a phonon density of states."
     )
 
-    dos: Optional[dict] = Field(
+    dos: PhononDosObject | None = Field(
         None, description="Serialized version of a pymatgen CompletePhononDos object."
     )
 
@@ -127,6 +127,28 @@ class PhononDos(BaseModel):
         description="Timestamp for when this material document was first created",
         default_factory=utcnow,
     )
+
+
+class PhononWebsiteDict(TypedDict):
+    vec2D = list[float, float]
+    vec3D = list[float, float, float]
+
+    atom_numbers: list[int]
+    atom_pos_car: list[vec3D]
+    atom_pos_red: list[vec3D]
+    atom_types: list[str]
+    distances: list[float]
+    eigenvalues: list[list[float]]
+    formula: str
+    # fails arrow conversion
+    # highsym_qpts: list[list[int, str]]
+    lattice: list[vec3D]
+    line_breaks: list[tuple[int, int]]
+    name: str
+    natoms: int
+    qpoints: list[vec3D]
+    repetitions: list[int, int, int]
+    vectors: list[list[list[list[vec2D, vec2D, vec2D]]]]
 
 
 class PhononWebsiteBS(BaseModel):
@@ -146,7 +168,7 @@ class PhononWebsiteBS(BaseModel):
         description="The type of the document: a phonon band structure for the phononwebsite.",
     )
 
-    phononwebsite: Optional[dict] = Field(
+    phononwebsite: PhononWebsiteDict | None = Field(
         None,
         description="Phononwebsite dictionary to plot the animated " "phonon modes.",
     )
@@ -195,19 +217,19 @@ class ThermodynamicProperties(BaseModel):
     Definition of the thermodynamic properties extracted from the phonon frequencies.
     """
 
-    temperatures: List[float] = Field(
+    temperatures: list[float] = Field(
         ...,
         description="The list of temperatures at which the thermodynamic properties "
         "are calculated",
     )
 
-    cv: List[float] = Field(
+    cv: list[float] = Field(
         ...,
         description="The values of the constant-volume specific heat.",
         alias="heat_capacity",
     )
 
-    entropy: List[float] = Field(
+    entropy: list[float] = Field(
         ..., description="The values of the vibrational entropy."
     )
 
@@ -218,17 +240,17 @@ class VibrationalEnergy(BaseModel):
     the temperature.
     """
 
-    temperatures: List[float] = Field(
+    temperatures: list[float] = Field(
         ...,
         description="The list of temperatures at which the thermodynamic properties "
         "are calculated",
     )
 
-    internal_energy: List[float] = Field(
+    internal_energy: list[float] = Field(
         ..., description="The values of the phonon contribution to the internal energy."
     )
 
-    helmholtz_free_energy: List[float] = Field(
+    helmholtz_free_energy: list[float] = Field(
         ..., description="The values of the Helmholtz free energy."
     )
 
@@ -256,8 +278,8 @@ class Phonon(StructureMetadata):
         None, description="The maximum breaking of the acoustic sum rule (ASR)."
     )
 
-    warnings: Optional[List[PhononWarnings]] = Field(
-        None, description="List of warnings associated to the phonon calculation."
+    warnings: Optional[list[PhononWarnings]] = Field(
+        None, description="list of warnings associated to the phonon calculation."
     )
 
     dielectric: Optional[DielectricDoc] = Field(
@@ -322,20 +344,20 @@ class SoundVelocity(BaseModel):
         ..., description="The relaxed structure for the phonon calculation."
     )
 
-    directions: List[Vector3D] = Field(
+    directions: list[Vector3D] = Field(
         ...,
         description="Q-points identifying the directions for the calculation"
         "of the speed of sound. In fractional coordinates.",
     )
 
-    labels: List[Optional[str]] = Field(..., description="labels of the directions.")
+    labels: list[Optional[str]] = Field(..., description="labels of the directions.")
 
-    sound_velocities: List[Vector3D] = Field(
+    sound_velocities: list[Vector3D] = Field(
         ...,
         description="Values of the sound velocities in SI units.",
     )
 
-    mode_types: List[Tuple[Optional[str], Optional[str], Optional[str]]] = Field(
+    mode_types: list[Tuple[Optional[str], Optional[str], Optional[str]]] = Field(
         ...,
         description="The types of the modes ('transversal', 'longitudinal'). "
         "None if not correctly identified.",
@@ -389,13 +411,13 @@ class ThermalDisplacement(BaseModel):
         description="The number of temperatures for which the displacements are calculated",
     )
 
-    temperatures: List[float] = Field(
+    temperatures: list[float] = Field(
         ...,
         description="The list of temperatures at which the thermodynamic properties "
         "are calculated",
     )
 
-    frequencies: List[float] = Field(
+    frequencies: list[float] = Field(
         ..., description="The list of frequencies for the generalized DOS"
     )
 
@@ -404,7 +426,7 @@ class ThermalDisplacement(BaseModel):
         description=" Generalized DOS in Cartesian coords, with shape (nsites, 3, 3, nomega)",
     )
 
-    amu: dict = Field(
+    amu: dict[str, float] = Field(
         ..., description="Dictionary of the atomic masses in atomic units."
     )
 
