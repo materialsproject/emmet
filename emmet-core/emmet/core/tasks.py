@@ -21,7 +21,7 @@ from pymatgen.io.vasp import Potcar as VaspPotcar
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
-from emmet.core.utils import utcnow
+from emmet.core.utils import arrow_incompatible, utcnow
 from emmet.core.vasp.calc_types import (
     CalcType,
     RunType,
@@ -56,6 +56,7 @@ class Potcar(BaseModel):
     )
 
 
+@arrow_incompatible
 class OrigInputs(CalculationInput):
     poscar: Optional[Poscar] = Field(
         None,
@@ -236,6 +237,7 @@ class InputDoc(CalculationInput):
         )
 
 
+@arrow_incompatible
 class CustodianDoc(BaseModel):
     corrections: Optional[List[Any]] = Field(
         None,
@@ -331,6 +333,7 @@ class AnalysisDoc(BaseModel):
         )
 
 
+@arrow_incompatible
 class TaskDoc(StructureMetadata, extra="allow"):
     """Calculation-level details about VASP calculations that power Materials Project."""
 

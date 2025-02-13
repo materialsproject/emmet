@@ -33,6 +33,18 @@ except ImportError:
 SETTINGS = EmmetSettings()
 
 
+def arrow_incompatible(cls):
+    """
+    Simple decorator to mark a document model as being
+    incompatible with serialization using pyarrow. This
+    should only be applied as a temporary measure, all
+    document models should aim for full type
+    introspection.
+    """
+    cls.arrow_incompatible = True
+    return cls
+
+
 def get_sg(struc, symprec=SETTINGS.SYMPREC) -> int:
     """helper function to get spacegroup with a loose tolerance"""
     try:

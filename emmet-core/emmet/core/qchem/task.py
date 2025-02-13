@@ -8,7 +8,6 @@ from pymatgen.core.structure import Molecule
 
 from emmet.core.structure import MoleculeMetadata
 from emmet.core.task import BaseTaskDocument
-from emmet.core.utils import ValueEnum
 from emmet.core.qchem.calc_types import (
     LevelOfTheory,
     CalcType,
@@ -20,6 +19,7 @@ from emmet.core.qchem.calc_types import (
     lot_solvent_string,
 )
 
+from emmet.core.utils import ValueEnum, arrow_incompatible
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -113,6 +113,7 @@ class OutputSummary(BaseModel):
         }
 
 
+@arrow_incompatible
 class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     """
     Definition of a Q-Chem task document

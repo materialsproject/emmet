@@ -25,7 +25,11 @@ def import_models():
             for name, obj in inspect.getmembers(
                 importlib.import_module(module_name), inspect.isclass
             ):
-                if obj.__module__ == module_name and isinstance(obj, ModelMetaclass):
+                if (
+                    obj.__module__ == module_name
+                    and isinstance(obj, ModelMetaclass)
+                    and not hasattr(obj, "arrow_incompatible")
+                ):
                     core_models.append(obj)
 
     return core_models

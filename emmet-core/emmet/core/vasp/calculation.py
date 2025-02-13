@@ -32,7 +32,7 @@ from pymatgen.io.vasp import (
 )
 
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
-from emmet.core.utils import ValueEnum
+from emmet.core.utils import ValueEnum, arrow_incompatible
 from emmet.core.vasp.calc_types import (
     CalcType,
     RunType,
@@ -124,6 +124,7 @@ class PotcarSpec(BaseModel):
         return [cls.from_potcar_single(p) for p in potcar]
 
 
+@arrow_incompatible
 class CalculationInput(CalculationBaseModel):
     """Document defining VASP calculation inputs."""
 

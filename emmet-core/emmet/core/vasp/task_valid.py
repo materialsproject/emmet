@@ -11,7 +11,7 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.task import BaseTaskDocument
 from emmet.core.structure import StructureMetadata
-from emmet.core.utils import ValueEnum
+from emmet.core.utils import ValueEnum, arrow_incompatible
 from emmet.core.vasp.calc_types import RunType, calc_type, run_type, task_type
 
 
@@ -25,6 +25,7 @@ class TaskState(ValueEnum):
     ERROR = "error"
 
 
+@arrow_incompatible
 class InputSummary(BaseModel):
     """
     Summary of inputs for a VASP calculation
@@ -104,6 +105,7 @@ class RunStatistics(BaseModel):
     )
 
 
+@arrow_incompatible
 class TaskDocument(BaseTaskDocument, StructureMetadata):
     """
     Definition of VASP Task Document

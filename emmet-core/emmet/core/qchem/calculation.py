@@ -25,6 +25,7 @@ from emmet.core.qchem.calc_types.calc_types import (
     FUNCTIONALS,
     BASIS_SETS,
 )
+from emmet.core.utils import arrow_incompatible
 
 # from emmet.core.qchem.calc_types.em_utils import (
 #     level_of_theory,
@@ -56,6 +57,7 @@ logger = logging.getLogger(__name__)
 # as QChem data objects
 
 
+@arrow_incompatible
 class CalculationInput(BaseModel):
     """
     Document defining QChem calculation inputs.
