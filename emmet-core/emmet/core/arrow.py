@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from enum import Enum
 from types import UnionType
-from typing import Any, _UnionGenericAlias
+from typing import Any, ForwardRef, _eval_type, _UnionGenericAlias
 
 import typing_extensions
 from monty.json import MSONable
@@ -115,6 +115,9 @@ def arrowize(obj):
                 for field_name, value in obj.__annotations__.items()
             ]
         )
+
+    if isinstance(obj, ForwardRef):
+        return arrowize(obj._evaluate(globals(), locals(), frozenset()))
 
     if issubclass(obj, MSONable):
         assert hasattr(
