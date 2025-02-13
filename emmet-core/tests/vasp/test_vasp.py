@@ -103,7 +103,7 @@ def test_computed_entry(tasks):
 
 @pytest.fixture(scope="session")
 def task_ldau(test_dir):
-    with zopen(test_dir / "test_task.json") as f:
+    with zopen(test_dir / "test_task.json.gz") as f:
         data = json.load(f)
 
     return TaskDoc(**data)
@@ -116,7 +116,7 @@ def test_ldau(task_ldau):
 
 
 def test_ldau_validation(test_dir):
-    with open(test_dir / "old_aflow_ggau_task.json") as f:
+    with zopen(test_dir / "old_aflow_ggau_task.json.gz") as f:
         data = json.load(f)
 
     task = TaskDoc(**data)
