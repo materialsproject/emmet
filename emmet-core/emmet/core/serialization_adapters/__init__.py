@@ -4,6 +4,10 @@ from emmet.core.serialization_adapters import (
     diffraction_pattern_adapter,
     ir_dielectric_tensor_adapter,
     kpoint_adapter,
+    lattice_adapter,
     phonon_adapter,
+    sites_adapter,
+    species_adapter,
+    structure_adapter,
     trajectory_adapter,
 )
