@@ -8,19 +8,23 @@ from pymatgen.io.vasp.outputs import Chgcar, Elfcar, Locpot
 
 
 VASP_INPUT_FILES = ["INCAR", "KPOINTS", "KPOINTS_OPT", "POSCAR", "POTCAR"]
-VASP_ELECTRONIC_STRUCTURE = ["EIGENVAL",  "DOSCAR",]
+VASP_ELECTRONIC_STRUCTURE = [
+    "EIGENVAL",
+    "DOSCAR",
+]
 VASP_VOLUMETRIC_FILES = (
     ["CHGCAR"] + [f"AECCAR{i}" for i in range(3)] + ["ELFCAR", "LOCPOT"]
 )
-VASP_OUTPUT_FILES = ["CONTCAR","OSZICAR", "OUTCAR", "vasprun.xml"]
+VASP_OUTPUT_FILES = ["CONTCAR", "OSZICAR", "OUTCAR", "vasprun.xml"]
 
 VASP_RAW_DATA_ORG = {
     "input": VASP_INPUT_FILES + [f + ".orig" for f in VASP_INPUT_FILES],
     "output": VASP_OUTPUT_FILES,
     "volumetric": VASP_VOLUMETRIC_FILES,
     "electronic_structure": VASP_ELECTRONIC_STRUCTURE,
-    "workflow": ["FW.json","custodian.json","transformations.json"]
+    "workflow": ["FW.json", "custodian.json", "transformations.json"],
 }
+
 
 class PotcarSpec:
     """Store high-level POTCAR information without licensed data.

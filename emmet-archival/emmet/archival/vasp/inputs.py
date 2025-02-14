@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     import h5py
     import zarr
 
+
 @dataclass
 class PoscarArchive(StructureArchive):
     """Archive a POSCAR."""

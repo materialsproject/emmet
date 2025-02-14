@@ -17,14 +17,13 @@ from emmet.archival.utils import zpath
 from emmet.archival.vasp import VASP_RAW_DATA_ORG, PotcarSpec
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
     from typing import Any
     from typing_extensions import Self
+
 
 @dataclass
 class RawArchive(Archiver):
     """Archive a raw VASP calculation directory and remove copyright-protected info."""
-
 
     @classmethod
     def from_directory(cls, calc_dir: str | Path, **kwargs) -> Self:
@@ -42,7 +41,9 @@ class RawArchive(Archiver):
                     metadata["file_paths"][calc_type][file_name] = file_path  # type: ignore[index]
 
                     if file_name == "POTCAR":
-                        parsed_objects["POTCAR_spec"] = str(PotcarSpec.from_file(file_path))
+                        parsed_objects["POTCAR_spec"] = str(
+                            PotcarSpec.from_file(file_path)
+                        )
                     else:
                         with zopen(file_path, "rt") as f:
                             parsed_objects[file_name] = f.read()
@@ -79,10 +80,10 @@ class RawArchive(Archiver):
     @classmethod
     def to_task_doc(
         cls,
-        archive_name : str | Path,
+        archive_name: str | Path,
         fmt: str | ArchivalFormat | None = None,
-        group_key : str | None = None,
-        **task_doc_kwargs
+        group_key: str | None = None,
+        **task_doc_kwargs,
     ) -> TaskDoc:
         """
         Create an emmet.core TaskDoc from an archived calculation directory.
@@ -102,26 +103,28 @@ class RawArchive(Archiver):
         -----------
         TaskDoc representing the calculation in the archive.
         """
-        
+
         required_files = []
-        for calc_type in ("input","output","workflow"):
+        for calc_type in ("input", "output", "workflow"):
             required_files.extend(
                 [f"{calc_type}/{fname}" for fname in VASP_RAW_DATA_ORG[calc_type]]
             )
 
         required_files.extend(
-            [f"volumetric/{fname}" for fname in task_doc_kwargs.get("volumetric_files",_VOLUMETRIC_FILES)]
+            [
+                f"volumetric/{fname}"
+                for fname in task_doc_kwargs.get("volumetric_files", _VOLUMETRIC_FILES)
+            ]
         )
-        
-        with cls.load_archive(archive_name, fmt=fmt, group_key=group_key) as group:
 
+        with cls.load_archive(archive_name, fmt=fmt, group_key=group_key) as group:
             with TemporaryDirectory() as _tmp_dir:
                 tmp_dir = Path(_tmp_dir)
                 for file_harch in required_files:
                     file_name = Path(file_harch).name
-                    if (_dset := group.get(file_harch) ) is not None:
+                    if (_dset := group.get(file_harch)) is not None:
                         with open(tmp_dir / file_name, "wb") as f:
                             f.write(list(_dset)[0])
-                task = TaskDoc.from_directory(tmp_dir,**task_doc_kwargs)
+                task = TaskDoc.from_directory(tmp_dir, **task_doc_kwargs)
 
         return task

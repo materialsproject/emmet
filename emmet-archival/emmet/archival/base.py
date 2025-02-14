@@ -85,7 +85,7 @@ class Archiver:
             file_name = ".".join(file_split[:-1])
         file_name += f".{self.format.value}"  # type: ignore[union-attr,attr-defined]
 
-        with self.load_archive(file_name,fmt=self.format,mode="w") as group:
+        with Archiver.load_archive(file_name, fmt=self.format, mode="w") as group:
             self.to_group(group)
 
     @classmethod
@@ -96,14 +96,14 @@ class Archiver:
     @contextmanager
     @staticmethod
     def load_archive(
-        archive_name : str | Path,
+        archive_name: str | Path,
         fmt: str | ArchivalFormat | None = None,
-        mode : str = "r",
-        group_key : str | None = None,
+        mode: str = "r",
+        group_key: str | None = None,
     ) -> Generator:
         """
         Load an archive from a file name.
-        
+
         Parameters
         -----------
         archive_name : str | Path
@@ -139,6 +139,7 @@ class Archiver:
             if fmt == ArchivalFormat.HDF5:
                 # zarr automatically flushes data
                 group.close()
+
 
 @dataclass
 class StructureArchive(Archiver):
