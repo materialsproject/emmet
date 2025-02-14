@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 import h5py
-import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -14,136 +13,21 @@ import zarr
 from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calculation import VaspObject
 
-from pymatgen.core import Structure
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
 from pymatgen.electronic_structure.core import Orbital, Spin
 from pymatgen.electronic_structure.dos import CompleteDos, Dos
-from pymatgen.io.vasp.inputs import Incar, Kpoints, Poscar, Potcar
-from pymatgen.io.vasp.outputs import Chgcar, Elfcar, Locpot, Vasprun
+from pymatgen.io.vasp.outputs import Vasprun
 
-from emmet.archival.base import ArchivalFormat, Archiver, StructureArchive
+from emmet.archival.base import ArchivalFormat, Archiver
 from emmet.archival.utils import zpath
+from emmet.archival.vasp import VASP_VOLUMETRIC_FILES, PMG_OBJ
+from emmet.archival.vasp.inputs import PoscarArchive
 
 if TYPE_CHECKING:
     from typing import Any
 
     from pymatgen.core.sites import PeriodicSite
     from pymatgen.io.vasp.outputs import VolumetricData
-
-_VASP_INPUT_FILES = ["INCAR", "KPOINTS", "KPOINTS_OPT", "POSCAR", "POTCAR"]
-_VASP_VOLUMETRIC_FILES = (
-    ["CHGCAR"] + [f"AECCAR{i}" for i in range(3)] + ["ELFCAR", "LOCPOT"]
-)
-_VASP_OUTPUT_FILES = ["EIGENVAL", "DOSCAR", "OSZICAR", "OUTCAR", "vasprun.xml"]
-
-_RAW_DATA_HIERARCHY = {
-    "input": _VASP_INPUT_FILES,
-    "output": _VASP_OUTPUT_FILES,
-    "volumetric": _VASP_VOLUMETRIC_FILES,
-}
-
-
-class PotcarSpec:
-    """Store high-level POTCAR information without licensed data.
-
-    Needed to avoid storage of full POTCARs and be compliant
-    with terms of POTCAR licensing.
-    """
-
-    def __init__(self, potcar: Potcar):
-        self.spec = [p._summary_stats for p in potcar]
-        self.meta = [p.spec for p in potcar]
-
-    @classmethod
-    def from_file(cls, file_path: str | Path):
-        """Create a PotcarSpec from a file.
-
-        Parameters
-        -----------
-        file_path : str or Path
-            The path to the POTCAR file.
-
-        Returns
-        -----------
-        A PotcarSpec of the specified POTCAR.
-        """
-        return cls(Potcar.from_file(file_path))
-
-    def __str__(self) -> str:
-        """Define str representation when writing to RawArchive."""
-        return json.dumps(self.spec)
-
-
-_PMG_OBJ = {
-    "INCAR": Incar,
-    "KPOINTS": Kpoints,
-    "KPOINTS_OPT": Kpoints,
-    "POSCAR": Poscar,
-    "POTCAR": PotcarSpec,
-    "CHGCAR": Chgcar,
-    "AECCAR0": Chgcar,
-    "AECCAR1": Chgcar,
-    "AECCAR2": Chgcar,
-    "ELFCAR": Elfcar,
-    "LOCPOT": Locpot,
-}
-
-
-@dataclass
-class PoscarArchive(StructureArchive):
-    """Archive a POSCAR."""
-
-    # parsed_objects: dict[str, Any] = field(default_factory=lambda: {"POSCAR": None})
-
-    def __post_init__(self):
-        if isinstance(self.parsed_objects["POSCAR"], Structure):
-            self.parsed_objects["POSCAR"] = Poscar(
-                structure=self.parsed_objects["POSCAR"]
-            )
-        elif (
-            isinstance(self.parsed_objects["POSCAR"], (str, Path))
-            and Path(self.parsed_objects["POSCAR"]).exists()
-        ):
-            self.parsed_objects["POSCAR"] = Poscar.from_file(
-                self.parsed_objects["POSCAR"]
-            )
-        elif isinstance(self.parsed_objects["POSCAR"], str):
-            self.parsed_objects["POSCAR"] = Poscar.from_str(
-                self.parsed_objects["POSCAR"]
-            )
-
-        self.metadata.update({"comment": self.parsed_objects["POSCAR"]["comment"]})
-
-        super().__post_init__()
-
-    @staticmethod
-    def from_group(group: h5py.Group | zarr.Group) -> Poscar:  # type: ignore[override]
-        return Poscar(StructureArchive.from_group(group), comment=group.get("comment"))
-
-
-@dataclass
-class IncarArchive(Archiver):
-    # parsed_objects : dict[str,Any] = {"INCAR": None}
-
-    def __post_init__(self) -> None:
-        if (
-            isinstance(self.parsed_objects["INCAR"], (str, Path))
-            and Path(self.parsed_objects["INCAR"]).exists()
-        ):
-            self.parsed_objects["INCAR"] = Incar.from_file(self.parsed_objects["INCAR"])
-        elif isinstance(self.parsed_objects["INCAR"], str):
-            self.parsed_objects["INCAR"] = Incar.from_str(self.parsed_objects["INCAR"])
-
-        super().__post_init__()
-
-    def to_group(self, group: h5py.Group, group_key: str = "INCAR") -> None:
-        group.create_group(group_key)
-        group.attrs.update(self.incar)
-
-    @staticmethod
-    def from_group(group: h5py.Group | zarr.Group) -> Incar:
-        return Incar(group["INCAR"].attrs)
-
 
 @dataclass
 class DosArchive(Archiver):
@@ -399,11 +283,11 @@ class VolumetricArchive(Archiver):
         calc_dir = Path(calc_dir).resolve()
         metadata = {"calc_dir": str(calc_dir), "file_paths": {}}
         parsed_objects: dict[str, Any] = {}
-        for file_name in _VASP_VOLUMETRIC_FILES:
+        for file_name in VASP_VOLUMETRIC_FILES:
             file_path = zpath(calc_dir / file_name)
             if file_path.exists():
                 metadata["file_paths"][file_name] = file_path  # type: ignore[index]
-                parsed_objects[file_name] = _PMG_OBJ[file_name].from_file(file_path)  # type: ignore[attr-defined]
+                parsed_objects[file_name] = PMG_OBJ[file_name].from_file(file_path)  # type: ignore[attr-defined]
 
         return cls(parsed_objects=parsed_objects, metadata=metadata, **kwargs)
 
@@ -479,114 +363,45 @@ class VolumetricArchive(Archiver):
                             **self.compression,
                         )
 
-    @staticmethod
+    @classmethod
     def get_vol_data_from_archive(
+        cls,
         archive_name: str | Path,
-        files_to_retrieve=_VASP_VOLUMETRIC_FILES,
+        files_to_retrieve=VASP_VOLUMETRIC_FILES,
         fmt: str | ArchivalFormat | None = None,
+        group_key : str | None = None,
     ) -> dict[str, VolumetricData]:
-        if fmt is None:
-            file_ext = "".join(Path(archive_name).suffixes)
-            for _fmt in ArchivalFormat:
-                if _fmt.value == file_ext:
-                    fmt = _fmt
-                    break
 
         charge_densities = {}
 
-        if fmt == ArchivalFormat.HDF5:
-            group = h5py.File(archive_name, "r")
-        elif fmt == ArchivalFormat.ZARR:
-            group = zarr.open(archive_name, "r")
-
-        poscar = PoscarArchive.from_group(group["structure"])
-        for file_name in files_to_retrieve:
-            if group.get(file_name):
-                data = {}
-                for k in (
-                    "total",
-                    "diff",
-                ):
-                    if (_data := group[file_name].get(k)) is not None:
-                        data[k] = np.array(_data)
-
-                data_aug = None
-                if (aug_data := group[file_name].get("augmentation")) is not None:
-                    data_aug = {}
+        with cls.load_archive(archive_name, fmt = fmt, group_key=group_key) as group:
+            
+            poscar = PoscarArchive.from_group(group["structure"])
+            for file_name in files_to_retrieve:
+                if group.get(file_name):
+                    data = {}
                     for k in (
                         "total",
                         "diff",
                     ):
-                        if (_data := aug_data.get(k)) is not None:
-                            data_aug[k] = [
-                                np.array(aug_chgs) for aug_chgs in _data.values()
-                            ]
+                        if (_data := group[file_name].get(k)) is not None:
+                            data[k] = np.array(_data)
 
-                kwargs: dict[str, Any] = {"poscar": poscar, "data": data}
-                if all(f not in file_name.upper() for f in ("ELFCAR", "LOCPOT")):
-                    kwargs.update({"data_aug": data_aug})
-                charge_densities[file_name] = _PMG_OBJ[file_name](**kwargs)
+                    data_aug = None
+                    if (aug_data := group[file_name].get("augmentation")) is not None:
+                        data_aug = {}
+                        for k in (
+                            "total",
+                            "diff",
+                        ):
+                            if (_data := aug_data.get(k)) is not None:
+                                data_aug[k] = [
+                                    np.array(aug_chgs) for aug_chgs in _data.values()
+                                ]
 
-        if fmt == ArchivalFormat.HDF5:
-            # zarr automatically flushes data
-            group.close()
+                    kwargs: dict[str, Any] = {"poscar": poscar, "data": data}
+                    if all(f not in file_name.upper() for f in ("ELFCAR", "LOCPOT")):
+                        kwargs.update({"data_aug": data_aug})
+                    charge_densities[file_name] = PMG_OBJ[file_name](**kwargs)
 
         return charge_densities
-
-
-@dataclass
-class RawArchive(Archiver):
-    @classmethod
-    def from_directory(cls, calc_dir: str | Path, **kwargs):
-        calc_dir = Path(calc_dir).resolve()
-        metadata = {"calc_dir": str(calc_dir), "file_paths": {}}
-
-        parsed_objects: dict[str, Any] = {}
-        for calc_type, file_list in _RAW_DATA_HIERARCHY.items():
-            metadata["file_paths"][calc_type] = {}  # type: ignore[index]
-            for file_name in file_list:
-                if (file_path := zpath(calc_dir / file_name)).exists():
-                    metadata["file_paths"][calc_type][file_name] = file_path  # type: ignore[index]
-
-                if file_name == "POTCAR":
-                    parsed_objects["POTCAR_spec"] = str(PotcarSpec.from_file(file_path))
-                else:
-                    with open(file_path, "r") as f:
-                        parsed_objects[file_name] = f.read()
-
-        return cls(parsed_objects=parsed_objects, metadata=metadata, **kwargs)
-
-    @staticmethod
-    def chunk_string(instr: str, str_len: int):
-        nrem = len(instr) % str_len
-        nchunk = (len(instr) - nrem) // str_len
-        return [
-            instr[i * str_len : min(len(instr), (i + 1) * str_len)]
-            for i in range(nchunk + 1)
-        ]
-
-    def to_group(
-        self, group: h5py.Group | zarr.Group, group_key: str | None = None
-    ) -> None:
-        if group_key is not None:
-            group.create_group(group_key)
-            group = group[group_key]
-
-        for calc_type, files in _RAW_DATA_HIERARCHY.items():
-            group.create_group(calc_type)
-
-            for file_name in files:
-                if (rawf := self.parsed_objects.get(file_name)) is None:
-                    continue
-
-                kwargs = self.compression.copy()
-                if self.format == ArchivalFormat.HDF5:
-                    kwargs.update(dtype=h5py.string_dtype(length=len(rawf)))
-
-                group[calc_type].create_dataset(
-                    file_name, data=[rawf], shape=1, **kwargs
-                )
-                if (
-                    fpath := self.metadata.get("file_paths", {}).get(file_name)
-                ) is not None:
-                    group[calc_type][file_name].attrs[f"{file_name}_path"] = str(fpath)
