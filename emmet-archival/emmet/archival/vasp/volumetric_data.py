@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from pymatgen.core.sites import PeriodicSite
     from pymatgen.io.vasp.outputs import VolumetricData
 
+
 @dataclass
 class DosArchive(Archiver):
     # parsed_objects : dict[str,Any] = {"DOS": None}
@@ -369,13 +370,11 @@ class VolumetricArchive(Archiver):
         archive_name: str | Path,
         files_to_retrieve=VASP_VOLUMETRIC_FILES,
         fmt: str | ArchivalFormat | None = None,
-        group_key : str | None = None,
+        group_key: str | None = None,
     ) -> dict[str, VolumetricData]:
-
         charge_densities = {}
 
-        with cls.load_archive(archive_name, fmt = fmt, group_key=group_key) as group:
-            
+        with cls.load_archive(archive_name, fmt=fmt, group_key=group_key) as group:
             poscar = PoscarArchive.from_group(group["structure"])
             for file_name in files_to_retrieve:
                 if group.get(file_name):
