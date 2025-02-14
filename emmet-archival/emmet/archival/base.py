@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -16,6 +17,7 @@ from pymatgen.core import Structure
 from emmet.archival.utils import StrEnum
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
     from typing import Any
     from typing_extensions import Self
 
@@ -83,23 +85,60 @@ class Archiver:
             file_name = ".".join(file_split[:-1])
         file_name += f".{self.format.value}"  # type: ignore[union-attr,attr-defined]
 
-        if self.format == ArchivalFormat.HDF5:
-            with h5py.File(file_name, "w") as hf5:
-                self.to_group(hf5)
-        elif self.format == ArchivalFormat.ZARR:
-            with zarr.open(file_name, "w") as zg:
-                self.to_group(zg)
-        else:
-            raise ValueError(
-                f"Unknown file format {self.format}. Acceptable file extensions are:"
-                f" {', '.join(ArchivalFormat)}"
-            )
+        with self.load_archive(file_name,fmt=self.format,mode="w") as group:
+            self.to_group(group)
 
     @classmethod
     def from_archive(cls, archive_path: str | Path, *args, **kwargs) -> Self:
         """Define methods to instantiate an Archiver from an archive path."""
         raise NotImplementedError
 
+    @contextmanager
+    @staticmethod
+    def load_archive(
+        archive_name : str | Path,
+        fmt: str | ArchivalFormat | None = None,
+        mode : str = "r",
+        group_key : str | None = None,
+    ) -> Generator:
+        """
+        Load an archive from a file name.
+        
+        Parameters
+        -----------
+        archive_name : str | Path
+            The name of the archive file
+        fmt: str | ArchivalFormat | None = None
+            The format of the archive if not None. Determined automatically otherwise.
+        mode : str = "r"
+            The mode to open the file in, either "r" or "w"
+        group_key : str | None = None
+            If not None, the name of a specific file hierarchy to retrieve.
+        """
+
+        if fmt is None:
+            file_ext = "".join(Path(archive_name).suffixes)
+            if file_ext[0] == ".":
+                file_ext = file_ext[1:]
+            for _fmt in ArchivalFormat:
+                if _fmt.value == file_ext:
+                    fmt = _fmt
+                    break
+
+        if fmt == ArchivalFormat.HDF5:
+            group = h5py.File(archive_name, mode)
+        elif fmt == ArchivalFormat.ZARR:
+            group = zarr.open(archive_name, mode)
+
+        try:
+            if group_key is not None:
+                yield group[group_key]
+            yield group
+
+        finally:
+            if fmt == ArchivalFormat.HDF5:
+                # zarr automatically flushes data
+                group.close()
 
 @dataclass
 class StructureArchive(Archiver):

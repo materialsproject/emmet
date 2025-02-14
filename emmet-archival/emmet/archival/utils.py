@@ -32,3 +32,4 @@ class StrEnum(str, Enum):
         for member in cls:
             if member.value.upper() == value.upper():
                 return member
+
