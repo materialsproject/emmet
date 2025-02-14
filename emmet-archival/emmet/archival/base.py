@@ -129,6 +129,8 @@ class Archiver:
             group = h5py.File(archive_name, mode)
         elif fmt == ArchivalFormat.ZARR:
             group = zarr.open(archive_name, mode)
+        else:
+            raise TypeError(f"Unknown archive format {fmt}.")
 
         try:
             if group_key is not None:
