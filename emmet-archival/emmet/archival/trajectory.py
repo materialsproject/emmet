@@ -19,7 +19,7 @@ except ImportError:
 from pymatgen.core import Structure
 from pymatgen.core.trajectory import Trajectory as PmgTrajectory
 
-from emmet.archival.base import Archiver, ArchivalFormat
+from emmet.archival.base import Archiver
 from emmet.archival.utils import StrEnum
 
 if TYPE_CHECKING:
@@ -212,15 +212,14 @@ class TrajArchive(Archiver):
 
     @staticmethod
     def to_dict(
-        archive: str | Path | h5py.Group | zarr.Group, group_key: str | None = None
+        group: h5py.Group | zarr.Group, group_key: str | None = None
     ) -> dict[str | TrajectoryProperty, Any]:
         """
         Convert either an archive on the file system or in memory to a dict.
 
         Parameters
         -----------
-        archive : str or Path or h5py.Group or zarr.Group
-            If a str or Path, the path to an existing hierarchical trajectory archive.
+        group : h5py.Group or zarr.Group
             If an h5py or zarr Group, the in-memory group to use.
         group_key : str or None (default)
             If a str, the hierarchical path to the trajectory.
@@ -229,20 +228,8 @@ class TrajArchive(Archiver):
         -----------
         A low-memory JSONable dict representation of the trajectory.
         """
-
-        archive_was_file = False
-        ext = None
-        if isinstance(archive, (str, Path)):
-            archive_was_file = True
-            ext = Path(archive).suffix.split(".")[-1]
-            if ext == ArchivalFormat.HDF5:
-                _loader = h5py.File
-            elif ext == ArchivalFormat.ZARR:
-                _loader = zarr.open
-
-            archive = _loader(archive, "r")
-
-        group = archive[group_key if group_key is not None else "/"]
+        if group_key is not None:
+            group = group[group_key]
 
         parsed_objects = {
             k: group.attrs[k]
@@ -286,9 +273,6 @@ class TrajArchive(Archiver):
                         for row in group["trajectory"]
                     ]
                 )
-
-        if archive_was_file and ext == ArchivalFormat.HDF5:
-            archive.close()
 
         return parsed_objects
 
@@ -381,20 +365,23 @@ class TrajArchive(Archiver):
         return dataframe
 
     @classmethod
-    def from_archive(cls, archive_path: str | Path, **kwargs) -> Self:
-        data = cls.to_dict(archive_path)
+    def from_archive(
+        cls, archive_name: str | Path, group_key: str | None = None, **kwargs
+    ) -> Self:
+        with cls.load_archive(archive_name, group_key=group_key) as group:
+            data = cls.to_dict(group)
         constant_lattice = data.pop("constant_lattice")
         return cls(parsed_objects=data, all_lattices_equal=constant_lattice, **kwargs)
 
     @classmethod
     def to_pymatgen_trajectory(
-        cls, file_name: str | Path, group_key: str | None = None
+        cls, archive_name: str | Path, group_key: str | None = None
     ) -> PmgTrajectory:
         """Create a pymatgen Trajectory from an archive.
 
         Parameters
         -----------
-        file_name : str or Path
+        archive_name : str or Path
             Name of the archive to transform to a pymatgen Trajectory.
         group_key : str or None (default)
             If a str, the name of the hierarchical group within an HDF5/zarr
@@ -405,9 +392,9 @@ class TrajArchive(Archiver):
         pymatgen.core.trajectory.Trajectory object.
         """
 
-        data: dict[str | TrajectoryProperty, Any] = cls.to_dict(
-            file_name, group_key=group_key
-        )
+        with cls.load_archive(archive_name, group_key=group_key) as group:
+            data: dict[str | TrajectoryProperty, Any] = cls.to_dict(group)
+
         num_steps = len(data["fractional_coordinates"])
         if data["constant_lattice"]:
             structures = [
@@ -446,7 +433,7 @@ class TrajArchive(Archiver):
     @classmethod
     def to_ase_trajectory(
         cls,
-        file_name: str | Path,
+        archive_name: str | Path,
         ase_traj_file: str | Path | None = None,
         group_key: str | None = None,
     ) -> AseTrajReader:
@@ -455,7 +442,7 @@ class TrajArchive(Archiver):
 
         Parameters
         -----------
-        file_name : str or Path
+        archive_name : str or Path
             Name of the archive to transform to an ASE Trajectory.
         ase_traj_file : str, Path, or None (default)
             If not None, the name of the file to write the ASE trajectory to.
@@ -480,7 +467,8 @@ class TrajArchive(Archiver):
 
         ase_traj_file = ase_traj_file or NamedTemporaryFile().name
 
-        data = cls.to_dict(file_name, group_key=group_key)
+        with cls.load_archive(archive_name, group_key=group_key) as group:
+            data = cls.to_dict(group)
 
         for idx, coords in enumerate(data["fractional_coordinates"]):
             atoms = Atoms(symbols=data["species"], positions=coords, pbc=True)
