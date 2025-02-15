@@ -6,6 +6,7 @@ from emmet.core.serialization_adapters import (
     ir_dielectric_tensor_adapter,
     kpoint_adapter,
     lattice_adapter,
+    molecule_adapter,
     phonon_adapter,
     sites_adapter,
     species_adapter,
