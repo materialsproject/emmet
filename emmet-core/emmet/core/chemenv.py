@@ -321,7 +321,7 @@ class ChemEnvDoc(PropertyDoc):
         description="The structure used in the generation of the chemical environment data",
     )
 
-    valences: List[Union[int, float]] = Field(
+    valences: list[int] = Field(
         description="List of valences for each site in this material to determine cations"
     )
 
