@@ -3,6 +3,7 @@ import pytest
 from pymatgen.core import Structure
 
 from . import test_structures
+from emmet.core.arrow import cleanup_msonables
 from emmet.core.chemenv import ChemEnvDoc
 from emmet.core.utils import jsanitize
 
@@ -38,9 +39,11 @@ def test_chemenv_arrow_round_trip_serialization(
 
     sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
     test_arrow_doc = ChemEnvDoc(
-        **pa.array([sanitized_doc], type=ChemEnvDoc.as_arrow())
-        .to_pandas(maps_as_pydicts="strict")
-        .iloc[0]
+        **cleanup_msonables(
+            pa.array([sanitized_doc], type=ChemEnvDoc.as_arrow())
+            .to_pandas(maps_as_pydicts="strict")
+            .iloc[0],
+        )
     )
 
     assert doc == test_arrow_doc
