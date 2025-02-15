@@ -30,6 +30,7 @@ from pymatgen.io.vasp import (
     Vasprun,
     VolumetricData,
 )
+from typing_extensions import TypedDict
 
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
 from emmet.core.utils import ValueEnum, arrow_incompatible
@@ -76,12 +77,35 @@ class CalculationBaseModel(BaseModel):
         return getattr(self, key, default_value)
 
 
+class TypedStatisticsDict(TypedDict):
+    MEAN: float
+    ABSMEAN: float
+    VAR: float
+    MIN: float
+    MAX: float
+
+
+class TypedPotcarKeywordsDict(TypedDict):
+    headers: list[str]
+    data: list[str]
+
+
+class TypedPotcarStatsDict(TypedDict):
+    header: TypedStatisticsDict
+    data: TypedStatisticsDict
+
+
+class TypedPotcarSummaryStatsDict(TypedDict):
+    keywords: TypedPotcarKeywordsDict
+    stats: TypedPotcarStatsDict
+
+
 class PotcarSpec(BaseModel):
     """Document defining a VASP POTCAR specification."""
 
-    titel: Optional[str] = Field(None, description="TITEL field from POTCAR header")
-    hash: Optional[str] = Field(None, description="md5 hash of POTCAR file")
-    summary_stats: Optional[dict] = Field(
+    titel: str | None = Field(None, description="TITEL field from POTCAR header")
+    hash: str | None = Field(None, description="md5 hash of POTCAR file")
+    summary_stats: TypedPotcarSummaryStatsDict | None = Field(
         None, description="summary statistics used to ID POTCARs without hashing"
     )
 
