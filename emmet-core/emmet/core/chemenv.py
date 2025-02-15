@@ -1,4 +1,4 @@
-from typing import Literal, List, Union, Optional
+from typing import List, Literal, Optional, Union
 
 from pydantic import Field
 from pymatgen.analysis.chemenv.coordination_environments.chemenv_strategies import (
@@ -14,8 +14,7 @@ from pymatgen.analysis.chemenv.coordination_environments.structure_environments 
     LightStructureEnvironments,
 )
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
-from pymatgen.core.structure import Molecule
-from pymatgen.core.structure import Structure
+from pymatgen.core.structure import Molecule, Structure
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
@@ -322,7 +321,7 @@ class ChemEnvDoc(PropertyDoc):
         description="The structure used in the generation of the chemical environment data",
     )
 
-    valences: List[Union[int, float]] = Field(
+    valences: list[int] = Field(
         description="List of valences for each site in this material to determine cations"
     )
 
