@@ -11,6 +11,7 @@ from monty.json import MSONable
 from pydantic._internal._model_construction import ModelMetaclass
 
 import emmet.core.serialization_adapters
+from emmet.core.utils import jsanitize
 
 try:
     import pyarrow as pa
@@ -29,6 +30,27 @@ PY_PRIMITIVES_TO_ARROW = {
     bool: pa.bool_(),
     datetime: pa.timestamp("us"),
 }
+
+
+def remove_empty_keys(d):
+    for k, v in list(d.items()):
+        if isinstance(v, dict):
+            remove_empty_keys(v)
+        elif v is None:
+            del d[k]
+        elif isinstance(v, list):
+            for entry in v:
+                if isinstance(entry, dict):
+                    remove_empty_keys(entry)
+
+    return d
+
+
+def cleanup_msonables(d):
+    return {
+        k: remove_empty_keys(v) if isinstance(v, dict) and "@class" in v else v
+        for k, v in jsanitize(d, allow_bson=True).items()
+    }
 
 
 def arrowize(obj):
