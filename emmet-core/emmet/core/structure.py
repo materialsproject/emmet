@@ -1,7 +1,7 @@
 """Core definition of Structure and Molecule metadata."""
 from __future__ import annotations
 
-from typing import List, Optional, Type, TypeVar
+from typing import Optional, Type, TypeVar
 
 from pydantic import Field
 from pymatgen.core.composition import Composition
@@ -11,8 +11,9 @@ from pymatgen.core.structure import Molecule, Structure
 from emmet.core.utils import get_graph_hash
 from emmet.core.base import EmmetBaseModel
 from emmet.core.symmetry import PointGroupData, SymmetryData
+from emmet.core.structure_replicas import CompositionReplica, StructureReplica
 
-T = TypeVar("T", bound="StructureMetadata")
+T = TypeVar("T", bound="DbStructureMetadata")
 S = TypeVar("S", bound="MoleculeMetadata")
 
 try:
@@ -21,21 +22,21 @@ except Exception:
     openbabel = None
 
 
-class StructureMetadata(EmmetBaseModel):
+class DbStructureMetadata(EmmetBaseModel):
     """Mix-in class for structure metadata."""
 
     # Structure metadata
     nsites: Optional[int] = Field(
         None, description="Total number of sites in the structure."
     )
-    elements: Optional[List[Element]] = Field(
+    elements: Optional[list[Element]] = Field(
         None, description="List of elements in the material."
     )
     nelements: Optional[int] = Field(None, description="Number of elements.")
-    composition: Optional[Composition] = Field(
+    composition: Optional[CompositionReplica] = Field(
         None, description="Full composition for the material."
     )
-    composition_reduced: Optional[Composition] = Field(
+    composition_reduced: Optional[CompositionReplica] = Field(
         None,
         title="Reduced Composition",
         description="Simplified representation of the composition.",
@@ -75,11 +76,13 @@ class StructureMetadata(EmmetBaseModel):
         None, description="Symmetry data for this material."
     )
 
+    _use_pymatgen_rep: bool = False
+
     @classmethod
     def from_composition(
         cls: Type[T],
-        composition: Composition,
-        fields: Optional[List[str]] = None,
+        composition: Composition | CompositionReplica,
+        fields: Optional[list[str]] = None,
         **kwargs,
     ) -> T:
         fields = (
@@ -95,6 +98,11 @@ class StructureMetadata(EmmetBaseModel):
             if fields is None
             else fields
         )
+        if isinstance(composition, Composition) and not cls._use_pymatgen_rep:
+            composition = CompositionReplica.from_pymatgen(composition)
+        elif isinstance(composition, CompositionReplica) and cls._use_pymatgen_rep:
+            composition = composition.to_pymatgen()
+
         composition = composition.remove_charges()
 
         elsyms = sorted({e.symbol for e in composition.elements})
@@ -114,8 +122,8 @@ class StructureMetadata(EmmetBaseModel):
     @classmethod
     def from_structure(
         cls: Type[T],
-        meta_structure: Structure,
-        fields: Optional[List[str]] = None,
+        meta_structure: Structure | StructureReplica,
+        fields: Optional[list[str]] = None,
         **kwargs,
     ) -> T:
         fields = (
@@ -137,6 +145,11 @@ class StructureMetadata(EmmetBaseModel):
             else fields
         )
         comp = meta_structure.composition.remove_charges()
+        if isinstance(comp, Composition) and not cls._use_pymatgen_rep:
+            comp = CompositionReplica.from_pymatgen(comp)
+        elif isinstance(comp, CompositionReplica) and cls._use_pymatgen_rep:
+            comp = comp.to_pymatgen()
+
         elsyms = sorted({e.symbol for e in comp.elements})
         symmetry = SymmetryData.from_structure(meta_structure)
 
@@ -158,6 +171,20 @@ class StructureMetadata(EmmetBaseModel):
         return cls(**kwargs)
 
 
+class StructureMetadata(DbStructureMetadata):
+    """Pymatgen-object version of DbStructureMetadata."""
+
+    composition: Optional[Composition] = Field(
+        None, description="Full composition for the material."
+    )
+    composition_reduced: Optional[Composition] = Field(
+        None,
+        title="Reduced Composition",
+        description="Simplified representation of the composition.",
+    )
+    _use_pymatgen_rep: bool = True
+
+
 class MoleculeMetadata(EmmetBaseModel):
     """Mix-in class for molecule metadata."""
 
@@ -168,7 +195,7 @@ class MoleculeMetadata(EmmetBaseModel):
     natoms: Optional[int] = Field(
         None, description="Total number of atoms in the molecule"
     )
-    elements: Optional[List[Element]] = Field(
+    elements: Optional[list[Element]] = Field(
         None, description="List of elements in the molecule"
     )
     nelements: Optional[int] = Field(None, title="Number of Elements")
@@ -223,7 +250,7 @@ class MoleculeMetadata(EmmetBaseModel):
     def from_composition(
         cls: Type[S],
         comp: Composition,
-        fields: Optional[List[str]] = None,
+        fields: Optional[list[str]] = None,
         **kwargs,
     ) -> S:
         """
@@ -276,7 +303,7 @@ class MoleculeMetadata(EmmetBaseModel):
     def from_molecule(
         cls: Type[S],
         meta_molecule: Molecule,
-        fields: Optional[List[str]] = None,
+        fields: Optional[list[str]] = None,
         **kwargs,
     ) -> S:
         fields = (
