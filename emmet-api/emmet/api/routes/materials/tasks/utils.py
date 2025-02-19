@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 from fastapi import HTTPException
 from pymatgen.analysis.structure_analyzer import oxide_type
@@ -93,3 +93,61 @@ def task_to_entry(doc: dict, include_structure: bool = True):
         return "Problem obtaining entry for {}. It might be missing necessary output structure information.".format(
             doc["task_id"]
         )
+
+def chemsys_to_search(chemsys: str) -> Dict:
+    """
+    Converts a chemsys string to a search query
+
+    Args:
+        chemsys:A comma delimited string list of chemical systems
+            with wildcards in it for unknown elements
+
+    Returns:
+        A dictionary representing a search query
+    """
+    crit = {}
+
+    chemsys_list = [chemsys_val.strip() for chemsys_val in chemsys.split(",")]
+    
+    if "*" in chemsys:
+        if len(chemsys_list) > 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Wild cards only supported for single chemsys queries.",
+            )
+        else:
+            eles = chemsys_list[0].split("-")
+
+            crit["equals"] =  {
+                    "path": "nelements",
+                    "value": len(eles)
+                }
+
+            for el in eles:
+                if el != "*":
+                    crit["exists"] =  {
+                        "path": f"composition_reduced.{el}"
+                    }
+
+            return crit
+    else:
+        query_vals = []
+        for chemsys_val in chemsys_list:
+            eles = chemsys_val.split("-")
+            sorted_chemsys = "-".join(sorted(eles))
+            query_vals.append(sorted_chemsys)
+        if len(query_vals) == 1:
+            crit = {
+                    "equals": {
+                        "path": "chemsys",
+                        "value": query_vals[0]
+                        }
+                    }
+        else:
+            crit = {
+                    "in": {
+                        "path": "chemsys",
+                        "value": query_vals
+                        }
+                    }
+    return crit

@@ -62,6 +62,7 @@ Wildcards for unknown elements only supported for single chemsys queries",
         if chemsys:
             crit.update(chemsys_to_criteria(chemsys))
 
+        print("chemsys query", crit)
         return {"criteria": crit}
 
     def ensure_indexes(self):  # pragma: no cover

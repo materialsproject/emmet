@@ -2,9 +2,7 @@ from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 from maggma.api.resource import ReadOnlyResource
 
 from emmet.api.routes.materials.materials.query_operators import (
-    ChemsysQuery,
     ElementsQuery,
-    FormulaQuery,
 )
 from emmet.api.routes.materials.tasks.hint_scheme import TasksHintScheme
 from emmet.api.routes.materials.tasks.query_operators import (
@@ -13,24 +11,193 @@ from emmet.api.routes.materials.tasks.query_operators import (
     TrajectoryQuery,
     EntryQuery,
     LastUpdatedQuery,
+    TaskFormulaQuery,
+    TaskChemsysQuery,
+    TaskTypeQuery,
+    CalcTypeQuery,
+    RunTypeQuery,
 )
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 from emmet.core.tasks import DeprecationDoc, TaskDoc, TrajectoryDoc, EntryDoc
 
+
+from inspect import signature
+from typing import Any, Optional, Union
+
+import orjson
+from fastapi import Depends, HTTPException, Path, Request, Response
+from pydantic import BaseModel
+from pymongo import timeout as query_timeout
+from pymongo.errors import NetworkTimeout, PyMongoError
+
+from maggma.api.models import Meta
+from maggma.api.models import Response as ResponseModel
+from maggma.api.query_operator import PaginationQuery, QueryOperator, SparseFieldsQuery
+from maggma.api.resource import HeaderProcessor, HintScheme, Resource
+from maggma.api.resource.utils import attach_query_ops, generate_atlas_search_pipeline
+from maggma.api.utils import STORE_PARAMS, merge_atlas_querires, serialization_helper
+from maggma.core import Store
+from maggma.stores import MongoStore, S3Store
+
+
 timeout = MAPISettings().TIMEOUT
+
+class TaskReadOnlyResource(ReadOnlyResource):
+    """
+    Subclass for using Atlas Search for the task collection
+    We need to override the build_dynamic_model_search method to use Atlas Search,
+    In the future, we can make this more generic if we have Atlas search index 
+    for all other resources
+    """
+    def __init__(
+        self,
+        store: Store,
+        model: type[BaseModel],
+        tags: Optional[list[str]] = None,
+        query_operators: Optional[list[QueryOperator]] = None,
+        key_fields: Optional[list[str]] = None,
+        hint_scheme: Optional[HintScheme] = None,
+        header_processor: Optional[HeaderProcessor] = None,
+        query_to_configure_on_request: Optional[QueryOperator] = None,
+        timeout: Optional[int] = None,
+        enable_get_by_key: bool = False,
+        enable_default_search: bool = True,
+        disable_validation: bool = False,
+        query_disk_use: bool = False,
+        include_in_schema: Optional[bool] = True,
+        sub_path: Optional[str] = "/",
+    ):
+        super().__init__(
+            store=store,
+            model=model,
+            tags=tags,
+            query_operators=query_operators,
+            key_fields=key_fields,
+            hint_scheme=hint_scheme,
+            header_processor=header_processor,
+            query_to_configure_on_request=query_to_configure_on_request,
+            timeout=timeout,
+            enable_get_by_key=enable_get_by_key,
+            enable_default_search=enable_default_search,
+            disable_validation=disable_validation,
+            query_disk_use=query_disk_use,
+            include_in_schema=include_in_schema,
+            sub_path=sub_path,
+        )
+
+    def build_dynamic_model_search(self):
+        model_name = self.model.__name__
+
+        def search(**queries: dict[str, STORE_PARAMS]) -> Union[dict, Response]:
+            request: Request = queries.pop("request")  # type: ignore
+            temp_response: Response = queries.pop("temp_response")  # type: ignore
+
+            if self.query_to_configure_on_request is not None:
+                # give the key name "request", arbitrary choice, as only the value gets merged into the query
+                queries["groups"] = self.header_processor.configure_query_on_request(
+                    request=request, query_operator=self.query_to_configure_on_request
+                )
+            # allowed query parameters
+            query_params = [
+                entry for _, i in enumerate(self.query_operators) for entry in signature(i.query).parameters
+            ]
+            
+            # check for overlap between allowed query parameters and request query parameters
+            overlap = [key for key in request.query_params if key not in query_params]
+            if any(overlap):
+                if "limit" in overlap or "skip" in overlap:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="'limit' and 'skip' parameters have been renamed. "
+                        "Please update your API client to the newest version.",
+                    )
+                else:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Request contains query parameters which cannot be used: {}".format(", ".join(overlap)),
+                    )
+            query: dict[Any, Any] = merge_atlas_querires(list(queries.values()))  # TODO: Update merge_queries
+
+            self.store.connect()
+
+            try:
+                with query_timeout(self.timeout):
+                    if isinstance(self.store, S3Store):
+                        count = self.store.count(criteria=query.get("criteria"))  # type: ignore
+
+                        if self.query_disk_use:
+                            data = list(self.store.query(**query, allow_disk_use=True))  # type: ignore
+                        else:
+                            data = list(self.store.query(**query))
+                    else:
+                        pipeline = generate_atlas_search_pipeline(query)
+                        print("Piepline", pipeline)
+
+                        data = list(self.store._collection.aggregate(pipeline))
+                        
+
+            except (NetworkTimeout, PyMongoError) as e:
+                if e.timeout:
+                    raise HTTPException(
+                        status_code=504,
+                        detail="Server timed out trying to obtain data. Try again with a smaller request.",
+                    )
+                else:
+                    raise HTTPException(
+                        status_code=500,
+                        detail="Server timed out trying to obtain data. Try again with a smaller request,"
+                        " or remove sorting fields and sort data locally.",
+                    )
+
+            operator_meta = {}
+
+            for operator in self.query_operators:
+                data = operator.post_process(data, query)
+                operator_meta.update(operator.meta())
+
+            if data and 'meta' in data[0] and data[0]['meta']:
+                meta = Meta(total_doc=data[0]['meta'][0].get("count", {}).get("lowerBound", 1))
+            else:
+                meta = Meta(total_doc=0)
+
+            response = {"data": data[0]['docs'] if data else [], "meta": {**meta.dict(), **operator_meta}}  # type: ignore
+
+
+            if self.disable_validation:
+                response = Response(orjson.dumps(response, default=serialization_helper))  # type: ignore
+
+            if self.header_processor is not None:
+                if self.disable_validation:
+                    self.header_processor.process_header(response, request)
+                else:
+                    self.header_processor.process_header(temp_response, request)
+
+            return response
+        
+        self.router.get(
+            self.sub_path,
+            tags=self.tags,
+            summary=f"Get {model_name} documents",
+            response_model=self.response_model,
+            response_description=f"Search for a {model_name}",
+            response_model_exclude_unset=True,
+        )(attach_query_ops(search, self.query_operators))
 
 
 def task_resource(task_store):
-    resource = ReadOnlyResource(
+    resource = TaskReadOnlyResource(
         task_store,
         TaskDoc,
         query_operators=[
-            FormulaQuery(),
-            ChemsysQuery(),
+            TaskChemsysQuery(),
             ElementsQuery(),
             MultipleTaskIDsQuery(),
             LastUpdatedQuery(),
+            TaskFormulaQuery(),
+            TaskTypeQuery(),
+            CalcTypeQuery(),
+            RunTypeQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 TaskDoc,
@@ -44,7 +211,6 @@ def task_resource(task_store):
         timeout=timeout,
         disable_validation=True,
     )
-
     return resource
 
 
@@ -99,5 +265,4 @@ def entries_resource(task_store):
         timeout=timeout,
         disable_validation=True,
     )
-
     return resource
