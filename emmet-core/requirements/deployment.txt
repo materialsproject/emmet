@@ -42,7 +42,6 @@ numpy==1.26.4
     # via
     #   -r python/requirements.txt
     #   contourpy
-    #   emmet-core (emmet/emmet-core/setup.py)
     #   matplotlib
     #   monty
     #   pandas
