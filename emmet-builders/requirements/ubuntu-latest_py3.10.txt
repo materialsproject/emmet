@@ -19,9 +19,9 @@ attrs==25.1.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.36.19
+boto3==1.36.24
     # via maggma
-botocore==1.36.19
+botocore==1.36.24
     # via
     #   boto3
     #   s3transfer
@@ -55,7 +55,7 @@ fonttools==4.56.0
     # via matplotlib
 griddataformats==1.0.2
     # via mdanalysis
-h5py==3.12.1
+h5py==3.13.0
     # via phonopy
 idna==3.10
     # via requests
@@ -133,7 +133,7 @@ monty==2025.1.9
     #   robocrys
 more-itertools==10.6.0
     # via inflect
-mp-api==0.45.1
+mp-api==0.45.2
     # via robocrys
 mp-pyrho==0.4.5
     # via pymatgen-analysis-defects
@@ -146,7 +146,7 @@ msgpack==1.1.0
     #   maggma
     #   mmtf-python
     #   mp-api
-narwhals==1.26.0
+narwhals==1.27.1
     # via plotly
 networkx==3.4.2
     # via
@@ -252,7 +252,7 @@ pydantic-settings==2.7.1
     #   maggma
 pydash==8.0.5
     # via maggma
-pymatgen==2025.1.9
+pymatgen==2025.2.18
     # via
     #   emmet-core
     #   matcalc
@@ -310,7 +310,7 @@ requests==2.32.3
     #   pymatgen
 robocrys==0.2.10
     # via emmet-core
-rpds-py==0.22.3
+rpds-py==0.23.0
     # via
     #   jsonschema
     #   referencing
@@ -324,11 +324,11 @@ ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
 s3transfer==0.11.2
     # via boto3
-scikit-image==0.25.1
+scikit-image==0.25.2
     # via pymatgen-analysis-defects
 scikit-learn==1.6.1
     # via matminer
-scipy==1.15.1
+scipy==1.15.2
     # via
     #   ase
     #   griddataformats
@@ -382,7 +382,7 @@ threadpoolctl==3.5.0
     # via
     #   mdanalysis
     #   scikit-learn
-tifffile==2025.1.10
+tifffile==2025.2.18
     # via scikit-image
 tomli==2.2.1
     # via pytest
@@ -392,7 +392,7 @@ tqdm==4.67.1
     #   matminer
     #   mdanalysis
     #   pymatgen
-typeguard==4.4.1
+typeguard==4.4.2
     # via inflect
 typing-extensions==4.12.2
     # via
