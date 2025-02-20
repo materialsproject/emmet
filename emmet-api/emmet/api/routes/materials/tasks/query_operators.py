@@ -11,8 +11,7 @@ from fastapi import Query
 from typing import Optional
 from monty.json import jsanitize
 
-FACETS_PARAMS = {"facets":    
-                     {
+FACETS_PARAMS ={
                         "calc_typeFacet": {
                             "type": "string",
                             "path": "calc_type",
@@ -21,8 +20,11 @@ FACETS_PARAMS = {"facets":
                             "type": "string",
                             "path": "task_type",
                         },
-                    }
-}
+                        "run_typeFacet": {
+                            "type": "string",
+                            "path": "run_type",
+                        },
+                }
 class LastUpdatedQuery(QueryOperator):
     def query(
         self,
@@ -249,8 +251,7 @@ class TaskFormulaQuery(QueryOperator):
                         }
                     }
 
-        return {"criteria": crit, 
-                **FACETS_PARAMS
+        return {"criteria": crit
         }
 
 class TaskChemsysQuery(QueryOperator):
@@ -265,8 +266,7 @@ class TaskChemsysQuery(QueryOperator):
         if chemsys:
             crit = chemsys_to_search(chemsys)
 
-        return {"criteria": crit,
-                **FACETS_PARAMS
+        return {"criteria": crit
         }
 
 class TaskTypeQuery(QueryOperator):
@@ -285,8 +285,7 @@ class TaskTypeQuery(QueryOperator):
                     "value": task_type
                 }
             }
-        return {"criteria": crit,
-                **FACETS_PARAMS
+        return {"criteria": crit
         }
 
 class CalcTypeQuery(QueryOperator):
@@ -305,8 +304,7 @@ class CalcTypeQuery(QueryOperator):
                     "value": calc_type,
                 }
             } 
-        return {"criteria": crit,
-                **FACETS_PARAMS
+        return {"criteria": crit
         }
     
 class RunTypeQuery(QueryOperator):
@@ -325,7 +323,30 @@ class RunTypeQuery(QueryOperator):
                     "value": run_type
                 }
             } 
-        return {"criteria": crit,
-                **FACETS_PARAMS
+        return {"criteria": crit
         }
     
+class FacetQuery(QueryOperator):
+    def query(
+        self,
+        facets: Optional[str] = Query(
+            None, description="Facets query to return facets meta information"
+        ),
+    ) -> STORE_PARAMS:
+        facets = {
+        }
+        if facets:
+            facets_list = [facet.strip() for facet in facets.split(",")] 
+            for f in facets_list:
+                facets.update(
+                    {
+                        f"{f}Facet": {
+                            "type": "string",
+                            "path": f,
+                        }
+                    }
+                )
+        else:
+            facets = {**FACETS_PARAMS}
+        return {"facets": facets}
+        

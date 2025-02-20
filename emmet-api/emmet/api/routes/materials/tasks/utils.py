@@ -122,12 +122,14 @@ def chemsys_to_search(chemsys: str) -> Dict:
                     "path": "nelements",
                     "value": len(eles)
                 }
-
-            for el in eles:
+            
+            crit["exists"] = []
+            for el in eles:    
                 if el != "*":
-                    crit["exists"] =  {
+                    crit["exists"].append({
                         "path": f"composition_reduced.{el}"
                     }
+                    )
 
             return crit
     else:
