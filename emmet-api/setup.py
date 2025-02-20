@@ -17,7 +17,7 @@ setup(
         "gunicorn",
         "boto3",
         "maggma[api]",
-        "ddtrace",
+        "ddtrace<3",
         "setproctitle",
         "shapely",
         "asgi-logger",
