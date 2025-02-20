@@ -25,6 +25,7 @@ from emmet.core.utils import ValueEnum, utcnow
 from emmet.core.vasp.calculation import Calculation, VaspObject
 from emmet.core.vasp.task_valid import TaskState
 
+
 class NebMethod(ValueEnum):
     """Common methods for NEB calculations.
 
@@ -34,6 +35,7 @@ class NebMethod(ValueEnum):
     STANDARD = "standard"
     CLIMBING_IMAGE = "climbing_image"
     APPROX = "approxNEB"
+
 
 class HopFailureReason(ValueEnum):
     """Define failure modes for ApproxNEB calculations."""
@@ -46,20 +48,34 @@ class HopFailureReason(ValueEnum):
 class BarrierAnalysis(BaseModel):
     """Define analysis schema for barrier calculations."""
 
-    energies : list[float] = Field(description="The energies of each frame along the reaction coordinate.")
-    frame_index : list[float] | None = Field(None, description="The fractional index along the reaction coordinate, between 0 and 1.")
-    cubic_spline_pars : list[list[float]] | None = Field(None, description="Parameters of the cubic spline used to fit the energies.")
-    ts_frame_index : float | None = Field(None, description="The fractional index of the reaction coordinate.")
-    ts_energy : float | None = Field(None,description="The energy at the transition state.")
-    ts_in_frames : bool | None = Field(None, description="Whether the transition state is one of the computed snapshots.")
-    forward_barrier : float | None = Field(None,description="The forwards barrier.")
-    reverse_barrier : float | None = Field(None,description="The reverse barrier.")
+    energies: list[float] = Field(
+        description="The energies of each frame along the reaction coordinate."
+    )
+    frame_index: list[float] | None = Field(
+        None,
+        description="The fractional index along the reaction coordinate, between 0 and 1.",
+    )
+    cubic_spline_pars: list[list[float]] | None = Field(
+        None, description="Parameters of the cubic spline used to fit the energies."
+    )
+    ts_frame_index: float | None = Field(
+        None, description="The fractional index of the reaction coordinate."
+    )
+    ts_energy: float | None = Field(
+        None, description="The energy at the transition state."
+    )
+    ts_in_frames: bool | None = Field(
+        None,
+        description="Whether the transition state is one of the computed snapshots.",
+    )
+    forward_barrier: float | None = Field(None, description="The forwards barrier.")
+    reverse_barrier: float | None = Field(None, description="The reverse barrier.")
 
     @classmethod
     def from_energies(
         cls,
         energies: Sequence[float],
-        spline_kwargs: dict[str,Any] | None = None,
+        spline_kwargs: dict[str, Any] | None = None,
         frame_match_tol: float = 1.0e-6,
     ) -> Self:
         """
@@ -91,9 +107,9 @@ class BarrierAnalysis(BaseModel):
         analysis["ts_frame_index"] = -1
         analysis["ts_energy"] = -np.inf
         for crit_point in crit_points:
-            if (energy := spline_fit(crit_point)) > analysis["ts_energy"] and spline_fit(
-                crit_point, 2
-            ) <= 0.0:
+            if (energy := spline_fit(crit_point)) > analysis[
+                "ts_energy"
+            ] and spline_fit(crit_point, 2) <= 0.0:
                 analysis["ts_frame_index"] = crit_point
                 analysis["ts_energy"] = float(energy)
 
@@ -107,9 +123,10 @@ class BarrierAnalysis(BaseModel):
 
         return cls(**analysis)
 
+
 class NebResult(BaseModel):
     """Container class to store high-level NEB calculation info.
-    
+
     This is intended to be code-agnostic, whereas NebTaskDoc
     is VASP-specific.
     """
@@ -170,9 +187,13 @@ class NebResult(BaseModel):
         ):
             self.barrier_analysis = BarrierAnalysis.from_energies(self.energies)
             for k in ("forward", "reverse"):
-                setattr(self, f"{k}_barrier", getattr(self.barrier_analysis,f"{k}_barrier",None))
+                setattr(
+                    self,
+                    f"{k}_barrier",
+                    getattr(self.barrier_analysis, f"{k}_barrier", None),
+                )
         return self
-    
+
 
 class NebTaskDoc(NebResult):
     """Define schema for VASP NEB tasks."""
@@ -187,7 +208,7 @@ class NebTaskDoc(NebResult):
     endpoint_calculations: list[Calculation] | None = Field(
         None, description="Calculation information for the endpoint structures"
     )
-    endpoint_objects: list[dict[VaspObject,Any]] | None = Field(
+    endpoint_objects: list[dict[VaspObject, Any]] | None = Field(
         None, description="VASP objects for each endpoint calculation."
     )
     endpoint_directories: list[str] | None = Field(
@@ -235,13 +256,13 @@ class NebTaskDoc(NebResult):
         None, description="Timestamp for when this task was completed"
     )
 
-    task_label : str | None = Field(
-        None, description = "Label for the NEB calculation(s)."
+    task_label: str | None = Field(
+        None, description="Label for the NEB calculation(s)."
     )
 
-    def model_post_init(self, __context : Any) -> None:
+    def model_post_init(self, __context: Any) -> None:
         """Ensure base model fields are populated for analysis."""
-        
+
         if self.energies is None:
             if self.endpoint_energies is not None:
                 self.energies = [  # type: ignore[misc]
@@ -272,7 +293,11 @@ class NebTaskDoc(NebResult):
                     calc.input.structure for calc in self.image_calculations
                 ]
 
-            self.initial_images = [ep_structures[0], *intermed_structs, ep_structures[1]]
+            self.initial_images = [
+                ep_structures[0],
+                *intermed_structs,
+                ep_structures[1],
+            ]
 
     @classmethod
     def from_directory(
@@ -438,6 +463,7 @@ class NebTaskDoc(NebResult):
             endpoint_directories=endpoint_directories,
             **neb_task_doc_kwargs,
         )
+
 
 class NebPathwayResult(BaseModel):  # type: ignore[call-arg]
     """Class for containing multiple NEB calculations, as along a reaction pathway."""
