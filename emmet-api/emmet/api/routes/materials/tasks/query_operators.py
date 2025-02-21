@@ -69,17 +69,6 @@ class MultipleTaskIDsQuery(QueryOperator):
                 }
 
         return {"criteria": crit, 
-                "facets":    
-                     {
-                        "calc_typeFacet": {
-                            "type": "string",
-                            "path": "calc_type",
-                        },
-                        "task_typeFacet": {
-                            "type": "string",
-                            "path": "task_type",
-                        },
-                    }
         }
 
     def post_process(self, docs, query):
@@ -325,7 +314,26 @@ class RunTypeQuery(QueryOperator):
             } 
         return {"criteria": crit
         }
-    
+class BatchQuery(QueryOperator):
+    def query(
+        self,
+        batches: Optional[str] = Query(
+            None, description="Comma-separated list of batch ids to query on"
+        ),
+    ) -> STORE_PARAMS:
+        crit = {
+        }
+        if batches:
+            batch_list = [b.strip() for b in batches.split(",")]
+            crit = {
+                "in": {
+                    "path": "batch_id",
+                    "value": batch_list
+                }
+            } 
+        return {"criteria": crit
+        }
+
 class FacetQuery(QueryOperator):
     def query(
         self,
@@ -333,12 +341,12 @@ class FacetQuery(QueryOperator):
             None, description="Facets query to return facets meta information"
         ),
     ) -> STORE_PARAMS:
-        facets = {
+        crit = {
         }
         if facets:
-            facets_list = [facet.strip() for facet in facets.split(",")] 
+            facets_list = [facet.strip() for facet in facets.split(",")]
             for f in facets_list:
-                facets.update(
+                crit.update(
                     {
                         f"{f}Facet": {
                             "type": "string",
@@ -347,6 +355,6 @@ class FacetQuery(QueryOperator):
                     }
                 )
         else:
-            facets = {**FACETS_PARAMS}
-        return {"facets": facets}
+            crit = {**FACETS_PARAMS}
+        return {"facets": crit}
         

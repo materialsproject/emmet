@@ -16,6 +16,7 @@ from emmet.api.routes.materials.tasks.query_operators import (
     TaskTypeQuery,
     CalcTypeQuery,
     RunTypeQuery,
+    BatchQuery,
     FacetQuery,
 )
 from emmet.api.core.global_header import GlobalHeaderProcessor
@@ -199,6 +200,7 @@ def task_resource(task_store):
             TaskTypeQuery(),
             CalcTypeQuery(),
             RunTypeQuery(),
+            BatchQuery(),
             FacetQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
