@@ -21,11 +21,11 @@ attrs==25.1.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.36.25
+boto3==1.36.26
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.36.25
+botocore==1.36.26
     # via
     #   boto3
     #   s3transfer
@@ -47,7 +47,7 @@ cryptography==44.0.1
     # via paramiko
 cycler==0.12.1
     # via matplotlib
-ddtrace==2.21.1
+ddtrace==2.21.2
     # via emmet-api (emmet/emmet-api/setup.py)
 deprecated==1.2.18
     # via opentelemetry-api
@@ -114,7 +114,7 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.1.0
     # via maggma
-narwhals==1.27.1
+narwhals==1.28.0
     # via plotly
 networkx==3.4.2
     # via
@@ -181,7 +181,7 @@ pydantic==2.10.6
     #   pydantic-settings
 pydantic-core==2.27.2
     # via pydantic
-pydantic-settings==2.7.1
+pydantic-settings==2.8.0
     # via
     #   emmet-core
     #   maggma
@@ -225,7 +225,7 @@ referencing==0.36.2
     #   jsonschema-specifications
 requests==2.32.3
     # via pymatgen
-rpds-py==0.23.0
+rpds-py==0.23.1
     # via
     #   jsonschema
     #   referencing
@@ -247,7 +247,7 @@ scipy==1.15.2
     #   scikit-image
 sentinels==1.0.0
     # via mongomock
-setproctitle==1.3.4
+setproctitle==1.3.5
     # via emmet-api (emmet/emmet-api/setup.py)
 shapely==2.0.7
     # via
