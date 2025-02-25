@@ -40,9 +40,10 @@ class NebMethod(ValueEnum):
 class HopFailureReason(ValueEnum):
     """Define failure modes for ApproxNEB calculations."""
 
-    ENDPOINT = "Endpoint structure relaxation failed"
+    ENDPOINT = "Endpoint structure relaxation failed."
     MIN_DIST = "Linear distance traversed by working ion is below threshold."
-    MIN_IMAGE = "Too few image calculations succeeded"
+    MIN_IMAGE = "Too few image calculations succeeded."
+    IMAGE_FAILURE = "No image calculation output."
 
 
 class BarrierAnalysis(BaseModel):
@@ -177,6 +178,14 @@ class NebResult(BaseModel):
         None, description="Analysis of the reaction barrier."
     )
 
+    failure_reasons: list[HopFailureReason] | None = Field(
+        None, description="Reasons why the barrier calculation failed."
+    )
+
+    tags: list[str] | None = Field(
+        None, description="List of string metadata about the calculation."
+    )
+
     @model_validator(mode="after")
     def set_barriers(self) -> Self:
         """Perform analysis on barrier if needed."""
@@ -193,6 +202,12 @@ class NebResult(BaseModel):
                     getattr(self.barrier_analysis, f"{k}_barrier", None),
                 )
         return self
+
+    @property
+    def barrier_energy_range(self) -> float | None:
+        """The maximum computed energy minus the minimum computed energy along the path."""
+        if self.energies:
+            return max(self.energies) - min(self.energies)
 
 
 class NebTaskDoc(NebResult):
