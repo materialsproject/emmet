@@ -134,7 +134,6 @@ class TaskReadOnlyResource(ReadOnlyResource):
                             data = list(self.store.query(**query))
                     else:
                         pipeline = generate_atlas_search_pipeline(query)
-                        print("Piepline", pipeline)
 
                         data = list(self.store._collection.aggregate(pipeline))
                         
@@ -159,7 +158,8 @@ class TaskReadOnlyResource(ReadOnlyResource):
                 operator_meta.update(operator.meta())
 
             if data and 'meta' in data[0] and data[0]['meta']:
-                meta = Meta(total_doc=data[0]['meta'][0].get("count", {}).get("lowerBound", 1))
+                meta = Meta(total_doc=data[0]['meta'][0].get("count", {}).get("lowerBound", 1),
+                            facet = data[0]['meta'][0].get("facet", {}))
             else:
                 meta = Meta(total_doc=0)
 
