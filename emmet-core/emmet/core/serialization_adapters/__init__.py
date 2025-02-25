@@ -12,4 +12,5 @@ from emmet.core.serialization_adapters import (
     species_adapter,
     structure_adapter,
     trajectory_adapter,
+    xas_adapter,
 )
