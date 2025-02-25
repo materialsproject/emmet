@@ -426,9 +426,19 @@ def generate_derived_fitting_data(
     Get the derived fitting data from symmetry operations on the primary fitting data.
 
     It can happen that multiple primary deformations can be mapped to the same derived
-    deformation from different symmetry operations. In such cases, the stress for a
-    derived deformation is the average of all derived stresses, each corresponding to a
-    primary calculation. In doing so, we also check to ensure that:
+    deformation from different symmetry operations. Ideally, this cannot happen if one
+    use the same structure to determine all the symmetry operations.
+
+    However, this is not the case in atomate, where the deformation tasks are determined
+    based on the symmetry of the structure before the tight relaxation, which in this
+    function the structure is the relaxed structure. The symmetries can be different.
+
+    In atomate2, this is not a problem, because the deformation tasks are determined
+    based on the relaxed structure.
+
+    To make it work for all cases, the stress for a derived deformation is the average
+    of all derived stresses, each corresponding to a primary calculation.
+    In doing so, we also check to ensure that:
     1. only independent derived deformations are used
     2. for a specific derived strain, a primary deformation is only used (mapped)
        once to obtain the average
