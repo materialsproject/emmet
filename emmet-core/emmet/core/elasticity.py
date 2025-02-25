@@ -331,9 +331,7 @@ class ElasticityDoc(PropertyDoc):
                 derived_props = get_derived_properties(structure, elastic_tensor)
 
                 # check all
-                state, warnings = sanity_check(
-                    structure, et_doc, fitting_strains, derived_props  # type: ignore
-                )
+                state, warnings = sanity_check(structure, et_doc, fitting_strains, derived_props)  # type: ignore
 
             except np.linalg.LinAlgError as e:
                 ct_doc = None
@@ -422,24 +420,15 @@ def generate_derived_fitting_data(
     strains: List[Strain],
     stresses: List[Stress],
     symprec=SETTINGS.SYMPREC,
+    tol: float = 0.002,
 ) -> Tuple[List[Deformation], List[Strain], List[Stress], List[Stress]]:
     """
     Get the derived fitting data from symmetry operations on the primary fitting data.
 
     It can happen that multiple primary deformations can be mapped to the same derived
-    deformation from different symmetry operations. Ideally, this cannot happen if one
-    use the same structure to determine all the symmetry operations.
-
-    However, this is not the case in atomate, where the deformation tasks are determined
-    based on the symmetry of the structure before the tight relaxation, which in this
-    function the structure is the relaxed structure. The symmetries can be different.
-
-    In atomate2, this is not a problem, because the deformation tasks are determined
-    based on the relaxed structure.
-
-    To make it work for all cases, the stress for a derived deformation is the average
-    of all derived stresses, each corresponding to a primary calculation.
-    In doing so, we also check to ensure that:
+    deformation from different symmetry operations. In such cases, the stress for a
+    derived deformation is the average of all derived stresses, each corresponding to a
+    primary calculation. In doing so, we also check to ensure that:
     1. only independent derived deformations are used
     2. for a specific derived strain, a primary deformation is only used (mapped)
        once to obtain the average
@@ -449,6 +438,10 @@ def generate_derived_fitting_data(
         strains: primary strains
         stresses: primary stresses
         symprec: symmetry operation precision
+        tol: tolerance for comparing strains and also for determining whether the
+            deformation corresponds to the train is independent. The elastic workflow
+            use a minimum strain of 0.005, so the default tolerance of 0.002 should be
+            able to distinguish different strain states.
 
     Returns:
         derived_deforms: derived deformations
@@ -460,16 +453,27 @@ def generate_derived_fitting_data(
     symmops = sga.get_symmetry_operations(cartesian=True)
 
     # primary strain mapping (used only for checking purpose below)
-    p_mapping = TensorMapping(strains, strains)
+    p_mapping = TensorMapping(strains, strains, tol=tol)
+
+    # Warnings:
+    # Do not use deformations to replace strains in generating the derived fitting
+    # data. More specifically, do not create TensorMapping using deformation. This is
+    # because the Lagrangian strain is symmetric, but the deformation gradient is not.
+    # Then, more derived data can be generated than enough/necessary, due to the
+    # asymmetry of the deformation gradient.
 
     # generated derived deforms
-    mapping = TensorMapping()
+    mapping = TensorMapping(tol=tol)
     for i, p_strain in enumerate(strains):
         for op in symmops:
             d_strain = p_strain.transform(op)
 
             # sym op generates another primary strain
             if d_strain in p_mapping:
+                continue
+
+            # sym op generates a non-independent deform
+            if not d_strain.get_deformation_matrix().is_independent(tol=tol):
                 continue
 
             # seen this derived deform before
