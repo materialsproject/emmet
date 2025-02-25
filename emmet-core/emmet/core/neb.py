@@ -517,3 +517,11 @@ class NebPathwayResult(BaseModel):  # type: ignore[call-arg]
             idx: max(self.forward_barriers[idx], self.reverse_barriers[idx])
             for idx in self.forward_barriers
         }
+
+    @property
+    def barrier_ranges(self) -> dict[str,float | None]:
+        """Retrieve the max minus min computed energy along each hop."""
+        return {
+            idx : neb_calc.barrier_energy_range
+            for idx, neb_calc in self.hops.items()
+        }
