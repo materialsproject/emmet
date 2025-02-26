@@ -21,11 +21,11 @@ attrs==25.1.0
     #   referencing
 bcrypt==4.2.1
     # via paramiko
-boto3==1.36.26
+boto3==1.37.1
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.36.26
+botocore==1.37.1
     # via
     #   boto3
     #   s3transfer
@@ -55,7 +55,7 @@ dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.6rc4
+emmet-core==0.84.6rc5
     # via emmet-api (emmet/emmet-api/setup.py)
 envier==0.6.1
     # via ddtrace
@@ -124,7 +124,6 @@ numpy==1.26.4
     # via
     #   -r python/requirements.txt
     #   contourpy
-    #   emmet-core
     #   imageio
     #   maggma
     #   matplotlib
@@ -187,7 +186,7 @@ pydantic-settings==2.8.0
     #   maggma
 pydash==8.0.5
     # via maggma
-pymatgen==2025.2.18
+pymatgen==2025.1.9
     # via
     #   emmet-core
     #   mp-pyrho
