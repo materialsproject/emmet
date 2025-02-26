@@ -37,9 +37,7 @@ def test_neb_doc(test_dir, from_dir: bool):
     assert neb_doc.num_images == 3
     assert len(neb_doc.image_structures) == neb_doc.num_images
     assert len(neb_doc.energies) == neb_doc.num_images
-    assert (
-        len(neb_doc.images) == neb_doc.num_images + 2
-    )  # always includes endpoints
+    assert len(neb_doc.images) == neb_doc.num_images + 2  # always includes endpoints
     assert isinstance(neb_doc.orig_inputs, OrigInputs)
 
     # test that NEB image calculations are all VASP Calculation objects
@@ -100,7 +98,7 @@ def test_from_directories(test_dir):
     assert isinstance(neb_doc.barrier_analysis, BarrierAnalysis)
 
     assert all(
-        getattr(neb_doc.barrier_analysis,k,None) is not None
+        getattr(neb_doc.barrier_analysis, k, None) is not None
         for k in (
             "energies",
             "frame_index",
@@ -115,6 +113,6 @@ def test_from_directories(test_dir):
 
     assert all(
         getattr(neb_doc, f"{direction}_barrier")
-        == getattr(neb_doc.barrier_analysis, f"{direction}_barrier",None)
+        == getattr(neb_doc.barrier_analysis, f"{direction}_barrier", None)
         for direction in ("forward", "reverse")
     )
