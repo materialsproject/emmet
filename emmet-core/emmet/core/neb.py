@@ -210,13 +210,13 @@ class NebResult(BaseModel):
         """The maximum computed energy minus the minimum computed energy along the path."""
         if self.energies:
             return max(self.energies) - min(self.energies)
+        return None  # mypy is not happy with implicit `None` return
 
 
 class NebTaskDoc(NebResult):
     """Define schema for VASP NEB tasks."""
 
     endpoint_structures: list[Structure] = Field(
-        None,
         description="The initial and final configurations (reactants and products) of the barrier.",
     )
     endpoint_energies: list[float] | None = Field(
@@ -241,9 +241,11 @@ class NebTaskDoc(NebResult):
     image_calculations: list[Calculation] | None = Field(
         None, description="Full calculation output for the NEB images."
     )
-    dir_name: str = Field(None, description="Top-level NEB calculation directory.")
+    dir_name: str | None = Field(
+        None, description="Top-level NEB calculation directory."
+    )
 
-    image_directories: list[str] = Field(
+    image_directories: list[str] | None = Field(
         None, description="List of the directories where the NEB images are located"
     )
     image_objects: dict[int, dict[VaspObject, Any]] | None = Field(
@@ -317,8 +319,8 @@ class NebTaskDoc(NebResult):
             ]
 
     @property
-    def num_images(self) -> int:
-        return len(self.image_structures)
+    def num_images(self) -> int | None:
+        return len(self.image_structures) if self.image_structures else None
 
     @classmethod
     def from_directory(
@@ -490,15 +492,15 @@ class NebPathwayResult(BaseModel):  # type: ignore[call-arg]
     """Class for containing multiple NEB calculations, as along a reaction pathway."""
 
     hops: dict[str, NebResult] = Field(
-        None, description="Dict of NEB calculations included in this calculation"
+        description="Dict of NEB calculations included in this calculation"
     )
 
     forward_barriers: dict[str, float] = Field(
-        None, description="Dict of the forward barriers computed here."
+        description="Dict of the forward barriers computed here."
     )
 
     reverse_barriers: dict[str, float] = Field(
-        None, description="Dict of the reverse barriers computed here."
+        description="Dict of the reverse barriers computed here."
     )
 
     identifier: str | None = Field(None, description="Identifier for the calculation.")
