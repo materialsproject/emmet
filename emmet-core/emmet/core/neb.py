@@ -316,6 +316,10 @@ class NebTaskDoc(NebResult):
                 ep_structures[1],
             ]
 
+    @property
+    def num_images(self) -> int:
+        return len(self.image_structures)
+
     @classmethod
     def from_directory(
         cls,
