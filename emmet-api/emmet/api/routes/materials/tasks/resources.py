@@ -35,15 +35,16 @@ from pymongo.errors import NetworkTimeout, PyMongoError
 
 from maggma.api.models import Meta
 from maggma.api.models import Response as ResponseModel
-from maggma.api.query_operator import PaginationQuery, QueryOperator, SparseFieldsQuery
+from maggma.api.query_operator import PaginationQuery, QueryOperator, SparseFieldsQuery, SortQuery
 from maggma.api.resource import HeaderProcessor, HintScheme, Resource
 from maggma.api.resource.utils import attach_query_ops, generate_atlas_search_pipeline
 from maggma.api.utils import STORE_PARAMS, merge_atlas_querires, serialization_helper
 from maggma.core import Store
 from maggma.stores import MongoStore, S3Store
 
-
+settings = MAPISettings()  # type: ignore
 timeout = MAPISettings().TIMEOUT
+sort_fields = ["nelements", "chemsys", "formula_pretty", "task_id"]
 
 class TaskReadOnlyResource(ReadOnlyResource):
     """
@@ -134,7 +135,6 @@ class TaskReadOnlyResource(ReadOnlyResource):
                             data = list(self.store.query(**query))
                     else:
                         pipeline = generate_atlas_search_pipeline(query)
-
                         data = list(self.store._collection.aggregate(pipeline))
                         
 
@@ -202,6 +202,7 @@ def task_resource(task_store):
             RunTypeQuery(),
             BatchQuery(),
             FacetQuery(),
+            SortQuery(fields=sort_fields, max_num=1),
             PaginationQuery(),
             SparseFieldsQuery(
                 TaskDoc,
