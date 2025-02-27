@@ -315,13 +315,72 @@ class Phonon(StructureMetadata):
     )
 
 
+class TypedBaseInputDict(TypedDict):
+    charge: float
+    chksymbreak: int
+    ecut: float
+    fband: float
+    kptopt: int
+    nband: int
+    nbdbuf: int
+    ngkpt: list[int]
+    nshiftk: int
+    nspden: int
+    nspinor: int
+    nsppol: int
+    nstep: int
+    pawecutdg: float
+    shiftk: list[list[float]]
+    tolvrs: float
+
+
+class TypedDdBaseDict(TypedBaseInputDict):
+    chkprim: int
+    nqpt: int
+    qpt: list[int]
+    rfdir: list[int]
+    rfelfd: int
+
+
+class TypedDdeInputDict(TypedDdBaseDict):
+    prtwf: int
+
+
+class TypedDdkInputDict(TypedDdBaseDict):
+    iscf: float
+
+
+class TypedPhononInputDict(TypedDdeInputDict):
+    rfatpol: list[int]
+
+
+class TypedPseudopotentialsDict(TypedDict):
+    md5: list[str]
+    name: list[str]
+
+
+class TypedAbinitInputVars(TypedDict):
+    dde_input: TypedDdeInputDict
+    ddk_input: TypedDdkInputDict
+    ecut: float
+    gs_input: TypedBaseInputDict
+    ngkpt: list[int]
+    ngqpt: list[int]
+    occopt: int
+    phonon_input: TypedPhononInputDict
+    pseudopotentials: TypedPseudopotentialsDict
+    shiftk: list[list[float]]
+    tsmear: int
+    wfq_input: TypedBaseInputDict  # have to guess here without an example entry
+
+
 class AbinitPhonon(Phonon):
     """
     Definition for a document with data produced from a phonon calculation
     with Abinit.
     """
 
-    abinit_input_vars: Optional[dict] = Field(
+    abinit_input_vars: TypedAbinitInputVars | None = Field(
         None,
         description="Dict representation of the inputs used to obtain the phonon"
         "properties and the main general options (e.g. number of "
