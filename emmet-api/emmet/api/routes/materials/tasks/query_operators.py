@@ -35,13 +35,14 @@ class LastUpdatedQuery(QueryOperator):
             None, description="Maximum last updated UTC datetime"
         ),
     ) -> STORE_PARAMS:
-        crit: dict = defaultdict(dict)
+        crit = {}
 
-        if last_updated_min:
-            crit["last_updated"]["$gte"] = last_updated_min
-
-        if last_updated_max:
-            crit["last_updated"]["$lte"] = last_updated_max
+        if last_updated_min or last_updated_max:
+            crit["range"] = {"path" : "last_updated"}
+            if last_updated_min:
+                crit["range"]["gte"] = last_updated_min
+            if last_updated_max:
+                crit["range"]["lte"] = last_updated_max
 
         return {"criteria": crit}
 
