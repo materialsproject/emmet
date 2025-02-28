@@ -5,11 +5,11 @@ Settings for defaults in the core definitions of Materials Project Documents
 """
 import json
 from pathlib import Path
-from typing import Type, TypeVar, Union, List, Dict
+from typing import Type, TypeVar, Union
 
 import requests
 from monty.json import MontyDecoder
-from pydantic import field_validator, model_validator, Field, ImportString
+from pydantic import Field, ImportString, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_CONFIG_FILE_PATH = str(Path.home().joinpath(".emmet.json"))
@@ -62,7 +62,7 @@ class EmmetSettings(BaseSettings):
         description="Maximum miller allowed for computing strain direction for maximal piezo response",
     )
 
-    QCHEM_FUNCTIONAL_QUALITY_SCORES: Dict[str, int] = Field(
+    QCHEM_FUNCTIONAL_QUALITY_SCORES: dict[str, int] = Field(
         {
             "wB97M-V": 7,
             "wB97X-V": 6,
@@ -78,7 +78,7 @@ class EmmetSettings(BaseSettings):
         description="Dictionary mapping Q-Chem density functionals to a quality score.",
     )
 
-    QCHEM_BASIS_QUALITY_SCORES: Dict[str, int] = Field(
+    QCHEM_BASIS_QUALITY_SCORES: dict[str, int] = Field(
         {
             "6-31g*": 1,
             "def2-SVPD": 2,
@@ -91,12 +91,12 @@ class EmmetSettings(BaseSettings):
         description="Dictionary mapping Q-Chem basis sets to a quality score.",
     )
 
-    QCHEM_SOLVENT_MODEL_QUALITY_SCORES: Dict[str, int] = Field(
+    QCHEM_SOLVENT_MODEL_QUALITY_SCORES: dict[str, int] = Field(
         {"CMIRS": 7, "SMD": 5, "ISOSVP": 4, "PCM": 3, "VACUUM": 1},
         description="Dictionary mapping Q-Chem solvent models to a quality score.",
     )
 
-    QCHEM_TASK_QUALITY_SCORES: Dict[str, int] = Field(
+    QCHEM_TASK_QUALITY_SCORES: dict[str, int] = Field(
         {
             "single_point": 1,
             "geometry optimization": 2,
@@ -105,7 +105,7 @@ class EmmetSettings(BaseSettings):
         description="Dictionary mapping Q-Chem task type to a quality score",
     )
 
-    VASP_STRUCTURE_QUALITY_SCORES: Dict[str, int] = Field(
+    VASP_STRUCTURE_QUALITY_SCORES: dict[str, int] = Field(
         {"r2SCAN": 5, "SCAN": 4, "GGA+U": 3, "GGA": 2, "PBEsol": 1},
         description="Dictionary Mapping VASP calculation run types to rung level for VASP materials builder structure data",  # noqa: E501
     )
@@ -120,11 +120,11 @@ class EmmetSettings(BaseSettings):
         description="Relative tolerance for kspacing to still be a valid task document",
     )
 
-    VASP_MAX_MAGMOM: Dict[str, float] = Field(
+    VASP_MAX_MAGMOM: dict[str, float] = Field(
         {"Cr": 5}, description="Maximum permitted magnetic moments by element type."
     )
 
-    VASP_DEFAULT_INPUT_SETS: Dict[str, ImportString] = Field(
+    VASP_DEFAULT_INPUT_SETS: dict[str, ImportString] = Field(
         {
             "GGA Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
             "GGA+U Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
@@ -157,7 +157,7 @@ class EmmetSettings(BaseSettings):
         True, description="Whether to validate POTCAR stat values."
     )
 
-    VASP_CHECKED_LDAU_FIELDS: List[str] = Field(
+    VASP_CHECKED_LDAU_FIELDS: list[str] = Field(
         ["LDAUU", "LDAUJ", "LDAUL"], description="LDAU fields to validate for tasks"
     )
 
