@@ -6,7 +6,7 @@ from collections import defaultdict
 from datetime import datetime
 from enum import Enum
 from math import isnan
-from typing import Dict, List, Optional, Type, TypeVar, Union
+from typing import Type, TypeVar
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -48,7 +48,7 @@ class BSObjectDoc(BaseModel):
     Band object document.
     """
 
-    task_id: Optional[MPID] = Field(
+    task_id: MPID | None = Field(
         None,
         description="The source calculation (task) ID that this band structure comes from. "
         "This has the same form as a Materials Project ID.",
@@ -69,7 +69,7 @@ class DOSObjectDoc(BaseModel):
     DOS object document.
     """
 
-    task_id: Optional[MPID] = Field(
+    task_id: MPID | None = Field(
         None,
         description="The source calculation (task) ID that this density of states comes from. "
         "This has the same form as a Materials Project ID.",
@@ -80,7 +80,7 @@ class DOSObjectDoc(BaseModel):
         default_factory=utcnow,
     )
 
-    data: Optional[CompleteDos] = Field(
+    data: CompleteDos | None = Field(
         None, description="The density of states object for the given calculation ID."
     )
 
@@ -95,14 +95,14 @@ class ElectronicStructureBaseData(BaseModel):
     band_gap: float = Field(..., description="Band gap energy in eV.")
     cbm: float | None = Field(None, description="Conduction band minimum data.")
     vbm: float | None = Field(None, description="Valence band maximum data.")
-    efermi: Optional[float] = Field(None, description="Fermi energy in eV.")
+    efermi: float | None = Field(None, description="Fermi energy in eV.")
 
 
 class ElectronicStructureSummary(ElectronicStructureBaseData):
     is_gap_direct: bool = Field(..., description="Whether the band gap is direct.")
     is_metal: bool = Field(..., description="Whether the material is a metal.")
 
-    magnetic_ordering: Union[str, Ordering] = Field(
+    magnetic_ordering: str | Ordering = Field(
         ..., description="Magnetic ordering of the calculation."
     )
 
@@ -127,57 +127,59 @@ class BandStructureSummaryData(ElectronicStructureSummary):
 
 
 class DosSummaryData(ElectronicStructureBaseData):
-    spin_polarization: Optional[float] = Field(
+    spin_polarization: float | None = Field(
         None, description="Spin polarization at the fermi level."
     )
 
 
 class BandstructureData(BaseModel):
-    setyawan_curtarolo: Optional[BandStructureSummaryData] = Field(
+    setyawan_curtarolo: BandStructureSummaryData | None = Field(
         None,
         description="Band structure summary data using the Setyawan-Curtarolo path convention.",
     )
 
-    hinuma: Optional[BandStructureSummaryData] = Field(
+    hinuma: BandStructureSummaryData | None = Field(
         None,
         description="Band structure summary data using the Hinuma et al. path convention.",
     )
 
-    latimer_munro: Optional[BandStructureSummaryData] = Field(
+    latimer_munro: BandStructureSummaryData | None = Field(
         None,
         description="Band structure summary data using the Latimer-Munro path convention.",
     )
 
 
 class DosData(BaseModel):
-    total: Optional[Dict[Union[Spin, str], DosSummaryData]] = Field(
+    total: dict[Spin | str, DosSummaryData] | None = Field(
         None, description="Total DOS summary data."
     )
 
-    elemental: Optional[
-        Dict[
+    elemental: (
+        dict[
             Element,
-            Dict[
-                Union[Literal["total", "s", "p", "d", "f"], OrbitalType],
-                Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
+            dict[
+                Literal["total", "s", "p", "d", "f"] | OrbitalType,
+                dict[Literal["1", "-1"] | Spin, DosSummaryData],
             ],
         ]
-    ] = Field(
+        | None
+    ) = Field(
         None,
         description="Band structure summary data using the Hinuma et al. path convention.",
     )
 
-    orbital: Optional[
-        Dict[
-            Union[Literal["total", "s", "p", "d", "f"], OrbitalType],
-            Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
+    orbital: (
+        dict[
+            Literal["total", "s", "p", "d", "f"] | OrbitalType,
+            dict[Literal["1", "-1"] | Spin, DosSummaryData],
         ]
-    ] = Field(
+        | None
+    ) = Field(
         None,
         description="Band structure summary data using the Latimer-Munro path convention.",
     )
 
-    magnetic_ordering: Optional[Union[Ordering, str]] = Field(
+    magnetic_ordering: Ordering | str | None = Field(
         None, description="Magnetic ordering of the calculation."
     )
 
@@ -192,11 +194,11 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
     property_name: str = "electronic_structure"
 
-    bandstructure: Optional[BandstructureData] = Field(
+    bandstructure: BandstructureData | None = Field(
         None, description="Band structure data for the material."
     )
 
-    dos: Optional[DosData] = Field(
+    dos: DosData | None = Field(
         None, description="Density of states data for the material."
     )
 
@@ -209,14 +211,14 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
     def from_bsdos(  # type: ignore[override]
         cls: Type[T],
         material_id: MPID,
-        dos: Dict[MPID, CompleteDos],
+        dos: dict[MPID, CompleteDos],
         is_gap_direct: bool,
         is_metal: bool,
-        origins: List[dict] = [],
-        structures: Optional[Dict[MPID, Structure]] = None,
-        setyawan_curtarolo: Optional[Dict[MPID, BandStructureSymmLine]] = None,
-        hinuma: Optional[Dict[MPID, BandStructureSymmLine]] = None,
-        latimer_munro: Optional[Dict[MPID, BandStructureSymmLine]] = None,
+        origins: list[dict] = [],
+        structures: dict[MPID, Structure] | None = None,
+        setyawan_curtarolo: dict[MPID, BandStructureSymmLine] | None = None,
+        hinuma: dict[MPID, BandStructureSymmLine] | None = None,
+        latimer_munro: dict[MPID, BandStructureSymmLine] | None = None,
         **kwargs,
     ) -> T:
         """
