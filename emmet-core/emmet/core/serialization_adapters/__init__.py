@@ -4,6 +4,7 @@ from emmet.core.serialization_adapters import (
     composition_adapter,
     computed_structure_entry_adapter,
     diffraction_pattern_adapter,
+    dos_adapter,
     ir_dielectric_tensor_adapter,
     kpoint_adapter,
     lattice_adapter,
