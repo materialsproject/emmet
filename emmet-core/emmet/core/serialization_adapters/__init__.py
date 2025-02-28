@@ -1,5 +1,6 @@
 from emmet.core.serialization_adapters import (
     balanced_reaction_adapter,
+    bandstructure_symm_line_adapter,
     composition_adapter,
     computed_structure_entry_adapter,
     diffraction_pattern_adapter,
