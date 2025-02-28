@@ -6,8 +6,10 @@ from emmet.api.routes.materials.tasks.utils import (
     calcs_reversed_to_trajectory,
     task_to_entry,
 )
+from pymatgen.core.periodic_table import Element
+
 from emmet.api.routes.materials.tasks.utils import chemsys_to_search
-from fastapi import Query
+from fastapi import Query, HTTPException
 from typing import Optional
 from monty.json import jsanitize
 
@@ -277,6 +279,55 @@ class TaskTypeQuery(QueryOperator):
             }
         return {"criteria": crit
         }
+
+class TaskElementsQuery(QueryOperator):
+    def query(
+        self,
+        elements: Optional[str] = Query(
+            None, description="Comma-separated list of elements to query on"
+        ),
+        exclude_elements: Optional[str] = Query(
+            None, description="Comma-separated list of elements to exclude from query")
+    ) -> STORE_PARAMS:
+        crit = {
+        }
+        if elements:
+            try:
+                eles = [Element(e) for e in elements.strip().split(",")]
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Please provide a valid comma-seperated list of elements",
+                )
+            
+            crit["exists"] = []
+            for el in eles:    
+                crit["exists"].append({
+                    "path": f"composition_reduced.{el}"
+                }
+                )
+            
+            return {"criteria": crit
+            }
+    
+        if exclude_elements:
+            try:
+                eles = [Element(e) for e in exclude_elements.strip().split(",")]
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Please provide a comma-seperated list of elements",
+                )
+            
+            crit["mustNot"] = []
+            for ele in eles:
+                crit["mustNot"].append({
+                    "exists": {
+                    "path": f"composition_reduced.{ele}"
+                }
+                }
+                )
+        return {"criteria": crit}
 
 class CalcTypeQuery(QueryOperator):
     def query(

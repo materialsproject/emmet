@@ -13,6 +13,7 @@ from emmet.api.routes.materials.tasks.query_operators import (
     LastUpdatedQuery,
     TaskFormulaQuery,
     TaskChemsysQuery,
+    TaskElementsQuery,
     TaskTypeQuery,
     CalcTypeQuery,
     RunTypeQuery,
@@ -193,7 +194,7 @@ def task_resource(task_store):
         TaskDoc,
         query_operators=[
             TaskChemsysQuery(),
-            ElementsQuery(),
+            TaskElementsQuery(),
             MultipleTaskIDsQuery(),
             LastUpdatedQuery(),
             TaskFormulaQuery(),
