@@ -19,13 +19,13 @@ attrs==25.1.0
     #   jsonlines
     #   jsonschema
     #   referencing
-bcrypt==4.2.1
+bcrypt==4.3.0
     # via paramiko
-boto3==1.37.2
+boto3==1.37.4
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.37.2
+botocore==1.37.4
     # via
     #   boto3
     #   s3transfer
@@ -59,7 +59,7 @@ emmet-core==0.84.6rc5
     # via emmet-api (emmet/emmet-api/setup.py)
 envier==0.6.1
     # via ddtrace
-fastapi==0.115.8
+fastapi==0.115.10
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
@@ -97,7 +97,7 @@ lazy-loader==0.4
     # via scikit-image
 maggma[api]==0.71.4
     # via emmet-api (emmet/emmet-api/setup.py)
-matplotlib==3.10.0
+matplotlib==3.10.1
     # via
     #   -r python/requirements.txt
     #   pymatgen
@@ -180,7 +180,7 @@ pydantic==2.10.6
     #   pydantic-settings
 pydantic-core==2.27.2
     # via pydantic
-pydantic-settings==2.8.0
+pydantic-settings==2.8.1
     # via
     #   emmet-core
     #   maggma
@@ -262,7 +262,7 @@ spglib==2.5.0
     # via pymatgen
 sshtunnel==0.4.0
     # via maggma
-starlette==0.45.3
+starlette==0.46.0
     # via fastapi
 sympy==1.13.3
     # via pymatgen
