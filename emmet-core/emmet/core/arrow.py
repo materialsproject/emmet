@@ -9,6 +9,7 @@ from typing import Any, ForwardRef, _eval_type, _UnionGenericAlias
 import typing_extensions
 from monty.json import MSONable
 from pydantic._internal._model_construction import ModelMetaclass
+from pydantic.types import ImportString
 
 import emmet.core.serialization_adapters
 from emmet.core.utils import jsanitize
@@ -129,6 +130,9 @@ def arrowize(obj):
                 for field_name, value in obj.model_fields.items()
             ]
         )
+
+    if obj is ImportString:
+        return PY_PRIMITIVES_TO_ARROW[str]
 
     if isinstance(obj, typing._TypedDictMeta | typing_extensions._TypedDictMeta):
         return pa.struct(
