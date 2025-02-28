@@ -17,11 +17,11 @@ attrs==25.1.0
     #   jsonlines
     #   jsonschema
     #   referencing
-bcrypt==4.2.1
+bcrypt==4.3.0
     # via paramiko
-boto3==1.37.1
+boto3==1.37.4
     # via maggma
-botocore==1.37.1
+botocore==1.37.4
     # via
     #   boto3
     #   s3transfer
@@ -96,7 +96,7 @@ matminer==0.9.3
     # via
     #   emmet-builders (setup.py)
     #   robocrys
-matplotlib==3.10.0
+matplotlib==3.10.1
     # via
     #   ase
     #   mdanalysis
@@ -131,7 +131,7 @@ monty==2025.1.9
     #   robocrys
 more-itertools==10.6.0
     # via inflect
-mp-api==0.45.2
+mp-api==0.45.3
     # via robocrys
 mp-pyrho==0.4.5
     # via pymatgen-analysis-defects
@@ -214,7 +214,7 @@ pathsimanalysis==1.2.0
     # via mdanalysis
 patsy==1.0.1
     # via statsmodels
-phonopy==2.37.0
+phonopy==2.37.1
     # via matcalc
 pillow==11.1.0
     # via
@@ -244,7 +244,7 @@ pydantic==2.10.6
     #   pydantic-settings
 pydantic-core==2.27.2
     # via pydantic
-pydantic-settings==2.8.0
+pydantic-settings==2.8.1
     # via
     #   emmet-core
     #   maggma
@@ -320,7 +320,7 @@ ruamel-yaml==0.18.10
     #   robocrys
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-s3transfer==0.11.2
+s3transfer==0.11.3
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
