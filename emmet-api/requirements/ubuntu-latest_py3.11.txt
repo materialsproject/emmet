@@ -19,13 +19,13 @@ attrs==25.1.0
     #   jsonlines
     #   jsonschema
     #   referencing
-bcrypt==4.2.1
+bcrypt==4.3.0
     # via paramiko
-boto3==1.37.1
+boto3==1.37.4
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.37.1
+botocore==1.37.4
     # via
     #   boto3
     #   s3transfer
@@ -47,7 +47,7 @@ cryptography==44.0.1
     # via paramiko
 cycler==0.12.1
     # via matplotlib
-ddtrace==2.21.2
+ddtrace==2.21.3
     # via emmet-api (setup.py)
 deprecated==1.2.18
     # via opentelemetry-api
@@ -59,7 +59,7 @@ emmet-core==0.84.6rc5
     # via emmet-api (setup.py)
 envier==0.6.1
     # via ddtrace
-fastapi==0.115.8
+fastapi==0.115.10
     # via
     #   emmet-api (setup.py)
     #   maggma
@@ -97,7 +97,7 @@ lazy-loader==0.4
     # via scikit-image
 maggma[api]==0.71.4
     # via emmet-api (setup.py)
-matplotlib==3.10.0
+matplotlib==3.10.1
     # via pymatgen
 mongomock==4.3.0
     # via maggma
@@ -176,7 +176,7 @@ pydantic==2.10.6
     #   pydantic-settings
 pydantic-core==2.27.2
     # via pydantic
-pydantic-settings==2.8.0
+pydantic-settings==2.8.1
     # via
     #   emmet-core
     #   maggma
@@ -231,7 +231,7 @@ ruamel-yaml==0.18.10
     #   pymatgen
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-s3transfer==0.11.2
+s3transfer==0.11.3
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
@@ -257,7 +257,7 @@ spglib==2.5.0
     # via pymatgen
 sshtunnel==0.4.0
     # via maggma
-starlette==0.45.3
+starlette==0.46.0
     # via fastapi
 sympy==1.13.3
     # via pymatgen
