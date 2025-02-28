@@ -113,6 +113,10 @@ class MatPESTrainDoc(MLTrainDoc):
         None, description="The uncorrected cohesive energy per atom."
     )
 
+    abs_forces: list[float] | None = Field(
+        None, description="The magnitude of the interatomic force on each site."
+    )
+
     bader_charges: list[float] | None = Field(
         None, description="Bader charges on each site of the structure."
     )
