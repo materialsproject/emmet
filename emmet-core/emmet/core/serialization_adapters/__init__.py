@@ -1,4 +1,5 @@
 from emmet.core.serialization_adapters import (
+    alloy_adapter,
     balanced_reaction_adapter,
     bandstructure_symm_line_adapter,
     composition_adapter,
