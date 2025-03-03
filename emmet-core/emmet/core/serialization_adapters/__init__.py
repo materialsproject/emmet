@@ -15,6 +15,7 @@ from emmet.core.serialization_adapters import (
     sites_adapter,
     species_adapter,
     structure_adapter,
+    structure_graph_adapter,
     trajectory_adapter,
     xas_adapter,
 )
