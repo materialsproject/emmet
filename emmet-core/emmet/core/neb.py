@@ -505,9 +505,36 @@ class NebPathwayResult(BaseModel):  # type: ignore[call-arg]
 
     identifier: str | None = Field(None, description="Identifier for the calculation.")
 
+    tags: list[str] | None = Field(
+        None, description="List of string metadata about the calculation."
+    )
+
+    host_structure: Structure | None = Field(
+        None, description="The structure without active/mobile site(s)."
+    )
+
+    host_formula: str | None = Field(
+        None,
+        description="The chemical formula of the structure without active site(s).",
+    )
+
+    host_formula_reduced: str | None = Field(
+        None,
+        description="The reduced chemical formula of the structure without active site(s).",
+    )
+
+    host_chemsys: str | None = Field(
+        None,
+        description="The chemical system for the structure without active site(s).",
+    )
+
+    active_species: str = Field(
+        None, description="The formula of the active/mobile species."
+    )
+
     @model_validator(mode="after")
-    def set_barriers(self) -> Self:
-        """Set barriers if needed."""
+    def set_top_levels(self) -> Self:
+        """Set barriers and host structure metadata, if needed."""
         for direction in ("forward", "reverse"):
             if getattr(self, f"{direction}_barriers", None) is None:
                 setattr(
@@ -518,6 +545,12 @@ class NebPathwayResult(BaseModel):  # type: ignore[call-arg]
                         for idx, neb_calc in self.hops.items()
                     },
                 )
+
+        if self.host_structure is not None:
+            self.host_formula = self.host_structure.formula
+            self.host_formula_reduced = self.host_structure.reduced_formula
+            self.host_chemsys = self.host_structure.chemical_system
+
         return self
 
     @property
