@@ -528,7 +528,7 @@ class NebPathwayResult(BaseModel):  # type: ignore[call-arg]
         description="The chemical system for the structure without active site(s).",
     )
 
-    active_species: str = Field(
+    active_species: str | None = Field(
         None, description="The formula of the active/mobile species."
     )
 
