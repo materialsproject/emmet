@@ -12,6 +12,7 @@ from emmet.core.serialization_adapters import (
     kpoint_adapter,
     lattice_adapter,
     molecule_adapter,
+    phase_diagram_adapter,
     phonon_adapter,
     sites_adapter,
     species_adapter,
