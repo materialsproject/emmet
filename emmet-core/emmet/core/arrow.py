@@ -66,6 +66,10 @@ def arrowize(obj):
         typing.Tuple,
     ), f"Cannot construct arrow type from container of type {RED}{obj}{RESET} without typed arguments"
 
+    assert (
+        obj is not Any
+    ), f"Cannot infer arrow type from: {RED}{obj}{RESET}, ambiguous ({BLUE}Any{RESET}) values cannot be resolved"
+
     if obj in PY_PRIMITIVES_TO_ARROW:
         return PY_PRIMITIVES_TO_ARROW[obj]
 
@@ -74,21 +78,28 @@ def arrowize(obj):
         if len(args) == 1:
             return pa.list_(arrowize(args[0]))
 
-        for member in args:
-            assert (
-                member is args[0]
-            ), f"Cannot construct arrow array from from list with mixed types: {RED}{args}{RESET}"
+        if all([member == args[0] for member in args]):
+            return pa.list_(arrowize(args[0]), len(args))
 
-        return pa.list_(arrowize(args[0]), len(args))
+        return pa.dense_union(
+            [
+                pa.field(f"child_{idx}", arrowize(field))
+                for idx, field, in zip(range(len(args)), args)
+            ]
+        )
 
     if typing.get_origin(obj) in (Mapping, dict):
         args = typing.get_args(obj)
-
-        assert args[1] is not Any and not isinstance(
-            args[1], UnionType | _UnionGenericAlias
-        ), f"Cannot construct arrow map type from: {RED}{obj}{RESET}, mixed ({BLUE}Unions{RESET}) or ambiguous ({BLUE}Any{RESET}) values cannot be resolved"
-
         key_type = arrowize(args[0])
+
+        assert not isinstance(
+            key_type, pa.UnionType
+        ), f"""
+        Cannot construct arrow map type from: {RED}{obj}{RESET}.
+        Keys for maps must resolve to single primitive data type,
+        not pyarrow UnionType: {BLUE}{key_type}{RESET}
+        """
+
         return pa.map_(key_type, arrowize(args[1]))
 
     if typing.get_origin(obj) is typing.Literal:
@@ -96,7 +107,7 @@ def arrowize(obj):
         first_type = type(args[0])
 
         assert all(
-            type(member) is first_type for member in args
+            isinstance(member, first_type) for member in args
         ), f"Cannot infer arrow compatible primitive from literal with mixed types: {RED}{obj}{RESET}"
 
         return PY_PRIMITIVES_TO_ARROW[first_type]
@@ -107,7 +118,7 @@ def arrowize(obj):
         return PY_PRIMITIVES_TO_ARROW[str]
 
     if isinstance(obj, _UnionGenericAlias | UnionType):
-        primitives = [
+        arrow_types = [
             arrowize(arg)
             for arg in list(
                 filter(
@@ -117,11 +128,15 @@ def arrowize(obj):
             )
         ]
 
-        assert all(
-            arg == primitives[0] for arg in primitives
-        ), f"Cannot construct arrow type from mixed union type: {RED}{obj}{RESET}. Resolves to: {BLUE}{primitives}{RESET}"
+        if all(arg == arrow_types[0] for arg in arrow_types):
+            return arrow_types[0]
 
-        return primitives[0]
+        return pa.dense_union(
+            [
+                pa.field(f"child_{idx}", field)
+                for idx, field, in zip(range(len(arrow_types)), arrow_types)
+            ]
+        )
 
     if isinstance(obj, ModelMetaclass):
         return pa.struct(
