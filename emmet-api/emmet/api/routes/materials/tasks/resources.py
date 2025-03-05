@@ -1,10 +1,6 @@
 from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 from maggma.api.resource import ReadOnlyResource
 
-from emmet.api.routes.materials.materials.query_operators import (
-    ElementsQuery,
-)
-from emmet.api.routes.materials.tasks.hint_scheme import TasksHintScheme
 from emmet.api.routes.materials.tasks.query_operators import (
     DeprecationQuery,
     MultipleTaskIDsQuery,
@@ -29,31 +25,37 @@ from inspect import signature
 from typing import Any, Optional, Union
 
 import orjson
-from fastapi import Depends, HTTPException, Path, Request, Response
+from fastapi import HTTPException, Request, Response
 from pydantic import BaseModel
 from pymongo import timeout as query_timeout
 from pymongo.errors import NetworkTimeout, PyMongoError
 
 from maggma.api.models import Meta
-from maggma.api.models import Response as ResponseModel
-from maggma.api.query_operator import PaginationQuery, QueryOperator, SparseFieldsQuery, SortQuery
-from maggma.api.resource import HeaderProcessor, HintScheme, Resource
+from maggma.api.query_operator import (
+    PaginationQuery,
+    QueryOperator,
+    SparseFieldsQuery,
+    SortQuery,
+)
+from maggma.api.resource import HeaderProcessor
 from maggma.api.resource.utils import attach_query_ops, generate_atlas_search_pipeline
 from maggma.api.utils import STORE_PARAMS, merge_atlas_querires, serialization_helper
 from maggma.core import Store
-from maggma.stores import MongoStore, S3Store
+from maggma.stores import S3Store
 
 settings = MAPISettings()  # type: ignore
 timeout = MAPISettings().TIMEOUT
 sort_fields = ["nelements", "chemsys", "formula_pretty", "task_id"]
 
+
 class TaskReadOnlyResource(ReadOnlyResource):
     """
     Subclass for using Atlas Search for the task collection
     We need to override the build_dynamic_model_search method to use Atlas Search,
-    In the future, we can make this more generic if we have Atlas search index 
+    In the future, we can make this more generic if we have Atlas search index
     for all other resources
     """
+
     def __init__(
         self,
         store: Store,
@@ -61,7 +63,6 @@ class TaskReadOnlyResource(ReadOnlyResource):
         tags: Optional[list[str]] = None,
         query_operators: Optional[list[QueryOperator]] = None,
         key_fields: Optional[list[str]] = None,
-        hint_scheme: Optional[HintScheme] = None,
         header_processor: Optional[HeaderProcessor] = None,
         query_to_configure_on_request: Optional[QueryOperator] = None,
         timeout: Optional[int] = None,
@@ -78,7 +79,6 @@ class TaskReadOnlyResource(ReadOnlyResource):
             tags=tags,
             query_operators=query_operators,
             key_fields=key_fields,
-            hint_scheme=hint_scheme,
             header_processor=header_processor,
             query_to_configure_on_request=query_to_configure_on_request,
             timeout=timeout,
@@ -104,9 +104,11 @@ class TaskReadOnlyResource(ReadOnlyResource):
                 )
             # allowed query parameters
             query_params = [
-                entry for _, i in enumerate(self.query_operators) for entry in signature(i.query).parameters
+                entry
+                for _, i in enumerate(self.query_operators)
+                for entry in signature(i.query).parameters
             ]
-            
+
             # check for overlap between allowed query parameters and request query parameters
             overlap = [key for key in request.query_params if key not in query_params]
             if any(overlap):
@@ -119,16 +121,20 @@ class TaskReadOnlyResource(ReadOnlyResource):
                 else:
                     raise HTTPException(
                         status_code=400,
-                        detail="Request contains query parameters which cannot be used: {}".format(", ".join(overlap)),
+                        detail="Request contains query parameters which cannot be used: {}".format(
+                            ", ".join(overlap)
+                        ),
                     )
-            query: dict[Any, Any] = merge_atlas_querires(list(queries.values()))  # TODO: Update merge_queries
+            query: dict[Any, Any] = merge_atlas_querires(
+                list(queries.values())
+            )  # TODO: Update merge_queries
 
             self.store.connect()
 
             try:
                 with query_timeout(self.timeout):
                     if isinstance(self.store, S3Store):
-                        count = self.store.count(criteria=query.get("criteria"))  # type: ignore
+                        self.store.count(criteria=query.get("criteria"))  # type: ignore
 
                         if self.query_disk_use:
                             data = list(self.store.query(**query, allow_disk_use=True))  # type: ignore
@@ -137,7 +143,6 @@ class TaskReadOnlyResource(ReadOnlyResource):
                     else:
                         pipeline = generate_atlas_search_pipeline(query)
                         data = list(self.store._collection.aggregate(pipeline))
-                        
 
             except (NetworkTimeout, PyMongoError) as e:
                 if e.timeout:
@@ -158,14 +163,15 @@ class TaskReadOnlyResource(ReadOnlyResource):
                 data = operator.post_process(data, query)
                 operator_meta.update(operator.meta())
 
-            if data and 'meta' in data[0] and data[0]['meta']:
-                meta = Meta(total_doc=data[0]['meta'][0].get("count", {}).get("lowerBound", 1),
-                            facet = data[0]['meta'][0].get("facet", {}))
+            if data and "meta" in data[0] and data[0]["meta"]:
+                meta = Meta(
+                    total_doc=data[0]["meta"][0].get("count", {}).get("lowerBound", 1),
+                    facet=data[0]["meta"][0].get("facet", {}),
+                )
             else:
                 meta = Meta(total_doc=0)
 
-            response = {"data": data[0]['docs'] if data else [], "meta": {**meta.dict(), **operator_meta}}  # type: ignore
-
+            response = {"data": data[0]["docs"] if data else [], "meta": {**meta.dict(), **operator_meta}}  # type: ignore
 
             if self.disable_validation:
                 response = Response(orjson.dumps(response, default=serialization_helper))  # type: ignore
@@ -177,7 +183,7 @@ class TaskReadOnlyResource(ReadOnlyResource):
                     self.header_processor.process_header(temp_response, request)
 
             return response
-        
+
         self.router.get(
             self.sub_path,
             tags=self.tags,
@@ -211,7 +217,6 @@ def task_resource(task_store):
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
-        hint_scheme=TasksHintScheme(),
         tags=["Materials Tasks"],
         sub_path="/tasks/",
         timeout=timeout,
