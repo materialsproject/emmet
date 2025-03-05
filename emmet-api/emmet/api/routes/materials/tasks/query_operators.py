@@ -1,5 +1,4 @@
 from datetime import datetime
-from collections import defaultdict
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
 from emmet.api.routes.materials.tasks.utils import (
@@ -13,20 +12,22 @@ from fastapi import Query, HTTPException
 from typing import Optional
 from monty.json import jsanitize
 
-FACETS_PARAMS ={
-                        "calc_typeFacet": {
-                            "type": "string",
-                            "path": "calc_type",
-                        },
-                        "task_typeFacet": {
-                            "type": "string",
-                            "path": "task_type",
-                        },
-                        "run_typeFacet": {
-                            "type": "string",
-                            "path": "run_type",
-                        },
-                }
+FACETS_PARAMS = {
+    "calc_typeFacet": {
+        "type": "string",
+        "path": "calc_type",
+    },
+    "task_typeFacet": {
+        "type": "string",
+        "path": "task_type",
+    },
+    "run_typeFacet": {
+        "type": "string",
+        "path": "run_type",
+    },
+}
+
+
 class LastUpdatedQuery(QueryOperator):
     def query(
         self,
@@ -40,7 +41,7 @@ class LastUpdatedQuery(QueryOperator):
         crit = {}
 
         if last_updated_min or last_updated_max:
-            crit["range"] = {"path" : "last_updated"}
+            crit["range"] = {"path": "last_updated"}
             if last_updated_min:
                 crit["range"]["gte"] = last_updated_min
             if last_updated_max:
@@ -60,18 +61,13 @@ class MultipleTaskIDsQuery(QueryOperator):
             None, description="Comma-separated list of task_ids to query on"
         ),
     ) -> STORE_PARAMS:
-        crit = {
-        }
+        crit = {}
         if task_ids:
             task_ids = [task_id.strip() for task_id in task_ids.split(",")]
-            crit = {
-                "in": {
-                       "path": "task_id",
-                        "value": task_ids
-                    }
-                }
+            crit = {"in": {"path": "task_id", "value": task_ids}}
 
-        return {"criteria": crit, 
+        return {
+            "criteria": crit,
         }
 
     def post_process(self, docs, query):
@@ -212,6 +208,7 @@ class DeprecationQuery(QueryOperator):
 
         return d
 
+
 class TaskFormulaQuery(QueryOperator):
     """
     Method to generate a query on search docs using multiple task_id values
@@ -223,28 +220,19 @@ class TaskFormulaQuery(QueryOperator):
             None, description="Comma-separated list of formula to query on"
         ),
     ) -> STORE_PARAMS:
-        crit = {
-        }
+        crit = {}
 
         if formula:
             formula_pretty = [formula.strip() for formula in formula.split(",")]
             if len(formula_pretty) == 1:
                 crit = {
-                    "equals": {
-                        "path": "formula_pretty",
-                            "value": formula_pretty[0]
-                        }
-                    }
+                    "equals": {"path": "formula_pretty", "value": formula_pretty[0]}
+                }
             else:
-                crit = {
-                    "in": {
-                        "path": "formula_pretty",
-                            "value": formula_pretty
-                        }
-                    }
+                crit = {"in": {"path": "formula_pretty", "value": formula_pretty}}
 
-        return {"criteria": crit
-        }
+        return {"criteria": crit}
+
 
 class TaskChemsysQuery(QueryOperator):
     def query(
@@ -253,13 +241,12 @@ class TaskChemsysQuery(QueryOperator):
             None, description="Comma-separated list of chemsys to query on"
         ),
     ) -> STORE_PARAMS:
-        crit = {
-        }
+        crit = {}
         if chemsys:
             crit = chemsys_to_search(chemsys)
 
-        return {"criteria": crit
-        }
+        return {"criteria": crit}
+
 
 class TaskTypeQuery(QueryOperator):
     def query(
@@ -268,17 +255,11 @@ class TaskTypeQuery(QueryOperator):
             None, description="Comma-separated list of task_types to query on"
         ),
     ) -> STORE_PARAMS:
-        crit = {
-        }
+        crit = {}
         if task_type:
-            crit = {
-                "equals": {
-                    "path": "task_type",
-                    "value": task_type
-                }
-            }
-        return {"criteria": crit
-        }
+            crit = {"equals": {"path": "task_type", "value": task_type}}
+        return {"criteria": crit}
+
 
 class TaskElementsQuery(QueryOperator):
     def query(
@@ -287,10 +268,10 @@ class TaskElementsQuery(QueryOperator):
             None, description="Comma-separated list of elements to query on"
         ),
         exclude_elements: Optional[str] = Query(
-            None, description="Comma-separated list of elements to exclude from query")
+            None, description="Comma-separated list of elements to exclude from query"
+        ),
     ) -> STORE_PARAMS:
-        crit = {
-        }
+        crit = {}
         if elements:
             try:
                 eles = [Element(e) for e in elements.strip().split(",")]
@@ -299,17 +280,13 @@ class TaskElementsQuery(QueryOperator):
                     status_code=400,
                     detail="Please provide a valid comma-seperated list of elements",
                 )
-            
+
             crit["exists"] = []
-            for el in eles:    
-                crit["exists"].append({
-                    "path": f"composition_reduced.{el}"
-                }
-                )
-            
-            return {"criteria": crit
-            }
-    
+            for el in eles:
+                crit["exists"].append({"path": f"composition_reduced.{el}"})
+
+            return {"criteria": crit}
+
         if exclude_elements:
             try:
                 eles = [Element(e) for e in exclude_elements.strip().split(",")]
@@ -318,16 +295,14 @@ class TaskElementsQuery(QueryOperator):
                     status_code=400,
                     detail="Please provide a comma-seperated list of elements",
                 )
-            
+
             crit["mustNot"] = []
             for ele in eles:
-                crit["mustNot"].append({
-                    "exists": {
-                    "path": f"composition_reduced.{ele}"
-                }
-                }
+                crit["mustNot"].append(
+                    {"exists": {"path": f"composition_reduced.{ele}"}}
                 )
         return {"criteria": crit}
+
 
 class CalcTypeQuery(QueryOperator):
     def query(
@@ -336,18 +311,17 @@ class CalcTypeQuery(QueryOperator):
             None, description="Comma-separated list of calc_types to query on"
         ),
     ) -> STORE_PARAMS:
-        crit = {
-        }
+        crit = {}
         if calc_type:
             crit = {
                 "equals": {
                     "path": "calc_type",
                     "value": calc_type,
                 }
-            } 
-        return {"criteria": crit
-        }
-    
+            }
+        return {"criteria": crit}
+
+
 class RunTypeQuery(QueryOperator):
     def query(
         self,
@@ -355,17 +329,12 @@ class RunTypeQuery(QueryOperator):
             None, description="Comma-separated list of run_types to query on"
         ),
     ) -> STORE_PARAMS:
-        crit = {
-        }
+        crit = {}
         if run_type:
-            crit = {
-                "equals": {
-                    "path": "run_type",
-                    "value": run_type
-                }
-            } 
-        return {"criteria": crit
-        }
+            crit = {"equals": {"path": "run_type", "value": run_type}}
+        return {"criteria": crit}
+
+
 class BatchQuery(QueryOperator):
     def query(
         self,
@@ -373,18 +342,12 @@ class BatchQuery(QueryOperator):
             None, description="Comma-separated list of batch ids to query on"
         ),
     ) -> STORE_PARAMS:
-        crit = {
-        }
+        crit = {}
         if batches:
             batch_list = [b.strip() for b in batches.split(",")]
-            crit = {
-                "in": {
-                    "path": "batch_id",
-                    "value": batch_list
-                }
-            } 
-        return {"criteria": crit
-        }
+            crit = {"in": {"path": "batch_id", "value": batch_list}}
+        return {"criteria": crit}
+
 
 class FacetQuery(QueryOperator):
     def query(
@@ -393,8 +356,7 @@ class FacetQuery(QueryOperator):
             None, description="Facets query to return facets meta information"
         ),
     ) -> STORE_PARAMS:
-        crit = {
-        }
+        crit = {}
         if facets:
             facets_list = [facet.strip() for facet in facets.split(",")]
             for f in facets_list:
@@ -409,4 +371,3 @@ class FacetQuery(QueryOperator):
         else:
             crit = {**FACETS_PARAMS}
         return {"facets": crit}
-        

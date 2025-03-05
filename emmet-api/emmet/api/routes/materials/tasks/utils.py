@@ -94,6 +94,7 @@ def task_to_entry(doc: dict, include_structure: bool = True):
             doc["task_id"]
         )
 
+
 def chemsys_to_search(chemsys: str) -> Dict:
     """
     Converts a chemsys string to a search query
@@ -108,7 +109,7 @@ def chemsys_to_search(chemsys: str) -> Dict:
     crit = {}
 
     chemsys_list = [chemsys_val.strip() for chemsys_val in chemsys.split(",")]
-    
+
     if "*" in chemsys:
         if len(chemsys_list) > 1:
             raise HTTPException(
@@ -118,18 +119,12 @@ def chemsys_to_search(chemsys: str) -> Dict:
         else:
             eles = chemsys_list[0].split("-")
 
-            crit["equals"] =  {
-                    "path": "nelements",
-                    "value": len(eles)
-                }
-            
+            crit["equals"] = {"path": "nelements", "value": len(eles)}
+
             crit["exists"] = []
-            for el in eles:    
+            for el in eles:
                 if el != "*":
-                    crit["exists"].append({
-                        "path": f"composition_reduced.{el}"
-                    }
-                    )
+                    crit["exists"].append({"path": f"composition_reduced.{el}"})
 
             return crit
     else:
@@ -139,17 +134,7 @@ def chemsys_to_search(chemsys: str) -> Dict:
             sorted_chemsys = "-".join(sorted(eles))
             query_vals.append(sorted_chemsys)
         if len(query_vals) == 1:
-            crit = {
-                    "equals": {
-                        "path": "chemsys",
-                        "value": query_vals[0]
-                        }
-                    }
+            crit = {"equals": {"path": "chemsys", "value": query_vals[0]}}
         else:
-            crit = {
-                    "in": {
-                        "path": "chemsys",
-                        "value": query_vals
-                        }
-                    }
+            crit = {"in": {"path": "chemsys", "value": query_vals}}
     return crit
