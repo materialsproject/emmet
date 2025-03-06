@@ -1,7 +1,6 @@
 """ Core definition of a CorrectedEntriesDoc Document """
 
 from datetime import datetime
-from typing import Dict, List, Optional, Union
 
 from pydantic import Field
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
@@ -25,9 +24,9 @@ class CorrectedEntriesDoc(EmmetBaseModel):
         description="Dash-delimited string of elements in the material.",
     )
 
-    entries: Dict[
-        Union[ThermoType, RunType],
-        Optional[List[Union[ComputedEntry, ComputedStructureEntry]]],
+    entries: dict[
+        ThermoType | RunType,
+        list[ComputedEntry | ComputedStructureEntry] | None,
     ] = Field(
         ...,
         description="List of all corrected entries that are valid for the specified thermo type.",
