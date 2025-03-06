@@ -7,6 +7,7 @@ from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 from pymatgen.core import Composition, Element
 from pymatgen.entries.computed_entries import ComputedEntry
 
+from emmet.core.arrow import cleanup_msonables
 from emmet.core.electrode import (
     ConversionElectrodeDoc,
     ConversionVoltagePairDoc,
@@ -140,9 +141,11 @@ def test_insertion_electrode_arrow_round_trip_serialization(insertion_elec):
 
     sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
     test_arrow_doc = InsertionElectrodeDoc(
-        **pa.array([sanitized_doc], type=InsertionElectrodeDoc.as_arrow())
-        .to_pandas(maps_as_pydicts="strict")
-        .iloc[0]
+        **cleanup_msonables(
+            pa.array([sanitized_doc], type=InsertionElectrodeDoc.as_arrow())
+            .to_pandas(maps_as_pydicts="strict")
+            .iloc[0]
+        )
     )
 
     assert doc == test_arrow_doc
