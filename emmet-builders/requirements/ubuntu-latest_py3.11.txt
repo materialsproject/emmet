@@ -19,9 +19,9 @@ attrs==25.1.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.37.4
+boto3==1.37.8
     # via maggma
-botocore==1.37.4
+botocore==1.37.8
     # via
     #   boto3
     #   s3transfer
@@ -35,7 +35,7 @@ charset-normalizer==3.4.1
     # via requests
 contourpy==1.3.1
     # via matplotlib
-cryptography==44.0.1
+cryptography==44.0.2
     # via paramiko
 cycler==0.12.1
     # via matplotlib
@@ -121,7 +121,7 @@ mmtf-python==1.1.3
     # via mdanalysis
 mongomock==4.3.0
     # via maggma
-monty==2025.1.9
+monty==2025.3.3
     # via
     #   emmet-core
     #   maggma
@@ -144,7 +144,7 @@ msgpack==1.1.0
     #   maggma
     #   mmtf-python
     #   mp-api
-narwhals==1.28.0
+narwhals==1.29.1
     # via plotly
 networkx==3.4.2
     # via
@@ -214,7 +214,7 @@ pathsimanalysis==1.2.0
     # via mdanalysis
 patsy==1.0.1
     # via statsmodels
-phonopy==2.37.1
+phonopy==2.38.0
     # via matcalc
 pillow==11.1.0
     # via
@@ -275,7 +275,7 @@ pynacl==1.5.0
     # via paramiko
 pyparsing==3.2.1
     # via matplotlib
-pytest==8.3.4
+pytest==8.3.5
     # via solvation-analysis
 python-dateutil==2.9.0.post0
     # via
@@ -320,7 +320,7 @@ ruamel-yaml==0.18.10
     #   robocrys
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-s3transfer==0.11.3
+s3transfer==0.11.4
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
