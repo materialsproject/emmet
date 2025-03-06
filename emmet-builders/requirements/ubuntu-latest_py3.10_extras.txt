@@ -4,7 +4,7 @@
 #
 #    pip-compile --all-extras --output-file=requirements/ubuntu-latest_py3.10_extras.txt
 #
-aiohappyeyeballs==2.4.6
+aiohappyeyeballs==2.5.0
     # via aiohttp
 aiohttp==3.11.13
     # via fsspec
@@ -30,9 +30,9 @@ attrs==25.1.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.37.4
+boto3==1.37.8
     # via maggma
-botocore==1.37.4
+botocore==1.37.8
     # via
     #   boto3
     #   s3transfer
@@ -58,7 +58,7 @@ contourpy==1.3.1
     # via matplotlib
 coverage[toml]==7.6.12
     # via pytest-cov
-cryptography==44.0.1
+cryptography==44.0.2
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -105,7 +105,7 @@ ghp-import==2.1.0
     # via mkdocs
 griddataformats==1.0.2
     # via mdanalysis
-griffe==1.5.7
+griffe==1.6.0
     # via mkdocstrings-python
 h5py==3.13.0
     # via phonopy
@@ -123,7 +123,7 @@ inflect==7.5.0
     # via robocrys
 iniconfig==2.0.0
     # via pytest
-jinja2==3.1.5
+jinja2==3.1.6
     # via
     #   emmet-builders (setup.py)
     #   mkdocs
@@ -157,7 +157,7 @@ lazy-loader==0.4
     # via scikit-image
 lightning==2.5.0.post0
     # via matgl
-lightning-utilities==0.12.0
+lightning-utilities==0.13.1
     # via
     #   lightning
     #   pytorch-lightning
@@ -256,7 +256,7 @@ mmtf-python==1.1.3
     # via mdanalysis
 mongomock==4.3.0
     # via maggma
-monty==2025.1.9
+monty==2025.3.3
     # via
     #   emmet-core
     #   maggma
@@ -289,7 +289,7 @@ mypy-extensions==1.0.0
     # via
     #   emmet-builders (setup.py)
     #   mypy
-narwhals==1.28.0
+narwhals==1.29.1
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -412,7 +412,7 @@ pathspec==0.12.1
     # via mkdocs
 patsy==1.0.1
     # via statsmodels
-phonopy==2.37.1
+phonopy==2.38.0
     # via matcalc
 pillow==11.1.0
     # via
@@ -502,7 +502,7 @@ pynacl==1.5.0
     # via paramiko
 pyparsing==3.2.1
     # via matplotlib
-pytest==8.3.4
+pytest==8.3.5
     # via
     #   emmet-builders (setup.py)
     #   pytest-cov
@@ -567,7 +567,7 @@ ruamel-yaml==0.18.10
     #   robocrys
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-s3transfer==0.11.3
+s3transfer==0.11.4
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
@@ -652,7 +652,7 @@ torchdata==0.7.1
     # via
     #   dgl
     #   matgl
-torchmetrics==1.6.1
+torchmetrics==1.6.2
     # via
     #   lightning
     #   pytorch-lightning
@@ -673,9 +673,9 @@ triton==3.2.0
     # via torch
 typeguard==4.4.2
     # via inflect
-types-requests==2.32.0.20241016
+types-requests==2.32.0.20250306
     # via emmet-builders (setup.py)
-types-setuptools==75.8.0.20250225
+types-setuptools==75.8.2.20250305
     # via emmet-builders (setup.py)
 typing-extensions==4.12.2
     # via
@@ -704,7 +704,7 @@ urllib3==2.3.0
     #   requests
     #   torchdata
     #   types-requests
-virtualenv==20.29.2
+virtualenv==20.29.3
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
