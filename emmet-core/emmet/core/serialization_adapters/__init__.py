@@ -2,6 +2,7 @@ from emmet.core.serialization_adapters import (
     alloy_adapter,
     balanced_reaction_adapter,
     bandstructure_symm_line_adapter,
+    compatibility_adapter,
     composition_adapter,
     computed_entries_adapter,
     defect_adapter,
@@ -11,6 +12,7 @@ from emmet.core.serialization_adapters import (
     ir_dielectric_tensor_adapter,
     kpoint_adapter,
     lattice_adapter,
+    mixing_scheme_adapter,
     molecule_adapter,
     phase_diagram_adapter,
     phonon_adapter,
@@ -18,6 +20,7 @@ from emmet.core.serialization_adapters import (
     species_adapter,
     structure_adapter,
     structure_graph_adapter,
+    structure_matcher_adapter,
     trajectory_adapter,
     xas_adapter,
 )
