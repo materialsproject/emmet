@@ -26,13 +26,13 @@ latexcodec==3.0.0
     # via pybtex
 matplotlib==3.10.1
     # via pymatgen
-monty==2025.1.9
+monty==2025.3.3
     # via
     #   emmet-core (setup.py)
     #   pymatgen
 mpmath==1.3.0
     # via sympy
-narwhals==1.28.0
+narwhals==1.29.1
     # via plotly
 networkx==3.4.2
     # via pymatgen
