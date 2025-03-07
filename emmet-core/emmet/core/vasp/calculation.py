@@ -86,7 +86,7 @@ class TypedStatisticsDict(TypedDict):
 
 
 class TypedPotcarKeywordsDict(TypedDict):
-    headers: list[str]
+    header: list[str]
     data: list[str]
 
 
