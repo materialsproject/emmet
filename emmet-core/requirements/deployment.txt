@@ -14,7 +14,7 @@ contourpy==1.3.1
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-fonttools==4.55.8
+fonttools==4.56.0
     # via matplotlib
 idna==3.10
     # via requests
@@ -24,17 +24,17 @@ kiwisolver==1.4.8
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
-matplotlib==3.10.0
+matplotlib==3.10.1
     # via
     #   -r python/requirements.txt
     #   pymatgen
-monty==2025.1.9
+monty==2025.3.3
     # via
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pymatgen
 mpmath==1.3.0
     # via sympy
-narwhals==1.25.0
+narwhals==1.29.1
     # via plotly
 networkx==3.4.2
     # via pymatgen
@@ -42,7 +42,6 @@ numpy==1.26.4
     # via
     #   -r python/requirements.txt
     #   contourpy
-    #   emmet-core (emmet/emmet-core/setup.py)
     #   matplotlib
     #   monty
     #   pandas
@@ -73,9 +72,9 @@ pydantic==2.10.6
     #   pydantic-settings
 pydantic-core==2.27.2
     # via pydantic
-pydantic-settings==2.7.1
+pydantic-settings==2.8.1
     # via emmet-core (emmet/emmet-core/setup.py)
-pymatgen==2025.1.24
+pymatgen==2025.1.9
     # via emmet-core (emmet/emmet-core/setup.py)
 pyparsing==3.2.1
     # via matplotlib
@@ -97,7 +96,7 @@ ruamel-yaml==0.18.10
     #   pymatgen
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-scipy==1.15.1
+scipy==1.15.2
     # via
     #   -r python/requirements.txt
     #   pymatgen

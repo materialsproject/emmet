@@ -28,8 +28,7 @@ setup(
     },
     include_package_data=True,
     install_requires=[
-        "numpy<2",
-        "pymatgen>=2024.6.10",
+        "pymatgen>=2024.6.10,<=2025.1.9",  # TODO: release upper version pin when bandgap parsing issues sorted
         "monty>=2024.2.2",
         "pydantic>=2.0",
         "pydantic-settings>=2.0",
@@ -75,7 +74,7 @@ setup(
             "jinja2",
         ],
     },
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     license="modified BSD",
     zip_safe=False,
 )
