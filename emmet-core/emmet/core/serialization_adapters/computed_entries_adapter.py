@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import pymatgen.entries.computed_entries
 from pydantic import RootModel
 from pymatgen.core import Structure
@@ -58,8 +56,8 @@ TypedTemperatureEnergyAdjustmentDict = TypedDict(
 
 class TypedCEDataDict(TypedDict):
     oxide_type: str
-    aspherical: str
-    last_updated: datetime
+    aspherical: bool
+    last_updated: str
     task_id: str
     material_id: str
     oxidation_states: dict[Element, float]
@@ -68,7 +66,7 @@ class TypedCEDataDict(TypedDict):
 
 
 class TypedCEParameterDict(TypedDict):
-    potcar_spec: PotcarSpec
+    potcar_spec: list[PotcarSpec]
     run_type: str
     is_hubbard: bool
     hubbards: dict[str, float]
