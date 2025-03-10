@@ -30,9 +30,9 @@ attrs==25.1.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.37.8
+boto3==1.37.9
     # via maggma
-botocore==1.37.8
+botocore==1.37.9
     # via
     #   boto3
     #   s3transfer
@@ -96,7 +96,7 @@ frozenlist==1.5.0
     # via
     #   aiohttp
     #   aiosignal
-fsspec[http]==2025.2.0
+fsspec[http]==2025.3.0
     # via
     #   lightning
     #   pytorch-lightning
@@ -111,7 +111,7 @@ h5py==3.13.0
     # via phonopy
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
-identify==2.6.8
+identify==2.6.9
     # via pre-commit
 idna==3.10
     # via
@@ -157,14 +157,14 @@ lazy-loader==0.4
     # via scikit-image
 lightning==2.5.0.post0
     # via matgl
-lightning-utilities==0.13.1
+lightning-utilities==0.14.0
     # via
     #   lightning
     #   pytorch-lightning
     #   torchmetrics
 livereload==2.7.1
     # via emmet-builders (setup.py)
-maggma==0.71.4
+maggma==0.71.5
     # via
     #   emmet-builders (setup.py)
     #   mp-api
@@ -226,7 +226,7 @@ mkdocs==1.6.1
     #   mkdocs-material
     #   mkdocs-minify-plugin
     #   mkdocstrings
-mkdocs-autorefs==1.4.0
+mkdocs-autorefs==1.4.1
     # via
     #   mkdocstrings
     #   mkdocstrings-python
@@ -246,11 +246,11 @@ mkdocs-material-extensions==1.3.1
     #   mkdocs-material
 mkdocs-minify-plugin==0.8.0
     # via emmet-builders (setup.py)
-mkdocstrings[python]==0.28.2
+mkdocstrings[python]==0.28.3
     # via
     #   emmet-builders (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.16.2
+mkdocstrings-python==1.16.3
     # via mkdocstrings
 mmtf-python==1.1.3
     # via mdanalysis
@@ -607,7 +607,7 @@ solvation-analysis==0.4.1
     # via
     #   emmet-builders (setup.py)
     #   emmet-core
-spglib==2.5.0
+spglib==2.6.0
     # via
     #   phonopy
     #   pymatgen
@@ -692,6 +692,7 @@ typing-extensions==4.12.2
     #   pydash
     #   pytorch-lightning
     #   referencing
+    #   spglib
     #   torch
     #   typeguard
 tzdata==2025.1
