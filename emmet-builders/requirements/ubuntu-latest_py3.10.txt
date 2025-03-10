@@ -19,9 +19,9 @@ attrs==25.1.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.37.8
+boto3==1.37.9
     # via maggma
-botocore==1.37.8
+botocore==1.37.9
     # via
     #   boto3
     #   s3transfer
@@ -88,7 +88,7 @@ latexcodec==3.0.0
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
-maggma==0.71.4
+maggma==0.71.5
     # via
     #   emmet-builders (setup.py)
     #   mp-api
@@ -359,7 +359,7 @@ solvation-analysis==0.4.1
     # via
     #   emmet-builders (setup.py)
     #   emmet-core
-spglib==2.5.0
+spglib==2.6.0
     # via
     #   phonopy
     #   pymatgen
@@ -402,6 +402,7 @@ typing-extensions==4.12.2
     #   pydantic-core
     #   pydash
     #   referencing
+    #   spglib
     #   typeguard
 tzdata==2025.1
     # via pandas
