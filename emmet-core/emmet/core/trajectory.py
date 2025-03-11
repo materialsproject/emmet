@@ -31,9 +31,8 @@ if TYPE_CHECKING:
 
 class TrajFormat(Enum):
 
-    PMG = "pmg"
-    ASE = "ase"
-    ARROW = "arrow"
+    PMG = "json"
+    ASE = "traj"
     PARQUET = "parquet"
 
 class Trajectory(BaseModel):
@@ -213,20 +212,29 @@ class Trajectory(BaseModel):
             frame_properties=frame_properties
         )
 
-    def to(self, fmt : TrajFormat | str = TrajFormat.PMG, file_name : str | Path | None = None, **kwargs):
+    def to(self, file_name : str | Path | None = None, fmt : TrajFormat | str | None = None, **kwargs):
 
-        fmt = TrajFormat(fmt)
+        if file_name and not fmt:
+            for _fmt in TrajFormat:
+                if _fmt.value in str(file_name).lower():
+                    fmt = _fmt
+                    break
+        
+        if isinstance(fmt,str) and fmt.upper() in TrajFormat.__members__:
+            fmt = TrajFormat[fmt.upper()]
+        else:
+            fmt = TrajFormat(fmt)
 
         if fmt in (TrajFormat.PMG, TrajFormat.ASE):
             traj = self.to_pmg(**kwargs)
             
-            if fmt == "pmg":
+            if fmt == TrajFormat.PMG:
                 if file_name:
                     dumpfn(traj, file_name)
             else:
                 traj = traj.to_ase(ase_traj_file=file_name)
 
-        elif fmt in (TrajFormat.ARROW, TrajFormat.PARQUET):
-            traj = self.to_arrow(file_name = None if fmt == "arrow" else file_name)
+        elif fmt == TrajFormat.PARQUET:
+            traj = self.to_arrow(file_name = file_name)
 
         return traj
