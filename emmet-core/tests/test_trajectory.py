@@ -1,4 +1,3 @@
-
 import numpy as np
 from pathlib import Path
 from pytest import approx
@@ -11,13 +10,15 @@ from emmet.core.trajectory import Trajectory
 
 
 class TestTrajectory(PymatgenTest):
-
     def setUp(self):
-        self.test_dir = Path(__file__).parent.parent.parent.joinpath("test_files").resolve()
-        self.task_doc = TaskDoc.from_directory(self.test_dir / "vasp" / "Si_old_double_relax")
+        self.test_dir = (
+            Path(__file__).parent.parent.parent.joinpath("test_files").resolve()
+        )
+        self.task_doc = TaskDoc.from_directory(
+            self.test_dir / "vasp" / "Si_old_double_relax"
+        )
 
     def test_task_doc(self):
-
         traj = Trajectory.from_task_doc(self.task_doc)
         assert traj.num_ionic_steps == sum(
             len(cr.output.ionic_steps) for cr in self.task_doc.calcs_reversed
@@ -29,8 +30,7 @@ class TestTrajectory(PymatgenTest):
                 istep -= 1
 
     def test_parquet(self):
-
-        parqet_file =  "test.parquet.gz"
+        parqet_file = "test.parquet.gz"
 
         traj = Trajectory.from_task_doc(self.task_doc)
         traj.to(parqet_file)
@@ -39,10 +39,9 @@ class TestTrajectory(PymatgenTest):
         assert hash(new_traj) == hash(traj)
 
     def test_pmg(self):
-
         traj = Trajectory.from_task_doc(self.task_doc)
         pmg_traj = traj.to(fmt="PMG")
-        assert isinstance(pmg_traj,PmgTraj)
+        assert isinstance(pmg_traj, PmgTraj)
         assert len(pmg_traj) == traj.num_ionic_steps
         assert len(pmg_traj.frame_properties) == traj.num_ionic_steps
 
@@ -50,11 +49,18 @@ class TestTrajectory(PymatgenTest):
         roundtrip = Trajectory.from_pmg(pmg_traj)
 
         for k in Trajectory.model_fields:
-            if k in ("num_ionic_steps","electronic_steps",) or getattr(traj,k,None) is None:
+            if (
+                k
+                in (
+                    "num_ionic_steps",
+                    "electronic_steps",
+                )
+                or getattr(traj, k, None) is None
+            ):
                 # Can't easily test for equality of electronic steps without bespoke code
                 continue
-            
+
             assert all(
-                np.all(np.abs(np.array(new_val) - np.array(getattr(traj,k)[i])) < 1e-6)
-                for i, new_val in enumerate(getattr(roundtrip,k))
+                np.all(np.abs(np.array(new_val) - np.array(getattr(traj, k)[i])) < 1e-6)
+                for i, new_val in enumerate(getattr(roundtrip, k))
             )
