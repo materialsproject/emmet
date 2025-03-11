@@ -157,7 +157,7 @@ class Trajectory(BaseModel):
                 "At this time, the Trajectory model in emmet does not support disordered structures."
             )
 
-        props["num_ionic_steps"] = len(structures)
+        num_ionic_steps = len(structures)
 
         props["elements"] = [site.species.elements[0].Z for site in structures[0]]
         if constant_lattice or (
@@ -167,8 +167,8 @@ class Trajectory(BaseModel):
                     np.abs(structures[i].lattice.matrix - structures[j].lattice.matrix)
                     < lattice_match_tol
                 )
-                for i in range(props["num_ionic_steps"])
-                for j in range(i + 1, props["num_ionic_steps"])
+                for i in range(num_ionic_steps)
+                for j in range(i + 1, num_ionic_steps)
             )
         ):
             props["constant_lattice"] = structures[0].lattice.matrix
@@ -183,7 +183,7 @@ class Trajectory(BaseModel):
         if len(esteps := props.get("electronic_steps", [])) > 0:
             props["num_electronic_steps"] = [len(estep) for estep in esteps]
 
-        return cls(**props)
+        return cls(**props, num_ionic_steps=num_ionic_steps)
 
     @classmethod
     def from_task_doc(cls, task_doc: TaskDoc, **kwargs) -> Self:
@@ -204,7 +204,7 @@ class Trajectory(BaseModel):
         -----------
         Trajectory
         """
-        props = {
+        props: dict[str, list] = {
             "structure": [],
             "cart_coords": [],
             "electronic_steps": [],
@@ -250,13 +250,14 @@ class Trajectory(BaseModel):
         -----------
         Trajectory
         """
-        props = {
+        props: dict[str, list] = {
             "structure": [structure for structure in traj],
         }
-        for k in cls.model_fields:
-            vals = [fp.get(k) for fp in traj.frame_properties]
-            if all(v is not None for v in vals):
-                props[k] = vals
+        if traj.frame_properties:
+            for k in cls.model_fields:
+                vals = [fp.get(k) for fp in traj.frame_properties]
+                if all(v is not None for v in vals):
+                    props[k] = vals
 
         return cls._from_dict(props, **kwargs)
 
@@ -347,7 +348,7 @@ class Trajectory(BaseModel):
             structure = Structure(
                 lattice=self.constant_lattice
                 if self.constant_lattice
-                else self.lattice[i],
+                else self.lattice[i],  # type: ignore[index]
                 species=species,
                 coords=coords,
                 coords_are_cartesian=True,
@@ -356,7 +357,8 @@ class Trajectory(BaseModel):
 
             props = {}
             for k in frame_props:
-                if (prop := getattr(self, k, None)[i]) is not None:
+                if (_prop := getattr(self, k, None)) is not None:
+                    prop = _prop[i]
                     for cmth in ("model_dump", "tolist"):
                         if hasattr(prop, cmth):
                             prop = getattr(prop, cmth)()
@@ -408,8 +410,13 @@ class Trajectory(BaseModel):
             if fmt == TrajFormat.PMG:
                 if file_name:
                     dumpfn(traj, file_name)
-            else:
-                traj = traj.to_ase(ase_traj_file=file_name)
+            elif fmt == TrajFormat.ASE:
+                if hasattr(PmgTrajectory, "to_ase"):
+                    traj = traj.to_ase(ase_traj_file=file_name)  # type: ignore[attr-defined]
+                else:
+                    raise ImportError(
+                        "Ensure you have pymatgen>=2025.1.23 to use ASE trajectory interfaces."
+                    )
 
         elif fmt == TrajFormat.PARQUET:
             traj = self.to_arrow(file_name=file_name)
