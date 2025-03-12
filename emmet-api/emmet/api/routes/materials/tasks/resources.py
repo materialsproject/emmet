@@ -1,4 +1,3 @@
-from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 from maggma.api.resource import ReadOnlyResource
 
 from emmet.api.routes.materials.tasks.query_operators import (
