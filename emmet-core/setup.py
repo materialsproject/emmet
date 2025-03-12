@@ -45,6 +45,7 @@ setup(
             "pymatgen-analysis-alloys>=0.0.6",
             "solvation-analysis>=0.4.1",
             "MDAnalysis>=2.7.0",
+            "pyarrow",
         ],
         "ml": ["chgnet", "matgl", "dgl<=2.1"],
         "test": [
