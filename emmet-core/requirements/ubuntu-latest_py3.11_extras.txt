@@ -421,6 +421,9 @@ psutil==7.0.0
     #   dgl
 pubchempy==1.0.4
     # via robocrys
+pyarrow==19.0.1
+    # via
+    #   emmet-core (setup.py)
 pybtex==0.24.0
     # via
     #   emmet-core
