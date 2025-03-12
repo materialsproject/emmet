@@ -69,13 +69,14 @@ class BarrierAnalysis(BaseModel):
         None,
         description="Whether the transition state is one of the computed snapshots.",
     )
-    forward_barrier: float | None = Field(None, description="The forwards barrier.")
+    forward_barrier: float | None = Field(None, description="The forward barrier.")
     reverse_barrier: float | None = Field(None, description="The reverse barrier.")
 
     @classmethod
     def from_energies(
         cls,
         energies: Sequence[float],
+        frame_index : Sequence[float] | None = None,
         spline_kwargs: dict[str, Any] | None = None,
         frame_match_tol: float = 1.0e-6,
     ) -> Self:
@@ -84,8 +85,12 @@ class BarrierAnalysis(BaseModel):
 
         Parameters
         ----------
-        energies : Sequence[float]
+        energies : Sequence of float
             The energies sorted by increasing frame index. Must include endpoints.
+        frame_index : Sequence of float or None (default)
+            If None, defaults to a linear interpolation between 0 and 1 for each
+            energy in energies. If not None, specifies the indices of succcessful
+            images.
         spline_kwargs : dict or None
             The kwargs to pass to the spline fit. Defaults to clamping the derivative
             to zero at the endpoints, consistent with the assumption that they
@@ -94,14 +99,17 @@ class BarrierAnalysis(BaseModel):
             The tolerance for matching the transition state frame index to the
             input frame indices.
         """
+        frame_index = frame_index or list(range(len(energies)))
+        frame_index = np.array(frame_index)/max(frame_index)
+
         analysis: dict[str, Any] = {
             "energies": list(energies),
-            "frame_index": list(frame_idx := np.linspace(0.0, 1.0, len(energies))),
+            "frame_index": list(frame_index),
         }
         energies = np.array(energies)  # type: ignore[assignment]
 
         spline_kwargs = spline_kwargs or {"bc_type": "clamped"}
-        spline_fit = CubicSpline(frame_idx, energies, **spline_kwargs)
+        spline_fit = CubicSpline(frame_index, energies, **spline_kwargs)
         analysis["cubic_spline_pars"] = spline_fit.c.tolist()
 
         crit_points = spline_fit.derivative().roots()
@@ -115,9 +123,9 @@ class BarrierAnalysis(BaseModel):
                 analysis["ts_energy"] = float(energy)
 
         analysis["ts_in_frames"] = any(
-            abs(analysis["ts_frame_index"] - frame_idx)
-            < frame_match_tol * max(frame_idx, frame_match_tol)
-            for frame_idx in frame_idx
+            abs(analysis["ts_frame_index"] - idx)
+            < frame_match_tol * max(idx, frame_match_tol)
+            for idx in frame_index
         )
         analysis["forward_barrier"] = analysis["ts_energy"] - energies[0]
         analysis["reverse_barrier"] = analysis["ts_energy"] - energies[-1]
@@ -142,6 +150,10 @@ class NebResult(BaseModel):
 
     initial_images: list[Structure | Molecule] | None = Field(
         None, description="Unrelaxed structures/molecules along the reaction pathway."
+    )
+
+    image_indices : list[int] | None = Field(
+        None, description="The indexes corresponding to initial_images of all successful image calculations."
     )
 
     energies: list[float] | None = Field(
@@ -196,7 +208,10 @@ class NebResult(BaseModel):
             and isinstance(self.energies, list)
             and len(self.energies) > 0
         ):
-            self.barrier_analysis = BarrierAnalysis.from_energies(self.energies)
+            self.barrier_analysis = BarrierAnalysis.from_energies(
+                self.energies,
+                frame_index=self.image_indices
+            )
             for k in ("forward", "reverse"):
                 setattr(
                     self,
@@ -495,12 +510,12 @@ class NebPathwayResult(BaseModel):  # type: ignore[call-arg]
         description="Dict of NEB calculations included in this calculation"
     )
 
-    forward_barriers: dict[str, float] = Field(
-        description="Dict of the forward barriers computed here."
+    forward_barriers: dict[str, float | None] | None = Field(
+        None, description="Dict of the forward barriers computed here."
     )
 
-    reverse_barriers: dict[str, float] = Field(
-        description="Dict of the reverse barriers computed here."
+    reverse_barriers: dict[str, float | None] | None = Field(
+        None, description="Dict of the reverse barriers computed here."
     )
 
     identifier: str | None = Field(None, description="Identifier for the calculation.")
