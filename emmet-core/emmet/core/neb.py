@@ -76,7 +76,7 @@ class BarrierAnalysis(BaseModel):
     def from_energies(
         cls,
         energies: Sequence[float],
-        frame_index : Sequence[float] | None = None,
+        frame_index: Sequence[float] | None = None,
         spline_kwargs: dict[str, Any] | None = None,
         frame_match_tol: float = 1.0e-6,
     ) -> Self:
@@ -100,7 +100,7 @@ class BarrierAnalysis(BaseModel):
             input frame indices.
         """
         frame_index = frame_index or list(range(len(energies)))
-        frame_index = np.array(frame_index)/max(frame_index)
+        frame_index = np.array(frame_index) / max(frame_index)
 
         analysis: dict[str, Any] = {
             "energies": list(energies),
@@ -152,8 +152,9 @@ class NebResult(BaseModel):
         None, description="Unrelaxed structures/molecules along the reaction pathway."
     )
 
-    image_indices : list[int] | None = Field(
-        None, description="The indexes corresponding to initial_images of all successful image calculations."
+    image_indices: list[int] | None = Field(
+        None,
+        description="The indexes corresponding to initial_images of all successful image calculations.",
     )
 
     energies: list[float] | None = Field(
@@ -209,8 +210,7 @@ class NebResult(BaseModel):
             and len(self.energies) > 0
         ):
             self.barrier_analysis = BarrierAnalysis.from_energies(
-                self.energies,
-                frame_index=self.image_indices
+                self.energies, frame_index=self.image_indices
             )
             for k in ("forward", "reverse"):
                 setattr(
