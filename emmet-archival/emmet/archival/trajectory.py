@@ -85,8 +85,8 @@ class TrajArchive(Archiver):
                         self.structure[i].lattice.matrix
                         - self.structure[j].lattice.matrix
                     )
+                    < self.lattice_match_tol
                 )
-                < self.lattice_match_tol
                 for i in range(self.num_steps)
                 for j in range(i + 1, self.num_steps)
             )
