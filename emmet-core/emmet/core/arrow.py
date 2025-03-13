@@ -82,7 +82,7 @@ def arrowize(obj):
             return pa.list_(arrowize(args[0]))
 
         if all([member == args[0] for member in args]):
-            return pa.list_(arrowize(args[0]), len(args))
+            return pa.list_(arrowize(args[0]))
 
         return pa.dense_union(
             [
