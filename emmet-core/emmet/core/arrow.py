@@ -33,25 +33,28 @@ PY_PRIMITIVES_TO_ARROW = {
 }
 
 
-def remove_empty_keys(d):
+def remove_empty_keys(d, in_class_obj=False):
+    if not isinstance(d, dict):
+        return d
+
+    has_class = "@class" in d
+    is_class_obj = has_class or in_class_obj
+
     for k, v in list(d.items()):
-        if isinstance(v, dict):
-            remove_empty_keys(v)
-        elif v is None:
+        if v is None and is_class_obj:
             del d[k]
+        elif isinstance(v, dict):
+            remove_empty_keys(v, is_class_obj)
         elif isinstance(v, list):
-            for entry in v:
+            for i, entry in enumerate(v):
                 if isinstance(entry, dict):
-                    remove_empty_keys(entry)
+                    v[i] = remove_empty_keys(entry, is_class_obj)
 
     return d
 
 
 def cleanup_msonables(d):
-    return {
-        k: remove_empty_keys(v) if isinstance(v, dict) and "@class" in v else v
-        for k, v in jsanitize(d, allow_bson=True).items()
-    }
+    return remove_empty_keys(jsanitize(d, allow_bson=True))
 
 
 def arrowize(obj):
