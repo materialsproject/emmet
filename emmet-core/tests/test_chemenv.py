@@ -40,7 +40,7 @@ def test_chemenv_arrow_round_trip_serialization(
     sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
     test_arrow_doc = ChemEnvDoc(
         **cleanup_msonables(
-            pa.array([sanitized_doc], type=ChemEnvDoc.as_arrow())
+            pa.array([sanitized_doc], type=ChemEnvDoc.arrow_type())
             .to_pandas(maps_as_pydicts="strict")
             .iloc[0],
         )

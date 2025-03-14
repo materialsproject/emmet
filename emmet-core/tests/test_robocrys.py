@@ -33,7 +33,7 @@ def test_robocrys_arrow_round_trip_serialization():
 
     sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
     test_arrow_doc = RobocrystallogapherDoc(
-        **pa.array([sanitized_doc], type=RobocrystallogapherDoc.as_arrow())
+        **pa.array([sanitized_doc], type=RobocrystallogapherDoc.arrow_type())
         .to_pandas(maps_as_pydicts="strict")
         .iloc[0]
     )

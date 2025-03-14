@@ -43,7 +43,7 @@ def test_magnetism_arrow_round_trip_serialization(magnetism_mats):
 
     sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
     test_arrow_doc = MagnetismDoc(
-        **pa.array([sanitized_doc], type=MagnetismDoc.as_arrow())
+        **pa.array([sanitized_doc], type=MagnetismDoc.arrow_type())
         .to_pandas(maps_as_pydicts="strict")
         .iloc[0]
     )

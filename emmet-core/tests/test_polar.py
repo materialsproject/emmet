@@ -61,7 +61,7 @@ def test_dielectric_arrow_round_trip_serialization(
 
     sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
     test_arrow_doc = DielectricDoc(
-        **pa.array([sanitized_doc], type=DielectricDoc.as_arrow())
+        **pa.array([sanitized_doc], type=DielectricDoc.arrow_type())
         .to_pandas(maps_as_pydicts="strict")
         .iloc[0]
     )
@@ -329,7 +329,7 @@ def test_piezoelectric_arrow_round_trip_serialization(
 
     sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
     test_arrow_doc = PiezoelectricDoc(
-        **pa.array([sanitized_doc], type=PiezoelectricDoc.as_arrow())
+        **pa.array([sanitized_doc], type=PiezoelectricDoc.arrow_type())
         .to_pandas(maps_as_pydicts="strict")
         .iloc[0]
     )

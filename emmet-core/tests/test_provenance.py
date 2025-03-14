@@ -65,7 +65,7 @@ def test_provenance_arrow_round_trip_serialization(snls, structure):
 
     sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
     test_arrow_doc = ProvenanceDoc(
-        **pa.array([sanitized_doc], type=ProvenanceDoc.as_arrow())
+        **pa.array([sanitized_doc], type=ProvenanceDoc.arrow_type())
         .to_pandas(maps_as_pydicts="strict")
         .iloc[0]
     )

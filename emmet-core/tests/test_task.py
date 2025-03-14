@@ -247,7 +247,7 @@ def test_task_doc_arrow_round_trip_serialization(test_dir, object_name, tmpdir):
 
     sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
     test_arrow_doc = TaskDoc(
-        **pa.array([sanitized_doc], type=TaskDoc.as_arrow())
+        **pa.array([sanitized_doc], type=TaskDoc.arrow_type())
         .to_pandas(maps_as_pydicts="strict")
         .iloc[0]
     )

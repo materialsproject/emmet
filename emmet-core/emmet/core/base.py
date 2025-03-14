@@ -62,7 +62,7 @@ class EmmetBaseModel(BaseModel):
     )
 
     @classmethod
-    def as_arrow(cls):
+    def arrow_type(cls):
         from emmet.core.arrow import arrowize
 
         return arrowize(cls)

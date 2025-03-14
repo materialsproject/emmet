@@ -117,7 +117,7 @@ def test_electronic_structure_arrow_round_trip_serialization(bandstructure_fs, d
 
     sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
     test_arrow_doc = ElectronicStructureDoc(
-        **pa.array([sanitized_doc], type=ElectronicStructureDoc.as_arrow())
+        **pa.array([sanitized_doc], type=ElectronicStructureDoc.arrow_type())
         .to_pandas(maps_as_pydicts="strict")
         .iloc[0]
     )

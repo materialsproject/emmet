@@ -147,7 +147,7 @@ def test_thermo_arrow_round_trip_serialization(entries):
 
     sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
     test_arrow_doc = ThermoDoc(
-        **pa.array([sanitized_doc], type=ThermoDoc.as_arrow())
+        **pa.array([sanitized_doc], type=ThermoDoc.arrow_type())
         .to_pandas(maps_as_pydicts="strict")
         .iloc[0]
     )

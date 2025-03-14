@@ -78,7 +78,7 @@ def test_structure_group_arrow_round_trip_serialization(entries_lto):
 
     sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
     test_arrow_doc = StructureGroupDoc(
-        # **pa.array([sanitized_doc], type=StructureGroupDoc.as_arrow())
+        # **pa.array([sanitized_doc], type=StructureGroupDoc.arrow_type())
         **pa.array([sanitized_doc], type=arrowize(StructureGroupDoc))
         .to_pandas(maps_as_pydicts="strict")
         .iloc[0]

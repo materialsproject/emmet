@@ -90,7 +90,7 @@ def test_elasticity_arrow_round_trip_serialization(fitting_data):
 
     sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
     test_arrow_doc = ElasticityDoc(
-        **pa.array([sanitized_doc], type=ElasticityDoc.as_arrow())
+        **pa.array([sanitized_doc], type=ElasticityDoc.arrow_type())
         .to_pandas(maps_as_pydicts="strict")
         .iloc[0]
     )

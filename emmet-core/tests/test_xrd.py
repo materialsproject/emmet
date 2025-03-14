@@ -57,7 +57,7 @@ def test_xrd_arrow_round_trip_serialization(structure):
 
     sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
     test_arrow_doc = XRDDoc(
-        **pa.array([sanitized_doc], type=XRDDoc.as_arrow())
+        **pa.array([sanitized_doc], type=XRDDoc.arrow_type())
         .to_pandas(maps_as_pydicts="strict")
         .iloc[0]
     )

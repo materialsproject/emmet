@@ -37,7 +37,7 @@ def test_xas_arrow_round_trip_serialization(xas_dict):
 
     sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
     test_arrow_doc = XASDoc(
-        **pa.array([sanitized_doc], type=XASDoc.as_arrow())
+        **pa.array([sanitized_doc], type=XASDoc.arrow_type())
         .to_pandas(maps_as_pydicts="strict")
         .iloc[0]
     )

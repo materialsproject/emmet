@@ -142,7 +142,7 @@ def test_insertion_electrode_arrow_round_trip_serialization(insertion_elec):
     sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
     test_arrow_doc = InsertionElectrodeDoc(
         **cleanup_msonables(
-            pa.array([sanitized_doc], type=InsertionElectrodeDoc.as_arrow())
+            pa.array([sanitized_doc], type=InsertionElectrodeDoc.arrow_type())
             .to_pandas(maps_as_pydicts="strict")
             .iloc[0]
         )
@@ -164,7 +164,7 @@ def test_conversion_electrode_arrow_round_trip_serialization(conversion_elec):
 
     sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
     test_arrow_doc = ConversionElectrodeDoc(
-        **pa.array([sanitized_doc], type=ConversionElectrodeDoc.as_arrow())
+        **pa.array([sanitized_doc], type=ConversionElectrodeDoc.arrow_type())
         .to_pandas(maps_as_pydicts="strict")
         .iloc[0]
     )

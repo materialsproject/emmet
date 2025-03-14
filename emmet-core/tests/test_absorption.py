@@ -75,7 +75,7 @@ def test_absorption_doc(absorption_test_doc):
 def test_absorption_arrow_round_trip_serialization(absorption_test_doc):
     sanitized_doc = jsanitize(absorption_test_doc.model_dump(), allow_bson=True)
     test_arrow_doc = AbsorptionDoc(
-        **pa.array([sanitized_doc], type=AbsorptionDoc.as_arrow())
+        **pa.array([sanitized_doc], type=AbsorptionDoc.arrow_type())
         .to_pandas(maps_as_pydicts="strict")
         .iloc[0]
     )
