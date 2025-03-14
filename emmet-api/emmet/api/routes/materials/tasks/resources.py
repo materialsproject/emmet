@@ -124,9 +124,7 @@ class TaskReadOnlyResource(ReadOnlyResource):
                             ", ".join(overlap)
                         ),
                     )
-            query: dict[Any, Any] = merge_atlas_querires(
-                list(queries.values())
-            )  # TODO: Update merge_queries
+            query: dict[Any, Any] = merge_atlas_querires(list(queries.values()))
 
             self.store.connect()
 
@@ -141,6 +139,7 @@ class TaskReadOnlyResource(ReadOnlyResource):
                             data = list(self.store.query(**query))
                     else:
                         pipeline = generate_atlas_search_pipeline(query)
+                        print("pipeline", pipeline)
                         data = list(self.store._collection.aggregate(pipeline))
 
             except (NetworkTimeout, PyMongoError) as e:

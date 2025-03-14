@@ -140,6 +140,7 @@ def chemsys_to_search(chemsys: str) -> Dict:
             crit = {"in": {"path": "chemsys", "value": query_vals}}
     return crit
 
+
 def formula_to_search(formulas: str) -> Dict:
     """
     Santizes formula into a dictionary to search with wild cards
@@ -178,17 +179,20 @@ def formula_to_search(formulas: str) -> Dict:
 
             comp = Composition(integer_formula).reduced_composition
             crit["equals"] = []
-            crit["equals"].append({"path": "formula_anonymous", "value": comp.anonymized_formula})
+            crit["equals"].append(
+                {"path": "formula_anonymous", "value": comp.anonymized_formula}
+            )
             real_elts = [
                 str(e)
                 for e in comp.elements
                 if e.as_dict().get("element", "A") not in dummies
             ]
 
-            
             for el, n in comp.to_reduced_dict.items():
                 if el in real_elts:
-                    crit["equals"].append({"path": f"composition_reduced.{el}", "value": n}) 
+                    crit["equals"].append(
+                        {"path": f"composition_reduced.{el}", "value": n}
+                    )
 
             return crit
 
@@ -206,12 +210,20 @@ def formula_to_search(formulas: str) -> Dict:
         ):
             # Assume fully anonymized formula
             if len(formula_list) == 1:
-                crit["equals"] = {"path": "formula_anonymous", "value": composition_list[0].anonymized_formula}
+                crit["equals"] = {
+                    "path": "formula_anonymous",
+                    "value": composition_list[0].anonymized_formula,
+                }
             else:
                 for comp in composition_list:
-                    crit['equals'].append({"path": "formula_anonymous", "value": comp.anonymized_formula})
+                    crit["equals"].append(
+                        {"path": "formula_anonymous", "value": comp.anonymized_formula}
+                    )
             return crit
 
         else:
-            crit["in"] = {"path": "formula_pretty", "value": [comp.reduced_formula for comp in composition_list]}
+            crit["in"] = {
+                "path": "formula_pretty",
+                "value": [comp.reduced_formula for comp in composition_list],
+            }
         return crit
