@@ -188,7 +188,7 @@ class CalculationInput(CalculationBaseModel):
             incar=incar,
             kpoints=kpoints_dict,
             nkpoints=len(kpoints_dict["actual_kpoints"]),
-            potcar=[s.split()[0] for s in vasprun.potcar_symbols],
+            potcar=[s.split()[1] for s in vasprun.potcar_symbols],
             potcar_spec=vasprun.potcar_spec,
             potcar_type=[s.split()[0] for s in vasprun.potcar_symbols],
             parameters=parameters,
