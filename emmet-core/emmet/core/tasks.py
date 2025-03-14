@@ -220,8 +220,12 @@ class InputDoc(CalculationInput):
         if xc:
             xc = xc.upper()
 
-        pot_type, func = calc_doc.input.potcar_type[0].split("_")
-        func = "lda" if len(pot_type) == 1 else "_".join(func)
+        if len(potcar_meta := calc_doc.input.potcar_type[0].split("_")) == 2:
+            pot_type, func = potcar_meta
+        elif len(potcar_meta) == 1:
+            pot_type = potcar_meta[0]
+            func = "LDA"
+
         pps = Potcar(pot_type=pot_type, functional=func, symbols=calc_doc.input.potcar)
         return cls(
             **calc_doc.input.model_dump(),
