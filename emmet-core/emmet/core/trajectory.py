@@ -11,7 +11,6 @@ from pymatgen.core import Element, Structure
 from pymatgen.core.trajectory import Trajectory as PmgTrajectory
 
 from monty.dev import requires
-from monty.io import zopen
 from monty.serialization import dumpfn
 
 from emmet.core.math import Vector3D, Matrix3D
@@ -264,7 +263,9 @@ class Trajectory(BaseModel):
     @requires(
         pa is not None, message="pyarrow must be installed to de-/serialize to parquet"
     )
-    def to_arrow(self, file_name: str | Path | None = None) -> ArrowTable:
+    def to_arrow(
+        self, file_name: str | Path | None = None, **write_file_kwargs
+    ) -> ArrowTable:
         """
         Create a PyArrow Table from a Trajectory.
 
@@ -272,7 +273,10 @@ class Trajectory(BaseModel):
         -----------
         file_name : str, .Path, or None (default)
             If not None, a file to write the parquet-format output to.
-            Accepts any compression extension (gz, bz2, etc.) used in monty.io.zopen
+            Accepts any compression extension used by pyarrow.write_table
+        **write_file_kwargs
+            If file_name is not None, any kwargs to pass to
+            pyarrow.parquet.write_file
 
         Returns
         -----------
@@ -289,8 +293,7 @@ class Trajectory(BaseModel):
 
         pa_table = pa.table(pa_config)
         if file_name:
-            with zopen(str(file_name), "wb") as f:
-                pa_pq.write_table(pa_table, f)
+            pa_pq.write_table(pa_table, file_name, **write_file_kwargs)
 
         return pa_table
 
@@ -309,8 +312,7 @@ class Trajectory(BaseModel):
         -----------
         Trajectory
         """
-        with zopen(str(file_name), "rb") as f:
-            pa_table = pa_pq.read_table(f)
+        pa_table = pa_pq.read_table(file_name)
         config = pa_table.to_pydict()
         config["num_ionic_steps"] = len(config["elements"])
         config["elements"] = config["elements"][0]
