@@ -30,10 +30,10 @@ class TestTrajectory(PymatgenTest):
                 istep -= 1
 
     def test_parquet(self):
-        parqet_file = "test.parquet.gz"
+        parqet_file = "test.parquet"
 
         traj = Trajectory.from_task_doc(self.task_doc)
-        traj.to(parqet_file)
+        traj.to(parqet_file, compression="GZIP")
 
         new_traj = Trajectory.from_parquet(parqet_file)
         assert hash(new_traj) == hash(traj)
