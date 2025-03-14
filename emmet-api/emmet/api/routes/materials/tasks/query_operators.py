@@ -7,7 +7,8 @@ from emmet.api.routes.materials.tasks.utils import (
 )
 from pymatgen.core.periodic_table import Element
 
-from emmet.api.routes.materials.tasks.utils import chemsys_to_search
+
+from emmet.api.routes.materials.tasks.utils import chemsys_to_search, formula_to_search
 from fastapi import Query, HTTPException
 from typing import Optional
 from monty.json import jsanitize
@@ -223,13 +224,7 @@ class TaskFormulaQuery(QueryOperator):
         crit = {}
 
         if formula:
-            formula_pretty = [formula.strip() for formula in formula.split(",")]
-            if len(formula_pretty) == 1:
-                crit = {
-                    "equals": {"path": "formula_pretty", "value": formula_pretty[0]}
-                }
-            else:
-                crit = {"in": {"path": "formula_pretty", "value": formula_pretty}}
+            crit = formula_to_search(formula)
 
         return {"criteria": crit}
 
