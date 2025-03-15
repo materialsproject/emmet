@@ -116,6 +116,11 @@ class MaterialsDoc(StructureMetadata):
             **kwargs,
         )
 
+    @field_validator("last_updated", "created_at", mode="before")
+    @classmethod
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)
+
 
 class CoreMoleculeDoc(MoleculeMetadata):
     """
@@ -191,3 +196,8 @@ class CoreMoleculeDoc(MoleculeMetadata):
         return super().from_molecule(  # type: ignore
             meta_molecule=molecule, molecule_id=molecule_id, molecule=molecule, **kwargs
         )
+
+    @field_validator("last_updated", "created_at", mode="before")
+    @classmethod
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)

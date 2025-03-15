@@ -137,7 +137,7 @@ class ProvenanceDoc(PropertyDoc):
         " of this material for the entry closest matching the material input",
     )
 
-    @field_validator("created_at", mode="before")
+    @field_validator("last_updated", "created_at", mode="before")
     @classmethod
     def handle_datetime(cls, v):
         return convert_datetime(cls, v)
