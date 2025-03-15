@@ -1,8 +1,8 @@
-import pyarrow as pa
 import pytest
 from monty.serialization import loadfn
 from pymatgen.core import Structure
 
+from emmet.core.arrow import cleanup_msonables
 from emmet.core.magnetism import MagnetismDoc
 from emmet.core.utils import jsanitize
 
@@ -40,12 +40,9 @@ def test_magnetism_arrow_round_trip_serialization(magnetism_mats):
         total_magnetization=magnetism_mats[0]["magnetism"]["total_magnetization"],
         deprecated=False,
     )
+    arrow_struct = doc.model_dump(context={"format": "arrow"})
+    test_arrow_doc = MagnetismDoc.from_arrow(arrow_struct)
 
-    sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
-    test_arrow_doc = MagnetismDoc(
-        **pa.array([sanitized_doc], type=MagnetismDoc.arrow_type())
-        .to_pandas(maps_as_pydicts="strict")
-        .iloc[0]
+    assert cleanup_msonables(doc.model_dump()) == cleanup_msonables(
+        test_arrow_doc.model_dump()
     )
-
-    assert doc == test_arrow_doc

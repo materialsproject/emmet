@@ -1,12 +1,11 @@
 """Test basic features of XASDoc."""
 
-import pyarrow as pa
 import pytest
 from monty.serialization import loadfn
 from pymatgen.analysis.xas.spectrum import XAS
 from pymatgen.core import Element
 
-from emmet.core.utils import jsanitize
+from emmet.core.arrow import cleanup_msonables
 from emmet.core.xas import XASDoc
 
 
@@ -34,12 +33,9 @@ def test_xas_doc(xas_dict):
 
 def test_xas_arrow_round_trip_serialization(xas_dict):
     doc = XASDoc(**xas_dict)
+    arrow_struct = doc.model_dump(context={"format": "arrow"})
+    test_arrow_doc = XASDoc.from_arrow(arrow_struct)
 
-    sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
-    test_arrow_doc = XASDoc(
-        **pa.array([sanitized_doc], type=XASDoc.arrow_type())
-        .to_pandas(maps_as_pydicts="strict")
-        .iloc[0]
+    assert cleanup_msonables(doc.model_dump()) == cleanup_msonables(
+        test_arrow_doc.model_dump()
     )
-
-    assert doc == test_arrow_doc

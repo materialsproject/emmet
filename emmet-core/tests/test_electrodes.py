@@ -138,17 +138,12 @@ def test_insertion_electrode_arrow_round_trip_serialization(insertion_elec):
         working_ion_entry=wion_entry,
         battery_id="mp-1234",
     )
+    arrow_struct = doc.model_dump(context={"format": "arrow"})
+    test_arrow_doc = InsertionElectrodeDoc.from_arrow(arrow_struct)
 
-    sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
-    test_arrow_doc = InsertionElectrodeDoc(
-        **cleanup_msonables(
-            pa.array([sanitized_doc], type=InsertionElectrodeDoc.arrow_type())
-            .to_pandas(maps_as_pydicts="strict")
-            .iloc[0]
-        )
+    assert cleanup_msonables(doc.model_dump()) == cleanup_msonables(
+        test_arrow_doc.model_dump()
     )
-
-    assert doc == test_arrow_doc
 
 
 def test_conversion_electrode_arrow_round_trip_serialization(conversion_elec):

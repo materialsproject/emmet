@@ -10,6 +10,7 @@ from pymatgen.core.composition import Composition
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
+from emmet.core.base import ArrowModel
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
 from emmet.core.utils import utcnow
@@ -47,7 +48,7 @@ def s_hash(el):
     return el.data["comp_delith"]
 
 
-class StructureGroupDoc(BaseModel):
+class StructureGroupDoc(ArrowModel):
     """
     Group of structure
     """

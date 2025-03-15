@@ -1,10 +1,10 @@
 import numpy as np
-import pyarrow as pa
 import pytest
 from monty.serialization import loadfn
 from pymatgen.core import Structure
 
 from emmet.core.absorption import AbsorptionDoc
+from emmet.core.arrow import cleanup_msonables
 from emmet.core.utils import jsanitize
 
 
@@ -73,11 +73,9 @@ def test_absorption_doc(absorption_test_doc):
 
 
 def test_absorption_arrow_round_trip_serialization(absorption_test_doc):
-    sanitized_doc = jsanitize(absorption_test_doc.model_dump(), allow_bson=True)
-    test_arrow_doc = AbsorptionDoc(
-        **pa.array([sanitized_doc], type=AbsorptionDoc.arrow_type())
-        .to_pandas(maps_as_pydicts="strict")
-        .iloc[0]
-    )
+    arrow_struct = absorption_test_doc.model_dump(context={"format": "arrow"})
+    test_arrow_doc = AbsorptionDoc.from_arrow(arrow_struct)
 
-    assert absorption_test_doc == test_arrow_doc
+    assert cleanup_msonables(absorption_test_doc.model_dump()) == cleanup_msonables(
+        test_arrow_doc.model_dump()
+    )

@@ -1,14 +1,12 @@
 import json
 
-import pyarrow as pa
 import pytest
 from monty.io import zopen
 
 from emmet.core.arrow import cleanup_msonables
-from emmet.core.utils import jsanitize
+from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
-from emmet.core.vasp.task_valid import TaskDocument
 
 
 @pytest.fixture
@@ -16,7 +14,10 @@ def test_tasks(test_dir):
     with zopen(test_dir / "test_si_tasks.json.gz") as f:
         tasks = json.load(f)
 
-    tasks = [TaskDocument(**t) for t in tasks]
+    for task in tasks:
+        task.update({"is_valid": True})
+
+    tasks = [TaskDoc(**t) for t in tasks]
     return tasks
 
 
@@ -53,14 +54,9 @@ def test_schema():
 
 def test_material_arrow_round_trip_serialization(test_tasks):
     doc = MaterialsDoc.from_tasks(test_tasks)
-    sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
+    arrow_struct = doc.model_dump(context={"format": "arrow"})
+    test_arrow_doc = MaterialsDoc.from_arrow(arrow_struct)
 
-    test_arrow_doc = MaterialsDoc(
-        **cleanup_msonables(
-            pa.array([sanitized_doc], type=MaterialsDoc.arrow_type())
-            .to_pandas(maps_as_pydicts="strict")
-            .iloc[0]
-        )
+    assert cleanup_msonables(doc.model_dump()) == cleanup_msonables(
+        test_arrow_doc.model_dump()
     )
-
-    assert doc == test_arrow_doc

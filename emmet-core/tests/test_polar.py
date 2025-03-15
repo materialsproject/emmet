@@ -1,9 +1,8 @@
-import pyarrow as pa
 import pytest
 from pymatgen.core import Lattice, Structure
 
+from emmet.core.arrow import cleanup_msonables
 from emmet.core.polar import DielectricDoc, PiezoelectricDoc
-from emmet.core.utils import jsanitize
 
 
 @pytest.fixture(scope="module")
@@ -58,15 +57,12 @@ def test_dielectric_arrow_round_trip_serialization(
         ionic=epsilon_ionic,
         deprecated=False,
     )
+    arrow_struct = doc.model_dump(context={"format": "arrow"})
+    test_arrow_doc = DielectricDoc.from_arrow(arrow_struct)
 
-    sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
-    test_arrow_doc = DielectricDoc(
-        **pa.array([sanitized_doc], type=DielectricDoc.arrow_type())
-        .to_pandas(maps_as_pydicts="strict")
-        .iloc[0]
+    assert cleanup_msonables(doc.model_dump()) == cleanup_msonables(
+        test_arrow_doc.model_dump()
     )
-
-    assert doc == test_arrow_doc
 
 
 @pytest.fixture(scope="module")
@@ -326,12 +322,9 @@ def test_piezoelectric_arrow_round_trip_serialization(
         ionic=piezo_ionic,
         deprecated=False,
     )
+    arrow_struct = doc.model_dump(context={"format": "arrow"})
+    test_arrow_doc = PiezoelectricDoc.from_arrow(arrow_struct)
 
-    sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
-    test_arrow_doc = PiezoelectricDoc(
-        **pa.array([sanitized_doc], type=PiezoelectricDoc.arrow_type())
-        .to_pandas(maps_as_pydicts="strict")
-        .iloc[0]
+    assert cleanup_msonables(doc.model_dump()) == cleanup_msonables(
+        test_arrow_doc.model_dump()
     )
-
-    assert doc == test_arrow_doc

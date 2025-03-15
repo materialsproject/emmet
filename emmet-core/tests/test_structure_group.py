@@ -1,10 +1,9 @@
-import pyarrow as pa
 import pytest
 from monty.serialization import loadfn
 from pymatgen.core import Composition
 
+from emmet.core.arrow import cleanup_msonables
 from emmet.core.structure_group import StructureGroupDoc, _get_id_lexi
-from emmet.core.utils import jsanitize
 
 
 @pytest.fixture(scope="session")
@@ -69,19 +68,13 @@ def test_lexi_id():
 
 
 def test_structure_group_arrow_round_trip_serialization(entries_lto):
-    from emmet.core.arrow import arrowize
-
     doc = StructureGroupDoc.from_grouped_entries(
         entries_lto,
         ignored_specie="Li",
     )
+    arrow_struct = doc.model_dump(context={"format": "arrow"})
+    test_arrow_doc = StructureGroupDoc.from_arrow(arrow_struct)
 
-    sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
-    test_arrow_doc = StructureGroupDoc(
-        # **pa.array([sanitized_doc], type=StructureGroupDoc.arrow_type())
-        **pa.array([sanitized_doc], type=arrowize(StructureGroupDoc))
-        .to_pandas(maps_as_pydicts="strict")
-        .iloc[0]
+    assert cleanup_msonables(doc.model_dump()) == cleanup_msonables(
+        test_arrow_doc.model_dump()
     )
-
-    assert doc == test_arrow_doc

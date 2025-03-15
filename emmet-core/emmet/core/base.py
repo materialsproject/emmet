@@ -5,14 +5,51 @@
 from datetime import datetime
 from typing import Literal, Optional, TypeVar
 
-from pydantic import BaseModel, Field, field_validator
+import pyarrow as pa
+from pydantic import (
+    BaseModel,
+    Field,
+    SerializationInfo,
+    field_validator,
+    model_serializer,
+)
 from pymatgen.core import __version__ as pmg_version
 
 from emmet.core import __version__
 from emmet.core.common import convert_datetime
-from emmet.core.utils import utcnow
+from emmet.core.utils import jsanitize, utcnow
 
 T = TypeVar("T", bound="EmmetBaseModel")
+
+
+class ArrowModel(BaseModel):
+    @classmethod
+    def arrow_type(cls):
+        from emmet.core.arrow import arrowize
+
+        return arrowize(cls)
+
+    @classmethod
+    def from_arrow(cls, arrow_struct):
+        from emmet.core.arrow import cleanup_msonables
+
+        data = cleanup_msonables(
+            jsanitize(arrow_struct.as_py(maps_as_pydicts="strict"))
+        )
+        return cls(**{k: v for k, v in data.items()})
+
+    @model_serializer(mode="wrap")
+    def model_serialization(self, default_serializer, info: SerializationInfo):
+        default_serialized_model = default_serializer(self, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            return pa.scalar(
+                jsanitize(default_serialized_model, allow_bson=True),
+                type=self.arrow_type(),
+            )
+
+        return default_serialized_model
 
 
 class EmmetMeta(BaseModel):
@@ -53,16 +90,10 @@ class EmmetMeta(BaseModel):
         return convert_datetime(cls, v)
 
 
-class EmmetBaseModel(BaseModel):
+class EmmetBaseModel(ArrowModel):
     """Base Model for default emmet data."""
 
     builder_meta: Optional[EmmetMeta] = Field(
         default_factory=EmmetMeta,  # type: ignore
         description="Builder metadata.",
     )
-
-    @classmethod
-    def arrow_type(cls):
-        from emmet.core.arrow import arrowize
-
-        return arrowize(cls)
