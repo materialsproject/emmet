@@ -12,3 +12,5 @@ try:
 except PackageNotFoundError:  # pragma: no cover
     # package is not installed
     pass
+
+import emmet.core.serialization_adapters

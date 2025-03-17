@@ -4,21 +4,15 @@ from collections.abc import Mapping
 from datetime import datetime
 from enum import Enum
 from types import UnionType
-from typing import Any, ForwardRef, _eval_type, _UnionGenericAlias
+from typing import Any, ForwardRef, _UnionGenericAlias
 
+import pyarrow as pa
 import typing_extensions
 from monty.json import MSONable
 from pydantic._internal._model_construction import ModelMetaclass
 from pydantic.types import ImportString
 
-import emmet.core.serialization_adapters
 from emmet.core.utils import jsanitize
-
-try:
-    import pyarrow as pa
-except ImportError:
-    raise ImportError("Install pyarrow to get arrow representations of emmet classes")
-
 
 RED = "\033[31m"
 BLUE = "\033[34m"

@@ -16,6 +16,7 @@ from pydantic import (
 from pymatgen.core import __version__ as pmg_version
 
 from emmet.core import __version__
+from emmet.core.arrow import arrowize, cleanup_msonables
 from emmet.core.common import convert_datetime
 from emmet.core.utils import jsanitize, utcnow
 
@@ -25,13 +26,11 @@ T = TypeVar("T", bound="EmmetBaseModel")
 class ArrowModel(BaseModel):
     @classmethod
     def arrow_type(cls):
-        from emmet.core.arrow import arrowize
 
         return arrowize(cls)
 
     @classmethod
     def from_arrow(cls, arrow_struct):
-        from emmet.core.arrow import cleanup_msonables
 
         data = cleanup_msonables(
             jsanitize(arrow_struct.as_py(maps_as_pydicts="strict"))
