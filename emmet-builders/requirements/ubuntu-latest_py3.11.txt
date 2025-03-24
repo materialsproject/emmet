@@ -19,9 +19,9 @@ attrs==25.3.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.37.16
+boto3==1.37.19
     # via maggma
-botocore==1.37.16
+botocore==1.37.19
     # via
     #   boto3
     #   s3transfer
@@ -51,6 +51,8 @@ filelock==3.18.0
     # via mdanalysis
 fonttools==4.56.0
     # via matplotlib
+fsspec==2025.3.0
+    # via matcalc
 griddataformats==1.0.2
     # via mdanalysis
 h5py==3.13.0
@@ -90,7 +92,7 @@ maggma==0.71.5
     # via
     #   emmet-builders (setup.py)
     #   mp-api
-matcalc==0.0.6
+matcalc==0.1.2
     # via emmet-core
 matminer==0.9.3
     # via
@@ -138,7 +140,7 @@ msgpack==1.1.0
     #   maggma
     #   mmtf-python
     #   mp-api
-narwhals==1.31.0
+narwhals==1.32.0
     # via plotly
 networkx==3.4.2
     # via
@@ -179,7 +181,7 @@ numpy==1.26.4
     #   statsmodels
     #   symfc
     #   tifffile
-orjson==3.10.15
+orjson==3.10.16
     # via maggma
 packaging==24.2
     # via
@@ -264,7 +266,7 @@ pymongo==4.10.1
     #   matminer
 pynacl==1.5.0
     # via paramiko
-pyparsing==3.2.1
+pyparsing==3.2.2
     # via matplotlib
 pytest==8.3.5
     # via solvation-analysis
@@ -390,7 +392,7 @@ typing-extensions==4.12.2
     #   referencing
     #   spglib
     #   typeguard
-tzdata==2025.1
+tzdata==2025.2
     # via pandas
 uncertainties==3.2.2
     # via pymatgen
