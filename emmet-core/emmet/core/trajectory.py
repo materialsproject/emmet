@@ -28,6 +28,7 @@ except ImportError:
     ArrowTable = None
 
 if TYPE_CHECKING:
+    from typing import Any
     from typing_extensions import Self
     from collections.abc import Sequence
 
@@ -132,7 +133,7 @@ class Trajectory(BaseModel):
     @classmethod
     def _from_dict(
         cls,
-        props: dict[str, list],
+        props: dict[str, Any],
         constant_lattice: bool = False,
         lattice_match_tol: float | None = 1.0e-6,
         **kwargs,
@@ -189,7 +190,9 @@ class Trajectory(BaseModel):
         if len(esteps := props.get("electronic_steps", [])) > 0:
             props["num_electronic_steps"] = [len(estep) for estep in esteps]
 
-        return cls(**props, num_ionic_steps=num_ionic_steps, **kwargs)
+        props["num_ionic_steps"] = num_ionic_steps
+
+        return cls(**props, **kwargs)
 
     @classmethod
     def from_task_doc(cls, task_doc: TaskDoc, **kwargs) -> Self:
