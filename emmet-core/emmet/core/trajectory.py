@@ -233,7 +233,11 @@ class Trajectory(BaseModel):
                 ):
                     props[k].append(getattr(ionic_step, k))
 
-        return cls._from_dict(props, identifier=task_doc.task_id.string, **kwargs)
+        return cls._from_dict(
+            props,
+            identifier=task_doc.task_id.string if task_doc.task_id else None,
+            **kwargs,
+        )
 
     @classmethod
     def from_pmg(cls, traj: PmgTrajectory, **kwargs) -> Self:
