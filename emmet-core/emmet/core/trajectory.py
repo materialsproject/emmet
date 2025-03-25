@@ -86,6 +86,10 @@ class Trajectory(BaseModel):
         None, description="The 3x3 stress tensor in kilobar at each ionic step."
     )
 
+    identifier: str | None = Field(
+        None, description="Identifier of this trajectory, e.g., task ID."
+    )
+
     def __hash__(self) -> int:
         """Used to verify roundtrip conversion of Trajectory."""
         return hash(self.model_dump_json())
@@ -131,6 +135,7 @@ class Trajectory(BaseModel):
         props: dict[str, list],
         constant_lattice: bool = False,
         lattice_match_tol: float | None = 1.0e-6,
+        **kwargs,
     ) -> Self:
         """
         Common class constructor to create a Trajectory from a dict.
@@ -145,6 +150,8 @@ class Trajectory(BaseModel):
             If a float and constant_lattice is False, this defines the tolerance
             for determining if the lattice has changed during the course of the
             trajectory. If None, no check is performed.
+        **kwargs
+            Other kwargs to pass to Trajectory
 
         Returns
         -----------
@@ -182,7 +189,7 @@ class Trajectory(BaseModel):
         if len(esteps := props.get("electronic_steps", [])) > 0:
             props["num_electronic_steps"] = [len(estep) for estep in esteps]
 
-        return cls(**props, num_ionic_steps=num_ionic_steps)
+        return cls(**props, num_ionic_steps=num_ionic_steps, **kwargs)
 
     @classmethod
     def from_task_doc(cls, task_doc: TaskDoc, **kwargs) -> Self:
@@ -194,10 +201,8 @@ class Trajectory(BaseModel):
         task_doc : emmet.core.TaskDoc
         constant_lattice : bool (default = False)
             Whether the lattice is constant thoughout the trajectory
-        lattice_match_tol : float or None (default = 1e-6)
-            If a float and constant_lattice is False, this defines the tolerance
-            for determining if the lattice has changed during the course of the
-            trajectory. If None, no check is performed.
+        kwargs
+            Other kwargs to pass to Trajectory
 
         Returns
         -----------
@@ -228,7 +233,7 @@ class Trajectory(BaseModel):
                 ):
                     props[k].append(getattr(ionic_step, k))
 
-        return cls._from_dict(props, **kwargs)
+        return cls._from_dict(props, identifier=task_doc.task_id.string, **kwargs)
 
     @classmethod
     def from_pmg(cls, traj: PmgTrajectory, **kwargs) -> Self:
@@ -285,10 +290,13 @@ class Trajectory(BaseModel):
         pa_config = {
             k: pa.array(v)
             for k, v in self.model_dump(mode="json").items()
-            if hasattr(v, "__len__")
+            if hasattr(v, "__len__") and not isinstance(v, str)
         }
         pa_config["elements"] = pa.array(
             [self.elements for _ in range(self.num_ionic_steps)]
+        )
+        pa_config["identifier"] = pa.array(
+            [self.identifier for _ in range(self.num_ionic_steps)]
         )
 
         pa_table = pa.table(pa_config)
@@ -298,24 +306,32 @@ class Trajectory(BaseModel):
         return pa_table
 
     @classmethod
-    def from_parquet(cls, file_name: str | Path) -> Self:
+    def from_parquet(cls, file_name: str | Path, identifier: str | None = None) -> Self:
         """
         Create a trajectory from a parquet file.
 
         Parameters
         -----------
         file_name : str or .Path
-        The parquet file to read from, can use any compression
-        (gz, bz2, etc.) known to monty.io.zopen
+            The parquet file to read from
+        identifier : str or None (default)
+            If not None, the identifier of the trajectory to return
+            from a dataset of multiple trajectories.
 
         Returns
         -----------
         Trajectory
         """
         pa_table = pa_pq.read_table(file_name)
+        if identifier:
+            pa_table = pa_table.filter(
+                pa.compute.field("identifier") == identifier,
+                null_selection_behavior="drop",
+            )
         config = pa_table.to_pydict()
         config["num_ionic_steps"] = len(config["elements"])
-        config["elements"] = config["elements"][0]
+        for k in ("elements", "identifier"):
+            config[k] = config[k][0]
         return cls(**config)
 
     def to_pmg(self, frame_props: Sequence[str] | None = None) -> PmgTrajectory:
