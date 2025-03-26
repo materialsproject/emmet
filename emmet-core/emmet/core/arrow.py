@@ -116,7 +116,7 @@ def arrowize(obj):
 
     if isinstance(obj, _UnionGenericAlias | UnionType):
         arrow_types = [
-            arrowize(arg)
+            (arg.__name__, arrowize(arg))
             for arg in list(
                 filter(
                     lambda x: x is not types.NoneType,
@@ -125,14 +125,11 @@ def arrowize(obj):
             )
         ]
 
-        if all(arg == arrow_types[0] for arg in arrow_types):
-            return arrow_types[0]
+        if all(field == arrow_types[0][1] for (field_name, field) in arrow_types):
+            return arrow_types[0][1]
 
         return pa.dense_union(
-            [
-                pa.field(f"child_{idx}", field)
-                for idx, field, in zip(range(len(arrow_types)), arrow_types)
-            ]
+            [pa.field(f"{field_name}", field) for (field_name, field) in arrow_types]
         )
 
     if isinstance(obj, ModelMetaclass):
