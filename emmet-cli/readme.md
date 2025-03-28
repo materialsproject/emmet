@@ -1,8 +1,8 @@
-# MP Contrib Command Line Interface
+# Emmet Command Line Interface
 ```
-Usage: mp-contrib [OPTIONS] COMMAND [ARGS]...
+Usage: emmet [OPTIONS] COMMAND [ARGS]...
 
-  Command line interface for MP contributions
+  Command line interface for Emmet
 
 Options:
   --verbose  Show debug messages.
@@ -14,7 +14,7 @@ Commands:
 ```
 ## submit
 ```
-Usage: mp-contrib submit [OPTIONS] COMMAND [ARGS]...
+Usage: emmet submit [OPTIONS] COMMAND [ARGS]...
 
   Commands for managing an MP data submission.
 
@@ -30,7 +30,7 @@ Commands:
 ```
 ### create
 ```
-Usage: mp-contrib submit create [OPTIONS] [PATHS]...
+Usage: emmet submit create [OPTIONS] [PATHS]...
 
   Creates a new MP data submission.
 
@@ -44,7 +44,7 @@ Options:
 ```
 ### add-to
 ```
-Usage: mp-contrib submit add-to [OPTIONS] SUBMISSION [ADDITIONAL_PATHS]...
+Usage: emmet submit add-to [OPTIONS] SUBMISSION [ADDITIONAL_PATHS]...
 
   Adds more files to the submission.
 
@@ -55,8 +55,7 @@ Options:
 ```
 ### remove-from
 ```
-Usage: mp-contrib submit remove-from [OPTIONS] SUBMISSION
-                                     [ADDITIONAL_PATHS]...
+Usage: emmet submit remove-from [OPTIONS] SUBMISSION [ADDITIONAL_PATHS]...
 
   Removes files from the submission.
 
@@ -67,7 +66,7 @@ Options:
 ```
 ### validate
 ```
-Usage: mp-contrib submit validate [OPTIONS] SUBMISSION
+Usage: emmet submit validate [OPTIONS] SUBMISSION
 
   Locally validates the latest version of an MP data submission.
 
@@ -78,7 +77,7 @@ Options:
 ```
 ### push
 ```
-Usage: mp-contrib submit push [OPTIONS] SUBMISSION
+Usage: emmet submit push [OPTIONS] SUBMISSION
 
   Pushes the latest version of an MP data submission.
 

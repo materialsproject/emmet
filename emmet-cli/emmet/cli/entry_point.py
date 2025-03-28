@@ -13,7 +13,7 @@ logger = logging.getLogger("emmet")
 @click.version_option()
 @click.pass_context
 def emmet(ctx, verbose):
-    """Command line interface for MP contributions"""
+    """Command line interface for Emmet"""
 
     logger.setLevel(logging.DEBUG if verbose else logging.INFO)
 

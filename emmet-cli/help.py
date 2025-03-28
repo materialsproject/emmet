@@ -17,5 +17,5 @@ def recursive_help(cmd, parent=None):
         recursive_help(sub, ctx)
 
 
-print("# MP Contrib Command Line Interface")
+print("# Emmet Command Line Interface")
 recursive_help(emmet)
