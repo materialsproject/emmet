@@ -18,9 +18,9 @@ import click
 from hpsspy import HpssOSError
 from hpsspy.os.path import isfile
 
-from emmet.cli import SETTINGS
-from emmet.cli.decorators import sbatch
-from emmet.cli.utils import (
+from emmet.cli.legacy import SETTINGS
+from emmet.cli.legacy.decorators import sbatch
+from emmet.cli.legacy.utils import (
     EmmetCliError,
     ReturnCodes,
     VaspDirsGenerator,

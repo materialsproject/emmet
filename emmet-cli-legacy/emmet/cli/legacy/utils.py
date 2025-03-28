@@ -26,7 +26,7 @@ from emmet.core.vasp.task_valid import TaskDocument
 from emmet.core.vasp.validation import ValidationDoc
 from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 
-from emmet.cli import SETTINGS
+from emmet.cli.legacy import SETTINGS
 from emmet.core.utils import group_structures
 
 logger = logging.getLogger("emmet")

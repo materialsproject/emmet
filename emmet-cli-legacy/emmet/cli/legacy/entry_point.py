@@ -6,10 +6,10 @@ from io import StringIO
 from github3 import GitHub
 from github3.session import GitHubSession
 
-from emmet.cli.admin import admin
-from emmet.cli.calc import calc
-from emmet.cli.tasks import tasks
-from emmet.cli.utils import EmmetCliError, calcdb_from_mgrant
+from emmet.cli.legacy.admin import admin
+from emmet.cli.legacy.calc import calc
+from emmet.cli.legacy.tasks import tasks
+from emmet.cli.legacy.utils import EmmetCliError, calcdb_from_mgrant
 
 logger = logging.getLogger("")
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
