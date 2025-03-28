@@ -99,8 +99,9 @@ def test_doc_enum():
     assert TestEnum.B.__doc__ == "Might describe B"
 
 
-def test_blocked_md5(tmp_dir):
+def test_blocked_hash(tmp_dir):
     import hashlib
+    import blake3
 
     file_text = (
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, "
@@ -114,10 +115,10 @@ def test_blocked_md5(tmp_dir):
         get_hash_blocked("test_md5.txt", hasher=hashlib.md5())
         == hashlib.md5(file_text).hexdigest()
     )
+    assert get_hash_blocked("test_md5.txt") == blake3.blake3(file_text).hexdigest()
 
 
 def test_model_flatten():
-
     sub_models = get_flat_models_from_model(TaskDoc)
     assert {model.__name__ for model in sub_models} == {
         "AnalysisDoc",
@@ -142,5 +143,4 @@ def test_model_flatten():
 
 
 def test_import():
-
     assert dynamic_import("emmet.core.tasks.TaskDoc") == TaskDoc

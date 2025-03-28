@@ -58,7 +58,14 @@ jobs:
     strategy:
       matrix:
         os: ["ubuntu-latest"] # TODO openbabel for windows and mac
-        package: ["emmet-core", "emmet-builders", "emmet-api", "emmet-archival"]
+        package:
+          [
+            "emmet-core",
+            "emmet-builders",
+            "emmet-api",
+            "emmet-cli",
+            "emmet-archival",
+          ]
         python-version: ["3.11", "3.12"]
     name: ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}

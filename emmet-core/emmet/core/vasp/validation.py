@@ -9,7 +9,7 @@ from emmet.core.vasp.calculation import Calculation
 from emmet.core.base import EmmetBaseModel
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID, AlphaID
-from emmet.core.utils import utcnow, DocEnum
+from emmet.core.utils import utcnow
 from emmet.core.vasp.calc_types.enums import CalcType, RunType
 from emmet.core.vasp.utils import FileMetadata, discover_vasp_files
 from emmet.core.vasp.task_valid import TaskDocument
@@ -31,28 +31,6 @@ if TYPE_CHECKING:
     from pathlib import Path
     from typing_extensions import Self
     from emmet.core.tasks import TaskDoc
-
-
-class DeprecationMessage(DocEnum):
-    MANUAL = "M", "Manual deprecation"
-    SYMMETRY = (
-        "S001",
-        "Could not determine crystalline space group, needed for input set check.",
-    )
-    KPTS = "C001", "Too few KPoints"
-    KSPACING = "C002", "KSpacing not high enough"
-    ENCUT = "C002", "ENCUT too low"
-    FORCES = "C003", "Forces too large"
-    MAG = "C004", "At least one site magnetization is too large"
-    POTCAR = (
-        "C005",
-        "At least one POTCAR used does not agree with the pymatgen input set",
-    )
-    CONVERGENCE = "E001", "Calculation did not converge"
-    MAX_SCF = "E002", "Max SCF gradient too large"
-    LDAU = "I001", "LDAU Parameters don't match the inputset"
-    SET = ("I002", "Cannot validate due to missing or problematic input set")
-    UNKNOWN = "U001", "Cannot validate due to unknown calc type"
 
 
 class ValidationDoc(VaspValidator, EmmetBaseModel):
@@ -79,6 +57,11 @@ class ValidationDoc(VaspValidator, EmmetBaseModel):
         None, description="The run type of the calculation"
     )
     calc_type: CalcType | None = Field(None, description="The calculation type.")
+
+    @field_validator("last_updated", mode="before")
+    @classmethod
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)
 
     @field_validator("last_updated", mode="before")
     @classmethod

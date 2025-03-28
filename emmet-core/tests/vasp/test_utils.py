@@ -9,10 +9,8 @@ from emmet.core.vasp.utils import (
     FileMetadata,
 )
 
-from emmet.core.utils import get_hash_blocked
 
-
-def test_file_meta(tmp_dir):
+def test_file_meta():
     incar_bytes = """
 ALGO = Normal
 ENCUT = 500
@@ -24,8 +22,9 @@ IBRION = -1
         f.write(incar_bytes)
 
     file_meta = FileMetadata(name="INCAR.bz2", path=file_name)
+    file_meta.compute_hash()
     assert Path(file_meta.path).exists()
-    assert file_meta.md5 == get_hash_blocked(file_name)
+    assert file_meta.hash == get_hash_blocked(file_name)
 
 
 def test_file_discovery():

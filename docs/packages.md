@@ -6,9 +6,9 @@
 
 This is the core package for the `emmet` ecosystem. `emmet.core` is where data models are defined. These data models are the most important part of `emmet` since they dictate what all the other packages have to use, serve, or compute.
 
-## emmet-cli
+## emmet-cli-legacy
 
-Many of the operations in `emmet` are complex. These range from backing up calculations, to parsing, to setting of build chains, to starting workflows. Since these processes are pretty standard, the `emmet` ecosystem provides a CLI implemented in `emmet.cli`. This makes managing MAPI much easier.
+Many of the operations in `emmet` are complex. These range from backing up calculations, to parsing, to setting of build chains, to starting workflows. Since these processes are pretty standard, the `emmet` ecosystem provides a CLI implemented in `emmet.cli.legacy`. This makes managing MAPI much easier.
 
 
 ## emmet-builders

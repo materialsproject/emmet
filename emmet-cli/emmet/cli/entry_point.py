@@ -1,108 +1,60 @@
 import logging
-import os
+import sys
 import click
+from pathlib import Path
 
-from io import StringIO
-from github3 import GitHub
-from github3.session import GitHubSession
-
-from emmet.cli.admin import admin
-from emmet.cli.calc import calc
+from emmet.cli.submit import submit
 from emmet.cli.tasks import tasks
-from emmet.cli.utils import EmmetCliError, calcdb_from_mgrant
+from emmet.cli.utils import EmmetCliError
+from emmet.cli.state_manager import StateManager
+from emmet.cli.task_manager import TaskManager
 
-logger = logging.getLogger("")
-CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
-
-
-def opt_prompt():
-    return click.prompt("GitHub OPT", hide_input=True)
+logger = logging.getLogger("emmet")
 
 
-@click.group(context_settings=CONTEXT_SETTINGS)
-@click.option(
-    "--spec-or-dbfile",
-    metavar="HOST/DB",
-    help="MongoGrant spec or path to db.json for DB to use.",
-)
-@click.option("--run", is_flag=True, help="Run DB/filesystem write operations.")
-@click.option("--issue", type=int, help="Production tracker issue (required if --run).")
-@click.option("--sbatch", is_flag=True, help="Switch to SBatch mode.")
-@click.option(
-    "--ntries",
-    default=1,
-    show_default=True,
-    help="Number of jobs (for walltime > 48h).",
-)
-@click.option("--bb", is_flag=True, help="Use burst buffer.")
-@click.option("--no-dupe-check", is_flag=True, help="Skip duplicate check(s).")
+@click.group()
 @click.option("--verbose", is_flag=True, help="Show debug messages.")
+@click.option(
+    "--state-dir",
+    type=click.Path(file_okay=False),
+    default=str(Path.home() / ".emmet"),
+    help="Directory to store state files.",
+)
+@click.option(
+    "--running-status-update-interval",
+    type=int,
+    default=30,
+    help="Interval in seconds between task status updates. Defaults to 30 seconds.",
+)
 @click.version_option()
-def emmet(spec_or_dbfile, run, issue, sbatch, ntries, bb, no_dupe_check, verbose):
-    """Command line interface for emmet"""
+@click.pass_context
+def emmet(
+    ctx: click.Context,
+    verbose: bool,
+    state_dir: str,
+    running_status_update_interval: int,
+) -> None:
+    """Command line interface for Emmet"""
+
     logger.setLevel(logging.DEBUG if verbose else logging.INFO)
-    logging.getLogger("github3").setLevel(logging.WARNING)
-    ctx = click.get_current_context()
+    handler = logging.StreamHandler(sys.stdout)
+    formatter = logging.Formatter("%(asctime)s %(name)-12s %(levelname)-8s %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+    state_manager = StateManager(Path(state_dir))
+    task_manager = TaskManager(
+        state_manager=state_manager,
+        running_status_update_interval=running_status_update_interval,
+    )
+
+    # Store in context for access by subcommands
     ctx.ensure_object(dict)
-
-    if not sbatch and bb:
-        raise EmmetCliError("Burst buffer only available in SBatch mode (--sbatch).")
-
-    if spec_or_dbfile:
-        client = calcdb_from_mgrant(spec_or_dbfile)
-        ctx.obj["CLIENT"] = client
-        # ctx.obj["MONGO_HANDLER"] = BufferedMongoHandler(
-        #    host=client.host,
-        #    port=client.port,
-        #    database_name=client.db_name,
-        #    username=client.user,
-        #    password=client.password,
-        #    level=logging.WARNING,
-        #    authentication_db=client.db_name,
-        #    collection="emmet_logs",
-        #    buffer_periodical_flush_timing=False,  # flush manually
-        # )
-        # logger.addHandler(ctx.obj["MONGO_HANDLER"])
-        # coll = ctx.obj["MONGO_HANDLER"].collection
-        # ensure_indexes(SETTINGS.log_fields, [coll])
-
-    if run:
-        if not issue:
-            raise EmmetCliError("Need issue number via --issue!")
-
-        ctx.obj["LOG_STREAM"] = StringIO()
-        memory_handler = logging.StreamHandler(ctx.obj["LOG_STREAM"])
-        formatter = logging.Formatter(
-            "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
-        )
-        memory_handler.setFormatter(formatter)
-        logger.addHandler(memory_handler)
-
-        CREDENTIALS = os.path.join(os.path.expanduser("~"), ".emmet_credentials")
-        if not os.path.exists(CREDENTIALS):
-            from github3 import authorize  # TODO not supported anymore
-
-            user = click.prompt("GitHub Username")
-            password = click.prompt("GitHub Password", hide_input=True)
-            auth = authorize(
-                user,
-                password,
-                ["user", "repo", "gist"],
-                "emmet CLI",
-                two_factor_callback=opt_prompt,
-            )
-            with open(CREDENTIALS, "w") as fd:
-                fd.write(auth.token)
-
-        with open(CREDENTIALS, "r") as fd:
-            token = fd.readline().strip()
-            ctx.obj["GH"] = gh = GitHub(session=GitHubSession(default_read_timeout=30))
-            gh.login(token=token)
-    else:
-        click.secho("DRY RUN! Add --run flag to execute changes.", fg="green")
+    ctx.obj["state_manager"] = state_manager
+    ctx.obj["task_manager"] = task_manager
 
 
-def safe_entry_point():
+def safe_entry_point() -> None:
     try:
         emmet()
     except EmmetCliError as e:
@@ -111,6 +63,6 @@ def safe_entry_point():
         logger.info(e, exc_info=True)
 
 
-emmet.add_command(admin)
-emmet.add_command(calc)
+# Add commands
+emmet.add_command(submit)
 emmet.add_command(tasks)

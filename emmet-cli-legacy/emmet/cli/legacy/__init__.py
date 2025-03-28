@@ -1,6 +1,6 @@
 import logging
 
-from emmet.cli.settings import EmmetCLISettings
+from emmet.cli.legacy.settings import EmmetCLISettings
 
 SETTINGS = EmmetCLISettings()
 logging.basicConfig(

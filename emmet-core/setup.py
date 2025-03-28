@@ -32,9 +32,10 @@ setup(
         "monty>=2024.2.2",
         "pydantic>=2.0",
         "pydantic-settings>=2.0",
-        "pymatgen-io-validation>=0.1.0",
+        "pymatgen-io-validation>=0.1.0rc2",
         "pybtex~=0.24",
         "typing-extensions>=3.7",
+        "blake3",
     ],
     extras_require={
         "all": [

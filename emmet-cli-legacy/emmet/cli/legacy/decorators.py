@@ -10,8 +10,8 @@ import click
 from slurmpy import Slurm
 from github3.gists import ShortGist
 
-from emmet.cli import SETTINGS
-from emmet.cli.utils import EmmetCliError, ReturnCodes, reconstruct_command
+from emmet.cli.legacy import SETTINGS
+from emmet.cli.legacy.utils import EmmetCliError, ReturnCodes, reconstruct_command
 
 logger = logging.getLogger("emmet")
 COMMENT_TEMPLATE = """
@@ -49,7 +49,6 @@ def track(func):
 
             # create or retrieve gist for log files
             gist_name = f"{SETTINGS.tracker['repo']}-issue{issue_number}.md"
-            directory = ctx.parent.params["directory"]
             emmet_dir = os.path.join(os.path.expanduser("~"), ".emmet")
             if not os.path.exists(emmet_dir):
                 os.mkdir(emmet_dir)

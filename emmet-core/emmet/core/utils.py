@@ -10,7 +10,10 @@ from importlib import import_module
 from itertools import groupby
 import logging
 from math import gcd
-from typing import TYPE_CHECKING, get_args
+from multiprocessing import Pool
+import shutil
+import subprocess
+from typing import Any, Dict, Iterator, List, Optional, Tuple, TYPE_CHECKING, get_args
 
 import numpy as np
 from monty.json import MSONable
@@ -502,10 +505,7 @@ def get_hash_blocked(
     The hash as a str
     """
     if hasher is None:
-        if blake3:
-            hasher = blake3.blake3()
-        else:
-            hasher = hashlib.md5()
+        hasher = blake3.blake3() if blake3 else hashlib.md5()
 
     with open(str(file_path), "rb") as f:
         while True:
@@ -513,7 +513,8 @@ def get_hash_blocked(
             if not data:
                 break
             hasher.update(data)
-        return hasher.hexdigest()
+
+    return hasher.hexdigest()
 
 
 def dynamic_import(module_path: str) -> Any:
@@ -568,3 +569,43 @@ def requires_arrow(func: Callable) -> Callable:
         return func(*args, **kwargs)
 
     return wrap
+
+
+def b3sum_available() -> bool:
+    """Check if the native `b3sum` CLI tool is available."""
+    return shutil.which("b3sum") is not None
+
+
+def hash_with_b3sum_cli(path: PathLike) -> Tuple[PathLike, Optional[str]]:
+    """Run the native Rust b3sum CLI on a file and return (path, hash)."""
+    try:
+        result = subprocess.run(
+            ["b3sum", str(path)],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        digest = result.stdout.strip().split()[0]
+        return path, digest
+    except subprocess.CalledProcessError as e:
+        print(f"Error hashing {path}: {e}")
+        return path, None
+
+
+def parallel_get_hash(
+    file_paths: List[PathLike], chunk_size: int = 4 * 1024 * 1024
+) -> Dict[PathLike, str]:
+    if b3sum_available():  # use native rust CLI if available
+        logger.info("Using native blake3 CLI for hashing.")
+        hash_func = hash_with_b3sum_cli
+    elif blake3 is not None:
+        logger.info("Using Python blake3 fallback.")
+        hash_func = get_hash_blocked
+    else:
+        logger.error("Neither b3sum CLI nor blake3 Python module is available.")
+        raise RuntimeError("Neither b3sum CLI nor blake3 Python module is available.")
+
+    # Run in parallel
+    with Pool() as pool:
+        results = pool.map(hash_func, file_paths)
+        return dict(results)
