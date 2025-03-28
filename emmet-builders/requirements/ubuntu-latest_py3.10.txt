@@ -19,9 +19,9 @@ attrs==25.3.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.37.19
+boto3==1.37.23
     # via maggma
-botocore==1.37.19
+botocore==1.37.23
     # via
     #   boto3
     #   s3transfer
@@ -58,7 +58,9 @@ fsspec==2025.3.0
 griddataformats==1.0.2
     # via mdanalysis
 h5py==3.13.0
-    # via phonopy
+    # via
+    #   phono3py
+    #   phonopy
 idna==3.10
     # via requests
 imageio==2.37.0
@@ -94,7 +96,7 @@ maggma==0.71.5
     # via
     #   emmet-builders (setup.py)
     #   mp-api
-matcalc==0.1.2
+matcalc==0.3.2
     # via emmet-core
 matminer==0.9.3
     # via
@@ -104,6 +106,7 @@ matplotlib==3.10.1
     # via
     #   ase
     #   mdanalysis
+    #   phono3py
     #   phonopy
     #   pymatgen
     #   seaborn
@@ -166,6 +169,7 @@ numpy==1.26.4
     #   mrcfile
     #   pandas
     #   patsy
+    #   phono3py
     #   phonopy
     #   pymatgen
     #   pymatgen-analysis-defects
@@ -209,8 +213,12 @@ paramiko==3.5.1
     # via sshtunnel
 patsy==1.0.1
     # via statsmodels
-phonopy==2.38.0
+phono3py==3.15.0
     # via matcalc
+phonopy==2.38.0
+    # via
+    #   matcalc
+    #   phono3py
 pillow==11.1.0
     # via
     #   imageio
@@ -232,12 +240,12 @@ pybtex==0.24.0
     #   robocrys
 pycparser==2.22
     # via cffi
-pydantic==2.10.6
+pydantic==2.11.1
     # via
     #   emmet-core
     #   maggma
     #   pydantic-settings
-pydantic-core==2.27.2
+pydantic-core==2.33.0
     # via pydantic
 pydantic-settings==2.8.1
     # via
@@ -268,7 +276,7 @@ pymongo==4.10.1
     #   matminer
 pynacl==1.5.0
     # via paramiko
-pyparsing==3.2.2
+pyparsing==3.2.3
     # via matplotlib
 pytest==8.3.5
     # via solvation-analysis
@@ -278,14 +286,15 @@ python-dateutil==2.9.0.post0
     #   maggma
     #   matplotlib
     #   pandas
-python-dotenv==1.0.1
+python-dotenv==1.1.0
     # via pydantic-settings
-pytz==2025.1
+pytz==2025.2
     # via
     #   mongomock
     #   pandas
 pyyaml==6.0.2
     # via
+    #   phono3py
     #   phonopy
     #   pybtex
 pyzmq==26.3.0
@@ -303,7 +312,7 @@ requests==2.32.3
     #   pymatgen
 robocrys==0.2.10
     # via emmet-core
-rpds-py==0.23.1
+rpds-py==0.24.0
     # via
     #   jsonschema
     #   referencing
@@ -320,12 +329,15 @@ s3transfer==0.11.4
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
 scikit-learn==1.6.1
-    # via matminer
+    # via
+    #   matcalc
+    #   matminer
 scipy==1.15.2
     # via
     #   ase
     #   griddataformats
     #   mdanalysis
+    #   phono3py
     #   pymatgen
     #   robocrys
     #   scikit-image
@@ -353,6 +365,7 @@ solvation-analysis==0.4.1
     #   emmet-core
 spglib==2.6.0
     # via
+    #   phono3py
     #   phonopy
     #   pymatgen
     #   robocrys
@@ -386,7 +399,7 @@ tqdm==4.67.1
     #   pymatgen
 typeguard==4.4.2
     # via inflect
-typing-extensions==4.12.2
+typing-extensions==4.13.0
     # via
     #   emmet-core
     #   mp-api
@@ -396,6 +409,9 @@ typing-extensions==4.12.2
     #   referencing
     #   spglib
     #   typeguard
+    #   typing-inspection
+typing-inspection==0.4.0
+    # via pydantic
 tzdata==2025.2
     # via pandas
 uncertainties==3.2.2
