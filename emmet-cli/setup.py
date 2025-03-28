@@ -3,7 +3,7 @@ import datetime
 from setuptools import setup
 
 setup(
-    name="mp-contrib-cli",
+    name="emmet-cli",
     version=datetime.datetime.today().strftime("%Y.%m.%d"),
     description="command line interface for MP contributors",
     author="The Materials Project",
@@ -11,7 +11,7 @@ setup(
     long_description=open("../README.md").read(),  # noqa: SIM115
     long_description_content_type="text/markdown",
     url="https://github.com/materialsproject/emmet",
-    packages=["mp_contrib.cli"],
+    packages=["emmet.cli"],
     install_requires=[
         "click",
         "colorama",
@@ -20,6 +20,6 @@ setup(
     zip_safe=False,
     entry_points="""
     [console_scripts]
-    mp_contrib=mp_contrib.cli.entry_point:safe_entry_point
+    emmet=emmet.cli.entry_point:safe_entry_point
     """,
 )

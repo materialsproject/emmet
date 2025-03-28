@@ -1,6 +1,6 @@
 from click.core import Command, Context, Group
 
-from mp_contrib.cli.entry_point import mp_contrib
+from emmet.cli.entry_point import emmet
 
 
 def recursive_help(cmd, parent=None):
@@ -18,4 +18,4 @@ def recursive_help(cmd, parent=None):
 
 
 print("# MP Contrib Command Line Interface")
-recursive_help(mp_contrib)
+recursive_help(emmet)

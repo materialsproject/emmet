@@ -1,0 +1,2 @@
+class EmmetCliError(Exception):
+    pass

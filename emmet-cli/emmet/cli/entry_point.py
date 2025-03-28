@@ -2,16 +2,17 @@ import logging
 import sys
 import click
 
-from mp_contrib.cli.submit import submit
-from mp_contrib.cli.utils import MPContribCliError
+from emmet.cli.submit import submit
+from emmet.cli.utils import EmmetCliError
 
-logger = logging.getLogger("mp_contrib_cli")
+logger = logging.getLogger("emmet")
+
 
 @click.group()
 @click.option("--verbose", is_flag=True, help="Show debug messages.")
 @click.version_option()
 @click.pass_context
-def mp_contrib(ctx, verbose):
+def emmet(ctx, verbose):
     """Command line interface for MP contributions"""
 
     logger.setLevel(logging.DEBUG if verbose else logging.INFO)
@@ -19,11 +20,10 @@ def mp_contrib(ctx, verbose):
 
 def safe_entry_point():
     try:
-        mp_contrib()
-    except MPContribCliError as e:
+        emmet()
+    except EmmetCliError as e:
         click.secho(str(e), fg="red")
     except Exception as e:
         logger.info(e, exc_info=True)
 
-mp_contrib.add_command(submit)
-
+emmet.add_command(submit)
