@@ -28,7 +28,7 @@ setup(
     },
     include_package_data=True,
     install_requires=[
-        "pymatgen>=2024.6.10,<=2025.1.9",  # TODO: release upper version pin when bandgap parsing issues sorted
+        "pymatgen>=2024.6.10,<=2025.3.10",  # TODO: release upper version pin when bandgap parsing issues sorted
         "monty>=2024.2.2",
         "pydantic>=2.0",
         "pydantic-settings>=2.0",
