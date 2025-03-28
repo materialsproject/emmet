@@ -24,6 +24,7 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
         frame_props = []
 
         steps = calculation.get("output", {}).get("ionic_steps", None)
+        potim = calculation.get("input", {}).get("incar", {}).get("POTIM", None)
 
         if steps is None:
             raise HTTPException(
@@ -50,7 +51,7 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
                 frame_props.append(step_dict)
 
             traj = Trajectory.from_structures(
-                structures, frame_properties=frame_props, time_step=None
+                structures, frame_properties=frame_props, time_step=potim,
             ).as_dict()
             trajectories.append(traj)
 
