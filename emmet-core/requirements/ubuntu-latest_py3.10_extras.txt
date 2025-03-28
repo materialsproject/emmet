@@ -78,8 +78,6 @@ dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.6rc6
-    # via mp-api
 exceptiongroup==1.2.2
     # via pytest
 filelock==3.18.0

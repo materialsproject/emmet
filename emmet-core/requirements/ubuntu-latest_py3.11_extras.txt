@@ -76,8 +76,6 @@ dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.6rc6
-    # via mp-api
 filelock==3.18.0
     # via
     #   mdanalysis
