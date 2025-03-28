@@ -21,11 +21,11 @@ attrs==25.3.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.37.19
+boto3==1.37.23
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.37.19
+botocore==1.37.23
     # via
     #   boto3
     #   s3transfer
@@ -164,7 +164,7 @@ pillow==11.1.0
     #   scikit-image
 plotly==6.0.1
     # via pymatgen
-protobuf==6.30.1
+protobuf==6.30.2
     # via ddtrace
 pybtex==0.24.0
     # via
@@ -172,13 +172,13 @@ pybtex==0.24.0
     #   pymatgen
 pycparser==2.22
     # via cffi
-pydantic==2.10.6
+pydantic==2.11.1
     # via
     #   emmet-core
     #   fastapi
     #   maggma
     #   pydantic-settings
-pydantic-core==2.27.2
+pydantic-core==2.33.0
     # via pydantic
 pydantic-settings==2.8.1
     # via
@@ -200,7 +200,7 @@ pymongo==4.10.1
     # via maggma
 pynacl==1.5.0
     # via paramiko
-pyparsing==3.2.2
+pyparsing==3.2.3
     # via matplotlib
 python-dateutil==2.9.0.post0
     # via
@@ -208,9 +208,9 @@ python-dateutil==2.9.0.post0
     #   maggma
     #   matplotlib
     #   pandas
-python-dotenv==1.0.1
+python-dotenv==1.1.0
     # via pydantic-settings
-pytz==2025.1
+pytz==2025.2
     # via
     #   mongomock
     #   pandas
@@ -224,7 +224,7 @@ referencing==0.36.2
     #   jsonschema-specifications
 requests==2.32.3
     # via pymatgen
-rpds-py==0.23.1
+rpds-py==0.24.0
     # via
     #   jsonschema
     #   referencing
@@ -274,7 +274,7 @@ tqdm==4.67.1
     # via
     #   maggma
     #   pymatgen
-typing-extensions==4.12.2
+typing-extensions==4.13.0
     # via
     #   anyio
     #   ddtrace
@@ -285,6 +285,9 @@ typing-extensions==4.12.2
     #   pydash
     #   referencing
     #   spglib
+    #   typing-inspection
+typing-inspection==0.4.0
+    # via pydantic
 tzdata==2025.2
     # via pandas
 uncertainties==3.2.2
