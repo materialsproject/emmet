@@ -732,13 +732,13 @@ class OrbitalDoc(PropertyDoc):
                     # To prevent a dramatic increase in storage space, atom indices and element symbols for 3C bonds
                     # are stored using the same keys as those used for lone pairs and conventional two-center bonds
                     donor_atom1_index = (
-                        int(re.sub("\D", "", perts["donor atom 1 symbol"][ind])) - 1
+                        int(re.sub(r"\D", "", perts["donor atom 1 symbol"][ind])) - 1
                     )
                     donor_atom2_index = (
-                        int(re.sub("\D", "", perts["donor atom 1 number"][ind])) - 1
+                        int(re.sub(r"\D", "", perts["donor atom 1 number"][ind])) - 1
                     )
                     donor_atom3_index = (
-                        int(re.sub("\D", "", perts["donor atom 2 symbol"][ind])) - 1
+                        int(re.sub(r"\D", "", perts["donor atom 2 symbol"][ind])) - 1
                     )
                 else:
                     donor_atom1_index = int(perts["donor atom 1 number"][ind]) - 1
@@ -751,13 +751,13 @@ class OrbitalDoc(PropertyDoc):
                 acceptor_atom2 = perts["acceptor atom 2 number"].get(ind)
                 if acceptor_atom2 == "info_is_from_3C":
                     acceptor_atom1_index = (
-                        int(re.sub("\D", "", perts["acceptor atom 1 symbol"][ind])) - 1
+                        int(re.sub(r"\D", "", perts["acceptor atom 1 symbol"][ind])) - 1
                     )
                     acceptor_atom2_index = (
-                        int(re.sub("\D", "", perts["acceptor atom 1 number"][ind])) - 1
+                        int(re.sub(r"\D", "", perts["acceptor atom 1 number"][ind])) - 1
                     )
                     acceptor_atom3_index = (
-                        int(re.sub("\D", "", perts["acceptor atom 2 symbol"][ind])) - 1
+                        int(re.sub(r"\D", "", perts["acceptor atom 2 symbol"][ind])) - 1
                     )
                 else:
                     acceptor_atom1_index = int(perts["acceptor atom 1 number"][ind]) - 1
