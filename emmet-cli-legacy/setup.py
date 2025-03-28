@@ -31,6 +31,6 @@ setup(
     zip_safe=False,
     entry_points="""
     [console_scripts]
-    emmet=emmet.cli.legacy.entry_point:safe_entry_point
+    emmet-legacy=emmet.cli.legacy.entry_point:safe_entry_point
     """,
 )
