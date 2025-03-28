@@ -1,8 +1,8 @@
 import logging
 import click
-from mp_contrib.cli.utils import MPContribCliError
+from emmet.cli.utils import EmmetCliError
 
-logger = logging.getLogger("mp_contrib_cli")
+logger = logging.getLogger("emmet")
 
 @click.group()
 @click.pass_context
@@ -22,9 +22,11 @@ def create(ctx, paths):
     used for all other actions related to this submission."""
 
     if not paths:
-        raise MPContribCliError("Must provide at least one file or directory path to include in submission")
+        raise EmmetCliError(
+            "Must provide at least one file or directory path to include in submission"
+        )
 
-    raise MPContribCliError("Have not implemented this yet")
+    raise EmmetCliError("Have not implemented this yet")
     # should we check if any of this data already exists in MP (how?)
     # submission id will be a UUID
 
@@ -38,9 +40,11 @@ def add_to(ctx, submission, additional_paths):
     This only updates the metadata about the submission."""
 
     if not additional_paths:
-        raise MPContribCliError("Must provide at least one file or directory path to add to the submission")
+        raise EmmetCliError(
+            "Must provide at least one file or directory path to add to the submission"
+        )
 
-    raise MPContribCliError("Have not implemented this yet")
+    raise EmmetCliError("Have not implemented this yet")
 
 @submit.command()
 @click.argument('submission', nargs=1, type=click.Path(exists=True, dir_okay=False))
@@ -52,9 +56,11 @@ def remove_from(ctx, submission, additional_paths):
     This only updates the metadata about the submission."""
 
     if not additional_paths:
-        raise MPContribCliError("Must provide at least one file or directory path to remove from the submission")
+        raise EmmetCliError(
+            "Must provide at least one file or directory path to remove from the submission"
+        )
 
-    raise MPContribCliError("Have not implemented this yet")
+    raise EmmetCliError("Have not implemented this yet")
 
 @submit.command()
 @click.argument('submission', nargs=1, type=click.Path(exists=True, dir_okay=False))
@@ -66,7 +72,7 @@ def validate(ctx, submission):
     
     """
     # perform a local validation (can shortcut if based on metadata)
-    raise MPContribCliError("Have not implemented this yet")
+    raise EmmetCliError("Have not implemented this yet")
 
 @submit.command()
 @click.argument('submission', nargs=1, type=click.Path(exists=True, dir_okay=False))
@@ -84,12 +90,16 @@ def push(ctx, submission):
     updated_file_info = get_changed_since_last_push(submission)
     logger.debug(f"Changes in files for submission since last update: {updated_file_info}")
     if not updated_file_info:
-        raise MPContribCliError("Files for submission have not changed since last update. Not pushing.")
+        raise EmmetCliError(
+            "Files for submission have not changed since last update. Not pushing."
+        )
 
     already_contributed_file_info = get_already_contributed(updated_file_info)
     logger.debug(f"Files for submission considered to be duplicates: {already_contributed_file_info}")
     if already_contributed_file_info:
-        raise MPContribCliError(f"The following are considered to be duplicates of data already in MP {already_contributed_file_info}")
+        raise EmmetCliError(
+            f"The following are considered to be duplicates of data already in MP {already_contributed_file_info}"
+        )
 
     # perform local validation
     ctx.invoke(validate, submission=submission)
@@ -112,4 +122,4 @@ def get_already_contributed(updated_file_info):
 def do_push(path, updated_file_info):
     # push updated submission (push id will be UUID)
     #    (can later determine whether to upload all each time or just diffs)
-    raise MPContribCliError("Have not implemented this yet")
+    raise EmmetCliError("Have not implemented this yet")

@@ -1,2 +1,0 @@
-class MPContribCliError(Exception):
-    pass
