@@ -74,7 +74,7 @@ pydantic-core==2.27.2
     # via pydantic
 pydantic-settings==2.8.1
     # via emmet-core (emmet/emmet-core/setup.py)
-pymatgen==2025.1.9
+pymatgen==2025.3.10
     # via emmet-core (emmet/emmet-core/setup.py)
 pyparsing==3.2.2
     # via matplotlib
