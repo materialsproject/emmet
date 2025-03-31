@@ -53,7 +53,7 @@ filelock==3.18.0
     # via mdanalysis
 fonttools==4.56.0
     # via matplotlib
-fsspec==2025.3.0
+fsspec==2025.3.1
     # via matcalc
 griddataformats==1.0.2
     # via mdanalysis
@@ -387,7 +387,7 @@ threadpoolctl==3.6.0
     # via
     #   mdanalysis
     #   scikit-learn
-tifffile==2025.3.13
+tifffile==2025.3.30
     # via scikit-image
 tomli==2.2.1
     # via pytest
