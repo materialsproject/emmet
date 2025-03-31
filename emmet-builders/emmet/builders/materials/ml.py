@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional, Union
 
 from maggma.builders.map_builder import MapBuilder
 from maggma.core import Store
-from matcalc.utils import get_universal_calculator
+from matcalc import PESCalculator
 from pymatgen.core import Structure
 
 from emmet.core.ml import MLDoc
@@ -43,7 +43,7 @@ class MLBuilder(MapBuilder):
         self.materials = materials
         self.ml_potential = ml_potential
         self.kwargs = kwargs
-        self.model = get_universal_calculator(model, **(model_kwargs or {}))
+        self.model = PESCalculator.load_universal(model, **(model_kwargs or {}))
         self.prop_kwargs = prop_kwargs or {}
 
         if provenance == {}:

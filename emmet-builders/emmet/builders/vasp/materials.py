@@ -186,6 +186,7 @@ class MaterialsBuilder(Builder):
             # needed for run_type and task_type
             "calcs_reversed.input.parameters",
             "calcs_reversed.input.incar",
+            "calcs_reversed.run_type",
             "orig_inputs",
             "input.structure",
             # needed for entry from task_doc
