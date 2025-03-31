@@ -1,8 +1,8 @@
 from typing import List, Optional
 
 from pydantic import Field
-from pymatgen.core import Structure
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
+from pymatgen.core import Structure
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
@@ -70,7 +70,7 @@ class MagnetismDoc(PropertyDoc):
         cls,
         structure: Structure,
         total_magnetization: float,
-        material_id: MPID,
+        material_id: MPID | None = None,
         **kwargs
     ):  # noqa: E501
         struct_has_magmoms = "magmom" in structure.site_properties

@@ -77,8 +77,8 @@ class RobocrystallogapherDoc(PropertyDoc):
     def from_structure(
         cls,
         structure: Structure,
-        material_id: MPID,
         robocrys_version: str,
+        material_id: MPID | None = None,
         mineral_matcher=None,
         **kwargs
     ):

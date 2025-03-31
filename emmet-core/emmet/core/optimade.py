@@ -3,6 +3,7 @@ from datetime import datetime
 
 from monty.fractions import gcd
 from optimade.models import Species, StructureResourceAttributes
+from pydantic import Field
 from pymatgen.core.composition import Composition, formula_double_format
 from pymatgen.core.structure import Structure
 
@@ -83,17 +84,17 @@ class OptimadeMaterialsDoc(StructureResourceAttributes, EmmetBaseModel):
     used to perform stability calc, i.e., R2SCAN, GGA_GGA+U_R2SCAN, or GGA_GGA+U
     """
 
-    material_id: MPID
+    material_id: MPID | None = Field(None, description="The ID of the material")
     chemical_system: str
     stability: dict
 
     @classmethod
     def from_structure(
         cls,
-        material_id: MPID,
         structure: Structure,
         last_updated_structure: datetime,
         thermo_calcs: dict,
+        material_id: MPID | None = None,
         **kwargs,
     ) -> StructureResourceAttributes:
         structure.remove_oxidation_states()

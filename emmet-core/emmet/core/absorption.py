@@ -1,9 +1,11 @@
 from typing import List, Optional
-from pydantic import Field
-from emmet.core.material_property import PropertyDoc
+
 import numpy as np
-from emmet.core.mpid import MPID
+from pydantic import Field
 from pymatgen.core import Structure
+
+from emmet.core.material_property import PropertyDoc
+from emmet.core.mpid import MPID
 
 
 class AbsorptionDoc(PropertyDoc):
@@ -49,7 +51,6 @@ class AbsorptionDoc(PropertyDoc):
     @classmethod
     def from_structure(
         cls,
-        material_id: MPID,
         energies: List,
         task_id: str,
         real_d: List[np.ndarray],
@@ -58,6 +59,7 @@ class AbsorptionDoc(PropertyDoc):
         bandgap: float,
         structure: Structure,
         nkpoints: float,
+        material_id: MPID | None = None,
         **kwargs,
     ):
         real_d_average = [
