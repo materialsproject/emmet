@@ -225,9 +225,9 @@ class ElasticityDoc(PropertyDoc):
     def from_deformations_and_stresses(
         cls,
         structure: Structure,
-        material_id: MPID,
         deformations: List[Deformation],
         stresses: List[Stress],
+        material_id: MPID | None = None,
         deformation_task_ids: Optional[List[MPID]] = None,
         deformation_dir_names: Optional[List[str]] = None,
         equilibrium_stress: Optional[Stress] = None,

@@ -1,4 +1,5 @@
 """ Core definition of Spectrum document """
+
 from datetime import datetime
 from typing import List
 
@@ -16,8 +17,8 @@ class SpectrumDoc(StructureMetadata):
 
     spectrum_name: str
 
-    material_id: MPID = Field(
-        ...,
+    material_id: MPID | None = Field(
+        None,
         description="The ID of the material, used as a universal reference across proeprty documents."
         "This comes in the form: mp-******.",
     )

@@ -425,7 +425,7 @@ class SummaryDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_docs(cls, material_id: MPID, **docs: Dict[str, Dict]):
+    def from_docs(cls, material_id: MPID | None = None, **docs: Dict[str, Dict]):
         """Converts a bunch of summary docs into a SummaryDoc"""
         doc = _copy_from_doc(docs)
 

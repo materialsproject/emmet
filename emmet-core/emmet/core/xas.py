@@ -78,7 +78,7 @@ class XASDoc(SpectrumDoc):
     def from_spectrum(
         cls,
         xas_spectrum: XAS,
-        material_id: MPID,
+        material_id: MPID | None = None,
         **kwargs,
     ):
         spectrum_type = xas_spectrum.spectrum_type
@@ -102,7 +102,10 @@ class XASDoc(SpectrumDoc):
 
     @classmethod
     def from_task_docs(
-        cls, all_tasks: List[TaskDocument], material_id: MPID, num_samples: int = 200
+        cls,
+        all_tasks: List[TaskDocument],
+        material_id: MPID | None = None,
+        num_samples: int = 200,
     ) -> List["XASDoc"]:
         """
         Converts a set of FEFF Task Documents into XASDocs by merging XANES + EXAFS into XAFS spectra first

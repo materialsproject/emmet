@@ -1,16 +1,17 @@
 """ Core definition for Polar property Document """
+
 from typing import List, Optional
-from emmet.core.mpid import MPID
 
 import numpy as np
 from pydantic import BaseModel, Field
 from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
-
-from emmet.core.settings import EmmetSettings
-from emmet.core.material_property import PropertyDoc
-from emmet.core.math import Matrix3D
 from pymatgen.core.structure import Structure
 from pymatgen.core.tensors import Tensor
+
+from emmet.core.material_property import PropertyDoc
+from emmet.core.math import Matrix3D
+from emmet.core.mpid import MPID
+from emmet.core.settings import EmmetSettings
 
 SETTINGS = EmmetSettings()
 
@@ -45,10 +46,10 @@ class DielectricDoc(PropertyDoc):
     @classmethod
     def from_ionic_and_electronic(
         cls,
-        material_id: MPID,
         ionic: Matrix3D,
         electronic: Matrix3D,
         structure: Structure,
+        material_id: MPID | None = None,
         **kwargs,
     ):
         ionic_tensor = Tensor(ionic).convert_to_ieee(structure)
@@ -98,10 +99,10 @@ class PiezoelectricDoc(PropertyDoc):
     @classmethod
     def from_ionic_and_electronic(
         cls,
-        material_id: MPID,
         ionic: PiezoTensor,
         electronic: PiezoTensor,
         structure: Structure,
+        material_id: MPID | None = None,
         **kwargs,
     ):
         ionic_tensor = BasePiezoTensor.from_vasp_voigt(ionic)
