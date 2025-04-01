@@ -9,7 +9,7 @@ from math import isnan
 from typing import Type, TypeVar
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from pymatgen.analysis.magnetism.analyzer import (
     CollinearMagneticStructureAnalyzer,
     Ordering,
@@ -125,6 +125,27 @@ class BandStructureSummaryData(ElectronicStructureSummary):
     cbm: TypedBandDict | None = Field(None, description="Conduction band minimum data.")
     vbm: TypedBandDict | None = Field(None, description="Valence band maximum data.")
 
+    @field_validator("cbm", "vbm", mode="before")
+    def deserialize_bands(cls, band):
+        if band:
+            if isinstance(band["kpoint"], dict) and "label" not in band["kpoint"]:
+                band["kpoint"]["label"] = None
+
+        return band
+
+    @field_validator("equivalent_labels", mode="before")
+    def deserialize_labels(cls, equivalent_labels):
+        if isinstance(next(iter(equivalent_labels.values())), list):
+            equivalent_labels = {
+                convention: {
+                    other_convention: {k: v for k, v in label_tuples}
+                    for other_convention, label_tuples in other_mapping
+                }
+                for convention, other_mapping in equivalent_labels.items()
+            }
+
+        return equivalent_labels
+
 
 class DosSummaryData(ElectronicStructureBaseData):
     spin_polarization: float | None = Field(
@@ -182,6 +203,33 @@ class DosData(BaseModel):
     magnetic_ordering: Ordering | str | None = Field(
         None, description="Magnetic ordering of the calculation."
     )
+
+    @field_validator("elemental", mode="before")
+    def deserialize_elemental(cls, elemental):
+        if isinstance(next(iter(elemental.values())), list):
+            elemental = {
+                element: {
+                    oribital_type: {
+                        spin: summary_data for spin, summary_data in spin_summary_pairs
+                    }
+                    for oribital_type, spin_summary_pairs in orbital
+                }
+                for element, orbital in elemental.items()
+            }
+
+        return elemental
+
+    @field_validator("orbital", mode="before")
+    def deserialize_orbital(cls, orbital):
+        if isinstance(next(iter(orbital.values())), list):
+            orbital = {
+                oribital_type: {
+                    spin: summary_data for spin, summary_data in spin_summary_pairs
+                }
+                for oribital_type, spin_summary_pairs in orbital.items()
+            }
+
+        return orbital
 
 
 T = TypeVar("T", bound="ElectronicStructureDoc")

@@ -1,10 +1,12 @@
 """ Core definition of a Thermo Document """
 
+import json
 from collections import defaultdict
+from collections.abc import Callable
 from datetime import datetime
 from typing import Dict, List, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer, field_validator
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
@@ -12,8 +14,13 @@ from emmet.core.base import EmmetMeta
 from emmet.core.material import PropertyOrigin
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
-from emmet.core.utils import ValueEnum, utcnow
+from emmet.core.utils import ValueEnum, jsanitize, utcnow
 from emmet.core.vasp.calc_types.enums import RunType
+
+
+def entries_energy_adjustments_serde(d: dict, serde_fn: Callable):
+    for entry in d.values():
+        entry["energy_adjustments"] = serde_fn(entry["energy_adjustments"])
 
 
 class DecompositionProduct(BaseModel):
@@ -49,7 +56,8 @@ class ThermoDoc(PropertyDoc):
 
     property_name: str = "thermo"
 
-    thermo_type: Union[ThermoType, RunType] = Field(
+    # thermo_type: Union[ThermoType, RunType] = Field(
+    thermo_type: ThermoType = Field(
         ...,
         description="Functional types of calculations involved in the energy mixing scheme.",
     )
@@ -113,11 +121,34 @@ class ThermoDoc(PropertyDoc):
         description="List of available energy types computed for this material."
     )
 
-    entries: Dict[str, Union[ComputedEntry, ComputedStructureEntry]] = Field(
+    # entries: Dict[str, Union[ComputedEntry, ComputedStructureEntry]] = Field(
+    entries: Dict[str, ComputedStructureEntry] = Field(
         ...,
         description="List of all entries that are valid for this material."
         " The keys for this dictionary are names of various calculation types.",
     )
+
+    @field_serializer("entries", mode="wrap")
+    def entries_serializer(self, entries, default_serializer, info):
+        default_serialized_object = default_serializer(entries, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            arrow_compat_object = jsanitize(default_serialized_object, allow_bson=True)
+            entries_energy_adjustments_serde(arrow_compat_object, json.dumps)
+            return arrow_compat_object
+
+        return default_serialized_object
+
+    @field_validator("entries", mode="before")
+    def entries_deserializer(cls, entries):
+        first_entry = next(iter(entries.values()))
+        if isinstance(first_entry, dict) and isinstance(
+            first_entry["energy_adjustments"], str
+        ):
+            entries_energy_adjustments_serde(entries, json.loads)
+
+        return entries
 
     @classmethod
     def from_entries(

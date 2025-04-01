@@ -1,9 +1,8 @@
-import pyarrow as pa
 import pytest
 from monty.serialization import MontyDecoder, loadfn
 
+from emmet.core.arrow import cleanup_msonables
 from emmet.core.thermo import ThermoDoc
-from emmet.core.utils import jsanitize
 
 
 @pytest.fixture(scope="session")
@@ -145,11 +144,9 @@ def test_from_entries(entries):
 def test_thermo_arrow_round_trip_serialization(entries):
     doc = ThermoDoc.from_entries(entries, thermo_type="UNKNOWN", deprecated=False)[0]
 
-    sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
-    test_arrow_doc = ThermoDoc(
-        **pa.array([sanitized_doc], type=ThermoDoc.arrow_type())
-        .to_pandas(maps_as_pydicts="strict")
-        .iloc[0]
-    )
+    arrow_struct = doc.model_dump(context={"format": "arrow"})
+    test_arrow_doc = ThermoDoc.from_arrow(arrow_struct)
 
-    assert doc == test_arrow_doc
+    assert cleanup_msonables(doc.model_dump()) == cleanup_msonables(
+        test_arrow_doc.model_dump()
+    )

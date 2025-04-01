@@ -1,4 +1,3 @@
-import pyarrow as pa
 import pytest
 from monty.serialization import loadfn
 from pymatgen.analysis.phase_diagram import PhaseDiagram
@@ -15,7 +14,6 @@ from emmet.core.electrode import (
     InsertionVoltagePairDoc,
     get_battery_formula,
 )
-from emmet.core.utils import jsanitize
 
 
 @pytest.fixture(scope="session")
@@ -157,11 +155,9 @@ def test_conversion_electrode_arrow_round_trip_serialization(conversion_elec):
         thermo_type="GGA_GGA+U",
     )
 
-    sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
-    test_arrow_doc = ConversionElectrodeDoc(
-        **pa.array([sanitized_doc], type=ConversionElectrodeDoc.arrow_type())
-        .to_pandas(maps_as_pydicts="strict")
-        .iloc[0]
-    )
+    arrow_struct = doc.model_dump(context={"format": "arrow"})
+    test_arrow_doc = ConversionElectrodeDoc.from_arrow(arrow_struct)
 
-    assert doc == test_arrow_doc
+    assert cleanup_msonables(doc.model_dump()) == cleanup_msonables(
+        test_arrow_doc.model_dump()
+    )

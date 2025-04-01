@@ -1,9 +1,8 @@
-import pyarrow as pa
 import pytest
 from monty.serialization import loadfn
 
+from emmet.core.arrow import cleanup_msonables
 from emmet.core.electronic_structure import ElectronicStructureDoc
-from emmet.core.utils import jsanitize
 
 
 @pytest.fixture(scope="session")
@@ -115,11 +114,9 @@ def test_electronic_structure_arrow_round_trip_serialization(bandstructure_fs, d
         meta_structure=dos.structure,
     )
 
-    sanitized_doc = jsanitize(doc.model_dump(), allow_bson=True)
-    test_arrow_doc = ElectronicStructureDoc(
-        **pa.array([sanitized_doc], type=ElectronicStructureDoc.arrow_type())
-        .to_pandas(maps_as_pydicts="strict")
-        .iloc[0]
-    )
+    arrow_struct = doc.model_dump(context={"format": "arrow"})
+    test_arrow_doc = ElectronicStructureDoc.from_arrow(arrow_struct)
 
-    assert doc == test_arrow_doc
+    assert cleanup_msonables(doc.model_dump()) == cleanup_msonables(
+        test_arrow_doc.model_dump()
+    )
