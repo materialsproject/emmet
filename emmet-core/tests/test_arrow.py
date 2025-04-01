@@ -47,15 +47,12 @@ def test_arrowize_succeeds():
 
     assert all(
         dtype == pa.map_(pa.string(), pa.int64())
-        for dtype in [arrowize(dict[str, int])]
+        for dtype in [arrowize(dict[str, int]), arrowize(dict[str, int | None])]
     )
-
-    # assert arrowize(set([10, 20, 30])) == pa.list_(pa.int64())
 
 
 def test_arrowize_fails():
     with pytest.raises(AssertionError):
-        arrowize(int | str)
         arrowize(dict)
         arrowize(list)
         arrowize(tuple)
