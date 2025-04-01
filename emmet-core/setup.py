@@ -28,7 +28,7 @@ setup(
     },
     include_package_data=True,
     install_requires=[
-        "pymatgen>=2024.6.10,<=2025.3.10",
+        "pymatgen>=2024.6.10",
         "monty>=2024.2.2",
         "pydantic>=2.0",
         "pydantic-settings>=2.0",
