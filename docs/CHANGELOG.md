@@ -120,16 +120,12 @@
 
 ## [v0.84.5](https://github.com/materialsproject/emmet/tree/v0.84.5) (2024-12-19)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.84.4...v0.84.5)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.84.3...v0.84.5)
 
 **Merged pull requests:**
 
 - Automated dependency upgrades [\#1159](https://github.com/materialsproject/emmet/pull/1159) ([tschaume](https://github.com/tschaume))
 - Automated dependency upgrades [\#1157](https://github.com/materialsproject/emmet/pull/1157) ([tschaume](https://github.com/tschaume))
-
-## [v0.84.4](https://github.com/materialsproject/emmet/tree/v0.84.4) (2024-12-12)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.84.3...v0.84.4)
 
 ## [v0.84.3](https://github.com/materialsproject/emmet/tree/v0.84.3) (2024-12-12)
 
@@ -1901,9 +1897,9 @@
 
 ## [v0.42.0](https://github.com/materialsproject/emmet/tree/v0.42.0) (2023-01-27)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.41.0...v0.42.0)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.40.0...v0.42.0)
 
-## [v0.41.0](https://github.com/materialsproject/emmet/tree/v0.41.0) (2023-01-27)
+## [v0.40.0](https://github.com/materialsproject/emmet/tree/v0.40.0) (2023-01-27)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.40.0...v0.41.0)
 
