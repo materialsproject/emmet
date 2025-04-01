@@ -19,9 +19,9 @@ attrs==25.3.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.37.23
+boto3==1.37.25
     # via maggma
-botocore==1.37.23
+botocore==1.37.25
     # via
     #   boto3
     #   s3transfer
@@ -43,7 +43,7 @@ dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.84.5
+emmet-core[all]==0.84.6
     # via
     #   emmet-builders (setup.py)
     #   mp-api
@@ -51,14 +51,12 @@ filelock==3.18.0
     # via mdanalysis
 fonttools==4.56.0
     # via matplotlib
-fsspec==2025.3.1
+fsspec==2025.3.2
     # via matcalc
 griddataformats==1.0.2
     # via mdanalysis
 h5py==3.13.0
-    # via
-    #   phono3py
-    #   phonopy
+    # via phonopy
 idna==3.10
     # via requests
 imageio==2.37.0
@@ -94,7 +92,7 @@ maggma==0.71.5
     # via
     #   emmet-builders (setup.py)
     #   mp-api
-matcalc==0.3.2
+matcalc==0.3.1
     # via emmet-core
 matminer==0.9.3
     # via
@@ -104,7 +102,6 @@ matplotlib==3.10.1
     # via
     #   ase
     #   mdanalysis
-    #   phono3py
     #   phonopy
     #   pymatgen
     #   seaborn
@@ -143,7 +140,7 @@ msgpack==1.1.0
     #   maggma
     #   mmtf-python
     #   mp-api
-narwhals==1.32.0
+narwhals==1.33.0
     # via plotly
 networkx==3.4.2
     # via
@@ -154,7 +151,6 @@ numpy==1.26.4
     # via
     #   ase
     #   contourpy
-    #   emmet-core
     #   griddataformats
     #   h5py
     #   imageio
@@ -167,7 +163,6 @@ numpy==1.26.4
     #   mrcfile
     #   pandas
     #   patsy
-    #   phono3py
     #   phonopy
     #   pymatgen
     #   pymatgen-analysis-defects
@@ -211,13 +206,9 @@ paramiko==3.5.1
     # via sshtunnel
 patsy==1.0.1
     # via statsmodels
-phono3py==3.15.0
-    # via matcalc
 phonopy==2.38.0
-    # via
-    #   matcalc
-    #   phono3py
-pillow==11.1.0
+    # via matcalc
+pillow==11.2.0
     # via
     #   imageio
     #   matplotlib
@@ -251,7 +242,7 @@ pydantic-settings==2.8.1
     #   maggma
 pydash==8.0.5
     # via maggma
-pymatgen==2025.3.10
+pymatgen==2025.1.9
     # via
     #   emmet-core
     #   matcalc
@@ -292,7 +283,6 @@ pytz==2025.2
     #   pandas
 pyyaml==6.0.2
     # via
-    #   phono3py
     #   phonopy
     #   pybtex
 pyzmq==26.3.0
@@ -335,7 +325,6 @@ scipy==1.15.2
     #   ase
     #   griddataformats
     #   mdanalysis
-    #   phono3py
     #   pymatgen
     #   robocrys
     #   scikit-image
@@ -363,7 +352,6 @@ solvation-analysis==0.4.1
     #   emmet-core
 spglib==2.6.0
     # via
-    #   phono3py
     #   phonopy
     #   pymatgen
     #   robocrys

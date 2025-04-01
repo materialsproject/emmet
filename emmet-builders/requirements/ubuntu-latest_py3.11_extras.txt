@@ -6,7 +6,7 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.11.14
+aiohttp==3.11.15
     # via fsspec
 aioitertools==0.12.0
     # via maggma
@@ -28,9 +28,9 @@ attrs==25.3.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.37.23
+boto3==1.37.25
     # via maggma
-botocore==1.37.23
+botocore==1.37.25
     # via
     #   boto3
     #   s3transfer
@@ -74,7 +74,7 @@ dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all,ml]==0.84.5
+emmet-core[all,ml]==0.84.6
     # via
     #   emmet-builders (setup.py)
     #   mp-api
@@ -91,7 +91,7 @@ frozenlist==1.5.0
     # via
     #   aiohttp
     #   aiosignal
-fsspec[http]==2025.3.1
+fsspec[http]==2025.3.2
     # via
     #   lightning
     #   matcalc
@@ -101,12 +101,10 @@ ghp-import==2.1.0
     # via mkdocs
 griddataformats==1.0.2
     # via mdanalysis
-griffe==1.7.1
+griffe==1.7.2
     # via mkdocstrings-python
 h5py==3.13.0
-    # via
-    #   phono3py
-    #   phonopy
+    # via phonopy
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
 identify==2.6.9
@@ -179,7 +177,7 @@ markupsafe==3.0.2
     #   mkdocs
     #   mkdocs-autorefs
     #   mkdocstrings
-matcalc==0.3.2
+matcalc==0.3.1
     # via emmet-core
 matgl==1.1.3
     # via emmet-core
@@ -191,7 +189,6 @@ matplotlib==3.10.1
     # via
     #   ase
     #   mdanalysis
-    #   phono3py
     #   phonopy
     #   pymatgen
     #   seaborn
@@ -237,7 +234,7 @@ mkdocs-material-extensions==1.3.1
     #   mkdocs-material
 mkdocs-minify-plugin==0.8.0
     # via emmet-builders (setup.py)
-mkdocstrings[python]==0.29.0
+mkdocstrings[python]==0.29.1
     # via
     #   emmet-builders (setup.py)
     #   mkdocstrings-python
@@ -270,7 +267,7 @@ msgpack==1.1.0
     #   maggma
     #   mmtf-python
     #   mp-api
-multidict==6.2.0
+multidict==6.3.1
     # via
     #   aiohttp
     #   yarl
@@ -280,7 +277,7 @@ mypy-extensions==1.0.0
     # via
     #   emmet-builders (setup.py)
     #   mypy
-narwhals==1.32.0
+narwhals==1.33.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -299,7 +296,6 @@ numpy==1.26.4
     #   chgnet
     #   contourpy
     #   dgl
-    #   emmet-core
     #   griddataformats
     #   h5py
     #   imageio
@@ -312,7 +308,6 @@ numpy==1.26.4
     #   mrcfile
     #   pandas
     #   patsy
-    #   phono3py
     #   phonopy
     #   pymatgen
     #   pymatgen-analysis-defects
@@ -401,13 +396,9 @@ pathspec==0.12.1
     # via mkdocs
 patsy==1.0.1
     # via statsmodels
-phono3py==3.15.0
-    # via matcalc
 phonopy==2.38.0
-    # via
-    #   matcalc
-    #   phono3py
-pillow==11.1.0
+    # via matcalc
+pillow==11.2.0
     # via
     #   imageio
     #   matplotlib
@@ -460,11 +451,11 @@ pydash==8.0.5
     # via maggma
 pydocstyle==6.3.0
     # via emmet-builders (setup.py)
-pyflakes==3.3.1
+pyflakes==3.3.2
     # via flake8
 pygments==2.19.1
     # via mkdocs-material
-pymatgen==2025.3.10
+pymatgen==2025.1.9
     # via
     #   chgnet
     #   emmet-core
@@ -500,7 +491,7 @@ pytest==8.3.5
     #   emmet-builders (setup.py)
     #   pytest-cov
     #   solvation-analysis
-pytest-cov==6.0.0
+pytest-cov==6.1.0
     # via emmet-builders (setup.py)
 python-dateutil==2.9.0.post0
     # via
@@ -523,7 +514,6 @@ pyyaml==6.0.2
     #   mkdocs
     #   mkdocs-get-deps
     #   mkdocs-markdownextradata-plugin
-    #   phono3py
     #   phonopy
     #   pre-commit
     #   pybtex
@@ -575,7 +565,6 @@ scipy==1.15.2
     #   dgl
     #   griddataformats
     #   mdanalysis
-    #   phono3py
     #   pymatgen
     #   robocrys
     #   scikit-image
@@ -605,7 +594,6 @@ solvation-analysis==0.4.1
     #   emmet-core
 spglib==2.6.0
     # via
-    #   phono3py
     #   phonopy
     #   pymatgen
     #   robocrys
@@ -698,7 +686,7 @@ urllib3==2.3.0
     #   requests
     #   torchdata
     #   types-requests
-virtualenv==20.29.3
+virtualenv==20.30.0
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
