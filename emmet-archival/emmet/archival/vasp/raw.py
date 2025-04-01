@@ -1,15 +1,18 @@
 """Define archival formats for raw VASP calculation data."""
 from __future__ import annotations
 
+import hashlib
 from typing import TYPE_CHECKING
 from dataclasses import dataclass
 from pathlib import Path
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, NamedTemporaryFile
 
 import h5py
 import zarr
 
 from monty.io import zopen
+from pymatgen.io.vasp.outputs import Vaspout
+
 from emmet.core.tasks import _VOLUMETRIC_FILES, TaskDoc
 
 from emmet.archival.base import Archiver, ArchivalFormat
@@ -20,6 +23,15 @@ if TYPE_CHECKING:
     from typing import Any
     from typing_extensions import Self
 
+def get_md5_blocked(file_path : str | Path, block_size: int = 1000000):
+    md5 = hashlib.md5()
+    with zopen(str(file_path),"rb") as f:
+        while True:
+            data = f.read(block_size)
+            if not data:
+                break
+            md5.update(data)
+        return md5.hexdigest()
 
 @dataclass
 class RawArchive(Archiver):
@@ -31,19 +43,29 @@ class RawArchive(Archiver):
         if not calc_dir.exists():
             raise SystemError(f"Directory {calc_dir} does not exist!")
 
-        metadata = {"calc_dir": str(calc_dir), "file_paths": {}}
+        metadata : dict[str, str | dict[str,str]] = {
+            "calc_dir": str(calc_dir),
+            "file_paths": {},
+            "md5": {}
+        }
 
         parsed_objects: dict[str, Any] = {}
         for calc_type, file_list in VASP_RAW_DATA_ORG.items():
-            metadata["file_paths"][calc_type] = {}  # type: ignore[index]
+            for k in ("file_paths","md5"):
+                metadata[k][calc_type] = {}
             for file_name in file_list:
                 if (file_path := zpath(calc_dir / file_name)).exists():
-                    metadata["file_paths"][calc_type][file_name] = file_path  # type: ignore[index]
+                
+                    metadata["file_paths"][calc_type][file_name] = str(file_path)
+                    metadata["md5"][calc_type][file_name] = get_md5_blocked(file_path)
 
-                    if file_name == "POTCAR":
-                        parsed_objects["POTCAR_spec"] = str(
+                    if "POTCAR" in file_name:
+                        parsed_objects[f"{file_name}.spec"] = str(
                             PotcarSpec.from_file(file_path)
                         )
+                        metadata["file_paths"][calc_type][f"{file_name}.spec"] = metadata["file_paths"][calc_type].pop(file_name)
+                    elif file_name.endswith("vaspout.h5"):
+                        continue
                     else:
                         with zopen(file_path, "rt") as f:
                             parsed_objects[file_name] = f.read()
@@ -58,10 +80,30 @@ class RawArchive(Archiver):
             group.create_group(group_key)
             group = group[group_key]
 
-        for calc_type, files in VASP_RAW_DATA_ORG.items():
+        checksums = self.metadata.get("md5",{})
+
+        for calc_type in VASP_RAW_DATA_ORG:
             group.create_group(calc_type)
 
-            for file_name in files:
+            for file_name, file_path in self.metadata["file_paths"][calc_type].items():
+                
+                if file_name.endswith(".h5"):
+
+                    if file_name == "vaspout.h5":
+                        vout = Vaspout(file_path)
+
+                        with NamedTemporaryFile() as vf:
+                            vout.remove_potcar_and_write_file(vf.name)
+                            with h5py.File(vf.name,"r") as f:
+                                group[calc_type].copy(
+                                    f, group[calc_type], name = file_name
+                                )
+                    else:
+                        with h5py.File(file_path,"r") as f:
+                            group[calc_type].create_dataset(
+                                file_name, data = f,
+                            )
+
                 if (rawf := self.parsed_objects.get(file_name)) is None:
                     continue
 
@@ -72,11 +114,10 @@ class RawArchive(Archiver):
                 group[calc_type].create_dataset(
                     file_name, data=[rawf], shape=1, **kwargs
                 )
-                if (
-                    fpath := self.metadata.get("file_paths", {}).get(file_name)
-                ) is not None:
-                    group[calc_type][file_name].attrs[f"{file_name}_path"] = str(fpath)
-
+                group[calc_type][file_name].attrs["path"] = str(file_path)
+                if (file_md5 := checksums.get(calc_type,{}).get(file_name)):
+                    group[calc_type][file_name].attrs["md5"] = file_md5
+                    
     @classmethod
     def to_task_doc(
         cls,

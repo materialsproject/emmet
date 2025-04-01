@@ -7,7 +7,7 @@ from pymatgen.io.vasp.inputs import Incar, Kpoints, Poscar, Potcar
 from pymatgen.io.vasp.outputs import Chgcar, Elfcar, Locpot
 
 
-VASP_INPUT_FILES = ["INCAR", "KPOINTS", "KPOINTS_OPT", "POSCAR", "POTCAR"]
+VASP_INPUT_FILES = ["INCAR", "KPOINTS", "KPOINTS_OPT", "POSCAR", "POTCAR","POTCAR.spec"]
 VASP_ELECTRONIC_STRUCTURE = [
     "EIGENVAL",
     "DOSCAR",
@@ -15,16 +15,22 @@ VASP_ELECTRONIC_STRUCTURE = [
 VASP_VOLUMETRIC_FILES = (
     ["CHGCAR"] + [f"AECCAR{i}" for i in range(3)] + ["ELFCAR", "LOCPOT"]
 )
-VASP_OUTPUT_FILES = ["CONTCAR", "OSZICAR", "OUTCAR", "vasprun.xml"]
+VASP_OUTPUT_FILES = ["CONTCAR", "OSZICAR", "OUTCAR", "vasprun.xml", "vaspout.h5"]
 
 VASP_RAW_DATA_ORG = {
-    "input": VASP_INPUT_FILES + [f + ".orig" for f in VASP_INPUT_FILES],
-    "output": VASP_OUTPUT_FILES,
-    "volumetric": VASP_VOLUMETRIC_FILES,
-    "electronic_structure": VASP_ELECTRONIC_STRUCTURE,
+    "input": VASP_INPUT_FILES.copy(),
+    "output": VASP_OUTPUT_FILES.copy(),
+    "volumetric": VASP_VOLUMETRIC_FILES.copy(),
+    "electronic_structure": VASP_ELECTRONIC_STRUCTURE.copy(),
     "workflow": ["FW.json", "custodian.json", "transformations.json"],
 }
 
+for f in VASP_INPUT_FILES:
+    fspec = f.split(".")
+    new_f = fspec[0] + ".orig"
+    if len(fspec) > 1:
+        new_f += "." + ".".join(fspec[1:])
+    VASP_RAW_DATA_ORG["input"].append(new_f)
 
 class PotcarSpec:
     """Store high-level POTCAR information without licensed data.
