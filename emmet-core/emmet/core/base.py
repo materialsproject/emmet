@@ -26,16 +26,11 @@ T = TypeVar("T", bound="EmmetBaseModel")
 class ArrowModel(BaseModel):
     @classmethod
     def arrow_type(cls):
-
         return arrowize(cls)
 
     @classmethod
     def from_arrow(cls, arrow_struct):
-
-        data = cleanup_msonables(
-            jsanitize(arrow_struct.as_py(maps_as_pydicts="strict"))
-        )
-        return cls(**{k: v for k, v in data.items()})
+        return cls(**cleanup_msonables(arrow_struct.as_py(maps_as_pydicts="strict")))
 
     @model_serializer(mode="wrap")
     def model_serialization(self, default_serializer, info: SerializationInfo):
