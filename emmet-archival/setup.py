@@ -21,7 +21,14 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
-    install_requires=["emmet-core", "h5py", "zarr", "pyarrow", "pandas","pymatgen>=2025.3.10"],
+    install_requires=[
+        "emmet-core",
+        "h5py",
+        "zarr",
+        "pyarrow",
+        "pandas",
+        "pymatgen>=2025.3.10",
+    ],
     extras_require={
         "ase": [
             "ase>=3.23.0",

@@ -7,7 +7,14 @@ from pymatgen.io.vasp.inputs import Incar, Kpoints, Poscar, Potcar
 from pymatgen.io.vasp.outputs import Chgcar, Elfcar, Locpot
 
 
-VASP_INPUT_FILES = ["INCAR", "KPOINTS", "KPOINTS_OPT", "POSCAR", "POTCAR","POTCAR.spec"]
+VASP_INPUT_FILES = [
+    "INCAR",
+    "KPOINTS",
+    "KPOINTS_OPT",
+    "POSCAR",
+    "POTCAR",
+    "POTCAR.spec",
+]
 VASP_ELECTRONIC_STRUCTURE = [
     "EIGENVAL",
     "DOSCAR",
@@ -31,6 +38,7 @@ for f in VASP_INPUT_FILES:
     if len(fspec) > 1:
         new_f += "." + ".".join(fspec[1:])
     VASP_RAW_DATA_ORG["input"].append(new_f)
+
 
 class PotcarSpec:
     """Store high-level POTCAR information without licensed data.
