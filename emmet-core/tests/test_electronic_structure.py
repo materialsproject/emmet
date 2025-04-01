@@ -85,15 +85,15 @@ def test_from_bsdos_2(bandstructure_fs, dos_fs):
     )
 
     assert str(es_doc.material_id) == "mp-25375"
-    assert es_doc.band_gap == 0.0
-    assert es_doc.cbm == 2.7102
-    assert es_doc.vbm == 2.9396
-    assert es_doc.efermi == 2.75448867
+    assert es_doc.band_gap == pytest.approx(0.0)
+    assert es_doc.cbm == pytest.approx(2.75448867)
+    assert es_doc.vbm == pytest.approx(2.75448867)
+    assert es_doc.efermi == pytest.approx(2.75448867)
     assert es_doc.is_gap_direct is False
     assert es_doc.is_metal is True
     assert str(es_doc.magnetic_ordering) == "Ordering.NM"
 
     assert str(es_doc.bandstructure.setyawan_curtarolo.task_id) == "mp-1612487"
-    assert es_doc.bandstructure.setyawan_curtarolo.band_gap == 1.9916
-    assert es_doc.bandstructure.setyawan_curtarolo.efermi == 2.49084067
-    assert es_doc.bandstructure.setyawan_curtarolo.nbands == 64.0
+    assert es_doc.bandstructure.setyawan_curtarolo.band_gap == pytest.approx(1.9916)
+    assert es_doc.bandstructure.setyawan_curtarolo.efermi == pytest.approx(2.49084067)
+    assert es_doc.bandstructure.setyawan_curtarolo.nbands == pytest.approx(64.0)

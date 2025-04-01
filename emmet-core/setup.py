@@ -28,7 +28,7 @@ setup(
     },
     include_package_data=True,
     install_requires=[
-        "pymatgen>=2024.6.10,<=2025.1.9",  # TODO: release upper version pin when bandgap parsing issues sorted
+        "pymatgen>=2024.6.10",
         "monty>=2024.2.2",
         "pydantic>=2.0",
         "pydantic-settings>=2.0",
@@ -45,6 +45,7 @@ setup(
             "pymatgen-analysis-alloys>=0.0.6",
             "solvation-analysis>=0.4.1",
             "MDAnalysis>=2.7.0",
+            "pyarrow",
         ],
         "ml": ["chgnet", "matgl", "dgl<=2.1"],
         "test": [

@@ -78,8 +78,6 @@ dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.6rc6
-    # via mp-api
 exceptiongroup==1.2.2
     # via pytest
 filelock==3.18.0
@@ -425,6 +423,9 @@ psutil==7.0.0
     #   dgl
 pubchempy==1.0.4
     # via robocrys
+pyarrow==19.0.1
+    # via
+    #   emmet-core (setup.py)
 pybtex==0.24.0
     # via
     #   emmet-core
@@ -459,7 +460,7 @@ pyflakes==3.3.1
     # via flake8
 pygments==2.19.1
     # via mkdocs-material
-pymatgen==2025.1.9
+pymatgen==2025.3.10
     # via
     #   chgnet
     #   emmet-core
