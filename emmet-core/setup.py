@@ -28,8 +28,7 @@ setup(
     },
     include_package_data=True,
     install_requires=[
-        "numpy<2",
-        "pymatgen>=2024.6.10",
+        "pymatgen>=2024.6.10,<=2025.1.9",  # TODO: release upper version pin when bandgap parsing issues sorted
         "monty>=2024.2.2",
         "pydantic>=2.0",
         "pydantic-settings>=2.0",
@@ -38,7 +37,7 @@ setup(
     ],
     extras_require={
         "all": [
-            "matcalc>=0.0.4",
+            "matcalc>=0.3.1",
             "seekpath>=2.0.1",
             "robocrys>=0.2.8",
             "pymatgen-analysis-defects>=2024.7.18",
@@ -75,7 +74,7 @@ setup(
             "jinja2",
         ],
     },
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     license="modified BSD",
     zip_safe=False,
 )

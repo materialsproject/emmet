@@ -1,17 +1,18 @@
 """ Core definition of a Materials Document """
+
 from __future__ import annotations
 
-from typing import Sequence, Type, TypeVar, Union, List, Optional
+from datetime import datetime
+from typing import List, Optional, Sequence, Type, TypeVar, Union
 
 from pydantic import Field, field_validator
 from pymatgen.core import Structure
-from datetime import datetime
 
+from emmet.core.common import convert_datetime
 from emmet.core.material import PropertyOrigin
 from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.validation import DeprecationMessage
-from emmet.core.common import convert_datetime
 
 S = TypeVar("S", bound="PropertyDoc")
 
@@ -24,8 +25,8 @@ class PropertyDoc(StructureMetadata):
     """
 
     property_name: str
-    material_id: MPID = Field(
-        ...,
+    material_id: MPID | None = Field(
+        None,
         description="The Materials Project ID of the material, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
     )
@@ -60,7 +61,10 @@ class PropertyDoc(StructureMetadata):
 
     @classmethod
     def from_structure(  # type: ignore[override]
-        cls: Type[S], meta_structure: Structure, material_id: MPID, **kwargs
+        cls: Type[S],
+        meta_structure: Structure,
+        material_id: MPID | None = None,
+        **kwargs,
     ) -> S:
         """
         Builds a materials document using the minimal amount of information

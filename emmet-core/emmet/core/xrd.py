@@ -1,7 +1,7 @@
 from typing import Dict, Optional
 
 import numpy as np
-from pydantic import model_validator, Field
+from pydantic import Field, model_validator
 from pymatgen.analysis.diffraction.xrd import (
     WAVELENGTHS,
     DiffractionPattern,
@@ -64,10 +64,10 @@ class XRDDoc(SpectrumDoc):
     @classmethod
     def from_structure(  # type: ignore[override]
         cls,
-        material_id: MPID,
         spectrum_id: str,
         structure: Structure,
         wavelength: float,
+        material_id: MPID | None = None,
         min_two_theta=0,
         max_two_theta=180,
         symprec=0.1,
@@ -92,10 +92,10 @@ class XRDDoc(SpectrumDoc):
     @classmethod
     def from_target(
         cls,
-        material_id: MPID,
         structure: Structure,
         target: Element,
         edge: Edge,
+        material_id: MPID | None = None,
         min_two_theta=0,
         max_two_theta=180,
         symprec=0.1,

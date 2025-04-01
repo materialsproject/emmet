@@ -1,10 +1,6 @@
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
-from matcalc.elasticity import ElasticityCalc
-from matcalc.eos import EOSCalc
-from matcalc.phonon import PhononCalc
-from matcalc.relaxation import RelaxCalc
-from matcalc.utils import get_universal_calculator
+from matcalc import ElasticityCalc, EOSCalc, PESCalculator, PhononCalc, RelaxCalc
 from pydantic import Field, validator
 from pymatgen.analysis.elasticity import ElasticTensor
 from pymatgen.core import Structure
@@ -150,9 +146,9 @@ class MLDoc(ElasticityDoc):
         Returns:
             MLDoc
         """
-        calculator = get_universal_calculator(calculator)
+        calculator = PESCalculator.load_universal(calculator)
 
-        results = {}
+        results = {}  # type: ignore
         for prop_cls in (RelaxCalc, PhononCalc, EOSCalc, ElasticityCalc):
             kwds = (prop_kwargs or {}).get(prop_cls.__name__, {})
             output = prop_cls(calculator, **kwds).calc(structure)

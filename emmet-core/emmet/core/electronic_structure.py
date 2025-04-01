@@ -206,10 +206,10 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
     @classmethod
     def from_bsdos(  # type: ignore[override]
         cls: Type[T],
-        material_id: MPID,
         dos: Dict[MPID, CompleteDos],
         is_gap_direct: bool,
         is_metal: bool,
+        material_id: MPID | None = None,
         origins: List[dict] = [],
         structures: Optional[Dict[MPID, Structure]] = None,
         setyawan_curtarolo: Optional[Dict[MPID, BandStructureSymmLine]] = None,

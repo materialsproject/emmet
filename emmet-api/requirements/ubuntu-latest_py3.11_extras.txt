@@ -8,24 +8,24 @@ aioitertools==0.12.0
     # via maggma
 annotated-types==0.7.0
     # via pydantic
-anyio==4.8.0
+anyio==4.9.0
     # via starlette
 asgi-logger==0.1.0
     # via emmet-api (setup.py)
 asgiref==3.8.1
     # via asgi-logger
-attrs==25.1.0
+attrs==25.3.0
     # via
     #   jsonlines
     #   jsonschema
     #   referencing
-bcrypt==4.2.1
+bcrypt==4.3.0
     # via paramiko
-boto3==1.36.19
+boto3==1.37.23
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.36.19
+botocore==1.37.23
     # via
     #   boto3
     #   s3transfer
@@ -51,15 +51,15 @@ colorama==0.4.6
     # via griffe
 contourpy==1.3.1
     # via matplotlib
-coverage[toml]==7.6.12
+coverage[toml]==7.8.0
     # via pytest-cov
-cryptography==44.0.1
+cryptography==44.0.2
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
 cycler==0.12.1
     # via matplotlib
-ddtrace==2.20.1
+ddtrace==2.21.4
     # via emmet-api (setup.py)
 deprecated==1.2.18
     # via opentelemetry-api
@@ -69,23 +69,23 @@ dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.6rc4
+emmet-core==0.84.6rc6
     # via emmet-api (setup.py)
-envier==0.6.1
+envier==0.5.2
     # via ddtrace
-fastapi==0.115.8
+fastapi==0.115.12
     # via
     #   emmet-api (setup.py)
     #   maggma
-filelock==3.17.0
+filelock==3.18.0
     # via virtualenv
-flake8==7.1.1
+flake8==7.2.0
     # via emmet-api (setup.py)
 fonttools==4.56.0
     # via matplotlib
 ghp-import==2.1.0
     # via mkdocs
-griffe==1.5.7
+griffe==1.7.1
     # via mkdocstrings-python
 gunicorn==23.0.0
     # via emmet-api (setup.py)
@@ -93,7 +93,7 @@ h11==0.14.0
     # via uvicorn
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
-identify==2.6.7
+identify==2.6.9
     # via pre-commit
 idna==3.10
     # via
@@ -101,11 +101,11 @@ idna==3.10
     #   requests
 imageio==2.37.0
     # via scikit-image
-importlib-metadata==8.5.0
+importlib-metadata==8.6.1
     # via opentelemetry-api
-iniconfig==2.0.0
+iniconfig==2.1.0
     # via pytest
-jinja2==3.1.5
+jinja2==3.1.6
     # via
     #   emmet-api (setup.py)
     #   mkdocs
@@ -133,7 +133,7 @@ lazy-loader==0.4
     # via scikit-image
 livereload==2.7.1
     # via emmet-api (setup.py)
-maggma[api]==0.71.4
+maggma[api]==0.71.5
     # via emmet-api (setup.py)
 markdown==3.7
     # via
@@ -148,7 +148,7 @@ markupsafe==3.0.2
     #   mkdocs
     #   mkdocs-autorefs
     #   mkdocstrings
-matplotlib==3.10.0
+matplotlib==3.10.1
     # via pymatgen
 mccabe==0.7.0
     # via flake8
@@ -165,7 +165,7 @@ mkdocs==1.6.1
     #   mkdocs-material
     #   mkdocs-minify-plugin
     #   mkdocstrings
-mkdocs-autorefs==1.3.1
+mkdocs-autorefs==1.4.1
     # via
     #   mkdocstrings
     #   mkdocstrings-python
@@ -185,15 +185,15 @@ mkdocs-material-extensions==1.3.1
     #   mkdocs-material
 mkdocs-minify-plugin==0.8.0
     # via emmet-api (setup.py)
-mkdocstrings[python]==0.28.0
+mkdocstrings[python]==0.29.0
     # via
     #   emmet-api (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.15.0
+mkdocstrings-python==1.16.8
     # via mkdocstrings
 mongomock==4.3.0
     # via maggma
-monty==2025.1.9
+monty==2025.3.3
     # via
     #   emmet-core
     #   maggma
@@ -210,7 +210,7 @@ mypy-extensions==1.0.0
     # via
     #   emmet-api (setup.py)
     #   mypy
-narwhals==1.26.0
+narwhals==1.32.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -223,8 +223,6 @@ nodeenv==1.9.1
 numpy==1.26.4
     # via
     #   contourpy
-    #   emmet-api (setup.py)
-    #   emmet-core
     #   imageio
     #   maggma
     #   matplotlib
@@ -237,9 +235,9 @@ numpy==1.26.4
     #   shapely
     #   spglib
     #   tifffile
-opentelemetry-api==1.30.0
+opentelemetry-api==1.31.1
     # via ddtrace
-orjson==3.10.15
+orjson==3.10.16
     # via maggma
 packaging==24.2
     # via
@@ -266,37 +264,37 @@ pillow==11.1.0
     #   imageio
     #   matplotlib
     #   scikit-image
-platformdirs==4.3.6
+platformdirs==4.3.7
     # via
     #   mkdocs-get-deps
     #   virtualenv
-plotly==6.0.0
+plotly==6.0.1
     # via pymatgen
 pluggy==1.5.0
     # via pytest
-pre-commit==4.1.0
+pre-commit==4.2.0
     # via emmet-api (setup.py)
-protobuf==5.29.3
+protobuf==6.30.2
     # via ddtrace
 pybtex==0.24.0
     # via
     #   emmet-core
     #   pymatgen
-pycodestyle==2.12.1
+pycodestyle==2.13.0
     # via
     #   emmet-api (setup.py)
     #   flake8
 pycparser==2.22
     # via cffi
-pydantic==2.10.6
+pydantic==2.11.1
     # via
     #   emmet-core
     #   fastapi
     #   maggma
     #   pydantic-settings
-pydantic-core==2.27.2
+pydantic-core==2.33.0
     # via pydantic
-pydantic-settings==2.7.1
+pydantic-settings==2.8.1
     # via
     #   emmet-core
     #   maggma
@@ -304,7 +302,7 @@ pydash==8.0.5
     # via maggma
 pydocstyle==6.3.0
     # via emmet-api (setup.py)
-pyflakes==3.2.0
+pyflakes==3.3.1
     # via flake8
 pygments==2.19.1
     # via mkdocs-material
@@ -326,9 +324,9 @@ pymongo==4.10.1
     # via maggma
 pynacl==1.5.0
     # via paramiko
-pyparsing==3.2.1
+pyparsing==3.2.3
     # via matplotlib
-pytest==8.3.4
+pytest==8.3.5
     # via
     #   emmet-api (setup.py)
     #   pytest-cov
@@ -341,9 +339,9 @@ python-dateutil==2.9.0.post0
     #   maggma
     #   matplotlib
     #   pandas
-python-dotenv==1.0.1
+python-dotenv==1.1.0
     # via pydantic-settings
-pytz==2025.1
+pytz==2025.2
     # via
     #   mongomock
     #   pandas
@@ -358,7 +356,7 @@ pyyaml==6.0.2
     #   pyyaml-env-tag
 pyyaml-env-tag==0.1
     # via mkdocs
-pyzmq==26.2.1
+pyzmq==26.3.0
     # via maggma
 referencing==0.36.2
     # via
@@ -366,7 +364,7 @@ referencing==0.36.2
     #   jsonschema-specifications
 requests==2.32.3
     # via pymatgen
-rpds-py==0.22.3
+rpds-py==0.24.0
     # via
     #   jsonschema
     #   referencing
@@ -377,17 +375,17 @@ ruamel-yaml==0.18.10
     #   pymatgen
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-s3transfer==0.11.2
+s3transfer==0.11.4
     # via boto3
-scikit-image==0.25.1
+scikit-image==0.25.2
     # via pymatgen-analysis-defects
-scipy==1.15.1
+scipy==1.15.2
     # via
     #   pymatgen
     #   scikit-image
 sentinels==1.0.0
     # via mongomock
-setproctitle==1.3.4
+setproctitle==1.3.5
     # via emmet-api (setup.py)
 shapely==2.0.7
     # via
@@ -401,17 +399,17 @@ sniffio==1.3.1
     # via anyio
 snowballstemmer==2.2.0
     # via pydocstyle
-spglib==2.5.0
+spglib==2.6.0
     # via pymatgen
 sshtunnel==0.4.0
     # via maggma
-starlette==0.45.3
+starlette==0.46.1
     # via fastapi
 sympy==1.13.3
     # via pymatgen
 tabulate==0.9.0
     # via pymatgen
-tifffile==2025.1.10
+tifffile==2025.3.30
     # via scikit-image
 tornado==6.4.2
     # via livereload
@@ -419,11 +417,11 @@ tqdm==4.67.1
     # via
     #   maggma
     #   pymatgen
-types-requests==2.32.0.20241016
+types-requests==2.32.0.20250328
     # via emmet-api (setup.py)
-types-setuptools==75.8.0.20250210
+types-setuptools==78.1.0.20250329
     # via emmet-api (setup.py)
-typing-extensions==4.12.2
+typing-extensions==4.13.0
     # via
     #   anyio
     #   ddtrace
@@ -434,7 +432,11 @@ typing-extensions==4.12.2
     #   pydantic-core
     #   pydash
     #   referencing
-tzdata==2025.1
+    #   spglib
+    #   typing-inspection
+typing-inspection==0.4.0
+    # via pydantic
+tzdata==2025.2
     # via pandas
 uncertainties==3.2.2
     # via pymatgen
@@ -445,7 +447,7 @@ urllib3==2.3.0
     #   types-requests
 uvicorn==0.34.0
     # via maggma
-virtualenv==20.29.2
+virtualenv==20.29.3
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs

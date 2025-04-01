@@ -1,17 +1,18 @@
 """ Core definition of a Provenance Document """
+
 import warnings
 from datetime import datetime
 from typing import Dict, List, Optional
 
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
-from pydantic import field_validator, model_validator, BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
+from pymatgen.core.structure import Structure
 
+from emmet.core.common import convert_datetime
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
 from emmet.core.utils import ValueEnum
-from emmet.core.common import convert_datetime
-from pymatgen.core.structure import Structure
 
 
 class Database(ValueEnum):
@@ -146,7 +147,11 @@ class ProvenanceDoc(PropertyDoc):
 
     @classmethod
     def from_SNLs(
-        cls, material_id: MPID, structure: Structure, snls: List[SNLDict], **kwargs
+        cls,
+        structure: Structure,
+        snls: List[SNLDict],
+        material_id: MPID | None = None,
+        **kwargs,
     ) -> "ProvenanceDoc":
         """
         Converts legacy Pymatgen SNLs into a single provenance document

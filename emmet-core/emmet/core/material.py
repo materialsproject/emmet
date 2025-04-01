@@ -1,18 +1,18 @@
 """ Core definition of a Materials Document """
+
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Mapping, Type, TypeVar, Union, Optional
+from typing import List, Mapping, Optional, Type, TypeVar, Union
 
 from pydantic import BaseModel, Field, field_validator
-
 from pymatgen.core import Structure
 from pymatgen.core.structure import Molecule
 
+from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID, MPculeID
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
 from emmet.core.vasp.validation import DeprecationMessage
-from emmet.core.common import convert_datetime
 
 
 class PropertyOrigin(BaseModel):
@@ -44,9 +44,8 @@ class MaterialsDoc(StructureMetadata):
     Definition for a core Materials Document
     """
 
-    # Only material_id is required for all documents
-    material_id: MPID = Field(
-        ...,
+    material_id: MPID | None = Field(
+        None,
         description="The Materials Project ID of the material, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
     )
@@ -103,7 +102,7 @@ class MaterialsDoc(StructureMetadata):
 
     @classmethod
     def from_structure(
-        cls: Type[T], structure: Structure, material_id: MPID, **kwargs
+        cls: Type[T], structure: Structure, material_id: MPID | None = None, **kwargs
     ) -> T:  # type: ignore[override]
         """
         Builds a materials document using the minimal amount of information

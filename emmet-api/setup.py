@@ -12,13 +12,12 @@ setup(
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
     install_requires=[
-        "numpy<2",
         "emmet-core>=0.78.0rc1",
         "fastapi",
         "gunicorn",
         "boto3",
         "maggma[api]",
-        "ddtrace",
+        "ddtrace<3",
         "setproctitle",
         "shapely",
         "asgi-logger",
@@ -52,7 +51,7 @@ setup(
             "jinja2",
         ],
     },
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     license="modified BSD",
     zip_safe=False,
 )

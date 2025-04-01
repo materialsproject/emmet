@@ -199,3 +199,31 @@ def test_task_doc(test_dir, object_name, tmpdir):
         }
     )
     assert test_doc.transformations == ts
+
+
+def test_lda_and_pseudo_format(test_dir, tmpdir):
+    from zipfile import ZipFile
+
+    from emmet.core.tasks import TaskDoc
+
+    with ZipFile(test_dir / "vasp" / "lda_calc.zip", "r") as zipped:
+        top_level = zipped.namelist()[0]
+        zipped.extractall(path=tmpdir)
+
+    import os
+
+    os.listdir(tmpdir)
+
+    task = TaskDoc.from_directory(tmpdir / top_level)
+    assert task.run_type.name == "LDA"
+    assert all(task.input.incar.get(k) is None for k in ("GGA", "METAGGA"))
+
+    expected_pseudo = {
+        "pot_type": "PAW",
+        "functional": "LDA",
+        "symbols": ["Si"],
+    }
+    assert all(
+        getattr(task.input.pseudo_potentials, k) == v
+        for k, v in expected_pseudo.items()
+    )
