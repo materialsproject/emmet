@@ -356,7 +356,7 @@ def _kspacing_warnings(input_set, inputs, data, warnings, kspacing_tolerance):
 
 
 def _potcar_stats_check(
-    task_doc, potcar_stats: dict, exclude_keys: Sequence[str] | None = ["sha", "copyr"]
+    task_doc, potcar_stats: dict, exclude_keys: Sequence[str] | None = ["sha256", "copyr"]
 ):
     """
     Checks to make sure the POTCAR summary stats is equal to the correct
@@ -392,7 +392,7 @@ def _potcar_stats_check(
             all_match = False
             break
 
-        if use_legacy_hash_check:
+        if use_legacy_hash_check:                    
             all_match = any(
                 all(
                     entry[key] == ref_stat[key]
