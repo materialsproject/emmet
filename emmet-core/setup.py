@@ -44,6 +44,7 @@ setup(
             "pymatgen-analysis-diffusion>=2024.7.15",
             "pymatgen-analysis-alloys>=0.0.6",
             "solvation-analysis>=0.4.1",
+            "transport-analysis",
             "MDAnalysis>=2.7.0",
             "pyarrow",
         ],
