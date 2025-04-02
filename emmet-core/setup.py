@@ -39,7 +39,7 @@ setup(
         "all": [
             "matcalc>=0.3.1",
             "seekpath>=2.0.1",
-            "robocrys>=0.2.8",
+            "robocrys>=0.2.11",
             "pymatgen-analysis-defects>=2024.7.18",
             "pymatgen-analysis-diffusion>=2024.7.15",
             "pymatgen-analysis-alloys>=0.0.6",
