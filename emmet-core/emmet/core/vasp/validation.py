@@ -365,7 +365,7 @@ def _potcar_stats_check(
     value from the pymatgen input set.
     """
     data_tol = 1.0e-6
-    exclude_keys = set([k.lower() for k in (exclude_keys or [])])
+    excl: set[str] = set([k.lower() for k in (exclude_keys or [])])
 
     try:
         potcar_details = task_doc.calcs_reversed[0].model_dump()["input"]["potcar_spec"]
@@ -409,14 +409,13 @@ def _potcar_stats_check(
         else:
             entry_keys = {
                 key: set([k.lower() for k in entry["summary_stats"]["keywords"][key]])
-                - exclude_keys
+                - excl
                 for key in ["header", "data"]
             }
             all_match = False
             for ref_stat in ref_summ_stats:
                 ref_keys = {
-                    key: set([k.lower() for k in ref_stat["keywords"][key]])
-                    - exclude_keys
+                    key: set([k.lower() for k in ref_stat["keywords"][key]]) - excl
                     for key in ["header", "data"]
                 }
 
