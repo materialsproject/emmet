@@ -21,11 +21,11 @@ attrs==25.3.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.37.23
+boto3==1.37.26
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.37.23
+botocore==1.37.26
     # via
     #   boto3
     #   s3transfer
@@ -69,7 +69,7 @@ dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.6rc6
+emmet-core==0.84.7rc0
     # via emmet-api (setup.py)
 envier==0.5.2
     # via ddtrace
@@ -81,11 +81,11 @@ filelock==3.18.0
     # via virtualenv
 flake8==7.2.0
     # via emmet-api (setup.py)
-fonttools==4.56.0
+fonttools==4.57.0
     # via matplotlib
 ghp-import==2.1.0
     # via mkdocs
-griffe==1.7.1
+griffe==1.7.2
     # via mkdocstrings-python
 gunicorn==23.0.0
     # via emmet-api (setup.py)
@@ -183,11 +183,11 @@ mkdocs-material-extensions==1.3.1
     #   mkdocs-material
 mkdocs-minify-plugin==0.8.0
     # via emmet-api (setup.py)
-mkdocstrings[python]==0.29.0
+mkdocstrings[python]==0.29.1
     # via
     #   emmet-api (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.16.8
+mkdocstrings-python==1.16.10
     # via mkdocstrings
 mongomock==4.3.0
     # via maggma
@@ -208,7 +208,7 @@ mypy-extensions==1.0.0
     # via
     #   emmet-api (setup.py)
     #   mypy
-narwhals==1.32.0
+narwhals==1.33.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -284,13 +284,13 @@ pycodestyle==2.13.0
     #   flake8
 pycparser==2.22
     # via cffi
-pydantic==2.11.1
+pydantic==2.11.2
     # via
     #   emmet-core
     #   fastapi
     #   maggma
     #   pydantic-settings
-pydantic-core==2.33.0
+pydantic-core==2.33.1
     # via pydantic
 pydantic-settings==2.8.1
     # via
@@ -300,11 +300,11 @@ pydash==8.0.5
     # via maggma
 pydocstyle==6.3.0
     # via emmet-api (setup.py)
-pyflakes==3.3.1
+pyflakes==3.3.2
     # via flake8
 pygments==2.19.1
     # via mkdocs-material
-pymatgen==2025.1.9
+pymatgen==2025.3.10
     # via
     #   emmet-core
     #   mp-pyrho
@@ -328,7 +328,7 @@ pytest==8.3.5
     # via
     #   emmet-api (setup.py)
     #   pytest-cov
-pytest-cov==6.0.0
+pytest-cov==6.1.0
     # via emmet-api (setup.py)
 python-dateutil==2.9.0.post0
     # via
@@ -385,7 +385,7 @@ sentinels==1.0.0
     # via mongomock
 setproctitle==1.3.5
     # via emmet-api (setup.py)
-shapely==2.0.7
+shapely==2.1.0
     # via
     #   emmet-api (setup.py)
     #   pymatgen-analysis-alloys
@@ -419,7 +419,7 @@ types-requests==2.32.0.20250328
     # via emmet-api (setup.py)
 types-setuptools==78.1.0.20250329
     # via emmet-api (setup.py)
-typing-extensions==4.13.0
+typing-extensions==4.13.1
     # via
     #   anyio
     #   ddtrace
@@ -445,7 +445,7 @@ urllib3==2.3.0
     #   types-requests
 uvicorn==0.34.0
     # via maggma
-virtualenv==20.29.3
+virtualenv==20.30.0
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
