@@ -21,11 +21,11 @@ attrs==25.3.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.37.23
+boto3==1.37.26
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.37.23
+botocore==1.37.26
     # via
     #   boto3
     #   s3transfer
@@ -55,7 +55,7 @@ dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.6rc6
+emmet-core==0.84.7rc0
     # via emmet-api (setup.py)
 envier==0.5.2
     # via ddtrace
@@ -65,7 +65,7 @@ fastapi==0.115.12
     # via
     #   emmet-api (setup.py)
     #   maggma
-fonttools==4.56.0
+fonttools==4.57.0
     # via matplotlib
 gunicorn==23.0.0
     # via emmet-api (setup.py)
@@ -114,7 +114,7 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.1.0
     # via maggma
-narwhals==1.32.0
+narwhals==1.33.0
     # via plotly
 networkx==3.4.2
     # via
@@ -170,13 +170,13 @@ pybtex==0.24.0
     #   pymatgen
 pycparser==2.22
     # via cffi
-pydantic==2.11.1
+pydantic==2.11.2
     # via
     #   emmet-core
     #   fastapi
     #   maggma
     #   pydantic-settings
-pydantic-core==2.33.0
+pydantic-core==2.33.1
     # via pydantic
 pydantic-settings==2.8.1
     # via
@@ -184,7 +184,7 @@ pydantic-settings==2.8.1
     #   maggma
 pydash==8.0.5
     # via maggma
-pymatgen==2025.1.9
+pymatgen==2025.3.10
     # via
     #   emmet-core
     #   mp-pyrho
@@ -245,7 +245,7 @@ sentinels==1.0.0
     # via mongomock
 setproctitle==1.3.5
     # via emmet-api (setup.py)
-shapely==2.0.7
+shapely==2.1.0
     # via
     #   emmet-api (setup.py)
     #   pymatgen-analysis-alloys
@@ -271,7 +271,7 @@ tqdm==4.67.1
     # via
     #   maggma
     #   pymatgen
-typing-extensions==4.13.0
+typing-extensions==4.13.1
     # via
     #   anyio
     #   asgiref
