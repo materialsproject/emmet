@@ -1,5 +1,8 @@
+"""Current MP tools to validate VASP calculations."""
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Dict, List, Union, Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 from pydantic import ConfigDict, Field, ImportString
@@ -14,6 +17,9 @@ from emmet.core.utils import DocEnum
 from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calc_types.enums import CalcType, TaskType
 from emmet.core.vasp.task_valid import TaskDocument
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 SETTINGS = EmmetSettings()
 
@@ -51,19 +57,19 @@ class ValidationDoc(EmmetBaseModel):
         description="Last updated date for this document",
         default_factory=datetime.utcnow,
     )
-    reasons: Optional[List[Union[DeprecationMessage, str]]] = Field(
+    reasons: list[DeprecationMessage | str] | None = Field(
         None, description="List of deprecation tags detailing why this task isn't valid"
     )
-    warnings: List[str] = Field(
+    warnings: list[str] = Field(
         [], description="List of potential warnings about this calculation"
     )
-    data: Dict = Field(
+    data: dict = Field(
         description="Dictioary of data used to perform validation."
         " Useful for post-mortem analysis"
     )
     model_config = ConfigDict(extra="allow")
-    nelements: Optional[int] = Field(None, description="Number of elements.")
-    symmetry_number: Optional[int] = Field(
+    nelements: int | None = Field(None, description="Number of elements.")
+    symmetry_number: int | None = Field(
         None,
         title="Space Group Number",
         description="The spacegroup number for the lattice.",
@@ -72,14 +78,14 @@ class ValidationDoc(EmmetBaseModel):
     @classmethod
     def from_task_doc(
         cls,
-        task_doc: Union[TaskDoc, TaskDocument],
+        task_doc: TaskDoc | TaskDocument,
         kpts_tolerance: float = SETTINGS.VASP_KPTS_TOLERANCE,
         kspacing_tolerance: float = SETTINGS.VASP_KSPACING_TOLERANCE,
-        input_sets: Dict[str, ImportString] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
-        LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
+        input_sets: dict[str, ImportString] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
+        LDAU_fields: list[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
         max_allowed_scf_gradient: float = SETTINGS.VASP_MAX_SCF_GRADIENT,
-        max_magmoms: Dict[str, float] = SETTINGS.VASP_MAX_MAGMOM,
-        potcar_stats: Optional[Dict[CalcType, Dict[str, str]]] = None,
+        max_magmoms: dict[str, float] = SETTINGS.VASP_MAX_MAGMOM,
+        potcar_stats: dict[CalcType, dict[str, str]] | None = None,
     ) -> "ValidationDoc":
         """
         Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
@@ -120,7 +126,7 @@ class ValidationDoc(EmmetBaseModel):
 
         reasons = []
         data = {}  # type: ignore
-        warnings: List[str] = []
+        warnings: list[str] = []
 
         if str(calc_type) in input_sets:
             try:
@@ -349,12 +355,17 @@ def _kspacing_warnings(input_set, inputs, data, warnings, kspacing_tolerance):
             )
 
 
-def _potcar_stats_check(task_doc, potcar_stats: dict):
+def _potcar_stats_check(
+    task_doc,
+    potcar_stats: dict,
+    exclude_keys: Sequence[str] | None = ["sha256", "copyr"],
+):
     """
     Checks to make sure the POTCAR summary stats is equal to the correct
     value from the pymatgen input set.
     """
     data_tol = 1.0e-6
+    excl: set[str] = set([k.lower() for k in (exclude_keys or [])])
 
     try:
         potcar_details = task_doc.calcs_reversed[0].model_dump()["input"]["potcar_spec"]
@@ -396,13 +407,19 @@ def _potcar_stats_check(task_doc, potcar_stats: dict):
             )
 
         else:
+            entry_keys = {
+                key: set([k.lower() for k in entry["summary_stats"]["keywords"][key]])
+                - excl
+                for key in ["header", "data"]
+            }
             all_match = False
             for ref_stat in ref_summ_stats:
-                key_match = all(
-                    set(ref_stat["keywords"][key])
-                    == set(entry["summary_stats"]["keywords"][key])
+                ref_keys = {
+                    key: set([k.lower() for k in ref_stat["keywords"][key]]) - excl
                     for key in ["header", "data"]
-                )
+                }
+
+                key_match = all(entry_keys[k] == v for k, v in ref_keys.items())
 
                 data_match = False
                 if key_match:
