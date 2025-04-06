@@ -5,7 +5,7 @@
 
 ## What is Emmet
 
-Emmet is a toolkit of packages designed to build the Materials API. The Materials API is the specification of the Materials Project (MP) for defining and dissemenating "materials documents". The core document definitions live in `emmet-core`. The data pipelines that build these documents live in `emmet-builders`. A specialized multi-functional CLI to manage the orchestration of calculation ingestion, backup, and parsing is in `emmet-cli`. Emmet has been developed by the Materials Project team at Lawrence Berkeley Labs.
+Emmet is a toolkit of packages designed to build the Materials API. The Materials API is the specification of the Materials Project (MP) for defining and dissemenating "materials documents". The core document definitions live in `emmet-core`. The data pipelines that build these documents live in `emmet-builders`. A specialized multi-functional CLI to manage the orchestration of calculation ingestion, backup, and parsing is in `emmet-cli-legacy`. Emmet has been developed by the Materials Project team at Lawrence Berkeley Labs.
 
 Emmet is written in [Python](http://docs.python-guide.org/en/latest/) and supports Python 3.6+.
 
