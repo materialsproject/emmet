@@ -3,14 +3,24 @@ from typing import TYPE_CHECKING, Optional, Union
 
 from maggma.builders.map_builder import MapBuilder
 from maggma.core import Store
-from matcalc import PESCalculator
+
+try:
+    from matcalc import PESCalculator
+    matcalc_installed = True
+except ImportError:
+    matcalc_installed = False
+
 from pymatgen.core import Structure
 
 from emmet.core.ml import MLDoc
 from emmet.core.utils import jsanitize
 
 if TYPE_CHECKING:
-    from ase.calculators.calculator import Calculator
+    try:
+        from ase.calculators.calculator import Calculator
+        ase_installed = True
+    except ImportError:
+        ase_installed = False
 
 
 class MLBuilder(MapBuilder):
@@ -40,6 +50,10 @@ class MLBuilder(MapBuilder):
                 MLDocs. Will be saved in each document so use sparingly. Defaults to None.
                 Set to {} to disable default provenance model, version, matcalc_version.
         """
+
+        if not matcalc_installed or not ase_installed:
+            raise ImportError("Please `pip install matcalc` to use the MLBuilder.")
+        
         self.materials = materials
         self.ml_potential = ml_potential
         self.kwargs = kwargs
