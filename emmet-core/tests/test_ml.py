@@ -83,21 +83,20 @@ def test_ml_doc(calculator, prop_kwargs: dict) -> None:
 
 
 def test_matpes_doc_from_task_doc(test_dir):
-
     task_doc = TaskDoc.from_directory(
         test_dir / "vasp" / get_test_object("SiOptimizeDouble").folder
     )
     matpes_train_docs = MatPESTrainDoc.from_task_doc(task_doc)
 
-    assert len(matpes_train_docs) == sum(len(cr.output.ionic_steps) for cr in task_doc.calcs_reversed)
-        
+    assert len(matpes_train_docs) == sum(
+        len(cr.output.ionic_steps) for cr in task_doc.calcs_reversed
+    )
+
     ctr = 0
     for cr in task_doc.calcs_reversed[::-1]:
         for iistep, istep in enumerate(cr.output.ionic_steps):
             assert matpes_train_docs[ctr].energy == pytest.approx(istep.e_0_energy)
-            assert np.allclose(
-                matpes_train_docs[ctr].forces, istep.forces
-            )
+            assert np.allclose(matpes_train_docs[ctr].forces, istep.forces)
 
             assert np.allclose(
                 matpes_train_docs[ctr].stress, matrix_3x3_to_voigt(istep.stress)
@@ -105,12 +104,17 @@ def test_matpes_doc_from_task_doc(test_dir):
 
             if iistep < len(cr.output.ionic_steps) - 1:
                 assert matpes_train_docs[ctr].bandgap is None
-                assert matpes_train_docs[ctr].structure.site_properties.get("magmom") is None
+                assert (
+                    matpes_train_docs[ctr].structure.site_properties.get("magmom")
+                    is None
+                )
             else:
-                assert matpes_train_docs[ctr].bandgap == pytest.approx(cr.output.bandgap)
+                assert matpes_train_docs[ctr].bandgap == pytest.approx(
+                    cr.output.bandgap
+                )
                 assert np.allclose(
                     matpes_train_docs[ctr].structure.site_properties.get("magmom"),
-                    cr.output.structure.site_properties.get("magmom")
+                    cr.output.structure.site_properties.get("magmom"),
                 )
-            
+
             ctr += 1

@@ -8,12 +8,10 @@ import numpy as np
 
 try:
     from matcalc import ElasticityCalc, EOSCalc, PESCalculator, PhononCalc, RelaxCalc
+
+    matcalc_installed = True
 except ImportError:
-    ElasticityCalc = None
-    EOSCalc = None
-    PESCalculator = None
-    PhononCalc = None
-    RelaxCalc = None
+    matcalc_installed = False
 
 from pydantic import Field, BaseModel, field_validator, model_validator
 from pymatgen.analysis.elasticity import ElasticTensor
@@ -32,12 +30,16 @@ from emmet.core.vasp.calc_types import RunType as VaspRunType
 from emmet.core.tasks import TaskDoc
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from typing_extensions import Self
 
     try:
         from ase.calculators.calculator import Calculator as AseCalculator
+
+        ase_installed = True
     except ImportError:
-        AseCalculator = None    
+        ase_installed = False
+
 
 class MLDoc(ElasticityDoc):
     """Document model for matcalc-generated material properties from machine learning
@@ -77,9 +79,7 @@ class MLDoc(ElasticityDoc):
     matcalc_version: str | None = Field(
         None, description="Version of matcalc used to generate this document"
     )
-    model: str | None = Field(
-        None, description="Name of model used as ML potential."
-    )
+    model: str | None = Field(None, description="Name of model used as ML potential.")
     version: str | None = Field(
         None, description="Version of model used as ML potential"
     )
@@ -104,9 +104,7 @@ class MLDoc(ElasticityDoc):
     bulk_modulus_bm: float | None = Field(None, description="bm.b0_GPa")
 
     # phonons attributes
-    temperatures: list[float] | None = Field(
-        None, description="list of temperatures"
-    )
+    temperatures: list[float] | None = Field(None, description="list of temperatures")
     free_energy: list[float] | None = Field(
         None,
         description="list of Helmholtz free energies at corresponding temperatures",
@@ -169,6 +167,10 @@ class MLDoc(ElasticityDoc):
         Returns:
             MLDoc
         """
+
+        if not matcalc_installed or not ase_installed:
+            raise ImportError("Please `pip install matcalc` to use `MLDoc`.")
+
         calculator = PESCalculator.load_universal(calculator)
 
         results = {}  # type: ignore
@@ -191,6 +193,7 @@ class MLDoc(ElasticityDoc):
         super().__init__(
             structure=structure, material_id=material_id, **results, **kwargs
         )
+
 
 class MLTrainDoc(StructureMetadata):
     """Generic schema for ML training data."""
@@ -215,9 +218,9 @@ class MLTrainDoc(StructureMetadata):
         description="The components of the symmetric stress tensor in Voigt notation (xx, yy, zz, yz, xz, xy).",
     )
 
-    stress_matrix : Matrix3D | None = Field(
+    stress_matrix: Matrix3D | None = Field(
         None,
-        description = "The 3x3 stress tensor. Use this if the tensor is unphysically non-symmetric."
+        description="The 3x3 stress tensor. Use this if the tensor is unphysically non-symmetric.",
     )
 
     bandgap: float | None = Field(None, description="The final DFT bandgap.")
@@ -255,7 +258,7 @@ class MLTrainDoc(StructureMetadata):
     ) -> Self:
         """Ensure the abs_forces are set if the vector-valued forces are."""
         if self.forces is not None and self.abs_forces is None:
-            self.abs_forces = [np.linalg.norm(f) for f in self.forces]
+            self.abs_forces = [np.linalg.norm(f) for f in self.forces]  # type: ignore[misc]
         return self
 
     @classmethod
@@ -267,7 +270,7 @@ class MLTrainDoc(StructureMetadata):
     ) -> Self:
         """
         Create an ML training document from a structure and fields.
-        
+
         This method mostly exists to ensure that the structure field is
         set because `meta_structure` does not populate it automatically.
 
@@ -293,7 +296,7 @@ class MLTrainDoc(StructureMetadata):
         **kwargs,
     ) -> list[Self]:
         """Create a list of ML training documents from the ionic steps in a TaskDoc.
-        
+
         Parameters
         -----------
         task_doc : TaskDoc
@@ -306,14 +309,13 @@ class MLTrainDoc(StructureMetadata):
             nion = len(cr.output.ionic_steps)
 
             for iion, ionic_step in enumerate(cr.output.ionic_steps):
-
                 structure = Structure.from_dict(ionic_step.structure.as_dict())
                 # these are fields that should only be set on the final frame of a calculation
                 # also patch in magmoms because of how Calculation works
                 last_step_kwargs = {}
                 if iion == nion - 1:
-                    if (magmom := cr.output.structure.site_properties.get("magmom")):
-                        structure.add_site_property("magmom",magmom)
+                    if magmom := cr.output.structure.site_properties.get("magmom"):
+                        structure.add_site_property("magmom", magmom)
                     last_step_kwargs["bandgap"] = cr.output.bandgap
                     if bader_analysis := cr.bader:
                         for bk in (
@@ -324,7 +326,7 @@ class MLTrainDoc(StructureMetadata):
 
                 if (_st := ionic_step.stress) is not None:
                     st = np.array(_st)
-                    if np.allclose(st,st.T,rtol=1e-8):
+                    if np.allclose(st, st.T, rtol=1e-8):
                         # Stress tensor is symmetric
                         last_step_kwargs["stress"] = matrix_3x3_to_voigt(_st)
                     else:
@@ -355,7 +357,7 @@ class MatPESProvenanceDoc(BaseModel):
         None,
         description="The version of the Materials Project from which the struture was sourced.",
     )
-    md_ensemble: str = Field(
+    md_ensemble: str | None = Field(
         None,
         description="The molecular dynamics ensemble used to generate this structure.",
     )
@@ -379,7 +381,7 @@ class MatPESProvenanceDoc(BaseModel):
 class MatPESTrainDoc(MLTrainDoc):
     """
     Schema for VASP data in the Materials Potential Energy Surface (MatPES) effort.
-    
+
     """
 
     matpes_id: str | None = Field(None, description="MatPES identifier.")
@@ -399,11 +401,12 @@ class MatPESTrainDoc(MLTrainDoc):
     @property
     def pressure(self) -> float | None:
         """Return the pressure from the DFT stress tensor."""
-        if self.stress:
-            return sum(self.stress[:3]) / 3.
+        return sum(self.stress[:3]) / 3.0 if self.stress else None
 
     @property
-    def magmoms(self) -> list[float] | None:
+    def magmoms(self) -> Sequence[float] | None:
         """Retrieve on-site magnetic moments from the structure if they exist."""
-        if self.structure and (magmom := self.structure.site_properties.get("magmom")):
-            return magmom
+        magmom = (
+            self.structure.site_properties.get("magmom") if self.structure else None
+        )
+        return magmom

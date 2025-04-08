@@ -26,15 +26,16 @@ ListMatrix3D.__doc__ = "Real space Matrix as list"  # type: ignore
 
 VOIGT_INDICES = [(0, 0), (1, 1), (2, 2), (1, 2), (0, 2), (0, 1)]
 
-def matrix_3x3_to_voigt(matrix : Matrix3D ) -> Vector6D:
+
+def matrix_3x3_to_voigt(matrix: Matrix3D) -> list[float]:
     """Convert a 3x3 symmetric matrix to its Voigt vector representation.
-    
+
     Parameters
     -----------
     matrix : Matrix3D
-    
+
     Returns
     -----------
-    Vector6D
+    list of float
     """
     return [matrix[idx[0]][idx[1]] for idx in VOIGT_INDICES]
