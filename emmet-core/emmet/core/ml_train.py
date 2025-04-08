@@ -2,16 +2,20 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from pydantic import Field, BaseModel
+
+import numpy as np
+from pydantic import Field, BaseModel, model_validator
 from pymatgen.core import Composition, Element, Structure
 
 from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import RunType as VaspRunType
+from emmet.core.tasks import TaskDoc
 
 if TYPE_CHECKING:
     from typing_extensions import Self
 
+_VOIGT_INDICES = [(0,0),(1,1),(2,2),(1,2),(0,2),(0,1)]
 
 class MLTrainDoc(StructureMetadata):
     """Generic schema for ML training data."""
@@ -27,10 +31,16 @@ class MLTrainDoc(StructureMetadata):
         description="The interatomic forces corresponding to each site in the structure.",
     )
 
+    abs_forces: list[float] | None = Field(
+        None, description="The magnitude of the interatomic force on each site."
+    )
+
     stress: tuple[float, float, float, float, float, float] | None = Field(
         None,
         description="The components of the symmetric stress tensor in Voigt notation (xx, yy, zz, yz, xz, xy).",
     )
+
+    bandgap: float | None = Field(None, description="The final DFT bandgap.")
 
     elements: list[Element] | None = Field(
         None,
@@ -47,6 +57,26 @@ class MLTrainDoc(StructureMetadata):
         description="Simplified representation of the composition.",
     )
 
+    functional: VaspRunType | None = Field(
+        None, description="The approximate functional used to generate this entry."
+    )
+
+    bader_charges: list[float] | None = Field(
+        None, description="Bader charges on each site of the structure."
+    )
+    bader_magmoms: list[float] | None = Field(
+        None,
+        description="Bader on-site magnetic moments for each site of the structure.",
+    )
+
+    @model_validator( mode="after")
+    def set_abs_forces(self,) -> Self:
+        if self.forces is not None and self.abs_forces is None:
+            self.abs_forces = [
+                np.linalg.norm(f) for f in self.forces
+            ]
+        return self
+
     @classmethod
     def from_structure(
         cls,
@@ -62,6 +92,38 @@ class MLTrainDoc(StructureMetadata):
             **kwargs,
         )
 
+    @classmethod
+    def from_task_doc(
+        cls,
+        task_doc : TaskDoc,
+        **kwargs,
+    ) -> list[Self]:
+        
+        entries = []
+
+        for cr in task_doc.calcs_reversed[::-1]:
+            nion = len(cr.output.ionic_steps)
+            for iion, ionic_step in enumerate(cr.output.ionic_steps):
+
+                # these are fields that should only be set on the final frame of a calculation
+                last_step_kwargs = {}
+                if iion == nion - 1 :
+                    last_step_kwargs["bandgap"] = cr.output.bandgap
+                    if (bader_analysis := cr.bader):
+                        for bk in ("charge","magmom",):
+                            last_step_kwargs[f"bader_{bk}s"] = bader_analysis[bk]
+
+                entries.append(
+                    cls.from_structure(
+                        meta_structure=ionic_step.structure,
+                        energy = ionic_step.e_0_energy,
+                        forces = ionic_step.forces,
+                        stress = [ionic_step.stress[idx[0]][idx[1]] for idx in _VOIGT_INDICES],
+                        run_type = cr.run_type,
+                        **last_step_kwargs,
+                        **kwargs
+                    )
+                )
 
 class MatPESProvenanceDoc(BaseModel):
     """Information regarding the origins of a MatPES structure."""
@@ -100,29 +162,12 @@ class MatPESTrainDoc(MLTrainDoc):
 
     matpes_id: str | None = Field(None, description="MatPES identifier.")
 
-    bandgap: float | None = Field(None, description="The DFT bandgap.")
-    functional: VaspRunType | None = Field(
-        None, description="The approximate functional used to generate this entry."
-    )
-
     formation_energy_per_atom: float | None = Field(
         None,
         description="The uncorrected formation enthalpy per atom at zero pressure and temperature.",
     )
     cohesive_energy_per_atom: float | None = Field(
         None, description="The uncorrected cohesive energy per atom."
-    )
-
-    abs_forces: list[float] | None = Field(
-        None, description="The magnitude of the interatomic force on each site."
-    )
-
-    bader_charges: list[float] | None = Field(
-        None, description="Bader charges on each site of the structure."
-    )
-    bader_magmoms: list[float] | None = Field(
-        None,
-        description="Bader on-site magnetic moments for each site of the structure.",
     )
 
     provenance: MatPESProvenanceDoc | None = Field(

@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 from matcalc import ElasticityCalc, EOSCalc, PESCalculator, PhononCalc, RelaxCalc
-from pydantic import Field, validator
+from pydantic import Field, field_validator
 from pymatgen.analysis.elasticity import ElasticTensor
 from pymatgen.core import Structure
 
@@ -100,7 +100,7 @@ class MLDoc(ElasticityDoc):
     # elasticity attributes
     # all inherited from ElasticityDoc
 
-    @validator("elastic_tensor", pre=True)
+    @field_validator("elastic_tensor", mode="before")
     def elastic_tensor(cls, val) -> ElasticTensorDoc:
         """ElasticTensorDoc from MSONable dict of ElasticTensor, or list (specifying the Voigt array)
         or the ElasticTensor class itself.
@@ -113,13 +113,13 @@ class MLDoc(ElasticityDoc):
             tensor = val
         return ElasticTensorDoc(raw=tensor.voigt.tolist())
 
-    @validator("bulk_modulus", pre=True, always=True)
+    @field_validator("bulk_modulus", mode="before")
     def bulk_vrh_no_suffix(cls, new_key, values):
         """Map field bulk_modulus_vrh to bulk_modulus."""
         val = values.get("bulk_modulus_vrh", new_key)
         return BulkModulus(vrh=val)
 
-    @validator("shear_modulus", pre=True, always=True)
+    @field_validator("shear_modulus", mode="before")
     def shear_vrh_no_suffix(cls, new_key, values):
         """Map field shear_modulus_vrh to shear_modulus."""
         val = values.get("shear_modulus_vrh", new_key)
