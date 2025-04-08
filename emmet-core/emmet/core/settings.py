@@ -1,16 +1,16 @@
-# mypy: ignore-errors
-
-"""
-Settings for defaults in the core definitions of Materials Project Documents
-"""
+"""Settings for defaults in the core definitions of Materials Project Documents."""
+from __future__ import annotations
 import json
 from pathlib import Path
-from typing import Type, TypeVar, Union, List, Dict
+from typing import Type, TypeVar, Union, List, Dict, TYPE_CHECKING
 
-import requests
+import requests # type: ignore[import-untyped]
 from monty.json import MontyDecoder
 from pydantic import field_validator, model_validator, Field, ImportString
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+if TYPE_CHECKING:
+    from typing import Any
 
 DEFAULT_CONFIG_FILE_PATH = str(Path.home().joinpath(".emmet.json"))
 
@@ -174,7 +174,7 @@ class EmmetSettings(BaseSettings):
 
     @model_validator(mode="before")
     @classmethod
-    def load_default_settings(cls, values):
+    def load_default_settings(cls, values : Any) -> Any:
         """
         Loads settings from a root file if available and uses that as defaults in
         place of built in defaults
@@ -196,7 +196,7 @@ class EmmetSettings(BaseSettings):
     @classmethod
     def autoload(cls: Type[S], settings: Union[None, dict, S]) -> S:
         if settings is None:
-            return cls()
+            return cls(**{})
         elif isinstance(settings, dict):
             return cls(**settings)
         return settings
@@ -212,4 +212,4 @@ class EmmetSettings(BaseSettings):
         """
         HotPatch to enable serializing EmmetSettings via Monty
         """
-        return self.dict(exclude_unset=True, exclude_defaults=True)
+        return self.model_dump(exclude_unset=True, exclude_defaults=True)

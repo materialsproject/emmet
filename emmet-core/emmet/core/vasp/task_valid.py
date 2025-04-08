@@ -1,6 +1,7 @@
+""" Core definition of a VASP Task Document """
+
 from __future__ import annotations
 
-""" Core definition of a VASP Task Document """
 from typing import Any, Dict, List, Union, Optional
 
 from pydantic import BaseModel, Field

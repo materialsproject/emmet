@@ -2,11 +2,13 @@
 
 # mypy: ignore-errors
 
+from __future__ import annotations
+
 import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, TYPE_CHECKING
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -42,6 +44,9 @@ from emmet.core.vasp.calc_types import (
     task_type,
 )
 from emmet.core.vasp.task_valid import TaskState
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 logger = logging.getLogger(__name__)
 
@@ -189,7 +194,7 @@ class CalculationInput(CalculationBaseModel):
             kpoints=kpoints_dict,
             nkpoints=len(kpoints_dict["actual_kpoints"]),
             potcar=[s.split()[1] for s in vasprun.potcar_symbols],
-            potcar_spec=vasprun.potcar_spec,
+            potcar_spec=[PotcarSpec(**ps) for ps in vasprun.potcar_spec],
             potcar_type=[s.split()[0] for s in vasprun.potcar_symbols],
             parameters=parameters,
             lattice_rec=vasprun.initial_structure.lattice.reciprocal_lattice,
@@ -236,7 +241,7 @@ class RunStatistics(BaseModel):
             "Total CPU time used (sec)": "total_time",
             "cores": "cores",
         }
-        run_stats = {}
+        run_stats : dict[str,int | float]= {}
         for k, v in mapping.items():
             stat = outcar.run_stats.get(k) or 0
             try:
@@ -247,7 +252,7 @@ class RunStatistics(BaseModel):
 
             run_stats[v] = stat
 
-        return cls(**run_stats)
+        return cls(**run_stats) # type: ignore[arg-type]
 
 
 class FrequencyDependentDielectric(BaseModel):
@@ -463,7 +468,7 @@ class CalculationOutput(BaseModel):
         contcar: Optional[Poscar],
         locpot: Optional[Locpot] = None,
         elph_poscars: Optional[List[Path]] = None,
-        store_trajectory: StoreTrajectoryOption = StoreTrajectoryOption.NO,
+        store_trajectory: StoreTrajectoryOption | str = StoreTrajectoryOption.NO,
         store_onsite_density_matrices: bool = False,
     ) -> "CalculationOutput":
         """
@@ -512,7 +517,7 @@ class CalculationOutput(BaseModel):
                 logger.warning("VASP doesn't properly output efermi for IBRION == 1")
             electronic_output = {}
 
-        freq_dependent_diel: Union[dict, FrequencyDependentDielectric] = {}
+        freq_dependent_diel: FrequencyDependentDielectric | None = None
         try:
             freq_dependent_diel = FrequencyDependentDielectric.from_vasprun(vasprun)
         except KeyError:
@@ -981,7 +986,7 @@ def _get_volumetric_data(
     dir_name: Path,
     output_file_paths: Dict[VaspObject, str],
     store_volumetric_data: Optional[Tuple[str]],
-) -> Dict[VaspObject, VolumetricData]:
+) -> Mapping[VaspObject, VolumetricData]:
     """
     Load volumetric data files from a directory.
 
@@ -1087,14 +1092,14 @@ def _get_band_props(
     """
     dosprop_dict: Dict[str, Dict[str, Dict[str, float]]] = {}
     for el in structure.composition.elements:
-        el_name = el.name
+        el_name = str(el.name)
         dosprop_dict[el_name] = {}
         for orb_type in [
             OrbitalType.s,
             OrbitalType.p,
             OrbitalType.d,
         ]:
-            orb_name = orb_type.name
+            orb_name = str(orb_type) # NB this is the same as orb_type.name
             if (
                 (el.block == "s" and orb_name in ["p", "d", "f"])
                 or (el.block == "p" and orb_name in ["d", "f"])
