@@ -15,7 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from emmet.core.openff import MDTaskDocument  # type: ignore[import-untyped]
 from emmet.core.openff.tasks import CompressedStr  # type: ignore[import-untyped]
-from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
+from emmet.core.vasp.task_valid import TaskState
 
 if TYPE_CHECKING:
     from typing import Any
