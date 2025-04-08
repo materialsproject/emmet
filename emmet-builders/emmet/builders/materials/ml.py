@@ -6,6 +6,7 @@ from maggma.core import Store
 
 try:
     from matcalc import PESCalculator
+
     matcalc_installed = True
 except ImportError:
     matcalc_installed = False
@@ -18,6 +19,7 @@ from emmet.core.utils import jsanitize
 if TYPE_CHECKING:
     try:
         from ase.calculators.calculator import Calculator
+
         ase_installed = True
     except ImportError:
         ase_installed = False
@@ -53,7 +55,7 @@ class MLBuilder(MapBuilder):
 
         if not matcalc_installed or not ase_installed:
             raise ImportError("Please `pip install matcalc` to use the MLBuilder.")
-        
+
         self.materials = materials
         self.ml_potential = ml_potential
         self.kwargs = kwargs
