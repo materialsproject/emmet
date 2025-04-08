@@ -15,7 +15,8 @@ from emmet.core.tasks import TaskDoc
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-_VOIGT_INDICES = [(0,0),(1,1),(2,2),(1,2),(0,2),(0,1)]
+_VOIGT_INDICES = [(0, 0), (1, 1), (2, 2), (1, 2), (0, 2), (0, 1)]
+
 
 class MLTrainDoc(StructureMetadata):
     """Generic schema for ML training data."""
@@ -69,12 +70,12 @@ class MLTrainDoc(StructureMetadata):
         description="Bader on-site magnetic moments for each site of the structure.",
     )
 
-    @model_validator( mode="after")
-    def set_abs_forces(self,) -> Self:
+    @model_validator(mode="after")
+    def set_abs_forces(
+        self,
+    ) -> Self:
         if self.forces is not None and self.abs_forces is None:
-            self.abs_forces = [
-                np.linalg.norm(f) for f in self.forces
-            ]
+            self.abs_forces = [np.linalg.norm(f) for f in self.forces]
         return self
 
     @classmethod
@@ -95,35 +96,39 @@ class MLTrainDoc(StructureMetadata):
     @classmethod
     def from_task_doc(
         cls,
-        task_doc : TaskDoc,
+        task_doc: TaskDoc,
         **kwargs,
     ) -> list[Self]:
-        
         entries = []
 
         for cr in task_doc.calcs_reversed[::-1]:
             nion = len(cr.output.ionic_steps)
             for iion, ionic_step in enumerate(cr.output.ionic_steps):
-
                 # these are fields that should only be set on the final frame of a calculation
                 last_step_kwargs = {}
-                if iion == nion - 1 :
+                if iion == nion - 1:
                     last_step_kwargs["bandgap"] = cr.output.bandgap
-                    if (bader_analysis := cr.bader):
-                        for bk in ("charge","magmom",):
+                    if bader_analysis := cr.bader:
+                        for bk in (
+                            "charge",
+                            "magmom",
+                        ):
                             last_step_kwargs[f"bader_{bk}s"] = bader_analysis[bk]
 
                 entries.append(
                     cls.from_structure(
                         meta_structure=ionic_step.structure,
-                        energy = ionic_step.e_0_energy,
-                        forces = ionic_step.forces,
-                        stress = [ionic_step.stress[idx[0]][idx[1]] for idx in _VOIGT_INDICES],
-                        run_type = cr.run_type,
+                        energy=ionic_step.e_0_energy,
+                        forces=ionic_step.forces,
+                        stress=[
+                            ionic_step.stress[idx[0]][idx[1]] for idx in _VOIGT_INDICES
+                        ],
+                        run_type=cr.run_type,
                         **last_step_kwargs,
-                        **kwargs
+                        **kwargs,
                     )
                 )
+
 
 class MatPESProvenanceDoc(BaseModel):
     """Information regarding the origins of a MatPES structure."""
