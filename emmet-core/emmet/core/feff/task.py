@@ -11,7 +11,8 @@ from pymatgen.core.periodic_table import Element, Species
 
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import ValueEnum
-from emmet.core.vasp.task_valid import TaskDocument as VaspTaskDocument
+from emmet.core.vasp.task_valid import TaskDocument as BaseTaskDocument
+
 
 class CalcType(ValueEnum):
     """
@@ -26,7 +27,7 @@ class CalcType(ValueEnum):
     XAFS = "XAFS"
 
 
-class TaskDocument(VaspTaskDocument, StructureMetadata):
+class TaskDocument(BaseTaskDocument, StructureMetadata):
     """Task Document for a FEFF XAS Calculation. Doesn't support EELS for now"""
 
     calc_code: str = "FEFF"

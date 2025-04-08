@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Type, TypeVar, Union, List, Dict, TYPE_CHECKING
 
-import requests # type: ignore[import-untyped]
+import requests  # type: ignore[import-untyped]
 from monty.json import MontyDecoder
 from pydantic import field_validator, model_validator, Field, ImportString
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -174,7 +174,7 @@ class EmmetSettings(BaseSettings):
 
     @model_validator(mode="before")
     @classmethod
-    def load_default_settings(cls, values : Any) -> Any:
+    def load_default_settings(cls, values: Any) -> Any:
         """
         Loads settings from a root file if available and uses that as defaults in
         place of built in defaults

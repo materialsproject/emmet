@@ -241,7 +241,7 @@ class RunStatistics(BaseModel):
             "Total CPU time used (sec)": "total_time",
             "cores": "cores",
         }
-        run_stats : dict[str,int | float]= {}
+        run_stats: dict[str, int | float] = {}
         for k, v in mapping.items():
             stat = outcar.run_stats.get(k) or 0
             try:
@@ -252,7 +252,7 @@ class RunStatistics(BaseModel):
 
             run_stats[v] = stat
 
-        return cls(**run_stats) # type: ignore[arg-type]
+        return cls(**run_stats)  # type: ignore[arg-type]
 
 
 class FrequencyDependentDielectric(BaseModel):
@@ -1099,7 +1099,7 @@ def _get_band_props(
             OrbitalType.p,
             OrbitalType.d,
         ]:
-            orb_name = str(orb_type) # NB this is the same as orb_type.name
+            orb_name = str(orb_type)  # NB this is the same as orb_type.name
             if (
                 (el.block == "s" and orb_name in ["p", "d", "f"])
                 or (el.block == "p" and orb_name in ["d", "f"])
