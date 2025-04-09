@@ -1,12 +1,13 @@
 """Schemas and utils for NEB calculations."""
 
-from collections.abc import Sequence
+from __future__ import annotations
+
 from datetime import datetime
 import numpy as np
 from pathlib import Path
 from pydantic import BaseModel, Field, model_validator
 from scipy.interpolate import CubicSpline
-from typing import Any
+from typing import TYPE_CHECKING
 from typing_extensions import Self
 
 from monty.os.path import zpath
@@ -24,6 +25,12 @@ from emmet.core.tasks import (
 from emmet.core.utils import ValueEnum, utcnow
 from emmet.core.vasp.calculation import Calculation, VaspObject
 from emmet.core.vasp.task_valid import TaskState
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from typing import Any
+
+    from numpy.typing import NDArray
 
 
 class NebMethod(ValueEnum):
@@ -76,7 +83,7 @@ class BarrierAnalysis(BaseModel):
     def from_energies(
         cls,
         energies: Sequence[float],
-        frame_index: Sequence[float] | None = None,
+        frame_index: Sequence[float] | NDArray | None = None,
         spline_kwargs: dict[str, Any] | None = None,
         frame_match_tol: float = 1.0e-6,
     ) -> Self:
@@ -569,12 +576,22 @@ class NebPathwayResult(BaseModel):  # type: ignore[call-arg]
         return self
 
     @property
-    def max_barriers(self) -> dict[str, float]:
+    def max_barriers(self) -> dict[str, float | None] | None:
         """Retrieve the maximum barrier along each hop."""
-        return {
-            idx: max(self.forward_barriers[idx], self.reverse_barriers[idx])
-            for idx in self.forward_barriers
-        }
+
+        barriers: dict[str, list[float]] = {}
+        for b in [self.forward_barriers, self.reverse_barriers]:
+            if b:
+                for idx, barrier in b.items():
+                    if barrier:
+                        if idx not in barriers:
+                            barriers[idx] = []
+                        barriers[idx].append(barrier)
+
+        if len(barriers) == 0:
+            return None
+
+        return {idx: max(v) for idx, v in barriers.items()}
 
     @property
     def barrier_ranges(self) -> dict[str, float | None]:
