@@ -13,7 +13,13 @@ try:
 except ImportError:
     matcalc_installed = False
 
-from pydantic import Field, BaseModel, field_validator, model_validator
+from pydantic import (
+    Field,
+    BaseModel,
+    field_validator,
+    model_validator,
+    model_serializer,
+)
 from pymatgen.analysis.elasticity import ElasticTensor
 from pymatgen.core import Composition, Element, Structure
 
@@ -28,6 +34,7 @@ from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import RunType as VaspRunType
 from emmet.core.tasks import TaskDoc
+from emmet.core.utils import jsanitize
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -252,6 +259,11 @@ class MLTrainDoc(StructureMetadata):
         description="Bader on-site magnetic moments for each site of the structure.",
     )
 
+    @model_serializer
+    def deseralize(self):
+        """Ensure output is JSON compliant."""
+        return jsanitize({k: getattr(self, k, None) for k in self.model_fields})
+
     @model_validator(mode="after")
     def set_abs_forces(
         self,
@@ -385,7 +397,7 @@ class MatPESTrainDoc(MLTrainDoc):
     This schema is used in the data entries for MatPES v2025.1,
     which can be downloaded either:
         - On [MPContribs](https://materialsproject-contribs.s3.amazonaws.com/index.html#MatPES_2025_1/)
-        - or on [the site](https://matpes.ai)
+        - or on [the site]
     """
 
     matpes_id: str | None = Field(None, description="MatPES identifier.")
