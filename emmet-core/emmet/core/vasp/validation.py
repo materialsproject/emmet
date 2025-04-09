@@ -259,7 +259,7 @@ def _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandga
 
 
 def _scf_upward_check(calcs_reversed, inputs, data, max_allowed_scf_gradient, warnings):
-    skip = abs(inputs.get("incar", {}).get("NLEMDL", -5)) - 1
+    skip = abs(inputs.get("incar", {}).get("NELMDL", -5)) - 1
     energies = [
         d["e_fr_energy"]
         for d in calcs_reversed[0]["output"]["ionic_steps"][-1]["electronic_steps"]

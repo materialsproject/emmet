@@ -37,7 +37,6 @@ setup(
     ],
     extras_require={
         "all": [
-            "matcalc>=0.3.1",
             "seekpath>=2.0.1",
             "robocrys>=0.2.11",
             "pymatgen-analysis-defects>=2024.7.18",
@@ -48,7 +47,7 @@ setup(
             "MDAnalysis>=2.7.0",
             "pyarrow",
         ],
-        "ml": ["chgnet", "matgl", "dgl<=2.1"],
+        "ml": ["matcalc>=0.3.1"],
         "test": [
             "pre-commit",
             "pytest",

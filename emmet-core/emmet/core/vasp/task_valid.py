@@ -1,6 +1,7 @@
-# mypy: ignore-errors
-
 """ Core definition of a VASP Task Document """
+
+from __future__ import annotations
+
 from typing import Any, Dict, List, Union, Optional
 
 from pydantic import BaseModel, Field
@@ -30,24 +31,22 @@ class InputSummary(BaseModel):
     Summary of inputs for a VASP calculation
     """
 
-    structure: Optional[Structure] = Field(
-        None, description="The input structure object"
-    )
-    parameters: Dict = Field(
+    structure: Structure | None = Field(None, description="The input structure object")
+    parameters: dict = Field(
         {},
         description="Input parameters from VASPRUN for the last calculation in the series",
     )
-    pseudo_potentials: Dict = Field(
+    pseudo_potentials: dict = Field(
         {}, description="Summary of the pseudopotentials used in this calculation"
     )
 
-    potcar_spec: List[Dict] = Field(
-        [], description="Potcar specification as a title and hash"
+    potcar_spec: list[dict] = Field(
+        [{}], description="Potcar specification as a title and hash"
     )
 
     is_hubbard: bool = Field(False, description="Is this a Hubbard +U calculation.")
 
-    hubbards: Dict = Field({}, description="The hubbard parameters used.")
+    hubbards: dict = Field({}, description="The hubbard parameters used.")
 
 
 class OutputSummary(BaseModel):
@@ -119,8 +118,8 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
         True, description="Whether this task document passed validation or not"
     )
 
-    input: InputSummary = Field(InputSummary())
-    output: OutputSummary = Field(OutputSummary())
+    input: InputSummary = Field(default=InputSummary(**{}))
+    output: OutputSummary = Field(default=OutputSummary(**{}))
 
     state: Optional[TaskState] = Field(None, description="State of this calculation")
 
@@ -164,12 +163,12 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
         return calc_type(inputs, {**params, **incar})
 
     @property
-    def entry(self) -> ComputedEntry:
-        """Turns a Task Doc into a ComputedEntry"""
-        entry_dict = {
+    def _entry_dict(self):
+        """Dict representation of the TaskDocument's ComputedEntry."""
+        return {
             "correction": 0.0,
             "entry_id": self.task_id,
-            "composition": self.output.structure.composition,
+            "composition": getattr(self.output.structure, "composition", None),
             "energy": self.output.energy,
             "parameters": {
                 "potcar_spec": self.input.potcar_spec,
@@ -179,35 +178,25 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
                 "run_type": str(self.run_type),
             },
             "data": {
-                "oxide_type": oxide_type(self.output.structure),
+                "oxide_type": oxide_type(self.output.structure)
+                if self.output.structure
+                else None,
                 "aspherical": self.input.parameters.get("LASPH", True),
                 "last_updated": self.last_updated,
             },
         }
 
-        return ComputedEntry.from_dict(entry_dict)
+    @property
+    def entry(self) -> ComputedEntry:
+        """Turns a Task Doc into a ComputedEntry"""
+        return ComputedEntry.from_dict(self._entry_dict)
 
     @property
     def structure_entry(self) -> ComputedStructureEntry:
         """Turns a Task Doc into a ComputedStructureEntry"""
-        entry_dict = {
-            "correction": 0.0,
-            "entry_id": self.task_id,
-            "composition": self.output.structure.composition,
-            "energy": self.output.energy,
-            "parameters": {
-                "potcar_spec": self.input.potcar_spec,
-                "is_hubbard": self.input.is_hubbard,
-                "hubbards": self.input.hubbards,
-                # This is done to be compatible with MontyEncoder for the ComputedEntry
-                "run_type": str(self.run_type),
-            },
-            "data": {
-                "oxide_type": oxide_type(self.output.structure),
-                "aspherical": self.input.parameters.get("LASPH", False),
-                "last_updated": self.last_updated,
-            },
-            "structure": self.output.structure,
-        }
-
-        return ComputedStructureEntry.from_dict(entry_dict)
+        return ComputedStructureEntry.from_dict(
+            {
+                **self._entry_dict,
+                "structure": self.output.structure,
+            }
+        )
