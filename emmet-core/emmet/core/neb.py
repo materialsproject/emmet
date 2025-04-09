@@ -34,7 +34,7 @@ class NebMethod(ValueEnum):
 
     STANDARD = "standard"
     CLIMBING_IMAGE = "climbing_image"
-    APPROX = "approxNEB"
+    APPROX = "approx_neb"
 
 
 class HopFailureReason(ValueEnum):
