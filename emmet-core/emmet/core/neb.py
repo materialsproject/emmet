@@ -7,7 +7,7 @@ import numpy as np
 from pathlib import Path
 from pydantic import BaseModel, Field, model_validator
 from scipy.interpolate import CubicSpline
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from typing_extensions import Self
 
 from monty.os.path import zpath
@@ -28,7 +28,6 @@ from emmet.core.vasp.task_valid import TaskState
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
-    from typing import Any
 
     from numpy.typing import NDArray
 
