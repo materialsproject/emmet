@@ -6,7 +6,18 @@ import re
 from collections import OrderedDict
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Tuple, Type, TypeVar, Union, TYPE_CHECKING
+from typing import (
+    Any,
+    Dict,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    TYPE_CHECKING,
+)
 
 import numpy as np
 from monty.json import MontyDecoder
@@ -1056,11 +1067,12 @@ def _get_run_stats(calcs_reversed: List[Calculation]) -> Dict[str, RunStatistics
     run_stats["overall"] = RunStatistics(**total)
     return run_stats
 
+
 def _find_vasp_files(
-    path : str | Path,
-    volumetric_files : Sequence[str] | None = None,
-    task_names : Sequence[str] | None = None,
-) -> dict[str,Path]:
+    path: str | Path,
+    volumetric_files: Sequence[str] | None = None,
+    task_names: Sequence[str] | None = None,
+) -> dict[str, Path]:
     """
     Find VASP files in a directory.
 
@@ -1101,7 +1113,7 @@ def _find_vasp_files(
     task_names = task_names or ["precondition"] + [f"relax{i}" for i in range(9)]
     task_files = OrderedDict()
     for depth in range(2):
-        vasp_files = discover_and_sort_vasp_files(base_path,depth=depth)
+        vasp_files = discover_and_sort_vasp_files(base_path, depth=depth)
         for calc_dir, file_categories in vasp_files.items():
             for category, files in file_categories.items():
                 for f in files:
@@ -1109,7 +1121,9 @@ def _find_vasp_files(
                     task = "standard" if len(tasks) == 0 else tasks[0]
                     if task not in task_files:
                         task_files[task] = {}
-                    if (is_list_like := category in ("volumetric_files","elph_poscars") ) and category not in task_files[task]:
+                    if (
+                        is_list_like := category in ("volumetric_files", "elph_poscars")
+                    ) and category not in task_files[task]:
                         task_files[task][category] = []
 
                     abs_f = Path(calc_dir) / f
