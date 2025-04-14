@@ -1,11 +1,12 @@
 # mypy: ignore-errors
+from __future__ import annotations
 
 import logging
 import re
 from collections import OrderedDict
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Dict, List, Mapping, Optional, Tuple, Type, TypeVar, Union, TYPE_CHECKING
 
 import numpy as np
 from monty.json import MontyDecoder
@@ -38,6 +39,10 @@ from emmet.core.vasp.calculation import (
     VaspObject,
 )
 from emmet.core.vasp.task_valid import TaskState
+from emmet.core.vasp.utils import discover_and_sort_vasp_files
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 monty_decoder = MontyDecoder()
 logger = logging.getLogger(__name__)
@@ -1051,12 +1056,11 @@ def _get_run_stats(calcs_reversed: List[Calculation]) -> Dict[str, RunStatistics
     run_stats["overall"] = RunStatistics(**total)
     return run_stats
 
-
 def _find_vasp_files(
-    path: Union[str, Path],
-    volumetric_files: Tuple[str, ...] = _VOLUMETRIC_FILES,
-    task_names: Optional[list[str]] = None,
-) -> Dict[str, Any]:
+    path : str | Path,
+    volumetric_files : Sequence[str] | None = None,
+    task_names : Sequence[str] | None = None,
+) -> dict[str,Path]:
     """
     Find VASP files in a directory.
 
@@ -1069,12 +1073,15 @@ def _find_vasp_files(
     ----------
     path
         Path to a directory to search.
-    volumetric_files
+    volumetric_files : sequence of str, defaults to _VOLUMETRIC_FILES
         Volumetric files to search for.
+    task_names : sequence of str, defaults to
+        task_names = ["precondition","standard","relax0","relax1",..."relax8"]
+
 
     Returns
     -------
-    dict[str, Any]
+    dict[str, Path]
         The filenames of the calculation outputs for each VASP task, given as a ordered
         dictionary of::
 
@@ -1088,57 +1095,29 @@ def _find_vasp_files(
                 },
                 ...
             }
-
     """
-    task_names = ["precondition"] + [f"relax{i}" for i in range(9)]
-    path = Path(path)
+    base_path = Path(path)
+    volumetric_files = volumetric_files or _VOLUMETRIC_FILES
+    task_names = task_names or ["precondition"] + [f"relax{i}" for i in range(9)]
     task_files = OrderedDict()
+    for depth in range(2):
+        vasp_files = discover_and_sort_vasp_files(base_path,depth=depth)
+        for calc_dir, file_categories in vasp_files.items():
+            for category, files in file_categories.items():
+                for f in files:
+                    tasks = sorted([t for t in task_names if t in f])
+                    task = "standard" if len(tasks) == 0 else tasks[0]
+                    if task not in task_files:
+                        task_files[task] = {}
+                    if (is_list_like := category in ("volumetric_files","elph_poscars") ) and category not in task_files[task]:
+                        task_files[task][category] = []
 
-    def _get_task_files(files, suffix=""):
-        vasp_files = {}
-        vol_files = []
-        elph_poscars = []
-        for file in files:
-            file_no_path = file.relative_to(path)
-            if file.match(f"*vasprun.xml{suffix}*"):
-                vasp_files["vasprun_file"] = file_no_path
-            elif file.match(f"*OUTCAR{suffix}*"):
-                vasp_files["outcar_file"] = file_no_path
-            elif file.match(f"*CONTCAR{suffix}*"):
-                vasp_files["contcar_file"] = file_no_path
-            elif any(file.match(f"*{f}{suffix}*") for f in volumetric_files):
-                vol_files.append(file_no_path)
-            elif file.match(f"*POSCAR.T=*{suffix}*"):
-                elph_poscars.append(file_no_path)
-            elif file.match(f"*OSZICAR{suffix}*"):
-                vasp_files["oszicar_file"] = file_no_path
+                    abs_f = Path(calc_dir) / f
+                    if is_list_like:
+                        task_files[task][category].append(abs_f)
+                    else:
+                        task_files[task][category] = abs_f
 
-        if len(vol_files) > 0:
-            # add volumetric files if some were found or other vasp files were found
-            vasp_files["volumetric_files"] = vol_files
-
-        if len(elph_poscars) > 0:
-            # add elph displaced poscars if they were found or other vasp files found
-            vasp_files["elph_poscars"] = elph_poscars
-
-        return vasp_files
-
-    for task_name in task_names:
-        subfolder_match = list(path.glob(f"{task_name}/*"))
-        suffix_match = list(path.glob(f"*.{task_name}*"))
-        if len(subfolder_match) > 0:
-            # subfolder match
-            task_files[task_name] = _get_task_files(subfolder_match)
-        elif len(suffix_match) > 0:
-            # try extension schema
-            task_files[task_name] = _get_task_files(
-                suffix_match, suffix=f".{task_name}"
-            )
-
-    if len(task_files) == 0:
-        # get any matching file from the root folder
-        standard_files = _get_task_files(list(path.glob("*")))
-        if len(standard_files) > 0:
-            task_files["standard"] = standard_files
-
+        if len(task_files) > 0:
+            break
     return task_files
