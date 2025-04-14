@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 from pathlib import Path
 
 
-from emmet.core.vasp.utils import discover_vasp_files
+from emmet.core.vasp.utils import discover_vasp_files, discover_and_sort_vasp_files
 
 
 def test_file_discovery():
@@ -12,6 +12,7 @@ def test_file_discovery():
         "./neb_calc/00/": ["INCAR.gz", "KPOINTS", "POSCAR.gz"],
         "./neb_calc/01/": [
             "INCAR.gz",
+            "CHGCAR",
             "CONTCAR.gz",
             "KPOINTS",
             "OUTCAR",
@@ -25,6 +26,7 @@ def test_file_discovery():
             "CONTCAR.relax1",
             "OUTCAR.relax1",
             "vasprun.xml.relax1",
+            "POSCAR.T=300.gz"
         ],
     }
     for idx in range(1, 3):
@@ -50,6 +52,7 @@ def test_file_discovery():
                 (p / f).touch()
         vasp_files = discover_vasp_files(tmp_dir)
         valid_vasp_files = discover_vasp_files(tmp_dir, only_valid=True)
+        depth_two_vasp_files = discover_vasp_files(tmp_dir,depth=2)
 
     assert len(vasp_files) == len(
         directory_structure
@@ -68,3 +71,6 @@ def test_file_discovery():
         for p in valid_calc_dirs
         for f in directory_structure[p]
     )
+
+    # Should only find two subdirectories deep
+    assert len(depth_two_vasp_files) == 3
