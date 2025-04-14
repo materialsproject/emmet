@@ -21,9 +21,26 @@ VASP_ELECTRONIC_STRUCTURE = [
     "DOSCAR",
 ]
 VASP_VOLUMETRIC_FILES = (
-    ["CHGCAR"] + [f"AECCAR{i}" for i in range(3)] + ["ELFCAR", "LOCPOT", "POT",]
+    ["CHGCAR"]
+    + [f"AECCAR{i}" for i in range(3)]
+    + [
+        "ELFCAR",
+        "LOCPOT",
+        "POT",
+    ]
 )
-VASP_OUTPUT_FILES = ["CONTCAR", "IBZKPT", "OSZICAR", "OUTCAR", "PCDAT", "PROCAR", "REPORT", "vasprun.xml", "vaspout.h5", "XDATCAR"]
+VASP_OUTPUT_FILES = [
+    "CONTCAR",
+    "IBZKPT",
+    "OSZICAR",
+    "OUTCAR",
+    "PCDAT",
+    "PROCAR",
+    "REPORT",
+    "vasprun.xml",
+    "vaspout.h5",
+    "XDATCAR",
+]
 
 VASP_RAW_DATA_ORG = {
     "input": VASP_INPUT_FILES.copy(),
@@ -46,10 +63,11 @@ for f in VASP_INPUT_FILES:
         new_f += "." + ".".join(fspec[1:])
     VASP_RAW_DATA_ORG["input"].append(new_f)
 
+
 def discover_vasp_files(
-    target_dir : str | Path,
-    only_valid : bool = False,
-) -> dict[Path,Sequence[str]]:
+    target_dir: str | Path,
+    only_valid: bool = False,
+) -> dict[Path, list[str]]:
     """
     Walk a target directory and identify VASP files.
 
@@ -66,10 +84,10 @@ def discover_vasp_files(
     """
 
     head_dir = Path(target_dir)
-    vasp_files = {}
+    vasp_files : dict[Path,list[str]] = {}
     for file_name in _vasp_files:
         for p in head_dir.glob(f"**/{file_name}*"):
-            if (calc_dir := p.parent.resolve() ) not in vasp_files:
+            if (calc_dir := p.parent.resolve()) not in vasp_files:
                 vasp_files[calc_dir] = []
             vasp_files[calc_dir].append(p.name)
 
@@ -77,9 +95,7 @@ def discover_vasp_files(
         valid_vasp_files = {}
         for calc_dir, files in vasp_files.items():
             # TODO: update with vaspout.h5 parsing
-            if all(
-                any(f in file for file in files) for f in REQUIRED_VASP_FILES
-            ):
+            if all(any(f in file for file in files) for f in REQUIRED_VASP_FILES):
                 valid_vasp_files[calc_dir] = files.copy()
         return valid_vasp_files
 
