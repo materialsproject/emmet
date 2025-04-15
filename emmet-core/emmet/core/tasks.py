@@ -1133,7 +1133,7 @@ def _find_vasp_files(
     volumetric_files = volumetric_files or _VOLUMETRIC_FILES
     task_names = task_names or ["precondition"] + [f"relax{i}" for i in range(9)]
 
-    def _find_vasp_files_from_dir(dir_name : str | Path) -> list[str]:
+    def _find_vasp_files_from_dir(dir_name: str | Path) -> dict[str, dict[str, Path | list[Path]]]:
         """Find VASP files within a speciic directory and sort them by task type."""
         calc_dir = Path(dir_name)
         task_files: dict[str, dict[str, Path | list[Path]]] = OrderedDict()
@@ -1162,9 +1162,10 @@ def _find_vasp_files(
     files = _find_vasp_files_from_dir(base_path)
     if len(files) == 0:
         # If no files are found, try iterating through depth-1 subdirectories
-        for p in os.scandir(base_path):
-            if Path(p).is_dir():
-                files = _find_vasp_files_from_dir(p)
-                if len(files) > 0:
-                    break
+        for _p in os.scandir(base_path):
+            if (
+                (p := Path(_p)).is_dir()
+                and len(files := _find_vasp_files_from_dir(p))  > 0
+            ):
+                break
     return files

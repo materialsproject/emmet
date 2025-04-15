@@ -65,7 +65,9 @@ for f in VASP_INPUT_FILES:
     VASP_RAW_DATA_ORG["input"].append(new_f)
 
 
-def discover_vasp_files(target_dir: str | Path,) -> list[str]:
+def discover_vasp_files(
+    target_dir: str | Path,
+) -> list[str]:
     """
     Scan a target directory and identify VASP files.
 
@@ -79,16 +81,19 @@ def discover_vasp_files(target_dir: str | Path,) -> list[str]:
     """
 
     head_dir = Path(target_dir)
-    vasp_files: list[Path] = []
+    vasp_files: list[str] = []
 
     for _p in os.scandir(head_dir):
         p = Path(_p)
         matched_vasp_files = [f for f in _vasp_files if f in p.name]
         if len(matched_vasp_files) > 0:
             vasp_files.append(p.name)
-    return vasp_files    
+    return vasp_files
 
-def discover_and_sort_vasp_files(target_dir: str | Path) -> dict[Path, dict[str, list[str]]]:
+
+def discover_and_sort_vasp_files(
+    target_dir: str | Path,
+) -> dict[str, list[str]]:
     categories = [
         "contcar_file",
         "elph_poscars",
@@ -100,7 +105,11 @@ def discover_and_sort_vasp_files(target_dir: str | Path) -> dict[Path, dict[str,
     for _f in discover_vasp_files(target_dir):
         f = _f.lower()
         is_ided = False
-        for k in ("vasprun", "contcar", "outcar",):
+        for k in (
+            "vasprun",
+            "contcar",
+            "outcar",
+        ):
             if is_ided := k in f:
                 by_type[f"{k}_file"].append(_f)
                 break
@@ -116,10 +125,11 @@ def discover_and_sort_vasp_files(target_dir: str | Path) -> dict[Path, dict[str,
 
     return by_type
 
+
 def recursive_discover_vasp_files(
-    target_dir : str | Path,
-    only_valid : bool = False,
-) -> dict[Path,list[str]]:
+    target_dir: str | Path,
+    only_valid: bool = False,
+) -> dict[Path, list[str]]:
     """
     Recursively scan a target directory and identify VASP files.
 
@@ -135,14 +145,16 @@ def recursive_discover_vasp_files(
     List of file names as str.
     """
 
-    def _recursive_discover_vasp_files(tdir : str | Path, paths : dict[Path,list[str]]) -> None:
+    def _recursive_discover_vasp_files(
+        tdir: str | Path, paths: dict[Path, list[str]]
+    ) -> None:
         for _p in os.scandir(tdir):
             if (p := Path(_p)).is_dir():
-                _recursive_discover_vasp_files(p,paths)
+                _recursive_discover_vasp_files(p, paths)
         if len(tpaths := discover_vasp_files(tdir)) > 0:
             paths[Path(tdir).resolve()] = tpaths
 
-    vasp_files = {}
+    vasp_files : dict[Path, list[str]] = {}
     _recursive_discover_vasp_files(target_dir, vasp_files)
 
     if only_valid:
