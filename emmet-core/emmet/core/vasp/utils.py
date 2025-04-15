@@ -154,7 +154,7 @@ def recursive_discover_vasp_files(
         if len(tpaths := discover_vasp_files(tdir)) > 0:
             paths[Path(tdir).resolve()] = tpaths
 
-    vasp_files : dict[Path, list[str]] = {}
+    vasp_files: dict[Path, list[str]] = {}
     _recursive_discover_vasp_files(target_dir, vasp_files)
 
     if only_valid:
