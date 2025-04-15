@@ -5,41 +5,8 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, model_validator
-
-from emmet.core.utils import get_md5_blocked
-
 if TYPE_CHECKING:
     from typing_extensions import Self
-
-
-class FileMeta(BaseModel):
-    name: str
-    path: str | None = None
-    md5: str | None = None
-
-    @model_validator(mode="after")
-    def set_md5(self) -> Self:
-        """Set the MD5 value if a reference file exists."""
-        if self.path and Path(self.path).exists() and not self.md5:
-            self.md5 = get_md5_blocked(self.path)
-        return self
-
-
-class VaspInputFiles(BaseModel):
-    INCAR: FileMeta
-    POSCAR: FileMeta
-    POTCAR: FileMeta
-    POTCAR_spec: FileMeta | None = None
-    KPOINTS: FileMeta | None = None
-    KPOINTS_OPT: FileMeta | None = None
-    vaspin_h5: FileMeta | None = None
-
-
-class VaspElectronicStructure(BaseModel):
-    EIGENVAL: FileMeta | None = None
-    DOSCAR: FileMeta | None = None
-
 
 VASP_INPUT_FILES = [
     "INCAR",
