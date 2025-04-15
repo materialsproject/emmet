@@ -1,6 +1,7 @@
 """Define utilities needed for parsing VASP calculations."""
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -64,13 +65,63 @@ for f in VASP_INPUT_FILES:
     VASP_RAW_DATA_ORG["input"].append(new_f)
 
 
-def discover_vasp_files(
-    target_dir: str | Path,
-    only_valid: bool = False,
-    depth: int | None = None,
-) -> dict[Path, list[str]]:
+def discover_vasp_files(target_dir: str | Path,) -> list[str]:
     """
-    Walk a target directory and identify VASP files.
+    Scan a target directory and identify VASP files.
+
+    Parameters
+    -----------
+    target_dir : str or Path
+
+    Returns
+    -----------
+    List of file names as str.
+    """
+
+    head_dir = Path(target_dir)
+    vasp_files: list[Path] = []
+
+    for _p in os.scandir(head_dir):
+        p = Path(_p)
+        matched_vasp_files = [f for f in _vasp_files if f in p.name]
+        if len(matched_vasp_files) > 0:
+            vasp_files.append(p.name)
+    return vasp_files    
+
+def discover_and_sort_vasp_files(target_dir: str | Path) -> dict[Path, dict[str, list[str]]]:
+    categories = [
+        "contcar_file",
+        "elph_poscars",
+        "outcar_file",
+        "vasprun_file",
+        "volumetric_files",
+    ]
+    by_type: dict[str, list[str]] = {category: [] for category in categories}
+    for _f in discover_vasp_files(target_dir):
+        f = _f.lower()
+        is_ided = False
+        for k in ("vasprun", "contcar", "outcar",):
+            if is_ided := k in f:
+                by_type[f"{k}_file"].append(_f)
+                break
+
+        if not is_ided and any(vf in f for vf in VASP_VOLUMETRIC_FILES):
+            by_type["volumetric_files"].append(_f)
+        elif not is_ided and "poscar.t=" in f:
+            by_type["elph_poscars"].append(_f)
+
+    for category in categories:
+        if len(by_type[category]) == 0:
+            _ = by_type.pop(category)
+
+    return by_type
+
+def recursive_discover_vasp_files(
+    target_dir : str | Path,
+    only_valid : bool = False,
+) -> dict[Path,list[str]]:
+    """
+    Recursively scan a target directory and identify VASP files.
 
     Parameters
     -----------
@@ -78,29 +129,21 @@ def discover_vasp_files(
     only_valid : bool = False (default)
         Whether to only include directories which have the required
         minimum number of input and output files for parsing.
-    depth : int or None
-        If an int, the depth to which the file search is performed.
-        If None, walks the entire directory recursively.
 
     Returns
     -----------
-    dict of Path to list of file names as str.
+    List of file names as str.
     """
 
-    head_dir = Path(target_dir)
-    vasp_files: dict[Path, list[str]] = {}
+    def _recursive_discover_vasp_files(tdir : str | Path, paths : dict[Path,list[str]]) -> None:
+        for _p in os.scandir(tdir):
+            if (p := Path(_p)).is_dir():
+                _recursive_discover_vasp_files(p,paths)
+        if len(tpaths := discover_vasp_files(tdir)) > 0:
+            paths[Path(tdir).resolve()] = tpaths
 
-    base_glob_str = ""
-    if depth is None:
-        base_glob_str = "**/"
-    elif depth:
-        base_glob_str = "/".join("*" for _ in range(depth)) + "/"
-
-    for file_name in _vasp_files:
-        for p in head_dir.glob(f"{base_glob_str}{file_name}*"):
-            if (calc_dir := p.parent.resolve()) not in vasp_files:
-                vasp_files[calc_dir] = []
-            vasp_files[calc_dir].append(p.name)
+    vasp_files = {}
+    _recursive_discover_vasp_files(target_dir, vasp_files)
 
     if only_valid:
         valid_vasp_files = {}
@@ -111,44 +154,3 @@ def discover_vasp_files(
         return valid_vasp_files
 
     return vasp_files
-
-
-def discover_and_sort_vasp_files(
-    target_dir: str | Path,
-    **kwargs,
-) -> dict[Path, dict[str, list[str]]]:
-    vasp_files = discover_vasp_files(target_dir, **kwargs)
-    categories = [
-        "contcar_file",
-        "elph_poscars",
-        "outcar_file",
-        "vasprun_file",
-        "volumetric_files",
-    ]
-    by_type: dict[Path, dict[str, list[str]]] = {
-        calc_dir: {category: [] for category in categories} for calc_dir in vasp_files
-    }
-    for calc_dir, files in vasp_files.items():
-        for _f in files:
-            f = _f.lower()
-            is_ided = False
-            for k in (
-                "vasprun",
-                "contcar",
-                "outcar",
-            ):
-                if is_ided := k in f:
-                    by_type[calc_dir][f"{k}_file"].append(_f)
-                    break
-
-            if not is_ided and any(vf in f for vf in VASP_VOLUMETRIC_FILES):
-                by_type[calc_dir]["volumetric_files"].append(_f)
-            elif not is_ided and "poscar.t=" in f:
-                by_type[calc_dir]["elph_poscars"].append(_f)
-
-    for calc_dir in by_type:
-        for category in categories:
-            if len(by_type[calc_dir][category]) == 0:
-                _ = by_type[calc_dir].pop(category)
-
-    return by_type

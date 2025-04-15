@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import re
 from collections import OrderedDict
 from datetime import datetime
@@ -582,9 +583,9 @@ class TaskDoc(StructureMetadata, extra="allow"):
 
         calcs_reversed = []
         all_vasp_objects = []
-        for task_name, files in task_files.items():
+        for task_name in sorted(task_files):
             calc_doc, vasp_objects = Calculation.from_vasp_files(
-                dir_name, task_name, **files, **vasp_calculation_kwargs
+                dir_name, task_name, **task_files[task_name], **vasp_calculation_kwargs
             )
             calcs_reversed.append(calc_doc)
             all_vasp_objects.append(vasp_objects)
@@ -1131,27 +1132,39 @@ def _find_vasp_files(
     base_path = Path(path)
     volumetric_files = volumetric_files or _VOLUMETRIC_FILES
     task_names = task_names or ["precondition"] + [f"relax{i}" for i in range(9)]
-    task_files: dict[str, dict[str, Path | list[Path]]] = OrderedDict()
-    for depth in range(2):
-        vasp_files = discover_and_sort_vasp_files(base_path, depth=depth)
-        for calc_dir, file_categories in vasp_files.items():
-            for category, files in file_categories.items():
-                for f in files:
-                    tasks = sorted([t for t in task_names if t in f])
-                    task = "standard" if len(tasks) == 0 else tasks[0]
-                    if task not in task_files:
-                        task_files[task] = {}
-                    if (
-                        is_list_like := category in ("volumetric_files", "elph_poscars")
-                    ) and category not in task_files[task]:
-                        task_files[task][category] = []
 
-                    abs_f = Path(calc_dir) / f
-                    if is_list_like:
-                        task_files[task][category].append(abs_f)  # type: ignore[union-attr]
-                    else:
-                        task_files[task][category] = abs_f
+    def _find_vasp_files_from_dir(dir_name : str | Path) -> list[str]:
+        """Find VASP files within a speciic directory and sort them by task type."""
+        calc_dir = Path(dir_name)
+        task_files: dict[str, dict[str, Path | list[Path]]] = OrderedDict()
+        if len(vasp_files := discover_and_sort_vasp_files(calc_dir)) == 0:
+            return task_files
 
-        if len(task_files) > 0:
-            break
-    return task_files
+        for category, files in vasp_files.items():
+            for f in files:
+                tasks = sorted([t for t in task_names if t in f])
+                task = "standard" if len(tasks) == 0 else tasks[0]
+                if task not in task_files:
+                    task_files[task] = {}
+                if (
+                    is_list_like := category in ("volumetric_files", "elph_poscars")
+                ) and category not in task_files[task]:
+                    task_files[task][category] = []
+
+                abs_f = Path(calc_dir) / f
+                if is_list_like:
+                    task_files[task][category].append(abs_f)  # type: ignore[union-attr]
+                else:
+                    task_files[task][category] = abs_f
+        return task_files
+
+    # Try the specified directory
+    files = _find_vasp_files_from_dir(base_path)
+    if len(files) == 0:
+        # If no files are found, try iterating through depth-1 subdirectories
+        for p in os.scandir(base_path):
+            if Path(p).is_dir():
+                files = _find_vasp_files_from_dir(p)
+                if len(files) > 0:
+                    break
+    return files

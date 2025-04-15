@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 from pathlib import Path
 
 
-from emmet.core.vasp.utils import discover_vasp_files
+from emmet.core.vasp.utils import recursive_discover_vasp_files
 
 
 def test_file_discovery():
@@ -50,9 +50,8 @@ def test_file_discovery():
                 p.mkdir(parents=True, exist_ok=True)
             for f in files:
                 (p / f).touch()
-        vasp_files = discover_vasp_files(tmp_dir)
-        valid_vasp_files = discover_vasp_files(tmp_dir, only_valid=True)
-        depth_two_vasp_files = discover_vasp_files(tmp_dir, depth=2)
+        vasp_files = recursive_discover_vasp_files(tmp_dir)
+        valid_vasp_files = recursive_discover_vasp_files(tmp_dir, only_valid=True)
 
     assert len(vasp_files) == len(
         directory_structure
@@ -71,6 +70,3 @@ def test_file_discovery():
         for p in valid_calc_dirs
         for f in directory_structure[p]
     )
-
-    # Should only find two subdirectories deep
-    assert len(depth_two_vasp_files) == 3
