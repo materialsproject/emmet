@@ -3,10 +3,9 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TypeAlias
 
-if TYPE_CHECKING:
-    pass
+PathLike: TypeAlias = str | Path | os.DirEntry[str]
 
 VASP_INPUT_FILES = [
     "INCAR",
@@ -66,7 +65,7 @@ for f in VASP_INPUT_FILES:
 
 
 def discover_vasp_files(
-    target_dir: str | Path,
+    target_dir: PathLike,
 ) -> list[str]:
     """
     Scan a target directory and identify VASP files.
@@ -148,7 +147,7 @@ def recursive_discover_vasp_files(
     """
 
     def _recursive_discover_vasp_files(
-        tdir: str | Path, paths: dict[Path, list[str]]
+        tdir: PathLike, paths: dict[Path, list[str]]
     ) -> None:
         with os.scandir(tdir) as scan_dir:
             for p in scan_dir:
