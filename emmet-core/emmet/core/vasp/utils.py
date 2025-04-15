@@ -5,8 +5,29 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from pydantic import BaseModel, model_validator
+
+from emmet.core.utils import get_md5_blocked
+
 if TYPE_CHECKING:
-    pass
+    from typing_extensions import Self
+
+
+class VaspFile(BaseModel):
+    name: str
+    path: str | None = None
+    md5: str | None = None
+
+    @model_validator(mode="after")
+    def set_md5(self) -> Self:
+        """Set the MD5 value if a reference file exists."""
+        if self.path and Path(self.path).exists() and not self.md5:
+            self.md5 = get_md5_blocked(self.path)
+        return self
+
+
+# class VaspInputFiles(BaseModel)
+
 
 VASP_INPUT_FILES = [
     "INCAR",
@@ -83,11 +104,13 @@ def discover_vasp_files(
     head_dir = Path(target_dir)
     vasp_files: list[str] = []
 
-    for _p in os.scandir(head_dir):
-        p = Path(_p)
-        matched_vasp_files = [f for f in _vasp_files if f in p.name]
-        if len(matched_vasp_files) > 0:
-            vasp_files.append(p.name)
+    with os.scandir(head_dir) as scan_dir:
+        for p in scan_dir:
+            if not p.is_file():
+                continue
+            matched_vasp_files = [f for f in _vasp_files if f in p.name]
+            if len(matched_vasp_files) > 0:
+                vasp_files.append(p.name)
     return vasp_files
 
 
@@ -148,9 +171,10 @@ def recursive_discover_vasp_files(
     def _recursive_discover_vasp_files(
         tdir: str | Path, paths: dict[Path, list[str]]
     ) -> None:
-        for _p in os.scandir(tdir):
-            if (p := Path(_p)).is_dir():
-                _recursive_discover_vasp_files(p, paths)
+        with os.scandir(tdir) as scan_dir:
+            for p in scan_dir:
+                if p.is_dir():
+                    _recursive_discover_vasp_files(p, paths)
         if len(tpaths := discover_vasp_files(tdir)) > 0:
             paths[Path(tdir).resolve()] = tpaths
 

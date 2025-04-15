@@ -1,3 +1,4 @@
+from copy import deepcopy
 import json
 
 import pytest
@@ -58,20 +59,26 @@ def test_validator(tasks):
 
 def test_validator_magmom(test_dir):
     # Task with Cr in structure - this is only element with MAGMOM check
-    with zopen(test_dir / "task_doc_mp-2766060.json.gz") as f:
-        cr_task_dict = json.load(f)
 
-    taskdoc = TaskDoc(**cr_task_dict)
+    def cr_task_dict():
+        # Model validation for TaskDoc serializes some fields.
+        # Need to refresh reference unserialized dict to have
+        # serialization for TaskDocument also work.
+        with zopen(test_dir / "task_doc_mp-2766060.json.gz") as f:
+            _cr_task_dict = json.load(f)
+        return _cr_task_dict
+
+    taskdoc = TaskDoc(**cr_task_dict())
     assert ValidationDoc.from_task_doc(taskdoc).valid
 
     # test backwards compatibility
     taskdocument = TaskDocument(
-        **{k: v for k, v in cr_task_dict.items() if k != "last_updated"}
+        **{k: v for k, v in cr_task_dict().items() if k != "last_updated"}
     )
     assert ValidationDoc.from_task_doc(taskdocument).valid
 
     # Change MAGMOM on Cr to fail magmom test
-    td_bad_mag = TaskDoc(**cr_task_dict)
+    td_bad_mag = TaskDoc(**cr_task_dict())
     td_bad_mag.calcs_reversed[0].output.outcar["magnetization"] = [
         {"tot": 6.0} if td_bad_mag.structure[ientry].species_string == "Cr" else entry
         for ientry, entry in enumerate(
@@ -82,7 +89,7 @@ def test_validator_magmom(test_dir):
     assert any("MAG" in repr(reason) for reason in valid_doc.reasons)
 
     # Remove magnetization tag to simulate spin-unpolarized (ISPIN = 1) calculation
-    td_no_mag = TaskDoc(**cr_task_dict)
+    td_no_mag = TaskDoc(**cr_task_dict())
     del td_no_mag.calcs_reversed[0].output.outcar["magnetization"]
     assert ValidationDoc.from_task_doc(td_no_mag).valid
 
@@ -146,7 +153,7 @@ def test_potcar_stats_check(test_dir):
     I cannot rebuild the TaskDoc without excluding the `orig_inputs` key.
     """
     # task_doc = TaskDocument(**{key: data[key] for key in data if key != "last_updated"})
-    task_doc = TaskDoc(**data)
+    task_doc = TaskDoc(**deepcopy(data))
     try:
         # First check: generate hashes from POTCARs in TaskDoc, check should pass
         calc_type = str(task_doc.calc_type)
@@ -183,7 +190,7 @@ def test_potcar_stats_check(test_dir):
 
         # Fourth check: use legacy hash check if `summary_stats`
         # field not populated. This should pass
-        legacy_data = data.copy()
+        legacy_data = deepcopy(data)
         legacy_data["calcs_reversed"][0]["input"]["potcar_spec"] = [
             {
                 key: potcar[key]
