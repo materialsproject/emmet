@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 import os
 import re
-from collections import OrderedDict
 from datetime import datetime
 from pathlib import Path
 from typing import (
@@ -1136,9 +1135,9 @@ def _find_vasp_files(
     def _find_vasp_files_from_dir(
         dir_name: str | Path,
     ) -> dict[str, dict[str, Path | list[Path]]]:
-        """Find VASP files within a speciic directory and sort them by task type."""
+        """Find VASP files within a specific directory and sort them by task type."""
         calc_dir = Path(dir_name)
-        task_files: dict[str, dict[str, Path | list[Path]]] = OrderedDict()
+        task_files: dict[str, dict[str, Path | list[Path]]] = {}
         if len(vasp_files := discover_and_sort_vasp_files(calc_dir)) == 0:
             return task_files
 
