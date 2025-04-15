@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
 
-class VaspFile(BaseModel):
+class FileMeta(BaseModel):
     name: str
     path: str | None = None
     md5: str | None = None
@@ -26,7 +26,19 @@ class VaspFile(BaseModel):
         return self
 
 
-# class VaspInputFiles(BaseModel)
+class VaspInputFiles(BaseModel):
+    INCAR: FileMeta
+    POSCAR: FileMeta
+    POTCAR: FileMeta
+    POTCAR_spec: FileMeta | None = None
+    KPOINTS: FileMeta | None = None
+    KPOINTS_OPT: FileMeta | None = None
+    vaspin_h5: FileMeta | None = None
+
+
+class VaspElectronicStructure(BaseModel):
+    EIGENVAL: FileMeta | None = None
+    DOSCAR: FileMeta | None = None
 
 
 VASP_INPUT_FILES = [

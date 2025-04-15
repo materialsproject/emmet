@@ -1,13 +1,10 @@
 import copy
 import datetime
 from enum import Enum
-import hashlib
 from itertools import groupby
-from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Union
 
 import numpy as np
-from monty.io import zopen
 from monty.json import MSONable
 from pydantic import BaseModel
 from pymatgen.analysis.elasticity.strain import Deformation
@@ -440,15 +437,3 @@ class IgnoreCaseEnum(ValueEnum):
 def utcnow() -> datetime.datetime:
     """Get UTC time right now."""
     return datetime.datetime.now(datetime.timezone.utc)
-
-
-def get_md5_blocked(file_path: str | Path, block_size: int = 1000000) -> str:
-    """Get the MD5 hash of a file in blocks."""
-    md5 = hashlib.md5()
-    with zopen(str(file_path), "rb") as f:
-        while True:
-            data = f.read(block_size)
-            if not data:
-                break
-            md5.update(data)
-        return md5.hexdigest()
