@@ -1,6 +1,6 @@
 """Define utilities needed for parsing VASP calculations."""
 from __future__ import annotations
-
+from collections import defaultdict
 import os
 from pathlib import Path
 from typing import TypeAlias
@@ -84,10 +84,8 @@ def discover_vasp_files(
 
     with os.scandir(head_dir) as scan_dir:
         for p in scan_dir:
-            if not p.is_file():
-                continue
-            matched_vasp_files = [f for f in _vasp_files if f in p.name]
-            if len(matched_vasp_files) > 0:
+            # Check that at least one VASP file matches the file name
+            if p.is_file() and [f for f in _vasp_files if f in p.name]:
                 vasp_files.append(p.name)
     return vasp_files
 
@@ -95,14 +93,7 @@ def discover_vasp_files(
 def discover_and_sort_vasp_files(
     target_dir: str | Path,
 ) -> dict[str, list[str]]:
-    categories = [
-        "contcar_file",
-        "elph_poscars",
-        "outcar_file",
-        "vasprun_file",
-        "volumetric_files",
-    ]
-    by_type: dict[str, list[str]] = {category: [] for category in categories}
+    by_type: dict[str, list[str]] = defaultdict(list)
     for _f in discover_vasp_files(target_dir):
         f = _f.lower()
         is_ided = False
@@ -119,10 +110,6 @@ def discover_and_sort_vasp_files(
             by_type["volumetric_files"].append(_f)
         elif not is_ided and "poscar.t=" in f:
             by_type["elph_poscars"].append(_f)
-
-    for category in categories:
-        if len(by_type[category]) == 0:
-            _ = by_type.pop(category)
 
     return by_type
 
@@ -149,12 +136,13 @@ def recursive_discover_vasp_files(
     def _recursive_discover_vasp_files(
         tdir: PathLike, paths: dict[Path, list[str]]
     ) -> None:
-        with os.scandir(tdir) as scan_dir:
-            for p in scan_dir:
-                if p.is_dir():
+        if Path(tdir).is_dir():
+            with os.scandir(tdir) as scan_dir:
+                for p in scan_dir:
                     _recursive_discover_vasp_files(p, paths)
-        if len(tpaths := discover_vasp_files(tdir)) > 0:
-            paths[Path(tdir).resolve()] = tpaths
+
+            if tpaths := discover_vasp_files(tdir):
+                paths[Path(tdir).resolve()] = tpaths
 
     vasp_files: dict[Path, list[str]] = {}
     _recursive_discover_vasp_files(target_dir, vasp_files)
