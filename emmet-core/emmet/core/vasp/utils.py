@@ -3,9 +3,33 @@ from __future__ import annotations
 from collections import defaultdict
 import os
 from pathlib import Path
-from typing import TypeAlias
+from pydantic import BaseModel, model_validator
+from typing import TYPE_CHECKING
 
-PathLike: TypeAlias = str | Path | os.DirEntry[str]
+from emmet.core.utils import get_md5_blocked
+
+if TYPE_CHECKING:
+    from typing import Any
+    from emmet.core.typing import PathLike
+
+
+class FileMeta(BaseModel):
+    """
+    Lightweight model to enable validation on files via MD5.
+    """
+
+    name: str
+    path: str
+    md5: str
+
+    @model_validator(mode="before")
+    def check_path_md5(cls, v: Any) -> Any:
+        if fp := v.get("path"):
+            v["path"] = str(fp)
+            if not v.get("md5") and Path(fp).exists():
+                v["md5"] = get_md5_blocked(fp)
+        return v
+
 
 VASP_INPUT_FILES = [
     "INCAR",
@@ -72,7 +96,7 @@ def discover_vasp_files(
 
     Parameters
     -----------
-    target_dir : str or Path
+    target_dir : PathLike
 
     Returns
     -----------
@@ -91,7 +115,7 @@ def discover_vasp_files(
 
 
 def discover_and_sort_vasp_files(
-    target_dir: str | Path,
+    target_dir: PathLike,
 ) -> dict[str, list[str]]:
     by_type: dict[str, list[str]] = defaultdict(list)
     for _f in discover_vasp_files(target_dir):
@@ -115,7 +139,7 @@ def discover_and_sort_vasp_files(
 
 
 def recursive_discover_vasp_files(
-    target_dir: str | Path,
+    target_dir: PathLike,
     only_valid: bool = False,
 ) -> dict[Path, list[str]]:
     """
@@ -123,7 +147,7 @@ def recursive_discover_vasp_files(
 
     Parameters
     -----------
-    target_dir : str or Path
+    target_dir : PathLike
     only_valid : bool = False (default)
         Whether to only include directories which have the required
         minimum number of input and output files for parsing.
