@@ -10,7 +10,7 @@ certifi==2025.1.31
     # via requests
 charset-normalizer==3.4.1
     # via requests
-contourpy==1.3.1
+contourpy==1.3.2
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
@@ -34,7 +34,7 @@ monty==2025.3.3
     #   pymatgen
 mpmath==1.3.0
     # via sympy
-narwhals==1.34.1
+narwhals==1.35.0
     # via plotly
 networkx==3.4.2
     # via pymatgen
@@ -74,7 +74,7 @@ pydantic-core==2.33.1
     # via pydantic
 pydantic-settings==2.8.1
     # via emmet-core (emmet/emmet-core/setup.py)
-pymatgen==2025.4.10
+pymatgen==2025.4.17
     # via emmet-core (emmet/emmet-core/setup.py)
 pyparsing==3.2.3
     # via matplotlib
