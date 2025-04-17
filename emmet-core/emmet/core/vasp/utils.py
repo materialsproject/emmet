@@ -45,7 +45,10 @@ VASP_ELECTRONIC_STRUCTURE = [
     "DOSCAR",
 ]
 VASP_VOLUMETRIC_FILES = (
-    ["CHGCAR"]
+    [
+        "CHGCAR",
+        "CHG",
+    ]
     + [f"AECCAR{i}" for i in range(3)]
     + [
         "ELFCAR",
@@ -130,7 +133,12 @@ def discover_and_sort_vasp_files(
                 by_type[f"{k}_file"].append(_f)
                 break
 
-        if not is_ided and any(vf in f for vf in VASP_VOLUMETRIC_FILES):
+        # NB: the POT file needs the extra `"potcar" not in f` check to ensure that
+        # POTCARs are not classed as volumetric files.
+        if not is_ided and any(
+            vf.lower() in f and "potcar" not in f for vf in VASP_VOLUMETRIC_FILES
+        ):
+            print(f, [vf for vf in VASP_VOLUMETRIC_FILES if vf.lower() in f])
             by_type["volumetric_files"].append(_f)
         elif not is_ided and "poscar.t=" in f:
             by_type["elph_poscars"].append(_f)
