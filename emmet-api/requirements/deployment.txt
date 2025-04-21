@@ -21,11 +21,13 @@ attrs==25.3.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.37.36
+bibtexparser==1.4.3
+    # via pymatgen
+boto3==1.37.37
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.37.36
+botocore==1.37.37
     # via
     #   boto3
     #   s3transfer
@@ -140,7 +142,7 @@ opentelemetry-api==1.32.1
     # via ddtrace
 orjson==3.10.16
     # via maggma
-packaging==24.2
+packaging==25.0
     # via
     #   gunicorn
     #   lazy-loader
@@ -167,9 +169,7 @@ plotly==6.0.1
 protobuf==6.30.2
     # via ddtrace
 pybtex==0.24.0
-    # via
-    #   emmet-core
-    #   pymatgen
+    # via emmet-core
 pycparser==2.22
     # via cffi
 pydantic==2.11.3
@@ -180,13 +180,13 @@ pydantic==2.11.3
     #   pydantic-settings
 pydantic-core==2.33.1
     # via pydantic
-pydantic-settings==2.8.1
+pydantic-settings==2.9.1
     # via
     #   emmet-core
     #   maggma
 pydash==8.0.5
     # via maggma
-pymatgen==2025.4.17
+pymatgen==2025.4.20
     # via
     #   emmet-core
     #   mp-pyrho
@@ -201,7 +201,9 @@ pymongo==4.10.1
 pynacl==1.5.0
     # via paramiko
 pyparsing==3.2.3
-    # via matplotlib
+    # via
+    #   bibtexparser
+    #   matplotlib
 python-dateutil==2.9.0.post0
     # via
     #   botocore
@@ -287,7 +289,9 @@ typing-extensions==4.13.2
     #   spglib
     #   typing-inspection
 typing-inspection==0.4.0
-    # via pydantic
+    # via
+    #   pydantic
+    #   pydantic-settings
 tzdata==2025.2
     # via pandas
 uncertainties==3.2.2
@@ -296,7 +300,7 @@ urllib3==2.4.0
     # via
     #   botocore
     #   requests
-uvicorn==0.34.1
+uvicorn==0.34.2
     # via maggma
 wrapt==1.17.2
     # via
