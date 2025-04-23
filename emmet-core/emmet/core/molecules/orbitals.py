@@ -1,21 +1,20 @@
 import re
-
-from typing import List, Optional, Dict, Any
 from hashlib import blake2b
-
-from pydantic import Field
+from typing import Any, Dict, List, Optional
 
 from monty.json import MSONable
+from pydantic import Field
 
-from emmet.core.mpid import MPculeID
 from emmet.core.material import PropertyOrigin
-from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.molecule_property import PropertyDoc
-
+from emmet.core.mpid import MPculeID
+from emmet.core.qchem.task import TaskDocument
+from emmet.core.utils import set_msonable_type_adapter
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
+@set_msonable_type_adapter
 class NaturalPopulation(MSONable):
     def __init__(
         self,
@@ -42,6 +41,7 @@ class NaturalPopulation(MSONable):
         self.total_electrons = float(total_electrons)
 
 
+@set_msonable_type_adapter
 class LonePair(MSONable):
     def __init__(
         self,
@@ -81,6 +81,7 @@ class LonePair(MSONable):
         self.type_code = type_code
 
 
+@set_msonable_type_adapter
 class Bond(MSONable):
     def __init__(
         self,
@@ -148,6 +149,7 @@ class Bond(MSONable):
         self.type_code = type_code
 
 
+@set_msonable_type_adapter
 class ThreeCenterBond(MSONable):
     def __init__(
         self,
@@ -236,6 +238,7 @@ class ThreeCenterBond(MSONable):
         self.type_code = type_code
 
 
+@set_msonable_type_adapter
 class Hyperbond(MSONable):
     def __init__(
         self,
@@ -283,6 +286,7 @@ class Hyperbond(MSONable):
         self.hybrid_index_3 = int(hybrid_index_3)
 
 
+@set_msonable_type_adapter
 class Interaction(MSONable):
     def __init__(
         self,
