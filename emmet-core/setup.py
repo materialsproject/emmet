@@ -34,6 +34,7 @@ setup(
         "pydantic-settings>=2.0",
         "pybtex~=0.24",
         "typing-extensions>=3.7",
+        "pyarrow>=19.0.1",
     ],
     extras_require={
         "all": [

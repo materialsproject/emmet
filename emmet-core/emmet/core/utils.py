@@ -1,17 +1,19 @@
 """Define utility functions used across the emmet namespace packages."""
+
 from __future__ import annotations
 
 import copy
 import datetime
 import hashlib
+import inspect
 from enum import Enum
 from itertools import groupby
-from typing import Any, Dict, Iterator, List, Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Union
 
 import numpy as np
 from monty.io import zopen
 from monty.json import MSONable
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel
 from pymatgen.analysis.elasticity.strain import Deformation
 from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
@@ -26,6 +28,7 @@ from pymatgen.transformations.standard_transformations import (
     DeformStructureTransformation,
 )
 from pymatgen.util.graph_hashing import weisfeiler_lehman_graph_hash
+from typing_extensions import TypedDict
 
 from emmet.core.mpid import MPculeID
 from emmet.core.settings import EmmetSettings
@@ -40,6 +43,48 @@ if TYPE_CHECKING:
 
 
 SETTINGS = EmmetSettings()
+
+
+def type_override(overrides: dict[str, Any]):
+    def wrapped(cls):
+        cls.type_overrides = overrides
+        return cls
+
+    return wrapped
+
+
+def set_msonable_type_adapter(cls):
+    TypedClsDict = TypedDict(
+        f"Typed{cls.__name__}Dict",
+        {
+            "@module": str,
+            "@class": str,
+            "@version": str,
+            **{
+                key: field.annotation
+                for key, field in inspect.signature(cls).parameters.items()
+            },
+        },
+    )
+
+    class ClsTypeAdapter(RootModel):
+        root: TypedClsDict
+
+    cls.__type_adapter__ = ClsTypeAdapter
+
+    return cls
+
+
+def arrow_incompatible(cls):
+    """
+    Simple decorator to mark a document model as being
+    incompatible with serialization using pyarrow. This
+    should only be applied as a temporary measure, all
+    document models should aim for full type
+    introspection.
+    """
+    cls.arrow_incompatible = True
+    return cls
 
 
 def get_sg(struc, symprec=SETTINGS.SYMPREC) -> int:
