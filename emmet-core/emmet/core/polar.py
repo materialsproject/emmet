@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
 from pymatgen.core.structure import Structure
 from pymatgen.core.tensors import Tensor
+from pymatgen.phonon.ir_spectra import IRDielectricTensor
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.math import Matrix3D
@@ -163,6 +164,6 @@ class IRDielectric(BaseModel):
     A block for the pymatgen IRDielectricTensor object
     """
 
-    ir_dielectric_tensor: dict | None = Field(
+    ir_dielectric_tensor: IRDielectricTensor | None = Field(
         None, description="Serialized version of a pymatgen IRDielectricTensor object."
     )

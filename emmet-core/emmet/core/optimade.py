@@ -6,10 +6,10 @@ from optimade.models import Species, StructureResourceAttributes
 from pydantic import Field
 from pymatgen.core.composition import Composition, formula_double_format
 from pymatgen.core.structure import Structure
-from typing_extensions import TypedDict
 
 from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
+from emmet.core.typing import TypedStabilityDict
 from emmet.core.utils import arrow_incompatible
 
 letters = "ABCDEFGHIJKLMNOPQRSTUVXYZ"
@@ -76,13 +76,6 @@ def hill_formula(comp: Composition) -> str:
         for el in form_elements
     ]
     return "".join(formula)
-
-
-class TypedStabilityDict(TypedDict):
-    thermo_id: str
-    energy_above_hull: float
-    formation_energy_per_atom: float
-    last_updated_thermo: datetime
 
 
 @arrow_incompatible

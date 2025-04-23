@@ -1,21 +1,26 @@
 from __future__ import annotations
 
+import json
 import re
 from collections import defaultdict
+from collections.abc import Callable
 from datetime import datetime
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator
 from pymatgen.analysis.phase_diagram import PhaseDiagram
+from pymatgen.analysis.reaction_calculator import BalancedReaction
 from pymatgen.apps.battery.battery_abc import AbstractElectrode
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
-from pymatgen.core import Composition, Structure
-from pymatgen.core.periodic_table import DummySpecies, Element, Species
+from pymatgen.core import Composition
+from pymatgen.core.periodic_table import Element
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
+from emmet.core.base import EmmetBaseModel
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
-from emmet.core.utils import ValueEnum, utcnow
+from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
+from emmet.core.utils import ValueEnum, jsanitize, utcnow
 
 
 class BatteryType(str, ValueEnum):
@@ -25,6 +30,43 @@ class BatteryType(str, ValueEnum):
 
     insertion = "insertion"
     conversion = "conversion"
+
+
+def electrode_object_energy_adjustments_serde(
+    d: dict, battery_type: BatteryType, serde_fn: Callable
+):
+    d["working_ion_entry"]["energy_adjustments"] = serde_fn(
+        d["working_ion_entry"]["energy_adjustments"]
+    )
+    match battery_type:
+        case BatteryType.insertion:
+            for pair in d["voltage_pairs"]:
+                pair["working_ion_entry"]["energy_adjustments"] = serde_fn(
+                    pair["working_ion_entry"]["energy_adjustments"]
+                )
+                pair["entry_charge"]["energy_adjustments"] = serde_fn(
+                    pair["entry_charge"]["energy_adjustments"]
+                )
+                pair["entry_discharge"]["energy_adjustments"] = serde_fn(
+                    pair["entry_discharge"]["energy_adjustments"]
+                )
+            for entry in d["stable_entries"]:
+                entry["energy_adjustments"] = serde_fn(entry["energy_adjustments"])
+            for entry in d["unstable_entries"]:
+                entry["energy_adjustments"] = serde_fn(entry["energy_adjustments"])
+        case BatteryType.conversion:
+            for pair in d["voltage_pairs"]:
+                pair["working_ion_entry"]["energy_adjustments"] = serde_fn(
+                    pair["working_ion_entry"]["energy_adjustments"]
+                )
+                for charge_entry in pair["entries_charge"]:
+                    charge_entry["energy_adjustments"] = serde_fn(
+                        charge_entry["energy_adjustments"]
+                    )
+                for discharge_entry in pair["entries_discharge"]:
+                    discharge_entry["energy_adjustments"] = serde_fn(
+                        discharge_entry["energy_adjustments"]
+                    )
 
 
 class VoltagePairDoc(BaseModel):
@@ -97,11 +139,11 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
         None, description="The energy above hull of the discharged material in eV/atom."
     )
 
-    id_charge: MPID | int | None | None = Field(
+    id_charge: MPID | None = Field(
         None, description="The Materials Project ID of the charged structure."
     )
 
-    id_discharge: MPID | int | None | None = Field(
+    id_discharge: MPID | None = Field(
         None, description="The Materials Project ID of the discharged structure."
     )
 
@@ -111,7 +153,7 @@ class ConversionVoltagePairDoc(VoltagePairDoc):
     Features specific to conversion electrode
     """
 
-    reaction: dict | None = Field(
+    reaction: BalancedReaction | None = Field(
         None,
         description="The reaction that characterizes that particular voltage step.",
     )
@@ -138,12 +180,12 @@ class EntriesCompositionSummary(BaseModel):
         description="Anonymous formulas for material entries across all voltage pairs.",
     )
 
-    all_elements: list[Element | Species | DummySpecies] | None = Field(
+    all_elements: list[Element] | None = Field(
         None,
         description="Elements in material entries across all voltage pairs.",
     )
 
-    all_composition_reduced: dict | None = Field(
+    all_composition_reduced: dict[str, list[float]] | None = Field(
         None,
         description="Composition reduced data for entries across all voltage pairs.",
     )
@@ -174,7 +216,7 @@ class EntriesCompositionSummary(BaseModel):
         )
 
 
-class BaseElectrode(BaseModel):
+class BaseElectrode(EmmetBaseModel):
     battery_type: BatteryType | None = Field(
         None, description="The type of battery (insertion or conversion)."
     )
@@ -259,7 +301,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
     Insertion electrode
     """
 
-    host_structure: Structure | None = Field(
+    host_structure: AnnotatedStructure | None = Field(
         None, description="Host structure (structure without the working ion)."
     )
 
@@ -282,6 +324,30 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
         None, description="The Pymatgen electrode object."
     )
 
+    @field_serializer("electrode_object", mode="wrap")
+    def electrode_object_serializer(self, electrode_object, default_serializer, info):
+        default_serialized_object = default_serializer(electrode_object, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            arrow_compat_object = jsanitize(default_serialized_object, allow_bson=True)
+            electrode_object_energy_adjustments_serde(
+                arrow_compat_object, BatteryType.insertion, json.dumps
+            )
+            return arrow_compat_object
+
+        return default_serialized_object
+
+    @field_validator("electrode_object", mode="before")
+    def electrode_object_deserializer(cls, electrode_object):
+        if isinstance(electrode_object, dict) and isinstance(
+            electrode_object["working_ion_entry"].get("energy_adjustments"), str
+        ):
+            electrode_object_energy_adjustments_serde(
+                electrode_object, BatteryType.insertion, json.loads
+            )
+        return electrode_object
+
     @classmethod
     def from_entries(
         cls,
@@ -289,7 +355,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
         working_ion_entry: ComputedEntry,
         battery_id: str,
         strip_structures: bool = False,
-    ) -> "InsertionElectrodeDoc" | None:
+    ) -> InsertionElectrodeDoc | None:
         try:
             ie = InsertionElectrode.from_entries(
                 entries=grouped_entries,
@@ -450,6 +516,30 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
     electrode_object: ConversionElectrode | None = Field(
         None, description="The Pymatgen conversion electrode object."
     )
+
+    @field_serializer("electrode_object", mode="wrap")
+    def electrode_object_serializer(self, electrode_object, default_serializer, info):
+        default_serialized_object = default_serializer(electrode_object, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            arrow_compat_object = jsanitize(default_serialized_object, allow_bson=True)
+            electrode_object_energy_adjustments_serde(
+                arrow_compat_object, BatteryType.conversion, json.dumps
+            )
+            return arrow_compat_object
+
+        return default_serialized_object
+
+    @field_validator("electrode_object", mode="before")
+    def electrode_object_deserializer(cls, electrode_object):
+        if isinstance(electrode_object, dict) and isinstance(
+            electrode_object["working_ion_entry"].get("energy_adjustments"), str
+        ):
+            electrode_object_energy_adjustments_serde(
+                electrode_object, BatteryType.conversion, json.loads
+            )
+        return electrode_object
 
     @classmethod
     def from_composition_and_entries(

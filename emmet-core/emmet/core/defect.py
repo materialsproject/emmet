@@ -38,7 +38,7 @@ class DefectInfo(BaseModel):
         description="Charge state of the defect.",
     )
 
-    supercell_matrix: list | None = Field(
+    supercell_matrix: list[list[int, int, int]] | None = Field(
         None,
         title="Supercell Matrix",
         description="Supercell matrix used to construct the defect supercell.",

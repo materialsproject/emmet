@@ -29,6 +29,7 @@ from emmet.core.math import Matrix3D, Tensor4R, Vector3D
 from emmet.core.mpid import MPID
 from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
 from emmet.core.structure import StructureMetadata
+from emmet.core.typing import PhononWebsiteDict, TypedAbinitInputVars
 from emmet.core.utils import DocEnum, get_num_formula_units, utcnow
 
 try:
@@ -883,7 +884,7 @@ class PhononWebsiteBS(BaseModel):
         description="The type of the document: a phonon band structure for the phononwebsite.",
     )
 
-    phononwebsite: dict | None = Field(
+    phononwebsite: PhononWebsiteDict | None = Field(
         None,
         description="Phononwebsite dictionary to plot the animated " "phonon modes.",
     )
@@ -1034,7 +1035,7 @@ class AbinitPhonon(Phonon):
     with Abinit.
     """
 
-    abinit_input_vars: dict | None = Field(
+    abinit_input_vars: TypedAbinitInputVars | None = Field(
         None,
         description="Dict representation of the inputs used to obtain the phonon"
         "properties and the main general options (e.g. number of "
@@ -1139,7 +1140,7 @@ class ThermalDisplacement(BaseModel):
         description=" Generalized DOS in Cartesian coords, with shape (nsites, 3, 3, nomega)",
     )
 
-    amu: dict = Field(
+    amu: dict[str, float] = Field(
         ..., description="Dictionary of the atomic masses in atomic units."
     )
 

@@ -16,7 +16,9 @@ TypedComputedDataDict = TypedDict(
     "TypedComputedDataDict",
     {
         "dim": int,
-        "el_refs": list[str, ComputedStructureEntry],
+        # "el_refs": list[str, ComputedStructureEntry],
+        "el_refs_elements": list[str],
+        "el_refs_entries": list[ComputedStructureEntry],
         "facets": list[list[int]],
         "qhull_data": list[list[float]],
         "qhull_entries": list[ComputedStructureEntry],
