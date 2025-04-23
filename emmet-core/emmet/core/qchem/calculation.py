@@ -3,28 +3,23 @@
 # mypy: ignore-errors
 
 import logging
+import re
+import warnings
+from collections import OrderedDict
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
-import warnings
-from pydantic import field_validator, BaseModel, Field, ConfigDict
-from datetime import datetime
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pymatgen.core.structure import Molecule
 from pymatgen.io.qchem.inputs import QCInput
 from pymatgen.io.qchem.outputs import QCOutput
-from pymatgen.core.structure import Molecule
-from collections import OrderedDict
-import re
 
-from emmet.core.qchem.calc_types import (
-    LevelOfTheory,
-    CalcType,
-    TaskType,
-)
-from emmet.core.qchem.calc_types.calc_types import (
-    FUNCTIONALS,
-    BASIS_SETS,
-)
+from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
+from emmet.core.qchem.calc_types.calc_types import BASIS_SETS, FUNCTIONALS
+from emmet.core.qchem.task import QChemStatus
+from emmet.core.utils import arrow_incompatible
 
 # from emmet.core.qchem.calc_types.em_utils import (
 #     level_of_theory,
@@ -32,7 +27,6 @@ from emmet.core.qchem.calc_types.calc_types import (
 #     calc_type,
 # )
 
-from emmet.core.qchem.task import QChemStatus
 
 functional_synonyms = {
     "b97mv": "b97m-v",
@@ -56,6 +50,7 @@ logger = logging.getLogger(__name__)
 # as QChem data objects
 
 
+@arrow_incompatible
 class CalculationInput(BaseModel):
     """
     Document defining QChem calculation inputs.
@@ -135,9 +130,11 @@ class CalculationInput(BaseModel):
 
         return cls(
             initial_molecule=qcinput.molecule,
-            charge=int(qcinput.molecule.as_dict()["charge"])
-            if qcinput.molecule.as_dict()
-            else None,
+            charge=(
+                int(qcinput.molecule.as_dict()["charge"])
+                if qcinput.molecule.as_dict()
+                else None
+            ),
             rem=qcinput.rem,
             job_type=qcinput.rem.get("job_type", None),
             opt=qcinput.opt,
@@ -150,6 +147,7 @@ class CalculationInput(BaseModel):
         )
 
 
+@arrow_incompatible
 class CalculationOutput(BaseModel):
     """Document defining QChem calculation outputs."""
 
@@ -290,6 +288,7 @@ class CalculationOutput(BaseModel):
     # TODO What can be done for the trajectories, also how will walltime and cputime be reconciled
 
 
+@arrow_incompatible
 class Calculation(BaseModel):
     """Full QChem calculation inputs and outputs."""
 
@@ -407,9 +406,11 @@ class Calculation(BaseModel):
             input=input_doc,
             output=output_doc,
             output_file_paths={
-                k.lower(): Path(v)
-                if isinstance(v, str)
-                else {k2: Path(v2) for k2, v2 in v.items()}
+                k.lower(): (
+                    Path(v)
+                    if isinstance(v, str)
+                    else {k2: Path(v2) for k2, v2 in v.items()}
+                )
                 for k, v in output_file_paths.items()
             },
             level_of_theory=level_of_theory(input_doc, validate_lot=validate_lot),
