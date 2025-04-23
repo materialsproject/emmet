@@ -9,6 +9,7 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 from emmet.core.base import EmmetBaseModel
 from emmet.core.thermo import ThermoType
 from emmet.core.vasp.calc_types.enums import RunType
+from emmet.core.utils import utcnow
 
 
 class CorrectedEntriesDoc(EmmetBaseModel):
@@ -34,5 +35,5 @@ class CorrectedEntriesDoc(EmmetBaseModel):
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property.",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )

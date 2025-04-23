@@ -11,6 +11,7 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from emmet.core.mpid import MPID
 from emmet.core.common import convert_datetime
+from emmet.core.utils import utcnow
 
 logger = logging.getLogger(__name__)
 
@@ -92,8 +93,8 @@ class StructureGroupDoc(BaseModel):
         "present the chemsys will also include the ignored species.",
     )
 
-    last_updated: Optional[datetime] = Field(
-        None, description="Timestamp when this document was built."
+    last_updated: datetime = Field(
+        default_factory=utcnow, description="Timestamp when this document was built."
     )
 
     # Make sure that the datetime field is properly formatted
