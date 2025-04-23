@@ -1,25 +1,24 @@
 # mypy: ignore-errors
 
 """ Core definition of a Q-Chem Task Document """
-from typing import Any, Dict, List, Optional, Callable
+from typing import Any, Callable, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 from pymatgen.core.structure import Molecule
 
-from emmet.core.structure import MoleculeMetadata
-from emmet.core.task import BaseTaskDocument
-from emmet.core.utils import ValueEnum
 from emmet.core.qchem.calc_types import (
-    LevelOfTheory,
     CalcType,
+    LevelOfTheory,
     TaskType,
     calc_type,
     level_of_theory,
-    task_type,
-    solvent,
     lot_solvent_string,
+    solvent,
+    task_type,
 )
-
+from emmet.core.structure import MoleculeMetadata
+from emmet.core.task import BaseTaskDocument
+from emmet.core.utils import ValueEnum, arrow_incompatible
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -33,6 +32,7 @@ class QChemStatus(ValueEnum):
     FAILED = "unsuccessful"
 
 
+@arrow_incompatible
 class OutputSummary(BaseModel):
     """
     Summary of an output for a Q-Chem calculation
@@ -113,6 +113,7 @@ class OutputSummary(BaseModel):
         }
 
 
+@arrow_incompatible
 class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     """
     Definition of a Q-Chem task document
