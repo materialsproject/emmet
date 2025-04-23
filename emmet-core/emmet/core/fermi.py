@@ -3,9 +3,10 @@ from datetime import datetime
 from pydantic import BaseModel, Field, field_validator
 
 from emmet.core.common import convert_datetime
-from emmet.core.utils import utcnow
+from emmet.core.utils import arrow_incompatible, utcnow
 
 
+@arrow_incompatible
 class FermiDoc(BaseModel):
     """
     Fermi surfaces.

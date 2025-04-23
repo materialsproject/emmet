@@ -9,6 +9,7 @@ from emmet.core.molecules.metal_binding import MetalBindingData
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPID, MPculeID
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
+from emmet.core.utils import arrow_incompatible
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -264,6 +265,7 @@ class RedoxComposite(BaseModel):
     )
 
 
+@arrow_incompatible
 class MetalBindingComposite(BaseModel):
     """
     Summary information obtained from MetalBindingDocs
@@ -344,6 +346,7 @@ class MetalBindingComposite(BaseModel):
     )
 
 
+@arrow_incompatible
 class MoleculeSummaryDoc(PropertyDoc):
     """
     Summary information about molecules and their properties, useful for searching.

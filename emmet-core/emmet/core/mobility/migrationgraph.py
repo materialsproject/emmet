@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Sequence
 
 import numpy as np
 from pydantic import Field
@@ -10,7 +9,7 @@ from pymatgen.core import Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.utils import utcnow
+from emmet.core.utils import arrow_incompatible, utcnow
 
 try:
     from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
@@ -19,6 +18,7 @@ except ImportError:
     raise ImportError("Install pymatgen-analysis-diffusion to use MigrationGraphDoc")
 
 
+@arrow_incompatible
 class MigrationGraphDoc(EmmetBaseModel):
     """
     MigrationGraph Doc.
@@ -38,7 +38,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         description="Timestamp for the most recent calculation for this MigrationGraph document.",
     )
 
-    warnings: Sequence[str] = Field(
+    warnings: list[str] = Field(
         [], description="Any warnings related to this property."
     )
 
