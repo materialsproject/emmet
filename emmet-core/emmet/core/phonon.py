@@ -30,6 +30,7 @@ from emmet.core.common import convert_datetime
 from emmet.core.utils import utcnow, get_num_formula_units
 
 from typing_extensions import Literal
+from emmet.core.utils import DocEnum, utcnow
 
 try:
     import pyarrow as pa
@@ -839,12 +840,12 @@ class PhononWebsiteBS(BaseModel):
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
 
@@ -867,12 +868,12 @@ class Ddb(BaseModel):
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
 
@@ -970,12 +971,12 @@ class Phonon(StructureMetadata):
 
     last_updated: datetime = Field(
         description="Timestamp for when this document was last updated",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
 
@@ -1029,12 +1030,12 @@ class SoundVelocity(BaseModel):
 
     last_updated: datetime = Field(
         description="Timestamp for when this document was last updated",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
 
@@ -1052,12 +1053,12 @@ class ThermalDisplacement(BaseModel):
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     nsites: int = Field(

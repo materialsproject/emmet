@@ -26,6 +26,7 @@ from typing_extensions import Literal
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
 from emmet.core.settings import EmmetSettings
+from emmet.core.utils import utcnow
 
 SETTINGS = EmmetSettings()
 
@@ -55,7 +56,7 @@ class BSObjectDoc(BaseModel):
 
     last_updated: datetime = Field(
         description="The timestamp when this calculation was last updated",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     data: Optional[Union[Dict, BandStructureSymmLine]] = Field(
@@ -76,7 +77,7 @@ class DOSObjectDoc(BaseModel):
 
     last_updated: datetime = Field(
         description="The timestamp when this calculation was last updated.",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     data: Optional[CompleteDos] = Field(

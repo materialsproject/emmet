@@ -4,6 +4,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field, field_validator
 
 from emmet.core.common import convert_datetime
+from emmet.core.utils import arrow_incompatible, utcnow
 
 
 class FermiDoc(BaseModel):
@@ -27,8 +28,8 @@ class FermiDoc(BaseModel):
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )
 
-    last_updated: Optional[datetime] = Field(
-        None,
+    last_updated: datetime = Field(
+        default_factory=utcnow,
         description="Timestamp for the most recent calculation for this fermi surface document.",
     )
 
