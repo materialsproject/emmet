@@ -90,7 +90,7 @@ def set_msonable_type_adapter(cls):
     class ClsTypeAdapter(RootModel):
         root: TypedClsDict
 
-    cls.__type_adapter__ = ClsTypeAdapter
+    setattr(cls, "__type_adapter__", ClsTypeAdapter)
 
     return cls
 
