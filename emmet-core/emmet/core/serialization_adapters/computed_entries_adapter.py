@@ -154,14 +154,16 @@ ComputedStructureEntryTypeVar = TypeVar(
 )
 
 
-def pop_cse_empty_structure_keys(cse: ComputedStructureEntryTypeVar):
+def pop_cse_empty_keys(cse: ComputedStructureEntryTypeVar):
     if isinstance(cse, dict):
-        clean_structure = pop_empty_structure_keys(cse["structure"])
-        cse["structure"] = clean_structure
+        if cse.get("structure"):
+            cse["structure"] = pop_empty_structure_keys(cse["structure"])
+        cse["data"] = {k: v for k, v in cse["data"].items() if v}
+        cse["parameters"] = {k: v for k, v in cse["parameters"].items() if v}
 
     return cse
 
 
 AnnotatedComputedStructureEntry = Annotated[
-    ComputedStructureEntryTypeVar, BeforeValidator(pop_cse_empty_structure_keys)
+    ComputedStructureEntryTypeVar, BeforeValidator(pop_cse_empty_keys)
 ]

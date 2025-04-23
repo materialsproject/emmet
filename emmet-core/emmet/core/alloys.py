@@ -1,15 +1,17 @@
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.base import EmmetBaseModel
-from typing import Dict
+from emmet.core.typing import TypedSearchDict
 
 try:
-    from pymatgen.analysis.alloys.core import (
-        AlloyPair,
-        AlloySystem,
-    )
+    from pymatgen.analysis.alloys.core import AlloyPair, AlloySystem
 except ImportError:
     raise ImportError(
         "Install pymatgen-analysis-alloys to use AlloyPairDoc or AlloySystemDoc"
     )
+
+
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters import alloy_adapter
 
 
 class AlloyPairDoc(EmmetBaseModel):
@@ -18,7 +20,7 @@ class AlloyPairDoc(EmmetBaseModel):
     pair_id: str
 
     # fields useful for building search indices
-    _search: Dict
+    _search: TypedSearchDict
 
     @classmethod
     def from_pair(cls, pair: AlloyPair):

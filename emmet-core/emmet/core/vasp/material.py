@@ -1,30 +1,57 @@
 """ Core definition of a Materials Document """
 
+import json
 from typing import Dict, List, Mapping, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_serializer
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.analysis.structure_matcher import StructureMatcher
-from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 from emmet.core.base import EmmetMeta
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin
+from emmet.core.serialization_adapters.computed_entries_adapter import (
+    AnnotatedComputedStructureEntry,
+)
 from emmet.core.settings import EmmetSettings
 from emmet.core.structure import StructureMetadata
 from emmet.core.tasks import TaskDoc
+from emmet.core.utils import jsanitize
 from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
 
 SETTINGS = EmmetSettings()
 
 
 class BlessedCalcs(BaseModel, populate_by_name=True):
-    GGA: Optional[ComputedStructureEntry] = None
-    GGA_U: Optional[ComputedStructureEntry] = Field(None, alias="GGA+U")
-    PBESol: Optional[ComputedStructureEntry] = Field(None, alias="PBEsol")
-    SCAN: Optional[ComputedStructureEntry] = None
-    R2SCAN: Optional[ComputedStructureEntry] = Field(None, alias="r2SCAN")
-    HSE: Optional[ComputedStructureEntry] = None
+    GGA: AnnotatedComputedStructureEntry | None = Field(None)
+    GGA_U: AnnotatedComputedStructureEntry | None = Field(None, alias="GGA+U")
+    PBESol: AnnotatedComputedStructureEntry | None = Field(None, alias="PBEsol")
+    SCAN: AnnotatedComputedStructureEntry | None = Field(None)
+    R2SCAN: AnnotatedComputedStructureEntry | None = Field(None, alias="r2SCAN")
+    HSE: AnnotatedComputedStructureEntry | None = Field(None)
+
+    @model_serializer(mode="wrap")
+    def model_serialization(self, default_serializer, info):
+        default_serialized_model = default_serializer(self, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            arrow_compat_model = jsanitize(default_serialized_model, allow_bson=True)
+            for entry in arrow_compat_model.values():
+                # cast as str, de-serializing unions is not well supported in pyarrow as of v19.0.1
+                if entry:
+                    entry["energy_adjustments"] = json.dumps(
+                        entry["energy_adjustments"]
+                    )
+            return arrow_compat_model
+
+        return default_serialized_model
+
+    @field_validator("*", mode="before")
+    def entry_deserializer(cls, entry):
+        if isinstance(entry, dict) and isinstance(entry.get("energy_adjustments"), str):
+            entry["energy_adjustments"] = json.loads(entry["energy_adjustments"])
+        return entry
 
 
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):

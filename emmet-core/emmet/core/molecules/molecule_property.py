@@ -1,17 +1,17 @@
 """ Core definition of a Materials Document """
+
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Sequence, Type, TypeVar, List, Optional
+from typing import List, Optional, Type, TypeVar
 
 from pydantic import Field
 from pymatgen.core.structure import Molecule
 
-from emmet.core.qchem.calc_types import LevelOfTheory
 from emmet.core.material import PropertyOrigin
 from emmet.core.mpid import MPculeID
+from emmet.core.qchem.calc_types import LevelOfTheory
 from emmet.core.structure import MoleculeMetadata
-
 from emmet.core.utils import utcnow
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
@@ -70,13 +70,11 @@ class PropertyDoc(MoleculeMetadata):
         default_factory=utcnow,
     )
 
-    origins: Sequence[PropertyOrigin] = Field(
+    origins: list[PropertyOrigin] = Field(
         [], description="Dictionary for tracking the provenance of properties"
     )
 
-    warnings: Sequence[str] = Field(
-        [], description="Any warnings related to this property"
-    )
+    warnings: list[str] = Field([], description="Any warnings related to this property")
 
     @classmethod
     def from_molecule(  # type: ignore[override]

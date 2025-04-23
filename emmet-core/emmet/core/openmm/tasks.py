@@ -109,6 +109,7 @@ class CalculationInput(BaseModel):  # type: ignore[call-arg]
     model_config = ConfigDict(extra="allow")
 
 
+@type_override({"traj_blob": str})
 class CalculationOutput(BaseModel):
     """OpenMM calculation output files and extracted data."""
 

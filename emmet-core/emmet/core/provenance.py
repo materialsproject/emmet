@@ -2,7 +2,6 @@
 
 import warnings
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
@@ -30,8 +29,8 @@ class Author(BaseModel):
     Author information
     """
 
-    name: Optional[str] = Field(None)
-    email: Optional[str] = Field(None)
+    name: str | None = Field(None)
+    email: str | None = Field(None)
 
 
 class History(BaseModel):
@@ -41,7 +40,7 @@ class History(BaseModel):
 
     name: str
     url: str
-    description: Optional[Dict] = Field(
+    description: dict[str, str] | None = Field(
         None, description="Dictionary of extra data for this history node."
     )
 
@@ -60,21 +59,23 @@ class SNLAbout(BaseModel):
         "", description="Bibtex reference strings for this material."
     )
 
-    authors: List[Author] = Field([], description="List of authors for this material.")
-
-    remarks: List[str] = Field(
-        [], description="List of remarks for the provenance of this material."
+    authors: list[Author] | None = Field(
+        None, description="list of authors for this material."
     )
 
-    tags: List[str] = Field([])
-
-    database_IDs: Dict[Database, List[str]] = Field(
-        dict(), description="Database IDs corresponding to this material."
+    remarks: list[str] | None = Field(
+        None, description="list of remarks for the provenance of this material."
     )
 
-    history: List[History] = Field(
-        [],
-        description="List of history nodes specifying the transformations or orignation"
+    tags: list[str] | None = Field(None)
+
+    database_IDs: dict[Database, list[str]] | None = Field(
+        None, description="Database IDs corresponding to this material."
+    )
+
+    history: list[History] | None = Field(
+        None,
+        description="list of history nodes specifying the transformations or orignation"
         " of this material for the entry closest matching the material input.",
     )
 
@@ -108,29 +109,31 @@ class ProvenanceDoc(PropertyDoc):
         description="creation date for the first structure corresponding to this material",
     )
 
-    references: List[str] = Field(
-        [], description="Bibtex reference strings for this material"
+    references: list[str] | None = Field(
+        None, description="Bibtex reference strings for this material"
     )
 
-    authors: List[Author] = Field([], description="List of authors for this material")
-
-    remarks: List[str] = Field(
-        [], description="List of remarks for the provenance of this material"
+    authors: list[Author] | None = Field(
+        None, description="list of authors for this material"
     )
 
-    tags: List[str] = Field([])
+    remarks: list[str] | None = Field(
+        None, description="list of remarks for the provenance of this material"
+    )
+
+    tags: list[str] | None = Field(None)
 
     theoretical: bool = Field(
         True, description="If this material has any experimental provenance or not"
     )
 
-    database_IDs: Dict[Database, List[str]] = Field(
-        dict(), description="Database IDs corresponding to this material"
+    database_IDs: dict[Database, list[str]] | None = Field(
+        None, description="Database IDs corresponding to this material"
     )
 
-    history: List[History] = Field(
-        [],
-        description="List of history nodes specifying the transformations or orignation"
+    history: list[History] | None = Field(
+        None,
+        description="list of history nodes specifying the transformations or orignation"
         " of this material for the entry closest matching the material input",
     )
 
@@ -149,7 +152,7 @@ class ProvenanceDoc(PropertyDoc):
     def from_SNLs(
         cls,
         structure: Structure,
-        snls: List[SNLDict],
+        snls: list[SNLDict],
         material_id: MPID | None = None,
         **kwargs,
     ) -> "ProvenanceDoc":

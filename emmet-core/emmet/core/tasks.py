@@ -1,23 +1,27 @@
 """Define core schemas for VASP calculations."""
+
 from __future__ import annotations
 
-from collections.abc import Mapping
+import json
 import logging
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import (
-    Any,
-    Optional,
-    TYPE_CHECKING,
-)
+from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
 from monty.json import MontyDecoder
 from monty.serialization import loadfn
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_serializer,
+    field_validator,
+    model_serializer,
+    model_validator,
+)
 from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.core.structure import Structure
 from pymatgen.core.trajectory import Trajectory
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.io.vasp import Incar, Kpoints, Poscar
@@ -25,8 +29,10 @@ from pymatgen.io.vasp import Potcar as VaspPotcar
 
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
+from emmet.core.serialization_adapters.poscar_adapter import AnnotatedPoscar
+from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 from emmet.core.structure import StructureMetadata
-from emmet.core.utils import utcnow
+from emmet.core.utils import jsanitize, type_override, utcnow
 from emmet.core.vasp.calc_types import (
     CalcType,
     RunType,
@@ -47,6 +53,7 @@ from emmet.core.vasp.utils import discover_and_sort_vasp_files
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
     from typing_extensions import Self
 
 monty_decoder = MontyDecoder()
@@ -66,12 +73,12 @@ class Potcar(BaseModel):
 
 
 class OrigInputs(CalculationInput):
-    poscar: Optional[Poscar] = Field(
+    poscar: AnnotatedPoscar | None = Field(
         None,
         description="Pymatgen object representing the POSCAR file.",
     )
 
-    potcar: Optional[Potcar | VaspPotcar | list[Any]] = Field(
+    potcar: Potcar | None = Field(
         None,
         description="Pymatgen object representing the POTCAR file.",
     )
@@ -84,7 +91,7 @@ class OrigInputs(CalculationInput):
             return list(v)
         return v
 
-    @field_validator("potcar", mode="after")
+    @field_validator("potcar", mode="before")
     @classmethod
     def parse_potcar(cls, v):
         """Check that potcar attribute is not a pymatgen POTCAR."""
@@ -99,7 +106,8 @@ class OrigInputs(CalculationInput):
 
 
 class OutputDoc(BaseModel):
-    structure: Optional[Structure] = Field(
+    # structure: Optional[Structure] = Field(
+    structure: Optional[AnnotatedStructure] = Field(
         None,
         title="Output Structure",
         description="Output Structure from the VASP calculation.",
@@ -245,17 +253,37 @@ class InputDoc(CalculationInput):
         )
 
 
+@type_override({"corrections": str, "job": str})
 class CustodianDoc(BaseModel):
-    corrections: Optional[list[Any]] = Field(
+    corrections: list[Any] | None = Field(
         None,
         title="Custodian Corrections",
         description="List of custodian correction data for calculation.",
     )
-    job: Optional[Any] = Field(
+    job: Any | None = Field(
         None,
         title="Custodian Job Data",
         description="Job data logged by custodian.",
     )
+
+    @model_serializer(mode="wrap")
+    def model_serialization(self, default_serializer, info):
+        default_serialized_model = default_serializer(self, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            arrow_compat_model = jsanitize(default_serialized_model, allow_bson=True)
+            for field, value in arrow_compat_model.items():
+                arrow_compat_model[field] = json.dumps(value)
+            return arrow_compat_model
+
+        return default_serialized_model
+
+    @field_validator("*", mode="before")
+    def field_deserializer(cls, field):
+        if isinstance(field, str):
+            field = json.loads(field)
+        return field
 
 
 class AnalysisDoc(BaseModel):
@@ -340,94 +368,98 @@ class AnalysisDoc(BaseModel):
         )
 
 
+@type_override(
+    {
+        "additional_json": str,
+        "transformations": str,
+        "vasp_objects": str,
+    }
+)
 class TaskDoc(StructureMetadata, extra="allow"):
     """Calculation-level details about VASP calculations that power Materials Project."""
 
     tags: list[str] | None = Field(
-        [], title="tag", description="Metadata tagged to a given task."
+        None, title="tag", description="Metadata tagged to a given task."
     )
-    dir_name: Optional[str] = Field(
-        None, description="The directory for this VASP task"
-    )
+    dir_name: str | None = Field(None, description="The directory for this VASP task")
+    state: TaskState | None = Field(None, description="State of this calculation")
 
-    state: Optional[TaskState] = Field(None, description="State of this calculation")
-
-    calcs_reversed: Optional[list[Calculation]] = Field(
+    calcs_reversed: list[Calculation] | None = Field(
         None,
         title="Calcs reversed data",
         description="Detailed data for each VASP calculation contributing to the task document.",
     )
 
-    structure: Optional[Structure] = Field(
+    # structure: Structure | None = Field(
+    structure: AnnotatedStructure | None = Field(
         None, description="Final output structure from the task"
     )
 
-    task_type: Optional[TaskType | CalcType] = Field(
+    task_type: TaskType | CalcType | None = Field(
         None, description="The type of calculation."
     )
 
-    run_type: Optional[RunType] = Field(
+    run_type: RunType | None = Field(
         None, description="The functional used in the calculation."
     )
 
-    calc_type: Optional[CalcType] = Field(
+    calc_type: CalcType | None = Field(
         None, description="The functional and task type used in the calculation."
     )
 
-    task_id: Optional[MPID | str] = Field(
+    task_id: MPID | str | None = Field(
         None,
         description="The (task) ID of this calculation, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
     )
 
-    orig_inputs: Optional[OrigInputs] = Field(
+    orig_inputs: OrigInputs | None = Field(
         None,
         description="The exact set of input parameters used to generate the current task document.",
     )
 
-    input: Optional[InputDoc] = Field(
+    input: InputDoc | None = Field(
         None,
         description="The input structure used to generate the current task document.",
     )
 
-    output: Optional[OutputDoc] = Field(
+    output: OutputDoc | None = Field(
         None,
         description="The exact set of output parameters used to generate the current task document.",
     )
 
-    included_objects: Optional[list[VaspObject]] = Field(
+    included_objects: list[VaspObject] | None = Field(
         None, description="List of VASP objects included with this task document"
     )
-    vasp_objects: Optional[dict[VaspObject, Any]] = Field(
+    vasp_objects: dict[VaspObject, Any] | None = Field(
         None, description="Vasp objects associated with this task"
     )
-    entry: Optional[ComputedEntry] = Field(
+    entry: ComputedEntry | None = Field(
         None, description="The ComputedEntry from the task doc"
     )
-
-    task_label: Optional[str] = Field(None, description="A description of the task")
-    author: Optional[str] = Field(
+    task_label: str | None = Field(None, description="A description of the task")
+    author: str | None = Field(
         None, description="Author extracted from transformations"
     )
-    icsd_id: Optional[str | int] = Field(
+    icsd_id: int | None = Field(
         None, description="Inorganic Crystal Structure Database id of the structure"
     )
-    transformations: Optional[Any] = Field(
+    transformations: Any | None = Field(
         None,
         description="Information on the structural transformations, parsed from a "
         "transformations.json file",
     )
-    additional_json: Optional[dict[str, Any]] = Field(
+    additional_json: dict[str, Any] | None = Field(
         None, description="Additional json loaded from the calculation directory"
     )
 
-    custodian: Optional[list[CustodianDoc]] = Field(
+    custodian: list[CustodianDoc] | None = Field(
         None,
         title="Calcs reversed data",
         description="Detailed custodian data for each VASP calculation contributing to the task document.",
     )
 
-    analysis: Optional[AnalysisDoc] = Field(
+    analysis: AnalysisDoc | None = Field(
         None,
         title="Calculation Analysis",
         description="Some analysis of calculation data after collection.",
@@ -438,16 +470,16 @@ class TaskDoc(StructureMetadata, extra="allow"):
         description="Timestamp for the most recent calculation for this task document",
     )
 
-    completed_at: Optional[datetime] = Field(
+    completed_at: datetime | None = Field(
         None, description="Timestamp for when this task was completed"
     )
 
-    batch_id: Optional[str] = Field(
+    batch_id: str | None = Field(
         None,
         description="Identifier for this calculation; should provide rough information about the calculation origin and purpose.",
     )
 
-    run_stats: Optional[Mapping[str, RunStatistics]] = Field(
+    run_stats: dict[str, RunStatistics] | None = Field(
         None,
         description="Summary of runtime statistics for each calculation in this task",
     )
@@ -522,6 +554,47 @@ class TaskDoc(StructureMetadata, extra="allow"):
                 )
 
         return values
+
+    @field_serializer("additional_json", "transformations", "vasp_objects", mode="wrap")
+    def serialize_overrides(self, d, default_serializer, info):
+        default_serialized_object = default_serializer(d, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            return json.dumps(default_serialized_object)
+
+        return default_serialized_object
+
+    @field_validator(
+        "additional_json", "transformations", "vasp_objects", mode="before"
+    )
+    def deserialize_overrides(cls, d):
+        if isinstance(d, str):
+            d = json.loads(d)
+
+        return d
+
+    @field_serializer("entry", mode="wrap")
+    def serialize_entry(self, entry, default_serializer, info):
+        default_serialized_object = default_serializer(entry, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            arrow_compat_object = jsanitize(default_serialized_object, allow_bson=True)
+            arrow_compat_object["energy_adjustments"] = json.dumps(
+                arrow_compat_object["energy_adjustments"]
+            )
+
+            return arrow_compat_object
+
+        return default_serialized_object
+
+    @field_validator("entry", mode="before")
+    def deserialize_entry(cls, entry):
+        if isinstance(entry, dict) and isinstance(entry["energy_adjustments"], str):
+            entry["energy_adjustments"] = json.loads(entry["energy_adjustments"])
+
+        return entry
 
     @classmethod
     def from_directory(

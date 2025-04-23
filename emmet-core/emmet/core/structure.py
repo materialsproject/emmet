@@ -1,9 +1,10 @@
 """Core definition of Structure and Molecule metadata."""
+
 from __future__ import annotations
 
 from typing import List, Optional, Type, TypeVar
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Molecule, Structure
@@ -74,6 +75,13 @@ class StructureMetadata(EmmetBaseModel):
     symmetry: Optional[SymmetryData] = Field(
         None, description="Symmetry data for this material."
     )
+
+    @field_validator("composition", "composition_reduced", mode="before")
+    def deserialize_comp(cls, comp):
+        if isinstance(comp, list):
+            comp = {k: v for k, v in comp}
+
+        return comp
 
     @classmethod
     def from_composition(

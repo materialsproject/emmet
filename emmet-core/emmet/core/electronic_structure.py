@@ -6,10 +6,10 @@ from collections import defaultdict
 from datetime import datetime
 from enum import Enum
 from math import isnan
-from typing import Dict, List, Optional, Type, TypeVar, Union
+from typing import Type, TypeVar
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from pymatgen.analysis.magnetism.analyzer import (
     CollinearMagneticStructureAnalyzer,
     Ordering,
@@ -21,12 +21,19 @@ from pymatgen.electronic_structure.core import OrbitalType, Spin
 from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.symmetry.bandstructure import HighSymmKpath
-from typing_extensions import Literal
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
 from emmet.core.settings import EmmetSettings
-from emmet.core.utils import utcnow
+from emmet.core.typing import StrOrbital, StrSpin, TypedBandDict
+from emmet.core.utils import type_override, utcnow
+
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters import (
+        bandstructure_symm_line_adapter,
+        dos_adapter,
+        kpoint_adapter,
+    )
 
 SETTINGS = EmmetSettings()
 
@@ -48,7 +55,7 @@ class BSObjectDoc(BaseModel):
     Band object document.
     """
 
-    task_id: Optional[MPID] = Field(
+    task_id: MPID | None = Field(
         None,
         description="The source calculation (task) ID that this band structure comes from. "
         "This has the same form as a Materials Project ID.",
@@ -59,7 +66,7 @@ class BSObjectDoc(BaseModel):
         default_factory=utcnow,
     )
 
-    data: Optional[Union[Dict, BandStructureSymmLine]] = Field(
+    data: BandStructureSymmLine | None = Field(
         None, description="The band structure object for the given calculation ID"
     )
 
@@ -69,7 +76,7 @@ class DOSObjectDoc(BaseModel):
     DOS object document.
     """
 
-    task_id: Optional[MPID] = Field(
+    task_id: MPID | None = Field(
         None,
         description="The source calculation (task) ID that this density of states comes from. "
         "This has the same form as a Materials Project ID.",
@@ -80,7 +87,7 @@ class DOSObjectDoc(BaseModel):
         default_factory=utcnow,
     )
 
-    data: Optional[CompleteDos] = Field(
+    data: CompleteDos | None = Field(
         None, description="The density of states object for the given calculation ID."
     )
 
@@ -93,92 +100,133 @@ class ElectronicStructureBaseData(BaseModel):
     )
 
     band_gap: float = Field(..., description="Band gap energy in eV.")
-
-    cbm: Optional[Union[float, Dict]] = Field(
-        None, description="Conduction band minimum data."
-    )
-
-    vbm: Optional[Union[float, Dict]] = Field(
-        None, description="Valence band maximum data."
-    )
-
-    efermi: Optional[float] = Field(None, description="Fermi energy in eV.")
+    cbm: float | None = Field(None, description="Conduction band minimum data.")
+    vbm: float | None = Field(None, description="Valence band maximum data.")
+    efermi: float | None = Field(None, description="Fermi energy in eV.")
 
 
 class ElectronicStructureSummary(ElectronicStructureBaseData):
     is_gap_direct: bool = Field(..., description="Whether the band gap is direct.")
-
     is_metal: bool = Field(..., description="Whether the material is a metal.")
 
-    magnetic_ordering: Union[str, Ordering] = Field(
+    magnetic_ordering: Ordering = Field(
         ..., description="Magnetic ordering of the calculation."
     )
 
 
 class BandStructureSummaryData(ElectronicStructureSummary):
-    nbands: float = Field(..., description="Number of bands.")
-
-    equivalent_labels: Dict = Field(
+    equivalent_labels: dict[str, dict[str, dict[str, str]]] = Field(
         ..., description="Equivalent k-point labels in other k-path conventions."
     )
 
+    nbands: float = Field(..., description="Number of bands.")
     direct_gap: float = Field(..., description="Direct gap energy in eV.")
+    cbm: TypedBandDict | None = Field(None, description="Conduction band minimum data.")
+    vbm: TypedBandDict | None = Field(None, description="Valence band maximum data.")
+
+    @field_validator("cbm", "vbm", mode="before")
+    def deserialize_bands(cls, band):
+        if band:
+            if isinstance(band["kpoint"], dict) and "label" not in band["kpoint"]:
+                band["kpoint"]["label"] = None
+        return band
+
+    @field_validator("equivalent_labels", mode="before")
+    def deserialize_labels(cls, equivalent_labels):
+        if isinstance(next(iter(equivalent_labels.values())), list):
+            equivalent_labels = {
+                convention: {
+                    other_convention: {k: v for k, v in label_tuples}
+                    for other_convention, label_tuples in other_mapping
+                }
+                for convention, other_mapping in equivalent_labels.items()
+            }
+        return equivalent_labels
 
 
 class DosSummaryData(ElectronicStructureBaseData):
-    spin_polarization: Optional[float] = Field(
+    spin_polarization: float | None = Field(
         None, description="Spin polarization at the fermi level."
     )
 
 
 class BandstructureData(BaseModel):
-    setyawan_curtarolo: Optional[BandStructureSummaryData] = Field(
+    setyawan_curtarolo: BandStructureSummaryData | None = Field(
         None,
         description="Band structure summary data using the Setyawan-Curtarolo path convention.",
     )
 
-    hinuma: Optional[BandStructureSummaryData] = Field(
+    hinuma: BandStructureSummaryData | None = Field(
         None,
         description="Band structure summary data using the Hinuma et al. path convention.",
     )
 
-    latimer_munro: Optional[BandStructureSummaryData] = Field(
+    latimer_munro: BandStructureSummaryData | None = Field(
         None,
         description="Band structure summary data using the Latimer-Munro path convention.",
     )
 
 
+@type_override(
+    {
+        "total": dict[StrSpin, DosSummaryData],
+        "elemental": dict[Element, dict[StrOrbital, dict[StrSpin, DosSummaryData]]],
+        "orbital": dict[StrOrbital, dict[StrSpin, DosSummaryData]],
+    }
+)
 class DosData(BaseModel):
-    total: Optional[Dict[Union[Spin, str], DosSummaryData]] = Field(
+    total: dict[Spin | StrSpin, DosSummaryData] | None = Field(
         None, description="Total DOS summary data."
     )
 
-    elemental: Optional[
-        Dict[
+    elemental: (
+        dict[
             Element,
-            Dict[
-                Union[Literal["total", "s", "p", "d", "f"], OrbitalType],
-                Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
-            ],
+            dict[OrbitalType | StrOrbital, dict[Spin | StrSpin, DosSummaryData]],
         ]
-    ] = Field(
+        | None
+    ) = Field(
         None,
         description="Band structure summary data using the Hinuma et al. path convention.",
     )
 
-    orbital: Optional[
-        Dict[
-            Union[Literal["total", "s", "p", "d", "f"], OrbitalType],
-            Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
-        ]
-    ] = Field(
+    orbital: (
+        dict[OrbitalType | StrOrbital, dict[Spin | StrSpin, DosSummaryData]] | None
+    ) = Field(
         None,
         description="Band structure summary data using the Latimer-Munro path convention.",
     )
 
-    magnetic_ordering: Optional[Union[Ordering, str]] = Field(
+    magnetic_ordering: Ordering | None = Field(
         None, description="Magnetic ordering of the calculation."
     )
+
+    @field_validator("elemental", mode="before")
+    def deserialize_elemental(cls, elemental):
+        if isinstance(next(iter(elemental.values())), list):
+            elemental = {
+                element: {
+                    oribital_type: {
+                        spin: summary_data for spin, summary_data in spin_summary_pairs
+                    }
+                    for oribital_type, spin_summary_pairs in orbital
+                }
+                for element, orbital in elemental.items()
+            }
+
+        return elemental
+
+    @field_validator("orbital", mode="before")
+    def deserialize_orbital(cls, orbital):
+        if isinstance(next(iter(orbital.values())), list):
+            orbital = {
+                oribital_type: {
+                    spin: summary_data for spin, summary_data in spin_summary_pairs
+                }
+                for oribital_type, spin_summary_pairs in orbital.items()
+            }
+
+        return orbital
 
 
 T = TypeVar("T", bound="ElectronicStructureDoc")
@@ -191,31 +239,31 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
     property_name: str = "electronic_structure"
 
-    bandstructure: Optional[BandstructureData] = Field(
+    bandstructure: BandstructureData | None = Field(
         None, description="Band structure data for the material."
     )
 
-    dos: Optional[DosData] = Field(
+    dos: DosData | None = Field(
         None, description="Density of states data for the material."
     )
 
     last_updated: datetime = Field(
         description="Timestamp for when this document was last updated.",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     @classmethod
     def from_bsdos(  # type: ignore[override]
         cls: Type[T],
-        dos: Dict[MPID, CompleteDos],
+        dos: dict[MPID, CompleteDos],
         is_gap_direct: bool,
         is_metal: bool,
         material_id: MPID | None = None,
-        origins: List[dict] = [],
-        structures: Optional[Dict[MPID, Structure]] = None,
-        setyawan_curtarolo: Optional[Dict[MPID, BandStructureSymmLine]] = None,
-        hinuma: Optional[Dict[MPID, BandStructureSymmLine]] = None,
-        latimer_munro: Optional[Dict[MPID, BandStructureSymmLine]] = None,
+        origins: list[dict] = [],
+        structures: dict[MPID, Structure] | None = None,
+        setyawan_curtarolo: dict[MPID, BandStructureSymmLine] | None = None,
+        hinuma: dict[MPID, BandStructureSymmLine] | None = None,
+        latimer_munro: dict[MPID, BandStructureSymmLine] | None = None,
         **kwargs,
     ) -> T:
         """
@@ -368,6 +416,10 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                     cbm = bs.get_cbm()  # type: ignore[assignment]
                     vbm = bs.get_vbm()  # type: ignore[assignment]
                     is_gap_direct = gap_dict["direct"]
+
+                    # coerce type here, mixture of str and int types in bs objects
+                    cbm["kpoint_index"] = [int(x) for x in cbm["kpoint_index"]]
+                    vbm["kpoint_index"] = [int(x) for x in vbm["kpoint_index"]]
 
                 bs_efermi = bs.efermi
                 nbands = bs.nb_bands
