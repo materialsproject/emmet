@@ -36,6 +36,7 @@ setup(
         "pybtex~=0.24",
         "typing-extensions>=3.7",
         "blake3",
+        "pyarrow>=19.0.1",
     ],
     extras_require={
         "all": [
