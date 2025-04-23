@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import io
 from pathlib import Path
-from typing import Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Union
 
 import openmm
 import pandas as pd  # type: ignore[import-untyped]
@@ -20,7 +20,10 @@ from emmet.core.vasp.task_valid import TaskState
 if TYPE_CHECKING:
     from typing import Any
 
+from emmet.core.utils import arrow_incompatible, type_override
 
+
+@arrow_incompatible
 class CalculationInput(BaseModel):  # type: ignore[call-arg]
     """OpenMM input settings for a job, these are the attributes of the OpenMMMaker."""
 
@@ -202,6 +205,7 @@ class CalculationOutput(BaseModel):
         )
 
 
+@arrow_incompatible
 class Calculation(BaseModel):
     """All input and output data for an OpenMM calculation."""
 

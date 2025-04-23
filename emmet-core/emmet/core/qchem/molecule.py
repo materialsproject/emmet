@@ -1,18 +1,18 @@
 """ Core definition of a Molecule Document """
-from typing import Any, Dict, List, Mapping, Union, Optional
+
+from typing import Any, Dict, List, Mapping, Optional, Union
 
 from pydantic import Field
-
-from pymatgen.core.structure import Molecule
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
+from pymatgen.core.structure import Molecule
 from pymatgen.io.babel import BabelMolAdaptor
 
-from emmet.core.mpid import MPculeID
-from emmet.core.utils import get_molecule_id
-from emmet.core.settings import EmmetSettings
 from emmet.core.material import CoreMoleculeDoc, PropertyOrigin
+from emmet.core.mpid import MPculeID
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.qchem.task import TaskDocument
+from emmet.core.settings import EmmetSettings
+from emmet.core.utils import arrow_incompatible, get_molecule_id
 
 try:
     import openbabel
@@ -139,6 +139,7 @@ def evaluate_task_entry(
     )
 
 
+@arrow_incompatible
 class MoleculeDoc(CoreMoleculeDoc):
     species: Optional[List[str]] = Field(
         None, description="Ordered list of elements/species in this Molecule."

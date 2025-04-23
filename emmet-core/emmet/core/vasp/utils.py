@@ -1,19 +1,23 @@
 """Define utilities needed for parsing VASP calculations."""
 
 from __future__ import annotations
-from collections import defaultdict
+
 import os
+from collections import defaultdict
 from pathlib import Path
-from pydantic import BaseModel, Field, PrivateAttr, computed_field, model_validator
 from typing import TYPE_CHECKING, Optional
 
-from emmet.core.utils import get_md5_blocked
+from pydantic import BaseModel, Field, PrivateAttr, computed_field, model_validator
+
+from emmet.core.utils import arrow_incompatible, get_md5_blocked
 
 if TYPE_CHECKING:
     from typing import Any
+
     from emmet.core.typing import PathLike
 
 
+@arrow_incompatible
 class FileMetadata(BaseModel):
     """
     Lightweight model to enable validation on files via MD5.

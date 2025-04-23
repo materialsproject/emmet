@@ -1,15 +1,15 @@
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, TypeVar
 from hashlib import blake2b
+from typing import Any, Dict, List, Optional, Tuple, TypeVar
 
 from pydantic import BaseModel, Field
 from pymatgen.core.structure import Molecule
 
-from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
+from emmet.core.molecules.metal_binding import MetalBindingData
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPID, MPculeID
-from emmet.core.molecules.metal_binding import MetalBindingData
-
+from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
+from emmet.core.utils import arrow_incompatible
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -267,6 +267,7 @@ class RedoxComposite(BaseModel):
     )
 
 
+@arrow_incompatible
 class MetalBindingComposite(BaseModel):
     """
     Summary information obtained from MetalBindingDocs
@@ -347,6 +348,7 @@ class MetalBindingComposite(BaseModel):
     )
 
 
+@arrow_incompatible
 class MoleculeSummaryDoc(PropertyDoc):
     """
     Summary information about molecules and their properties, useful for searching.
@@ -646,9 +648,9 @@ def _copy_from_docs(
                             composite_docs[solvent][method]["property_id"] = entry.get(
                                 "property_id"
                             )
-                            composite_docs[solvent][method][
-                                "level_of_theory"
-                            ] = entry.get("level_of_theory")
+                            composite_docs[solvent][method]["level_of_theory"] = (
+                                entry.get("level_of_theory")
+                            )
 
                             # Convert to appropriate BaseModel
                             composite_docs[solvent][method] = target_type(

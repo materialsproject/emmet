@@ -1,11 +1,12 @@
 from enum import Enum
-from typing import List, Optional, Any
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, Field
 
 from emmet.core.synthesis.materials import ExtractedMaterial
 from emmet.core.synthesis.operations import Operation
 from emmet.core.synthesis.reaction import ReactionFormula
+from emmet.core.utils import arrow_incompatible
 
 
 class SynthesisTypeEnum(str, Enum):
@@ -59,6 +60,7 @@ class SynthesisRecipe(BaseModel):
     )
 
 
+@arrow_incompatible
 class SynthesisSearchResultModel(SynthesisRecipe):
     """
     Model for a document containing synthesis recipes

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Union, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_analyzer import oxide_type
@@ -10,9 +10,9 @@ from pymatgen.core.structure import Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.math import Matrix3D, Vector3D
-from emmet.core.task import BaseTaskDocument
 from emmet.core.structure import StructureMetadata
-from emmet.core.utils import ValueEnum
+from emmet.core.task import BaseTaskDocument
+from emmet.core.utils import ValueEnum, arrow_incompatible
 from emmet.core.vasp.calc_types import RunType, calc_type, run_type, task_type
 
 
@@ -26,6 +26,7 @@ class TaskState(ValueEnum):
     ERROR = "error"
 
 
+@arrow_incompatible
 class InputSummary(BaseModel):
     """
     Summary of inputs for a VASP calculation
@@ -74,6 +75,7 @@ class OutputSummary(BaseModel):
     )
 
 
+@arrow_incompatible
 class RunStatistics(BaseModel):
     """
     Summary of the Run statistics for a VASP calculation
@@ -103,6 +105,7 @@ class RunStatistics(BaseModel):
     )
 
 
+@arrow_incompatible
 class TaskDocument(BaseTaskDocument, StructureMetadata):
     """
     Definition of VASP Task Document
@@ -178,9 +181,9 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
                 "run_type": str(self.run_type),
             },
             "data": {
-                "oxide_type": oxide_type(self.output.structure)
-                if self.output.structure
-                else None,
+                "oxide_type": (
+                    oxide_type(self.output.structure) if self.output.structure else None
+                ),
                 "aspherical": self.input.parameters.get("LASPH", True),
                 "last_updated": self.last_updated,
             },
