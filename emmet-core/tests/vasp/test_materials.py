@@ -1,11 +1,12 @@
 import json
 
+import pyarrow as pa
 import pytest
 from monty.io import zopen
 
+from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
-from emmet.core.vasp.task_valid import TaskDocument
 
 
 @pytest.fixture
@@ -13,7 +14,10 @@ def test_tasks(test_dir):
     with zopen(test_dir / "test_si_tasks.json.gz") as f:
         tasks = json.load(f)
 
-    tasks = [TaskDocument(**t) for t in tasks]
+    for task in tasks:
+        task.update({"is_valid": True})
+
+    tasks = [TaskDoc(**t) for t in tasks]
     return tasks
 
 
@@ -46,3 +50,13 @@ def test_make_deprecated_mat(test_tasks):
 
 def test_schema():
     MaterialsDoc.schema()
+
+
+def test_arrow(test_tasks):
+    doc = MaterialsDoc.from_tasks(test_tasks)
+    arrow_struct = pa.scalar(
+        doc.model_dump(context={"format": "arrow"}), type=MaterialsDoc.arrow_type()
+    )
+    test_arrow_doc = MaterialsDoc(**arrow_struct.as_py(maps_as_pydicts="strict"))
+
+    assert doc == test_arrow_doc
