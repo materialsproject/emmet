@@ -11,6 +11,7 @@ from emmet.core.elasticity import (
     generate_derived_fitting_data,
     generate_primary_fitting_data,
 )
+from emmet.core.utils import jsanitize
 
 
 @pytest.fixture(scope="session")
@@ -73,3 +74,22 @@ def test_from_deformations_and_stresses(fitting_data, reference_data):
     )
 
     assert np.allclose(doc.elastic_tensor.raw, ref_elastic_tensor, atol=1e-6)
+
+
+def test_elasticity_arrow_round_trip_serialization(fitting_data):
+    structure, deformations, stresses, equilibrium_stress = fitting_data
+
+    doc = ElasticityDoc.from_deformations_and_stresses(
+        structure=structure,
+        deformations=deformations,
+        stresses=stresses,
+        equilibrium_stress=equilibrium_stress,
+        material_id=1,
+    )
+
+    arrow_struct = doc.model_dump(context={"format": "arrow"})
+    test_arrow_doc = ElasticityDoc.from_arrow(arrow_struct)
+
+    assert jsanitize(doc.model_dump(), allow_bson=True) == jsanitize(
+        test_arrow_doc.model_dump(), allow_bson=True
+    )

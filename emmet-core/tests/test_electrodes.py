@@ -1,9 +1,9 @@
 import pytest
 from monty.serialization import loadfn
+from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 from pymatgen.core import Composition, Element
-from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.entries.computed_entries import ComputedEntry
 
 from emmet.core.electrode import (
@@ -13,6 +13,7 @@ from emmet.core.electrode import (
     InsertionVoltagePairDoc,
     get_battery_formula,
 )
+from emmet.core.utils import jsanitize
 
 
 @pytest.fixture(scope="session")
@@ -126,3 +127,37 @@ def test_get_battery_formula():
     results = [get_battery_formula(*case) for case in test_cases]
 
     assert results == ["Li2-3.5CoO3", "Al1.33-2CoO4", "Li8.5-10.5Co4O9"]
+
+
+def test_insertion_electrode_arrow_round_trip_serialization(insertion_elec):
+    elec, struct, wion_entry = next(iter(insertion_elec.values()))
+    doc = InsertionElectrodeDoc.from_entries(
+        grouped_entries=elec.stable_entries,
+        working_ion_entry=wion_entry,
+        battery_id="mp-1234",
+    )
+    arrow_struct = doc.model_dump(context={"format": "arrow"})
+    test_arrow_doc = InsertionElectrodeDoc.from_arrow(arrow_struct)
+
+    assert jsanitize(doc.model_dump(), allow_bson=True) == jsanitize(
+        test_arrow_doc.model_dump(), allow_bson=True
+    )
+
+
+def test_conversion_electrode_arrow_round_trip_serialization(conversion_elec):
+    k = next(iter(conversion_elec))
+    elec, expected = next(iter(conversion_elec.values()))
+    doc = ConversionElectrodeDoc.from_composition_and_entries(
+        Composition(k),
+        entries=elec["entries"],
+        working_ion_symbol=elec["working_ion"],
+        battery_id="mp-1234",
+        thermo_type="GGA_GGA+U",
+    )
+
+    arrow_struct = doc.model_dump(context={"format": "arrow"})
+    test_arrow_doc = ConversionElectrodeDoc.from_arrow(arrow_struct)
+
+    assert jsanitize(doc.model_dump(), allow_bson=True) == jsanitize(
+        test_arrow_doc.model_dump(), allow_bson=True
+    )

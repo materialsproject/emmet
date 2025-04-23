@@ -49,6 +49,7 @@ setup(
             "pyarrow",
         ],
         "ml": ["matcalc>=0.3.1"],
+        "optimade": ["optimade"],
         "test": [
             "pre-commit",
             "pytest",
