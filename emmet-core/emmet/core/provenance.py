@@ -46,7 +46,7 @@ class History(BaseModel):
 
     name: str
     url: str
-    description: dict | None = Field(
+    description: dict[str, str] | None = Field(
         None, description="Dictionary of extra data for this history node."
     )
 
@@ -65,21 +65,23 @@ class SNLAbout(BaseModel):
         "", description="Bibtex reference strings for this material."
     )
 
-    authors: list[Author] = Field([], description="list of authors for this material.")
-
-    remarks: list[str] = Field(
-        [], description="List of remarks for the provenance of this material."
+    authors: list[Author] | None = Field(
+        None, description="list of authors for this material."
     )
 
-    tags: list[str] = Field([])
-
-    database_IDs: dict[Database, list[str]] = Field(
-        dict(), description="Database IDs corresponding to this material."
+    remarks: list[str] | None = Field(
+        None, description="list of remarks for the provenance of this material."
     )
 
-    history: list[History] = Field(
-        [],
-        description="List of history nodes specifying the transformations or orignation"
+    tags: list[str] | None = Field(None)
+
+    database_IDs: dict[Database, list[str]] | None = Field(
+        None, description="Database IDs corresponding to this material."
+    )
+
+    history: list[History] | None = Field(
+        None,
+        description="list of history nodes specifying the transformations or orignation"
         " of this material for the entry closest matching the material input.",
     )
 
@@ -113,29 +115,31 @@ class ProvenanceDoc(PropertyDoc):
         description="creation date for the first structure corresponding to this material",
     )
 
-    references: list[str] = Field(
-        [], description="Bibtex reference strings for this material"
+    references: list[str] | None = Field(
+        None, description="Bibtex reference strings for this material"
     )
 
-    authors: list[Author] = Field([], description="list of authors for this material")
-
-    remarks: list[str] = Field(
-        [], description="List of remarks for the provenance of this material"
+    authors: list[Author] | None = Field(
+        None, description="list of authors for this material"
     )
 
-    tags: list[str] = Field([])
+    remarks: list[str] | None = Field(
+        None, description="list of remarks for the provenance of this material"
+    )
+
+    tags: list[str] | None = Field(None)
 
     theoretical: bool = Field(
         True, description="If this material has any experimental provenance or not"
     )
 
-    database_IDs: dict[Database, list[str]] = Field(
-        dict(), description="Database IDs corresponding to this material"
+    database_IDs: dict[Database, list[str]] | None = Field(
+        None, description="Database IDs corresponding to this material"
     )
 
-    history: list[History] = Field(
-        [],
-        description="List of history nodes specifying the transformations or orignation"
+    history: list[History] | None = Field(
+        None,
+        description="list of history nodes specifying the transformations or orignation"
         " of this material for the entry closest matching the material input",
     )
 

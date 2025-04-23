@@ -11,11 +11,13 @@ from pymatgen.core.periodic_table import Element
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.core.feff.task import TaskDocument
+from emmet.core.mpid import MPID
+from emmet.core.serialization_adapters.xas_adapter import AnnotatedXAS
 from emmet.core.spectrum import SpectrumDoc
 from emmet.core.utils import ValueEnum
 
 if TYPE_CHECKING:
-    from emmet.core.mpid import AlphaID, MPID
+    from emmet.core.mpid import MPID, AlphaID
 
 
 class Edge(ValueEnum):
@@ -54,7 +56,7 @@ class XASDoc(SpectrumDoc):
 
     spectrum_name: str = "XAS"
 
-    spectrum: XAS | dict | None = Field(
+    spectrum: AnnotatedXAS | None = Field(
         None, description="The XAS spectrum for this calculation."
     )
 
@@ -72,10 +74,9 @@ class XASDoc(SpectrumDoc):
 
     @field_validator("spectrum", mode="before")
     @classmethod
-    def check_spectrum_non_positive_values(cls, v, eps=1.0e-12) -> XAS:
+    def check_spectrum_non_positive_values(cls, v, eps=1.0e-12) -> dict:
         if isinstance(v, dict):
             v["y"] = [y if y > 0.0 else abs(eps) for y in v["y"]]
-            v = XAS.from_dict(v)
         return v
 
     @classmethod

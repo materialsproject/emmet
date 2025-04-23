@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -73,13 +72,11 @@ class PropertyDoc(MoleculeMetadata):
         default_factory=utcnow,
     )
 
-    origins: Sequence[MolPropertyOrigin] = Field(
+    origins: list[MolPropertyOrigin] = Field(
         [], description="Dictionary for tracking the provenance of properties"
     )
 
-    warnings: Sequence[str] = Field(
-        [], description="Any warnings related to this property"
-    )
+    warnings: list[str] = Field([], description="Any warnings related to this property")
 
     @classmethod
     def from_molecule(  # type: ignore[override]
