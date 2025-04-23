@@ -149,6 +149,7 @@ def sbatch(func):
         else:
             slurm_kwargs = {
                 "qos": "xfer",
+                "C": "cron",
                 "time": "48:00:00",
                 "licenses": "SCRATCH",
                 "mem": "48GB",

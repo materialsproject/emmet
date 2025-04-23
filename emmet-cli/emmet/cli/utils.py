@@ -497,10 +497,14 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                             include=set(TaskDoc.model_fields),
                             exclude={
                                 "additional_json",
+                                "author",
                                 "builder_meta",
                                 "custodian",
                                 "entry",
+                                "included_objects",
                                 "run_stats",
+                                "state",
+                                "task_label",
                             },
                         )
                     )
@@ -530,9 +534,14 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                                     include=set(TaskDoc.model_fields),
                                     exclude={
                                         "additional_json",
+                                        "author",
                                         "builder_meta",
                                         "custodian",
                                         "entry",
+                                        "included_objects",
+                                        "run_stats",
+                                        "state",
+                                        "task_label",
                                     },
                                 )
                             )

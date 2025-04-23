@@ -1,0 +1,4 @@
+ sed -n '/BLOCKS/,/===/{//!p;}' emmet-laucher-report-20231110-202650.txt | \
+ awk '{ print $1, $2 }' | \
+ xargs -l sh -c \
+ 'emmet --run --sbatch --issue 1150 tasks -d $(dirname $1) -p $(basename $1) -m $0 backup --check --clean --exhaustive --tar'

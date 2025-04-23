@@ -3,7 +3,7 @@
 UTC() { date -u "+%Y%m%d-%H%M%S"; }
 
 block_search () {
-  find "$1" -type f -name "vasprun.xml*" > "$2"
+  find "$1" -type f -name "INCAR*" > "$2"
 
   awk -F/ '{
     for (i = 1; i < NF; i++) {
