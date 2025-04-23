@@ -1,6 +1,7 @@
+import pyarrow as pa
 import pytest
-from monty.serialization import MontyDecoder
-from monty.serialization import loadfn
+from monty.serialization import MontyDecoder, loadfn
+
 from emmet.core.thermo import ThermoDoc
 
 
@@ -138,3 +139,14 @@ def test_from_entries(entries):
     unstable_doc = next(d for d in docs if d.material_id == "mp-5")
     assert unstable_doc.is_stable is False
     assert all([d.is_stable for d in docs if d != unstable_doc])
+
+
+def test_arrow(entries):
+    doc = ThermoDoc.from_entries(entries, thermo_type="UNKNOWN", deprecated=False)[0]
+
+    arrow_struct = pa.scalar(
+        doc.model_dump(context={"format": "arrow"}), type=ThermoDoc.arrow_type()
+    )
+    test_arrow_doc = ThermoDoc(**arrow_struct.as_py(maps_as_pydicts="strict"))
+
+    assert doc == test_arrow_doc

@@ -1,6 +1,7 @@
 import pytest
-
 from tests.conftest import assert_schemas_equal, get_test_object
+
+from emmet.core.tasks import TaskDoc
 
 
 @pytest.mark.parametrize(
@@ -110,17 +111,16 @@ def test_output_summary(test_dir, object_name, task_name):
     ],
 )
 def test_task_doc(test_dir, object_name, tmpdir):
+    import os
+    import shutil
+
     from monty.json import jsanitize
     from monty.serialization import dumpfn
-    import os
     from pymatgen.alchemy.materials import TransformedStructure
     from pymatgen.entries.computed_entries import ComputedEntry
     from pymatgen.transformations.standard_transformations import (
         DeformStructureTransformation,
     )
-    import shutil
-
-    from emmet.core.tasks import TaskDoc
 
     test_object = get_test_object(object_name)
     dir_name = test_dir / "vasp" / test_object.folder
@@ -204,8 +204,6 @@ def test_task_doc(test_dir, object_name, tmpdir):
 def test_lda_and_pseudo_format(test_dir, tmpdir):
     from zipfile import ZipFile
 
-    from emmet.core.tasks import TaskDoc
-
     with ZipFile(test_dir / "vasp" / "lda_calc.zip", "r") as zipped:
         top_level = zipped.namelist()[0]
         zipped.extractall(path=tmpdir)
@@ -227,3 +225,31 @@ def test_lda_and_pseudo_format(test_dir, tmpdir):
         getattr(task.input.pseudo_potentials, k) == v
         for k, v in expected_pseudo.items()
     )
+
+
+@pytest.mark.parametrize(
+    "object_name",
+    [
+        pytest.param("SiOptimizeDouble", id="SiOptimizeDouble"),
+        pytest.param("SiStatic", id="SiStatic"),
+        pytest.param("SiNonSCFUniform", id="SiNonSCFUniform"),
+    ],
+)
+def test_arrow(test_dir, object_name, tmpdir):
+    import pyarrow as pa
+
+    test_object = get_test_object(object_name)
+    dir_name = test_dir / "vasp" / test_object.folder
+
+    doc = TaskDoc.from_directory(dir_name)
+    arrow_struct = pa.scalar(
+        doc.model_dump(context={"format": "arrow"}), type=TaskDoc.arrow_type()
+    )
+
+    # Avoiding comparisons of round tripped arrow doc vs. original doc
+    # due to a few field types that get changed during json serialization
+    # e.g., orig_inputs/input.kpoints.tet_weight is a float, but if the
+    # val is 0 json dumps to int -> 0, 0 != 0.0 when comparing doc models
+    # TBD on the value of getting this strict comparison correct
+
+    assert TaskDoc(**arrow_struct.as_py(maps_as_pydicts="strict"))

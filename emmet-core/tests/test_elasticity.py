@@ -1,6 +1,7 @@
 from typing import List
 
 import numpy as np
+import pyarrow as pa
 import pytest
 from monty.serialization import loadfn
 from pymatgen.analysis.elasticity import Deformation, Strain, Stress
@@ -73,3 +74,22 @@ def test_from_deformations_and_stresses(fitting_data, reference_data):
     )
 
     assert np.allclose(doc.elastic_tensor.raw, ref_elastic_tensor, atol=1e-6)
+
+
+def test_arrow(fitting_data):
+    structure, deformations, stresses, equilibrium_stress = fitting_data
+
+    doc = ElasticityDoc.from_deformations_and_stresses(
+        structure=structure,
+        deformations=deformations,
+        stresses=stresses,
+        equilibrium_stress=equilibrium_stress,
+        material_id=1,
+    )
+
+    arrow_struct = pa.scalar(
+        doc.model_dump(context={"format": "arrow"}), type=ElasticityDoc.arrow_type()
+    )
+    test_arrow_doc = ElasticityDoc(**arrow_struct.as_py(maps_as_pydicts="strict"))
+
+    assert doc == test_arrow_doc

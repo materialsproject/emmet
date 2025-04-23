@@ -5,6 +5,8 @@ These will be ingested via Drones, built by Builders, and served via the API.
 
 from importlib.metadata import PackageNotFoundError, version
 
+core_path = __path__[0]
+
 try:
     __version__ = version("emmet-core")
 except PackageNotFoundError:  # pragma: no cover
