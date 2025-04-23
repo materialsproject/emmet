@@ -1,17 +1,38 @@
+import numpy as np
+import pyarrow as pa
 import pytest
-from pymatgen.core import Structure
 from monty.serialization import loadfn
+from pymatgen.core import Structure
+
 from emmet.core.absorption import AbsorptionDoc
 from emmet.core.utils import jsanitize
-import numpy as np
 
 
-@pytest.fixture(scope="session")
-def absorption_test_data(test_dir):
-    return loadfn(test_dir / "sample_absorptions.json")
+@pytest.fixture(scope="module")
+def absorption_test_doc(test_dir):
+    data = loadfn(test_dir / "sample_absorptions.json")
+    structure = Structure.from_dict(jsanitize(data["input"]["structure"]))
+    task_id = data["task_id"]
+    kpoints = data["orig_inputs"]["kpoints"]
+
+    doc = AbsorptionDoc.from_structure(
+        structure=structure,
+        material_id="mp-{}".format(task_id),
+        task_id=task_id,
+        deprecated=False,
+        energies=data["output"]["dielectric"]["energy"],
+        real_d=data["output"]["dielectric"]["real"],
+        imag_d=data["output"]["dielectric"]["imag"],
+        absorption_co=data["output"]["optical_absorption_coeff"],
+        bandgap=data["output"]["bandgap"],
+        nkpoints=kpoints.num_kpts,
+        is_hubbard=False,
+    )
+
+    return doc
 
 
-def test_absorption_doc(absorption_test_data):
+def test_absorption_doc(absorption_test_doc):
     absorption_coeff = np.array(
         [
             0,
@@ -42,29 +63,21 @@ def test_absorption_doc(absorption_test_data):
         0.2778,
     ]
 
-    data = absorption_test_data
-    structure = Structure.from_dict(jsanitize(data["input"]["structure"]))
-    task_id = data["task_id"]
-    kpoints = data["orig_inputs"]["kpoints"]
+    assert absorption_test_doc is not None
+    assert absorption_test_doc.property_name == "Optical absorption spectrum"
+    assert absorption_test_doc.energies[0:10] == energies
+    assert absorption_test_doc.material_id == "mp-1316"
+    assert absorption_test_doc.absorption_coefficient[0:10] == list(absorption_coeff)
+    assert absorption_test_doc.average_imaginary_dielectric[0:3] == imag_dielectric
+    assert absorption_test_doc.bandgap == 4.4652
 
-    doc = AbsorptionDoc.from_structure(
-        structure=structure,
-        material_id="mp-{}".format(task_id),
-        task_id=task_id,
-        deprecated=False,
-        energies=data["output"]["dielectric"]["energy"],
-        real_d=data["output"]["dielectric"]["real"],
-        imag_d=data["output"]["dielectric"]["imag"],
-        absorption_co=data["output"]["optical_absorption_coeff"],
-        bandgap=data["output"]["bandgap"],
-        nkpoints=kpoints.num_kpts,
-        is_hubbard=False,
+
+def test_arrow(absorption_test_doc):
+    arrow_struct = pa.scalar(
+        absorption_test_doc.model_dump(context={"format": "arrow"}),
+        type=AbsorptionDoc.arrow_type(),
     )
 
-    assert doc is not None
-    assert doc.property_name == "Optical absorption spectrum"
-    assert doc.energies[0:10] == energies
-    assert doc.material_id == "mp-1316"
-    assert doc.absorption_coefficient[0:10] == list(absorption_coeff)
-    assert doc.average_imaginary_dielectric[0:3] == imag_dielectric
-    assert doc.bandgap == 4.4652
+    test_arrow_doc = AbsorptionDoc(**arrow_struct.as_py(maps_as_pydicts="strict"))
+
+    assert absorption_test_doc == test_arrow_doc
