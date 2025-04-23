@@ -20,7 +20,10 @@ from emmet.core.vasp.task_valid import TaskState
 if TYPE_CHECKING:
     from typing import Any
 
+from emmet.core.utils import arrow_incompatible, type_override
 
+
+@arrow_incompatible
 class CalculationInput(BaseModel):  # type: ignore[call-arg]
     """OpenMM input settings for a job, these are the attributes of the OpenMMMaker."""
 
@@ -198,6 +201,7 @@ class CalculationOutput(BaseModel):
         )
 
 
+@arrow_incompatible
 class Calculation(BaseModel):
     """All input and output data for an OpenMM calculation."""
 

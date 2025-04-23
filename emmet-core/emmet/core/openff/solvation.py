@@ -9,6 +9,8 @@ from typing_extensions import Annotated
 if TYPE_CHECKING:
     from typing import Any
 
+from emmet.core.utils import arrow_incompatible
+
 
 def data_frame_validater(o: Any) -> pd.DataFrame:
     if isinstance(o, pd.DataFrame):
@@ -31,6 +33,7 @@ DataFrame = Annotated[
 
 
 # class SolvationDoc(ClassicalMDDoc, arbitrary_types_allowed=True):
+@arrow_incompatible
 class SolvationDoc(BaseModel, arbitrary_types_allowed=True):
     solute_name: str | None = Field(None, description="Name of the solute")
 

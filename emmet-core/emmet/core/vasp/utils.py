@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from collections import defaultdict
-import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, model_validator
 
-from emmet.core.utils import get_hash_blocked
+from emmet.core.utils import arrow_incompatible, get_hash_blocked
 
 if TYPE_CHECKING:
     from typing import Any
@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 TASK_NAMES = {"precondition"}.union([f"relax{i+1}" for i in range(9)])
 
 
+@arrow_incompatible
 class FileMetadata(BaseModel):
     """
     Lightweight model to enable validation on files via MD5.
