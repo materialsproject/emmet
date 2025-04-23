@@ -9,7 +9,7 @@ import inspect
 from enum import Enum
 from itertools import groupby
 from math import gcd
-from typing import Any, Dict, Iterator, List, Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Union
 
 import numpy as np
 from monty.io import zopen
@@ -41,6 +41,7 @@ except ImportError:
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
+
     from emmet.core.typing import PathLike
 
 
@@ -89,7 +90,7 @@ def set_msonable_type_adapter(cls):
     class ClsTypeAdapter(RootModel):
         root: TypedClsDict
 
-    cls.__type_adapter__ = ClsTypeAdapter
+    setattr(cls, "__type_adapter__", ClsTypeAdapter)
 
     return cls
 
