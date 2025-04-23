@@ -433,8 +433,8 @@ class TaskDoc(StructureMetadata, extra="allow"):
         description="Some analysis of calculation data after collection.",
     )
 
-    last_updated: Optional[datetime] = Field(
-        utcnow(),
+    last_updated: datetime = Field(
+        default_factory=utcnow,
         description="Timestamp for the most recent calculation for this task document",
     )
 
