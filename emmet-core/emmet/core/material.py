@@ -11,6 +11,7 @@ from pymatgen.core.structure import Molecule
 
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID, MPculeID
+from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
 from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
@@ -51,7 +52,7 @@ class MaterialsDoc(StructureMetadata):
         "This comes in the form: mp-******.",
     )
 
-    structure: Structure = Field(
+    structure: Optional[AnnotatedStructure] = Field(
         ...,
         description="The structure of the this material.",
     )
@@ -66,7 +67,8 @@ class MaterialsDoc(StructureMetadata):
         description="List of deprecation tags detailing why this materials document isn't valid.",
     )
 
-    initial_structures: List[Structure] = Field(
+    # initial_structures: List[Structure] = Field(
+    initial_structures: List[AnnotatedStructure | None] = Field(
         [],
         description="Initial structures used in the DFT optimizations corresponding to this material.",
     )

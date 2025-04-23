@@ -1,20 +1,21 @@
 """Current MP tools to validate VASP calculations."""
+
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
-from pydantic import ConfigDict, Field, ImportString
+from pydantic import BaseModel, ConfigDict, Field, ImportString
 from pymatgen.core.structure import Structure
 from pymatgen.io.vasp.inputs import Kpoints
 from pymatgen.io.vasp.sets import VaspInputSet
 
-from emmet.core.settings import EmmetSettings
 from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
-from emmet.core.utils import DocEnum
+from emmet.core.settings import EmmetSettings
 from emmet.core.tasks import TaskDoc
+from emmet.core.utils import DocEnum, utcnow
 from emmet.core.vasp.calc_types.enums import CalcType, TaskType
 from emmet.core.vasp.task_valid import TaskDocument
 
@@ -46,6 +47,13 @@ class DeprecationMessage(DocEnum):
     UNKNOWN = "U001", "Cannot validate due to unknown calc type"
 
 
+class ValidationDataDict(BaseModel):
+    encut_ratio: float | None = Field(None)
+    max_gradient: Optional[float] = Field(None)
+    kspacing_delta: float | None = Field(None)
+    kpts_ratio: float | None = Field(None)
+
+
 class ValidationDoc(EmmetBaseModel):
     """
     Validation document for a VASP calculation
@@ -55,7 +63,7 @@ class ValidationDoc(EmmetBaseModel):
     valid: bool = Field(False, description="Whether this task is valid or not")
     last_updated: datetime = Field(
         description="Last updated date for this document",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
     reasons: list[DeprecationMessage | str] | None = Field(
         None, description="List of deprecation tags detailing why this task isn't valid"
@@ -63,9 +71,10 @@ class ValidationDoc(EmmetBaseModel):
     warnings: list[str] = Field(
         [], description="List of potential warnings about this calculation"
     )
-    data: dict = Field(
+    data: ValidationDataDict | None = Field(
+        None,
         description="Dictioary of data used to perform validation."
-        " Useful for post-mortem analysis"
+        " Useful for post-mortem analysis",
     )
     model_config = ConfigDict(extra="allow")
     nelements: int | None = Field(None, description="Number of elements.")
