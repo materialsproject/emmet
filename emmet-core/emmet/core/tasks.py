@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-import os
 import re
 from datetime import datetime
 from pathlib import Path
@@ -1126,16 +1125,10 @@ def _find_vasp_files(
     volumetric_files = volumetric_files or _VOLUMETRIC_FILES
     task_names = task_names or ["precondition"] + [f"relax{i}" for i in range(9)]
 
-    def _find_vasp_files_from_dir(
-        dir_name: str | Path,
-    ) -> dict[str, dict[str, Path | list[Path]]]:
-        """Find VASP files within a specific directory and sort them by task type."""
-        calc_dir = Path(dir_name)
-        task_files: dict[str, dict[str, Path | list[Path]]] = {}
-        if len(vasp_files := discover_and_sort_vasp_files(calc_dir)) == 0:
-            return task_files
+    task_files: dict[str, dict[str, Path | list[Path]]] = {}
 
-        for category, files in vasp_files.items():
+    def _update_task_files(tpath) -> None:
+        for category, files in discover_and_sort_vasp_files(tpath).items():
             for f in files:
                 tasks = sorted([t for t in task_names if t in f])
                 task = "standard" if len(tasks) == 0 else tasks[0]
@@ -1146,20 +1139,20 @@ def _find_vasp_files(
                 ) and category not in task_files[task]:
                     task_files[task][category] = []
 
-                abs_f = Path(calc_dir) / f
+                abs_f = Path(base_path) / f
                 if is_list_like:
                     task_files[task][category].append(abs_f)  # type: ignore[union-attr]
                 else:
                     task_files[task][category] = abs_f
-        return task_files
 
-    # Try the specified directory
-    files = _find_vasp_files_from_dir(base_path)
-    if len(files) == 0:
-        # If no files are found, try iterating through depth-1 subdirectories
-        for _p in os.scandir(base_path):
-            if (p := Path(_p)).is_dir() and len(
-                files := _find_vasp_files_from_dir(p)
-            ) > 0:
-                break
-    return files
+    _update_task_files(base_path)
+
+    # TODO: TaskDoc permits matching sub directories if they use one of
+    # `task_names` as a directory name.
+    # Not sure this is behavior we want to keep in the long term,
+    # but is maintained here for backwards compatibility.
+    for task_name in task_names:
+        if (subdir := base_path / task_name).exists():
+            _update_task_files(subdir)
+
+    return task_files

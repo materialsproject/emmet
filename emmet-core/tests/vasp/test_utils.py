@@ -78,6 +78,9 @@ def test_file_discovery():
         vasp_files = recursive_discover_vasp_files(tmp_dir)
         valid_vasp_files = recursive_discover_vasp_files(tmp_dir, only_valid=True)
 
+        assert len(recursive_discover_vasp_files(tmp_dir, max_depth=2)) == 4
+        assert len(recursive_discover_vasp_files(tmp_dir, max_depth=1)) == 1
+
         sorted_files = discover_and_sort_vasp_files(
             tmp_dir / "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001"
         )
