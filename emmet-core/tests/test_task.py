@@ -223,6 +223,7 @@ def test_lda_and_pseudo_format(test_dir, tmpdir):
         "functional": "LDA",
         "symbols": ["Si"],
     }
+
     assert all(
         getattr(task.input.pseudo_potentials, k) == v
         for k, v in expected_pseudo.items()

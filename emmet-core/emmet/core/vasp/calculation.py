@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 import logging
 import os
 from datetime import datetime
@@ -139,9 +140,6 @@ class CalculationInput(CalculationBaseModel):
         None, description="KPOINTS for the calculation"
     )
     nkpoints: Optional[int] = Field(None, description="Total number of k-points")
-    potcar: Optional[List[str]] = Field(
-        None, description="POTCAR symbols in the calculation"
-    )
     potcar_spec: Optional[List[PotcarSpec]] = Field(
         None, description="Title and hash of POTCAR files used in the calculation"
     )
@@ -159,6 +157,18 @@ class CalculationInput(CalculationBaseModel):
         default=False, description="Is this a Hubbard +U calculation"
     )
     hubbards: Optional[dict] = Field(None, description="The hubbard parameters used")
+
+    @cached_property
+    def poscar(self) -> Poscar | None:
+        "Return pymatgen object representing the POSCAR file."
+        if self.structure:
+            return Poscar(self.structure)
+
+    @property
+    def potcar(self) -> list[str] | None:
+        "Return POTCAR symbols in the calculation."
+        if self.potcar_spec:
+            return [spec.titel.split()[1] for spec in self.potcar_spec]
 
     @classmethod
     def from_vasprun(cls, vasprun: Vasprun) -> "CalculationInput":
@@ -193,7 +203,6 @@ class CalculationInput(CalculationBaseModel):
             incar=incar,
             kpoints=kpoints_dict,
             nkpoints=len(kpoints_dict["actual_kpoints"]),
-            potcar=[s.split()[1] for s in vasprun.potcar_symbols],
             potcar_spec=[PotcarSpec(**ps) for ps in vasprun.potcar_spec],
             potcar_type=[s.split()[0] for s in vasprun.potcar_symbols],
             parameters=parameters,

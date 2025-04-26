@@ -45,7 +45,6 @@ class XRDDoc(SpectrumDoc):
     @model_validator(mode="before")
     @classmethod
     def get_target_and_edge(cls, values: Dict):
-        print("Validations")
         # Only do this if neither target not edge is defined
         if "target" not in values and "edge" not in values:
             try:
