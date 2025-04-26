@@ -139,7 +139,7 @@ class AbsorptionBuilder(Builder):
             task_query = self.tasks.query_one(
                 properties=[
                     "orig_inputs.kpoints",
-                    "orig_inputs.poscar.structure",
+                    "orig_inputs.structure",
                     "input.parameters",
                     "input.structure",
                     "output.dielectric.energy",
@@ -153,9 +153,9 @@ class AbsorptionBuilder(Builder):
 
             if task_query["output"]["optical_absorption_coeff"] is not None:
                 try:
-                    structure = task_query["orig_inputs"]["poscar"]["structure"]
-                except KeyError:
                     structure = task_query["input"]["structure"]
+                except KeyError:
+                    structure = task_query["orig_inputs"]["structure"]
 
                 if (
                     task_query["orig_inputs"]["kpoints"]["generation_style"]
