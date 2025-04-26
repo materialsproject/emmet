@@ -47,16 +47,6 @@ _T = TypeVar("_T", bound="TaskDoc")
 _VOLUMETRIC_FILES = ("CHGCAR", "LOCPOT", "AECCAR0", "AECCAR1", "AECCAR2")
 
 
-class Potcar(BaseModel):
-    pot_type: Optional[str] = Field(None, description="Pseudo-potential type, e.g. PAW")
-    functional: Optional[str] = Field(
-        None, description="Functional type use in the calculation."
-    )
-    symbols: Optional[List[str]] = Field(
-        None, description="List of VASP potcar symbols used in the calculation."
-    )
-
-
 class OrigInputs(CalculationInput):
     """Maintained for backward compatibility - deprecated."""
 
@@ -67,6 +57,20 @@ class OrigInputs(CalculationInput):
             "to ensure parity with the inputs field of `TaskDoc`. "
             "Please transition to using `CalculationInput`, which "
             "is fully backwards compatible with `OrigInputs`.",
+            stacklevel=2,
+        )
+
+
+class InputDoc(CalculationInput):
+    """Maintained for backward compatibility - deprecated."""
+
+    def model_post_init(self, __context):
+        super().model_post_init(__context)
+        warnings.warn(
+            "The `InputDoc` class has been marked for deprecation "
+            "to ensure parity with the inputs field of `TaskDoc`. "
+            "Please transition to using `CalculationInput`, which "
+            "is fully backwards compatible with `InputDoc`.",
             stacklevel=2,
         )
 
@@ -147,79 +151,6 @@ class OutputDoc(BaseModel):
             forces=forces,
             stress=stress,
         )
-
-
-class InputDoc(CalculationInput):
-    """Light wrapper around `CalculationInput` with a few extra fields.
-
-    Note that the following fields were formerly top-level fields, but are
-    now attributes of `InputDoc`:
-        pseudo_potentials (Potcar) : summary of the POTCARs used in the calculation
-        xc_override (str) : the exchange-correlation functional used if not
-            the one specified by POTCAR
-        is_lasph (bool) : how the calculation set LASPH (aspherical corrections)
-        magnetic_moments (list of floats) : on-site magnetic moments
-    """
-
-    @field_validator("parameters", mode="after")
-    @classmethod
-    def parameter_keys_should_not_contain_spaces(cls, parameters: Optional[Dict]):
-        # A change in VASP introduced whitespace into some parameters,
-        # for example `<i type="string" name="GGA    ">PE</I>` was observed in
-        # VASP 6.4.3. This will lead to an incorrect return value from RunType.
-        # This validator will ensure that any already-parsed documents are fixed.
-        if parameters:
-            return {k.strip(): v for k, v in parameters.items()}
-
-    @property
-    def is_lasph(self) -> bool | None:
-        "Report if the calculation was run with aspherical corrections."
-        if self.parameters:
-            return self.parameters.get("LASPH", False)
-        return None
-
-    @property
-    def pseudo_potentials(self) -> Potcar | None:
-        "Get summary of the pseudo-potentials used in this calculation."
-        if not self.potcar_type:
-            return None
-
-        if len(potcar_meta := self.potcar_type[0].split("_")) == 2:
-            pot_type, func = potcar_meta
-        elif len(potcar_meta) == 1:
-            pot_type = potcar_meta[0]
-            func = "LDA"
-
-        return Potcar(pot_type=pot_type, functional=func, symbols=self.potcar)
-
-    @property
-    def xc_override(self) -> str | None:
-        "Report the exchange-correlation functional used."
-        xc = self.incar.get("GGA") or self.incar.get("METAGGA")
-        return xc.upper() if xc else xc
-
-    @property
-    def magnetic_moments(self) -> list[float] | None:
-        """Report initial magnetic moments assigned to each atom."""
-        return (self.parameters or {}).get("MAGMOM", None)
-
-    @classmethod
-    def from_vasp_calc_doc(cls, calc_doc: Calculation) -> "InputDoc":
-        """
-        Create calculation input summary from a calculation document.
-
-        Parameters
-        ----------
-        calc_doc
-            A VASP calculation document.
-
-        Returns
-        -------
-        InputDoc
-            A summary of the input structure and parameters.
-        """
-
-        return cls(**calc_doc.input.model_dump())
 
 
 class CustodianDoc(BaseModel):
@@ -362,7 +293,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         description="The exact set of input parameters used to generate the current task document.",
     )
 
-    input: Optional[InputDoc] = Field(
+    input: Optional[CalculationInput] = Field(
         None,
         description="The input structure used to generate the current task document.",
     )
@@ -598,7 +529,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
             tags=tags,
             author=author,
             completed_at=calcs_reversed[0].completed_at,
-            input=InputDoc.from_vasp_calc_doc(calcs_reversed[-1]),
+            input=calcs_reversed[-1].input,
             output=OutputDoc.from_vasp_calc_doc(
                 calcs_reversed[0],
                 vasp_objects.get(VaspObject.TRAJECTORY),  # type: ignore
@@ -673,7 +604,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
             analysis=analysis,
             orig_inputs=orig_inputs,
             completed_at=calcs_reversed[0].completed_at,
-            input=InputDoc.from_vasp_calc_doc(calcs_reversed[-1]),
+            input=calcs_reversed[-1].input,
             output=OutputDoc.from_vasp_calc_doc(calcs_reversed[0]),
             state=_get_state(calcs_reversed, analysis),
             run_stats=None,
