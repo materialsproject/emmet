@@ -4,15 +4,15 @@ from __future__ import annotations
 
 import logging
 import re
-from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Mapping, Optional
+import warnings
 
 import numpy as np
 from monty.json import MontyDecoder
 from monty.serialization import loadfn
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core.structure import Structure
 from pymatgen.core.trajectory import Trajectory
@@ -21,7 +21,6 @@ from pymatgen.io.vasp import Incar, Kpoints, Poscar
 from pymatgen.io.vasp import Potcar as VaspPotcar
 
 from emmet.core.common import convert_datetime
-from emmet.core.math import Vector3D
 from emmet.core.mpid import AlphaID, MPID
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import utcnow
@@ -64,36 +63,17 @@ class Potcar(BaseModel):
 
 
 class OrigInputs(CalculationInput):
-    poscar: Poscar | None = Field(
-        None,
-        description="Pymatgen object representing the POSCAR file.",
-    )
+    """Maintained for backward compatibility - deprecated."""
 
-    potcar: Potcar | VaspPotcar | list[Any] | None = Field(
-        None,
-        description="Pymatgen object representing the POTCAR file.",
-    )
-
-    @field_validator("potcar", mode="before")
-    @classmethod
-    def potcar_ok(cls, v):
-        """Check that the POTCAR meets type requirements."""
-        if isinstance(v, list):
-            return list(v)
-        return v
-
-    @field_validator("potcar", mode="after")
-    @classmethod
-    def parse_potcar(cls, v):
-        """Check that potcar attribute is not a pymatgen POTCAR."""
-        if isinstance(v, VaspPotcar):
-            # The user should not mix potential types, but account for that here
-            # Using multiple potential types will be caught in validation
-            pot_typ = "_".join(set(p.potential_type for p in v))
-            return Potcar(pot_type=pot_typ, functional=v.functional, symbols=v.symbols)
-        return v
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    def model_post_init(self, __context):
+        super().model_post_init(__context)
+        warnings.warn(
+            "The `OrigInputs` class has been marked for deprecation "
+            "to ensure parity with the inputs field of `TaskDoc`. "
+            "Please transition to using `CalculationInput`, which "
+            "is fully backwards compatible with `OrigInputs`.",
+            stacklevel=2,
+        )
 
 
 class OutputDoc(BaseModel):
@@ -177,32 +157,14 @@ class OutputDoc(BaseModel):
 class InputDoc(CalculationInput):
     """Light wrapper around `CalculationInput` with a few extra fields.
 
-    pseudo_potentials (Potcar) : summary of the POTCARs used in the calculation
-    xc_override (str) : the exchange-correlation functional used if not
-        the one specified by POTCAR
-    is_lasph (bool) : how the calculation set LASPH (aspherical corrections)
-    magnetic_moments (list of floats) : on-site magnetic moments
-    ncl_magnetic_moments (list of 3-vector of floats) : on-site, noncollinear magnetic moments
+    Note that the following fields were formerly top-level fields, but are
+    now attributes of `InputDoc`:
+        pseudo_potentials (Potcar) : summary of the POTCARs used in the calculation
+        xc_override (str) : the exchange-correlation functional used if not
+            the one specified by POTCAR
+        is_lasph (bool) : how the calculation set LASPH (aspherical corrections)
+        magnetic_moments (list of floats) : on-site magnetic moments
     """
-
-    pseudo_potentials: Potcar | None = Field(
-        None, description="Summary of the pseudo-potentials used in this calculation"
-    )
-
-    xc_override: str | None = Field(
-        None, description="Exchange-correlation functional used if not the default"
-    )
-    is_lasph: bool | None = Field(
-        None, description="Whether the calculation was run with aspherical corrections"
-    )
-    magnetic_moments: list[float] | None = Field(
-        None, description="Magnetic moments for each atom"
-    )
-
-    ncl_magnetic_moments: list[Vector3D] | None = Field(
-        None,
-        description="The vector-valued magnetic moments from a noncollinear calculation.",
-    )
 
     @field_validator("parameters", mode="after")
     @classmethod
@@ -213,6 +175,38 @@ class InputDoc(CalculationInput):
         # This validator will ensure that any already-parsed documents are fixed.
         if parameters:
             return {k.strip(): v for k, v in parameters.items()}
+
+    @property
+    def is_lasph(self) -> bool | None:
+        "Report if the calculation was run with aspherical corrections."
+        if self.parameters:
+            return self.parameters.get("LASPH", False)
+        return None
+
+    @property
+    def pseudo_potentials(self) -> Potcar | None:
+        "Get summary of the pseudo-potentials used in this calculation."
+        if not self.potcar_type:
+            return None
+
+        if len(potcar_meta := self.potcar_type[0].split("_")) == 2:
+            pot_type, func = potcar_meta
+        elif len(potcar_meta) == 1:
+            pot_type = potcar_meta[0]
+            func = "LDA"
+
+        return Potcar(pot_type=pot_type, functional=func, symbols=self.potcar)
+
+    @property
+    def xc_override(self) -> str | None:
+        "Report the exchange-correlation functional used."
+        xc = self.incar.get("GGA") or self.incar.get("METAGGA")
+        return xc.upper() if xc else xc
+
+    @property
+    def magnetic_moments(self) -> list[float] | None:
+        """Report initial magnetic moments assigned to each atom."""
+        return (self.parameters or {}).get("MAGMOM", None)
 
     @classmethod
     def from_vasp_calc_doc(cls, calc_doc: Calculation) -> "InputDoc":
@@ -229,32 +223,7 @@ class InputDoc(CalculationInput):
         InputDoc
             A summary of the input structure and parameters.
         """
-        xc = calc_doc.input.incar.get("GGA") or calc_doc.input.incar.get("METAGGA")
-        if xc:
-            xc = xc.upper()
-
-        if len(potcar_meta := calc_doc.input.potcar_type[0].split("_")) == 2:
-            pot_type, func = potcar_meta
-        elif len(potcar_meta) == 1:
-            pot_type = potcar_meta[0]
-            func = "LDA"
-
-        pps = Potcar(pot_type=pot_type, functional=func, symbols=calc_doc.input.potcar)
-
-        mag_config = {k: None for k in ("magnetic_moments", "ncl_magnetic_moments")}
-        if (magmom := calc_doc.input.parameters.get("MAGMOM")) is not None:
-            if all(isinstance(mag, float) for mag in magmom):
-                mag_config["magnetic_moments"] = magmom
-            elif all(isinstance(mag, list | tuple) for mag in magmom):
-                mag_config["ncl_magnetic_moments"] = magmom
-
-        return cls(
-            **calc_doc.input.model_dump(),
-            pseudo_potentials=pps,
-            xc_override=xc,
-            is_lasph=calc_doc.input.parameters.get("LASPH", False),
-            **mag_config,
-        )
+        return cls(**calc_doc.input.model_dump())
 
 
 class CustodianDoc(BaseModel):
@@ -390,7 +359,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         "This comes in the form: mp-******.",
     )
 
-    orig_inputs: OrigInputs | None = Field(
+    orig_inputs: Optional[CalculationInput] = Field(
         None,
         description="The exact set of input parameters used to generate the current task document.",
     )
@@ -691,9 +660,9 @@ class TaskDoc(StructureMetadata, extra="allow"):
         )
 
         # assume orig_inputs are those stated in vasprun.xml
-        orig_inputs = OrigInputs(
+        orig_inputs = CalculationInput(
             incar=calc.input.incar,
-            poscar=Poscar(calc.input.structure),
+            structure=calc.input.structure,
             kpoints=calc.input.kpoints,
             potcar=calc.input.potcar,
         )
@@ -772,7 +741,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
 
     @staticmethod
     def _get_calc_type(
-        calcs_reversed: list[Calculation | dict], orig_inputs: OrigInputs | dict
+        calcs_reversed: list[Calculation], orig_inputs: CalculationInput
     ) -> CalcType:
         """Get the calc type from calcs_reversed.
 
@@ -1005,8 +974,8 @@ def _parse_orig_inputs(
             if f"{name}{suffix}" in str(filename):
                 if name == "POTCAR":
                     # can't serialize POTCAR
-                    orig_inputs[name.lower()] = PotcarSpec.from_potcar(
-                        vasp_input.from_file(filename)  # type: ignore[attr-defined]
+                    orig_inputs[f"{name.lower()}_spec"] = PotcarSpec.from_potcar(
+                        vasp_input.from_file(filename)
                     )
                 else:
                     orig_inputs[name.lower()] = vasp_input.from_file(filename)  # type: ignore[attr-defined]

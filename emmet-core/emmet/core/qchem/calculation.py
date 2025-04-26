@@ -391,7 +391,7 @@ class Calculation(BaseModel):
         )
 
         if store_energy_trajectory:
-            warnings.warn("Still have to figure the energy trajectory")
+            warnings.warn("Still have to figure the energy trajectory", stacklevel=2)
 
         return cls(
             dir_name=str(dir_name),
