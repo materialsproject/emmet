@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator, field_validator
 from pymatgen.command_line.bader_caller import bader_analysis_from_path
 from pymatgen.command_line.chargemol_caller import ChargemolAnalysis
 from pymatgen.core.lattice import Lattice
@@ -28,7 +28,7 @@ from pymatgen.io.vasp import (
     Oszicar,
     Outcar,
     Poscar,
-    Potcar,
+    Potcar as VaspPotcar,
     PotcarSingle,
     Vasprun,
     VolumetricData,
@@ -50,6 +50,16 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
 logger = logging.getLogger(__name__)
+
+
+class Potcar(BaseModel):
+    pot_type: Optional[str] = Field(None, description="Pseudo-potential type, e.g. PAW")
+    functional: Optional[str] = Field(
+        None, description="Functional type use in the calculation."
+    )
+    symbols: Optional[List[str]] = Field(
+        None, description="List of VASP potcar symbols used in the calculation."
+    )
 
 
 class VaspObject(ValueEnum):
@@ -113,7 +123,7 @@ class PotcarSpec(BaseModel):
         )
 
     @classmethod
-    def from_potcar(cls, potcar: Potcar) -> list["PotcarSpec"]:
+    def from_potcar(cls, potcar: VaspPotcar) -> List["PotcarSpec"]:
         """
         Get a list of PotcarSpecs from a Potcar.
 
@@ -131,7 +141,16 @@ class PotcarSpec(BaseModel):
 
 
 class CalculationInput(CalculationBaseModel):
-    """Document defining VASP calculation inputs."""
+    """Document defining VASP calculation inputs.
+
+    Note that the following fields were formerly top-level fields on InputDoc,
+    but are now properties of `CalculationInput`:
+        pseudo_potentials (Potcar) : summary of the POTCARs used in the calculation
+        xc_override (str) : the exchange-correlation functional used if not
+            the one specified by POTCAR
+        is_lasph (bool) : how the calculation set LASPH (aspherical corrections)
+        magnetic_moments (list of floats) : on-site magnetic moments
+    """
 
     incar: dict[str, Any] | None = Field(
         None, description="INCAR parameters for the calculation"
@@ -158,6 +177,16 @@ class CalculationInput(CalculationBaseModel):
     )
     hubbards: dict | None = Field(None, description="The hubbard parameters used")
 
+    @field_validator("parameters", mode="after")
+    @classmethod
+    def parameter_keys_should_not_contain_spaces(cls, parameters: Optional[Dict]):
+        # A change in VASP introduced whitespace into some parameters,
+        # for example `<i type="string" name="GGA    ">PE</I>` was observed in
+        # VASP 6.4.3. This will lead to an incorrect return value from RunType.
+        # This validator will ensure that any already-parsed documents are fixed.
+        if parameters:
+            return {k.strip(): v for k, v in parameters.items()}
+
     @cached_property
     def poscar(self) -> Poscar | None:
         "Return pymatgen object representing the POSCAR file."
@@ -169,6 +198,38 @@ class CalculationInput(CalculationBaseModel):
         "Return POTCAR symbols in the calculation."
         if self.potcar_spec:
             return [spec.titel.split()[1] for spec in self.potcar_spec]
+
+    @property
+    def is_lasph(self) -> bool | None:
+        "Report if the calculation was run with aspherical corrections."
+        if self.parameters:
+            return self.parameters.get("LASPH", False)
+        return None
+
+    @property
+    def pseudo_potentials(self) -> Potcar | None:
+        "Get summary of the pseudo-potentials used in this calculation."
+        if not self.potcar_type:
+            return None
+
+        if len(potcar_meta := self.potcar_type[0].split("_")) == 2:
+            pot_type, func = potcar_meta
+        elif len(potcar_meta) == 1:
+            pot_type = potcar_meta[0]
+            func = "LDA"
+
+        return Potcar(pot_type=pot_type, functional=func, symbols=self.potcar)
+
+    @property
+    def xc_override(self) -> str | None:
+        "Report the exchange-correlation functional used."
+        xc = self.incar.get("GGA") or self.incar.get("METAGGA")
+        return xc.upper() if xc else xc
+
+    @property
+    def magnetic_moments(self) -> list[float] | None:
+        """Report initial magnetic moments assigned to each atom."""
+        return (self.parameters or {}).get("MAGMOM", None)
 
     @classmethod
     def from_vasprun(cls, vasprun: Vasprun) -> "CalculationInput":

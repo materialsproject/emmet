@@ -52,7 +52,6 @@ def test_analysis_summary(test_dir, object_name):
 def test_input_summary(test_dir, object_name, task_name):
     from monty.json import MontyDecoder, jsanitize
 
-    from emmet.core.tasks import InputDoc
     from emmet.core.vasp.calculation import Calculation
 
     test_object = get_test_object(object_name)
@@ -61,7 +60,7 @@ def test_input_summary(test_dir, object_name, task_name):
     files = test_object.task_files[task_name]
     calc_doc, _ = Calculation.from_vasp_files(dir_name, task_name, **files)
 
-    test_doc = InputDoc.from_vasp_calc_doc(calc_doc)
+    test_doc = calc_doc.input
     valid_doc = test_object.task_doc["input"]
     assert_schemas_equal(test_doc, valid_doc)
 
