@@ -227,3 +227,37 @@ def test_lda_and_pseudo_format(test_dir, tmpdir):
         getattr(task.input.pseudo_potentials, k) == v
         for k, v in expected_pseudo.items()
     )
+
+
+def test_orig_inp_parsing(tmp_dir):
+    """Test parsing of VASP input with variable suffix, like `.orig`."""
+
+    from pathlib import Path
+    from pymatgen.core import Structure
+    from pymatgen.io.vasp import Incar, Kpoints
+
+    from emmet.core.tasks import _parse_orig_inputs
+
+    # demo simple cubic Copper structure
+    structure = Structure(
+        [[3 if i != j else 0.0 for j in range(3)] for i in range(3)],
+        ["Cu"],
+        [[0.0, 0.0, 0.0]],
+    )
+
+    incar = Incar.from_dict(
+        {
+            "ALGO": "Normal",
+            "ENCUT": 600,
+        }
+    )
+    kpoints = Kpoints()
+
+    for suffix in (".orig", ".image", ".mangoes"):
+        structure.to(f"POSCAR{suffix}")
+        incar.write_file(f"INCAR{suffix}")
+        kpoints.write_file(f"KPOINTS{suffix}")
+
+        vi = _parse_orig_inputs(Path("."), suffix=suffix)
+        assert all(k in vi for k in ("incar", "kpoints", "poscar"))
+        assert len(vi) == 3
