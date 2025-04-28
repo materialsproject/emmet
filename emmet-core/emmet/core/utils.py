@@ -1,10 +1,15 @@
+"""Define utility functions used across the emmet namespace packages."""
+from __future__ import annotations
+
 import copy
 import datetime
+import hashlib
 from enum import Enum
 from itertools import groupby
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, Iterator, List, Optional, Union, TYPE_CHECKING
 
 import numpy as np
+from monty.io import zopen
 from monty.json import MSONable
 from pydantic import BaseModel
 from pymatgen.analysis.elasticity.strain import Deformation
@@ -29,6 +34,10 @@ try:
     import bson
 except ImportError:
     bson = None  # type: ignore
+
+if TYPE_CHECKING:
+    from emmet.core.typing import PathLike
+
 
 SETTINGS = EmmetSettings()
 
@@ -437,3 +446,27 @@ class IgnoreCaseEnum(ValueEnum):
 def utcnow() -> datetime.datetime:
     """Get UTC time right now."""
     return datetime.datetime.now(datetime.timezone.utc)
+
+
+def get_md5_blocked(file_path: PathLike, chunk_size: int = 1_000_000) -> str:
+    """
+    Get the MD5 hash of a file in byte chunks.
+
+    Parameters
+    -----------
+    file_path : PathLike
+    chunk_size : int = 1,000,000 bytes (default)
+        The byte chunk size to use in iteratively computing the MD5
+
+    Returns
+    -----------
+    The MD5 as a str
+    """
+    md5 = hashlib.md5()
+    with zopen(str(file_path), "rb") as f:
+        while True:
+            data = f.read(chunk_size)
+            if not data:
+                break
+            md5.update(data)
+        return md5.hexdigest()
