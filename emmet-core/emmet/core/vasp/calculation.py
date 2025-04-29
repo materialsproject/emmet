@@ -117,7 +117,7 @@ class PotcarSpec(BaseModel):
             A potcar spec.
         """
         return cls(
-            titel=potcar_single.symbol,
+            titel=potcar_single.TITEL,
             hash=potcar_single.md5_header_hash,
             summary_stats=potcar_single._summary_stats,
         )
@@ -138,6 +138,22 @@ class PotcarSpec(BaseModel):
             A list of potcar specs.
         """
         return [cls.from_potcar_single(p) for p in potcar]
+
+    @classmethod
+    def from_file(cls, file_path: str | Path) -> List["PotcarSpec"]:
+        """
+        Get a list of PotcarSpecs from a Potcar.
+
+        Parameters
+        ----------
+        file_path : str or Path of the POTCAR
+
+        Returns
+        -------
+        list[PotcarSpec]
+            A list of potcar specs.
+        """
+        return cls.from_potcar(VaspPotcar.from_file(file_path))
 
 
 class CalculationInput(CalculationBaseModel):

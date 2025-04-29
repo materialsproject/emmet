@@ -1,23 +1,27 @@
-# mypy: ignore-errors
+"""Define core schemas for VASP calculations."""
+from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 import re
-from collections import OrderedDict
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Tuple, Type, TypeVar, Union
+from typing import (
+    Any,
+    Optional,
+    TYPE_CHECKING,
+)
 import warnings
 
 import numpy as np
 from monty.json import MontyDecoder
 from monty.serialization import loadfn
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, model_validator
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core.structure import Structure
 from pymatgen.core.trajectory import Trajectory
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.io.vasp import Incar, Kpoints, Poscar
-from pymatgen.io.vasp import Potcar as VaspPotcar
 
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
@@ -39,11 +43,15 @@ from emmet.core.vasp.calculation import (
     VaspObject,
 )
 from emmet.core.vasp.task_valid import TaskState
+from emmet.core.vasp.utils import discover_and_sort_vasp_files
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from typing_extensions import Self
 
 monty_decoder = MontyDecoder()
 logger = logging.getLogger(__name__)
 
-_T = TypeVar("_T", bound="TaskDoc")
 _VOLUMETRIC_FILES = ("CHGCAR", "LOCPOT", "AECCAR0", "AECCAR1", "AECCAR2")
 
 
@@ -53,26 +61,16 @@ class OrigInputs(CalculationInput):
     def model_post_init(self, __context):
         super().model_post_init(__context)
         warnings.warn(
-            "The `OrigInputs` class has been marked for deprecation "
-            "to ensure parity with the inputs field of `TaskDoc`. "
-            "Please transition to using `CalculationInput`, which "
-            "is fully backwards compatible with `OrigInputs`.",
+            f"The `{self.__class__.__name__}` class has been marked "
+            "for deprecation to ensure parity of the inputs field "
+            "in `TaskDoc`. Please transition to using `CalculationInput`, "
+            f"which is fully backwards compatible with `{self.__class__.__name__}`.",
             stacklevel=2,
         )
 
 
-class InputDoc(CalculationInput):
+class InputDoc(OrigInputs):
     """Maintained for backward compatibility - deprecated."""
-
-    def model_post_init(self, __context):
-        super().model_post_init(__context)
-        warnings.warn(
-            "The `InputDoc` class has been marked for deprecation "
-            "to ensure parity with the inputs field of `TaskDoc`. "
-            "Please transition to using `CalculationInput`, which "
-            "is fully backwards compatible with `InputDoc`.",
-            stacklevel=2,
-        )
 
 
 class OutputDoc(BaseModel):
@@ -84,10 +82,10 @@ class OutputDoc(BaseModel):
 
     density: Optional[float] = Field(None, description="Density of in units of g/cc.")
     energy: Optional[float] = Field(None, description="Total Energy in units of eV.")
-    forces: Optional[List[List[float]]] = Field(
+    forces: Optional[list[list[float]]] = Field(
         None, description="The force on each atom in units of eV/A."
     )
-    stress: Optional[List[List[float]]] = Field(
+    stress: Optional[list[list[float]]] = Field(
         None, description="The stress on the cell in units of kB."
     )
     energy_per_atom: Optional[float] = Field(
@@ -136,15 +134,15 @@ class OutputDoc(BaseModel):
         if calc_doc.output.ionic_steps:
             forces = calc_doc.output.ionic_steps[-1].forces
             stress = calc_doc.output.ionic_steps[-1].stress
-        elif trajectory:
-            ionic_steps = trajectory.frame_properties
-            forces = ionic_steps[-1]["forces"]
-            stress = ionic_steps[-1]["stress"]
+        elif trajectory and (ionic_steps := trajectory.frame_properties) is not None:
+            forces = ionic_steps[-1].get("forces")
+            stress = ionic_steps[-1].get("stress")
         else:
             raise RuntimeError("Unable to find ionic steps.")
 
         return cls(
             structure=calc_doc.output.structure,
+            density=calc_doc.output.structure.density,
             energy=calc_doc.output.energy,
             energy_per_atom=calc_doc.output.energy_per_atom,
             bandgap=calc_doc.output.bandgap,
@@ -154,7 +152,7 @@ class OutputDoc(BaseModel):
 
 
 class CustodianDoc(BaseModel):
-    corrections: Optional[List[Any]] = Field(
+    corrections: Optional[list[Any]] = Field(
         None,
         title="Custodian Corrections",
         description="List of custodian correction data for calculation.",
@@ -183,13 +181,13 @@ class AnalysisDoc(BaseModel):
         description="Maximum force on any atom at the end of the calculation.",
     )
 
-    warnings: Optional[List[str]] = Field(
+    warnings: Optional[list[str]] = Field(
         None,
         title="Calculation Warnings",
         description="Warnings issued after analysis.",
     )
 
-    errors: Optional[List[str]] = Field(
+    errors: Optional[list[str]] = Field(
         None,
         title="Calculation Errors",
         description="Errors issued after analysis.",
@@ -198,7 +196,7 @@ class AnalysisDoc(BaseModel):
     @classmethod
     def from_vasp_calc_docs(
         cls,
-        calcs_reversed: List[Calculation],
+        calcs_reversed: list[Calculation],
         volume_change_warning_tol: float = 0.2,
     ) -> "AnalysisDoc":
         """
@@ -251,7 +249,7 @@ class AnalysisDoc(BaseModel):
 class TaskDoc(StructureMetadata, extra="allow"):
     """Calculation-level details about VASP calculations that power Materials Project."""
 
-    tags: Union[List[str], None] = Field(
+    tags: list[str] | None = Field(
         [], title="tag", description="Metadata tagged to a given task."
     )
     dir_name: Optional[str] = Field(
@@ -260,7 +258,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
 
     state: Optional[TaskState] = Field(None, description="State of this calculation")
 
-    calcs_reversed: Optional[List[Calculation]] = Field(
+    calcs_reversed: Optional[list[Calculation]] = Field(
         None,
         title="Calcs reversed data",
         description="Detailed data for each VASP calculation contributing to the task document.",
@@ -270,7 +268,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         None, description="Final output structure from the task"
     )
 
-    task_type: Optional[Union[TaskType, CalcType]] = Field(
+    task_type: Optional[TaskType | CalcType] = Field(
         None, description="The type of calculation."
     )
 
@@ -282,7 +280,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         None, description="The functional and task type used in the calculation."
     )
 
-    task_id: Optional[Union[MPID, str]] = Field(
+    task_id: Optional[MPID | str] = Field(
         None,
         description="The (task) ID of this calculation, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
@@ -303,10 +301,10 @@ class TaskDoc(StructureMetadata, extra="allow"):
         description="The exact set of output parameters used to generate the current task document.",
     )
 
-    included_objects: Optional[List[VaspObject]] = Field(
+    included_objects: Optional[list[VaspObject]] = Field(
         None, description="List of VASP objects included with this task document"
     )
-    vasp_objects: Optional[Dict[VaspObject, Any]] = Field(
+    vasp_objects: Optional[dict[VaspObject, Any]] = Field(
         None, description="Vasp objects associated with this task"
     )
     entry: Optional[ComputedEntry] = Field(
@@ -317,7 +315,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
     author: Optional[str] = Field(
         None, description="Author extracted from transformations"
     )
-    icsd_id: Optional[Union[str, int]] = Field(
+    icsd_id: Optional[str | int] = Field(
         None, description="Inorganic Crystal Structure Database id of the structure"
     )
     transformations: Optional[Any] = Field(
@@ -325,11 +323,11 @@ class TaskDoc(StructureMetadata, extra="allow"):
         description="Information on the structural transformations, parsed from a "
         "transformations.json file",
     )
-    additional_json: Optional[Dict[str, Any]] = Field(
+    additional_json: Optional[dict[str, Any]] = Field(
         None, description="Additional json loaded from the calculation directory"
     )
 
-    custodian: Optional[List[CustodianDoc]] = Field(
+    custodian: Optional[list[CustodianDoc]] = Field(
         None,
         title="Calcs reversed data",
         description="Detailed custodian data for each VASP calculation contributing to the task document.",
@@ -368,79 +366,80 @@ class TaskDoc(StructureMetadata, extra="allow"):
 
     # _structure_entry: Optional[ComputedStructureEntry] = PrivateAttr(None)
 
-    def model_post_init(self, __context: Any) -> None:
-        # Always refresh task_type, calc_type, run_type
-        # See, e.g. https://github.com/materialsproject/emmet/issues/960
-        # where run_type's were set incorrectly in older versions of TaskDoc
-
-        # only run if attributes containing input sets are available
-        attrs = ["calcs_reversed", "input", "orig_inputs"]
-        if not any(hasattr(self, attr) and getattr(self, attr) for attr in attrs):
-            return
-
-        # To determine task and run type, we search for input sets in this order
-        # of precedence: calcs_reversed, inputs, orig_inputs
-        inp_set = None
-        inp_sets_to_check = [self.input, self.orig_inputs]
-        if (calcs_reversed := getattr(self, "calcs_reversed", None)) is not None:
-            inp_sets_to_check = [calcs_reversed[0].input] + inp_sets_to_check
-
-        for inp_set in inp_sets_to_check:
-            if inp_set is not None:
-                self.task_type = task_type(inp_set)
-                break
-
-        # calcs_reversed needed below
-        if calcs_reversed is not None:
-            self.run_type = self._get_run_type(calcs_reversed)
-            if inp_set is not None:
-                self.calc_type = self._get_calc_type(calcs_reversed, inp_set)
-
-            # TODO: remove after imposing TaskDoc schema on older tasks in collection
-            if self.structure is None:
-                self.structure = calcs_reversed[0].output.structure
-
-    # Make sure that the datetime field is properly formatted
-    # (Unclear when this is not the case, please leave comment if observed)
-    @field_validator("last_updated", mode="before")
+    @model_validator(mode="before")
     @classmethod
-    def last_updated_dict_ok(cls, v) -> datetime:
-        return convert_datetime(cls, v)
+    def set_model_pre_fields(cls, values: Any) -> Any:
+        """Ensure all important model fields are set and refreshed."""
 
-    @field_validator("batch_id", mode="before")
-    @classmethod
-    def _validate_batch_id(cls, v) -> str:
-        if v is not None:
+        # Make sure that the datetime field is properly formatted
+        # (Unclear when this is not the case, please leave comment if observed)
+        values["last_updated"] = convert_datetime(
+            cls, values.get("last_updated", utcnow())
+        )
+
+        # Ensure batch_id includes only valid characters
+        if (batch_id := values.get("batch_id")) is not None:
             invalid_chars = set(
-                char for char in v if (not char.isalnum()) and (char not in {"-", "_"})
+                char
+                for char in batch_id
+                if (not char.isalnum()) and (char not in {"-", "_"})
             )
             if len(invalid_chars) > 0:
                 raise ValueError(
                     f"Invalid characters in batch_id: {' '.join(invalid_chars)}"
                 )
-        return v
 
-    @model_validator(mode="after")
-    def set_entry(self) -> datetime:
-        if (
-            not self.entry
-            and self.calcs_reversed
-            and getattr(self.calcs_reversed[0].output, "structure", None)
-        ):
-            self.entry = self.get_entry(self.calcs_reversed, self.task_id)
-        return self
+        # Always refresh task_type, calc_type, run_type
+        # if attributes containing input sets are available.
+        # See, e.g. https://github.com/materialsproject/emmet/issues/960
+        # where run_type's were set incorrectly in older versions of TaskDoc
+        attrs = ["calcs_reversed", "input", "orig_inputs"]
+        for icalc, calc in enumerate(values.get("calcs_reversed", [])):
+            if isinstance(calc, dict):
+                values["calcs_reversed"][icalc] = Calculation(**calc)
+
+        calcs_reversed = values.get("calcs_reversed")
+
+        if any(values.get(attr) is not None for attr in attrs):
+            # To determine task and run type, we search for input sets in this order
+            # of precedence: calcs_reversed, inputs, orig_inputs
+            inp_set = None
+            inp_sets_to_check = [values.get("input"), values.get("orig_inputs")]
+            if calcs_reversed:
+                inp_sets_to_check = [calcs_reversed[0].get("input")] + inp_sets_to_check
+
+            for inp_set in inp_sets_to_check:
+                if inp_set is not None:
+                    values["task_type"] = task_type(inp_set)
+                    break
+
+            # calcs_reversed needed below
+            if calcs_reversed:
+                values["run_type"] = cls._get_run_type(calcs_reversed)
+                if inp_set is not None:
+                    values["calc_type"] = cls._get_calc_type(calcs_reversed, inp_set)
+
+        if calcs_reversed:
+            # TODO: remove after imposing TaskDoc schema on older tasks in collection
+            if final_struct := calcs_reversed[0].output.structure:
+                values["structure"] = values.get("structure", final_struct)
+                values["entry"] = values.get(
+                    "entry", cls.get_entry(calcs_reversed, values.get("task_id"))
+                )
+
+        return values
 
     @classmethod
     def from_directory(
-        cls: Type[_T],
-        dir_name: Union[Path, str],
-        volumetric_files: Tuple[str, ...] = _VOLUMETRIC_FILES,
+        cls,
+        dir_name: Path | str,
+        volumetric_files: tuple[str, ...] = _VOLUMETRIC_FILES,
         store_additional_json: bool = True,
-        additional_fields: Optional[Dict[str, Any]] = None,
+        additional_fields: Optional[dict[str, Any]] = None,
         volume_change_warning_tol: float = 0.2,
         task_names: Optional[list[str]] = None,
         **vasp_calculation_kwargs,
-    ) -> _T:
+    ) -> Self:
         """
         Create a task document from a directory containing VASP files.
 
@@ -482,9 +481,9 @@ class TaskDoc(StructureMetadata, extra="allow"):
 
         calcs_reversed = []
         all_vasp_objects = []
-        for task_name, files in task_files.items():
+        for task_name in sorted(task_files):
             calc_doc, vasp_objects = Calculation.from_vasp_files(
-                dir_name, task_name, **files, **vasp_calculation_kwargs
+                dir_name, task_name, **task_files[task_name], **vasp_calculation_kwargs
             )
             calcs_reversed.append(calc_doc)
             all_vasp_objects.append(vasp_objects)
@@ -544,12 +543,12 @@ class TaskDoc(StructureMetadata, extra="allow"):
 
     @classmethod
     def from_vasprun(
-        cls: Type[_T],
-        path: Union[str, Path],
-        additional_fields: Optional[Dict[str, Any]] = None,
+        cls,
+        path: str | Path,
+        additional_fields: Optional[dict[str, Any]] = None,
         volume_change_warning_tol: float = 0.2,
         **vasp_calculation_kwargs,
-    ) -> _T:
+    ) -> Self:
         """
         Create a task document from a vasprun.xml file.
 
@@ -618,7 +617,8 @@ class TaskDoc(StructureMetadata, extra="allow"):
 
     @staticmethod
     def get_entry(
-        calcs_reversed: List[Calculation], task_id: Optional[Union[MPID, str]] = None
+        calcs_reversed: list[Calculation | dict],
+        task_id: Optional[MPID | str] = None,
     ) -> ComputedEntry:
         """
         Get a computed entry from a list of VASP calculation documents.
@@ -635,27 +635,32 @@ class TaskDoc(StructureMetadata, extra="allow"):
         ComputedEntry
             A computed entry.
         """
+        if isinstance(cr := calcs_reversed[0], dict):
+            cr = Calculation(**cr)
+        calc_inp = cr.input
+        calc_out = cr.output
+
         entry_dict = {
             "correction": 0.0,
             "entry_id": task_id,
-            "composition": calcs_reversed[0].output.structure.composition,
-            "energy": calcs_reversed[0].output.energy,
+            "composition": calc_out.structure.composition,
+            "energy": calc_out.energy,
             "parameters": {
                 # Cannot be PotcarSpec document, pymatgen expects a dict
                 # Note that `potcar_spec` is optional
                 "potcar_spec": (
-                    [dict(d) for d in calcs_reversed[0].input.potcar_spec]
-                    if calcs_reversed[0].input.potcar_spec
+                    [dict(d) for d in calc_inp.potcar_spec]
+                    if calc_inp.potcar_spec
                     else []
                 ),
                 # Required to be compatible with MontyEncoder for the ComputedEntry
-                "run_type": str(calcs_reversed[0].run_type),
-                "is_hubbard": calcs_reversed[0].input.is_hubbard,
-                "hubbards": calcs_reversed[0].input.hubbards,
+                "run_type": str(cr.run_type),
+                "is_hubbard": calc_inp.is_hubbard,
+                "hubbards": calc_inp.hubbards,
             },
             "data": {
-                "oxide_type": oxide_type(calcs_reversed[0].output.structure),
-                "aspherical": calcs_reversed[0].input.parameters.get("LASPH", False),
+                "oxide_type": oxide_type(calc_out.structure),
+                "aspherical": calc_inp.parameters.get("LASPH", False),
                 "last_updated": str(utcnow()),
             },
         }
@@ -672,17 +677,20 @@ class TaskDoc(StructureMetadata, extra="allow"):
         CalcType
             The type of calculation.
         """
-        inputs = (
-            calcs_reversed[0].input.model_dump()
-            if len(calcs_reversed) > 0
-            else orig_inputs
-        )
-        params = calcs_reversed[0].input.parameters
-        incar = calcs_reversed[0].input.incar
+        if isinstance(calcs_reversed[0], Calculation):
+            cr_inp = calcs_reversed[0].input
+            params = cr_inp.parameters
+            incar = cr_inp.incar
+        else:
+            cr_inp = calcs_reversed[0].get("input", {})
+            params = cr_inp.get("parameters", {})
+            incar = cr_inp.get("incar", {})
+
+        inputs = cr_inp if len(calcs_reversed) > 0 else orig_inputs
         return calc_type(inputs, {**params, **incar})
 
     @staticmethod
-    def _get_run_type(calcs_reversed: list[Calculation]) -> RunType:
+    def _get_run_type(calcs_reversed: list[Calculation | dict]) -> RunType:
         """Get the run type from calcs_reversed.
 
         Returns
@@ -690,8 +698,13 @@ class TaskDoc(StructureMetadata, extra="allow"):
         RunType
             The type of calculation.
         """
-        params = calcs_reversed[0].input.parameters
-        incar = calcs_reversed[0].input.incar
+        if isinstance(calcs_reversed[0], Calculation):
+            params = calcs_reversed[0].input.parameters
+            incar = calcs_reversed[0].input.incar
+        else:
+            cr_inp = calcs_reversed[0].get("input", {})
+            params = cr_inp.get("parameters", {})
+            incar = cr_inp.get("incar", {})
         return run_type({**params, **incar})
 
     @property
@@ -704,6 +717,11 @@ class TaskDoc(StructureMetadata, extra="allow"):
         ComputedStructureEntry
             The TaskDoc.entry with corresponding TaskDoc.structure added.
         """
+        if not self.structure or not self.entry:
+            raise ValueError(
+                "Need both a `structure` and `entry` to return a `ComputedStructureEntry`."
+            )
+
         return ComputedStructureEntry(
             structure=self.structure,
             energy=self.entry.energy,
@@ -725,7 +743,7 @@ class TrajectoryDoc(BaseModel):
         "This comes in the form: mp-******.",
     )
 
-    trajectories: Optional[List[Trajectory]] = Field(
+    trajectories: Optional[list[Trajectory]] = Field(
         None,
         description="Trajectory data for calculations associated with a task doc.",
     )
@@ -766,7 +784,7 @@ class DeprecationDoc(BaseModel):
     )
 
 
-def get_uri(dir_name: Union[str, Path]) -> str:
+def get_uri(dir_name: str | Path) -> str:
     """
     Return the URI path for a directory.
 
@@ -795,7 +813,7 @@ def get_uri(dir_name: Union[str, Path]) -> str:
 
 def _parse_transformations(
     dir_name: Path,
-) -> Tuple[Dict, Optional[int], Optional[List[str]], Optional[str]]:
+) -> tuple[dict, Optional[int], Optional[list[str]], Optional[str]]:
     """Parse transformations.json file."""
     transformations = {}
     filenames = tuple(dir_name.glob("transformations.json*"))
@@ -823,7 +841,7 @@ def _parse_transformations(
     return transformations, icsd_id, new_tags, new_author
 
 
-def _parse_custodian(dir_name: Path) -> Optional[Dict]:
+def _parse_custodian(dir_name: Path) -> Optional[dict]:
     """
     Parse custodian.json file.
 
@@ -848,7 +866,7 @@ def _parse_custodian(dir_name: Path) -> Optional[Dict]:
 
 def _parse_orig_inputs(
     dir_name: Path,
-) -> Dict[str, Union[Kpoints, Poscar, PotcarSpec, Incar]]:
+) -> dict[str, Kpoints | Poscar | PotcarSpec | Incar]:
     """
     Parse original input files.
 
@@ -862,31 +880,27 @@ def _parse_orig_inputs(
 
     Returns
     -------
-    Dict[str, Union[Kpints, Poscar, PotcarSpec, Incar]]
+    dict[str, Kpoints | Poscar | PotcarSpec | Incar ]
         The original POSCAR, KPOINTS, POTCAR, and INCAR data.
     """
     orig_inputs = {}
-    input_mapping = {
+    input_mapping: dict[str, Kpoints | Poscar | PotcarSpec | Incar] = {
         "INCAR": Incar,
         "KPOINTS": Kpoints,
-        "POTCAR": VaspPotcar,
+        "POTCAR": PotcarSpec,
         "POSCAR": Poscar,
     }
     for filename in dir_name.glob("*.orig*"):
         for name, vasp_input in input_mapping.items():
             if f"{name}.orig" in str(filename):
-                if name == "POTCAR":
-                    # can't serialize POTCAR
-                    orig_inputs[f"{name.lower()}_spec"] = PotcarSpec.from_potcar(
-                        vasp_input.from_file(filename)
-                    )
-                else:
-                    orig_inputs[name.lower()] = vasp_input.from_file(filename)
+                orig_inputs[
+                    f"{name.lower()}{'_spec' if name == 'POTCAR' else ''}"
+                ] = vasp_input.from_file(filename)
 
     return orig_inputs
 
 
-def _parse_additional_json(dir_name: Path) -> Dict[str, Any]:
+def _parse_additional_json(dir_name: Path) -> dict[str, Any]:
     """Parse additional json files in the directory."""
     additional_json = {}
     for filename in dir_name.glob("*.json*"):
@@ -903,7 +917,7 @@ def _parse_additional_json(dir_name: Path) -> Dict[str, Any]:
 def _get_max_force(calc_doc: Calculation) -> Optional[float]:
     """Get max force acting on atoms from a calculation document."""
     if calc_doc.output.ionic_steps:
-        forces: Optional[Union[np.ndarray, List]] = None
+        forces: Optional[np.ndarray | list] = None
         if calc_doc.output.ionic_steps:
             forces = calc_doc.output.ionic_steps[-1].forces
 
@@ -917,7 +931,7 @@ def _get_max_force(calc_doc: Calculation) -> Optional[float]:
     return None
 
 
-def _get_drift_warnings(calc_doc: Calculation) -> List[str]:
+def _get_drift_warnings(calc_doc: Calculation) -> list[str]:
     """Get warnings of whether the drift on atoms is too large."""
     warnings = []
     if calc_doc.input.parameters.get("NSW", 0) > 0:
@@ -933,17 +947,17 @@ def _get_drift_warnings(calc_doc: Calculation) -> List[str]:
     return warnings
 
 
-def _get_state(calcs_reversed: List[Calculation], analysis: AnalysisDoc) -> TaskState:
+def _get_state(calcs_reversed: list[Calculation], analysis: AnalysisDoc) -> TaskState:
     """Get state from calculation documents and relaxation analysis."""
     all_calcs_completed = all(
         c.has_vasp_completed == TaskState.SUCCESS for c in calcs_reversed
     )
-    if len(analysis.errors) == 0 and all_calcs_completed:
+    if analysis.errors and len(analysis.errors) == 0 and all_calcs_completed:
         return TaskState.SUCCESS  # type: ignore
     return TaskState.FAILED  # type: ignore
 
 
-def _get_run_stats(calcs_reversed: List[Calculation]) -> Dict[str, RunStatistics]:
+def _get_run_stats(calcs_reversed: list[Calculation]) -> dict[str, RunStatistics]:
     """Get summary of runtime statistics for each calculation in this task."""
     run_stats = {}
     total = dict(
@@ -970,10 +984,10 @@ def _get_run_stats(calcs_reversed: List[Calculation]) -> Dict[str, RunStatistics
 
 
 def _find_vasp_files(
-    path: Union[str, Path],
-    volumetric_files: Tuple[str, ...] = _VOLUMETRIC_FILES,
-    task_names: Optional[list[str]] = None,
-) -> Dict[str, Any]:
+    path: str | Path,
+    volumetric_files: Sequence[str] | None = None,
+    task_names: Sequence[str] | None = None,
+) -> dict[str, dict[str, Path | list[Path]]]:
     """
     Find VASP files in a directory.
 
@@ -986,12 +1000,15 @@ def _find_vasp_files(
     ----------
     path
         Path to a directory to search.
-    volumetric_files
+    volumetric_files : sequence of str, defaults to _VOLUMETRIC_FILES
         Volumetric files to search for.
+    task_names : sequence of str, defaults to
+        task_names = ["precondition","standard","relax0","relax1",..."relax8"]
+
 
     Returns
     -------
-    dict[str, Any]
+    dict[str,dict[str,Path | list[Path]]]
         The filenames of the calculation outputs for each VASP task, given as a ordered
         dictionary of::
 
@@ -1005,57 +1022,39 @@ def _find_vasp_files(
                 },
                 ...
             }
-
     """
-    task_names = ["precondition"] + [f"relax{i}" for i in range(9)]
-    path = Path(path)
-    task_files = OrderedDict()
+    base_path = Path(path)
+    volumetric_files = volumetric_files or _VOLUMETRIC_FILES
+    task_names = task_names or ["precondition"] + [f"relax{i}" for i in range(9)]
 
-    def _get_task_files(files, suffix=""):
-        vasp_files = {}
-        vol_files = []
-        elph_poscars = []
-        for file in files:
-            file_no_path = file.relative_to(path)
-            if file.match(f"*vasprun.xml{suffix}*"):
-                vasp_files["vasprun_file"] = file_no_path
-            elif file.match(f"*OUTCAR{suffix}*"):
-                vasp_files["outcar_file"] = file_no_path
-            elif file.match(f"*CONTCAR{suffix}*"):
-                vasp_files["contcar_file"] = file_no_path
-            elif any(file.match(f"*{f}{suffix}*") for f in volumetric_files):
-                vol_files.append(file_no_path)
-            elif file.match(f"*POSCAR.T=*{suffix}*"):
-                elph_poscars.append(file_no_path)
-            elif file.match(f"*OSZICAR{suffix}*"):
-                vasp_files["oszicar_file"] = file_no_path
+    task_files: dict[str, dict[str, Path | list[Path]]] = {}
 
-        if len(vol_files) > 0:
-            # add volumetric files if some were found or other vasp files were found
-            vasp_files["volumetric_files"] = vol_files
+    def _update_task_files(tpath) -> None:
+        for category, files in discover_and_sort_vasp_files(tpath).items():
+            for f in files:
+                tasks = sorted([t for t in task_names if t in f])
+                task = "standard" if len(tasks) == 0 else tasks[0]
+                if task not in task_files:
+                    task_files[task] = {}
+                if (
+                    is_list_like := category in ("volumetric_files", "elph_poscars")
+                ) and category not in task_files[task]:
+                    task_files[task][category] = []
 
-        if len(elph_poscars) > 0:
-            # add elph displaced poscars if they were found or other vasp files found
-            vasp_files["elph_poscars"] = elph_poscars
+                abs_f = Path(base_path) / f
+                if is_list_like:
+                    task_files[task][category].append(abs_f)  # type: ignore[union-attr]
+                else:
+                    task_files[task][category] = abs_f
 
-        return vasp_files
+    _update_task_files(base_path)
 
+    # TODO: TaskDoc permits matching sub directories if they use one of
+    # `task_names` as a directory name.
+    # Not sure this is behavior we want to keep in the long term,
+    # but is maintained here for backwards compatibility.
     for task_name in task_names:
-        subfolder_match = list(path.glob(f"{task_name}/*"))
-        suffix_match = list(path.glob(f"*.{task_name}*"))
-        if len(subfolder_match) > 0:
-            # subfolder match
-            task_files[task_name] = _get_task_files(subfolder_match)
-        elif len(suffix_match) > 0:
-            # try extension schema
-            task_files[task_name] = _get_task_files(
-                suffix_match, suffix=f".{task_name}"
-            )
-
-    if len(task_files) == 0:
-        # get any matching file from the root folder
-        standard_files = _get_task_files(list(path.glob("*")))
-        if len(standard_files) > 0:
-            task_files["standard"] = standard_files
+        if (subdir := base_path / task_name).exists():
+            _update_task_files(subdir)
 
     return task_files

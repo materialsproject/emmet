@@ -1,4 +1,4 @@
-from pymatgen.util.testing import PymatgenTest
+from pymatgen.util.testing import STRUCTURES_DIR
 from pymatgen.core import Structure
 
 struct_names = (
@@ -7,7 +7,5 @@ struct_names = (
 )
 
 test_structures = {
-    name.stem: Structure.from_file(name)
-    for name in PymatgenTest.TEST_STRUCTURES.keys()
-    if name.stem in struct_names
+    name: Structure.from_file(STRUCTURES_DIR / f"{name}.json") for name in struct_names
 }
