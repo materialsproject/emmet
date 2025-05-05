@@ -37,7 +37,6 @@ class FileMetadata(BaseModel):
         return v
 
     @computed_field
-    @property
     def md5(self) -> Optional[str]:
         """MD5 checksum of the file (computed lazily if needed)."""
         if self._md5 is not None:
@@ -153,7 +152,7 @@ def discover_vasp_files(
         for p in scan_dir:
             # Check that at least one VASP file matches the file name
             if p.is_file() and any(f for f in _vasp_files if f in p.name):
-                vasp_files.append(FileMetadata(name=p.name, path=p))
+                vasp_files.append(FileMetadata(name=p.name, path=Path(p.path)))
     return vasp_files
 
 
@@ -249,6 +248,6 @@ def recursive_discover_vasp_files(
                     return
                 paths[Path(tdir).resolve()] = tpaths
 
-    vasp_files: dict[Path, list[str]] = {}
+    vasp_files: dict[Path, list[FileMetadata]] = {}
     _recursive_discover_vasp_files(target_dir, vasp_files)
     return vasp_files
