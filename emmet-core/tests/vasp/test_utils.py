@@ -3,6 +3,7 @@
 from tempfile import TemporaryDirectory
 from pathlib import Path
 
+from emmet.core.utils import get_md5_blocked
 from emmet.core.vasp.utils import (
     recursive_discover_vasp_files,
     discover_and_sort_vasp_files,
@@ -24,7 +25,7 @@ IBRION = -1
     with zopen(file_name := "INCAR.bz2", "wb") as f:
         f.write(incar_bytes)
 
-    file_meta = FileMetadata(name="INCAR", path=file_name)
+    file_meta = FileMetadata(name="INCAR.bz2", path=file_name)
     assert Path(file_meta.path).exists()
     assert file_meta.md5 == hashlib.md5(incar_bytes).hexdigest()
 

@@ -56,6 +56,7 @@ class FileMetadata(BaseModel):
             raise ValueError(f"Path does not exist: {self.path}")
         if not self.path.is_file():
             raise ValueError(f"Path is not a file: {self.path}")
+        return True
 
     def reset_md5(self):
         """Force recomputation of MD5 checksum on next call to md5 property."""
