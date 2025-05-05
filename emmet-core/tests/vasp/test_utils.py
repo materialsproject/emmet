@@ -6,7 +6,7 @@ from pathlib import Path
 from emmet.core.vasp.utils import (
     recursive_discover_vasp_files,
     discover_and_sort_vasp_files,
-    FileMeta,
+    FileMetadata,
 )
 
 
@@ -24,7 +24,7 @@ IBRION = -1
     with zopen(file_name := "INCAR.bz2", "wb") as f:
         f.write(incar_bytes)
 
-    file_meta = FileMeta(name="INCAR", path=file_name)
+    file_meta = FileMetadata(name="INCAR", path=file_name)
     assert Path(file_meta.path).exists()
     assert file_meta.md5 == hashlib.md5(incar_bytes).hexdigest()
 
@@ -85,18 +85,24 @@ def test_file_discovery():
             tmp_dir / "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001"
         )
 
-    assert set(sorted_files["contcar_file"]) == {"CONTCAR.relax1"}
-    assert set(sorted_files["vasprun_file"]) == {"vasprun.xml.relax1"}
-    assert set(sorted_files["outcar_file"]) == {"OUTCAR.relax1"}
-    assert set(sorted_files["volumetric_files"]) == {"AECCAR0.bz2", "LOCPOT.gz"}
-    assert set(sorted_files["elph_poscars"]) == {"POSCAR.T=300.gz", "POSCAR.T=1000.gz"}
+    assert set([b.name for b in sorted_files["contcar_file"]]) == {"CONTCAR.relax1"}
+    assert set([b.name for b in sorted_files["vasprun_file"]]) == {"vasprun.xml.relax1"}
+    assert set([b.name for b in sorted_files["outcar_file"]]) == {"OUTCAR.relax1"}
+    assert set([b.name for b in sorted_files["volumetric_files"]]) == {
+        "AECCAR0.bz2",
+        "LOCPOT.gz",
+    }
+    assert set([b.name for b in sorted_files["elph_poscars"]]) == {
+        "POSCAR.T=300.gz",
+        "POSCAR.T=1000.gz",
+    }
 
     assert len(vasp_files) == len(
         directory_structure
     )  # should find all of the defined calculation directories
     for calc_dir, files in directory_structure.items():
         assert (base_path := tmp_dir / calc_dir) in vasp_files
-        assert all(f in vasp_files[base_path] for f in files)
+        assert all(f in [b.name for b in vasp_files[base_path]] for f in files)
 
     # Should only find two valid calculation directories
     valid_calc_dirs = (
@@ -104,7 +110,7 @@ def test_file_discovery():
         "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001",
     )
     assert all(
-        f in valid_vasp_files[tmp_dir / p]
+        f in [b.name for b in valid_vasp_files[tmp_dir / p]]
         for p in valid_calc_dirs
         for f in directory_structure[p]
     )
