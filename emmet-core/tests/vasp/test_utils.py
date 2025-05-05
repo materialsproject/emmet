@@ -3,7 +3,6 @@
 from tempfile import TemporaryDirectory
 from pathlib import Path
 
-from emmet.core.utils import get_md5_blocked
 from emmet.core.vasp.utils import (
     recursive_discover_vasp_files,
     discover_and_sort_vasp_files,
