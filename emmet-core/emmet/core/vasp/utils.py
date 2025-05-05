@@ -46,7 +46,7 @@ class FileMetadata(BaseModel):
         if self.validate_path_exists():
             try:
                 self._md5 = get_md5_blocked(self.path)
-            except Exception as e:
+            except Exception:
                 self._md5 = None
 
         return self._md5
