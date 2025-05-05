@@ -1,5 +1,7 @@
 import logging
+from pathlib import Path
 import click
+from emmet.cli.submission import Submission
 from emmet.cli.utils import EmmetCliError
 
 logger = logging.getLogger("emmet")
@@ -10,14 +12,19 @@ def submit(ctx):
     """Commands for managing an MP data submission."""
     pass
 
+
+# eventually add something here to use a config file instead
+# add an option for pattern matching
 @submit.command()
-@click.argument('paths', nargs=-1, type=click.Path(exists=True))
+@click.argument("paths", nargs=-1, type=click.Path(exists=True))
 @click.pass_context
 def create(ctx, paths):
     """Creates a new MP data submission.
 
-    This only creates metadata about the submission. The submission will 
-    include all the files located in the provided files and directories paths.
+    This only creates metadata about the submission. The submission will
+    include all the files related to calculations recursively discovered
+    in the provided directory paths. The recursive walk will not follow symlinks.
+
     The output will contain the metadata filename path. That path will be
     used for all other actions related to this submission."""
 
@@ -26,13 +33,21 @@ def create(ctx, paths):
             "Must provide at least one file or directory path to include in submission"
         )
 
-    raise EmmetCliError("Have not implemented this yet")
+    submission = Submission.from_paths(paths=paths)
+    logger.debug(f"created submission {submission.id}")
+
+    output_file = f"submission-{submission.id}.json"
+
+    submission.save(Path(output_file))
+    print(f"wrote submission output to {output_file}")
+
     # should we check if any of this data already exists in MP (how?)
     # submission id will be a UUID
 
+
 @submit.command()
-@click.argument('submission', nargs=1, type=click.Path(exists=True, dir_okay=False))
-@click.argument('additional_paths', nargs=-1, type=click.Path(exists=True))
+@click.argument("submission", nargs=1, type=click.Path(exists=True, dir_okay=False))
+@click.argument("additional_paths", nargs=-1, type=click.Path(exists=True))
 @click.pass_context
 def add_to(ctx, submission, additional_paths):
     """Adds more files to the submission.
@@ -44,23 +59,31 @@ def add_to(ctx, submission, additional_paths):
             "Must provide at least one file or directory path to add to the submission"
         )
 
-    raise EmmetCliError("Have not implemented this yet")
+    sub = Submission.load(Path(submission))
+    added = sub.add_to([Path(p) for p in additional_paths])
+    added_str = "\n".join(str(p.path) for p in added)
+    print(f"added following {len(added)} files from submission:\n{added_str}")
+
 
 @submit.command()
-@click.argument('submission', nargs=1, type=click.Path(exists=True, dir_okay=False))
-@click.argument('additional_paths', nargs=-1, type=click.Path(exists=True))
+@click.argument("submission", nargs=1, type=click.Path(exists=True, dir_okay=False))
+@click.argument("files_to_remove", nargs=-1, type=click.Path(exists=True))
 @click.pass_context
-def remove_from(ctx, submission, additional_paths):
+def remove_from(ctx, submission, files_to_remove):
     """Removes files from the submission.
     
     This only updates the metadata about the submission."""
 
-    if not additional_paths:
+    if not files_to_remove:
         raise EmmetCliError(
             "Must provide at least one file or directory path to remove from the submission"
         )
 
-    raise EmmetCliError("Have not implemented this yet")
+    sub = Submission.load(Path(submission))
+    removed = sub.remove_from([Path(p) for p in files_to_remove])
+    removed_str = "\n".join(str(p.path) for p in removed)
+    print(f"removed following {len(removed)} files from submission:\n{removed_str}")
+
 
 @submit.command()
 @click.argument('submission', nargs=1, type=click.Path(exists=True, dir_okay=False))
@@ -87,7 +110,10 @@ def push(ctx, submission):
     If the files for this submission do not pass local validation return with an
     error message.
     """
-    updated_file_info = get_changed_since_last_push(submission)
+
+    sub = Submission.load(Path(submission))
+
+    updated_file_info = sub.stage_for_push()
     logger.debug(f"Changes in files for submission since last update: {updated_file_info}")
     if not updated_file_info:
         raise EmmetCliError(

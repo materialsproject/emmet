@@ -1,3 +1,4 @@
+from io import StringIO
 import logging
 import sys
 import click
@@ -16,6 +17,11 @@ def emmet(ctx, verbose):
     """Command line interface for Emmet"""
 
     logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+
+    handler = logging.StreamHandler(sys.stdout)
+    formatter = logging.Formatter("%(asctime)s %(name)-12s %(levelname)-8s %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
 
 def safe_entry_point():

@@ -15,6 +15,7 @@ setup(
     install_requires=[
         "click",
         "colorama",
+        "emmet-core",
     ],
     license="modified BSD",
     zip_safe=False,
