@@ -1,4 +1,3 @@
-from io import StringIO
 import logging
 import sys
 import click

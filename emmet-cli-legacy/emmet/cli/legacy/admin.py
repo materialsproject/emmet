@@ -4,7 +4,11 @@ import click
 from pymatgen.core import Structure
 
 from emmet.cli.legacy import SETTINGS
-from emmet.cli.legacy.utils import EmmetCliError, ensure_indexes, get_meta_from_structure
+from emmet.cli.legacy.utils import (
+    EmmetCliError,
+    ensure_indexes,
+    get_meta_from_structure,
+)
 
 logger = logging.getLogger("emmet")
 
