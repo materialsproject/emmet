@@ -5,6 +5,7 @@ from emmet.cli.submission import Submission
 from emmet.cli.submit import submit
 import pytest
 
+
 @pytest.fixture(scope="session")
 def tmp_dir(tmp_path_factory):
     directory_structure = {
@@ -18,7 +19,7 @@ def tmp_dir(tmp_path_factory):
             "POSCAR.gz",
             "POTCAR.bz2",
             "vasprun.xml",
-            "GARBAGE"
+            "GARBAGE",
         ],
         "./neb_calc/02/": ["INCAR.gz", "KPOINTS", "POSCAR.gz"],
         "neb_calc": ["INCAR.gz", "KPOINTS", "POSCAR.gz", "POTCAR.lzma"],
@@ -56,14 +57,15 @@ def tmp_dir(tmp_path_factory):
 
     return tmp_dir
 
+
 @pytest.fixture(scope="session")
 def sub_file(tmp_dir, tmp_path_factory):
     runner = CliRunner()
     result = runner.invoke(submit, ["create", str(tmp_dir)])
 
-    matches = [word for word in result.output.split() if 'submission-' in word]
+    matches = [word for word in result.output.split() if "submission-" in word]
     assert len(matches) == 1
-    
+
     sub = Submission.load(Path(matches[0]))
 
     # clean up side-effect of calling create

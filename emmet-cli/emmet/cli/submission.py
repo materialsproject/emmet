@@ -166,7 +166,9 @@ class Submission(BaseModel):
         """ "Stages submission for push. Returns the list of files that will need to be (re)pushed."""
         self.pending_calculations = self.create_refreshed_calculations()
 
-        changes = self.get_changed_files_per_calc_path(self.last_pushed(), self.pending_calculations)
+        changes = self.get_changed_files_per_calc_path(
+            self.last_pushed(), self.pending_calculations
+        )
         self._pending_push = changes
         return [item for sublist in changes.values() for item in sublist]
 
@@ -192,7 +194,9 @@ class Submission(BaseModel):
 
     def push(self):  ## TODO: return type
         """Performs the push. Returns info about the push"""
-        if self.get_changed_files_per_calc_path(self.pending_calculations, self.create_refreshed_calculations()):
+        if self.get_changed_files_per_calc_path(
+            self.pending_calculations, self.create_refreshed_calculations()
+        ):
             raise EmmetCliError(
                 "Files for submission have changed since staging. Please re-stage before pushing."
             )

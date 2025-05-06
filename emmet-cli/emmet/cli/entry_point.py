@@ -32,4 +32,5 @@ def safe_entry_point():
     except Exception as e:
         logger.info(e, exc_info=True)
 
+
 emmet.add_command(submit)

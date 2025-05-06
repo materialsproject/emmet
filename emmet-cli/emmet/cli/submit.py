@@ -6,6 +6,7 @@ from emmet.cli.utils import EmmetCliError
 
 logger = logging.getLogger("emmet")
 
+
 @click.group()
 @click.pass_context
 def submit(ctx):
@@ -51,7 +52,7 @@ def create(ctx, paths):
 @click.pass_context
 def add_to(ctx, submission, additional_paths):
     """Adds more files to the submission.
-    
+
     This only updates the metadata about the submission."""
 
     if not additional_paths:
@@ -71,7 +72,7 @@ def add_to(ctx, submission, additional_paths):
 @click.pass_context
 def remove_from(ctx, submission, files_to_remove):
     """Removes files from the submission.
-    
+
     This only updates the metadata about the submission."""
 
     if not files_to_remove:
@@ -86,25 +87,26 @@ def remove_from(ctx, submission, files_to_remove):
 
 
 @submit.command()
-@click.argument('submission', nargs=1, type=click.Path(exists=True, dir_okay=False))
+@click.argument("submission", nargs=1, type=click.Path(exists=True, dir_okay=False))
 @click.pass_context
 def validate(ctx, submission):
-    """Locally validates the latest version of an MP data submission. 
-    
-    The metadata submission filename path is a required argument. 
-    
+    """Locally validates the latest version of an MP data submission.
+
+    The metadata submission filename path is a required argument.
+
     """
     # perform a local validation (can shortcut if based on metadata)
     raise EmmetCliError("Have not implemented this yet")
 
+
 @submit.command()
-@click.argument('submission', nargs=1, type=click.Path(exists=True, dir_okay=False))
+@click.argument("submission", nargs=1, type=click.Path(exists=True, dir_okay=False))
 @click.pass_context
 def push(ctx, submission):
-    """Pushes the latest version of an MP data submission. 
-    
-    The metadata submission filename path is a required argument. 
-    
+    """Pushes the latest version of an MP data submission.
+
+    The metadata submission filename path is a required argument.
+
     If the files for this submission have not changed since the most recent push
     return with an error message.
     If the files for this submission do not pass local validation return with an
@@ -114,14 +116,18 @@ def push(ctx, submission):
     sub = Submission.load(Path(submission))
 
     updated_file_info = sub.stage_for_push()
-    logger.debug(f"Changes in files for submission since last update: {updated_file_info}")
+    logger.debug(
+        f"Changes in files for submission since last update: {updated_file_info}"
+    )
     if not updated_file_info:
         raise EmmetCliError(
             "Files for submission have not changed since last update. Not pushing."
         )
 
     already_contributed_file_info = get_already_contributed(updated_file_info)
-    logger.debug(f"Files for submission considered to be duplicates: {already_contributed_file_info}")
+    logger.debug(
+        f"Files for submission considered to be duplicates: {already_contributed_file_info}"
+    )
     if already_contributed_file_info:
         raise EmmetCliError(
             f"The following are considered to be duplicates of data already in MP {already_contributed_file_info}"
@@ -135,15 +141,18 @@ def push(ctx, submission):
     logger.info(f"Successfuly update submission in {submission}")
     pass
 
+
 def get_changed_since_last_push(submission):
     # check whether the files for submission have changed since last update
     #    (this can be done by checking hashes against values stored in the metadata about last push)
     # returns a dictionary of file names -> metadata
-    return {"foo" : "changed"}
+    return {"foo": "changed"}
+
 
 def get_already_contributed(updated_file_info):
     # if doing checks for data already in MP check the changed data against MP
     return {}
+
 
 def do_push(path, updated_file_info):
     # push updated submission (push id will be UUID)

@@ -2,6 +2,7 @@ from pathlib import Path
 from emmet.cli.submission import Submission
 import pytest
 
+
 @pytest.fixture(scope="session")
 def tmp_structure(tmp_path_factory):
     directory_structure = {
@@ -27,12 +28,13 @@ def tmp_structure(tmp_path_factory):
         a_file = None
         for f in files:
             (p / f).touch()
-            a_file = (p / f)
+            a_file = p / f
         if calc_dir == "other_calc/00/":
             tmp_structure[calc_dir] = p
         else:
             tmp_structure[calc_dir] = a_file
     return tmp_structure
+
 
 def verify_submission_calculations_against_tmp_dir_data(calculations):
     for path, cm in calculations.items():
@@ -49,6 +51,7 @@ def verify_submission_calculations_against_tmp_dir_data(calculations):
         else:
             assert path is None
 
+
 def test_from_paths(tmp_dir):
     submission = Submission.from_paths(paths=[tmp_dir])
 
@@ -61,6 +64,7 @@ def test_save_and_load(sub_file):
     sub = Submission.load(Path(sub_file))
     verify_submission_calculations_against_tmp_dir_data(sub.calculations)
 
+
 def test_add_to(sub_file, tmp_structure):
     sub = Submission.load(Path(sub_file))
 
@@ -71,9 +75,9 @@ def test_add_to(sub_file, tmp_structure):
             to_add_path.append(p)
         elif "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001" in str(p):
             to_add_path.append(cm.files[0].path)
-    
+
     assert len(to_add_path) == 2
-    
+
     added = sub.add_to(to_add_path)
     assert len(added) == 0
 
@@ -83,13 +87,14 @@ def test_add_to(sub_file, tmp_structure):
     assert len(added) == 4
     assert len(sub.calculations.keys()) == 7
 
+
 def test_remove_from(sub_file, tmp_structure):
     sub = Submission.load(Path(sub_file))
 
     # test removing paths and files not present
     removed = sub.remove_from(tmp_structure.values())
     assert len(removed) == 0
-    
+
     # test removing present paths and files too
     to_remove_path = []
     for p, cm in sub.calculations.items():
@@ -97,17 +102,22 @@ def test_remove_from(sub_file, tmp_structure):
             to_remove_path.append(p)
         elif "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001" in str(p):
             to_remove_path.append(cm.files[0].path)
-    
+
     assert len(to_remove_path) == 2
-    
+
     removed = sub.remove_from(to_remove_path + list(tmp_structure.values()))
     assert len(removed) == 9
 
+
 def test_changed_files(sub_file):
     sub = Submission.load(Path(sub_file))
-    changed = sub.get_changed_files_per_calc_path(sub.calculations, sub.create_refreshed_calculations())
+    changed = sub.get_changed_files_per_calc_path(
+        sub.calculations, sub.create_refreshed_calculations()
+    )
     assert len(changed) == 0
-    changed = sub.get_changed_files_per_calc_path(sub.last_pushed(), sub.create_refreshed_calculations())
+    changed = sub.get_changed_files_per_calc_path(
+        sub.last_pushed(), sub.create_refreshed_calculations()
+    )
     assert len(changed) == 5
 
 
@@ -125,4 +135,3 @@ def test_changed_files_to_push(sub_file):
     # changed = sub.stage_for_push()
     # assert len(changed) == 0
     # verify_submission_calculations_against_tmp_dir_data(sub.pending_calculations)
-
