@@ -24,10 +24,34 @@ class CalculationMetadata(BaseModel):
         description="List of file metadata for the the files for this calculation."
     )
 
-    def refresh(self):
+    valid: Optional[bool] = Field(
+        description="Whether calculation is valid. If None then has not been checked yet.",
+        default=None,
+    )
+
+    validation_errors: Optional[List[str]] = Field(
+        description="Validation errors for this calculation", default_factory=list
+    )
+
+    def validate(self) -> bool:
+        """Validate the calculation. Returns whether it's valid."""
+        self.refresh()
+        if self.valid is None:
+            # TODO: change to do actual validation rather than just passing
+            self.valid = True
+        return self.valid
+
+    def refresh(self) -> None:
+        """Refreshes the information for the calculation (recalculates MD5s and clears validation if any changes)"""
+        changed_files = False
         for f in self.files:
+            cached_md5 = f._md5
             f.reset_md5()
-            f.md5
+            if cached_md5 != f.md5:
+                changed_files = True
+        if changed_files:
+            self.valid = None
+            self.validation_errors.clear()
 
 
 class Submission(BaseModel):
@@ -101,7 +125,7 @@ class Submission(BaseModel):
         calcs_to_add = find_all_calculations(paths)
         self._merge_calculations(calcs_to_add)
 
-        # TODO: add clear pending
+        self._clear_pending()
 
         return set([item for cm in calcs_to_add.values() for item in cm.files]) - set(
             [item for cm in orig_calcs.values() for item in cm.files]
@@ -152,11 +176,24 @@ class Submission(BaseModel):
             ]
             self.calculations[path].files = remaining_files
 
-        # TODO: add clear pending
+        self._clear_pending()
 
         return removed_files
 
-    def create_refreshed_calculations(self):
+    def validate(self) -> bool:
+        is_valid = True
+        calcs_to_check = (
+            self.pending_calculations
+            if self.pending_calculations
+            else self.calculations
+        )
+
+        for p, cm in calcs_to_check.items():
+            is_valid = cm.validate() and is_valid
+
+        return is_valid
+
+    def _create_refreshed_calculations(self):
         pending_calculations = copy.deepcopy(self.calculations)
         for cm in pending_calculations.values():
             cm.refresh()
@@ -164,12 +201,20 @@ class Submission(BaseModel):
 
     def stage_for_push(self) -> List[FileMetadata]:
         """ "Stages submission for push. Returns the list of files that will need to be (re)pushed."""
-        self.pending_calculations = self.create_refreshed_calculations()
+        self.pending_calculations = self._create_refreshed_calculations()
+
+        if not self.validate():
+            self.calculations = copy.deepcopy(self.pending_calculations)
+            self._clear_pending()
+            raise EmmetCliError(
+                "Submission does not pass validation. Please fix validation errors prior to staging."
+            )
 
         changes = self.get_changed_files_per_calc_path(
             self.last_pushed(), self.pending_calculations
         )
         self._pending_push = changes
+
         return [item for sublist in changes.values() for item in sublist]
 
     def get_changed_files_per_calc_path(self, previous, current):
@@ -194,19 +239,30 @@ class Submission(BaseModel):
 
     def push(self):  ## TODO: return type
         """Performs the push. Returns info about the push"""
+        if not self.pending_calculations:
+            raise EmmetCliError("Nothing is staged. Please stage before pushing.")
+
         if self.get_changed_files_per_calc_path(
-            self.pending_calculations, self.create_refreshed_calculations()
+            self.pending_calculations, self._create_refreshed_calculations()
         ):
             raise EmmetCliError(
                 "Files for submission have changed since staging. Please re-stage before pushing."
             )
 
-        # TODO: validate any pending validation and return error if don't pass
+        if not self.validate():  # THIS SHOULD NEVER HAPPEN
+            self.calculations = copy.deepcopy(self.pending_calculations)
+            self._clear_pending()
+            raise EmmetCliError(
+                "Submission does not pass validation. Please fix validation errors and re-stage."
+            )
 
         # TODO: do push
 
         # do bookkeeping
-        self.last_pushed.append(self.pending_calculations)
+        self.calc_history.append(self.pending_calculations)
+        self._clear_pending()
+
+    def _clear_pending(self):
         self.pending_calculations = None
         self._pending_push = None
 

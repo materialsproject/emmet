@@ -1,5 +1,6 @@
 from pathlib import Path
 from emmet.cli.submission import Submission
+from emmet.cli.utils import EmmetCliError
 import pytest
 
 
@@ -112,18 +113,35 @@ def test_remove_from(sub_file, tmp_structure):
 def test_changed_files(sub_file):
     sub = Submission.load(Path(sub_file))
     changed = sub.get_changed_files_per_calc_path(
-        sub.calculations, sub.create_refreshed_calculations()
+        sub.calculations, sub._create_refreshed_calculations()
     )
     assert len(changed) == 0
     changed = sub.get_changed_files_per_calc_path(
-        sub.last_pushed(), sub.create_refreshed_calculations()
+        sub.last_pushed(), sub._create_refreshed_calculations()
     )
     assert len(changed) == 5
+
+
+def test_validate(sub_file):
+    sub = Submission.load(Path(sub_file))
+
+    assert sub.validate() == True
+
+    # TODO: once validation is implemented check invalid and then check that staging fails this way
+    # with pytest.raises(EmmetCliError) as ex_info:
+    #     sub.stage_for_push()
+
+    # assert "Submission does not pass validation" in str(ex_info.value)
 
 
 def test_changed_files_to_push(sub_file):
     sub = Submission.load(Path(sub_file))
 
+    with pytest.raises(EmmetCliError) as ex_info:
+        sub.push()
+
+    assert "Nothing is staged" in str(ex_info.value)
+
     changed = sub.stage_for_push()
     assert len(changed) == 37
     verify_submission_calculations_against_tmp_dir_data(sub.pending_calculations)
@@ -131,7 +149,9 @@ def test_changed_files_to_push(sub_file):
     assert len(changed) == 37
     verify_submission_calculations_against_tmp_dir_data(sub.pending_calculations)
 
-    # sub.push()
-    # changed = sub.stage_for_push()
-    # assert len(changed) == 0
-    # verify_submission_calculations_against_tmp_dir_data(sub.pending_calculations)
+    sub.push()
+    changed = sub.stage_for_push()
+    assert len(changed) == 0
+    verify_submission_calculations_against_tmp_dir_data(sub.pending_calculations)
+
+    # check that if file changed after stage then push raises exception
