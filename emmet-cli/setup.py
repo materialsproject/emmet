@@ -1,17 +1,16 @@
-import datetime
-
-from setuptools import setup
+from setuptools import find_namespace_packages, setup
 
 setup(
     name="emmet-cli",
-    version=datetime.datetime.today().strftime("%Y.%m.%d"),
+    use_scm_version={"root": "..", "relative_to": __file__},
+    setup_requires=["setuptools_scm"],
     description="command line interface for MP contributors",
     author="The Materials Project",
     author_email="feedback@materialsproject.org",
     long_description=open("../README.md").read(),  # noqa: SIM115
     long_description_content_type="text/markdown",
     url="https://github.com/materialsproject/emmet",
-    packages=["emmet.cli"],
+    packages=find_namespace_packages(include=["emmet.*"]),
     install_requires=[
         "click",
         "colorama",
