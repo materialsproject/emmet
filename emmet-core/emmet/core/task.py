@@ -6,6 +6,7 @@ from pydantic import Field
 
 from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID, MPculeID
+from emmet.core.utils import utcnow
 
 
 class BaseTaskDocument(EmmetBaseModel):
@@ -27,6 +28,6 @@ class BaseTaskDocument(EmmetBaseModel):
         None, description="Timestamp for when this task was completed"
     )
     last_updated: datetime = Field(
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
         description="Timestamp for when this task document was last updated",
     )

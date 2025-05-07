@@ -28,25 +28,27 @@ setup(
     },
     include_package_data=True,
     install_requires=[
-        "pymatgen>=2024.6.10,<=2025.1.9",  # TODO: release upper version pin when bandgap parsing issues sorted
+        "pymatgen>=2024.6.10",
         "monty>=2024.2.2",
         "pydantic>=2.0",
         "pydantic-settings>=2.0",
+        "pymatgen-io-vasp>=0.1.0",
         "pybtex~=0.24",
         "typing-extensions>=3.7",
     ],
     extras_require={
         "all": [
-            "matcalc>=0.3.1",
             "seekpath>=2.0.1",
-            "robocrys>=0.2.8",
+            "robocrys>=0.2.11",
             "pymatgen-analysis-defects>=2024.7.18",
             "pymatgen-analysis-diffusion>=2024.7.15",
             "pymatgen-analysis-alloys>=0.0.6",
             "solvation-analysis>=0.4.1",
+            "transport-analysis",
             "MDAnalysis>=2.7.0",
+            "pyarrow",
         ],
-        "ml": ["chgnet", "matgl", "dgl<=2.1"],
+        "ml": ["matcalc>=0.3.1"],
         "test": [
             "pre-commit",
             "pytest",

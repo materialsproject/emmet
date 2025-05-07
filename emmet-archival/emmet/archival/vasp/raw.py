@@ -1,9 +1,9 @@
 """Define archival formats for raw VASP calculation data."""
 from __future__ import annotations
 
-import hashlib
+from collections import defaultdict
+import json
 from typing import TYPE_CHECKING
-from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory, NamedTemporaryFile
 
@@ -13,29 +13,18 @@ import zarr
 from monty.io import zopen
 from pymatgen.io.vasp.outputs import Vaspout
 
+from pymatgen.io.validation.common import PotcarSummaryStats
+
 from emmet.core.tasks import _VOLUMETRIC_FILES, TaskDoc
+from emmet.core.vasp.utils import VASP_RAW_DATA_ORG, discover_vasp_files, FileMeta
 
 from emmet.archival.base import Archiver, ArchivalFormat
 from emmet.archival.utils import zpath
-from emmet.archival.vasp import VASP_RAW_DATA_ORG, PotcarSpec
 
 if TYPE_CHECKING:
     from typing import Any
     from typing_extensions import Self
 
-
-def get_md5_blocked(file_path: str | Path, block_size: int = 1000000):
-    md5 = hashlib.md5()
-    with zopen(str(file_path), "rb") as f:
-        while True:
-            data = f.read(block_size)
-            if not data:
-                break
-            md5.update(data)
-        return md5.hexdigest()
-
-
-@dataclass
 class RawArchive(Archiver):
     """Archive a raw VASP calculation directory and remove copyright-protected info."""
 
@@ -47,36 +36,43 @@ class RawArchive(Archiver):
 
         metadata: dict[str, str | dict[str, str]] = {
             "calc_dir": str(calc_dir),
-            "file_paths": {},
-            "md5": {},
+            "file_paths": defaultdict(dict),
+            "md5": defaultdict(dict),
         }
 
         parsed_objects: dict[str, Any] = {}
-        for calc_type, file_list in VASP_RAW_DATA_ORG.items():
-            for k in ("file_paths", "md5"):
-                metadata[k][calc_type] = {}
-            for file_name in file_list:
-                if (file_path := zpath(calc_dir / file_name)).exists():
-                    metadata["file_paths"][calc_type][file_name] = str(file_path)
-                    metadata["md5"][calc_type][file_name] = get_md5_blocked(file_path)
+        for file_name in discover_vasp_files(calc_dir):
 
-                    if "POTCAR" in file_name:
-                        parsed_objects[f"{file_name}.spec"] = str(
-                            PotcarSpec.from_file(file_path)
-                        )
-                        metadata["file_paths"][calc_type][
-                            f"{file_name}.spec"
-                        ] = metadata["file_paths"][calc_type].pop(file_name)
-                    elif file_name.endswith("vaspout.h5"):
-                        continue
-                    else:
-                        with zopen(file_path, "rt") as f:
-                            parsed_objects[file_name] = f.read()
+            for calc_type, base_file_names in VASP_RAW_DATA_ORG.items():
+                if (matches := sorted([f for f in base_file_names if f in file_name])):
+                    ref_file_name = matches[-1] # ensures, e.g., INCAR.orig is matched over INCAR
+                    break
+                
+            if not ref_file_name:
+                continue
+            
+            file_meta = FileMeta(name = ref_file_name, path = calc_dir / file_name)
+            metadata["file_paths"][calc_type][file_name] = str(file_meta.path)
+            metadata["md5"][calc_type][file_name] = file_meta.md5
+
+            if "POTCAR" in file_name:
+                ps = PotcarSummaryStats.from_file(file_meta.path)
+                parsed_objects[f"{file_name}.spec"] = json.dumps(
+                    [p.model_dump() for p in ps]
+                )
+                metadata["file_paths"][calc_type][
+                    f"{file_name}.spec"
+                ] = metadata["file_paths"][calc_type].pop(file_name)
+            elif file_name.startswith("vaspout.h5"):
+                continue
+            else:
+                with zopen(file_meta.path, "rt") as f:
+                    parsed_objects[file_name] = f.read()
 
         return cls(parsed_objects=parsed_objects, metadata=metadata, **kwargs)
 
     def to_group(
-        self, group: h5py.Group | zarr.Group, group_key: str | None = None
+        self, group: h5py.Group | zarr.Group, group_key: str | None = None, **kwargs
     ) -> None:
         """Add VASP files to an existing archival group."""
         if group_key is not None:
@@ -109,12 +105,12 @@ class RawArchive(Archiver):
                 if (rawf := self.parsed_objects.get(file_name)) is None:
                     continue
 
-                kwargs = self.compression.copy()
+                compress_kwargs = kwargs.pop("compression",{}) or self.get_default_compression(self.format)
                 if self.format == ArchivalFormat.HDF5:
                     kwargs.update(dtype=h5py.string_dtype(length=len(rawf)))
 
                 group[calc_type].create_dataset(
-                    file_name, data=[rawf], shape=1, **kwargs
+                    file_name, data=[rawf], shape=1, **kwargs, **compress_kwargs
                 )
                 group[calc_type][file_name].attrs["path"] = str(file_path)
                 if file_md5 := checksums.get(calc_type, {}).get(file_name):

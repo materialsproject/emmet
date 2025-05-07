@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import io
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, TYPE_CHECKING
 
 import openmm
 import pandas as pd  # type: ignore[import-untyped]
@@ -15,7 +15,10 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from emmet.core.openff import MDTaskDocument  # type: ignore[import-untyped]
 from emmet.core.openff.tasks import CompressedStr  # type: ignore[import-untyped]
-from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
+from emmet.core.vasp.task_valid import TaskState
+
+if TYPE_CHECKING:
+    from typing import Any
 
 
 class CalculationInput(BaseModel):  # type: ignore[call-arg]
@@ -161,7 +164,7 @@ class CalculationOutput(BaseModel):
     ) -> CalculationOutput:
         """Extract data from the output files in the directory."""
         state_file = Path(dir_name) / state_file_name
-        column_name_map = {
+        column_name_map: dict[str, str] = {
             '#"Step"': "steps_reported",
             "Potential Energy (kJ/mole)": "potential_energy",
             "Kinetic Energy (kJ/mole)": "kinetic_energy",
@@ -174,8 +177,8 @@ class CalculationOutput(BaseModel):
         if state_is_not_empty:
             data = pd.read_csv(state_file, header=0)
             data = data.rename(columns=column_name_map)
-            data = data.filter(items=column_name_map.values())
-            attributes = data.to_dict(orient="list")
+            data = data.filter(items=list(column_name_map.values()))
+            attributes: dict[str, Any] = data.to_dict(orient="list")  # type: ignore[assignment]
         else:
             attributes = {name: None for name in column_name_map.values()}
             state_file_name = None  # type: ignore[assignment]
@@ -184,14 +187,10 @@ class CalculationOutput(BaseModel):
         traj_is_not_empty = traj_file.exists() and traj_file.stat().st_size > 0
         traj_file_name = traj_file_name if traj_is_not_empty else None  # type: ignore
 
-        if traj_is_not_empty:
-            if embed_traj:
-                with open(traj_file, "rb") as f:
-                    traj_blob = f.read().hex()
-            else:
-                traj_blob = None
-        else:
-            traj_blob = None
+        traj_blob: str | None = None
+        if traj_is_not_empty and embed_traj:
+            with open(traj_file, "rb") as f:
+                traj_blob = f.read().hex()
 
         return CalculationOutput(
             dir_name=str(dir_name),

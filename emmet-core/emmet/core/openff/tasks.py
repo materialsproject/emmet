@@ -19,7 +19,7 @@ from pydantic import (
 from pymatgen.core import Structure
 from typing_extensions import Annotated
 
-from emmet.core.vasp.task_valid import TaskState  # type: ignore[import-untyped]
+from emmet.core.vasp.task_valid import TaskState
 
 
 def compressed_str_validator(s: str) -> str:
