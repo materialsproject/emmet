@@ -44,12 +44,11 @@ def assert_schemas_equal(
         for key, sub_valid_schema in valid_schema.items():
             if isinstance(key, str) and hasattr(test_schema, key):
                 sub_test_schema = getattr(test_schema, key, {})
-                if key == "initial_molecule":
+                if key in ("initial_molecule", "optimized_molecule") and hasattr(
+                    sub_test_schema, "as_dict"
+                ):
                     sub_test_schema = sub_test_schema.as_dict()
-                elif key == "optimized_molecule":
-                    sub_test_schema = (
-                        sub_test_schema.as_dict() if sub_test_schema else {}
-                    )
+
             elif not isinstance(test_schema, BaseModel):
                 sub_test_schema = test_schema[key]
             else:
