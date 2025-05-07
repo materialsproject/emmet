@@ -1,55 +1,12 @@
-from pathlib import Path
 import pytest
 import numpy as np
+
+from emmet.core.testing_utils import TEST_FILES_DIR
 
 
 @pytest.fixture(scope="session")
 def test_dir():
-    return Path(__file__).parent.parent.parent.joinpath("test_files").resolve()
-
-
-def assert_schemas_equal(test_schema, valid_schema):
-    """
-    Recursively test all items in valid_schema are present and equal in test_schema.
-
-    While test_schema can be a pydantic schema or dictionary, the valid schema must
-    be a (nested) dictionary. This function automatically handles accessing the
-    attributes of classes in the test_schema.
-
-    Args:
-        test_schema: A pydantic schema or dictionary of the schema.
-        valid_schema: A (nested) dictionary specifying the key and values that must be
-            present in test_schema. This is what the generated test_schema will be tested against
-    """
-    from pydantic import BaseModel
-
-    if isinstance(valid_schema, dict):
-        for key, sub_valid_schema in valid_schema.items():
-            if isinstance(key, str) and hasattr(test_schema, key):
-                sub_test_schema = getattr(test_schema, key)
-                if key == "initial_molecule":
-                    sub_test_schema = sub_test_schema.as_dict()
-                elif key == "optimized_molecule":
-                    sub_test_schema = (
-                        sub_test_schema.as_dict() if sub_test_schema else {}
-                    )
-            elif not isinstance(test_schema, BaseModel):
-                sub_test_schema = test_schema[key]
-            else:
-                raise ValueError(f"{type(test_schema)} does not have field: {key}")
-            return assert_schemas_equal(sub_test_schema, sub_valid_schema)
-
-    elif isinstance(valid_schema, list):
-        for i, sub_valid_schema in enumerate(valid_schema):
-            return assert_schemas_equal(test_schema[i], sub_valid_schema)
-
-    elif isinstance(valid_schema, np.ndarray):
-        assert np.array_equal(test_schema, valid_schema)
-
-    elif isinstance(valid_schema, float):
-        assert test_schema == pytest.approx(valid_schema)
-    else:
-        assert test_schema == valid_schema
+    return TEST_FILES_DIR
 
 
 class SchemaTestData:

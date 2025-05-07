@@ -27,10 +27,7 @@ class FileMetadata(BaseModel):
 
     """
 
-    name: str = Field(
-        description="Name of the VASP file without suffixes (e.g., INCAR)"
-    )
-    path: Path = Field(description="Path to the VASP file")
+    path: Path = Field(description="Path to the file")
     hash: str | None = Field(
         description="Hash of the file (computed only when requested)",
         default=None,
@@ -38,7 +35,7 @@ class FileMetadata(BaseModel):
 
     @model_validator(mode="before")
     def coerce_path(cls, v: Any) -> Any:
-        """Only coerce to Path. No existence check here."""
+        """Coerce to path."""
         if "path" in v:
             path = v["path"]
             if not isinstance(path, Path):
@@ -46,8 +43,18 @@ class FileMetadata(BaseModel):
             v["path"] = path
         return v
 
-    def compute_hash(self) -> Optional[str]:
-        """Compute the hash of the file."""
+    @property
+    def name(self) -> str:
+        """Return the name of the file."""
+        return self.path.name
+
+    @computed_field  # type:ignore[prop-decorator]
+    @property
+    def md5(self) -> str | None:
+        """MD5 checksum of the file (computed lazily if needed)."""
+        if self.hash is not None:
+            return self.hash
+
         if self.validate_path_exists():
             try:
                 self.hash = get_hash_blocked(self.path)
@@ -187,7 +194,8 @@ def discover_vasp_files(
         for p in scan_dir:
             # Check that at least one VASP file matches the file name
             if p.is_file() and any(f for f in _vasp_files if f in p.name):
-                vasp_files.append(FileMetadata(name=p.name, path=Path(p.path)))
+                vasp_files.append(FileMetadata(path=Path(p.path)))
+
     by_suffix = defaultdict(list)
     for file_meta in vasp_files:
         by_suffix[file_meta.calc_suffix].append(file_meta)

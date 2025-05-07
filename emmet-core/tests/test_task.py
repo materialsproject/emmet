@@ -1,7 +1,8 @@
 import pytest
 
-from tests.conftest import assert_schemas_equal, get_test_object
 from emmet.core.vasp.task_valid import TaskState
+from emmet.core.testing_utils import assert_schemas_equal
+from tests.conftest import get_test_object
 
 
 @pytest.mark.parametrize(
