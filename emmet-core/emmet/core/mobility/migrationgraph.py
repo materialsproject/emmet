@@ -357,6 +357,7 @@ class MigrationGraphDoc(EmmetBaseModel):
 
         return f"{sc_iindex}+{sc_eindex}", ordered_sc_site_list
 
+    @staticmethod
     def get_distinct_hop_sites(
         inserted_ion_coords: List[str], insert_coords_combo: List
     ) -> Tuple[List, List[str], Dict]:

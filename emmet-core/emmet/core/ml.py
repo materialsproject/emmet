@@ -259,7 +259,7 @@ class MLTrainDoc(StructureMetadata):
         description="Bader on-site magnetic moments for each site of the structure.",
     )
 
-    @model_serializer
+    @model_serializer()
     def deseralize(self):
         """Ensure output is JSON compliant."""
         return jsanitize({k: getattr(self, k, None) for k in self.model_fields})
