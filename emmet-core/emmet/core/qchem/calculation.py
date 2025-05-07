@@ -1,6 +1,5 @@
 """Core definitions of a QChem calculation document."""
-
-# mypy: ignore-errors
+from __future__ import annotations
 
 import logging
 from pathlib import Path
@@ -25,13 +24,6 @@ from emmet.core.qchem.calc_types.calc_types import (
     FUNCTIONALS,
     BASIS_SETS,
 )
-
-# from emmet.core.qchem.calc_types.em_utils import (
-#     level_of_theory,
-#     task_type,
-#     calc_type,
-# )
-
 from emmet.core.qchem.task import QChemStatus
 
 functional_synonyms = {
@@ -69,14 +61,14 @@ class CalculationInput(BaseModel):
     #     None, description = "Parameters from a previous QChem calculation."
     # )
 
-    charge: int = Field(None, description="The charge of the input molecule")
+    charge: int | None = Field(None, description="The charge of the input molecule")
 
     rem: Optional[Dict[str, Any]] = Field(
         None,
         description="The rem dict of the input file which has all the input parameters",
     )
 
-    job_type: str = Field(
+    job_type: str | None = Field(
         None, description="The type of QChem calculation being performed"
     )
 
@@ -132,6 +124,11 @@ class CalculationInput(BaseModel):
         CalculationInput
             The input document.
         """
+
+        # QCInput.molecule is either a Molecule, list of Molecule, or a str-literal
+        # Catch latter two cases here and error out
+        if not isinstance(qcinput.molecule, Molecule):
+            raise ValueError("QCInput contains multiple molecules.")
 
         return cls(
             initial_molecule=qcinput.molecule,
@@ -293,43 +290,42 @@ class CalculationOutput(BaseModel):
 class Calculation(BaseModel):
     """Full QChem calculation inputs and outputs."""
 
-    dir_name: str = Field(None, description="The directory for this QChem calculation")
-    qchem_version: str = Field(
+    dir_name: str = Field(description="The directory for this QChem calculation")
+    qchem_version: str | None = Field(
         None, description="QChem version used to perform the current calculation"
     )
-    has_qchem_completed: Union[QChemStatus, bool] = Field(
+    has_qchem_completed: QChemStatus | bool | None = Field(
         None, description="Whether QChem calculated the calculation successfully"
     )
-    input: CalculationInput = Field(
+    input: CalculationInput | None = Field(
         None, description="QChem input settings for the calculation"
     )
-    output: CalculationOutput = Field(
+    output: CalculationOutput | None = Field(
         None, description="The QChem calculation output document"
     )
-    completed_at: str = Field(
+    completed_at: str | None = Field(
         None, description="Timestamp for when the calculation was completed"
     )
-    task_name: str = Field(
-        None,
+    task_name: str | None = Field(
         description="Name of task given by custodian (e.g. opt1, opt2, freq1, freq2)",
     )
-    output_file_paths: Dict[str, Union[str, Path, Dict[str, Path]]] = Field(
+    output_file_paths: Dict[str, Union[str, Path, Dict[str, Path]]] | None = Field(
         None,
         description="Paths (relative to dir_name) of the QChem output files associated with this calculation",
     )
-    level_of_theory: Union[LevelOfTheory, str] = Field(
+    level_of_theory: Union[LevelOfTheory, str] | None = Field(
         None,
         description="Levels of theory used for the QChem calculation: For instance, B97-D/6-31g*",
     )
-    solvation_lot_info: Optional[str] = Field(
+    solvation_lot_info: Optional[str] | None = Field(
         None,
         description="A condensed string representation of the comboned LOT and Solvent info",
     )
-    task_type: TaskType = Field(
+    task_type: TaskType | None = Field(
         None,
         description="Calculation task type like Single Point, Geometry Optimization. Frequency...",
     )
-    calc_type: Union[CalcType, str] = Field(
+    calc_type: Union[CalcType, str] | None = Field(
         None,
         description="Combination dict of LOT + TaskType: B97-D/6-31g*/VACUUM Geometry Optimization",
     )
@@ -382,7 +378,7 @@ class Calculation(BaseModel):
         qcinput = QCInput.from_file(qcinput_file, **qcinput_kwargs)
 
         qcoutput_kwargs = qcoutput_kwargs if qcoutput_kwargs else {}
-        qcoutput = QCOutput(qcoutput_file, **qcoutput_kwargs)
+        qcoutput = QCOutput(str(qcoutput_file), **qcoutput_kwargs)
 
         completed_at = str(datetime.fromtimestamp(qcoutput_file.stat().st_mtime))
 
@@ -516,15 +512,16 @@ def level_of_theory(
 
     """
 
-    funct_raw = parameters.rem.get("method")
-    basis_raw = parameters.rem.get("basis")
+    rem_pars = parameters.rem or {}
+    funct_raw = rem_pars.get("method")
+    basis_raw = rem_pars.get("basis")
 
     if funct_raw is None or basis_raw is None:
         raise ValueError(
             'Method and basis must be included in "rem" section ' "of parameters!"
         )
 
-    disp_corr = parameters.rem.get("dft_d")
+    disp_corr = rem_pars.get("dft_d")
 
     if disp_corr is None:
         funct_lower = funct_raw.lower()
@@ -536,7 +533,7 @@ def level_of_theory(
 
     basis_lower = basis_raw.lower()
 
-    solvent_method = parameters.rem.get("solvent_method", "").lower()
+    solvent_method = rem_pars.get("solvent_method", "").lower()
 
     if solvent_method == "":
         solvation = "VACUUM"
@@ -639,7 +636,7 @@ def solvent(
     #         string += "," + piecestring
     #     return string
     elif solvation == "SMD":
-        solvent = parameters.smx.get("solvent", "water")
+        solvent = (parameters.smx or {}).get("solvent", "water")
         if solvent == "other":
             if custom_smd is None:
                 raise ValueError(
