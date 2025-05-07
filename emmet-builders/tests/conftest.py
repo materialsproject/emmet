@@ -1,8 +1,9 @@
 from pathlib import Path
 
+from emmet.core.testing_utils import TEST_FILES_DIR
 import pytest
 
 
 @pytest.fixture(scope="session")
 def test_dir():
-    return Path(__file__).parent.parent.parent.joinpath("test_files").resolve()
+    return TEST_FILES_DIR
