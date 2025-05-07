@@ -1,7 +1,5 @@
 """Core definitions of a VASP calculation documents."""
 
-# mypy: ignore-errors
-
 from __future__ import annotations
 
 from functools import cached_property
@@ -57,7 +55,7 @@ class Potcar(BaseModel):
     functional: Optional[str] = Field(
         None, description="Functional type use in the calculation."
     )
-    symbols: Optional[List[str]] = Field(
+    symbols: Optional[list[str]] = Field(
         None, description="List of VASP potcar symbols used in the calculation."
     )
 
@@ -123,7 +121,7 @@ class PotcarSpec(BaseModel):
         )
 
     @classmethod
-    def from_potcar(cls, potcar: VaspPotcar) -> List["PotcarSpec"]:
+    def from_potcar(cls, potcar: VaspPotcar) -> list["PotcarSpec"]:
         """
         Get a list of PotcarSpecs from a Potcar.
 
@@ -138,6 +136,22 @@ class PotcarSpec(BaseModel):
             A list of potcar specs.
         """
         return [cls.from_potcar_single(p) for p in potcar]
+
+    @classmethod
+    def from_file(cls, file_path: str | Path) -> list["PotcarSpec"]:
+        """
+        Get a list of PotcarSpecs from a Potcar.
+
+        Parameters
+        ----------
+        file_path : str or Path of the POTCAR
+
+        Returns
+        -------
+        list[PotcarSpec]
+            A list of potcar specs.
+        """
+        return cls.from_potcar(VaspPotcar.from_file(file_path))
 
 
 class CalculationInput(CalculationBaseModel):
@@ -177,15 +191,24 @@ class CalculationInput(CalculationBaseModel):
     )
     hubbards: dict | None = Field(None, description="The hubbard parameters used")
 
-    @field_validator("parameters", mode="after")
+    @model_validator(mode="before")
     @classmethod
-    def parameter_keys_should_not_contain_spaces(cls, parameters: Optional[Dict]):
-        # A change in VASP introduced whitespace into some parameters,
-        # for example `<i type="string" name="GGA    ">PE</I>` was observed in
-        # VASP 6.4.3. This will lead to an incorrect return value from RunType.
-        # This validator will ensure that any already-parsed documents are fixed.
-        if parameters:
-            return {k.strip(): v for k, v in parameters.items()}
+    def clean_inputs(cls, config: Any) -> Any:
+        """Ensure whitespace in parameters and Kpoints are serialized.
+
+        NOTE:
+        ------
+        A change in VASP introduced whitespace into some parameters,
+        for example `<i type="string" name="GGA    ">PE</I>` was observed in
+        VASP 6.4.3. This will lead to an incorrect return value from RunType.
+        This validator will ensure that any already-parsed documents are fixed.
+        """
+        config["parameters"] = {
+            k.strip(): v for k, v in config.get("parameters", {}).items()
+        }
+        if (kpts := config.get("kpoints")) and isinstance(kpts, dict):
+            config["kpoints"] = Kpoints.from_dict(kpts)
+        return config
 
     @cached_property
     def poscar(self) -> Poscar | None:
@@ -737,6 +760,13 @@ class Calculation(CalculationBaseModel):
         None, description="Return calculation type (run type + task_type)."
     )
 
+    @field_validator("has_vasp_completed", mode="before")
+    @classmethod
+    def ensure_enum(cls, v: Any) -> TaskState:
+        if isinstance(v, bool):
+            v = TaskState.SUCCESS if v else TaskState.FAILED
+        return v
+
     @classmethod
     def from_vasp_files(
         cls,
@@ -1160,7 +1190,7 @@ def _get_band_props(
 
     Returns
     -------
-    Dict
+    dict
         A dictionary of element and orbital-projected DOS properties.
     """
     dosprop_dict: dict[str, dict[str, dict[str, float]]] = {}
