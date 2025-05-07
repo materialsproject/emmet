@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from emmet.core.testing_utils import TEST_FILES_DIR
 import pytest
 
