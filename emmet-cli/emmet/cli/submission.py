@@ -123,7 +123,9 @@ class Submission(BaseModel):
                     files=list(set(self.calculations[k].files + cm[k].files)),
                 )
             else:
-                new_calcs[k] = self.calculations.get(k) or cm.get(k)
+                tmp = self.calculations.get(k) or cm.get(k)
+                assert tmp is not None
+                new_calcs[k] = tmp
         self.calculations = new_calcs
 
     def add_to(self, paths: Iterable[Path]) -> list[FileMetadata]:
@@ -213,6 +215,7 @@ class Submission(BaseModel):
         self.pending_calculations = self._create_refreshed_calculations()
 
         if not self.validate_submission():
+            assert self.pending_calculations is not None
             self.calculations = copy.deepcopy(self.pending_calculations)
             self._clear_pending()
             raise EmmetCliError(
