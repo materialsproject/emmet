@@ -85,3 +85,13 @@ def test_validate(sub_file):
     assert "passed validation" in str(result.output)
 
     # TODO: add test that fails validation when add implementation
+
+
+def test_push(sub_file):
+    runner = CliRunner()
+    result = runner.invoke(submit, ["push", sub_file])
+
+    assert result.exit_code == 0
+    assert "Successfuly updated submission in" in str(result.output)
+
+    # TODO: add test that for failing cases

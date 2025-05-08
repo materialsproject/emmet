@@ -135,6 +135,8 @@ def push(ctx, submission):
             "Files for submission have not changed since last update. Not pushing."
         )
 
+    # TODO: redo this so it does a quick check of the staged submission on the server side (prior to needing to upload)
+    # should provide the signed url? should it all go into Submission class?
     already_contributed_file_info = get_already_contributed(updated_file_info)
     logger.debug(
         f"Files for submission considered to be duplicates: {already_contributed_file_info}"
@@ -144,12 +146,11 @@ def push(ctx, submission):
             f"The following are considered to be duplicates of data already in MP {already_contributed_file_info}"
         )
 
-    # perform local validation
-    ctx.invoke(validate, submission=submission)
+    sub.push()
 
-    do_push(submission, updated_file_info)
+    sub.save(Path(submission))
 
-    logger.info(f"Successfuly update submission in {submission}")
+    print(f"Successfuly updated submission in {submission}")
     pass
 
 
@@ -163,9 +164,3 @@ def get_changed_since_last_push(submission):
 def get_already_contributed(updated_file_info):
     # if doing checks for data already in MP check the changed data against MP
     return {}
-
-
-def do_push(path, updated_file_info):
-    # push updated submission (push id will be UUID)
-    #    (can later determine whether to upload all each time or just diffs)
-    raise EmmetCliError("Have not implemented this yet")
