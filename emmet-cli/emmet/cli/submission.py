@@ -5,7 +5,7 @@ import json
 import logging
 from os import PathLike
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Self
+from typing import Any, Dict, Iterable, List, Optional
 from emmet.cli.utils import EmmetCliError
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from uuid import UUID, uuid4
@@ -24,22 +24,22 @@ class CalculationMetadata(BaseModel):
         description="List of file metadata for the the files for this calculation."
     )
 
-    valid: Optional[bool] = Field(
+    calc_valid: Optional[bool] = Field(
         description="Whether calculation is valid. If None then has not been checked yet.",
         default=None,
     )
 
-    validation_errors: Optional[List[str]] = Field(
+    calc_validation_errors: List[str] = Field(
         description="Validation errors for this calculation", default_factory=list
     )
 
-    def validate(self) -> bool:
+    def validate_calculation(self) -> bool:
         """Validate the calculation. Returns whether it's valid."""
         self.refresh()
-        if self.valid is None:
+        if self.calc_valid is None:
             # TODO: change to do actual validation rather than just passing
-            self.valid = True
-        return self.valid
+            self.calc_valid = True
+        return self.calc_valid
 
     def refresh(self) -> None:
         """Refreshes the information for the calculation (recalculates MD5s and clears validation if any changes)"""
@@ -50,8 +50,8 @@ class CalculationMetadata(BaseModel):
             if cached_md5 != f.md5:
                 changed_files = True
         if changed_files:
-            self.valid = None
-            self.validation_errors.clear()
+            self.calc_valid = None
+            self.calc_validation_errors.clear()
 
 
 class Submission(BaseModel):
@@ -83,7 +83,7 @@ class Submission(BaseModel):
             data["calculations"] = {Path(k): v for k, v in data["calculations"].items()}
         return data
 
-    def last_pushed(self) -> Dict[Path, CalculationMetadata]:
+    def last_pushed(self) -> Dict[Path, CalculationMetadata] | None:
         return self.calc_history[-1] if self.calc_history else None
 
     def save(self, path: Path) -> None:
@@ -91,14 +91,22 @@ class Submission(BaseModel):
         path.write_text(self.model_dump_json(indent=4))
 
     @classmethod
-    def load(cls, path: Path) -> Self:
+    def load(
+        cls, path: Path
+    ) -> (
+        "Submission"
+    ):  # change this to use TypeVar (or self if min Python >= 3.11) if ever create subclasses
         """Load a submission from a JSON file."""
         content = path.read_text()
         data = json.loads(content)
         return cls.model_validate(data)
 
     @classmethod
-    def from_paths(cls, paths: Iterable[Path]) -> Self:
+    def from_paths(
+        cls, paths: Iterable[Path]
+    ) -> (
+        "Submission"
+    ):  # change this to use TypeVar (or self if min Python >= 3.11) if ever create subclasses
         """Create Submission from all calculations in the provided paths"""
         all_calculations = find_all_calculations(paths)
         logger.debug(f"found all calculations for {paths}:\n{all_calculations}")
@@ -127,8 +135,9 @@ class Submission(BaseModel):
 
         self._clear_pending()
 
-        return set([item for cm in calcs_to_add.values() for item in cm.files]) - set(
-            [item for cm in orig_calcs.values() for item in cm.files]
+        return list(
+            set([item for cm in calcs_to_add.values() for item in cm.files])
+            - set([item for cm in orig_calcs.values() for item in cm.files])
         )
 
     def remove_from(self, paths: Iterable[Path]) -> list[FileMetadata]:
@@ -180,7 +189,7 @@ class Submission(BaseModel):
 
         return removed_files
 
-    def validate(self) -> bool:
+    def validate_submission(self) -> bool:
         is_valid = True
         calcs_to_check = (
             self.pending_calculations
@@ -189,7 +198,7 @@ class Submission(BaseModel):
         )
 
         for p, cm in calcs_to_check.items():
-            is_valid = cm.validate() and is_valid
+            is_valid = cm.validate_calculation() and is_valid
 
         return is_valid
 
@@ -203,7 +212,7 @@ class Submission(BaseModel):
         """ "Stages submission for push. Returns the list of files that will need to be (re)pushed."""
         self.pending_calculations = self._create_refreshed_calculations()
 
-        if not self.validate():
+        if not self.validate_submission():
             self.calculations = copy.deepcopy(self.pending_calculations)
             self._clear_pending()
             raise EmmetCliError(
@@ -249,7 +258,7 @@ class Submission(BaseModel):
                 "Files for submission have changed since staging. Please re-stage before pushing."
             )
 
-        if not self.validate():  # THIS SHOULD NEVER HAPPEN
+        if not self.validate_submission():  # THIS SHOULD NEVER HAPPEN
             self.calculations = copy.deepcopy(self.pending_calculations)
             self._clear_pending()
             raise EmmetCliError(
@@ -267,7 +276,7 @@ class Submission(BaseModel):
         self._pending_push = None
 
 
-def find_all_calculations(paths: List[PathLike]):
+def find_all_calculations(paths: Iterable[PathLike]):
     all_calculations = {}
     for path in paths:
         path = Path(path).resolve()

@@ -122,10 +122,10 @@ def test_changed_files(sub_file):
     assert len(changed) == 5
 
 
-def test_validate(sub_file):
+def test_validate_submission(sub_file):
     sub = Submission.load(Path(sub_file))
 
-    assert sub.validate() is True
+    assert sub.validate_submission() is True
 
     # TODO: once validation is implemented check invalid and then check that staging fails this way
     # with pytest.raises(EmmetCliError) as ex_info:
