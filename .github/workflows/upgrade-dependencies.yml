@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         os: ["ubuntu-latest"]
-        package: ["emmet-core", "emmet-builders", "emmet-api"]
+        package: ["emmet-core", "emmet-builders", "emmet-api", "emmet-cli"]
         python-version: ["3.10", "3.11"]
     steps:
       - uses: actions/checkout@v4
