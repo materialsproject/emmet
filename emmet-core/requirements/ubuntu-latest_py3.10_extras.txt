@@ -18,7 +18,7 @@ certifi==2025.4.26
     # via requests
 cfgv==3.4.0
     # via pre-commit
-charset-normalizer==3.4.1
+charset-normalizer==3.4.2
     # via requests
 click==8.1.8
     # via mkdocs
@@ -78,7 +78,7 @@ jinja2==3.1.6
     #   mkdocs
     #   mkdocs-material
     #   mkdocstrings
-joblib==1.4.2
+joblib==1.5.0
     # via
     #   matcalc
     #   mdanalysis
@@ -192,7 +192,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-core (setup.py)
     #   mypy
-narwhals==1.37.1
+narwhals==1.38.2
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -272,7 +272,7 @@ pillow==11.2.1
     #   matplotlib
     #   rdkit
     #   scikit-image
-platformdirs==4.3.7
+platformdirs==4.3.8
     # via
     #   mkdocs-get-deps
     #   virtualenv
@@ -312,7 +312,7 @@ pyflakes==3.3.2
     # via flake8
 pygments==2.19.1
     # via mkdocs-material
-pymatgen==2025.4.24
+pymatgen==2025.5.2
     # via
     #   emmet-core (setup.py)
     #   matcalc
@@ -389,7 +389,7 @@ scikit-learn==1.6.1
     # via
     #   matcalc
     #   matminer
-scipy==1.15.2
+scipy==1.15.3
     # via
     #   ase
     #   griddataformats
@@ -412,7 +412,7 @@ six==1.17.0
     # via
     #   pybtex
     #   python-dateutil
-snowballstemmer==2.2.0
+snowballstemmer==3.0.0.1
     # via pydocstyle
 solvation-analysis==0.4.1
     # via emmet-core (setup.py)
@@ -460,7 +460,7 @@ typeguard==4.4.2
     # via inflect
 types-requests==2.32.0.20250328
     # via emmet-core (setup.py)
-types-setuptools==80.0.0.20250429
+types-setuptools==80.3.0.20250505
     # via emmet-core (setup.py)
 typing-extensions==4.13.2
     # via
@@ -484,7 +484,7 @@ urllib3==2.4.0
     # via
     #   requests
     #   types-requests
-virtualenv==20.30.0
+virtualenv==20.31.2
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
