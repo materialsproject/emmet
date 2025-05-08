@@ -58,7 +58,7 @@ def tmp_dir(tmp_path_factory):
     return tmp_dir
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def sub_file(tmp_dir, tmp_path_factory):
     runner = CliRunner()
     result = runner.invoke(submit, ["create", str(tmp_dir)])

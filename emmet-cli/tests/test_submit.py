@@ -75,3 +75,13 @@ def test_remove_from(sub_file):
 
     assert result.exit_code == 0
     assert result.output.count(str(path_to_remove)) == 8
+
+
+def test_validate(sub_file):
+    runner = CliRunner()
+    result = runner.invoke(submit, ["validate", sub_file])
+
+    assert result.exit_code == 0
+    assert "passed validation" in str(result.output)
+
+    # TODO: add test that fails validation when add implementation

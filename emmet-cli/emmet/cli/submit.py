@@ -63,6 +63,7 @@ def add_to(ctx, submission, additional_paths):
     sub = Submission.load(Path(submission))
     added = sub.add_to([Path(p) for p in additional_paths])
     added_str = "\n".join(str(p.path) for p in added)
+    sub.save(Path(submission))
     print(f"added following {len(added)} files from submission:\n{added_str}")
 
 
@@ -83,6 +84,7 @@ def remove_from(ctx, submission, files_to_remove):
     sub = Submission.load(Path(submission))
     removed = sub.remove_from([Path(p) for p in files_to_remove])
     removed_str = "\n".join(str(p.path) for p in removed)
+    sub.save(Path(submission))
     print(f"removed following {len(removed)} files from submission:\n{removed_str}")
 
 
@@ -96,7 +98,16 @@ def validate(ctx, submission):
 
     """
     # perform a local validation (can shortcut if based on metadata)
-    raise EmmetCliError("Have not implemented this yet")
+    sub = Submission.load(Path(submission))
+
+    is_valid = sub.validate_submission()
+    sub.save(Path(submission))
+    if is_valid:
+        print(
+            f"All calculations in submission {sub.id} passed validation. Ready to push."
+        )
+    else:
+        print(f"Validation failed. See {submission} for details on validation errors.")
 
 
 @submit.command()
