@@ -7,48 +7,32 @@ if os.path.exists(readme_path):
     with open(readme_path) as f:
         long_description = f.read()
 else:
-    long_description = "Core Emmet Library"
+    long_description = "Archival Emmet Library"
 
 
 setup(
-    name="emmet-core",
+    name="emmet-archive",
     use_scm_version={"root": "..", "relative_to": __file__},
     setup_requires=["setuptools_scm"],
-    description="Core Emmet Library",
+    description="Archival Emmet Library",
     author="The Materials Project",
     author_email="feedback@materialsproject.org",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
-    package_data={
-        "emmet.core.vasp.calc_types": ["*.yaml"],
-        "emmet.core.qchem.calc_types": ["*.yaml"],
-        "emmet.core.subtrates": ["*.json"],
-    },
-    include_package_data=True,
     install_requires=[
-        "pymatgen>=2024.6.10",
-        "monty>=2024.2.2",
-        "pydantic>=2.0",
-        "pydantic-settings>=2.0",
-        "pymatgen-io-vasp>=0.1.0",
-        "pybtex~=0.24",
-        "typing-extensions>=3.7",
+        "emmet-core",
+        "h5py",
+        "zarr",
+        "pyarrow",
+        "pandas",
+        "pymatgen>=2025.3.10",
     ],
     extras_require={
-        "all": [
-            "seekpath>=2.0.1",
-            "robocrys>=0.2.11",
-            "pymatgen-analysis-defects>=2024.7.18",
-            "pymatgen-analysis-diffusion>=2024.7.15",
-            "pymatgen-analysis-alloys>=0.0.6",
-            "solvation-analysis>=0.4.1",
-            "transport-analysis",
-            "MDAnalysis>=2.7.0",
-            "pyarrow",
+        "ase": [
+            "ase>=3.23.0",
         ],
-        "ml": ["matcalc>=0.3.1"],
         "test": [
             "pre-commit",
             "pytest",
@@ -61,7 +45,6 @@ setup(
             "types-setuptools",
             "types-requests",
             "wincertstore",
-            "custodian",
         ],
         "docs": [
             "mkdocs",
@@ -76,7 +59,7 @@ setup(
             "jinja2",
         ],
     },
-    python_requires=">=3.10",
+    python_requires=">=3.9",
     license="modified BSD",
     zip_safe=False,
 )
