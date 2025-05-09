@@ -5,14 +5,20 @@ from __future__ import annotations
 from datetime import datetime
 from pydantic import Field
 
-from emmet.core.vasp.calculation import Calculation 
+from emmet.core.vasp.calculation import Calculation
 from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
 from emmet.core.utils import utcnow
 
 from pymatgen.io.vasp import Incar
 
-from pymatgen.io.validation.common import LightOutcar, LightVasprun, PotcarSummaryStats, VaspFiles, VaspInputSafe
+from pymatgen.io.validation.common import (
+    LightOutcar,
+    LightVasprun,
+    PotcarSummaryStats,
+    VaspFiles,
+    VaspInputSafe,
+)
 from pymatgen.io.validation.validation import VaspValidator
 
 from typing import TYPE_CHECKING
@@ -28,7 +34,9 @@ class ValidationDoc(EmmetBaseModel):
     Validation document for a VASP calculation
     """
 
-    task_id: MPID | None = Field(None, description="The task_id for this validation document")
+    task_id: MPID | None = Field(
+        None, description="The task_id for this validation document"
+    )
 
     valid: bool = Field(False, description="Whether this task is valid.")
 
@@ -37,9 +45,13 @@ class ValidationDoc(EmmetBaseModel):
         default_factory=utcnow,
     )
 
-    reasons: list[str] = Field([], description="List of deprecation tags detailing why this task is not valid")
+    reasons: list[str] = Field(
+        [], description="List of deprecation tags detailing why this task is not valid"
+    )
 
-    warnings: list[str] = Field([], description="List of potential warnings about this calculation")
+    warnings: list[str] = Field(
+        [], description="List of potential warnings about this calculation"
+    )
 
     @staticmethod
     def task_doc_to_vasp_files(task_doc: TaskDoc | TaskDocument) -> VaspFiles:
@@ -52,13 +64,14 @@ class ValidationDoc(EmmetBaseModel):
 
         potcar_stats = None
         if final_calc.input.potcar_spec:
-
             potcar_stats = [
                 PotcarSummaryStats(
                     titel=ps.titel,
                     keywords=ps.summary_stats["keywords"] if ps.summary_stats else None,
                     stats=ps.summary_stats["stats"] if ps.summary_stats else None,
-                    lexch="pe" if final_calc.input.potcar_type[0] == "PAW_PBE" else "ca",
+                    lexch="pe"
+                    if final_calc.input.potcar_type[0] == "PAW_PBE"
+                    else "ca",
                 )
                 for ps in final_calc.input.potcar_spec
             ]
@@ -70,10 +83,18 @@ class ValidationDoc(EmmetBaseModel):
                 structure=final_calc.input.structure,
                 potcar=potcar_stats,
             ),
-            outcar=LightOutcar(**{k: final_calc.output.outcar.get(k) for k in ("drift", "magnetization")}),
+            outcar=LightOutcar(
+                **{
+                    k: final_calc.output.outcar.get(k)
+                    for k in ("drift", "magnetization")
+                }
+            ),
             vasprun=LightVasprun(
                 vasp_version=final_calc.vasp_version,
-                ionic_steps=[ionic_step.model_dump() for ionic_step in final_calc.output.ionic_steps],
+                ionic_steps=[
+                    ionic_step.model_dump()
+                    for ionic_step in final_calc.output.ionic_steps
+                ],
                 final_energy=task_doc.output.energy,
                 final_structure=task_doc.output.structure,
                 kpoints=final_calc.input.kpoints,

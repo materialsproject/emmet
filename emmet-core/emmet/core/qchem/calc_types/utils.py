@@ -189,7 +189,7 @@ def task_type(orig: Dict[str, Any], special_run_type: Optional[str] = None) -> T
     return TaskType("Unknown")
 
 
-def calc_type(special_run_type: str, orig: Dict[str, Any]) -> CalcType:
+def calc_type(special_run_type: str, orig: Optional[Dict[str, Any]]) -> CalcType:
     """
     Determines the calc type
 

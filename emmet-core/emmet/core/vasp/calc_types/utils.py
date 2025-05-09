@@ -1,11 +1,18 @@
 """Module to define various calculation types as Enums for VASP."""
 
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Dict, Literal
+from typing import TYPE_CHECKING
 
 from monty.serialization import loadfn
 
+from pymatgen.io.vasp import Kpoints
+
 from emmet.core.vasp.calc_types.enums import CalcType, RunType, TaskType
+
+if TYPE_CHECKING:
+    from typing import Any
 
 _RUN_TYPE_DATA = loadfn(
     str(Path(__file__).parent.joinpath("calc_types.yaml").resolve())
@@ -14,7 +21,7 @@ _RUN_TYPE_DATA = loadfn(
 __all__ = ["run_type", "task_type", "calc_type"]
 
 
-def run_type(parameters: Dict) -> RunType:
+def run_type(parameters: dict[str, Any]) -> RunType:
     """
     Determine run type from the VASP parameters dict.
 
@@ -51,9 +58,7 @@ def run_type(parameters: Dict) -> RunType:
     return RunType(f"LDA{is_hubbard}")
 
 
-def task_type(
-    inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict]
-) -> TaskType:
+def task_type(inputs: dict[str, Any]) -> TaskType:
     """
     Determine task type from vasp inputs.
 
@@ -68,7 +73,7 @@ def task_type(
     incar = inputs.get("incar", {})
     kpts = inputs.get("kpoints") or {}  # kpoints can be None, then want a dict
 
-    if not isinstance(kpts, dict):
+    if isinstance(kpts, Kpoints):
         kpts = kpts.as_dict()
 
     if incar.get("ICHARG", 0) > 10:
@@ -132,8 +137,8 @@ def task_type(
 
 
 def calc_type(
-    inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict],
-    parameters: Dict,
+    inputs: dict[str, Any],
+    parameters: dict[str, Any],
 ) -> CalcType:
     """
     Determine the calc type.
