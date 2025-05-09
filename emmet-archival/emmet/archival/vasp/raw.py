@@ -5,16 +5,19 @@ import json
 from typing import TYPE_CHECKING
 from pathlib import Path
 from pydantic import Field
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, NamedTemporaryFile
 
 import h5py
 import numpy as np
 import zarr
 
 from monty.io import zopen
-from pymatgen.io.vasp import Potcar
+from pymatgen.core import Structure
+from pymatgen.io.vasp import Incar, Kpoints, Potcar, Outcar, Vasprun
+import zarr.storage
 
-from pymatgen.io.validation.common import PotcarSummaryStats
+from pymatgen.io.validation.common import PotcarSummaryStats, VaspFiles
+from pymatgen.io.validation.validation import VaspValidator
 
 from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.utils import VASP_RAW_DATA_ORG, discover_vasp_files, FileMetadata
@@ -141,10 +144,149 @@ class RawArchive(Archiver):
         return extracted_files
 
     @classmethod
+    def _validate(
+        cls,
+        archive_path: PathLike,
+        group_key: str | None = None,
+        files_to_extract: list[str] | None = None,
+        zarr_store: zarr.storage.Store | None = None,
+        **kwargs,
+    ) -> VaspValidator:
+        """
+        Validate a VASP calculation from an archive.
+
+        Parameters
+        -----------
+        archive_path : PathLike
+            Name of the archive.
+        group_key : str or None (default)
+            If a str, the name of the group in the archive to prefix from.
+        files_to_extract : list[str] or None
+            If specified, this is a list of all keys in the archive which
+            should be extracted for validation.
+            Defaults to the minimal files needed for a comprehensive validation.
+        zarr_store : zarr.storage.Store or None (default)
+            If specified, the ZARR store to begin file root at.
+        **kwargs to pass to VaspValidator.from_vasp_input
+        """
+
+        files_to_extract = files_to_extract or [
+            *[f"input/{k}" for k in ("INCAR", "KPOINTS", "POSCAR", "POTCAR.spec")],
+            *[f"output/{k}" for k in ("OUTCAR", "vasprun.xml")],
+        ]
+
+        fname_to_type = {
+            "incar": Incar,
+            "kpoints": Kpoints,
+            "poscar": Structure,
+            "potcar.spec": PotcarSummaryStats,
+            "outcar": Outcar,
+            "vasprun.xml": Vasprun,
+        }
+
+        vasp_io = {"user_input": {}}
+        with cls._open_hdf5_like(
+            archive_path, mode="r", group_key=group_key, zarr_store=zarr_store
+        ) as group:
+            for io_typ in ("input", "output"):
+                for key in [
+                    key for key in files_to_extract if io_typ in key and key in group
+                ]:
+                    if (fname := Path(key).name.lower()) not in fname_to_type:
+                        continue
+
+                    data = np.array(group[key])[0].decode()
+                    if io_typ == "input":
+                        # These methods can directly parse from in-memory str
+
+                        if fname == "potcar.spec":
+                            vasp_io["user_input"]["potcar"] = [
+                                PotcarSummaryStats(**ps) for ps in json.loads(data)
+                            ]
+                        elif fname == "poscar":
+                            vasp_io["user_input"]["structure"] = Structure.from_str(
+                                data, fmt="poscar"
+                            )
+                        else:
+                            vasp_io["user_input"][fname] = fname_to_type[
+                                fname
+                            ].from_str(
+                                data,
+                            )
+                    else:
+                        # These methods must write to a temp file to parse
+                        with NamedTemporaryFile() as temp_file:
+                            temp_file.write(np.array(group[key])[0])
+                            temp_file.seek(0)
+                            vasp_io[fname.split(".")[0]] = fname_to_type[fname](
+                                temp_file.name
+                            )
+
+        vasp_files = VaspFiles(**vasp_io)
+        return VaspValidator.from_vasp_input(vasp_files=vasp_files, **kwargs)
+
+    @classmethod
+    def fast_validate(
+        cls, archive_path: PathLike, group_key: str | None = None
+    ) -> VaspValidator:
+        """Perform a quick validation check on the calculation.
+
+        This signature is intendended to match the pre-validation
+        used in the new CLI:
+        ```
+        validated = VaspValidator.from_vasp_input(
+            vasp_file_paths = {
+                "incar": < path to INCAR>,
+                "poscar": < path to POSCAR>,
+                "potcar": < path to POTCAR>,
+                "kpoints": < optional path to KPOINTS>,
+            },
+            fast = True
+        )
+        validated.valid # whether calculation is valid or not
+        ```
+
+        Parameters
+        -----------
+        archive_path : PathLike
+            Name of the archive.
+        group_key : str or None (default)
+            If a str, the name of the group in the archive to prefix from.
+        """
+        return cls._validate(
+            archive_path,
+            group_key=group_key,
+            files_to_extract=[
+                f"input/{k}" for k in ("INCAR", "KPOINTS", "POSCAR", "POTCAR.spec")
+            ],
+            fast=True,
+        )
+
+    @classmethod
+    def validate(
+        cls, archive_path: PathLike, group_key: str | None = None
+    ) -> VaspValidator:
+        """Perform a normal validation check on the calculation.
+
+        Parameters
+        -----------
+        archive_path : PathLike
+            Name of the archive.
+        group_key : str or None (default)
+            If a str, the name of the group in the archive to prefix from.
+        """
+        return cls._validate(
+            archive_path,
+            group_key=group_key,
+            fast=True,
+        )
+
+    @classmethod
     def to_task_doc(
         cls,
         archive_path: PathLike,
         group_key: str | None = None,
+        zarr_store: zarr.storage.Store | None = None,
         **task_doc_kwargs,
     ) -> TaskDoc:
         """
@@ -156,6 +298,8 @@ class RawArchive(Archiver):
             The name of the archive
         group_key : str | None = None
             If not None, the name of a file hierarchy to retrieve.
+        zarr_store : zarr.storage.Store or None (default)
+            If specified, the ZARR store to begin file root at.
         **task_doc_kwargs
             kwargs to pass to TaskDoc.from_directory
 
@@ -175,8 +319,12 @@ class RawArchive(Archiver):
             )
 
         with TemporaryDirectory() as _tmp_dir:
-            fm = cls.extract(archive_path, keys=required_files, output_dir=_tmp_dir)
-            print(fm)
+            cls.extract(
+                archive_path,
+                keys=required_files,
+                output_dir=_tmp_dir,
+                zarr_store=zarr_store,
+            )
             task = TaskDoc.from_directory(_tmp_dir, **task_doc_kwargs)
 
         return task
