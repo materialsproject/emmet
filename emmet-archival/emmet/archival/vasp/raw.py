@@ -30,6 +30,41 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
 
+def raw_archive_hierarchy_from_files(
+    file_metas: list[FileMetadata],
+) -> dict[str, FileMetadata]:
+    """Arrange files into the hierarchical structure expected by RawArchive.
+
+    Parameters
+    -----------
+    file_metas : list of FileMetadata
+
+    Returns
+    -----------
+    dict of str to FileMetadata
+        The same input FileMetadata but in the hierarchical
+        structure expected by RawArchive.
+    """
+    file_paths: dict[str, FileMetadata] = {}
+    for file_meta in file_metas:
+        file_name = ".".join(file_meta.name.split(".")[:-1])
+        ref_file_name = None
+        for calc_type, base_file_names in VASP_RAW_DATA_ORG.items():
+            if matches := sorted(
+                [f for f in base_file_names if f in file_name], key=lambda k: len(k)
+            ):
+                ref_file_name = matches[
+                    -1
+                ]  # ensures, e.g., INCAR.orig is matched over INCAR
+                break
+
+        if not ref_file_name:
+            continue
+
+        file_paths[f"{calc_type}/{ref_file_name}"] = file_meta
+    return file_paths
+
+
 class RawArchive(Archiver):
     """Archive a raw VASP calculation directory and remove copyright-protected info."""
 
@@ -47,28 +82,19 @@ class RawArchive(Archiver):
         )
 
     @classmethod
-    def from_directory(cls, calc_dir: str | Path, **kwargs) -> Self:
+    def from_directory(cls, calc_dir: str | Path) -> Self:
+        """Create a RawArchive from a directory.
+
+        Parameters
+        -----------
+        calc_dir : str or Path
+            Directory with VASP files
+        """
         calc_dir = Path(calc_dir).resolve()
         if not calc_dir.exists():
             raise SystemError(f"Directory {calc_dir} does not exist!")
 
-        file_paths: dict[str, FileMetadata] = {}
-        for file_meta in discover_vasp_files(calc_dir):
-            file_name = ".".join(file_meta.name.split(".")[:-1])
-            ref_file_name = None
-            for calc_type, base_file_names in VASP_RAW_DATA_ORG.items():
-                if matches := sorted(
-                    [f for f in base_file_names if f in file_name], key=lambda k: len(k)
-                ):
-                    ref_file_name = matches[
-                        -1
-                    ]  # ensures, e.g., INCAR.orig is matched over INCAR
-                    break
-
-            if not ref_file_name:
-                continue
-
-            file_paths[f"{calc_type}/{ref_file_name}"] = file_meta
+        file_paths = raw_archive_hierarchy_from_files(discover_vasp_files(calc_dir))
 
         return cls(file_paths=file_paths)
 

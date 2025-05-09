@@ -285,9 +285,7 @@ class StructureArchive(Archiver):
         return data
 
     @staticmethod
-    def columnar_to_structure(column_dict: dict[str, Any]) -> Structure:
-        struct_meta = column_dict.pop("_attributes")
-        df = pd.DataFrame(column_dict)
+    def columnar_to_structure(df: pd.DataFrame) -> Structure:
         sites = [None for _ in range(len(df))]
         max_dis = len([col for col in df.columns if "occu" in col])
         has_oxi = any("oxi_state" in col for col in df.columns)
@@ -307,7 +305,6 @@ class StructureArchive(Archiver):
                     spec = Element.from_Z(df[f"atomic_num_{icomp}"][isite])
                     if has_oxi and not np.isnan(oxi := df[f"oxi_state_{icomp}"][isite]):
                         spec = Species(spec, oxidation_state=oxi)
-                    print(spec)
                     comp[spec] = df[f"occu_{icomp}"][isite]
             else:
                 comp = Element.from_Z(df["atomic_num"][isite])
@@ -322,11 +319,11 @@ class StructureArchive(Archiver):
             sites[isite] = PeriodicSite(
                 comp,
                 [df[v][isite] for v in _RECIPROCAL],
-                Lattice(struct_meta["lattice"]),
+                Lattice(df.attrs["lattice"]),
                 coords_are_cartesian=False,
                 properties=props or None,
             )
-        return Structure.from_sites(sites, charge=struct_meta.get("charge"))
+        return Structure.from_sites(sites, charge=df.attrs.get("charge"))
 
     def _to_hdf5_like(self, group: h5py.Group | zarr.Group, **kwargs) -> None:
         columnar_struct = self.structure_to_columnar(self.structure)
@@ -345,4 +342,8 @@ class StructureArchive(Archiver):
     def _extract_from_hdf5_like(cls, group: h5py.Group | zarr.Group) -> Structure:
         data = {k: np.array(group[k]) for k in group}
         data["_attributes"] = {k: group.attrs.get(k) for k in ("lattice", "charge")}
-        return cls.columnar_to_structure(data)
+        struct_meta = data.pop("_attributes")
+        df = pd.DataFrame(data)
+        df.attrs.update(struct_meta)
+
+        return cls.columnar_to_structure(df)
