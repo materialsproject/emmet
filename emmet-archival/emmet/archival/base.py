@@ -52,9 +52,7 @@ def infer_archive_format(file_name: PathLike) -> ArchivalFormat:
         if f".{fmt.value}" in archive_path.suffixes:
             return fmt
 
-    raise TypeError(
-        f"Unknown file format - recognized formats are:\n{', '.join(ArchivalFormat.__members__)}"
-    )
+    raise TypeError(f"Unknown file format - recognized formats are:\n{', '.join(ArchivalFormat.__members__)}")
 
 
 class Archiver(BaseModel):
@@ -104,7 +102,7 @@ class Archiver(BaseModel):
         if fmt == ArchivalFormat.HDF5:
             group = h5py.File(archive_name, mode)
         elif fmt == ArchivalFormat.ZARR:
-            group = zarr.open(store=zarr_store, path=archive_name, mode=mode)
+            group = zarr.open_group(store=zarr_store, path=archive_name, mode=mode)
         else:
             raise TypeError(f"Specified format = {fmt} is not HDF5-like.")
 
@@ -157,9 +155,7 @@ class Archiver(BaseModel):
         compression = compression or self.get_default_compression(fmt)
 
         if fmt in (ArchivalFormat.HDF5, ArchivalFormat.ZARR):
-            with self._open_hdf5_like(
-                file_name, fmt=fmt, mode="w", zarr_store=zarr_store
-            ) as group:
+            with self._open_hdf5_like(file_name, fmt=fmt, mode="w", zarr_store=zarr_store) as group:
                 self._to_hdf5_like(group, **compression)
                 for k, v in (metadata or {}).items():
                     group.attrs[k] = v
@@ -169,9 +165,7 @@ class Archiver(BaseModel):
             raise ValueError("Unknown file format")
 
     @classmethod
-    def _extract_from_hdf5_like(
-        cls, group: h5py.Group | zarr.Group, *args, **kwargs
-    ) -> Any:
+    def _extract_from_hdf5_like(cls, group: h5py.Group | zarr.Group, *args, **kwargs) -> Any:
         """Extract data from an HDF5-like file."""
         raise NotImplementedError
 
@@ -202,9 +196,7 @@ class Archiver(BaseModel):
 
         fmt = infer_archive_format(archive_path)
         if fmt in (ArchivalFormat.HDF5, ArchivalFormat.ZARR):
-            with cls._open_hdf5_like(
-                archive_path, fmt=fmt, mode="r", zarr_store=zarr_store
-            ) as _f:
+            with cls._open_hdf5_like(archive_path, fmt=fmt, mode="r", zarr_store=zarr_store) as _f:
                 return cls._extract_from_hdf5_like(_f, *args, **kwargs)
         elif fmt == ArchivalFormat.PARQ:
             return cls._extract_from_parquet(archive_path, *args, **kwargs)
@@ -238,11 +230,7 @@ class StructureArchive(Archiver):
         if structure.site_properties.get("magmom"):
             cols += ["magmom"]
 
-        for k in (
-            has_vector_site_props := set(_VECTOR_SITE_PROPS).intersection(
-                structure.site_properties
-            )
-        ):
+        for k in (has_vector_site_props := set(_VECTOR_SITE_PROPS).intersection(structure.site_properties)):
             if structure.site_properties.get(k):
                 cols.extend([f"{k}_{vec_dir}" for vec_dir in _CARTESIAN])
 
@@ -289,12 +277,8 @@ class StructureArchive(Archiver):
         sites = [None for _ in range(len(df))]
         max_dis = len([col for col in df.columns if "occu" in col])
         has_oxi = any("oxi_state" in col for col in df.columns)
-        has_vector_site_props = set(
-            [k for k in _VECTOR_SITE_PROPS if any(k in col for col in df.columns)]
-        )
-        has_scalar_site_props = set(
-            [k for k in ("magmom",) if any(k in col for col in df.columns)]
-        )
+        has_vector_site_props = set([k for k in _VECTOR_SITE_PROPS if any(k in col for col in df.columns)])
+        has_scalar_site_props = set([k for k in ("magmom",) if any(k in col for col in df.columns)])
 
         for isite in df.index:
             if max_dis:

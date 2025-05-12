@@ -1,0 +1,105 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools >= 65.0.0", "versioningit >= 1,< 4", "wheel"]
+
+[project]
+authors = [
+  { name = "Aaron Kaplan"},
+  { name = "Karlo Buma"},
+  { name = "Patrick Huck"},
+  { name = "Tyler Mathis"},
+]
+classifiers = [
+  "Programming Language :: Python :: 3.11",
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Materials Science",
+  "Topic :: Scientific/Engineering :: Physics",
+  "Topic :: Scientific/Engineering :: Chemistry",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+  "emmet-core>=0.84.0",
+  "h5py",
+  "pyarrow",
+  "pandas",
+  "zarr",
+  "pydantic>=2.0.1",
+]
+description = "Tools for archiving electronic structure calculations."
+dynamic = ["version"]
+keywords = ["data storage","dft","vasp"]
+license = { text = "modified BSD" }
+name = "emmet-archival"
+readme = "README.md"
+requires-python = '>=3.11'
+
+[project.optional-dependencies]
+dev = ["pre-commit>=2.12.1"]
+
+tests = ["pytest==8.3.5", "pytest-cov==6.0.0", "types-requests"]
+
+[tool.setuptools.dynamic]
+readme = { file = ["README.md"] }
+
+[project.urls]
+repository = "https://github.com/materialsproject/emmet"
+
+[tool.setuptools.packages.find]
+exclude = ["tests"]
+where = ["./"]
+
+[tool.versioningit.vcs]
+default-tag = "0.0.1"
+method = "git"
+
+[tool.isort]
+profile = "black"
+
+[tool.black]
+line-length = 120
+
+[tool.blacken-docs]
+line-length = 120
+
+[tool.flake8]
+extend-ignore = "E203, Wv503, E501, F401, RST21"
+max-line-length = 120
+max-doc-length = 120
+min-python-version = "3.8.0"
+rst-roles = "class, func, ref, obj"
+select = "C, E, F, W, B, B950"
+
+[tool.mypy]
+explicit_package_bases = true
+namespace_packages = true
+ignore_missing_imports = true
+no_strict_optional = true
+plugins = ["pydantic.mypy"]
+
+[tool.coverage.run]
+branch = true
+include = ["pymatgen/*"]
+parallel = true
+
+[tool.coverage.paths]
+source = ["pymatgen/"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
+[tool.pydocstyle]
+convention = 'google'
+match = '^pymatgen/(?!_).*\.py'
+inherit = false
+add-ignore = "D107, "
+
+[tool.autoflake]
+in-place = true
+remove-unused-variables = true
+remove-all-unused-imports = true
+expand-star-imports = true
+ignore-init-module-imports = true
