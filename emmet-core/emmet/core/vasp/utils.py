@@ -19,6 +19,7 @@ class FileMetadata(BaseModel):
     Lightweight model to enable validation on files via MD5.
 
     """
+
     path: Path = Field(description="Path to the file")
     _md5: Optional[str] = PrivateAttr(default=None)
 
@@ -31,7 +32,7 @@ class FileMetadata(BaseModel):
                 path = Path(path)
             v["path"] = path
         return v
-    
+
     @property
     def name(self) -> str:
         """Return the name of the file."""
