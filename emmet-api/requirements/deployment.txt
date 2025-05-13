@@ -21,33 +21,35 @@ attrs==25.3.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.37.33
+bibtexparser==1.4.3
+    # via pymatgen
+boto3==1.38.13
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.37.33
+botocore==1.38.13
     # via
     #   boto3
     #   s3transfer
 bytecode==0.16.2
     # via ddtrace
-certifi==2025.1.31
+certifi==2025.4.26
     # via requests
 cffi==1.17.1
     # via
     #   cryptography
     #   pynacl
-charset-normalizer==3.4.1
+charset-normalizer==3.4.2
     # via requests
-click==8.1.8
+click==8.2.0
     # via uvicorn
-contourpy==1.3.1
+contourpy==1.3.2
     # via matplotlib
-cryptography==44.0.2
+cryptography==44.0.3
     # via paramiko
 cycler==0.12.1
     # via matplotlib
-ddtrace==2.21.5
+ddtrace==2.21.7
     # via emmet-api (emmet/emmet-api/setup.py)
 deprecated==1.2.18
     # via opentelemetry-api
@@ -63,11 +65,11 @@ fastapi==0.115.12
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-fonttools==4.57.0
+fonttools==4.58.0
     # via matplotlib
 gunicorn==23.0.0
     # via emmet-api (emmet/emmet-api/setup.py)
-h11==0.14.0
+h11==0.16.0
     # via uvicorn
 idna==3.10
     # via
@@ -81,13 +83,13 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-joblib==1.4.2
+joblib==1.5.0
     # via pymatgen
 jsonlines==4.0.0
     # via maggma
 jsonschema==4.23.0
     # via maggma
-jsonschema-specifications==2024.10.1
+jsonschema-specifications==2025.4.1
     # via jsonschema
 kiwisolver==1.4.8
     # via matplotlib
@@ -97,7 +99,7 @@ lazy-loader==0.4
     # via scikit-image
 maggma[api]==0.71.5
     # via emmet-api (emmet/emmet-api/setup.py)
-matplotlib==3.10.1
+matplotlib==3.10.3
     # via
     #   -r python/requirements.txt
     #   pymatgen
@@ -114,7 +116,7 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.1.0
     # via maggma
-narwhals==1.34.1
+narwhals==1.39.0
     # via plotly
 networkx==3.4.2
     # via
@@ -136,11 +138,11 @@ numpy==1.26.4
     #   shapely
     #   spglib
     #   tifffile
-opentelemetry-api==1.32.0
+opentelemetry-api==1.33.0
     # via ddtrace
-orjson==3.10.16
+orjson==3.10.18
     # via maggma
-packaging==24.2
+packaging==25.0
     # via
     #   gunicorn
     #   lazy-loader
@@ -167,26 +169,24 @@ plotly==6.0.1
 protobuf==6.30.2
     # via ddtrace
 pybtex==0.24.0
-    # via
-    #   emmet-core
-    #   pymatgen
+    # via emmet-core
 pycparser==2.22
     # via cffi
-pydantic==2.11.3
+pydantic==2.11.4
     # via
     #   emmet-core
     #   fastapi
     #   maggma
     #   pydantic-settings
-pydantic-core==2.33.1
+pydantic-core==2.33.2
     # via pydantic
-pydantic-settings==2.8.1
+pydantic-settings==2.9.1
     # via
     #   emmet-core
     #   maggma
 pydash==8.0.5
     # via maggma
-pymatgen==2025.4.10
+pymatgen==2025.5.2
     # via
     #   emmet-core
     #   mp-pyrho
@@ -201,7 +201,9 @@ pymongo==4.10.1
 pynacl==1.5.0
     # via paramiko
 pyparsing==3.2.3
-    # via matplotlib
+    # via
+    #   bibtexparser
+    #   matplotlib
 python-dateutil==2.9.0.post0
     # via
     #   botocore
@@ -235,18 +237,18 @@ ruamel-yaml==0.18.10
     #   pymatgen
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-s3transfer==0.11.4
+s3transfer==0.12.0
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
-scipy==1.15.2
+scipy==1.15.3
     # via
     #   -r python/requirements.txt
     #   pymatgen
     #   scikit-image
 sentinels==1.0.0
     # via mongomock
-setproctitle==1.3.5
+setproctitle==1.3.6
     # via emmet-api (emmet/emmet-api/setup.py)
 shapely==2.1.0
     # via
@@ -264,11 +266,11 @@ sshtunnel==0.4.0
     # via maggma
 starlette==0.46.2
     # via fastapi
-sympy==1.13.3
+sympy==1.14.0
     # via pymatgen
 tabulate==0.9.0
     # via pymatgen
-tifffile==2025.3.30
+tifffile==2025.5.10
     # via scikit-image
 tqdm==4.67.1
     # via
@@ -287,16 +289,18 @@ typing-extensions==4.13.2
     #   spglib
     #   typing-inspection
 typing-inspection==0.4.0
-    # via pydantic
+    # via
+    #   pydantic
+    #   pydantic-settings
 tzdata==2025.2
     # via pandas
-uncertainties==3.2.2
+uncertainties==3.2.3
     # via pymatgen
 urllib3==2.4.0
     # via
     #   botocore
     #   requests
-uvicorn==0.34.1
+uvicorn==0.34.2
     # via maggma
 wrapt==1.17.2
     # via

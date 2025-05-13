@@ -6,7 +6,7 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.11.16
+aiohttp==3.11.18
     # via fsspec
 aioitertools==0.12.0
     # via maggma
@@ -14,7 +14,7 @@ aiosignal==1.3.2
     # via aiohttp
 annotated-types==0.7.0
     # via pydantic
-ase==3.24.0
+ase==3.25.0
     # via
     #   chgnet
     #   matcalc
@@ -28,15 +28,15 @@ attrs==25.3.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.37.26
+boto3==1.38.6
     # via maggma
-botocore==1.37.26
+botocore==1.38.6
     # via
     #   boto3
     #   s3transfer
 bracex==2.5.post1
     # via wcmatch
-certifi==2025.1.31
+certifi==2025.4.26
     # via requests
 cffi==1.17.1
     # via
@@ -52,7 +52,7 @@ click==8.1.8
     # via mkdocs
 colorama==0.4.6
     # via griffe
-contourpy==1.3.1
+contourpy==1.3.2
     # via matplotlib
 coverage[toml]==7.8.0
     # via pytest-cov
@@ -85,7 +85,7 @@ flake8==7.2.0
     # via emmet-builders (setup.py)
 fonttools==4.57.0
     # via matplotlib
-frozenlist==1.5.0
+frozenlist==1.6.0
     # via
     #   aiohttp
     #   aiosignal
@@ -99,13 +99,13 @@ ghp-import==2.1.0
     # via mkdocs
 griddataformats==1.0.2
     # via mdanalysis
-griffe==1.7.2
+griffe==1.7.3
     # via mkdocstrings-python
 h5py==3.13.0
     # via phonopy
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
-identify==2.6.9
+identify==2.6.10
     # via pre-commit
 idna==3.10
     # via
@@ -141,7 +141,7 @@ jsonlines==4.0.0
     # via maggma
 jsonschema==4.23.0
     # via maggma
-jsonschema-specifications==2024.10.1
+jsonschema-specifications==2025.4.1
     # via jsonschema
 kiwisolver==1.4.8
     # via matplotlib
@@ -149,7 +149,7 @@ latexcodec==3.0.0
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
-lightning==2.5.1
+lightning==2.5.1.post0
     # via matgl
 lightning-utilities==0.14.3
     # via
@@ -160,7 +160,7 @@ livereload==2.7.1
     # via emmet-builders (setup.py)
 maggma==0.71.5
     # via emmet-builders (setup.py)
-markdown==3.7
+markdown==3.8
     # via
     #   mkdocs
     #   mkdocs-autorefs
@@ -247,7 +247,7 @@ monty==2025.3.3
     #   matminer
     #   pymatgen
     #   robocrys
-more-itertools==10.6.0
+more-itertools==10.7.0
     # via inflect
 mp-pyrho==0.4.5
     # via pymatgen-analysis-defects
@@ -259,17 +259,17 @@ msgpack==1.1.0
     # via
     #   maggma
     #   mmtf-python
-multidict==6.2.0
+multidict==6.4.3
     # via
     #   aiohttp
     #   yarl
 mypy==1.15.0
     # via emmet-builders (setup.py)
-mypy-extensions==1.0.0
+mypy-extensions==1.1.0
     # via
     #   emmet-builders (setup.py)
     #   mypy
-narwhals==1.33.0
+narwhals==1.37.1
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -319,43 +319,46 @@ numpy==1.26.4
     #   tidynamics
     #   tifffile
     #   torchmetrics
-nvidia-cublas-cu12==12.4.5.8
+nvidia-cublas-cu12==12.6.4.1
     # via
     #   nvidia-cudnn-cu12
     #   nvidia-cusolver-cu12
     #   torch
-nvidia-cuda-cupti-cu12==12.4.127
+nvidia-cuda-cupti-cu12==12.6.80
     # via torch
-nvidia-cuda-nvrtc-cu12==12.4.127
+nvidia-cuda-nvrtc-cu12==12.6.77
     # via torch
-nvidia-cuda-runtime-cu12==12.4.127
+nvidia-cuda-runtime-cu12==12.6.77
     # via torch
-nvidia-cudnn-cu12==9.1.0.70
+nvidia-cudnn-cu12==9.5.1.17
     # via torch
-nvidia-cufft-cu12==11.2.1.3
+nvidia-cufft-cu12==11.3.0.4
     # via torch
-nvidia-curand-cu12==10.3.5.147
+nvidia-cufile-cu12==1.11.1.6
     # via torch
-nvidia-cusolver-cu12==11.6.1.9
+nvidia-curand-cu12==10.3.7.77
     # via torch
-nvidia-cusparse-cu12==12.3.1.170
+nvidia-cusolver-cu12==11.7.1.2
+    # via torch
+nvidia-cusparse-cu12==12.5.4.2
     # via
     #   nvidia-cusolver-cu12
     #   torch
-nvidia-cusparselt-cu12==0.6.2
+nvidia-cusparselt-cu12==0.6.3
     # via torch
 nvidia-ml-py3==7.352.0
     # via chgnet
-nvidia-nccl-cu12==2.21.5
+nvidia-nccl-cu12==2.26.2
     # via torch
-nvidia-nvjitlink-cu12==12.4.127
+nvidia-nvjitlink-cu12==12.6.85
     # via
+    #   nvidia-cufft-cu12
     #   nvidia-cusolver-cu12
     #   nvidia-cusparse-cu12
     #   torch
-nvidia-nvtx-cu12==12.4.127
+nvidia-nvtx-cu12==12.6.77
     # via torch
-orjson==3.10.16
+orjson==3.10.18
     # via maggma
 packaging==24.2
     # via
@@ -388,9 +391,9 @@ pathspec==0.12.1
     # via mkdocs
 patsy==1.0.1
     # via statsmodels
-phonopy==2.38.0
+phonopy==2.38.2
     # via matcalc
-pillow==11.1.0
+pillow==11.2.1
     # via
     #   imageio
     #   matplotlib
@@ -427,15 +430,15 @@ pycodestyle==2.13.0
     #   flake8
 pycparser==2.22
     # via cffi
-pydantic==2.11.2
+pydantic==2.11.4
     # via
     #   emmet-core
     #   maggma
     #   matgl
     #   pydantic-settings
-pydantic-core==2.33.1
+pydantic-core==2.33.2
     # via pydantic
-pydantic-settings==2.8.1
+pydantic-settings==2.9.1
     # via
     #   emmet-core
     #   maggma
@@ -465,7 +468,7 @@ pymatgen-analysis-defects==2025.1.18
     # via emmet-core
 pymatgen-analysis-diffusion==2024.7.15
     # via emmet-core
-pymdown-extensions==10.14.3
+pymdown-extensions==10.15
     # via
     #   mkdocs-material
     #   mkdocstrings
@@ -482,7 +485,7 @@ pytest==8.3.5
     #   emmet-builders (setup.py)
     #   pytest-cov
     #   solvation-analysis
-pytest-cov==6.1.0
+pytest-cov==6.1.1
     # via emmet-builders (setup.py)
 python-dateutil==2.9.0.post0
     # via
@@ -493,7 +496,7 @@ python-dateutil==2.9.0.post0
     #   pandas
 python-dotenv==1.1.0
     # via pydantic-settings
-pytorch-lightning==2.5.1
+pytorch-lightning==2.5.1.post0
     # via lightning
 pytz==2025.2
     # via
@@ -513,7 +516,7 @@ pyyaml==6.0.2
     #   pyyaml-env-tag
 pyyaml-env-tag==0.1
     # via mkdocs
-pyzmq==26.3.0
+pyzmq==26.4.0
     # via maggma
 rdkit==2024.9.6
     # via solvation-analysis
@@ -541,7 +544,7 @@ ruamel-yaml==0.18.10
     #   robocrys
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-s3transfer==0.11.4
+s3transfer==0.12.0
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
@@ -593,7 +596,7 @@ statsmodels==0.14.4
     # via solvation-analysis
 symfc==1.3.4
     # via phonopy
-sympy==1.13.1
+sympy==1.14.0
     # via
     #   matminer
     #   pymatgen
@@ -608,7 +611,7 @@ tidynamics==1.1.2
     # via transport-analysis
 tifffile==2025.3.30
     # via scikit-image
-torch==2.6.0
+torch==2.7.0
     # via
     #   chgnet
     #   lightning
@@ -620,7 +623,7 @@ torchdata==0.7.1
     # via
     #   dgl
     #   matgl
-torchmetrics==1.7.0
+torchmetrics==1.7.1
     # via
     #   lightning
     #   pytorch-lightning
@@ -637,15 +640,15 @@ tqdm==4.67.1
     #   pytorch-lightning
 transport-analysis==0.1.2
     # via emmet-builders (setup.py)
-triton==3.2.0
+triton==3.3.0
     # via torch
 typeguard==4.4.2
     # via inflect
 types-requests==2.32.0.20250328
     # via emmet-builders (setup.py)
-types-setuptools==78.1.0.20250329
+types-setuptools==80.0.0.20250429
     # via emmet-builders (setup.py)
-typing-extensions==4.13.1
+typing-extensions==4.13.2
     # via
     #   chgnet
     #   emmet-core
@@ -662,12 +665,14 @@ typing-extensions==4.13.1
     #   typeguard
     #   typing-inspection
 typing-inspection==0.4.0
-    # via pydantic
+    # via
+    #   pydantic
+    #   pydantic-settings
 tzdata==2025.2
     # via pandas
-uncertainties==3.2.2
+uncertainties==3.2.3
     # via pymatgen
-urllib3==2.3.0
+urllib3==2.4.0
     # via
     #   botocore
     #   requests
@@ -681,7 +686,7 @@ wcmatch==10.0
     # via mkdocs-awesome-pages-plugin
 wincertstore==0.2.1
     # via emmet-builders (setup.py)
-yarl==1.18.3
+yarl==1.20.0
     # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:

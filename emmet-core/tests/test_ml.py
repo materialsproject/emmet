@@ -3,7 +3,7 @@ import pytest
 # from matcalc.utils import get_universal_calculator
 import numpy as np
 from pymatgen.core import Structure
-from pymatgen.util.testing import PymatgenTest
+from pymatgen.util.testing import STRUCTURES_DIR
 
 from emmet.core.elasticity import BulkModulus, ElasticTensorDoc, ShearModulus
 from emmet.core.math import matrix_3x3_to_voigt
@@ -15,9 +15,6 @@ from tests.conftest import get_test_object
 
 # if TYPE_CHECKING:
 #    from ase.calculators.calculator import Calculator
-
-struct = PymatgenTest.get_structure("Si")
-
 
 expected_keys = {
     # -- metadata --
@@ -62,6 +59,8 @@ expected_keys = {
 # )
 @pytest.mark.skip(reason="Temporary skip. Needs attention.")
 def test_ml_doc(calculator, prop_kwargs: dict) -> None:
+    struct = Structure.from_file(STRUCTURES_DIR / "Si.json")
+
     doc = MLDoc(
         structure=struct,
         calculator=calculator,
