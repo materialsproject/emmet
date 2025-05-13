@@ -1,6 +1,7 @@
 """Define common testing utils used across emmet namespaces."""
 from __future__ import annotations
 
+from importlib.resources import files as import_resource
 import math
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -12,9 +13,18 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from typing import Any
 
-TEST_FILES_DIR = (
-    Path(__file__).parent.parent.parent.parent.joinpath("test_files").resolve()
-)
+
+def _get_test_files_dir(module: str) -> Path:
+    """Get path to test files directory."""
+    return (
+        Path(str(import_resource(module)))
+        .parent.parent.parent.joinpath("test_files")
+        .resolve()
+    )
+
+
+TEST_FILES_DIR = _get_test_files_dir("emmet.core")
+"""Test files directory measured relative to emmet-core install."""
 
 
 def _float_comparator(x: float, y: float):

@@ -124,8 +124,8 @@ class XASDoc(SpectrumDoc):
         # without generating new objects
         for task in all_tasks:
             spectrum = task.xas_spectrum
-            spectrum.last_updated = task.last_updated
-            spectrum.task_ids = [task.task_id]
+            setattr(spectrum, "last_updated", task.last_updated)
+            setattr(spectrum, "task_ids", [task.task_id])
             all_spectra.append(spectrum)
 
         # Pre sort by keys to remove needing to sort in the group by stage

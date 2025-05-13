@@ -767,6 +767,34 @@ class Calculation(CalculationBaseModel):
             v = TaskState.SUCCESS if v else TaskState.FAILED
         return v
 
+    @staticmethod
+    def safe_get_run_task_calc_types(
+        calc_inp: CalculationInput | None,
+    ) -> tuple[RunType | None, TaskType | None, CalcType | None]:
+        """Safely get run, task, and calc types from optional input.
+
+        Parameters
+        -----------
+        calc_inp : CalculationInput (optional because it is in the document schema.)
+
+        Returns
+        -----------
+        tuple of RunType, TaskType, and CalcType, or None if insufficient parameters
+        were supplied.
+
+        """
+        _run_type = None
+        _task_type = None
+        _calc_type = None
+        if calc_inp:
+            calc_inp_dict = calc_inp.model_dump()
+            _task_type = task_type(calc_inp_dict)
+            if calc_inp.parameters:
+                _run_type = run_type(calc_inp.parameters)
+                _calc_type = calc_type(calc_inp_dict, calc_inp.parameters)
+
+        return _run_type, _task_type, _calc_type
+
     @classmethod
     def from_vasp_files(
         cls,
@@ -981,6 +1009,7 @@ class Calculation(CalculationBaseModel):
                 TaskState.SUCCESS if vasprun.converged else TaskState.FAILED
             )
 
+        rtyp, ttyp, ctyp = cls.safe_get_run_task_calc_types(input_doc)
         return (
             cls(
                 dir_name=str(dir_name),
@@ -995,9 +1024,9 @@ class Calculation(CalculationBaseModel):
                 },
                 bader=bader,
                 ddec6=ddec6,
-                run_type=run_type(input_doc.parameters),
-                task_type=task_type(input_doc.model_dump()),
-                calc_type=calc_type(input_doc.model_dump(), input_doc.parameters),
+                run_type=rtyp,
+                task_type=ttyp,
+                calc_type=ctyp,
             ),
             vasp_objects,
         )
@@ -1052,6 +1081,7 @@ class Calculation(CalculationBaseModel):
                 TaskState.SUCCESS if vasprun.converged else TaskState.FAILED
             )
 
+        rtyp, ttyp, ctyp = cls.safe_get_run_task_calc_types(input_doc)
         return cls(
             dir_name=str(path.resolve().parent),
             task_name=task_name,
@@ -1061,9 +1091,9 @@ class Calculation(CalculationBaseModel):
             input=input_doc,
             output=output_doc,
             output_file_paths={},
-            run_type=run_type(input_doc.parameters),
-            task_type=task_type(input_doc.model_dump()),
-            calc_type=calc_type(input_doc.model_dump(), input_doc.parameters),
+            run_type=rtyp,
+            task_type=ttyp,
+            calc_type=ctyp,
         )
 
 
