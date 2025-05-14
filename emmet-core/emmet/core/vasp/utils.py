@@ -38,7 +38,7 @@ class FileMetadata(BaseModel):
         """Return the name of the file."""
         return self.path.name
 
-    @computed_field
+    @computed_field  # type:ignore[prop-decorator]
     @property
     def md5(self) -> Optional[str]:
         """MD5 checksum of the file (computed lazily if needed)."""

@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 def _get_test_files_dir(module: str) -> Path:
     """Get path to test files directory."""
     return (
-        Path(import_resource(module))
+        Path(import_resource(module))  # type: ignore[arg-type]
         .parent.parent.parent.joinpath("test_files")
         .resolve()
     )
