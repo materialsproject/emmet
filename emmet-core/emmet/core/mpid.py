@@ -297,7 +297,7 @@ class AlphaID(str):
                 prefix, identifier = split_mpid
                 separator = "-"
 
-        if isinstance(identifier, str):
+        if isinstance(identifier, str) and set(identifier).intersection(digits) > set():
             identifier = int(identifier)
         if isinstance(identifier, int):
             identifier = cls._integer_to_alpha_rep(identifier)
@@ -345,6 +345,10 @@ class AlphaID(str):
                     rem -= coeff * mult
                     break
         return string
+
+    def __hash__(self):
+        """Ensure hashability."""
+        return hash(str(self))
 
     def __int__(self) -> int:
         """Get and cache the current AlphaID's integer value."""
@@ -424,10 +428,12 @@ class AlphaID(str):
             if exc_str:
                 raise TypeError(exc_str)
 
-            diff = self._string_to_base_10_value(test._identifier)
+            diff = int(test)
         elif isinstance(test, str):
             diff = self._string_to_base_10_value(test)
-        elif not isinstance(test, int):
+        elif isinstance(test, int):
+            diff = test
+        else:
             raise NotImplementedError(f"Cannot add AlphaID to type {type(test)}")
 
         return AlphaID(
@@ -445,15 +451,29 @@ class AlphaID(str):
 
         Will not subtract two AlphaIDs if `prefix` and `separator` do not match.
         """
-        if isinstance(other, AlphaID):
-            test = self._string_to_base_10_value(other._identifier)
-        elif isinstance(other, MPID):
-            test = self._string_to_base_10_value(AlphaID(other)._identifier)
-        elif isinstance(other, str):
-            test = self._string_to_base_10_value(other)
+        if isinstance(other, MPID):
+            test = AlphaID(other)
         else:
             test = other
-        return self.__add__(-test)
+
+        if isinstance(test, AlphaID):
+            exc_str = ""
+            if test._prefix != self._prefix:
+                exc_str += f"Prefixes do not match: left = {self._prefix or None}, right {test._prefix or None}. "
+
+            if test._prefix and self._prefix and test._separator != self._separator:
+                exc_str += f"Separators do not match: left = {self._separator}, right {test._separator}."
+
+            if exc_str:
+                raise TypeError(exc_str)
+            diff = self._string_to_base_10_value(test._identifier)
+
+        elif isinstance(test, str):
+            diff = self._string_to_base_10_value(test)
+        else:
+            diff = test
+
+        return self.__add__(-diff)
 
     def __lt__(self, other: Any) -> bool:
         """Define AlphaID less than.

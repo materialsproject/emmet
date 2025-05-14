@@ -107,6 +107,10 @@ def test_alpha_id():
     ):
         for separator in ("-", ":", ">"):
             idx = AlphaID(majik_num, prefix=pfx, separator=separator)
+
+            # Roundtrip
+            assert idx == AlphaID(str(idx))
+
             assert int(idx) == majik_num
 
             # Test integer equality
@@ -140,6 +144,15 @@ def test_alpha_id():
 
                 assert idx + other_idx == majik_num + 100
                 assert idx + other_idx == AlphaID(majik_num + 100)
+            else:
+                with pytest.raises(TypeError):
+                    assert idx - other_idx == majik_num - 100
+                with pytest.raises(TypeError):
+                    assert idx - other_idx == AlphaID(majik_num - 100)
+                with pytest.raises(TypeError):
+                    assert idx + other_idx == majik_num + 100
+                with pytest.raises(TypeError):
+                    assert idx + other_idx == AlphaID(majik_num + 100)
 
     # test iterative addition / subtraction
     last_val = None
