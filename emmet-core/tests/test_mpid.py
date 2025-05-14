@@ -59,38 +59,54 @@ def test_to_str():
 
 
 def test_alpha_id():
-
     # Test initialization from MPID-like string
     mpid_like_idx = AlphaID("mp-149")
-    assert mpid_like_idx == AlphaID(149,prefix="mp",separator="-")
+    assert mpid_like_idx == AlphaID(149, prefix="mp", separator="-")
     assert mpid_like_idx._prefix == "mp"
     assert mpid_like_idx._separator == "-"
     assert int(mpid_like_idx) == 149
+
     assert mpid_like_idx == MPID("mp-149")
     assert mpid_like_idx == AlphaID(MPID("mp-149"))
     assert AlphaID("mvc-160") == MPID("mvc-160")
     assert AlphaID(160) == MPID("160")
     assert mpid_like_idx + MPID("mp-140") == AlphaID("mp-289")
     assert mpid_like_idx - MPID("mp-140") == AlphaID("mp-9")
-    
+
+    # Test relationality - should always be False if prefix / separator don't match
+    assert mpid_like_idx > MPID("mp-140")
+    mvc_idx = AlphaID("mvc-140")
+    assert not mpid_like_idx < mvc_idx
+    assert not mpid_like_idx > mvc_idx
+
     majik_num = 137
 
-    # Test initialization from int
-    for pfx in (None, "iamaprefix",):
+    ref_idx = AlphaID(majik_num, prefix="cats", separator="^")
+    assert ref_idx < AlphaID(
+        majik_num + 100, prefix=ref_idx._prefix, separator=ref_idx._separator
+    )
+    assert ref_idx > AlphaID(
+        majik_num - 100, prefix=ref_idx._prefix, separator=ref_idx._separator
+    )
 
-        for separator in ("-",":",">"):
-            idx = AlphaID(majik_num,prefix=pfx,separator=separator)
+    # Test initialization from int
+    for pfx in (
+        None,
+        "iamaprefix",
+    ):
+        for separator in ("-", ":", ">"):
+            idx = AlphaID(majik_num, prefix=pfx, separator=separator)
             assert int(idx) == majik_num
 
             # Test integer equality
             assert idx == majik_num
 
             # Test in/equality when prefix and separators do not match
-            assert idx != AlphaID(majik_num,prefix="unusedprefix")
+            assert idx != AlphaID(majik_num, prefix="unusedprefix")
 
             # Test equality when separators differ but prefixes are None
             # (separators are unset)
-            idx_diff_sep = AlphaID(majik_num,prefix=pfx,separator="&")
+            idx_diff_sep = AlphaID(majik_num, prefix=pfx, separator="&")
             if pfx is None:
                 assert idx == idx_diff_sep
             else:
@@ -98,11 +114,11 @@ def test_alpha_id():
 
             # Test integer addition
             assert idx + 1 == majik_num + 1
-            assert idx + 1 == AlphaID( majik_num + 1, prefix=pfx, separator=separator)
+            assert idx + 1 == AlphaID(majik_num + 1, prefix=pfx, separator=separator)
 
             # Test string addition/subtraction
-            assert idx + "y" == AlphaID(majik_num + 24, prefix=pfx,separator=separator)
-            assert idx - "z" == AlphaID(majik_num - 25, prefix=pfx,separator=separator)
+            assert idx + "y" == AlphaID(majik_num + 24, prefix=pfx, separator=separator)
+            assert idx - "z" == AlphaID(majik_num - 25, prefix=pfx, separator=separator)
 
             # Test equality, addition, subtraction of AlphaID
             other_idx = AlphaID(100)
@@ -113,7 +129,7 @@ def test_alpha_id():
 
                 assert idx + other_idx == majik_num + 100
                 assert idx + other_idx == AlphaID(majik_num + 100)
-    
+
     # test iterative addition / subtraction
     last_val = None
     next_val = None
@@ -124,6 +140,6 @@ def test_alpha_id():
             assert alpha - 1 == last_val
             assert alpha - AlphaID(1) == last_val
             assert alpha == next_val
-            
+
         last_val = alpha
         next_val = alpha + 1
