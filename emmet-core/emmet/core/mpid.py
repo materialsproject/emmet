@@ -290,12 +290,8 @@ class AlphaID(str):
                 )
 
         elif isinstance(identifier, MPID):
-            split_mpid = identifier.string.split("-")
-            if len(split_mpid) == 1:
-                identifier = split_mpid[0]
-            else:
-                prefix, identifier = split_mpid
-                separator = "-"
+            prefix, identifier = identifier.parts
+            separator = "-"
 
         if isinstance(identifier, str) and set(identifier).intersection(digits) > set():
             identifier = int(identifier)

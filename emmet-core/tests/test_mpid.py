@@ -107,6 +107,7 @@ def test_alpha_id():
     ):
         for separator in ("-", ":", ">"):
             idx = AlphaID(majik_num, prefix=pfx, separator=separator)
+            assert isinstance(hash(idx), int)
 
             # Roundtrip
             assert idx == AlphaID(str(idx))
@@ -146,13 +147,28 @@ def test_alpha_id():
                 assert idx + other_idx == AlphaID(majik_num + 100)
             else:
                 with pytest.raises(TypeError):
-                    assert idx - other_idx == majik_num - 100
+                    idx - other_idx
                 with pytest.raises(TypeError):
-                    assert idx - other_idx == AlphaID(majik_num - 100)
+                    idx - other_idx
                 with pytest.raises(TypeError):
-                    assert idx + other_idx == majik_num + 100
+                    idx + other_idx
                 with pytest.raises(TypeError):
-                    assert idx + other_idx == AlphaID(majik_num + 100)
+                    idx + other_idx
+
+            # Can't add nor compare floats with AlphaID
+            with pytest.raises(NotImplementedError):
+                idx + 1.0
+            with pytest.raises(NotImplementedError):
+                idx < float(int(idx))
+
+        # test sorting
+        test_ints = (10, 100, 50, 20, 50000)
+        test_idxs = [AlphaID(i) for i in test_ints]
+        sorted_idxs = sorted(test_idxs)
+        assert all(isinstance(_idx, AlphaID) for _idx in sorted_idxs)
+        assert [int(v) for v in sorted_idxs] == sorted(test_ints)
+        assert max(test_idxs) == AlphaID(max(test_ints))
+        assert min(test_idxs) == AlphaID(min(test_ints))
 
     # test iterative addition / subtraction
     last_val = None
