@@ -5,13 +5,16 @@ from __future__ import annotations
 import re
 from math import floor, log
 from string import ascii_lowercase, digits
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING
 
 from pydantic import GetJsonSchemaHandler
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import CoreSchema, core_schema
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import Any
+
     from typing_extensions import Self
 
 
@@ -377,11 +380,11 @@ class AlphaID(str):
             return (
                 test._prefix == self._prefix
                 and test._separator == self._separator
-                and int(test) == int(self)
+                and int(self) == int(test)
             )
         elif isinstance(test, str):
-            return test == str(self)
-        return False
+            return self == str(test)
+        raise NotImplementedError(f"Cannot compare AlphaID with {type(test)}")
 
     def __ne__(self, other: Any) -> bool:
         """Define inverse equality for AlphaID."""
@@ -412,7 +415,6 @@ class AlphaID(str):
             test = other
 
         if isinstance(test, AlphaID):
-
             exc_str = ""
             if test._prefix != self._prefix:
                 exc_str += f"Prefixes do not match: left = {self._prefix or None}, right {test._prefix or None}. "
@@ -453,3 +455,41 @@ class AlphaID(str):
         else:
             test = other
         return self.__add__(-test)
+
+    def __lt__(self, other: Any) -> bool:
+        """Define AlphaID less than.
+
+        Returns False between two AlphaIDs if `prefix` and `separator` do not match.
+        """
+        if isinstance(other, MPID):
+            test = AlphaID(other)
+        else:
+            test = other
+
+        if isinstance(test, int):
+            return int(self) < test
+        elif isinstance(test, AlphaID):
+            if test._prefix == self._prefix and test._separator == self._separator:
+                return int(self) < int(test)
+            return False
+        elif isinstance(test, str):
+            return int(self) < self._string_to_base_10_value(test)
+        raise NotImplementedError(f"Cannot compare AlphaID with {type(test)}")
+
+    def __gt__(self, other: Any) -> bool:
+        """Define AlphaID greater than.
+
+        Returns False between two AlphaIDs if `prefix` and `separator` do not match.
+        """
+        if isinstance(other, MPID):
+            test = AlphaID(other)
+        else:
+            test = other
+
+        if isinstance(test, AlphaID) and (
+            self._prefix != test._prefix
+            or (self._prefix == test._prefix and self._separator != test._separator)
+        ):
+            return False
+
+        return not self.__lt__(test)
