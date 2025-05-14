@@ -424,14 +424,14 @@ class AlphaID(str):
             if exc_str:
                 raise TypeError(exc_str)
 
-            test = self._string_to_base_10_value(test._identifier)
+            diff = self._string_to_base_10_value(test._identifier)
         elif isinstance(test, str):
-            test = self._string_to_base_10_value(test)
+            diff = self._string_to_base_10_value(test)
         elif not isinstance(test, int):
             raise NotImplementedError(f"Cannot add AlphaID to type {type(test)}")
 
         return AlphaID(
-            int(self) + test,
+            int(self) + diff,
             padlen=self._padlen,
             prefix=self._prefix,
             separator=self._separator,
