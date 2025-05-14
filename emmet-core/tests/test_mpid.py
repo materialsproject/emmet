@@ -89,6 +89,17 @@ def test_alpha_id():
         majik_num - 100, prefix=ref_idx._prefix, separator=ref_idx._separator
     )
 
+    # test padding
+    padded_idx = AlphaID(majik_num, prefix="cats", separator="^", padlen=8)
+    assert ref_idx == padded_idx
+    assert int(ref_idx) == int(padded_idx)
+    assert str(padded_idx) == ref_idx._prefix + ref_idx._separator + (
+        8 - len(str(ref_idx._identifier))
+    ) * "a" + str(ref_idx._identifier)
+
+    assert AlphaID(majik_num, padlen=10) < AlphaID(majik_num + 1)
+    assert AlphaID(majik_num, padlen=10) > AlphaID(majik_num - 1)
+
     # Test initialization from int
     for pfx in (
         None,
