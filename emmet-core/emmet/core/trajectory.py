@@ -92,12 +92,14 @@ class Trajectory(BaseModel):
         None, description="Identifier of this trajectory, e.g., task ID."
     )
 
-    task_type : TaskType | None = Field(
-        None, description = "The TaskType of the calculation used to generate this trajectory."
+    task_type: TaskType | None = Field(
+        None,
+        description="The TaskType of the calculation used to generate this trajectory.",
     )
-    
-    run_type : RunType | None = Field(
-        None, description = "The RunType of the calculation used to generate this trajectory."
+
+    run_type: RunType | None = Field(
+        None,
+        description="The RunType of the calculation used to generate this trajectory.",
     )
 
     def __hash__(self) -> int:
@@ -246,9 +248,9 @@ class Trajectory(BaseModel):
                     props[k].append(getattr(ionic_step, k))
 
         kwargs.update(
-            identifier = task_doc.task_id.string if task_doc.task_id else None,
-            task_type = task_doc.task_type,
-            run_type = task_doc.run_type,
+            identifier=task_doc.task_id.string if task_doc.task_id else None,
+            task_type=task_doc.task_type,
+            run_type=task_doc.run_type,
         )
         return cls._from_dict(
             props,
@@ -313,15 +315,19 @@ class Trajectory(BaseModel):
             if hasattr(v, "__len__") and not isinstance(v, str)
         }
 
-        for k in ("elements", "identifier", "run_type", "task_type","constant_lattice"):
-            if val := getattr(self,k):
-                if isinstance(val,Enum):
+        for k in (
+            "elements",
+            "identifier",
+            "run_type",
+            "task_type",
+            "constant_lattice",
+        ):
+            if val := getattr(self, k):
+                if isinstance(val, Enum):
                     val = val.value
-                pa_config[k] = pa.array(
-                    [val for _ in range(self.num_ionic_steps)]
-                )
+                pa_config[k] = pa.array([val for _ in range(self.num_ionic_steps)])
 
-        pa_config["ionic_step_idx"] = pa.array(range(1,self.num_ionic_steps + 1))
+        pa_config["ionic_step_idx"] = pa.array(range(1, self.num_ionic_steps + 1))
 
         pa_table = pa.table(pa_config)
         if file_name:
@@ -330,7 +336,7 @@ class Trajectory(BaseModel):
         return pa_table
 
     @classmethod
-    def from_arrow(cls, pa_table : ArrowTable, identifier: str | None = None) -> Self:
+    def from_arrow(cls, pa_table: ArrowTable, identifier: str | None = None) -> Self:
         """
         Create a trajectory from an arrow Table.
 
@@ -351,20 +357,26 @@ class Trajectory(BaseModel):
                 pa.compute.field("identifier") == identifier,
                 null_selection_behavior="drop",
             )
-        
+
         # Ensure that ionic steps are properly sorted.
         # Order can change during table writing because of multithreading.
         config = pa_table.sort_by("ionic_step_idx").to_pydict()
         config["num_ionic_steps"] = len(config["elements"])
-        for k in ("elements", "identifier", "run_type", "task_type","constant_lattice"):
+        for k in (
+            "elements",
+            "identifier",
+            "run_type",
+            "task_type",
+            "constant_lattice",
+        ):
             if config.get(k):
                 config[k] = config[k][0]
         return cls(**config)
 
     @classmethod
-    def from_parquet(cls, file_name : str | Path, identifier : str | None = None) -> Self:
+    def from_parquet(cls, file_name: str | Path, identifier: str | None = None) -> Self:
         """Create a Trajectory from a parquet file.
-        
+
         Parameters
         -----------
         file_name : str | Path
@@ -374,9 +386,9 @@ class Trajectory(BaseModel):
         """
         kwargs = {}
         if identifier:
-            kwargs["filters"] = [("identifier","=",identifier)]
+            kwargs["filters"] = [("identifier", "=", identifier)]
         return cls.from_arrow(pa_pq.read_table(file_name, **kwargs))
-            
+
     def to_pmg(self, frame_props: Sequence[str] | None = None) -> PmgTrajectory:
         """
         Create a pymatgen Trajectory.
