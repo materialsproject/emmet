@@ -24,36 +24,57 @@ from typing_extensions import Literal
 if TYPE_CHECKING:
     from typing import Any
 
+
 class PhononDOS(BaseModel):
     """Define schema of pymatgen phonon density of states."""
 
-    frequencies : list[float] = Field(description="The phonon frequencies in THz.")
-    densities : list[float] = Field(description="The phonon density of states.")
-    
+    frequencies: list[float] = Field(description="The phonon frequencies in THz.")
+    densities: list[float] = Field(description="The phonon density of states.")
+
     def to_pmg(self) -> PhononDosObject:
-        return PhononDosObject(
-            frequencies=self.frequencies, densities=self.densities
-        )
+        return PhononDosObject(frequencies=self.frequencies, densities=self.densities)
+
 
 class PhononBS(BaseModel):
     """Define schema of pymatgen phonon band structure."""
 
-    qpoints : list[Vector3D] = Field(None,description="The q-kpoints at which the band structure was sampled, in direct coordinates.")
-    frequencies : list[tuple[float,float]] = Field(None, description="The phonon frequencies in THz, with the first index representing the band, and the second the q-point.")
-    reciprocal_lattice : tuple[Vector3D,Vector3D,Vector3D] = Field(description="The reciprocal lattice.")
-    has_nac : bool = Field(False,description="Whether the calculation includes non-analytical corrections at Gamma.")
-    eigendisplacements : list[list[list[tuple[complex,complex,complex]]]] | None = Field(None,description="Phonon eigendisplacements in Cartesian coordinates.")
-    labels_dict: dict[str,Vector3D] | None = Field(None, description="The high-symmetry labels of specific q-points.")
-    structure : Structure | None = Field(None, description="The structure associated with the calculation.")
+    qpoints: list[Vector3D] = Field(
+        None,
+        description="The q-kpoints at which the band structure was sampled, in direct coordinates.",
+    )
+    frequencies: list[tuple[float, float]] = Field(
+        None,
+        description="The phonon frequencies in THz, with the first index representing the band, and the second the q-point.",
+    )
+    reciprocal_lattice: tuple[Vector3D, Vector3D, Vector3D] = Field(
+        description="The reciprocal lattice."
+    )
+    has_nac: bool = Field(
+        False,
+        description="Whether the calculation includes non-analytical corrections at Gamma.",
+    )
+    eigendisplacements: list[
+        list[list[tuple[complex, complex, complex]]]
+    ] | None = Field(
+        None, description="Phonon eigendisplacements in Cartesian coordinates."
+    )
+    labels_dict: dict[str, Vector3D] | None = Field(
+        None, description="The high-symmetry labels of specific q-points."
+    )
+    structure: Structure | None = Field(
+        None, description="The structure associated with the calculation."
+    )
 
     @model_validator(mode="before")
-    def rehydrate(cls, config : Any) -> Any:
+    def rehydrate(cls, config: Any) -> Any:
         if (egd := config.get("eigendisplacements")) and all(
-            egd.get(k) is not None for k in ("real","imag")
+            egd.get(k) is not None for k in ("real", "imag")
         ):
-            config["eigendisplacements"] = (np.array(egd["real"]) + 1j*np.array(egd["imag"])).tolist()
-            
-        if (struct := config.get("structure")) and not isinstance(struct,Structure):
+            config["eigendisplacements"] = (
+                np.array(egd["real"]) + 1j * np.array(egd["imag"])
+            ).tolist()
+
+        if (struct := config.get("structure")) and not isinstance(struct, Structure):
             config["structure"] = Structure.from_dict(struct)
 
         # remap legacy fields
@@ -63,23 +84,35 @@ class PhononBS(BaseModel):
             if config.get(k):
                 config[v] = config.pop(k)
 
-        if isinstance(config["reciprocal_lattice"],dict):
+        if isinstance(config["reciprocal_lattice"], dict):
             config["reciprocal_lattice"] = config["reciprocal_lattice"].get("matrix")
 
         return config
-    
+
     def to_pmg(self) -> PhononBandStructureSymmLine:
         return PhononBandStructureSymmLine(
             self.qpoints,
             self.frequencies,
             self.reciprocal_lattice,
-            has_nac= self.has_nac,
+            has_nac=self.has_nac,
             eigendisplacements=self.eigendisplacements,
             structure=self.structure,
             labels_dict=self.labels_dict,
             coords_are_cartesian=False,
         )
-        
+
+
+class SumRuleChecks(BaseModel):
+    """Container class for defining sum rule checks."""
+
+    asr: float | None = Field(
+        None, description="The violation of the acoustic sum rule."
+    )
+    cnsr: float | None = Field(
+        None, description="The violation of the charge neutral sum rule."
+    )
+
+
 class BasePhononBSDOSDoc(StructureMetadata):
     """Phonon band structures and density of states data."""
 
@@ -88,7 +121,7 @@ class BasePhononBSDOSDoc(StructureMetadata):
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )
 
-    phonon_bandstructure : PhononBS | None = Field(
+    phonon_bandstructure: PhononBS | None = Field(
         None,
         description="Phonon band structure object.",
     )
@@ -103,7 +136,8 @@ class BasePhononBSDOSDoc(StructureMetadata):
     )
 
     epsilon_electronic: Matrix3D | None = Field(
-        None, description="The electronic contribution to the high-frequency dielectric constant."
+        None,
+        description="The electronic contribution to the high-frequency dielectric constant.",
     )
 
     born: list[Matrix3D] | None = Field(
@@ -111,15 +145,24 @@ class BasePhononBSDOSDoc(StructureMetadata):
         description="Born charges, only for symmetrically inequivalent atoms",
     )
 
+    # needed, e.g. to compute Grueneisen parameter etc
+    force_constants: list[list[Matrix3D]] | None = Field(
+        None, description="Force constants between every pair of atoms in the structure"
+    )
 
     last_updated: datetime = Field(
         utcnow,
         description="Timestamp for the most recent calculation for this Material document.",
     )
 
+    sum_rules_breaking: SumRuleChecks | None = Field(
+        None,
+        description="Deviations from sum rules.",
+    )
+
     @model_validator(mode="before")
     @classmethod
-    def migrate_fields(cls, config : Any) -> Any:
+    def migrate_fields(cls, config: Any) -> Any:
         """Migrate legacy input fields."""
         for k, v in {
             "ph_dos": "phonon_dos",
@@ -134,38 +177,71 @@ class BasePhononBSDOSDoc(StructureMetadata):
         # Make sure that the datetime field is properly formatted
         if config.get("last_updated"):
             config["last_updated"] = convert_datetime(cls, config["last_updated"])
+
         return config
-    
+
     @computed_field
     @cached_property
-    def charge_neutral_sum_rule(self) -> list[float]:
+    def charge_neutral_sum_rule(self) -> Matrix3D | None:
         """Sum of Born effective charges over sites should be zero."""
-        if self.born is None:
-            return []
-        bec = np.array(self.born)
-        return np.sum(bec,axis=0).tolist()
+        if self.born:
+            bec = np.array(self.born)
+            return tuple(tuple(row) for row in np.sum(bec, axis=0).tolist())
+        return None
 
-    # @computed_field
-    # @cached_property
-    # def acoustic_sum_rule(self) -> list[float]:
-    #     """Sum of Born effective charges over sites should be zero."""
+    @computed_field
+    @cached_property
+    def acoustic_sum_rule(self) -> Matrix3D | None:
+        """Sum of q=0 atomic force constants should be zero."""
+        if self.force_constants:
+            return tuple(
+                tuple(row)
+                for row in np.einsum(
+                    "ijki->jk", np.array(self.force_constants).tolist()
+                )
+            )
+        return None
+
+    @computed_field
+    @property
+    def check_sum_rule_deviations(self) -> SumRuleChecks:
+        """Report deviations from sum rules."""
+        if not self.sum_rules_breaking:
+            self.sum_rules_breaking = SumRuleChecks(
+                **{
+                    k: np.max(np.abs(getattr(self, attr)))
+                    if getattr(self, attr)
+                    else None
+                    for k, attr in {
+                        "asr": "acoustic_sum_rule",
+                        "cnsr": "charge_neutral_sum_rule",
+                    }.items()
+                }
+            )
+        return self.sum_rules_breaking
+
 
 class PhononComputationalSettings(BaseModel):
     """Collection to store computational settings for the phonon computation."""
 
     # could be optional and implemented at a later stage?
-    npoints_band: int | None = Field(None, description="number of points for band structure computation")
-    kpath_scheme: str | None = Field(None,description = "indicates the kpath scheme")
-    kpoint_density_dos: int | None= Field(
-        None, description = "number of points for computation of free energies and densities of states",
+    npoints_band: int | None = Field(
+        None, description="number of points for band structure computation"
     )
+    kpath_scheme: str | None = Field(None, description="indicates the kpath scheme")
+    kpoint_density_dos: int | None = Field(
+        None,
+        description="number of points for computation of free energies and densities of states",
+    )
+
 
 class ThermalDisplacementData(BaseModel):
     """Collection to store information on the thermal displacement matrices."""
 
-    freq_min_thermal_displacements: float | None = Field(None,
-        description = "cutoff frequency in THz to avoid numerical issues in the "
-        "computation of the thermal displacement parameters"
+    freq_min_thermal_displacements: float | None = Field(
+        None,
+        description="cutoff frequency in THz to avoid numerical issues in the "
+        "computation of the thermal displacement parameters",
     )
     thermal_displacement_matrix_cif: list[list[Matrix3D]] | None = Field(
         None, description="field including thermal displacement matrices in CIF format"
@@ -181,17 +257,17 @@ class ThermalDisplacementData(BaseModel):
         "have been computed",
     )
 
+
 class PhononUUIDs(BaseModel):
     """Collection to save all uuids connected to the phonon run."""
 
-    optimization_run_uuid: str | None = Field(
-        None, description="optimization run uuid"
-    )
+    optimization_run_uuid: str | None = Field(None, description="optimization run uuid")
     displacements_uuids: list[str] | None = Field(
         None, description="The uuids of the displacement jobs."
     )
     static_run_uuid: str | None = Field(None, description="static run uuid")
     born_run_uuid: str | None = Field(None, description="born run uuid")
+
 
 class PhononJobDirs(BaseModel):
     """Collection to save all job directories relevant for the phonon run."""
@@ -211,7 +287,6 @@ class PhononJobDirs(BaseModel):
     taskdoc_run_job_dir: str | None = Field(
         None, description="Directory where task doc was generated."
     )
-
 
 
 class PhononBSDOSDoc(BasePhononBSDOSDoc):
@@ -265,11 +340,6 @@ class PhononBSDOSDoc(BasePhononBSDOSDoc):
         None, description="if true, structure has imaginary modes"
     )
 
-    # needed, e.g. to compute Grueneisen parameter etc
-    force_constants: list[list[Matrix3D]] | None = Field(
-        None, description="Force constants between every pair of atoms in the structure"
-    )
-
     supercell_matrix: Optional[Matrix3D] = Field(
         None, description="matrix describing the supercell"
     )
@@ -313,6 +383,7 @@ class PhononWarnings(DocEnum):
         " but these are small and very close to the Gamma point "
         "(usually related to numerical errors).",
     )
+
 
 class PhononWebsiteBS(BaseModel):
     """
