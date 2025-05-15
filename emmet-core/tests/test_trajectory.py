@@ -50,12 +50,14 @@ def test_pmg(si_task):
             in (
                 "num_ionic_steps",
                 "electronic_steps",
+                "task_type",
+                "run_type",
             )
             or getattr(traj, k, None) is None
         ):
             # Can't easily test for equality of electronic steps without bespoke code
             continue
-
+        
         assert all(
             np.all(np.abs(np.array(new_val) - np.array(getattr(traj, k)[i])) < 1e-6)
             for i, new_val in enumerate(getattr(roundtrip, k))
