@@ -176,6 +176,7 @@ def test_alpha_id():
     for i in range(5000):
         alpha = AlphaID(i)
         assert int(alpha) == i
+        assert alpha.string == str(alpha)
         if i > 0:
             assert alpha - 1 == last_val
             assert alpha - AlphaID(1) == last_val

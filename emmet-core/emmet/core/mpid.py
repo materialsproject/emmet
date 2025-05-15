@@ -508,3 +508,8 @@ class AlphaID(str):
             return False
 
         return not self.__lt__(test)
+
+    @property
+    def string(self) -> str:
+        """Legacy access to .string attr as in MPID."""
+        return self.__str__()
