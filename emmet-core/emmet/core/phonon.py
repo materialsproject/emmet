@@ -1,8 +1,11 @@
+"""Define schemas for DFPT, phonopy, and pheasy-derived phonon data."""
 from __future__ import annotations
 
 from datetime import datetime
+import json
 from functools import cached_property
 
+from monty.dev import requires
 import numpy as np
 from pydantic import model_validator, BaseModel, Field, computed_field, PrivateAttr
 from typing import Optional, TYPE_CHECKING
@@ -22,9 +25,17 @@ from emmet.core.utils import utcnow
 
 from typing_extensions import Literal
 
+try:
+    import pyarrow as pa
+
+    from pyarrow import Table as ArrowTable
+except ImportError:
+    ArrowTable = None
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from typing import Any
+    from typing_extensions import Self
 
 
 class PhononDOS(BaseModel):
@@ -35,7 +46,21 @@ class PhononDOS(BaseModel):
 
     @cached_property
     def to_pmg(self) -> PhononDosObject:
+        """Get / cache corresponding pymatgen object."""
         return PhononDosObject(frequencies=self.frequencies, densities=self.densities)
+
+    @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
+    def to_arrow(self, col_prefix : str | None = None) -> ArrowTable:
+        """Convert PhononDOS to a pyarrow Table."""
+        col_prefix = col_prefix or ""
+        return pa.Table.from_pydict({f"{col_prefix}{k}": [getattr(self,k)] for k in ("frequencies","densities")})
+
+    @classmethod
+    @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
+    def from_arrow(cls, table: ArrowTable, col_prefix : str | None = None) -> Self:
+        """Create a PhononDOS from a pyarrow Table."""
+        col_prefix = col_prefix or ""
+        return cls(**{k: table[f"{col_prefix}{k}"].to_pylist()[0] for k in cls.model_fields})
 
 
 class PhononBS(BaseModel):
@@ -47,9 +72,7 @@ class PhononBS(BaseModel):
     frequencies: list[list[float]] = Field(
         description="The phonon frequencies in THz, with the first index representing the band, and the second the q-point.",
     )
-    reciprocal_lattice: tuple[Vector3D, Vector3D, Vector3D] = Field(
-        description="The reciprocal lattice."
-    )
+    reciprocal_lattice: Matrix3D = Field(description="The reciprocal lattice.")
     has_nac: bool = Field(
         False,
         description="Whether the calculation includes non-analytical corrections at Gamma.",
@@ -102,6 +125,7 @@ class PhononBS(BaseModel):
 
     @cached_property
     def to_pmg(self) -> PhononBandStructureSymmLine:
+        """Get / cache corresponding pymatgen object."""
         rlatt = Lattice(self.reciprocal_lattice)
         return PhononBandStructureSymmLine(
             [Kpoint(q, lattice=rlatt).frac_coords for q in self.qpoints],  # type: ignore[misc]
@@ -116,6 +140,71 @@ class PhononBS(BaseModel):
             },
             coords_are_cartesian=False,
         )
+
+    @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
+    def to_arrow(self, col_prefix : str | None = None) -> ArrowTable:
+        """Convert a PhononBS to an arrow table."""
+        config = self.model_dump()
+        if structure := config.pop("structure", None):
+            config["structure"] = json.dumps(structure.as_dict())
+
+        for k in ("qpoints", "frequencies", "reciprocal_lattice", "eigendisplacements"):
+            if (vals := config.pop(k, None)) and k == "eigendisplacements":
+                cvals = np.array(vals)
+                config["eigendisplacements_real"] = cvals.real.flatten()
+                config["eigendisplacements_imag"] = cvals.imag.flatten()
+                config["eigendisplacements_shape"] = list(cvals.shape)
+            elif vals:
+                rvals = np.array(vals)
+                config[k] = rvals.flatten()
+                config[f"{k}_shape"] = list(rvals.shape)
+
+        if qpt_labels := config.pop("labels_dict"):
+            config["qpoint_labels"] = list(qpt_labels)
+            config["qpoint_labelled_points"] = [
+                qpt_labels[k] for k in config["qpoint_labels"]
+            ]
+
+        col_prefix = col_prefix or ""
+        return pa.Table.from_pydict({f"{col_prefix}{k}": [v] for k, v in config.items()})
+
+    @classmethod
+    @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
+    def from_arrow(cls, table: ArrowTable, col_prefix : str | None = None) -> Self:
+        """Create a PhononBS from an arrow table."""
+        col_prefix= col_prefix or ""
+        config: dict[str, Any] = {}
+        for k in (
+            "structure",
+            "has_nac",
+            "qpoints",
+            "frequencies",
+            "reciprocal_lattice",
+            "eigendisplacements_real",
+            "qpoint_labels",
+        ):
+            _k = f"{col_prefix}{k}"
+            if _k not in table.column_names:
+                continue
+            v = table[_k].to_pylist()[0]
+            if k == "structure":
+                config[k] = Structure.from_dict(json.loads(v))
+            elif k in ("qpoints", "frequencies", "reciprocal_lattice"):
+                config[k] = np.array(v).reshape(
+                    tuple(table[f"{_k}_shape"].to_pylist()[0])
+                )
+            elif k == "eigendisplacements_real":
+                config["eigendisplacements"] = (
+                    table[f"{col_prefix}eigendisplacements_real"].to_numpy()[0]
+                    + 1.0j * table[f"{col_prefix}eigendisplacements_imag"].to_numpy()[0]
+                ).reshape(tuple(table[f"{col_prefix}eigendisplacements_shape"].to_pylist()[0]))
+            elif k == "qpoint_labels":
+                config["labels_dict"] = dict(
+                    zip(v, table[f"{col_prefix}qpoint_labelled_points"].to_pylist()[0])
+                )
+            else:
+                config[k] = v
+        return cls(**config)
 
 
 class SumRuleChecks(BaseModel):
@@ -281,7 +370,22 @@ class BasePhononBSDOSDoc(StructureMetadata):
         thermo_props["temperature"] = temperatures
         return thermo_props
 
-
+    @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
+    def objects_to_arrow(self) -> ArrowTable:
+        """Convert band structure and DOS to pyarrow table row."""
+        table = pa.Table.from_pydict({"material_id": [self.material_id]})
+        if self.phonon_bandstructure:
+            bst = self.phonon_bandstructure.to_arrow(col_prefix="bs_")
+            for k in bst.column_names:
+                table = table.append_column(k,bst[k])
+        
+        if self.phonon_dos:
+            dost = self.phonon_dos.to_arrow(col_prefix="dos_")
+            
+            for k in dost.column_names:
+                table = table.append_column(k,dost[k])
+        return table
+    
 class PhononComputationalSettings(BaseModel):
     """Collection to store computational settings for the phonon computation."""
 
