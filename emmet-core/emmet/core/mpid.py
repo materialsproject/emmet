@@ -242,6 +242,12 @@ class AlphaID(str):
         _padlen (int) : The minimum length of an identifier to pad left with zeroes.
         _prefix (str) : The ID prefix, ex. "mp"
         _separator (str) : The separator between `_prefix` and `_identifier`, ex: "-"
+        _cut_point (int or None) : For legacy purposes, all MPIDs minted before the
+            transition to AlphaID will use the legacy __repr__ as `mp-<int>` when
+            calling `AlphaID(...).string`.
+
+            Thus `_cut_point`, if not `None`, defines the maximum MPID at which
+            the integer in `AlphaID(...).string` is preferred.
     """
 
     _identifier: str
@@ -250,6 +256,7 @@ class AlphaID(str):
     _separator: str
     _alphabet: str = ascii_lowercase
     _value: int | None = None
+    _cut_point: int | None = 3347529
 
     def __new__(
         cls,
@@ -352,7 +359,7 @@ class AlphaID(str):
             self._value = self._string_to_base_10_value(self._identifier)
         return self._value
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Set AlphaID display name to distinguish from base string class."""
         return "AlphaID(" + self + ")"
 
@@ -512,4 +519,6 @@ class AlphaID(str):
     @property
     def string(self) -> str:
         """Legacy access to .string attr as in MPID."""
-        return self.__str__()
+        if self._cut_point is None or int(self) > self._cut_point:
+            return str(self)
+        return f"{self._prefix}{self._separator}{int(self)}"
