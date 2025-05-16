@@ -15,7 +15,7 @@ from monty.serialization import dumpfn
 
 from emmet.core.math import Vector3D, Matrix3D
 from emmet.core.tasks import TaskDoc
-from emmet.core.vasp.calc_types import RunType, TaskType
+from emmet.core.vasp.calc_types import RunType, TaskType, run_type, task_type, calc_type
 from emmet.core.vasp.calculation import ElectronicStep
 
 try:
@@ -206,34 +206,64 @@ class Trajectory(BaseModel):
         return cls(**props, **kwargs)
 
     @classmethod
-    def from_task_doc(cls, task_doc: TaskDoc, **kwargs) -> Self:
+    def from_task_doc(cls, task_doc: TaskDoc, **kwargs) -> list["Trajectory"]:
         """
-        Create a trajectory from a TaskDoc.
+        Create trajectories from a TaskDoc.
+
+        This class creates a separate trajectory for all non-continuous
+        calculations in `TaskDoc.calcs_reversed`.
+        This is to ensure that each trajectory represents only a single
+        calculation type.
+        In cases where sequential calculations in the reversed `calcs_reversed`
+        have the same calc type, their trajectories are joined.
 
         Parameters
         -----------
         task_doc : emmet.core.TaskDoc
-        constant_lattice : bool (default = False)
-            Whether the lattice is constant thoughout the trajectory
         kwargs
             Other kwargs to pass to Trajectory
 
         Returns
         -----------
-        Trajectory
+        list of Trajectory
         """
-        props: dict[str, list] = {
-            "structure": [],
-            "cart_coords": [],
-            "electronic_steps": [],
-            "energy": [],
-            "e_wo_entrp": [],
-            "e_fr_energy": [],
-            "forces": [],
-            "stress": [],
-        }
+
+        trajs: list[Trajectory] = []
+        kwargs.update(
+            identifier=str(task_doc.task_id) if task_doc.task_id else None,
+        )
+
+        prev_cr = None
+        props: dict[str, list]
+        tt: TaskType
+        rt: RunType
         # un-reverse the calcs_reversed
-        for cr in task_doc.calcs_reversed[::-1]:
+        for icr, cr in enumerate(task_doc.calcs_reversed[::-1]):
+            # refresh calc, run, and task type
+            vis = cr.input.model_dump()
+            padded_params = {**(cr.input.parameters or {}), **(cr.input.incar or {})}
+            ct = calc_type(vis, padded_params)
+
+            if prev_cr != ct or icr == 0:
+                # calc type changed, create Trajectory and start fresh
+                if icr > 0:
+                    trajs.append(
+                        cls._from_dict(
+                            props, task_type=tt, run_type=rt, **kwargs  # noqa: F821
+                        )
+                    )
+
+                props = {
+                    "structure": [],
+                    "cart_coords": [],
+                    "electronic_steps": [],
+                    "energy": [],
+                    "e_wo_entrp": [],
+                    "e_fr_energy": [],
+                    "forces": [],
+                    "stress": [],
+                }
+
             for ionic_step in cr.output.ionic_steps:
                 props["structure"].append(ionic_step.structure)
 
@@ -247,15 +277,14 @@ class Trajectory(BaseModel):
                 ):
                     props[k].append(getattr(ionic_step, k))
 
-        kwargs.update(
-            identifier=task_doc.task_id.string if task_doc.task_id else None,
-            task_type=task_doc.task_type,
-            run_type=task_doc.run_type,
-        )
-        return cls._from_dict(
-            props,
-            **kwargs,
-        )
+            prev_cr = ct
+            rt = run_type(padded_params)
+            tt = task_type(vis)
+
+        # create final trajectory
+        trajs.append(cls._from_dict(props, task_type=tt, run_type=rt, **kwargs))
+
+        return trajs
 
     @classmethod
     def from_pmg(cls, traj: PmgTrajectory, **kwargs) -> Self:
