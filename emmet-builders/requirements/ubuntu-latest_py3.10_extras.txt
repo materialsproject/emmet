@@ -30,9 +30,9 @@ attrs==25.3.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.38.11
+boto3==1.38.17
     # via maggma
-botocore==1.38.11
+botocore==1.38.17
     # via
     #   boto3
     #   s3transfer
@@ -50,7 +50,7 @@ charset-normalizer==3.4.2
     # via requests
 chgnet==0.4.0
     # via emmet-core
-click==8.1.8
+click==8.2.0
     # via mkdocs
 colorama==0.4.6
     # via griffe
@@ -64,7 +64,7 @@ csscompressor==0.9.5
     # via mkdocs-minify-plugin
 cycler==0.12.1
     # via matplotlib
-cython==3.0.12
+cython==3.1.0
     # via chgnet
 dgl==2.1.0
     # via
@@ -78,7 +78,7 @@ dnspython==2.7.0
     #   pymongo
 emmet-core[all,ml]==0.84.6
     # via emmet-builders (setup.py)
-exceptiongroup==1.2.2
+exceptiongroup==1.3.0
     # via pytest
 filelock==3.18.0
     # via
@@ -87,7 +87,7 @@ filelock==3.18.0
     #   virtualenv
 flake8==7.2.0
     # via emmet-builders (setup.py)
-fonttools==4.57.0
+fonttools==4.58.0
     # via matplotlib
 frozenlist==1.6.0
     # via
@@ -185,7 +185,7 @@ matminer==0.9.3
     # via
     #   emmet-builders (setup.py)
     #   robocrys
-matplotlib==3.10.1
+matplotlib==3.10.3
     # via
     #   ase
     #   mdanalysis
@@ -273,7 +273,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-builders (setup.py)
     #   mypy
-narwhals==1.38.2
+narwhals==1.39.1
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -407,11 +407,11 @@ platformdirs==4.3.8
     # via
     #   mkdocs-get-deps
     #   virtualenv
-plotly==6.0.1
+plotly==6.1.0
     # via
     #   pymatgen
     #   solvation-analysis
-pluggy==1.5.0
+pluggy==1.6.0
     # via pytest
 pre-commit==4.2.0
     # via emmet-builders (setup.py)
@@ -518,11 +518,11 @@ pyyaml==6.0.2
     #   pymdown-extensions
     #   pytorch-lightning
     #   pyyaml-env-tag
-pyyaml-env-tag==0.1
+pyyaml-env-tag==1.1
     # via mkdocs
 pyzmq==26.4.0
     # via maggma
-rdkit==2024.9.6
+rdkit==2025.3.2
     # via solvation-analysis
 referencing==0.36.2
     # via
@@ -536,7 +536,7 @@ requests==2.32.3
     #   torchdata
 robocrys==0.2.11
     # via emmet-core
-rpds-py==0.24.0
+rpds-py==0.25.0
     # via
     #   jsonschema
     #   referencing
@@ -581,7 +581,7 @@ six==1.17.0
     # via
     #   pybtex
     #   python-dateutil
-snowballstemmer==3.0.0.1
+snowballstemmer==3.0.1
     # via pydocstyle
 solvation-analysis==0.4.1
     # via
@@ -613,7 +613,7 @@ threadpoolctl==3.6.0
     #   scikit-learn
 tidynamics==1.1.2
     # via transport-analysis
-tifffile==2025.3.30
+tifffile==2025.5.10
     # via scikit-image
 tomli==2.2.1
     # via
@@ -636,7 +636,7 @@ torchmetrics==1.7.1
     # via
     #   lightning
     #   pytorch-lightning
-tornado==6.4.2
+tornado==6.5
     # via livereload
 tqdm==4.67.1
     # via
@@ -653,14 +653,15 @@ triton==3.3.0
     # via torch
 typeguard==4.4.2
     # via inflect
-types-requests==2.32.0.20250328
+types-requests==2.32.0.20250515
     # via emmet-builders (setup.py)
-types-setuptools==80.3.0.20250505
+types-setuptools==80.7.0.20250516
     # via emmet-builders (setup.py)
 typing-extensions==4.13.2
     # via
     #   chgnet
     #   emmet-core
+    #   exceptiongroup
     #   lightning
     #   lightning-utilities
     #   mkdocstrings-python
