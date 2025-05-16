@@ -1,16 +1,13 @@
 """Define core schemas for VASP calculations."""
+
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 import re
+from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
-from typing import (
-    Any,
-    Optional,
-    TYPE_CHECKING,
-)
+from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
 from monty.json import MontyDecoder
@@ -24,7 +21,7 @@ from pymatgen.io.vasp import Incar, Kpoints, Poscar
 from pymatgen.io.vasp import Potcar as VaspPotcar
 
 from emmet.core.common import convert_datetime
-from emmet.core.mpid import MPID
+from emmet.core.mpid import MPID, AlphaID
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import utcnow
 from emmet.core.vasp.calc_types import (
@@ -38,6 +35,7 @@ from emmet.core.vasp.calc_types import (
 from emmet.core.vasp.calculation import (
     Calculation,
     CalculationInput,
+    CalculationOutput,
     PotcarSpec,
     RunStatistics,
     VaspObject,
@@ -47,6 +45,7 @@ from emmet.core.vasp.utils import discover_and_sort_vasp_files
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
     from typing_extensions import Self
 
 monty_decoder = MontyDecoder()
@@ -340,117 +339,127 @@ class AnalysisDoc(BaseModel):
         )
 
 
-class TaskDoc(StructureMetadata, extra="allow"):
+class ProductionTaskDoc(StructureMetadata):
     """Calculation-level details about VASP calculations that power Materials Project."""
 
-    tags: list[str] | None = Field(
-        [], title="tag", description="Metadata tagged to a given task."
+    batch_id: Optional[str] = Field(
+        None,
+        description="Identifier for this calculation; should provide rough information about the calculation origin and purpose.",
+    )
+    calc_type: Optional[CalcType] = Field(
+        None, description="The functional and task type used in the calculation."
+    )
+    completed_at: Optional[datetime] = Field(
+        None, description="Timestamp for when this task was completed"
     )
     dir_name: Optional[str] = Field(
         None, description="The directory for this VASP task"
     )
-
-    state: Optional[TaskState] = Field(None, description="State of this calculation")
-
-    calcs_reversed: Optional[list[Calculation]] = Field(
+    icsd_id: Optional[str | int] = Field(
+        None, description="Inorganic Crystal Structure Database id of the structure"
+    )
+    input: CalculationInput | None = Field(
         None,
-        title="Calcs reversed data",
-        description="Detailed data for each VASP calculation contributing to the task document.",
+        description="The input structure used to generate the current task document.",
     )
-
-    structure: Optional[Structure] = Field(
-        None, description="Final output structure from the task"
+    last_updated: Optional[datetime] = Field(
+        utcnow(),
+        description="Timestamp for the most recent calculation for this task document",
     )
-
-    task_type: Optional[TaskType | CalcType] = Field(
-        None, description="The type of calculation."
+    orig_inputs: CalculationInput | None = Field(
+        None,
+        description="The exact set of input parameters used to generate the current task document.",
     )
-
+    output: CalculationOutput | None = Field(
+        None,
+        description="The exact set of output parameters used to generate the current task document.",
+    )
     run_type: Optional[RunType] = Field(
         None, description="The functional used in the calculation."
     )
-
-    calc_type: Optional[CalcType] = Field(
-        None, description="The functional and task type used in the calculation."
+    structure: Optional[Structure] = Field(
+        None, description="Final output structure from the task"
     )
-
-    task_id: Optional[MPID | str] = Field(
+    tags: list[str] | None = Field(
+        None, title="tag", description="Metadata tagged to a given task."
+    )
+    task_id: AlphaID | MPID | str | None = Field(
         None,
         description="The (task) ID of this calculation, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
     )
-
-    orig_inputs: Optional[OrigInputs] = Field(
-        None,
-        description="The exact set of input parameters used to generate the current task document.",
-    )
-
-    input: Optional[InputDoc] = Field(
-        None,
-        description="The input structure used to generate the current task document.",
-    )
-
-    output: Optional[OutputDoc] = Field(
-        None,
-        description="The exact set of output parameters used to generate the current task document.",
-    )
-
-    included_objects: Optional[list[VaspObject]] = Field(
-        None, description="List of VASP objects included with this task document"
-    )
-    vasp_objects: Optional[dict[VaspObject, Any]] = Field(
-        None, description="Vasp objects associated with this task"
-    )
-    entry: Optional[ComputedEntry] = Field(
-        None, description="The ComputedEntry from the task doc"
-    )
-
-    task_label: Optional[str] = Field(None, description="A description of the task")
-    author: Optional[str] = Field(
-        None, description="Author extracted from transformations"
-    )
-    icsd_id: Optional[str | int] = Field(
-        None, description="Inorganic Crystal Structure Database id of the structure"
+    task_type: Optional[TaskType | CalcType] = Field(
+        None, description="The type of calculation."
     )
     transformations: Optional[Any] = Field(
         None,
         description="Information on the structural transformations, parsed from a "
         "transformations.json file",
     )
+    vasp_objects: Optional[dict[VaspObject, Any]] = Field(
+        None, description="Vasp objects associated with this task"
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def set_prod_model_pre_fields(cls, values: Any) -> Any:
+        """Ensure all important model fields are set and refreshed."""
+        values["last_updated"] = convert_datetime(
+            cls, values.get("last_updated", utcnow())
+        )
+
+        if (batch_id := values.get("batch_id")) is not None:
+            invalid_chars = set(
+                char
+                for char in batch_id
+                if (not char.isalnum()) and (char not in {"-", "_"})
+            )
+            if len(invalid_chars) > 0:
+                raise ValueError(
+                    f"Invalid characters in batch_id: {' '.join(invalid_chars)}"
+                )
+
+
+class TaskDoc(ProductionTaskDoc, extra="allow"):
+    """Flexible wrapper around ProductionTaskDoc"""
+
     additional_json: Optional[dict[str, Any]] = Field(
         None, description="Additional json loaded from the calculation directory"
     )
-
-    custodian: Optional[list[CustodianDoc]] = Field(
-        None,
-        title="Calcs reversed data",
-        description="Detailed custodian data for each VASP calculation contributing to the task document.",
-    )
-
     analysis: Optional[AnalysisDoc] = Field(
         None,
         title="Calculation Analysis",
         description="Some analysis of calculation data after collection.",
     )
-
-    last_updated: Optional[datetime] = Field(
-        utcnow(),
-        description="Timestamp for the most recent calculation for this task document",
+    author: Optional[str] = Field(
+        None, description="Author extracted from transformations"
     )
-
-    completed_at: Optional[datetime] = Field(
-        None, description="Timestamp for when this task was completed"
-    )
-
-    batch_id: Optional[str] = Field(
+    calcs_reversed: Optional[list[Calculation]] = Field(
         None,
-        description="Identifier for this calculation; should provide rough information about the calculation origin and purpose.",
+        title="Calcs reversed data",
+        description="Detailed data for each VASP calculation contributing to the task document.",
     )
-
+    custodian: Optional[list[CustodianDoc]] = Field(
+        None,
+        title="Calcs reversed data",
+        description="Detailed custodian data for each VASP calculation contributing to the task document.",
+    )
+    entry: Optional[ComputedEntry] = Field(
+        None, description="The ComputedEntry from the task doc"
+    )
+    included_objects: Optional[list[VaspObject]] = Field(
+        None, description="List of VASP objects included with this task document"
+    )
+    output: Optional[OutputDoc] = Field(
+        None,
+        description="The exact set of output parameters used to generate the current task document.",
+    )
     run_stats: Optional[Mapping[str, RunStatistics]] = Field(
         None,
         description="Summary of runtime statistics for each calculation in this task",
     )
+    state: Optional[TaskState] = Field(None, description="State of this calculation")
+    task_label: Optional[str] = Field(None, description="A description of the task")
 
     # Note that private fields are needed because TaskDoc permits extra info
     # added to the model, unlike TaskDocument. Because of this, when pydantic looks up
@@ -464,25 +473,6 @@ class TaskDoc(StructureMetadata, extra="allow"):
     @classmethod
     def set_model_pre_fields(cls, values: Any) -> Any:
         """Ensure all important model fields are set and refreshed."""
-
-        # Make sure that the datetime field is properly formatted
-        # (Unclear when this is not the case, please leave comment if observed)
-        values["last_updated"] = convert_datetime(
-            cls, values.get("last_updated", utcnow())
-        )
-
-        # Ensure batch_id includes only valid characters
-        if (batch_id := values.get("batch_id")) is not None:
-            invalid_chars = set(
-                char
-                for char in batch_id
-                if (not char.isalnum()) and (char not in {"-", "_"})
-            )
-            if len(invalid_chars) > 0:
-                raise ValueError(
-                    f"Invalid characters in batch_id: {' '.join(invalid_chars)}"
-                )
-
         # Always refresh task_type, calc_type, run_type
         # if attributes containing input sets are available.
         # See, e.g. https://github.com/materialsproject/emmet/issues/960
@@ -565,7 +555,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         logger.info(f"Getting task doc in: {dir_name}")
 
         additional_fields = {} if additional_fields is None else additional_fields
-        dir_name = Path(dir_name)
+        dir_name = Path(dir_name).resolve()
         task_files = _find_vasp_files(
             dir_name, volumetric_files=volumetric_files, task_names=task_names
         )

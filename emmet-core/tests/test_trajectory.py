@@ -50,6 +50,8 @@ def test_pmg(si_task):
             in (
                 "num_ionic_steps",
                 "electronic_steps",
+                "task_type",
+                "run_type",
             )
             or getattr(traj, k, None) is None
         ):
