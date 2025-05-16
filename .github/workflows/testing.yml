@@ -74,6 +74,7 @@ jobs:
           environment-name: openff-env
           create-args: >-
             -c conda-forge
+            -c defaults
             python=${{ matrix.python-version }}
             openbabel
             "openff-toolkit>=0.16.2"
