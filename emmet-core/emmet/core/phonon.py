@@ -50,17 +50,24 @@ class PhononDOS(BaseModel):
         return PhononDosObject(frequencies=self.frequencies, densities=self.densities)
 
     @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
-    def to_arrow(self, col_prefix : str | None = None) -> ArrowTable:
+    def to_arrow(self, col_prefix: str | None = None) -> ArrowTable:
         """Convert PhononDOS to a pyarrow Table."""
         col_prefix = col_prefix or ""
-        return pa.Table.from_pydict({f"{col_prefix}{k}": [getattr(self,k)] for k in ("frequencies","densities")})
+        return pa.Table.from_pydict(
+            {
+                f"{col_prefix}{k}": [getattr(self, k)]
+                for k in ("frequencies", "densities")
+            }
+        )
 
     @classmethod
     @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
-    def from_arrow(cls, table: ArrowTable, col_prefix : str | None = None) -> Self:
+    def from_arrow(cls, table: ArrowTable, col_prefix: str | None = None) -> Self:
         """Create a PhononDOS from a pyarrow Table."""
         col_prefix = col_prefix or ""
-        return cls(**{k: table[f"{col_prefix}{k}"].to_pylist()[0] for k in cls.model_fields})
+        return cls(
+            **{k: table[f"{col_prefix}{k}"].to_pylist()[0] for k in cls.model_fields}
+        )
 
 
 class PhononBS(BaseModel):
@@ -142,7 +149,7 @@ class PhononBS(BaseModel):
         )
 
     @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
-    def to_arrow(self, col_prefix : str | None = None) -> ArrowTable:
+    def to_arrow(self, col_prefix: str | None = None) -> ArrowTable:
         """Convert a PhononBS to an arrow table."""
         config = self.model_dump()
         if structure := config.pop("structure", None):
@@ -166,13 +173,15 @@ class PhononBS(BaseModel):
             ]
 
         col_prefix = col_prefix or ""
-        return pa.Table.from_pydict({f"{col_prefix}{k}": [v] for k, v in config.items()})
+        return pa.Table.from_pydict(
+            {f"{col_prefix}{k}": [v] for k, v in config.items()}
+        )
 
     @classmethod
     @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
-    def from_arrow(cls, table: ArrowTable, col_prefix : str | None = None) -> Self:
+    def from_arrow(cls, table: ArrowTable, col_prefix: str | None = None) -> Self:
         """Create a PhononBS from an arrow table."""
-        col_prefix= col_prefix or ""
+        col_prefix = col_prefix or ""
         config: dict[str, Any] = {}
         for k in (
             "structure",
@@ -197,7 +206,9 @@ class PhononBS(BaseModel):
                 config["eigendisplacements"] = (
                     table[f"{col_prefix}eigendisplacements_real"].to_numpy()[0]
                     + 1.0j * table[f"{col_prefix}eigendisplacements_imag"].to_numpy()[0]
-                ).reshape(tuple(table[f"{col_prefix}eigendisplacements_shape"].to_pylist()[0]))
+                ).reshape(
+                    tuple(table[f"{col_prefix}eigendisplacements_shape"].to_pylist()[0])
+                )
             elif k == "qpoint_labels":
                 config["labels_dict"] = dict(
                     zip(v, table[f"{col_prefix}qpoint_labelled_points"].to_pylist()[0])
@@ -377,15 +388,16 @@ class BasePhononBSDOSDoc(StructureMetadata):
         if self.phonon_bandstructure:
             bst = self.phonon_bandstructure.to_arrow(col_prefix="bs_")
             for k in bst.column_names:
-                table = table.append_column(k,bst[k])
-        
+                table = table.append_column(k, bst[k])
+
         if self.phonon_dos:
             dost = self.phonon_dos.to_arrow(col_prefix="dos_")
-            
+
             for k in dost.column_names:
-                table = table.append_column(k,dost[k])
+                table = table.append_column(k, dost[k])
         return table
-    
+
+
 class PhononComputationalSettings(BaseModel):
     """Collection to store computational settings for the phonon computation."""
 
