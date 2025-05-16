@@ -90,7 +90,7 @@ class Submission(BaseModel):
         """Save this submission to a JSON file."""
         exc = set()
         if not include_md5:
-            exc.add("md5")
+            exc = {"calculations": {...: {"files": {...: {"md5"}}}}}
         path.write_text(self.model_dump_json(indent=4, exclude=exc))
 
     @classmethod
