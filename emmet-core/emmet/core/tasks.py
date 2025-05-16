@@ -28,7 +28,7 @@ from pymatgen.io.vasp import Incar, Kpoints, Poscar
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.common import convert_datetime
 from emmet.core.math import Vector3D
-from emmet.core.mpid import MPID
+from emmet.core.mpid import MPID, AlphaID
 from emmet.core.structure import StructureMetadata
 from emmet.core.typing import StructureType
 from emmet.core.utils import jsanitize, type_override, utcnow
@@ -43,6 +43,7 @@ from emmet.core.vasp.calc_types import (
 from emmet.core.vasp.calculation import (
     Calculation,
     CalculationInput,
+    CalculationOutput,
     PotcarSpec,
     RunStatistics,
     VaspObject,
@@ -372,6 +373,85 @@ class AnalysisDoc(BaseModel):
         )
 
 
+class ProductionTaskDoc(StructureMetadata):
+    """Calculation-level details about VASP calculations that power Materials Project."""
+
+    batch_id: str | None = Field(
+        None,
+        description="Identifier for this calculation; should provide rough information about the calculation origin and purpose.",
+    )
+    calc_type: CalcType | None = Field(
+        None, description="The functional and task type used in the calculation."
+    )
+    completed_at: datetime | None = Field(
+        None, description="Timestamp for when this task was completed"
+    )
+    dir_name: str | None = Field(None, description="The directory for this VASP task")
+    icsd_id: int | None = Field(
+        None, description="Inorganic Crystal Structure Database id of the structure"
+    )
+    input: CalculationInput | None = Field(
+        None,
+        description="The input structure used to generate the current task document.",
+    )
+    last_updated: datetime | None = Field(
+        utcnow(),
+        description="Timestamp for the most recent calculation for this task document",
+    )
+    orig_inputs: CalculationInput | None = Field(
+        None,
+        description="The exact set of input parameters used to generate the current task document.",
+    )
+    output: CalculationOutput | None = Field(
+        None,
+        description="The exact set of output parameters used to generate the current task document.",
+    )
+    run_type: RunType | None = Field(
+        None, description="The functional used in the calculation."
+    )
+    structure: StructureType | None = Field(
+        None, description="Final output structure from the task"
+    )
+    tags: list[str] | None = Field(
+        None, title="tag", description="Metadata tagged to a given task."
+    )
+    task_id: AlphaID | MPID | str | None = Field(
+        None,
+        description="The (task) ID of this calculation, used as a universal reference across property documents."
+        "This comes in the form: mp-******.",
+    )
+    task_type: TaskType | CalcType | None = Field(
+        None, description="The type of calculation."
+    )
+    transformations: Any | None = Field(
+        None,
+        description="Information on the structural transformations, parsed from a "
+        "transformations.json file",
+    )
+    vasp_objects: dict[VaspObject, Any] | None = Field(
+        None, description="Vasp objects associated with this task"
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def set_prod_model_pre_fields(cls, values: Any) -> Any:
+        """Ensure all important model fields are set and refreshed."""
+        values["last_updated"] = convert_datetime(
+            cls, values.get("last_updated", utcnow())
+        )
+
+        if (batch_id := values.get("batch_id")) is not None:
+            invalid_chars = set(
+                char
+                for char in batch_id
+                if (not char.isalnum()) and (char not in {"-", "_"})
+            )
+            if len(invalid_chars) > 0:
+                raise ValueError(
+                    f"Invalid characters in batch_id: {' '.join(invalid_chars)}"
+                )
+
+
 @type_override(
     {
         "additional_json": str,
@@ -379,112 +459,47 @@ class AnalysisDoc(BaseModel):
         "vasp_objects": str,
     }
 )
-class TaskDoc(StructureMetadata, extra="allow"):
-    """Calculation-level details about VASP calculations that power Materials Project."""
+class TaskDoc(ProductionTaskDoc, extra="allow", use_enum_values=True):
+    """Flexible wrapper around ProductionTaskDoc"""
 
-    tags: list[str] | None = Field(
-        None, title="tag", description="Metadata tagged to a given task."
-    )
-    dir_name: str | None = Field(None, description="The directory for this VASP task")
-    state: TaskState | None = Field(None, description="State of this calculation")
-    calcs_reversed: list[Calculation] | None = Field(
-        None,
-        title="Calcs reversed data",
-        description="Detailed data for each VASP calculation contributing to the task document.",
-    )
-
-    structure: StructureType | None = Field(
-        None, description="Final output structure from the task"
-    )
-
-    task_type: TaskType | CalcType | None = Field(
-        None, description="The type of calculation."
-    )
-
-    run_type: RunType | None = Field(
-        None, description="The functional used in the calculation."
-    )
-
-    calc_type: CalcType | None = Field(
-        None, description="The functional and task type used in the calculation."
-    )
-
-    task_id: MPID | str | None = Field(
-        None,
-        description="The (task) ID of this calculation, used as a universal reference across property documents."
-        "This comes in the form: mp-******.",
-    )
-
-    orig_inputs: OrigInputs | None = Field(
-        None,
-        description="The exact set of input parameters used to generate the current task document.",
-    )
-
-    input: InputDoc | None = Field(
-        None,
-        description="The input structure used to generate the current task document.",
-    )
-
-    output: OutputDoc | None = Field(
-        None,
-        description="The exact set of output parameters used to generate the current task document.",
-    )
-
-    included_objects: list[VaspObject] | None = Field(
-        None, description="List of VASP objects included with this task document"
-    )
-    vasp_objects: dict[VaspObject, Any] | None = Field(
-        None, description="Vasp objects associated with this task"
-    )
-    entry: ComputedEntryType | None = Field(
-        None, description="The ComputedEntry from the task doc"
-    )
-    task_label: str | None = Field(None, description="A description of the task")
-    author: str | None = Field(
-        None, description="Author extracted from transformations"
-    )
-    icsd_id: int | None = Field(
-        None, description="Inorganic Crystal Structure Database id of the structure"
-    )
-    transformations: Any | None = Field(
-        None,
-        description="Information on the structural transformations, parsed from a "
-        "transformations.json file",
-    )
     additional_json: dict[str, Any] | None = Field(
         None, description="Additional json loaded from the calculation directory"
     )
-
-    custodian: list[CustodianDoc] | None = Field(
-        None,
-        title="Calcs reversed data",
-        description="Detailed custodian data for each VASP calculation contributing to the task document.",
-    )
-
     analysis: AnalysisDoc | None = Field(
         None,
         title="Calculation Analysis",
         description="Some analysis of calculation data after collection.",
     )
-
-    last_updated: datetime = Field(
-        default_factory=utcnow,
-        description="Timestamp for the most recent calculation for this task document",
+    author: str | None = Field(
+        None, description="Author extracted from transformations"
     )
-
-    completed_at: datetime | None = Field(
-        None, description="Timestamp for when this task was completed"
-    )
-
-    batch_id: str | None = Field(
+    calcs_reversed: list[Calculation] | None = Field(
         None,
-        description="Identifier for this calculation; should provide rough information about the calculation origin and purpose.",
+        title="Calcs reversed data",
+        description="Detailed data for each VASP calculation contributing to the task document.",
+    )
+    custodian: list[CustodianDoc] | None = Field(
+        None,
+        title="Calcs reversed data",
+        description="Detailed custodian data for each VASP calculation contributing to the task document.",
+    )
+    entry: ComputedEntry | None = Field(
+        None, description="The ComputedEntry from the task doc"
+    )
+    included_objects: list[VaspObject] | None = Field(
+        None, description="List of VASP objects included with this task document"
+    )
+    output: OutputDoc | None = Field(
+        None,
+        description="The exact set of output parameters used to generate the current task document.",
     )
 
     run_stats: dict[str, RunStatistics] | None = Field(
         None,
         description="Summary of runtime statistics for each calculation in this task",
     )
+    state: TaskState | None = Field(None, description="State of this calculation")
+    task_label: str | None = Field(None, description="A description of the task")
 
     # Note that private fields are needed because TaskDoc permits extra info
     # added to the model, unlike TaskDocument. Because of this, when pydantic looks up
@@ -498,25 +513,6 @@ class TaskDoc(StructureMetadata, extra="allow"):
     @classmethod
     def set_model_pre_fields(cls, values: Any) -> Any:
         """Ensure all important model fields are set and refreshed."""
-
-        # Make sure that the datetime field is properly formatted
-        # (Unclear when this is not the case, please leave comment if observed)
-        values["last_updated"] = convert_datetime(
-            cls, values.get("last_updated", utcnow())
-        )
-
-        # Ensure batch_id includes only valid characters
-        if (batch_id := values.get("batch_id")) is not None:
-            invalid_chars = set(
-                char
-                for char in batch_id
-                if (not char.isalnum()) and (char not in {"-", "_"})
-            )
-            if len(invalid_chars) > 0:
-                raise ValueError(
-                    f"Invalid characters in batch_id: {' '.join(invalid_chars)}"
-                )
-
         # Always refresh task_type, calc_type, run_type
         # if attributes containing input sets are available.
         # See, e.g. https://github.com/materialsproject/emmet/issues/960
