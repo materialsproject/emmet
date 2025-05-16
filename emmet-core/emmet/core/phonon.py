@@ -4,16 +4,17 @@ from datetime import datetime
 from functools import cached_property
 
 import numpy as np
-from pydantic import model_validator, BaseModel, Field, computed_field
+from pydantic import model_validator, BaseModel, Field, computed_field, PrivateAttr
 from typing import Optional, TYPE_CHECKING
 
-from emmet.core.mpid import MPID
+from pymatgen.core import Lattice, Structure
+from pymatgen.electronic_structure.bandstructure import Kpoint
 from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
 from pymatgen.phonon.dos import PhononDos as PhononDosObject
 
 from emmet.core.utils import DocEnum
-from pymatgen.core import Structure
 from emmet.core.math import Vector3D, Matrix3D, Tensor4R
+from emmet.core.mpid import MPID
 from emmet.core.polar import DielectricDoc, BornEffectiveCharges, IRDielectric
 from emmet.core.structure import StructureMetadata
 from emmet.core.common import convert_datetime
@@ -22,6 +23,7 @@ from emmet.core.utils import utcnow
 from typing_extensions import Literal
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from typing import Any
 
 
@@ -31,6 +33,7 @@ class PhononDOS(BaseModel):
     frequencies: list[float] = Field(description="The phonon frequencies in THz.")
     densities: list[float] = Field(description="The phonon density of states.")
 
+    @cached_property
     def to_pmg(self) -> PhononDosObject:
         return PhononDosObject(frequencies=self.frequencies, densities=self.densities)
 
@@ -39,11 +42,9 @@ class PhononBS(BaseModel):
     """Define schema of pymatgen phonon band structure."""
 
     qpoints: list[Vector3D] = Field(
-        None,
         description="The q-kpoints at which the band structure was sampled, in direct coordinates.",
     )
-    frequencies: list[tuple[float, float]] = Field(
-        None,
+    frequencies: list[list[float]] = Field(
         description="The phonon frequencies in THz, with the first index representing the band, and the second the q-point.",
     )
     reciprocal_lattice: tuple[Vector3D, Vector3D, Vector3D] = Field(
@@ -64,10 +65,12 @@ class PhononBS(BaseModel):
     structure: Structure | None = Field(
         None, description="The structure associated with the calculation."
     )
+    _primitive_structure: Structure | None = PrivateAttr(None)
 
     @model_validator(mode="before")
     def rehydrate(cls, config: Any) -> Any:
-        if (egd := config.get("eigendisplacements")) and all(
+        """Ensure fields are correctly populated."""
+        if isinstance(egd := config.get("eigendisplacements"), dict) and all(
             egd.get(k) is not None for k in ("real", "imag")
         ):
             config["eigendisplacements"] = (
@@ -80,6 +83,7 @@ class PhononBS(BaseModel):
         # remap legacy fields
         for k, v in {
             "lattice_rec": "reciprocal_lattice",
+            "bands": "frequencies",
         }.items():
             if config.get(k):
                 config[v] = config.pop(k)
@@ -89,15 +93,27 @@ class PhononBS(BaseModel):
 
         return config
 
+    @property
+    def primitive_structure(self) -> Structure | None:
+        """Cache primitive structure for use in computing entropy, heat capacity, etc."""
+        if self.structure and not self._primitive_structure:
+            self._primitive_structure = self.structure.get_primitive_structure()
+        return self._primitive_structure
+
+    @cached_property
     def to_pmg(self) -> PhononBandStructureSymmLine:
+        rlatt = Lattice(self.reciprocal_lattice)
         return PhononBandStructureSymmLine(
-            self.qpoints,
-            self.frequencies,
-            self.reciprocal_lattice,
+            [Kpoint(q, lattice=rlatt).frac_coords for q in self.qpoints],  # type: ignore[misc]
+            np.array(self.frequencies),
+            rlatt,
             has_nac=self.has_nac,
-            eigendisplacements=self.eigendisplacements,
+            eigendisplacements=np.array(self.eigendisplacements),
             structure=self.structure,
-            labels_dict=self.labels_dict,
+            labels_dict={
+                k: Kpoint(v, lattice=rlatt).frac_coords
+                for k, v in (self.labels_dict or {}).items()
+            },
             coords_are_cartesian=False,
         )
 
@@ -180,7 +196,7 @@ class BasePhononBSDOSDoc(StructureMetadata):
 
         return config
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @cached_property
     def charge_neutral_sum_rule(self) -> Matrix3D | None:
         """Sum of Born effective charges over sites should be zero."""
@@ -189,7 +205,7 @@ class BasePhononBSDOSDoc(StructureMetadata):
             return tuple(tuple(row) for row in np.sum(bec, axis=0).tolist())
         return None
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @cached_property
     def acoustic_sum_rule(self) -> Matrix3D | None:
         """Sum of q=0 atomic force constants should be zero."""
@@ -202,7 +218,7 @@ class BasePhononBSDOSDoc(StructureMetadata):
             )
         return None
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def check_sum_rule_deviations(self) -> SumRuleChecks:
         """Report deviations from sum rules."""
@@ -219,6 +235,51 @@ class BasePhononBSDOSDoc(StructureMetadata):
                 }
             )
         return self.sum_rules_breaking
+
+    def entropy(self, temperature: float) -> float | None:
+        """Compute the entropy in J/(K*mol) per formula unit."""
+
+        if not self.phonon_dos or not self.phonon_bandstructure:
+            return None
+        return self.phonon_dos.to_pmg.entropy(
+            temp=temperature, structure=self.phonon_bandstructure.primitive_structure
+        )
+
+    def heat_capacity(self, temperature: float) -> float | None:
+        """Compute the heat capacity in J/(K*mol) per formula unit."""
+        if not self.phonon_dos or not self.phonon_bandstructure:
+            return None
+        return self.phonon_dos.to_pmg.cv(
+            temp=temperature, structure=self.phonon_bandstructure.primitive_structure
+        )
+
+    def internal_energy(self, temperature: float) -> float | None:
+        """Compute the internal energy in kJ/mol."""
+        if not self.phonon_dos or not self.phonon_bandstructure:
+            return None
+        return 1e-3 * self.phonon_dos.to_pmg.internal_energy(
+            temp=temperature, structure=self.phonon_bandstructure.primitive_structure
+        )
+
+    def free_energy(self, temperature: float) -> float | None:
+        """Compute the Helmholtz free energy in kJ/mol."""
+        if not self.phonon_dos or not self.phonon_bandstructure:
+            return None
+        return 1e-3 * self.phonon_dos.to_pmg.helmholtz_free_energy(
+            temp=temperature, structure=self.phonon_bandstructure.primitive_structure
+        )
+
+    def compute_thermo_quantites(
+        self, temperatures: Sequence[float]
+    ) -> dict[str, Sequence[float | None]]:
+        """Compute all thermodynamic quantities as a convenience method."""
+
+        quantities = ("entropy", "heat_capacity", "internal_energy", "free_energy")
+        thermo_props: dict[str, Sequence[float | None]] = {
+            k: [getattr(self, k)(temp) for temp in temperatures] for k in quantities
+        }
+        thermo_props["temperature"] = temperatures
+        return thermo_props
 
 
 class PhononComputationalSettings(BaseModel):
@@ -294,36 +355,6 @@ class PhononBSDOSDoc(BasePhononBSDOSDoc):
 
     structure: Structure | None = Field(
         None, description="Structure used in the calculation."
-    )
-
-    free_energies: list[float] | None = Field(
-        None,
-        description="vibrational part of the free energies in J/mol per "
-        "formula unit for temperatures in temperature_list",
-    )
-
-    heat_capacities: list[float] | None = Field(
-        None,
-        description="heat capacities in J/K/mol per "
-        "formula unit for temperatures in temperature_list",
-    )
-
-    internal_energies: list[float] | None = Field(
-        None,
-        description="internal energies in J/mol per "
-        "formula unit for temperatures in temperature_list",
-    )
-    entropies: list[float] | None = Field(
-        None,
-        description="entropies in J/(K*mol) per formula unit"
-        "for temperatures in temperature_list ",
-    )
-
-    temperatures: list[float] | None = Field(
-        None,
-        description="temperatures at which the vibrational"
-        " part of the free energies"
-        " and other properties have been computed",
     )
 
     total_dft_energy: float | None = Field(
