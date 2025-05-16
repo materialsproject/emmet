@@ -1,50 +1,519 @@
-from datetime import datetime
+"""Define schemas for DFPT, phonopy, and pheasy-derived phonon data."""
+from __future__ import annotations
 
-from pydantic import field_validator, BaseModel, Field
-from emmet.core.mpid import MPID
+from datetime import datetime
+import json
+from functools import cached_property
+
+from monty.dev import requires
+import numpy as np
+from pydantic import model_validator, BaseModel, Field, computed_field, PrivateAttr
+from typing import Optional, TYPE_CHECKING
+
+from pymatgen.core import Lattice, Structure
+from pymatgen.electronic_structure.bandstructure import Kpoint
 from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
 from pymatgen.phonon.dos import PhononDos as PhononDosObject
 
-from typing import List, Tuple, Optional
 from emmet.core.utils import DocEnum
-from pymatgen.core import Structure
-from emmet.core.math import Vector3D, Tensor4R
+from emmet.core.math import Vector3D, Matrix3D, Tensor4R
+from emmet.core.mpid import MPID
 from emmet.core.polar import DielectricDoc, BornEffectiveCharges, IRDielectric
 from emmet.core.structure import StructureMetadata
 from emmet.core.common import convert_datetime
+from emmet.core.utils import utcnow
+
 from typing_extensions import Literal
 
+try:
+    import pyarrow as pa
 
-class PhononBSDOSDoc(BaseModel):
-    """
-    Phonon band structures and density of states data.
-    """
+    from pyarrow import Table as ArrowTable
+except ImportError:
+    ArrowTable = None
 
-    material_id: Optional[MPID] = Field(
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from typing import Any
+    from typing_extensions import Self
+
+
+class PhononDOS(BaseModel):
+    """Define schema of pymatgen phonon density of states."""
+
+    frequencies: list[float] = Field(description="The phonon frequencies in THz.")
+    densities: list[float] = Field(description="The phonon density of states.")
+
+    @cached_property
+    def to_pmg(self) -> PhononDosObject:
+        """Get / cache corresponding pymatgen object."""
+        return PhononDosObject(frequencies=self.frequencies, densities=self.densities)
+
+    @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
+    def to_arrow(self, col_prefix: str | None = None) -> ArrowTable:
+        """Convert PhononDOS to a pyarrow Table."""
+        col_prefix = col_prefix or ""
+        return pa.Table.from_pydict(
+            {
+                f"{col_prefix}{k}": [getattr(self, k)]
+                for k in ("frequencies", "densities")
+            }
+        )
+
+    @classmethod
+    @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
+    def from_arrow(cls, table: ArrowTable, col_prefix: str | None = None) -> Self:
+        """Create a PhononDOS from a pyarrow Table."""
+        col_prefix = col_prefix or ""
+        return cls(
+            **{k: table[f"{col_prefix}{k}"].to_pylist()[0] for k in cls.model_fields}
+        )
+
+
+class PhononBS(BaseModel):
+    """Define schema of pymatgen phonon band structure."""
+
+    qpoints: list[Vector3D] = Field(
+        description="The q-kpoints at which the band structure was sampled, in direct coordinates.",
+    )
+    frequencies: list[list[float]] = Field(
+        description="The phonon frequencies in THz, with the first index representing the band, and the second the q-point.",
+    )
+    reciprocal_lattice: Matrix3D = Field(description="The reciprocal lattice.")
+    has_nac: bool = Field(
+        False,
+        description="Whether the calculation includes non-analytical corrections at Gamma.",
+    )
+    eigendisplacements: list[
+        list[list[tuple[complex, complex, complex]]]
+    ] | None = Field(
+        None, description="Phonon eigendisplacements in Cartesian coordinates."
+    )
+    labels_dict: dict[str, Vector3D] | None = Field(
+        None, description="The high-symmetry labels of specific q-points."
+    )
+    structure: Structure | None = Field(
+        None, description="The structure associated with the calculation."
+    )
+    _primitive_structure: Structure | None = PrivateAttr(None)
+
+    @model_validator(mode="before")
+    def rehydrate(cls, config: Any) -> Any:
+        """Ensure fields are correctly populated."""
+        if isinstance(egd := config.get("eigendisplacements"), dict) and all(
+            egd.get(k) is not None for k in ("real", "imag")
+        ):
+            config["eigendisplacements"] = (
+                np.array(egd["real"]) + 1j * np.array(egd["imag"])
+            ).tolist()
+
+        if (struct := config.get("structure")) and not isinstance(struct, Structure):
+            config["structure"] = Structure.from_dict(struct)
+
+        # remap legacy fields
+        for k, v in {
+            "lattice_rec": "reciprocal_lattice",
+            "bands": "frequencies",
+        }.items():
+            if config.get(k):
+                config[v] = config.pop(k)
+
+        if isinstance(config["reciprocal_lattice"], dict):
+            config["reciprocal_lattice"] = config["reciprocal_lattice"].get("matrix")
+
+        return config
+
+    @property
+    def primitive_structure(self) -> Structure | None:
+        """Cache primitive structure for use in computing entropy, heat capacity, etc."""
+        if self.structure and not self._primitive_structure:
+            self._primitive_structure = self.structure.get_primitive_structure()
+        return self._primitive_structure
+
+    @cached_property
+    def to_pmg(self) -> PhononBandStructureSymmLine:
+        """Get / cache corresponding pymatgen object."""
+        rlatt = Lattice(self.reciprocal_lattice)
+        return PhononBandStructureSymmLine(
+            [Kpoint(q, lattice=rlatt).frac_coords for q in self.qpoints],  # type: ignore[misc]
+            np.array(self.frequencies),
+            rlatt,
+            has_nac=self.has_nac,
+            eigendisplacements=np.array(self.eigendisplacements),
+            structure=self.structure,
+            labels_dict={
+                k: Kpoint(v, lattice=rlatt).frac_coords
+                for k, v in (self.labels_dict or {}).items()
+            },
+            coords_are_cartesian=False,
+        )
+
+    @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
+    def to_arrow(self, col_prefix: str | None = None) -> ArrowTable:
+        """Convert a PhononBS to an arrow table."""
+        config = self.model_dump()
+        if structure := config.pop("structure", None):
+            config["structure"] = json.dumps(structure.as_dict())
+
+        for k in ("qpoints", "frequencies", "reciprocal_lattice", "eigendisplacements"):
+            if (vals := config.pop(k, None)) and k == "eigendisplacements":
+                cvals = np.array(vals)
+                config["eigendisplacements_real"] = cvals.real.flatten()
+                config["eigendisplacements_imag"] = cvals.imag.flatten()
+                config["eigendisplacements_shape"] = list(cvals.shape)
+            elif vals:
+                rvals = np.array(vals)
+                config[k] = rvals.flatten()
+                config[f"{k}_shape"] = list(rvals.shape)
+
+        if qpt_labels := config.pop("labels_dict"):
+            config["qpoint_labels"] = list(qpt_labels)
+            config["qpoint_labelled_points"] = [
+                qpt_labels[k] for k in config["qpoint_labels"]
+            ]
+
+        col_prefix = col_prefix or ""
+        return pa.Table.from_pydict(
+            {f"{col_prefix}{k}": [v] for k, v in config.items()}
+        )
+
+    @classmethod
+    @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
+    def from_arrow(cls, table: ArrowTable, col_prefix: str | None = None) -> Self:
+        """Create a PhononBS from an arrow table."""
+        col_prefix = col_prefix or ""
+        config: dict[str, Any] = {}
+        for k in (
+            "structure",
+            "has_nac",
+            "qpoints",
+            "frequencies",
+            "reciprocal_lattice",
+            "eigendisplacements_real",
+            "qpoint_labels",
+        ):
+            _k = f"{col_prefix}{k}"
+            if _k not in table.column_names:
+                continue
+            v = table[_k].to_pylist()[0]
+            if k == "structure":
+                config[k] = Structure.from_dict(json.loads(v))
+            elif k in ("qpoints", "frequencies", "reciprocal_lattice"):
+                config[k] = np.array(v).reshape(
+                    tuple(table[f"{_k}_shape"].to_pylist()[0])
+                )
+            elif k == "eigendisplacements_real":
+                config["eigendisplacements"] = (
+                    table[f"{col_prefix}eigendisplacements_real"].to_numpy()[0]
+                    + 1.0j * table[f"{col_prefix}eigendisplacements_imag"].to_numpy()[0]
+                ).reshape(
+                    tuple(table[f"{col_prefix}eigendisplacements_shape"].to_pylist()[0])
+                )
+            elif k == "qpoint_labels":
+                config["labels_dict"] = dict(
+                    zip(v, table[f"{col_prefix}qpoint_labelled_points"].to_pylist()[0])
+                )
+            else:
+                config[k] = v
+        return cls(**config)
+
+
+class SumRuleChecks(BaseModel):
+    """Container class for defining sum rule checks."""
+
+    asr: float | None = Field(
+        None, description="The violation of the acoustic sum rule."
+    )
+    cnsr: float | None = Field(
+        None, description="The violation of the charge neutral sum rule."
+    )
+
+
+class BasePhononBSDOSDoc(StructureMetadata):
+    """Phonon band structures and density of states data."""
+
+    material_id: MPID | None = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )
 
-    ph_bs: Optional[PhononBandStructureSymmLine] = Field(
+    phonon_bandstructure: PhononBS | None = Field(
         None,
         description="Phonon band structure object.",
     )
 
-    ph_dos: Optional[PhononDosObject] = Field(
+    phonon_dos: PhononDOS | None = Field(
         None,
         description="Phonon density of states object.",
     )
 
-    last_updated: Optional[datetime] = Field(
+    epsilon_static: Matrix3D | None = Field(
+        None, description="The high-frequency dielectric constant."
+    )
+
+    epsilon_electronic: Matrix3D | None = Field(
         None,
+        description="The electronic contribution to the high-frequency dielectric constant.",
+    )
+
+    born: list[Matrix3D] | None = Field(
+        None,
+        description="Born charges, only for symmetrically inequivalent atoms",
+    )
+
+    # needed, e.g. to compute Grueneisen parameter etc
+    force_constants: list[list[Matrix3D]] | None = Field(
+        None, description="Force constants between every pair of atoms in the structure"
+    )
+
+    last_updated: datetime = Field(
+        utcnow,
         description="Timestamp for the most recent calculation for this Material document.",
     )
 
-    # Make sure that the datetime field is properly formatted
-    @field_validator("last_updated", mode="before")
+    sum_rules_breaking: SumRuleChecks | None = Field(
+        None,
+        description="Deviations from sum rules.",
+    )
+
+    @model_validator(mode="before")
     @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)
+    def migrate_fields(cls, config: Any) -> Any:
+        """Migrate legacy input fields."""
+        for k, v in {
+            "ph_dos": "phonon_dos",
+            "ph_bs": "phonon_bandstructure",
+            "e_total": "epsilon_static",
+            "e_electronic": "epsilon_electronic",
+            "becs": "born",
+        }.items():
+            if config.get(k):
+                config[v] = config.pop(k)
+
+        # Make sure that the datetime field is properly formatted
+        if config.get("last_updated"):
+            config["last_updated"] = convert_datetime(cls, config["last_updated"])
+
+        return config
+
+    @computed_field  # type: ignore[prop-decorator]
+    @cached_property
+    def charge_neutral_sum_rule(self) -> Matrix3D | None:
+        """Sum of Born effective charges over sites should be zero."""
+        if self.born:
+            bec = np.array(self.born)
+            return tuple(tuple(row) for row in np.sum(bec, axis=0).tolist())
+        return None
+
+    @computed_field  # type: ignore[prop-decorator]
+    @cached_property
+    def acoustic_sum_rule(self) -> Matrix3D | None:
+        """Sum of q=0 atomic force constants should be zero."""
+        if self.force_constants:
+            return tuple(
+                tuple(row)
+                for row in np.einsum(
+                    "ijki->jk", np.array(self.force_constants).tolist()
+                )
+            )
+        return None
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def check_sum_rule_deviations(self) -> SumRuleChecks:
+        """Report deviations from sum rules."""
+        if not self.sum_rules_breaking:
+            self.sum_rules_breaking = SumRuleChecks(
+                **{
+                    k: np.max(np.abs(getattr(self, attr)))
+                    if getattr(self, attr)
+                    else None
+                    for k, attr in {
+                        "asr": "acoustic_sum_rule",
+                        "cnsr": "charge_neutral_sum_rule",
+                    }.items()
+                }
+            )
+        return self.sum_rules_breaking
+
+    def entropy(self, temperature: float) -> float | None:
+        """Compute the entropy in J/(K*mol) per formula unit."""
+
+        if not self.phonon_dos or not self.phonon_bandstructure:
+            return None
+        return self.phonon_dos.to_pmg.entropy(
+            temp=temperature, structure=self.phonon_bandstructure.primitive_structure
+        )
+
+    def heat_capacity(self, temperature: float) -> float | None:
+        """Compute the heat capacity in J/(K*mol) per formula unit."""
+        if not self.phonon_dos or not self.phonon_bandstructure:
+            return None
+        return self.phonon_dos.to_pmg.cv(
+            temp=temperature, structure=self.phonon_bandstructure.primitive_structure
+        )
+
+    def internal_energy(self, temperature: float) -> float | None:
+        """Compute the internal energy in kJ/mol."""
+        if not self.phonon_dos or not self.phonon_bandstructure:
+            return None
+        return 1e-3 * self.phonon_dos.to_pmg.internal_energy(
+            temp=temperature, structure=self.phonon_bandstructure.primitive_structure
+        )
+
+    def free_energy(self, temperature: float) -> float | None:
+        """Compute the Helmholtz free energy in kJ/mol."""
+        if not self.phonon_dos or not self.phonon_bandstructure:
+            return None
+        return 1e-3 * self.phonon_dos.to_pmg.helmholtz_free_energy(
+            temp=temperature, structure=self.phonon_bandstructure.primitive_structure
+        )
+
+    def compute_thermo_quantites(
+        self, temperatures: Sequence[float]
+    ) -> dict[str, Sequence[float | None]]:
+        """Compute all thermodynamic quantities as a convenience method."""
+
+        quantities = ("entropy", "heat_capacity", "internal_energy", "free_energy")
+        thermo_props: dict[str, Sequence[float | None]] = {
+            k: [getattr(self, k)(temp) for temp in temperatures] for k in quantities
+        }
+        thermo_props["temperature"] = temperatures
+        return thermo_props
+
+    @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
+    def objects_to_arrow(self) -> ArrowTable:
+        """Convert band structure and DOS to pyarrow table row."""
+        table = pa.Table.from_pydict({"material_id": [self.material_id]})
+        if self.phonon_bandstructure:
+            bst = self.phonon_bandstructure.to_arrow(col_prefix="bs_")
+            for k in bst.column_names:
+                table = table.append_column(k, bst[k])
+
+        if self.phonon_dos:
+            dost = self.phonon_dos.to_arrow(col_prefix="dos_")
+
+            for k in dost.column_names:
+                table = table.append_column(k, dost[k])
+        return table
+
+
+class PhononComputationalSettings(BaseModel):
+    """Collection to store computational settings for the phonon computation."""
+
+    # could be optional and implemented at a later stage?
+    npoints_band: int | None = Field(
+        None, description="number of points for band structure computation"
+    )
+    kpath_scheme: str | None = Field(None, description="indicates the kpath scheme")
+    kpoint_density_dos: int | None = Field(
+        None,
+        description="number of points for computation of free energies and densities of states",
+    )
+
+
+class ThermalDisplacementData(BaseModel):
+    """Collection to store information on the thermal displacement matrices."""
+
+    freq_min_thermal_displacements: float | None = Field(
+        None,
+        description="cutoff frequency in THz to avoid numerical issues in the "
+        "computation of the thermal displacement parameters",
+    )
+    thermal_displacement_matrix_cif: list[list[Matrix3D]] | None = Field(
+        None, description="field including thermal displacement matrices in CIF format"
+    )
+    thermal_displacement_matrix: list[list[Matrix3D]] | None = Field(
+        None,
+        description="field including thermal displacement matrices in Cartesian "
+        "coordinate system",
+    )
+    temperatures_thermal_displacements: list[float] | None = Field(
+        None,
+        description="temperatures at which the thermal displacement matrices"
+        "have been computed",
+    )
+
+
+class PhononUUIDs(BaseModel):
+    """Collection to save all uuids connected to the phonon run."""
+
+    optimization_run_uuid: str | None = Field(None, description="optimization run uuid")
+    displacements_uuids: list[str] | None = Field(
+        None, description="The uuids of the displacement jobs."
+    )
+    static_run_uuid: str | None = Field(None, description="static run uuid")
+    born_run_uuid: str | None = Field(None, description="born run uuid")
+
+
+class PhononJobDirs(BaseModel):
+    """Collection to save all job directories relevant for the phonon run."""
+
+    displacements_job_dirs: list[str | None] | None = Field(
+        None, description="The directories where the displacement jobs were run."
+    )
+    static_run_job_dir: str | None = Field(
+        None, description="Directory where static run was performed."
+    )
+    born_run_job_dir: str | None = Field(
+        None, description="Directory where born run was performed."
+    )
+    optimization_run_job_dir: str | None = Field(
+        None, description="Directory where optimization run was performed."
+    )
+    taskdoc_run_job_dir: str | None = Field(
+        None, description="Directory where task doc was generated."
+    )
+
+
+class PhononBSDOSDoc(BasePhononBSDOSDoc):
+    """Heavier phonon document schema for parsing newer phonon calculations."""
+
+    structure: Structure | None = Field(
+        None, description="Structure used in the calculation."
+    )
+
+    total_dft_energy: float | None = Field(
+        None, description="total DFT energy per formula unit in eV"
+    )
+
+    volume_per_formula_unit: float | None = Field(
+        None, description="volume per formula unit in Angstrom**3"
+    )
+
+    formula_units: int | None = Field(None, description="Formula units per cell")
+
+    has_imaginary_modes: Optional[bool] = Field(
+        None, description="if true, structure has imaginary modes"
+    )
+
+    supercell_matrix: Optional[Matrix3D] = Field(
+        None, description="matrix describing the supercell"
+    )
+    primitive_matrix: Optional[Matrix3D] = Field(
+        None, description="matrix describing relationship to primitive cell"
+    )
+
+    code: Optional[str] = Field(
+        None, description="String describing the code for the computation"
+    )
+
+    phonopy_settings: Optional[PhononComputationalSettings] = Field(
+        None, description="Field including settings for Phonopy"
+    )
+
+    thermal_displacement_data: Optional[ThermalDisplacementData] = Field(
+        None,
+        description="Includes all data of the computation of the thermal displacements",
+    )
+
+    jobdirs: Optional[PhononJobDirs] = Field(
+        None, description="Field including all relevant job directories"
+    )
+
+    uuids: Optional[PhononUUIDs] = Field(
+        None, description="Field including all relevant uuids"
+    )
 
 
 class PhononWarnings(DocEnum):
@@ -60,72 +529,6 @@ class PhononWarnings(DocEnum):
         "the phonon band structure has negative frequencies,"
         " but these are small and very close to the Gamma point "
         "(usually related to numerical errors).",
-    )
-
-
-class PhononBandStructure(BaseModel):
-    """
-    Document with a pymatgen serialized phonon band structure.
-    """
-
-    material_id: str = Field(
-        ...,
-        description="The ID of this material, used as a universal reference across property documents."
-        "This comes in the form: mp-******",
-    )
-
-    doc_type: Literal["bs"] = Field(
-        "bs", description="The type of the document: a phonon band structure."
-    )
-
-    band_structure: Optional[dict] = Field(
-        None,
-        description="Serialized version of a pymatgen "
-        "PhononBandStructureSymmLine object.",
-    )
-
-    last_updated: datetime = Field(
-        description="Timestamp for the most recent calculation update for this property",
-        default_factory=datetime.utcnow,
-    )
-
-    created_at: datetime = Field(
-        description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
-    )
-
-
-class PhononDos(BaseModel):
-    """
-    Document with a pymatgen serialized phonon density of states (DOS).
-    """
-
-    material_id: str = Field(
-        ...,
-        description="The ID of this material, used as a universal reference across property documents."
-        "This comes in the form: mp-******",
-    )
-
-    doc_type: Literal["dos"] = Field(
-        "dos", description="The type of the document: a phonon density of states."
-    )
-
-    dos: Optional[dict] = Field(
-        None, description="Serialized version of a pymatgen CompletePhononDos object."
-    )
-
-    dos_method: Optional[str] = Field(
-        None, description="The method used to calculate the phonon DOS."
-    )
-
-    last_updated: datetime = Field(
-        description="Timestamp for the most recent calculation update for this property",
-        default_factory=datetime.utcnow,
-    )
-
-    created_at: datetime = Field(
-        description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
     )
 
 
@@ -146,7 +549,7 @@ class PhononWebsiteBS(BaseModel):
         description="The type of the document: a phonon band structure for the phononwebsite.",
     )
 
-    phononwebsite: Optional[dict] = Field(
+    phononwebsite: dict | None = Field(
         None,
         description="Phononwebsite dictionary to plot the animated " "phonon modes.",
     )
@@ -177,7 +580,7 @@ class Ddb(BaseModel):
         "ddb", description="The type of the document: a DDB file."
     )
 
-    ddb: Optional[str] = Field(None, description="The string of the DDB file.")
+    ddb: str | None = Field(None, description="The string of the DDB file.")
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property",
@@ -195,19 +598,19 @@ class ThermodynamicProperties(BaseModel):
     Definition of the thermodynamic properties extracted from the phonon frequencies.
     """
 
-    temperatures: List[float] = Field(
+    temperatures: list[float] = Field(
         ...,
         description="The list of temperatures at which the thermodynamic properties "
         "are calculated",
     )
 
-    cv: List[float] = Field(
+    cv: list[float] = Field(
         ...,
         description="The values of the constant-volume specific heat.",
         alias="heat_capacity",
     )
 
-    entropy: List[float] = Field(
+    entropy: list[float] = Field(
         ..., description="The values of the vibrational entropy."
     )
 
@@ -218,17 +621,17 @@ class VibrationalEnergy(BaseModel):
     the temperature.
     """
 
-    temperatures: List[float] = Field(
+    temperatures: list[float] = Field(
         ...,
         description="The list of temperatures at which the thermodynamic properties "
         "are calculated",
     )
 
-    internal_energy: List[float] = Field(
+    internal_energy: list[float] = Field(
         ..., description="The values of the phonon contribution to the internal energy."
     )
 
-    helmholtz_free_energy: List[float] = Field(
+    helmholtz_free_energy: list[float] = Field(
         ..., description="The values of the Helmholtz free energy."
     )
 
@@ -256,7 +659,7 @@ class Phonon(StructureMetadata):
         None, description="The maximum breaking of the acoustic sum rule (ASR)."
     )
 
-    warnings: Optional[List[PhononWarnings]] = Field(
+    warnings: Optional[list[PhononWarnings]] = Field(
         None, description="List of warnings associated to the phonon calculation."
     )
 
@@ -322,20 +725,20 @@ class SoundVelocity(BaseModel):
         ..., description="The relaxed structure for the phonon calculation."
     )
 
-    directions: List[Vector3D] = Field(
+    directions: list[Vector3D] = Field(
         ...,
         description="Q-points identifying the directions for the calculation"
         "of the speed of sound. In fractional coordinates.",
     )
 
-    labels: List[Optional[str]] = Field(..., description="labels of the directions.")
+    labels: list[Optional[str]] = Field(..., description="labels of the directions.")
 
-    sound_velocities: List[Vector3D] = Field(
+    sound_velocities: list[Vector3D] = Field(
         ...,
         description="Values of the sound velocities in SI units.",
     )
 
-    mode_types: List[Tuple[Optional[str], Optional[str], Optional[str]]] = Field(
+    mode_types: list[tuple[Optional[str], Optional[str], Optional[str]]] = Field(
         ...,
         description="The types of the modes ('transversal', 'longitudinal'). "
         "None if not correctly identified.",
@@ -389,13 +792,13 @@ class ThermalDisplacement(BaseModel):
         description="The number of temperatures for which the displacements are calculated",
     )
 
-    temperatures: List[float] = Field(
+    temperatures: list[float] = Field(
         ...,
         description="The list of temperatures at which the thermodynamic properties "
         "are calculated",
     )
 
-    frequencies: List[float] = Field(
+    frequencies: list[float] = Field(
         ..., description="The list of frequencies for the generalized DOS"
     )
 
