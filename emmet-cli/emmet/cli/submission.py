@@ -269,6 +269,11 @@ class Submission(BaseModel):
             )
 
         # TODO: do push
+        for k, _ in self._pending_push.items():
+            # call RawArchive static method to create file_paths from list of FileMetadata for the pending_calc[k]
+            # construct a RawArchive file for writing
+            # push that file to S3
+            pass
 
         # do bookkeeping
         self.calc_history.append(self.pending_calculations)
