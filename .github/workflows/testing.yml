@@ -73,12 +73,12 @@ jobs:
         with:
           environment-name: openff-env
           create-args: >-
+            -c conda-forge
             python=${{ matrix.python-version }}
             openbabel
             "openff-toolkit>=0.16.2"
             "openff-interchange>=0.3.22"
             sqlite
-          channels: conda-forge
           init-shell: bash
           cache-environment: true
 
