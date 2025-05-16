@@ -14,7 +14,7 @@ cfgv==3.4.0
     # via pre-commit
 charset-normalizer==3.4.2
     # via requests
-click==8.1.8
+click==8.2.0
     # via
     #   emmet-cli (setup.py)
     #   mkdocs
@@ -38,7 +38,7 @@ filelock==3.18.0
     # via virtualenv
 flake8==7.2.0
     # via emmet-cli (setup.py)
-fonttools==4.57.0
+fonttools==4.58.0
     # via matplotlib
 ghp-import==2.1.0
     # via mkdocs
@@ -81,7 +81,7 @@ markupsafe==3.0.2
     #   mkdocs
     #   mkdocs-autorefs
     #   mkdocstrings
-matplotlib==3.10.1
+matplotlib==3.10.3
     # via pymatgen
 mccabe==0.7.0
     # via flake8
@@ -134,7 +134,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-cli (setup.py)
     #   mypy
-narwhals==1.38.2
+narwhals==1.39.1
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -169,9 +169,9 @@ platformdirs==4.3.8
     # via
     #   mkdocs-get-deps
     #   virtualenv
-plotly==6.0.1
+plotly==6.1.0
     # via pymatgen
-pluggy==1.5.0
+pluggy==1.6.0
     # via pytest
 pre-commit==4.2.0
     # via emmet-cli (setup.py)
@@ -229,7 +229,7 @@ pyyaml==6.0.2
     #   pybtex
     #   pymdown-extensions
     #   pyyaml-env-tag
-pyyaml-env-tag==0.1
+pyyaml-env-tag==1.1
     # via mkdocs
 requests==2.32.3
     # via pymatgen
@@ -245,7 +245,7 @@ six==1.17.0
     # via
     #   pybtex
     #   python-dateutil
-snowballstemmer==3.0.0.1
+snowballstemmer==3.0.1
     # via pydocstyle
 spglib==2.6.0
     # via pymatgen
@@ -253,13 +253,13 @@ sympy==1.14.0
     # via pymatgen
 tabulate==0.9.0
     # via pymatgen
-tornado==6.4.2
+tornado==6.5
     # via livereload
 tqdm==4.67.1
     # via pymatgen
-types-requests==2.32.0.20250328
+types-requests==2.32.0.20250515
     # via emmet-cli (setup.py)
-types-setuptools==80.3.0.20250505
+types-setuptools==80.7.0.20250516
     # via emmet-cli (setup.py)
 typing-extensions==4.13.2
     # via
@@ -289,6 +289,3 @@ wcmatch==10.0
     # via mkdocs-awesome-pages-plugin
 wincertstore==0.2.1
     # via emmet-cli (setup.py)
-
-# The following packages are considered to be unsafe in a requirements file:
-# setuptools
