@@ -6,7 +6,11 @@ from pymatgen.analysis.graphs import StructureGraph
 from pymatgen.analysis.local_env import NearNeighbors
 from typing_extensions import TypedDict
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.material_property import PropertyDoc
+
+if ARROW_COMPATIBLE:
+    import emmet.core.serialization_adapters.structure_graph_adapter
 
 AVAILABLE_METHODS = {nn.__name__: nn for nn in NearNeighbors.__subclasses__()}
 

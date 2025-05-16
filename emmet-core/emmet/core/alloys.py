@@ -1,5 +1,6 @@
 from typing_extensions import TypedDict
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.base import EmmetBaseModel
 
 try:
@@ -8,6 +9,10 @@ except ImportError:
     raise ImportError(
         "Install pymatgen-analysis-alloys to use AlloyPairDoc or AlloySystemDoc"
     )
+
+
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters import alloy_adapter
 
 
 class TypedBoolDict(TypedDict):

@@ -16,17 +16,26 @@ from pymatgen.analysis.magnetism.analyzer import (
 )
 from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
-from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine, Kpoint
+from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
 from pymatgen.electronic_structure.core import OrbitalType, Spin
 from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.symmetry.bandstructure import HighSymmKpath
-from typing_extensions import Literal, TypedDict
+from typing_extensions import Literal
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
 from emmet.core.settings import EmmetSettings
+from emmet.core.typing import TypedBandDict
 from emmet.core.utils import utcnow
+
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters import (
+        bandstructure_symm_line_adapter,
+        dos_adapter,
+        kpoint_adapter,
+    )
 
 SETTINGS = EmmetSettings()
 
@@ -105,14 +114,6 @@ class ElectronicStructureSummary(ElectronicStructureBaseData):
     magnetic_ordering: str | Ordering = Field(
         ..., description="Magnetic ordering of the calculation."
     )
-
-
-class TypedBandDict(TypedDict):
-    band_index: dict[str, list[int]]
-    kpoint_index: list[int]
-    kpoint: Kpoint
-    energy: float
-    projections: dict[str, list[list[float]]]
 
 
 class BandStructureSummaryData(ElectronicStructureSummary):

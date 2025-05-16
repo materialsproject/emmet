@@ -5,7 +5,6 @@
 from datetime import datetime
 from typing import Literal, Optional, TypeVar
 
-import pyarrow as pa
 from pydantic import (
     BaseModel,
     Field,

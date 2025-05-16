@@ -16,11 +16,19 @@ from pymatgen.core import Composition, Structure
 from pymatgen.core.periodic_table import Element
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.base import EmmetBaseModel
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
-from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 from emmet.core.utils import ValueEnum, jsanitize, utcnow
+
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters import (
+        balanced_reaction_adapter,
+        electrode_adapter,
+        structure_adapter,
+    )
+    from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 
 
 class BatteryType(str, ValueEnum):

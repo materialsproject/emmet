@@ -7,12 +7,16 @@ from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
 from pymatgen.phonon.dos import PhononDos as PhononDosObject
 from typing_extensions import Literal, TypedDict
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.common import convert_datetime
 from emmet.core.math import Tensor4R, Vector3D
 from emmet.core.mpid import MPID
 from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import DocEnum, utcnow
+
+if ARROW_COMPATIBLE:
+    import emmet.core.serialization_adapters.phonon_adapter
 
 
 class PhononBSDOSDoc(BaseModel):

@@ -76,12 +76,11 @@ class ValidationDoc(EmmetBaseModel):
         description="Dictioary of data used to perform validation."
         " Useful for post-mortem analysis",
     )
-    model_config = ConfigDict(extra="allow")
     nelements: int | None = Field(None, description="Number of elements.")
-    symmetry_number: int | None = Field(
+    formula_pretty: str | None = Field(
         None,
-        title="Space Group Number",
-        description="The spacegroup number for the lattice.",
+        title="Pretty Formula",
+        description="Cleaned representation of the formula.",
     )
 
     @classmethod
@@ -111,8 +110,8 @@ class ValidationDoc(EmmetBaseModel):
             potcar_stats: Dictionary of potcar stat data. Mapping is calculation type -> potcar symbol -> hash value.
         """
 
-        nelements = task_doc.nelements or None
-        symmetry_number = task_doc.symmetry.number if task_doc.symmetry else None
+        nelements = task_doc.nelements
+        formula_pretty = task_doc.formula_pretty
 
         bandgap = task_doc.output.bandgap
         calc_type = task_doc.calc_type
@@ -236,14 +235,12 @@ class ValidationDoc(EmmetBaseModel):
 
         doc = ValidationDoc(
             task_id=task_doc.task_id,
-            calc_type=calc_type,
-            run_type=task_doc.run_type,
             valid=len(reasons) == 0,
             reasons=reasons,
             data=data,
             warnings=warnings,
             nelements=nelements,
-            symmetry_number=symmetry_number,
+            formula_pretty=formula_pretty,
         )
 
         return doc

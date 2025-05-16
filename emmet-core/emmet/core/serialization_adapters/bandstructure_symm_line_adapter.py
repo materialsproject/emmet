@@ -3,20 +3,7 @@ from pydantic import RootModel
 from pymatgen.core import Lattice, Structure
 from typing_extensions import TypedDict
 
-from emmet.core.electronic_structure import TypedBandDict
-
-
-class TypedBandGapDict(TypedDict):
-    direct: bool
-    transition: str
-    energy: float
-
-
-class TypedBranchDict(TypedDict):
-    start_index: int
-    end_index: int
-    name: str
-
+from emmet.core.typing import TypedBandDict, TypedBandGapDict, TypedBranchDict
 
 TypedBandStructureSymmLineDict = TypedDict(
     "TypedBandStructureSymmLineDict",

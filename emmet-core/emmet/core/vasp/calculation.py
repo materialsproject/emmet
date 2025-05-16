@@ -42,8 +42,8 @@ from pymatgen.io.vasp import (
 )
 from typing_extensions import NotRequired, TypedDict
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
-from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 from emmet.core.utils import ValueEnum, jsanitize, type_override
 from emmet.core.vasp.calc_types import (
     CalcType,
@@ -54,6 +54,9 @@ from emmet.core.vasp.calc_types import (
     task_type,
 )
 from emmet.core.vasp.task_valid import TaskState
+
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -195,6 +198,13 @@ class CalculationInput(CalculationBaseModel):
     hubbards: Optional[dict[str, float]] = Field(
         None, description="The hubbard parameters used"
     )
+
+    @field_validator("hubbards", mode="before")
+    def deserialize_hubbards(cls, hubbards):
+        if isinstance(hubbards, list):
+            hubbards = {k: v for k, v in hubbards}
+
+        return hubbards
 
     @field_serializer("incar", "parameters", mode="wrap")
     def overrides_serializer(self, d, default_serializer, info):
@@ -537,15 +547,24 @@ class CalculationOutput(BaseModel):
         None, description="Summary of runtime statistics for this calculation"
     )
 
+    @field_validator("locpot", mode="before")
+    def deserialize_locpot(cls, locpot):
+        if isinstance(locpot, list):
+            locpot = {k: v for k, v in locpot}
+
+        return locpot
+
     @field_validator("dos_properties", mode="before")
     def deserialize_dos_properties(cls, dos_properties):
-        if dos_properties and isinstance(next(iter(dos_properties.values())), list):
+        # if dos_properties and isinstance(next(iter(dos_properties.values())), list):
+        if dos_properties and isinstance(dos_properties, list):
             dos_properties = {
                 element: {
                     orbital: {key: value for key, value in property}
                     for orbital, property in properties
                 }
-                for element, properties in dos_properties.items()
+                # for element, properties in dos_properties.items()
+                for element, properties in dos_properties
             }
         return dos_properties
 
@@ -786,6 +805,13 @@ class Calculation(CalculationBaseModel):
             d = json.loads(d)
 
         return d
+
+    @field_validator("output_file_paths", mode="before")
+    def deserialize_output_fps(cls, output_fps):
+        if isinstance(output_fps, list):
+            output_fps = {k: v for k, v in output_fps}
+
+        return output_fps
 
     @classmethod
     def from_vasp_files(
