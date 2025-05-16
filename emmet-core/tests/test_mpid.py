@@ -176,7 +176,6 @@ def test_alpha_id():
     for i in range(5000):
         alpha = AlphaID(i)
         assert int(alpha) == i
-        assert alpha.string == str(alpha)
         if i > 0:
             assert alpha - 1 == last_val
             assert alpha - AlphaID(1) == last_val
@@ -184,3 +183,9 @@ def test_alpha_id():
 
         last_val = alpha
         next_val = alpha + 1
+
+    # For legacy purposes, ensure that MPIDs with lower values
+    # present as int when calling .string
+    assert AlphaID("mp-149").string == "mp-149"
+    assert AlphaID("mp-3347529").string == "mp-3347529"
+    assert AlphaID("mp-3347530").string == str(AlphaID("mp-3347530"))
