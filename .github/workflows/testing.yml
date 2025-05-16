@@ -58,7 +58,7 @@ jobs:
       matrix:
         os: ["ubuntu-latest"] # TODO openbabel for windows and mac
         package: ["emmet-core", "emmet-builders", "emmet-api", "emmet-cli"]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12"]
     name: ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
     steps:
@@ -68,30 +68,26 @@ jobs:
           repository: ${{github.event.pull_request.head.repo.full_name}}
           fetch-depth: 0
 
-      - name: Set up micromamba (CI-friendly conda replacement)
-        uses: mamba-org/setup-micromamba@v1
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
         with:
-          environment-name: openff-env
-          create-args: >-
-            -c anaconda
-            -c conda-forge
-            python=${{ matrix.python-version }}
-            openbabel
-            "openff-toolkit>=0.16.2"
-            "openff-interchange>=0.3.22"
-            sqlite
-          init-shell: bash
-          cache-environment: true
+          auto-update-conda: true
+          python-version: ${{ matrix.python-version }}
+          channels: anaconda, conda-forge
 
-      - name: Install pip dependencies
+      - name: Install all conda requirements
+        shell: bash -l {0}
+        run: conda install -c conda-forge openbabel openff-toolkit==0.16.2 openff-interchange==0.3.22 sqlite -y
+
+      - name: Install Python dependencies
         shell: bash -l {0}
         env:
           CC: gcc-14
           CXX: g++-14
         run: |
-          pip install --upgrade pip pip-tools
-          pip install --user `grep numpy ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt`
-          pip install --user -r ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
+          python${{ matrix.python-version }} -m pip install --upgrade pip pip-tools
+          python${{ matrix.python-version }} -m pip install --user `grep numpy ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt`
+          python${{ matrix.python-version }} -m pip install --user -r ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
 
       - name: Install editable emmet-core if needed
         shell: bash -l {0}
