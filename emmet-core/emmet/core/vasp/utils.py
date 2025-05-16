@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 from collections import defaultdict
+import logging
 import os
 from pathlib import Path
 from pydantic import BaseModel, Field, PrivateAttr, computed_field, model_validator
@@ -13,6 +14,7 @@ if TYPE_CHECKING:
     from typing import Any
     from emmet.core.typing import PathLike
 
+logger = logging.getLogger(__name__)
 
 class FileMetadata(BaseModel):
     """
@@ -247,6 +249,7 @@ def recursive_discover_vasp_files(
                     # Incomplete calculation input/output
                     return
                 paths[Path(tdir).resolve()] = tpaths
+                logger.debug(f"Found VASP files in {tdir}")
 
     vasp_files: dict[Path, list[FileMetadata]] = {}
     _recursive_discover_vasp_files(target_dir, vasp_files)

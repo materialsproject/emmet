@@ -63,6 +63,7 @@ def sub_file(tmp_dir, tmp_path_factory):
     runner = CliRunner()
     result = runner.invoke(submit, ["create", str(tmp_dir)])
 
+    assert result.exit_code == 0
     matches = [word for word in result.output.split() if "submission-" in word]
     assert len(matches) == 1
 

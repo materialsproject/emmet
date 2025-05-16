@@ -86,9 +86,12 @@ class Submission(BaseModel):
     def last_pushed(self) -> Dict[Path, CalculationMetadata] | None:
         return self.calc_history[-1] if self.calc_history else None
 
-    def save(self, path: Path) -> None:
+    def save(self, path: Path, include_md5: bool = True) -> None:
         """Save this submission to a JSON file."""
-        path.write_text(self.model_dump_json(indent=4))
+        exc = set()
+        if not include_md5:
+            exc.add("md5")
+        path.write_text(self.model_dump_json(indent=4, exclude=exc))
 
     @classmethod
     def load(
@@ -288,6 +291,7 @@ def find_all_calculations(paths: Iterable[PathLike]):
     all_calculations = {}
     for path in paths:
         path = Path(path).resolve()
+        logger.info(f"Checking path: {path}")
         if path.is_dir():
             calcs = recursive_discover_vasp_files(path)
             all_calculations.update(calcs)

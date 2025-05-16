@@ -35,11 +35,11 @@ def create(ctx, paths):
         )
 
     submission = Submission.from_paths(paths=paths)
-    logger.debug(f"created submission {submission.id}")
+    logger.info(f"created submission {submission.id}")
 
     output_file = f"submission-{submission.id}.json"
 
-    submission.save(Path(output_file))
+    submission.save(Path(output_file), include_md5=False)
     print(f"wrote submission output to {output_file}")
 
     # should we check if any of this data already exists in MP (how?)
