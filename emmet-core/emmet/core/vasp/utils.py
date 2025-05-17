@@ -5,7 +5,7 @@ from collections import defaultdict
 import logging
 import os
 from pathlib import Path
-from pydantic import BaseModel, Field, PrivateAttr, computed_field, model_validator
+from pydantic import BaseModel, Field, model_validator
 from typing import TYPE_CHECKING, Optional
 
 from emmet.core.utils import get_md5_blocked
@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from emmet.core.typing import PathLike
 
 logger = logging.getLogger(__name__)
+
 
 class FileMetadata(BaseModel):
     """

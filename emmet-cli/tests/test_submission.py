@@ -1,7 +1,6 @@
 from pathlib import Path
-from emmet.cli.submission import CalculationMetadata, Submission
+from emmet.cli.submission import Submission
 from emmet.cli.utils import EmmetCliError
-from emmet.core.vasp.utils import FileMetadata
 import pytest
 
 
