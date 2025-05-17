@@ -45,8 +45,8 @@ class CalculationMetadata(BaseModel):
         """Refreshes the information for the calculation (recalculates MD5s and clears validation if any changes)"""
         changed_files = False
         for f in self.files:
-            cached_md5 = f._md5
-            f.reset_md5()
+            cached_md5 = f.md5
+            f.compute_md5()
             if cached_md5 != f.md5:
                 changed_files = True
         if changed_files:
@@ -86,12 +86,9 @@ class Submission(BaseModel):
     def last_pushed(self) -> Dict[Path, CalculationMetadata] | None:
         return self.calc_history[-1] if self.calc_history else None
 
-    def save(self, path: Path, include_md5: bool = True) -> None:
+    def save(self, path: Path) -> None:
         """Save this submission to a JSON file."""
-        exc = set()
-        if not include_md5:
-            exc = {"calculations": {...: {"files": {...: {"md5"}}}}}
-        path.write_text(self.model_dump_json(indent=4, exclude=exc))
+        path.write_text(self.model_dump_json(indent=4))
 
     @classmethod
     def load(

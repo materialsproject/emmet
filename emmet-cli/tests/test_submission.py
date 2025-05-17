@@ -1,6 +1,7 @@
 from pathlib import Path
-from emmet.cli.submission import Submission
+from emmet.cli.submission import CalculationMetadata, Submission
 from emmet.cli.utils import EmmetCliError
+from emmet.core.vasp.utils import FileMetadata
 import pytest
 
 
@@ -112,6 +113,13 @@ def test_remove_from(sub_file, tmp_structure):
 
 def test_changed_files(sub_file):
     sub = Submission.load(Path(sub_file))
+    changed = sub.get_changed_files_per_calc_path(
+        sub.calculations, sub._create_refreshed_calculations()
+    )
+    assert len(changed) == 5
+
+    sub.calculations = sub._create_refreshed_calculations()
+
     changed = sub.get_changed_files_per_calc_path(
         sub.calculations, sub._create_refreshed_calculations()
     )

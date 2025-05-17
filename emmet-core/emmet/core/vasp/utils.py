@@ -26,7 +26,10 @@ class FileMetadata(BaseModel):
         description="Name of the VASP file without suffixes (e.g., INCAR)"
     )
     path: Path = Field(description="Path to the VASP file")
-    _md5: Optional[str] = PrivateAttr(default=None)
+    md5: Optional[str] = Field(
+        description="MD5 checksum of the file (computed only when requested)",
+        default=None,
+    )
 
     @model_validator(mode="before")
     def coerce_path(cls, v: Any) -> Any:
@@ -38,19 +41,15 @@ class FileMetadata(BaseModel):
             v["path"] = path
         return v
 
-    @computed_field
-    def md5(self) -> Optional[str]:
+    def compute_md5(self) -> Optional[str]:
         """MD5 checksum of the file (computed lazily if needed)."""
-        if self._md5 is not None:
-            return self._md5
-
         if self.validate_path_exists():
             try:
-                self._md5 = get_md5_blocked(self.path)
+                self.md5 = get_md5_blocked(self.path)
             except Exception:
-                self._md5 = None
+                self.md5 = None
 
-        return self._md5
+        return self.md5
 
     def validate_path_exists(self):
         if not self.path.exists():
@@ -58,10 +57,6 @@ class FileMetadata(BaseModel):
         if not self.path.is_file():
             raise ValueError(f"Path is not a file: {self.path}")
         return True
-
-    def reset_md5(self):
-        """Force recomputation of MD5 checksum on next call to md5 property."""
-        self._md5 = None
 
     def __hash__(self):
         return hash(self.path)

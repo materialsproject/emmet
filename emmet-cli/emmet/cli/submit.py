@@ -39,7 +39,7 @@ def create(ctx, paths):
 
     output_file = f"submission-{submission.id}.json"
 
-    submission.save(Path(output_file), include_md5=False)
+    submission.save(Path(output_file))
     print(f"wrote submission output to {output_file}")
 
     # should we check if any of this data already exists in MP (how?)
