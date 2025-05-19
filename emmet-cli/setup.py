@@ -29,6 +29,7 @@ setup(
             "types-setuptools",
             "types-requests",
             "wincertstore",
+            "blake3",
         ],
         "docs": [
             "mkdocs",
