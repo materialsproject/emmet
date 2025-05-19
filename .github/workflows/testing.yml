@@ -107,7 +107,7 @@ jobs:
         shell: bash -l {0}
         run: python${{ matrix.python-version }} -m pytest --cov=emmet --cov-report=xml ${{ matrix.package }}/tests
 
-      - uses: codecov/codecov-action@v5.4.2
+      - uses: codecov/codecov-action@v5.4.3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
