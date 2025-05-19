@@ -27,8 +27,8 @@ class FileMetadata(BaseModel):
         description="Name of the VASP file without suffixes (e.g., INCAR)"
     )
     path: Path = Field(description="Path to the VASP file")
-    md5: Optional[str] = Field(
-        description="MD5 checksum of the file (computed only when requested)",
+    hash: Optional[str] = Field(
+        description="Hash of the file (computed only when requested)",
         default=None,
     )
 
@@ -42,15 +42,15 @@ class FileMetadata(BaseModel):
             v["path"] = path
         return v
 
-    def compute_md5(self) -> Optional[str]:
-        """MD5 checksum of the file (computed lazily if needed)."""
+    def compute_hash(self) -> Optional[str]:
+        """Compute the hash of the file."""
         if self.validate_path_exists():
             try:
-                self.md5 = get_md5_blocked(self.path)
+                self.hash = get_md5_blocked(self.path)
             except Exception:
-                self.md5 = None
+                self.hash = None
 
-        return self.md5
+        return self.hash
 
     def validate_path_exists(self):
         if not self.path.exists():

@@ -42,12 +42,12 @@ class CalculationMetadata(BaseModel):
         return self.calc_valid
 
     def refresh(self) -> None:
-        """Refreshes the information for the calculation (recalculates MD5s and clears validation if any changes)"""
+        """Refreshes the information for the calculation (recalculates hashes and clears validation if any changes)"""
         changed_files = False
         for f in self.files:
-            cached_md5 = f.md5
-            f.compute_md5()
-            if cached_md5 != f.md5:
+            cached_hash = f.hash
+            f.compute_hash()
+            if cached_hash != f.hash:
                 changed_files = True
         if changed_files:
             self.calc_valid = None
@@ -246,7 +246,7 @@ class Submission(BaseModel):
                         match = next(
                             (item for item in previous[p].files if item == fm), None
                         )
-                        if match is None or fm.md5 != match.md5:
+                        if match is None or fm.hash != match.hash:
                             file_changes.append(fm)
                     if file_changes:
                         changes[p] = file_changes

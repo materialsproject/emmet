@@ -26,7 +26,7 @@ IBRION = -1
 
     file_meta = FileMetadata(name="INCAR.bz2", path=file_name)
     assert Path(file_meta.path).exists()
-    assert file_meta.md5 == hashlib.md5(incar_bytes).hexdigest()
+    assert file_meta.hash == hashlib.md5(incar_bytes).hexdigest()
 
 
 def test_file_discovery():
