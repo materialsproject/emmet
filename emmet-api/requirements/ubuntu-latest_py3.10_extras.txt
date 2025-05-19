@@ -23,6 +23,8 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
+blake3==1.0.5
+    # TMP
 boto3==1.38.19
     # via
     #   emmet-api (setup.py)

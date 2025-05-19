@@ -28,6 +28,8 @@ attrs==25.3.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
+blake3==1.0.5
+    # TMP
 boto3==1.38.19
     # via maggma
 botocore==1.38.19
