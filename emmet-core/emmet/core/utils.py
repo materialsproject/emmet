@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import copy
 import datetime
-import hashlib
 from enum import Enum
 from itertools import groupby
 from typing import Any, Dict, Iterator, List, Optional, Union, TYPE_CHECKING
 
+import blake3
 import numpy as np
 from monty.io import zopen
 from monty.json import MSONable
@@ -448,9 +448,9 @@ def utcnow() -> datetime.datetime:
     return datetime.datetime.now(datetime.timezone.utc)
 
 
-def get_md5_blocked(file_path: PathLike, chunk_size: int = 1_000_000) -> str:
+def get_hash_blocked(file_path: PathLike, chunk_size: int = 1_000_000) -> str:
     """
-    Get the MD5 hash of a file in byte chunks.
+    Get the hash of a file in byte chunks.
 
     Parameters
     -----------
@@ -460,13 +460,13 @@ def get_md5_blocked(file_path: PathLike, chunk_size: int = 1_000_000) -> str:
 
     Returns
     -----------
-    The MD5 as a str
+    The hash as a str
     """
-    md5 = hashlib.md5()
+    h = blake3.blake3()
     with zopen(str(file_path), "rb") as f:
         while True:
             data = f.read(chunk_size)
             if not data:
                 break
-            md5.update(data)
-        return md5.hexdigest()
+            h.update(data)
+        return h.hexdigest()

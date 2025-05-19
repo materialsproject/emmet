@@ -11,7 +11,7 @@ from emmet.core.vasp.utils import (
 
 
 def test_file_meta(tmp_dir):
-    import hashlib
+    import blake3
     from monty.io import zopen
 
     incar_bytes = """
@@ -27,7 +27,7 @@ IBRION = -1
     file_meta = FileMetadata(name="INCAR.bz2", path=file_name)
     file_meta.compute_hash()
     assert Path(file_meta.path).exists()
-    assert file_meta.hash == hashlib.md5(incar_bytes).hexdigest()
+    assert file_meta.hash == blake3.blake3(incar_bytes).hexdigest()
 
 
 def test_file_discovery():

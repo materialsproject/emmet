@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 from bson.objectid import ObjectId
-from emmet.core.utils import DocEnum, ValueEnum, jsanitize, get_md5_blocked
+from emmet.core.utils import DocEnum, ValueEnum, jsanitize, get_hash_blocked
 from monty.json import MSONable
 from monty.serialization import dumpfn
 
@@ -91,7 +91,7 @@ def test_doc_enum():
 
 
 def test_blocked_md5(tmp_dir):
-    import hashlib
+    import blake3
     from monty.io import zopen
 
     file_text = (
@@ -102,4 +102,4 @@ def test_blocked_md5(tmp_dir):
     with zopen("test_md5.gz", "wb") as f:
         f.write(file_text)
 
-    assert get_md5_blocked("test_md5.gz") == hashlib.md5(file_text).hexdigest()
+    assert get_hash_blocked("test_md5.gz") == blake3.blake3(file_text).hexdigest()

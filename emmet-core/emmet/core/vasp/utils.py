@@ -8,7 +8,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, model_validator
 from typing import TYPE_CHECKING, Optional
 
-from emmet.core.utils import get_md5_blocked
+from emmet.core.utils import get_hash_blocked
 
 if TYPE_CHECKING:
     from typing import Any
@@ -46,7 +46,7 @@ class FileMetadata(BaseModel):
         """Compute the hash of the file."""
         if self.validate_path_exists():
             try:
-                self.hash = get_md5_blocked(self.path)
+                self.hash = get_hash_blocked(self.path)
             except Exception:
                 self.hash = None
 
