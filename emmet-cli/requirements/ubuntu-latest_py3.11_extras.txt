@@ -134,7 +134,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-cli (setup.py)
     #   mypy
-narwhals==1.39.1
+narwhals==1.40.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -142,7 +142,7 @@ networkx==3.4.2
     # via pymatgen
 nodeenv==1.9.1
     # via pre-commit
-numpy==2.2.5
+numpy==2.2.6
     # via
     #   contourpy
     #   matplotlib
