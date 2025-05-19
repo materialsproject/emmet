@@ -4,6 +4,7 @@ import pytest
 import json
 from pydantic import BaseModel
 
+
 def test_mpid():
     assert MPID("mp-3") == MPID("mp-3")
     assert MPID("mp-3") < 3
@@ -31,7 +32,8 @@ def test_mpid():
     assert ulid_mpid.parts == ("01HMVV88CCQ6JQ2Y1N8F3ZTVWP", 0)
     with pytest.raises(ValueError, match="MPID string representation must follow"):
         MPID("GGIRADF")
-        
+
+
 def test_mpculeid():
     assert MPculeID("b9ba54febc77d2a9177accf4605767db-F6Li1P1-1-2") == MPculeID(
         "b9ba54febc77d2a9177accf4605767db-F6Li1P1-1-2"
@@ -83,7 +85,10 @@ def test_alpha_id():
     majik_num = 137
 
     ref_idx = AlphaID(majik_num, prefix="cats", separator="^")
-    assert ref_idx.__repr__() == f"AlphaID(cats^{AlphaID._integer_to_alpha_rep(majik_num)})"
+    assert (
+        ref_idx.__repr__()
+        == f"AlphaID(cats^{AlphaID._integer_to_alpha_rep(majik_num)})"
+    )
     assert ref_idx < AlphaID(
         majik_num + 100, prefix=ref_idx._prefix, separator=ref_idx._separator
     )
@@ -150,18 +155,18 @@ def test_alpha_id():
                     match_strs.append("Prefixes do not match")
                 if pfx and separator != ":":
                     match_strs.append("Separators do not match")
-                
+
                 for match_str in match_strs:
-                    with pytest.raises(TypeError,match = match_str):
+                    with pytest.raises(TypeError, match=match_str):
                         idx - other_idx
 
-                    with pytest.raises(TypeError,match = match_str):
+                    with pytest.raises(TypeError, match=match_str):
                         idx + other_idx
 
             # Can't add nor compare floats with AlphaID
-            with pytest.raises(NotImplementedError,match="Cannot add AlphaID"):
+            with pytest.raises(NotImplementedError, match="Cannot add AlphaID"):
                 idx + 1.0
-            with pytest.raises(NotImplementedError,match="Cannot compare AlphaID"):
+            with pytest.raises(NotImplementedError, match="Cannot compare AlphaID"):
                 idx < float(int(idx))
 
         # test sorting
@@ -195,16 +200,16 @@ def test_alpha_id():
 
     # test that AlphaID is supported by pydantic de-/serialization
 
+
 @pytest.mark.parametrize("id_cls", [MPID, AlphaID])
 def test_pydantic(id_cls):
-
     class TestClass(BaseModel):
-        ID :  id_cls
+        ID: id_cls
 
     idx = id_cls(101010)
     test_case = TestClass(ID=idx)
     assert test_case.model_dump() == {"ID": idx}
     assert json.loads(test_case.model_dump_json()) == {"ID": str(idx)}
-    
-    with pytest.raises(ValueError,match=f"Invalid {id_cls.__name__} Format"):
-        TestClass(ID = 10.)
+
+    with pytest.raises(ValueError, match=f"Invalid {id_cls.__name__} Format"):
+        TestClass(ID=10.0)
