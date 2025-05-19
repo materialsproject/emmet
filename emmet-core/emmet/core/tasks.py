@@ -373,7 +373,13 @@ class AnalysisDoc(BaseModel):
         )
 
 
-class ProductionTaskDoc(StructureMetadata):
+@type_override(
+    {
+        "transformations": str,
+        "vasp_objects": str,
+    }
+)
+class ProductionTaskDoc(StructureMetadata, arbitrary_types_allowed=True):
     """Calculation-level details about VASP calculations that power Materials Project."""
 
     batch_id: str | None = Field(
