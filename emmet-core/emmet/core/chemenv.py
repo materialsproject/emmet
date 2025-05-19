@@ -16,8 +16,13 @@ from pymatgen.analysis.chemenv.coordination_environments.structure_environments 
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.core.structure import Molecule, Structure
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
+
+if ARROW_COMPATIBLE:
+    import emmet.core.serialization_adapters.molecule_adapter
+    from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 
 DEFAULT_DISTANCE_CUTOFF = 1.4
 DEFAULT_ANGLE_CUTOFF = 0.3
@@ -316,12 +321,12 @@ class ChemEnvDoc(PropertyDoc):
 
     property_name: str = "coord_environment"
 
-    structure: Structure = Field(
+    structure: AnnotatedStructure | None = Field(
         ...,
         description="The structure used in the generation of the chemical environment data",
     )
 
-    valences: List[Union[int, float]] = Field(
+    valences: list[int] = Field(
         description="List of valences for each site in this material to determine cations"
     )
 

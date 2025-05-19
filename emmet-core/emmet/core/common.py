@@ -1,14 +1,33 @@
-from emmet.core.utils import ValueEnum
-from datetime import datetime
+from datetime import datetime, timezone
+from typing import Any
+
 from monty.json import MontyDecoder
+from pydantic import BaseModel, ValidationInfo, model_validator
+
+from emmet.core.utils import ValueEnum, utcnow
 
 
 def convert_datetime(cls, v):
+    if not v:
+        return utcnow()
+
     if isinstance(v, dict):
         if v.get("$date"):
-            return datetime.fromisoformat(v["$date"])
+            dt = datetime.fromisoformat(v["$date"])
+            if not dt.tzinfo:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt
 
-    return MontyDecoder().process_decoded(v)
+    if isinstance(v, str):
+        dt = datetime.fromisoformat(v)
+        if not dt.tzinfo:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+
+    v = MontyDecoder().process_decoded(v)
+    if not v.tzinfo:
+        v = v.replace(tzinfo=timezone.utc)
+    return v
 
 
 class Status(ValueEnum):

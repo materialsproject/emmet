@@ -1,12 +1,14 @@
 from datetime import datetime
-from typing import List, Union, Dict, Tuple, Sequence, Optional
+from typing import Dict, List, Optional, Tuple, Union
 
-from pydantic import Field
 import numpy as np
-from emmet.core.base import EmmetBaseModel
-from pymatgen.core import Structure
+from pydantic import Field
 from pymatgen.analysis.structure_matcher import StructureMatcher
+from pymatgen.core import Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+
+from emmet.core.base import EmmetBaseModel
+from emmet.core.utils import arrow_incompatible, utcnow
 
 try:
     from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
@@ -15,6 +17,7 @@ except ImportError:
     raise ImportError("Install pymatgen-analysis-diffusion to use MigrationGraphDoc")
 
 
+@arrow_incompatible
 class MigrationGraphDoc(EmmetBaseModel):
     """
     MigrationGraph Doc.
@@ -29,12 +32,12 @@ class MigrationGraphDoc(EmmetBaseModel):
         ..., description="The battery id for this MigrationGraphDoc"
     )
 
-    last_updated: Optional[datetime] = Field(
-        None,
+    last_updated: datetime = Field(
+        default_factory=utcnow,
         description="Timestamp for the most recent calculation for this MigrationGraph document.",
     )
 
-    warnings: Sequence[str] = Field(
+    warnings: list[str] = Field(
         [], description="Any warnings related to this property."
     )
 
@@ -87,11 +90,11 @@ class MigrationGraphDoc(EmmetBaseModel):
         description="The conversion matrix used to convert unit cell to supercell.",
     )
 
-    inserted_ion_coords: Optional[
-        List[Dict[str, Union[List[float], str, int]]]
-    ] = Field(
-        None,
-        description="A dictionary containing all mobile ion fractional coordinates in terms of supercell.",
+    inserted_ion_coords: Optional[List[Dict[str, Union[List[float], str, int]]]] = (
+        Field(
+            None,
+            description="A dictionary containing all mobile ion fractional coordinates in terms of supercell.",
+        )
     )
 
     insert_coords_combo: Optional[List[str]] = Field(

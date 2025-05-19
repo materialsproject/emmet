@@ -1,18 +1,22 @@
 from datetime import datetime
+from typing import Optional, Tuple
 
-from pydantic import field_validator, BaseModel, Field
-from emmet.core.mpid import MPID
+from pydantic import BaseModel, Field, field_validator
+from pymatgen.core import Structure
 from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
 from pymatgen.phonon.dos import PhononDos as PhononDosObject
+from typing_extensions import Literal, TypedDict
 
-from typing import List, Tuple, Optional
-from emmet.core.utils import DocEnum
-from pymatgen.core import Structure
-from emmet.core.math import Vector3D, Tensor4R
-from emmet.core.polar import DielectricDoc, BornEffectiveCharges, IRDielectric
-from emmet.core.structure import StructureMetadata
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.common import convert_datetime
-from typing_extensions import Literal
+from emmet.core.math import Tensor4R, Vector3D
+from emmet.core.mpid import MPID
+from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
+from emmet.core.structure import StructureMetadata
+from emmet.core.utils import DocEnum, utcnow
+
+if ARROW_COMPATIBLE:
+    import emmet.core.serialization_adapters.phonon_adapter
 
 
 class PhononBSDOSDoc(BaseModel):
@@ -20,7 +24,7 @@ class PhononBSDOSDoc(BaseModel):
     Phonon band structures and density of states data.
     """
 
-    material_id: Optional[MPID] = Field(
+    material_id: MPID | None = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )
@@ -35,8 +39,8 @@ class PhononBSDOSDoc(BaseModel):
         description="Phonon density of states object.",
     )
 
-    last_updated: Optional[datetime] = Field(
-        None,
+    last_updated: datetime = Field(
+        default_factory=utcnow,
         description="Timestamp for the most recent calculation for this Material document.",
     )
 
@@ -78,7 +82,7 @@ class PhononBandStructure(BaseModel):
         "bs", description="The type of the document: a phonon band structure."
     )
 
-    band_structure: Optional[dict] = Field(
+    band_structure: PhononBandStructureSymmLine | None = Field(
         None,
         description="Serialized version of a pymatgen "
         "PhononBandStructureSymmLine object.",
@@ -86,12 +90,12 @@ class PhononBandStructure(BaseModel):
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
 
@@ -110,7 +114,7 @@ class PhononDos(BaseModel):
         "dos", description="The type of the document: a phonon density of states."
     )
 
-    dos: Optional[dict] = Field(
+    dos: PhononDosObject | None = Field(
         None, description="Serialized version of a pymatgen CompletePhononDos object."
     )
 
@@ -120,13 +124,35 @@ class PhononDos(BaseModel):
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
+
+
+class PhononWebsiteDict(TypedDict):
+    vec2D = list[float, float]
+    vec3D = list[float, float, float]
+
+    atom_numbers: list[int]
+    atom_pos_car: list[vec3D]
+    atom_pos_red: list[vec3D]
+    atom_types: list[str]
+    distances: list[float]
+    eigenvalues: list[list[float]]
+    formula: str
+    # fails arrow conversion
+    # highsym_qpts: list[list[int, str]]
+    lattice: list[vec3D]
+    line_breaks: list[tuple[int, int]]
+    name: str
+    natoms: int
+    qpoints: list[vec3D]
+    repetitions: list[int, int, int]
+    vectors: list[list[list[list[vec2D, vec2D, vec2D]]]]
 
 
 class PhononWebsiteBS(BaseModel):
@@ -146,19 +172,19 @@ class PhononWebsiteBS(BaseModel):
         description="The type of the document: a phonon band structure for the phononwebsite.",
     )
 
-    phononwebsite: Optional[dict] = Field(
+    phononwebsite: PhononWebsiteDict | None = Field(
         None,
         description="Phononwebsite dictionary to plot the animated " "phonon modes.",
     )
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
 
@@ -181,12 +207,12 @@ class Ddb(BaseModel):
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
 
@@ -195,19 +221,19 @@ class ThermodynamicProperties(BaseModel):
     Definition of the thermodynamic properties extracted from the phonon frequencies.
     """
 
-    temperatures: List[float] = Field(
+    temperatures: list[float] = Field(
         ...,
         description="The list of temperatures at which the thermodynamic properties "
         "are calculated",
     )
 
-    cv: List[float] = Field(
+    cv: list[float] = Field(
         ...,
         description="The values of the constant-volume specific heat.",
         alias="heat_capacity",
     )
 
-    entropy: List[float] = Field(
+    entropy: list[float] = Field(
         ..., description="The values of the vibrational entropy."
     )
 
@@ -218,17 +244,17 @@ class VibrationalEnergy(BaseModel):
     the temperature.
     """
 
-    temperatures: List[float] = Field(
+    temperatures: list[float] = Field(
         ...,
         description="The list of temperatures at which the thermodynamic properties "
         "are calculated",
     )
 
-    internal_energy: List[float] = Field(
+    internal_energy: list[float] = Field(
         ..., description="The values of the phonon contribution to the internal energy."
     )
 
-    helmholtz_free_energy: List[float] = Field(
+    helmholtz_free_energy: list[float] = Field(
         ..., description="The values of the Helmholtz free energy."
     )
 
@@ -256,8 +282,8 @@ class Phonon(StructureMetadata):
         None, description="The maximum breaking of the acoustic sum rule (ASR)."
     )
 
-    warnings: Optional[List[PhononWarnings]] = Field(
-        None, description="List of warnings associated to the phonon calculation."
+    warnings: Optional[list[PhononWarnings]] = Field(
+        None, description="list of warnings associated to the phonon calculation."
     )
 
     dielectric: Optional[DielectricDoc] = Field(
@@ -284,13 +310,72 @@ class Phonon(StructureMetadata):
 
     last_updated: datetime = Field(
         description="Timestamp for when this document was last updated",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
+
+
+class TypedBaseInputDict(TypedDict):
+    charge: float
+    chksymbreak: int
+    ecut: float
+    fband: float
+    kptopt: int
+    nband: int
+    nbdbuf: int
+    ngkpt: list[int]
+    nshiftk: int
+    nspden: int
+    nspinor: int
+    nsppol: int
+    nstep: int
+    pawecutdg: float
+    shiftk: list[list[float]]
+    tolvrs: float
+
+
+class TypedDdBaseDict(TypedBaseInputDict):
+    chkprim: int
+    nqpt: int
+    qpt: list[int]
+    rfdir: list[int]
+    rfelfd: int
+
+
+class TypedDdeInputDict(TypedDdBaseDict):
+    prtwf: int
+
+
+class TypedDdkInputDict(TypedDdBaseDict):
+    iscf: float
+
+
+class TypedPhononInputDict(TypedDdeInputDict):
+    rfatpol: list[int]
+
+
+class TypedPseudopotentialsDict(TypedDict):
+    md5: list[str]
+    name: list[str]
+
+
+class TypedAbinitInputVars(TypedDict):
+    dde_input: TypedDdeInputDict
+    ddk_input: TypedDdkInputDict
+    ecut: float
+    gs_input: TypedBaseInputDict
+    ngkpt: list[int]
+    ngqpt: list[int]
+    occopt: int
+    phonon_input: TypedPhononInputDict
+    pseudopotentials: TypedPseudopotentialsDict
+    shiftk: list[list[float]]
+    tsmear: int
+    wfq_input: TypedBaseInputDict  # have to guess here without an example entry
 
 
 class AbinitPhonon(Phonon):
@@ -299,7 +384,7 @@ class AbinitPhonon(Phonon):
     with Abinit.
     """
 
-    abinit_input_vars: Optional[dict] = Field(
+    abinit_input_vars: TypedAbinitInputVars | None = Field(
         None,
         description="Dict representation of the inputs used to obtain the phonon"
         "properties and the main general options (e.g. number of "
@@ -322,20 +407,20 @@ class SoundVelocity(BaseModel):
         ..., description="The relaxed structure for the phonon calculation."
     )
 
-    directions: List[Vector3D] = Field(
+    directions: list[Vector3D] = Field(
         ...,
         description="Q-points identifying the directions for the calculation"
         "of the speed of sound. In fractional coordinates.",
     )
 
-    labels: List[Optional[str]] = Field(..., description="labels of the directions.")
+    labels: list[Optional[str]] = Field(..., description="labels of the directions.")
 
-    sound_velocities: List[Vector3D] = Field(
+    sound_velocities: list[Vector3D] = Field(
         ...,
         description="Values of the sound velocities in SI units.",
     )
 
-    mode_types: List[Tuple[Optional[str], Optional[str], Optional[str]]] = Field(
+    mode_types: list[Tuple[Optional[str], Optional[str], Optional[str]]] = Field(
         ...,
         description="The types of the modes ('transversal', 'longitudinal'). "
         "None if not correctly identified.",
@@ -343,12 +428,12 @@ class SoundVelocity(BaseModel):
 
     last_updated: datetime = Field(
         description="Timestamp for when this document was last updated",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
 
@@ -366,12 +451,12 @@ class ThermalDisplacement(BaseModel):
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     nsites: int = Field(
@@ -389,13 +474,13 @@ class ThermalDisplacement(BaseModel):
         description="The number of temperatures for which the displacements are calculated",
     )
 
-    temperatures: List[float] = Field(
+    temperatures: list[float] = Field(
         ...,
         description="The list of temperatures at which the thermodynamic properties "
         "are calculated",
     )
 
-    frequencies: List[float] = Field(
+    frequencies: list[float] = Field(
         ..., description="The list of frequencies for the generalized DOS"
     )
 
@@ -404,7 +489,7 @@ class ThermalDisplacement(BaseModel):
         description=" Generalized DOS in Cartesian coords, with shape (nsites, 3, 3, nomega)",
     )
 
-    amu: dict = Field(
+    amu: dict[str, float] = Field(
         ..., description="Dictionary of the atomic masses in atomic units."
     )
 
