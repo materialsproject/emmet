@@ -423,10 +423,10 @@ class AlphaID(str):
         if isinstance(test, AlphaID):
             exc_str = ""
             if test._prefix != self._prefix:
-                exc_str += f"Prefixes do not match: left = {self._prefix or None}, right {test._prefix or None}. "
+                exc_str += f"Prefixes do not match\n  left {self._prefix or None}\n  right {test._prefix or None} "
 
             if test._prefix and self._prefix and test._separator != self._separator:
-                exc_str += f"Separators do not match: left = {self._separator}, right {test._separator}."
+                exc_str += f"Separators do not match:\n  left {self._separator}\n  right {test._separator}"
 
             if exc_str:
                 raise TypeError(exc_str)
@@ -462,10 +462,10 @@ class AlphaID(str):
         if isinstance(test, AlphaID):
             exc_str = ""
             if test._prefix != self._prefix:
-                exc_str += f"Prefixes do not match: left = {self._prefix or None}, right {test._prefix or None}. "
+                exc_str += f"Prefixes do not match\n  left {self._prefix or None}\n  right {test._prefix or None} "
 
             if test._prefix and self._prefix and test._separator != self._separator:
-                exc_str += f"Separators do not match: left = {self._separator}, right {test._separator}."
+                exc_str += f"Separators do not match:\n  left {self._separator}\n  right {test._separator}"
 
             if exc_str:
                 raise TypeError(exc_str)
@@ -522,3 +522,20 @@ class AlphaID(str):
         if self._cut_point is None or int(self) > self._cut_point:
             return str(self)
         return f"{self._prefix}{self._separator}{int(self)}"
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls, source: Any, handler: core_schema.CoreSchema
+    ) -> core_schema.CoreSchema:
+        """Generate pydantic schema for AlphaID."""
+        return core_schema.with_info_plain_validator_function(cls.validate)
+
+    @classmethod
+    def validate(cls, __input_value: Any, _: core_schema.ValidationInfo) -> AlphaID:
+        """Define pydantic validator for AlphaID."""
+        if isinstance(__input_value, AlphaID):
+            return __input_value
+        elif isinstance(__input_value, str | int | MPID):
+            return AlphaID(__input_value)
+
+        raise ValueError(f"Invalid AlphaID Format {__input_value}")

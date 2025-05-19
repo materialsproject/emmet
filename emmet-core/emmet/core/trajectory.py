@@ -33,6 +33,9 @@ if TYPE_CHECKING:
     from typing_extensions import Self
     from collections.abc import Sequence
 
+    from emmet.core.vasp.calculation import Calculation
+    from emmet.core.vasp.calc_types import CalcType
+
 
 class TrajFormat(Enum):
     """Define known trajectory formats."""
@@ -205,6 +208,49 @@ class Trajectory(BaseModel):
 
         return cls(**props, **kwargs)
 
+    @staticmethod
+    def _calculation_to_props_dict(calc : Calculation,) -> tuple[dict[str, list[Any]], RunType, TaskType, CalcType]:
+        """Convert a single VASP calculation to Trajectory._from_dict compatible dict.
+        
+        Parameters
+        -----------
+        calc (emmet.core.vasp.calculation.Calculation)
+
+        Returns
+        -----------
+        dict, RunType, TaskType, CalcType
+        """
+
+        ct : CalcType | None = None
+        rt : RunType | None = None
+        tt : TaskType | None = None
+        # refresh calc, run, and task type if possible
+        if calc.input:
+            vis = calc.input.model_dump()
+            padded_params = {**(calc.input.parameters or {}), **(calc.input.incar or {})}
+            ct = calc_type(vis, padded_params)
+            rt = run_type(padded_params)
+            tt = task_type(vis)
+
+        props = {
+            k : [] for k in ("structure", "cart_coords","electronic_steps", "energy", "e_wo_entrp", "e_fr_energy", "forces", "stress")
+        }
+                    
+        for ionic_step in calc.output.ionic_steps:
+            props["structure"].append(ionic_step.structure)
+
+            props["energy"].append(ionic_step.e_0_energy)
+            for k in (
+                "e_fr_energy",
+                "e_wo_entrp",
+                "forces",
+                "stress",
+                "electronic_steps",
+            ):
+                props[k].append(getattr(ionic_step, k))
+
+        return props, rt, tt, ct
+
     @classmethod
     def from_task_doc(cls, task_doc: TaskDoc, **kwargs) -> list["Trajectory"]:
         """
@@ -216,6 +262,9 @@ class Trajectory(BaseModel):
         calculation type.
         In cases where sequential calculations in the reversed `calcs_reversed`
         have the same calc type, their trajectories are joined.
+
+        Note that if no input is provided in the calculation, the calculation
+        is split off into its own trajectory.
 
         Parameters
         -----------
@@ -233,56 +282,35 @@ class Trajectory(BaseModel):
             identifier=str(task_doc.task_id) if task_doc.task_id else None,
         )
 
-        prev_cr = None
-        props: dict[str, list]
-        tt: TaskType
-        rt: RunType
+        props: dict[str, list[Any]]
+        old_meta = {f"{k}_type" : None for k in ("run","task","calc")}
+        new_meta = old_meta.copy()
         # un-reverse the calcs_reversed
         for icr, cr in enumerate(task_doc.calcs_reversed[::-1]):
-            # refresh calc, run, and task type
-            vis = cr.input.model_dump()
-            padded_params = {**(cr.input.parameters or {}), **(cr.input.incar or {})}
-            ct = calc_type(vis, padded_params)
 
-            if prev_cr != ct or icr == 0:
-                # calc type changed, create Trajectory and start fresh
+            new_props, new_meta["run_type"], new_meta["task_type"], new_meta["calc_type"] = cls._calculation_to_props_dict(cr)
+
+            if old_meta["calc_type"] != new_meta["calc_type"] or new_meta["calc_type"] is None or icr == 0:
+                # Either CalcType changed or no calculation input was provided
+                # or this is the first calculation in `calcs_reversed`
+                # Append existing trajectory to list of trajectories, and restart
                 if icr > 0:
                     trajs.append(
                         cls._from_dict(
-                            props, task_type=tt, run_type=rt, **kwargs  # noqa: F821
+                            props, **old_meta, **kwargs  # noqa: F821
                         )
                     )
 
-                props = {
-                    "structure": [],
-                    "cart_coords": [],
-                    "electronic_steps": [],
-                    "energy": [],
-                    "e_wo_entrp": [],
-                    "e_fr_energy": [],
-                    "forces": [],
-                    "stress": [],
-                }
-
-            for ionic_step in cr.output.ionic_steps:
-                props["structure"].append(ionic_step.structure)
-
-                props["energy"].append(ionic_step.e_0_energy)
-                for k in (
-                    "e_fr_energy",
-                    "e_wo_entrp",
-                    "forces",
-                    "stress",
-                    "electronic_steps",
-                ):
-                    props[k].append(getattr(ionic_step, k))
-
-            prev_cr = ct
-            rt = run_type(padded_params)
-            tt = task_type(vis)
+                props = new_props.copy()
+            else:
+                for k, new_vals in new_props.items():
+                    props[k].extend(new_vals)
+            
+            for k, v in new_meta.items():
+                old_meta[k] = v
 
         # create final trajectory
-        trajs.append(cls._from_dict(props, task_type=tt, run_type=rt, **kwargs))
+        trajs.append(cls._from_dict(props, **old_meta, **kwargs))
 
         return trajs
 

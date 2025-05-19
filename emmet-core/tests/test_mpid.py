@@ -1,6 +1,8 @@
 from emmet.core.mpid import MPID, MPculeID, AlphaID
 import pytest
 
+import json
+from pydantic import BaseModel
 
 def test_mpid():
     assert MPID("mp-3") == MPID("mp-3")
@@ -29,8 +31,7 @@ def test_mpid():
     assert ulid_mpid.parts == ("01HMVV88CCQ6JQ2Y1N8F3ZTVWP", 0)
     with pytest.raises(ValueError, match="MPID string representation must follow"):
         MPID("GGIRADF")
-
-
+        
 def test_mpculeid():
     assert MPculeID("b9ba54febc77d2a9177accf4605767db-F6Li1P1-1-2") == MPculeID(
         "b9ba54febc77d2a9177accf4605767db-F6Li1P1-1-2"
@@ -82,6 +83,7 @@ def test_alpha_id():
     majik_num = 137
 
     ref_idx = AlphaID(majik_num, prefix="cats", separator="^")
+    assert ref_idx.__repr__() == f"AlphaID(cats^{AlphaID._integer_to_alpha_rep(majik_num)})"
     assert ref_idx < AlphaID(
         majik_num + 100, prefix=ref_idx._prefix, separator=ref_idx._separator
     )
@@ -101,10 +103,7 @@ def test_alpha_id():
     assert AlphaID(majik_num, padlen=10) > AlphaID(majik_num - 1)
 
     # Test initialization from int
-    for pfx in (
-        None,
-        "iamaprefix",
-    ):
+    for pfx in (None, "task"):
         for separator in ("-", ":", ">"):
             idx = AlphaID(majik_num, prefix=pfx, separator=separator)
             assert isinstance(hash(idx), int)
@@ -137,28 +136,32 @@ def test_alpha_id():
             assert idx - "z" == AlphaID(majik_num - 25, prefix=pfx, separator=separator)
 
             # Test equality, addition, subtraction of AlphaID
-            other_idx = AlphaID(100)
+            other_idx = AlphaID("task:100")
             assert other_idx != idx
-            if pfx is None:
+            if pfx == "task" and separator == ":":
                 assert idx - other_idx == majik_num - 100
-                assert idx - other_idx == AlphaID(majik_num - 100)
+                assert idx - other_idx == AlphaID(f"task:{majik_num - 100}")
 
                 assert idx + other_idx == majik_num + 100
-                assert idx + other_idx == AlphaID(majik_num + 100)
+                assert idx + other_idx == AlphaID(f"task:{majik_num + 100}")
             else:
-                with pytest.raises(TypeError):
-                    idx - other_idx
-                with pytest.raises(TypeError):
-                    idx - other_idx
-                with pytest.raises(TypeError):
-                    idx + other_idx
-                with pytest.raises(TypeError):
-                    idx + other_idx
+                match_strs = []
+                if pfx != "task":
+                    match_strs.append("Prefixes do not match")
+                if pfx and separator != ":":
+                    match_strs.append("Separators do not match")
+                
+                for match_str in match_strs:
+                    with pytest.raises(TypeError,match = match_str):
+                        idx - other_idx
+
+                    with pytest.raises(TypeError,match = match_str):
+                        idx + other_idx
 
             # Can't add nor compare floats with AlphaID
-            with pytest.raises(NotImplementedError):
+            with pytest.raises(NotImplementedError,match="Cannot add AlphaID"):
                 idx + 1.0
-            with pytest.raises(NotImplementedError):
+            with pytest.raises(NotImplementedError,match="Cannot compare AlphaID"):
                 idx < float(int(idx))
 
         # test sorting
@@ -189,3 +192,19 @@ def test_alpha_id():
     assert AlphaID("mp-149").string == "mp-149"
     assert AlphaID("mp-3347529").string == "mp-3347529"
     assert AlphaID("mp-3347530").string == str(AlphaID("mp-3347530"))
+
+    # test that AlphaID is supported by pydantic de-/serialization
+
+@pytest.mark.parametrize("id_cls", [MPID, AlphaID])
+def test_pydantic(id_cls):
+
+    class TestClass(BaseModel):
+        ID :  id_cls
+
+    idx = id_cls(101010)
+    test_case = TestClass(ID=idx)
+    assert test_case.model_dump() == {"ID": idx}
+    assert json.loads(test_case.model_dump_json()) == {"ID": str(idx)}
+    
+    with pytest.raises(ValueError,match=f"Invalid {id_cls.__name__} Format"):
+        TestClass(ID = 10.)
