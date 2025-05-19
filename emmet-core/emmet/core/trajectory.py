@@ -209,9 +209,11 @@ class Trajectory(BaseModel):
         return cls(**props, **kwargs)
 
     @staticmethod
-    def _calculation_to_props_dict(calc : Calculation,) -> tuple[dict[str, list[Any]], RunType, TaskType, CalcType]:
+    def _calculation_to_props_dict(
+        calc: Calculation,
+    ) -> tuple[dict[str, list[Any]], RunType, TaskType, CalcType]:
         """Convert a single VASP calculation to Trajectory._from_dict compatible dict.
-        
+
         Parameters
         -----------
         calc (emmet.core.vasp.calculation.Calculation)
@@ -221,21 +223,34 @@ class Trajectory(BaseModel):
         dict, RunType, TaskType, CalcType
         """
 
-        ct : CalcType | None = None
-        rt : RunType | None = None
-        tt : TaskType | None = None
+        ct: CalcType | None = None
+        rt: RunType | None = None
+        tt: TaskType | None = None
         # refresh calc, run, and task type if possible
         if calc.input:
             vis = calc.input.model_dump()
-            padded_params = {**(calc.input.parameters or {}), **(calc.input.incar or {})}
+            padded_params = {
+                **(calc.input.parameters or {}),
+                **(calc.input.incar or {}),
+            }
             ct = calc_type(vis, padded_params)
             rt = run_type(padded_params)
             tt = task_type(vis)
 
-        props = {
-            k : [] for k in ("structure", "cart_coords","electronic_steps", "energy", "e_wo_entrp", "e_fr_energy", "forces", "stress")
+        props: dict[str, list[Any]] = {
+            k: []
+            for k in (
+                "structure",
+                "cart_coords",
+                "electronic_steps",
+                "energy",
+                "e_wo_entrp",
+                "e_fr_energy",
+                "forces",
+                "stress",
+            )
         }
-                    
+
         for ionic_step in calc.output.ionic_steps:
             props["structure"].append(ionic_step.structure)
 
@@ -282,35 +297,39 @@ class Trajectory(BaseModel):
             identifier=str(task_doc.task_id) if task_doc.task_id else None,
         )
 
-        props: dict[str, list[Any]]
-        old_meta = {f"{k}_type" : None for k in ("run","task","calc")}
+        props: dict[str, list[Any]] = {}
+        old_meta = {f"{k}_type": None for k in ("run", "task", "calc")}
         new_meta = old_meta.copy()
         # un-reverse the calcs_reversed
         for icr, cr in enumerate(task_doc.calcs_reversed[::-1]):
+            (
+                new_props,
+                new_meta["run_type"],
+                new_meta["task_type"],
+                new_meta["calc_type"],
+            ) = cls._calculation_to_props_dict(cr)
 
-            new_props, new_meta["run_type"], new_meta["task_type"], new_meta["calc_type"] = cls._calculation_to_props_dict(cr)
-
-            if old_meta["calc_type"] != new_meta["calc_type"] or new_meta["calc_type"] is None or icr == 0:
+            if (
+                old_meta["calc_type"] != new_meta["calc_type"]
+                or new_meta["calc_type"] is None
+                or icr == 0
+            ):
                 # Either CalcType changed or no calculation input was provided
                 # or this is the first calculation in `calcs_reversed`
                 # Append existing trajectory to list of trajectories, and restart
                 if icr > 0:
-                    trajs.append(
-                        cls._from_dict(
-                            props, **old_meta, **kwargs  # noqa: F821
-                        )
-                    )
+                    trajs.append(cls._from_dict(props, **old_meta, **kwargs))  # type: ignore[arg-type]
 
                 props = new_props.copy()
             else:
                 for k, new_vals in new_props.items():
                     props[k].extend(new_vals)
-            
+
             for k, v in new_meta.items():
                 old_meta[k] = v
 
         # create final trajectory
-        trajs.append(cls._from_dict(props, **old_meta, **kwargs))
+        trajs.append(cls._from_dict(props, **old_meta, **kwargs))  # type: ignore[arg-type]
 
         return trajs
 
