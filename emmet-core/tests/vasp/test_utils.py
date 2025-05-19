@@ -25,6 +25,7 @@ IBRION = -1
         f.write(incar_bytes)
 
     file_meta = FileMetadata(name="INCAR.bz2", path=file_name)
+    file_meta.compute_hash()
     assert Path(file_meta.path).exists()
     assert file_meta.hash == hashlib.md5(incar_bytes).hexdigest()
 
