@@ -28,9 +28,9 @@ attrs==25.3.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.38.17
+boto3==1.38.18
     # via maggma
-botocore==1.38.17
+botocore==1.38.18
     # via
     #   boto3
     #   s3transfer
@@ -56,13 +56,13 @@ contourpy==1.3.2
     # via matplotlib
 coverage[toml]==7.8.0
     # via pytest-cov
-cryptography==44.0.3
+cryptography==45.0.2
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
 cycler==0.12.1
     # via matplotlib
-cython==3.1.0
+cython==3.1.1
     # via chgnet
 dgl==2.1.0
     # via
@@ -259,7 +259,7 @@ msgpack==1.1.0
     # via
     #   maggma
     #   mmtf-python
-multidict==6.4.3
+multidict==6.4.4
     # via
     #   aiohttp
     #   yarl
@@ -269,7 +269,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-builders (setup.py)
     #   mypy
-narwhals==1.39.1
+narwhals==1.40.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -571,7 +571,7 @@ seekpath==2.1.0
     # via emmet-core
 sentinels==1.0.0
     # via mongomock
-shapely==2.1.0
+shapely==2.1.1
     # via pymatgen-analysis-alloys
 six==1.17.0
     # via
