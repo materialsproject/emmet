@@ -12,6 +12,8 @@ ase==3.25.0
     #   pymatgen-analysis-diffusion
 bibtexparser==1.4.3
     # via pymatgen
+blake3==1.0.4
+    # via emmet-core (setup.py)
 bracex==2.5.post1
     # via wcmatch
 certifi==2025.4.26
@@ -192,7 +194,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-core (setup.py)
     #   mypy
-narwhals==1.39.1
+narwhals==1.40.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -406,7 +408,7 @@ seaborn==0.13.2
     # via pymatgen-analysis-diffusion
 seekpath==2.1.0
     # via emmet-core (setup.py)
-shapely==2.1.0
+shapely==2.1.1
     # via pymatgen-analysis-alloys
 six==1.17.0
     # via

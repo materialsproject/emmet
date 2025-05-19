@@ -8,6 +8,8 @@ annotated-types==0.7.0
     # via pydantic
 bibtexparser==1.4.3
     # via pymatgen
+blake3==1.0.4
+    # via emmet-core (setup.py)
 certifi==2025.4.26
     # via requests
 charset-normalizer==3.4.2
@@ -34,11 +36,11 @@ monty==2025.3.3
     #   pymatgen
 mpmath==1.3.0
     # via sympy
-narwhals==1.39.1
+narwhals==1.40.0
     # via plotly
 networkx==3.4.2
     # via pymatgen
-numpy==2.2.5
+numpy==2.2.6
     # via
     #   contourpy
     #   matplotlib
