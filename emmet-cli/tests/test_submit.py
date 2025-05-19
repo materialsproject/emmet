@@ -85,6 +85,7 @@ def test_validate(sub_file):
     assert "passed validation" in str(result.output)
 
     # TODO: add test that fails validation when add implementation
+    # TODO: add test for check_all parameter values when add implementation
 
 
 def test_push(sub_file):

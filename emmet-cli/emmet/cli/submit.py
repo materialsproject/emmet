@@ -90,9 +90,13 @@ def remove_from(ctx, submission, files_to_remove):
 
 @submit.command()
 @click.argument("submission", nargs=1, type=click.Path(exists=True, dir_okay=False))
+@click.option(
+    "--check-all", is_flag=True, default=False, help="Checks every calculation."
+)
 @click.pass_context
-def validate(ctx, submission):
+def validate(ctx, submission, check_all):
     """Locally validates the latest version of an MP data submission.
+    By default, fails fast and stops checking after the first invalid calculation encountered.
 
     The metadata submission filename path is a required argument.
 
@@ -100,7 +104,7 @@ def validate(ctx, submission):
     # perform a local validation (can shortcut if based on metadata)
     sub = Submission.load(Path(submission))
 
-    is_valid = sub.validate_submission()
+    is_valid = sub.validate_submission(check_all=check_all)
     sub.save(Path(submission))
     if is_valid:
         print(

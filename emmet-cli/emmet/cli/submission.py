@@ -191,7 +191,8 @@ class Submission(BaseModel):
 
         return removed_files
 
-    def validate_submission(self) -> bool:
+    def validate_submission(self, check_all: bool = False) -> bool:
+        logger.debug(f"Validating submissions: check_all={check_all}")
         is_valid = True
         calcs_to_check = (
             self.pending_calculations
@@ -201,6 +202,8 @@ class Submission(BaseModel):
 
         for p, cm in calcs_to_check.items():
             is_valid = cm.validate_calculation() and is_valid
+            if not is_valid and not check_all:
+                return is_valid
 
         return is_valid
 
