@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 import json
 from functools import cached_property
 
@@ -15,13 +16,14 @@ from pymatgen.electronic_structure.bandstructure import Kpoint
 from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
 from pymatgen.phonon.dos import PhononDos as PhononDosObject
 
+from emmet.core.base import CalcMeta
 from emmet.core.utils import DocEnum
 from emmet.core.math import Vector3D, Matrix3D, Tensor4R
 from emmet.core.mpid import MPID
 from emmet.core.polar import DielectricDoc, BornEffectiveCharges, IRDielectric
 from emmet.core.structure import StructureMetadata
 from emmet.core.common import convert_datetime
-from emmet.core.utils import utcnow
+from emmet.core.utils import utcnow, get_num_formula_units
 
 from typing_extensions import Literal
 
@@ -37,6 +39,11 @@ if TYPE_CHECKING:
     from typing import Any
     from typing_extensions import Self
 
+class PhononMethod(Enum):
+    """Define common methods for computed phonon properties."""
+    DFPT = "dfpt"
+    PHONOPY = "phonopy"
+    PHEASY = "pheasy"
 
 class PhononDOS(BaseModel):
     """Define schema of pymatgen phonon density of states."""
@@ -158,13 +165,11 @@ class PhononBS(BaseModel):
         for k in ("qpoints", "frequencies", "reciprocal_lattice", "eigendisplacements"):
             if (vals := config.pop(k, None)) and k == "eigendisplacements":
                 cvals = np.array(vals)
-                config["eigendisplacements_real"] = cvals.real.flatten()
-                config["eigendisplacements_imag"] = cvals.imag.flatten()
-                config["eigendisplacements_shape"] = list(cvals.shape)
+                config["eigendisplacements_real"] = cvals.real.tolist()
+                config["eigendisplacements_imag"] = cvals.imag.tolist()
             elif vals:
                 rvals = np.array(vals)
-                config[k] = rvals.flatten()
-                config[f"{k}_shape"] = list(rvals.shape)
+                config[k] = rvals.tolist()
 
         if qpt_labels := config.pop("labels_dict"):
             config["qpoint_labels"] = list(qpt_labels)
@@ -199,15 +204,11 @@ class PhononBS(BaseModel):
             if k == "structure":
                 config[k] = Structure.from_dict(json.loads(v))
             elif k in ("qpoints", "frequencies", "reciprocal_lattice"):
-                config[k] = np.array(v).reshape(
-                    tuple(table[f"{_k}_shape"].to_pylist()[0])
-                )
+                config[k] = np.array(v)
             elif k == "eigendisplacements_real":
                 config["eigendisplacements"] = (
                     table[f"{col_prefix}eigendisplacements_real"].to_numpy()[0]
                     + 1.0j * table[f"{col_prefix}eigendisplacements_imag"].to_numpy()[0]
-                ).reshape(
-                    tuple(table[f"{col_prefix}eigendisplacements_shape"].to_pylist()[0])
                 )
             elif k == "qpoint_labels":
                 config["labels_dict"] = dict(
@@ -229,12 +230,16 @@ class SumRuleChecks(BaseModel):
     )
 
 
-class BasePhononBSDOSDoc(StructureMetadata):
+class PhononBSDOSDoc(StructureMetadata):
     """Phonon band structures and density of states data."""
 
     material_id: MPID | None = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
+    )
+
+    phonon_method : PhononMethod | None = Field(
+        None, description = "The method used to calculate phonon properties."
     )
 
     phonon_bandstructure: PhononBS | None = Field(
@@ -276,10 +281,50 @@ class BasePhononBSDOSDoc(StructureMetadata):
         description="Deviations from sum rules.",
     )
 
+    structure: Structure | None = Field(
+        None, description="Structure used in the calculation."
+    )
+
+    total_dft_energy: float | None = Field(
+        None, description="total DFT energy in eV/atom."
+    )
+
+    volume_per_formula_unit: float | None = Field(
+        None, description="volume per formula unit in Angstrom**3."
+    )
+
+    formula_units: int | None = Field(None, description="Formula units per cell.")
+
+    supercell_matrix: Matrix3D | None = Field(
+        None, description="matrix describing the supercell."
+    )
+    primitive_matrix: Matrix3D | None = Field(
+        None, description="matrix describing relationship to primitive cell."
+    )
+
+    code: str | None = Field(
+        None, description="String describing the code for the computation."
+    )
+
+    post_process_settings: PhononComputationalSettings | PhononComputationalSettings = Field(
+        None, description="Field including settings for the post processing code, e.g., phonopy."
+    )
+
+    thermal_displacement_data: ThermalDisplacementData | None = Field(
+        None,
+        description="Includes all data of the computation of the thermal displacements",
+    )
+
+    calc_meta : list[CalcMeta] | None = Field(
+        None, description="Metadata for individual calculations used to build this document."
+    )
+
     @model_validator(mode="before")
     @classmethod
     def migrate_fields(cls, config: Any) -> Any:
         """Migrate legacy input fields."""
+
+        # This block is for older DFPT data
         for k, v in {
             "ph_dos": "phonon_dos",
             "ph_bs": "phonon_bandstructure",
@@ -294,7 +339,81 @@ class BasePhononBSDOSDoc(StructureMetadata):
         if config.get("last_updated"):
             config["last_updated"] = convert_datetime(cls, config["last_updated"])
 
+        if (ph_bs := config.get("phonon_bandstucture") ) and not config.get("structure"):
+            if isinstance(ph_bs,PhononBandStructureSymmLine | PhononBS):
+                config["structure"] = ph_bs.structure
+            else:
+                config["structure"] = ph_bs.get("structure")
+
+        # This block is for the migration from atomate2 --> emmet-core schemas
+        if config.get("structure"):
+
+            if isinstance(config["structure"],dict):
+                config["structure"] = Structure.from_dict(config["structure"])
+
+            old_formula_units = config.pop("formula_units",1)
+            if toten := config.pop("total_dft_energy",None):
+                config["total_energy"] = toten * old_formula_units / config["structure"].num_sites
+
+
+            config["formula_units"] = get_num_formula_units(config["structure"].composition)
+
+        if (fc := config.get("force_constants")) and isinstance(fc, dict):
+            config["force_constants"] = fc["force_constants"]
+
+        if (comp_sett := config.get("phonopy_settings")):
+            config["post_process_settings"] = comp_sett
+
+        calc_meta_migrate = {
+            "uuids": "_uuid",
+            "jobdirs": "_job_dir",
+        }
+        calc_meta_remap = {
+            "uuids": "identifier",
+            "jobdirs": "dir_name"
+        }
+        if any(config.get(k) for k in calc_meta_migrate):
+
+            calc_meta : dict[str, dict[str,str]] = {}
+            for field_name, splitter in calc_meta_migrate.items():
+                if (vals := config.get(field_name)):
+                    if not isinstance(vals,dict):
+                        vals = vals.model_dump()
+                    for k, v in vals.items():
+                        job_name = k.split(splitter)[0]
+                        if isinstance(v,list):
+                            for idx, sub_v in enumerate(v):
+                                if (sub_name := f"{job_name}-{idx}") not in calc_meta:
+                                    calc_meta[sub_name] = {}
+                                calc_meta[sub_name][calc_meta_remap[field_name]] = sub_v
+                        else:
+                            if job_name not in calc_meta:
+                                calc_meta[job_name] = {}
+                            calc_meta[job_name][calc_meta_remap[field_name]] = v
+
+            config["calc_meta"] = [
+                CalcMeta(
+                    name = job_name,
+                    **meta,
+                )
+                for job_name, meta in calc_meta.items()
+            ]
+
         return config
+    
+    @computed_field # type: ignore[prop-decorator]
+    @cached_property
+    def has_imaginary_modes(self) -> bool | None:
+        tol : float = 1e-5
+        if self.phonon_bandstructure:
+            return self.phonon_bandstructure.to_pmg.has_imaginary_freq(tol=tol)
+        elif self.phonon_dos:
+            return np.any(
+                np.array(self.phonon_dos.densities)[
+                    np.array(self.phonon_dos.frequencies) < tol
+                ] > tol
+            )
+        return None
 
     @computed_field  # type: ignore[prop-decorator]
     @cached_property
@@ -335,48 +454,101 @@ class BasePhononBSDOSDoc(StructureMetadata):
                 }
             )
         return self.sum_rules_breaking
+    
+    def _get_thermo_from_dos(
+        self,
+        quantity : Literal["entropy","cv","internal_energy","helmholtz_free_energy"],
+        temperature : float,
+        normalization : Literal["atoms","formula_units"] | None = "formula_units"
+    ) -> float | None:
+        """Get a thermodynamic property from the phonon DOS.
+        
+        quantity : "entropy", "cv", "internal_energy", or "helmholtz_free_energy"
+            If "entropy" or "cv", the units before normalization are J/(K * mol).
+            If "internal_energy" or "helmholtz_free_energy", the units before normalization are J/mol.
+        temperature : float
+        normalization : "atoms", "formula_units", or None
+            Whether to normalize by the number of atoms in the cell ("atoms"),
+            the number of formula units ("formula_units", default), or not (None).
+        """
 
-    def entropy(self, temperature: float) -> float | None:
-        """Compute the entropy in J/(K*mol) per formula unit."""
-
-        if not self.phonon_dos or not self.phonon_bandstructure:
+        if not self.phonon_dos or (normalization and not self.structure):
             return None
-        return self.phonon_dos.to_pmg.entropy(
-            temp=temperature, structure=self.phonon_bandstructure.primitive_structure
-        )
+        
+        norm_fac = 1.
+        if normalization == "atoms":
+            norm_fac = 1./self.structure.num_sites
+        elif normalization == "formula_units":
+            norm_fac = 1./self.formula_units
+        else:
+            raise ValueError(f"Unknown {normalization=} convention.")
 
-    def heat_capacity(self, temperature: float) -> float | None:
-        """Compute the heat capacity in J/(K*mol) per formula unit."""
-        if not self.phonon_dos or not self.phonon_bandstructure:
-            return None
-        return self.phonon_dos.to_pmg.cv(
-            temp=temperature, structure=self.phonon_bandstructure.primitive_structure
-        )
+        return getattr(self.phonon_dos.to_pmg,quantity)(temp=temperature,) * norm_fac
 
-    def internal_energy(self, temperature: float) -> float | None:
-        """Compute the internal energy in kJ/mol."""
-        if not self.phonon_dos or not self.phonon_bandstructure:
-            return None
-        return 1e-3 * self.phonon_dos.to_pmg.internal_energy(
-            temp=temperature, structure=self.phonon_bandstructure.primitive_structure
-        )
+    def entropy(self, temperature: float, normalization : Literal["atoms","formula_units"] | None = "formula_units") -> float | None:
+        """Compute the entropy in J/(K * mol * formula units).
+        
+        temperature : float
+        normalization : "atoms", "formula_units", or None
+            Whether to normalize by the number of atoms in the cell ("atoms"),
+            the number of formula units ("formula_units"), or not (None).
+        """
+        return self._get_thermo_from_dos("entropy",temperature,normalization=normalization)
+    
+    def heat_capacity(self, temperature: float, normalization : Literal["atoms","formula_units"] | None = "formula_units") -> float | None:
+        """Compute the heat capacity in J/(K * mol * formula units).
+        
+        temperature : float
+        normalization : "atoms", "formula_units", or None
+            Whether to normalize by the number of atoms in the cell ("atoms"),
+            the number of formula units ("formula_units"), or not (None).
+        """
+        return self._get_thermo_from_dos("cv",temperature,normalization=normalization)
 
-    def free_energy(self, temperature: float) -> float | None:
-        """Compute the Helmholtz free energy in kJ/mol."""
-        if not self.phonon_dos or not self.phonon_bandstructure:
-            return None
-        return 1e-3 * self.phonon_dos.to_pmg.helmholtz_free_energy(
-            temp=temperature, structure=self.phonon_bandstructure.primitive_structure
-        )
+
+    def internal_energy(self, temperature: float, normalization : Literal["atoms","formula_units"] | None = "formula_units") -> float | None:
+        """Compute the internal energy in kJ/(mol * formula units).
+
+        temperature : float
+        normalization : "atoms", "formula_units", or None
+            Whether to normalize by the number of atoms in the cell ("atoms"),
+            the number of formula units ("formula_units"), or not (None).
+        """
+        return 1e-3*self._get_thermo_from_dos("internal_energy",temperature,normalization=normalization)
+
+
+    def free_energy(self, temperature: float, normalization : Literal["atoms","formula_units"] | None = "formula_units") -> float | None:
+        """Compute the Helmholtz free energy in kJ/(mol * formula units).
+    
+        temperature : float
+        normalization : "atoms", "formula_units", or None
+            Whether to normalize by the number of atoms in the cell ("atoms"),
+            the number of formula units ("formula_units"), or not (None).
+        """
+        return 1e-3*self._get_thermo_from_dos("helmholtz_free_energy",temperature,normalization=normalization)
 
     def compute_thermo_quantites(
-        self, temperatures: Sequence[float]
+        self,
+        temperatures: Sequence[float],
+        normalization : Literal["atoms","formula_units"] | None = "formula_units",
     ) -> dict[str, Sequence[float | None]]:
         """Compute all thermodynamic quantities as a convenience method."""
 
-        quantities = ("entropy", "heat_capacity", "internal_energy", "free_energy")
+        quantities = {
+            "entropy": "entropy",
+            "heat_capacity" : "cv",
+            "internal_energy": "internal_energy",
+            "free_energy": "helmholtz_free_energy",
+        }
+        fac = {
+            "entropy": 1.,
+            "heat_capacity": 1.,
+            "internal_energy": 1e-3,
+            "free_energy": 1e-3,
+        }
+
         thermo_props: dict[str, Sequence[float | None]] = {
-            k: [getattr(self, k)(temp) for temp in temperatures] for k in quantities
+            k: [fac[k]*self._get_thermo_from_dos(v, temp, normalization=normalization) for temp in temperatures] for k, v in quantities.items()
         }
         thermo_props["temperature"] = temperatures
         return thermo_props
@@ -432,87 +604,6 @@ class ThermalDisplacementData(BaseModel):
         None,
         description="temperatures at which the thermal displacement matrices"
         "have been computed",
-    )
-
-
-class PhononUUIDs(BaseModel):
-    """Collection to save all uuids connected to the phonon run."""
-
-    optimization_run_uuid: str | None = Field(None, description="optimization run uuid")
-    displacements_uuids: list[str] | None = Field(
-        None, description="The uuids of the displacement jobs."
-    )
-    static_run_uuid: str | None = Field(None, description="static run uuid")
-    born_run_uuid: str | None = Field(None, description="born run uuid")
-
-
-class PhononJobDirs(BaseModel):
-    """Collection to save all job directories relevant for the phonon run."""
-
-    displacements_job_dirs: list[str | None] | None = Field(
-        None, description="The directories where the displacement jobs were run."
-    )
-    static_run_job_dir: str | None = Field(
-        None, description="Directory where static run was performed."
-    )
-    born_run_job_dir: str | None = Field(
-        None, description="Directory where born run was performed."
-    )
-    optimization_run_job_dir: str | None = Field(
-        None, description="Directory where optimization run was performed."
-    )
-    taskdoc_run_job_dir: str | None = Field(
-        None, description="Directory where task doc was generated."
-    )
-
-
-class PhononBSDOSDoc(BasePhononBSDOSDoc):
-    """Heavier phonon document schema for parsing newer phonon calculations."""
-
-    structure: Structure | None = Field(
-        None, description="Structure used in the calculation."
-    )
-
-    total_dft_energy: float | None = Field(
-        None, description="total DFT energy per formula unit in eV"
-    )
-
-    volume_per_formula_unit: float | None = Field(
-        None, description="volume per formula unit in Angstrom**3"
-    )
-
-    formula_units: int | None = Field(None, description="Formula units per cell")
-
-    has_imaginary_modes: Optional[bool] = Field(
-        None, description="if true, structure has imaginary modes"
-    )
-
-    supercell_matrix: Optional[Matrix3D] = Field(
-        None, description="matrix describing the supercell"
-    )
-    primitive_matrix: Optional[Matrix3D] = Field(
-        None, description="matrix describing relationship to primitive cell"
-    )
-
-    code: Optional[str] = Field(
-        None, description="String describing the code for the computation"
-    )
-
-    phonopy_settings: Optional[PhononComputationalSettings] = Field(
-        None, description="Field including settings for Phonopy"
-    )
-
-    thermal_displacement_data: Optional[ThermalDisplacementData] = Field(
-        None,
-        description="Includes all data of the computation of the thermal displacements",
-    )
-
-    jobdirs: Optional[PhononJobDirs] = Field(
-        None, description="Field including all relevant job directories"
-    )
-
-    uuids: Optional[PhononUUIDs] = Field(
-        None, description="Field including all relevant uuids"
     )
 
 
