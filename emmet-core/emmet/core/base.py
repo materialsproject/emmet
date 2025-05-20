@@ -61,18 +61,19 @@ class EmmetBaseModel(BaseModel):
         description="Builder metadata.",
     )
 
+
 class CalcMeta(BaseModel):
     """Lightweight representation for storing jobflow-style job info."""
 
-    identifier : str | None = Field(
-        None, description = "The identifier (UUID, ULID, etc.) of the calculation."
+    identifier: str | None = Field(
+        None, description="The identifier (UUID, ULID, etc.) of the calculation."
     )
-    dir_name : str | None = Field(
-        None, description = "The file-systm-like path where a job was run."
+    dir_name: str | None = Field(
+        None, description="The file-systm-like path where a job was run."
     )
-    name : str | None = Field(
-        None, description = "The job name or a convenient label for it."
+    name: str | None = Field(
+        None, description="The job name or a convenient label for it."
     )
-    parents : list[str] | None = Field(
+    parents: list[str] | None = Field(
         None, description="A list of all UUIDs which fed into this job."
     )

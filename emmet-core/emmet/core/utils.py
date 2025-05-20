@@ -51,9 +51,10 @@ def get_sg(struc, symprec=SETTINGS.SYMPREC) -> int:
     except Exception:
         return -1
 
-def get_num_formula_units(composition : Mapping[Any, int | float]) -> int:
+
+def get_num_formula_units(composition: Mapping[Any, int | float]) -> int:
     """Get the number of formula units in a dict-like composition.
-    
+
     This implementation differs slightly from how some pymatgen/atomate2
     internals work. In those, certain formulas, e.g., N, will assume
     a smallest formula unit of N2. Thus even if a specified composition is
@@ -66,6 +67,7 @@ def get_num_formula_units(composition : Mapping[Any, int | float]) -> int:
     if all(abs(int(val) - val) < 1e-6 for val in composition.values()):
         num_form_u = gcd(*[int(sc) for sc in composition.values()])
     return num_form_u
+
 
 def group_structures(
     structures: List[Structure],
