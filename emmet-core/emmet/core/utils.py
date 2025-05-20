@@ -6,6 +6,7 @@ import datetime
 import hashlib
 from enum import Enum
 from itertools import groupby
+from math import gcd
 from typing import Any, Dict, Iterator, List, Optional, Union, TYPE_CHECKING
 
 import numpy as np
@@ -36,6 +37,7 @@ except ImportError:
     bson = None  # type: ignore
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
     from emmet.core.typing import PathLike
 
 
@@ -49,6 +51,21 @@ def get_sg(struc, symprec=SETTINGS.SYMPREC) -> int:
     except Exception:
         return -1
 
+def get_num_formula_units(composition : Mapping[Any, int | float]) -> int:
+    """Get the number of formula units in a dict-like composition.
+    
+    This implementation differs slightly from how some pymatgen/atomate2
+    internals work. In those, certain formulas, e.g., N, will assume
+    a smallest formula unit of N2. Thus even if a specified composition is
+    `{"N": 1}`, the reduced composition will be `{"N": 2}`, and the number of
+    formula units 1/2.
+
+    This always just returns the greatest common divisor of a composition.
+    """
+    num_form_u = 1
+    if all(abs(int(val) - val) < 1e-6 for val in composition.values()):
+        num_form_u = gcd(*[int(sc) for sc in composition.values()])
+    return num_form_u
 
 def group_structures(
     structures: List[Structure],
