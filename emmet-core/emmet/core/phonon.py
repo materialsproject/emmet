@@ -344,7 +344,9 @@ class PhononBSDOSDoc(StructureMetadata):
         if config.get("last_updated"):
             config["last_updated"] = convert_datetime(cls, config["last_updated"])
 
-        if (ph_bs := config.get("phonon_bandstucture")) and not config.get("structure"):
+        if (ph_bs := config.get("phonon_bandstructure")) and not config.get(
+            "structure"
+        ):
             if isinstance(ph_bs, PhononBandStructureSymmLine | PhononBS):
                 config["structure"] = ph_bs.structure
             else:
