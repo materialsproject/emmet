@@ -23,6 +23,7 @@ from pymatgen.phonon.dos import CompletePhononDos
 from pymatgen.phonon.dos import PhononDos as PhononDosObject
 from typing_extensions import Literal
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.base import CalcMeta
 from emmet.core.common import convert_datetime
 from emmet.core.math import Matrix3D, Tensor4R, Vector3D
@@ -38,6 +39,9 @@ try:
 except ImportError:
     pa = None
     ArrowTable = None
+
+if ARROW_COMPATIBLE:
+    import emmet.core.serialization_adapters.phonon_adapter
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

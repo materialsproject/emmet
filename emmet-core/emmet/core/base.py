@@ -14,10 +14,12 @@ from pydantic import (
 )
 from pymatgen.core import __version__ as pmg_version
 
-from emmet.core import __version__
-from emmet.core.arrow import arrowize
+from emmet.core import ARROW_COMPATIBLE, __version__
 from emmet.core.common import convert_datetime
 from emmet.core.utils import jsanitize, utcnow
+
+if ARROW_COMPATIBLE:
+    from emmet.core.arrow import arrowize
 
 T = TypeVar("T", bound="EmmetBaseModel")
 
@@ -25,6 +27,10 @@ T = TypeVar("T", bound="EmmetBaseModel")
 class ContextModel(BaseModel):
     @classmethod
     def arrow_type(cls):
+        if not ARROW_COMPATIBLE:
+            raise RuntimeError(
+                "pyarrow must be installed to generate arrow type defs for emmet models"
+            )
         return arrowize(cls)
 
     @model_serializer(mode="wrap")
