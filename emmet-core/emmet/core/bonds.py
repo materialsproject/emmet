@@ -5,12 +5,15 @@ from pydantic import Field
 from pymatgen.analysis.graphs import StructureGraph
 from pymatgen.analysis.local_env import NearNeighbors
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.material_property import PropertyDoc
 from emmet.core.typing import TypedBondLengthStatsDict
 
 
 AVAILABLE_METHODS = {nn.__name__: nn for nn in NearNeighbors.__subclasses__()}
 
+if ARROW_COMPATIBLE:
+    import emmet.core.serialization_adapters.structure_graph_adapter
 
 class BondingDoc(PropertyDoc):
     """Structure graphs representing chemical bonds calculated from structure

@@ -12,15 +12,27 @@ from pymatgen.analysis.reaction_calculator import BalancedReaction
 from pymatgen.apps.battery.battery_abc import AbstractElectrode
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
-from pymatgen.core import Composition, Structure
+from pymatgen.core import Composition
 from pymatgen.core.periodic_table import Element
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.base import EmmetBaseModel
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
-from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 from emmet.core.utils import ValueEnum, jsanitize, utcnow
+
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters import (
+        balanced_reaction_adapter,
+        electrode_adapter,
+        structure_adapter,
+    )
+    from emmet.core.serialization_adapters.electrode_adapter import (
+        AnnotatedConversionElectrode,
+        AnnotatedInsertionElectrode,
+    )
+    from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 
 
 class BatteryType(str, ValueEnum):
@@ -301,7 +313,6 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
     Insertion electrode
     """
 
-    # host_structure: Structure | None = Field(
     host_structure: AnnotatedStructure | None = Field(
         None, description="Host structure (structure without the working ion)."
     )
@@ -321,8 +332,9 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
         description="Composition summary data for all material in entries across all voltage pairs.",
     )
 
-    electrode_object: InsertionElectrode | None = Field(
-        None, description="The Pymatgen electrode object."
+    electrode_object: AnnotatedInsertionElectrode | None = Field(
+        None,
+        description="The Pymatgen electrode object.",
     )
 
     @field_serializer("electrode_object", mode="wrap")
@@ -514,7 +526,7 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
         None, description="Returns all of the voltage steps material pairs."
     )
 
-    electrode_object: ConversionElectrode | None = Field(
+    electrode_object: AnnotatedConversionElectrode | None = Field(
         None, description="The Pymatgen conversion electrode object."
     )
 

@@ -11,12 +11,17 @@ from pymatgen.core.structure import Structure
 from pymatgen.core.tensors import TensorMapping
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.common import Status
 from emmet.core.material_property import PropertyDoc
 from emmet.core.math import Matrix3D, MatrixVoigt
 from emmet.core.mpid import MPID
-from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 from emmet.core.settings import EmmetSettings
+
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters.structure_adapter import (
+        AnnotatedStructure as Structure,
+    )
 
 SETTINGS = EmmetSettings()
 

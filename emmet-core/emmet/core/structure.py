@@ -9,9 +9,17 @@ from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Molecule, Structure
 
-from emmet.core.utils import get_graph_hash
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.base import EmmetBaseModel
 from emmet.core.symmetry import PointGroupData, SymmetryData
+from emmet.core.utils import get_graph_hash
+
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters import (
+        composition_adapter,
+        molecule_adapter,
+        structure_adapter,
+    )
 
 T = TypeVar("T", bound="StructureMetadata")
 S = TypeVar("S", bound="MoleculeMetadata")

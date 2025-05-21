@@ -27,10 +27,9 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 from pymatgen.io.vasp import Incar, Kpoints, Poscar
 from pymatgen.io.vasp import Potcar as VaspPotcar
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
-from emmet.core.serialization_adapters.poscar_adapter import AnnotatedPoscar
-from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import jsanitize, type_override, utcnow
 from emmet.core.vasp.calc_types import (
@@ -55,6 +54,15 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from typing_extensions import Self
+
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters import (
+        computed_entries_adapter,
+        kpoints_adapter,
+        trajectory_adapter,
+    )
+    from emmet.core.serialization_adapters.poscar_adapter import AnnotatedPoscar
+    from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 
 monty_decoder = MontyDecoder()
 logger = logging.getLogger(__name__)

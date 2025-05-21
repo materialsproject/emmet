@@ -1,55 +1,49 @@
 """Define schemas for DFPT, phonopy, and pheasy-derived phonon data."""
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from enum import Enum
 from functools import cached_property
-import json
 from pathlib import Path
-import yaml  # type: ignore[import-untyped]
+from typing import TYPE_CHECKING, Optional
 
+import numpy as np
+import yaml  # type: ignore[import-untyped]
+from monty.dev import requires
 from monty.io import zopen
 from monty.os.path import zpath
-from monty.dev import requires
-import numpy as np
-from pydantic import model_validator, BaseModel, Field, computed_field, PrivateAttr
-from typing import Optional, TYPE_CHECKING
-
+from pydantic import BaseModel, Field, PrivateAttr, computed_field, model_validator
 from pymatgen.core import Lattice, Structure
 from pymatgen.electronic_structure.bandstructure import Kpoint
 from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
 from pymatgen.phonon.dos import PhononDos as PhononDosObject
-
-from emmet.core.base import CalcMeta
-from emmet.core.utils import DocEnum
-from emmet.core.math import Vector3D, Matrix3D, Tensor4R
-from emmet.core.mpid import MPID
-from emmet.core.polar import DielectricDoc, BornEffectiveCharges, IRDielectric
-from emmet.core.structure import StructureMetadata
-from emmet.core.common import convert_datetime
-from emmet.core.utils import utcnow, get_num_formula_units
-
 from typing_extensions import Literal
 
+from emmet.core import ARROW_COMPATIBLE
+from emmet.core.base import CalcMeta
 from emmet.core.common import convert_datetime
-from emmet.core.math import Tensor4R, Vector3D
+from emmet.core.math import Matrix3D, Tensor4R, Vector3D
 from emmet.core.mpid import MPID
 from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
 from emmet.core.structure import StructureMetadata
 from emmet.core.typing import PhononWebsiteDict, TypedAbinitInputVars
-from emmet.core.utils import DocEnum, utcnow
+from emmet.core.utils import DocEnum, get_num_formula_units, utcnow
 
 try:
     import pyarrow as pa
-
     from pyarrow import Table as ArrowTable
 except ImportError:
     pa = None
     ArrowTable = None
 
+if ARROW_COMPATIBLE:
+    import emmet.core.serialization_adapters.phonon_adapter
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from typing import Any
+
     from typing_extensions import Self
 
 DEFAULT_PHONON_FILES = {

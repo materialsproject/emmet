@@ -7,11 +7,15 @@ from pymatgen.analysis.xas.spectrum import XAS, site_weighted_spectrum
 from pymatgen.core.periodic_table import Element
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.feff.task import TaskDocument
 from emmet.core.mpid import MPID
 from emmet.core.serialization_adapters.xas_adapter import AnnotatedXAS
 from emmet.core.spectrum import SpectrumDoc
 from emmet.core.utils import ValueEnum
+
+if ARROW_COMPATIBLE:
+    import emmet.core.serialization_adapters.xas_adapter
 
 
 class Edge(ValueEnum):

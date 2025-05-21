@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.base import EmmetMeta
 from emmet.core.material import PropertyOrigin
 from emmet.core.material_property import PropertyDoc
@@ -21,6 +22,12 @@ from emmet.core.serialization_adapters.computed_entries_adapter import (
 )
 from emmet.core.utils import ValueEnum, jsanitize, type_override, utcnow
 from emmet.core.vasp.calc_types.enums import RunType
+
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters import (
+        computed_entries_adapter,
+        phase_diagram_adapter,
+    )
 
 
 class Mode(Enum):
