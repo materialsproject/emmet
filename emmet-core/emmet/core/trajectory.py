@@ -109,8 +109,59 @@ class Trajectory(BaseModel):
         """Used to verify roundtrip conversion of Trajectory."""
         return hash(self.model_dump_json())
 
+    def __len__(self) -> int:
+        """Get number of ionic steps."""
+        return self.num_ionic_steps
+
+    @property
+    def convergence_data(self) -> dict[str, list[float] | None]:
+        """Get convergence of energy and interatomic forces.
+
+        If possible, energy convergence is taken at every electronic step.
+        If not, it is taken at each ionic step (the final electronic step).
+
+        Forces are taken at each ionic step.
+        """
+        conv_data: dict[str, list[float] | None] = {}
+
+        if self.electronic_steps is None:
+            ionic_step_keys = ["energy", "e_fr_energy", "e_wo_entrp", "forces"]
+        else:
+            ionic_step_keys = ["forces"]
+            flattened_e_steps = []
+            for e_step in self.electronic_steps:
+                flattened_e_steps.extend(e_step)
+
+            for k, remap in {
+                "e_0_energy": "energy",
+                "e_fr_energy": "e_fr_energy",
+                "e_wo_entrp": "e_wo_entrp",
+            }.items():
+                list_data = [getattr(e_step, k, None) for e_step in flattened_e_steps]
+                if not all(list_data):
+                    ionic_step_keys.append(remap)
+                    continue
+
+                data = np.array(list_data)
+                conv_data[remap] = np.abs(data[-1] - data).tolist()
+
+        for k in ionic_step_keys:
+            if (list_data := getattr(self, k)) is None:
+                conv_data[k] = None
+                continue
+
+            if k == "forces":
+                list_data = [np.linalg.norm(f) for f in list_data]
+
+            data = np.array(list_data)
+            conv_data[k] = np.abs(data[-1] - data).tolist()
+
+        return conv_data
+
     @staticmethod
-    def reorder_structure(structure: Structure, ref_z: list[int]) -> Structure:
+    def reorder_structure(
+        structure: Structure, ref_z: list[int]
+    ) -> tuple[Structure, list[int]]:
         """
         Ensure that the sites in a structure match the order in a set of reference Z values.
 
@@ -126,23 +177,26 @@ class Trajectory(BaseModel):
         Returns
         -----------
         pymatgen .Structure : structure matching the reference order of sites
+        list of int : indices in the original structure which are reordered
         """
         if [site.species.elements[0].Z for site in structure] == ref_z:
-            return structure
+            return structure, list(range(structure.num_sites))
 
         running_sites = list(range(len(structure)))
         ordered_sites = []
+        reordered_index = []
         for z in ref_z:
             for idx in running_sites:
                 if structure[idx].species.elements[0].Z == z:
                     ordered_sites.append(structure[idx])
+                    reordered_index.append(idx)
                     running_sites.remove(idx)
                     break
 
         if len(running_sites) > 0:
             raise ValueError("Cannot order structure according to reference list.")
 
-        return Structure.from_sites(ordered_sites)
+        return Structure.from_sites(ordered_sites), reordered_index
 
     @classmethod
     def _from_dict(
@@ -197,7 +251,7 @@ class Trajectory(BaseModel):
             props["lattice"] = [structure.lattice.matrix for structure in structures]
 
         props["cart_coords"] = [
-            cls.reorder_structure(structure, props["elements"]).cart_coords
+            cls.reorder_structure(structure, props["elements"])[0].cart_coords
             for structure in structures
         ]
 
@@ -367,7 +421,10 @@ class Trajectory(BaseModel):
         pa is not None, message="pyarrow must be installed to de-/serialize to parquet"
     )
     def to_arrow(
-        self, file_name: str | Path | None = None, **write_file_kwargs
+        self,
+        file_name: str | Path | None = None,
+        store_conv_data: bool = True,
+        **write_file_kwargs,
     ) -> ArrowTable:
         """
         Create a PyArrow Table from a Trajectory.
@@ -377,6 +434,10 @@ class Trajectory(BaseModel):
         file_name : str, .Path, or None (default)
             If not None, a file to write the parquet-format output to.
             Accepts any compression extension used by pyarrow.write_table
+        store_conv_data : bool = True (default)
+            Whether to store the data in `Trajectory.convergence_data`.
+            Defaults to True to ensure that MP website convergence data is
+            stored and easily accesible via parquet.
         **write_file_kwargs
             If file_name is not None, any kwargs to pass to
             pyarrow.parquet.write_file
@@ -386,24 +447,21 @@ class Trajectory(BaseModel):
         pyarrow.Table
         """
         pa_config = {
-            k: pa.array(v)
+            k: pa.array([v])
             for k, v in self.model_dump(mode="json").items()
-            if hasattr(v, "__len__") and not isinstance(v, str)
+            if hasattr(v, "__len__")
         }
 
         for k in (
-            "elements",
-            "identifier",
             "run_type",
             "task_type",
-            "constant_lattice",
         ):
             if val := getattr(self, k):
-                if isinstance(val, Enum):
-                    val = val.value
-                pa_config[k] = pa.array([val for _ in range(self.num_ionic_steps)])
+                pa_config[k] = pa.array([val.value])
 
-        pa_config["ionic_step_idx"] = pa.array(range(1, self.num_ionic_steps + 1))
+        if store_conv_data:
+            for k, v in self.convergence_data.items():
+                pa_config[f"{k}_convergence"] = pa.array([v])
 
         pa_table = pa.table(pa_config)
         if file_name:
@@ -434,19 +492,12 @@ class Trajectory(BaseModel):
                 null_selection_behavior="drop",
             )
 
-        # Ensure that ionic steps are properly sorted.
-        # Order can change during table writing because of multithreading.
-        config = pa_table.sort_by("ionic_step_idx").to_pydict()
-        config["num_ionic_steps"] = len(config["elements"])
-        for k in (
-            "elements",
-            "identifier",
-            "run_type",
-            "task_type",
-            "constant_lattice",
-        ):
-            if config.get(k):
-                config[k] = config[k][0]
+        config = {
+            k: pa_table[k].to_pylist()[0]
+            for k in pa_table.column_names
+            if k in cls.model_fields
+        }
+        config["num_ionic_steps"] = len(config["cart_coords"])
         return cls(**config)
 
     @classmethod
