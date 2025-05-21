@@ -2,6 +2,7 @@ import numpy as np
 from pytest import approx, fixture
 
 from monty.serialization import loadfn
+from pymatgen.core import Element, Structure
 from pymatgen.core.trajectory import Trajectory as PmgTraj
 
 from emmet.core.tasks import TaskDoc
@@ -11,6 +12,38 @@ from emmet.core.trajectory import Trajectory
 @fixture(scope="module")
 def si_task(test_dir):
     return TaskDoc.from_directory(test_dir / "vasp" / "Si_old_double_relax")
+
+
+def test_reorder_structure():
+    # Test that site ordering works correctly
+
+    lattice = [[5.0, 0, 0], [4, 0, 0], [4.5, 0, 0]]
+    coords = [
+        [0, 0, 0],
+        [0.0, 0.25, 0.0],
+        [0.25, 0.0, 0.25],
+        [0.0, 0.0, 0.25],
+        [0.25, 0.0, 0.0],
+        [0.25, 0.25, 0.25],
+        [0.5, 0.5, 0.5],
+        [0.75, 0.75, 0.75],
+    ]
+
+    elements = ["Si", "Si", "Ti", "N", "Ga", "As", "N", "Cu"]
+    ref_z = [Element(ele).Z for ele in elements]
+
+    # try a number of times to ensure ordering is always OK
+    for _ in range(2 * len(elements)):
+        new_z = [z for z in ref_z]
+        np.random.shuffle(new_z)
+        structure = Structure(lattice, [Element.from_Z(z) for z in new_z], coords)
+        reordered_struct, reordered_idx = Trajectory.reorder_structure(structure, ref_z)
+        assert all(site.specie.Z == ref_z[i] for i, site in enumerate(reordered_struct))
+        assert all(
+            np.abs(np.linalg.norm(reordered_struct[i].coords - structure[old_i].coords))
+            < 1e-6
+            for i, old_i in enumerate(reordered_idx)
+        )
 
 
 def test_task_doc(si_task):
