@@ -18,6 +18,12 @@ from emmet.core.utils import ValueEnum
 if TYPE_CHECKING:
     from emmet.core.mpid import MPID, AlphaID
 
+from emmet.core import ARROW_COMPATIBLE
+from emmet.core.mpid import MPID
+
+if ARROW_COMPATIBLE:
+    import emmet.core.serialization_adapters.diffraction_pattern_adapter
+
 
 class Edge(ValueEnum):
     K_Alpha = "Ka"

@@ -7,6 +7,7 @@ from pydantic import Field
 from pymatgen.analysis.graphs import StructureGraph
 from pymatgen.analysis.local_env import NearNeighbors
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.material_property import PropertyDoc
 from emmet.core.typing import TypedBondLengthStatsDict
 
@@ -18,6 +19,9 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
     from emmet.core.mpid import MPID
+
+if ARROW_COMPATIBLE:
+    import emmet.core.serialization_adapters.structure_graph_adapter
 
 
 class BondingDoc(PropertyDoc):

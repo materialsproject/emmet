@@ -6,7 +6,11 @@ from monty.json import MontyDecoder
 from pydantic import BaseModel, Field
 from pymatgen.analysis.defects.core import Defect
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.tasks import _VOLUMETRIC_FILES, TaskDoc
+
+if ARROW_COMPATIBLE:
+    import emmet.core.serialization_adapters.defect_adapter
 
 if TYPE_CHECKING:
     from pathlib import Path

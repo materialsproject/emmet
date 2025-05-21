@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from pymatgen.core import Structure
 from pymatgen.core.structure import Molecule
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.base import EmmetBaseModel
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID, AlphaID, MPculeID
@@ -22,6 +23,8 @@ if TYPE_CHECKING:
     from typing import Any
 
     from typing_extensions import Self
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 
 
 class PropertyOrigin(BaseModel):
