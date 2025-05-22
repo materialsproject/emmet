@@ -565,7 +565,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         logger.info(f"Getting task doc in: {dir_name}")
 
         additional_fields = {} if additional_fields is None else additional_fields
-        dir_name = Path(dir_name)
+        dir_name = Path(dir_name).resolve()
         task_files = _find_vasp_files(
             dir_name, volumetric_files=volumetric_files, task_names=task_names
         )
