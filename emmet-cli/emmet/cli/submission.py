@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import json
 import logging
+from multiprocessing import Pool
 from os import PathLike
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
@@ -52,6 +53,11 @@ class CalculationMetadata(BaseModel):
         if changed_files:
             self.calc_valid = None
             self.calc_validation_errors.clear()
+
+
+def invoke_calc_validation(args):
+    path, cm = args
+    return path, cm.validate_calculation()
 
 
 class Submission(BaseModel):
@@ -200,12 +206,18 @@ class Submission(BaseModel):
             else self.calculations
         )
 
-        for p, cm in calcs_to_check.items():
-            is_valid = cm.validate_calculation() and is_valid
-            if not is_valid and not check_all:
-                return is_valid
+        if len(calcs_to_check) > 100:
+            # Run in parallel
+            with Pool() as pool:
+                results = pool.map(invoke_calc_validation, calcs_to_check.items())
+                return all(val for _, val in results)
+        else:
+            for p, cm in calcs_to_check.items():
+                is_valid = cm.validate_calculation() and is_valid
+                if not is_valid and not check_all:
+                    return is_valid
 
-        return is_valid
+            return is_valid
 
     def _create_refreshed_calculations(self):
         pending_calculations = copy.deepcopy(self.calculations)
