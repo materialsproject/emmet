@@ -5,11 +5,13 @@ import copy
 import datetime
 from enum import Enum
 from itertools import groupby
-from typing import Any, Dict, Iterator, List, Optional, Union, TYPE_CHECKING
+import logging
+from multiprocessing import Pool
+import shutil
+import subprocess
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union, TYPE_CHECKING
 
-import blake3
 import numpy as np
-from monty.io import zopen
 from monty.json import MSONable
 from pydantic import BaseModel
 from pymatgen.analysis.elasticity.strain import Deformation
@@ -31,6 +33,11 @@ from emmet.core.mpid import MPculeID
 from emmet.core.settings import EmmetSettings
 
 try:
+    import blake3
+except ImportError:
+    blake3 = None  # type: ignore
+
+try:
     import bson
 except ImportError:
     bson = None  # type: ignore
@@ -38,6 +45,7 @@ except ImportError:
 if TYPE_CHECKING:
     from emmet.core.typing import PathLike
 
+logger = logging.getLogger(__name__)
 
 SETTINGS = EmmetSettings()
 
@@ -448,7 +456,7 @@ def utcnow() -> datetime.datetime:
     return datetime.datetime.now(datetime.timezone.utc)
 
 
-def get_hash_blocked(file_path: PathLike, chunk_size: int = 1_000_000) -> str:
+def get_hash_blocked(file_path: PathLike, chunk_size: int = 4 * 1024 * 1024) -> str:
     """
     Get the hash of a file in byte chunks.
 
@@ -463,10 +471,50 @@ def get_hash_blocked(file_path: PathLike, chunk_size: int = 1_000_000) -> str:
     The hash as a str
     """
     h = blake3.blake3()
-    with zopen(str(file_path), "rb") as f:
+    with open(str(file_path), "rb") as f:
         while True:
             data = f.read(chunk_size)
             if not data:
                 break
             h.update(data)
         return h.hexdigest()
+
+
+def b3sum_available() -> bool:
+    """Check if the native `b3sum` CLI tool is available."""
+    return shutil.which("b3sum") is not None
+
+
+def hash_with_b3sum_cli(path: PathLike) -> Tuple[PathLike, Optional[str]]:
+    """Run the native Rust b3sum CLI on a file and return (path, hash)."""
+    try:
+        result = subprocess.run(
+            ["b3sum", str(path)],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        digest = result.stdout.strip().split()[0]
+        return path, digest
+    except subprocess.CalledProcessError as e:
+        print(f"Error hashing {path}: {e}")
+        return path, None
+
+
+def parallel_get_hash(
+    file_paths: List[PathLike], chunk_size: int = 4 * 1024 * 1024
+) -> Dict[PathLike, str]:
+    if b3sum_available():  # use native rust CLI if available
+        logger.info("Using native blake3 CLI for hashing.")
+        hash_func = hash_with_b3sum_cli
+    elif blake3 is not None:
+        logger.info("Using Python blake3 fallback.")
+        hash_func = get_hash_blocked
+    else:
+        logger.error("Neither b3sum CLI nor blake3 Python module is available.")
+        raise RuntimeError("Neither b3sum CLI nor blake3 Python module is available.")
+
+    # Run in parallel
+    with Pool() as pool:
+        results = pool.map(hash_func, file_paths)
+        return dict(results)
