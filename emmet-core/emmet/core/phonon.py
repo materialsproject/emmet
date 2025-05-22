@@ -233,12 +233,11 @@ class SumRuleChecks(BaseModel):
     )
 
 
-class PhononBSDOSDoc(StructureMetadata):
+class PhononBSDOSTask(StructureMetadata):
     """Phonon band structures and density of states data."""
 
-    material_id: MPID | None = Field(
-        None,
-        description="The Materials Project ID of the material. This comes in the form: mp-******.",
+    identifier: str | None = Field(
+        None, description="The identifier of this phonon analysis task."
     )
 
     phonon_method: PhononMethod | None = Field(
@@ -275,7 +274,7 @@ class PhononBSDOSDoc(StructureMetadata):
     )
 
     last_updated: datetime = Field(
-        utcnow,
+        default_factory=utcnow,
         description="Timestamp for the most recent calculation for this Material document.",
     )
 
@@ -439,9 +438,7 @@ class PhononBSDOSDoc(StructureMetadata):
         if self.force_constants:
             return tuple(
                 tuple(row)
-                for row in np.einsum(
-                    "ijki->jk", np.array(self.force_constants).tolist()
-                )
+                for row in np.einsum("iijk->jk", np.array(self.force_constants))
             )
         return None
 
@@ -604,6 +601,24 @@ class PhononBSDOSDoc(StructureMetadata):
             for k in dost.column_names:
                 table = table.append_column(k, dost[k])
         return table
+
+
+class PhononBSDOSDoc(PhononBSDOSTask):
+    """Built data version of PhononBSDOSTask."""
+
+    material_id: MPID | None = Field(
+        None,
+        description="The Materials Project ID of the material, of the form mp-******.",
+    )
+    task_ids: list[str] | None = Field(
+        None, description="A list of identifiers that were used to build this document."
+    )
+
+    @model_validator(mode="after")
+    def match_id_fields(self) -> Self:
+        """Ensure that `material_id` aliases inherited `identifier` field."""
+        self.identifier = self.material_id
+        return self
 
 
 class PhononComputationalSettings(BaseModel):
