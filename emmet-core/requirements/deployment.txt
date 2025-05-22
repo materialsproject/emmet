@@ -62,7 +62,7 @@ pandas==2.2.3
     #   pymatgen
 pillow==11.2.1
     # via matplotlib
-plotly==6.1.0
+plotly==6.1.1
     # via pymatgen
 pybtex==0.24.0
     # via emmet-core (emmet/emmet-core/setup.py)
@@ -121,7 +121,7 @@ typing-extensions==4.13.2
     #   pydantic-core
     #   spglib
     #   typing-inspection
-typing-inspection==0.4.0
+typing-inspection==0.4.1
     # via
     #   pydantic
     #   pydantic-settings
