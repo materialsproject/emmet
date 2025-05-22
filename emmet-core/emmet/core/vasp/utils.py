@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 from collections import defaultdict
+import logging
 import os
 from pathlib import Path
-from pydantic import BaseModel, Field, PrivateAttr, computed_field, model_validator
+from pydantic import BaseModel, Field, model_validator
 from typing import TYPE_CHECKING, Optional
 
-from emmet.core.utils import get_md5_blocked
+from emmet.core.utils import get_hash_blocked
 
 if TYPE_CHECKING:
     from typing import Any
     from emmet.core.typing import PathLike
+
+logger = logging.getLogger(__name__)
 
 
 class FileMetadata(BaseModel):
@@ -24,7 +27,10 @@ class FileMetadata(BaseModel):
         description="Name of the VASP file without suffixes (e.g., INCAR)"
     )
     path: Path = Field(description="Path to the VASP file")
-    _md5: Optional[str] = PrivateAttr(default=None)
+    hash: Optional[str] = Field(
+        description="Hash of the file (computed only when requested)",
+        default=None,
+    )
 
     @model_validator(mode="before")
     def coerce_path(cls, v: Any) -> Any:
@@ -36,19 +42,15 @@ class FileMetadata(BaseModel):
             v["path"] = path
         return v
 
-    @computed_field
-    def md5(self) -> Optional[str]:
-        """MD5 checksum of the file (computed lazily if needed)."""
-        if self._md5 is not None:
-            return self._md5
-
+    def compute_hash(self) -> Optional[str]:
+        """Compute the hash of the file."""
         if self.validate_path_exists():
             try:
-                self._md5 = get_md5_blocked(self.path)
+                self.hash = get_hash_blocked(self.path)
             except Exception:
-                self._md5 = None
+                self.hash = None
 
-        return self._md5
+        return self.hash
 
     def validate_path_exists(self):
         if not self.path.exists():
@@ -56,10 +58,6 @@ class FileMetadata(BaseModel):
         if not self.path.is_file():
             raise ValueError(f"Path is not a file: {self.path}")
         return True
-
-    def reset_md5(self):
-        """Force recomputation of MD5 checksum on next call to md5 property."""
-        self._md5 = None
 
     def __hash__(self):
         return hash(self.path)
@@ -247,6 +245,7 @@ def recursive_discover_vasp_files(
                     # Incomplete calculation input/output
                     return
                 paths[Path(tdir).resolve()] = tpaths
+                logger.debug(f"Found VASP files in {tdir}")
 
     vasp_files: dict[Path, list[FileMetadata]] = {}
     _recursive_discover_vasp_files(target_dir, vasp_files)

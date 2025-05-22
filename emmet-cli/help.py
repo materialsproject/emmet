@@ -1,6 +1,6 @@
 from click.core import Command, Context, Group
 
-from emmet.cli import emmet
+from emmet.cli.entry_point import emmet
 
 
 def recursive_help(cmd, parent=None):
