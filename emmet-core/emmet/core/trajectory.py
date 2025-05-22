@@ -52,7 +52,7 @@ class Trajectory(BaseModel):
         description="The proton number Z of the elements in the sites"
     )
 
-    cart_coords: list[list[Vector3D]] = Field(
+    cart_coords: list[list[Vector3D] | None] = Field(
         description="The Cartesian coordinates (Å) of the sites at each ionic step"
     )
     num_ionic_steps: int = Field(description="The number of ionic steps.")
@@ -112,6 +112,13 @@ class Trajectory(BaseModel):
     def __len__(self) -> int:
         """Get number of ionic steps."""
         return self.num_ionic_steps
+
+    @property
+    def has_full_output(self) -> bool:
+        """Return true if a trajectory has all structures and SCF convergence info available."""
+        return all(coord_set is not None for coord_set in self.cart_coords) and all(
+            conv_list is not None for conv_list in self.convergence_data.values()
+        )
 
     @property
     def convergence_data(self) -> dict[str, list[float] | None]:
@@ -463,6 +470,8 @@ class Trajectory(BaseModel):
             for k, v in self.convergence_data.items():
                 pa_config[f"{k}_convergence"] = pa.array([v])
 
+        pa_config["has_full_output"] = [self.has_full_output]
+
         pa_table = pa.table(pa_config)
         if file_name:
             pa_pq.write_table(pa_table, file_name, **write_file_kwargs)
@@ -545,6 +554,9 @@ class Trajectory(BaseModel):
         frame_properties = []
 
         for i, coords in enumerate(self.cart_coords):
+            if coords is None:
+                continue
+
             structure = Structure(
                 lattice=self.constant_lattice
                 if self.constant_lattice
