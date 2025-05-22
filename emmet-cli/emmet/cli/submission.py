@@ -57,7 +57,8 @@ class CalculationMetadata(BaseModel):
 
 def invoke_calc_validation(args):
     path, cm = args
-    return path, cm.validate_calculation()
+    valid = cm.validate_calculation()
+    return path, valid, cm
 
 
 class Submission(BaseModel):
@@ -210,7 +211,9 @@ class Submission(BaseModel):
             # Run in parallel
             with Pool() as pool:
                 results = pool.map(invoke_calc_validation, calcs_to_check.items())
-                return all(val for _, val in results)
+                for p, _, cm in results:
+                    calcs_to_check[p] = cm
+                return all(val for _, val, _ in results)
         else:
             for p, cm in calcs_to_check.items():
                 is_valid = cm.validate_calculation() and is_valid
