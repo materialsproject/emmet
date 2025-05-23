@@ -43,7 +43,6 @@ def create(ctx, paths):
     print(f"wrote submission output to {output_file}")
 
     # should we check if any of this data already exists in MP (how?)
-    # submission id will be a UUID
 
 
 @submit.command()
@@ -156,13 +155,6 @@ def push(ctx, submission):
 
     print(f"Successfuly updated submission in {submission}")
     pass
-
-
-def get_changed_since_last_push(submission):
-    # check whether the files for submission have changed since last update
-    #    (this can be done by checking hashes against values stored in the metadata about last push)
-    # returns a dictionary of file names -> metadata
-    return {"foo": "changed"}
 
 
 def get_already_contributed(updated_file_info):

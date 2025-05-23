@@ -55,6 +55,12 @@ class CalculationMetadata(BaseModel):
             self.calc_validation_errors.clear()
 
 
+def invoke_calc_refresh(args):
+    path, cm = args
+    cm.refresh()
+    return path, cm
+
+
 def invoke_calc_validation(args):
     path, cm = args
     valid = cm.validate_calculation()
@@ -62,7 +68,7 @@ def invoke_calc_validation(args):
 
 
 class Submission(BaseModel):
-    PARALLEL_VALIDATION_THRESHOLD: ClassVar[int] = 100
+    PARALLEL_THRESHOLD: ClassVar[int] = 100
 
     id: UUID = Field(
         description="The identifier for this submission", default_factory=uuid4
@@ -201,7 +207,6 @@ class Submission(BaseModel):
         return removed_files
 
     def validate_submission(self, check_all: bool = False) -> bool:
-        logger.debug(f"Validating submissions: check_all={check_all}")
         is_valid = True
         calcs_to_check = (
             self.pending_calculations
@@ -209,14 +214,21 @@ class Submission(BaseModel):
             else self.calculations
         )
 
-        if len(calcs_to_check) > Submission.PARALLEL_VALIDATION_THRESHOLD:
-            # Run in parallel
+        if len(calcs_to_check) > Submission.PARALLEL_THRESHOLD:
+            logger.debug(
+                f"Running validation in parallel for {len(calcs_to_check)} calculations"
+            )
             with Pool() as pool:
                 results = pool.map(invoke_calc_validation, calcs_to_check.items())
                 for p, _, cm in results:
                     calcs_to_check[p] = cm
                 return all(val for _, val, _ in results)
         else:
+            logger.debug(
+                f"Running validation serially for {len(calcs_to_check)} calculations"
+            )
+            if not check_all:
+                logger.debug(f"Will fail fast if any calculation is invalid")
             for p, cm in calcs_to_check.items():
                 is_valid = cm.validate_calculation() and is_valid
                 if not is_valid and not check_all:
@@ -224,15 +236,30 @@ class Submission(BaseModel):
 
             return is_valid
 
-    def _create_refreshed_calculations(self):
+    def _create_calculations_copy(self, refresh: bool = False):
         pending_calculations = copy.deepcopy(self.calculations)
-        for cm in pending_calculations.values():
-            cm.refresh()
+        if refresh:
+            if len(pending_calculations) > Submission.PARALLEL_THRESHOLD:
+                logger.debug(
+                    f"Running refresh in parallel for {len(pending_calculations)} calculations"
+                )
+                with Pool() as pool:
+                    results = pool.map(
+                        invoke_calc_refresh, pending_calculations.items()
+                    )
+                    for p, cm in results:
+                        pending_calculations[p] = cm
+            else:
+                logger.debug(
+                    f"Running refresh serially for {len(pending_calculations)} calculations"
+                )
+                for cm in pending_calculations.values():
+                    cm.refresh()
         return pending_calculations
 
     def stage_for_push(self) -> List[FileMetadata]:
-        """ "Stages submission for push. Returns the list of files that will need to be (re)pushed."""
-        self.pending_calculations = self._create_refreshed_calculations()
+        """Stages submission for push. Returns the list of files that will need to be (re)pushed."""
+        self.pending_calculations = self._create_calculations_copy()
 
         if not self.validate_submission():
             assert self.pending_calculations is not None
@@ -275,7 +302,7 @@ class Submission(BaseModel):
             raise EmmetCliError("Nothing is staged. Please stage before pushing.")
 
         if self.get_changed_files_per_calc_path(
-            self.pending_calculations, self._create_refreshed_calculations()
+            self.pending_calculations, self._create_calculations_copy(refresh=True)
         ):
             raise EmmetCliError(
                 "Files for submission have changed since staging. Please re-stage before pushing."

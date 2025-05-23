@@ -113,18 +113,18 @@ def test_remove_from(sub_file, tmp_structure):
 def test_changed_files(sub_file):
     sub = Submission.load(Path(sub_file))
     changed = sub.get_changed_files_per_calc_path(
-        sub.calculations, sub._create_refreshed_calculations()
+        sub.calculations, sub._create_calculations_copy(refresh=True)
     )
     assert len(changed) == 5
 
-    sub.calculations = sub._create_refreshed_calculations()
+    sub.calculations = sub._create_calculations_copy(refresh=True)
 
     changed = sub.get_changed_files_per_calc_path(
-        sub.calculations, sub._create_refreshed_calculations()
+        sub.calculations, sub._create_calculations_copy(refresh=True)
     )
     assert len(changed) == 0
     changed = sub.get_changed_files_per_calc_path(
-        sub.last_pushed(), sub._create_refreshed_calculations()
+        sub.last_pushed(), sub._create_calculations_copy(refresh=True)
     )
     assert len(changed) == 5
 
@@ -143,7 +143,7 @@ def test_validate_submission(sub_file):
     # test parallel validation mode correctness by creating submission more calculations than threshold
     files = next(iter(sub.calculations.items()))[1].files
     d = dict()
-    for i in range(Submission.PARALLEL_VALIDATION_THRESHOLD + 1):
+    for i in range(Submission.PARALLEL_THRESHOLD + 1):
         d[Path(f"/{i}")] = CalculationMetadata(files=files)
     lsub = Submission(calculations=d)
     assert lsub.validate_submission() is True
