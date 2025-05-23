@@ -6,7 +6,7 @@ import logging
 from multiprocessing import Pool
 from os import PathLike
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, ClassVar, Dict, Iterable, List, Optional
 from emmet.cli.utils import EmmetCliError
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from uuid import UUID, uuid4
@@ -62,6 +62,8 @@ def invoke_calc_validation(args):
 
 
 class Submission(BaseModel):
+    PARALLEL_VALIDATION_THRESHOLD: ClassVar[int] = 100
+
     id: UUID = Field(
         description="The identifier for this submission", default_factory=uuid4
     )
@@ -207,7 +209,7 @@ class Submission(BaseModel):
             else self.calculations
         )
 
-        if len(calcs_to_check) > 100:
+        if len(calcs_to_check) > Submission.PARALLEL_VALIDATION_THRESHOLD:
             # Run in parallel
             with Pool() as pool:
                 results = pool.map(invoke_calc_validation, calcs_to_check.items())

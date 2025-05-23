@@ -1,5 +1,5 @@
 from pathlib import Path
-from emmet.cli.submission import Submission
+from emmet.cli.submission import CalculationMetadata, Submission
 from emmet.cli.utils import EmmetCliError
 import pytest
 
@@ -139,6 +139,14 @@ def test_validate_submission(sub_file):
     #     sub.stage_for_push()
 
     # assert "Submission does not pass validation" in str(ex_info.value)
+
+    # test parallel validation mode correctness by creating submission more calculations than threshold
+    files = next(iter(sub.calculations.items()))[1].files
+    d = dict()
+    for i in range(Submission.PARALLEL_VALIDATION_THRESHOLD + 1):
+        d[Path(f"/{i}")] = CalculationMetadata(files=files)
+    lsub = Submission(calculations=d)
+    assert lsub.validate_submission() is True
 
 
 def test_changed_files_to_push(sub_file):
