@@ -3,9 +3,10 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-import json
 from functools import cached_property
-import yaml
+import json
+from pathlib import Path
+import yaml  # type: ignore[import-untyped]
 
 from monty.io import zopen
 from monty.os.path import zpath
@@ -30,16 +31,6 @@ from emmet.core.utils import utcnow, get_num_formula_units
 
 from typing_extensions import Literal
 
-from pathlib import Path
-from emmet.core.tasks import TaskDoc
-from emmet.core.polar import DielectricDoc, BornEffectiveCharges
-
-from pymatgen.phonon import PhononBandStructure as PmgPhononBandStructure
-from pymatgen.core import Lattice
-from pymatgen.phonon import PhononBandStructureSymmLine as PmgPhononBSLine
-from pymatgen.io.vasp import Poscar
-
-
 try:
     import pyarrow as pa
 
@@ -54,11 +45,12 @@ if TYPE_CHECKING:
 
 DEFAULT_PHONON_FILES = {
     "structure": "POSCAR",
-    "phonon_bandstructure": "band.yaml", # chosen as Phonopy default
-    "phonon_dos": "total_dos.dat", # chosen as Phonopy default
-    "force_constants": "FORCE_CONSTANTS", # chosen as Phonopy default
+    "phonon_bandstructure": "band.yaml",  # chosen as Phonopy default
+    "phonon_dos": "total_dos.dat",  # chosen as Phonopy default
+    "force_constants": "FORCE_CONSTANTS",  # chosen as Phonopy default
     "born": "born.npz",
     "epsilon_static": "epsilon_static.npz",
+    "phonopy_output": "phonopy.yaml",
 }
 
 
@@ -102,16 +94,18 @@ class PhononDOS(BaseModel):
         )
 
     @classmethod
-    def from_phonopy(
-        cls,
-        phonon_dos_file : str | Path
-    ) -> Self:
+    def from_phonopy(cls, phonon_dos_file: str | Path) -> Self:
         """Create a PhononDOS from phonopy .dat output."""
-        phonopy_dos = {k : [] for k in ("frequencies","densities",)}
-        with zopen(phonon_dos_file,"rt") as f:
+        phonopy_dos: dict[str, list[float]] = {
+            k: []
+            for k in (
+                "frequencies",
+                "densities",
+            )
+        }
+        with zopen(phonon_dos_file, "rt") as f:
             for line in f.read().splitlines():
-
-                non_comment_text = line.split("#")[0]
+                non_comment_text = line.split("#")[0]  # type: ignore[arg-type]
                 if len(cols := non_comment_text.split()) == 2:
                     phonopy_dos["frequencies"].append(float(cols[0]))
                     phonopy_dos["densities"].append(float(cols[1]))
@@ -261,14 +255,17 @@ class PhononBS(BaseModel):
         return cls(**config)
 
     @classmethod
-    def from_phonopy(cls,phonon_bandstructure_file : str | Path):
+    def from_phonopy(cls, phonon_bandstructure_file: str | Path):
         """Create a PhononBS from phonopy .yaml output."""
-        with zopen(phonon_bandstructure_file,"rt") as f:
+        with zopen(phonon_bandstructure_file, "rt") as f:
             phonopy_bandstructure = yaml.safe_load(f.read())
 
         phonopy_bandstructure.update(
-            qpoints = [entry["q-position"] for entry in phonopy_bandstructure["phonon"]],
-            frequencies = [[branch["frequency"] for branch in entry["band"]] for entry in phonopy_bandstructure["phonon"]]
+            qpoints=[entry["q-position"] for entry in phonopy_bandstructure["phonon"]],
+            frequencies=[
+                [branch["frequency"] for branch in entry["band"]]
+                for entry in phonopy_bandstructure["phonon"]
+            ],
         )
         return cls(**phonopy_bandstructure)
 
@@ -674,26 +671,29 @@ class PhononBSDOSDoc(PhononBSDOSTask):
     @classmethod
     def from_phonopy_pheasy_files(
         cls,
-        structure_file : str | Path,
-        phonon_bandstructure_file : str | Path | None = None,
-        phonon_dos_file : str | Path | None = None,
-        force_constants_file : str | Path | None = None,
-        born_file : str | Path | None = None,
-        epsilon_static_file : str | Path | None = None,
+        structure_file: str | Path,
+        phonon_bandstructure_file: str | Path | None = None,
+        phonon_dos_file: str | Path | None = None,
+        force_constants_file: str | Path | None = None,
+        born_file: str | Path | None = None,
+        epsilon_static_file: str | Path | None = None,
+        phonopy_output_file: str | Path | None = None,
         **kwargs,
     ) -> Self:
         """
         Create a PhononBSDOSDoc from a list of explicit Phonopy/Pheasy file paths.
         """
-        
-        cls_config : dict[str,Any] = {
+
+        cls_config: dict[str, Any] = {
             "structure": Structure.from_file(structure_file),
         }
         if "poscar" in str(structure_file).lower():
             cls_config["code"] = "vasp"
 
         if phonon_bandstructure_file:
-            cls_config["phonon_bandstructure"] = PhononBS.from_phonopy(phonon_bandstructure_file)
+            cls_config["phonon_bandstructure"] = PhononBS.from_phonopy(
+                phonon_bandstructure_file
+            )
 
         if phonon_dos_file:
             cls_config["phonon_dos"] = PhononDOS.from_phonopy(phonon_dos_file)
@@ -701,18 +701,29 @@ class PhononBSDOSDoc(PhononBSDOSTask):
         if force_constants_file:
             # read FORCE_CONSTANTS manually
             force_constant_matrix: np.ndarray
-            idxs : tuple[float | None, float | None] = (None,None,)
+            idxs: tuple[int | None, int | None] = (
+                None,
+                None,
+            )
             irow = 0
-            with zopen(force_constants_file,"rt") as f:
+            with zopen(force_constants_file, "rt") as f:
                 for idx, line in enumerate(f.read().splitlines()):
                     vals = line.strip().split()
                     if idx == 0:
-                        force_constant_matrix = np.zeros((int(vals[0]),int(vals[1]),3,3))
+                        force_constant_matrix = np.zeros(
+                            (int(vals[0]), int(vals[1]), 3, 3)
+                        )
                     elif len(vals) == 2:
-                        idxs = tuple(int(v)-1 for v in vals)
+                        # idxs written like this for mypy
+                        idxs = (
+                            int(vals[0]) - 1,
+                            int(vals[1]) - 1,
+                        )
                         irow = 0
                     elif len(vals) == 3:
-                        force_constant_matrix[idxs[0],idxs[1],irow] = [float(v) for v in vals]
+                        force_constant_matrix[idxs[0], idxs[1], irow] = [
+                            float(v) for v in vals
+                        ]
                         irow += 1
             cls_config["force_constants"] = force_constant_matrix.tolist()
 
@@ -721,10 +732,13 @@ class PhononBSDOSDoc(PhononBSDOSTask):
         if epsilon_static_file:
             cls_config["epsilon_static"] = np.load(epsilon_static_file)
 
-        return cls(
-            **cls_config,
-            **kwargs
-        )
+        if phonopy_output_file:
+            with zopen(phonopy_output_file, "rt") as f:
+                phonopy_output = yaml.safe_load(f.read())
+            for k in ("primitive_matrix", "supercell_matrix"):
+                cls_config[k] = phonopy_output.get(k)
+
+        return cls(**cls_config, **kwargs)
 
     @classmethod
     def from_phonopy_pheasy_directory(
@@ -733,7 +747,7 @@ class PhononBSDOSDoc(PhononBSDOSTask):
         **kwargs,
     ) -> Self:
         """Create a PhononBSDOSDoc from a Phonopy/Pheasy directory.
-        
+
         Parameters
         -----------
         phonon_dir : str or Path
@@ -744,7 +758,7 @@ class PhononBSDOSDoc(PhononBSDOSTask):
         for k, file_name in DEFAULT_PHONON_FILES.items():
             if (file_path := Path(zpath(str(phonon_path / file_name)))).exists():
                 file_paths[f"{k}_file"] = file_path
-        return cls.from_phonopy_pheasy_files(**file_paths,**kwargs)
+        return cls.from_phonopy_pheasy_files(**file_paths, **kwargs)
 
 
 class PhononComputationalSettings(BaseModel):
@@ -759,12 +773,6 @@ class PhononComputationalSettings(BaseModel):
         None,
         description="number of points for computation of free energies and densities of states",
     )
-
-    @classmethod
-    def from_phonopy(cls, phonopy_settings_file : str | Path) -> Self:
-        with zopen(phonopy_settings_file,"rt") as f:
-            phonopy_settings = yaml.safe_load(f)
-        
 
 
 class ThermalDisplacementData(BaseModel):
