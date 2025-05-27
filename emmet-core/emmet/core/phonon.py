@@ -5,7 +5,10 @@ from datetime import datetime
 from enum import Enum
 import json
 from functools import cached_property
+import yaml
 
+from monty.io import zopen
+from monty.os.path import zpath
 from monty.dev import requires
 import numpy as np
 from pydantic import model_validator, BaseModel, Field, computed_field, PrivateAttr
@@ -31,7 +34,6 @@ from pathlib import Path
 from emmet.core.tasks import TaskDoc
 from emmet.core.polar import DielectricDoc, BornEffectiveCharges
 
-import yaml
 from pymatgen.phonon import PhononBandStructure as PmgPhononBandStructure
 from pymatgen.core import Lattice
 from pymatgen.phonon import PhononBandStructureSymmLine as PmgPhononBSLine
@@ -49,6 +51,15 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
     from typing import Any
     from typing_extensions import Self
+
+DEFAULT_PHONON_FILES = {
+    "structure": "POSCAR",
+    "phonon_bandstructure": "band.yaml", # chosen as Phonopy default
+    "phonon_dos": "total_dos.dat", # chosen as Phonopy default
+    "force_constants": "FORCE_CONSTANTS", # chosen as Phonopy default
+    "born": "born.npz",
+    "epsilon_static": "epsilon_static.npz",
+}
 
 
 class PhononMethod(Enum):
@@ -89,6 +100,23 @@ class PhononDOS(BaseModel):
         return cls(
             **{k: table[f"{col_prefix}{k}"].to_pylist()[0] for k in cls.model_fields}
         )
+
+    @classmethod
+    def from_phonopy(
+        cls,
+        phonon_dos_file : str | Path
+    ) -> Self:
+        """Create a PhononDOS from phonopy .dat output."""
+        phonopy_dos = {k : [] for k in ("frequencies","densities",)}
+        with zopen(phonon_dos_file,"rt") as f:
+            for line in f.read().splitlines():
+
+                non_comment_text = line.split("#")[0]
+                if len(cols := non_comment_text.split()) == 2:
+                    phonopy_dos["frequencies"].append(float(cols[0]))
+                    phonopy_dos["densities"].append(float(cols[1]))
+
+        return cls(**phonopy_dos)
 
 
 class PhononBS(BaseModel):
@@ -231,6 +259,18 @@ class PhononBS(BaseModel):
             else:
                 config[k] = v
         return cls(**config)
+
+    @classmethod
+    def from_phonopy(cls,phonon_bandstructure_file : str | Path):
+        """Create a PhononBS from phonopy .yaml output."""
+        with zopen(phonon_bandstructure_file,"rt") as f:
+            phonopy_bandstructure = yaml.safe_load(f.read())
+
+        phonopy_bandstructure.update(
+            qpoints = [entry["q-position"] for entry in phonopy_bandstructure["phonon"]],
+            frequencies = [[branch["frequency"] for branch in entry["band"]] for entry in phonopy_bandstructure["phonon"]]
+        )
+        return cls(**phonopy_bandstructure)
 
 
 class SumRuleChecks(BaseModel):
@@ -631,171 +671,80 @@ class PhononBSDOSDoc(PhononBSDOSTask):
         self.identifier = self.material_id
         return self
 
-    
     @classmethod
-    def from_directory(
+    def from_phonopy_pheasy_files(
         cls,
-        phonon_dir: Path | str,
-        dielectric_dir: Path | str,
+        structure_file : str | Path,
+        phonon_bandstructure_file : str | Path | None = None,
+        phonon_dos_file : str | Path | None = None,
+        force_constants_file : str | Path | None = None,
+        born_file : str | Path | None = None,
+        epsilon_static_file : str | Path | None = None,
+        **kwargs,
     ) -> Self:
         """
-        Build a PhononBSDOSDoc by:
-          - manually reading all phonon outputs (YAMLs, FORCE_CONSTANTS, POSCAR, FW.json)
-          - using TaskDoc.from_directory on the dielectric_dir to get energy, epsilon, born charges
+        Create a PhononBSDOSDoc from a list of explicit Phonopy/Pheasy file paths.
         """
-        phonon_path = Path(phonon_dir)
-        diel_path = Path(dielectric_dir)
-
-
-        # 1) Manually parse dielectric run with pymatgen
-        from pymatgen.io.vasp.outputs import Vasprun, Outcar
-
-        vr = Vasprun(str(dielectric_dir) + "/vasprun.xml.gz", parse_dos=False, parse_eigen=False)
-        oc = Outcar(str(dielectric_dir) + "/OUTCAR.gz")
-
-        eps_static = vr.epsilon_static
-        eps_ionic  = vr.epsilon_ionic
-        # born charges: pymatgen places these on oc.born_charge or oc.born_charges
-        born = getattr(oc, "born_charge", None) or getattr(oc, "born_charges", None)
-        # energy per atom
-        energy_ev_per_atom = vr.final_energy / len(vr.structures[-1].sites)
-
-        # 2) Read the raw Phonopy band-structure YAML
-        raw = yaml.safe_load((phonon_path / "phonon_band_structure.yaml").read_text())
-
-        # a) Read POSCAR → get structure & real‐space cell
-        structure = Poscar.from_file(phonon_path / "POSCAR").structure
-
-        # b) Build q‐points & bands list-of-lists
-        qpts     = [e["q-position"] for e in raw["phonon"]]
-        freqs_qp = [[m["frequency"] for m in e["band"]] for e in raw["phonon"]]
-        bands    = list(map(list, zip(*freqs_qp)))  # shape [n_bands, n_qpoints]
-
-        # c) Zero‐fill eigendisplacements [bands, qpts, atoms, 3]
-        nqpt   = len(qpts)
-        natom  = structure.num_sites
-        nbands = len(bands)
-        zeros  = np.zeros((nbands, nqpt, natom, 3), dtype=float).tolist()
-        eigdisp= {"real": zeros, "imag": zeros}
-
-        # d) Compute reciprocal cell (physics convention 2π) from POSCAR
-        lat_rec_mat = structure.lattice.reciprocal_lattice.matrix.tolist()
-
-        # e) Assemble dict for BOTH PhononBandStructureSymmLine AND rehydrate in your PhononBS
-        symm_dict = {
-            "lattice_rec":        {"matrix": lat_rec_mat},
-            "qpoints":             qpts,
-            "bands":               bands,
-            "has_nac":             False,
-            "eigendisplacements":  eigdisp,
-            "labels_dict":         {},           # no labels in this YAML
-            "structure":           structure.as_dict(),
+        
+        cls_config : dict[str,Any] = {
+            "structure": Structure.from_file(structure_file),
         }
+        if "poscar" in str(structure_file).lower():
+            cls_config["code"] = "vasp"
 
-        # f) Optional: validate via pymatgen importer (to get Kpoint distances etc),
-        #    but _we_ don’t need it to build our doc—skip it for simplicity:
-        # pmg_bs_line = PmgPhononBSLine.from_dict(symm_dict)
+        if phonon_bandstructure_file:
+            cls_config["phonon_bandstructure"] = PhononBS.from_phonopy(phonon_bandstructure_file)
 
-        # g) Directly create your PhononBS schema
-        from emmet.core.phonon import PhononBS
-        bs_schema = PhononBS.model_validate(symm_dict)
+        if phonon_dos_file:
+            cls_config["phonon_dos"] = PhononDOS.from_phonopy(phonon_dos_file)
 
-        # 3) Read phonon_dos.yaml manually & validate via our PhononDOS schema ───
-        from emmet.core.phonon import PhononDOS
+        if force_constants_file:
+            # read FORCE_CONSTANTS manually
+            force_constant_matrix: np.ndarray
+            idxs : tuple[float | None, float | None] = (None,None,)
+            irow = 0
+            with zopen(force_constants_file,"rt") as f:
+                for idx, line in enumerate(f.read().splitlines()):
+                    vals = line.strip().split()
+                    if idx == 0:
+                        force_constant_matrix = np.zeros((int(vals[0]),int(vals[1]),3,3))
+                    elif len(vals) == 2:
+                        idxs = tuple(int(v)-1 for v in vals)
+                        irow = 0
+                    elif len(vals) == 3:
+                        force_constant_matrix[idxs[0],idxs[1],irow] = [float(v) for v in vals]
+                        irow += 1
+            cls_config["force_constants"] = force_constant_matrix.tolist()
 
-        freqs = []
-        dens  = []
-        dos_file = phonon_path / "phonon_dos.yaml"
-        with dos_file.open() as f:
-            for line in f:
-                line = line.strip()
-                # skip header / comments
-                if not line or line.startswith("#"):
-                    continue
-                parts = line.split()
-                # expect two columns: frequency, density
-                if len(parts) >= 2:
-                    freq, d = float(parts[0]), float(parts[1])
-                    freqs.append(freq)
-                    dens.append(d)
+        if born_file:
+            cls_config["born"] = np.load(born_file)
+        if epsilon_static_file:
+            cls_config["epsilon_static"] = np.load(epsilon_static_file)
 
-        dos_schema = PhononDOS.model_validate({
-            "frequencies": freqs,
-            "densities":   dens,
-        })
-
-        # read FORCE_CONSTANTS manually
-        fcs_path = phonon_path / "FORCE_CONSTANTS"
-        force_constants: list[list[list[list[float]]]]  # type: ignore[var-annotated] 
-
-        with fcs_path.open() as f:
-            # first line: two ints (n_rows, n_cols) – here both should equal n_satom
-            header = f.readline().split()
-            n_rows, n_cols = int(header[0]), int(header[1])
-
-            # pre‐allocate an n_rows × n_cols array
-            force_constants = [[None for _ in range(n_cols)] for _ in range(n_rows)]
-
-            # for each (i, j) pair
-            while True:
-                line = f.readline()
-                if not line:
-                    break
-                parts = line.split()
-                if len(parts) < 2:
-                    continue
-                i, j = int(parts[0]) - 1, int(parts[1]) - 1  # zero‐based
-                mat = []
-                for _ in range(3):
-                    row = [float(x) for x in f.readline().split()]
-                    mat.append(row)
-                force_constants[i][j] = mat
-
-        # c) POSCAR → Structure
-        structure = Poscar.from_file(phonon_path / "POSCAR").structure
-
-        # d) last_updated
-        fw = phonon_path / "FW.json"
-        if fw.exists():
-            updated = datetime.fromisoformat(json.loads(fw.read_text())["updated_on"])
-        else:
-            updated = None
-
-        # 4) Instantiate the document ────────────────────────────────
-        doc = cls(
-            # identifiers & method
-            identifier = phonon_path.name,
-            phonon_method = PhononMethod.PHEASY,
-            last_updated = updated,
-            structure = structure,
-
-            # static + DFPT
-            total_dft_energy = energy_ev_per_atom,
-            volume_per_formula_unit = structure.volume / structure.num_sites,
-            formula_units = structure.num_sites,
-
-            # supercell/primitive: if you have them in metadata, else None
-            supercell_matrix = None,
-            primitive_matrix = None,
-
-            # code & optional settings
-            code="VASP",
-            post_process_settings=None,
-            thermal_displacement_data=None,
-            calc_meta=None,
-
-            # dielectric & BECs
-            epsilon_static = eps_static,
-            epsilon_electronic = None,
-            born = born,
+        return cls(
+            **cls_config,
+            **kwargs
         )
 
-        # attach the nested docs
-        doc.phonon_bandstructure = bs_schema
-        doc.phonon_dos = dos_schema
-        doc.force_constants = force_constants
-
-        return doc
+    @classmethod
+    def from_phonopy_pheasy_directory(
+        cls,
+        phonon_dir: Path | str,
+        **kwargs,
+    ) -> Self:
+        """Create a PhononBSDOSDoc from a Phonopy/Pheasy directory.
+        
+        Parameters
+        -----------
+        phonon_dir : str or Path
+        **kwargs to pass to `PhononBSDOSDoc.from_phonopy_pheasy_files`
+        """
+        phonon_path = Path(phonon_dir).resolve()
+        file_paths = {}
+        for k, file_name in DEFAULT_PHONON_FILES.items():
+            if (file_path := Path(zpath(str(phonon_path / file_name)))).exists():
+                file_paths[f"{k}_file"] = file_path
+        return cls.from_phonopy_pheasy_files(**file_paths,**kwargs)
 
 
 class PhononComputationalSettings(BaseModel):
@@ -810,6 +759,12 @@ class PhononComputationalSettings(BaseModel):
         None,
         description="number of points for computation of free energies and densities of states",
     )
+
+    @classmethod
+    def from_phonopy(cls, phonopy_settings_file : str | Path) -> Self:
+        with zopen(phonopy_settings_file,"rt") as f:
+            phonopy_settings = yaml.safe_load(f)
+        
 
 
 class ThermalDisplacementData(BaseModel):
