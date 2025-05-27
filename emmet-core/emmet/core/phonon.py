@@ -27,6 +27,17 @@ from emmet.core.utils import utcnow, get_num_formula_units
 
 from typing_extensions import Literal
 
+from pathlib import Path
+from emmet.core.tasks import TaskDoc
+from emmet.core.polar import DielectricDoc, BornEffectiveCharges
+
+import yaml
+from pymatgen.phonon import PhononBandStructure as PmgPhononBandStructure
+from pymatgen.core import Lattice
+from pymatgen.phonon import PhononBandStructureSymmLine as PmgPhononBSLine
+from pymatgen.io.vasp import Poscar
+
+
 try:
     import pyarrow as pa
 
@@ -619,6 +630,172 @@ class PhononBSDOSDoc(PhononBSDOSTask):
         """Ensure that `material_id` aliases inherited `identifier` field."""
         self.identifier = self.material_id
         return self
+
+    
+    @classmethod
+    def from_directory(
+        cls,
+        phonon_dir: Path | str,
+        dielectric_dir: Path | str,
+    ) -> Self:
+        """
+        Build a PhononBSDOSDoc by:
+          - manually reading all phonon outputs (YAMLs, FORCE_CONSTANTS, POSCAR, FW.json)
+          - using TaskDoc.from_directory on the dielectric_dir to get energy, epsilon, born charges
+        """
+        phonon_path = Path(phonon_dir)
+        diel_path = Path(dielectric_dir)
+
+
+        # 1) Manually parse dielectric run with pymatgen
+        from pymatgen.io.vasp.outputs import Vasprun, Outcar
+
+        vr = Vasprun(str(dielectric_dir) + "/vasprun.xml.gz", parse_dos=False, parse_eigen=False)
+        oc = Outcar(str(dielectric_dir) + "/OUTCAR.gz")
+
+        eps_static = vr.epsilon_static
+        eps_ionic  = vr.epsilon_ionic
+        # born charges: pymatgen places these on oc.born_charge or oc.born_charges
+        born = getattr(oc, "born_charge", None) or getattr(oc, "born_charges", None)
+        # energy per atom
+        energy_ev_per_atom = vr.final_energy / len(vr.structures[-1].sites)
+
+        # 2) Read the raw Phonopy band-structure YAML
+        raw = yaml.safe_load((phonon_path / "phonon_band_structure.yaml").read_text())
+
+        # a) Read POSCAR → get structure & real‐space cell
+        structure = Poscar.from_file(phonon_path / "POSCAR").structure
+
+        # b) Build q‐points & bands list-of-lists
+        qpts     = [e["q-position"] for e in raw["phonon"]]
+        freqs_qp = [[m["frequency"] for m in e["band"]] for e in raw["phonon"]]
+        bands    = list(map(list, zip(*freqs_qp)))  # shape [n_bands, n_qpoints]
+
+        # c) Zero‐fill eigendisplacements [bands, qpts, atoms, 3]
+        nqpt   = len(qpts)
+        natom  = structure.num_sites
+        nbands = len(bands)
+        zeros  = np.zeros((nbands, nqpt, natom, 3), dtype=float).tolist()
+        eigdisp= {"real": zeros, "imag": zeros}
+
+        # d) Compute reciprocal cell (physics convention 2π) from POSCAR
+        lat_rec_mat = structure.lattice.reciprocal_lattice.matrix.tolist()
+
+        # e) Assemble dict for BOTH PhononBandStructureSymmLine AND rehydrate in your PhononBS
+        symm_dict = {
+            "lattice_rec":        {"matrix": lat_rec_mat},
+            "qpoints":             qpts,
+            "bands":               bands,
+            "has_nac":             False,
+            "eigendisplacements":  eigdisp,
+            "labels_dict":         {},           # no labels in this YAML
+            "structure":           structure.as_dict(),
+        }
+
+        # f) Optional: validate via pymatgen importer (to get Kpoint distances etc),
+        #    but _we_ don’t need it to build our doc—skip it for simplicity:
+        # pmg_bs_line = PmgPhononBSLine.from_dict(symm_dict)
+
+        # g) Directly create your PhononBS schema
+        from emmet.core.phonon import PhononBS
+        bs_schema = PhononBS.model_validate(symm_dict)
+
+        # 3) Read phonon_dos.yaml manually & validate via our PhononDOS schema ───
+        from emmet.core.phonon import PhononDOS
+
+        freqs = []
+        dens  = []
+        dos_file = phonon_path / "phonon_dos.yaml"
+        with dos_file.open() as f:
+            for line in f:
+                line = line.strip()
+                # skip header / comments
+                if not line or line.startswith("#"):
+                    continue
+                parts = line.split()
+                # expect two columns: frequency, density
+                if len(parts) >= 2:
+                    freq, d = float(parts[0]), float(parts[1])
+                    freqs.append(freq)
+                    dens.append(d)
+
+        dos_schema = PhononDOS.model_validate({
+            "frequencies": freqs,
+            "densities":   dens,
+        })
+
+        # read FORCE_CONSTANTS manually
+        fcs_path = phonon_path / "FORCE_CONSTANTS"
+        force_constants: list[list[list[list[float]]]]  # type: ignore[var-annotated] 
+
+        with fcs_path.open() as f:
+            # first line: two ints (n_rows, n_cols) – here both should equal n_satom
+            header = f.readline().split()
+            n_rows, n_cols = int(header[0]), int(header[1])
+
+            # pre‐allocate an n_rows × n_cols array
+            force_constants = [[None for _ in range(n_cols)] for _ in range(n_rows)]
+
+            # for each (i, j) pair
+            while True:
+                line = f.readline()
+                if not line:
+                    break
+                parts = line.split()
+                if len(parts) < 2:
+                    continue
+                i, j = int(parts[0]) - 1, int(parts[1]) - 1  # zero‐based
+                mat = []
+                for _ in range(3):
+                    row = [float(x) for x in f.readline().split()]
+                    mat.append(row)
+                force_constants[i][j] = mat
+
+        # c) POSCAR → Structure
+        structure = Poscar.from_file(phonon_path / "POSCAR").structure
+
+        # d) last_updated
+        fw = phonon_path / "FW.json"
+        if fw.exists():
+            updated = datetime.fromisoformat(json.loads(fw.read_text())["updated_on"])
+        else:
+            updated = None
+
+        # 4) Instantiate the document ────────────────────────────────
+        doc = cls(
+            # identifiers & method
+            identifier = phonon_path.name,
+            phonon_method = PhononMethod.PHEASY,
+            last_updated = updated,
+            structure = structure,
+
+            # static + DFPT
+            total_dft_energy = energy_ev_per_atom,
+            volume_per_formula_unit = structure.volume / structure.num_sites,
+            formula_units = structure.num_sites,
+
+            # supercell/primitive: if you have them in metadata, else None
+            supercell_matrix = None,
+            primitive_matrix = None,
+
+            # code & optional settings
+            code="VASP",
+            post_process_settings=None,
+            thermal_displacement_data=None,
+            calc_meta=None,
+
+            # dielectric & BECs
+            epsilon_static = eps_static,
+            epsilon_electronic = None,
+            born = born,
+        )
+
+        # attach the nested docs
+        doc.phonon_bandstructure = bs_schema
+        doc.phonon_dos = dos_schema
+        doc.force_constants = force_constants
+
+        return doc
 
 
 class PhononComputationalSettings(BaseModel):
