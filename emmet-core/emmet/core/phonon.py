@@ -650,24 +650,6 @@ class PhononBSDOSTask(StructureMetadata):
                 table = table.append_column(k, dost[k])
         return table
 
-
-class PhononBSDOSDoc(PhononBSDOSTask):
-    """Built data version of PhononBSDOSTask."""
-
-    material_id: MPID | None = Field(
-        None,
-        description="The Materials Project ID of the material, of the form mp-******.",
-    )
-    task_ids: list[str] | None = Field(
-        None, description="A list of identifiers that were used to build this document."
-    )
-
-    @model_validator(mode="after")
-    def match_id_fields(self) -> Self:
-        """Ensure that `material_id` aliases inherited `identifier` field."""
-        self.identifier = self.material_id
-        return self
-
     @classmethod
     def from_phonopy_pheasy_files(
         cls,
@@ -738,7 +720,7 @@ class PhononBSDOSDoc(PhononBSDOSTask):
             for k in ("primitive_matrix", "supercell_matrix"):
                 cls_config[k] = phonopy_output.get(k)
 
-        return cls(**cls_config, **kwargs)
+        return cls.from_structure(cls_config["structure"], **cls_config, **kwargs)
 
     @classmethod
     def from_phonopy_pheasy_directory(
@@ -759,6 +741,24 @@ class PhononBSDOSDoc(PhononBSDOSTask):
             if (file_path := Path(zpath(str(phonon_path / file_name)))).exists():
                 file_paths[f"{k}_file"] = file_path
         return cls.from_phonopy_pheasy_files(**file_paths, **kwargs)
+
+
+class PhononBSDOSDoc(PhononBSDOSTask):
+    """Built data version of PhononBSDOSTask."""
+
+    material_id: MPID | None = Field(
+        None,
+        description="The Materials Project ID of the material, of the form mp-******.",
+    )
+    task_ids: list[str] | None = Field(
+        None, description="A list of identifiers that were used to build this document."
+    )
+
+    @model_validator(mode="after")
+    def match_id_fields(self) -> Self:
+        """Ensure that `material_id` aliases inherited `identifier` field."""
+        self.identifier = self.material_id
+        return self
 
 
 class PhononComputationalSettings(BaseModel):
