@@ -845,7 +845,7 @@ class Calculation(CalculationBaseModel):
             ]
             if oszicar_file:
                 try:
-                    oszicar = Oszicar(oszicar_file)
+                    oszicar = Oszicar(dir_name / oszicar_file)
                     if "T" in oszicar.ionic_steps[0]:
                         for frame_property, oszicar_is in zip(
                             frame_properties, oszicar.ionic_steps

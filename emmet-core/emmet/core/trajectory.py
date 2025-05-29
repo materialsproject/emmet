@@ -15,6 +15,7 @@ from monty.serialization import dumpfn
 
 from emmet.core.math import Vector3D, Matrix3D
 from emmet.core.tasks import TaskDoc
+from emmet.core.vasp.calc_types import RunType, TaskType, run_type, task_type, calc_type
 from emmet.core.vasp.calculation import ElectronicStep
 
 try:
@@ -32,6 +33,9 @@ if TYPE_CHECKING:
     from typing_extensions import Self
     from collections.abc import Sequence
 
+    from emmet.core.vasp.calculation import Calculation
+    from emmet.core.vasp.calc_types import CalcType
+
 
 class TrajFormat(Enum):
     """Define known trajectory formats."""
@@ -48,7 +52,7 @@ class Trajectory(BaseModel):
         description="The proton number Z of the elements in the sites"
     )
 
-    cart_coords: list[list[Vector3D]] = Field(
+    cart_coords: list[list[Vector3D] | None] = Field(
         description="The Cartesian coordinates (Å) of the sites at each ionic step"
     )
     num_ionic_steps: int = Field(description="The number of ionic steps.")
@@ -91,12 +95,80 @@ class Trajectory(BaseModel):
         None, description="Identifier of this trajectory, e.g., task ID."
     )
 
+    task_type: TaskType | None = Field(
+        None,
+        description="The TaskType of the calculation used to generate this trajectory.",
+    )
+
+    run_type: RunType | None = Field(
+        None,
+        description="The RunType of the calculation used to generate this trajectory.",
+    )
+
     def __hash__(self) -> int:
         """Used to verify roundtrip conversion of Trajectory."""
         return hash(self.model_dump_json())
 
+    def __len__(self) -> int:
+        """Get number of ionic steps."""
+        return self.num_ionic_steps
+
+    @property
+    def has_full_output(self) -> bool:
+        """Return true if a trajectory has all structures and SCF convergence info available."""
+        return all(coord_set is not None for coord_set in self.cart_coords) and all(
+            conv_list is not None for conv_list in self.convergence_data.values()
+        )
+
+    @property
+    def convergence_data(self) -> dict[str, list[float] | None]:
+        """Get convergence of energy and interatomic forces.
+
+        If possible, energy convergence is taken at every electronic step.
+        If not, it is taken at each ionic step (the final electronic step).
+
+        Forces are taken at each ionic step.
+        """
+        conv_data: dict[str, list[float] | None] = {}
+
+        if self.electronic_steps is None:
+            ionic_step_keys = ["energy", "e_fr_energy", "e_wo_entrp", "forces"]
+        else:
+            ionic_step_keys = ["forces"]
+            flattened_e_steps = []
+            for e_step in self.electronic_steps:
+                flattened_e_steps.extend(e_step)
+
+            for k, remap in {
+                "e_0_energy": "energy",
+                "e_fr_energy": "e_fr_energy",
+                "e_wo_entrp": "e_wo_entrp",
+            }.items():
+                list_data = [getattr(e_step, k, None) for e_step in flattened_e_steps]
+                if not all(list_data):
+                    ionic_step_keys.append(remap)
+                    continue
+
+                data = np.array(list_data)
+                conv_data[remap] = np.abs(data[-1] - data).tolist()
+
+        for k in ionic_step_keys:
+            if (list_data := getattr(self, k)) is None:
+                conv_data[k] = None
+                continue
+
+            if k == "forces":
+                list_data = [np.linalg.norm(f) for f in list_data]
+
+            data = np.array(list_data)
+            conv_data[k] = np.abs(data[-1] - data).tolist()
+
+        return conv_data
+
     @staticmethod
-    def reorder_structure(structure: Structure, ref_z: list[int]) -> Structure:
+    def reorder_structure(
+        structure: Structure, ref_z: list[int]
+    ) -> tuple[Structure, list[int]]:
         """
         Ensure that the sites in a structure match the order in a set of reference Z values.
 
@@ -112,30 +184,33 @@ class Trajectory(BaseModel):
         Returns
         -----------
         pymatgen .Structure : structure matching the reference order of sites
+        list of int : indices in the original structure which are reordered
         """
         if [site.species.elements[0].Z for site in structure] == ref_z:
-            return structure
+            return structure, list(range(structure.num_sites))
 
         running_sites = list(range(len(structure)))
         ordered_sites = []
+        reordered_index = []
         for z in ref_z:
             for idx in running_sites:
                 if structure[idx].species.elements[0].Z == z:
                     ordered_sites.append(structure[idx])
+                    reordered_index.append(idx)
                     running_sites.remove(idx)
                     break
 
         if len(running_sites) > 0:
             raise ValueError("Cannot order structure according to reference list.")
 
-        return Structure.from_sites(ordered_sites)
+        return Structure.from_sites(ordered_sites), reordered_index
 
     @classmethod
     def _from_dict(
         cls,
         props: dict[str, Any],
         constant_lattice: bool = False,
-        lattice_match_tol: float | None = 1.0e-6,
+        lattice_match_tol: float | None = None,
         **kwargs,
     ) -> Self:
         """
@@ -183,7 +258,7 @@ class Trajectory(BaseModel):
             props["lattice"] = [structure.lattice.matrix for structure in structures]
 
         props["cart_coords"] = [
-            cls.reorder_structure(structure, props["elements"]).cart_coords
+            cls.reorder_structure(structure, props["elements"])[0].cart_coords
             for structure in structures
         ]
 
@@ -194,53 +269,130 @@ class Trajectory(BaseModel):
 
         return cls(**props, **kwargs)
 
-    @classmethod
-    def from_task_doc(cls, task_doc: TaskDoc, **kwargs) -> Self:
+    @staticmethod
+    def _calculation_to_props_dict(
+        calc: Calculation,
+    ) -> tuple[dict[str, list[Any]], RunType, TaskType, CalcType]:
+        """Convert a single VASP calculation to Trajectory._from_dict compatible dict.
+
+        Parameters
+        -----------
+        calc (emmet.core.vasp.calculation.Calculation)
+
+        Returns
+        -----------
+        dict, RunType, TaskType, CalcType
         """
-        Create a trajectory from a TaskDoc.
+
+        ct: CalcType | None = None
+        rt: RunType | None = None
+        tt: TaskType | None = None
+        # refresh calc, run, and task type if possible
+        if calc.input:
+            vis = calc.input.model_dump()
+            padded_params = {
+                **(calc.input.parameters or {}),
+                **(calc.input.incar or {}),
+            }
+            ct = calc_type(vis, padded_params)
+            rt = run_type(padded_params)
+            tt = task_type(vis)
+
+        props: dict[str, list[Any]] = {
+            k: []
+            for k in (
+                "structure",
+                "cart_coords",
+                "electronic_steps",
+                "energy",
+                "e_wo_entrp",
+                "e_fr_energy",
+                "forces",
+                "stress",
+            )
+        }
+
+        for ionic_step in calc.output.ionic_steps:
+            props["structure"].append(ionic_step.structure)
+
+            props["energy"].append(ionic_step.e_0_energy)
+            for k in (
+                "e_fr_energy",
+                "e_wo_entrp",
+                "forces",
+                "stress",
+                "electronic_steps",
+            ):
+                props[k].append(getattr(ionic_step, k))
+
+        return props, rt, tt, ct
+
+    @classmethod
+    def from_task_doc(cls, task_doc: TaskDoc, **kwargs) -> list["Trajectory"]:
+        """
+        Create trajectories from a TaskDoc.
+
+        This class creates a separate trajectory for all non-continuous
+        calculations in `TaskDoc.calcs_reversed`.
+        This is to ensure that each trajectory represents only a single
+        calculation type.
+        In cases where sequential calculations in the reversed `calcs_reversed`
+        have the same calc type, their trajectories are joined.
+
+        Note that if no input is provided in the calculation, the calculation
+        is split off into its own trajectory.
 
         Parameters
         -----------
         task_doc : emmet.core.TaskDoc
-        constant_lattice : bool (default = False)
-            Whether the lattice is constant thoughout the trajectory
         kwargs
             Other kwargs to pass to Trajectory
 
         Returns
         -----------
-        Trajectory
+        list of Trajectory
         """
-        props: dict[str, list] = {
-            "structure": [],
-            "cart_coords": [],
-            "electronic_steps": [],
-            "energy": [],
-            "e_wo_entrp": [],
-            "e_fr_energy": [],
-            "forces": [],
-            "stress": [],
-        }
-        # un-reverse the calcs_reversed
-        for cr in task_doc.calcs_reversed[::-1]:
-            for ionic_step in cr.output.ionic_steps:
-                props["structure"].append(ionic_step.structure)
 
-                props["energy"].append(ionic_step.e_0_energy)
-                for k in (
-                    "e_fr_energy",
-                    "e_wo_entrp",
-                    "forces",
-                    "stress",
-                    "electronic_steps",
-                ):
-                    props[k].append(getattr(ionic_step, k))
-
-        return cls._from_dict(
-            props,
-            identifier=task_doc.task_id.string if task_doc.task_id else None,
-            **kwargs,
+        trajs: list[Trajectory] = []
+        kwargs.update(
+            identifier=str(task_doc.task_id) if task_doc.task_id else None,
         )
+
+        props: dict[str, list[Any]] = {}
+        old_meta = {f"{k}_type": None for k in ("run", "task", "calc")}
+        new_meta = old_meta.copy()
+        # un-reverse the calcs_reversed
+        for icr, cr in enumerate(task_doc.calcs_reversed[::-1]):
+            (
+                new_props,
+                new_meta["run_type"],
+                new_meta["task_type"],
+                new_meta["calc_type"],
+            ) = cls._calculation_to_props_dict(cr)
+
+            if (
+                old_meta["calc_type"] != new_meta["calc_type"]
+                or new_meta["calc_type"] is None
+                or icr == 0
+            ):
+                # Either CalcType changed or no calculation input was provided
+                # or this is the first calculation in `calcs_reversed`
+                # Append existing trajectory to list of trajectories, and restart
+                if icr > 0:
+                    trajs.append(cls._from_dict(props, **old_meta, **kwargs))  # type: ignore[arg-type]
+
+                props = new_props.copy()
+            else:
+                for k, new_vals in new_props.items():
+                    props[k].extend(new_vals)
+
+            for k, v in new_meta.items():
+                old_meta[k] = v
+
+        # create final trajectory
+        trajs.append(cls._from_dict(props, **old_meta, **kwargs))  # type: ignore[arg-type]
+
+        return trajs
 
     @classmethod
     def from_pmg(cls, traj: PmgTrajectory, **kwargs) -> Self:
@@ -276,7 +428,10 @@ class Trajectory(BaseModel):
         pa is not None, message="pyarrow must be installed to de-/serialize to parquet"
     )
     def to_arrow(
-        self, file_name: str | Path | None = None, **write_file_kwargs
+        self,
+        file_name: str | Path | None = None,
+        store_conv_data: bool = True,
+        **write_file_kwargs,
     ) -> ArrowTable:
         """
         Create a PyArrow Table from a Trajectory.
@@ -286,6 +441,10 @@ class Trajectory(BaseModel):
         file_name : str, .Path, or None (default)
             If not None, a file to write the parquet-format output to.
             Accepts any compression extension used by pyarrow.write_table
+        store_conv_data : bool = True (default)
+            Whether to store the data in `Trajectory.convergence_data`.
+            Defaults to True to ensure that MP website convergence data is
+            stored and easily accesible via parquet.
         **write_file_kwargs
             If file_name is not None, any kwargs to pass to
             pyarrow.parquet.write_file
@@ -295,16 +454,23 @@ class Trajectory(BaseModel):
         pyarrow.Table
         """
         pa_config = {
-            k: pa.array(v)
+            k: pa.array([v])
             for k, v in self.model_dump(mode="json").items()
-            if hasattr(v, "__len__") and not isinstance(v, str)
+            if hasattr(v, "__len__")
         }
-        pa_config["elements"] = pa.array(
-            [self.elements for _ in range(self.num_ionic_steps)]
-        )
-        pa_config["identifier"] = pa.array(
-            [self.identifier for _ in range(self.num_ionic_steps)]
-        )
+
+        for k in (
+            "run_type",
+            "task_type",
+        ):
+            if val := getattr(self, k):
+                pa_config[k] = pa.array([val.value])
+
+        if store_conv_data:
+            for k, v in self.convergence_data.items():
+                pa_config[f"{k}_convergence"] = pa.array([v])
+
+        pa_config["has_full_output"] = [self.has_full_output]
 
         pa_table = pa.table(pa_config)
         if file_name:
@@ -313,9 +479,9 @@ class Trajectory(BaseModel):
         return pa_table
 
     @classmethod
-    def from_parquet(cls, file_name: str | Path, identifier: str | None = None) -> Self:
+    def from_arrow(cls, pa_table: ArrowTable, identifier: str | None = None) -> Self:
         """
-        Create a trajectory from a parquet file.
+        Create a trajectory from an arrow Table.
 
         Parameters
         -----------
@@ -329,17 +495,35 @@ class Trajectory(BaseModel):
         -----------
         Trajectory
         """
-        pa_table = pa_pq.read_table(file_name)
         if identifier:
             pa_table = pa_table.filter(
                 pa.compute.field("identifier") == identifier,
                 null_selection_behavior="drop",
             )
-        config = pa_table.to_pydict()
-        config["num_ionic_steps"] = len(config["elements"])
-        for k in ("elements", "identifier"):
-            config[k] = config[k][0]
+
+        config = {
+            k: pa_table[k].to_pylist()[0]
+            for k in pa_table.column_names
+            if k in cls.model_fields
+        }
+        config["num_ionic_steps"] = len(config["cart_coords"])
         return cls(**config)
+
+    @classmethod
+    def from_parquet(cls, file_name: str | Path, identifier: str | None = None) -> Self:
+        """Create a Trajectory from a parquet file.
+
+        Parameters
+        -----------
+        file_name : str | Path
+            Path to the parquet file. Can be a remote path, e.g. AWS.
+        identifier : str | None = None
+            The string identifier for the task.
+        """
+        kwargs = {}
+        if identifier:
+            kwargs["filters"] = [("identifier", "=", identifier)]
+        return cls.from_arrow(pa_pq.read_table(file_name, **kwargs))
 
     def to_pmg(self, frame_props: Sequence[str] | None = None) -> PmgTrajectory:
         """
@@ -370,6 +554,9 @@ class Trajectory(BaseModel):
         frame_properties = []
 
         for i, coords in enumerate(self.cart_coords):
+            if coords is None:
+                continue
+
             structure = Structure(
                 lattice=self.constant_lattice
                 if self.constant_lattice
