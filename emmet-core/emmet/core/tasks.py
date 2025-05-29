@@ -421,7 +421,7 @@ class ProductionTaskDoc(StructureMetadata):
     tags: list[str] | None = Field(
         None, title="tag", description="Metadata tagged to a given task."
     )
-    task_id: AlphaID | MPID | str | None = Field(
+    task_id: str | None = Field(
         None,
         description="The (task) ID of this calculation, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
@@ -438,24 +438,41 @@ class ProductionTaskDoc(StructureMetadata):
         None, description="Vasp objects associated with this task"
     )
 
-    @model_validator(mode="before")
-    @classmethod
-    def set_model_pre_fields(cls, values: Any) -> Any:
-        """Ensure all important model fields are set and refreshed."""
-        values["last_updated"] = convert_datetime(
-            cls, values.get("last_updated", utcnow())
-        )
+    #@model_validator(mode="before")
+    #@classmethod
+    #def set_prod_model_pre_fields(cls, values: Any) -> Any:
+    #    """Ensure all important model fields are set and refreshed."""
+    #    values["last_updated"] = convert_datetime(
+    #        cls, values.get("last_updated", utcnow())
+    #    )
 
-        if (batch_id := values.get("batch_id")) is not None:
-            invalid_chars = set(
-                char
-                for char in batch_id
-                if (not char.isalnum()) and (char not in {"-", "_"})
-            )
-            if len(invalid_chars) > 0:
-                raise ValueError(
-                    f"Invalid characters in batch_id: {' '.join(invalid_chars)}"
-                )
+    #    if (batch_id := values.get("batch_id")) is not None:
+    #        invalid_chars = set(
+    #            char
+    #            for char in batch_id
+    #            if (not char.isalnum()) and (char not in {"-", "_"})
+    #        )
+    #        if len(invalid_chars) > 0:
+    #            raise ValueError(
+    #                f"Invalid characters in batch_id: {' '.join(invalid_chars)}"
+    #            )
+
+    @field_serializer("transformations", "vasp_objects", mode="wrap")
+    def serialize_overrides(self, d, default_serializer, info):
+        default_serialized_object = default_serializer(d, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            return json.dumps(jsanitize(default_serialized_object))
+
+        return default_serialized_object
+
+    @field_validator( "transformations", "vasp_objects", mode="before")
+    def deserialize_overrides(cls, d):
+        if isinstance(d, str):
+            d = json.loads(d)
+
+        return d
 
         return values
 

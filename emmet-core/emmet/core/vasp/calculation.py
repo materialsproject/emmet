@@ -545,25 +545,22 @@ class ProdCalculationOutput(BaseModel):
 
     @field_validator("dos_properties", mode="before")
     def dos_properties_deserializer(cls, dos_properties):
-        if ARROW_COMPATIBLE:
-            if dos_properties and isinstance(dos_properties, list):
-                dos_properties = {
-                    element: {
-                        orbital: {key: value for key, value in property}
-                        for orbital, property in properties
-                    }
-                    for element, properties in dos_properties
+        if dos_properties and isinstance(next(iter(dos_properties.values())), list):
+            dos_properties = {
+                element: {
+                    orbital: {key: value for key, value in property}
+                    for orbital, property in properties
                 }
-            elif dos_properties and isinstance(
-                next(iter(dos_properties.values())), list
-            ):
-                dos_properties = {
-                    element: {
-                        orbital: {key: value for key, value in property}
-                        for orbital, property in properties
-                    }
-                    for element, properties in dos_properties.items()
+                for element, properties in dos_properties.items()
+            }
+        elif dos_properties and isinstance(dos_properties, list):
+            dos_properties = {
+                element: {
+                    orbital: {key: value for key, value in property}
+                    for orbital, property in properties
                 }
+                for element, properties in dos_properties
+            }
         return dos_properties
 
     @field_serializer("outcar", mode="wrap")

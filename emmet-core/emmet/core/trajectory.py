@@ -131,6 +131,51 @@ class AtomTrajectory(BaseModel):
                 config[k] = v
         return AtomTrajectory(**config)
 
+    @property
+    def convergence_data(self) -> dict[str, list[float] | None]:
+        """Get convergence of energy and interatomic forces.
+
+        If possible, energy convergence is taken at every electronic step.
+        If not, it is taken at each ionic step (the final electronic step).
+
+        Forces are taken at each ionic step.
+        """
+        conv_data: dict[str, list[float] | None] = {}
+
+        if self.electronic_steps is None:
+            ionic_step_keys = ["energy", "e_fr_energy", "e_wo_entrp", "forces"]
+        else:
+            ionic_step_keys = ["forces"]
+            flattened_e_steps = []
+            for e_step in self.electronic_steps:
+                flattened_e_steps.extend(e_step)
+
+            for k, remap in {
+                "e_0_energy": "energy",
+                "e_fr_energy": "e_fr_energy",
+                "e_wo_entrp": "e_wo_entrp",
+            }.items():
+                list_data = [getattr(e_step, k, None) for e_step in flattened_e_steps]
+                if not all(list_data):
+                    ionic_step_keys.append(remap)
+                    continue
+
+                data = np.array(list_data)
+                conv_data[remap] = np.abs(data[-1] - data).tolist()
+
+        for k in ionic_step_keys:
+            if (list_data := getattr(self, k)) is None:
+                conv_data[k] = None
+                continue
+
+            if k == "forces":
+                list_data = [np.linalg.norm(f) for f in list_data]
+
+            data = np.array(list_data)
+            conv_data[k] = np.abs(data[-1] - data).tolist()
+
+        return conv_data
+
     @staticmethod
     def reorder_sites(
         structure: Structure | Molecule, ref_z: list[int]
