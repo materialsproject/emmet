@@ -328,7 +328,7 @@ pymatgen-analysis-defects==2025.1.18
     # via emmet-core (setup.py)
 pymatgen-analysis-diffusion==2024.7.15
     # via emmet-core (setup.py)
-pymatgen-io-validation==0.1.0
+pymatgen-io-validation==0.1.0rc
 pymdown-extensions==10.15
     # via
     #   mkdocs-material
