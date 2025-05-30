@@ -50,12 +50,9 @@ def raw_archive_hierarchy_from_files(
         file_name = ".".join(file_meta.name.split(".")[:-1])
         ref_file_name = None
         for calc_type, base_file_names in VASP_RAW_DATA_ORG.items():
-            if matches := sorted(
-                [f for f in base_file_names if f in file_name], key=lambda k: len(k)
-            ):
-                ref_file_name = matches[
-                    -1
-                ]  # ensures, e.g., INCAR.orig is matched over INCAR
+            if matches := sorted([f for f in base_file_names if f in file_name], key=lambda k: len(k)):
+                # This ensures, e.g., INCAR.orig is matched instead of INCAR
+                ref_file_name = matches[-1]
                 break
 
         if not ref_file_name:
@@ -77,9 +74,7 @@ class RawArchive(Archiver):
         """Convert a VASP POTCAR to JSON-dumped string."""
         if isinstance(potcar, str):
             potcar = Potcar.from_str(potcar)
-        return json.dumps(
-            [p.model_dump() for p in PotcarSummaryStats.from_file(potcar)]
-        )
+        return json.dumps([p.model_dump() for p in PotcarSummaryStats.from_file(potcar)])
 
     @classmethod
     def from_directory(cls, calc_dir: str | Path) -> Self:
@@ -104,9 +99,7 @@ class RawArchive(Archiver):
             if ".h5" in file_arch:
                 arch = Path(file_arch)
                 base_group = str(arch.parent)
-                with zopen(file_meta.path, "rb") as vhf_b, h5py.File(
-                    vhf_b, "r"
-                ) as vh5f:
+                with zopen(file_meta.path, "rb") as vhf_b, h5py.File(vhf_b, "r") as vh5f:
                     if base_group not in group:
                         group.create_group(base_group)
                     vh5f.copy("/", group[base_group], name=arch.name)
@@ -149,11 +142,7 @@ class RawArchive(Archiver):
         extracted_files = []
         if keys is None:
             keys = []
-            group.visit(
-                lambda x: keys.append(x)
-                if getattr(group[x], "attrs", {}).get("md5")
-                else None
-            )
+            group.visit(lambda x: keys.append(x) if getattr(group[x], "attrs", {}).get("md5") else None)
 
         for k in [_k for _k in keys if _k in group]:
             p = Path(k)
@@ -211,13 +200,9 @@ class RawArchive(Archiver):
         }
 
         vasp_io = {"user_input": {}}
-        with cls._open_hdf5_like(
-            archive_path, mode="r", group_key=group_key, zarr_store=zarr_store
-        ) as group:
+        with cls._open_hdf5_like(archive_path, mode="r", group_key=group_key, zarr_store=zarr_store) as group:
             for io_typ in ("input", "output"):
-                for key in [
-                    key for key in files_to_extract if io_typ in key and key in group
-                ]:
+                for key in [key for key in files_to_extract if io_typ in key and key in group]:
                     if (fname := Path(key).name.lower()) not in fname_to_type:
                         continue
 
@@ -226,17 +211,11 @@ class RawArchive(Archiver):
                         # These methods can directly parse from in-memory str
 
                         if fname == "potcar.spec":
-                            vasp_io["user_input"]["potcar"] = [
-                                PotcarSummaryStats(**ps) for ps in json.loads(data)
-                            ]
+                            vasp_io["user_input"]["potcar"] = [PotcarSummaryStats(**ps) for ps in json.loads(data)]
                         elif fname == "poscar":
-                            vasp_io["user_input"]["structure"] = Structure.from_str(
-                                data, fmt="poscar"
-                            )
+                            vasp_io["user_input"]["structure"] = Structure.from_str(data, fmt="poscar")
                         else:
-                            vasp_io["user_input"][fname] = fname_to_type[
-                                fname
-                            ].from_str(
+                            vasp_io["user_input"][fname] = fname_to_type[fname].from_str(
                                 data,
                             )
                     else:
@@ -244,17 +223,13 @@ class RawArchive(Archiver):
                         with NamedTemporaryFile() as temp_file:
                             temp_file.write(np.array(group[key])[0])
                             temp_file.seek(0)
-                            vasp_io[fname.split(".")[0]] = fname_to_type[fname](
-                                temp_file.name
-                            )
+                            vasp_io[fname.split(".")[0]] = fname_to_type[fname](temp_file.name)
 
         vasp_files = VaspFiles(**vasp_io)
         return VaspValidator.from_vasp_input(vasp_files=vasp_files, **kwargs)
 
     @classmethod
-    def fast_validate(
-        cls, archive_path: PathLike, group_key: str | None = None
-    ) -> VaspValidator:
+    def fast_validate(cls, archive_path: PathLike, group_key: str | None = None) -> VaspValidator:
         """Perform a quick validation check on the calculation.
 
         This signature is intendended to match the pre-validation
@@ -282,16 +257,12 @@ class RawArchive(Archiver):
         return cls._validate(
             archive_path,
             group_key=group_key,
-            files_to_extract=[
-                f"input/{k}" for k in ("INCAR", "KPOINTS", "POSCAR", "POTCAR.spec")
-            ],
+            files_to_extract=[f"input/{k}" for k in ("INCAR", "KPOINTS", "POSCAR", "POTCAR.spec")],
             fast=True,
         )
 
     @classmethod
-    def validate(
-        cls, archive_path: PathLike, group_key: str | None = None
-    ) -> VaspValidator:
+    def validate(cls, archive_path: PathLike, group_key: str | None = None) -> VaspValidator:
         """Perform a normal validation check on the calculation.
 
         Parameters
@@ -337,12 +308,7 @@ class RawArchive(Archiver):
         required_files = []
         group_key = group_key or ""
         for calc_type in ("input", "output", "workflow"):
-            required_files.extend(
-                [
-                    f"{group_key}/{calc_type}/{fname}"
-                    for fname in VASP_RAW_DATA_ORG[calc_type]
-                ]
-            )
+            required_files.extend([f"{group_key}/{calc_type}/{fname}" for fname in VASP_RAW_DATA_ORG[calc_type]])
 
         with TemporaryDirectory() as _tmp_dir:
             cls.extract(

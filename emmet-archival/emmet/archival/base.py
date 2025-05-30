@@ -52,9 +52,7 @@ def infer_archive_format(file_name: PathLike) -> ArchivalFormat:
         if f".{fmt.value}" in archive_path.suffixes:
             return fmt
 
-    raise TypeError(
-        f"Unknown file format - recognized formats are:\n{', '.join(ArchivalFormat.__members__)}"
-    )
+    raise TypeError(f"Unknown file format - recognized formats are:\n{', '.join(ArchivalFormat.__members__)}")
 
 
 class Archiver(BaseModel):
@@ -157,9 +155,7 @@ class Archiver(BaseModel):
         compression = compression or self.get_default_compression(fmt)
 
         if fmt in (ArchivalFormat.HDF5, ArchivalFormat.ZARR):
-            with self._open_hdf5_like(
-                file_name, fmt=fmt, mode="w", zarr_store=zarr_store
-            ) as group:
+            with self._open_hdf5_like(file_name, fmt=fmt, mode="w", zarr_store=zarr_store) as group:
                 self._to_hdf5_like(group, **compression)
                 for k, v in (metadata or {}).items():
                     group.attrs[k] = v
@@ -169,9 +165,7 @@ class Archiver(BaseModel):
             raise ValueError("Unknown file format")
 
     @classmethod
-    def _extract_from_hdf5_like(
-        cls, group: h5py.Group | zarr.Group, *args, **kwargs
-    ) -> Any:
+    def _extract_from_hdf5_like(cls, group: h5py.Group | zarr.Group, *args, **kwargs) -> Any:
         """Extract data from an HDF5-like file."""
         raise NotImplementedError
 
@@ -202,9 +196,7 @@ class Archiver(BaseModel):
 
         fmt = infer_archive_format(archive_path)
         if fmt in (ArchivalFormat.HDF5, ArchivalFormat.ZARR):
-            with cls._open_hdf5_like(
-                archive_path, fmt=fmt, mode="r", zarr_store=zarr_store
-            ) as _f:
+            with cls._open_hdf5_like(archive_path, fmt=fmt, mode="r", zarr_store=zarr_store) as _f:
                 return cls._extract_from_hdf5_like(_f, *args, **kwargs)
         elif fmt == ArchivalFormat.PARQ:
             return cls._extract_from_parquet(archive_path, *args, **kwargs)
@@ -238,11 +230,7 @@ class StructureArchive(Archiver):
         if structure.site_properties.get("magmom"):
             cols += ["magmom"]
 
-        for k in (
-            has_vector_site_props := set(_VECTOR_SITE_PROPS).intersection(
-                structure.site_properties
-            )
-        ):
+        for k in (has_vector_site_props := set(_VECTOR_SITE_PROPS).intersection(structure.site_properties)):
             if structure.site_properties.get(k):
                 cols.extend([f"{k}_{vec_dir}" for vec_dir in _CARTESIAN])
 
@@ -278,42 +266,40 @@ class StructureArchive(Archiver):
             else:
                 _dtype = pd.Float64Dtype()
             data[k] = pd.array(v, dtype=_dtype)
-        data["_attributes"] = {
+
+        columnar = pd.DataFrame(data)
+        columnar.attrs = {
             "lattice": structure.lattice.matrix,
             "charge": structure.charge,
         }
-        return data
+        return columnar
 
     @staticmethod
     def columnar_to_structure(df: pd.DataFrame) -> Structure:
         sites = [None for _ in range(len(df))]
         max_dis = len([col for col in df.columns if "occu" in col])
         has_oxi = any("oxi_state" in col for col in df.columns)
-        has_vector_site_props = set(
-            [k for k in _VECTOR_SITE_PROPS if any(k in col for col in df.columns)]
-        )
-        has_scalar_site_props = set(
-            [k for k in ("magmom",) if any(k in col for col in df.columns)]
-        )
+        has_vector_site_props = set([k for k in _VECTOR_SITE_PROPS if any(k in col for col in df.columns)])
+        has_scalar_site_props = set([k for k in ("magmom",) if any(k in col for col in df.columns)])
 
         for isite in df.index:
             if max_dis:
                 comp = defaultdict(float)
                 for icomp in range(max_dis):
-                    if np.isnan(df[f"atomic_num_{icomp}"][isite]):
+                    if pd.isna(df[f"atomic_num_{icomp}"][isite]) or df[f"atomic_num_{icomp}"][isite] < 0:
                         break
                     spec = Element.from_Z(df[f"atomic_num_{icomp}"][isite])
-                    if has_oxi and not np.isnan(oxi := df[f"oxi_state_{icomp}"][isite]):
+                    if has_oxi and not pd.isna(oxi := df[f"oxi_state_{icomp}"][isite]):
                         spec = Species(spec, oxidation_state=oxi)
                     comp[spec] = df[f"occu_{icomp}"][isite]
             else:
                 comp = Element.from_Z(df["atomic_num"][isite])
             props = {}
             for k in has_scalar_site_props:
-                if not np.isnan(df[k][isite]):
+                if not pd.isna(df[k][isite]):
                     props[k] = df[k][isite]
             for k in has_vector_site_props:
-                if any(np.isnan(df[f"{k}_{v}"][isite]) for v in _CARTESIAN):
+                if any(pd.isna(df[f"{k}_{v}"][isite]) for v in _CARTESIAN):
                     continue
                 props[k] = [df[f"{k}_{v}"][isite] for v in _CARTESIAN]
             sites[isite] = PeriodicSite(
@@ -325,25 +311,36 @@ class StructureArchive(Archiver):
             )
         return Structure.from_sites(sites, charge=df.attrs.get("charge"))
 
+    def as_columnar(self) -> pd.DataFrame:
+        return self.structure_to_columnar(self.structure)
+
     def _to_hdf5_like(self, group: h5py.Group | zarr.Group, **kwargs) -> None:
-        columnar_struct = self.structure_to_columnar(self.structure)
+        cs = self.as_columnar()
 
-        struct_meta = columnar_struct.pop("_attributes")
-        for k in ("lattice", "charge"):
-            group.attrs[k] = struct_meta.get(k)
+        for k in (
+            "lattice",
+            "charge",
+        ):
+            if hasattr(v := cs.attrs[k], "tolist"):
+                group.attrs[k] = v.tolist()
+            else:
+                group.attrs[k] = v
 
-        columns = list(columnar_struct)
-        for k in columns:
-            group.create_dataset(k, data=columnar_struct[k], **kwargs)
+        group.attrs["columns"] = list(cs.columns)
+        dtype = [(col, cs.dtypes[col].numpy_dtype) for col in cs.columns]
+        int_cols = [idx for idx, dts in enumerate(dtype) if np.issubdtype(dts[1], np.integer)]
+        slist = cs.to_dict(orient="split")["data"]
+        for idx in range(cs.shape[0]):
+            for jdx in range(cs.shape[1]):
+                if slist[idx][jdx] is None:
+                    slist[idx][jdx] = -1 if jdx in int_cols else np.nan
 
-        group.attrs["columns"] = columns
+        print(slist, dtype)
+        group.create_dataset("structure", data=np.array(slist, dtype=dtype), **kwargs)
 
     @classmethod
     def _extract_from_hdf5_like(cls, group: h5py.Group | zarr.Group) -> Structure:
         data = {k: np.array(group[k]) for k in group}
-        data["_attributes"] = {k: group.attrs.get(k) for k in ("lattice", "charge")}
-        struct_meta = data.pop("_attributes")
         df = pd.DataFrame(data)
-        df.attrs.update(struct_meta)
-
+        df.attrs.update({k: group.attrs.get(k) for k in ("lattice", "charge")})
         return cls.columnar_to_structure(df)
