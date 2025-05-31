@@ -12,14 +12,19 @@ def test_structure_archive(tmp_dir):
         [{"Na": 0.5, "K+": 0.5}, "Cl0.5-"],
         [[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
     )
-    structure.add_site_property("selective_dynamics", [[True, True, False], [False, False, True]])
+    structure.add_site_property(
+        "selective_dynamics", [[True, True, False], [False, False, True]]
+    )
 
     struct_archive = StructureArchive(structure=structure)
 
     # test round trip on structure --> pandas roundtrip
     columnar_struct = struct_archive.as_columnar()
     assert len(columnar_struct) == len(structure)
-    assert np.all(np.abs(np.array(columnar_struct.attrs["lattice"]) - structure.lattice.matrix) < 1e-6)
+    assert np.all(
+        np.abs(np.array(columnar_struct.attrs["lattice"]) - structure.lattice.matrix)
+        < 1e-6
+    )
 
     # Needs work? Should we do HDF5/zarr for structures?
     """

@@ -28,7 +28,9 @@ class VolumetricLabel(Enum):
 
 
 class AugChargeData(BaseModel):
-    label: str | None = Field(None, description="The label written by VASP for the augmenation charge data.")
+    label: str | None = Field(
+        None, description="The label written by VASP for the augmenation charge data."
+    )
     data: list[float] | None = Field(None, description="The augmentation charges.")
 
 
@@ -39,10 +41,14 @@ class VolumetricArchive(Archiver):
     data_aug: dict[VolumetricLabel, list[AugChargeData]] | None = Field(
         None, description="The augmentation charge volumetric data."
     )
-    structure: Structure | None = Field(None, description="The structure associated with the volumetric data.")
+    structure: Structure | None = Field(
+        None, description="The structure associated with the volumetric data."
+    )
 
     @staticmethod
-    def parse_augmentation_charge_data(aug_data: dict[str, list[str]]) -> dict[VolumetricLabel, list[AugChargeData]]:
+    def parse_augmentation_charge_data(
+        aug_data: dict[str, list[str]]
+    ) -> dict[VolumetricLabel, list[AugChargeData]]:
         aug_data_arr = {}
         for k, unfmt_data in aug_data.items():
             parse_meta = True
@@ -67,7 +73,9 @@ class VolumetricArchive(Archiver):
                     atom_data["data"].extend([float(x) for x in data])
                     if len(atom_data["data"]) >= num_vals:
                         parse_meta = True
-                        aug_data_arr[VolumetricLabel(k)].append(AugChargeData(**atom_data))
+                        aug_data_arr[VolumetricLabel(k)].append(
+                            AugChargeData(**atom_data)
+                        )
 
         return aug_data_arr
 
@@ -92,7 +100,9 @@ class VolumetricArchive(Archiver):
         pq.write_table(pa.table(config), file_name)
 
     @classmethod
-    def _extract_from_parquet(cls, archive_path: str | Path, *args, **kwargs) -> PmgVolumetricData:
+    def _extract_from_parquet(
+        cls, archive_path: str | Path, *args, **kwargs
+    ) -> PmgVolumetricData:
         table = pq.read_table(archive_path)
         cls_config = {}
         for data_key in ("data", "data_aug"):
