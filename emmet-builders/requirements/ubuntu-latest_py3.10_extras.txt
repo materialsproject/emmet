@@ -223,7 +223,9 @@ mkdocs-autorefs==1.4.2
 mkdocs-awesome-pages-plugin==2.10.1
     # via emmet-builders (setup.py)
 mkdocs-get-deps==0.2.0
-    # via mkdocs
+    # via
+    #   mkdocs
+    #   mkdocstrings
 mkdocs-markdownextradata-plugin==0.2.6
     # via emmet-builders (setup.py)
 mkdocs-material==8.2.16
