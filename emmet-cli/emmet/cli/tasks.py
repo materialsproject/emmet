@@ -64,7 +64,7 @@ def list(ctx):
         started = task["started_at"]
         completed = task.get("status", "running")
 
-        color = (
+        color = (  # noqa: E131
             "green"
             if "completed_at" in task and "error" not in task
             else "red" if "error" in task else "yellow"
