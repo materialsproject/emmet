@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
+from collections import defaultdict
 from enum import Enum
 import numpy as np
 from pydantic import BaseModel, Field
@@ -299,19 +301,7 @@ class Trajectory(BaseModel):
             rt = run_type(padded_params)
             tt = task_type(vis)
 
-        props: dict[str, list[Any]] = {
-            k: []
-            for k in (
-                "structure",
-                "cart_coords",
-                "electronic_steps",
-                "energy",
-                "e_wo_entrp",
-                "e_fr_energy",
-                "forces",
-                "stress",
-            )
-        }
+        props = defaultdict(list)
 
         for ionic_step in calc.output.ionic_steps:
             props["structure"].append(ionic_step.structure)
@@ -326,7 +316,7 @@ class Trajectory(BaseModel):
             ):
                 props[k].append(getattr(ionic_step, k))
 
-        return props, rt, tt, ct
+        return dict(props), rt, tt, ct
 
     @classmethod
     def from_task_doc(cls, task_doc: TaskDoc, **kwargs) -> list["Trajectory"]:
@@ -361,7 +351,7 @@ class Trajectory(BaseModel):
 
         props: dict[str, list[Any]] = {}
         old_meta = {f"{k}_type": None for k in ("run", "task", "calc")}
-        new_meta = old_meta.copy()
+        new_meta = deepcopy(old_meta)
         # un-reverse the calcs_reversed
         for icr, cr in enumerate(task_doc.calcs_reversed[::-1]):
             (
@@ -382,7 +372,7 @@ class Trajectory(BaseModel):
                 if icr > 0:
                     trajs.append(cls._from_dict(props, **old_meta, **kwargs))  # type: ignore[arg-type]
 
-                props = new_props.copy()
+                props = deepcopy(new_props)
             else:
                 for k, new_vals in new_props.items():
                     props[k].extend(new_vals)
