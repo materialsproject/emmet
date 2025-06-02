@@ -18,10 +18,14 @@ if TYPE_CHECKING:
 
 
 # matches "mp-1234" or "1234" followed by and optional "-(Alphanumeric)"
-mpid_regex = re.compile(r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$")
-mpculeid_regex = re.compile(
+MPID_REGEX_PATTERN = r"^([A-Za-z]+-)?(\d+)(-[A-Za-z0-9]+)*$"
+mpid_regex = re.compile(MPID_REGEX_PATTERN)
+
+MPCULE_REGEX_PATTERN = (
     r"^([A-Za-z]+-)?([A-Fa-f0-9]+)-([A-Za-z0-9]+)-(m?[0-9]+)-([0-9]+)$"
 )
+mpculeid_regex = re.compile(MPCULE_REGEX_PATTERN)
+
 # matches capital letters and numbers of length 26 (ULID)
 # followed by and optional "-(Alphanumeric)"
 check_ulid = re.compile(r"^[A-Z0-9]{26}(-[A-Za-z0-9]+)*$")
@@ -49,6 +53,8 @@ class MPID(str):
             self.string = val.string  # type: ignore
 
         elif isinstance(val, int) or (isinstance(val, str) and val.isnumeric()):
+            if int(val) < 0:
+                raise ValueError("MPID cannot represent a negative integer.")
             self.parts = ("", int(val))
             self.string = str(val)
 
@@ -86,14 +92,14 @@ class MPID(str):
     def __lt__(self, other: MPID | int | str):
         other_parts = MPID(other).parts
 
-        if self.parts[0] != "" and other_parts[0] != "":
+        if self.parts[0] and other_parts[0]:
             # both have prefixes; normal comparison
             return self.parts < other_parts
-        elif self.parts[0] != "":
+        elif self.parts[0]:
             # other is a pure int, self is prefixed
             # Always sort MPIDs before pure integer IDs
             return True
-        elif other_parts[0] != "":
+        elif other_parts[0]:
             # self is pure int, other is prefixed
             return False
         else:
@@ -101,6 +107,22 @@ class MPID(str):
             return self.parts[1] < other_parts[1]
 
     def __gt__(self, other: MPID | int | str):
+        """Define greater than for MPID.
+
+        Note that `__gt__` is not the same as `not __lt__`.
+        If two values are equal, `__lt__` will return False.
+        Defining
+        ```__gt__ := not __lt__```
+        will then incorrectly return True for equal values.
+        """
+        other_parts = MPID(other).parts
+
+        if self.parts[0] and other_parts[0]:
+            # both have prefixes; normal comparison
+            return self.parts > other_parts
+        elif not self.parts[0] and not other_parts[0]:
+            # both are pure ints; normal comparison
+            return self.parts[1] > other_parts[1]
         return not self.__lt__(other)
 
     def __hash__(self):
@@ -117,7 +139,7 @@ class MPID(str):
         cls, core_schema: CoreSchema, handler: GetJsonSchemaHandler
     ) -> JsonSchemaValue:
         return dict(
-            pattern=r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$",
+            pattern=MPID_REGEX_PATTERN,
             examples=["mp-3534", "3453", "mp-834-Ag"],
             type="string",
         )
@@ -214,7 +236,7 @@ class MPculeID(str):
         cls, core_schema: CoreSchema, handler: GetJsonSchemaHandler
     ) -> JsonSchemaValue:
         return dict(
-            pattern=r"^^([A-Za-z]+-)?([A-Fa-f0-9]+)-([A-Za-z0-9]+)-(m?[0-9]+)-([0-9]+)$",
+            pattern=MPCULE_REGEX_PATTERN,
             examples=[
                 "1a525231bdac3f13e2fac0962fe8d053-Mg1-0-1",
                 "22b40b99719ac570fc7e6225e855ec6e-F5Li1P1-m1-2",
@@ -291,6 +313,13 @@ class AlphaID(str):
             ):
                 separator = list(non_alpha_char)[0]
                 prefix, identifier = identifier.split(separator)
+
+                if not prefix or not identifier:
+                    raise ValueError(
+                        "Missing prefix and/or identifer."
+                        "To specify an AlphaID without a prefix, provide only the identifier."
+                    )
+
             elif len(non_alpha_char) > 1:
                 raise ValueError(
                     f"Too many non-alpha-numeric characters: {', '.join(non_alpha_char)}"
@@ -300,9 +329,11 @@ class AlphaID(str):
             prefix, identifier = identifier.parts
             separator = "-"
 
-        if isinstance(identifier, str) and set(identifier).intersection(digits) > set():
+        if isinstance(identifier, str) and set(identifier).intersection(digits):
             identifier = int(identifier)
         if isinstance(identifier, int):
+            if identifier < 0:
+                raise ValueError("AlphaID cannot represent a negative integer.")
             identifier = cls._integer_to_alpha_rep(identifier)
 
         prefix = prefix or ""
@@ -396,6 +427,61 @@ class AlphaID(str):
         """Define inverse equality for AlphaID."""
         return not self.__eq__(other)
 
+    @staticmethod
+    def _coerce_value(
+        alpha_id: AlphaID, other: Any, exception_on_mismatch: bool = True
+    ) -> int:
+        """Check if another value is comparable to a reference AlphaID.
+
+        Used in defining `__add__`, `__sub__`, `__gt__`, and `__lt_``.
+
+        Args:
+            alpha_id : AlphaID
+            other : Any other value
+            exception_on_mismatch : bool (True = default)
+                If True, raises an exception when the prefix and separators
+                of two AlphaIDs do not match.
+
+                To allow sorting of AlphaIDs, this is False for `__gt__` and `__lt__`
+                but is True for `__add__` and `__sub__`.
+
+        Returns:
+            integer reprsenting the other value if possible.
+            Raises exceptions if `other` cannot be compared to `alpha_id`.
+        """
+        if isinstance(other, MPID):
+            test = AlphaID(other)
+        else:
+            test = other
+
+        if isinstance(test, AlphaID):
+            if exception_on_mismatch:
+                exc_str = ""
+                if test._prefix != alpha_id._prefix:
+                    exc_str += f"Prefixes do not match\n  left {alpha_id._prefix or None}\n  right {test._prefix or None}"
+
+                if (
+                    test._prefix
+                    and alpha_id._prefix
+                    and test._separator != alpha_id._separator
+                ):
+                    if exc_str:
+                        exc_str += "\n"
+                    exc_str += f"Separators do not match:\n  left {alpha_id._separator}\n  right {test._separator}"
+
+                if exc_str:
+                    raise TypeError(exc_str)
+
+            diff = int(test)
+        elif isinstance(test, str):
+            diff = alpha_id._string_to_base_10_value(test)
+        elif isinstance(test, int):
+            diff = test
+        else:
+            raise NotImplementedError(f"Cannot compare AlphaID with type {type(test)}")
+
+        return diff
+
     def __add__(self, other: Any) -> "AlphaID":
         """Define addition of AlphaID.
 
@@ -407,40 +493,15 @@ class AlphaID(str):
         will not add the two. Only checks the separator if prefixes are both non-null.
 
         Args:
-            other (str or int) : the value to add to the current identifier.
+            other : the value to add to the current identifier.
                 If a string, its integer value is first computed.
                 The integer values are then added, and a new instance
                 of AlphaID is returned.
         Returns:
             AlphaID representing the sum of the current and other values.
         """
-
-        if isinstance(other, MPID):
-            test = AlphaID(other)
-        else:
-            test = other
-
-        if isinstance(test, AlphaID):
-            exc_str = ""
-            if test._prefix != self._prefix:
-                exc_str += f"Prefixes do not match\n  left {self._prefix or None}\n  right {test._prefix or None} "
-
-            if test._prefix and self._prefix and test._separator != self._separator:
-                exc_str += f"Separators do not match:\n  left {self._separator}\n  right {test._separator}"
-
-            if exc_str:
-                raise TypeError(exc_str)
-
-            diff = int(test)
-        elif isinstance(test, str):
-            diff = self._string_to_base_10_value(test)
-        elif isinstance(test, int):
-            diff = test
-        else:
-            raise NotImplementedError(f"Cannot add AlphaID to type {type(test)}")
-
         return AlphaID(
-            int(self) + diff,
+            int(self) + self._coerce_value(self, other),
             padlen=self._padlen,
             prefix=self._prefix,
             separator=self._separator,
@@ -454,67 +515,21 @@ class AlphaID(str):
 
         Will not subtract two AlphaIDs if `prefix` and `separator` do not match.
         """
-        if isinstance(other, MPID):
-            test = AlphaID(other)
-        else:
-            test = other
-
-        if isinstance(test, AlphaID):
-            exc_str = ""
-            if test._prefix != self._prefix:
-                exc_str += f"Prefixes do not match\n  left {self._prefix or None}\n  right {test._prefix or None} "
-
-            if test._prefix and self._prefix and test._separator != self._separator:
-                exc_str += f"Separators do not match:\n  left {self._separator}\n  right {test._separator}"
-
-            if exc_str:
-                raise TypeError(exc_str)
-            diff = self._string_to_base_10_value(test._identifier)
-
-        elif isinstance(test, str):
-            diff = self._string_to_base_10_value(test)
-        else:
-            diff = test
-
-        return self.__add__(-diff)
+        return self.__add__(-self._coerce_value(self, other))
 
     def __lt__(self, other: Any) -> bool:
         """Define AlphaID less than.
 
         Returns False between two AlphaIDs if `prefix` and `separator` do not match.
         """
-        if isinstance(other, MPID):
-            test = AlphaID(other)
-        else:
-            test = other
-
-        if isinstance(test, int):
-            return int(self) < test
-        elif isinstance(test, AlphaID):
-            if test._prefix == self._prefix and test._separator == self._separator:
-                return int(self) < int(test)
-            return False
-        elif isinstance(test, str):
-            return int(self) < self._string_to_base_10_value(test)
-        raise NotImplementedError(f"Cannot compare AlphaID with {type(test)}")
+        return int(self) < self._coerce_value(self, other, exception_on_mismatch=False)
 
     def __gt__(self, other: Any) -> bool:
         """Define AlphaID greater than.
 
         Returns False between two AlphaIDs if `prefix` and `separator` do not match.
         """
-        if isinstance(other, MPID):
-            test = AlphaID(other)
-        else:
-            test = other
-
-        if isinstance(test, AlphaID) and (
-            self._prefix != test._prefix
-            or (self._prefix == test._prefix and self._separator != test._separator)
-        ):
-            return False
-
-        return not self.__lt__(test)
+        return int(self) > self._coerce_value(self, other, exception_on_mismatch=False)
 
     @property
     def string(self) -> str:

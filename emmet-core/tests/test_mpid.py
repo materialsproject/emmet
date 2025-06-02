@@ -27,6 +27,13 @@ def test_mpid():
         == 3
     )
 
+    for invalid_value, msg in {
+        "-100": "MPID string representation must follow",
+        -14: "MPID cannot represent a negative integer.",
+    }.items():
+        with pytest.raises(ValueError, match=msg):
+            MPID(invalid_value)
+
     MPID(3)
     ulid_mpid = MPID("01HMVV88CCQ6JQ2Y1N8F3ZTVWP-Li")
     assert ulid_mpid.parts == ("01HMVV88CCQ6JQ2Y1N8F3ZTVWP", 0)
@@ -76,11 +83,11 @@ def test_alpha_id():
     assert mpid_like_idx + MPID("mp-140") == AlphaID("mp-289")
     assert mpid_like_idx - MPID("mp-140") == AlphaID("mp-9")
 
-    # Test relationality - should always be False if prefix / separator don't match
+    # Test relationality - should still compare integers when prefix and separator don't match
     assert mpid_like_idx > MPID("mp-140")
     mvc_idx = AlphaID("mvc-140")
     assert not mpid_like_idx < mvc_idx
-    assert not mpid_like_idx > mvc_idx
+    assert mpid_like_idx > mvc_idx
 
     majik_num = 137
 
@@ -164,7 +171,7 @@ def test_alpha_id():
                         idx + other_idx
 
             # Can't add nor compare floats with AlphaID
-            with pytest.raises(NotImplementedError, match="Cannot add AlphaID"):
+            with pytest.raises(NotImplementedError, match="Cannot compare AlphaID"):
                 idx + 1.0
             with pytest.raises(NotImplementedError, match="Cannot compare AlphaID"):
                 idx < float(int(idx))
@@ -198,11 +205,20 @@ def test_alpha_id():
     assert AlphaID("mp-3347529").string == "mp-3347529"
     assert AlphaID("mp-3347530").string == str(AlphaID("mp-3347530"))
 
-    # test that AlphaID is supported by pydantic de-/serialization
+    for invalid_val, msg in {
+        "-100": "Missing prefix and/or identifer.",
+        "pfx-": "Missing prefix and/or identifer.",
+        ":": "Missing prefix and/or identifer.",
+        -100: "AlphaID cannot represent a negative integer.",
+    }.items():
+        with pytest.raises(ValueError, match=msg):
+            AlphaID(invalid_val)
 
 
 @pytest.mark.parametrize("id_cls", [MPID, AlphaID])
 def test_pydantic(id_cls):
+    # test that AlphaID is supported by pydantic de-/serialization
+
     class TestClass(BaseModel):
         ID: id_cls
 
