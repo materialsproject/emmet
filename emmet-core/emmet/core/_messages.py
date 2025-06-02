@@ -1,7 +1,10 @@
-from typing import List, Optional
 from datetime import datetime
-from pydantic import BaseModel, Field
 from enum import Enum
+from typing import List, Optional
+
+from pydantic import BaseModel, Field
+
+from emmet.core.utils import utcnow
 
 
 class MessageType(Enum):
@@ -37,7 +40,7 @@ class MessagesDoc(BaseModel):
     )
 
     last_updated: datetime = Field(
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
         title="Last Updated",
         description="The last updated UTC timestamp for the message.",
     )

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional, Sequence, Type, TypeVar, Union
+from typing import Type, TypeVar
 
 from pydantic import Field, field_validator
 from pymatgen.core import Structure
@@ -12,6 +12,7 @@ from emmet.core.common import convert_datetime
 from emmet.core.material import PropertyOrigin
 from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
+from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
 
 S = TypeVar("S", bound="PropertyDoc")
@@ -36,22 +37,22 @@ class PropertyDoc(StructureMetadata):
         description="Whether this property document is deprecated.",
     )
 
-    deprecation_reasons: Optional[List[Union[DeprecationMessage, str]]] = Field(
+    deprecation_reasons: list[DeprecationMessage] | None = Field(
         None,
         description="List of deprecation tags detailing why this document isn't valid.",
     )
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property.",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
-    origins: Sequence[PropertyOrigin] = Field(
-        [], description="Dictionary for tracking the provenance of properties."
+    origins: list[PropertyOrigin] | None = Field(
+        None, description="Dictionary for tracking the provenance of properties."
     )
 
-    warnings: Sequence[str] = Field(
-        [], description="Any warnings related to this property."
+    warnings: list[str] | None = Field(
+        None, description="Any warnings related to this property."
     )
 
     @field_validator("last_updated", mode="before")

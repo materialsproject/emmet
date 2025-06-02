@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict, List, Optional, TypeVar, Union
+from typing import TypeVar
 
 from pydantic import BaseModel, Field
 from pymatgen.core.periodic_table import Element
@@ -47,38 +47,38 @@ class SummaryStats(BaseModel):
     Statistics about a specified SummaryDoc field.
     """
 
-    field: Optional[str] = Field(
+    field: str | None = Field(
         None,
         title="Field",
         description="Field name corresponding to a field in SummaryDoc.",
     )
-    num_samples: Optional[int] = Field(
+    num_samples: int | None = Field(
         None,
         title="Sample",
         description="The number of documents sampled to generate statistics. "
         "If unspecified, statistics will be from entire database.",
     )
-    min: Optional[float] = Field(
+    min: float | None = Field(
         None,
         title="Minimum",
         description="The minimum value "
         "of the specified field used to "
         "generate statistics.",
     )
-    max: Optional[float] = Field(
+    max: float | None = Field(
         None,
         title="Maximum",
         description="The maximum value "
         "of the specified field used to "
         "generate statistics.",
     )
-    median: Optional[float] = Field(
+    median: float | None = Field(
         None, title="Median", description="The median of the field values."
     )
-    mean: Optional[float] = Field(
+    mean: float | None = Field(
         None, title="Mean", description="The mean of the field values."
     )
-    distribution: Optional[List[float]] = Field(
+    distribution: list[float] | None = Field(
         None,
         title="Distribution",
         description="List of floats specifying a kernel density "
@@ -92,17 +92,17 @@ class XASSearchData(BaseModel):
     Fields in XAS sub docs in summary
     """
 
-    edge: Optional[Edge] = Field(
+    edge: Edge | None = Field(
         None,
         title="Absorption Edge",
         description="The interaction edge for XAS",
     )
-    absorbing_element: Optional[Element] = Field(
+    absorbing_element: Element | None = Field(
         None,
         description="Absorbing element.",
     )
 
-    spectrum_type: Optional[Type] = Field(
+    spectrum_type: Type | None = Field(
         None,
         description="Type of XAS spectrum.",
     )
@@ -113,22 +113,22 @@ class GBSearchData(BaseModel):
     Fields in grain boundary sub docs in summary
     """
 
-    sigma: Optional[int] = Field(
+    sigma: int | None = Field(
         None,
         description="Sigma value of the boundary.",
     )
 
-    type: Optional[str] = Field(
+    type: str | None = Field(
         None,
         description="Grain boundary type.",
     )
 
-    gb_energy: Optional[float] = Field(
+    gb_energy: float | None = Field(
         None,
         description="Grain boundary energy in J/m^2.",
     )
 
-    rotation_angle: Optional[float] = Field(
+    rotation_angle: float | None = Field(
         None,
         description="Rotation angle in degrees.",
     )
@@ -149,7 +149,7 @@ class SummaryDoc(PropertyDoc):
         description="The lowest energy structure for this material.",
     )
 
-    task_ids: List[MPID] = Field(
+    task_ids: list[MPID] = Field(
         [],
         title="Calculation IDs",
         description="List of Calculations IDs associated with this material.",
@@ -157,22 +157,22 @@ class SummaryDoc(PropertyDoc):
 
     # Thermo
 
-    uncorrected_energy_per_atom: Optional[float] = Field(
+    uncorrected_energy_per_atom: float | None = Field(
         None,
         description="The total DFT energy of this material per atom in eV/atom.",
     )
 
-    energy_per_atom: Optional[float] = Field(
+    energy_per_atom: float | None = Field(
         None,
         description="The total corrected DFT energy of this material per atom in eV/atom.",
     )
 
-    formation_energy_per_atom: Optional[float] = Field(
+    formation_energy_per_atom: float | None = Field(
         None,
         description="The formation energy per atom in eV/atom.",
     )
 
-    energy_above_hull: Optional[float] = Field(
+    energy_above_hull: float | None = Field(
         None,
         description="The energy above the hull in eV/Atom.",
     )
@@ -182,231 +182,229 @@ class SummaryDoc(PropertyDoc):
         description="Flag for whether this material is on the hull and therefore stable.",
     )
 
-    equilibrium_reaction_energy_per_atom: Optional[float] = Field(
+    equilibrium_reaction_energy_per_atom: float | None = Field(
         None,
         description="The reaction energy of a stable entry from the neighboring equilibrium stable materials in eV."
         " Also known as the inverse distance to hull.",
     )
 
-    decomposes_to: Optional[List[DecompositionProduct]] = Field(
+    decomposes_to: list[DecompositionProduct] | None = Field(
         None,
         description="List of decomposition data for this material. Only valid for metastable or unstable material.",
     )
 
     # XAS
 
-    xas: Optional[List[XASSearchData]] = Field(
+    xas: list[XASSearchData] | None = Field(
         None,
         description="List of xas documents.",
     )
 
     # GB
 
-    grain_boundaries: Optional[List[GBSearchData]] = Field(
+    grain_boundaries: list[GBSearchData] | None = Field(
         None,
         description="List of grain boundary documents.",
     )
 
     # Electronic Structure
 
-    band_gap: Optional[float] = Field(
+    band_gap: float | None = Field(
         None,
         description="Band gap energy in eV.",
     )
 
-    cbm: Optional[Union[float, Dict]] = Field(
+    cbm: float | None = Field(
         None,
         description="Conduction band minimum data.",
     )
 
-    vbm: Optional[Union[float, Dict]] = Field(
+    vbm: float | None = Field(
         None,
         description="Valence band maximum data.",
     )
 
-    efermi: Optional[float] = Field(
+    efermi: float | None = Field(
         None,
         description="Fermi energy in eV.",
     )
 
-    is_gap_direct: Optional[bool] = Field(
+    is_gap_direct: bool | None = Field(
         None,
         description="Whether the band gap is direct.",
     )
 
-    is_metal: Optional[bool] = Field(
+    is_metal: bool | None = Field(
         None,
         description="Whether the material is a metal.",
     )
 
-    es_source_calc_id: Optional[Union[MPID, int]] = Field(
+    es_source_calc_id: MPID | None = Field(
         None,
         description="The source calculation ID for the electronic structure data.",
     )
 
-    bandstructure: Optional[BandstructureData] = Field(
+    bandstructure: BandstructureData | None = Field(
         None,
         description="Band structure data for the material.",
     )
 
-    dos: Optional[DosData] = Field(
+    dos: DosData | None = Field(
         None,
         description="Density of states data for the material.",
     )
 
     # DOS
 
-    dos_energy_up: Optional[float] = Field(
+    dos_energy_up: float | None = Field(
         None,
         description="Spin-up DOS band gap in eV.",
     )
 
-    dos_energy_down: Optional[float] = Field(
+    dos_energy_down: float | None = Field(
         None,
         description="Spin-down DOS band gap in eV.",
     )
 
     # Magnetism
 
-    is_magnetic: Optional[bool] = Field(
+    is_magnetic: bool | None = Field(
         None,
         description="Whether the material is magnetic.",
     )
 
-    ordering: Optional[str] = Field(
+    ordering: str | None = Field(
         None,
         description="Type of magnetic ordering.",
     )
 
-    total_magnetization: Optional[float] = Field(
+    total_magnetization: float | None = Field(
         None,
         description="Total magnetization in μB.",
     )
 
-    total_magnetization_normalized_vol: Optional[float] = Field(
+    total_magnetization_normalized_vol: float | None = Field(
         None,
         description="Total magnetization normalized by volume in μB/Å³.",
     )
 
-    total_magnetization_normalized_formula_units: Optional[float] = Field(
+    total_magnetization_normalized_formula_units: float | None = Field(
         None,
         description="Total magnetization normalized by formula unit in μB/f.u. .",
     )
 
-    num_magnetic_sites: Optional[int] = Field(
+    num_magnetic_sites: int | None = Field(
         None,
         description="The number of magnetic sites.",
     )
 
-    num_unique_magnetic_sites: Optional[int] = Field(
+    num_unique_magnetic_sites: int | None = Field(
         None,
         description="The number of unique magnetic sites.",
     )
 
-    types_of_magnetic_species: Optional[List[Element]] = Field(
+    types_of_magnetic_species: list[Element] | None = Field(
         None,
         description="Magnetic specie elements.",
     )
 
     # Elasticity
 
-    # k_voigt: Optional[float] = Field(None, description="Voigt average of the bulk modulus.")
+    # k_voigt: float | None = Field(None, description="Voigt average of the bulk modulus.")
 
-    # k_reuss: Optional[float] = Field(None, description="Reuss average of the bulk modulus in GPa.")
+    # k_reuss: float | None = Field(None, description="Reuss average of the bulk modulus in GPa.")
 
-    # k_vrh: Optional[float] = Field(None, description="Voigt-Reuss-Hill average of the bulk modulus in GPa.")
+    # k_vrh: float | None = Field(None, description="Voigt-Reuss-Hill average of the bulk modulus in GPa.")
 
-    # g_voigt: Optional[float] = Field(None, description="Voigt average of the shear modulus in GPa.")
+    # g_voigt: float | None = Field(None, description="Voigt average of the shear modulus in GPa.")
 
-    # g_reuss: Optional[float] = Field(None, description="Reuss average of the shear modulus in GPa.")
+    # g_reuss: float | None = Field(None, description="Reuss average of the shear modulus in GPa.")
 
-    # g_vrh: Optional[float] = Field(None, description="Voigt-Reuss-Hill average of the shear modulus in GPa.")
+    # g_vrh: float | None = Field(None, description="Voigt-Reuss-Hill average of the shear modulus in GPa.")
 
-    bulk_modulus: Optional[dict] = Field(
+    bulk_modulus: dict[str, float] | None = Field(
         None,
         description="Voigt, Reuss, and Voigt-Reuss-Hill averages of the bulk modulus in GPa.",
     )
 
-    shear_modulus: Optional[dict] = Field(
+    shear_modulus: dict[str, float] | None = Field(
         None,
         description="Voigt, Reuss, and Voigt-Reuss-Hill averages of the shear modulus in GPa.",
     )
 
-    universal_anisotropy: Optional[float] = Field(
-        None, description="Elastic anisotropy."
-    )
+    universal_anisotropy: float | None = Field(None, description="Elastic anisotropy.")
 
-    homogeneous_poisson: Optional[float] = Field(None, description="Poisson's ratio.")
+    homogeneous_poisson: float | None = Field(None, description="Poisson's ratio.")
 
     # Dielectric and Piezo
 
-    e_total: Optional[float] = Field(
+    e_total: float | None = Field(
         None,
         description="Total dielectric constant.",
     )
 
-    e_ionic: Optional[float] = Field(
+    e_ionic: float | None = Field(
         None,
         description="Ionic contribution to dielectric constant.",
     )
 
-    e_electronic: Optional[float] = Field(
+    e_electronic: float | None = Field(
         None,
         description="Electronic contribution to dielectric constant.",
     )
 
-    n: Optional[float] = Field(
+    n: float | None = Field(
         None,
         description="Refractive index.",
     )
 
-    e_ij_max: Optional[float] = Field(
+    e_ij_max: float | None = Field(
         None,
         description="Piezoelectric modulus.",
     )
 
     # Surface Properties
 
-    weighted_surface_energy_EV_PER_ANG2: Optional[float] = Field(
+    weighted_surface_energy_EV_PER_ANG2: float | None = Field(
         None,
         description="Weighted surface energy in eV/Å².",
     )
 
-    weighted_surface_energy: Optional[float] = Field(
+    weighted_surface_energy: float | None = Field(
         None,
         description="Weighted surface energy in J/m².",
     )
 
-    weighted_work_function: Optional[float] = Field(
+    weighted_work_function: float | None = Field(
         None,
         description="Weighted work function in eV.",
     )
 
-    surface_anisotropy: Optional[float] = Field(
+    surface_anisotropy: float | None = Field(
         None,
         description="Surface energy anisotropy.",
     )
 
-    shape_factor: Optional[float] = Field(
+    shape_factor: float | None = Field(
         None,
         description="Shape factor.",
     )
 
-    has_reconstructed: Optional[bool] = Field(
+    has_reconstructed: bool | None = Field(
         None,
         description="Whether the material has any reconstructed surfaces.",
     )
 
     # Oxi States
 
-    possible_species: Optional[List[str]] = Field(
+    possible_species: list[str] | None = Field(
         None,
         description="Possible charged species in this material.",
     )
 
     # Has Props
 
-    has_props: Optional[Dict[str, bool]] = Field(
+    has_props: dict[str, bool] | None = Field(
         None,
         description="List of properties that are available for a given material.",
     )
@@ -420,12 +418,12 @@ class SummaryDoc(PropertyDoc):
 
     # External Database IDs
 
-    database_IDs: Dict[str, List[str]] = Field(
+    database_Ids: dict[str, list[str]] = Field(
         {}, description="External database IDs corresponding to this material."
     )
 
     @classmethod
-    def from_docs(cls, material_id: MPID | None = None, **docs: Dict[str, Dict]):
+    def from_docs(cls, material_id: MPID | None = None, **docs: dict[str, dict]):
         """Converts a bunch of summary docs into a SummaryDoc"""
         doc = _copy_from_doc(docs)
 
@@ -452,7 +450,7 @@ class SummaryDoc(PropertyDoc):
 
 
 # Key mapping
-summary_fields: Dict[str, list] = {
+summary_fields: dict[str, list] = {
     HasProps.materials.value: [
         "nsites",
         "elements",

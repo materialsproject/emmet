@@ -1,10 +1,12 @@
-from typing import Optional, Any
-from typing_extensions import Annotated
+from io import StringIO
+from typing import Any, Optional
 
 import pandas as pd
+from pydantic import BaseModel, Field, PlainSerializer, PlainValidator, WithJsonSchema
 from solvation_analysis.solute import Solute
-from pydantic import Field, BaseModel, PlainValidator, PlainSerializer, WithJsonSchema
-from io import StringIO
+from typing_extensions import Annotated
+
+from emmet.core.utils import arrow_incompatible
 
 
 def data_frame_validater(o: Any) -> pd.DataFrame:
@@ -28,6 +30,7 @@ DataFrame = Annotated[
 
 
 # class SolvationDoc(ClassicalMDDoc, arbitrary_types_allowed=True):
+@arrow_incompatible
 class SolvationDoc(BaseModel, arbitrary_types_allowed=True):
     solute_name: Optional[str] = Field(None, description="Name of the solute")
 

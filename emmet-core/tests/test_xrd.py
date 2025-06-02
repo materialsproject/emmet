@@ -2,6 +2,7 @@ import pytest
 from pymatgen.analysis.diffraction.xrd import WAVELENGTHS
 from pymatgen.core import Element, Lattice, Structure
 
+from emmet.core.utils import jsanitize
 from emmet.core.xrd import Edge, XRDDoc
 
 
@@ -43,3 +44,18 @@ def test_from_target(structure, target):
 
 def test_schema():
     XRDDoc.schema()
+
+
+def test_xrd_arrow_round_trip_serialization(structure):
+    doc = XRDDoc.from_structure(
+        structure=structure,
+        spectrum_id="test-1",
+        material_id="test-1",
+        wavelength=WAVELENGTHS[next(iter(WAVELENGTHS))],
+    )
+    arrow_struct = doc.model_dump(context={"format": "arrow"})
+    test_arrow_doc = XRDDoc.from_arrow(arrow_struct)
+
+    assert jsanitize(doc.model_dump(), allow_bson=True) == jsanitize(
+        test_arrow_doc.model_dump(), allow_bson=True
+    )

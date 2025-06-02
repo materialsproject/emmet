@@ -10,9 +10,13 @@ from pymatgen.analysis.diffraction.xrd import (
 from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.mpid import MPID
 from emmet.core.spectrum import SpectrumDoc
 from emmet.core.utils import ValueEnum
+
+if ARROW_COMPATIBLE:
+    import emmet.core.serialization_adapters.diffraction_pattern_adapter
 
 
 class Edge(ValueEnum):
