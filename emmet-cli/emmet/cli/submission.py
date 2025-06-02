@@ -228,7 +228,7 @@ class Submission(BaseModel):
                 f"Running validation serially for {len(calcs_to_check)} calculations"
             )
             if not check_all:
-                logger.debug(f"Will fail fast if any calculation is invalid")
+                logger.debug("Will fail fast if any calculation is invalid")
             for p, cm in calcs_to_check.items():
                 is_valid = cm.validate_calculation() and is_valid
                 if not is_valid and not check_all:

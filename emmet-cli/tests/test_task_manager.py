@@ -61,7 +61,7 @@ def test_task_status_checking(task_manager):
     task_id = task_manager.start_task(long_task_test_function)
 
     # Test initial running status
-    assert task_manager.is_task_running(task_id) == True
+    assert task_manager.is_task_running(task_id) is True
 
     # Wait for task to timeout and verify status
     final_status = task_manager.wait_for_task_completion(
@@ -77,7 +77,7 @@ def test_task_status_checking(task_manager):
 
     # Give some time for the process to be cleaned up
     time.sleep(0.1)
-    assert task_manager.is_task_running(task_id) == False
+    assert task_manager.is_task_running(task_id) is False
 
 
 def test_nonexistent_task_status(task_manager):
@@ -85,7 +85,7 @@ def test_nonexistent_task_status(task_manager):
     status = task_manager.get_task_status("nonexistent-task")
     assert status["status"] == "not_found"
 
-    assert task_manager.is_task_running("nonexistent-task") == False
+    assert task_manager.is_task_running("nonexistent-task") is False
 
 
 def test_sequential_tasks(task_manager):

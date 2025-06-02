@@ -1,10 +1,8 @@
 import logging
 from pathlib import Path
-from uuid import uuid4
 import click
 from emmet.cli.submission import Submission
 from emmet.cli.utils import EmmetCliError
-from emmet.cli.task_manager import TaskManager
 
 logger = logging.getLogger("emmet")
 

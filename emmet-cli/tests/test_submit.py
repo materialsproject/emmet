@@ -113,7 +113,7 @@ def test_validate(sub_file, cli_runner, task_manager):
     assert result.exit_code == 0
     assert "Validation started." in result.output
     final_status = wait_for_task_completion_and_assert_success(result, task_manager)
-    assert final_status["result"] == True
+    assert final_status["result"] is True
 
     # TODO: add test that fails validation when add implementation
     # TODO: add test for check_all parameter values when add implementation
@@ -126,6 +126,6 @@ def test_push(sub_file, cli_runner, task_manager):
     assert "Push started." in result.output
 
     final_status = wait_for_task_completion_and_assert_success(result, task_manager)
-    assert final_status["result"][0] == True
+    assert final_status["result"][0] is True
 
     # TODO: add test that for failing cases

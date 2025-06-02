@@ -1,7 +1,5 @@
 import click
 import logging
-from pathlib import Path
-from typing import Optional
 from uuid import UUID
 
 from emmet.cli.utils import EmmetCliError
