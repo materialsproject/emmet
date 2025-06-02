@@ -64,11 +64,15 @@ def list(ctx):
         started = task["started_at"]
         completed = task.get("status", "running")
 
-        color = (  # noqa: E131
+        # fmt: off
+        color = (
             "green"
             if "completed_at" in task and "error" not in task
-            else "red" if "error" in task else "yellow"
+            else "red"
+            if "error" in task
+            else "yellow"
         )
+        # fmt: on
         click.secho(f"{status} Task {task_id}", fg=color)
         click.echo(f"   Started: {started}")
         click.echo(f"   Status:  {completed}")
