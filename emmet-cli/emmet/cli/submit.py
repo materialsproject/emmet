@@ -1,8 +1,10 @@
 import logging
 from pathlib import Path
+from uuid import uuid4
 import click
 from emmet.cli.submission import Submission
 from emmet.cli.utils import EmmetCliError
+from emmet.cli.task_manager import TaskManager
 
 logger = logging.getLogger("emmet")
 
@@ -34,15 +36,26 @@ def create(ctx, paths):
             "Must provide at least one file or directory path to include in submission"
         )
 
+    task_manager = ctx.obj["task_manager"]
+    task_id = task_manager.start_task(_create_submission, paths)
+    click.echo(f"Submission creation started. Task ID: {task_id}")
+    click.echo("Use 'emmet tasks status <task_id>' to check the status")
+
+
+def _create_submission(paths):
+    """Helper function to create a submission that can run in a separate process."""
     submission = Submission.from_paths(paths=paths)
-    logger.info(f"created submission {submission.id}")
-
     output_file = f"submission-{submission.id}.json"
-
     submission.save(Path(output_file))
-    print(f"wrote submission output to {output_file}")
+    return str(submission.id), output_file
 
-    # should we check if any of this data already exists in MP (how?)
+
+def _add_to_submission(submission_path: Path, paths):
+    """Helper function to add files to a submission that can run in a separate process."""
+    sub = Submission.load(submission_path)
+    added = sub.add_to([Path(p) for p in paths])
+    sub.save(submission_path)
+    return [str(f.path) for f in added]
 
 
 @submit.command()
@@ -50,20 +63,28 @@ def create(ctx, paths):
 @click.argument("additional_paths", nargs=-1, type=click.Path(exists=True))
 @click.pass_context
 def add_to(ctx, submission, additional_paths):
-    """Adds more files to the submission.
+    """Adds more files to the submission asynchronously.
 
-    This only updates the metadata about the submission."""
-
+    Returns a task ID that can be used to check the status."""
     if not additional_paths:
         raise EmmetCliError(
             "Must provide at least one file or directory path to add to the submission"
         )
 
-    sub = Submission.load(Path(submission))
-    added = sub.add_to([Path(p) for p in additional_paths])
-    added_str = "\n".join(str(p.path) for p in added)
-    sub.save(Path(submission))
-    print(f"added following {len(added)} files from submission:\n{added_str}")
+    task_manager = ctx.obj["task_manager"]
+    task_id = task_manager.start_task(
+        _add_to_submission, Path(submission), additional_paths
+    )
+    click.echo(f"Adding files started. Task ID: {task_id}")
+    click.echo("Use 'emmet tasks status <task_id>' to check the status")
+
+
+def _remove_from_submission(submission_path: Path, paths_to_remove):
+    """Helper function to remove files from a submission that can run in a separate process."""
+    sub = Submission.load(submission_path)
+    removed = sub.remove_from([Path(p) for p in paths_to_remove])
+    sub.save(submission_path)
+    return [str(f.path) for f in removed]
 
 
 @submit.command()
@@ -71,20 +92,28 @@ def add_to(ctx, submission, additional_paths):
 @click.argument("files_to_remove", nargs=-1, type=click.Path(exists=True))
 @click.pass_context
 def remove_from(ctx, submission, files_to_remove):
-    """Removes files from the submission.
+    """Removes files from the submission asynchronously.
 
-    This only updates the metadata about the submission."""
-
+    Returns a task ID that can be used to check the status."""
     if not files_to_remove:
         raise EmmetCliError(
             "Must provide at least one file or directory path to remove from the submission"
         )
 
-    sub = Submission.load(Path(submission))
-    removed = sub.remove_from([Path(p) for p in files_to_remove])
-    removed_str = "\n".join(str(p.path) for p in removed)
-    sub.save(Path(submission))
-    print(f"removed following {len(removed)} files from submission:\n{removed_str}")
+    task_manager = ctx.obj["task_manager"]
+    task_id = task_manager.start_task(
+        _remove_from_submission, Path(submission), files_to_remove
+    )
+    click.echo(f"Removing files started. Task ID: {task_id}")
+    click.echo("Use 'emmet tasks status <task_id>' to check the status")
+
+
+def _validate_submission(submission_path: Path, check_all: bool):
+    """Helper function to validate a submission that can run in a separate process."""
+    sub = Submission.load(submission_path)
+    is_valid = sub.validate_submission(check_all=check_all)
+    sub.save(submission_path)
+    return is_valid
 
 
 @submit.command()
@@ -94,67 +123,41 @@ def remove_from(ctx, submission, files_to_remove):
 )
 @click.pass_context
 def validate(ctx, submission, check_all):
-    """Locally validates the latest version of an MP data submission.
-    By default, fails fast and stops checking after the first invalid calculation encountered.
+    """Validates a submission asynchronously.
 
-    The metadata submission filename path is a required argument.
+    Returns a task ID that can be used to check the status."""
+    task_manager = ctx.obj["task_manager"]
+    task_id = task_manager.start_task(_validate_submission, Path(submission), check_all)
+    click.echo(f"Validation started. Task ID: {task_id}")
+    click.echo("Use 'emmet tasks status <task_id>' to check the status")
 
-    """
-    # perform a local validation (can shortcut if based on metadata)
-    sub = Submission.load(Path(submission))
 
-    is_valid = sub.validate_submission(check_all=check_all)
-    sub.save(Path(submission))
-    if is_valid:
-        print(
-            f"All calculations in submission {sub.id} passed validation. Ready to push."
+def _push_submission(submission_path: Path):
+    """Helper function to push a submission that can run in a separate process."""
+    sub = Submission.load(submission_path)
+    updated_file_info = sub.stage_for_push()
+    if not updated_file_info:
+        return (
+            False,
+            "Files for submission have not changed since last update. Not pushing.",
         )
-    else:
-        print(f"Validation failed. See {submission} for details on validation errors.")
+
+    sub.push()
+    sub.save(submission_path)
+    return True, f"Successfully updated submission in {submission_path}"
 
 
 @submit.command()
 @click.argument("submission", nargs=1, type=click.Path(exists=True, dir_okay=False))
 @click.pass_context
 def push(ctx, submission):
-    """Pushes the latest version of an MP data submission.
+    """Pushes a submission asynchronously.
 
-    The metadata submission filename path is a required argument.
-
-    If the files for this submission have not changed since the most recent push
-    return with an error message.
-    If the files for this submission do not pass local validation return with an
-    error message.
-    """
-
-    sub = Submission.load(Path(submission))
-
-    updated_file_info = sub.stage_for_push()
-    logger.debug(
-        f"Changes in files for submission since last update: {updated_file_info}"
-    )
-    if not updated_file_info:
-        raise EmmetCliError(
-            "Files for submission have not changed since last update. Not pushing."
-        )
-
-    # TODO: redo this so it does a quick check of the staged submission on the server side (prior to needing to upload)
-    # should provide the signed url? should it all go into Submission class?
-    already_contributed_file_info = get_already_contributed(updated_file_info)
-    logger.debug(
-        f"Files for submission considered to be duplicates: {already_contributed_file_info}"
-    )
-    if already_contributed_file_info:
-        raise EmmetCliError(
-            f"The following are considered to be duplicates of data already in MP {already_contributed_file_info}"
-        )
-
-    sub.push()
-
-    sub.save(Path(submission))
-
-    print(f"Successfuly updated submission in {submission}")
-    pass
+    Returns a task ID that can be used to check the status."""
+    task_manager = ctx.obj["task_manager"]
+    task_id = task_manager.start_task(_push_submission, Path(submission))
+    click.echo(f"Push started. Task ID: {task_id}")
+    click.echo("Use 'emmet tasks status <task_id>' to check the status")
 
 
 def get_already_contributed(updated_file_info):

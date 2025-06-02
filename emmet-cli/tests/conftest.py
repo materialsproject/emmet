@@ -1,9 +1,50 @@
 import os
 from pathlib import Path
 from click.testing import CliRunner
+from emmet.cli.state_manager import StateManager
 from emmet.cli.submission import Submission
 from emmet.cli.submit import submit
+from emmet.cli.task_manager import TaskManager
 import pytest
+
+
+@pytest.fixture
+def cli_runner(task_manager):
+    """Fixture that provides a CliRunner with proper context setup."""
+
+    def invoke_wrapper(command, *args, **kwargs):
+        runner = CliRunner()
+        if "obj" not in kwargs:
+            kwargs["obj"] = {"task_manager": task_manager}
+        return runner.invoke(command, *args, **kwargs)
+
+    return invoke_wrapper
+
+
+def wait_for_task_completion_and_assert_success(result, task_manager):
+    task_id = result.output.split("\n")[0].split()[-1]
+    final_status = task_manager.wait_for_task_completion(task_id)
+    assert final_status["status"] == "completed"
+    return final_status
+
+
+@pytest.fixture
+def temp_state_dir(tmp_path):
+    """Creates a temporary directory for state files."""
+    state_dir = tmp_path / "test_emmet"
+    return state_dir
+
+
+@pytest.fixture
+def task_manager(state_manager):
+    """Creates a TaskManager instance with a temporary state directory."""
+    return TaskManager(state_manager=state_manager)
+
+
+@pytest.fixture
+def state_manager(temp_state_dir):
+    """Creates a StateManager instance with a temporary state directory."""
+    return StateManager(state_dir=temp_state_dir)
 
 
 @pytest.fixture(scope="session")
@@ -59,18 +100,17 @@ def tmp_dir(tmp_path_factory):
 
 
 @pytest.fixture()
-def sub_file(tmp_dir, tmp_path_factory):
-    runner = CliRunner()
-    result = runner.invoke(submit, ["create", str(tmp_dir)])
+def sub_file(tmp_dir, cli_runner, tmp_path_factory, task_manager):
+    result = cli_runner(submit, ["create", str(tmp_dir)])
 
     assert result.exit_code == 0
-    matches = [word for word in result.output.split() if "submission-" in word]
-    assert len(matches) == 1
+    final_status = wait_for_task_completion_and_assert_success(result, task_manager)
+    matches = final_status["result"][1]
 
-    sub = Submission.load(Path(matches[0]))
+    sub = Submission.load(Path(matches))
 
     # clean up side-effect of calling create
-    os.remove(matches[0])
+    os.remove(matches)
 
     output_file = tmp_path_factory.mktemp("sub_test_dir") / "sub.json"
     sub.save(output_file)
