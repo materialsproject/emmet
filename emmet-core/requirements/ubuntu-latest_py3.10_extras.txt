@@ -22,13 +22,13 @@ cfgv==3.4.0
     # via pre-commit
 charset-normalizer==3.4.2
     # via requests
-click==8.2.0
+click==8.2.1
     # via mkdocs
 colorama==0.4.6
     # via griffe
 contourpy==1.3.2
     # via matplotlib
-coverage[toml]==7.8.0
+coverage[toml]==7.8.1
     # via pytest-cov
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -50,7 +50,7 @@ flake8==7.2.0
     # via emmet-core (setup.py)
 fonttools==4.58.0
     # via matplotlib
-fsspec==2025.3.2
+fsspec==2025.5.0
     # via matcalc
 ghp-import==2.1.0
     # via mkdocs
@@ -145,7 +145,7 @@ mkdocs==1.6.1
     #   mkdocs-material
     #   mkdocs-minify-plugin
     #   mkdocstrings
-mkdocs-autorefs==1.4.1
+mkdocs-autorefs==1.4.2
     # via
     #   mkdocstrings
     #   mkdocstrings-python
@@ -278,7 +278,7 @@ platformdirs==4.3.8
     # via
     #   mkdocs-get-deps
     #   virtualenv
-plotly==6.1.0
+plotly==6.1.1
     # via
     #   pymatgen
     #   solvation-analysis
@@ -449,7 +449,7 @@ tomli==2.2.1
     #   coverage
     #   mypy
     #   pytest
-tornado==6.5
+tornado==6.5.1
     # via livereload
 tqdm==4.67.1
     # via
@@ -462,7 +462,7 @@ typeguard==4.4.2
     # via inflect
 types-requests==2.32.0.20250515
     # via emmet-core (setup.py)
-types-setuptools==80.7.0.20250516
+types-setuptools==80.8.0.20250521
     # via emmet-core (setup.py)
 typing-extensions==4.13.2
     # via
@@ -475,7 +475,7 @@ typing-extensions==4.13.2
     #   spglib
     #   typeguard
     #   typing-inspection
-typing-inspection==0.4.0
+typing-inspection==0.4.1
     # via
     #   pydantic
     #   pydantic-settings

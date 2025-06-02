@@ -19,9 +19,9 @@ attrs==25.3.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.38.19
+boto3==1.38.21
     # via maggma
-botocore==1.38.19
+botocore==1.38.21
     # via
     #   boto3
     #   s3transfer
@@ -51,7 +51,7 @@ filelock==3.18.0
     # via mdanalysis
 fonttools==4.58.0
     # via matplotlib
-fsspec==2025.3.2
+fsspec==2025.5.0
     # via matcalc
 griddataformats==1.0.2
     # via mdanalysis
@@ -208,7 +208,7 @@ pillow==11.2.1
     #   matplotlib
     #   rdkit
     #   scikit-image
-plotly==6.1.0
+plotly==6.1.1
     # via
     #   pymatgen
     #   solvation-analysis
@@ -292,7 +292,7 @@ requests==2.32.3
     #   pymatgen
 robocrys==0.2.11
     # via emmet-core
-rpds-py==0.25.0
+rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
@@ -386,7 +386,7 @@ typing-extensions==4.13.2
     #   spglib
     #   typeguard
     #   typing-inspection
-typing-inspection==0.4.0
+typing-inspection==0.4.1
     # via
     #   pydantic
     #   pydantic-settings
