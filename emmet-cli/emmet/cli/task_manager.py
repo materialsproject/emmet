@@ -17,7 +17,7 @@ class TaskManager:
 
     def __init__(
         self,
-        state_manager: Optional[StateManager] = None,
+        state_manager: StateManager,
         running_status_update_interval: int = 30,
     ):
         """Initialize the TaskManager with an optional StateManager instance."""
