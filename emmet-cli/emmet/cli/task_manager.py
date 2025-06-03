@@ -101,7 +101,7 @@ class TaskManager:
             target=self._task_wrapper,
             args=(task_id, func) + args,
             kwargs=kwargs,
-            daemon=True,
+            daemon=False,
         )
         process.start()
 
