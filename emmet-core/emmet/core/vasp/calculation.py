@@ -28,18 +28,9 @@ from pymatgen.core.trajectory import Trajectory
 from pymatgen.electronic_structure.bandstructure import BandStructure
 from pymatgen.electronic_structure.core import OrbitalType
 from pymatgen.electronic_structure.dos import CompleteDos, Dos
-from pymatgen.io.vasp import (
-    BSVasprun,
-    Kpoints,
-    Locpot,
-    Oszicar,
-    Outcar,
-    Poscar,
-    Potcar,
-    PotcarSingle,
-    Vasprun,
-    VolumetricData,
-)
+from pymatgen.io.vasp import BSVasprun, Kpoints, Locpot, Oszicar, Outcar, Poscar
+from pymatgen.io.vasp import Potcar as VaspPotcar
+from pymatgen.io.vasp import PotcarSingle, Vasprun, VolumetricData
 from typing_extensions import NotRequired, TypedDict
 
 from emmet.core import ARROW_COMPATIBLE
@@ -149,7 +140,7 @@ class PotcarSpec(BaseModel):
         )
 
     @classmethod
-    def from_potcar(cls, potcar: Potcar) -> List["PotcarSpec"]:
+    def from_potcar(cls, potcar: VaspPotcar) -> List["PotcarSpec"]:
         """
         Get a list of PotcarSpecs from a Potcar.
 
@@ -164,6 +155,20 @@ class PotcarSpec(BaseModel):
             A list of potcar specs.
         """
         return [cls.from_potcar_single(p) for p in potcar]
+
+    @classmethod
+    def from_file(cls, file_path: str | Path) -> list["PotcarSpec"]:
+        """
+        Get a list of PotcarSpecs from a Potcar.
+        Parameters
+        ----------
+        file_path : str or Path of the POTCAR
+        Returns
+        -------
+        list[PotcarSpec]
+            A list of potcar specs.
+        """
+        return cls.from_potcar(VaspPotcar.from_file(str(file_path)))
 
 
 @type_override({"incar": str, "parameters": str})

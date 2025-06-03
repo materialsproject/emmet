@@ -86,32 +86,6 @@ class OrigInputs(CalculationInput):
         description="Pymatgen object representing the POSCAR file.",
     )
 
-    potcar: Potcar | None = Field(
-        None,
-        description="Pymatgen object representing the POTCAR file.",
-    )
-
-    @field_validator("potcar", mode="before")
-    @classmethod
-    def potcar_ok(cls, v):
-        """Check that the POTCAR meets type requirements."""
-        if isinstance(v, list):
-            return list(v)
-        return v
-
-    @field_validator("potcar", mode="before")
-    @classmethod
-    def parse_potcar(cls, v):
-        """Check that potcar attribute is not a pymatgen POTCAR."""
-        if isinstance(v, VaspPotcar):
-            # The user should not mix potential types, but account for that here
-            # Using multiple potential types will be caught in validation
-            pot_typ = "_".join(set(p.potential_type for p in v))
-            return Potcar(pot_type=pot_typ, functional=v.functional, symbols=v.symbols)
-        return v
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
 
 class OutputDoc(BaseModel):
     # structure: Optional[Structure] = Field(
@@ -1057,22 +1031,18 @@ def _parse_orig_inputs(
         The original POSCAR, KPOINTS, POTCAR, and INCAR data.
     """
     orig_inputs = {}
-    input_mapping = {
+    input_mapping: dict[str, Kpoints | Poscar | PotcarSpec | Incar] = {
         "INCAR": Incar,
         "KPOINTS": Kpoints,
-        "POTCAR": VaspPotcar,
+        "POTCAR": PotcarSpec,
         "POSCAR": Poscar,
     }
     for filename in dir_name.glob("*.orig*"):
         for name, vasp_input in input_mapping.items():
             if f"{name}.orig" in str(filename):
-                if name == "POTCAR":
-                    # can't serialize POTCAR
-                    orig_inputs[name.lower()] = PotcarSpec.from_potcar(
-                        vasp_input.from_file(filename)  # type: ignore[attr-defined]
-                    )
-                else:
-                    orig_inputs[name.lower()] = vasp_input.from_file(filename)  # type: ignore[attr-defined]
+                orig_inputs[f"{name.lower()}{'_spec' if name == 'POTCAR' else ''}"] = (
+                    vasp_input.from_file(filename)
+                )
 
     return orig_inputs
 
