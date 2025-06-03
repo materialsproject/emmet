@@ -24,6 +24,26 @@ class TaskManager:
         self.state_manager = state_manager
         self.running_status_update_interval = running_status_update_interval
 
+    def _detached_task_wrapper(
+        self, task_id: str, func: Callable[..., Any], *args: Any, **kwargs: Any
+    ):
+        """Wrapper for running a task in a detached process."""
+        import os
+
+        # Create new session ID
+        os.setsid()
+
+        # Close file descriptors
+        # Keep 0, 1, 2 (stdin, stdout, stderr) open
+        for fd in range(3, 1024):
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+
+        # Now run the actual task
+        self._task_wrapper(task_id, func, *args, **kwargs)
+
     def _task_wrapper(
         self, task_id: str, func: Callable[..., Any], *args: Any, **kwargs: Any
     ) -> None:
@@ -74,13 +94,16 @@ class TaskManager:
         tasks[task_id].update(result)
         self.state_manager.set("tasks", tasks)
 
-    def start_task(self, func: Callable[..., Any], *args: Any, **kwargs: Any) -> str:
+    def start_task(
+        self, func: Callable[..., Any], *args: Any, detach: bool = True, **kwargs: Any
+    ) -> str:
         """
         Start a new task in a separate process.
 
         Args:
             func: The function to execute
             *args: Positional arguments for the function
+            detach: If True, detach the process from parent (will keep running after parent exits)
             **kwargs: Keyword arguments for the function
 
         Returns:
@@ -97,12 +120,14 @@ class TaskManager:
         self.state_manager.set("tasks", tasks)
 
         # Start the process
+        wrapper = self._detached_task_wrapper if detach else self._task_wrapper
         process = mp.Process(
-            target=self._task_wrapper,
+            target=wrapper,
             args=(task_id, func) + args,
             kwargs=kwargs,
             daemon=False,
         )
+
         process.start()
 
         return task_id
