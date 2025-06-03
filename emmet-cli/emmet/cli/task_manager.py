@@ -7,7 +7,7 @@ import time
 import atexit
 from typing import Any, Callable, Dict, Optional
 from uuid import uuid4
-from multiprocessing.util import info, debug, _run_finalizers
+from multiprocessing.util import info, debug, _run_finalizers, _exit_function
 
 from emmet.cli.state_manager import StateManager
 
@@ -16,7 +16,7 @@ logger = logging.getLogger("emmet")
 _exiting = False
 
 
-def _exit_function(
+def _detached_exit_function(
     info=info,
     debug=debug,
     _run_finalizers=_run_finalizers,
@@ -60,7 +60,8 @@ def _exit_function(
 
 
 # Register the exit function
-atexit.register(_exit_function)
+atexit.register(_detached_exit_function)
+atexit.unregister(_exit_function)
 
 
 class TaskManager:
