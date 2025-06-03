@@ -288,7 +288,7 @@ class VaspVolumetricArchive(Archiver):
         return cls(file_names=file_names, volumetric_archives=vol_archs)
 
     def _to_parquet(self, file_name, **kwargs):
-        # to ensure that schema used contains augmentation data,
+        # to ensure that the pyarrow schema contains augmentation data,
         # use either CHGCAR or POT first
         got_aug_data = False
         for schema_k in ("CHGCAR", "POT"):
