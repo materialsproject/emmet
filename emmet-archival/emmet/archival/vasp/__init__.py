@@ -18,4 +18,5 @@ PMG_OBJ = {
     "AECCAR2": Chgcar,
     "ELFCAR": Elfcar,
     "LOCPOT": Locpot,
+    "POT": Chgcar,  # this includes augmentation data
 }

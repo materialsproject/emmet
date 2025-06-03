@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING
 from pymatgen.core import Structure
 from pymatgen.io.vasp.inputs import Incar, Poscar
 
-from emmet.archival.base import Archiver, StructureArchive
+from emmet.archival.base import Archiver
+from emmet.archival.atoms import StructureArchive
 
 if TYPE_CHECKING:
     import h5py

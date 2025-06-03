@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from enum import Enum
-import json
 from typing import TYPE_CHECKING
 
 import pyarrow as pa
@@ -13,6 +12,7 @@ from pymatgen.core import Structure
 from pymatgen.io.common import VolumetricData as PmgVolumetricData
 
 from emmet.archival.base import Archiver
+from emmet.archival.atoms import CrystalArchive
 
 if TYPE_CHECKING:
     from os import PathLike
@@ -51,6 +51,8 @@ class VolumetricArchive(Archiver):
     ) -> dict[VolumetricLabel, list[AugChargeData]]:
         aug_data_arr = {}
         for k, unfmt_data in aug_data.items():
+            if not any(line.strip() for line in unfmt_data):
+                continue
             parse_meta = True
             num_vals = -1
             aug_data_arr[VolumetricLabel(k)] = []
@@ -81,23 +83,38 @@ class VolumetricArchive(Archiver):
 
     @classmethod
     def from_pmg(cls, vd: PmgVolumetricData) -> VolumetricArchive:
+        """Convert generic pymatgen volumetric data to an archive format."""
         return cls(
             data={VolumetricLabel(k): v.tolist() for k, v in vd.data.items()},
-            data_aug=cls.parse_augmentation_charge_data(vd.data_aug),
+            data_aug=cls.parse_augmentation_charge_data(vd.data_aug) or None,
             structure=vd.structure,
         )
 
-    def _to_parquet(self, file_name: PathLike, **kwargs) -> None:
+    def to_arrow(self) -> pa.Table:
         config = {}
-        for k, v in self.data.items():
-            config[f"data_{k.value}"] = pa.array([v])
-        for k, v in self.data_aug.items():
-            config[f"data_aug_{k.value}"] = pa.array([[x.model_dump() for x in v]])
+        for k in VolumetricLabel:
+            config[f"data_{k.value}"] = pa.array([[self.data.get(k, None)]])
 
-        # CRITICAL - improve like traj does
-        config["structure"] = pa.array([json.dumps(self.structure.as_dict())])
+        if self.data_aug:
+            for k in VolumetricLabel:
+                if vals := self.data_aug.get(k, None):
+                    config[f"data_aug_{k.value}"] = pa.array(
+                        [[x.model_dump() for x in vals]]
+                    )
+                else:
+                    config[f"data_aug_{k.value}"] = pa.array([[None]])
+        else:
+            for k in VolumetricLabel:
+                config[f"data_aug_{k.value}"] = pa.array([[None]])
 
-        pq.write_table(pa.table(config), file_name)
+        crystal_archive = CrystalArchive.from_pmg(self.structure)
+        for k in CrystalArchive.model_fields:
+            config[f"structure_{k}"] = pa.array([getattr(crystal_archive, k)])
+
+        return pa.table(config)
+
+    def _to_parquet(self, file_name: PathLike, **kwargs) -> None:
+        pq.write_table(self.to_arrow(), file_name)
 
     @classmethod
     def _extract_from_parquet(
@@ -113,6 +130,6 @@ class VolumetricArchive(Archiver):
                     cls_config[data_key][vlab.value] = table[comp_key].to_pylist()[0]
 
         return PmgVolumetricData(
-            structure=Structure.from_str(table["structure"].to_pylist()[0], fmt="json"),
+            structure=CrystalArchive.from_arrow(table, prefix="structure_"),
             **cls_config,
         )

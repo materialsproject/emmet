@@ -8,26 +8,28 @@ from typing import TYPE_CHECKING
 
 from monty.serialization import loadfn
 import numpy as np
+import pyarrow as pa
+import pyarrow.parquet as pq
+from pydantic import Field
 import zarr
 
 from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calculation import VaspObject
+from emmet.core.vasp.utils import VASP_VOLUMETRIC_FILES
 
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
 from pymatgen.electronic_structure.core import Orbital, Spin
 from pymatgen.electronic_structure.dos import CompleteDos, Dos
 from pymatgen.io.vasp.outputs import Vasprun
 
-from emmet.archival.base import ArchivalFormat, Archiver
+from emmet.archival.base import Archiver
+from emmet.archival.volumetric import VolumetricArchive
 from emmet.archival.utils import zpath
-from emmet.archival.vasp import VASP_VOLUMETRIC_FILES, PMG_OBJ
+from emmet.archival.vasp import PMG_OBJ
 from emmet.archival.vasp.inputs import PoscarArchive
 
 if TYPE_CHECKING:
-    from typing import Any
-
     from pymatgen.core.sites import PeriodicSite
-    from pymatgen.io.vasp.outputs import VolumetricData
 
 
 @dataclass
@@ -258,149 +260,56 @@ class ElectronicStructureArchive(Archiver):
             ).to_group(group[group_key])
 
 
-@dataclass
-class VolumetricArchive(Archiver):
-    def __post_init__(self):
-        for file_name, obj in self.parsed_objects.items():
-            self.parsed_objects[file_name] = {
-                "object": obj,
-                "augmentation": {},
-            }
-            for aug_key, data_aug_subset in obj.data_aug.items():
-                if data_aug_subset is not None:
-                    (
-                        self.parsed_objects[file_name]["augmentation"][aug_key],
-                        _,
-                    ) = self.parse_augmentation_data(data_aug_subset)
+class VaspVolumetricArchive(Archiver):
+    """Archive all CHGCAR-like volumetric data associated with a VASP calculation."""
 
-            self.parsed_objects[file_name]["augmentation"] = (
-                self.parsed_objects[file_name]["augmentation"] or None
-            )
-
-        super().__post_init__()
+    file_names: list[str] = Field(
+        description="The names of the volumetric files included in the archive."
+    )
+    volumetric_archives: list[VolumetricArchive] = Field(
+        description="Individual volumetric archives for the files in file_names."
+    )
+    identifier: str | None = Field(
+        None, description="The identifier associated with this set of volumetric d"
+    )
 
     @classmethod
-    def from_directory(cls, calc_dir: str | Path, **kwargs) -> VolumetricArchive:
-        calc_dir = Path(calc_dir).resolve()
-        metadata = {"calc_dir": str(calc_dir), "file_paths": {}}
-        parsed_objects: dict[str, Any] = {}
-        for file_name in VASP_VOLUMETRIC_FILES:
+    def from_directory(cls, dir_name: str | Path, **kwargs) -> VaspVolumetricArchive:
+        calc_dir = Path(dir_name).resolve()
+        file_names: list[str] = []
+        vol_archs = []
+        for file_name in set(VASP_VOLUMETRIC_FILES).intersection(PMG_OBJ):
             file_path = zpath(calc_dir / file_name)
             if file_path.exists():
-                metadata["file_paths"][file_name] = file_path  # type: ignore[index]
-                parsed_objects[file_name] = PMG_OBJ[file_name].from_file(file_path)  # type: ignore[attr-defined]
+                file_names.append(file_name)
+                vol_data = PMG_OBJ[file_name].from_file(file_path)
+                vol_archs.append(VolumetricArchive.from_pmg(vol_data))
 
-        return cls(parsed_objects=parsed_objects, metadata=metadata, **kwargs)
+        return cls(file_names=file_names, volumetric_archives=vol_archs)
 
-    @staticmethod
-    def parse_augmentation_data(
-        aug_data: list[str], pad_value=None, pad_to_rank: int | None = None
-    ):
-        aug_data_parsed: list | np.ndarray = []
-        data = None
-        for _line in aug_data:
-            line = _line.strip().split()
-            if any("augmentation" in ele for ele in line):
-                rank = int(line[-1])
-                if data is not None:
-                    aug_data_parsed.append(data)
-                data_idx = 0
-                data = np.zeros(rank)
-                continue
-            for val in line:
-                if data_idx == rank:
-                    continue
-                data[data_idx] = float(val)
-                data_idx += 1
-
-        ranks = [len(row) for row in aug_data_parsed]
-        if pad_value is not None:
-            pad_to_rank = pad_to_rank or max(ranks)
-            for idx, row in enumerate(aug_data_parsed):
-                if len(row) < pad_to_rank:
-                    aug_data_parsed[idx] = np.array(
-                        list(row) + [pad_value for _ in range(pad_to_rank - len(row))]
-                    )
-            aug_data_parsed = np.array(aug_data_parsed)
-
-        return aug_data_parsed, ranks
-
-    def to_group(self, group: h5py.Group, group_key: str | None = None) -> None:
-        for vobj in self.parsed_objects.values():
-            if vobj is not None:
+    def _to_parquet(self, file_name, **kwargs):
+        # to ensure that schema used contains augmentation data,
+        # use either CHGCAR or POT first
+        got_aug_data = False
+        for schema_k in ("CHGCAR", "POT"):
+            for schema_idx, fname in enumerate(self.file_names):
+                if schema_k == fname:
+                    got_aug_data = True
+                    break
+            if got_aug_data:
                 break
 
-        if group_key is not None:
-            group.create_group(group_key)
-            group = group[group_key]
-        for k, v in self.metadata.items():
-            if k != "file_paths":
-                group.attrs[k] = v
+        if not got_aug_data:
+            schema_idx = 0
 
-        PoscarArchive(
-            parsed_objects={"POSCAR": vobj["object"].poscar}, format=self.format
-        ).to_group(group)
+        tables = []
+        for idx in [schema_idx] + [
+            i for i in range(len(self.file_names)) if i != schema_idx
+        ]:
+            table = self.volumetric_archives[idx].to_arrow()
+            table = table.append_column("file_name", pa.array([self.file_names[idx]]))
+            table = table.append_column("identifier", pa.array([self.identifier]))
+            tables.append(table)
 
-        for file_name, entry in self.parsed_objects.items():
-            group.create_group(file_name)
-            if (
-                fpath := self.metadata.get("file_paths", {}).get(file_name)
-            ) is not None:
-                group[file_name].attrs["path"] = str(fpath)
-            for chg_key, data in entry["object"].data.items():
-                group[file_name].create_dataset(
-                    chg_key, data=data, dtype=self.float_dtype, **self.compression
-                )
-
-            if entry["augmentation"] is not None:
-                group[file_name].create_group("augmentation")
-                for aug_key, aug_data in entry["augmentation"].items():
-                    group[f"{file_name}/augmentation"].create_group(aug_key)
-                    for aug_idx, aug_set in enumerate(aug_data):
-                        group[f"{file_name}/augmentation/{aug_key}"].create_dataset(
-                            f"{aug_idx+1}",
-                            data=aug_set,
-                            dtype=self.float_dtype,
-                            **self.compression,
-                        )
-
-    @classmethod
-    def get_vol_data_from_archive(
-        cls,
-        archive_name: str | Path,
-        files_to_retrieve=VASP_VOLUMETRIC_FILES,
-        fmt: str | ArchivalFormat | None = None,
-        group_key: str | None = None,
-    ) -> dict[str, VolumetricData]:
-        charge_densities = {}
-
-        with cls.load_archive(archive_name, fmt=fmt, group_key=group_key) as group:
-            poscar = PoscarArchive.from_group(group["structure"])
-            for file_name in files_to_retrieve:
-                if group.get(file_name):
-                    data = {}
-                    for k in (
-                        "total",
-                        "diff",
-                    ):
-                        if (_data := group[file_name].get(k)) is not None:
-                            data[k] = np.array(_data)
-
-                    data_aug = None
-                    if (aug_data := group[file_name].get("augmentation")) is not None:
-                        data_aug = {}
-                        for k in (
-                            "total",
-                            "diff",
-                        ):
-                            if (_data := aug_data.get(k)) is not None:
-                                data_aug[k] = [
-                                    np.array(aug_chgs) for aug_chgs in _data.values()
-                                ]
-
-                    kwargs: dict[str, Any] = {"poscar": poscar, "data": data}
-                    if all(f not in file_name.upper() for f in ("ELFCAR", "LOCPOT")):
-                        kwargs.update({"data_aug": data_aug})
-                    charge_densities[file_name] = PMG_OBJ[file_name](**kwargs)
-
-        return charge_densities
+        vol_data_table = pa.concat_tables(tables, promote_options="permissive")
+        pq.write_table(vol_data_table, file_name, **kwargs)

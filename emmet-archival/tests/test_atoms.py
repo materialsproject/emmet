@@ -3,7 +3,7 @@
 from pymatgen.core import Structure
 import numpy as np
 
-from emmet.archival.base import _RECIPROCAL, StructureArchive
+from emmet.archival.atoms import _RECIPROCAL, StructureArchive
 
 
 def test_structure_archive(tmp_dir):
