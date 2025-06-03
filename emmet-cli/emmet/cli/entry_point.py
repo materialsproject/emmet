@@ -2,15 +2,12 @@ import logging
 import sys
 import click
 from pathlib import Path
-from multiprocessing import util
 
 from emmet.cli.submit import submit
 from emmet.cli.tasks import tasks
 from emmet.cli.utils import EmmetCliError
 from emmet.cli.state_manager import StateManager
-from emmet.cli.task_manager import TaskManager, _exit_function
-
-util._exit_function = _exit_function
+from emmet.cli.task_manager import TaskManager
 
 logger = logging.getLogger("emmet")
 

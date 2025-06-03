@@ -4,6 +4,7 @@ import logging
 import multiprocessing as mp
 from datetime import datetime
 import time
+import atexit
 from typing import Any, Callable, Dict, Optional
 from uuid import uuid4
 from multiprocessing.util import info, debug, _run_finalizers
@@ -56,6 +57,10 @@ def _exit_function(
 
         debug('running the remaining "atexit" finalizers')
         _run_finalizers()
+
+
+# Register the exit function
+atexit.register(_exit_function)
 
 
 class TaskManager:
