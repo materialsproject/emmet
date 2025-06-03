@@ -4,64 +4,47 @@ import logging
 import multiprocessing as mp
 from datetime import datetime
 import time
-import atexit
+import os
 from typing import Any, Callable, Dict, Optional
 from uuid import uuid4
-from multiprocessing.util import info, debug, _run_finalizers, _exit_function
 
 from emmet.cli.state_manager import StateManager
 
 logger = logging.getLogger("emmet")
 
-_exiting = False
 
+def _detach_process():
+    """
+    Detach the process using double fork to ensure it becomes independent of the parent.
+    Returns True in the parent process, False in the child process.
+    """
+    try:
+        pid = os.fork()
+        if pid > 0:
+            return True  # Parent
+    except OSError:
+        return True  # Not on Unix or fork failed, return to parent
 
-def _detached_exit_function(
-    info=info,
-    debug=debug,
-    _run_finalizers=_run_finalizers,
-    active_children=mp.process.active_children,
-    current_process=mp.process.current_process,
-):
-    # We hold on to references to functions in the arglist due to the
-    # situation described below, where this function is called after this
-    # module's globals are destroyed.
+    # First child
+    try:
+        os.setsid()  # Become session leader
+        try:
+            pid = os.fork()
+            if pid > 0:
+                os._exit(0)  # Exit first child
+        except OSError:
+            os._exit(0)
+    except OSError:
+        os._exit(0)
 
-    global _exiting
+    # Second child (fully detached)
+    try:
+        # Close all file descriptors
+        os.closerange(3, 256)
+    except OSError:
+        pass
 
-    if not _exiting:
-        _exiting = True
-
-        info("process shutting down")
-        debug('running all "atexit" finalizers with priority >= 0')
-        _run_finalizers(0)
-
-        if current_process() is not None:
-            # We check if the current process is None here because if
-            # it's None, any call to ``active_children()`` will raise
-            # an AttributeError (active_children winds up trying to
-            # get attributes from util._current_process).  One
-            # situation where this can happen is if someone has
-            # manipulated sys.modules, causing this module to be
-            # garbage collected.  The destructor for the module type
-            # then replaces all values in the module dict with None.
-            # For instance, after setuptools runs a test it replaces
-            # sys.modules with a copy created earlier.  See issues
-            # #9775 and #15881.  Also related: #4106, #9205, and
-            # #9207.
-
-            for p in active_children():
-                if p.daemon:
-                    info("calling terminate() for daemon %s", p.name)
-                    p._popen.terminate()
-
-        debug('running the remaining "atexit" finalizers')
-        _run_finalizers()
-
-
-# Register the exit function
-atexit.register(_detached_exit_function)
-atexit.unregister(_exit_function)
+    return False  # We are in the detached process
 
 
 class TaskManager:
@@ -80,7 +63,10 @@ class TaskManager:
         self, task_id: str, func: Callable[..., Any], *args: Any, **kwargs: Any
     ) -> None:
         """Wrapper function that executes the task and stores its result."""
-        import time
+        if _detach_process():
+            return  # Parent process returns immediately
+
+        # We are now in the detached child process
         import threading
 
         running = True
@@ -119,6 +105,7 @@ class TaskManager:
             )
         finally:
             running = False
+            os._exit(0)  # Ensure the process exits cleanly
 
     def _store_task_result(self, task_id: str, result: Dict[str, Any]) -> None:
         """Store the task result in the state manager."""
@@ -128,12 +115,11 @@ class TaskManager:
 
     def start_task(self, func: Callable[..., Any], *args: Any, **kwargs: Any) -> str:
         """
-        Start a new task in a separate process.
+        Start a new task in a separate, fully detached process.
 
         Args:
             func: The function to execute
             *args: Positional arguments for the function
-            detach: If True, detach the process from parent (will keep running after parent exits)
             **kwargs: Keyword arguments for the function
 
         Returns:
