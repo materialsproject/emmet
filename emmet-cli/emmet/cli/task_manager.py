@@ -6,13 +6,57 @@ from datetime import datetime
 import time
 from typing import Any, Callable, Dict, Optional
 from uuid import uuid4
+from multiprocessing.util import info, debug, _run_finalizers
 
 from emmet.cli.state_manager import StateManager
 
 logger = logging.getLogger("emmet")
 
-# Get spawn context for process creation
-spawn_context = mp.get_context("spawn")
+_exiting = False
+
+
+def _exit_function(
+    info=info,
+    debug=debug,
+    _run_finalizers=_run_finalizers,
+    active_children=mp.process.active_children,
+    current_process=mp.process.current_process,
+):
+    # We hold on to references to functions in the arglist due to the
+    # situation described below, where this function is called after this
+    # module's globals are destroyed.
+
+    global _exiting
+
+    if not _exiting:
+        _exiting = True
+
+        info("process shutting down")
+        debug('running all "atexit" finalizers with priority >= 0')
+        _run_finalizers(0)
+
+        if current_process() is not None:
+            # We check if the current process is None here because if
+            # it's None, any call to ``active_children()`` will raise
+            # an AttributeError (active_children winds up trying to
+            # get attributes from util._current_process).  One
+            # situation where this can happen is if someone has
+            # manipulated sys.modules, causing this module to be
+            # garbage collected.  The destructor for the module type
+            # then replaces all values in the module dict with None.
+            # For instance, after setuptools runs a test it replaces
+            # sys.modules with a copy created earlier.  See issues
+            # #9775 and #15881.  Also related: #4106, #9205, and
+            # #9207.
+
+            for p in active_children():
+                if p.daemon:
+                    info("calling terminate() for daemon %s", p.name)
+                    p._popen.terminate()
+
+        debug('running the remaining "atexit" finalizers')
+        _run_finalizers()
+
 
 class TaskManager:
     """Manages background tasks and their states."""
@@ -99,8 +143,7 @@ class TaskManager:
         }
         self.state_manager.set("tasks", tasks)
 
-        # Start the process using spawn context
-        process = spawn_context.Process(
+        process = mp.Process(
             target=self._task_wrapper,
             args=(task_id, func) + args,
             kwargs=kwargs,
