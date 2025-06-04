@@ -16,6 +16,7 @@ from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID, AlphaID, MPculeID
 from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
+from emmet.core.typing import StructureType
 from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
 
@@ -63,7 +64,7 @@ class MaterialsDoc(StructureMetadata, EmmetBaseModel):
         "This comes in the form: mp-******.",
     )
 
-    structure: AnnotatedStructure | None = Field(
+    structure: StructureType = Field(
         ...,
         description="The structure of the this material.",
     )
@@ -78,7 +79,7 @@ class MaterialsDoc(StructureMetadata, EmmetBaseModel):
         description="List of deprecation tags detailing why this materials document isn't valid.",
     )
 
-    initial_structures: list[AnnotatedStructure | None] = Field(
+    initial_structures: list[StructureType] = Field(
         [],
         description="Initial structures used in the DFT optimizations corresponding to this material.",
     )

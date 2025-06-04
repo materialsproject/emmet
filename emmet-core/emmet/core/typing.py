@@ -7,14 +7,23 @@ from datetime import datetime
 from pathlib import Path
 from typing import Literal, TypeAlias
 
+from pymatgen.core import Structure
 from pymatgen.electronic_structure.bandstructure import Kpoint
 from typing_extensions import TypedDict
 
+from emmet.core import ARROW_COMPATIBLE
+
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
+
+
 ############################################################
-# GENERICS
+# ALIASES
 ############################################################
 PathLike: TypeAlias = str | Path | os.DirEntry[str]
 """Type of a generic path-like object"""
+
+StructureType: TypeAlias = AnnotatedStructure if ARROW_COMPATIBLE else Structure
 
 
 ############################################################

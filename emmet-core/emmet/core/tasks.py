@@ -32,6 +32,7 @@ from emmet.core.mpid import MPID, AlphaID
 from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 from emmet.core.structure import StructureMetadata
 from emmet.core.trajectory import Trajectory as CoreTrajectory
+from emmet.core.typing import StructureType
 from emmet.core.utils import jsanitize, type_override, utcnow
 from emmet.core.vasp.calc_types import (
     CalcType,
@@ -91,7 +92,7 @@ class InputDoc(OrigInputs):
 
 
 class OutputDoc(BaseModel):
-    structure: AnnotatedStructure | None = Field(
+    structure: StructureType | None = Field(
         None,
         title="Output Structure",
         description="Output Structure from the VASP calculation.",
@@ -320,7 +321,7 @@ class CoreTaskDoc(StructureMetadata):
     run_type: RunType | None = Field(
         None, description="The functional used in the calculation."
     )
-    structure: AnnotatedStructure | None = Field(
+    structure: StructureType | None = Field(
         None, description="Final output structure from the task"
     )
     tags: list[str] | None = Field(
