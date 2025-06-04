@@ -7,14 +7,13 @@ import logging
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Optional, TypeAlias
 
 import numpy as np
 from monty.json import MontyDecoder
 from monty.serialization import loadfn
 from pydantic import (
     BaseModel,
-    ConfigDict,
     Field,
     field_serializer,
     field_validator,
@@ -25,7 +24,6 @@ from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core.trajectory import Trajectory
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.io.vasp import Incar, Kpoints, Poscar
-from pymatgen.io.vasp import Potcar as VaspPotcar
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.common import convert_datetime
@@ -63,7 +61,8 @@ if ARROW_COMPATIBLE:
         trajectory_adapter,
     )
     from emmet.core.serialization_adapters.poscar_adapter import AnnotatedPoscar
-    from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
+
+PoscarType: TypeAlias = AnnotatedPoscar if ARROW_COMPATIBLE else Poscar
 
 monty_decoder = MontyDecoder()
 logger = logging.getLogger(__name__)
@@ -82,7 +81,7 @@ class Potcar(BaseModel):
 
 
 class OrigInputs(CalculationInput):
-    poscar: AnnotatedPoscar | None = Field(
+    poscar: PoscarType | None = Field(
         None,
         description="Pymatgen object representing the POSCAR file.",
     )
