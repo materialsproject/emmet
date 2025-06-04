@@ -92,7 +92,6 @@ def test_doc_enum():
 
 def test_blocked_hash(tmp_dir):
     import blake3
-    from monty.io import zopen
 
     file_text = (
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, "
