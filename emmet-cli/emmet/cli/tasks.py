@@ -119,3 +119,40 @@ def clean(ctx):
     task_manager = ctx.obj["task_manager"]
     task_manager.cleanup_finished_tasks()
     click.echo("Cleaned up completed tasks")
+
+
+@tasks.command()
+@click.argument("task_id", type=str)
+@click.option(
+    "--force", "-f", is_flag=True, help="Force termination without confirmation"
+)
+@click.pass_context
+def terminate(ctx, task_id, force):
+    """Terminate a running task."""
+    try:
+        task_uuid = UUID(task_id)
+    except ValueError:
+        raise EmmetCliError(f"Invalid task ID: {task_id}")
+
+    task_manager = ctx.obj["task_manager"]
+    task_status = task_manager.get_task_status(str(task_uuid))
+
+    if task_status["status"] == "not_found":
+        click.echo(f"Task {task_id} not found")
+        return
+
+    if task_status["status"] != "running":
+        click.echo(f"Task {task_id} is not running (status: {task_status['status']})")
+        return
+
+    if not force and not click.confirm(
+        f"Are you sure you want to terminate task {task_id}?"
+    ):
+        click.echo("Operation cancelled")
+        return
+
+    status = task_manager.terminate_task(str(task_uuid))
+    if status["status"] == "terminated":
+        click.secho(f"Task {task_id} has been terminated", fg="yellow")
+    else:
+        click.secho(f"Failed to terminate task {task_id}", fg="red")

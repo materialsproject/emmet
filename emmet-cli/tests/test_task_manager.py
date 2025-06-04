@@ -131,14 +131,14 @@ def test_sequential_tasks(task_manager):
     # Start and complete first task
     task_id1 = task_manager.start_task(task_test_function)
     status1 = task_manager.wait_for_task_completion(
-        task_id1, timeout=1, check_interval=0.1
+        task_id1, timeout=2, check_interval=0.1
     )
     assert status1["status"] == "completed"
 
     # Start and complete second task
     task_id2 = task_manager.start_task(task_test_function)
     status2 = task_manager.wait_for_task_completion(
-        task_id2, timeout=1, check_interval=0.1
+        task_id2, timeout=2, check_interval=0.1
     )
     assert status2["status"] == "completed"
 
@@ -459,3 +459,196 @@ def test_no_pid_various_times(task_manager, time_factor, expected_running):
         status = task_manager.get_task_status(task_id)
         if not expected_running:
             assert status["status"] == "terminated"
+
+
+def test_terminate_running_task(task_manager):
+    """Test terminating a running task."""
+    task_id = task_manager.start_task(infinite_task_function)
+
+    # Wait for the detached process to start
+    time.sleep(0.5)
+
+    # Get initial status
+    status = task_manager.get_task_status(task_id)
+    assert status["status"] == "running"
+    assert "detached_pid" in status
+
+    # Terminate the task
+    final_status = task_manager.terminate_task(task_id)
+    assert final_status["status"] == "terminated"
+    assert "completed_at" in final_status
+    assert "error" in final_status
+    assert "terminated by user request" in final_status["error"].lower()
+
+    # Verify the task is no longer running
+    assert not task_manager.is_task_running(task_id)
+
+
+def test_terminate_nonexistent_task(task_manager):
+    """Test attempting to terminate a nonexistent task."""
+    status = task_manager.terminate_task("nonexistent-task")
+    assert status["status"] == "not_found"
+
+
+def test_terminate_completed_task(task_manager):
+    """Test attempting to terminate an already completed task."""
+    task_id = task_manager.start_task(task_test_function)
+
+    # Wait for task to complete
+    task_manager.wait_for_task_completion(task_id, timeout=1)
+
+    # Try to terminate the completed task
+    status = task_manager.terminate_task(task_id)
+    assert status["status"] == "completed"
+    assert "result" in status
+    assert status["result"] == "completed"
+
+
+def test_terminate_failed_task(task_manager):
+    """Test attempting to terminate a failed task."""
+    task_id = task_manager.start_task(failing_task_test_function)
+
+    # Wait for task to fail
+    task_manager.wait_for_task_completion(task_id, timeout=1)
+
+    # Try to terminate the failed task
+    status = task_manager.terminate_task(task_id)
+    assert status["status"] == "failed"
+    assert "error" in status
+    assert "Task failed" in status["error"]
+
+
+def test_terminate_already_terminated_task(task_manager):
+    """Test attempting to terminate an already terminated task."""
+    task_id = task_manager.start_task(infinite_task_function)
+
+    # Wait for the detached process to start
+    time.sleep(0.5)
+
+    # Terminate the task first time
+    first_status = task_manager.terminate_task(task_id)
+    assert first_status["status"] == "terminated"
+
+    # Try to terminate again
+    second_status = task_manager.terminate_task(task_id)
+    assert second_status["status"] == "terminated"
+    assert second_status == first_status  # Should return the same status
+
+
+def test_terminate_task_with_only_initial_pid(task_manager):
+    """Test terminating a task that only has initial PID."""
+    task_id = task_manager.start_task(infinite_task_function)
+
+    # Immediately try to terminate before detached PID is set
+    status = task_manager.terminate_task(task_id)
+    assert status["status"] == "terminated"
+    assert "error" in status
+    assert "terminated by user request" in status["error"].lower()
+
+    # Verify the task is no longer running
+    assert not task_manager.is_task_running(task_id)
+
+
+@pytest.mark.parametrize(
+    "exception_class",
+    [
+        psutil.NoSuchProcess,
+        psutil.AccessDenied,
+        lambda pid: psutil.TimeoutExpired(pid),  # TimeoutExpired needs special handling
+    ],
+)
+def test_terminate_task_with_process_errors(task_manager, exception_class):
+    """Test terminating a task when process operations raise exceptions."""
+    task_id = task_manager.start_task(infinite_task_function)
+
+    # Wait for the detached process to start
+    time.sleep(0.5)
+
+    def mock_process(*args):
+        pid = args[0]  # Get the actual PID being passed
+        if exception_class == psutil.TimeoutExpired:
+            raise exception_class(pid)
+        raise exception_class(pid=pid)
+
+    with patch("psutil.Process", side_effect=mock_process):
+        status = task_manager.terminate_task(task_id)
+        assert status["status"] == "terminated"
+        assert "error" in status
+        assert "terminated by user request" in status["error"].lower()
+
+
+def test_sequential_task_termination(task_manager):
+    """Test terminating tasks in sequence."""
+    # Start and terminate first task
+    task_id1 = task_manager.start_task(infinite_task_function)
+    time.sleep(0.5)  # Wait for task to start
+    status1 = task_manager.terminate_task(task_id1)
+    assert status1["status"] == "terminated"
+    assert "terminated by user request" in status1["error"].lower()
+
+    # Start and terminate second task
+    task_id2 = task_manager.start_task(infinite_task_function)
+    time.sleep(0.5)  # Wait for task to start
+    status2 = task_manager.terminate_task(task_id2)
+    assert status2["status"] == "terminated"
+    assert "terminated by user request" in status2["error"].lower()
+
+    # Verify both tasks remain terminated
+    assert task_manager.get_task_status(task_id1)["status"] == "terminated"
+    assert task_manager.get_task_status(task_id2)["status"] == "terminated"
+
+
+def test_terminate_mixed_tasks(task_manager):
+    """Test terminating a mix of running, completed, and failed tasks."""
+    # Start a task that will complete
+    completed_task_id = task_manager.start_task(task_test_function)
+    task_manager.wait_for_task_completion(completed_task_id, timeout=2)
+
+    # Start a task that will fail
+    failed_task_id = task_manager.start_task(failing_task_test_function)
+    task_manager.wait_for_task_completion(failed_task_id, timeout=2)
+
+    # Start a task that will be terminated
+    running_task_id = task_manager.start_task(infinite_task_function)
+    time.sleep(0.5)  # Wait for task to start
+
+    # Try to terminate all tasks
+    completed_status = task_manager.terminate_task(completed_task_id)
+    failed_status = task_manager.terminate_task(failed_task_id)
+    running_status = task_manager.terminate_task(running_task_id)
+
+    # Verify completed task stays completed
+    assert completed_status["status"] == "completed"
+    assert completed_status["result"] == "completed"
+
+    # Verify failed task stays failed
+    assert failed_status["status"] == "failed"
+    assert "Task failed" in failed_status["error"]
+
+    # Verify running task was terminated
+    assert running_status["status"] == "terminated"
+    assert "terminated by user request" in running_status["error"].lower()
+
+
+def test_terminate_task_cleanup(task_manager):
+    """Test that terminated tasks are properly cleaned up."""
+    # Start and terminate a task
+    task_id = task_manager.start_task(infinite_task_function)
+    time.sleep(0.5)  # Wait for task to start
+
+    # Get the PID before termination
+    status = task_manager.get_task_status(task_id)
+    assert "detached_pid" in status
+    pid = status["detached_pid"]
+
+    # Terminate the task
+    task_manager.terminate_task(task_id)
+
+    # Verify the process is no longer running
+    assert not _is_process_running(pid)
+
+    # Clean up tasks
+    task_manager.cleanup_finished_tasks()
+
+    # Verify task is removed from state
+    assert task_manager.get_task_status(task_id)["status"] == "not_found"

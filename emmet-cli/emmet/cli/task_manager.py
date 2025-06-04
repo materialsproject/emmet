@@ -5,13 +5,15 @@ import multiprocessing as mp
 from datetime import datetime
 import time
 import os
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Literal
 from uuid import uuid4
 import psutil
 
 from emmet.cli.state_manager import StateManager
 
 logger = logging.getLogger("emmet")
+
+TaskStatus = Literal["running", "completed", "failed", "terminated", "not_found"]
 
 
 def _detach_process():
@@ -79,6 +81,45 @@ class TaskManager:
         self.state_manager = state_manager
         self.running_status_update_interval = running_status_update_interval
 
+    def _get_current_timestamp(self) -> str:
+        """Get current timestamp in ISO format."""
+        return datetime.now().isoformat()
+
+    def _update_task_status(
+        self,
+        task_id: str,
+        status: TaskStatus,
+        error: Optional[str] = None,
+        result: Optional[Any] = None,
+        additional_data: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """Update task status with common fields."""
+        update_data = {"status": status}
+
+        if status in ["completed", "failed", "terminated"]:
+            update_data["completed_at"] = self._get_current_timestamp()
+
+        if error is not None:
+            update_data["error"] = error
+
+        if result is not None:
+            update_data["result"] = result
+
+        if additional_data:
+            update_data.update(additional_data)
+
+        self._store_task_result(task_id, update_data)
+
+    def _try_terminate_process(self, pid: int, timeout: int = 3) -> bool:
+        """Try to terminate a process with the given PID."""
+        try:
+            process = psutil.Process(pid)
+            process.terminate()
+            process.wait(timeout=timeout)
+            return True
+        except (psutil.NoSuchProcess, psutil.TimeoutExpired, psutil.AccessDenied):
+            return False
+
     def _task_wrapper(
         self, task_id: str, func: Callable[..., Any], *args: Any, **kwargs: Any
     ) -> None:
@@ -86,62 +127,38 @@ class TaskManager:
         if _detach_process():
             return  # Parent process returns immediately
 
-        # We are now in the detached child process
-        import threading
-
         # Store the detached process PID
-        self._store_task_result(task_id, {"detached_pid": os.getpid()})
+        self._update_task_status(
+            task_id, "running", additional_data={"detached_pid": os.getpid()}
+        )
 
         try:
             result = func(*args, **kwargs)
-            self._store_task_result(
-                task_id,
-                {
-                    "status": "completed",
-                    "result": result,
-                    "completed_at": datetime.now().isoformat(),
-                },
-            )
+            self._update_task_status(task_id, "completed", result=result)
         except Exception as e:
             logger.exception(f"Task {task_id} failed")
-            self._store_task_result(
-                task_id,
-                {
-                    "status": "failed",
-                    "error": str(e),
-                    "completed_at": datetime.now().isoformat(),
-                },
-            )
+            self._update_task_status(task_id, "failed", error=str(e))
         finally:
-            os._exit(0)  # Ensure the process exits cleanly
+            os._exit(0)
 
     def _store_task_result(self, task_id: str, result: Dict[str, Any]) -> None:
         """Store the task result in the state manager."""
         tasks = self.state_manager.get("tasks", {})
+        if task_id not in tasks:
+            tasks[task_id] = {}
         tasks[task_id].update(result)
         self.state_manager.set("tasks", tasks)
 
     def start_task(self, func: Callable[..., Any], *args: Any, **kwargs: Any) -> str:
-        """
-        Start a new task in a separate, fully detached process.
-
-        Args:
-            func: The function to execute
-            *args: Positional arguments for the function
-            **kwargs: Keyword arguments for the function
-
-        Returns:
-            str: The task ID
-        """
+        """Start a new task in a separate, fully detached process."""
         task_id = str(uuid4())
 
         # Initialize task state
-        tasks = self.state_manager.get("tasks", {})
-        tasks[task_id] = {
-            "status": "running",
-            "started_at": datetime.now().isoformat(),
-        }
-        self.state_manager.set("tasks", tasks)
+        self._update_task_status(
+            task_id,
+            "running",
+            additional_data={"started_at": self._get_current_timestamp()},
+        )
 
         process = mp.Process(
             target=self._task_wrapper,
@@ -152,7 +169,9 @@ class TaskManager:
         process.start()
 
         # Store the initial process ID
-        self._store_task_result(task_id, {"initial_pid": process.pid})
+        self._update_task_status(
+            task_id, "running", additional_data={"initial_pid": process.pid}
+        )
 
         return task_id
 
@@ -184,89 +203,63 @@ class TaskManager:
                 return status
             time.sleep(check_interval)
 
-    def is_task_running(self, task_id: str) -> bool:
-        """
-        Check if a task is still running.
-
-        Args:
-            task_id: The ID of the task to check
-
-        Returns:
-            bool: True if the task is still running, False if completed, not found,
-            or if the task was terminated.
-        """
-        status = self.get_task_status(task_id)
-        if status["status"] != "running":
-            return False
-
+    def _check_process_state(self, task_id: str, status: Dict[str, Any]) -> bool:
+        """Check the state of a process and update status accordingly."""
         now = datetime.now()
 
-        # If we have a PID, check if the process is still running
+        # Check detached process
         if "detached_pid" in status:
             if not _is_process_running(status["detached_pid"]):
-                self._store_task_result(
-                    task_id,
-                    {
-                        "status": "terminated",
-                        "completed_at": now.isoformat(),
-                        "error": "Process was terminated unexpectedly",
-                    },
+                self._update_task_status(
+                    task_id, "terminated", error="Process was terminated unexpectedly"
                 )
                 return False
             return True
 
-        # If we have an initial PID but no detached PID, check if we should wait longer
+        # Check initial process
         if "initial_pid" in status and "started_at" in status:
             start_time = datetime.fromisoformat(status["started_at"])
             elapsed = (now - start_time).total_seconds()
 
-            # Give the process up to 5 seconds to detach before checking its status
             if elapsed < self.DETACH_GRACE_PERIOD:
                 return True
 
             if not _is_process_running(status["initial_pid"]):
-                self._store_task_result(
+                self._update_task_status(
                     task_id,
-                    {
-                        "status": "terminated",
-                        "completed_at": now.isoformat(),
-                        "error": "Process failed to detach and was terminated",
-                    },
+                    "terminated",
+                    error="Process failed to detach and was terminated",
                 )
                 return False
-            # Process is still running but hasn't detached yet
             return True
 
-        # If we have neither PID but the task is marked as running,
-        # check if we should wait longer for initialization
+        # Check initialization period
         if "started_at" in status:
             start_time = datetime.fromisoformat(status["started_at"])
             elapsed = (now - start_time).total_seconds()
 
-            # Give the process up to 2 seconds to initialize and register its PID
             if elapsed < self.INIT_GRACE_PERIOD:
                 return True
 
-            self._store_task_result(
+            self._update_task_status(
                 task_id,
-                {
-                    "status": "terminated",
-                    "completed_at": now.isoformat(),
-                    "error": "Process was terminated before initialization completed",
-                },
+                "terminated",
+                error="Process was terminated before initialization completed",
             )
             return False
 
-        # No started_at timestamp - this shouldn't happen but handle it anyway
-        self._store_task_result(
-            task_id,
-            {
-                "status": "terminated",
-                "completed_at": now.isoformat(),
-                "error": "Invalid task state: no start time recorded",
-            },
+        self._update_task_status(
+            task_id, "terminated", error="Invalid task state: no start time recorded"
         )
         return False
+
+    def is_task_running(self, task_id: str) -> bool:
+        """Check if a task is still running."""
+        status = self.get_task_status(task_id)
+        if status["status"] != "running":
+            return False
+
+        return self._check_process_state(task_id, status)
 
     def cleanup_finished_tasks(self) -> None:
         """Remove finished tasks from the state manager."""
@@ -277,3 +270,21 @@ class TaskManager:
         for task_id in finished_tasks:
             del tasks[task_id]
         self.state_manager.set("tasks", tasks)
+
+    def terminate_task(self, task_id: str) -> Dict[str, Any]:
+        """Terminate a running task."""
+        status = self.get_task_status(task_id)
+        if status["status"] != "running":
+            return status
+
+        # Try to terminate the detached process first
+        if "detached_pid" in status:
+            self._try_terminate_process(status["detached_pid"])
+        # If the process is still in initial state, try terminating that
+        elif "initial_pid" in status:
+            self._try_terminate_process(status["initial_pid"])
+
+        self._update_task_status(
+            task_id, "terminated", error="Task was terminated by user request"
+        )
+        return self.get_task_status(task_id)
