@@ -7,7 +7,7 @@ import logging
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 import numpy as np
 from monty.json import MontyDecoder
@@ -62,7 +62,8 @@ if ARROW_COMPATIBLE:
         trajectory_adapter,
     )
     from emmet.core.serialization_adapters.poscar_adapter import AnnotatedPoscar
-    from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
+
+PoscarType: TypeAlias = AnnotatedPoscar if ARROW_COMPATIBLE else Poscar
 
 monty_decoder = MontyDecoder()
 logger = logging.getLogger(__name__)
@@ -81,7 +82,7 @@ class Potcar(BaseModel):
 
 
 class OrigInputs(CalculationInput):
-    poscar: AnnotatedPoscar | None = Field(
+    poscar: PoscarType | None = Field(
         None,
         description="Pymatgen object representing the POSCAR file.",
     )
