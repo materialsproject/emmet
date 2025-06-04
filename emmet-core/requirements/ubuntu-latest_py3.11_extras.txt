@@ -455,7 +455,7 @@ tqdm==4.67.1
     #   pymatgen
 transport-analysis==0.1.2
     # via emmet-core (setup.py)
-typeguard==4.4.2
+typeguard==4.4.3
     # via inflect
 types-requests==2.32.0.20250602
     # via emmet-core (setup.py)
