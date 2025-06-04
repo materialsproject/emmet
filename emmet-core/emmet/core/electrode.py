@@ -5,6 +5,7 @@ import re
 from collections import defaultdict
 from collections.abc import Callable
 from datetime import datetime
+from typing import TypeAlias
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 from pymatgen.analysis.phase_diagram import PhaseDiagram
@@ -33,6 +34,13 @@ if ARROW_COMPATIBLE:
         AnnotatedConversionElectrode,
         AnnotatedInsertionElectrode,
     )
+
+InsertionElectrodeType: TypeAlias = (
+    AnnotatedInsertionElectrode if ARROW_COMPATIBLE else InsertionElectrode
+)
+ConversionElectrodeType: TypeAlias = (
+    AnnotatedConversionElectrode if ARROW_COMPATIBLE else ConversionElectrode
+)
 
 
 class BatteryType(str, ValueEnum):
@@ -332,7 +340,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
         description="Composition summary data for all material in entries across all voltage pairs.",
     )
 
-    electrode_object: AnnotatedInsertionElectrode | None = Field(
+    electrode_object: InsertionElectrodeType | None = Field(
         None,
         description="The Pymatgen electrode object.",
     )
@@ -526,7 +534,7 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
         None, description="Returns all of the voltage steps material pairs."
     )
 
-    electrode_object: AnnotatedConversionElectrode | None = Field(
+    electrode_object: ConversionElectrodeType | None = Field(
         None, description="The Pymatgen conversion electrode object."
     )
 
