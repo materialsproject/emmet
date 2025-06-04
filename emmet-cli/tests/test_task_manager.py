@@ -107,3 +107,62 @@ def test_sequential_tasks(task_manager):
     # Verify both tasks completed successfully
     assert task_manager.get_task_status(task_id1)["status"] == "completed"
     assert task_manager.get_task_status(task_id2)["status"] == "completed"
+
+
+def test_task_pid_storage(task_manager):
+    """Test that task PIDs are properly stored."""
+    # Start a task
+    task_id = task_manager.start_task(long_task_test_function)
+
+    # Check initial status
+    initial_status = task_manager.get_task_status(task_id)
+    assert "initial_pid" in initial_status
+    assert isinstance(initial_status["initial_pid"], int)
+    assert initial_status["initial_pid"] > 0
+
+    # Wait a bit for the detached process to start and store its PID
+    time.sleep(0.5)
+
+    # Check detached status
+    detached_status = task_manager.get_task_status(task_id)
+    assert "detached_pid" in detached_status
+    assert isinstance(detached_status["detached_pid"], int)
+    assert detached_status["detached_pid"] > 0
+
+    # Verify the PIDs are different (due to process detachment)
+    assert detached_status["detached_pid"] != initial_status["initial_pid"]
+
+    # Wait for task completion
+    final_status = task_manager.wait_for_task_completion(task_id)
+    assert final_status["status"] == "completed"
+
+    # Verify PIDs are preserved after completion
+    assert final_status["initial_pid"] == initial_status["initial_pid"]
+    assert final_status["detached_pid"] == detached_status["detached_pid"]
+
+
+def test_failing_task_pid_storage(task_manager):
+    """Test that PIDs are properly stored even for failing tasks."""
+    # Start a failing task
+    task_id = task_manager.start_task(failing_task_test_function)
+
+    # Check initial status
+    initial_status = task_manager.get_task_status(task_id)
+    assert "initial_pid" in initial_status
+    assert isinstance(initial_status["initial_pid"], int)
+
+    # Wait a bit for the detached process to start and store its PID
+    time.sleep(0.5)
+
+    # Check detached status
+    detached_status = task_manager.get_task_status(task_id)
+    assert "detached_pid" in detached_status
+    assert isinstance(detached_status["detached_pid"], int)
+
+    # Wait for task completion
+    final_status = task_manager.wait_for_task_completion(task_id)
+    assert final_status["status"] == "failed"
+
+    # Verify PIDs are preserved after failure
+    assert final_status["initial_pid"] == initial_status["initial_pid"]
+    assert final_status["detached_pid"] == detached_status["detached_pid"]

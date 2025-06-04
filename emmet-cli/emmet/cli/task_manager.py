@@ -69,6 +69,9 @@ class TaskManager:
         # We are now in the detached child process
         import threading
 
+        # Store the detached process PID
+        self._store_task_result(task_id, {"detached_pid": os.getpid()})
+
         running = True
 
         def update_running_status():
@@ -142,6 +145,9 @@ class TaskManager:
             daemon=False,
         )
         process.start()
+
+        # Store the initial process ID
+        self._store_task_result(task_id, {"initial_pid": process.pid})
 
         return task_id
 
