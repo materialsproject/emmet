@@ -90,7 +90,10 @@ if db_uri:
     )
 
     phonon_bs_store = MongoURIStore(
-        uri=db_uri, database="mp_core", key="material_id", collection_name="pmg_ph_bs"
+        uri=db_uri,
+        database=f"mp_core_{db_suffix}",
+        key="material_id",
+        collection_name="phonon",
     )
 
     eos_store = MongoURIStore(
