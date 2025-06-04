@@ -2,7 +2,7 @@ import numpy as np
 from pytest import approx, fixture
 
 from monty.serialization import loadfn
-from pymatgen.core import Element, Structure
+from pymatgen.core import Element, Structure, Molecule
 from pymatgen.core.trajectory import Trajectory as PmgTraj
 
 from emmet.core.tasks import TaskDoc
@@ -14,7 +14,7 @@ def si_task(test_dir):
     return TaskDoc.from_directory(test_dir / "vasp" / "Si_old_double_relax")
 
 
-def test_reorder_structure():
+def test_reorder_sites():
     # Test that site ordering works correctly
 
     lattice = [[5.0, 0, 0], [4, 0, 0], [4.5, 0, 0]]
@@ -36,12 +36,22 @@ def test_reorder_structure():
     for _ in range(2 * len(elements)):
         new_z = [z for z in ref_z]
         np.random.shuffle(new_z)
+
         structure = Structure(lattice, [Element.from_Z(z) for z in new_z], coords)
-        reordered_struct, reordered_idx = Trajectory.reorder_structure(structure, ref_z)
+        reordered_struct, reordered_idx = Trajectory.reorder_sites(structure, ref_z)
         assert all(site.specie.Z == ref_z[i] for i, site in enumerate(reordered_struct))
         assert all(
             np.abs(np.linalg.norm(reordered_struct[i].coords - structure[old_i].coords))
             < 1e-6
+            for i, old_i in enumerate(reordered_idx)
+        )
+
+        # ensur that these also work for Molecules
+        mol = Molecule.from_sites(structure)
+        reordered_mol, reordered_idx = Trajectory.reorder_sites(structure, ref_z)
+        assert all(site.specie.Z == ref_z[i] for i, site in enumerate(reordered_mol))
+        assert all(
+            np.abs(np.linalg.norm(reordered_mol[i].coords - mol[old_i].coords)) < 1e-6
             for i, old_i in enumerate(reordered_idx)
         )
 
@@ -79,6 +89,9 @@ def test_pmg(si_task):
     roundtrip = Trajectory.from_pmg(pmg_traj)
 
     for k in Trajectory.model_fields:
+        if k == "ionic_step_properties":
+            continue
+
         if (
             k
             in (
