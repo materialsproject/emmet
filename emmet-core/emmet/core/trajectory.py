@@ -347,7 +347,7 @@ class AtomTrajectory(BaseModel):
         pymatgen.core.trajectory.Trajectory
         """
         frame_props = set(frame_props or self.ionic_step_properties)
-        if "magmoms" in frame_props and self.magmoms:
+        if "magmoms" in frame_props:
             frame_props.discard("magmoms")
 
         if indices:
@@ -592,6 +592,7 @@ class Trajectory(AtomTrajectory):
         ).difference(
             {
                 "energy",
+                "magmoms",
             }
         )
         # refresh calc, run, and task type if possible
