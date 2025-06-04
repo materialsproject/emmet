@@ -61,9 +61,6 @@ jobs:
         python-version: ["3.10", "3.11", "3.12"]
         exclude:
           - os : "ubuntu-latest"
-            package: "emmet-core"
-            python-version: "3.12"
-          - os : "ubuntu-latest"
             package: "emmet-builders"
             python-version: "3.12"
           - os : "ubuntu-latest"

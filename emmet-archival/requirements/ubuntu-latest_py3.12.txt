@@ -90,6 +90,8 @@ pydantic-settings==2.9.1
     # via emmet-core
 pymatgen==2025.1.9
     # via emmet-core
+pymatgen-io-validation==0.1.0rc0
+    # via emmet-core
 pyparsing==3.2.3
     # via matplotlib
 python-dateutil==2.9.0.post0

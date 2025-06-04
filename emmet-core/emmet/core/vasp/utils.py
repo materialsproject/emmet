@@ -13,6 +13,8 @@ if TYPE_CHECKING:
     from typing import Any
     from emmet.core.typing import PathLike
 
+TASK_NAMES = {"precondition"}.union([f"relax{i+1}" for i in range(9)])
+
 
 class FileMetadata(BaseModel):
     """
@@ -68,6 +70,17 @@ class FileMetadata(BaseModel):
         if not isinstance(other, FileMetadata):
             return NotImplemented
         return self.path == other.path
+
+    @property
+    def calc_suffix(self) -> str:
+        """Get any calculation-related suffixes, e.g., relax1."""
+        suffix: str | None = None
+        suffixes = self.path.suffixes
+        for i in range(len(suffixes)):
+            if (s := suffixes[-1 - i].split(".")[-1]) in TASK_NAMES:
+                suffix = s
+                break
+        return suffix or "standard"
 
 
 VASP_INPUT_FILES = [
@@ -147,7 +160,6 @@ def discover_vasp_files(
 
     head_dir = Path(target_dir)
     vasp_files: list[FileMetadata] = []
-
     with os.scandir(head_dir) as scan_dir:
         for p in scan_dir:
             # Check that at least one VASP file matches the file name
@@ -158,7 +170,7 @@ def discover_vasp_files(
 
 def discover_and_sort_vasp_files(
     target_dir: PathLike,
-) -> dict[str, list[FileMetadata]]:
+) -> dict[str, dict[str, Path | list[Path]]]:
     """
     Find and sort VASP files from a directory for TaskDoc.
 
@@ -171,16 +183,18 @@ def discover_and_sort_vasp_files(
     dict of str (categories) to list of FileMetadata (list of VASP files in
         that category)
     """
-    by_type: dict[str, list[FileMetadata]] = defaultdict(list)
+    by_type: defaultdict[str, dict[str, Path | list[Path]]] = defaultdict(dict)
     for _f in discover_vasp_files(target_dir):
         f = _f.name.lower()
+        file_path = _f.path.resolve()
+
         for k in (
             "vasprun",
             "contcar",
             "outcar",
         ):
             if k in f:
-                by_type[f"{k}_file"].append(_f)
+                by_type[_f.calc_suffix][f"{k}_file"] = file_path
                 break
         else:
             # NB: the POT file needs the extra `"potcar" not in f` check to ensure that
@@ -188,11 +202,17 @@ def discover_and_sort_vasp_files(
             if any(
                 vf.lower() in f and "potcar" not in f for vf in VASP_VOLUMETRIC_FILES
             ):
-                by_type["volumetric_files"].append(_f)
-            elif "poscar.t=" in f:
-                by_type["elph_poscars"].append(_f)
+                if "volumetric_files" not in by_type[_f.calc_suffix]:
+                    by_type[_f.calc_suffix]["volumetric_files"] = []
+                by_type[_f.calc_suffix]["volumetric_files"].append(file_path)  # type: ignore[union-attr]
 
-    return by_type
+            elif "poscar.t=" in f:
+                if "elph_poscars" not in by_type[_f.calc_suffix]:
+                    by_type[_f.calc_suffix]["elph_poscars"] = []
+
+                by_type[_f.calc_suffix]["elph_poscars"].append(file_path)  # type: ignore[union-attr]
+
+    return dict(by_type)
 
 
 def recursive_discover_vasp_files(

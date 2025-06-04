@@ -9,6 +9,8 @@ from emmet.core.vasp.calculation import Calculation
 from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
 from emmet.core.utils import utcnow
+from emmet.core.vasp.utils import FileMetadata
+from emmet.core.vasp.task_valid import TaskDocument
 
 from pymatgen.io.vasp import Incar
 
@@ -19,17 +21,17 @@ from pymatgen.io.validation.common import (
     VaspFiles,
     VaspInputSafe,
 )
-from pymatgen.io.validation.validation import VaspValidator
+from pymatgen.io.validation.validation import REQUIRED_VASP_FILES, VaspValidator
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from pathlib import Path
     from typing_extensions import Self
     from emmet.core.tasks import TaskDoc
-    from emmet.core.vasp.task_valid import TaskDocument
 
 
-class ValidationDoc(EmmetBaseModel):
+class ValidationDoc(VaspValidator, EmmetBaseModel):
     """
     Validation document for a VASP calculation
     """
@@ -38,20 +40,22 @@ class ValidationDoc(EmmetBaseModel):
         None, description="The task_id for this validation document"
     )
 
-    valid: bool = Field(False, description="Whether this task is valid.")
-
     last_updated: datetime = Field(
         description="The most recent time when this document was updated.",
         default_factory=utcnow,
     )
 
-    reasons: list[str] = Field(
-        [], description="List of deprecation tags detailing why this task is not valid"
-    )
-
-    warnings: list[str] = Field(
-        [], description="List of potential warnings about this calculation"
-    )
+    @classmethod
+    def from_file_metadata(cls, file_meta: list[FileMetadata], **kwargs) -> Self:
+        """Validate files from a list of their metadata."""
+        vasp_file_paths: dict[str, Path] = {}
+        for f in file_meta:
+            if (
+                len(matched_files := [vf for vf in REQUIRED_VASP_FILES if vf in f.name])
+                > 0
+            ):
+                vasp_file_paths[matched_files[0]] = f.path
+        return cls.from_vasp_input(cls, vasp_file_paths, **kwargs)
 
     @staticmethod
     def task_doc_to_vasp_files(task_doc: TaskDoc | TaskDocument) -> VaspFiles:
@@ -107,11 +111,4 @@ class ValidationDoc(EmmetBaseModel):
     def from_task_doc(cls, task_doc: TaskDoc | TaskDocument, **kwargs) -> Self:
         """Validate a VASP calculation represented by an emmet.core TaskDoc/ument."""
         vasp_files = cls.task_doc_to_vasp_files(task_doc)
-        validator = VaspValidator.from_vasp_input(vasp_files=vasp_files)
-        return cls(
-            valid=validator.is_valid,
-            reasons=validator.reasons,
-            warnings=validator.warnings,
-            task_id=task_doc.task_id,
-            **kwargs,
-        )
+        return cls.from_vasp_input(vasp_files=vasp_files, **kwargs)

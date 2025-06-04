@@ -43,7 +43,7 @@ from emmet.core.vasp.calculation import (
     VaspObject,
 )
 from emmet.core.vasp.task_valid import TaskState
-from emmet.core.vasp.utils import discover_and_sort_vasp_files
+from emmet.core.vasp.utils import TASK_NAMES, discover_and_sort_vasp_files
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -1034,7 +1034,7 @@ def _get_drift_warnings(calc_doc: Calculation) -> list[str]:
     warnings = []
     if calc_doc.input.parameters.get("NSW", 0) > 0:
         drift = calc_doc.output.outcar.get("drift", [[0, 0, 0]])
-        max_drift = max(np.linalg.norm(d) for d in drift)
+        max_drift = max(np.linalg.norm(d) for d in drift)  # type: ignore[type-var]
         ediffg = calc_doc.input.parameters.get("EDIFFG", None)
         max_force = -float(ediffg) if ediffg and float(ediffg) < 0 else np.inf
         if max_drift > max_force:
@@ -1123,37 +1123,18 @@ def _find_vasp_files(
     """
     base_path = Path(path)
     volumetric_files = volumetric_files or _VOLUMETRIC_FILES
-    task_names = task_names or ["precondition"] + [f"relax{i}" for i in range(9)]
+    task_names = task_names or TASK_NAMES
 
-    task_files: dict[str, dict[str, Path | list[Path]]] = {}
-
-    def _update_task_files(tpath) -> None:
-        for category, files in discover_and_sort_vasp_files(tpath).items():
-            for f in files:
-                f = f.name
-                tasks = sorted([t for t in task_names if t in f])
-                task = "standard" if len(tasks) == 0 else tasks[0]
-                if task not in task_files:
-                    task_files[task] = {}
-                if (
-                    is_list_like := category in ("volumetric_files", "elph_poscars")
-                ) and category not in task_files[task]:
-                    task_files[task][category] = []
-
-                abs_f = Path(base_path) / f
-                if is_list_like:
-                    task_files[task][category].append(abs_f)  # type: ignore[union-attr]
-                else:
-                    task_files[task][category] = abs_f
-
-    _update_task_files(base_path)
-
+    task_files: dict[str, dict[str, Path | list[Path]]] = discover_and_sort_vasp_files(
+        base_path
+    )
     # TODO: TaskDoc permits matching sub directories if they use one of
     # `task_names` as a directory name.
     # Not sure this is behavior we want to keep in the long term,
     # but is maintained here for backwards compatibility.
-    for task_name in task_names:
+    for task_name in set(task_names).difference(task_files):
         if (subdir := base_path / task_name).exists():
-            _update_task_files(subdir)
+            for task_name, calcs in discover_and_sort_vasp_files(subdir).items():
+                task_files[task_name].update(calcs)
 
     return task_files

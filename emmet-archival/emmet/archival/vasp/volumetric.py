@@ -29,6 +29,9 @@ from emmet.archival.vasp import PMG_OBJ
 from emmet.archival.vasp.inputs import PoscarArchive
 
 if TYPE_CHECKING:
+    from typing import Any
+
+    from pymatgen.io.common import VolumetricData as PmgVolumetricData
     from pymatgen.core.sites import PeriodicSite
 
 
@@ -313,3 +316,46 @@ class VaspVolumetricArchive(Archiver):
 
         vol_data_table = pa.concat_tables(tables, promote_options="permissive")
         pq.write_table(vol_data_table, file_name, **kwargs)
+
+    @classmethod
+    def _extract_from_parquet(
+        cls,
+        archive_path: str | Path,
+        file_names: list[str] | None = None,
+        filters: list[tuple[str, str, Any]] | None = None,
+    ) -> list[dict[str, PmgVolumetricData | str]]:
+        """Extract volumetric data from a parquet file.
+
+        Defaults to extracting all available data within an archive.
+        """
+        file_names = (
+            file_names
+            or pq.read_table(
+                archive_path,
+                columns=[
+                    "file_name",
+                ],
+            ).to_pylist()[0]
+        )
+        table = pq.read_table(archive_path, filters=filters)
+        output_data: list[dict[str, PmgVolumetricData | str]] = []
+        for identifier in set(table["identifier"].to_pylist()):
+            if identifier is None:
+                id_filter = ~pa.compute.field("identifier").is_valid()
+            else:
+                id_filter = pa.compute.field("identifier") == identifier
+
+            for file_name in set([f for f in table.filter(id_filter)["file_name"]]):
+                output_data.append(
+                    {
+                        "identifier": identifier,
+                        "file_name": file_name,
+                        "data": VolumetricArchive.from_arrow(
+                            table.filter(
+                                id_filter & (pa.compute.field("file_name") == file_name)
+                            )
+                        ),
+                    }
+                )
+
+        return output_data

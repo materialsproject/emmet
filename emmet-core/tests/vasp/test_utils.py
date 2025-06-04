@@ -81,18 +81,20 @@ def test_file_discovery():
         assert len(recursive_discover_vasp_files(tmp_dir, max_depth=2)) == 4
         assert len(recursive_discover_vasp_files(tmp_dir, max_depth=1)) == 1
 
-        sorted_files = discover_and_sort_vasp_files(
+        files_by_calc_suffix = discover_and_sort_vasp_files(
             tmp_dir / "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001"
         )
 
-    assert set([b.name for b in sorted_files["contcar_file"]]) == {"CONTCAR.relax1"}
-    assert set([b.name for b in sorted_files["vasprun_file"]]) == {"vasprun.xml.relax1"}
-    assert set([b.name for b in sorted_files["outcar_file"]]) == {"OUTCAR.relax1"}
-    assert set([b.name for b in sorted_files["volumetric_files"]]) == {
+    assert files_by_calc_suffix["relax1"]["contcar_file"].name == "CONTCAR.relax1"
+    assert files_by_calc_suffix["relax1"]["vasprun_file"].name == "vasprun.xml.relax1"
+    assert files_by_calc_suffix["relax1"]["outcar_file"].name == "OUTCAR.relax1"
+    assert set(
+        [b.name for b in files_by_calc_suffix["standard"]["volumetric_files"]]
+    ) == {
         "AECCAR0.bz2",
         "LOCPOT.gz",
     }
-    assert set([b.name for b in sorted_files["elph_poscars"]]) == {
+    assert set([b.name for b in files_by_calc_suffix["standard"]["elph_poscars"]]) == {
         "POSCAR.T=300.gz",
         "POSCAR.T=1000.gz",
     }
@@ -100,9 +102,10 @@ def test_file_discovery():
     assert len(vasp_files) == len(
         directory_structure
     )  # should find all of the defined calculation directories
+
     for calc_dir, files in directory_structure.items():
         assert (base_path := tmp_dir / calc_dir) in vasp_files
-        assert all(f in [b.name for b in vasp_files[base_path]] for f in files)
+        assert len(set([b.name for b in vasp_files[base_path]]).difference(files)) == 0
 
     # Should only find two valid calculation directories
     valid_calc_dirs = (

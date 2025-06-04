@@ -22,6 +22,8 @@ if TYPE_CHECKING:
 class VolumetricLabel(Enum):
     TOTAL = "total"
     DIFF = "diff"
+
+    # NB: we only need these if we have noncolinear calculations
     DIFF_X = "diff_x"
     DIFF_Y = "diff_y"
     DIFF_Z = "diff_z"
@@ -35,6 +37,13 @@ class AugChargeData(BaseModel):
 
 
 class VolumetricArchive(Archiver):
+    """Archive a pymatgen.io.common.VolumetricData object.
+
+    While the name of this file suggests a common I/O purpose,
+    the structure of the pymatgen object and its Archiver are meant
+    for VASP data.
+    """
+
     data: dict[VolumetricLabel, list[list[list[float]]] | None] = Field(
         None, description="The primary volumetric data."
     )
@@ -117,10 +126,7 @@ class VolumetricArchive(Archiver):
         pq.write_table(self.to_arrow(), file_name)
 
     @classmethod
-    def _extract_from_parquet(
-        cls, archive_path: str | Path, *args, **kwargs
-    ) -> PmgVolumetricData:
-        table = pq.read_table(archive_path)
+    def from_arrow(cls, table: pa.Table) -> PmgVolumetricData:
         cls_config = {}
         for data_key in ("data", "data_aug"):
             cls_config[data_key] = {}
@@ -133,3 +139,10 @@ class VolumetricArchive(Archiver):
             structure=CrystalArchive.from_arrow(table, prefix="structure_"),
             **cls_config,
         )
+
+    @classmethod
+    def _extract_from_parquet(
+        cls,
+        archive_path: str | Path,
+    ) -> PmgVolumetricData:
+        return cls.from_arrow(pq.read_table(archive_path))
