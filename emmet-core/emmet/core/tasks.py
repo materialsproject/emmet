@@ -14,7 +14,6 @@ from monty.json import MontyDecoder
 from monty.serialization import loadfn
 from pydantic import (
     BaseModel,
-    ConfigDict,
     Field,
     field_serializer,
     field_validator,
@@ -25,13 +24,13 @@ from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core.trajectory import Trajectory
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.io.vasp import Incar, Kpoints, Poscar
-from pymatgen.io.vasp import Potcar as VaspPotcar
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.common import convert_datetime
 from emmet.core.math import Vector3D
 from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
+from emmet.core.typing import StructureType
 from emmet.core.utils import jsanitize, type_override, utcnow
 from emmet.core.vasp.calc_types import (
     CalcType,
@@ -89,7 +88,7 @@ class OrigInputs(CalculationInput):
 
 
 class OutputDoc(BaseModel):
-    structure: Optional[AnnotatedStructure] = Field(
+    structure: StructureType | None = Field(
         None,
         title="Output Structure",
         description="Output Structure from the VASP calculation.",
@@ -385,7 +384,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         description="Detailed data for each VASP calculation contributing to the task document.",
     )
 
-    structure: AnnotatedStructure | None = Field(
+    structure: StructureType | None = Field(
         None, description="Final output structure from the task"
     )
 

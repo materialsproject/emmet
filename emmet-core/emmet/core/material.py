@@ -9,15 +9,12 @@ from pydantic import BaseModel, Field, field_validator
 from pymatgen.core import Structure
 from pymatgen.core.structure import Molecule
 
-from emmet.core import ARROW_COMPATIBLE
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID, MPculeID
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
+from emmet.core.typing import StructureType
 from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
-
-if ARROW_COMPATIBLE:
-    from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 
 
 class PropertyOrigin(BaseModel):
@@ -55,7 +52,7 @@ class MaterialsDoc(StructureMetadata):
         "This comes in the form: mp-******.",
     )
 
-    structure: AnnotatedStructure | None = Field(
+    structure: StructureType = Field(
         ...,
         description="The structure of the this material.",
     )
@@ -70,7 +67,7 @@ class MaterialsDoc(StructureMetadata):
         description="List of deprecation tags detailing why this materials document isn't valid.",
     )
 
-    initial_structures: list[AnnotatedStructure | None] = Field(
+    initial_structures: list[StructureType] = Field(
         [],
         description="Initial structures used in the DFT optimizations corresponding to this material.",
     )
