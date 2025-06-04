@@ -36,6 +36,7 @@ try:
 
     from pyarrow import Table as ArrowTable
 except ImportError:
+    pa = None
     ArrowTable = None
 
 if TYPE_CHECKING:
