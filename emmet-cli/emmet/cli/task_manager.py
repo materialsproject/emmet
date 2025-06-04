@@ -7,6 +7,7 @@ import time
 import os
 from typing import Any, Callable, Dict, Optional
 from uuid import uuid4
+import psutil
 
 from emmet.cli.state_manager import StateManager
 
@@ -47,8 +48,27 @@ def _detach_process():
     return False  # We are in the detached process
 
 
+def _is_process_running(pid: int) -> bool:
+    """
+    Check if a process with the given PID is running.
+    Returns False if the process is not running or if we don't have permission to check.
+    """
+    try:
+        process = psutil.Process(pid)
+        return process.is_running() and process.status() != psutil.STATUS_ZOMBIE
+    except psutil.NoSuchProcess:
+        return False
+    except psutil.AccessDenied:
+        logger.warning(f"Access denied when checking process {pid}")
+        return False
+
+
 class TaskManager:
     """Manages background tasks and their states."""
+
+    # Time limits for various grace periods (in seconds)
+    DETACH_GRACE_PERIOD = 5  # Time to wait for process to detach
+    INIT_GRACE_PERIOD = 2  # Time to wait for process to initialize and register PID
 
     def __init__(
         self,
@@ -72,21 +92,8 @@ class TaskManager:
         # Store the detached process PID
         self._store_task_result(task_id, {"detached_pid": os.getpid()})
 
-        running = True
-
-        def update_running_status():
-            while running:
-                self._store_task_result(
-                    task_id, {"still_running_at": datetime.now().isoformat()}
-                )
-                time.sleep(self.running_status_update_interval)
-
-        status_thread = threading.Thread(target=update_running_status, daemon=True)
-        status_thread.start()
-
         try:
             result = func(*args, **kwargs)
-            running = False
             self._store_task_result(
                 task_id,
                 {
@@ -96,7 +103,6 @@ class TaskManager:
                 },
             )
         except Exception as e:
-            running = False
             logger.exception(f"Task {task_id} failed")
             self._store_task_result(
                 task_id,
@@ -107,7 +113,6 @@ class TaskManager:
                 },
             )
         finally:
-            running = False
             os._exit(0)  # Ensure the process exits cleanly
 
     def _store_task_result(self, task_id: str, result: Dict[str, Any]) -> None:
@@ -188,22 +193,80 @@ class TaskManager:
 
         Returns:
             bool: True if the task is still running, False if completed, not found,
-            or if the task appears stalled (no status updates for too long)
+            or if the task was terminated.
         """
         status = self.get_task_status(task_id)
         if status["status"] != "running":
             return False
 
-        # Check if task appears stalled
-        if "started_at" in status and "still_running_at" in status:
-            now = datetime.now()
-            last_update = datetime.fromisoformat(status["still_running_at"])
-            max_interval = self.running_status_update_interval * 3
+        now = datetime.now()
 
-            if (now - last_update).total_seconds() > max_interval:
+        # If we have a PID, check if the process is still running
+        if "detached_pid" in status:
+            if not _is_process_running(status["detached_pid"]):
+                self._store_task_result(
+                    task_id,
+                    {
+                        "status": "terminated",
+                        "completed_at": now.isoformat(),
+                        "error": "Process was terminated unexpectedly",
+                    },
+                )
                 return False
+            return True
 
-        return True
+        # If we have an initial PID but no detached PID, check if we should wait longer
+        if "initial_pid" in status and "started_at" in status:
+            start_time = datetime.fromisoformat(status["started_at"])
+            elapsed = (now - start_time).total_seconds()
+
+            # Give the process up to 5 seconds to detach before checking its status
+            if elapsed < self.DETACH_GRACE_PERIOD:
+                return True
+
+            if not _is_process_running(status["initial_pid"]):
+                self._store_task_result(
+                    task_id,
+                    {
+                        "status": "terminated",
+                        "completed_at": now.isoformat(),
+                        "error": "Process failed to detach and was terminated",
+                    },
+                )
+                return False
+            # Process is still running but hasn't detached yet
+            return True
+
+        # If we have neither PID but the task is marked as running,
+        # check if we should wait longer for initialization
+        if "started_at" in status:
+            start_time = datetime.fromisoformat(status["started_at"])
+            elapsed = (now - start_time).total_seconds()
+
+            # Give the process up to 2 seconds to initialize and register its PID
+            if elapsed < self.INIT_GRACE_PERIOD:
+                return True
+
+            self._store_task_result(
+                task_id,
+                {
+                    "status": "terminated",
+                    "completed_at": now.isoformat(),
+                    "error": "Process was terminated before initialization completed",
+                },
+            )
+            return False
+
+        # No started_at timestamp - this shouldn't happen but handle it anyway
+        self._store_task_result(
+            task_id,
+            {
+                "status": "terminated",
+                "completed_at": now.isoformat(),
+                "error": "Invalid task state: no start time recorded",
+            },
+        )
+        return False
 
     def cleanup_finished_tasks(self) -> None:
         """Remove finished tasks from the state manager."""

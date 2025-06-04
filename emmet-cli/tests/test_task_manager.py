@@ -1,6 +1,11 @@
 import pytest
 import time
-from emmet.cli.task_manager import TaskManager
+import os
+import signal
+from unittest.mock import patch, Mock
+import psutil
+from datetime import datetime, timedelta
+from emmet.cli.task_manager import TaskManager, _is_process_running
 from emmet.cli.state_manager import StateManager
 
 
@@ -15,9 +20,42 @@ def long_task_test_function():
     return "completed"
 
 
+def infinite_task_function():
+    """A task that runs indefinitely until terminated"""
+    while True:
+        time.sleep(0.1)
+
+
 def failing_task_test_function():
     """Task that raises an exception"""
     raise ValueError("Task failed")
+
+
+class MockProcess:
+    def __init__(self, is_running=True, status=psutil.STATUS_RUNNING):
+        self._is_running = is_running
+        self._status = status
+
+    def is_running(self):
+        return self._is_running
+
+    def status(self):
+        return self._status
+
+
+class MockDateTime:
+    """Helper class to mock datetime.now() with a specific time"""
+
+    def __init__(self, current_time):
+        self._current_time = current_time
+
+    def now(self):
+        return self._current_time
+
+    @staticmethod
+    def fromisoformat(date_string):
+        # Delegate to the real datetime.fromisoformat
+        return datetime.fromisoformat(date_string)
 
 
 @pytest.fixture
@@ -166,3 +204,258 @@ def test_failing_task_pid_storage(task_manager):
     # Verify PIDs are preserved after failure
     assert final_status["initial_pid"] == initial_status["initial_pid"]
     assert final_status["detached_pid"] == detached_status["detached_pid"]
+
+
+def test_terminated_task_detection(task_manager):
+    """Test detection of terminated tasks."""
+    # Start a long-running task
+    task_id = task_manager.start_task(infinite_task_function)
+
+    # Wait for the detached process to start
+    time.sleep(0.5)
+
+    # Get the detached PID
+    status = task_manager.get_task_status(task_id)
+    assert "detached_pid" in status
+    pid = status["detached_pid"]
+
+    # Verify the process is running
+    assert _is_process_running(pid)
+    assert task_manager.is_task_running(task_id)
+
+    # Terminate the process
+    os.kill(pid, signal.SIGTERM)
+
+    # Give some time for the termination to be processed
+    time.sleep(0.1)
+
+    # Verify the task is detected as terminated
+    assert not task_manager.is_task_running(task_id)
+    final_status = task_manager.get_task_status(task_id)
+    assert final_status["status"] == "terminated"
+    assert "completed_at" in final_status
+    assert "error" in final_status
+    assert "terminated unexpectedly" in final_status["error"].lower()
+
+
+def test_terminated_task_wait_completion(task_manager):
+    """Test that wait_for_task_completion properly handles terminated tasks."""
+    task_id = task_manager.start_task(infinite_task_function)
+
+    # Wait for the detached process to start
+    time.sleep(0.5)
+
+    # Get the detached PID
+    status = task_manager.get_task_status(task_id)
+    pid = status["detached_pid"]
+
+    # Mock the process as not running
+    mock_dead = MockProcess(is_running=False, status=psutil.STATUS_DEAD)
+
+    with patch("psutil.Process", return_value=mock_dead):
+        # First check should mark it as terminated
+        assert not task_manager.is_task_running(task_id)
+        # Now wait_for_task_completion should see the terminated status
+        final_status = task_manager.wait_for_task_completion(task_id, timeout=1)
+        assert final_status["status"] == "terminated"
+        assert "completed_at" in final_status
+        assert "error" in final_status
+
+
+def test_zombie_process_detection():
+    """Test that zombie processes are properly detected as not running."""
+    # Mock a zombie process
+    mock_zombie = MockProcess(is_running=True, status=psutil.STATUS_ZOMBIE)
+
+    with patch("psutil.Process", return_value=mock_zombie):
+        assert not _is_process_running(999)  # Any PID will do as we're mocking
+
+
+def test_process_permission_denied():
+    """Test handling of permission denied when checking process status."""
+
+    def mock_process(*args):
+        raise psutil.AccessDenied()
+
+    with patch("psutil.Process", side_effect=mock_process):
+        # Should return False and log a warning when access is denied
+        assert not _is_process_running(999)
+
+
+def test_no_such_process():
+    """Test handling of non-existent processes."""
+
+    def mock_process(*args):
+        raise psutil.NoSuchProcess(999)
+
+    with patch("psutil.Process", side_effect=mock_process):
+        assert not _is_process_running(999)
+
+
+def test_zombie_process_task_status(task_manager):
+    """Test that tasks with zombie processes are marked as terminated."""
+    task_id = task_manager.start_task(infinite_task_function)
+
+    # Wait for the detached process to start
+    time.sleep(0.5)
+
+    # Get the detached PID
+    status = task_manager.get_task_status(task_id)
+    pid = status["detached_pid"]
+
+    # Mock the process as a zombie
+    mock_zombie = MockProcess(is_running=True, status=psutil.STATUS_ZOMBIE)
+
+    with patch("psutil.Process", return_value=mock_zombie):
+        # Check if task is running should detect zombie and mark as terminated
+        assert not task_manager.is_task_running(task_id)
+        final_status = task_manager.get_task_status(task_id)
+        assert final_status["status"] == "terminated"
+        assert "completed_at" in final_status
+        assert "error" in final_status
+
+
+def test_permission_denied_task_status(task_manager):
+    """Test task status handling when process check permission is denied."""
+    task_id = task_manager.start_task(infinite_task_function)
+
+    # Wait for the detached process to start
+    time.sleep(0.5)
+
+    def mock_process(*args):
+        raise psutil.AccessDenied()
+
+    with patch("psutil.Process", side_effect=mock_process):
+        # Even with access denied, the task should be considered not running
+        assert not task_manager.is_task_running(task_id)
+        final_status = task_manager.get_task_status(task_id)
+        assert final_status["status"] == "terminated"
+        assert "completed_at" in final_status
+        assert "error" in final_status
+
+
+@pytest.mark.parametrize(
+    "process_status",
+    [
+        psutil.STATUS_DEAD,
+        psutil.STATUS_STOPPED,
+        psutil.STATUS_TRACING_STOP,
+    ],
+)
+def test_various_process_states(process_status):
+    """Test handling of various non-running process states."""
+    # For these states, is_running() should return False to indicate the process is not active
+    mock_process = MockProcess(is_running=False, status=process_status)
+
+    with patch("psutil.Process", return_value=mock_process):
+        # Any non-running state should be detected
+        assert not _is_process_running(999)
+
+
+def test_initial_pid_grace_period(task_manager):
+    """Test that tasks with only initial PID get proper grace period."""
+    task_id = task_manager.start_task(infinite_task_function)
+
+    # Set up our initial time just after task start
+    start_time = datetime.now()
+
+    # Within grace period - process should appear running
+    within_grace = TaskManager.DETACH_GRACE_PERIOD * 0.6
+    mock_now = MockDateTime(start_time + timedelta(seconds=within_grace))
+
+    mock_running_process = MockProcess(is_running=True)
+    with patch("psutil.Process", return_value=mock_running_process):
+        with patch("emmet.cli.task_manager.datetime", mock_now):
+            # Should still be considered running within grace period
+            assert task_manager.is_task_running(task_id)
+            status = task_manager.get_task_status(task_id)
+            assert status["status"] == "running"
+
+    # After grace period - process should appear not running
+    after_grace = TaskManager.DETACH_GRACE_PERIOD * 1.2
+    mock_now = MockDateTime(start_time + timedelta(seconds=after_grace))
+
+    mock_dead_process = MockProcess(is_running=False)
+    with patch("psutil.Process", return_value=mock_dead_process):
+        with patch("emmet.cli.task_manager.datetime", mock_now):
+            # Should be marked as terminated after grace period
+            assert not task_manager.is_task_running(task_id)
+            status = task_manager.get_task_status(task_id)
+            assert status["status"] == "terminated"
+            assert "failed to detach" in status["error"].lower()
+
+
+def test_no_pid_grace_period(task_manager):
+    """Test that tasks with no PID get proper grace period."""
+    task_id = task_manager.start_task(infinite_task_function)
+
+    # Simulate a task that hasn't registered any PID yet
+    tasks = task_manager.state_manager.get("tasks", {})
+    tasks[task_id] = {"status": "running", "started_at": datetime.now().isoformat()}
+    task_manager.state_manager.set("tasks", tasks)
+
+    # Set up our initial time just after task start
+    start_time = datetime.now()
+
+    # Test within grace period (at 50% of grace period)
+    within_grace = TaskManager.INIT_GRACE_PERIOD * 0.5
+    mock_now = MockDateTime(start_time + timedelta(seconds=within_grace))
+    with patch("emmet.cli.task_manager.datetime", mock_now):
+        # Should still be considered running within grace period
+        assert task_manager.is_task_running(task_id)
+        status = task_manager.get_task_status(task_id)
+        assert status["status"] == "running"
+
+    # Test after grace period (50% past grace period)
+    after_grace = TaskManager.INIT_GRACE_PERIOD * 1.5
+    mock_now = MockDateTime(start_time + timedelta(seconds=after_grace))
+    with patch("emmet.cli.task_manager.datetime", mock_now):
+        # Should be marked as terminated after grace period
+        assert not task_manager.is_task_running(task_id)
+        status = task_manager.get_task_status(task_id)
+        assert status["status"] == "terminated"
+        assert "before initialization completed" in status["error"].lower()
+
+
+def test_missing_start_time(task_manager):
+    """Test handling of tasks with missing start time."""
+    task_id = task_manager.start_task(infinite_task_function)
+
+    # Simulate a task with no start time
+    tasks = task_manager.state_manager.get("tasks", {})
+    tasks[task_id] = {"status": "running", "initial_pid": 12345}  # Some dummy PID
+    task_manager.state_manager.set("tasks", tasks)
+
+    # Should be marked as terminated immediately
+    assert not task_manager.is_task_running(task_id)
+    status = task_manager.get_task_status(task_id)
+    assert status["status"] == "terminated"
+    assert "no start time recorded" in status["error"].lower()
+
+
+@pytest.mark.parametrize(
+    "time_factor,expected_running",
+    [
+        (0.5, True),  # 50% of grace period - should be running
+        (1.5, False),  # 50% past grace period - should be terminated
+        (2.0, False),  # Double grace period - should be terminated
+    ],
+)
+def test_no_pid_various_times(task_manager, time_factor, expected_running):
+    """Test task status at various times when no PID is registered."""
+    task_id = task_manager.start_task(infinite_task_function)
+
+    # Simulate a task that hasn't registered any PID yet
+    start_time = datetime.now()
+    tasks = task_manager.state_manager.get("tasks", {})
+    tasks[task_id] = {"status": "running", "started_at": start_time.isoformat()}
+    task_manager.state_manager.set("tasks", tasks)
+
+    # Test at the specified time
+    elapsed_time = TaskManager.INIT_GRACE_PERIOD * time_factor
+    mock_now = MockDateTime(start_time + timedelta(seconds=elapsed_time))
+    with patch("emmet.cli.task_manager.datetime", mock_now):
+        assert task_manager.is_task_running(task_id) == expected_running
+        status = task_manager.get_task_status(task_id)
+        if not expected_running:
+            assert status["status"] == "terminated"
