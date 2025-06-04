@@ -16,7 +16,7 @@ cfgv==3.4.0
     # via pre-commit
 charset-normalizer==3.4.2
     # via requests
-click==8.2.0
+click==8.2.1
     # via
     #   emmet-cli (setup.py)
     #   mkdocs
@@ -26,7 +26,7 @@ colorama==0.4.6
     #   griffe
 contourpy==1.3.2
     # via matplotlib
-coverage[toml]==7.8.0
+coverage[toml]==7.8.2
     # via pytest-cov
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -40,7 +40,7 @@ filelock==3.18.0
     # via virtualenv
 flake8==7.2.0
     # via emmet-cli (setup.py)
-fonttools==4.58.0
+fonttools==4.58.1
     # via matplotlib
 ghp-import==2.1.0
     # via mkdocs
@@ -48,7 +48,7 @@ griffe==1.7.3
     # via mkdocstrings-python
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
-identify==2.6.10
+identify==2.6.12
     # via pre-commit
 idna==3.10
     # via requests
@@ -60,7 +60,7 @@ jinja2==3.1.6
     #   mkdocs
     #   mkdocs-material
     #   mkdocstrings
-joblib==1.5.0
+joblib==1.5.1
     # via pymatgen
 jsmin==3.0.1
     # via mkdocs-minify-plugin
@@ -100,7 +100,7 @@ mkdocs==1.6.1
     #   mkdocs-material
     #   mkdocs-minify-plugin
     #   mkdocstrings
-mkdocs-autorefs==1.4.1
+mkdocs-autorefs==1.4.2
     # via
     #   mkdocstrings
     #   mkdocstrings-python
@@ -122,7 +122,7 @@ mkdocstrings[python]==0.29.1
     # via
     #   emmet-cli (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.16.10
+mkdocstrings-python==1.16.12
     # via mkdocstrings
 monty==2025.3.3
     # via
@@ -130,17 +130,17 @@ monty==2025.3.3
     #   pymatgen
 mpmath==1.3.0
     # via sympy
-mypy==1.15.0
+mypy==1.16.0
     # via emmet-cli (setup.py)
 mypy-extensions==1.1.0
     # via
     #   emmet-cli (setup.py)
     #   mypy
-narwhals==1.40.0
+narwhals==1.41.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
-networkx==3.4.2
+networkx==3.5
     # via pymatgen
 nodeenv==1.9.1
     # via pre-commit
@@ -164,14 +164,16 @@ palettable==3.3.3
 pandas==2.2.3
     # via pymatgen
 pathspec==0.12.1
-    # via mkdocs
+    # via
+    #   mkdocs
+    #   mypy
 pillow==11.2.1
     # via matplotlib
 platformdirs==4.3.8
     # via
     #   mkdocs-get-deps
     #   virtualenv
-plotly==6.1.0
+plotly==6.1.2
     # via pymatgen
 pluggy==1.6.0
     # via pytest
@@ -185,7 +187,7 @@ pycodestyle==2.13.0
     # via
     #   emmet-cli (setup.py)
     #   flake8
-pydantic==2.11.4
+pydantic==2.11.5
     # via
     #   emmet-core
     #   pydantic-settings
@@ -198,7 +200,9 @@ pydocstyle==6.3.0
 pyflakes==3.3.2
     # via flake8
 pygments==2.19.1
-    # via mkdocs-material
+    # via
+    #   mkdocs-material
+    #   pytest
 pymatgen==2025.1.9
     # via emmet-core
 pymdown-extensions==10.15
@@ -207,7 +211,7 @@ pymdown-extensions==10.15
     #   mkdocstrings
 pyparsing==3.2.3
     # via matplotlib
-pytest==8.3.5
+pytest==8.4.0
     # via
     #   emmet-cli (setup.py)
     #   pytest-cov
@@ -235,7 +239,7 @@ pyyaml-env-tag==1.1
     # via mkdocs
 requests==2.32.3
     # via pymatgen
-ruamel-yaml==0.18.10
+ruamel-yaml==0.18.12
     # via
     #   monty
     #   pymatgen
@@ -255,15 +259,15 @@ sympy==1.14.0
     # via pymatgen
 tabulate==0.9.0
     # via pymatgen
-tornado==6.5
+tornado==6.5.1
     # via livereload
 tqdm==4.67.1
     # via pymatgen
-types-requests==2.32.0.20250515
+types-requests==2.32.0.20250602
     # via emmet-cli (setup.py)
-types-setuptools==80.7.0.20250516
+types-setuptools==80.9.0.20250529
     # via emmet-cli (setup.py)
-typing-extensions==4.13.2
+typing-extensions==4.14.0
     # via
     #   emmet-core
     #   mypy
@@ -271,7 +275,7 @@ typing-extensions==4.13.2
     #   pydantic-core
     #   spglib
     #   typing-inspection
-typing-inspection==0.4.0
+typing-inspection==0.4.1
     # via
     #   pydantic
     #   pydantic-settings
