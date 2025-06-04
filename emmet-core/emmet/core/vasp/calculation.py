@@ -33,8 +33,8 @@ from pymatgen.io.vasp import Potcar as VaspPotcar
 from pymatgen.io.vasp import PotcarSingle, Vasprun, VolumetricData
 from typing_extensions import NotRequired, TypedDict
 
-from emmet.core import ARROW_COMPATIBLE
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
+from emmet.core.typing import StructureType
 from emmet.core.utils import ValueEnum, jsanitize, type_override
 from emmet.core.vasp.calc_types import (
     CalcType,
@@ -45,9 +45,6 @@ from emmet.core.vasp.calc_types import (
     task_type,
 )
 from emmet.core.vasp.task_valid import TaskState
-
-if ARROW_COMPATIBLE:
-    from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -193,8 +190,7 @@ class CalculationInput(CalculationBaseModel):
     lattice_rec: Optional[Lattice] = Field(
         None, description="Reciprocal lattice of the structure"
     )
-    # structure: Optional[Structure] = Field(
-    structure: Optional[AnnotatedStructure] = Field(
+    structure: Optional[StructureType] = Field(
         None, description="Input structure for the calculation"
     )
     is_hubbard: bool = Field(
@@ -438,8 +434,7 @@ class IonicStep(BaseModel):  # type: ignore
     num_electronic_steps: Optional[int] = Field(
         None, description="The number of electronic steps needed to reach convergence."
     )
-    # structure: Optional[Structure] = Field(
-    structure: Optional[AnnotatedStructure] = Field(
+    structure: Optional[StructureType] = Field(
         None, description="The structure at this step."
     )
 
@@ -462,8 +457,7 @@ class CalculationOutput(BaseModel):
     energy_per_atom: Optional[float] = Field(
         None, description="The final DFT energy per atom for the calculation"
     )
-    # structure: Optional[Structure] = Field(
-    structure: Optional[AnnotatedStructure] = Field(
+    structure: Optional[StructureType] = Field(
         None, description="The final structure from the calculation"
     )
     efermi: Optional[float] = Field(

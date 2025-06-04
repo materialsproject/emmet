@@ -31,6 +31,7 @@ from emmet.core import ARROW_COMPATIBLE
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
+from emmet.core.typing import StructureType
 from emmet.core.utils import jsanitize, type_override, utcnow
 from emmet.core.vasp.calc_types import (
     CalcType,
@@ -88,8 +89,7 @@ class OrigInputs(CalculationInput):
 
 
 class OutputDoc(BaseModel):
-    # structure: Optional[Structure] = Field(
-    structure: Optional[AnnotatedStructure] = Field(
+    structure: Optional[StructureType] = Field(
         None,
         title="Output Structure",
         description="Output Structure from the VASP calculation.",
@@ -372,8 +372,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         description="Detailed data for each VASP calculation contributing to the task document.",
     )
 
-    # structure: Structure | None = Field(
-    structure: AnnotatedStructure | None = Field(
+    structure: StructureType | None = Field(
         None, description="Final output structure from the task"
     )
 

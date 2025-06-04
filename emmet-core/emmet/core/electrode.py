@@ -20,6 +20,7 @@ from emmet.core import ARROW_COMPATIBLE
 from emmet.core.base import EmmetBaseModel
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
+from emmet.core.typing import StructureType
 from emmet.core.utils import ValueEnum, jsanitize, utcnow
 
 if ARROW_COMPATIBLE:
@@ -32,7 +33,6 @@ if ARROW_COMPATIBLE:
         AnnotatedConversionElectrode,
         AnnotatedInsertionElectrode,
     )
-    from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 
 
 class BatteryType(str, ValueEnum):
@@ -313,7 +313,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
     Insertion electrode
     """
 
-    host_structure: AnnotatedStructure | None = Field(
+    host_structure: StructureType | None = Field(
         None, description="Host structure (structure without the working ion)."
     )
 
