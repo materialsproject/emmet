@@ -371,7 +371,7 @@ tqdm==4.67.1
     #   matminer
     #   mdanalysis
     #   pymatgen
-typeguard==4.4.2
+typeguard==4.4.3
     # via inflect
 typing-extensions==4.14.0
     # via
