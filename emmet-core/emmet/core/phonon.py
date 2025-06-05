@@ -1,4 +1,5 @@
 """Define schemas for DFPT, phonopy, and pheasy-derived phonon data."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -128,10 +129,8 @@ class PhononBS(BaseModel):
         False,
         description="Whether the calculation includes non-analytical corrections at Gamma.",
     )
-    eigendisplacements: list[
-        list[list[tuple[complex, complex, complex]]]
-    ] | None = Field(
-        None, description="Phonon eigendisplacements in Cartesian coordinates."
+    eigendisplacements: list[list[list[tuple[complex, complex, complex]]]] | None = (
+        Field(None, description="Phonon eigendisplacements in Cartesian coordinates.")
     )
     labels_dict: dict[str, Vector3D] | None = Field(
         None, description="The high-symmetry labels of specific q-points."
@@ -498,9 +497,11 @@ class PhononBSDOSTask(StructureMetadata):
         if not self.sum_rules_breaking:
             self.sum_rules_breaking = SumRuleChecks(
                 **{
-                    k: np.max(np.abs(getattr(self, attr)))
-                    if getattr(self, attr)
-                    else None
+                    k: (
+                        np.max(np.abs(getattr(self, attr)))
+                        if getattr(self, attr)
+                        else None
+                    )
                     for k, attr in {
                         "asr": "acoustic_sum_rule",
                         "cnsr": "charge_neutral_sum_rule",
@@ -611,7 +612,7 @@ class PhononBSDOSTask(StructureMetadata):
             "helmholtz_free_energy", temperature, normalization=normalization
         )
 
-    def compute_thermo_quantites(
+    def compute_thermo_quantities(
         self,
         temperatures: Sequence[float],
         normalization: Literal["atoms", "formula_units"] | None = "formula_units",
