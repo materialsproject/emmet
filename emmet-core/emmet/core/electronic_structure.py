@@ -419,8 +419,8 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                     is_gap_direct = gap_dict["direct"]
 
                     # coerce type here, mixture of str and int types in bs objects
-                    cbm["kpoint_index"] = [int(x) for x in cbm["kpoint_index"]]
-                    vbm["kpoint_index"] = [int(x) for x in vbm["kpoint_index"]]
+                    cbm["kpoint_index"] = [int(x) for x in cbm["kpoint_index"]]  # type: ignore[index]
+                    vbm["kpoint_index"] = [int(x) for x in vbm["kpoint_index"]]  # type: ignore[index]
 
                 bs_efermi = bs.efermi
                 nbands = bs.nb_bands

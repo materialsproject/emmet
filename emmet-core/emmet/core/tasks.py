@@ -62,7 +62,7 @@ if ARROW_COMPATIBLE:
     )
     from emmet.core.serialization_adapters.poscar_adapter import AnnotatedPoscar
 
-PoscarType: TypeAlias = AnnotatedPoscar if ARROW_COMPATIBLE else Poscar
+PoscarType: TypeAlias = AnnotatedPoscar if ARROW_COMPATIBLE else Poscar  # type: ignore[valid-type]
 
 monty_decoder = MontyDecoder()
 logger = logging.getLogger(__name__)

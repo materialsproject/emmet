@@ -12,7 +12,7 @@ TypedBandStructureSymmLineDict = TypedDict(
         "@class": str,
         "lattice_rec": Lattice,
         "efermi": float,
-        "kpoints": list[list[float, float, float]],
+        "kpoints": list[list[float, float, float]],  # type: ignore[type-arg]
         "bands": dict[str, list[list[float]]],
         "is_metal": bool,
         "vbm": TypedBandDict,

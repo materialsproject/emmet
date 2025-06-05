@@ -32,7 +32,7 @@ BaseVoltagePairDict = TypedDict(
 BaseInsertionVoltagePairDict = TypedDict(
     "BaseInsertionVoltagePairDict",
     {
-        **BaseVoltagePairDict.__annotations__,
+        **BaseVoltagePairDict.__annotations__,  # type: ignore[misc]
         "working_ion_entry": ComputedEntry,
     },
 )
@@ -40,7 +40,7 @@ BaseInsertionVoltagePairDict = TypedDict(
 BaseConversionVoltagePairDict = TypedDict(
     "BaseConversionVoltagePairDict",
     {
-        **BaseVoltagePairDict.__annotations__,
+        **BaseVoltagePairDict.__annotations__,  # type: ignore[misc]
         "working_ion_entry": ComputedStructureEntry,
     },
 )

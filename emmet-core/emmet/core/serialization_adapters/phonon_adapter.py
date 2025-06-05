@@ -13,7 +13,7 @@ TypedPhononBandStructureSymmLineDict = TypedDict(
         "bands": list[list[float]],
         "eigendisplacements": dict[str, list[list[list[list[float]]]]],
         "has_nac": bool,
-        "labels_dict": dict[str, list[float, float, float]],
+        "labels_dict": dict[str, list[float, float, float]],  # type: ignore[type-arg]
         "lattice_rec": Lattice,
         "qpoints": list[list[float]],
         "structure": Structure,

@@ -9,7 +9,7 @@ class TypedSiteProperitesDict(TypedDict):
     velocities: Vector3D
     selective_dynamics: tuple[bool, bool, bool]
     coordination_no: int
-    forces: list[float, float, float]
+    forces: list[float, float, float]  # type: ignore[type-arg]
 
 
 class TypedAggregateProperitesDict(TypedDict):

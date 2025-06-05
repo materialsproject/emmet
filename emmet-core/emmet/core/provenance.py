@@ -189,15 +189,15 @@ class ProvenanceDoc(PropertyDoc):
 
         # TODO: Maybe we should combine this robocrystallographer?
         # TODO: Refine these tags / remarks
-        remarks = list(set([remark for snl in snls for remark in snl.about.remarks]))
+        remarks = list(set([remark for snl in snls for remark in snl.about.remarks]))  # type: ignore[union-attr]
         tags = [r for r in remarks if len(r) < 140]
 
-        authors = [entry for snl in snls for entry in snl.about.authors]
+        authors = [entry for snl in snls for entry in snl.about.authors]  # type: ignore[union-attr]
 
         # Check if this entry is experimental
         exp_vals = []
         for snl in snls:
-            for entry in snl.about.history:
+            for entry in snl.about.history:  # type: ignore[union-attr]
                 if entry.description is not None:
                     exp_vals.append(entry.description.get("experimental", False))
 

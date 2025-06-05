@@ -3,7 +3,7 @@ from pydantic import RootModel
 from pymatgen.core import Molecule, Structure
 from typing_extensions import TypedDict
 
-GraphDescriptors = list[str, str]
+GraphDescriptors = list[str, str]  # type: ignore[type-arg]
 
 
 class TypedNodeDict(TypedDict):
@@ -11,7 +11,7 @@ class TypedNodeDict(TypedDict):
 
 
 class TypedAdjacencyDict(TypedDict):
-    to_jimage: list[int, int, int]
+    to_jimage: list[int, int, int]  # type: ignore[type-arg]
     weight: float
     id: int
     key: int
@@ -20,7 +20,7 @@ class TypedAdjacencyDict(TypedDict):
 class TypedGraphDict(TypedDict):
     directed: bool
     multigraph: bool
-    graph: list[GraphDescriptors, GraphDescriptors, GraphDescriptors]
+    graph: list[GraphDescriptors, GraphDescriptors, GraphDescriptors]  # type: ignore[type-arg]
     nodes: list[TypedNodeDict]
     adjacency: list[list[TypedAdjacencyDict]]
 

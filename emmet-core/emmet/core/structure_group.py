@@ -27,7 +27,7 @@ def generic_groupby(list_in, comp=operator.eq) -> list[int]:
     Returns:
         [int] list of labels for the input list
     """
-    list_out = [None] * len(list_in)  # type: list[Union[int, None]]
+    list_out: list[int | None] = [None] * len(list_in)
     label_num = 0
     for i1, ls1 in enumerate(list_out):
         if ls1 is not None:
