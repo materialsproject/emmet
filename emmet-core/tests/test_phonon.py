@@ -1,17 +1,14 @@
 """Test phonon document models."""
 
-import numpy as np
-from monty.serialization import loadfn
-from pymatgen.core import Structure
-import pytest
+from copy import deepcopy
 
-from emmet.core.phonon import PhononDOS, PhononBS, PhononBSDOSDoc
+import numpy as np
+import pyarrow as pa
+import pytest
+from monty.serialization import loadfn
 from tests.conftest import assert_schemas_equal
 
-try:
-    import pyarrow.parquet as pq
-except ImportError:
-    pq = None
+from emmet.core.phonon import PhononBSDOSDoc
 
 
 @pytest.fixture(scope="module")
@@ -21,11 +18,9 @@ def legacy_ph_task(test_dir):
 
 def test_legacy_migration(legacy_ph_task):
     # ensure that legacy phonon data can be migrated to current schema
-
     assert all(legacy_ph_task.get(k) for k in ("ph_bs", "ph_dos"))
-    ph_doc = PhononBSDOSDoc.from_structure(
-        Structure.from_dict(legacy_ph_task["ph_bs"]["structure"]), **legacy_ph_task
-    )
+
+    ph_doc = PhononBSDOSDoc.migrate_legacy_doc(deepcopy(legacy_ph_task))
     assert_schemas_equal(ph_doc, PhononBSDOSDoc.model_config)
 
     # check remap of phonon DOS
@@ -39,14 +34,20 @@ def test_legacy_migration(legacy_ph_task):
         )
 
     # check remap of phonon bandstructure
-    for k in ("qpoints", "frequencies"):
-        assert np.all(
-            np.abs(
-                np.array(getattr(ph_doc.phonon_bandstructure, k, []))
-                - np.array(legacy_ph_task["ph_bs"].get(k, []))
-            )
-            < 1e-6
+    assert np.all(
+        np.abs(
+            np.array(getattr(ph_doc.phonon_bandstructure, "qpoints", []))
+            - np.array(legacy_ph_task["ph_bs"].get("qpoints", []))
         )
+        < 1e-6
+    )
+    assert np.all(
+        np.abs(
+            np.array(getattr(ph_doc.phonon_bandstructure, "frequencies", []))
+            - np.array(legacy_ph_task["ph_bs"].get("bands", []))
+        )
+        < 1e-6
+    )
 
     temps = [5, 100, 300, 500, 800]
     ref_data = {
@@ -95,23 +96,18 @@ def test_legacy_migration(legacy_ph_task):
     assert sorted(ph_doc.elements) == sorted(ph_doc.structure.composition.elements)
 
 
-@pytest.mark.skipif(pq is None, reason="pyarrow must be installed to run this test.")
-def test_arrow(tmp_dir, legacy_ph_task):
-    # test to parquet and rehydration
-    ph_doc = PhononBSDOSDoc(**legacy_ph_task)
-    arrow_table = ph_doc.objects_to_arrow()
-    pq.write_table(arrow_table, "test.parquet")
+@pytest.mark.skipif(pa is None, reason="pyarrow must be installed to run this test.")
+def test_arrow(legacy_ph_task):
+    from emmet.core.utils import jsanitize
 
-    rehyd = pq.read_table("test.parquet")
+    ph_doc = PhononBSDOSDoc.migrate_legacy_doc(legacy_ph_task)
 
-    dos_from_table = PhononDOS.from_arrow(arrow_table, col_prefix="dos_")
-    dos_from_parquet = PhononDOS.from_arrow(rehyd, col_prefix="dos_")
+    arrow_struct = pa.scalar(
+        ph_doc.model_dump(context={"format": "arrow"}), type=PhononBSDOSDoc.arrow_type()
+    )
 
-    assert ph_doc.phonon_dos == dos_from_table
-    assert ph_doc.phonon_dos == dos_from_parquet
+    test_arrow_doc = PhononBSDOSDoc(**arrow_struct.as_py(maps_as_pydicts="strict"))
 
-    bs_from_table = PhononBS.from_arrow(arrow_table, col_prefix="bs_")
-    bs_from_parquet = PhononBS.from_arrow(rehyd, col_prefix="bs_")
-
-    assert ph_doc.phonon_bandstructure == bs_from_table
-    assert ph_doc.phonon_bandstructure == bs_from_parquet
+    assert jsanitize(ph_doc.model_dump(), allow_bson=True) == jsanitize(
+        test_arrow_doc.model_dump(), allow_bson=True
+    )
