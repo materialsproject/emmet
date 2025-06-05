@@ -2,7 +2,7 @@ import pytest
 import time
 import os
 import signal
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 import psutil
 from datetime import datetime, timedelta
 from emmet.cli.task_manager import TaskManager, _is_process_running
@@ -245,10 +245,6 @@ def test_terminated_task_wait_completion(task_manager):
     # Wait for the detached process to start
     time.sleep(0.5)
 
-    # Get the detached PID
-    status = task_manager.get_task_status(task_id)
-    pid = status["detached_pid"]
-
     # Mock the process as not running
     mock_dead = MockProcess(is_running=False, status=psutil.STATUS_DEAD)
 
@@ -298,10 +294,6 @@ def test_zombie_process_task_status(task_manager):
 
     # Wait for the detached process to start
     time.sleep(0.5)
-
-    # Get the detached PID
-    status = task_manager.get_task_status(task_id)
-    pid = status["detached_pid"]
 
     # Mock the process as a zombie
     mock_zombie = MockProcess(is_running=True, status=psutil.STATUS_ZOMBIE)
