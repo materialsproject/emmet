@@ -7,10 +7,7 @@ from enum import Enum
 from itertools import groupby
 import logging
 from math import gcd
-from multiprocessing import Pool
-import shutil
-import subprocess
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union, TYPE_CHECKING
+from typing import Any, Dict, Iterator, List, Optional, Union, TYPE_CHECKING
 
 import numpy as np
 from monty.json import MSONable
