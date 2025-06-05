@@ -1,3 +1,4 @@
+from fastapi import Query
 from emmet.core.mpid import MPID
 
 from maggma.api.query_operator import QueryOperator
@@ -19,3 +20,22 @@ class PhononImgQuery(QueryOperator):
         ),
     ) -> STORE_PARAMS:
         return {"criteria": {"task_id": str(task_id)}}
+
+
+class PhononMethodQuery(QueryOperator):
+    """
+    Method to query phonon method
+    """
+
+    def query(
+        self,
+        phonon_method: str = Query(
+            None,
+            description="Phonon Method to search for",
+        ),
+    ) -> STORE_PARAMS:
+        crit = {}
+        if phonon_method in {"dfpt", "phonopy", "pheasy"}:
+            crit = {"phonon_method": phonon_method}
+
+        return {"criteria": crit}
