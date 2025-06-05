@@ -23,7 +23,7 @@ if ARROW_COMPATIBLE:
 PathLike: TypeAlias = str | Path | os.DirEntry[str]
 """Type of a generic path-like object"""
 
-StructureType: TypeAlias = AnnotatedStructure if ARROW_COMPATIBLE else Structure
+StructureType: TypeAlias = AnnotatedStructure if ARROW_COMPATIBLE else Structure  # type: ignore[valid-type]
 
 
 ############################################################
@@ -115,8 +115,8 @@ class TypedStabilityDict(TypedDict):
 ############################################################
 # PHONON
 ############################################################
-vec2D: TypeAlias = list[float, float]
-vec3D: TypeAlias = list[float, float, float]
+vec2D: TypeAlias = list[float, float]  # type: ignore[type-arg]
+vec3D: TypeAlias = list[float, float, float]  # type: ignore[type-arg]
 
 
 class PhononWebsiteDict(TypedDict):
@@ -134,8 +134,8 @@ class PhononWebsiteDict(TypedDict):
     name: str
     natoms: int
     qpoints: list[vec3D]
-    repetitions: list[int, int, int]
-    vectors: list[list[list[list[vec2D, vec2D, vec2D]]]]
+    repetitions: list[int, int, int]  # type: ignore[type-arg]
+    vectors: list[list[list[list[vec2D, vec2D, vec2D]]]]  # type: ignore[type-arg]
 
 
 class TypedBaseInputDict(TypedDict):

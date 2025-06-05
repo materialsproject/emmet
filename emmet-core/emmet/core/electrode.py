@@ -14,7 +14,7 @@ from pymatgen.apps.battery.battery_abc import AbstractElectrode
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 from pymatgen.core import Composition
-from pymatgen.core.periodic_table import Element
+from pymatgen.core.periodic_table import DummySpecies, Element, Species
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core import ARROW_COMPATIBLE
@@ -22,7 +22,7 @@ from emmet.core.base import EmmetBaseModel
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
 from emmet.core.typing import StructureType
-from emmet.core.utils import ValueEnum, jsanitize, utcnow
+from emmet.core.utils import ValueEnum, jsanitize, type_override, utcnow
 
 if ARROW_COMPATIBLE:
     from emmet.core.serialization_adapters import (
@@ -36,10 +36,10 @@ if ARROW_COMPATIBLE:
     )
 
 InsertionElectrodeType: TypeAlias = (
-    AnnotatedInsertionElectrode if ARROW_COMPATIBLE else InsertionElectrode
+    AnnotatedInsertionElectrode if ARROW_COMPATIBLE else InsertionElectrode  # type: ignore[valid-type]
 )
 ConversionElectrodeType: TypeAlias = (
-    AnnotatedConversionElectrode if ARROW_COMPATIBLE else ConversionElectrode
+    AnnotatedConversionElectrode if ARROW_COMPATIBLE else ConversionElectrode  # type: ignore[valid-type]
 )
 
 
@@ -179,6 +179,7 @@ class ConversionVoltagePairDoc(VoltagePairDoc):
     )
 
 
+@type_override({"all_elements": list[Element]})
 class EntriesCompositionSummary(BaseModel):
     """
     Composition summary data for all material entries associated with this electrode.
@@ -200,7 +201,7 @@ class EntriesCompositionSummary(BaseModel):
         description="Anonymous formulas for material entries across all voltage pairs.",
     )
 
-    all_elements: list[Element] | None = Field(
+    all_elements: list[Element | Species | DummySpecies] | None = Field(
         None,
         description="Elements in material entries across all voltage pairs.",
     )

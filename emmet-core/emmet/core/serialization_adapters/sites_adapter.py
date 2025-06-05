@@ -14,8 +14,8 @@ MSONableTypedSiteDict = TypedDict(
         "name": str,
         "properties": TypedSiteProperitesDict,
         "species": list[TypedSpeciesDict],
-        "abc": list[float, float, float],
-        "xyz": list[float, float, float],
+        "abc": list[float, float, float],  # type: ignore[type-arg]
+        "xyz": list[float, float, float],  # type: ignore[type-arg]
     },
 )
 
@@ -25,8 +25,8 @@ class TypedSiteDict(TypedDict):
     name: str
     properties: TypedSiteProperitesDict
     species: list[TypedSpeciesDict]
-    abc: list[float, float, float]
-    xyz: list[float, float, float]
+    abc: list[float, float, float]  # type: ignore[type-arg]
+    xyz: list[float, float, float]  # type: ignore[type-arg]
 
 
 class SiteAdapter(RootModel):

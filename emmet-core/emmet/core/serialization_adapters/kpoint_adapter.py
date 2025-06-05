@@ -9,8 +9,8 @@ TypedKpointDict = TypedDict(
         "@module": str,
         "@class": str,
         "lattice": Lattice,
-        "fcoords": list[float, float, float],
-        "ccoords": list[float, float, float],
+        "fcoords": list[float, float, float],  # type: ignore[type-arg]
+        "ccoords": list[float, float, float],  # type: ignore[type-arg]
         "label": str,
     },
 )

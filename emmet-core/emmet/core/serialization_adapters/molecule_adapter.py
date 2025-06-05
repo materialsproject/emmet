@@ -7,7 +7,7 @@ from emmet.core.serialization_adapters.sites_adapter import TypedSiteDict
 
 
 class TypedLattice(TypedDict):
-    matrix: list[list[float, float, float]]
+    matrix: list[list[float, float, float]]  # type: ignore[type-arg]
 
 
 TypedMoleculeDict = TypedDict(
