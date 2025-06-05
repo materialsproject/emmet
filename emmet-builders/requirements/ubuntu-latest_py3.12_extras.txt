@@ -28,9 +28,9 @@ attrs==25.3.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.38.30
+boto3==1.38.31
     # via maggma
-botocore==1.38.30
+botocore==1.38.31
     # via
     #   boto3
     #   s3transfer
@@ -377,7 +377,7 @@ packaging==24.2
     #   torchmetrics
 palettable==3.3.3
     # via pymatgen
-pandas==2.2.3
+pandas==2.3.0
     # via
     #   maggma
     #   matminer
@@ -552,7 +552,7 @@ s3transfer==0.13.0
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
-scikit-learn==1.6.1
+scikit-learn==1.7.0
     # via
     #   matcalc
     #   matminer
