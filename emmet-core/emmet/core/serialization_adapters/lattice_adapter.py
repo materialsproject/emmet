@@ -7,8 +7,8 @@ MSONableTypedLatticeDict = TypedDict(
     {
         "@module": str,
         "@class": str,
-        "matrix": list[list[float, float, float]],
-        "pbc": list[bool, bool, bool],
+        "matrix": list[list[float, float, float]],  # type: ignore[type-arg]
+        "pbc": list[bool, bool, bool],  # type: ignore[type-arg]
         "a": float,
         "b": float,
         "c": float,
@@ -21,8 +21,8 @@ MSONableTypedLatticeDict = TypedDict(
 
 
 class TypedLatticeDict(TypedDict):
-    matrix: list[list[float, float, float]]
-    pbc: list[bool, bool, bool]
+    matrix: list[list[float, float, float]]  # type: ignore[type-arg]
+    pbc: list[bool, bool, bool]  # type: ignore[type-arg]
     a: float
     b: float
     c: float
