@@ -3,10 +3,11 @@ from __future__ import annotations
 
 from copy import deepcopy
 from collections import defaultdict
-from collections.abc import Sequence
+from collections.abc import Iterable
 from enum import Enum
+from functools import cached_property
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -81,11 +82,16 @@ class AtomTrajectory(BaseModel):
         None, description="The magnetic moments at each ionic step."
     )
 
-    ionic_step_properties: Sequence[str] | None = Field(
+    ionic_step_properties: Iterable[str] = Field(
         {"energy", "forces", "stress", "magmoms"},
         exclude=True,
         description="The properties included at each ionic step.",
     )
+
+    @model_validator(mode="before")
+    def reset_num_ionic_steps(cls, config: Any) -> Any:
+        config["num_ionic_steps"] = len(config["cart_coords"])
+        return config
 
     def __hash__(self) -> int:
         """Used to verify roundtrip conversion of Trajectory."""
@@ -95,10 +101,31 @@ class AtomTrajectory(BaseModel):
         """Get number of ionic steps."""
         return self.num_ionic_steps
 
+    def __getitem__(self, index: int | slice) -> AtomTrajectory:
+        if isinstance(index, int):
+            if index < 0:
+                index = len(self) + index
+        _slice: slice = slice(index, index + 1) if isinstance(index, int) else index
+
+        config = {}
+        all_ionic_step_props = set(self.ionic_step_properties).union(
+            {
+                "lattice",
+                "cart_coords",
+            }
+        )
+        for k in AtomTrajectory.model_fields:
+            v = getattr(self, k)
+            if v and k in all_ionic_step_props:
+                config[k] = v[_slice]
+            elif v:
+                config[k] = v
+        return AtomTrajectory(**config)
+
     @staticmethod
     def reorder_sites(
         structure: Structure | Molecule, ref_z: list[int]
-    ) -> tuple[Structure, list[int]]:
+    ) -> tuple[Structure | Molecule, list[int]]:
         """
         Ensure that the sites in a structure match the order in a set of reference Z values.
 
@@ -209,8 +236,6 @@ class AtomTrajectory(BaseModel):
         if len(esteps := props.get("electronic_steps", [])) > 0:
             props["num_electronic_steps"] = [len(estep) for estep in esteps]
 
-        props["num_ionic_steps"] = num_ionic_steps
-
         return cls(**props, **kwargs)
 
     @classmethod
@@ -307,7 +332,6 @@ class AtomTrajectory(BaseModel):
             for k in pa_table.column_names
             if k in cls.model_fields
         }
-        config["num_ionic_steps"] = len(config["cart_coords"])
         return cls(**config)
 
     @classmethod
@@ -328,8 +352,8 @@ class AtomTrajectory(BaseModel):
 
     def to_pmg(
         self,
-        frame_props: Sequence[str] | None = None,
-        indices: int | slice | Sequence[int] = None,
+        frame_props: Iterable[str] | None = None,
+        indices: int | slice | Iterable[int] | None = None,
     ) -> PmgTrajectory:
         """
         Create a pymatgen Trajectory.
@@ -345,9 +369,9 @@ class AtomTrajectory(BaseModel):
         -----------
         pymatgen.core.trajectory.Trajectory
         """
-        frame_props = set(frame_props or self.ionic_step_properties)
-        if "magmoms" in frame_props:
-            frame_props.discard("magmoms")
+        frame_prop_keys: set[str] = set(frame_props or self.ionic_step_properties)
+        if "magmoms" in frame_prop_keys:
+            frame_prop_keys.discard("magmoms")
 
         if indices:
             if isinstance(indices, slice):
@@ -372,25 +396,25 @@ class AtomTrajectory(BaseModel):
                 site_properties["magmoms"] = self.magmoms[i]
 
             if is_structure:
-                structure = Structure(
+                structure: Structure | Molecule = Structure(
                     lattice=self.constant_lattice
                     if self.constant_lattice
                     else self.lattice[i],  # type: ignore[index]
                     species=species,
-                    coords=self.cart_coords[i],
+                    coords=self.cart_coords[i],  # type: ignore[arg-type]
                     coords_are_cartesian=True,
                     site_properties=site_properties,
                 )
             else:
                 structure = Molecule(
                     species=species,
-                    coords=self.cart_coords[i],
+                    coords=self.cart_coords[i],  # type: ignore[arg-type]
                     site_properties=site_properties,
                 )
             structures.append(structure)
 
             props = {}
-            for k in frame_props:
+            for k in frame_prop_keys:
                 if (_prop := getattr(self, k, None)) is not None:
                     prop = _prop[i]
                     for cmth in ("model_dump", "tolist"):
@@ -459,6 +483,18 @@ class AtomTrajectory(BaseModel):
 
         return traj
 
+    @cached_property
+    def msd(self) -> np.ndarray:
+        """Obtain the mean-squared displacement (MSD).
+
+        This returns a numpy array where each row contains the
+        MSD of the corresponding atom in the structure, i.e., an
+        (# of atoms) x (# of ionic steps)
+        array.
+        """
+        coords = np.array(self.cart_coords)
+        return (np.linalg.norm(coords - coords[0], axis=2) ** 2).T
+
 
 class Trajectory(AtomTrajectory):
     """Low memory schema for trajectories that can interface with parquet, pymatgen, and ASE.
@@ -498,7 +534,7 @@ class Trajectory(AtomTrajectory):
         description="The RunType of the calculation used to generate this trajectory.",
     )
 
-    ionic_step_properties: Sequence[str] | None = Field(
+    ionic_step_properties: Iterable[str] = Field(
         {
             "energy",
             "forces",
