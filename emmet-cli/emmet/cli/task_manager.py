@@ -8,6 +8,7 @@ import os
 from typing import Any, Callable, Dict, Optional, Literal
 from uuid import uuid4
 import psutil
+from typing import cast
 
 from emmet.cli.state_manager import StateManager
 
@@ -94,7 +95,7 @@ class TaskManager:
         additional_data: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Update task status with common fields."""
-        update_data = {"status": status}
+        update_data: Dict[str, Any] = {"status": status}
 
         if status in ["completed", "failed", "terminated"]:
             update_data["completed_at"] = self._get_current_timestamp()
@@ -129,15 +130,19 @@ class TaskManager:
 
         # Store the detached process PID
         self._update_task_status(
-            task_id, "running", additional_data={"detached_pid": os.getpid()}
+            task_id,
+            cast(TaskStatus, "running"),
+            additional_data={"detached_pid": os.getpid()},
         )
 
         try:
             result = func(*args, **kwargs)
-            self._update_task_status(task_id, "completed", result=result)
+            self._update_task_status(
+                task_id, cast(TaskStatus, "completed"), result=result
+            )
         except Exception as e:
             logger.exception(f"Task {task_id} failed")
-            self._update_task_status(task_id, "failed", error=str(e))
+            self._update_task_status(task_id, cast(TaskStatus, "failed"), error=str(e))
         finally:
             os._exit(0)
 
@@ -156,7 +161,7 @@ class TaskManager:
         # Initialize task state
         self._update_task_status(
             task_id,
-            "running",
+            cast(TaskStatus, "running"),
             additional_data={"started_at": self._get_current_timestamp()},
         )
 
@@ -170,7 +175,9 @@ class TaskManager:
 
         # Store the initial process ID
         self._update_task_status(
-            task_id, "running", additional_data={"initial_pid": process.pid}
+            task_id,
+            cast(TaskStatus, "running"),
+            additional_data={"initial_pid": process.pid},
         )
 
         return task_id
@@ -211,7 +218,9 @@ class TaskManager:
         if "detached_pid" in status:
             if not _is_process_running(status["detached_pid"]):
                 self._update_task_status(
-                    task_id, "terminated", error="Process was terminated unexpectedly"
+                    task_id,
+                    cast(TaskStatus, "terminated"),
+                    error="Process was terminated unexpectedly",
                 )
                 return False
             return True
@@ -227,7 +236,7 @@ class TaskManager:
             if not _is_process_running(status["initial_pid"]):
                 self._update_task_status(
                     task_id,
-                    "terminated",
+                    cast(TaskStatus, "terminated"),
                     error="Process failed to detach and was terminated",
                 )
                 return False
@@ -243,13 +252,15 @@ class TaskManager:
 
             self._update_task_status(
                 task_id,
-                "terminated",
+                cast(TaskStatus, "terminated"),
                 error="Process was terminated before initialization completed",
             )
             return False
 
         self._update_task_status(
-            task_id, "terminated", error="Invalid task state: no start time recorded"
+            task_id,
+            cast(TaskStatus, "terminated"),
+            error="Invalid task state: no start time recorded",
         )
         return False
 
@@ -285,6 +296,8 @@ class TaskManager:
             self._try_terminate_process(status["initial_pid"])
 
         self._update_task_status(
-            task_id, "terminated", error="Task was terminated by user request"
+            task_id,
+            cast(TaskStatus, "terminated"),
+            error="Task was terminated by user request",
         )
         return self.get_task_status(task_id)
