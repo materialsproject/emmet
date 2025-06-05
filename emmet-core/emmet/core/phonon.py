@@ -284,6 +284,43 @@ class SumRuleChecks(BaseModel):
     )
 
 
+class PhononComputationalSettings(BaseModel):
+    """Collection to store computational settings for the phonon computation."""
+
+    # could be optional and implemented at a later stage?
+    npoints_band: int | None = Field(
+        None, description="number of points for band structure computation"
+    )
+    kpath_scheme: str | None = Field(None, description="indicates the kpath scheme")
+    kpoint_density_dos: int | None = Field(
+        None,
+        description="number of points for computation of free energies and densities of states",
+    )
+
+
+class ThermalDisplacementData(BaseModel):
+    """Collection to store information on the thermal displacement matrices."""
+
+    freq_min_thermal_displacements: float | None = Field(
+        None,
+        description="cutoff frequency in THz to avoid numerical issues in the "
+        "computation of the thermal displacement parameters",
+    )
+    thermal_displacement_matrix_cif: list[list[Matrix3D]] | None = Field(
+        None, description="field including thermal displacement matrices in CIF format"
+    )
+    thermal_displacement_matrix: list[list[Matrix3D]] | None = Field(
+        None,
+        description="field including thermal displacement matrices in Cartesian "
+        "coordinate system",
+    )
+    temperatures_thermal_displacements: list[float] | None = Field(
+        None,
+        description="temperatures at which the thermal displacement matrices"
+        "have been computed",
+    )
+
+
 class PhononBSDOSTask(StructureMetadata):
     """Phonon band structures and density of states data."""
 
@@ -500,9 +537,11 @@ class PhononBSDOSTask(StructureMetadata):
         if not self.sum_rules_breaking:
             self.sum_rules_breaking = SumRuleChecks(
                 **{
-                    k: np.max(np.abs(getattr(self, attr)))
-                    if getattr(self, attr)
-                    else None
+                    k: (
+                        np.max(np.abs(getattr(self, attr)))
+                        if getattr(self, attr)
+                        else None
+                    )
                     for k, attr in {
                         "asr": "acoustic_sum_rule",
                         "cnsr": "charge_neutral_sum_rule",
@@ -762,43 +801,6 @@ class PhononBSDOSDoc(PhononBSDOSTask):
         """Ensure that `material_id` aliases inherited `identifier` field."""
         self.identifier = self.material_id
         return self
-
-
-class PhononComputationalSettings(BaseModel):
-    """Collection to store computational settings for the phonon computation."""
-
-    # could be optional and implemented at a later stage?
-    npoints_band: int | None = Field(
-        None, description="number of points for band structure computation"
-    )
-    kpath_scheme: str | None = Field(None, description="indicates the kpath scheme")
-    kpoint_density_dos: int | None = Field(
-        None,
-        description="number of points for computation of free energies and densities of states",
-    )
-
-
-class ThermalDisplacementData(BaseModel):
-    """Collection to store information on the thermal displacement matrices."""
-
-    freq_min_thermal_displacements: float | None = Field(
-        None,
-        description="cutoff frequency in THz to avoid numerical issues in the "
-        "computation of the thermal displacement parameters",
-    )
-    thermal_displacement_matrix_cif: list[list[Matrix3D]] | None = Field(
-        None, description="field including thermal displacement matrices in CIF format"
-    )
-    thermal_displacement_matrix: list[list[Matrix3D]] | None = Field(
-        None,
-        description="field including thermal displacement matrices in Cartesian "
-        "coordinate system",
-    )
-    temperatures_thermal_displacements: list[float] | None = Field(
-        None,
-        description="temperatures at which the thermal displacement matrices"
-        "have been computed",
-    )
 
 
 class PhononWarnings(DocEnum):
