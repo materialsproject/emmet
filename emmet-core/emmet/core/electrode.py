@@ -34,7 +34,7 @@ if ARROW_COMPATIBLE:
     )
 
 BalancedReactionType: TypeAlias = (
-    BalancedReactionTypeVar if ARROW_COMPATIBLE else BalancedReaction
+    BalancedReactionTypeVar if ARROW_COMPATIBLE else BalancedReaction  # type: ignore[valid-type]
 )
 InsertionElectrodeType: TypeAlias = (
     AnnotatedInsertionElectrode if ARROW_COMPATIBLE else InsertionElectrode  # type: ignore[valid-type]

@@ -29,7 +29,6 @@ from pymatgen.io.vasp import Incar, Kpoints, Poscar
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID, AlphaID
-from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 from emmet.core.structure import StructureMetadata
 from emmet.core.trajectory import Trajectory as CoreTrajectory
 from emmet.core.typing import StructureType
@@ -59,11 +58,6 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
 if ARROW_COMPATIBLE:
-    from emmet.core.serialization_adapters import (
-        computed_entries_adapter,
-        kpoints_adapter,
-        trajectory_adapter,
-    )
     from emmet.core.serialization_adapters.computed_entries_adapter import (
         AnnotatedComputedStructureEntry,
         ComputedEntryTypeVar,
@@ -72,13 +66,13 @@ if ARROW_COMPATIBLE:
     from emmet.core.serialization_adapters.trajectory_adapter import TrajectoryTypeVar
 
 ComputedEntryType: TypeAlias = (
-    ComputedEntryTypeVar if ARROW_COMPATIBLE else ComputedEntry
+    ComputedEntryTypeVar if ARROW_COMPATIBLE else ComputedEntry  # type: ignore[valid-type]
 )
 ComputedStructureEntryType: TypeAlias = (
-    AnnotatedComputedStructureEntry if ARROW_COMPATIBLE else ComputedStructureEntry
+    AnnotatedComputedStructureEntry if ARROW_COMPATIBLE else ComputedStructureEntry  # type: ignore[valid-type]
 )
 PoscarType: TypeAlias = AnnotatedPoscar if ARROW_COMPATIBLE else Poscar  # type: ignore[valid-type]
-TrajectoryType: TypeAlias = TrajectoryTypeVar if ARROW_COMPATIBLE else Trajectory
+TrajectoryType: TypeAlias = TrajectoryTypeVar if ARROW_COMPATIBLE else Trajectory  # type: ignore[valid-type]
 
 monty_decoder = MontyDecoder()
 logger = logging.getLogger(__name__)

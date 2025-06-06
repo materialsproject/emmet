@@ -16,7 +16,7 @@ if ARROW_COMPATIBLE:
 
 
 GrainBoundaryType: TypeAlias = (
-    AnnotatedGrainBoundary if ARROW_COMPATIBLE else GrainBoundary
+    AnnotatedGrainBoundary if ARROW_COMPATIBLE else GrainBoundary  # type: ignore[valid-type]
 )
 
 
