@@ -17,9 +17,13 @@ from pydantic import model_validator, BaseModel, Field, computed_field, PrivateA
 from typing import Optional, TYPE_CHECKING
 
 from pymatgen.core import Lattice, Structure
-from pymatgen.electronic_structure.bandstructure import Kpoint
+from pymatgen.electronic_structure.core import Spin
+from pymatgen.electronic_structure.bandstructure import Kpoint, BandStructureSymmLine
 from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
-from pymatgen.phonon.dos import PhononDos as PhononDosObject
+from pymatgen.phonon.dos import (
+    PhononDos as PhononDosObject,
+    CompletePhononDos,
+)
 
 from emmet.core.base import CalcMeta
 from emmet.core.utils import DocEnum
@@ -69,31 +73,64 @@ class PhononDOS(BaseModel):
 
     frequencies: list[float] = Field(description="The phonon frequencies in THz.")
     densities: list[float] = Field(description="The phonon density of states.")
+    projected_densities: list[list[float]] | None = Field(
+        None, description="The projected phonon density of states."
+    )
+    structure: Structure | None = Field(
+        None, description="The structure associated with this DOS."
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def rehydrate(cls, config: Any) -> Any:
+        """Correctly parse pymatgen-like keys."""
+        if config.get("pdos"):
+            config["projected_densities"] = config.pop("pdos")
+
+        # legacy data contains abipy structure objects
+        if (struct := config.get("structure")) and not isinstance(struct, Structure):
+            config["structure"] = Structure.from_dict(struct)
+
+        return config
 
     @cached_property
-    def to_pmg(self) -> PhononDosObject:
+    def to_pmg(self) -> PhononDosObject | CompletePhononDos:
         """Get / cache corresponding pymatgen object."""
-        return PhononDosObject(frequencies=self.frequencies, densities=self.densities)
+        dos = PhononDosObject(frequencies=self.frequencies, densities=self.densities)
+        if self.projected_densities and self.structure:
+            return CompletePhononDos(
+                self.structure,
+                dos,
+                dict(zip(self.structure, self.projected_densities, strict=True)),
+            )
+        return dos
 
     @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
     def to_arrow(self, col_prefix: str | None = None) -> ArrowTable:
         """Convert PhononDOS to a pyarrow Table."""
         col_prefix = col_prefix or ""
-        return pa.Table.from_pydict(
-            {
-                f"{col_prefix}{k}": [getattr(self, k)]
-                for k in ("frequencies", "densities")
-            }
-        )
+        config = {
+            f"{col_prefix}{k}": [getattr(self, k)]
+            for k in (
+                "frequencies",
+                "densities",
+                "projected_densities",
+            )
+        }
+        config[f"{col_prefix}structure"] = [
+            json.dumps(self.structure.as_dict()) if self.structure else None
+        ]
+        return pa.Table.from_pydict(config)
 
     @classmethod
     @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
     def from_arrow(cls, table: ArrowTable, col_prefix: str | None = None) -> Self:
         """Create a PhononDOS from a pyarrow Table."""
         col_prefix = col_prefix or ""
-        return cls(
-            **{k: table[f"{col_prefix}{k}"].to_pylist()[0] for k in cls.model_fields}
-        )
+        config = {k: table[f"{col_prefix}{k}"].to_pylist()[0] for k in cls.model_fields}
+        if structure_str := config.pop("structure"):
+            config["structure"] = Structure.from_dict(json.loads(structure_str))
+        return cls(**config)
 
     @classmethod
     def from_phonopy(cls, phonon_dos_file: str | Path) -> Self:
@@ -152,6 +189,7 @@ class PhononBS(BaseModel):
                 np.array(egd["real"]) + 1j * np.array(egd["imag"])
             ).tolist()
 
+        # legacy data contains abipy structure objects
         if (struct := config.get("structure")) and not isinstance(struct, Structure):
             config["structure"] = Structure.from_dict(struct)
 
@@ -191,6 +229,23 @@ class PhononBS(BaseModel):
                 for k, v in (self.labels_dict or {}).items()
             },
             coords_are_cartesian=False,
+        )
+
+    @property
+    def _to_pmg_es_bs(self) -> BandStructureSymmLine:
+        """Convenience method for crystal toolkit to create electronic-structure style band structure object."""
+        rlatt = Lattice(self.reciprocal_lattice)
+        return BandStructureSymmLine(
+            [Kpoint(q, lattice=rlatt).frac_coords for q in self.qpoints],  # type: ignore[misc]
+            {Spin.up: np.array(self.frequencies)},
+            rlatt,
+            1e-6,  # There is no Fermi level in a Phonon DOS (these are bosons definitionally) but we want to plot the bands from zero.
+            {
+                k: Kpoint(v, lattice=rlatt).frac_coords
+                for k, v in (self.labels_dict or {}).items()
+            },
+            coords_are_cartesian=False,
+            structure=self.structure,
         )
 
     @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
