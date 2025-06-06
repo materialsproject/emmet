@@ -1,5 +1,3 @@
-# mypy: ignore-errors
-
 """ Core definition of a Q-Chem Task Document """
 from typing import Any, Dict, List, Optional, Callable
 
@@ -199,10 +197,12 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
 
     @property
     def entry(self) -> Dict[str, Any]:
-        if self.output.optimized_molecule is not None:
-            mol = self.output.optimized_molecule
-        else:
-            mol = self.output.initial_molecule
+        mol = None
+        for mol_field in ("optimized_molecule", "initial_molecule"):
+            if mol := getattr(self.output, mol_field, None):
+                break
+        if not mol:
+            raise ValueError("No molecule could be associated with the calculation.")
 
         if self.charge is None:
             charge = int(mol.charge)
