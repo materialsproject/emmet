@@ -44,7 +44,7 @@ filelock==3.18.0
     #   virtualenv
 flake8==7.2.0
     # via emmet-core (setup.py)
-fonttools==4.58.1
+fonttools==4.58.2
     # via matplotlib
 fsspec==2025.5.1
     # via matcalc
@@ -54,7 +54,7 @@ griddataformats==1.0.2
     # via mdanalysis
 griffe==1.7.3
     # via mkdocstrings-python
-h5py==3.13.0
+h5py==3.14.0
     # via
     #   phono3py
     #   phonopy
@@ -190,7 +190,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-core (setup.py)
     #   mypy
-narwhals==1.41.0
+narwhals==1.41.1
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -379,7 +379,7 @@ requests==2.32.3
     #   pymatgen
 robocrys==0.2.11
     # via emmet-core (setup.py)
-ruamel-yaml==0.18.12
+ruamel-yaml==0.18.13
     # via
     #   custodian
     #   monty
