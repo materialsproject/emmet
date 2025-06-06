@@ -18,7 +18,7 @@ if ARROW_COMPATIBLE:
     from emmet.core.serialization_adapters.xas_adapter import AnnotatedXAS
 
 
-XASType: TypeAlias = AnnotatedXAS if ARROW_COMPATIBLE else XAS
+XASType: TypeAlias = AnnotatedXAS if ARROW_COMPATIBLE else XAS  # type: ignore[valid-type]
 
 
 class Edge(ValueEnum):

@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from pathlib import Path
     from typing import Any
 
-DefectType: TypeAlias = AnnotatedDefect if ARROW_COMPATIBLE else Defect
+DefectType: TypeAlias = AnnotatedDefect if ARROW_COMPATIBLE else Defect  # type: ignore[valid-type]
 
 mdecoder = MontyDecoder().process_decoded
 

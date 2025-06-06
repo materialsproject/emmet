@@ -21,7 +21,7 @@ if ARROW_COMPATIBLE:
     )
 
 IRDielectricTensorType: TypeAlias = (
-    TypedIRDTensorDict if ARROW_COMPATIBLE else IRDielectricTensor
+    TypedIRDTensorDict if ARROW_COMPATIBLE else IRDielectricTensor  # type: ignore[valid-type]
 )
 
 SETTINGS = EmmetSettings()
