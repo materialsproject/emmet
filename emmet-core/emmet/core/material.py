@@ -12,7 +12,7 @@ from pymatgen.core.structure import Molecule
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID, MPculeID
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
-from emmet.core.typing import StructureType
+from emmet.core.typing import MoleculeType, StructureType
 from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
 
@@ -135,7 +135,7 @@ class CoreMoleculeDoc(MoleculeMetadata):
         "This comes in the form of an MPID (or int) or MPculeID (or str)",
     )
 
-    molecule: Molecule = Field(
+    molecule: MoleculeType = Field(
         ...,
         description="The best (typically meaning lowest in energy) structure for this molecule",
     )
@@ -151,7 +151,7 @@ class CoreMoleculeDoc(MoleculeMetadata):
         description="List of deprecation tags detailing why this molecules document isn't valid",
     )
 
-    initial_molecules: List[Molecule] = Field(
+    initial_molecules: List[MoleculeType] = Field(
         [],
         description="Initial molecules used in the DFT geometry optimizations corresponding to this molecule",
     )

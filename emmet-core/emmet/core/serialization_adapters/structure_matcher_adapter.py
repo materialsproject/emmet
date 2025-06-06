@@ -1,7 +1,6 @@
-import pymatgen.analysis.structure_matcher
-from pydantic import RootModel
-from pymatgen.core import Species
 from typing_extensions import TypedDict
+
+from emmet.core.serialization_adapters.species_adapter import MSONableTypedSpeciesDict
 
 TypedComparatorDict = TypedDict(
     "TypedComparatorDict",
@@ -26,17 +25,6 @@ TypedStructureMatcherDict = TypedDict(
         "attempt_supercell": bool,
         "comparator": TypedComparatorDict,
         "supercell_size": str,
-        "ignored_species": list[Species],
+        "ignored_species": list[MSONableTypedSpeciesDict],
     },
-)
-
-
-class StructureMatcherAdapter(RootModel):
-    root: TypedStructureMatcherDict
-
-
-setattr(
-    pymatgen.analysis.structure_matcher.StructureMatcher,
-    "__type_adapter__",
-    StructureMatcherAdapter,
 )

@@ -1,5 +1,6 @@
-import pymatgen.io.vasp.inputs
-from pydantic import RootModel
+from typing import TypeVar
+
+from pymatgen.io.vasp.inputs import Kpoints
 from typing_extensions import TypedDict
 
 TypedKpointsDict = TypedDict(
@@ -22,9 +23,4 @@ TypedKpointsDict = TypedDict(
     },
 )
 
-
-class KpointsAdapter(RootModel):
-    root: TypedKpointsDict
-
-
-setattr(pymatgen.io.vasp.inputs.Kpoints, "__type_adapter__", KpointsAdapter)
+KpointsTypeVar = TypeVar("KpointsTypeVar", Kpoints, TypedKpointsDict)

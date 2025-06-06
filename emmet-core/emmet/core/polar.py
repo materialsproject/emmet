@@ -1,6 +1,6 @@
 """ Core definition for Polar property Document """
 
-from typing import List, Optional
+from typing import List, Optional, TypeAlias
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -9,15 +9,20 @@ from pymatgen.core.structure import Structure
 from pymatgen.core.tensors import Tensor
 from pymatgen.phonon.ir_spectra import IRDielectricTensor
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.material_property import PropertyDoc
 from emmet.core.math import Matrix3D
 from emmet.core.mpid import MPID
 from emmet.core.settings import EmmetSettings
 
-from emmet.core.material_property import PropertyDoc
-from emmet.core.math import Matrix3D
-from emmet.core.mpid import MPID
-from emmet.core.settings import EmmetSettings
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters.ir_dielectric_tensor_adapter import (
+        TypedIRDTensorDict,
+    )
+
+IRDielectricTensorType: TypeAlias = (
+    TypedIRDTensorDict if ARROW_COMPATIBLE else IRDielectricTensor
+)
 
 SETTINGS = EmmetSettings()
 
@@ -172,6 +177,6 @@ class IRDielectric(BaseModel):
     A block for the pymatgen IRDielectricTensor object
     """
 
-    ir_dielectric_tensor: IRDielectricTensor | None = Field(
+    ir_dielectric_tensor: IRDielectricTensorType | None = Field(
         None, description="Serialized version of a pymatgen IRDielectricTensor object."
     )

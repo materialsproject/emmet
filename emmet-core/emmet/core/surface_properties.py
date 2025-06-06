@@ -1,7 +1,8 @@
 from typing import List, Optional
-from pymatgen.core.structure import Structure
 
 from pydantic import BaseModel, Field
+
+from emmet.core.typing import StructureType
 
 
 class SurfaceEntry(BaseModel):
@@ -105,7 +106,7 @@ class SurfacePropDoc(BaseModel):
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )
 
-    structure: Optional[Structure] = Field(
+    structure: Optional[StructureType] = Field(
         None,
         description="The conventional crystal structure of the material.",
     )

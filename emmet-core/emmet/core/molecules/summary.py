@@ -3,12 +3,12 @@ from hashlib import blake2b
 from typing import Any, Dict, List, Optional, Tuple, TypeVar
 
 from pydantic import BaseModel, Field
-from pymatgen.core.structure import Molecule
 
 from emmet.core.molecules.metal_binding import MetalBindingData
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPID, MPculeID
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
+from emmet.core.typing import MoleculeType
 from emmet.core.utils import arrow_incompatible
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
@@ -357,7 +357,7 @@ class MoleculeSummaryDoc(PropertyDoc):
     property_name: str = "summary"
 
     # molecules
-    molecules: Dict[str, Molecule] = Field(
+    molecules: Dict[str, MoleculeType] = Field(
         ...,
         description="The lowest energy optimized structures for this molecule for each solvent.",
     )

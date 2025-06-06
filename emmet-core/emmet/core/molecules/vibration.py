@@ -1,15 +1,13 @@
-from typing import List, Optional
 from hashlib import blake2b
+from typing import List, Optional
 
 from pydantic import Field
 
-from pymatgen.core.structure import Molecule
-
-from emmet.core.mpid import MPculeID
 from emmet.core.material import PropertyOrigin
-from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.molecule_property import PropertyDoc
-
+from emmet.core.mpid import MPculeID
+from emmet.core.qchem.task import TaskDocument
+from emmet.core.typing import MoleculeType
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -17,7 +15,7 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 class VibrationDoc(PropertyDoc):
     property_name: str = "vibrations"
 
-    molecule: Molecule = Field(..., description="Molecular structure")
+    molecule: MoleculeType = Field(..., description="Molecular structure")
 
     frequencies: List[float] = Field(
         ..., description="List of molecular vibrational frequencies"

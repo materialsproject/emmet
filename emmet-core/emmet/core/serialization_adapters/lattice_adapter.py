@@ -1,5 +1,6 @@
-import pymatgen.core.lattice
-from pydantic import RootModel
+from typing import TypeVar
+
+from pymatgen.core import Lattice
 from typing_extensions import TypedDict
 
 MSONableTypedLatticeDict = TypedDict(
@@ -7,8 +8,8 @@ MSONableTypedLatticeDict = TypedDict(
     {
         "@module": str,
         "@class": str,
-        "matrix": list[list[float, float, float]],  # type: ignore[type-arg]
-        "pbc": list[bool, bool, bool],  # type: ignore[type-arg]
+        "matrix": list[list[float]],
+        "pbc": list[bool],
         "a": float,
         "b": float,
         "c": float,
@@ -21,8 +22,8 @@ MSONableTypedLatticeDict = TypedDict(
 
 
 class TypedLatticeDict(TypedDict):
-    matrix: list[list[float, float, float]]  # type: ignore[type-arg]
-    pbc: list[bool, bool, bool]  # type: ignore[type-arg]
+    matrix: list[list[float]]
+    pbc: list[bool]
     a: float
     b: float
     c: float
@@ -32,8 +33,4 @@ class TypedLatticeDict(TypedDict):
     volume: float
 
 
-class LatticeAdapter(RootModel):
-    root: MSONableTypedLatticeDict
-
-
-setattr(pymatgen.core.lattice.Lattice, "__type_adapter__", LatticeAdapter)
+LatticeTypeVar = TypeVar("LatticeTypeVar", Lattice, MSONableTypedLatticeDict)

@@ -6,10 +6,10 @@ from typing import Any, Dict, List
 
 from pydantic import Field
 from pymatgen.analysis.xas.spectrum import XAS
-from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element, Species
 
 from emmet.core.structure import StructureMetadata
+from emmet.core.typing import StructureType
 from emmet.core.utils import ValueEnum
 from emmet.core.vasp.task_valid import TaskDocument as BaseTaskDocument
 
@@ -32,7 +32,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
 
     calc_code: str = "FEFF"
 
-    structure: Structure
+    structure: StructureType
     input_parameters: Dict[str, Any] = Field(
         {}, description="Input parameters for the FEFF calculation"
     )

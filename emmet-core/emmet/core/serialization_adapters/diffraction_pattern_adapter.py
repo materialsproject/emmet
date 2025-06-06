@@ -1,5 +1,6 @@
-import pymatgen.analysis.diffraction.xrd
-from pydantic import RootModel
+from typing import TypeVar
+
+from pymatgen.analysis.diffraction.xrd import DiffractionPattern
 from typing_extensions import TypedDict
 
 
@@ -8,8 +9,8 @@ class TypedHKLDict(TypedDict):
     multiplicity: int
 
 
-TypedDiffractionPattern = TypedDict(
-    "TypedDiffractionPattern",
+TypedDiffractionPatternDict = TypedDict(
+    "TypedDiffractionPatternDict",
     {
         "@module": str,
         "@class": str,
@@ -20,13 +21,6 @@ TypedDiffractionPattern = TypedDict(
     },
 )
 
-
-class DiffractionPatternAdapter(RootModel):
-    root: TypedDiffractionPattern
-
-
-setattr(
-    pymatgen.analysis.diffraction.xrd.DiffractionPattern,
-    "__type_adapter__",
-    DiffractionPatternAdapter,
+DiffractionPatternTypeVar = TypeVar(
+    "DiffractionPatternTypeVar", DiffractionPattern, TypedDiffractionPatternDict
 )

@@ -1,7 +1,6 @@
 from typing import Annotated, TypeVar
 
 import pymatgen.core.structure
-from pydantic import RootModel
 from pydantic.functional_validators import BeforeValidator
 from typing_extensions import TypedDict
 
@@ -21,14 +20,9 @@ TypedStructureDict = TypedDict(
     },
 )
 
-
-class StructureAdapter(RootModel):
-    root: TypedStructureDict
-
-
-setattr(pymatgen.core.structure.Structure, "__type_adapter__", StructureAdapter)
-
-StructureTypeVar = TypeVar("StructureTypeVar", pymatgen.core.structure.Structure, dict)
+StructureTypeVar = TypeVar(
+    "StructureTypeVar", pymatgen.core.structure.Structure, TypedStructureDict
+)
 
 
 def pop_empty_structure_keys(structure: StructureTypeVar):

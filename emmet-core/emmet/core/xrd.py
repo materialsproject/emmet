@@ -16,7 +16,13 @@ from emmet.core.spectrum import SpectrumDoc
 from emmet.core.utils import ValueEnum
 
 if ARROW_COMPATIBLE:
-    import emmet.core.serialization_adapters.diffraction_pattern_adapter
+    from emmet.core.serialization_adapters.diffraction_pattern_adapter import (
+        DiffractionPatternTypeVar,
+    )
+
+DiffractionPatternType = (
+    DiffractionPatternTypeVar if ARROW_COMPATIBLE else DiffractionPattern
+)
 
 
 class Edge(ValueEnum):
@@ -35,7 +41,7 @@ class XRDDoc(SpectrumDoc):
 
     spectrum_name: str = "XRD"
 
-    spectrum: DiffractionPattern
+    spectrum: DiffractionPatternType
     min_two_theta: float
     max_two_theta: float
     wavelength: float = Field(..., description="Wavelength for the diffraction source.")

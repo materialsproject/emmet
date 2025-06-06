@@ -1,7 +1,13 @@
-import pymatgen.electronic_structure.dos
-from pydantic import RootModel
-from pymatgen.core import Structure
+from typing import Annotated, TypeVar
+
+from pydantic import BeforeValidator
+from pymatgen.electronic_structure.dos import CompleteDos
 from typing_extensions import TypedDict
+
+from emmet.core.serialization_adapters.structure_adapter import (
+    TypedStructureDict,
+    pop_empty_structure_keys,
+)
 
 TypedDosDict = TypedDict(
     "TypedDosDict",
@@ -20,7 +26,7 @@ TypedCompleteDosDict = TypedDict(
         "@module": str,
         "@class": str,
         "efermi": float,
-        "structure": Structure,
+        "structure": TypedStructureDict,
         "energies": list[float],
         "densities": dict[str, list[float]],
         "pdos": list[dict[str, dict[str, dict[str, list[float]]]]],
@@ -30,17 +36,16 @@ TypedCompleteDosDict = TypedDict(
 )
 
 
-class DosAdapter(RootModel):
-    root: TypedDosDict
+CompleteDosTypeVar = TypeVar("CompleteDosTypeVar", CompleteDos, TypedCompleteDosDict)
 
 
-class CompleteDosAdapter(RootModel):
-    root: TypedCompleteDosDict
+def pop_empty_dos_keys(dos: CompleteDosTypeVar):
+    if isinstance(dos, dict):
+        dos["structure"] = pop_empty_structure_keys(dos["structure"])
+
+    return dos
 
 
-setattr(pymatgen.electronic_structure.dos.Dos, "__type_adapter__", DosAdapter)
-setattr(
-    pymatgen.electronic_structure.dos.CompleteDos,
-    "__type_adapter__",
-    CompleteDosAdapter,
-)
+AnnotatedCompleteDos = Annotated[
+    CompleteDosTypeVar, BeforeValidator(pop_empty_dos_keys)
+]

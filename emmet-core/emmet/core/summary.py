@@ -3,12 +3,12 @@ from typing import TypeVar
 
 from pydantic import BaseModel, Field
 from pymatgen.core.periodic_table import Element
-from pymatgen.core.structure import Structure
 
 from emmet.core.electronic_structure import BandstructureData, DosData
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
 from emmet.core.thermo import DecompositionProduct
+from emmet.core.typing import StructureType
 from emmet.core.xas import Edge, Type
 
 T = TypeVar("T", bound="SummaryDoc")
@@ -144,7 +144,7 @@ class SummaryDoc(PropertyDoc):
 
     # Materials
 
-    structure: Structure = Field(
+    structure: StructureType = Field(
         ...,
         description="The lowest energy structure for this material.",
     )

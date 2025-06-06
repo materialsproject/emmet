@@ -1,122 +1,82 @@
 from typing import Annotated, TypeVar
 
-import pymatgen.apps.battery.conversion_battery
-import pymatgen.apps.battery.insertion_battery
-from pydantic import BeforeValidator, RootModel
-from pymatgen.analysis.reaction_calculator import BalancedReaction
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from pydantic import BeforeValidator
+from pymatgen.apps.battery.conversion_battery import ConversionElectrode
+from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 from typing_extensions import TypedDict
 
+from emmet.core.serialization_adapters.balanced_reaction_adapter import (
+    TypedBalancedReactionDict,
+)
 from emmet.core.serialization_adapters.computed_entries_adapter import (
+    TypedComputedEntryDict,
+    TypedComputedStructureEntryDict,
     pop_cse_empty_keys,
 )
 
-BaseVoltagePairDict = TypedDict(
-    "BaseVoltagePairDict",
-    {
-        # "@module": str,
-        # "@class": str,
-        # "@version": str,
-        "voltage": float,
-        "frac_charge": float,
-        "frac_discharge": float,
-        "framework_formula": str,
-        "mAh": float,
-        "mass_charge": float,
-        "mass_discharge": float,
-        "vol_charge": float,
-        "vol_discharge": float,
-    },
-)
 
-BaseInsertionVoltagePairDict = TypedDict(
-    "BaseInsertionVoltagePairDict",
-    {
-        **BaseVoltagePairDict.__annotations__,  # type: ignore[misc]
-        "working_ion_entry": ComputedEntry,
-    },
-)
+# pmg .as_dict() missing:
+# "@module": str,
+# "@class": str,
+# "@version": str,
+class BaseVoltagePairDict(TypedDict):
+    voltage: float
+    frac_charge: float
+    frac_discharge: float
+    framework_formula: str
+    mAh: float
+    mass_charge: float
+    mass_discharge: float
+    vol_charge: float
+    vol_discharge: float
 
-BaseConversionVoltagePairDict = TypedDict(
-    "BaseConversionVoltagePairDict",
-    {
-        **BaseVoltagePairDict.__annotations__,  # type: ignore[misc]
-        "working_ion_entry": ComputedStructureEntry,
-    },
-)
+
+class BaseInsertionVoltagePairDict(BaseVoltagePairDict):
+    working_ion_entry: TypedComputedEntryDict
+
+
+class BaseConversionVoltagePairDict(BaseVoltagePairDict):
+    working_ion_entry: TypedComputedStructureEntryDict
 
 
 class TypedInsertionVoltagePairDict(BaseInsertionVoltagePairDict):
-    entry_charge: ComputedStructureEntry
-    entry_discharge: ComputedStructureEntry
+    entry_charge: TypedComputedStructureEntryDict
+    entry_discharge: TypedComputedStructureEntryDict
 
 
 class TypedConversionVoltagePairDict(BaseConversionVoltagePairDict):
-    entries_charge: list[ComputedStructureEntry]
-    entries_discharge: list[ComputedStructureEntry]
-    rxn: BalancedReaction
+    entries_charge: list[TypedComputedStructureEntryDict]
+    entries_discharge: list[TypedComputedStructureEntryDict]
+    rxn: TypedBalancedReactionDict
 
 
-TypedInsertionElectrodeDict = TypedDict(
-    "TypedInsertionElectrodeDict",
-    {
-        # "@module": str,
-        # "@class": str,
-        # "@version": str,
-        "framework_formula": str,
-        "stable_entries": list[ComputedStructureEntry],
-        "unstable_entries": list[ComputedStructureEntry],
-        "voltage_pairs": list[TypedInsertionVoltagePairDict],
-        "working_ion_entry": ComputedEntry,
-    },
-)
-
-TypedConversionElectrodeDict = TypedDict(
-    "TypedConversionElectrodeDict",
-    {
-        # "@module": str,
-        # "@class": str,
-        # "@version": str,
-        "framework_formula": str,
-        "initial_comp_formula": str,
-        "voltage_pairs": list[TypedConversionVoltagePairDict],
-        "working_ion_entry": ComputedStructureEntry,
-    },
-)
+# pmg .as_dict() missing:
+# "@module": str,
+# "@class": str,
+# "@version": str,
+class TypedInsertionElectrodeDict(TypedDict):
+    framework_formula: str
+    stable_entries: list[TypedComputedStructureEntryDict]
+    unstable_entries: list[TypedComputedStructureEntryDict]
+    voltage_pairs: list[TypedInsertionVoltagePairDict]
+    working_ion_entry: TypedComputedEntryDict
 
 
-class InsertionVoltagePairAdapter(RootModel):
-    root: TypedInsertionVoltagePairDict
+# pmg .as_dict() missing:
+# "@module": str,
+# "@class": str,
+# "@version": str,
+class TypedConversionElectrodeDict(TypedDict):
+    framework_formula: str
+    initial_comp_formula: str
+    voltage_pairs: list[TypedConversionVoltagePairDict]
+    working_ion_entry: TypedComputedStructureEntryDict
 
-
-class InsertionElectrodeAdapter(RootModel):
-    root: TypedInsertionElectrodeDict
-
-
-class ConversionElectrodeAdapter(RootModel):
-    root: TypedConversionElectrodeDict
-
-
-setattr(
-    pymatgen.apps.battery.insertion_battery.InsertionVoltagePair,
-    "__type_adapter__",
-    InsertionVoltagePairAdapter,
-)
-setattr(
-    pymatgen.apps.battery.insertion_battery.InsertionElectrode,
-    "__type_adapter__",
-    InsertionElectrodeAdapter,
-)
-setattr(
-    pymatgen.apps.battery.conversion_battery.ConversionElectrode,
-    "__type_adapter__",
-    ConversionElectrodeAdapter,
-)
 
 InsertionElectrodeTypeVar = TypeVar(
     "InsertionElectrodeTypeVar",
-    pymatgen.apps.battery.insertion_battery.InsertionElectrode,
-    dict,
+    InsertionElectrode,
+    TypedInsertionElectrodeDict,
 )
 
 
@@ -147,8 +107,8 @@ AnnotatedInsertionElectrode = Annotated[
 
 ConversionElectrodeTypeVar = TypeVar(
     "ConversionElectrodeTypeVar",
-    pymatgen.apps.battery.conversion_battery.ConversionElectrode,
-    dict,
+    ConversionElectrode,
+    TypedConversionElectrodeDict,
 )
 
 

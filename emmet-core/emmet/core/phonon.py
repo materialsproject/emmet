@@ -29,7 +29,6 @@ from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
 from pymatgen.phonon.dos import PhononDos as PhononDosObject
 from typing_extensions import Literal, TypedDict
 
-from emmet.core import ARROW_COMPATIBLE
 from emmet.core.base import CalcMeta, ContextModel
 from emmet.core.common import convert_datetime
 from emmet.core.math import Matrix3D, Tensor4R, Vector3D
@@ -46,14 +45,12 @@ except ImportError:
     pa = None
     ArrowTable = None
 
-if ARROW_COMPATIBLE:
-    import emmet.core.serialization_adapters.phonon_adapter
-
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from typing import Any
 
     from typing_extensions import Self
+
 
 DEFAULT_PHONON_FILES = {
     "structure": "POSCAR",

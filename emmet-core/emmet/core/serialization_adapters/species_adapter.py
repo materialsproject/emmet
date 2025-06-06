@@ -1,5 +1,6 @@
-import pymatgen.core.periodic_table
-from pydantic import RootModel
+from typing import TypeVar
+
+from pymatgen.core.periodic_table import Species
 from typing_extensions import TypedDict
 
 MSONableTypedSpeciesDict = TypedDict(
@@ -21,8 +22,4 @@ class TypedSpeciesDict(TypedDict):
     occu: int
 
 
-class SpeciesAdapter(RootModel):
-    root: MSONableTypedSpeciesDict
-
-
-setattr(pymatgen.core.sites.Species, "__type_adapter__", SpeciesAdapter)
+SpeciesTypeVar = TypeVar("SpeciesTypeVar", Species, TypedSpeciesDict)

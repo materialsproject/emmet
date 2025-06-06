@@ -2,14 +2,15 @@
 # from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 from typing import Annotated, TypeVar
 
-import pymatgen.entries.computed_entries
-from pydantic import RootModel
 from pydantic.functional_validators import BeforeValidator
-from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
+from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from typing_extensions import TypedDict
 
-from emmet.core.serialization_adapters.structure_adapter import pop_empty_structure_keys
+from emmet.core.serialization_adapters.structure_adapter import (
+    TypedStructureDict,
+    pop_empty_structure_keys,
+)
 from emmet.core.vasp.calculation import PotcarSpec
 
 # TypedEnergyAdjustmentDict = TypedDict(
@@ -98,59 +99,19 @@ TypedComputedEntryDict = TypedDict(
 
 
 class TypedComputedStructureEntryDict(TypedComputedEntryDict):
-    structure: Structure
+    structure: TypedStructureDict
 
 
-# class EnergyAdjustmentAdatper(RootModel):
-#     root: TypedEnergyAdjustmentDict
-
-
-# class ConstantEnergyAdjustmentAdatper(EnergyAdjustmentAdatper):
-#     pass
-
-
-# class ManualEnergyAdjustmentAdatper(EnergyAdjustmentAdatper):
-#     pass
-
-
-# class CompositionEnergyAdjustmentAdatper(RootModel):
-#     root: TypedCompositionEnergyAdjustmentDict
-
-
-# class TemperatureEnergyAdjustmentAdatper(RootModel):
-#     root: TypedTemperatureEnergyAdjustmentDict
-
-
-class ComputedEntryAdapter(RootModel):
-    root: TypedComputedEntryDict
-
-
-class ComputedStructureEntryAdapter(RootModel):
-    root: TypedComputedStructureEntryDict
-
-
-# setattr(pymatgen.entries.computed_entries.EnergyAdjustment, "__type_adapter__", EnergyAdjustmentAdatper)
-# setattr(pymatgen.entries.computed_entries.ConstantEnergyAdjustment, "__type_adapter__", ConstantEnergyAdjustmentAdatper)
-# setattr(pymatgen.entries.computed_entries.ManualEnergyAdjustment, "__type_adapter__", ManualEnergyAdjustmentAdatper)
-# setattr(pymatgen.entries.computed_entries.CompositionEnergyAdjustment, "__type_adapter__", CompositionEnergyAdjustmentAdatper)
-# setattr(pymatgen.entries.computed_entries.TemperatureEnergyAdjustment, "__type_adapter__", TemperatureEnergyAdjustmentAdatper)
-
-setattr(
-    pymatgen.entries.computed_entries.ComputedEntry,
-    "__type_adapter__",
-    ComputedEntryAdapter,
-)
-
-setattr(
-    pymatgen.entries.computed_entries.ComputedStructureEntry,
-    "__type_adapter__",
-    ComputedStructureEntryAdapter,
+ComputedEntryTypeVar = TypeVar(
+    "ComputedEntryTypeVar",
+    ComputedEntry,
+    TypedComputedEntryDict,
 )
 
 ComputedStructureEntryTypeVar = TypeVar(
     "ComputedStructureEntryTypeVar",
-    pymatgen.entries.computed_entries.ComputedStructureEntry,
-    dict,
+    ComputedStructureEntry,
+    TypedComputedStructureEntryDict,
 )
 
 

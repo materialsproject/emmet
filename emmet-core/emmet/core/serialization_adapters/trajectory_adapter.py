@@ -1,5 +1,6 @@
-import pymatgen.core.trajectory
-from pydantic import RootModel
+from typing import TypeVar
+
+from pymatgen.core.trajectory import Trajectory
 from typing_extensions import TypedDict
 
 from emmet.core.math import Matrix3D, Vector3D
@@ -10,8 +11,8 @@ class FrameProps(TypedDict):
     energy: float
 
 
-TypedTrajectory = TypedDict(
-    "TypedTrajectory",
+TypedTrajectoryDict = TypedDict(
+    "TypedTrajectoryDict",
     {
         "@module": str,
         "@class": str,
@@ -29,9 +30,4 @@ TypedTrajectory = TypedDict(
     },
 )
 
-
-class TrajectoryAdapter(RootModel):
-    root: TypedTrajectory
-
-
-setattr(pymatgen.core.trajectory.Trajectory, "__type_adapter__", TrajectoryAdapter)
+TrajectoryTypeVar = TypeVar("TrajectoryTypeVar", Trajectory, TypedTrajectoryDict)

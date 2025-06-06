@@ -1,27 +1,21 @@
-import pymatgen.electronic_structure.bandstructure
-from pydantic import RootModel
-from pymatgen.core.lattice import Lattice
+from typing import TypeVar
+
+from pymatgen.electronic_structure.bandstructure import Kpoint
 from typing_extensions import TypedDict
+
+from emmet.core.serialization_adapters.lattice_adapter import MSONableTypedLatticeDict
 
 TypedKpointDict = TypedDict(
     "TypedKpointDict",
     {
         "@module": str,
         "@class": str,
-        "lattice": Lattice,
-        "fcoords": list[float, float, float],  # type: ignore[type-arg]
-        "ccoords": list[float, float, float],  # type: ignore[type-arg]
+        "lattice": MSONableTypedLatticeDict,
+        "fcoords": list[float],
+        "ccoords": list[float],
         "label": str,
     },
 )
 
 
-class KpointAdapter(RootModel):
-    root: TypedKpointDict
-
-
-setattr(
-    pymatgen.electronic_structure.bandstructure.Kpoint,
-    "__type_adapter__",
-    KpointAdapter,
-)
+KpointTypeVar = TypeVar("KpointTypeVar", Kpoint, TypedKpointDict)

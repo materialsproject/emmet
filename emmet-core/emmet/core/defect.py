@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field
@@ -10,11 +10,13 @@ from emmet.core import ARROW_COMPATIBLE
 from emmet.core.tasks import _VOLUMETRIC_FILES, TaskDoc
 
 if ARROW_COMPATIBLE:
-    import emmet.core.serialization_adapters.defect_adapter
+    from emmet.core.serialization_adapters.defect_adapter import AnnotatedDefect
 
 if TYPE_CHECKING:
     from pathlib import Path
     from typing import Any, Tuple
+
+DefectType: TypeAlias = AnnotatedDefect if ARROW_COMPATIBLE else Defect
 
 mdecoder = MontyDecoder().process_decoded
 
@@ -31,7 +33,7 @@ class DefectInfo(BaseModel):
         description="Formula of the bulk structure.",
     )
 
-    defect: Defect = Field(
+    defect: DefectType = Field(
         title="Defect Object",
         description="Unit cell representation of the defect object.",
     )

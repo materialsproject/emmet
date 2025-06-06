@@ -6,7 +6,7 @@ from collections import defaultdict
 from datetime import datetime
 from enum import Enum
 from math import isnan
-from typing import Type, TypeVar
+from typing import Type, TypeAlias, TypeVar
 
 import numpy as np
 from pydantic import BaseModel, Field, field_validator
@@ -30,11 +30,15 @@ from emmet.core.typing import StrOrbital, StrSpin, TypedBandDict
 from emmet.core.utils import type_override, utcnow
 
 if ARROW_COMPATIBLE:
-    from emmet.core.serialization_adapters import (
-        bandstructure_symm_line_adapter,
-        dos_adapter,
-        kpoint_adapter,
+    from emmet.core.serialization_adapters.bandstructure_symm_line_adapter import (
+        AnnotatedBandStructureSymmLine,
     )
+    from emmet.core.serialization_adapters.dos_adapter import AnnotatedCompleteDos
+
+BandStructureSymmLineType: TypeAlias = (
+    AnnotatedBandStructureSymmLine if ARROW_COMPATIBLE else BandStructureSymmLine
+)
+CompleteDosType: TypeAlias = AnnotatedCompleteDos if ARROW_COMPATIBLE else CompleteDos
 
 SETTINGS = EmmetSettings()
 
@@ -67,7 +71,7 @@ class BSObjectDoc(BaseModel):
         default_factory=utcnow,
     )
 
-    data: BandStructureSymmLine | None = Field(
+    data: BandStructureSymmLineType | None = Field(
         None, description="The band structure object for the given calculation ID"
     )
 
@@ -88,7 +92,7 @@ class DOSObjectDoc(BaseModel):
         default_factory=utcnow,
     )
 
-    data: CompleteDos | None = Field(
+    data: CompleteDosType | None = Field(
         None, description="The density of states object for the given calculation ID."
     )
 

@@ -60,9 +60,21 @@ if ARROW_COMPATIBLE:
         kpoints_adapter,
         trajectory_adapter,
     )
+    from emmet.core.serialization_adapters.computed_entries_adapter import (
+        AnnotatedComputedStructureEntry,
+        ComputedEntryTypeVar,
+    )
     from emmet.core.serialization_adapters.poscar_adapter import AnnotatedPoscar
+    from emmet.core.serialization_adapters.trajectory_adapter import TrajectoryTypeVar
 
+ComputedEntryType: TypeAlias = (
+    ComputedEntryTypeVar if ARROW_COMPATIBLE else ComputedEntry
+)
+ComputedStructureEntryType: TypeAlias = (
+    AnnotatedComputedStructureEntry if ARROW_COMPATIBLE else ComputedStructureEntry
+)
 PoscarType: TypeAlias = AnnotatedPoscar if ARROW_COMPATIBLE else Poscar  # type: ignore[valid-type]
+TrajectoryType: TypeAlias = TrajectoryTypeVar if ARROW_COMPATIBLE else Trajectory
 
 monty_decoder = MontyDecoder()
 logger = logging.getLogger(__name__)
@@ -414,7 +426,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
     vasp_objects: dict[VaspObject, Any] | None = Field(
         None, description="Vasp objects associated with this task"
     )
-    entry: ComputedEntry | None = Field(
+    entry: ComputedEntryType | None = Field(
         None, description="The ComputedEntry from the task doc"
     )
     task_label: str | None = Field(None, description="A description of the task")
@@ -888,7 +900,7 @@ class TrajectoryDoc(BaseModel):
         "This comes in the form: mp-******.",
     )
 
-    trajectories: Optional[list[Trajectory]] = Field(
+    trajectories: Optional[list[TrajectoryType]] = Field(
         None,
         description="Trajectory data for calculations associated with a task doc.",
     )
@@ -903,7 +915,7 @@ class EntryDoc(BaseModel):
         "This comes in the form: mp-******.",
     )
 
-    entry: Optional[ComputedStructureEntry] = Field(
+    entry: ComputedStructureEntryType | None = Field(
         None,
         description="Computed structure entry for the calculation associated with the task doc.",
     )

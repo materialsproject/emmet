@@ -1,19 +1,27 @@
-from typing import Dict, List, Any, Optional, Tuple
 import copy
 from hashlib import blake2b
+from typing import Any, Dict, List, Optional, Tuple, TypeAlias
 
-from pydantic import Field
 import networkx as nx
-
-from pymatgen.core.structure import Molecule
+from pydantic import Field
 from pymatgen.analysis.graphs import MoleculeGraph
+from pymatgen.core.structure import Molecule
 
-from emmet.core.mpid import MPculeID
-from emmet.core.utils import make_mol_graph
-from emmet.core.qchem.task import TaskDocument
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
+from emmet.core.mpid import MPculeID
+from emmet.core.qchem.task import TaskDocument
+from emmet.core.utils import make_mol_graph
 
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters.structure_graph_adapter import (
+        AnnotatedMoleculeGraph,
+    )
+
+MoleculeGraphType: TypeAlias = (
+    AnnotatedMoleculeGraph if ARROW_COMPATIBLE else MoleculeGraph
+)
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -339,7 +347,7 @@ class MoleculeBondingDoc(PropertyDoc):
 
     property_name: str = "bonding"
 
-    molecule_graph: MoleculeGraph = Field(..., description="Molecule graph")
+    molecule_graph: MoleculeGraphType = Field(..., description="Molecule graph")
 
     method: str = Field(..., description="Method used to compute molecule graph")
 
