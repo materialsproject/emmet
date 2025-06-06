@@ -15,7 +15,7 @@ from emmet.core.thermo import ThermoType
 from emmet.core.utils import utcnow
 
 ComputedStructureEntryType: TypeAlias = (
-    AnnotatedComputedStructureEntry if ARROW_COMPATIBLE else ComputedStructureEntry
+    AnnotatedComputedStructureEntry if ARROW_COMPATIBLE else ComputedStructureEntry  # type: ignore[valid-type]
 )
 
 

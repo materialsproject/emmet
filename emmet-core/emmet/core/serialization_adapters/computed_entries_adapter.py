@@ -1,5 +1,3 @@
-# from pymatgen.entries.mixing_scheme import MaterialsProjectDFTMixingScheme
-# from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 from typing import Annotated, TypeVar
 
 from pydantic.functional_validators import BeforeValidator
@@ -119,8 +117,8 @@ def pop_cse_empty_keys(cse: ComputedStructureEntryTypeVar):
     if isinstance(cse, dict):
         if cse.get("structure"):
             cse["structure"] = pop_empty_structure_keys(cse["structure"])
-        cse["data"] = {k: v for k, v in cse["data"].items() if v}
-        cse["parameters"] = {k: v for k, v in cse["parameters"].items() if v}
+        cse["data"] = {k: v for k, v in cse["data"].items() if v}  # type: ignore[typeddict-item]
+        cse["parameters"] = {k: v for k, v in cse["parameters"].items() if v}  # type: ignore[typeddict-item]
 
     return cse
 

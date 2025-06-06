@@ -19,8 +19,8 @@ if ARROW_COMPATIBLE:
     )
 
 
-AlloyPairType: TypeAlias = AnnotatedAlloyPair if ARROW_COMPATIBLE else AlloyPair
-AlloySystemType: TypeAlias = AnnotatedAlloySystem if ARROW_COMPATIBLE else AlloySystem
+AlloyPairType: TypeAlias = AnnotatedAlloyPair if ARROW_COMPATIBLE else AlloyPair  # type: ignore[valid-type]
+AlloySystemType: TypeAlias = AnnotatedAlloySystem if ARROW_COMPATIBLE else AlloySystem  # type: ignore[valid-type]
 
 
 class AlloyPairDoc(EmmetBaseModel):

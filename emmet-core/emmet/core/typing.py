@@ -27,9 +27,9 @@ if ARROW_COMPATIBLE:
 PathLike: TypeAlias = str | Path | os.DirEntry[str]
 """Type of a generic path-like object"""
 
-CompositionType: TypeAlias = CompositionTypeVar if ARROW_COMPATIBLE else Composition
-KpointType: TypeAlias = KpointTypeVar if ARROW_COMPATIBLE else Kpoint
-LatticeType: TypeAlias = LatticeTypeVar if ARROW_COMPATIBLE else Lattice
+CompositionType: TypeAlias = CompositionTypeVar if ARROW_COMPATIBLE else Composition  # type: ignore[valid-type]
+KpointType: TypeAlias = KpointTypeVar if ARROW_COMPATIBLE else Kpoint  # type: ignore[valid-type]
+LatticeType: TypeAlias = LatticeTypeVar if ARROW_COMPATIBLE else Lattice  # type: ignore[valid-type]
 MoleculeType: TypeAlias = AnnotatedMolecule if ARROW_COMPATIBLE else Molecule  # type: ignore[valid-type]
 StructureType: TypeAlias = AnnotatedStructure if ARROW_COMPATIBLE else Structure  # type: ignore[valid-type]
 

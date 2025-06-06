@@ -18,7 +18,7 @@ if ARROW_COMPATIBLE:
     )
 
 StructureGraphType: TypeAlias = (
-    AnnotatedStructureGraph if ARROW_COMPATIBLE else StructureGraph
+    AnnotatedStructureGraph if ARROW_COMPATIBLE else StructureGraph  # type: ignore[valid-type]
 )
 
 

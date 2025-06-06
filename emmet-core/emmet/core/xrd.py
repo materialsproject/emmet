@@ -21,7 +21,7 @@ if ARROW_COMPATIBLE:
     )
 
 DiffractionPatternType = (
-    DiffractionPatternTypeVar if ARROW_COMPATIBLE else DiffractionPattern
+    DiffractionPatternTypeVar if ARROW_COMPATIBLE else DiffractionPattern  # type: ignore[valid-type]
 )
 
 
@@ -41,7 +41,7 @@ class XRDDoc(SpectrumDoc):
 
     spectrum_name: str = "XRD"
 
-    spectrum: DiffractionPatternType
+    spectrum: DiffractionPatternType  # type: ignore[valid-type]
     min_two_theta: float
     max_two_theta: float
     wavelength: float = Field(..., description="Wavelength for the diffraction source.")

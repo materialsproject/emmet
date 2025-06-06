@@ -24,16 +24,12 @@ from emmet.core.utils import ValueEnum, jsanitize, type_override, utcnow
 from emmet.core.vasp.calc_types.enums import RunType
 
 if ARROW_COMPATIBLE:
-    from emmet.core.serialization_adapters import (
-        computed_entries_adapter,
-        phase_diagram_adapter,
-    )
     from emmet.core.serialization_adapters.phase_diagram_adapter import (
         AnnotatedPhaseDiagram,
     )
 
 PhaseDiagramType: TypeAlias = (
-    AnnotatedPhaseDiagram if ARROW_COMPATIBLE else PhaseDiagram
+    AnnotatedPhaseDiagram if ARROW_COMPATIBLE else PhaseDiagram  # type: ignore[valid-type]
 )
 
 

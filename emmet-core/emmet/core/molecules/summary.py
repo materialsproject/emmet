@@ -648,9 +648,9 @@ def _copy_from_docs(
                             composite_docs[solvent][method]["property_id"] = entry.get(
                                 "property_id"
                             )
-                            composite_docs[solvent][method]["level_of_theory"] = (
-                                entry.get("level_of_theory")
-                            )
+                            composite_docs[solvent][method][
+                                "level_of_theory"
+                            ] = entry.get("level_of_theory")
 
                             # Convert to appropriate BaseModel
                             composite_docs[solvent][method] = target_type(

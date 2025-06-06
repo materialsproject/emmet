@@ -55,11 +55,6 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
 if ARROW_COMPATIBLE:
-    from emmet.core.serialization_adapters import (
-        computed_entries_adapter,
-        kpoints_adapter,
-        trajectory_adapter,
-    )
     from emmet.core.serialization_adapters.computed_entries_adapter import (
         AnnotatedComputedStructureEntry,
         ComputedEntryTypeVar,
@@ -68,13 +63,13 @@ if ARROW_COMPATIBLE:
     from emmet.core.serialization_adapters.trajectory_adapter import TrajectoryTypeVar
 
 ComputedEntryType: TypeAlias = (
-    ComputedEntryTypeVar if ARROW_COMPATIBLE else ComputedEntry
+    ComputedEntryTypeVar if ARROW_COMPATIBLE else ComputedEntry  # type: ignore[valid-type]
 )
 ComputedStructureEntryType: TypeAlias = (
-    AnnotatedComputedStructureEntry if ARROW_COMPATIBLE else ComputedStructureEntry
+    AnnotatedComputedStructureEntry if ARROW_COMPATIBLE else ComputedStructureEntry  # type: ignore[valid-type]
 )
 PoscarType: TypeAlias = AnnotatedPoscar if ARROW_COMPATIBLE else Poscar  # type: ignore[valid-type]
-TrajectoryType: TypeAlias = TrajectoryTypeVar if ARROW_COMPATIBLE else Trajectory
+TrajectoryType: TypeAlias = TrajectoryTypeVar if ARROW_COMPATIBLE else Trajectory  # type: ignore[valid-type]
 
 monty_decoder = MontyDecoder()
 logger = logging.getLogger(__name__)
@@ -1050,9 +1045,9 @@ def _parse_orig_inputs(
     for filename in dir_name.glob("*.orig*"):
         for name, vasp_input in input_mapping.items():
             if f"{name}.orig" in str(filename):
-                orig_inputs[f"{name.lower()}{'_spec' if name == 'POTCAR' else ''}"] = (
-                    vasp_input.from_file(filename)
-                )
+                orig_inputs[
+                    f"{name.lower()}{'_spec' if name == 'POTCAR' else ''}"
+                ] = vasp_input.from_file(filename)
 
     return orig_inputs
 

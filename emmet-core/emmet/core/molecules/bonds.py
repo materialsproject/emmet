@@ -20,7 +20,7 @@ if ARROW_COMPATIBLE:
     )
 
 MoleculeGraphType: TypeAlias = (
-    AnnotatedMoleculeGraph if ARROW_COMPATIBLE else MoleculeGraph
+    AnnotatedMoleculeGraph if ARROW_COMPATIBLE else MoleculeGraph  # type: ignore[valid-type]
 )
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"

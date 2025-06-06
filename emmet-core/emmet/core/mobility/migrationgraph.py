@@ -90,11 +90,11 @@ class MigrationGraphDoc(EmmetBaseModel):
         description="The conversion matrix used to convert unit cell to supercell.",
     )
 
-    inserted_ion_coords: Optional[List[Dict[str, Union[List[float], str, int]]]] = (
-        Field(
-            None,
-            description="A dictionary containing all mobile ion fractional coordinates in terms of supercell.",
-        )
+    inserted_ion_coords: Optional[
+        List[Dict[str, Union[List[float], str, int]]]
+    ] = Field(
+        None,
+        description="A dictionary containing all mobile ion fractional coordinates in terms of supercell.",
     )
 
     insert_coords_combo: Optional[List[str]] = Field(

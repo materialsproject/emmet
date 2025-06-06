@@ -1,8 +1,6 @@
 from datetime import datetime, timezone
-from typing import Any
 
 from monty.json import MontyDecoder
-from pydantic import BaseModel, ValidationInfo, model_validator
 
 from emmet.core.utils import ValueEnum, utcnow
 

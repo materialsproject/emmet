@@ -36,9 +36,9 @@ if ARROW_COMPATIBLE:
     from emmet.core.serialization_adapters.dos_adapter import AnnotatedCompleteDos
 
 BandStructureSymmLineType: TypeAlias = (
-    AnnotatedBandStructureSymmLine if ARROW_COMPATIBLE else BandStructureSymmLine
+    AnnotatedBandStructureSymmLine if ARROW_COMPATIBLE else BandStructureSymmLine  # type: ignore[valid-type]
 )
-CompleteDosType: TypeAlias = AnnotatedCompleteDos if ARROW_COMPATIBLE else CompleteDos
+CompleteDosType: TypeAlias = AnnotatedCompleteDos if ARROW_COMPATIBLE else CompleteDos  # type: ignore[valid-type]
 
 SETTINGS = EmmetSettings()
 
