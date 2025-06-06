@@ -129,8 +129,10 @@ class PhononBS(BaseModel):
         False,
         description="Whether the calculation includes non-analytical corrections at Gamma.",
     )
-    eigendisplacements: list[list[list[tuple[complex, complex, complex]]]] | None = (
-        Field(None, description="Phonon eigendisplacements in Cartesian coordinates.")
+    eigendisplacements: list[
+        list[list[tuple[complex, complex, complex]]]
+    ] | None = Field(
+        None, description="Phonon eigendisplacements in Cartesian coordinates."
     )
     labels_dict: dict[str, Vector3D] | None = Field(
         None, description="The high-symmetry labels of specific q-points."
