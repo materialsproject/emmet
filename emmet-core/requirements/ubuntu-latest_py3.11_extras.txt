@@ -251,7 +251,7 @@ packaging==25.0
     #   statsmodels
 palettable==3.3.3
     # via pymatgen
-pandas==2.2.3
+pandas==2.3.0
     # via
     #   matminer
     #   pymatgen
@@ -391,7 +391,7 @@ ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
-scikit-learn==1.6.1
+scikit-learn==1.7.0
     # via
     #   matcalc
     #   matminer
