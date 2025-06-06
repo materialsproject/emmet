@@ -1,7 +1,14 @@
-import pymatgen.analysis.defects.core
-from pydantic import RootModel
-from pymatgen.core import Site, Structure
+from typing import Annotated, TypeVar
+
+from pydantic import BeforeValidator
+from pymatgen.analysis.defects.core import Defect
 from typing_extensions import TypedDict
+
+from emmet.core.serialization_adapters.sites_adapter import MSONableTypedSiteDict
+from emmet.core.serialization_adapters.structure_adapter import (
+    TypedStructureDict,
+    pop_empty_structure_keys,
+)
 
 TypedDefectDict = TypedDict(
     "TypedDefectDict",
@@ -9,20 +16,28 @@ TypedDefectDict = TypedDict(
         "@module": str,
         "@class": str,
         "@version": str,
-        "structure": Structure,
-        "site": Site,
+        "structure": TypedStructureDict,
+        "site": MSONableTypedSiteDict,
         "multiplicity": int,
         "oxi_state": float,
-        "equivalent_sites": list[Site],
+        "equivalent_sites": list[MSONableTypedSiteDict],
         "symprec": float,
         "angle_tolerance": float,
         "user_changes": list[int],
     },
 )
 
-
-class DefectAdapter(RootModel):
-    root: TypedDefectDict
+DefectTypeVar = TypeVar("DefectTypeVar", Defect, TypedDefectDict)
 
 
-setattr(pymatgen.analysis.defects.core.Defect, "__type_adapter__", DefectAdapter)
+def pop_defect_empty_structure_fields(defect: DefectTypeVar):
+    if isinstance(defect, dict):
+        clean_structure = pop_empty_structure_keys(defect["structure"])
+        defect["structure"] = clean_structure
+
+    return defect
+
+
+AnnotatedDefect = Annotated[
+    DefectTypeVar, BeforeValidator(pop_defect_empty_structure_fields)
+]

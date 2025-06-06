@@ -16,7 +16,7 @@ from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID, AlphaID, MPculeID
 from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
-from emmet.core.typing import StructureType
+from emmet.core.typing import MoleculeType, StructureType
 from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
 
@@ -156,7 +156,7 @@ class CoreMoleculeDoc(MoleculeMetadata, EmmetBaseModel):
         "This comes in the form of an MPID (or int) or MPculeID (or str)",
     )
 
-    molecule: Molecule = Field(
+    molecule: MoleculeType = Field(
         ...,
         description="The best (typically meaning lowest in energy) structure for this molecule",
     )
@@ -172,7 +172,7 @@ class CoreMoleculeDoc(MoleculeMetadata, EmmetBaseModel):
         description="List of deprecation tags detailing why this molecules document isn't valid",
     )
 
-    initial_molecules: list[Molecule] = Field(
+    initial_molecules: list[MoleculeType] = Field(
         [],
         description="Initial molecules used in the DFT geometry optimizations corresponding to this molecule",
     )

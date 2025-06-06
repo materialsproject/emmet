@@ -1,7 +1,6 @@
-import pymatgen.phonon.ir_spectra
-from pydantic import RootModel
-from pymatgen.core.structure import Structure
 from typing_extensions import TypedDict
+
+from emmet.core.serialization_adapters.structure_adapter import TypedStructureDict
 
 TypedIRDTensorDict = TypedDict(
     "TypedIRDTensorDict",
@@ -10,18 +9,7 @@ TypedIRDTensorDict = TypedDict(
         "@class": str,
         "oscillator_strength": list[float],
         "ph_freqs_gamma": list[float],
-        "structure": Structure,
+        "structure": TypedStructureDict,
         "epsilon_infinity": list[float],
     },
-)
-
-
-class IRDielectricTensorAdapter(RootModel):
-    root: TypedIRDTensorDict
-
-
-setattr(
-    pymatgen.phonon.ir_spectra.IRDielectricTensor,
-    "__type_adapter__",
-    IRDielectricTensorAdapter,
 )

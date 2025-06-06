@@ -30,7 +30,6 @@ from pymatgen.phonon.dos import CompletePhononDos
 from pymatgen.phonon.dos import PhononDos as PhononDosObject
 from typing_extensions import Literal, TypedDict
 
-from emmet.core import ARROW_COMPATIBLE
 from emmet.core.band_theory import BandStructure
 from emmet.core.base import CalcMeta, ContextModel
 from emmet.core.common import convert_datetime
@@ -54,14 +53,12 @@ except ImportError:
     pa = None
     ArrowTable = None
 
-if ARROW_COMPATIBLE:
-    import emmet.core.serialization_adapters.phonon_adapter
-
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from typing import Any
 
     from typing_extensions import Self
+
 
 DEFAULT_PHONON_FILES = {
     "structure": "POSCAR",
@@ -90,7 +87,7 @@ class PhononDOS(ContextModel):
     projected_densities: list[list[float]] | None = Field(
         None, description="The projected phonon density of states."
     )
-    structure: Structure | None = Field(
+    structure: StructureType | None = Field(
         None, description="The structure associated with this DOS."
     )
 

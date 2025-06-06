@@ -1,5 +1,3 @@
-import pymatgen.core.sites
-from pydantic import RootModel
 from typing_extensions import TypedDict
 
 from emmet.core.serialization_adapters.properties import TypedSiteProperitesDict
@@ -27,10 +25,3 @@ class TypedSiteDict(TypedDict):
     species: list[TypedSpeciesDict]
     abc: list[float, float, float]  # type: ignore[type-arg]
     xyz: list[float, float, float]  # type: ignore[type-arg]
-
-
-class SiteAdapter(RootModel):
-    root: MSONableTypedSiteDict
-
-
-setattr(pymatgen.core.sites.Site, "__type_adapter__", SiteAdapter)

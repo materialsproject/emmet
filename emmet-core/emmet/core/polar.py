@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -10,6 +10,7 @@ from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
 from pymatgen.core.tensors import Tensor
 from pymatgen.phonon.ir_spectra import IRDielectricTensor
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.material_property import PropertyDoc
 from emmet.core.math import Matrix3D
 from emmet.core.settings import EmmetSettings
@@ -19,6 +20,14 @@ if TYPE_CHECKING:
 
     from emmet.core.mpid import MPID, AlphaID
 
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters.ir_dielectric_tensor_adapter import (
+        TypedIRDTensorDict,
+    )
+
+IRDielectricTensorType: TypeAlias = (
+    TypedIRDTensorDict if ARROW_COMPATIBLE else IRDielectricTensor
+)
 
 SETTINGS = EmmetSettings()
 
@@ -172,6 +181,6 @@ class IRDielectric(BaseModel):
     A block for the pymatgen IRDielectricTensor object
     """
 
-    ir_dielectric_tensor: IRDielectricTensor | None = Field(
+    ir_dielectric_tensor: IRDielectricTensorType | None = Field(
         None, description="Serialized version of a pymatgen IRDielectricTensor object."
     )

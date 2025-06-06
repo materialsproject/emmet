@@ -9,18 +9,12 @@ from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Molecule, Structure
 
-from emmet.core import ARROW_COMPATIBLE
 from emmet.core.symmetry import PointGroupData, SymmetryData
+from emmet.core.typing import CompositionType
 from emmet.core.utils import get_graph_hash
 
 if TYPE_CHECKING:
     from typing_extensions import Self
-if ARROW_COMPATIBLE:
-    from emmet.core.serialization_adapters import (
-        composition_adapter,
-        molecule_adapter,
-        structure_adapter,
-    )
 
 T = TypeVar("T", bound="StructureMetadata")
 S = TypeVar("S", bound="MoleculeMetadata")
@@ -42,10 +36,10 @@ class StructureMetadata(BaseModel):
         None, description="List of elements in the material."
     )
     nelements: int | None = Field(None, description="Number of elements.")
-    composition: Composition | None = Field(
+    composition: CompositionType | None = Field(
         None, description="Full composition for the material."
     )
-    composition_reduced: Composition | None = Field(
+    composition_reduced: CompositionType | None = Field(
         None,
         title="Reduced Composition",
         description="Simplified representation of the composition.",
@@ -194,10 +188,10 @@ class MoleculeMetadata(BaseModel):
         title="Number of electrons",
         description="The total number of electrons for the molecule",
     )
-    composition: Composition | None = Field(
+    composition: CompositionType | None = Field(
         None, description="Full composition for the molecule"
     )
-    composition_reduced: Composition | None = Field(
+    composition_reduced: CompositionType | None = Field(
         None,
         title="Reduced Composition",
         description="Simplified representation of the composition",

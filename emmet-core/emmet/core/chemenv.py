@@ -18,18 +18,13 @@ from pymatgen.analysis.chemenv.coordination_environments.structure_environments 
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.core.structure import Molecule, Structure
 
-from emmet.core import ARROW_COMPATIBLE
 from emmet.core.material_property import PropertyDoc
 
 if TYPE_CHECKING:
     from emmet.core.mpid import MPID, AlphaID
 
 from emmet.core.mpid import MPID
-from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
-from emmet.core.typing import StructureType
-
-if ARROW_COMPATIBLE:
-    import emmet.core.serialization_adapters.molecule_adapter
+from emmet.core.typing import MoleculeType, StructureType
 
 DEFAULT_DISTANCE_CUTOFF = 1.4
 DEFAULT_ANGLE_CUTOFF = 0.3
@@ -370,7 +365,7 @@ class ChemEnvDoc(PropertyDoc):
         description="Method used to compute chemical environments"
     )
 
-    mol_from_site_environments: list[Molecule | None] = Field(
+    mol_from_site_environments: list[MoleculeType | None] = Field(
         description="List of Molecule Objects describing the detected environment."
     )
 

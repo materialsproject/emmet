@@ -108,7 +108,7 @@ def arrowize(obj):
             (arg.__name__, arrowize(arg))
             for arg in list(
                 filter(
-                    lambda x: x is not types.NoneType,
+                    lambda x: x is not types.NoneType,  # noqa: E721
                     obj.__args__,
                 )
             )
@@ -158,7 +158,7 @@ def arrowize(obj):
         return arrowize(obj._evaluate(globals(), locals(), frozenset()))
 
     if isinstance(obj, typing.TypeVar):
-        return arrowize(obj.__constraints__[0])
+        return arrowize(obj.__constraints__[1])
 
     if isinstance(obj, typing._AnnotatedAlias):
         return arrowize(obj.__args__[0])
@@ -166,7 +166,11 @@ def arrowize(obj):
     if issubclass(obj, MSONable):
         assert hasattr(
             obj, "__type_adapter__"
-        ), f"No serialization adapter is specified for msonable obj: {RED}{obj}{RESET}"
+        ), f"""
+        No serialization adapter is specified for msonable obj: {RED}{obj}{RESET}.
+        TypeVars can be written for external classes in the serialization_adapters module.
+        Internal classes may use the set_msonable_type_adapter decorator.
+        """
 
         return arrowize(obj.__type_adapter__.model_fields["root"].annotation)
 

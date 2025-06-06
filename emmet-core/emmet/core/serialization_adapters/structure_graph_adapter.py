@@ -1,7 +1,17 @@
-import pymatgen.analysis.graphs
-from pydantic import RootModel
-from pymatgen.core import Molecule, Structure
+from typing import Annotated, TypeVar
+
+from pydantic import BeforeValidator
+from pymatgen.analysis.graphs import MoleculeGraph, StructureGraph
 from typing_extensions import TypedDict
+
+from emmet.core.serialization_adapters.molecule_adapter import (
+    TypedMoleculeDict,
+    pop_empty_molecule_keys,
+)
+from emmet.core.serialization_adapters.structure_adapter import (
+    TypedStructureDict,
+    pop_empty_structure_keys,
+)
 
 GraphDescriptors = list[str, str]  # type: ignore[type-arg]
 
@@ -27,26 +37,52 @@ class TypedGraphDict(TypedDict):
 
 TypedStructureGraphDict = TypedDict(
     "TypedStructureGraphDict",
-    {"@module": str, "@class": str, "structure": Structure, "graphs": TypedGraphDict},
+    {
+        "@module": str,
+        "@class": str,
+        "structure": TypedStructureDict,
+        "graphs": TypedGraphDict,
+    },
 )
 
 TypedMoleculeGraphDict = TypedDict(
     "TypedMoleculeGraphDict",
-    {"@module": str, "@class": str, "molecule": Molecule, "graphs": TypedGraphDict},
+    {
+        "@module": str,
+        "@class": str,
+        "molecule": TypedMoleculeDict,
+        "graphs": TypedGraphDict,
+    },
+)
+
+StructureGraphTypeVar = TypeVar(
+    "StructureGraphTypeVar", StructureGraph, TypedStructureGraphDict
 )
 
 
-class StructureGraphAdapter(RootModel):
-    root: TypedStructureGraphDict
+def pop_empty_structure_graph_keys(sg: StructureGraphTypeVar):
+    if isinstance(sg, dict):
+        sg["structure"] = pop_empty_structure_keys(sg["structure"])
+
+    return sg
 
 
-class MoleculeGraphAdapter(RootModel):
-    root: TypedMoleculeGraphDict
+AnnotatedStructureGraph = Annotated[
+    StructureGraphTypeVar, BeforeValidator(pop_empty_structure_graph_keys)
+]
 
-
-setattr(
-    pymatgen.analysis.graphs.StructureGraph, "__type_adapter__", StructureGraphAdapter
+MoleculeGraphTypeVar = TypeVar(
+    "MoleculeGraphTypeVar", MoleculeGraph, TypedMoleculeGraphDict
 )
-setattr(
-    pymatgen.analysis.graphs.MoleculeGraph, "__type_adapter__", MoleculeGraphAdapter
-)
+
+
+def pop_empty_molecule_graph_keys(mg: MoleculeGraphTypeVar):
+    if isinstance(mg, dict):
+        mg["molecule"] = pop_empty_molecule_keys(mg["molecule"])
+
+    return mg
+
+
+AnnotatedMoleculeGraph = Annotated[
+    MoleculeGraphTypeVar, BeforeValidator(pop_empty_molecule_graph_keys)
+]

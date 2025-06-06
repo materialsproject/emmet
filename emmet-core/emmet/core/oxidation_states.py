@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from enum import Enum
 import logging
 from collections import defaultdict
+from enum import Enum
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -12,9 +12,10 @@ from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Specie
 
 from emmet.core.material_property import PropertyDoc
+from emmet.core.typing import StructureType
 
 if TYPE_CHECKING:
-    from emmet.core.mpid import AlphaID, MPID
+    from emmet.core.mpid import MPID, AlphaID
 
 
 class OxiStateAssigner(Enum):
@@ -29,6 +30,10 @@ class OxidationStateDoc(PropertyDoc):
 
     property_name: str = "oxidation"
 
+    structure: StructureType = Field(
+        ...,
+        description="The structure used in the generation of the oxidation state data.",
+    )
     possible_species: list[str] = Field(
         description="Possible charged species in this material."
     )

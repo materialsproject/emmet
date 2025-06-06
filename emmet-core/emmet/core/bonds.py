@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 import numpy as np
 from pydantic import Field
@@ -21,7 +21,13 @@ if TYPE_CHECKING:
     from emmet.core.mpid import MPID
 
 if ARROW_COMPATIBLE:
-    import emmet.core.serialization_adapters.structure_graph_adapter
+    from emmet.core.serialization_adapters.structure_graph_adapter import (
+        AnnotatedStructureGraph,
+    )
+
+StructureGraphType: TypeAlias = (
+    AnnotatedStructureGraph if ARROW_COMPATIBLE else StructureGraph
+)
 
 
 class BondingDoc(PropertyDoc):
@@ -30,7 +36,7 @@ class BondingDoc(PropertyDoc):
 
     property_name: str = "bonding"
 
-    structure_graph: StructureGraph = Field(
+    structure_graph: StructureGraphType = Field(
         description="Structure graph",
     )
 

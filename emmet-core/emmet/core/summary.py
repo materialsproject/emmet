@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 from pymatgen.core.periodic_table import Element
-from pymatgen.core.structure import Structure
 
 from emmet.core.electronic_structure import BandstructureData, DosData
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID, AlphaID
 from emmet.core.thermo import DecompositionProduct
+from emmet.core.typing import StructureType
 from emmet.core.xas import Edge, Type
 
 if TYPE_CHECKING:
@@ -146,6 +146,11 @@ class SummaryDoc(PropertyDoc):
     property_name: str = "summary"
 
     # Materials
+
+    structure: StructureType = Field(
+        ...,
+        description="The lowest energy structure for this material.",
+    )
 
     task_ids: list[MPID | AlphaID] = Field(
         [],
@@ -418,12 +423,6 @@ class SummaryDoc(PropertyDoc):
 
     database_Ids: dict[str, list[str]] = Field(
         {}, description="External database IDs corresponding to this material."
-    )
-
-    structure: Structure | None = Field(
-        None,
-        description="The lowest energy structure for this material.",
-        exclude=False,
     )
 
     @classmethod

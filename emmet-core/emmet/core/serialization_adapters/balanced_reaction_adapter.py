@@ -1,9 +1,10 @@
-import pymatgen.analysis.reaction_calculator
-from pydantic import RootModel
+from typing import TypeVar
+
+from pymatgen.analysis.reaction_calculator import BalancedReaction
 from typing_extensions import TypedDict
 
-TypedBalancedReaction = TypedDict(
-    "TypedBalancedReaction",
+TypedBalancedReactionDict = TypedDict(
+    "TypedBalancedReactionDict",
     {
         "@module": str,
         "@class": str,
@@ -12,13 +13,6 @@ TypedBalancedReaction = TypedDict(
     },
 )
 
-
-class BalancedReactionAdapter(RootModel):
-    root: TypedBalancedReaction
-
-
-setattr(
-    pymatgen.analysis.reaction_calculator.BalancedReaction,
-    "__type_adapter__",
-    BalancedReactionAdapter,
+BalancedReactionTypeVar = TypeVar(
+    "BalancedReactionTypeVar", BalancedReaction, TypedBalancedReactionDict
 )

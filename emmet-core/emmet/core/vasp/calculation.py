@@ -8,7 +8,7 @@ import os
 from datetime import datetime
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 import numpy as np
 from pydantic import (
@@ -21,7 +21,6 @@ from pydantic import (
 )
 from pymatgen.command_line.bader_caller import bader_analysis_from_path
 from pymatgen.command_line.chargemol_caller import ChargemolAnalysis
-from pymatgen.core.lattice import Lattice
 from pymatgen.core.structure import Structure
 from pymatgen.core.trajectory import Trajectory
 from pymatgen.electronic_structure.bandstructure import BandStructure
@@ -32,8 +31,9 @@ from pymatgen.io.vasp import Potcar as VaspPotcar
 from pymatgen.io.vasp import PotcarSingle, Vasprun, VolumetricData
 from typing_extensions import NotRequired, TypedDict
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
-from emmet.core.typing import StructureType
+from emmet.core.typing import LatticeType, StructureType
 from emmet.core.utils import ValueEnum, jsanitize, type_override
 from emmet.core.vasp.calc_types import (
     CalcType,
@@ -45,8 +45,13 @@ from emmet.core.vasp.calc_types import (
 )
 from emmet.core.vasp.task_valid import TaskState
 
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters.kpoints_adapter import KpointsTypeVar
+
 if TYPE_CHECKING:
     from typing_extensions import Self
+
+KpointsType: TypeAlias = KpointsTypeVar if ARROW_COMPATIBLE else Kpoints
 
 logger = logging.getLogger(__name__)
 
@@ -195,7 +200,7 @@ class CalculationInput(CalculationBaseModel):
     incar: dict[str, Any] | None = Field(
         None, description="INCAR parameters for the calculation"
     )
-    kpoints: Kpoints | None = Field(None, description="KPOINTS for the calculation")
+    kpoints: KpointsType | None = Field(None, description="KPOINTS for the calculation")
     nkpoints: int | None = Field(None, description="Total number of k-points")
     potcar_spec: list[PotcarSpec] | None = Field(
         None, description="Title and hash of POTCAR files used in the calculation"
@@ -207,7 +212,7 @@ class CalculationInput(CalculationBaseModel):
         None, description="List of POTCAR functional types."
     )
     parameters: dict | None = Field(None, description="Parameters from vasprun")
-    lattice_rec: Lattice | None = Field(
+    lattice_rec: LatticeType | None = Field(
         None, description="Reciprocal lattice of the structure"
     )
     structure: StructureType | None = Field(
@@ -527,7 +532,7 @@ class ElectronPhononDisplacedStructures(BaseModel):
         description="The temperatures at which the electron phonon displacements "
         "were generated.",
     )
-    structures: list[Structure] | None = Field(
+    structures: list[StructureType] | None = Field(
         None, description="The displaced structures corresponding to each temperature."
     )
 
