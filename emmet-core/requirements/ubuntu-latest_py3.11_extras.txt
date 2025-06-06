@@ -26,7 +26,7 @@ colorama==0.4.6
     # via griffe
 contourpy==1.3.2
     # via matplotlib
-coverage[toml]==7.8.1
+coverage[toml]==7.8.2
     # via pytest-cov
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -44,9 +44,9 @@ filelock==3.18.0
     #   virtualenv
 flake8==7.2.0
     # via emmet-core (setup.py)
-fonttools==4.58.0
+fonttools==4.58.1
     # via matplotlib
-fsspec==2025.5.0
+fsspec==2025.5.1
     # via matcalc
 ghp-import==2.1.0
     # via mkdocs
@@ -60,7 +60,7 @@ h5py==3.13.0
     #   phonopy
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
-identify==2.6.10
+identify==2.6.12
     # via pre-commit
 idna==3.10
     # via requests
@@ -76,7 +76,7 @@ jinja2==3.1.6
     #   mkdocs
     #   mkdocs-material
     #   mkdocstrings
-joblib==1.5.0
+joblib==1.5.1
     # via
     #   matcalc
     #   mdanalysis
@@ -163,7 +163,7 @@ mkdocstrings[python]==0.29.1
     # via
     #   emmet-core (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.16.10
+mkdocstrings-python==1.16.12
     # via mkdocstrings
 mmtf-python==1.1.3
     # via mdanalysis
@@ -184,17 +184,17 @@ mrcfile==1.5.4
     # via griddataformats
 msgpack==1.1.0
     # via mmtf-python
-mypy==1.15.0
+mypy==1.16.0
     # via emmet-core (setup.py)
 mypy-extensions==1.1.0
     # via
     #   emmet-core (setup.py)
     #   mypy
-narwhals==1.40.0
+narwhals==1.41.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
-networkx==3.4.2
+networkx==3.5
     # via
     #   pymatgen
     #   robocrys
@@ -235,6 +235,8 @@ numpy==1.26.4
     #   symfc
     #   tidynamics
     #   tifffile
+orjson==3.10.18
+    # via pymatgen
 packaging==25.0
     # via
     #   lazy-loader
@@ -247,7 +249,7 @@ packaging==25.0
     #   statsmodels
 palettable==3.3.3
     # via pymatgen
-pandas==2.2.3
+pandas==2.3.0
     # via
     #   matminer
     #   pymatgen
@@ -255,7 +257,9 @@ pandas==2.2.3
     #   solvation-analysis
     #   statsmodels
 pathspec==0.12.1
-    # via mkdocs
+    # via
+    #   mkdocs
+    #   mypy
 patsy==1.0.1
     # via statsmodels
 phono3py==3.15.1
@@ -274,7 +278,7 @@ platformdirs==4.3.8
     # via
     #   mkdocs-get-deps
     #   virtualenv
-plotly==6.1.1
+plotly==6.1.2
     # via
     #   pymatgen
     #   solvation-analysis
@@ -296,7 +300,7 @@ pycodestyle==2.13.0
     # via
     #   emmet-core (setup.py)
     #   flake8
-pydantic==2.11.4
+pydantic==2.11.5
     # via
     #   emmet-core (setup.py)
     #   pydantic-settings
@@ -309,8 +313,10 @@ pydocstyle==6.3.0
 pyflakes==3.3.2
     # via flake8
 pygments==2.19.1
-    # via mkdocs-material
-pymatgen==2025.5.2
+    # via
+    #   mkdocs-material
+    #   pytest
+pymatgen==2025.5.28
     # via
     #   emmet-core (setup.py)
     #   matcalc
@@ -336,7 +342,7 @@ pyparsing==3.2.3
     # via
     #   bibtexparser
     #   matplotlib
-pytest==8.3.5
+pytest==8.4.0
     # via
     #   emmet-core (setup.py)
     #   pytest-cov
@@ -373,7 +379,7 @@ requests==2.32.3
     #   pymatgen
 robocrys==0.2.11
     # via emmet-core (setup.py)
-ruamel-yaml==0.18.10
+ruamel-yaml==0.18.12
     # via
     #   custodian
     #   monty
@@ -383,7 +389,7 @@ ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
-scikit-learn==1.6.1
+scikit-learn==1.7.0
     # via
     #   matcalc
     #   matminer
@@ -424,7 +430,7 @@ spglib==2.6.0
     #   symfc
 statsmodels==0.14.4
     # via solvation-analysis
-symfc==1.3.4
+symfc==1.4.0
     # via phonopy
 sympy==1.14.0
     # via
@@ -438,7 +444,7 @@ threadpoolctl==3.6.0
     #   scikit-learn
 tidynamics==1.1.2
     # via transport-analysis
-tifffile==2025.5.21
+tifffile==2025.6.1
     # via scikit-image
 tornado==6.5.1
     # via livereload
@@ -449,13 +455,13 @@ tqdm==4.67.1
     #   pymatgen
 transport-analysis==0.1.2
     # via emmet-core (setup.py)
-typeguard==4.4.2
+typeguard==4.4.3
     # via inflect
-types-requests==2.32.0.20250515
+types-requests==2.32.0.20250602
     # via emmet-core (setup.py)
-types-setuptools==80.8.0.20250521
+types-setuptools==80.9.0.20250529
     # via emmet-core (setup.py)
-typing-extensions==4.13.2
+typing-extensions==4.14.0
     # via
     #   emmet-core (setup.py)
     #   mypy
