@@ -21,20 +21,21 @@ from emmet.core import ARROW_COMPATIBLE
 from emmet.core.base import EmmetBaseModel
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
-from emmet.core.typing import StructureType
+from emmet.core.typing import CompositionType, StructureType
 from emmet.core.utils import ValueEnum, jsanitize, type_override, utcnow
 
 if ARROW_COMPATIBLE:
-    from emmet.core.serialization_adapters import (
-        balanced_reaction_adapter,
-        electrode_adapter,
-        structure_adapter,
+    from emmet.core.serialization_adapters.balanced_reaction_adapter import (
+        BalancedReactionTypeVar,
     )
     from emmet.core.serialization_adapters.electrode_adapter import (
         AnnotatedConversionElectrode,
         AnnotatedInsertionElectrode,
     )
 
+BalancedReactionType: TypeAlias = (
+    BalancedReactionTypeVar if ARROW_COMPATIBLE else BalancedReaction
+)
 InsertionElectrodeType: TypeAlias = (
     AnnotatedInsertionElectrode if ARROW_COMPATIBLE else InsertionElectrode  # type: ignore[valid-type]
 )
@@ -173,7 +174,7 @@ class ConversionVoltagePairDoc(VoltagePairDoc):
     Features specific to conversion electrode
     """
 
-    reaction: BalancedReaction | None = Field(
+    reaction: BalancedReactionType | None = Field(
         None,
         description="The reaction that characterizes that particular voltage step.",
     )
@@ -277,7 +278,7 @@ class BaseElectrode(EmmetBaseModel):
         description="Timestamp for the most recent calculation for this Material document.",
     )
 
-    framework: Composition | None = Field(
+    framework: CompositionType | None = Field(
         None, description="The chemical compositions of the host framework."
     )
 

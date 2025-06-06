@@ -1,5 +1,10 @@
-import pymatgen.entries.compatibility
-from pydantic import RootModel
+from typing import TypeVar
+
+from pymatgen.entries.compatibility import (
+    Compatibility,
+    MaterialsProject2020Compatibility,
+    MaterialsProjectAqueousCompatibility,
+)
 from typing_extensions import TypedDict
 
 TypedCompatibilityDict = TypedDict(
@@ -12,11 +17,7 @@ TypedCompatibilityDict = TypedDict(
 )
 
 
-class CompatibilityAdapter(RootModel):
-    root: TypedCompatibilityDict
-
-
-class MaterialsProject2020CompatibilityAdapter(CompatibilityAdapter):
+class TypedMaterialsProject2020CompatibilityAdapterDict(TypedCompatibilityDict):
     """
     Does not define an as_dict() method, parent(Compatibility) is abstract
     so Monty just serializes to module, class, and version.
@@ -25,7 +26,7 @@ class MaterialsProject2020CompatibilityAdapter(CompatibilityAdapter):
     pass
 
 
-class MaterialsProjectAqueousCompatibilityAdapter(CompatibilityAdapter):
+class TypedMaterialsProjectAqueousCompatibilityAdapterDict(TypedCompatibilityDict):
     """
     Does not define an as_dict() method, parent(Compatibility) is abstract
     so Monty just serializes to module, class, and version.
@@ -34,20 +35,18 @@ class MaterialsProjectAqueousCompatibilityAdapter(CompatibilityAdapter):
     pass
 
 
-setattr(
-    pymatgen.entries.compatibility.Compatibility,
-    "__type_adapter__",
-    CompatibilityAdapter,
+CompatibilityTypeVar = TypeVar(
+    "CompatibilityTypeVar", Compatibility, TypedCompatibilityDict
 )
 
-setattr(
-    pymatgen.entries.compatibility.MaterialsProject2020Compatibility,
-    "__type_adapter__",
-    MaterialsProject2020CompatibilityAdapter,
+MaterialsProjectAqueousCompatibilityAdapterDictTypeVar = TypeVar(
+    "MaterialsProjectAqueousCompatibilityAdapterDictTypeVar",
+    MaterialsProjectAqueousCompatibility,
+    TypedMaterialsProjectAqueousCompatibilityAdapterDict,
 )
 
-setattr(
-    pymatgen.entries.compatibility.MaterialsProjectAqueousCompatibility,
-    "__type_adapter__",
-    MaterialsProjectAqueousCompatibilityAdapter,
+MaterialsProject2020CompatibilityAdapterDictTypeVar = TypeVar(
+    "MaterialsProject2020CompatibilityAdapterDictTypeVar",
+    MaterialsProject2020Compatibility,
+    TypedMaterialsProject2020CompatibilityAdapterDict,
 )

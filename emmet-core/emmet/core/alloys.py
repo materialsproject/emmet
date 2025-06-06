@@ -1,3 +1,5 @@
+from typing import TypeAlias
+
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.base import EmmetBaseModel
 from emmet.core.typing import TypedSearchDict
@@ -11,11 +13,18 @@ except ImportError:
 
 
 if ARROW_COMPATIBLE:
-    from emmet.core.serialization_adapters import alloy_adapter
+    from emmet.core.serialization_adapters.alloy_adapter import (
+        AnnotatedAlloyPair,
+        AnnotatedAlloySystem,
+    )
+
+
+AlloyPairType: TypeAlias = AnnotatedAlloyPair if ARROW_COMPATIBLE else AlloyPair
+AlloySystemType: TypeAlias = AnnotatedAlloySystem if ARROW_COMPATIBLE else AlloySystem
 
 
 class AlloyPairDoc(EmmetBaseModel):
-    alloy_pair: AlloyPair
+    alloy_pair: AlloyPairType
 
     pair_id: str
 
@@ -28,7 +37,7 @@ class AlloyPairDoc(EmmetBaseModel):
 
 
 class AlloySystemDoc(EmmetBaseModel):
-    alloy_system: AlloySystem
+    alloy_system: AlloySystemType
 
     alloy_id: str
 

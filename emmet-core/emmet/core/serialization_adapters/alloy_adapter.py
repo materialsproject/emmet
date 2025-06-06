@@ -1,7 +1,14 @@
-import pymatgen.analysis.alloys.core
-from pydantic import RootModel
-from pymatgen.core import Composition, Structure
+from typing import Annotated, TypeVar
+
+from pydantic import BeforeValidator
+from pymatgen.analysis.alloys.core import AlloyMember, AlloyPair, AlloySystem
+from pymatgen.core import Element
 from typing_extensions import TypedDict
+
+from emmet.core.serialization_adapters.structure_adapter import (
+    TypedStructureDict,
+    pop_empty_structure_keys,
+)
 
 
 class TypedSupportedPropertiesDict(TypedDict):
@@ -18,7 +25,7 @@ class TypedSupportedPropertiesDict(TypedDict):
 class TypedAlloyMemberDict(TypedDict):
     id_: str
     db: str
-    composition: Composition
+    composition: dict[Element, float]
     x: float
     is_ordered: bool
 
@@ -31,8 +38,8 @@ TypedAlloyPairDict = TypedDict(
         "@version": str,
         "formula_a": str,
         "formula_b": str,
-        "structure_a": Structure,
-        "structure_b": Structure,
+        "structure_a": TypedStructureDict,
+        "structure_b": TypedStructureDict,
         "id_a": str,
         "id_b": str,
         "chemsys": str,
@@ -84,22 +91,32 @@ TypedAlloySystemDict = TypedDict(
 )
 
 
-class AlloyMemberAdapter(RootModel):
-    root: TypedAlloyMemberDict
+AlloyMemberTypeVar = TypeVar("AlloyMemberTypeVar", AlloyMember, TypedAlloyMemberDict)
+AlloyPairTypeVar = TypeVar("AlloyPairTypeVar", AlloyPair, TypedAlloyPairDict)
+AlloySystemTypeVar = TypeVar("AlloySystemTypeVar", AlloySystem, TypedAlloySystemDict)
 
 
-class AlloyPairAdapter(RootModel):
-    root: TypedAlloyPairDict
+def pop_empty_alloy_pair_structure_keys(alloy_pair: AlloyPairTypeVar):
+    if isinstance(alloy_pair, dict):
+        alloy_pair["structure_a"] = pop_empty_structure_keys(alloy_pair["structure_a"])
+        alloy_pair["structure_b"] = pop_empty_structure_keys(alloy_pair["structure_b"])
+
+    return alloy_pair
 
 
-class AlloySystemAdapter(RootModel):
-    root: TypedAlloySystemDict
+def pop_empty_alloy_system_structure_keys(alloy_system: AlloySystemTypeVar):
+    if isinstance(alloy_system, dict):
+        alloy_system["alloy_pairs"] = [
+            pop_empty_alloy_pair_structure_keys(alloy_pair)
+            for alloy_pair in alloy_system["alloy_pairs"]
+        ]
+
+    return alloy_system
 
 
-setattr(
-    pymatgen.analysis.alloys.core.AlloyMember, "__type_adapter__", AlloyMemberAdapter
-)
-setattr(pymatgen.analysis.alloys.core.AlloyPair, "__type_adapter__", AlloyPairAdapter)
-setattr(
-    pymatgen.analysis.alloys.core.AlloySystem, "__type_adapter__", AlloySystemAdapter
-)
+AnnotatedAlloyPair = Annotated[
+    AlloyPairTypeVar, BeforeValidator(pop_empty_alloy_pair_structure_keys)
+]
+AnnotatedAlloySystem = Annotated[
+    AlloySystemTypeVar, BeforeValidator(pop_empty_alloy_system_structure_keys)
+]

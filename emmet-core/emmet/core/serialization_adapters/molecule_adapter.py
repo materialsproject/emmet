@@ -1,14 +1,11 @@
-import pymatgen.core.structure
-from pydantic import RootModel
+from typing import Annotated, TypeVar
+
+from pydantic import BeforeValidator
+from pymatgen.core.structure import Molecule
 from typing_extensions import TypedDict
 
 from emmet.core.serialization_adapters.properties import TypedAggregateProperitesDict
 from emmet.core.serialization_adapters.sites_adapter import TypedSiteDict
-
-
-class TypedLattice(TypedDict):
-    matrix: list[list[float, float, float]]  # type: ignore[type-arg]
-
 
 TypedMoleculeDict = TypedDict(
     "TypedMoleculeDict",
@@ -23,8 +20,32 @@ TypedMoleculeDict = TypedDict(
 )
 
 
-class MoleculeAdapter(RootModel):
-    root: TypedMoleculeDict
+MoleculeTypeVar = TypeVar("MoleculeTypeVar", Molecule, TypedMoleculeDict)
 
 
-setattr(pymatgen.core.structure.Molecule, "__type_adapter__", MoleculeAdapter)
+def pop_empty_molecule_keys(molecule: MoleculeTypeVar):
+    if isinstance(molecule, dict):
+        if molecule.get("properties"):
+            for prop, val in list(molecule["properties"].items()):
+                if val is None:
+                    del molecule["properties"][prop]
+
+        for site in molecule["sites"]:
+            if "name" in site:
+                if not site["name"]:
+                    del site["name"]
+
+            if site.get("properties"):
+                for prop, val in list(site["properties"].items()):
+                    if val is None:
+                        del site["properties"][prop]
+
+            for species in site["species"]:
+                for prop, val in list(species.items()):
+                    if val is None:
+                        del species[prop]
+
+    return molecule
+
+
+AnnotatedMolecule = Annotated[MoleculeTypeVar, BeforeValidator(pop_empty_molecule_keys)]

@@ -1,9 +1,15 @@
-import pymatgen.phonon.bandstructure
-import pymatgen.phonon.dos
-from pydantic import RootModel
-from pymatgen.core.lattice import Lattice
-from pymatgen.core.structure import Structure
+from typing import Annotated, TypeVar
+
+from pydantic import BeforeValidator
+from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
+from pymatgen.phonon.dos import PhononDos
 from typing_extensions import TypedDict
+
+from emmet.core.serialization_adapters.lattice_adapter import MSONableTypedLatticeDict
+from emmet.core.serialization_adapters.structure_adapter import (
+    TypedStructureDict,
+    pop_empty_structure_keys,
+)
 
 TypedPhononBandStructureSymmLineDict = TypedDict(
     "TypedPhononBandStructureSymmLineDict",
@@ -14,9 +20,9 @@ TypedPhononBandStructureSymmLineDict = TypedDict(
         "eigendisplacements": dict[str, list[list[list[list[float]]]]],
         "has_nac": bool,
         "labels_dict": dict[str, list[float, float, float]],  # type: ignore[type-arg]
-        "lattice_rec": Lattice,
+        "lattice_rec": MSONableTypedLatticeDict,
         "qpoints": list[list[float]],
-        "structure": Structure,
+        "structure": TypedStructureDict,
     },
 )
 
@@ -28,22 +34,32 @@ TypedPhononDosDict = TypedDict(
         "densities": list[float],
         "frequencies": list[float],
         "pdos": list[list[float]],
-        "structure": Structure,
+        "structure": TypedStructureDict,
     },
 )
 
-
-class PhononBandStructureSymmLineAdapter(RootModel):
-    root: TypedPhononBandStructureSymmLineDict
-
-
-class PhononDosAdapter(RootModel):
-    root: TypedPhononDosDict
-
-
-setattr(
-    pymatgen.phonon.bandstructure.PhononBandStructureSymmLine,
-    "__type_adapter__",
-    PhononBandStructureSymmLineAdapter,
+PhononBandStructureSymmLineTypeVar = TypeVar(
+    "PhononBandStructureSymmLineTypeVar",
+    PhononBandStructureSymmLine,
+    TypedPhononBandStructureSymmLineDict,
 )
-setattr(pymatgen.phonon.dos.PhononDos, "__type_adapter__", PhononDosAdapter)
+
+PhononDosTypeVar = TypeVar("PhononDosTypeVar", PhononDos, TypedPhononDosDict)
+
+
+def pop_empty_keys_from_structure(
+    d: PhononDosTypeVar | PhononBandStructureSymmLineTypeVar,
+):
+    if isinstance(d, dict):
+        d["structure"] = pop_empty_structure_keys(d["structure"])
+
+    return d
+
+
+AnnotatedPhononBandStructureSymmLine = Annotated[
+    PhononBandStructureSymmLineTypeVar, BeforeValidator(pop_empty_keys_from_structure)
+]
+
+AnnotatedPhononDos = Annotated[
+    PhononDosTypeVar, BeforeValidator(pop_empty_keys_from_structure)
+]

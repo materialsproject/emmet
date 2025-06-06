@@ -7,13 +7,17 @@ from datetime import datetime
 from pathlib import Path
 from typing import Literal, TypeAlias
 
-from pymatgen.core import Structure
+from pymatgen.core import Composition, Lattice, Molecule, Structure
 from pymatgen.electronic_structure.bandstructure import Kpoint
 from typing_extensions import TypedDict
 
 from emmet.core import ARROW_COMPATIBLE
 
 if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters.composition_adapter import CompositionTypeVar
+    from emmet.core.serialization_adapters.kpoint_adapter import KpointTypeVar
+    from emmet.core.serialization_adapters.lattice_adapter import LatticeTypeVar
+    from emmet.core.serialization_adapters.molecule_adapter import AnnotatedMolecule
     from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 
 
@@ -23,6 +27,10 @@ if ARROW_COMPATIBLE:
 PathLike: TypeAlias = str | Path | os.DirEntry[str]
 """Type of a generic path-like object"""
 
+CompositionType: TypeAlias = CompositionTypeVar if ARROW_COMPATIBLE else Composition
+KpointType: TypeAlias = KpointTypeVar if ARROW_COMPATIBLE else Kpoint
+LatticeType: TypeAlias = LatticeTypeVar if ARROW_COMPATIBLE else Lattice
+MoleculeType: TypeAlias = AnnotatedMolecule if ARROW_COMPATIBLE else Molecule  # type: ignore[valid-type]
 StructureType: TypeAlias = AnnotatedStructure if ARROW_COMPATIBLE else Structure  # type: ignore[valid-type]
 
 
@@ -74,7 +82,7 @@ StrOrbital: TypeAlias = Literal["total", "s", "p", "d", "f"]
 class TypedBandDict(TypedDict):
     band_index: dict[str, list[int]]
     kpoint_index: list[int]
-    kpoint: Kpoint
+    kpoint: KpointType
     energy: float
     projections: dict[str, list[list[float]]]
 

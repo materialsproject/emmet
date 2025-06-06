@@ -6,6 +6,7 @@ from collections.abc import Callable
 from datetime import datetime
 from enum import Enum, auto
 from itertools import chain, islice
+from typing import TypeAlias
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 from pymatgen.analysis.phase_diagram import PhaseDiagram
@@ -27,6 +28,13 @@ if ARROW_COMPATIBLE:
         computed_entries_adapter,
         phase_diagram_adapter,
     )
+    from emmet.core.serialization_adapters.phase_diagram_adapter import (
+        AnnotatedPhaseDiagram,
+    )
+
+PhaseDiagramType: TypeAlias = (
+    AnnotatedPhaseDiagram if ARROW_COMPATIBLE else PhaseDiagram
+)
 
 
 class Mode(Enum):
@@ -395,7 +403,7 @@ class PhaseDiagramDoc(BaseModel):
         description="Functional types of calculations involved in the energy mixing scheme.",
     )
 
-    phase_diagram: PhaseDiagram = Field(
+    phase_diagram: PhaseDiagramType = Field(
         ...,
         description="Phase diagram for the chemical system.",
     )

@@ -1,4 +1,5 @@
 import logging
+from typing import TypeAlias
 
 import numpy as np
 from pydantic import Field
@@ -12,7 +13,14 @@ from emmet.core.typing import TypedBondLengthStatsDict
 AVAILABLE_METHODS = {nn.__name__: nn for nn in NearNeighbors.__subclasses__()}
 
 if ARROW_COMPATIBLE:
-    import emmet.core.serialization_adapters.structure_graph_adapter
+    from emmet.core.serialization_adapters.structure_graph_adapter import (
+        AnnotatedStructureGraph,
+    )
+
+StructureGraphType: TypeAlias = (
+    AnnotatedStructureGraph if ARROW_COMPATIBLE else StructureGraph
+)
+
 
 class BondingDoc(PropertyDoc):
     """Structure graphs representing chemical bonds calculated from structure
@@ -20,7 +28,7 @@ class BondingDoc(PropertyDoc):
 
     property_name: str = "bonding"
 
-    structure_graph: StructureGraph = Field(
+    structure_graph: StructureGraphType = Field(
         description="Structure graph",
     )
 

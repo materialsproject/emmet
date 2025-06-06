@@ -1,5 +1,6 @@
 import warnings
 from itertools import groupby
+from typing import TypeAlias
 
 import numpy as np
 from pydantic import Field, field_validator
@@ -10,12 +11,14 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.feff.task import TaskDocument
 from emmet.core.mpid import MPID
-from emmet.core.serialization_adapters.xas_adapter import AnnotatedXAS
 from emmet.core.spectrum import SpectrumDoc
 from emmet.core.utils import ValueEnum
 
 if ARROW_COMPATIBLE:
-    import emmet.core.serialization_adapters.xas_adapter
+    from emmet.core.serialization_adapters.xas_adapter import AnnotatedXAS
+
+
+XASType: TypeAlias = AnnotatedXAS if ARROW_COMPATIBLE else XAS
 
 
 class Edge(ValueEnum):
@@ -54,7 +57,7 @@ class XASDoc(SpectrumDoc):
 
     spectrum_name: str = "XAS"
 
-    spectrum: AnnotatedXAS | None = Field(
+    spectrum: XASType | None = Field(
         None, description="The XAS spectrum for this calculation."
     )
 
