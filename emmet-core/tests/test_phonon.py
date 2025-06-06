@@ -79,7 +79,7 @@ def test_legacy_migration(legacy_ph_task):
             -93889.03563367906,
         ],
     }
-    tprops = ph_doc.compute_thermo_quantites(temps)
+    tprops = ph_doc.compute_thermo_quantities(temps)
     assert all(
         t == pytest.approx(tprops["temperature"][i]) for i, t in enumerate(temps)
     )
