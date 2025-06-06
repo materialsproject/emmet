@@ -135,7 +135,7 @@ class PhononDOS(BaseModel):
     @classmethod
     def from_phonopy(cls, phonon_dos_file: str | Path) -> Self:
         """Create a PhononDOS from phonopy .dat output."""
-        phonopy_dos: dict[str, list[float]] = {
+        phonopy_dos: dict[str, Any] = {
             k: []
             for k in (
                 "frequencies",
@@ -241,7 +241,7 @@ class PhononBS(BaseModel):
             rlatt,
             1e-6,  # There is no Fermi level in a Phonon DOS (these are bosons definitionally) but we want to plot the bands from zero.
             {
-                k: Kpoint(v, lattice=rlatt).frac_coords
+                k: Kpoint(v, lattice=rlatt).frac_coords  # type: ignore[misc]
                 for k, v in (self.labels_dict or {}).items()
             },
             coords_are_cartesian=False,
