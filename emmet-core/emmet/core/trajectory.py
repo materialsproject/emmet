@@ -82,8 +82,16 @@ class AtomTrajectory(BaseModel):
         None, description="The magnetic moments at each ionic step."
     )
 
+    velocities: list[list[Vector3D]] | None = Field(
+        None, description="The velocities of each atom."
+    )
+
+    temperature: list[float] | None = Field(
+        None, description="The temperature at each ionic step."
+    )
+
     ionic_step_properties: Iterable[str] = Field(
-        {"energy", "forces", "stress", "magmoms"},
+        {"energy", "forces", "stress", "magmoms", "velocities", "temperature"},
         exclude=True,
         description="The properties included at each ionic step.",
     )
@@ -414,15 +422,16 @@ class AtomTrajectory(BaseModel):
             structures.append(structure)
 
             props = {}
-            for k in frame_prop_keys:
-                if (_prop := getattr(self, k, None)) is not None:
-                    prop = _prop[i]
-                    for cmth in ("model_dump", "tolist"):
-                        if hasattr(prop, cmth):
-                            prop = getattr(prop, cmth)()
-                    props[k] = prop
+            if len(frame_prop_keys) > 0:
+                for k in frame_prop_keys:
+                    if _prop := getattr(self, k, []):
+                        prop = _prop[i]
+                        for cmth in ("model_dump", "tolist"):
+                            if hasattr(prop, cmth):
+                                prop = getattr(prop, cmth)()
+                        props[k] = prop
 
-            frame_properties.append(props)
+                frame_properties.append(props)
 
         return getattr(
             PmgTrajectory, f"from_{'structures' if is_structure else 'molecules'}"
