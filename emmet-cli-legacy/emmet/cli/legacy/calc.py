@@ -13,8 +13,8 @@ from pymatgen.alchemy.materials import TransformedStructure
 from pymatgen.core import Structure
 from pymatgen.util.provenance import Author, StructureNL
 
-from emmet.cli import SETTINGS
-from emmet.cli.utils import (
+from emmet.cli.legacy import SETTINGS
+from emmet.cli.legacy.utils import (
     EmmetCliError,
     aggregate_by_formula,
     calcdb_from_mgrant,

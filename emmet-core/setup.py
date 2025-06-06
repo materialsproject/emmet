@@ -34,6 +34,7 @@ setup(
         "pydantic-settings>=2.0",
         "pybtex~=0.24",
         "typing-extensions>=3.7",
+        "blake3",
     ],
     extras_require={
         "all": [
