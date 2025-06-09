@@ -204,8 +204,9 @@ class CustodianDoc(BaseModel):
 
     @field_validator("*", mode="before")
     def field_deserializer(cls, field):
-        if isinstance(field, str):
-            field = json.loads(field)
+        if ARROW_COMPATIBLE:
+            if isinstance(field, str):
+                field = json.loads(field)
         return field
 
 
@@ -382,8 +383,9 @@ class CoreTaskDoc(StructureMetadata):
 
     @field_validator("transformations", "vasp_objects", mode="before")
     def deserialize_overrides(cls, d):
-        if isinstance(d, str):
-            d = json.loads(d)
+        if ARROW_COMPATIBLE:
+            if isinstance(d, str):
+                d = json.loads(d)
 
         return d
 
@@ -575,13 +577,14 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
 
     @field_validator("additional_json", mode="before")
     def deserialize_additional_json(cls, d):
-        if isinstance(d, str):
-            d = json.loads(d)
+        if ARROW_COMPATIBLE:
+            if isinstance(d, str):
+                d = json.loads(d)
 
         return d
 
     @field_serializer("entry", mode="wrap")
-    def serialize_entry(self, entry, default_serializer, info):
+    def entry_serializer(self, entry, default_serializer, info):
         default_serialized_object = default_serializer(entry, info)
 
         format = info.context.get("format") if info.context else "standard"
@@ -596,9 +599,10 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
         return default_serialized_object
 
     @field_validator("entry", mode="before")
-    def deserialize_entry(cls, entry):
-        if isinstance(entry, dict) and isinstance(entry["energy_adjustments"], str):
-            entry["energy_adjustments"] = json.loads(entry["energy_adjustments"])
+    def entry_deserializer(cls, entry):
+        if ARROW_COMPATIBLE:
+            if isinstance(entry, dict) and isinstance(entry["energy_adjustments"], str):
+                entry["energy_adjustments"] = json.loads(entry["energy_adjustments"])
 
         return entry
 

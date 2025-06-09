@@ -220,7 +220,7 @@ class PhononBS(ContextModel):
         return super(PhononBS, cls).deserialize_pmg(config)
 
     @field_serializer("eigendisplacements", mode="wrap")
-    def serialize_eigendisplacements(self, eigen, default_serializer, info):
+    def eigendisplacements_serializer(self, eigen, default_serializer, info):
         arr = np.array(default_serializer(eigen, info))
         return {
             "eigendisplacements_real": arr.real.tolist(),
@@ -228,7 +228,7 @@ class PhononBS(ContextModel):
         }
 
     @field_validator("eigendisplacements", mode="before")
-    def deserialize_eigendisplacements(cls, eigen):
+    def eigendisplacements_deserializer(cls, eigen):
         if isinstance(eigen, dict) and all(
             eigen.get(k) is not None
             for k in ("eigendisplacements_real", "eigendisplacements_imag")
