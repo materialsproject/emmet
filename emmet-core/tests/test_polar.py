@@ -1,8 +1,11 @@
-import pyarrow as pa
 import pytest
 from pymatgen.core import Lattice, Structure
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.polar import DielectricDoc, PiezoelectricDoc
+
+if ARROW_COMPATIBLE:
+    import pyarrow as pa
 
 
 @pytest.fixture(scope="module")
@@ -47,6 +50,9 @@ def test_dielectric(dielectric_structure, epsilon_static, epsilon_ionic):
     assert doc.e_ionic == pytest.approx(30.5498978544694)
 
 
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
 def test_arrow_dielectric(dielectric_structure, epsilon_static, epsilon_ionic):
     doc = DielectricDoc.from_ionic_and_electronic(
         material_id="mp-149",
@@ -310,6 +316,9 @@ def test_piezoelectric(piezoelectric_structure, piezo_static, piezo_ionic):
         assert doc.total[i] == pytest.approx(total[i])
 
 
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
 def test_arrow_piezo(piezoelectric_structure, piezo_static, piezo_ionic):
     doc = PiezoelectricDoc.from_ionic_and_electronic(
         material_id="mp-149",

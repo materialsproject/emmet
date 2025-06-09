@@ -4,12 +4,15 @@ import itertools
 import os
 from typing import Optional, Union
 
-import pyarrow as pa
 import pytest
 from pydantic._internal._model_construction import ModelMetaclass
 
-from emmet.core import core_path
-from emmet.core.arrow import arrowize
+from emmet.core import ARROW_COMPATIBLE, core_path
+
+pa = pytest.importorskip("pyarrow")
+
+if ARROW_COMPATIBLE:
+    from emmet.core.arrow import arrowize
 
 
 def import_models():

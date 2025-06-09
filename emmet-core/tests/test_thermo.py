@@ -1,8 +1,11 @@
-import pyarrow as pa
 import pytest
 from monty.serialization import MontyDecoder, loadfn
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.thermo import ThermoDoc
+
+if ARROW_COMPATIBLE:
+    import pyarrow as pa
 
 
 @pytest.fixture(scope="session")
@@ -141,6 +144,9 @@ def test_from_entries(entries):
     assert all([d.is_stable for d in docs if d != unstable_doc])
 
 
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
 def test_arrow(entries):
     doc = ThermoDoc.from_entries(entries, thermo_type="UNKNOWN", deprecated=False)[0]
 

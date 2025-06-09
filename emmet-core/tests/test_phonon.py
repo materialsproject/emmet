@@ -3,14 +3,18 @@
 from copy import deepcopy
 
 import numpy as np
-import pyarrow as pa
 import pytest
 from monty.serialization import loadfn
 from pymatgen.phonon.dos import CompletePhononDos
 from pymatgen.phonon.dos import PhononDos as PmgPhononDos
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.phonon import PhononBSDOSDoc
 from emmet.core.testing_utils import assert_schemas_equal
+from emmet.core.utils import jsanitize
+
+if ARROW_COMPATIBLE:
+    import pyarrow as pa
 
 
 @pytest.fixture(scope="module")
@@ -114,10 +118,10 @@ def test_legacy_migration(legacy_ph_task):
     assert ph_doc.phonon_bandstructure._to_pmg_es_bs.get_cbm()
 
 
-@pytest.mark.skipif(pa is None, reason="pyarrow must be installed to run this test.")
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
 def test_arrow(legacy_ph_task):
-    from emmet.core.utils import jsanitize
-
     ph_doc = PhononBSDOSDoc.migrate_legacy_doc(legacy_ph_task)
 
     arrow_struct = pa.scalar(
