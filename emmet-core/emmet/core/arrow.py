@@ -162,7 +162,7 @@ def arrowize(obj):
             # before 3.12.4 still has the old signature).
             # See: https://github.com/python/cpython/pull/118104.
             return arrowize(
-                obj._evaluate(globals(), locals(), {}, recursive_gaurd=frozenset())
+                obj._evaluate(globals(), locals(), {}, recursive_guard=frozenset())
             )
         return arrowize(obj._evaluate(globals(), locals(), frozenset()))
 
