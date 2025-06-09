@@ -1,9 +1,12 @@
-import pyarrow as pa
 import pytest
 from monty.serialization import loadfn
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.electronic_structure import ElectronicStructureDoc
 from emmet.core.utils import jsanitize
+
+if ARROW_COMPATIBLE:
+    import pyarrow as pa
 
 
 @pytest.fixture(scope="session")
@@ -101,6 +104,9 @@ def test_from_bsdos_2(bandstructure_fs, dos_fs):
     assert es_doc.bandstructure.setyawan_curtarolo.nbands == pytest.approx(64.0)
 
 
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
 def test_arrow(bandstructure_fs, dos_fs):
     dos = dos_fs[0]["data"]
     bs = bandstructure_fs[0]["data"]

@@ -1,11 +1,14 @@
 import numpy as np
-import pyarrow as pa
 import pytest
 from monty.serialization import loadfn
 from pymatgen.core import Structure
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.absorption import AbsorptionDoc
 from emmet.core.utils import jsanitize
+
+if ARROW_COMPATIBLE:
+    import pyarrow as pa
 
 
 @pytest.fixture(scope="module")
@@ -72,6 +75,9 @@ def test_absorption_doc(absorption_test_doc):
     assert absorption_test_doc.bandgap == 4.4652
 
 
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
 def test_arrow(absorption_test_doc):
     arrow_struct = pa.scalar(
         absorption_test_doc.model_dump(context={"format": "arrow"}),

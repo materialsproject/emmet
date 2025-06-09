@@ -1,17 +1,20 @@
 from typing import List
 
 import numpy as np
-import pyarrow as pa
 import pytest
 from monty.serialization import loadfn
 from pymatgen.analysis.elasticity import Deformation, Strain, Stress
 from pymatgen.core.tensors import Tensor, TensorMapping
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.elasticity import (
     ElasticityDoc,
     generate_derived_fitting_data,
     generate_primary_fitting_data,
 )
+
+if ARROW_COMPATIBLE:
+    import pyarrow as pa
 
 
 @pytest.fixture(scope="session")
@@ -76,6 +79,9 @@ def test_from_deformations_and_stresses(fitting_data, reference_data):
     assert np.allclose(doc.elastic_tensor.raw, ref_elastic_tensor, atol=1e-6)
 
 
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
 def test_arrow(fitting_data):
     structure, deformations, stresses, equilibrium_stress = fitting_data
 

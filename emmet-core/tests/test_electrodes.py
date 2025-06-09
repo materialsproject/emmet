@@ -1,4 +1,3 @@
-import pyarrow as pa
 import pytest
 from monty.serialization import loadfn
 from pymatgen.analysis.phase_diagram import PhaseDiagram
@@ -7,6 +6,7 @@ from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 from pymatgen.core import Composition, Element
 from pymatgen.entries.computed_entries import ComputedEntry
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.electrode import (
     ConversionElectrodeDoc,
     ConversionVoltagePairDoc,
@@ -15,6 +15,9 @@ from emmet.core.electrode import (
     get_battery_formula,
 )
 from emmet.core.utils import jsanitize
+
+if ARROW_COMPATIBLE:
+    import pyarrow as pa
 
 
 @pytest.fixture(scope="session")
@@ -130,6 +133,9 @@ def test_get_battery_formula():
     assert results == ["Li2-3.5CoO3", "Al1.33-2CoO4", "Li8.5-10.5Co4O9"]
 
 
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
 def test_arrow_insertion(insertion_elec):
     elec, struct, wion_entry = next(iter(insertion_elec.values()))
     doc = InsertionElectrodeDoc.from_entries(
@@ -175,6 +181,9 @@ def test_arrow_insertion(insertion_elec):
     )
 
 
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
 def test_arrow_conversion(conversion_elec):
     k = next(iter(conversion_elec))
     elec, expected = next(iter(conversion_elec.values()))

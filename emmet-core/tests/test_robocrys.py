@@ -1,10 +1,13 @@
-import pyarrow as pa
 import pytest
 from pymatgen.core import Structure
 from robocrys import __version__ as __robocrys_version__
 
 from . import test_structures
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.robocrys import RobocrystallogapherDoc
+
+if ARROW_COMPATIBLE:
+    import pyarrow as pa
 
 
 @pytest.mark.parametrize("structure", test_structures.values())
@@ -20,6 +23,9 @@ def test_robocrys(structure: Structure):
     assert doc is not None
 
 
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
 def test_arrow():
     structure = next(iter(test_structures.values()))
     doc = RobocrystallogapherDoc.from_structure(

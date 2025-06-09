@@ -1,10 +1,13 @@
-import pyarrow as pa
 import pytest
 from monty.serialization import loadfn
 from pymatgen.core import Composition
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.structure_group import StructureGroupDoc, _get_id_lexi
 from emmet.core.utils import jsanitize
+
+if ARROW_COMPATIBLE:
+    import pyarrow as pa
 
 
 @pytest.fixture(scope="session")
@@ -68,6 +71,9 @@ def test_lexi_id():
     assert _get_id_lexi("123") == ("", 123)
 
 
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
 def test_arrow(entries_lto):
     doc = StructureGroupDoc.from_grouped_entries(
         entries_lto,

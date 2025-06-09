@@ -1,10 +1,13 @@
-import pyarrow as pa
 import pytest
 from monty.serialization import loadfn
 from pymatgen.core import Structure
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.magnetism import MagnetismDoc
 from emmet.core.utils import jsanitize
+
+if ARROW_COMPATIBLE:
+    import pyarrow as pa
 
 
 @pytest.fixture(scope="module")
@@ -33,6 +36,9 @@ def test_magnetism_doc(magnetism_mats):
             assert doc.ordering == test_orderings[material_id]
 
 
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
 def test_arrow(magnetism_mats):
     doc = MagnetismDoc.from_structure(
         structure=Structure.from_dict(jsanitize(magnetism_mats[0]["structure"])),
