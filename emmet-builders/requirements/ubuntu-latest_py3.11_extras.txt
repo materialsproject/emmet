@@ -30,7 +30,6 @@ bcrypt==4.3.0
     # via paramiko
 boto3==1.38.35
     # via maggma
-botocore==1.38.35
     # via
     #   boto3
     #   s3transfer
