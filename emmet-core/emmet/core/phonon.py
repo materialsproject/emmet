@@ -142,10 +142,8 @@ class PhononBS(ContextModel):
         False,
         description="Whether the calculation includes non-analytical corrections at Gamma.",
     )
-    eigendisplacements: list[
-        list[list[tuple[complex, complex, complex]]]
-    ] | None = Field(
-        None, description="Phonon eigendisplacements in Cartesian coordinates."
+    eigendisplacements: list[list[list[tuple[complex, complex, complex]]]] | None = (
+        Field(None, description="Phonon eigendisplacements in Cartesian coordinates.")
     )
     labels_dict: dict[str, Vector3D] | None = Field(
         None, description="The high-symmetry labels of specific q-points."
@@ -156,7 +154,7 @@ class PhononBS(ContextModel):
     _primitive_structure: Structure | None = PrivateAttr(None)
 
     @field_serializer("eigendisplacements", mode="wrap")
-    def serialize_eigendisplacements(self, eigen, default_serializer, info):
+    def eigendisplacements_serializer(self, eigen, default_serializer, info):
         arr = np.array(default_serializer(eigen, info))
         return {
             "eigendisplacements_real": arr.real.tolist(),
@@ -164,7 +162,7 @@ class PhononBS(ContextModel):
         }
 
     @field_validator("eigendisplacements", mode="before")
-    def deserialize_eigendisplacements(cls, eigen):
+    def eigendisplacements_deserializer(cls, eigen):
         if isinstance(eigen, dict) and all(
             eigen.get(k) is not None
             for k in ("eigendisplacements_real", "eigendisplacements_imag")

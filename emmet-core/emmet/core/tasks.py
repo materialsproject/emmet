@@ -269,8 +269,9 @@ class CustodianDoc(BaseModel):
 
     @field_validator("*", mode="before")
     def field_deserializer(cls, field):
-        if isinstance(field, str):
-            field = json.loads(field)
+        if ARROW_COMPATIBLE:
+            if isinstance(field, str):
+                field = json.loads(field)
         return field
 
 
@@ -543,7 +544,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         return values
 
     @field_serializer("additional_json", "transformations", "vasp_objects", mode="wrap")
-    def serialize_overrides(self, d, default_serializer, info):
+    def blobs_serializer(self, d, default_serializer, info):
         default_serialized_object = default_serializer(d, info)
 
         format = info.context.get("format") if info.context else "standard"
@@ -555,14 +556,15 @@ class TaskDoc(StructureMetadata, extra="allow"):
     @field_validator(
         "additional_json", "transformations", "vasp_objects", mode="before"
     )
-    def deserialize_overrides(cls, d):
-        if isinstance(d, str):
-            d = json.loads(d)
+    def blobs_deserializer(cls, d):
+        if ARROW_COMPATIBLE:
+            if isinstance(d, str):
+                d = json.loads(d)
 
         return d
 
     @field_serializer("entry", mode="wrap")
-    def serialize_entry(self, entry, default_serializer, info):
+    def entry_serializer(self, entry, default_serializer, info):
         default_serialized_object = default_serializer(entry, info)
 
         format = info.context.get("format") if info.context else "standard"
@@ -577,9 +579,10 @@ class TaskDoc(StructureMetadata, extra="allow"):
         return default_serialized_object
 
     @field_validator("entry", mode="before")
-    def deserialize_entry(cls, entry):
-        if isinstance(entry, dict) and isinstance(entry["energy_adjustments"], str):
-            entry["energy_adjustments"] = json.loads(entry["energy_adjustments"])
+    def entry_deserializer(cls, entry):
+        if ARROW_COMPATIBLE:
+            if isinstance(entry, dict) and isinstance(entry["energy_adjustments"], str):
+                entry["energy_adjustments"] = json.loads(entry["energy_adjustments"])
 
         return entry
 
@@ -1045,9 +1048,9 @@ def _parse_orig_inputs(
     for filename in dir_name.glob("*.orig*"):
         for name, vasp_input in input_mapping.items():
             if f"{name}.orig" in str(filename):
-                orig_inputs[
-                    f"{name.lower()}{'_spec' if name == 'POTCAR' else ''}"
-                ] = vasp_input.from_file(filename)
+                orig_inputs[f"{name.lower()}{'_spec' if name == 'POTCAR' else ''}"] = (
+                    vasp_input.from_file(filename)
+                )
 
     return orig_inputs
 

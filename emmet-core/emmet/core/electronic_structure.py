@@ -207,29 +207,32 @@ class DosData(BaseModel):
     )
 
     @field_validator("elemental", mode="before")
-    def deserialize_elemental(cls, elemental):
-        if isinstance(next(iter(elemental.values())), list):
-            elemental = {
-                element: {
-                    oribital_type: {
-                        spin: summary_data for spin, summary_data in spin_summary_pairs
+    def elemental_deserializer(cls, elemental):
+        if ARROW_COMPATIBLE:
+            if isinstance(next(iter(elemental.values())), list):
+                elemental = {
+                    element: {
+                        oribital_type: {
+                            spin: summary_data
+                            for spin, summary_data in spin_summary_pairs
+                        }
+                        for oribital_type, spin_summary_pairs in orbital
                     }
-                    for oribital_type, spin_summary_pairs in orbital
+                    for element, orbital in elemental.items()
                 }
-                for element, orbital in elemental.items()
-            }
 
         return elemental
 
     @field_validator("orbital", mode="before")
-    def deserialize_orbital(cls, orbital):
-        if isinstance(next(iter(orbital.values())), list):
-            orbital = {
-                oribital_type: {
-                    spin: summary_data for spin, summary_data in spin_summary_pairs
+    def oribital_deserializer(cls, orbital):
+        if ARROW_COMPATIBLE:
+            if isinstance(next(iter(orbital.values())), list):
+                orbital = {
+                    oribital_type: {
+                        spin: summary_data for spin, summary_data in spin_summary_pairs
+                    }
+                    for oribital_type, spin_summary_pairs in orbital.items()
                 }
-                for oribital_type, spin_summary_pairs in orbital.items()
-            }
 
         return orbital
 

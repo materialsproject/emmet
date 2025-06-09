@@ -207,14 +207,15 @@ class CalculationInput(CalculationBaseModel):
     )
 
     @field_validator("hubbards", mode="before")
-    def deserialize_hubbards(cls, hubbards):
-        if isinstance(hubbards, list):
-            hubbards = {k: v for k, v in hubbards}
+    def hubbards_deserializer(cls, hubbards):
+        if ARROW_COMPATIBLE:
+            if isinstance(hubbards, list):
+                hubbards = {k: v for k, v in hubbards}
 
         return hubbards
 
     @field_serializer("incar", "parameters", mode="wrap")
-    def overrides_serializer(self, d, default_serializer, info):
+    def incar_params_serializer(self, d, default_serializer, info):
         default_serialized_object = default_serializer(d, info)
 
         format = info.context.get("format") if info.context else "standard"
@@ -224,9 +225,10 @@ class CalculationInput(CalculationBaseModel):
         return default_serialized_object
 
     @field_validator("incar", "parameters", mode="before")
-    def overrides_deserializer(cls, d):
-        if isinstance(d, str):
-            d = json.loads(d)
+    def incar_params_deserializer(cls, d):
+        if ARROW_COMPATIBLE:
+            if isinstance(d, str):
+                d = json.loads(d)
         return d
 
     @field_serializer("kpoints", mode="wrap")
@@ -245,9 +247,10 @@ class CalculationInput(CalculationBaseModel):
 
     @field_validator("kpoints", mode="before")
     def kpoints_deserializer(cls, kpoints):
-        if isinstance(kpoints, dict):
-            if isinstance(kpoints["tet_connections"], str):
-                kpoints["tet_connections"] = json.loads(kpoints["tet_connections"])
+        if ARROW_COMPATIBLE:
+            if isinstance(kpoints, dict):
+                if isinstance(kpoints["tet_connections"], str):
+                    kpoints["tet_connections"] = json.loads(kpoints["tet_connections"])
 
         return kpoints
 
@@ -553,34 +556,38 @@ class CalculationOutput(BaseModel):
     )
 
     @field_validator("locpot", mode="before")
-    def deserialize_locpot(cls, locpot):
-        if isinstance(locpot, list):
-            locpot = {k: v for k, v in locpot}
+    def locpot_deserializer(cls, locpot):
+        if ARROW_COMPATIBLE:
+            if isinstance(locpot, list):
+                locpot = {k: v for k, v in locpot}
 
         return locpot
 
     @field_validator("dos_properties", mode="before")
-    def deserialize_dos_properties(cls, dos_properties):
-        if dos_properties and isinstance(dos_properties, list):
-            dos_properties = {
-                element: {
-                    orbital: {key: value for key, value in property}
-                    for orbital, property in properties
+    def dos_properties_deserializer(cls, dos_properties):
+        if ARROW_COMPATIBLE:
+            if dos_properties and isinstance(dos_properties, list):
+                dos_properties = {
+                    element: {
+                        orbital: {key: value for key, value in property}
+                        for orbital, property in properties
+                    }
+                    for element, properties in dos_properties
                 }
-                for element, properties in dos_properties
-            }
-        elif dos_properties and isinstance(next(iter(dos_properties.values())), list):
-            dos_properties = {
-                element: {
-                    orbital: {key: value for key, value in property}
-                    for orbital, property in properties
+            elif dos_properties and isinstance(
+                next(iter(dos_properties.values())), list
+            ):
+                dos_properties = {
+                    element: {
+                        orbital: {key: value for key, value in property}
+                        for orbital, property in properties
+                    }
+                    for element, properties in dos_properties.items()
                 }
-                for element, properties in dos_properties.items()
-            }
         return dos_properties
 
     @field_serializer("outcar", mode="wrap")
-    def serialize_outcar(self, outcar, default_serializer, info):
+    def outcar_serializer(self, outcar, default_serializer, info):
         default_serialized_object = default_serializer(outcar, info)
 
         format = info.context.get("format") if info.context else "standard"
@@ -590,9 +597,10 @@ class CalculationOutput(BaseModel):
         return default_serialized_object
 
     @field_validator("outcar", mode="before")
-    def deserialize_outcar(cls, outcar):
-        if isinstance(outcar, str):
-            outcar = json.loads(outcar)
+    def outcar_deserializer(cls, outcar):
+        if ARROW_COMPATIBLE:
+            if isinstance(outcar, str):
+                outcar = json.loads(outcar)
         return outcar
 
     @classmethod
@@ -801,7 +809,7 @@ class Calculation(CalculationBaseModel):
     )
 
     @field_serializer("bader", "ddec6", mode="wrap")
-    def serialize_overrides(self, d, default_serializer, info):
+    def bader_ddec6__serializer(self, d, default_serializer, info):
         default_serialized_object = default_serializer(d, info)
 
         format = info.context.get("format") if info.context else "standard"
@@ -811,16 +819,18 @@ class Calculation(CalculationBaseModel):
         return default_serialized_object
 
     @field_validator("bader", "ddec6", mode="before")
-    def deserialize_overrides(cls, d):
-        if isinstance(d, str):
-            d = json.loads(d)
+    def bader_ddec6_deserializer(cls, d):
+        if ARROW_COMPATIBLE:
+            if isinstance(d, str):
+                d = json.loads(d)
 
         return d
 
     @field_validator("output_file_paths", mode="before")
-    def deserialize_output_fps(cls, output_fps):
-        if isinstance(output_fps, list):
-            output_fps = {k: v for k, v in output_fps}
+    def output_fps_deserializer(cls, output_fps):
+        if ARROW_COMPATIBLE:
+            if isinstance(output_fps, list):
+                output_fps = {k: v for k, v in output_fps}
 
         return output_fps
 

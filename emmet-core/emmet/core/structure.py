@@ -9,6 +9,7 @@ from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Molecule, Structure
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.base import EmmetBaseModel
 from emmet.core.symmetry import PointGroupData, SymmetryData
 from emmet.core.typing import CompositionType
@@ -78,9 +79,10 @@ class StructureMetadata(EmmetBaseModel):
     )
 
     @field_validator("composition", "composition_reduced", mode="before")
-    def deserialize_comp(cls, comp):
-        if isinstance(comp, list):
-            comp = {k: v for k, v in comp}
+    def composition_deserializer(cls, comp):
+        if ARROW_COMPATIBLE:
+            if isinstance(comp, list):
+                comp = {k: v for k, v in comp}
 
         return comp
 
