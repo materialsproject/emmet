@@ -11,7 +11,6 @@ from tests.conftest import assert_schemas_equal
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.phonon import PhononBSDOSDoc
-from emmet.core.utils import jsanitize
 
 if ARROW_COMPATIBLE:
     import pyarrow as pa
