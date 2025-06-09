@@ -36,7 +36,6 @@ setup(
         "pybtex~=0.24",
         "typing-extensions>=3.7",
         "blake3",
-        "pyarrow>=20.0.0",
     ],
     extras_require={
         "all": [
@@ -48,8 +47,8 @@ setup(
             "solvation-analysis>=0.4.1",
             "transport-analysis",
             "MDAnalysis>=2.7.0",
-            "pyarrow",
         ],
+        "arrow": ["pyarrow>=20.0.0"],
         "ml": ["matcalc>=0.3.1"],
         "optimade": ["optimade"],
         "test": [
