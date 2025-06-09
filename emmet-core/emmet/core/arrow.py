@@ -1,3 +1,4 @@
+import sys
 import types
 import typing
 from collections.abc import Mapping
@@ -155,6 +156,14 @@ def arrowize(obj):
         )
 
     if isinstance(obj, typing.ForwardRef):
+        if sys.version_info >= (3, 12, 4):
+            # ``type_params`` were added in 3.13 and the signature of _evaluate()
+            # is not backward-compatible (it was backported to 3.12.4, so anything
+            # before 3.12.4 still has the old signature).
+            # See: https://github.com/python/cpython/pull/118104.
+            return arrowize(
+                obj._evaluate(globals(), locals(), {}, recursive_gaurd=frozenset())
+            )
         return arrowize(obj._evaluate(globals(), locals(), frozenset()))
 
     if isinstance(obj, typing.TypeVar):
