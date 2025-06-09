@@ -6,7 +6,7 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.12.9
+aiohttp==3.12.11
     # via fsspec
 aioitertools==0.12.0
     # via maggma
@@ -28,9 +28,9 @@ attrs==25.3.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.38.32
+boto3==1.38.33
     # via maggma
-botocore==1.38.32
+botocore==1.38.33
     # via
     #   boto3
     #   s3transfer
@@ -62,7 +62,7 @@ csscompressor==0.9.5
     # via mkdocs-minify-plugin
 cycler==0.12.1
     # via matplotlib
-cython==3.1.1
+cython==3.1.2
     # via chgnet
 dgl==2.1.0
     # via
@@ -269,7 +269,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-builders (setup.py)
     #   mypy
-narwhals==1.41.1
+narwhals==1.42.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -528,7 +528,7 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.3
+requests==2.32.4
     # via
     #   dgl
     #   matminer
@@ -540,7 +540,7 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruamel-yaml==0.18.13
+ruamel-yaml==0.18.14
     # via
     #   maggma
     #   monty
