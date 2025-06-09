@@ -1048,9 +1048,9 @@ def _parse_orig_inputs(
     for filename in dir_name.glob("*.orig*"):
         for name, vasp_input in input_mapping.items():
             if f"{name}.orig" in str(filename):
-                orig_inputs[f"{name.lower()}{'_spec' if name == 'POTCAR' else ''}"] = (
-                    vasp_input.from_file(filename)
-                )
+                orig_inputs[
+                    f"{name.lower()}{'_spec' if name == 'POTCAR' else ''}"
+                ] = vasp_input.from_file(filename)
 
     return orig_inputs
 
