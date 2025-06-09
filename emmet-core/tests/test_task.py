@@ -2,7 +2,11 @@ import pytest
 from tests.conftest import assert_schemas_equal, get_test_object
 from emmet.core.vasp.task_valid import TaskState
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.tasks import TaskDoc
+
+if ARROW_COMPATIBLE:
+    import pyarrow as pa
 
 
 @pytest.mark.parametrize(
@@ -238,9 +242,10 @@ def test_lda_and_pseudo_format(test_dir, tmpdir):
         pytest.param("SiNonSCFUniform", id="SiNonSCFUniform"),
     ],
 )
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
 def test_arrow(test_dir, object_name, tmpdir):
-    import pyarrow as pa
-
     test_object = get_test_object(object_name)
     dir_name = test_dir / "vasp" / test_object.folder
 

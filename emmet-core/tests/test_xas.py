@@ -1,13 +1,16 @@
 """Test basic features of XASDoc."""
 
-import pyarrow as pa
 import pytest
 from monty.serialization import loadfn
 from pymatgen.analysis.xas.spectrum import XAS
 from pymatgen.core import Element
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.utils import jsanitize
 from emmet.core.xas import XASDoc
+
+if ARROW_COMPATIBLE:
+    import pyarrow as pa
 
 
 @pytest.fixture(scope="module")
@@ -32,6 +35,9 @@ def test_xas_doc(xas_dict):
     assert isinstance(xas.absorbing_element, Element)
 
 
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
 def test_arrow(xas_dict):
     doc = XASDoc(**xas_dict)
     arrow_struct = pa.scalar(

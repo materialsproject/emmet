@@ -1,10 +1,13 @@
-import pyarrow as pa
 import pytest
 from pymatgen.analysis.diffraction.xrd import WAVELENGTHS
 from pymatgen.core import Element, Lattice, Structure
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.utils import jsanitize
 from emmet.core.xrd import Edge, XRDDoc
+
+if ARROW_COMPATIBLE:
+    import pyarrow as pa
 
 
 @pytest.fixture
@@ -47,6 +50,9 @@ def test_schema():
     XRDDoc.schema()
 
 
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
 def test_arrow(structure):
     doc = XRDDoc.from_structure(
         structure=structure,

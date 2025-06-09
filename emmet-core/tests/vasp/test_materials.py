@@ -1,12 +1,15 @@
 import json
 
-import pyarrow as pa
 import pytest
 from monty.io import zopen
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
+
+if ARROW_COMPATIBLE:
+    import pyarrow as pa
 
 
 @pytest.fixture
@@ -52,6 +55,9 @@ def test_schema():
     MaterialsDoc.schema()
 
 
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
 def test_arrow(test_tasks):
     doc = MaterialsDoc.from_tasks(test_tasks)
     arrow_struct = pa.scalar(

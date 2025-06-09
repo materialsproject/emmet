@@ -1,9 +1,12 @@
-import pyarrow as pa
 import pytest
 from pymatgen.core import Structure
 
 from . import test_structures
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.chemenv import ChemEnvDoc
+
+if ARROW_COMPATIBLE:
+    import pyarrow as pa
 
 
 @pytest.mark.parametrize("structure", test_structures.values())
@@ -28,6 +31,9 @@ def test_chemenv(structure: Structure):
         )
 
 
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
 def test_arrow(
     structure=next(iter(test_structures.values())),
 ):
