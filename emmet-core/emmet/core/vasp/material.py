@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, field_validator, model_serializer
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.analysis.structure_matcher import StructureMatcher
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.base import EmmetMeta
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin
@@ -38,7 +39,7 @@ class BlessedCalcs(BaseModel, populate_by_name=True):
         if format == "arrow":
             arrow_compat_model = jsanitize(default_serialized_model, allow_bson=True)
             for entry in arrow_compat_model.values():
-                # cast as str, de-serializing unions is not well supported in pyarrow as of v19.0.1
+                # cast as str, de-serializing unions is not yet supported in pyarrow
                 if entry:
                     entry["energy_adjustments"] = json.dumps(
                         entry["energy_adjustments"]
@@ -49,8 +50,11 @@ class BlessedCalcs(BaseModel, populate_by_name=True):
 
     @field_validator("*", mode="before")
     def entry_deserializer(cls, entry):
-        if isinstance(entry, dict) and isinstance(entry.get("energy_adjustments"), str):
-            entry["energy_adjustments"] = json.loads(entry["energy_adjustments"])
+        if ARROW_COMPATIBLE:
+            if isinstance(entry, dict) and isinstance(
+                entry.get("energy_adjustments"), str
+            ):
+                entry["energy_adjustments"] = json.loads(entry["energy_adjustments"])
         return entry
 
 

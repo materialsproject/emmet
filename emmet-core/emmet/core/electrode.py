@@ -363,12 +363,13 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
 
     @field_validator("electrode_object", mode="before")
     def electrode_object_deserializer(cls, electrode_object):
-        if isinstance(electrode_object, dict) and isinstance(
-            electrode_object["working_ion_entry"].get("energy_adjustments"), str
-        ):
-            electrode_object_energy_adjustments_serde(
-                electrode_object, BatteryType.insertion, json.loads
-            )
+        if ARROW_COMPATIBLE:
+            if isinstance(electrode_object, dict) and isinstance(
+                electrode_object["working_ion_entry"].get("energy_adjustments"), str
+            ):
+                electrode_object_energy_adjustments_serde(
+                    electrode_object, BatteryType.insertion, json.loads
+                )
         return electrode_object
 
     @classmethod
@@ -556,12 +557,13 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
 
     @field_validator("electrode_object", mode="before")
     def electrode_object_deserializer(cls, electrode_object):
-        if isinstance(electrode_object, dict) and isinstance(
-            electrode_object["working_ion_entry"].get("energy_adjustments"), str
-        ):
-            electrode_object_energy_adjustments_serde(
-                electrode_object, BatteryType.conversion, json.loads
-            )
+        if ARROW_COMPATIBLE:
+            if isinstance(electrode_object, dict) and isinstance(
+                electrode_object["working_ion_entry"].get("energy_adjustments"), str
+            ):
+                electrode_object_energy_adjustments_serde(
+                    electrode_object, BatteryType.conversion, json.loads
+                )
         return electrode_object
 
     @classmethod

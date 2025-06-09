@@ -193,11 +193,12 @@ class ThermoDoc(PropertyDoc):
 
     @field_validator("entries", mode="before")
     def entries_deserializer(cls, entries):
-        first_entry = next(iter(entries.values()))
-        if isinstance(first_entry, dict) and isinstance(
-            first_entry["energy_adjustments"], str
-        ):
-            entries_energy_adjustments_serde(entries, json.loads)
+        if ARROW_COMPATIBLE:
+            first_entry = next(iter(entries.values()))
+            if isinstance(first_entry, dict) and isinstance(
+                first_entry["energy_adjustments"], str
+            ):
+                entries_energy_adjustments_serde(entries, json.loads)
 
         return entries
 
@@ -423,8 +424,9 @@ class PhaseDiagramDoc(BaseModel):
 
     @field_validator("phase_diagram", mode="before")
     def phase_diagram_deserializer(cls, phase_diagram):
-        if isinstance(phase_diagram, dict):
-            if isinstance(phase_diagram["el_refs"], str):
-                el_refs_serde(phase_diagram, mode=Mode.STITCH)
+        if ARROW_COMPATIBLE:
+            if isinstance(phase_diagram, dict):
+                if isinstance(phase_diagram["el_refs"], str):
+                    el_refs_serde(phase_diagram, mode=Mode.STITCH)
 
         return phase_diagram
