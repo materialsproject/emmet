@@ -2,43 +2,37 @@
 
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from enum import Enum
 from functools import cached_property
-import json
 from pathlib import Path
-import yaml  # type: ignore[import-untyped]
+from typing import TYPE_CHECKING
 
+import numpy as np
+import yaml  # type: ignore[import-untyped]
+from monty.dev import requires
 from monty.io import zopen
 from monty.os.path import zpath
-from monty.dev import requires
-import numpy as np
-from pydantic import model_validator, BaseModel, Field, computed_field, PrivateAttr
-from typing import Optional, TYPE_CHECKING
-
+from pydantic import BaseModel, Field, PrivateAttr, computed_field, model_validator
 from pymatgen.core import Lattice, Structure
+from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine, Kpoint
 from pymatgen.electronic_structure.core import Spin
-from pymatgen.electronic_structure.bandstructure import Kpoint, BandStructureSymmLine
 from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
-from pymatgen.phonon.dos import (
-    PhononDos as PhononDosObject,
-    CompletePhononDos,
-)
+from pymatgen.phonon.dos import CompletePhononDos
+from pymatgen.phonon.dos import PhononDos as PhononDosObject
+from typing_extensions import Literal
 
 from emmet.core.base import CalcMeta
-from emmet.core.utils import DocEnum
-from emmet.core.math import Vector3D, Matrix3D, Tensor4R
-from emmet.core.mpid import MPID
-from emmet.core.polar import DielectricDoc, BornEffectiveCharges, IRDielectric
-from emmet.core.structure import StructureMetadata
 from emmet.core.common import convert_datetime
-from emmet.core.utils import utcnow, get_num_formula_units
-
-from typing_extensions import Literal
+from emmet.core.math import Matrix3D, Tensor4R, Vector3D
+from emmet.core.mpid import MPID
+from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
+from emmet.core.structure import StructureMetadata
+from emmet.core.utils import DocEnum, get_num_formula_units, utcnow
 
 try:
     import pyarrow as pa
-
     from pyarrow import Table as ArrowTable
 except ImportError:
     pa = None
@@ -47,6 +41,7 @@ except ImportError:
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from typing import Any
+
     from typing_extensions import Self
 
 DEFAULT_PHONON_FILES = {
@@ -996,33 +991,31 @@ class Phonon(StructureMetadata):
         ..., description="The relaxed structure for the phonon calculation."
     )
 
-    asr_break: Optional[float] = Field(
+    asr_break: float | None = Field(
         None, description="The maximum breaking of the acoustic sum rule (ASR)."
     )
 
-    warnings: Optional[list[PhononWarnings]] = Field(
+    warnings: list[PhononWarnings] | None = Field(
         None, description="List of warnings associated to the phonon calculation."
     )
 
-    dielectric: Optional[DielectricDoc] = Field(
+    dielectric: DielectricDoc | None = Field(
         None, description="Dielectric properties obtained during a phonon calculations."
     )
 
-    becs: Optional[BornEffectiveCharges] = Field(
+    becs: BornEffectiveCharges | None = Field(
         None, description="Born effective charges obtained for a phonon calculation."
     )
 
-    ir_spectra: Optional[IRDielectric] = Field(
-        None, description="The IRDielectricTensor."
-    )
+    ir_spectra: IRDielectric | None = Field(None, description="The IRDielectricTensor.")
 
-    thermodynamic: Optional[ThermodynamicProperties] = Field(
+    thermodynamic: ThermodynamicProperties | None = Field(
         None,
         description="The thermodynamic properties extracted from the phonon "
         "frequencies.",
     )
 
-    vibrational_energy: Optional[VibrationalEnergy] = Field(
+    vibrational_energy: VibrationalEnergy | None = Field(
         None, description="The vibrational contributions to the total energy."
     )
 
@@ -1043,7 +1036,7 @@ class AbinitPhonon(Phonon):
     with Abinit.
     """
 
-    abinit_input_vars: Optional[dict] = Field(
+    abinit_input_vars: dict | None = Field(
         None,
         description="Dict representation of the inputs used to obtain the phonon"
         "properties and the main general options (e.g. number of "
@@ -1072,14 +1065,14 @@ class SoundVelocity(BaseModel):
         "of the speed of sound. In fractional coordinates.",
     )
 
-    labels: list[Optional[str]] = Field(..., description="labels of the directions.")
+    labels: list[str | None] = Field(..., description="labels of the directions.")
 
     sound_velocities: list[Vector3D] = Field(
         ...,
         description="Values of the sound velocities in SI units.",
     )
 
-    mode_types: list[tuple[Optional[str], Optional[str], Optional[str]]] = Field(
+    mode_types: list[tuple[str | None, str | None, str | None]] = Field(
         ...,
         description="The types of the modes ('transversal', 'longitudinal'). "
         "None if not correctly identified.",

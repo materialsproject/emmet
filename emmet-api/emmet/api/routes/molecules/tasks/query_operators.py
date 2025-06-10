@@ -1,8 +1,6 @@
+from fastapi import Query
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
-from fastapi import Query
-from typing import Optional
-
 from monty.json import jsanitize
 
 from emmet.api.routes.molecules.tasks.utils import calcs_reversed_to_trajectory
@@ -15,7 +13,8 @@ class MultipleTaskIDsQuery(QueryOperator):
 
     def query(
         self,
-        task_ids: Optional[str] = Query(
+        task_ids: str
+        | None = Query(
             None, description="Comma-separated list of task_ids to query on"
         ),
     ) -> STORE_PARAMS:
@@ -101,7 +100,8 @@ class TrajectoryQuery(QueryOperator):
 
     def query(
         self,
-        task_ids: Optional[str] = Query(
+        task_ids: str
+        | None = Query(
             None, description="Comma-separated list of task_ids to query on"
         ),
     ) -> STORE_PARAMS:

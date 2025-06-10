@@ -1,8 +1,8 @@
-from typing import Any, Literal, Optional, Dict
+from typing import Any, Literal
+
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
-
 
 allowed_components = {
     "dipole": {"X", "Y", "Z"},
@@ -36,23 +36,27 @@ class MultipoleMomentComponentQuery(QueryOperator):
 
     def query(
         self,
-        moment_type: Optional[
+        moment_type: (
             Literal["dipole", "resp_dipole", "quadrupole", "octopole", "hexadecapole"]
-        ] = Query(
+            | None
+        ) = Query(
             None,
             description=(
                 "Type of multipole moment. Allowed values: 'dipole', 'resp_dipole', 'quadrupole', 'octopole', and "
                 "'hexadecapole'"
             ),
         ),
-        component: Optional[str] = Query(
+        component: str
+        | None = Query(
             None,
             description="Component to query on, i.e. 'X', 'Y', or 'Z' for dipole moments",
         ),
-        component_value_min: Optional[float] = Query(
+        component_value_min: float
+        | None = Query(
             None, description="Minimum value for the multipole moment component"
         ),
-        component_value_max: Optional[float] = Query(
+        component_value_max: float
+        | None = Query(
             None, description="Maximum value for the multipole moment component"
         ),
     ) -> STORE_PARAMS:
@@ -81,7 +85,7 @@ class MultipoleMomentComponentQuery(QueryOperator):
 
         key = key_prefix + "." + key_suffix
 
-        crit: Dict[str, Any] = {key: dict()}  # type: ignore
+        crit: dict[str, Any] = {key: dict()}  # type: ignore
 
         if self.min_value is not None and isinstance(self.min_value, float):
             crit[key]["$gte"] = self.min_value

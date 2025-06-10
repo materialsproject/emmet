@@ -7,7 +7,7 @@ from gzip import GzipFile
 from io import BytesIO
 from itertools import chain, combinations
 from pathlib import Path
-from typing import Any, Literal, Optional, Set, Union
+from typing import Any, Literal, Set
 
 import orjson
 from botocore.exceptions import ClientError
@@ -65,7 +65,7 @@ def get_hop_cutoff(
     algorithm: str = "min_distance",
     min_hop_distance: float = 1,
     max_hop_distance: float = 7,
-) -> Union[float, None]:
+) -> float | None:
     """
     A function to get an appropriate hop distance cutoff for a given migration
     graph structure which can be used for MigrationGraph.with_distance()
@@ -165,7 +165,7 @@ def query_open_data(
     key: str,
     monty_decode: bool = True,
     s3_resource: Any = None,
-) -> Union[dict, None]:
+) -> dict | None:
     """Query a Materials Project AWS S3 Open Data bucket directly with boto3
 
     Args:
@@ -173,7 +173,7 @@ def query_open_data(
         prefix (str): Full set of file prefixes
         key (str): Key for file
         monty_decode (bool): Whether to monty decode or keep as dictionary. Defaults to True.
-        s3_resource (Optional[Any]): S3 resource. One will be instantiated if none are provided
+        s3_resource (Any | None): S3 resource. One will be instantiated if none are provided
 
     Returns:
         dict: MontyDecoded data or None
@@ -222,7 +222,7 @@ class HiddenPrints:
 
 def get_potcar_stats(
     method: Literal["potcar", "pymatgen", "stored"] = "potcar",
-    path_to_stored_stats: Optional[Union[str, os.PathLike, Path]] = None,
+    path_to_stored_stats: str | os.PathLike | Path | None = None,
 ) -> dict[str, Any]:
     """
     Get the POTCAR stats used in MP calculations to validate POTCARs.

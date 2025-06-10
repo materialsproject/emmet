@@ -1,17 +1,15 @@
+from collections import defaultdict
 from sys import version_info
-from typing import Optional, get_args
-from fastapi import Query
+from typing import get_args
 
+import numpy as np
+from fastapi import Query
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
-from emmet.core.summary import SummaryStats
-
 from pymatgen.analysis.magnetism import Ordering
-
 from scipy.stats import gaussian_kde
-import numpy as np
 
-from collections import defaultdict
+from emmet.core.summary import SummaryStats
 
 if version_info >= (3, 8):
     from typing import Literal  # type: ignore
@@ -26,7 +24,8 @@ class HasPropsQuery(QueryOperator):
 
     def query(
         self,
-        has_props: Optional[str] = Query(
+        has_props: str
+        | None = Query(
             None,
             description="Comma-delimited list of possible properties given by HasPropsEnum to search for.",
         ),
@@ -47,7 +46,8 @@ class MaterialIDsSearchQuery(QueryOperator):
 
     def query(
         self,
-        material_ids: Optional[str] = Query(
+        material_ids: str
+        | None = Query(
             None, description="Comma-separated list of material_ids to query on"
         ),
     ) -> STORE_PARAMS:
@@ -88,9 +88,8 @@ class SearchIsStableQuery(QueryOperator):
 
     def query(
         self,
-        is_stable: Optional[bool] = Query(
-            None, description="Whether the material is stable."
-        ),
+        is_stable: bool
+        | None = Query(None, description="Whether the material is stable."),
     ):
         crit = {}
 
@@ -110,7 +109,8 @@ class SearchHasReconstructedQuery(QueryOperator):
 
     def query(
         self,
-        has_reconstructed: Optional[bool] = Query(
+        has_reconstructed: bool
+        | None = Query(
             None, description="Whether the material has reconstructed surfaces."
         ),
     ):
@@ -132,9 +132,8 @@ class SearchMagneticQuery(QueryOperator):
 
     def query(
         self,
-        ordering: Optional[Ordering] = Query(
-            None, description="Magnetic ordering of the material."
-        ),
+        ordering: Ordering
+        | None = Query(None, description="Magnetic ordering of the material."),
     ) -> STORE_PARAMS:
         crit = defaultdict(dict)  # type: dict
 
@@ -154,9 +153,8 @@ class SearchIsTheoreticalQuery(QueryOperator):
 
     def query(
         self,
-        theoretical: Optional[bool] = Query(
-            None, description="Whether the material is theoretical."
-        ),
+        theoretical: bool
+        | None = Query(None, description="Whether the material is theoretical."),
     ):
         crit = {}
 
@@ -176,12 +174,10 @@ class SearchESQuery(QueryOperator):
 
     def query(
         self,
-        is_gap_direct: Optional[bool] = Query(
-            None, description="Whether a band gap is direct or not."
-        ),
-        is_metal: Optional[bool] = Query(
-            None, description="Whether the material is considered a metal."
-        ),
+        is_gap_direct: bool
+        | None = Query(None, description="Whether a band gap is direct or not."),
+        is_metal: bool
+        | None = Query(None, description="Whether the material is considered a metal."),
     ) -> STORE_PARAMS:
         crit = defaultdict(dict)  # type: dict
 
@@ -219,16 +215,19 @@ class SearchStatsQuery(QueryOperator):
                 title=f"SearchDoc field to query on, must be a numerical field, "
                 f"choose from: {', '.join(valid_numeric_fields)}",
             ),
-            num_samples: Optional[int] = Query(
+            num_samples: int
+            | None = Query(
                 None,
                 title="If specified, will only sample this number of documents.",
             ),
-            min_val: Optional[float] = Query(
+            min_val: float
+            | None = Query(
                 None,
                 title="If specified, will only consider documents with field values "
                 "greater than or equal to this minimum value.",
             ),
-            max_val: Optional[float] = Query(
+            max_val: float
+            | None = Query(
                 None,
                 title="If specified, will only consider documents with field values "
                 "less than or equal to this minimum value.",

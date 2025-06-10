@@ -1,5 +1,4 @@
 from importlib.metadata import version
-from typing import TYPE_CHECKING, Optional, Union
 
 from maggma.builders.map_builder import MapBuilder
 from maggma.core import Store
@@ -16,13 +15,12 @@ from pymatgen.core import Structure
 from emmet.core.ml import MLDoc
 from emmet.core.utils import jsanitize
 
-if TYPE_CHECKING:
-    try:
-        from ase.calculators.calculator import Calculator
+try:
+    from ase.calculators.calculator import Calculator
 
-        ase_installed = True
-    except ImportError:
-        ase_installed = False
+    ase_installed = True
+except ImportError:
+    ase_installed = False
 
 
 class MLBuilder(MapBuilder):
@@ -30,10 +28,10 @@ class MLBuilder(MapBuilder):
         self,
         materials: Store,
         ml_potential: Store,
-        model: Union[str, "Calculator"],
-        model_kwargs: Optional[dict] = None,
-        prop_kwargs: Optional[dict] = None,
-        provenance: Optional[dict] = None,
+        model: str | Calculator,
+        model_kwargs: dict | None = None,
+        prop_kwargs: dict | None = None,
+        provenance: dict | None = None,
         **kwargs,
     ):
         """Machine learning interatomic potential builder.

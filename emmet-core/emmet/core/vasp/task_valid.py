@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Union, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_analyzer import oxide_type
@@ -10,8 +10,8 @@ from pymatgen.core.structure import Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.math import Matrix3D, Vector3D
-from emmet.core.task import BaseTaskDocument
 from emmet.core.structure import StructureMetadata
+from emmet.core.task import BaseTaskDocument
 from emmet.core.utils import ValueEnum
 from emmet.core.vasp.calc_types import RunType, calc_type, run_type, task_type
 
@@ -54,22 +54,20 @@ class OutputSummary(BaseModel):
     Summary of the outputs for a VASP calculation
     """
 
-    structure: Optional[Structure] = Field(
-        None, description="The output structure object"
-    )
-    energy: Optional[float] = Field(
+    structure: Structure | None = Field(None, description="The output structure object")
+    energy: float | None = Field(
         None, description="The final total DFT energy for the last calculation"
     )
-    energy_per_atom: Optional[float] = Field(
+    energy_per_atom: float | None = Field(
         None, description="The final DFT energy per atom for the last calculation"
     )
-    bandgap: Optional[float] = Field(
+    bandgap: float | None = Field(
         None, description="The DFT bandgap for the last calculation"
     )
-    forces: Optional[List[Vector3D]] = Field(
+    forces: list[Vector3D] | None = Field(
         None, description="Forces on atoms from the last calculation"
     )
-    stress: Optional[Matrix3D] = Field(
+    stress: Matrix3D | None = Field(
         None, description="Stress on the unitcell from the last calculation"
     )
 
@@ -79,25 +77,23 @@ class RunStatistics(BaseModel):
     Summary of the Run statistics for a VASP calculation
     """
 
-    average_memory: Optional[float] = Field(
+    average_memory: float | None = Field(
         None, description="The average memory used in kb"
     )
-    max_memory: Optional[float] = Field(
-        None, description="The maximum memory used in kb"
-    )
-    elapsed_time: Optional[float] = Field(
+    max_memory: float | None = Field(None, description="The maximum memory used in kb")
+    elapsed_time: float | None = Field(
         None, description="The real time elapsed in seconds"
     )
-    system_time: Optional[float] = Field(
+    system_time: float | None = Field(
         None, description="The system CPU time in seconds"
     )
-    user_time: Optional[float] = Field(
+    user_time: float | None = Field(
         None, description="The user CPU time spent by VASP in seconds"
     )
-    total_time: Optional[float] = Field(
+    total_time: float | None = Field(
         None, description="The total CPU time for this calculation"
     )
-    cores: Optional[Union[int, str]] = Field(
+    cores: int | str | None = Field(
         None,
         description="The number of cores used by VASP (some clusters print `mpi-ranks` here)",
     )
@@ -109,7 +105,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
     """
 
     calc_code: str = "VASP"
-    run_stats: Dict[str, RunStatistics] = Field(
+    run_stats: dict[str, RunStatistics] = Field(
         {},
         description="Summary of runtime statistics for each calculation in this task",
     )
@@ -121,21 +117,21 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
     input: InputSummary = Field(default=InputSummary(**{}))
     output: OutputSummary = Field(default=OutputSummary(**{}))
 
-    state: Optional[TaskState] = Field(None, description="State of this calculation")
+    state: TaskState | None = Field(None, description="State of this calculation")
 
-    orig_inputs: Dict[str, Any] = Field(
+    orig_inputs: dict[str, Any] = Field(
         {}, description="Summary of the original VASP inputs"
     )
 
-    calcs_reversed: List[Dict] = Field(
+    calcs_reversed: list[dict] = Field(
         [], description="The 'raw' calculation docs used to assembled this task"
     )
 
-    tags: Union[List[str], None] = Field(
-        [], description="Metadata tags for this task document"
+    tags: list[str] | None = Field(
+        None, description="Metadata tags for this task document"
     )
 
-    warnings: Optional[List[str]] = Field(
+    warnings: list[str] | None = Field(
         None, description="Any warnings related to this property"
     )
 
@@ -178,9 +174,9 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
                 "run_type": str(self.run_type),
             },
             "data": {
-                "oxide_type": oxide_type(self.output.structure)
-                if self.output.structure
-                else None,
+                "oxide_type": (
+                    oxide_type(self.output.structure) if self.output.structure else None
+                ),
                 "aspherical": self.input.parameters.get("LASPH", True),
                 "last_updated": self.last_updated,
             },

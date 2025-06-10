@@ -1,10 +1,9 @@
+from fastapi import HTTPException
 from pymatgen.core import Composition
 from pymatgen.core.periodic_table import DummySpecies
-from typing import Dict
-from fastapi import HTTPException
 
 
-def formula_to_criteria(formulas: str) -> Dict:
+def formula_to_criteria(formulas: str) -> dict:
     """
     Santizes formula into a dictionary to search with wild cards
 
@@ -102,7 +101,7 @@ def formula_to_criteria(formulas: str) -> Dict:
                 }
 
 
-def chemsys_to_criteria(chemsys: str) -> Dict:
+def chemsys_to_criteria(chemsys: str) -> dict:
     """
     Santizes chemsys into a dictionary to search with wild cards
 

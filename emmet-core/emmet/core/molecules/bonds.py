@@ -1,19 +1,17 @@
-from typing import Dict, List, Any, Optional, Tuple
 import copy
 from hashlib import blake2b
+from typing import Any
 
-from pydantic import Field
 import networkx as nx
-
-from pymatgen.core.structure import Molecule
+from pydantic import Field
 from pymatgen.analysis.graphs import MoleculeGraph
+from pymatgen.core.structure import Molecule
 
-from emmet.core.mpid import MPculeID
-from emmet.core.utils import make_mol_graph
-from emmet.core.qchem.task import TaskDocument
 from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
-
+from emmet.core.mpid import MPculeID
+from emmet.core.qchem.task import TaskDocument
+from emmet.core.utils import make_mol_graph
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -70,7 +68,7 @@ metals = [
 BOND_METHODS = ["nbo", "critic2", "OpenBabelNN + metal_edge_extender"]
 
 
-def fix_C_Li_bonds(critic: Dict) -> Dict:
+def fix_C_Li_bonds(critic: dict) -> dict:
     """
     Adjust C-Li coordinate bonding for Critic2 calculations.
 
@@ -95,7 +93,7 @@ def fix_C_Li_bonds(critic: Dict) -> Dict:
     return critic
 
 
-def _bonds_hybridization(nbo: Dict[str, Any], index: int):
+def _bonds_hybridization(nbo: dict[str, Any], index: int):
     """
     Extract bonds from "hybridization_character" NBO output
     """
@@ -152,11 +150,11 @@ def _bonds_hybridization(nbo: Dict[str, Any], index: int):
 
 
 def _bonds_peturbation(
-    nbo: Dict[str, Any],
+    nbo: dict[str, Any],
     index: int,
-    poss_coord: Dict[Optional[int], List[Optional[int]]],
+    poss_coord: dict[int | None, list[int | None]],
     energy_cutoff: float,
-    metal_indices: List[int],
+    metal_indices: list[int],
 ):
     """
     Extract bonds from "perturbation_energy" NBO output
@@ -171,8 +169,8 @@ def _bonds_peturbation(
     if len(nbo["perturbation_energy"]) > index:
         for inter_ind in nbo["perturbation_energy"][index].get("donor type", list()):
             coord = False
-            m_ind: Optional[int] = None
-            x_ind: Optional[int] = None
+            m_ind: int | None = None
+            x_ind: int | None = None
             if (
                 int(
                     nbo["perturbation_energy"][index]["acceptor atom 1 number"][
@@ -266,7 +264,7 @@ def _bonds_peturbation(
     return bonds
 
 
-def nbo_molecule_graph(mol: Molecule, nbo: Dict[str, Any]):
+def nbo_molecule_graph(mol: Molecule, nbo: dict[str, Any]):
     """
     Construct a molecule graph from NBO data.
 
@@ -285,7 +283,7 @@ def nbo_molecule_graph(mol: Molecule, nbo: Dict[str, Any]):
     energy_cutoff = 3.0
     metal_indices = [i for i, e in enumerate(mol.species) if str(e) in metals]
 
-    poss_coord: Dict[Optional[int], List[Optional[int]]] = dict()
+    poss_coord: dict[int | None, list[int | None]] = dict()
     dist_mat = mol.distance_matrix
     for i in metal_indices:
         poss_coord[i] = list()
@@ -343,18 +341,18 @@ class MoleculeBondingDoc(PropertyDoc):
 
     method: str = Field(..., description="Method used to compute molecule graph")
 
-    bond_types: Dict[str, List[float]] = Field(
+    bond_types: dict[str, list[float]] = Field(
         dict(),
         description="Dictionary of bond types to their length, e.g. C-O to "
         "a list of the lengths of C-O bonds in Angstrom.",
     )
 
-    bonds: List[Tuple[int, int]] = Field(
+    bonds: list[tuple[int, int]] = Field(
         [],
         description="List of bonds in the form (a, b), where a and b are 0-indexed atom indices",
     )
 
-    bonds_nometal: List[Tuple[int, int]] = Field(
+    bonds_nometal: list[tuple[int, int]] = Field(
         [],
         description="List of bonds in the form (a, b), where a and b are 0-indexed atom indices, "
         "with all metal ions removed",
@@ -365,7 +363,7 @@ class MoleculeBondingDoc(PropertyDoc):
         cls,
         task: TaskDocument,
         molecule_id: MPculeID,
-        preferred_methods: List[str],
+        preferred_methods: list[str],
         deprecated: bool = False,
         **kwargs,
     ):  # type: ignore[override]

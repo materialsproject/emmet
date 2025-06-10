@@ -1,9 +1,8 @@
-from typing import Optional
+from collections import defaultdict
+
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
-
-from collections import defaultdict
 
 
 class PiezoelectricQuery(QueryOperator):
@@ -13,11 +12,13 @@ class PiezoelectricQuery(QueryOperator):
 
     def query(
         self,
-        piezo_modulus_max: Optional[float] = Query(
+        piezo_modulus_max: float
+        | None = Query(
             None,
             description="Maximum value for the piezoelectric modulus in C/m².",
         ),
-        piezo_modulus_min: Optional[float] = Query(
+        piezo_modulus_min: float
+        | None = Query(
             None,
             description="Minimum value for the piezoelectric modulus in C/m².",
         ),

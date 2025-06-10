@@ -2,7 +2,6 @@
 
 from collections import defaultdict
 from datetime import datetime
-from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
@@ -21,15 +20,15 @@ class DecompositionProduct(BaseModel):
     Entry metadata for a decomposition process
     """
 
-    material_id: Optional[MPID] = Field(
+    material_id: MPID | None = Field(
         None,
         description="The Materials Project ID for the material this decomposition points to.",
     )
-    formula: Optional[str] = Field(
+    formula: str | None = Field(
         None,
         description="The formula of the decomposed material this material decomposes to.",
     )
-    amount: Optional[float] = Field(
+    amount: float | None = Field(
         None,
         description="The amount of the decomposed material by formula units this this material decomposes to.",
     )
@@ -49,7 +48,7 @@ class ThermoDoc(PropertyDoc):
 
     property_name: str = "thermo"
 
-    thermo_type: Union[ThermoType, RunType] = Field(
+    thermo_type: ThermoType | RunType = Field(
         ...,
         description="Functional types of calculations involved in the energy mixing scheme.",
     )
@@ -68,9 +67,9 @@ class ThermoDoc(PropertyDoc):
         description="The total corrected DFT energy of this material per atom in eV/atom.",
     )
 
-    energy_uncertainy_per_atom: Optional[float] = Field(None, description="")
+    energy_uncertainy_per_atom: float | None = Field(None, description="")
 
-    formation_energy_per_atom: Optional[float] = Field(
+    formation_energy_per_atom: float | None = Field(
         None, description="The formation energy per atom in eV/atom."
     )
 
@@ -83,23 +82,23 @@ class ThermoDoc(PropertyDoc):
         description="Flag for whether this material is on the hull and therefore stable.",
     )
 
-    equilibrium_reaction_energy_per_atom: Optional[float] = Field(
+    equilibrium_reaction_energy_per_atom: float | None = Field(
         None,
         description="The reaction energy of a stable entry from the neighboring equilibrium stable materials in eV."
         " Also known as the inverse distance to hull.",
     )
 
-    decomposes_to: Optional[List[DecompositionProduct]] = Field(
+    decomposes_to: list[DecompositionProduct] | None = Field(
         None,
         description="List of decomposition data for this material. Only valid for metastable or unstable material.",
     )
 
-    decomposition_enthalpy: Optional[float] = Field(
+    decomposition_enthalpy: float | None = Field(
         None,
         description="Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen.",
     )
 
-    decomposition_enthalpy_decomposes_to: Optional[List[DecompositionProduct]] = Field(
+    decomposition_enthalpy_decomposes_to: list[DecompositionProduct] | None = Field(
         None,
         description="List of decomposition data associated with the decomposition_enthalpy quantity.",
     )
@@ -109,11 +108,11 @@ class ThermoDoc(PropertyDoc):
         description="The type of calculation this energy evaluation comes from.",
     )
 
-    entry_types: List[str] = Field(
+    entry_types: list[str] = Field(
         description="List of available energy types computed for this material."
     )
 
-    entries: Dict[str, Union[ComputedEntry, ComputedStructureEntry]] = Field(
+    entries: dict[str, ComputedEntry | ComputedStructureEntry] = Field(
         ...,
         description="List of all entries that are valid for this material."
         " The keys for this dictionary are names of various calculation types.",
@@ -122,23 +121,23 @@ class ThermoDoc(PropertyDoc):
     @classmethod
     def from_entries(
         cls,
-        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
-        thermo_type: Union[ThermoType, RunType],
-        phase_diagram: Optional[PhaseDiagram] = None,
+        entries: list[ComputedEntry | ComputedStructureEntry],
+        thermo_type: ThermoType | RunType,
+        phase_diagram: PhaseDiagram | None = None,
         use_max_chemsys: bool = False,
         **kwargs
     ):
         """Produce a list of ThermoDocs from a list of Entry objects
 
         Args:
-            entries (List[Union[ComputedEntry, ComputedStructureEntry]]): List of Entry objects
-            thermo_type (Union[ThermoType, RunType]): Thermo type
-            phase_diagram (Optional[PhaseDiagram], optional): Already built phase diagram. Defaults to None.
+            entries (list[ComputedEntry| ComputedStructureEntry]): list of Entry objects
+            thermo_type (ThermoType| RunType): Thermo type
+            phase_diagram (PhaseDiagram | None, optional): Already built phase diagram. Defaults to None.
             use_max_chemsys (bool, optional): Whether to only produce thermo docs for materials
                 that match the largest chemsys represented in the list. Defaults to False.
 
         Returns:
-            List[ThermoDoc]: List of built thermo doc objects.
+            list[ThermoDoc]: list of built thermo doc objects.
         """
 
         pd = phase_diagram or cls.construct_phase_diagram(entries)
@@ -153,7 +152,7 @@ class ThermoDoc(PropertyDoc):
 
         entry_quality_scores = {"GGA": 1, "GGA+U": 2, "SCAN": 3, "r2SCAN": 4}
 
-        def _energy_eval(entry: Union[ComputedStructureEntry, ComputedEntry]):
+        def _energy_eval(entry: ComputedStructureEntry | ComputedEntry):
             """
             Helper function to order entries for thermo energy data selection
             - Run type
@@ -270,7 +269,7 @@ class ThermoDoc(PropertyDoc):
         represented in the entry data passed.
 
         Args:
-            entries (List[ComputedStructureEntry]): List of corrected pymatgen entry objects.
+            entries (list[ComputedStructureEntry]): list of corrected pymatgen entry objects.
 
         Returns:
             PhaseDiagram: Pymatgen PhaseDiagram object
@@ -312,7 +311,7 @@ class PhaseDiagramDoc(BaseModel):
         description="Dash-delimited string of elements in the material",
     )
 
-    thermo_type: Union[ThermoType, RunType] = Field(
+    thermo_type: ThermoType | RunType = Field(
         ...,
         description="Functional types of calculations involved in the energy mixing scheme.",
     )

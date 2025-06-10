@@ -1,25 +1,24 @@
 # mypy: ignore-errors
 
 """ Core definition of a Q-Chem Task Document """
-from typing import Any, Dict, List, Optional, Callable
+from typing import Any, Callable
 
 from pydantic import BaseModel, Field
 from pymatgen.core.structure import Molecule
 
-from emmet.core.structure import MoleculeMetadata
-from emmet.core.task import BaseTaskDocument
-from emmet.core.utils import ValueEnum
 from emmet.core.qchem.calc_types import (
-    LevelOfTheory,
     CalcType,
+    LevelOfTheory,
     TaskType,
     calc_type,
     level_of_theory,
-    task_type,
-    solvent,
     lot_solvent_string,
+    solvent,
+    task_type,
 )
-
+from emmet.core.structure import MoleculeMetadata
+from emmet.core.task import BaseTaskDocument
+from emmet.core.utils import ValueEnum
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -38,63 +37,61 @@ class OutputSummary(BaseModel):
     Summary of an output for a Q-Chem calculation
     """
 
-    initial_molecule: Optional[Molecule] = Field(
-        None, description="Input Molecule object"
-    )
-    optimized_molecule: Optional[Molecule] = Field(
+    initial_molecule: Molecule | None = Field(None, description="Input Molecule object")
+    optimized_molecule: Molecule | None = Field(
         None, description="Optimized Molecule object"
     )
 
-    final_energy: Optional[float] = Field(
+    final_energy: float | None = Field(
         None, description="Final electronic energy for the calculation (units: Hartree)"
     )
-    enthalpy: Optional[float] = Field(
+    enthalpy: float | None = Field(
         None, description="Total enthalpy of the molecule (units: kcal/mol)"
     )
-    entropy: Optional[float] = Field(
+    entropy: float | None = Field(
         None, description="Total entropy of the molecule (units: cal/mol-K"
     )
 
-    mulliken: Optional[List[Any]] = Field(
+    mulliken: list[Any] | None = Field(
         None, description="Mulliken atomic partial charges and partial spins"
     )
-    resp: Optional[List[float]] = Field(
+    resp: list[float] | None = Field(
         None,
         description="Restrained Electrostatic Potential (RESP) atomic partial charges",
     )
-    nbo: Optional[Dict[str, Any]] = Field(
+    nbo: dict[str, Any] | None = Field(
         None, description="Natural Bonding Orbital (NBO) output"
     )
 
-    frequencies: Optional[List[float]] = Field(
+    frequencies: list[float] | None = Field(
         None, description="Vibrational frequencies of the molecule (units: cm^-1)"
     )
 
-    dipoles: Optional[Dict[str, Any]] = Field(
+    dipoles: dict[str, Any] | None = Field(
         None, description="Electric dipole information for the molecule"
     )
 
-    gradients: Optional[List[List[float]]] = Field(
+    gradients: list[list[float]] | None = Field(
         None, description="Atomic forces, in atomic units (Ha/Bohr)"
     )
 
-    precise_gradients: Optional[List[List[float]]] = Field(
+    precise_gradients: list[list[float]] | None = Field(
         None, description="High-precision atomic forces, in atomic units (Ha/Bohr)"
     )
 
-    pcm_gradients: Optional[List[List[float]]] = Field(
+    pcm_gradients: list[list[float]] | None = Field(
         None,
         description="Electrostatic atomic forces from polarizable continuum model (PCM) implicit solvation,"
         "in atomic units (Ha/Bohr).",
     )
 
-    CDS_gradients: Optional[List[List[float]]] = Field(
+    CDS_gradients: list[list[float]] | None = Field(
         None,
         description="Atomic force contributions from cavitation, dispersion, and structural rearrangement in the SMx"
         "family of implicit solvent models, in atomic units (Ha/Bohr)",
     )
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         return {
             "@module": self.__class__.__module__,
             "@class": self.__class__.__name__,
@@ -124,45 +121,43 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     is_valid: bool = Field(
         True, description="Whether this task document passed validation or not"
     )
-    state: Optional[QChemStatus] = Field(None, description="State of this calculation")
+    state: QChemStatus | None = Field(None, description="State of this calculation")
 
-    cputime: Optional[float] = Field(None, description="The system CPU time in seconds")
-    walltime: Optional[float] = Field(
-        None, description="The real elapsed time in seconds"
-    )
+    cputime: float | None = Field(None, description="The system CPU time in seconds")
+    walltime: float | None = Field(None, description="The real elapsed time in seconds")
 
-    calcs_reversed: List[Dict] = Field(
+    calcs_reversed: list[dict] = Field(
         [], description="The 'raw' calculation docs used to assembled this task"
     )
 
-    orig: Dict[str, Any] = Field(
+    orig: dict[str, Any] = Field(
         {}, description="Summary of the original Q-Chem inputs"
     )
     output: OutputSummary = Field(OutputSummary())
 
-    critic2: Optional[Dict[str, Any]] = Field(
+    critic2: dict[str, Any] | None = Field(
         None, description="Output from Critic2 critical point analysis code"
     )
-    custom_smd: Optional[str] = Field(
+    custom_smd: str | None = Field(
         None, description="Parameter string for SMD implicit solvent model"
     )
 
-    special_run_type: Optional[str] = Field(
+    special_run_type: str | None = Field(
         None, description="Special workflow name (if applicable)"
     )
 
-    smiles: Optional[str] = Field(
+    smiles: str | None = Field(
         None,
         description="Simplified molecular-input line-entry system (SMILES) string for the molecule involved "
         "in this calculation.",
     )
 
-    species_hash: Optional[str] = Field(
+    species_hash: str | None = Field(
         None,
         description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph "
         "node attribute.",
     )
-    coord_hash: Optional[str] = Field(
+    coord_hash: str | None = Field(
         None,
         description="Weisfeiler Lehman (WL) graph hash using the atom coordinates as the graph "
         "node attribute.",
@@ -171,9 +166,9 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     # TODO - type of `tags` field seems to differ among task databases
     # sometimes List, sometimes Dict
     # left as Any here to ensure tags don't cause validation to fail.
-    tags: Optional[Any] = Field(None, description="Metadata tags")
+    tags: Any | None = Field(None, description="Metadata tags")
 
-    warnings: Optional[Dict[str, bool]] = Field(
+    warnings: dict[str, bool] | None = Field(
         None, description="Any warnings related to this task document"
     )
 
@@ -198,7 +193,7 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
         return calc_type(self.special_run_type, self.orig)
 
     @property
-    def entry(self) -> Dict[str, Any]:
+    def entry(self) -> dict[str, Any]:
         if self.output.optimized_molecule is not None:
             mol = self.output.optimized_molecule
         else:
@@ -242,10 +237,10 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
 
 
 def filter_task_type(
-    entries: List[Dict[str, Any]],
+    entries: list[dict[str, Any]],
     task_type: TaskType,
-    sort_by: Optional[Callable] = None,
-) -> List[Dict[str, Any]]:
+    sort_by: Callable | None = None,
+) -> list[dict[str, Any]]:
     """
     Filter (and sort) TaskDocument entries based on task type
 

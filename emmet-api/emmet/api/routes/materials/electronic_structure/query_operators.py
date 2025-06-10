@@ -1,19 +1,15 @@
+from collections import defaultdict
 from sys import version_info
-from typing import Optional, Union
-from fastapi import Query, HTTPException
-from pymatgen.analysis.magnetism.analyzer import Ordering
-from pymatgen.electronic_structure.core import Spin, OrbitalType
-from pymatgen.core.periodic_table import Element
-from emmet.core.mpid import MPID
 
+from fastapi import HTTPException, Query
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
-from emmet.core.electronic_structure import (
-    BSPathType,
-    DOSProjectionType,
-)
+from pymatgen.analysis.magnetism.analyzer import Ordering
+from pymatgen.core.periodic_table import Element
+from pymatgen.electronic_structure.core import OrbitalType, Spin
 
-from collections import defaultdict
+from emmet.core.electronic_structure import BSPathType, DOSProjectionType
+from emmet.core.mpid import MPID
 
 if version_info >= (3, 8):
     from typing import Literal  # type: ignore
@@ -28,15 +24,12 @@ class ESSummaryDataQuery(QueryOperator):
 
     def query(
         self,
-        magnetic_ordering: Optional[Ordering] = Query(
-            None, description="Magnetic ordering associated with the data."
-        ),
-        is_gap_direct: Optional[bool] = Query(
-            None, description="Whether a band gap is direct or not."
-        ),
-        is_metal: Optional[bool] = Query(
-            None, description="Whether the material is considered a metal."
-        ),
+        magnetic_ordering: Ordering
+        | None = Query(None, description="Magnetic ordering associated with the data."),
+        is_gap_direct: bool
+        | None = Query(None, description="Whether a band gap is direct or not."),
+        is_metal: bool
+        | None = Query(None, description="Whether the material is considered a metal."),
     ) -> STORE_PARAMS:
         crit = defaultdict(dict)  # type: dict
 
@@ -64,31 +57,29 @@ class BSDataQuery(QueryOperator):
 
     def query(
         self,
-        path_type: Optional[BSPathType] = Query(
+        path_type: BSPathType
+        | None = Query(
             None,
             description="k-path selection convention for the band structure.",
         ),
-        band_gap_max: Optional[float] = Query(
+        band_gap_max: float
+        | None = Query(
             None, description="Maximum value for the band gap energy in eV."
         ),
-        band_gap_min: Optional[float] = Query(
+        band_gap_min: float
+        | None = Query(
             None, description="Minimum value for the band gap energy in eV."
         ),
-        efermi_max: Optional[float] = Query(
-            None, description="Maximum value for the fermi energy in eV."
-        ),
-        efermi_min: Optional[float] = Query(
-            None, description="Minimum value for the fermi energy in eV."
-        ),
-        magnetic_ordering: Optional[Ordering] = Query(
-            None, description="Magnetic ordering associated with the data."
-        ),
-        is_gap_direct: Optional[bool] = Query(
-            None, description="Whether a band gap is direct or not."
-        ),
-        is_metal: Optional[bool] = Query(
-            None, description="Whether the material is considered a metal."
-        ),
+        efermi_max: float
+        | None = Query(None, description="Maximum value for the fermi energy in eV."),
+        efermi_min: float
+        | None = Query(None, description="Minimum value for the fermi energy in eV."),
+        magnetic_ordering: Ordering
+        | None = Query(None, description="Magnetic ordering associated with the data."),
+        is_gap_direct: bool
+        | None = Query(None, description="Whether a band gap is direct or not."),
+        is_metal: bool
+        | None = Query(None, description="Whether the material is considered a metal."),
     ) -> STORE_PARAMS:
         crit = defaultdict(dict)  # type: dict
 
@@ -138,37 +129,41 @@ class DOSDataQuery(QueryOperator):
 
     def query(
         self,
-        projection_type: Optional[DOSProjectionType] = Query(
+        projection_type: DOSProjectionType
+        | None = Query(
             None,
             description="Projection type for the density of states data.",
         ),
-        spin: Optional[Union[Literal["1", "-1"], Spin]] = Query(
+        spin: Literal["1", "-1"]
+        | Spin
+        | None = Query(
             None,
             description="Spin channel for density of states data. '1' corresponds to spin up.",
         ),
-        element: Optional[Element] = Query(
+        element: Element
+        | None = Query(
             None,
             description="Element type for projected density of states data.",
         ),
-        orbital: Optional[OrbitalType] = Query(
+        orbital: OrbitalType
+        | None = Query(
             None,
             description="Orbital type for projected density of states data.",
         ),
-        band_gap_max: Optional[float] = Query(
+        band_gap_max: float
+        | None = Query(
             None, description="Maximum value for the band gap energy in eV."
         ),
-        band_gap_min: Optional[float] = Query(
+        band_gap_min: float
+        | None = Query(
             None, description="Minimum value for the band gap energy in eV."
         ),
-        efermi_max: Optional[float] = Query(
-            None, description="Maximum value for the fermi energy in eV."
-        ),
-        efermi_min: Optional[float] = Query(
-            None, description="Minimum value for the fermi energy in eV."
-        ),
-        magnetic_ordering: Optional[Ordering] = Query(
-            None, description="Magnetic ordering associated with the data."
-        ),
+        efermi_max: float
+        | None = Query(None, description="Maximum value for the fermi energy in eV."),
+        efermi_min: float
+        | None = Query(None, description="Minimum value for the fermi energy in eV."),
+        magnetic_ordering: Ordering
+        | None = Query(None, description="Magnetic ordering associated with the data."),
     ) -> STORE_PARAMS:
         crit = defaultdict(dict)  # type: dict
 

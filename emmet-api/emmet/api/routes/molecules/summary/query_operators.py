@@ -1,6 +1,4 @@
-from typing import Optional
 from fastapi import Query
-
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
 
@@ -12,7 +10,8 @@ class MPculeIDsSearchQuery(QueryOperator):
 
     def query(
         self,
-        molecule_ids: Optional[str] = Query(
+        molecule_ids: str
+        | None = Query(
             None, description="Comma-separated list of molecule_ids to query on"
         ),
     ) -> STORE_PARAMS:

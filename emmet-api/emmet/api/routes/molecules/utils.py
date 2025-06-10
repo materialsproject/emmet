@@ -1,7 +1,4 @@
-from typing import Optional
-
 from fastapi import Query
-
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
 
@@ -14,7 +11,8 @@ class MethodQuery(QueryOperator):
 
     def query(
         self,
-        method: Optional[str] = Query(
+        method: str
+        | None = Query(
             None,
             description="Query by calculation method (e.g. mulliken, nbo).",
         ),
@@ -37,7 +35,8 @@ class MultiPropertyIDQuery(QueryOperator):
 
     def query(
         self,
-        property_ids: Optional[str] = Query(
+        property_ids: str
+        | None = Query(
             None, description="Comma-separated list of property_id values to query on"
         ),
     ) -> STORE_PARAMS:

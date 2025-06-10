@@ -1,42 +1,39 @@
-from pydantic import BaseModel, Field
-from typing import Optional
-
 from MDAnalysis import Universe
 from MDAnalysis.analysis.dielectric import DielectricConstant
-
+from pydantic import BaseModel, Field
 from transport_analysis.viscosity import ViscosityHelfand
 
 
 class SolventBenchmarkingDoc(BaseModel, arbitrary_types_allowed=True):
-    density: Optional[float] = Field(None, description="Density of the solvent")
+    density: float | None = Field(None, description="Density of the solvent")
 
-    viscosity_function_values: Optional[list[float]] = Field(
+    viscosity_function_values: list[float] | None = Field(
         None, description="Viscosity function over time"
     )
 
-    viscosity: Optional[float] = Field(None, description="Viscosity of the solvent")
+    viscosity: float | None = Field(None, description="Viscosity of the solvent")
 
-    dielectric: Optional[float] = Field(
+    dielectric: float | None = Field(
         None, description="Dielectric constant of the solvent"
     )
 
-    job_uuid: Optional[str] = Field(
+    job_uuid: str | None = Field(
         None, description="The UUID of the flow that generated this data."
     )
 
-    flow_uuid: Optional[str] = Field(
+    flow_uuid: str | None = Field(
         None, description="The UUID of the top level host from that job."
     )
 
-    dielectric_run_kwargs: Optional[dict] = Field(
+    dielectric_run_kwargs: dict | None = Field(
         None, description="kwargs passed to the DielectricConstant.run method"
     )
 
-    viscosity_run_kwargs: Optional[dict] = Field(
+    viscosity_run_kwargs: dict | None = Field(
         None, description="kwargs passed to the ViscosityHelfand.run method"
     )
 
-    tags: Optional[list[str]] = Field(
+    tags: list[str] | None = Field(
         [], title="tag", description="Metadata tagged to the parent job."
     )
 
@@ -44,13 +41,13 @@ class SolventBenchmarkingDoc(BaseModel, arbitrary_types_allowed=True):
     def from_universe(
         cls,
         u: Universe,
-        temperature: Optional[float] = None,
-        density: Optional[float] = None,
-        job_uuid: Optional[str] = None,
-        flow_uuid: Optional[str] = None,
-        dielectric_run_kwargs: Optional[dict] = None,
-        viscosity_run_kwargs: Optional[dict] = None,
-        tags: Optional[list[str]] = None,
+        temperature: float | None = None,
+        density: float | None = None,
+        job_uuid: str | None = None,
+        flow_uuid: str | None = None,
+        dielectric_run_kwargs: dict | None = None,
+        viscosity_run_kwargs: dict | None = None,
+        tags: list[str] | None = None,
     ) -> "SolventBenchmarkingDoc":
         if temperature is not None:
             dielectric = DielectricConstant(

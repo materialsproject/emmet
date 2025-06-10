@@ -1,9 +1,9 @@
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
-from emmet.core.xas import Edge, Type
 from pymatgen.core.periodic_table import Element
-from typing import Optional
+
+from emmet.core.xas import Edge, Type
 
 
 class XASQuery(QueryOperator):
@@ -37,7 +37,8 @@ class XASIDQuery(QueryOperator):
 
     def query(
         self,
-        spectrum_ids: Optional[str] = Query(
+        spectrum_ids: str
+        | None = Query(
             None, description="Comma-separated list of spectrum_id to query on"
         ),
     ) -> STORE_PARAMS:

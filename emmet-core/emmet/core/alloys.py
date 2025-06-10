@@ -1,11 +1,7 @@
 from emmet.core.base import EmmetBaseModel
-from typing import Dict
 
 try:
-    from pymatgen.analysis.alloys.core import (
-        AlloyPair,
-        AlloySystem,
-    )
+    from pymatgen.analysis.alloys.core import AlloyPair, AlloySystem
 except ImportError:
     raise ImportError(
         "Install pymatgen-analysis-alloys to use AlloyPairDoc or AlloySystemDoc"
@@ -18,7 +14,7 @@ class AlloyPairDoc(EmmetBaseModel):
     pair_id: str
 
     # fields useful for building search indices
-    _search: Dict
+    _search: dict
 
     @classmethod
     def from_pair(cls, pair: AlloyPair):

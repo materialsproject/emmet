@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import Dict, Optional
-from fastapi import Query, Body
-from maggma.api.utils import STORE_PARAMS
+
+from fastapi import Body, Query
 from maggma.api.query_operator import QueryOperator
+from maggma.api.utils import STORE_PARAMS
 
 
 class UserSettingsPostQuery(QueryOperator):
@@ -14,7 +14,7 @@ class UserSettingsPostQuery(QueryOperator):
             ...,
             title="Consumer ID",
         ),
-        settings: Dict = Body(
+        settings: dict = Body(
             ...,
             title="User settings",
         ),
@@ -41,9 +41,8 @@ class UserSettingsPatchQuery(QueryOperator):
             ...,
             title="Consumer ID",
         ),
-        fields_to_update: Optional[Dict] = Body(
-            None, title="Field name and value to update in user settings"
-        ),
+        fields_to_update: dict
+        | None = Body(None, title="Field name and value to update in user settings"),
     ) -> STORE_PARAMS:
         crit = {"consumer_id": consumer_id}
 

@@ -1,5 +1,4 @@
 from math import ceil
-from typing import Dict, Optional
 
 import numpy as np
 from maggma.builders import Builder
@@ -17,7 +16,7 @@ class PiezoelectricBuilder(Builder):
         materials: Store,
         tasks: Store,
         piezoelectric: Store,
-        query: Optional[Dict] = None,
+        query: dict | None = None,
         **kwargs,
     ):
         self.materials = materials

@@ -1,14 +1,12 @@
-from typing import Dict, Optional
 from hashlib import blake2b
 
 from pydantic import Field
 
-from emmet.core.math import Vector3D
-from emmet.core.mpid import MPculeID
 from emmet.core.material import PropertyOrigin
-from emmet.core.qchem.task import TaskDocument
+from emmet.core.math import Vector3D
 from emmet.core.molecules.molecule_property import PropertyDoc
-
+from emmet.core.mpid import MPculeID
+from emmet.core.qchem.task import TaskDocument
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -28,27 +26,27 @@ class ElectricMultipoleDoc(PropertyDoc):
         description="Molecular dipole moment vector (Debye)",
     )
 
-    resp_total_dipole: Optional[float] = Field(
+    resp_total_dipole: float | None = Field(
         None,
         description="Total dipole moment, calculated via restrained electrostatic potential (RESP) (Debye)",
     )
 
-    resp_dipole_moment: Optional[Vector3D] = Field(
+    resp_dipole_moment: Vector3D | None = Field(
         None,
         description="Molecular dipole moment vector, calculated via RESP (Debye)",
     )
 
-    quadrupole_moment: Optional[Dict[str, float]] = Field(
+    quadrupole_moment: dict[str, float] | None = Field(
         None,
         description="Quadrupole moment components (Debye Ang)",
     )
 
-    octopole_moment: Optional[Dict[str, float]] = Field(
+    octopole_moment: dict[str, float] | None = Field(
         None,
         description="Octopole moment components (Debye Ang^2)",
     )
 
-    hexadecapole_moment: Optional[Dict[str, float]] = Field(
+    hexadecapole_moment: dict[str, float] | None = Field(
         None,
         description="Hexadecapole moment tensor components (Debye Ang^2)",
     )
