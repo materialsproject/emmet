@@ -1,6 +1,5 @@
 """ Core definition for Polar property Document """
 
-
 import numpy as np
 from pydantic import BaseModel, Field
 from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
@@ -16,7 +15,6 @@ SETTINGS = EmmetSettings()
 
 Vector = list[float]
 PiezoTensor = list[Vector]
-PiezoTensor.__doc__ = "Rank 3 real space tensor in Voigt notation"  # type: ignore
 
 
 class DielectricDoc(PropertyDoc):
