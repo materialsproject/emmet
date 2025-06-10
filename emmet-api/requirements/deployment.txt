@@ -23,11 +23,11 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.38.13
+boto3==1.38.32
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.38.13
+botocore==1.38.32
     # via
     #   boto3
     #   s3transfer
@@ -41,23 +41,21 @@ cffi==1.17.1
     #   pynacl
 charset-normalizer==3.4.2
     # via requests
-click==8.2.0
+click==8.2.1
     # via uvicorn
 contourpy==1.3.2
     # via matplotlib
-cryptography==44.0.3
+cryptography==45.0.3
     # via paramiko
 cycler==0.12.1
     # via matplotlib
-ddtrace==2.21.7
+ddtrace==2.21.9
     # via emmet-api (emmet/emmet-api/setup.py)
-deprecated==1.2.18
-    # via opentelemetry-api
 dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.7rc1
+emmet-core==0.84.7rc4
     # via emmet-api (emmet/emmet-api/setup.py)
 envier==0.5.2
     # via ddtrace
@@ -65,7 +63,7 @@ fastapi==0.115.12
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-fonttools==4.58.0
+fonttools==4.58.2
     # via matplotlib
 gunicorn==23.0.0
     # via emmet-api (emmet/emmet-api/setup.py)
@@ -77,17 +75,17 @@ idna==3.10
     #   requests
 imageio==2.37.0
     # via scikit-image
-importlib-metadata==8.6.1
+importlib-metadata==8.7.0
     # via opentelemetry-api
 jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-joblib==1.5.0
+joblib==1.5.1
     # via pymatgen
 jsonlines==4.0.0
     # via maggma
-jsonschema==4.23.0
+jsonschema==4.24.0
     # via maggma
 jsonschema-specifications==2025.4.1
     # via jsonschema
@@ -116,9 +114,9 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.1.0
     # via maggma
-narwhals==1.39.0
+narwhals==1.41.1
     # via plotly
-networkx==3.4.2
+networkx==3.5
     # via
     #   pymatgen
     #   scikit-image
@@ -138,10 +136,12 @@ numpy==1.26.4
     #   shapely
     #   spglib
     #   tifffile
-opentelemetry-api==1.33.0
+opentelemetry-api==1.34.0
     # via ddtrace
 orjson==3.10.18
-    # via maggma
+    # via
+    #   maggma
+    #   pymatgen
 packaging==25.0
     # via
     #   gunicorn
@@ -152,7 +152,7 @@ packaging==25.0
     #   scikit-image
 palettable==3.3.3
     # via pymatgen
-pandas==2.2.3
+pandas==2.3.0
     # via
     #   -r python/requirements.txt
     #   maggma
@@ -164,15 +164,15 @@ pillow==11.2.1
     #   imageio
     #   matplotlib
     #   scikit-image
-plotly==6.0.1
+plotly==6.1.2
     # via pymatgen
-protobuf==6.30.2
+protobuf==6.31.1
     # via ddtrace
 pybtex==0.24.0
     # via emmet-core
 pycparser==2.22
     # via cffi
-pydantic==2.11.4
+pydantic==2.11.5
     # via
     #   emmet-core
     #   fastapi
@@ -186,7 +186,7 @@ pydantic-settings==2.9.1
     #   maggma
 pydash==8.0.5
     # via maggma
-pymatgen==2025.5.2
+pymatgen==2025.5.28
     # via
     #   emmet-core
     #   mp-pyrho
@@ -226,18 +226,18 @@ referencing==0.36.2
     #   jsonschema-specifications
 requests==2.32.3
     # via pymatgen
-rpds-py==0.24.0
+rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruamel-yaml==0.18.10
+ruamel-yaml==0.18.13
     # via
     #   maggma
     #   monty
     #   pymatgen
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-s3transfer==0.12.0
+s3transfer==0.13.0
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
@@ -250,7 +250,7 @@ sentinels==1.0.0
     # via mongomock
 setproctitle==1.3.6
     # via emmet-api (emmet/emmet-api/setup.py)
-shapely==2.1.0
+shapely==2.1.1
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   pymatgen-analysis-alloys
@@ -270,25 +270,26 @@ sympy==1.14.0
     # via pymatgen
 tabulate==0.9.0
     # via pymatgen
-tifffile==2025.5.10
+tifffile==2025.6.1
     # via scikit-image
 tqdm==4.67.1
     # via
     #   maggma
     #   pymatgen
-typing-extensions==4.13.2
+typing-extensions==4.14.0
     # via
     #   anyio
     #   ddtrace
     #   emmet-core
     #   fastapi
+    #   opentelemetry-api
     #   pydantic
     #   pydantic-core
     #   pydash
     #   referencing
     #   spglib
     #   typing-inspection
-typing-inspection==0.4.0
+typing-inspection==0.4.1
     # via
     #   pydantic
     #   pydantic-settings
@@ -300,15 +301,13 @@ urllib3==2.4.0
     # via
     #   botocore
     #   requests
-uvicorn==0.34.2
+uvicorn==0.34.3
     # via maggma
 wrapt==1.17.2
-    # via
-    #   ddtrace
-    #   deprecated
+    # via ddtrace
 xmltodict==0.14.2
     # via ddtrace
-zipp==3.21.0
+zipp==3.22.0
     # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:

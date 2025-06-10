@@ -3,10 +3,12 @@
 from datetime import datetime
 from typing import List
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
+from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
+from emmet.core.utils import utcnow
 
 
 class SpectrumDoc(StructureMetadata):
@@ -31,9 +33,14 @@ class SpectrumDoc(StructureMetadata):
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property.",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     warnings: List[str] = Field(
         [], description="Any warnings related to this property."
     )
+
+    @field_validator("last_updated", mode="before")
+    @classmethod
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)

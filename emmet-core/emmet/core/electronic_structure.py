@@ -9,7 +9,7 @@ from math import isnan
 from typing import Dict, List, Optional, Type, TypeVar, Union
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from pymatgen.analysis.magnetism.analyzer import (
     CollinearMagneticStructureAnalyzer,
     Ordering,
@@ -23,9 +23,11 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 from typing_extensions import Literal
 
+from emmet.core.common import convert_datetime
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
 from emmet.core.settings import EmmetSettings
+from emmet.core.utils import utcnow
 
 SETTINGS = EmmetSettings()
 
@@ -55,12 +57,17 @@ class BSObjectDoc(BaseModel):
 
     last_updated: datetime = Field(
         description="The timestamp when this calculation was last updated",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     data: Optional[Union[Dict, BandStructureSymmLine]] = Field(
         None, description="The band structure object for the given calculation ID"
     )
+
+    @field_validator("last_updated", mode="before")
+    @classmethod
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)
 
 
 class DOSObjectDoc(BaseModel):
@@ -76,12 +83,17 @@ class DOSObjectDoc(BaseModel):
 
     last_updated: datetime = Field(
         description="The timestamp when this calculation was last updated.",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     data: Optional[CompleteDos] = Field(
         None, description="The density of states object for the given calculation ID."
     )
+
+    @field_validator("last_updated", mode="before")
+    @classmethod
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)
 
 
 class ElectronicStructureBaseData(BaseModel):
@@ -196,11 +208,6 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
     dos: Optional[DosData] = Field(
         None, description="Density of states data for the material."
-    )
-
-    last_updated: datetime = Field(
-        description="Timestamp for when this document was last updated.",
-        default_factory=datetime.utcnow,
     )
 
     @classmethod
