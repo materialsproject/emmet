@@ -8,7 +8,7 @@ from os import PathLike
 from pathlib import Path
 from typing import Any, ClassVar, Dict, Iterable, List, Optional
 from emmet.cli.utils import EmmetCliError
-from pydantic import BaseModel, Field, PrivateAttr, model_validator
+from pydantic import BaseModel, Field, PrivateAttr
 from uuid import UUID, uuid4
 
 from emmet.core.vasp.utils import FileMetadata, recursive_discover_vasp_files
@@ -102,19 +102,19 @@ class Submission(BaseModel):
 
     # TODO: add origin
 
-    calculations: Dict[CalculationLocator, CalculationMetadata] = Field(
-        description="The calculations in this submission with the keys being the locators for the calculations"
+    calculations: List[tuple[CalculationLocator, CalculationMetadata]] = Field(
+        description="The calculations in this submission as a list of (locator, metadata) tuples"
     )
 
-    calc_history: List[Dict[CalculationLocator, CalculationMetadata]] = Field(
-        description="The history of pushed calculations. This gets updated whenever a new version of the calculations is pushed to the submission service",
+    calc_history: List[List[tuple[CalculationLocator, CalculationMetadata]]] = Field(
+        description="The history of pushed calculations as a list of lists of (locator, metadata) tuples. This gets updated whenever a new version of the calculations is pushed to the submission service",
         default_factory=list,
     )
 
-    pending_calculations: Optional[  # pending
-        Dict[CalculationLocator, CalculationMetadata]
+    pending_calculations: Optional[
+        List[tuple[CalculationLocator, CalculationMetadata]]
     ] = Field(
-        description="The calculations in this submission with the keys being the locators for the calculations",
+        description="The calculations in this submission as a list of (locator, metadata) tuples",
         default=None,
     )
 
@@ -122,39 +122,9 @@ class Submission(BaseModel):
         default=None
     )
 
-    @model_validator(mode="before")
-    def coerce_keys_to_locators(cls, data: Any) -> Any:
-        if isinstance(data, dict) and "calculations" in data:
-            new_calcs = {}
-            for k, v in data["calculations"].items():
-                if isinstance(k, str):
-                    # Handle string representation of CalculationLocator
-                    if k.startswith("path="):
-                        # Parse the string representation
-                        path_str = k.split("path=")[1].split(" modifier=")[0]
-                        # Clean up nested PosixPath strings
-                        while "PosixPath(" in path_str:
-                            path_str = path_str.split("PosixPath(")[1].rstrip(")")
-                        # Remove any remaining quotes
-                        path_str = path_str.strip("'\"")
-                        modifier = None
-                        if "modifier=" in k:
-                            mod_str = k.split("modifier=")[1]
-                            # Only set modifier if it's not the string "None"
-                            if mod_str != "None":
-                                modifier = mod_str
-                        new_calcs[
-                            CalculationLocator(path=Path(path_str), modifier=modifier)
-                        ] = v
-                    else:
-                        # Handle simple path string
-                        new_calcs[CalculationLocator(path=Path(k))] = v
-                else:
-                    new_calcs[k] = v
-            data["calculations"] = new_calcs
-        return data
-
-    def last_pushed(self) -> Dict[CalculationLocator, CalculationMetadata] | None:
+    def last_pushed(
+        self,
+    ) -> List[tuple[CalculationLocator, CalculationMetadata]] | None:
         return self.calc_history[-1] if self.calc_history else None
 
     def save(self, path: Path) -> None:
@@ -184,24 +154,36 @@ class Submission(BaseModel):
 
         return Submission(calculations=all_calculations)
 
-    def _merge_calculations(self, cm: dict[CalculationLocator, CalculationMetadata]):
-        new_calcs = {}
-        keys = set(self.calculations) | set(cm)
+    def _merge_calculations(
+        self, cm: List[tuple[CalculationLocator, CalculationMetadata]]
+    ):
+        new_calcs = []
+        existing_keys = {k for k, _ in self.calculations}
+        new_keys = {k for k, _ in cm}
+        keys = existing_keys | new_keys
+
         for k in keys:
-            if k in self.calculations and k in cm:
-                new_calcs[k] = CalculationMetadata(
-                    id=self.calculations[k].id,
-                    files=list(set(self.calculations[k].files + cm[k].files)),
+            existing_calc = next((v for loc, v in self.calculations if loc == k), None)
+            new_calc = next((v for loc, v in cm if loc == k), None)
+
+            if existing_calc and new_calc:
+                new_calcs.append(
+                    (
+                        k,
+                        CalculationMetadata(
+                            id=existing_calc.id,
+                            files=list(set(existing_calc.files + new_calc.files)),
+                        ),
+                    )
                 )
             else:
-                tmp = self.calculations.get(k) or cm.get(k)
+                tmp = existing_calc or new_calc
                 assert tmp is not None
-                new_calcs[k] = tmp
+                new_calcs.append((k, tmp))
         self.calculations = new_calcs
 
     def add_to(self, paths: Iterable[Path]) -> list[FileMetadata]:
         """Add all files in the paths to the submission. Performs de-duping"""
-
         orig_calcs = self.calculations
         calcs_to_add = find_all_calculations(paths)
         self._merge_calculations(calcs_to_add)
@@ -209,8 +191,8 @@ class Submission(BaseModel):
         self._clear_pending()
 
         return list(
-            set([item for cm in calcs_to_add.values() for item in cm.files])
-            - set([item for cm in orig_calcs.values() for item in cm.files])
+            set([item for _, cm in calcs_to_add for item in cm.files])
+            - set([item for _, cm in orig_calcs for item in cm.files])
         )
 
     def remove_from(self, paths: Iterable[Path]) -> list[FileMetadata]:
@@ -227,7 +209,7 @@ class Submission(BaseModel):
         calculations_to_remove = set()
         files_to_remove = {}
 
-        for calc_locator, calc_metadata in self.calculations.items():
+        for calc_locator, calc_metadata in self.calculations:
             matched_entire_calc = any(
                 is_subpath(calc_locator.path, rm_path) for rm_path in paths
             )
@@ -247,16 +229,22 @@ class Submission(BaseModel):
                 files_to_remove[calc_locator] = matching_files
                 removed_files.extend(matching_files)
 
-        # Remove entire calculations
-        for locator in calculations_to_remove:
-            self.calculations.pop(locator, None)
+        # Remove entire calculations and update files
+        self.calculations = [
+            (loc, cm)
+            for loc, cm in self.calculations
+            if loc not in calculations_to_remove
+        ]
 
         # Remove matching files from remaining calculations
         for locator, files in files_to_remove.items():
-            remaining_files = [
-                fm for fm in self.calculations[locator].files if fm not in files
-            ]
-            self.calculations[locator].files = remaining_files
+            for i, (loc, cm) in enumerate(self.calculations):
+                if loc == locator:
+                    remaining_files = [fm for fm in cm.files if fm not in files]
+                    self.calculations[i] = (
+                        loc,
+                        CalculationMetadata(id=cm.id, files=remaining_files),
+                    )
 
         self._clear_pending()
 
@@ -275,9 +263,12 @@ class Submission(BaseModel):
                 f"Running validation in parallel for {len(calcs_to_check)} calculations"
             )
             with Pool() as pool:
-                results = pool.map(invoke_calc_validation, calcs_to_check.items())
+                results = pool.map(invoke_calc_validation, calcs_to_check)
                 for locator, _, cm in results:
-                    calcs_to_check[locator] = cm
+                    # Update the calculation metadata in the list
+                    for i, (loc, _) in enumerate(calcs_to_check):
+                        if loc == locator:
+                            calcs_to_check[i] = (loc, cm)
                 return all(val for _, val, _ in results)
         else:
             logger.debug(
@@ -285,7 +276,7 @@ class Submission(BaseModel):
             )
             if not check_all:
                 logger.debug("Will fail fast if any calculation is invalid")
-            for locator, cm in calcs_to_check.items():
+            for i, (locator, cm) in enumerate(calcs_to_check):
                 is_valid = cm.validate_calculation(locator) and is_valid
                 if not is_valid and not check_all:
                     return is_valid
@@ -302,18 +293,18 @@ class Submission(BaseModel):
                 with Pool() as pool:
                     results = pool.map(
                         invoke_calc_refresh,
-                        [
-                            (locator.path, cm)
-                            for locator, cm in pending_calculations.items()
-                        ],
+                        [(locator.path, cm) for locator, cm in pending_calculations],
                     )
                     for p, cm in results:
-                        pending_calculations[CalculationLocator(path=p)] = cm
+                        # Update the calculation metadata in the list
+                        for i, (loc, _) in enumerate(pending_calculations):
+                            if loc.path == p:
+                                pending_calculations[i] = (loc, cm)
             else:
                 logger.debug(
                     f"Running refresh serially for {len(pending_calculations)} calculations"
                 )
-                for cm in pending_calculations.values():
+                for i, (_, cm) in enumerate(pending_calculations):
                     cm.refresh()
         return pending_calculations
 
@@ -339,16 +330,17 @@ class Submission(BaseModel):
     def get_changed_files_per_calc_path(self, previous, current):
         changes = {}
         if not previous:
-            changes = {k: v.files for k, v in current.items()}
+            changes = {k: v.files for k, v in current}
         else:
-            for p, cm in current.items():
-                if p not in previous.keys():
+            for p, cm in current:
+                prev_cm = next((v for loc, v in previous if loc == p), None)
+                if prev_cm is None:
                     changes[p] = cm.files
                 else:
                     file_changes = []
                     for fm in cm.files:
                         match = next(
-                            (item for item in previous[p].files if item == fm), None
+                            (item for item in prev_cm.files if item == fm), None
                         )
                         if match is None or fm.hash != match.hash:
                             file_changes.append(fm)
@@ -411,4 +403,4 @@ def find_all_calculations(paths: Iterable[PathLike]):
             else:
                 all_calculations[locator] = [fm]
 
-    return {k: CalculationMetadata(files=v) for k, v in all_calculations.items()}
+    return [(k, CalculationMetadata(files=v)) for k, v in all_calculations.items()]

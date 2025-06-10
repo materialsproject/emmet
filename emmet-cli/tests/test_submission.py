@@ -38,7 +38,7 @@ def tmp_structure(tmp_path_factory):
 
 
 def verify_submission_calculations_against_tmp_dir_data(calculations):
-    for locator, cm in calculations.items():
+    for locator, cm in calculations:
         path = locator.path
         if path.name == "00":
             assert len(cm.files) == 3
@@ -58,7 +58,7 @@ def test_from_paths(tmp_dir):
     submission = Submission.from_paths(paths=[tmp_dir])
 
     verify_submission_calculations_against_tmp_dir_data(submission.calculations)
-    assert len(submission.calculations.keys()) == 5
+    assert len(submission.calculations) == 5
 
 
 def test_save_and_load(sub_file):
@@ -72,7 +72,7 @@ def test_add_to(sub_file, tmp_structure):
 
     # test adding already present paths and files
     to_add_path = []
-    for locator, cm in sub.calculations.items():
+    for locator, cm in sub.calculations:
         if "neb_calc/01" in str(locator.path):
             to_add_path.append(locator.path)
         elif "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001" in str(
@@ -89,7 +89,7 @@ def test_add_to(sub_file, tmp_structure):
     to_add_path = to_add_path + list(tmp_structure.values())
     added = sub.add_to(to_add_path)
     assert len(added) == 4
-    assert len(sub.calculations.keys()) == 7
+    assert len(sub.calculations) == 7
 
 
 def test_remove_from(sub_file, tmp_structure):
@@ -101,7 +101,7 @@ def test_remove_from(sub_file, tmp_structure):
 
     # test removing present paths and files too
     to_remove_path = []
-    for locator, cm in sub.calculations.items():
+    for locator, cm in sub.calculations:
         if "neb_calc/01" in str(locator.path):
             to_remove_path.append(locator.path)
         elif "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001" in str(
@@ -146,13 +146,16 @@ def test_validate_submission(sub_file):
     # assert "Submission does not pass validation" in str(ex_info.value)
 
     # test parallel validation mode correctness by creating submission more calculations than threshold
-    files = next(iter(sub.calculations.items()))[1].files
-    d = dict()
+    files = next(iter(sub.calculations))[1].files
+    calcs = []
     for i in range(Submission.PARALLEL_THRESHOLD + 1):
-        d[CalculationLocator(path=Path(f"/{i}"), modifier=None)] = CalculationMetadata(
-            files=files
+        calcs.append(
+            (
+                CalculationLocator(path=Path(f"/{i}"), modifier=None),
+                CalculationMetadata(files=files),
+            )
         )
-    lsub = Submission(calculations=d)
+    lsub = Submission(calculations=calcs)
     assert lsub.validate_submission() is True
 
 

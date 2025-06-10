@@ -40,11 +40,12 @@ def test_add_to(sub_file, cli_runner, task_manager, tmp_path_factory):
     )
 
     sub = Submission.load(Path(sub_file))
-    it = iter(sub.calculations)
-    while (path_to_add_from := next(it).path, None) and "neb_calc/01" not in str(
-        path_to_add_from
-    ):
-        pass
+    # Find the first calculation with neb_calc/01 in its path
+    path_to_add_from = next(
+        (loc.path for loc, _ in sub.calculations if "neb_calc/01" in str(loc.path)),
+        None,
+    )
+    assert path_to_add_from is not None
 
     result = cli_runner(submit, ["add-to", sub_file, str(path_to_add_from)])
 
@@ -88,11 +89,12 @@ def test_remove_from(sub_file, cli_runner, task_manager):
     )
 
     sub = Submission.load(Path(sub_file))
-    it = iter(sub.calculations)
-    while (path_to_remove := next(it).path, None) and "neb_calc/01" not in str(
-        path_to_remove
-    ):
-        pass
+    # Find the first calculation with neb_calc/01 in its path
+    path_to_remove = next(
+        (loc.path for loc, _ in sub.calculations if "neb_calc/01" in str(loc.path)),
+        None,
+    )
+    assert path_to_remove is not None
 
     result = cli_runner(submit, ["remove-from", sub_file, str(path_to_remove)])
 
