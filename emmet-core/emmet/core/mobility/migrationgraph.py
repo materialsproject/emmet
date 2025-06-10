@@ -8,6 +8,8 @@ from pymatgen.core import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
+from emmet.core.utils import utcnow
+
 try:
     from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
     from pymatgen.analysis.diffusion.utils.supercells import get_sc_fromstruct
@@ -29,8 +31,8 @@ class MigrationGraphDoc(EmmetBaseModel):
         ..., description="The battery id for this MigrationGraphDoc"
     )
 
-    last_updated: Optional[datetime] = Field(
-        None,
+    last_updated: datetime = Field(
+        default_factory=utcnow,
         description="Timestamp for the most recent calculation for this MigrationGraph document.",
     )
 

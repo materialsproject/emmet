@@ -1,6 +1,8 @@
 from pydantic import BaseModel, Field
 from typing import Dict
 
+from emmet.core.utils import utcnow
+
 try:
     from typing import Literal, Optional  # type: ignore
 except ImportError:
@@ -23,5 +25,5 @@ class GeneralStoreDoc(BaseModel):
 
     last_updated: datetime = Field(
         description="Timestamp for when this document was last updated",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
