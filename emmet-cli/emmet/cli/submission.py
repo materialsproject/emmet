@@ -19,8 +19,6 @@ logger = logging.getLogger("emmet")
 
 
 class CalculationLocator(BaseModel):
-    model_config = {"exclude_none": True}
-
     path: Path = Field(description="The path to the calculation directory")
     modifier: Optional[str] = Field(
         description="Optional modifier for the calculation", default=None
