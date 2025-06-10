@@ -12,7 +12,7 @@ from emmet.core.base import EmmetMeta
 from emmet.core.material import PropertyOrigin
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
-from emmet.core.utils import ValueEnum
+from emmet.core.utils import ValueEnum, utcnow
 from emmet.core.vasp.calc_types.enums import RunType
 
 
@@ -251,7 +251,7 @@ class ThermoDoc(PropertyDoc):
                 PropertyOrigin(
                     name="energy",
                     task_id=blessed_entry.data["task_id"],
-                    last_updated=d.get("last_updated", datetime.utcnow()),
+                    last_updated=d.get("last_updated", utcnow()),
                 )
             ]
 
@@ -324,5 +324,5 @@ class PhaseDiagramDoc(BaseModel):
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
