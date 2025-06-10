@@ -12,8 +12,32 @@ from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from uuid import UUID, uuid4
 
 from emmet.core.vasp.utils import FileMetadata, recursive_discover_vasp_files
+from pymatgen.io.validation.validation import VaspValidator
 
 logger = logging.getLogger("emmet")
+
+
+class CalculationLocator(BaseModel):
+    model_config = {"exclude_none": True}
+
+    path: Path = Field(description="The path to the calculation directory")
+    modifier: Optional[str] = Field(
+        description="Optional modifier for the calculation", default=None
+    )
+
+    def __hash__(self) -> int:
+        # Resolve path to handle different representations of same path
+        return hash((self.path.resolve(), self.modifier))
+
+    # You might not need custom __eq__ in Pydantic v2
+    # But if you keep it, consider path resolution:
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, CalculationLocator):
+            return False
+        return (
+            self.path.resolve() == other.path.resolve()
+            and self.modifier == other.modifier
+        )
 
 
 class CalculationMetadata(BaseModel):
@@ -34,11 +58,14 @@ class CalculationMetadata(BaseModel):
         description="Validation errors for this calculation", default_factory=list
     )
 
-    def validate_calculation(self) -> bool:
+    def validate_calculation(self, locator: CalculationLocator) -> bool:
         """Validate the calculation. Returns whether it's valid."""
         self.refresh()
         if self.calc_valid is None:
-            # TODO: change to do actual validation rather than just passing
+            # print(f"Validating calculation at {locator.path}")
+            # validator = VaspValidator.from_directory(dir_name=locator.path, fast=True) # TODO: add modifier
+            # self.calc_valid = validator.valid
+            # self.calc_validation_errors = validator.reasons
             self.calc_valid = True
         return self.calc_valid
 
@@ -62,9 +89,9 @@ def invoke_calc_refresh(args):
 
 
 def invoke_calc_validation(args):
-    path, cm = args
-    valid = cm.validate_calculation()
-    return path, valid, cm
+    locator, cm = args
+    valid = cm.validate_calculation(locator)
+    return locator, valid, cm
 
 
 class Submission(BaseModel):
@@ -76,29 +103,59 @@ class Submission(BaseModel):
 
     # TODO: add origin
 
-    calculations: Dict[Path, CalculationMetadata] = Field(
-        description="The calculations in this submission with the keys being the absolute paths to the directory containing the data for the calculation"
+    calculations: Dict[CalculationLocator, CalculationMetadata] = Field(
+        description="The calculations in this submission with the keys being the locators for the calculations"
     )
 
-    calc_history: List[Dict[Path, CalculationMetadata]] = Field(
+    calc_history: List[Dict[CalculationLocator, CalculationMetadata]] = Field(
         description="The history of pushed calculations. This gets updated whenever a new version of the calculations is pushed to the submission service",
         default_factory=list,
     )
 
-    pending_calculations: Optional[Dict[Path, CalculationMetadata]] = Field(
-        description="The calculations in this submission with the keys being the absolute paths to the directory containing the data for the calculation",
-        default=None,
+    pending_calculations: Optional[Dict[CalculationLocator, CalculationMetadata]] = (
+        Field(
+            description="The calculations in this submission with the keys being the locators for the calculations",
+            default=None,
+        )
     )
 
-    _pending_push: Optional[Dict[Path, FileMetadata]] = PrivateAttr(default=None)
+    _pending_push: Optional[Dict[CalculationLocator, FileMetadata]] = PrivateAttr(
+        default=None
+    )
 
     @model_validator(mode="before")
-    def coerce_keys_to_paths(cls, data: Any) -> Any:
+    def coerce_keys_to_locators(cls, data: Any) -> Any:
         if isinstance(data, dict) and "calculations" in data:
-            data["calculations"] = {Path(k): v for k, v in data["calculations"].items()}
+            new_calcs = {}
+            for k, v in data["calculations"].items():
+                if isinstance(k, str):
+                    # Handle string representation of CalculationLocator
+                    if k.startswith("path="):
+                        # Parse the string representation
+                        path_str = k.split("path=")[1].split(" modifier=")[0]
+                        # Clean up nested PosixPath strings
+                        while "PosixPath(" in path_str:
+                            path_str = path_str.split("PosixPath(")[1].rstrip(")")
+                        # Remove any remaining quotes
+                        path_str = path_str.strip("'\"")
+                        modifier = None
+                        if "modifier=" in k:
+                            mod_str = k.split("modifier=")[1]
+                            # Only set modifier if it's not the string "None"
+                            if mod_str != "None":
+                                modifier = mod_str
+                        new_calcs[
+                            CalculationLocator(path=Path(path_str), modifier=modifier)
+                        ] = v
+                    else:
+                        # Handle simple path string
+                        new_calcs[CalculationLocator(path=Path(k))] = v
+                else:
+                    new_calcs[k] = v
+            data["calculations"] = new_calcs
         return data
 
-    def last_pushed(self) -> Dict[Path, CalculationMetadata] | None:
+    def last_pushed(self) -> Dict[CalculationLocator, CalculationMetadata] | None:
         return self.calc_history[-1] if self.calc_history else None
 
     def save(self, path: Path) -> None:
@@ -128,7 +185,7 @@ class Submission(BaseModel):
 
         return Submission(calculations=all_calculations)
 
-    def _merge_calculations(self, cm: dict[Path, CalculationMetadata]):
+    def _merge_calculations(self, cm: dict[CalculationLocator, CalculationMetadata]):
         new_calcs = {}
         keys = set(self.calculations) | set(cm)
         for k in keys:
@@ -171,13 +228,13 @@ class Submission(BaseModel):
         calculations_to_remove = set()
         files_to_remove = {}
 
-        for calc_path, calc_metadata in self.calculations.items():
+        for calc_locator, calc_metadata in self.calculations.items():
             matched_entire_calc = any(
-                is_subpath(calc_path, rm_path) for rm_path in paths
+                is_subpath(calc_locator.path, rm_path) for rm_path in paths
             )
 
             if matched_entire_calc:
-                calculations_to_remove.add(calc_path)
+                calculations_to_remove.add(calc_locator)
                 removed_files.extend(calc_metadata.files)
                 continue  # Skip checking individual files if whole calc is removed
 
@@ -188,19 +245,19 @@ class Submission(BaseModel):
                 if any(is_subpath(fm.path, rm_path) for rm_path in paths)
             ]
             if matching_files:
-                files_to_remove[calc_path] = matching_files
+                files_to_remove[calc_locator] = matching_files
                 removed_files.extend(matching_files)
 
         # Remove entire calculations
-        for path in calculations_to_remove:
-            self.calculations.pop(path, None)
+        for locator in calculations_to_remove:
+            self.calculations.pop(locator, None)
 
         # Remove matching files from remaining calculations
-        for path, files in files_to_remove.items():
+        for locator, files in files_to_remove.items():
             remaining_files = [
-                fm for fm in self.calculations[path].files if fm not in files
+                fm for fm in self.calculations[locator].files if fm not in files
             ]
-            self.calculations[path].files = remaining_files
+            self.calculations[locator].files = remaining_files
 
         self._clear_pending()
 
@@ -220,8 +277,8 @@ class Submission(BaseModel):
             )
             with Pool() as pool:
                 results = pool.map(invoke_calc_validation, calcs_to_check.items())
-                for p, _, cm in results:
-                    calcs_to_check[p] = cm
+                for locator, _, cm in results:
+                    calcs_to_check[locator] = cm
                 return all(val for _, val, _ in results)
         else:
             logger.debug(
@@ -229,8 +286,8 @@ class Submission(BaseModel):
             )
             if not check_all:
                 logger.debug("Will fail fast if any calculation is invalid")
-            for p, cm in calcs_to_check.items():
-                is_valid = cm.validate_calculation() and is_valid
+            for locator, cm in calcs_to_check.items():
+                is_valid = cm.validate_calculation(locator) and is_valid
                 if not is_valid and not check_all:
                     return is_valid
 
@@ -245,10 +302,14 @@ class Submission(BaseModel):
                 )
                 with Pool() as pool:
                     results = pool.map(
-                        invoke_calc_refresh, pending_calculations.items()
+                        invoke_calc_refresh,
+                        [
+                            (locator.path, cm)
+                            for locator, cm in pending_calculations.items()
+                        ],
                     )
                     for p, cm in results:
-                        pending_calculations[p] = cm
+                        pending_calculations[CalculationLocator(path=p)] = cm
             else:
                 logger.debug(
                     f"Running refresh serially for {len(pending_calculations)} calculations"
@@ -338,14 +399,17 @@ def find_all_calculations(paths: Iterable[PathLike]):
         logger.info(f"Checking path: {path}")
         if path.is_dir():
             calcs = recursive_discover_vasp_files(path)
-            all_calculations.update(calcs)
+            all_calculations.update(
+                {CalculationLocator(path=k): v for k, v in calcs.items()}
+            )
         else:
             parent = path.parent
             fm = FileMetadata(name=path.name, path=path)
-            if parent in all_calculations:
-                if fm not in all_calculations[parent]:
-                    all_calculations[parent].append(fm)
+            locator = CalculationLocator(path=parent)
+            if locator in all_calculations:
+                if fm not in all_calculations[locator]:
+                    all_calculations[locator].append(fm)
             else:
-                all_calculations[parent] = [fm]
+                all_calculations[locator] = [fm]
 
     return {k: CalculationMetadata(files=v) for k, v in all_calculations.items()}

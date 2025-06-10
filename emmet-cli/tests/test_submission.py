@@ -1,5 +1,5 @@
 from pathlib import Path
-from emmet.cli.submission import CalculationMetadata, Submission
+from emmet.cli.submission import CalculationMetadata, CalculationLocator, Submission
 from emmet.cli.utils import EmmetCliError
 import pytest
 
@@ -38,7 +38,8 @@ def tmp_structure(tmp_path_factory):
 
 
 def verify_submission_calculations_against_tmp_dir_data(calculations):
-    for path, cm in calculations.items():
+    for locator, cm in calculations.items():
+        path = locator.path
         if path.name == "00":
             assert len(cm.files) == 3
         elif path.name == "01":
@@ -71,10 +72,12 @@ def test_add_to(sub_file, tmp_structure):
 
     # test adding already present paths and files
     to_add_path = []
-    for p, cm in sub.calculations.items():
-        if "neb_calc/01" in str(p):
-            to_add_path.append(p)
-        elif "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001" in str(p):
+    for locator, cm in sub.calculations.items():
+        if "neb_calc/01" in str(locator.path):
+            to_add_path.append(locator.path)
+        elif "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001" in str(
+            locator.path
+        ):
             to_add_path.append(cm.files[0].path)
 
     assert len(to_add_path) == 2
@@ -98,10 +101,12 @@ def test_remove_from(sub_file, tmp_structure):
 
     # test removing present paths and files too
     to_remove_path = []
-    for p, cm in sub.calculations.items():
-        if "neb_calc/01" in str(p):
-            to_remove_path.append(p)
-        elif "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001" in str(p):
+    for locator, cm in sub.calculations.items():
+        if "neb_calc/01" in str(locator.path):
+            to_remove_path.append(locator.path)
+        elif "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001" in str(
+            locator.path
+        ):
             to_remove_path.append(cm.files[0].path)
 
     assert len(to_remove_path) == 2
@@ -144,7 +149,9 @@ def test_validate_submission(sub_file):
     files = next(iter(sub.calculations.items()))[1].files
     d = dict()
     for i in range(Submission.PARALLEL_THRESHOLD + 1):
-        d[Path(f"/{i}")] = CalculationMetadata(files=files)
+        d[CalculationLocator(path=Path(f"/{i}"), modifier=None)] = CalculationMetadata(
+            files=files
+        )
     lsub = Submission(calculations=d)
     assert lsub.validate_submission() is True
 
