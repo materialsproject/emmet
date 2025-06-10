@@ -12,7 +12,8 @@ from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from uuid import UUID, uuid4
 
 from emmet.core.vasp.utils import FileMetadata, recursive_discover_vasp_files
-from pymatgen.io.validation.validation import VaspValidator
+
+# from pymatgen.io.validation.validation import VaspValidator
 
 logger = logging.getLogger("emmet")
 
@@ -112,11 +113,11 @@ class Submission(BaseModel):
         default_factory=list,
     )
 
-    pending_calculations: Optional[Dict[CalculationLocator, CalculationMetadata]] = (
-        Field(
-            description="The calculations in this submission with the keys being the locators for the calculations",
-            default=None,
-        )
+    pending_calculations: Optional[  # pending
+        Dict[CalculationLocator, CalculationMetadata]
+    ] = Field(
+        description="The calculations in this submission with the keys being the locators for the calculations",
+        default=None,
     )
 
     _pending_push: Optional[Dict[CalculationLocator, FileMetadata]] = PrivateAttr(
