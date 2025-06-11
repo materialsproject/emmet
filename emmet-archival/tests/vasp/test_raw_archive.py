@@ -1,13 +1,12 @@
-from pathlib import Path
 import h5py
 import json
 import numpy as np
 
 from monty.io import zopen
-from monty.os.path import zpath
-from emmet.core.utils import get_md5_blocked
+from emmet.core.utils import get_hash_blocked
 
 from emmet.archival.vasp.raw import RawArchive
+from emmet.archival.utils import zpath
 
 
 def test_from_directory(tmp_dir, test_dir):
@@ -19,7 +18,7 @@ def test_from_directory(tmp_dir, test_dir):
         for calc_type in f:
             for fname in f[calc_type]:
                 if computed_md5 := f[calc_type][fname].attrs.get("md5"):
-                    assert computed_md5 == get_md5_blocked(
+                    assert computed_md5 == get_hash_blocked(
                         f[calc_type][fname].attrs["file_path"]
                     )
 
@@ -40,7 +39,7 @@ def test_from_directory(tmp_dir, test_dir):
         else:
             fname = file_meta.name
 
-        orig_file = Path(zpath(str(vasp_files_dir / fname)))
+        orig_file = zpath(vasp_files_dir / fname)
         # check that original file exists
         assert orig_file.exists()
 

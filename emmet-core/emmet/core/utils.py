@@ -3,14 +3,14 @@ from __future__ import annotations
 
 import copy
 import datetime
-import hashlib
 from enum import Enum
 from itertools import groupby
+import hashlib
+import logging
 from math import gcd
 from typing import Any, Dict, Iterator, List, Optional, Union, TYPE_CHECKING
 
 import numpy as np
-from monty.io import zopen
 from monty.json import MSONable
 from pydantic import BaseModel
 from pymatgen.analysis.elasticity.strain import Deformation
@@ -32,6 +32,11 @@ from emmet.core.mpid import MPculeID
 from emmet.core.settings import EmmetSettings
 
 try:
+    import blake3
+except ImportError:
+    blake3 = None  # type: ignore
+
+try:
     import bson
 except ImportError:
     bson = None  # type: ignore
@@ -40,6 +45,7 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
     from emmet.core.typing import PathLike
 
+logger = logging.getLogger(__name__)
 
 SETTINGS = EmmetSettings()
 
@@ -467,25 +473,34 @@ def utcnow() -> datetime.datetime:
     return datetime.datetime.now(datetime.timezone.utc)
 
 
-def get_md5_blocked(file_path: PathLike, chunk_size: int = 1_000_000) -> str:
+def get_hash_blocked(
+    file_path: PathLike, chunk_size: int = 4 * 1024 * 1024, hasher: Any | None = None
+) -> str:
     """
-    Get the MD5 hash of a file in byte chunks.
+    Get the hash of a file in byte chunks.
 
     Parameters
     -----------
     file_path : PathLike
     chunk_size : int = 1,000,000 bytes (default)
-        The byte chunk size to use in iteratively computing the MD5
+        The byte chunk size to use in iteratively computing the hash.
+    hahser : function to compute hashes. Defaults to blake3 if available,
+        and MD5 if not.
 
     Returns
     -----------
-    The MD5 as a str
+    The hash as a str
     """
-    md5 = hashlib.md5()
-    with zopen(str(file_path), "rb") as f:
+    if hasher is None:
+        if blake3:
+            hasher = blake3.blake3()
+        else:
+            hasher = hashlib.md5()
+
+    with open(str(file_path), "rb") as f:
         while True:
             data = f.read(chunk_size)
             if not data:
                 break
-            md5.update(data)
-        return md5.hexdigest()
+            hasher.update(data)
+        return hasher.hexdigest()

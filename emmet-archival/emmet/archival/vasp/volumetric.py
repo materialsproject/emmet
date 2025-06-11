@@ -17,6 +17,7 @@ from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calculation import VaspObject
 from emmet.core.vasp.utils import VASP_VOLUMETRIC_FILES
 
+from pymatgen.core import Structure
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
 from pymatgen.electronic_structure.core import Orbital, Spin
 from pymatgen.electronic_structure.dos import CompleteDos, Dos
@@ -37,14 +38,23 @@ if TYPE_CHECKING:
 
 @dataclass
 class DosArchive(Archiver):
-    # parsed_objects : dict[str,Any] = {"DOS": None}
+    """Tools for archiving a density of states (DOS)."""
 
-    def __post_init__(self) -> None:
-        if isinstance(self.parsed_objects["DOS"], dict):
-            self.parsed_objects["DOS"] = CompleteDos.from_dict(
-                self.parsed_objects["DOS"]
-            )
-        super().__post_init__()
+    energies: list[float] = Field(
+        description="The energies at which the DOS was calculated."
+    )
+
+    densities: dict[Spin, list[float]] = Field(
+        description="The (colinear-)spin-resolved densities of state."
+    )
+
+    structure: Structure | None = Field(
+        None, description="The structure associated with this DOS."
+    )
+
+    projected_densties: dict[
+        int, dict[Orbital, dict[Spin, list[float]]]
+    ] | None = Field(None, description="The orbita- and site-projected DOS.")
 
     @classmethod
     def from_vasprun(cls, vasprun: Vasprun | str | Path, **kwargs):

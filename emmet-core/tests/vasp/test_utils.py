@@ -9,11 +9,10 @@ from emmet.core.vasp.utils import (
     FileMetadata,
 )
 
+from emmet.core.utils import get_hash_blocked
+
 
 def test_file_meta(tmp_dir):
-    import hashlib
-    from monty.io import zopen
-
     incar_bytes = """
 ALGO = Normal
 ENCUT = 500
@@ -21,12 +20,12 @@ EDIFF = 0.0001
 IBRION = -1
 """.encode()
 
-    with zopen(file_name := "INCAR.bz2", "wb") as f:
+    with open(file_name := "INCAR.bz2", "wb") as f:
         f.write(incar_bytes)
 
     file_meta = FileMetadata(name="INCAR.bz2", path=file_name)
     assert Path(file_meta.path).exists()
-    assert file_meta.md5 == hashlib.md5(incar_bytes).hexdigest()
+    assert file_meta.md5 == get_hash_blocked(file_name)
 
 
 def test_file_discovery():
@@ -99,21 +98,27 @@ def test_file_discovery():
         "POSCAR.T=1000.gz",
     }
 
-    assert len(vasp_files) == len(
-        directory_structure
-    )  # should find all of the defined calculation directories
+    # should find all of the defined calculation directories + suffixes within those
+    assert len(vasp_files) == 7
 
+    found_files = set()
+    ref_files = set()
     for calc_dir, files in directory_structure.items():
-        assert (base_path := tmp_dir / calc_dir) in vasp_files
-        assert len(set([b.name for b in vasp_files[base_path]]).difference(files)) == 0
+        ref_files.update([tmp_dir / calc_dir / file for file in files])
+    for calc_id, file_metas in vasp_files.items():
+        found_files.update([file_meta.path for file_meta in file_metas])
 
-    # Should only find two valid calculation directories
+    assert found_files == ref_files
+
+    # Should only find two valid calculation directory / suffix pairs
     valid_calc_dirs = (
-        "./neb_calc/01/",
+        "neb_calc/01/",
         "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001",
     )
-    assert all(
-        f in [b.name for b in valid_vasp_files[tmp_dir / p]]
-        for p in valid_calc_dirs
-        for f in directory_structure[p]
+    assert len(valid_vasp_files) == 2
+    found_valid_dirs = set()
+    for calc_loc in valid_vasp_files:
+        found_valid_dirs.update({calc_loc.path})
+    assert (
+        set([tmp_dir / valid_dir for valid_dir in valid_calc_dirs]) == found_valid_dirs
     )
