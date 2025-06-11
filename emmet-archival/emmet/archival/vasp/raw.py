@@ -101,6 +101,8 @@ class RawArchive(Archiver):
         """Add VASP files to an existing archival group."""
         for file_arch, file_meta in self.file_paths.items():
             if ".h5" in file_arch:
+                file_key = file_arch
+                # insert HDF5 files into output
                 arch = Path(file_arch)
                 base_group = str(arch.parent)
                 with zopen(file_meta.path, "rb") as vhf_b, h5py.File(
@@ -112,26 +114,36 @@ class RawArchive(Archiver):
                 if "vaspout" in file_arch:
                     ppath = str(arch / "input/potcar/content")
                     pdata = np.array(group[ppath]).tolist().decode()
-                    group[file_arch]["input"]["potcar"].create_dataset(
-                        "spec",
-                        data=self.convert_potcar_to_spec(pdata),
-                    )
+                    pspec = self.convert_potcar_to_spec(pdata)
+
+                    if "spec" in group[file_arch]["input/potcar"]:
+                        old_spec = group[file_arch]["input/potcar/spec"]
+                        old_spec[...] = pspec
+                    else:
+                        group[file_arch]["input/potcar"].create_dataset(
+                            "spec",
+                            data=pspec,
+                        )
                     del group[ppath]
-                    group[file_arch].attrs["md5"] = file_meta.md5
-                continue
 
-            with zopen(file_meta.path, "rt") as _f:
-                data = _f.read()
+            else:
+                # insert plaintext / binary files into HDF5 datasets
+                with zopen(file_meta.path, "rt") as _f:
+                    data = _f.read()
 
-            file_key = file_arch
-            if "POTCAR" in file_arch and "spec" not in file_arch:
-                if len(_split_arch := file_arch.split(".")) > 1:
-                    file_key = ".".join([*_split_arch[:-1], "spec", _split_arch[-1]])
-                else:
-                    file_key = f"{file_arch}.spec"
-                data = self.convert_potcar_to_spec(data)
+                file_key = file_arch
+                if "POTCAR" in file_arch and "spec" not in file_arch:
+                    if len(_split_arch := file_arch.split(".")) > 1:
+                        file_key = ".".join(
+                            [*_split_arch[:-1], "spec", _split_arch[-1]]
+                        )
+                    else:
+                        file_key = f"{file_arch}.spec"
+                    data = self.convert_potcar_to_spec(data)
 
-            group.create_dataset(file_key, data=[data], **kwargs)
+                group.create_dataset(file_key, data=[data], **kwargs)
+
+            group[file_key].attrs["file_path"] = str(file_meta.path)
             group[file_key].attrs["md5"] = file_meta.md5
 
     @classmethod
@@ -165,7 +177,9 @@ class RawArchive(Archiver):
                 with open(output_dir / file_name, "wt") as f:
                     f.write(np.array(group[k])[0].decode())
 
-            extracted_files.append(FileMetadata(path=output_dir / file_name))
+            extracted_files.append(
+                FileMetadata(name=file_name, path=output_dir / file_name)
+            )
         return extracted_files
 
     @classmethod

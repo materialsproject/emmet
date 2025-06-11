@@ -1,12 +1,18 @@
+from pathlib import Path
 import h5py
 import json
 import numpy as np
 
-from emmet.archival.vasp.raw import RawArchive, get_md5_blocked
+from monty.io import zopen
+from monty.os.path import zpath
+from emmet.core.utils import get_md5_blocked
+
+from emmet.archival.vasp.raw import RawArchive
 
 
 def test_from_directory(tmp_dir, test_dir):
-    archiver = RawArchive.from_directory(test_dir / "test_raw_archive")
+    vasp_files_dir = test_dir / "test_raw_archive"
+    archiver = RawArchive.from_directory(vasp_files_dir)
     archiver.to_archive("archive.h5")
 
     with h5py.File("archive.h5", "r") as f:
@@ -27,9 +33,18 @@ def test_from_directory(tmp_dir, test_dir):
                         for potcar_spec in potcar_data
                     )
 
-    RawArchive.from_archive("archive.h5")
-    # assert all(
-    #     archive.parsed_objects.get is not
-    # )
+    raw_data = RawArchive.extract("archive.h5")
+    for file_meta in raw_data:
+        if "potcar" in file_meta.name.lower():
+            fname = file_meta.name.split(".")[0]
+        else:
+            fname = file_meta.name
 
-    # assert False
+        orig_file = Path(zpath(str(vasp_files_dir / fname)))
+        # check that original file exists
+        assert orig_file.exists()
+
+        # for non-POTCAR data, check that roundtrip returns the same data
+        if not any(f in fname.lower() for f in ("potcar", ".h5")):
+            with zopen(orig_file, "rt") as f_orig, zopen(file_meta.path, "rt") as f_new:
+                assert f_orig.read() == f_new.read()

@@ -69,7 +69,7 @@ class CrystalArchive(Archiver):
         ]
         species = [
             Species(
-                Element.from_Z(z),
+                Element.from_Z(z).value,
                 oxidation_state=oxi_states[i],
             )
             for i, z in enumerate(data["atomic_num"])
@@ -215,7 +215,7 @@ class StructureArchive(Archiver):
                         break
                     spec = Element.from_Z(df[f"atomic_num_{icomp}"][isite])
                     if has_oxi and not pd.isna(oxi := df[f"oxi_state_{icomp}"][isite]):
-                        spec = Species(spec, oxidation_state=oxi)
+                        spec = Species(spec.value, oxidation_state=oxi)
                     comp[spec] = df[f"occu_{icomp}"][isite]
             else:
                 comp = Element.from_Z(df["atomic_num"][isite])
