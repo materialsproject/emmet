@@ -28,7 +28,12 @@ logger = logging.getLogger("emmet")
 )
 @click.version_option()
 @click.pass_context
-def emmet(ctx, verbose, state_dir, running_status_update_interval):
+def emmet(
+    ctx: click.Context,
+    verbose: bool,
+    state_dir: str,
+    running_status_update_interval: int,
+) -> None:
     """Command line interface for Emmet"""
 
     logger.setLevel(logging.DEBUG if verbose else logging.INFO)
@@ -49,7 +54,7 @@ def emmet(ctx, verbose, state_dir, running_status_update_interval):
     ctx.obj["task_manager"] = task_manager
 
 
-def safe_entry_point():
+def safe_entry_point() -> None:
     try:
         emmet()
     except EmmetCliError as e:

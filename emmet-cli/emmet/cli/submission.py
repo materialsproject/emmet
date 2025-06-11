@@ -6,7 +6,7 @@ import logging
 from multiprocessing import Pool
 from os import PathLike
 from pathlib import Path
-from typing import Any, ClassVar, Dict, Iterable, List, Optional
+from typing import Any, ClassVar, Iterable
 from emmet.cli.utils import EmmetCliError
 from pydantic import BaseModel, Field, PrivateAttr
 from uuid import UUID, uuid4
@@ -20,7 +20,7 @@ logger = logging.getLogger("emmet")
 
 class CalculationLocator(BaseModel):
     path: Path = Field(description="The path to the calculation directory")
-    modifier: Optional[str] = Field(
+    modifier: str | None = Field(
         description="Optional modifier for the calculation", default=None
     )
 
@@ -44,16 +44,16 @@ class CalculationMetadata(BaseModel):
         description="The identifier for this calculation", default_factory=uuid4
     )
 
-    files: List[FileMetadata] = Field(
+    files: list[FileMetadata] = Field(
         description="List of file metadata for the the files for this calculation."
     )
 
-    calc_valid: Optional[bool] = Field(
+    calc_valid: bool | None = Field(
         description="Whether calculation is valid. If None then has not been checked yet.",
         default=None,
     )
 
-    calc_validation_errors: List[str] = Field(
+    calc_validation_errors: list[str] = Field(
         description="Validation errors for this calculation", default_factory=list
     )
 
@@ -102,29 +102,29 @@ class Submission(BaseModel):
 
     # TODO: add origin
 
-    calculations: List[tuple[CalculationLocator, CalculationMetadata]] = Field(
+    calculations: list[tuple[CalculationLocator, CalculationMetadata]] = Field(
         description="The calculations in this submission as a list of (locator, metadata) tuples"
     )
 
-    calc_history: List[List[tuple[CalculationLocator, CalculationMetadata]]] = Field(
+    calc_history: list[list[tuple[CalculationLocator, CalculationMetadata]]] = Field(
         description="The history of pushed calculations as a list of lists of (locator, metadata) tuples. This gets updated whenever a new version of the calculations is pushed to the submission service",
         default_factory=list,
     )
 
-    pending_calculations: Optional[
-        List[tuple[CalculationLocator, CalculationMetadata]]
-    ] = Field(
+    pending_calculations: (
+        list[tuple[CalculationLocator, CalculationMetadata]] | None
+    ) = Field(
         description="The calculations in this submission as a list of (locator, metadata) tuples",
         default=None,
     )
 
-    _pending_push: Optional[Dict[CalculationLocator, FileMetadata]] = PrivateAttr(
+    _pending_push: dict[CalculationLocator, FileMetadata] | None = PrivateAttr(
         default=None
     )
 
     def last_pushed(
         self,
-    ) -> List[tuple[CalculationLocator, CalculationMetadata]] | None:
+    ) -> list[tuple[CalculationLocator, CalculationMetadata]] | None:
         return self.calc_history[-1] if self.calc_history else None
 
     def save(self, path: Path) -> None:
@@ -155,7 +155,7 @@ class Submission(BaseModel):
         return Submission(calculations=all_calculations)
 
     def _merge_calculations(
-        self, cm: List[tuple[CalculationLocator, CalculationMetadata]]
+        self, cm: list[tuple[CalculationLocator, CalculationMetadata]]
     ):
         new_calcs = []
         existing_keys = {k for k, _ in self.calculations}
@@ -308,7 +308,7 @@ class Submission(BaseModel):
                     cm.refresh()
         return pending_calculations
 
-    def stage_for_push(self) -> List[FileMetadata]:
+    def stage_for_push(self) -> list[FileMetadata]:
         """Stages submission for push. Returns the list of files that will need to be (re)pushed."""
         self.pending_calculations = self._create_calculations_copy()
 
@@ -348,9 +348,9 @@ class Submission(BaseModel):
                         changes[p] = file_changes
         return changes
 
-    def push(self):  ## TODO: return type
+    def push(self) -> None:
         """Performs the push. Returns info about the push"""
-        if not self.pending_calculations:
+        if not self.pending_calculations or not self._pending_push:
             raise EmmetCliError("Nothing is staged. Please stage before pushing.")
 
         if self.get_changed_files_per_calc_path(

@@ -9,7 +9,7 @@ logger = logging.getLogger("emmet")
 
 @click.group()
 @click.pass_context
-def tasks(ctx):
+def tasks(ctx: click.Context) -> None:
     """Commands for managing background tasks."""
     pass
 
@@ -17,7 +17,7 @@ def tasks(ctx):
 @tasks.command()
 @click.argument("task_id", type=str)
 @click.pass_context
-def status(ctx, task_id):
+def status(ctx: click.Context, task_id: str) -> None:
     """Check the status of a task."""
     try:
         task_uuid = UUID(task_id)
@@ -47,7 +47,7 @@ def status(ctx, task_id):
 
 @tasks.command()
 @click.pass_context
-def list(ctx):
+def list(ctx: click.Context) -> None:
     """List all tasks."""
     task_manager = ctx.obj["task_manager"]
     tasks = task_manager.state_manager.get("tasks", {})
@@ -87,7 +87,7 @@ def list(ctx):
     "--timeout", type=float, default=None, help="Maximum time to wait in seconds"
 )
 @click.pass_context
-def wait(ctx, task_id, timeout):
+def wait(ctx: click.Context, task_id: str, timeout: float | None) -> None:
     """Wait for a task to complete."""
     try:
         task_uuid = UUID(task_id)
@@ -114,7 +114,7 @@ def wait(ctx, task_id, timeout):
 
 @tasks.command()
 @click.pass_context
-def clean(ctx):
+def clean(ctx: click.Context) -> None:
     """Clean up completed tasks."""
     task_manager = ctx.obj["task_manager"]
     task_manager.cleanup_finished_tasks()
@@ -127,7 +127,7 @@ def clean(ctx):
     "--force", "-f", is_flag=True, help="Force termination without confirmation"
 )
 @click.pass_context
-def terminate(ctx, task_id, force):
+def terminate(ctx: click.Context, task_id: str, force: bool) -> None:
     """Terminate a running task."""
     try:
         task_uuid = UUID(task_id)

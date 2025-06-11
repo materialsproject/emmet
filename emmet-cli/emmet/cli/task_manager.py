@@ -5,7 +5,7 @@ import multiprocessing as mp
 from datetime import datetime
 import time
 import os
-from typing import Any, Callable, Dict, Optional, Literal
+from typing import Any, Callable, Literal
 from uuid import uuid4
 import psutil
 from typing import cast
@@ -17,7 +17,7 @@ logger = logging.getLogger("emmet")
 TaskStatus = Literal["running", "completed", "failed", "terminated", "not_found"]
 
 
-def _detach_process():
+def _detach_process() -> bool:
     """
     Detach the process using double fork to ensure it becomes independent of the parent.
     Returns True in the parent process, False in the child process.
@@ -77,7 +77,7 @@ class TaskManager:
         self,
         state_manager: StateManager,
         running_status_update_interval: int = 30,
-    ):
+    ) -> None:
         """Initialize the TaskManager with an optional StateManager instance."""
         self.state_manager = state_manager
         self.running_status_update_interval = running_status_update_interval
@@ -90,12 +90,12 @@ class TaskManager:
         self,
         task_id: str,
         status: TaskStatus,
-        error: Optional[str] = None,
-        result: Optional[Any] = None,
-        additional_data: Optional[Dict[str, Any]] = None,
+        error: str | None = None,
+        result: Any | None = None,
+        additional_data: dict[str, Any] | None = None,
     ) -> None:
         """Update task status with common fields."""
-        update_data: Dict[str, Any] = {"status": status}
+        update_data: dict[str, Any] = {"status": status}
 
         if status in ["completed", "failed", "terminated"]:
             update_data["completed_at"] = self._get_current_timestamp()
@@ -146,7 +146,7 @@ class TaskManager:
         finally:
             os._exit(0)
 
-    def _store_task_result(self, task_id: str, result: Dict[str, Any]) -> None:
+    def _store_task_result(self, task_id: str, result: dict[str, Any]) -> None:
         """Store the task result in the state manager."""
         tasks = self.state_manager.get("tasks", {})
         if task_id not in tasks:
@@ -182,7 +182,7 @@ class TaskManager:
 
         return task_id
 
-    def get_task_status(self, task_id: str) -> Dict[str, Any]:
+    def get_task_status(self, task_id: str) -> dict[str, Any]:
         """
         Get the current status of a task.
 
@@ -196,8 +196,8 @@ class TaskManager:
         return tasks.get(task_id, {"status": "not_found"})
 
     def wait_for_task_completion(
-        self, task_id: str, timeout: Optional[float] = None, check_interval: float = 1.0
-    ):
+        self, task_id: str, timeout: float | None = None, check_interval: float = 1.0
+    ) -> dict[str, Any]:
         """Helper function to wait for task completion"""
         start_time = time.time()
         while True:
@@ -210,7 +210,7 @@ class TaskManager:
                 return status
             time.sleep(check_interval)
 
-    def _check_process_state(self, task_id: str, status: Dict[str, Any]) -> bool:
+    def _check_process_state(self, task_id: str, status: dict[str, Any]) -> bool:
         """Check the state of a process and update status accordingly."""
         now = datetime.now()
 
@@ -282,7 +282,7 @@ class TaskManager:
             del tasks[task_id]
         self.state_manager.set("tasks", tasks)
 
-    def terminate_task(self, task_id: str) -> Dict[str, Any]:
+    def terminate_task(self, task_id: str) -> dict[str, Any]:
         """Terminate a running task."""
         status = self.get_task_status(task_id)
         if status["status"] != "running":

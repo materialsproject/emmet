@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Self, TextIO
 import fcntl
 
 logger = logging.getLogger("emmet")
@@ -12,17 +12,18 @@ logger = logging.getLogger("emmet")
 class FileLock:
     """A file-based lock implementation."""
 
-    def __init__(self, lock_file: Path):
+    def __init__(self, lock_file: Path) -> None:
         self.lock_file = lock_file
-        self.f = None
+        self.f: TextIO | None = None
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         self.f = self.lock_file.open("w")
-        fcntl.flock(self.f, fcntl.LOCK_EX)
+        if self.f is not None:
+            fcntl.flock(self.f, fcntl.LOCK_EX)
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.f:
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        if self.f is not None:
             fcntl.flock(self.f, fcntl.LOCK_UN)
             self.f.close()
 
@@ -39,7 +40,7 @@ class StateManager:
         """Ensures the state directory exists."""
         Path(self.state_file).parent.mkdir(parents=True, exist_ok=True)
 
-    def _load_state(self) -> Dict[str, Any]:
+    def _load_state(self) -> dict[str, Any]:
         """Loads state from disk. Not thread safe."""
         state_path = Path(self.state_file)
         if not state_path.exists():
@@ -51,7 +52,7 @@ class StateManager:
             logger.warning("Corrupted state file found, creating new state")
             return {}
 
-    def _save_state(self, state: Dict[str, Any]) -> None:
+    def _save_state(self, state: dict[str, Any]) -> None:
         """Saves current state to disk. Not thread safe."""
         with Path(self.state_file).open("w") as f:
             json.dump(state, f, indent=2)
@@ -69,6 +70,6 @@ class StateManager:
             state[key] = value
             self._save_state(state)
 
-    def _state_lock(self):
+    def _state_lock(self) -> FileLock:
         """Context manager for file locking."""
         return FileLock(Path(self.state_file + ".lock"))

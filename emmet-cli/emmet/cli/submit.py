@@ -9,7 +9,7 @@ logger = logging.getLogger("emmet")
 
 @click.group()
 @click.pass_context
-def submit(ctx):
+def submit(ctx: click.Context) -> None:
     """Commands for managing an MP data submission."""
     pass
 
@@ -19,7 +19,7 @@ def submit(ctx):
 @submit.command()
 @click.argument("paths", nargs=-1, type=click.Path(exists=True))
 @click.pass_context
-def create(ctx, paths):
+def create(ctx: click.Context, paths: list[Path]) -> None:
     """Creates a new MP data submission.
 
     This only creates metadata about the submission. The submission will
@@ -40,7 +40,7 @@ def create(ctx, paths):
     click.echo("Use 'emmet tasks status <task_id>' to check the status")
 
 
-def _create_submission(paths):
+def _create_submission(paths: list[Path]) -> tuple[str, str]:
     """Helper function to create a submission that can run in a separate process."""
     submission = Submission.from_paths(paths=paths)
     output_file = f"submission-{submission.id}.json"
@@ -48,7 +48,7 @@ def _create_submission(paths):
     return str(submission.id), output_file
 
 
-def _add_to_submission(submission_path: Path, paths):
+def _add_to_submission(submission_path: Path, paths: list[Path]) -> list[str]:
     """Helper function to add files to a submission that can run in a separate process."""
     sub = Submission.load(submission_path)
     added = sub.add_to([Path(p) for p in paths])
@@ -60,7 +60,7 @@ def _add_to_submission(submission_path: Path, paths):
 @click.argument("submission", nargs=1, type=click.Path(exists=True, dir_okay=False))
 @click.argument("additional_paths", nargs=-1, type=click.Path(exists=True))
 @click.pass_context
-def add_to(ctx, submission, additional_paths):
+def add_to(ctx: click.Context, submission: Path, additional_paths: list[Path]) -> None:
     """Adds more files to the submission asynchronously.
 
     Returns a task ID that can be used to check the status."""
@@ -77,7 +77,9 @@ def add_to(ctx, submission, additional_paths):
     click.echo("Use 'emmet tasks status <task_id>' to check the status")
 
 
-def _remove_from_submission(submission_path: Path, paths_to_remove):
+def _remove_from_submission(
+    submission_path: Path, paths_to_remove: list[Path]
+) -> list[str]:
     """Helper function to remove files from a submission that can run in a separate process."""
     sub = Submission.load(submission_path)
     removed = sub.remove_from([Path(p) for p in paths_to_remove])
@@ -89,7 +91,9 @@ def _remove_from_submission(submission_path: Path, paths_to_remove):
 @click.argument("submission", nargs=1, type=click.Path(exists=True, dir_okay=False))
 @click.argument("files_to_remove", nargs=-1, type=click.Path(exists=True))
 @click.pass_context
-def remove_from(ctx, submission, files_to_remove):
+def remove_from(
+    ctx: click.Context, submission: Path, files_to_remove: list[Path]
+) -> None:
     """Removes files from the submission asynchronously.
 
     Returns a task ID that can be used to check the status."""
@@ -106,7 +110,7 @@ def remove_from(ctx, submission, files_to_remove):
     click.echo("Use 'emmet tasks status <task_id>' to check the status")
 
 
-def _validate_submission(submission_path: Path, check_all: bool):
+def _validate_submission(submission_path: Path, check_all: bool) -> bool:
     """Helper function to validate a submission that can run in a separate process."""
     sub = Submission.load(submission_path)
     is_valid = sub.validate_submission(check_all=check_all)
@@ -120,7 +124,7 @@ def _validate_submission(submission_path: Path, check_all: bool):
     "--check-all", is_flag=True, default=False, help="Checks every calculation."
 )
 @click.pass_context
-def validate(ctx, submission, check_all):
+def validate(ctx: click.Context, submission: Path, check_all: bool) -> None:
     """Validates a submission asynchronously.
 
     Returns a task ID that can be used to check the status."""
@@ -130,7 +134,7 @@ def validate(ctx, submission, check_all):
     click.echo("Use 'emmet tasks status <task_id>' to check the status")
 
 
-def _push_submission(submission_path: Path):
+def _push_submission(submission_path: Path) -> tuple[bool, str]:
     """Helper function to push a submission that can run in a separate process."""
     sub = Submission.load(submission_path)
     updated_file_info = sub.stage_for_push()
@@ -148,7 +152,7 @@ def _push_submission(submission_path: Path):
 @submit.command()
 @click.argument("submission", nargs=1, type=click.Path(exists=True, dir_okay=False))
 @click.pass_context
-def push(ctx, submission):
+def push(ctx: click.Context, submission: Path) -> None:
     """Pushes a submission asynchronously.
 
     Returns a task ID that can be used to check the status."""
@@ -156,8 +160,3 @@ def push(ctx, submission):
     task_id = task_manager.start_task(_push_submission, Path(submission))
     click.echo(f"Push started. Task ID: {task_id}")
     click.echo("Use 'emmet tasks status <task_id>' to check the status")
-
-
-def get_already_contributed(updated_file_info):
-    # if doing checks for data already in MP check the changed data against MP
-    return {}
