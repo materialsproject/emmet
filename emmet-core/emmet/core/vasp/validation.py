@@ -1,12 +1,13 @@
-"""Validate VASP calculations using emmet."""
+"""Current MP tools to validate VASP calculations."""
 
 from __future__ import annotations
 
 from datetime import datetime
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from emmet.core.vasp.calculation import Calculation
 from emmet.core.base import EmmetBaseModel
+from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
 from emmet.core.utils import utcnow
 from emmet.core.vasp.utils import FileMetadata
@@ -44,6 +45,11 @@ class ValidationDoc(VaspValidator, EmmetBaseModel):
         description="The most recent time when this document was updated.",
         default_factory=utcnow,
     )
+
+    @field_validator("last_updated", mode="before")
+    @classmethod
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)
 
     @classmethod
     def from_file_metadata(cls, file_meta: list[FileMetadata], **kwargs) -> Self:

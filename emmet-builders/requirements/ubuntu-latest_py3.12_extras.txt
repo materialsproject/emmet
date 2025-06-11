@@ -6,7 +6,7 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.12.7
+aiohttp==3.12.9
     # via fsspec
 aioitertools==0.12.0
     # via maggma
@@ -28,9 +28,9 @@ attrs==25.3.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.38.28
+boto3==1.38.32
     # via maggma
-botocore==1.38.28
+botocore==1.38.32
     # via
     #   boto3
     #   s3transfer
@@ -83,9 +83,9 @@ filelock==3.18.0
     #   virtualenv
 flake8==7.2.0
     # via emmet-builders (setup.py)
-fonttools==4.58.1
+fonttools==4.58.2
     # via matplotlib
-frozenlist==1.6.0
+frozenlist==1.6.2
     # via
     #   aiohttp
     #   aiosignal
@@ -101,7 +101,7 @@ griddataformats==1.0.2
     # via mdanalysis
 griffe==1.7.3
     # via mkdocstrings-python
-h5py==3.13.0
+h5py==3.14.0
     # via phonopy
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
@@ -269,7 +269,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-builders (setup.py)
     #   mypy
-narwhals==1.41.0
+narwhals==1.41.1
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -377,7 +377,7 @@ packaging==24.2
     #   torchmetrics
 palettable==3.3.3
     # via pymatgen
-pandas==2.2.3
+pandas==2.3.0
     # via
     #   maggma
     #   matminer
@@ -540,7 +540,7 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruamel-yaml==0.18.12
+ruamel-yaml==0.18.13
     # via
     #   maggma
     #   monty
@@ -552,7 +552,7 @@ s3transfer==0.13.0
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
-scikit-learn==1.6.1
+scikit-learn==1.7.0
     # via
     #   matcalc
     #   matminer
@@ -615,7 +615,7 @@ tidynamics==1.1.2
     # via transport-analysis
 tifffile==2025.6.1
     # via scikit-image
-torch==2.7.0
+torch==2.7.1
     # via
     #   chgnet
     #   lightning
@@ -644,9 +644,9 @@ tqdm==4.67.1
     #   pytorch-lightning
 transport-analysis==0.1.2
     # via emmet-builders (setup.py)
-triton==3.3.0
+triton==3.3.1
     # via torch
-typeguard==4.4.2
+typeguard==4.4.3
     # via inflect
 types-requests==2.32.0.20250602
     # via emmet-builders (setup.py)

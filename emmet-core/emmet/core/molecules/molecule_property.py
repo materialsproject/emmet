@@ -12,6 +12,7 @@ from emmet.core.material import PropertyOrigin
 from emmet.core.mpid import MPculeID
 from emmet.core.structure import MoleculeMetadata
 
+from emmet.core.utils import utcnow
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -66,7 +67,7 @@ class PropertyDoc(MoleculeMetadata):
 
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     origins: Sequence[PropertyOrigin] = Field(

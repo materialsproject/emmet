@@ -19,9 +19,9 @@ attrs==25.3.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.38.28
+boto3==1.38.32
     # via maggma
-botocore==1.38.28
+botocore==1.38.32
     # via
     #   boto3
     #   s3transfer
@@ -47,13 +47,13 @@ emmet-core[all]==0.84.6
     # via emmet-builders (setup.py)
 filelock==3.18.0
     # via mdanalysis
-fonttools==4.58.1
+fonttools==4.58.2
     # via matplotlib
 fsspec==2025.5.1
     # via matcalc
 griddataformats==1.0.2
     # via mdanalysis
-h5py==3.13.0
+h5py==3.14.0
     # via phonopy
 idna==3.10
     # via requests
@@ -132,7 +132,7 @@ msgpack==1.1.0
     # via
     #   maggma
     #   mmtf-python
-narwhals==1.41.0
+narwhals==1.41.1
     # via plotly
 networkx==3.5
     # via
@@ -186,7 +186,7 @@ packaging==25.0
     #   statsmodels
 palettable==3.3.3
     # via pymatgen
-pandas==2.2.3
+pandas==2.3.0
     # via
     #   maggma
     #   matminer
@@ -296,7 +296,7 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruamel-yaml==0.18.12
+ruamel-yaml==0.18.13
     # via
     #   maggma
     #   monty
@@ -308,7 +308,7 @@ s3transfer==0.13.0
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
-scikit-learn==1.6.1
+scikit-learn==1.7.0
     # via
     #   matcalc
     #   matminer
@@ -371,7 +371,7 @@ tqdm==4.67.1
     #   matminer
     #   mdanalysis
     #   pymatgen
-typeguard==4.4.2
+typeguard==4.4.3
     # via inflect
 typing-extensions==4.14.0
     # via
