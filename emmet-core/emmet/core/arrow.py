@@ -37,6 +37,7 @@ PY_PRIMITIVES_TO_ARROW = {
 
 
 def arrowize(obj):
+    """ """
     assert obj not in (
         list,
         tuple,
