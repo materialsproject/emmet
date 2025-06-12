@@ -3,9 +3,10 @@
 from tempfile import NamedTemporaryFile
 import numpy as np
 
-from pymatgen.io.vasp import Chgcar
+from pymatgen.io.vasp import Chgcar, Vasprun
 
 from emmet.archival.volumetric import VolumetricArchive
+from emmet.archival.vasp.volumetric import DosArchive
 
 chgcar_str = """Fake CHGCAR
     4.0
@@ -57,3 +58,9 @@ def test_volumetric_archive():
 
     # ensure structure is same on round trip
     assert chg.structure == chg_arch.structure
+
+
+def test_dos(test_dir):
+    vrun = Vasprun(test_dir / "test_raw_archive" / "vasprun.xml.gz")
+    dos_arch = DosArchive.from_vasprun(vrun)
+    assert dos_arch

@@ -15,7 +15,6 @@ from emmet.archival.base import Archiver
 from emmet.archival.atoms import CrystalArchive
 
 if TYPE_CHECKING:
-    from os import PathLike
     from pathlib import Path
 
 
@@ -34,6 +33,24 @@ class AugChargeData(BaseModel):
         None, description="The label written by VASP for the augmenation charge data."
     )
     data: list[float] | None = Field(None, description="The augmentation charges.")
+
+
+class ElectronicDos(BaseModel):
+    """Basic structure for spin-resolved density of states (DOS)."""
+
+    spin_up: list[float] = Field(description="The up-spin DOS.")
+
+    spin_down: list[float] = Field(description="The down-spin DOS.")
+
+    energies: list[float] | None = Field(
+        None, description="The energies at which the DOS was calculated."
+    )
+
+    efermi: float | None = Field(None, description="The Fermi energy.")
+
+    orbital: str | None = Field(
+        None, description="The orbital character of this DOS, if applicable."
+    )
 
 
 class VolumetricArchive(Archiver):
@@ -117,13 +134,9 @@ class VolumetricArchive(Archiver):
                 config[f"data_aug_{k.value}"] = pa.array([[None]])
 
         crystal_archive = CrystalArchive.from_pmg(self.structure)
-        for k in CrystalArchive.model_fields:
-            config[f"structure_{k}"] = pa.array([getattr(crystal_archive, k)])
+        config.update(crystal_archive._to_arrow_arrays(prefix="structure_"))
 
         return pa.table(config)
-
-    def _to_parquet(self, file_name: PathLike, **kwargs) -> None:
-        pq.write_table(self.to_arrow(), file_name)
 
     @classmethod
     def from_arrow(cls, table: pa.Table) -> PmgVolumetricData:

@@ -10,7 +10,6 @@ import numpy as np
 from pydantic import Field
 import pandas as pd
 import pyarrow as pa
-import pyarrow.parquet as pq
 import zarr
 
 from pymatgen.core import Element, Lattice, Structure, Species, PeriodicSite
@@ -50,11 +49,16 @@ class CrystalArchive(Archiver):
         None, description="The oxidation states on each site."
     )
 
+    def _to_arrow_arrays(self, prefix: str | None = None) -> dict[str, pa.Array]:
+        prefix = prefix or ""
+        return {
+            f"{prefix}{k}": pa.array([getattr(self, k)])
+            for k in CrystalArchive.model_fields
+        }
+
     def to_arrow(self) -> pa.Table:
         """Convert a structure to a pyarrow table."""
-        return pa.table(
-            {k: pa.array([getattr(self, k)]) for k in CrystalArchive.model_fields}
-        )
+        return pa.table(self._to_arrow_arrays())
 
     @classmethod
     def from_arrow(cls, struct_table: pa.Table, prefix: str | None = None) -> Structure:
@@ -80,18 +84,6 @@ class CrystalArchive(Archiver):
             coords=data["direct_coords"],
             coords_are_cartesian=False,
         )
-
-    def _to_parquet(self, file_name, **kwargs):
-        """Dump a structure to parquet."""
-        pq.write_table(self.to_arrow(), file_name, **kwargs)
-
-    @classmethod
-    def _extract_from_parquet(
-        cls,
-        archive_path: str | Path,
-    ) -> Structure:
-        """Extract an ordered crystal structure from a parquet file."""
-        return cls.from_arrow(pq.read_table(archive_path))
 
     @classmethod
     def from_pmg(cls, structure: Structure) -> Self:

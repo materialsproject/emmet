@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import datetime
 import h5py
 from pathlib import Path
@@ -23,8 +22,9 @@ from pymatgen.electronic_structure.core import Orbital, Spin
 from pymatgen.electronic_structure.dos import CompleteDos, Dos
 from pymatgen.io.vasp.outputs import Vasprun
 
+from emmet.archival.atoms import CrystalArchive
 from emmet.archival.base import Archiver
-from emmet.archival.volumetric import VolumetricArchive
+from emmet.archival.volumetric import VolumetricArchive, ElectronicDos
 from emmet.archival.utils import zpath
 from emmet.archival.vasp import PMG_OBJ
 from emmet.archival.vasp.inputs import PoscarArchive
@@ -36,39 +36,71 @@ if TYPE_CHECKING:
     from pymatgen.core.sites import PeriodicSite
 
 
-@dataclass
 class DosArchive(Archiver):
     """Tools for archiving a density of states (DOS)."""
 
-    energies: list[float] = Field(
-        description="The energies at which the DOS was calculated."
-    )
-
-    densities: dict[Spin, list[float]] = Field(
-        description="The (colinear-)spin-resolved densities of state."
-    )
+    total_dos: ElectronicDos = Field(description="The DOS for the entire structure.")
 
     structure: Structure | None = Field(
         None, description="The structure associated with this DOS."
     )
 
-    projected_densties: dict[
-        int, dict[Orbital, dict[Spin, list[float]]]
-    ] | None = Field(None, description="The orbita- and site-projected DOS.")
+    projected_densities: list[list[ElectronicDos] | None] | None = Field(
+        None, description="The orbital- and site-projected DOS."
+    )
 
     @classmethod
-    def from_vasprun(cls, vasprun: Vasprun | str | Path, **kwargs):
-        if isinstance(vasprun, (str, Path)) and Path(vasprun).exists():
-            vasprun = Vasprun(vasprun)
-        return cls(parsed_objects={"DOS": vasprun.complete_dos}, **kwargs)  # type: ignore[union-attr]
+    def from_vasprun(cls, vasprun: Vasprun, **kwargs):
+        config = {
+            "total_dos": ElectronicDos(
+                **{
+                    f"spin_{spin.name}": sr_dos
+                    for spin, sr_dos in vasprun.complete_dos.densities.items()
+                },
+                efermi=vasprun.complete_dos.efermi,
+            ),
+            "structure": vasprun.complete_dos.structure,
+        }
 
-    @classmethod
-    def from_parsed_data(cls, dos_path: str | Path, **kwargs):
-        dos_data = loadfn(dos_path)
-        metadata = {k: v for k, v in dos_data.items() if k != "data"}
-        return cls(
-            parsed_objects={"DOS": dos_data["data"]}, metadata=metadata, **kwargs
-        )
+        pdos = None
+        if (vrun_pdos := vasprun.complete_dos.pdos) and config.get("structure"):
+            pdos = [None for _ in range(len(config["structure"]))]
+            for site, orb_spin_dos in vrun_pdos.items():
+                site_idx = [
+                    idx
+                    for idx, ref_site in enumerate(config["structure"])
+                    if ref_site == site
+                ][0]
+                pdos[site_idx] = [
+                    ElectronicDos(
+                        **{
+                            f"spin_{spin.name}": sr_dos
+                            for spin, sr_dos in spin_dos.items()
+                        },
+                        orbital=orbital.name,
+                    )
+                    for orbital, spin_dos in orb_spin_dos.items()
+                ]
+
+        return cls(**config, projected_densities=pdos, **kwargs)
+
+    def to_arrow(self) -> pa.Table:
+        config = {
+            **{
+                k: pa.array([v])
+                for k, v in self.model_dump(mode="json", exclude="structure").items()
+            },
+            **CrystalArchive.from_pmg(self.structure)._to_arrow_arrays(
+                prefix="structure_"
+            ),
+        }
+        return pa.table(config)
+
+    # def from_arrow(self, table : pa.Table) -> CompleteDos:
+    #     structure = CrystalArchive.from_arrow(table,prefix="structure_")
+    #     config = {
+    #         remap : v[0]
+    #     }
 
     def to_group(self, group: h5py.Group, group_key: str = "DOS") -> None:
         group.create_group(group_key)
@@ -157,7 +189,6 @@ class DosArchive(Archiver):
         )
 
 
-@dataclass
 class BandStructureArchive(Archiver):
     # parsed_objects : dict[str,Any] = {"BS": None}
 
@@ -226,7 +257,6 @@ class BandStructureArchive(Archiver):
                 )
 
 
-@dataclass
 class ElectronicStructureArchive(Archiver):
     # parsed_objects : dict[str,Any] = {"DOS": None,"BS": None,}
 

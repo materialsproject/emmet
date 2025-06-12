@@ -11,7 +11,8 @@ from typing import TYPE_CHECKING, Any
 import h5py
 from numcodecs import Blosc
 import zarr
-
+import pyarrow as pa
+import pyarrow.parquet as pq
 
 from emmet.archival.utils import StrEnum
 import zarr.storage
@@ -118,9 +119,20 @@ class Archiver(BaseModel):
         """Append data to an existing HDF5-like file group."""
         raise NotImplementedError
 
+    def to_arrow(
+        self,
+    ) -> pa.Table:
+        """Convert data to an arrow table."""
+        raise NotImplementedError
+
+    @classmethod
+    def from_arrow(cls, table: pa.Table) -> Any:
+        """Extract data from an arrow table"""
+        raise NotImplementedError
+
     def _to_parquet(self, file_name: PathLike, **kwargs) -> None:
         """Write data to a parquet file."""
-        raise NotImplementedError
+        pq.write_table(self.to_arrow(), file_name, **kwargs)
 
     def to_archive(
         self,
@@ -168,9 +180,9 @@ class Archiver(BaseModel):
         raise NotImplementedError
 
     @classmethod
-    def _extract_from_parquet(cls, archive_path: str | Path, *args, **kwargs) -> Any:
+    def _extract_from_parquet(cls, archive_path: PathLike, *args, **kwargs) -> Any:
         """Extract data from a parquet file."""
-        raise NotImplementedError
+        return cls.from_arrow(pq.read_table(archive_path))
 
     @classmethod
     def extract(

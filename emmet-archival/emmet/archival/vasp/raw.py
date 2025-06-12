@@ -93,7 +93,10 @@ class RawArchive(Archiver):
         if not calc_dir.exists():
             raise SystemError(f"Directory {calc_dir} does not exist!")
 
-        file_paths = raw_archive_hierarchy_from_files(discover_vasp_files(calc_dir))
+        flat_file_paths = []
+        for file_paths_by_suffix in discover_vasp_files(calc_dir).values():
+            flat_file_paths.extend(file_paths_by_suffix)
+        file_paths = raw_archive_hierarchy_from_files(flat_file_paths)
 
         return cls(file_paths=file_paths)
 
