@@ -45,6 +45,7 @@ numpy==2.3.0
     #   monty
     #   pandas
     #   pymatgen
+    #   pymatgen-io-validation
     #   scipy
     #   spglib
 orjson==3.10.18
@@ -67,9 +68,15 @@ pydantic==2.11.5
     # via
     #   emmet-core (setup.py)
     #   pydantic-settings
+    #   pymatgen-io-validation
 pydantic-core==2.33.2
     # via pydantic
 pydantic-settings==2.9.1
+pymatgen==2025.5.28
+    # via
+    #   emmet-core (setup.py)
+    #   pymatgen-io-validation
+pymatgen-io-validation==0.1.0rc0
     # via emmet-core (setup.py)
 pymatgen==2025.5.28
     # via emmet-core (setup.py)
