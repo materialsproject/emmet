@@ -71,13 +71,13 @@ class CrystalArchive(Archiver):
         oxi_states = data["oxi_states"] or [
             None for _ in range(len(data["atomic_num"]))
         ]
-        species = [
-            Species(
-                Element.from_Z(z).value,
-                oxidation_state=oxi_states[i],
-            )
-            for i, z in enumerate(data["atomic_num"])
-        ]
+        species = []
+        for i, z in enumerate(data["atomic_num"]):
+            ele = Element.from_Z(z).value
+            if oxi_states[i]:
+                species.append(Species(ele, oxidation_state=oxi_states[i]))
+            else:
+                species.append(ele)
         return Structure(
             Lattice(data["lattice"], pbc=data["pbc"]),
             species,

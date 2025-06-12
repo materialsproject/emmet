@@ -3,6 +3,7 @@
 from tempfile import NamedTemporaryFile
 import numpy as np
 
+from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.io.vasp import Chgcar, Vasprun
 
 from emmet.archival.volumetric import VolumetricArchive
@@ -63,4 +64,15 @@ def test_volumetric_archive():
 def test_dos(test_dir):
     vrun = Vasprun(test_dir / "test_raw_archive" / "vasprun.xml.gz")
     dos_arch = DosArchive.from_vasprun(vrun)
-    assert dos_arch
+
+    dos_table = dos_arch.to_arrow()
+
+    rehydrated = DosArchive.from_arrow(dos_table)
+    orig_dos_dict = vrun.complete_dos.as_dict()
+    for k, v in rehydrated.as_dict().items():
+        if k == "structure":
+            assert StructureMatcher().fit(
+                rehydrated.structure, vrun.complete_dos.structure
+            )
+        else:
+            assert v == orig_dos_dict[k]

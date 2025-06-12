@@ -57,6 +57,7 @@ class DosArchive(Archiver):
                     f"spin_{spin.name}": sr_dos
                     for spin, sr_dos in vasprun.complete_dos.densities.items()
                 },
+                energies=vasprun.complete_dos.energies,
                 efermi=vasprun.complete_dos.efermi,
             ),
             "structure": vasprun.complete_dos.structure,
@@ -96,11 +97,32 @@ class DosArchive(Archiver):
         }
         return pa.table(config)
 
-    # def from_arrow(self, table : pa.Table) -> CompleteDos:
-    #     structure = CrystalArchive.from_arrow(table,prefix="structure_")
-    #     config = {
-    #         remap : v[0]
-    #     }
+    @classmethod
+    def from_arrow(cls, table: pa.Table) -> Dos | CompleteDos:
+        tdos = ElectronicDos(**table["total_dos"].to_pylist()[0]).to_pmg()
+        if any("structure_" in col for col in table.column_names):
+            structure = CrystalArchive.from_arrow(table, prefix="structure_")
+        else:
+            return tdos
+
+        pdos_pmg = {}
+        if "projected_densities" in table.column_names:
+            pdos = table["projected_densities"].to_pylist()[0]
+            for site_idx, pdos_by_site in enumerate(pdos):
+                if pdos_by_site:
+                    pdos_pmg[structure[site_idx]] = {}
+                    for proj_dos in pdos_by_site:
+                        pdos_pmg[structure[site_idx]][Orbital[proj_dos["orbital"]]] = {
+                            spin: proj_dos[f"spin_{spin.name}"]
+                            for spin in Spin
+                            if proj_dos[f"spin_{spin.name}"]
+                        }
+
+        return CompleteDos(
+            structure,
+            tdos,
+            pdos_pmg,
+        )
 
     def to_group(self, group: h5py.Group, group_key: str = "DOS") -> None:
         group.create_group(group_key)

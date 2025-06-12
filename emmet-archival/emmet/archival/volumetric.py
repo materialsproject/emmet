@@ -9,6 +9,8 @@ import pyarrow.parquet as pq
 from pydantic import BaseModel, Field
 
 from pymatgen.core import Structure
+from pymatgen.electronic_structure.core import Spin
+from pymatgen.electronic_structure.dos import Dos
 from pymatgen.io.common import VolumetricData as PmgVolumetricData
 
 from emmet.archival.base import Archiver
@@ -38,9 +40,9 @@ class AugChargeData(BaseModel):
 class ElectronicDos(BaseModel):
     """Basic structure for spin-resolved density of states (DOS)."""
 
-    spin_up: list[float] = Field(description="The up-spin DOS.")
+    spin_up: list[float] | None = Field(None, description="The up-spin DOS.")
 
-    spin_down: list[float] = Field(description="The down-spin DOS.")
+    spin_down: list[float] | None = Field(None, description="The down-spin DOS.")
 
     energies: list[float] | None = Field(
         None, description="The energies at which the DOS was calculated."
@@ -51,6 +53,14 @@ class ElectronicDos(BaseModel):
     orbital: str | None = Field(
         None, description="The orbital character of this DOS, if applicable."
     )
+
+    def to_pmg(self) -> Dos:
+        """Convert to a pymatgen DOS object."""
+        densities = {}
+        for spin in Spin:
+            if sr_density := getattr(self, f"spin_{spin.name}", None):
+                densities[spin] = sr_density
+        return Dos(self.efermi, self.energies, densities)
 
 
 class VolumetricArchive(Archiver):
