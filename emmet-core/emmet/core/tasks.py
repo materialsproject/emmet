@@ -21,6 +21,7 @@ from pymatgen.io.vasp import Incar, Kpoints, Poscar
 from pymatgen.io.vasp import Potcar as VaspPotcar
 
 from emmet.core.common import convert_datetime
+from emmet.core.math import Vector3D
 from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import utcnow
@@ -182,6 +183,7 @@ class InputDoc(CalculationInput):
         the one specified by POTCAR
     is_lasph (bool) : how the calculation set LASPH (aspherical corrections)
     magnetic_moments (list of floats) : on-site magnetic moments
+    ncl_magnetic_moments (list of 3-vector of floats) : on-site, noncollinear magnetic moments
     """
 
     pseudo_potentials: Potcar | None = Field(
@@ -196,6 +198,11 @@ class InputDoc(CalculationInput):
     )
     magnetic_moments: list[float] | None = Field(
         None, description="Magnetic moments for each atom"
+    )
+
+    ncl_magnetic_moments: list[Vector3D] | None = Field(
+        None,
+        description="The vector-valued magnetic moments from a noncollinear calculation.",
     )
 
     @field_validator("parameters", mode="after")
@@ -234,12 +241,20 @@ class InputDoc(CalculationInput):
             func = "LDA"
 
         pps = Potcar(pot_type=pot_type, functional=func, symbols=calc_doc.input.potcar)
+
+        mag_config = {k: None for k in ("magnetic_moments", "ncl_magnetic_moments")}
+        if (magmom := calc_doc.input.parameters.get("MAGMOM")) is not None:
+            if all(isinstance(mag, float) for mag in magmom):
+                mag_config["magnetic_moments"] = magmom
+            elif all(isinstance(mag, list | tuple) for mag in magmom):
+                mag_config["ncl_magnetic_moments"] = magmom
+
         return cls(
             **calc_doc.input.model_dump(),
             pseudo_potentials=pps,
             xc_override=xc,
             is_lasph=calc_doc.input.parameters.get("LASPH", False),
-            magnetic_moments=calc_doc.input.parameters.get("MAGMOM"),
+            **mag_config,
         )
 
 
@@ -1046,7 +1061,10 @@ def _get_state(calcs_reversed: list[Calculation], analysis: AnalysisDoc) -> Task
     all_calcs_completed = all(
         c.has_vasp_completed == TaskState.SUCCESS for c in calcs_reversed
     )
-    if analysis.errors and len(analysis.errors) == 0 and all_calcs_completed:
+    if (
+        analysis.errors is None
+        or (isinstance(analysis.errors, list) and len(analysis.errors) == 0)
+    ) and all_calcs_completed:
         return TaskState.SUCCESS  # type: ignore
     return TaskState.FAILED  # type: ignore
 
