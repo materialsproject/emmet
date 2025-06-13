@@ -173,7 +173,7 @@ def arrowize(obj):
     if isinstance(obj, typing._AnnotatedAlias):
         return arrowize(obj.__args__[0])
 
-    if issubclass(obj, MSONable):
+    if isinstance(obj, type) and issubclass(obj, MSONable):
         assert hasattr(
             obj, "__type_adapter__"
         ), f"""
