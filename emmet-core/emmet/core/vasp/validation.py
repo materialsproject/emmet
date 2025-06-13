@@ -10,7 +10,7 @@ from emmet.core.base import EmmetBaseModel
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
 from emmet.core.utils import utcnow
-from emmet.core.vasp.utils import FileMetadata
+from emmet.core.vasp.utils import FileMetadata, discover_vasp_files
 from emmet.core.vasp.task_valid import TaskDocument
 
 from pymatgen.io.vasp import Incar
@@ -60,8 +60,8 @@ class ValidationDoc(VaspValidator, EmmetBaseModel):
                 len(matched_files := [vf for vf in REQUIRED_VASP_FILES if vf in f.name])
                 > 0
             ):
-                vasp_file_paths[matched_files[0]] = f.path
-        return cls.from_vasp_input(cls, vasp_file_paths, **kwargs)
+                vasp_file_paths[matched_files[0].lower().split(".")[0]] = f.path
+        return cls.from_vasp_input(vasp_file_paths=vasp_file_paths, **kwargs)
 
     @staticmethod
     def task_doc_to_vasp_files(task_doc: TaskDoc | TaskDocument) -> VaspFiles:
@@ -118,3 +118,14 @@ class ValidationDoc(VaspValidator, EmmetBaseModel):
         """Validate a VASP calculation represented by an emmet.core TaskDoc/ument."""
         vasp_files = cls.task_doc_to_vasp_files(task_doc)
         return cls.from_vasp_input(vasp_files=vasp_files, **kwargs)
+
+    @classmethod
+    def from_directory(cls, dir_name: str | Path, **kwargs) -> Self:
+        """Override parent model to use file discovery method."""
+        vasp_files = discover_vasp_files(dir_name)
+
+        # NB: this will pick "standard" over "relax*" if present,
+        # and will select the last "relax*" if those are the only
+        # types present
+        final_calc_name = sorted(vasp_files)[-1]
+        return cls.from_file_metadata(vasp_files[final_calc_name], **kwargs)
