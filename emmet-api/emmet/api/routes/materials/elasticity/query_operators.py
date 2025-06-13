@@ -12,33 +12,27 @@ class BulkModulusQuery(QueryOperator):
 
     def query(
         self,
-        k_voigt_max: float
-        | None = Query(
+        k_voigt_max: float | None = Query(
             None,
             description="Maximum value for the Voigt average of the bulk modulus in GPa.",
         ),
-        k_voigt_min: float
-        | None = Query(
+        k_voigt_min: float | None = Query(
             None,
             description="Minimum value for the Voigt average of the bulk modulus in GPa.",
         ),
-        k_reuss_max: float
-        | None = Query(
+        k_reuss_max: float | None = Query(
             None,
             description="Maximum value for the Reuss average of the bulk modulus in GPa.",
         ),
-        k_reuss_min: float
-        | None = Query(
+        k_reuss_min: float | None = Query(
             None,
             description="Minimum value for the Reuss average of the bulk modulus in GPa.",
         ),
-        k_vrh_max: float
-        | None = Query(
+        k_vrh_max: float | None = Query(
             None,
             description="Maximum value for the Voigt-Reuss-Hill average of the bulk modulus in GPa.",
         ),
-        k_vrh_min: float
-        | None = Query(
+        k_vrh_min: float | None = Query(
             None,
             description="Minimum value for the Voigt-Reuss-Hill average of the bulk modulus in GPa.",
         ),
@@ -68,33 +62,27 @@ class ShearModulusQuery(QueryOperator):
 
     def query(
         self,
-        g_voigt_max: float
-        | None = Query(
+        g_voigt_max: float | None = Query(
             None,
             description="Maximum value for the Voigt average of the shear modulus in GPa.",
         ),
-        g_voigt_min: float
-        | None = Query(
+        g_voigt_min: float | None = Query(
             None,
             description="Minimum value for the Voigt average of the shear modulus in GPa.",
         ),
-        g_reuss_max: float
-        | None = Query(
+        g_reuss_max: float | None = Query(
             None,
             description="Maximum value for the Reuss average of the shear modulus in GPa.",
         ),
-        g_reuss_min: float
-        | None = Query(
+        g_reuss_min: float | None = Query(
             None,
             description="Minimum value for the Reuss average of the shear modulus in GPa.",
         ),
-        g_vrh_max: float
-        | None = Query(
+        g_vrh_max: float | None = Query(
             None,
             description="Maximum value for the Voigt-Reuss-Hill average of the shear modulus in GPa.",
         ),
-        g_vrh_min: float
-        | None = Query(
+        g_vrh_min: float | None = Query(
             None,
             description="Minimum value for the Voigt-Reuss-Hill average of the shear modulus in GPa.",
         ),
@@ -125,23 +113,19 @@ class PoissonQuery(QueryOperator):
 
     def query(
         self,
-        elastic_anisotropy_max: float
-        | None = Query(
+        elastic_anisotropy_max: float | None = Query(
             None,
             description="Maximum value for the elastic anisotropy.",
         ),
-        elastic_anisotropy_min: float
-        | None = Query(
+        elastic_anisotropy_min: float | None = Query(
             None,
             description="Maximum value for the elastic anisotropy.",
         ),
-        poisson_max: float
-        | None = Query(
+        poisson_max: float | None = Query(
             None,
             description="Maximum value for Poisson's ratio.",
         ),
-        poisson_min: float
-        | None = Query(
+        poisson_min: float | None = Query(
             None,
             description="Minimum value for Poisson's ratio.",
         ),
@@ -173,8 +157,7 @@ class ElasticityChemsysQuery(QueryOperator):
 
     def query(
         self,
-        chemsys: str
-        | None = Query(
+        chemsys: str | None = Query(
             None,
             description="A comma delimited string list of chemical systems.",
         ),

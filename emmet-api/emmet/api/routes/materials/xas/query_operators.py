@@ -37,8 +37,7 @@ class XASIDQuery(QueryOperator):
 
     def query(
         self,
-        spectrum_ids: str
-        | None = Query(
+        spectrum_ids: str | None = Query(
             None, description="Comma-separated list of spectrum_id to query on"
         ),
     ) -> STORE_PARAMS:

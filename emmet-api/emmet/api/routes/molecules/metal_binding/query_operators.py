@@ -12,75 +12,70 @@ class BindingDataQuery(QueryOperator):
 
     def query(
         self,
-        metal_element: str
-        | None = Query(
+        metal_element: str | None = Query(
             None,
             description="Element symbol for coordinated metal, e.g. 'Li' for lithium or 'Mg' for magnesium",
         ),
-        metal_partial_charge_min: float
-        | None = Query(None, description="Minimum metal partial charge."),
-        metal_partial_charge_max: float
-        | None = Query(None, description="Maximum metal partial charge."),
-        metal_partial_spin_min: float
-        | None = Query(
+        metal_partial_charge_min: float | None = Query(
+            None, description="Minimum metal partial charge."
+        ),
+        metal_partial_charge_max: float | None = Query(
+            None, description="Maximum metal partial charge."
+        ),
+        metal_partial_spin_min: float | None = Query(
             None,
             description="Minimum metal partial spin (only meaningful for open-shell systems).",
         ),
-        metal_partial_spin_max: float
-        | None = Query(
+        metal_partial_spin_max: float | None = Query(
             None,
             description="Maximum metal partial spin (only meaningful for open-shell systems).",
         ),
-        metal_assigned_charge_min: float
-        | None = Query(
+        metal_assigned_charge_min: float | None = Query(
             None,
             description="Minimum charge of the metal, determined by analyzing partial charges/spins.",
         ),
-        metal_assigned_charge_max: float
-        | None = Query(
+        metal_assigned_charge_max: float | None = Query(
             None,
             description="Maximum charge of the metal, determined by analyzing partial charges/spins.",
         ),
-        metal_assigned_spin_min: int
-        | float
-        | None = Query(
+        metal_assigned_spin_min: int | float | None = Query(
             None,
             description="Minimum spin multiplicity of the metal, determined by analyzing partial spins.",
         ),
-        metal_assigned_spin_max: int
-        | float
-        | None = Query(
+        metal_assigned_spin_max: int | float | None = Query(
             None,
             description="Maximum spin multiplicity of the metal, determined by analyzing partial spins.",
         ),
-        number_coordinate_bonds_min: int
-        | None = Query(
+        number_coordinate_bonds_min: int | None = Query(
             None, description="Minimum number of atoms coordinated to the metal."
         ),
-        number_coordinate_bonds_max: int
-        | None = Query(
+        number_coordinate_bonds_max: int | None = Query(
             None, description="Maximum number of atoms coordinated to the metal."
         ),
-        binding_energy_min: float
-        | None = Query(
+        binding_energy_min: float | None = Query(
             None, description="Minimum binding electronic energy (units: eV)"
         ),
-        binding_energy_max: float
-        | None = Query(
+        binding_energy_max: float | None = Query(
             None, description="Maximum binding electronic energy (units: eV)"
         ),
-        binding_enthalpy_min: float
-        | None = Query(None, description="Minimum binding enthalpy (units: eV)"),
-        binding_enthalpy_max: float
-        | None = Query(None, description="Maximum binding enthalpy (units: eV)"),
-        binding_entropy_min: float
-        | None = Query(None, description="Minimum binding entropy (units: eV/K)"),
-        binding_entropy_max: float
-        | None = Query(None, description="Maximum binding entropy (units: eV/K)"),
-        binding_free_energy_min: float
-        | None = Query(None, description="Minimum binding free energy (units: eV)"),
-        binding_free_energy_max: float
-        | None = Query(None, description="Maximum binding free energy (units: eV)"),
+        binding_enthalpy_min: float | None = Query(
+            None, description="Minimum binding enthalpy (units: eV)"
+        ),
+        binding_enthalpy_max: float | None = Query(
+            None, description="Maximum binding enthalpy (units: eV)"
+        ),
+        binding_entropy_min: float | None = Query(
+            None, description="Minimum binding entropy (units: eV/K)"
+        ),
+        binding_entropy_max: float | None = Query(
+            None, description="Maximum binding entropy (units: eV/K)"
+        ),
+        binding_free_energy_min: float | None = Query(
+            None, description="Minimum binding free energy (units: eV)"
+        ),
+        binding_free_energy_max: float | None = Query(
+            None, description="Maximum binding free energy (units: eV)"
+        ),
     ) -> STORE_PARAMS:
         crit: dict[str, Any] = dict()  # type: ignore
 

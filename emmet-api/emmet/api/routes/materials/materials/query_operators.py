@@ -25,8 +25,7 @@ class FormulaQuery(QueryOperator):
 
     def query(
         self,
-        formula: str
-        | None = Query(
+        formula: str | None = Query(
             None,
             description="Query by formula including anonymized formula or by including wild cards. \
 A comma delimited string list of anonymous formulas or regular formulas can also be provided.",
@@ -52,8 +51,7 @@ class ChemsysQuery(QueryOperator):
 
     def query(
         self,
-        chemsys: str
-        | None = Query(
+        chemsys: str | None = Query(
             None,
             description="A comma delimited string list of chemical systems. \
 Wildcards for unknown elements only supported for single chemsys queries",
@@ -78,14 +76,12 @@ class ElementsQuery(QueryOperator):
 
     def query(
         self,
-        elements: str
-        | None = Query(
+        elements: str | None = Query(
             None,
             description="Query by elements in the material composition as a comma-separated list",
             max_length=60,
         ),
-        exclude_elements: str
-        | None = Query(
+        exclude_elements: str | None = Query(
             None,
             description="Query by excluded elements in the material composition as a comma-separated list",
             max_length=60,
@@ -130,8 +126,7 @@ class DeprecationQuery(QueryOperator):
 
     def query(
         self,
-        deprecated: bool
-        | None = Query(
+        deprecated: bool | None = Query(
             False,
             description="Whether the material is marked as deprecated",
         ),
@@ -151,18 +146,15 @@ class SymmetryQuery(QueryOperator):
 
     def query(
         self,
-        crystal_system: CrystalSystem
-        | None = Query(
+        crystal_system: CrystalSystem | None = Query(
             None,
             description="Crystal system of the material",
         ),
-        spacegroup_number: int
-        | None = Query(
+        spacegroup_number: int | None = Query(
             None,
             description="Space group number of the material",
         ),
-        spacegroup_symbol: str
-        | None = Query(
+        spacegroup_symbol: str | None = Query(
             None,
             description="Space group symbol of the material",
         ),
@@ -192,8 +184,7 @@ class MultiTaskIDQuery(QueryOperator):
 
     def query(
         self,
-        task_ids: str
-        | None = Query(
+        task_ids: str | None = Query(
             None, description="Comma-separated list of task_ids to query on"
         ),
     ) -> STORE_PARAMS:
@@ -224,12 +215,10 @@ class BlessedCalcsQuery(QueryOperator):
         run_type: RunType = Query(
             ..., description="Calculation run type of blessed task data"
         ),
-        energy_min: float
-        | None = Query(
+        energy_min: float | None = Query(
             None, description="Minimum total uncorrected DFT energy in eV/atom"
         ),
-        energy_max: float
-        | None = Query(
+        energy_max: float | None = Query(
             None, description="Maximum total uncorrected DFT energy in eV/atom"
         ),
     ) -> STORE_PARAMS:
@@ -267,8 +256,7 @@ class MultiMaterialIDQuery(QueryOperator):
 
     def query(
         self,
-        material_ids: str
-        | None = Query(
+        material_ids: str | None = Query(
             None, description="Comma-separated list of material_id values to query on"
         ),
     ) -> STORE_PARAMS:
@@ -474,8 +462,7 @@ class LicenseQuery(QueryOperator):
 
     def query(
         self,
-        license: Literal["BY-C", "BY-NC", "All"]
-        | None = Query(
+        license: Literal["BY-C", "BY-NC", "All"] | None = Query(
             "BY-C",
             description="Query by license. Can be commercial or non-commercial, or both",
         ),
@@ -489,23 +476,19 @@ class BatchIdQuery(QueryOperator):
 
     def query(
         self,
-        batch_id: str
-        | None = Query(
+        batch_id: str | None = Query(
             None,
             description="Query by batch identifier",
         ),
-        batch_id_not_eq: str
-        | None = Query(
+        batch_id_not_eq: str | None = Query(
             None,
             description="Exclude batch identifier",
         ),
-        batch_id_eq_any: str
-        | None = Query(
+        batch_id_eq_any: str | None = Query(
             None,
             description="Query by a comma-separated list of batch identifiers",
         ),
-        batch_id_neq_any: str
-        | None = Query(
+        batch_id_neq_any: str | None = Query(
             None,
             description="Exclude a comma-separated list of batch identifiers",
         ),

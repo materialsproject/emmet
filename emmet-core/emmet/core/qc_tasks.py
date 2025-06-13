@@ -1,6 +1,6 @@
 # mypy: ignore-errors
 
-""" Core definition of a Q-Chem Task Document """
+"""Core definition of a Q-Chem Task Document"""
 import logging
 import re
 from collections import OrderedDict

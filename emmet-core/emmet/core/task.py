@@ -1,4 +1,4 @@
-""" Core definition of a Task Document which represents a calculation from some program"""
+"""Core definition of a Task Document which represents a calculation from some program"""
 
 from datetime import datetime
 

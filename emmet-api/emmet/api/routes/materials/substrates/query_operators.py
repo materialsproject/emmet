@@ -12,13 +12,11 @@ class SubstrateStructureQuery(QueryOperator):
 
     def query(
         self,
-        film_orientation: str
-        | None = Query(
+        film_orientation: str | None = Query(
             None,
             description="Comma separated integers defining the film surface orientation.",
         ),
-        substrate_orientation: str
-        | None = Query(
+        substrate_orientation: str | None = Query(
             None,
             description="Comma separated integers defining the substrate surface orientation.",
         ),
@@ -50,23 +48,19 @@ class EnergyAreaQuery(QueryOperator):
 
     def query(
         self,
-        area_max: float
-        | None = Query(
+        area_max: float | None = Query(
             None,
             description="Maximum value for the minimum coincident interface area in Å².",
         ),
-        area_min: float
-        | None = Query(
+        area_min: float | None = Query(
             None,
             description="Minimum value for the minimum coincident interface area in Å².",
         ),
-        energy_max: float
-        | None = Query(
+        energy_max: float | None = Query(
             None,
             description="Maximum value for the energy in meV.",
         ),
-        energy_min: float
-        | None = Query(
+        energy_min: float | None = Query(
             None,
             description="Minimum value for the energy in meV.",
         ),

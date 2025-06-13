@@ -12,40 +12,33 @@ class ChemEnvQuery(QueryOperator):
 
     def query(
         self,
-        chemenv_iucr: str
-        | None = Query(
+        chemenv_iucr: str | None = Query(
             None,
             description="A comma delimited string list of unique (cationic) species in IUCR format.",
         ),
-        chemenv_iupac: str
-        | None = Query(
+        chemenv_iupac: str | None = Query(
             None,
             description="A comma delimited string list of unique (cationic) species in IUPAC format.",
         ),
-        chemenv_name: str
-        | None = Query(
+        chemenv_name: str | None = Query(
             None,
             description="A comma delimited string list of coordination environment descriptions for "
             "unique (cationic) species.",
         ),
-        chemenv_symbol: str
-        | None = Query(
+        chemenv_symbol: str | None = Query(
             None,
             description="A comma delimited string list of ChemEnv symbols for unique (cationic) species "
             "in the structure.",
         ),
-        species: str
-        | None = Query(
+        species: str | None = Query(
             None,
             description="A comma delimited string list of unique (cationic) species in the structure.",
         ),
-        csm_min: float
-        | None = Query(
+        csm_min: float | None = Query(
             None,
             description="Minimum value of the continous symmetry measure for any site.",
         ),
-        csm_max: float
-        | None = Query(
+        csm_max: float | None = Query(
             None,
             description="Maximum value of the continous symmetry measure for any site.",
         ),

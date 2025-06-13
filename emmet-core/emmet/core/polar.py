@@ -1,4 +1,4 @@
-""" Core definition for Polar property Document """
+"""Core definition for Polar property Document"""
 
 import numpy as np
 from pydantic import BaseModel, Field

@@ -11,8 +11,7 @@ class ReconstructedQuery(QueryOperator):
 
     def query(
         self,
-        has_reconstructed: bool
-        | None = Query(
+        has_reconstructed: bool | None = Query(
             None,
             description="Whether the entry has a reconstructed surface.",
         ),

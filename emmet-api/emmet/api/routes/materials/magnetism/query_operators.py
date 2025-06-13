@@ -13,55 +13,46 @@ class MagneticQuery(QueryOperator):
 
     def query(
         self,
-        ordering: Ordering
-        | None = Query(None, description="Magnetic ordering of the material."),
-        total_magnetization_max: float
-        | None = Query(
+        ordering: Ordering | None = Query(
+            None, description="Magnetic ordering of the material."
+        ),
+        total_magnetization_max: float | None = Query(
             None,
             description="Maximum value for the total magnetization.",
         ),
-        total_magnetization_min: float
-        | None = Query(
+        total_magnetization_min: float | None = Query(
             None,
             description="Minimum value for the total magnetization.",
         ),
-        total_magnetization_normalized_vol_max: float
-        | None = Query(
+        total_magnetization_normalized_vol_max: float | None = Query(
             None,
             description="Maximum value for the total magnetization normalized with volume.",
         ),
-        total_magnetization_normalized_vol_min: float
-        | None = Query(
+        total_magnetization_normalized_vol_min: float | None = Query(
             None,
             description="Minimum value for the total magnetization normalized with volume.",
         ),
-        total_magnetization_normalized_formula_units_max: float
-        | None = Query(
+        total_magnetization_normalized_formula_units_max: float | None = Query(
             None,
             description="Maximum value for the total magnetization normalized with formula units.",
         ),
-        total_magnetization_normalized_formula_units_min: float
-        | None = Query(
+        total_magnetization_normalized_formula_units_min: float | None = Query(
             None,
             description="Minimum value for the total magnetization normalized with formula units.",
         ),
-        num_magnetic_sites_max: int
-        | None = Query(
+        num_magnetic_sites_max: int | None = Query(
             None,
             description="Maximum value for the total number of magnetic sites.",
         ),
-        num_magnetic_sites_min: int
-        | None = Query(
+        num_magnetic_sites_min: int | None = Query(
             None,
             description="Minimum value for the total number of magnetic sites.",
         ),
-        num_unique_magnetic_sites_max: int
-        | None = Query(
+        num_unique_magnetic_sites_max: int | None = Query(
             None,
             description="Maximum value for the total number of unique magnetic sites.",
         ),
-        num_unique_magnetic_sites_min: int
-        | None = Query(
+        num_unique_magnetic_sites_min: int | None = Query(
             None,
             description="Minimum value for the total number of unique magnetic sites.",
         ),

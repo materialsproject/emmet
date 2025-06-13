@@ -14,8 +14,7 @@ class MoleculeElementsQuery(QueryOperator):
 
     def query(
         self,
-        elements: str
-        | None = Query(
+        elements: str | None = Query(
             None,
             description="Query by elements in the material composition as a comma-separated list",
         ),
@@ -45,53 +44,43 @@ class MoleculeBaseQuery(QueryOperator):
 
     def query(
         self,
-        nelements_max: float
-        | None = Query(
+        nelements_max: float | None = Query(
             None,
             description="Maximum value for the number of elements.",
         ),
-        nelements_min: float
-        | None = Query(
+        nelements_min: float | None = Query(
             None,
             description="Minimum value for the number of elements.",
         ),
-        EA_max: float
-        | None = Query(
+        EA_max: float | None = Query(
             None,
             description="Maximum value for the electron affinity in eV.",
         ),
-        EA_min: float
-        | None = Query(
+        EA_min: float | None = Query(
             None,
             description="Minimum value for the electron affinity in eV.",
         ),
-        IE_max: float
-        | None = Query(
+        IE_max: float | None = Query(
             None,
             description="Maximum value for the ionization energy in eV.",
         ),
-        IE_min: float
-        | None = Query(
+        IE_min: float | None = Query(
             None,
             description="Minimum value for the ionization energy in eV.",
         ),
-        charge_max: int
-        | None = Query(
+        charge_max: int | None = Query(
             None,
             description="Maximum value for the charge in +e.",
         ),
-        charge_min: int
-        | None = Query(
+        charge_min: int | None = Query(
             None,
             description="Minimum value for the charge in +e.",
         ),
-        pointgroup: str
-        | None = Query(
+        pointgroup: str | None = Query(
             None,
             description="Point of the molecule in Schoenflies notation.",
         ),
-        smiles: str
-        | None = Query(
+        smiles: str | None = Query(
             None,
             description="The simplified molecular input line-entry system (SMILES) \
             representation of the molecule.",
@@ -138,8 +127,7 @@ class MoleculeFormulaQuery(QueryOperator):
 
     def query(
         self,
-        formula: str
-        | None = Query(
+        formula: str | None = Query(
             None,
             description="Chemical formula of the molecule. A comma-separated list of formulas is also accepted.",
         ),

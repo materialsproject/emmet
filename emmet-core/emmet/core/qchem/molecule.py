@@ -1,4 +1,4 @@
-""" Core definition of a Molecule Document """
+"""Core definition of a Molecule Document"""
 
 from typing import Any, Mapping
 

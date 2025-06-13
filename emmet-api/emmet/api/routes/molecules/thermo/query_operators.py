@@ -12,32 +12,27 @@ class ThermoCorrectionQuery(QueryOperator):
 
     def query(
         self,
-        has_correction: bool
-        | None = Query(
+        has_correction: bool | None = Query(
             False,
             description="Whether the thermodynamics involve a single-point energy correction.",
         ),
-        correction_level_of_theory: str
-        | None = Query(
+        correction_level_of_theory: str | None = Query(
             None,
             description="Level of theory used for the single-point energy correction. Default is None, "
             "meaning that level of theory will not be queried.",
         ),
-        correction_solvent: str
-        | None = Query(
+        correction_solvent: str | None = Query(
             None,
             description="Solvent data used for the single-point energy correction. Default is None, "
             "meaning that solvent will not be queried.",
         ),
-        correction_lot_solvent: str
-        | None = Query(
+        correction_lot_solvent: str | None = Query(
             None,
             description="String representing the combination of level of theory and solvent for the "
             "single-point energy correction. Default is None, meaning lot_solvent will not be "
             "queried.",
         ),
-        combined_lot_solvent: str
-        | None = Query(
+        combined_lot_solvent: str | None = Query(
             None,
             description="String representing the combination of level of theory and solvent for the complete "
             "thermodynamic calculation, including the frequency analysis and single-point energy "

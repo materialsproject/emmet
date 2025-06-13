@@ -12,33 +12,27 @@ class BondLengthQuery(QueryOperator):
 
     def query(
         self,
-        max_bond_length_max: float
-        | None = Query(
+        max_bond_length_max: float | None = Query(
             None,
             description="Maximum value for the maximum bond length in the structure.",
         ),
-        max_bond_length_min: float
-        | None = Query(
+        max_bond_length_min: float | None = Query(
             None,
             description="Minimum value for the maximum bond length in the structure.",
         ),
-        min_bond_length_max: float
-        | None = Query(
+        min_bond_length_max: float | None = Query(
             None,
             description="Maximum value for the minimum bond length in the structure.",
         ),
-        min_bond_length_min: float
-        | None = Query(
+        min_bond_length_min: float | None = Query(
             None,
             description="Minimum value for the minimum bond length in the structure.",
         ),
-        mean_bond_length_max: float
-        | None = Query(
+        mean_bond_length_max: float | None = Query(
             None,
             description="Maximum value for the mean bond length in the structure.",
         ),
-        mean_bond_length_min: float
-        | None = Query(
+        mean_bond_length_min: float | None = Query(
             None,
             description="Minimum value for the mean bond length in the structure.",
         ),
@@ -76,14 +70,12 @@ class CoordinationEnvsQuery(QueryOperator):
 
     def query(
         self,
-        coordination_envs: str
-        | None = Query(
+        coordination_envs: str | None = Query(
             None,
             description="Query by coordination environments in the material composition as a comma-separated list\
  (e.g. 'Mo-S(6),S-Mo(3)')",
         ),
-        coordination_envs_anonymous: str
-        | None = Query(
+        coordination_envs_anonymous: str | None = Query(
             None,
             description="Query by anonymous coordination environments in the material composition as a comma-separated\
  list (e.g. 'A-B(6),A-B(3)')",

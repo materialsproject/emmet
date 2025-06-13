@@ -42,9 +42,9 @@ def electrodes_formula_to_criteria(formulas: str) -> dict:
 
             comp = Composition(integer_formula).reduced_composition
             crit = dict()  # type: dict
-            crit[
-                "entries_composition_summary.all_formula_anonymous"
-            ] = comp.anonymized_formula
+            crit["entries_composition_summary.all_formula_anonymous"] = (
+                comp.anonymized_formula
+            )
 
             real_elts = [
                 str(e)

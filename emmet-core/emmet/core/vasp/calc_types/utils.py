@@ -52,7 +52,7 @@ def run_type(parameters: dict) -> RunType:
 
 
 def task_type(
-    inputs: dict[Literal["incar", "poscar", "kpoints", "potcar"], dict]
+    inputs: dict[Literal["incar", "poscar", "kpoints", "potcar"], dict],
 ) -> TaskType:
     """
     Determine task type from vasp inputs.

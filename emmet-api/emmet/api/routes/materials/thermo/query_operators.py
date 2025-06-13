@@ -10,8 +10,9 @@ class IsStableQuery(QueryOperator):
 
     def query(
         self,
-        is_stable: bool
-        | None = Query(None, description="Whether the material is stable."),
+        is_stable: bool | None = Query(
+            None, description="Whether the material is stable."
+        ),
     ):
         crit = {}
 
@@ -32,8 +33,7 @@ class MultiThermoIDQuery(QueryOperator):
 
     def query(
         self,
-        thermo_ids: str
-        | None = Query(
+        thermo_ids: str | None = Query(
             None, description="Comma-separated list of thermo_id values to query on"
         ),
     ) -> STORE_PARAMS:
@@ -57,8 +57,7 @@ class MultiThermoTypeQuery(QueryOperator):
 
     def query(
         self,
-        thermo_types: str
-        | None = Query(
+        thermo_types: str | None = Query(
             None, description="Comma-separated list of thermo_type values to query on"
         ),
     ) -> STORE_PARAMS:
@@ -84,8 +83,7 @@ class MultiPhaseDiagramIDQuery(QueryOperator):
 
     def query(
         self,
-        phase_diagram_ids: str
-        | None = Query(
+        phase_diagram_ids: str | None = Query(
             None,
             description="Comma-separated list of phase_diagram_id values to query on",
         ),

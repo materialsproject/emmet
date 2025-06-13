@@ -12,43 +12,35 @@ class DielectricQuery(QueryOperator):
 
     def query(
         self,
-        e_total_max: float
-        | None = Query(
+        e_total_max: float | None = Query(
             None,
             description="Maximum value for the total dielectric constant.",
         ),
-        e_total_min: float
-        | None = Query(
+        e_total_min: float | None = Query(
             None,
             description="Minimum value for the total dielectric constant.",
         ),
-        e_ionic_max: float
-        | None = Query(
+        e_ionic_max: float | None = Query(
             None,
             description="Maximum value for the ionic dielectric constant.",
         ),
-        e_ionic_min: float
-        | None = Query(
+        e_ionic_min: float | None = Query(
             None,
             description="Minimum value for the ionic dielectric constant.",
         ),
-        e_electronic_max: float
-        | None = Query(
+        e_electronic_max: float | None = Query(
             None,
             description="Maximum value for the electronic dielectric constant.",
         ),
-        e_electronic_min: float
-        | None = Query(
+        e_electronic_min: float | None = Query(
             None,
             description="Minimum value for the electronic dielectric constant.",
         ),
-        n_max: float
-        | None = Query(
+        n_max: float | None = Query(
             None,
             description="Maximum value for the refractive index.",
         ),
-        n_min: float
-        | None = Query(
+        n_min: float | None = Query(
             None,
             description="Minimum value for the refractive index.",
         ),

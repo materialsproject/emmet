@@ -46,17 +46,14 @@ class MultipoleMomentComponentQuery(QueryOperator):
                 "'hexadecapole'"
             ),
         ),
-        component: str
-        | None = Query(
+        component: str | None = Query(
             None,
             description="Component to query on, i.e. 'X', 'Y', or 'Z' for dipole moments",
         ),
-        component_value_min: float
-        | None = Query(
+        component_value_min: float | None = Query(
             None, description="Minimum value for the multipole moment component"
         ),
-        component_value_max: float
-        | None = Query(
+        component_value_max: float | None = Query(
             None, description="Maximum value for the multipole moment component"
         ),
     ) -> STORE_PARAMS:

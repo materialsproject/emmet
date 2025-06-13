@@ -15,39 +15,41 @@ class SynthesisSearchQuery(QueryOperator):
 
     def query(  # noqa: C901
         self,
-        keywords: str
-        | None = Query(
+        keywords: str | None = Query(
             None,
             description="Comma delimited string keywords to search synthesis paragraph text with.",
         ),
-        synthesis_type: list[SynthesisTypeEnum]
-        | None = Query(None, description="Type of synthesis to include."),
-        target_formula: str
-        | None = Query(None, description="Chemical formula of the target material."),
-        precursor_formula: str
-        | None = Query(None, description="Chemical formula of the precursor material."),
-        operations: list[OperationTypeEnum]
-        | None = Query(
+        synthesis_type: list[SynthesisTypeEnum] | None = Query(
+            None, description="Type of synthesis to include."
+        ),
+        target_formula: str | None = Query(
+            None, description="Chemical formula of the target material."
+        ),
+        precursor_formula: str | None = Query(
+            None, description="Chemical formula of the precursor material."
+        ),
+        operations: list[OperationTypeEnum] | None = Query(
             None, description="List of operations that syntheses must have."
         ),
-        condition_heating_temperature_min: float
-        | None = Query(None, description="Minimal heating temperature."),
-        condition_heating_temperature_max: float
-        | None = Query(None, description="Maximal heating temperature."),
-        condition_heating_time_min: float
-        | None = Query(None, description="Minimal heating time."),
-        condition_heating_time_max: float
-        | None = Query(None, description="Maximal heating time."),
-        condition_heating_atmosphere: list[str]
-        | None = Query(
+        condition_heating_temperature_min: float | None = Query(
+            None, description="Minimal heating temperature."
+        ),
+        condition_heating_temperature_max: float | None = Query(
+            None, description="Maximal heating temperature."
+        ),
+        condition_heating_time_min: float | None = Query(
+            None, description="Minimal heating time."
+        ),
+        condition_heating_time_max: float | None = Query(
+            None, description="Maximal heating time."
+        ),
+        condition_heating_atmosphere: list[str] | None = Query(
             None, description='Required heating atmosphere, such as "air", "argon".'
         ),
-        condition_mixing_device: list[str]
-        | None = Query(
+        condition_mixing_device: list[str] | None = Query(
             None, description='Required mixing device, such as "zirconia", "Al2O3".'
         ),
-        condition_mixing_media: list[str]
-        | None = Query(
+        condition_mixing_media: list[str] | None = Query(
             None, description='Required mixing media, such as "alcohol", "water".'
         ),
         _skip: int = Query(0, description="Number of entries to skip in the search"),

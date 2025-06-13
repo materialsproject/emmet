@@ -15,10 +15,12 @@ from emmet.api.routes.materials.tasks.utils import (
 class LastUpdatedQuery(QueryOperator):
     def query(
         self,
-        last_updated_min: datetime
-        | None = Query(None, description="Minimum last updated UTC datetime"),
-        last_updated_max: datetime
-        | None = Query(None, description="Maximum last updated UTC datetime"),
+        last_updated_min: datetime | None = Query(
+            None, description="Minimum last updated UTC datetime"
+        ),
+        last_updated_max: datetime | None = Query(
+            None, description="Maximum last updated UTC datetime"
+        ),
     ) -> STORE_PARAMS:
         crit: dict = defaultdict(dict)
 
@@ -38,8 +40,7 @@ class MultipleTaskIDsQuery(QueryOperator):
 
     def query(
         self,
-        task_ids: str
-        | None = Query(
+        task_ids: str | None = Query(
             None, description="Comma-separated list of task_ids to query on"
         ),
     ) -> STORE_PARAMS:
@@ -76,8 +77,7 @@ class TrajectoryQuery(QueryOperator):
 
     def query(
         self,
-        task_ids: str
-        | None = Query(
+        task_ids: str | None = Query(
             None, description="Comma-separated list of task_ids to query on"
         ),
     ) -> STORE_PARAMS:
@@ -119,8 +119,7 @@ class EntryQuery(QueryOperator):
 
     def query(
         self,
-        task_ids: str
-        | None = Query(
+        task_ids: str | None = Query(
             None, description="Comma-separated list of task_ids to query on"
         ),
     ) -> STORE_PARAMS:

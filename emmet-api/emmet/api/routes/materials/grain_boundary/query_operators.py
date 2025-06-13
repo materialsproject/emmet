@@ -15,33 +15,27 @@ class GBStructureQuery(QueryOperator):
 
     def query(
         self,
-        sigma: int
-        | None = Query(
+        sigma: int | None = Query(
             None,
             description="Value of sigma.",
         ),
-        type: GBTypeEnum
-        | None = Query(
+        type: GBTypeEnum | None = Query(
             None,
             description="Grain boundary type.",
         ),
-        chemsys: str
-        | None = Query(
+        chemsys: str | None = Query(
             None,
             description="Dash-delimited string of elements in the material.",
         ),
-        pretty_formula: str
-        | None = Query(
+        pretty_formula: str | None = Query(
             None,
             description="Formula of the material.",
         ),
-        gb_plane: str
-        | None = Query(
+        gb_plane: str | None = Query(
             None,
             description="Miller index of the grain boundary plane as comma delimitd integers.",
         ),
-        rotation_axis: str
-        | None = Query(
+        rotation_axis: str | None = Query(
             None,
             description="Miller index of the rotation axis as comma delimitd integers.",
         ),
@@ -82,8 +76,7 @@ class GBTaskIDQuery(QueryOperator):
 
     def query(
         self,
-        task_ids: str
-        | None = Query(
+        task_ids: str | None = Query(
             None,
             description="Comma-separated list of Materials Project IDs to query on.",
         ),

@@ -10,8 +10,7 @@ class MPculeIDsSearchQuery(QueryOperator):
 
     def query(
         self,
-        molecule_ids: str
-        | None = Query(
+        molecule_ids: str | None = Query(
             None, description="Comma-separated list of molecule_ids to query on"
         ),
     ) -> STORE_PARAMS:

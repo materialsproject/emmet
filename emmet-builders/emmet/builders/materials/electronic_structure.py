@@ -640,9 +640,9 @@ class ElectronicStructureBuilder(Builder):
                     bs_obj["data"] if bs_obj is not None else None
                 )
 
-                materials_doc["bandstructure"][bs_type][
-                    "output_structure"
-                ] = sorted_bs_data[0]["output_structure"]
+                materials_doc["bandstructure"][bs_type]["output_structure"] = (
+                    sorted_bs_data[0]["output_structure"]
+                )
 
                 materials_doc["origins"].append(
                     {

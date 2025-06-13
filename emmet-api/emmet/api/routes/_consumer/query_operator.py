@@ -41,8 +41,9 @@ class UserSettingsPatchQuery(QueryOperator):
             ...,
             title="Consumer ID",
         ),
-        fields_to_update: dict
-        | None = Body(None, title="Field name and value to update in user settings"),
+        fields_to_update: dict | None = Body(
+            None, title="Field name and value to update in user settings"
+        ),
     ) -> STORE_PARAMS:
         crit = {"consumer_id": consumer_id}
 

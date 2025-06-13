@@ -1,4 +1,4 @@
-""" Core definition of a Thermo Document """
+"""Core definition of a Thermo Document"""
 
 from collections import defaultdict
 from datetime import datetime

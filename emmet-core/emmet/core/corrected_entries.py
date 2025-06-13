@@ -1,4 +1,4 @@
-""" Core definition of a CorrectedEntriesDoc Document """
+"""Core definition of a CorrectedEntriesDoc Document"""
 
 from datetime import datetime
 
