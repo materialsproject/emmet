@@ -2,21 +2,22 @@ import logging
 import operator
 from datetime import datetime
 from itertools import groupby
-from typing import Iterable, List, Optional, Union
+from typing import Iterable
 
-from pydantic import field_validator, BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 from pymatgen.core.composition import Composition
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from emmet.core.mpid import MPID
+
 from emmet.core.common import convert_datetime
+from emmet.core.mpid import MPID
 from emmet.core.utils import utcnow
 
 logger = logging.getLogger(__name__)
 
 
-def generic_groupby(list_in, comp=operator.eq) -> List[int]:
+def generic_groupby(list_in, comp=operator.eq) -> list[int]:
     """
     Group a list of unsortable objects
     Args:
@@ -25,7 +26,7 @@ def generic_groupby(list_in, comp=operator.eq) -> List[int]:
     Returns:
         [int] list of labels for the input list
     """
-    list_out = [None] * len(list_in)  # type: List[Union[int, None]]
+    list_out = [None] * len(list_in)  # type: list[int| None]
     label_num = 0
     for i1, ls1 in enumerate(list_out):
         if ls1 is not None:
@@ -51,43 +52,43 @@ class StructureGroupDoc(BaseModel):
     Group of structure
     """
 
-    group_id: Optional[str] = Field(
+    group_id: str | None = Field(
         None,
         description="The combined material_id of the grouped document is given by the numerically smallest "
         "material_id, you can also append the followed by the ignored species at the end.",
     )
 
-    has_distinct_compositions: Optional[bool] = Field(
+    has_distinct_compositions: bool | None = Field(
         None, description="True if multiple compositions are present in the group."
     )
 
-    material_ids: Optional[list] = Field(
+    material_ids: list | None = Field(
         None,
         description="A list of materials ids for all of the materials that were grouped together.",
     )
 
-    host_material_ids: Optional[list] = Field(
+    host_material_ids: list | None = Field(
         None,
         description="Material id(s) that correspond(s) to the host structure(s), which has/have the lowest"
         "concentration of ignored specie.",
     )
 
-    insertion_material_ids: Optional[list] = Field(
+    insertion_material_ids: list | None = Field(
         None,
         description="Material ids that correspond to the non-host structures identified in a given structure group.",
     )
 
-    framework_formula: Optional[str] = Field(
+    framework_formula: str | None = Field(
         None,
         description="The chemical formula for the framework (the materials system without the ignored species).",
     )
 
-    ignored_specie: Optional[str] = Field(
+    ignored_specie: str | None = Field(
         None,
         description="Ignored atomic specie which is usually the working ion (ex: Li, Mg, or Ca).",
     )
 
-    chemsys: Optional[str] = Field(
+    chemsys: str | None = Field(
         None,
         description="The chemical system this group belongs to, if the atoms for the ignored species is "
         "present the chemsys will also include the ignored species.",
@@ -106,7 +107,7 @@ class StructureGroupDoc(BaseModel):
     @classmethod
     def from_grouped_entries(
         cls,
-        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
+        entries: list[ComputedEntry | ComputedStructureEntry],
         ignored_specie: str,
     ) -> "StructureGroupDoc":
         """ "
@@ -150,12 +151,12 @@ class StructureGroupDoc(BaseModel):
     @classmethod
     def from_ungrouped_structure_entries(
         cls,
-        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
+        entries: list[ComputedEntry | ComputedStructureEntry],
         ignored_specie: str,
         ltol: float = 0.2,
         stol: float = 0.3,
         angle_tol: float = 5.0,
-    ) -> List["StructureGroupDoc"]:
+    ) -> list["StructureGroupDoc"]:
         """
         Create a list of StructureGroupDocs from a list of ungrouped entries.
 
@@ -216,7 +217,7 @@ class StructureGroupDoc(BaseModel):
 
     @staticmethod
     def get_host_and_insertion_ids(
-        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
+        entries: list[ComputedEntry | ComputedStructureEntry],
         ignored_specie: str,
     ) -> dict:
         host_and_insertion_ids = {
@@ -248,8 +249,8 @@ class StructureGroupDoc(BaseModel):
 def group_entries_with_structure_matcher(
     g,
     struct_matcher: StructureMatcher,
-    working_ion: Optional[str] = None,
-) -> Iterable[List[Union[ComputedStructureEntry, ComputedEntry]]]:
+    working_ion: str | None = None,
+) -> Iterable[list[ComputedStructureEntry | ComputedEntry]]:
     """
     Group the entries together based on similarity of the  primitive cells
     Args:
@@ -280,7 +281,7 @@ def group_entries_with_structure_matcher(
         yield [el for el in sub_g]
 
 
-def _get_id_lexi(task_id) -> Union[int, str]:
+def _get_id_lexi(task_id) -> int | str:
     """Get a lexicographic representation for a task ID"""
     # matches "mp-1234" or "1234" followed by and optional "-(Alphanumeric)"
     mpid = MPID(task_id)

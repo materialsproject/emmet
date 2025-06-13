@@ -1,5 +1,5 @@
 from math import ceil
-from typing import Dict, Iterator, Optional
+from typing import Iterator
 
 from maggma.builders import Builder
 from maggma.core import Store
@@ -16,7 +16,7 @@ class OptimadeMaterialsBuilder(Builder):
         materials: Store,
         thermo: Store,
         optimade: Store,
-        query: Optional[Dict] = None,
+        query: dict | None = None,
         **kwargs,
     ):
         """
@@ -42,7 +42,7 @@ class OptimadeMaterialsBuilder(Builder):
 
         super().__init__(sources=[materials, thermo], targets=optimade, **kwargs)
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterator[dict]:  # pragma: no cover
         """
         Prechunk method to perform chunking by the key field
         """

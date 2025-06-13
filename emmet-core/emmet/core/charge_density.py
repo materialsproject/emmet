@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -11,7 +10,7 @@ class VolumetricDataDoc(BaseModel):
     Volumetric data metadata for selected materials.
     """
 
-    fs_id: Optional[str] = Field(
+    fs_id: str | None = Field(
         None, description="Unique object ID for the charge density data."
     )
 
@@ -20,7 +19,7 @@ class VolumetricDataDoc(BaseModel):
         description="Timestamp for the most recent update to the charge density data.",
     )
 
-    task_id: Optional[str] = Field(
+    task_id: str | None = Field(
         None,
         description="The Materials Project ID of the calculation producing the charge density data. "
         "This comes in the form: mp-******.",

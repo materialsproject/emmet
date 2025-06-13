@@ -1,6 +1,6 @@
 # # https://gitlab.mpcdf.mpg.de/nomad-lab/nomad-FAIR/blob/v0.6.0/examples/external_project_parallel_upload/upload.py
 # def upload_next_data(
-#     sources: Iterator[Tuple[str, str, str]], upload_name="next upload"
+#     sources: Iterator[tuple[str, str, str]], upload_name="next upload"
 # ):
 #     """
 #     Reads data from the given sources iterator. Creates and uploads a .zip-stream of
@@ -366,7 +366,7 @@
 #                 source_iter = iter(source_generator())
 #                 all_uploaded = False
 #                 processing_completed = False
-#                 all_calc_metadata: Dict[str, Any] = {}
+#                 all_calc_metadata: dict[str, Any] = {}
 #
 #                 # run until there are no more uploads and everything is processed (and published)
 #                 while not (all_uploaded and processing_completed):

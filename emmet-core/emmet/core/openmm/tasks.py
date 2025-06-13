@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import io
 from pathlib import Path
-from typing import Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import openmm
 import pandas as pd  # type: ignore[import-untyped]
@@ -24,30 +24,30 @@ if TYPE_CHECKING:
 class CalculationInput(BaseModel):  # type: ignore[call-arg]
     """OpenMM input settings for a job, these are the attributes of the OpenMMMaker."""
 
-    n_steps: Optional[int] = Field(
+    n_steps: int | None = Field(
         None, description="The number of simulation steps to run."
     )
 
-    step_size: Optional[float] = Field(
+    step_size: float | None = Field(
         None, description="The size of each simulation step (picoseconds)."
     )
 
-    temperature: Optional[float] = Field(
+    temperature: float | None = Field(
         None, description="The simulation temperature (kelvin)."
     )
 
-    pressure: Optional[float] = Field(
+    pressure: float | None = Field(
         None, description="The simulation pressure (atmospheres)."
     )
 
-    friction_coefficient: Optional[float] = Field(
+    friction_coefficient: float | None = Field(
         None,
         description=(
             "The friction coefficient for the integrator (inverse picoseconds)."
         ),
     )
 
-    platform_name: Optional[str] = Field(
+    platform_name: str | None = Field(
         None,
         description=(
             "The name of the OpenMM platform to use, passed to "
@@ -55,7 +55,7 @@ class CalculationInput(BaseModel):  # type: ignore[call-arg]
         ),
     )
 
-    platform_properties: Optional[dict] = Field(
+    platform_properties: dict | None = Field(
         None,
         description=(
             "Properties for the OpenMM platform, passed to "
@@ -63,42 +63,42 @@ class CalculationInput(BaseModel):  # type: ignore[call-arg]
         ),
     )
 
-    state_interval: Optional[int] = Field(
+    state_interval: int | None = Field(
         None,
         description=(
             "State is saved every `state_interval` timesteps. For no state, set to 0."
         ),
     )
 
-    state_file_name: Optional[str] = Field(
+    state_file_name: str | None = Field(
         None, description="The name of the state file to save."
     )
 
-    traj_interval: Optional[int] = Field(
+    traj_interval: int | None = Field(
         None,
         description=(
             "The trajectory is saved every `traj_interval` timesteps. For no trajectory, set to 0."
         ),
     )
 
-    wrap_traj: Optional[bool] = Field(
+    wrap_traj: bool | None = Field(
         None, description="Whether to wrap trajectory coordinates."
     )
 
-    report_velocities: Optional[bool] = Field(
+    report_velocities: bool | None = Field(
         None, description="Whether to report velocities in the trajectory file."
     )
 
-    traj_file_name: Optional[str] = Field(
+    traj_file_name: str | None = Field(
         None, description="The name of the trajectory file to save."
     )
 
-    traj_file_type: Optional[str] = Field(
+    traj_file_type: str | None = Field(
         None,
         description="The type of trajectory file to save.",
     )
 
-    embed_traj: Optional[bool] = Field(
+    embed_traj: bool | None = Field(
         None,
         description="Whether to embed the trajectory blob in CalculationOutput.",
     )
@@ -109,57 +109,53 @@ class CalculationInput(BaseModel):  # type: ignore[call-arg]
 class CalculationOutput(BaseModel):
     """OpenMM calculation output files and extracted data."""
 
-    dir_name: Optional[str] = Field(
-        None, description="The directory for this OpenMM task"
-    )
+    dir_name: str | None = Field(None, description="The directory for this OpenMM task")
 
-    traj_file: Optional[str] = Field(
+    traj_file: str | None = Field(
         None, description="Path to the trajectory file relative to `dir_name`"
     )
 
-    traj_blob: Optional[CompressedStr] = Field(
+    traj_blob: CompressedStr | None = Field(
         None, description="Trajectory file bytes blob hex encoded to a string"
     )
 
-    state_file: Optional[str] = Field(
+    state_file: str | None = Field(
         None, description="Path to the state file relative to `dir_name`"
     )
 
-    steps_reported: Optional[list[int]] = Field(
+    steps_reported: list[int] | None = Field(
         None, description="Steps where outputs are reported"
     )
 
-    time: Optional[list[float]] = Field(None, description="List of times")
+    time: list[float] | None = Field(None, description="List of times")
 
-    potential_energy: Optional[list[float]] = Field(
+    potential_energy: list[float] | None = Field(
         None, description="List of potential energies"
     )
 
-    kinetic_energy: Optional[list[float]] = Field(
+    kinetic_energy: list[float] | None = Field(
         None, description="List of kinetic energies"
     )
 
-    total_energy: Optional[list[float]] = Field(
-        None, description="List of total energies"
-    )
+    total_energy: list[float] | None = Field(None, description="List of total energies")
 
-    temperature: Optional[list[float]] = Field(None, description="List of temperatures")
+    temperature: list[float] | None = Field(None, description="List of temperatures")
 
-    volume: Optional[list[float]] = Field(None, description="List of volumes")
+    volume: list[float] | None = Field(None, description="List of volumes")
 
-    density: Optional[list[float]] = Field(None, description="List of densities")
+    density: list[float] | None = Field(None, description="List of densities")
 
-    elapsed_time: Optional[float] = Field(
+    elapsed_time: float | None = Field(
         None, description="Elapsed time for the calculation (seconds)."
     )
 
     @classmethod
     def from_directory(
         cls,
-        dir_name: Union[Path, str],
+        dir_name: Path | str,
         state_file_name: str,
         traj_file_name: str,
-        elapsed_time: Optional[float] = None,
+        elapsed_time: float | None = None,
         embed_traj: bool = False,
     ) -> CalculationOutput:
         """Extract data from the output files in the directory."""
@@ -205,29 +201,29 @@ class CalculationOutput(BaseModel):
 class Calculation(BaseModel):
     """All input and output data for an OpenMM calculation."""
 
-    dir_name: Optional[str] = Field(
+    dir_name: str | None = Field(
         None, description="The directory for this OpenMM calculation"
     )
 
-    has_openmm_completed: Optional[Union[TaskState, bool]] = Field(
+    has_openmm_completed: TaskState | bool | None = Field(
         None, description="Whether OpenMM completed the calculation successfully"
     )
 
-    input: Optional[CalculationInput] = Field(
+    input: CalculationInput | None = Field(
         None, description="OpenMM input settings for the calculation"
     )
-    output: Optional[CalculationOutput] = Field(
+    output: CalculationOutput | None = Field(
         None, description="The OpenMM calculation output"
     )
 
-    completed_at: Optional[str] = Field(
+    completed_at: str | None = Field(
         None, description="Timestamp for when the calculation was completed"
     )
-    task_name: Optional[str] = Field(
+    task_name: str | None = Field(
         None, description="Name of task given by custodian (e.g., relax1, relax2)"
     )
 
-    calc_type: Optional[str] = Field(
+    calc_type: str | None = Field(
         None,
         description="Return calculation type (run type + task_type). or just new thing",
     )
@@ -236,7 +232,7 @@ class Calculation(BaseModel):
 class OpenMMTaskDocument(MDTaskDocument):
     """Definition of the OpenMM task document."""
 
-    calcs_reversed: Optional[list[Calculation]] = Field(
+    calcs_reversed: list[Calculation] | None = Field(
         None,
         title="Calcs reversed data",
         description="Detailed data for each OpenMM calculation contributing to the "
@@ -248,14 +244,14 @@ class OpenMMInterchange(BaseModel):
     """An object to sit in the place of the Interchance object
     and serialize the OpenMM system, topology, and state."""
 
-    system: Optional[str] = Field(
+    system: str | None = Field(
         None, description="An XML file representing the OpenMM system."
     )
-    state: Optional[str] = Field(
+    state: str | None = Field(
         None,
         description="An XML file representing the OpenMM state.",
     )
-    topology: Optional[str] = Field(
+    topology: str | None = Field(
         None,
         description="An XML file representing an OpenMM topology object."
         "This must correspond to the atom ordering in the system.",
@@ -265,7 +261,7 @@ class OpenMMInterchange(BaseModel):
         self,
         integrator: openmm.Integrator,
         platform: openmm.Platform,
-        platformProperties: Optional[dict[str, str]] = None,
+        platformProperties: dict[str, str] | None = None,
     ):
         system = XmlSerializer.deserialize(self.system)
         state = XmlSerializer.deserialize(self.state)

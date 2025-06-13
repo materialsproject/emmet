@@ -1,4 +1,3 @@
-from typing import Optional
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
@@ -11,7 +10,7 @@ class MaterialIDsSearchQuery(QueryOperator):
 
     def query(
         self,
-        material_ids: Optional[str] = Query(
+        material_ids: str | None = Query(
             None, description="Comma-separated list of material_ids to query on"
         ),
     ) -> STORE_PARAMS:
@@ -42,7 +41,7 @@ class MaterialIDsSearchQuery(QueryOperator):
 class FormulaSearchQuery(QueryOperator):
     def query(
         self,
-        formulae: Optional[str] = Query(
+        formulae: str | None = Query(
             None, description="Comma-separated list of end-point formulas to query."
         ),
     ) -> STORE_PARAMS:

@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 from pymatgen.core import Structure
@@ -6,8 +6,8 @@ from pymatgen.core.structure import Molecule
 from pymatgen.symmetry.analyzer import (
     PointGroupAnalyzer,
     SpacegroupAnalyzer,
-    spglib,
     SymmetryUndeterminedError,
+    spglib,
 )
 
 from emmet.core.settings import EmmetSettings
@@ -35,33 +35,33 @@ class PointGroupData(BaseModel):
     Defines symmetry for a molecule document
     """
 
-    point_group: Optional[str] = Field(
+    point_group: str | None = Field(
         None, title="Point Group Symbol", description="The point group for the lattice"
     )
 
-    rotation_number: Optional[float] = Field(
+    rotation_number: float | None = Field(
         None,
         title="Rotational Symmetry Number",
         description="Rotational symmetry number for the molecule",
     )
 
-    linear: Optional[bool] = Field(
+    linear: bool | None = Field(
         None, title="Molecule Linearity", description="Is the molecule linear?"
     )
 
-    tolerance: Optional[float] = Field(
+    tolerance: float | None = Field(
         None,
         title="Point Group Analyzer Tolerance",
         description="Distance tolerance to consider sites as symmetrically equivalent.",
     )
 
-    eigen_tolerance: Optional[float] = Field(
+    eigen_tolerance: float | None = Field(
         None,
         title="Interia Tensor Eigenvalue Tolerance",
         description="Tolerance to compare eigen values of the inertia tensor.",
     )
 
-    matrix_tolerance: Optional[float] = Field(
+    matrix_tolerance: float | None = Field(
         None,
         title="Symmetry Operation Matrix Element Tolerance",
         description="Tolerance used to generate the full set of symmetry operations of the point group.",
@@ -78,7 +78,7 @@ class PointGroupData(BaseModel):
             eigen_tolerance=eigentol,
             matrix_tolerance=matrixtol,
         )
-        symmetry: Dict[str, Any] = {
+        symmetry: dict[str, Any] = {
             "tolerance": tol,
             "eigen_tolerance": eigentol,
             "matrix_tolerance": matrixtol,
@@ -121,43 +121,43 @@ class SymmetryData(BaseModel):
     Defines a symmetry data set for materials documents
     """
 
-    crystal_system: Optional[CrystalSystem] = Field(
+    crystal_system: CrystalSystem | None = Field(
         None, title="Crystal System", description="The crystal system for this lattice."
     )
 
-    symbol: Optional[str] = Field(
+    symbol: str | None = Field(
         None,
         title="Space Group Symbol",
         description="The spacegroup symbol for the lattice.",
     )
 
-    number: Optional[int] = Field(
+    number: int | None = Field(
         None,
         title="Space Group Number",
         description="The spacegroup number for the lattice.",
     )
 
-    point_group: Optional[str] = Field(
+    point_group: str | None = Field(
         None, title="Point Group Symbol", description="The point group for the lattice."
     )
 
-    symprec: Optional[float] = Field(
+    symprec: float | None = Field(
         None,
         title="Symmetry Finding Precision",
         description="The precision provided to spglib to determine the symmetry of this structure.",
     )
 
-    angle_tolerance: Optional[float] = Field(
+    angle_tolerance: float | None = Field(
         None,
         title="Angle Tolerance",
         description="Angle tolerance provided to spglib to determine the symmetry of this structure.",
     )
 
-    version: Optional[str] = Field(None, title="spglib version")
+    version: str | None = Field(None, title="spglib version")
 
     @classmethod
     def from_structure(cls, structure: Structure) -> "SymmetryData":
-        symmetry: Dict[str, Any] = {
+        symmetry: dict[str, Any] = {
             "source": "spglib",
             "symbol": None,
             "number": None,

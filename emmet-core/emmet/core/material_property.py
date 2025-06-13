@@ -1,9 +1,9 @@
-""" Core definition of a Materials Document """
+"""Core definition of a Materials Document"""
 
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional, Sequence, Type, TypeVar, Union
+from typing import Sequence, Type, TypeVar
 
 from pydantic import Field, field_validator
 from pymatgen.core import Structure
@@ -37,7 +37,7 @@ class PropertyDoc(StructureMetadata):
         description="Whether this property document is deprecated.",
     )
 
-    deprecation_reasons: Optional[List[Union[DeprecationMessage, str]]] = Field(
+    deprecation_reasons: list[DeprecationMessage | str] | None = Field(
         None,
         description="List of deprecation tags detailing why this document isn't valid.",
     )

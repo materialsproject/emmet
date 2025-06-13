@@ -528,9 +528,9 @@ def group_strings_by_prefix(strings, prefix_length):
 @click.pass_context
 def parsers(ctx, task_ids):
     """Scan root directory and submit separate parser jobs"""
-    ctx.parent.params[
-        "nmax"
-    ] = sys.maxsize  # disable maximum launchers to determine parser jobs
+    ctx.parent.params["nmax"] = (
+        sys.maxsize
+    )  # disable maximum launchers to determine parser jobs
     run = ctx.parent.parent.params["run"]
     directory = ctx.parent.params["directory"]
     check_pattern()

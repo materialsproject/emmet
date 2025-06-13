@@ -2,18 +2,17 @@ from collections import defaultdict
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Optional, Iterable, Iterator, List, Dict
+from typing import Iterable, Iterator
 
 from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper
 
-from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
-from emmet.core.molecules.orbitals import OrbitalDoc
-from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
-
+from emmet.core.molecules.orbitals import OrbitalDoc
+from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
+from emmet.core.qchem.task import TaskDocument
+from emmet.core.utils import jsanitize
 
 __author__ = "Evan Spotte-Smith"
 
@@ -40,8 +39,8 @@ class OrbitalBuilder(Builder):
         tasks: Store,
         molecules: Store,
         orbitals: Store,
-        query: Optional[Dict] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        query: dict | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
         self.tasks = tasks
@@ -87,7 +86,7 @@ class OrbitalBuilder(Builder):
         self.orbitals.ensure_index("last_updated")
         self.orbitals.ensure_index("formula_alphabetical")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
         """Prechunk the builder for distributed computation"""
 
         temp_query = dict(self.query)
@@ -113,7 +112,7 @@ class OrbitalBuilder(Builder):
             query["species_hash"] = {"$in": list(hash_chunk)}
             yield {"query": query}
 
-    def get_items(self) -> Iterator[List[Dict]]:
+    def get_items(self) -> Iterator[list[dict]]:
         """
         Gets all items to process into orbital documents.
         This does no datetime checking; relying on on whether
@@ -160,12 +159,12 @@ class OrbitalBuilder(Builder):
 
             yield molecules
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
+    def process_item(self, items: list[dict]) -> list[dict]:
         """
         Process the tasks into a OrbitalDocs
 
         Args:
-            tasks List[Dict] : a list of MoleculeDocs in dict form
+            tasks list[dict] : a list of MoleculeDocs in dict form
 
         Returns:
             [dict] : a list of new orbital docs
@@ -257,7 +256,7 @@ class OrbitalBuilder(Builder):
 
         return jsanitize([doc.model_dump() for doc in orbital_docs], allow_bson=True)
 
-    def update_targets(self, items: List[List[Dict]]):
+    def update_targets(self, items: list[list[dict]]):
         """
         Inserts the new documents into the orbitals collection
 

@@ -219,9 +219,9 @@ def test_potcar_stats_check(test_dir):
             }
             for potcar in legacy_data["calcs_reversed"][0]["input"]["potcar_spec"]
         ]
-        legacy_data["calcs_reversed"][0]["input"]["potcar_spec"][0][
-            "hash"
-        ] = legacy_data["calcs_reversed"][0]["input"]["potcar_spec"][0]["hash"][:-1]
+        legacy_data["calcs_reversed"][0]["input"]["potcar_spec"][0]["hash"] = (
+            legacy_data["calcs_reversed"][0]["input"]["potcar_spec"][0]["hash"][:-1]
+        )
         legacy_task_doc = TaskDoc(
             **{key: legacy_data[key] for key in legacy_data if key != "last_updated"}
         )

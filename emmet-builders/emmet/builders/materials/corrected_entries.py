@@ -4,7 +4,7 @@ from collections import defaultdict
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Dict, Iterable, Iterator, List, Optional, Union
+from typing import Iterable, Iterator
 
 from maggma.core import Builder, Store
 from maggma.utils import grouper
@@ -22,9 +22,9 @@ class CorrectedEntriesBuilder(Builder):
         self,
         materials: Store,
         corrected_entries: Store,
-        oxidation_states: Optional[Store] = None,
-        query: Optional[Dict] = None,
-        compatibility: Optional[Union[List[Compatibility], List[None]]] = [None],
+        oxidation_states: Store | None = None,
+        query: dict | None = None,
+        compatibility: list[Compatibility] | list[None] | None = [None],
         chunk_size: int = 1000,
         **kwargs,
     ):
@@ -48,7 +48,7 @@ class CorrectedEntriesBuilder(Builder):
         self.compatibility = compatibility
         self.oxidation_states = oxidation_states
         self.chunk_size = chunk_size
-        self._entries_cache: Dict[str, List[Dict]] = defaultdict(list)
+        self._entries_cache: dict[str, list[dict]] = defaultdict(list)
 
         if self.corrected_entries.key != "chemsys":
             warnings.warn(
@@ -93,7 +93,7 @@ class CorrectedEntriesBuilder(Builder):
         # Search index for corrected_entries
         self.corrected_entries.ensure_index("chemsys")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
         to_process_chemsys = self._get_chemsys_to_process()
 
         N = ceil(len(to_process_chemsys) / number_splits)
@@ -101,7 +101,7 @@ class CorrectedEntriesBuilder(Builder):
         for chemsys_chunk in grouper(to_process_chemsys, N):
             yield {"query": {"chemsys": {"$in": list(chemsys_chunk)}}}
 
-    def get_items(self) -> Iterator[List[Dict]]:
+    def get_items(self) -> Iterator[list[dict]]:
         """
         Gets whole chemical systems of entries to process
         """
@@ -210,7 +210,7 @@ class CorrectedEntriesBuilder(Builder):
         else:
             self.logger.info("No corrected entry items to update")
 
-    def get_entries(self, chemsys: str) -> List[Dict]:
+    def get_entries(self, chemsys: str) -> list[dict]:
         """
         Gets entries from the materials collection for the corresponding chemical systems
         Args:
