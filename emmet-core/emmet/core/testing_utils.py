@@ -1,4 +1,5 @@
 """Define common testing utils used across emmet namespaces."""
+
 from __future__ import annotations
 
 from importlib.resources import files as import_resource

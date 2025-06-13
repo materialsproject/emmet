@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from pydantic import Field
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 from pymatgen.core import Structure
@@ -15,52 +13,52 @@ class MagnetismDoc(PropertyDoc):
 
     property_name: str = "magnetism"
 
-    ordering: Optional[str] = Field(
+    ordering: str | None = Field(
         None,
         description="Magnetic ordering.",
     )
 
-    is_magnetic: Optional[bool] = Field(
+    is_magnetic: bool | None = Field(
         None,
         description="Whether the material is magnetic.",
     )
 
-    exchange_symmetry: Optional[int] = Field(
+    exchange_symmetry: int | None = Field(
         None,
         description="Exchange symmetry.",
     )
 
-    num_magnetic_sites: Optional[int] = Field(
+    num_magnetic_sites: int | None = Field(
         None,
         description="The number of magnetic sites.",
     )
 
-    num_unique_magnetic_sites: Optional[int] = Field(
+    num_unique_magnetic_sites: int | None = Field(
         None,
         description="The number of unique magnetic sites.",
     )
 
-    types_of_magnetic_species: Optional[List[str]] = Field(
+    types_of_magnetic_species: list[str] | None = Field(
         None,
         description="Magnetic specie elements.",
     )
 
-    magmoms: Optional[List[float]] = Field(
+    magmoms: list[float] | None = Field(
         None,
         description="Magnetic moments for each site.",
     )
 
-    total_magnetization: Optional[float] = Field(
+    total_magnetization: float | None = Field(
         None,
         description="Total magnetization in μB.",
     )
 
-    total_magnetization_normalized_vol: Optional[float] = Field(
+    total_magnetization_normalized_vol: float | None = Field(
         None,
         description="Total magnetization normalized by volume in μB/Å³.",
     )
 
-    total_magnetization_normalized_formula_units: Optional[float] = Field(
+    total_magnetization_normalized_formula_units: float | None = Field(
         None,
         description="Total magnetization normalized by formula unit in μB/f.u. .",
     )

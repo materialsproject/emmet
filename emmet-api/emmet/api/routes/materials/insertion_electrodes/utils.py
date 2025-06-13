@@ -1,10 +1,9 @@
+from fastapi import HTTPException
 from pymatgen.core import Composition
 from pymatgen.core.periodic_table import DummySpecies
-from typing import Dict
-from fastapi import HTTPException
 
 
-def electrodes_formula_to_criteria(formulas: str) -> Dict:
+def electrodes_formula_to_criteria(formulas: str) -> dict:
     """
     Santizes formula into a dictionary to search with wild cards
     over electrodes data
@@ -43,9 +42,9 @@ def electrodes_formula_to_criteria(formulas: str) -> Dict:
 
             comp = Composition(integer_formula).reduced_composition
             crit = dict()  # type: dict
-            crit[
-                "entries_composition_summary.all_formula_anonymous"
-            ] = comp.anonymized_formula
+            crit["entries_composition_summary.all_formula_anonymous"] = (
+                comp.anonymized_formula
+            )
 
             real_elts = [
                 str(e)
@@ -115,7 +114,7 @@ def electrodes_formula_to_criteria(formulas: str) -> Dict:
             )
 
 
-def electrodes_chemsys_to_criteria(chemsys: str) -> Dict:
+def electrodes_chemsys_to_criteria(chemsys: str) -> dict:
     """
     Santizes chemsys into a dictionary to search with wild cards
     over electrodes data

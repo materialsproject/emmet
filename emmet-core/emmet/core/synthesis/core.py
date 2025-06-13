@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Optional, Any
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -37,24 +37,24 @@ class SynthesisRecipe(BaseModel):
     reaction: ReactionFormula = Field(..., description="The balanced reaction formula.")
 
     target: ExtractedMaterial = Field(..., description="The target material.")
-    targets_formula: List[str] = Field(
+    targets_formula: list[str] = Field(
         ..., description="List of synthesized target material compositions."
     )
-    precursors_formula: List[str] = Field(
+    precursors_formula: list[str] = Field(
         ..., description="List of precursor material compositions."
     )
-    targets_formula_s: List[str] = Field(
+    targets_formula_s: list[str] = Field(
         ..., description="List of synthesized target material compositions, as strings."
     )
-    precursors_formula_s: List[str] = Field(
+    precursors_formula_s: list[str] = Field(
         ..., description="List of precursor material compositions, as strings."
     )
 
-    precursors: List[ExtractedMaterial] = Field(
+    precursors: list[ExtractedMaterial] = Field(
         ..., description="List of precursor materials."
     )
 
-    operations: List[Operation] = Field(
+    operations: list[Operation] = Field(
         ..., description="List of operations used to synthesize this recipe."
     )
 
@@ -65,11 +65,11 @@ class SynthesisSearchResultModel(SynthesisRecipe):
     data and additional keyword search results
     """
 
-    search_score: Optional[float] = Field(
+    search_score: float | None = Field(
         None,
         description="Search score.",
     )
-    highlights: Optional[List[Any]] = Field(
+    highlights: list[Any] | None = Field(
         None,
         description="Search highlights.",
     )

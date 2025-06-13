@@ -7,7 +7,7 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, model_validator, field_validator
@@ -51,11 +51,11 @@ logger = logging.getLogger(__name__)
 
 
 class Potcar(BaseModel):
-    pot_type: Optional[str] = Field(None, description="Pseudo-potential type, e.g. PAW")
-    functional: Optional[str] = Field(
+    pot_type: str | None = Field(None, description="Pseudo-potential type, e.g. PAW")
+    functional: str | None = Field(
         None, description="Functional type use in the calculation."
     )
-    symbols: Optional[list[str]] = Field(
+    symbols: list[str] | None = Field(
         None, description="List of VASP potcar symbols used in the calculation."
     )
 
@@ -86,21 +86,21 @@ class StoreTrajectoryOption(ValueEnum):
 class CalculationBaseModel(BaseModel):
     """Wrapper around pydantic BaseModel with extra functionality."""
 
-    def get(self, key: Any, default_value: Optional[Any] = None) -> Any:
+    def get(self, key: Any, default_value: Any | None = None) -> Any:
         return getattr(self, key, default_value)
 
 
 class PotcarSpec(BaseModel):
     """Document defining a VASP POTCAR specification."""
 
-    titel: Optional[str] = Field(None, description="TITEL field from POTCAR header")
-    hash: Optional[str] = Field(None, description="md5 hash of POTCAR file")
-    summary_stats: Optional[dict] = Field(
+    titel: str | None = Field(None, description="TITEL field from POTCAR header")
+    hash: str | None = Field(None, description="md5 hash of POTCAR file")
+    summary_stats: dict | None = Field(
         None, description="summary statistics used to ID POTCARs without hashing"
     )
 
     @classmethod
-    def from_potcar_single(cls, potcar_single: PotcarSingle) -> "PotcarSpec":
+    def from_potcar_single(cls, potcar_single: PotcarSingle) -> Self:
         """
         Get a PotcarSpec from a PotcarSingle.
 
@@ -166,28 +166,28 @@ class CalculationInput(CalculationBaseModel):
         magnetic_moments (list of floats) : on-site magnetic moments
     """
 
-    incar: Optional[dict[str, Any]] = Field(
+    incar: dict[str, Any] | None = Field(
         None, description="INCAR parameters for the calculation"
     )
-    kpoints: Optional[Kpoints] = Field(None, description="KPOINTS for the calculation")
-    nkpoints: Optional[int] = Field(None, description="Total number of k-points")
-    potcar_spec: Optional[list[PotcarSpec]] = Field(
+    kpoints: Kpoints | None = Field(None, description="KPOINTS for the calculation")
+    nkpoints: int | None = Field(None, description="Total number of k-points")
+    potcar_spec: list[PotcarSpec] | None = Field(
         None, description="Title and hash of POTCAR files used in the calculation"
     )
-    potcar_type: Optional[list[str]] = Field(
+    potcar_type: list[str] | None = Field(
         None, description="List of POTCAR functional types."
     )
-    parameters: Optional[dict] = Field(None, description="Parameters from vasprun")
-    lattice_rec: Optional[Lattice] = Field(
+    parameters: dict | None = Field(None, description="Parameters from vasprun")
+    lattice_rec: Lattice | None = Field(
         None, description="Reciprocal lattice of the structure"
     )
-    structure: Optional[Structure] = Field(
+    structure: Structure | None = Field(
         None, description="Input structure for the calculation"
     )
     is_hubbard: bool = Field(
         default=False, description="Is this a Hubbard +U calculation"
     )
-    hubbards: Optional[dict] = Field(None, description="The hubbard parameters used")
+    hubbards: dict | None = Field(None, description="The hubbard parameters used")
 
     @model_validator(mode="before")
     @classmethod
@@ -257,7 +257,7 @@ class CalculationInput(CalculationBaseModel):
         return (self.parameters or {}).get("MAGMOM", None)
 
     @classmethod
-    def from_vasprun(cls, vasprun: Vasprun) -> "CalculationInput":
+    def from_vasprun(cls, vasprun: Vasprun) -> Self:
         """
         Create a VASP input document from a Vasprun object.
 
@@ -312,7 +312,7 @@ class RunStatistics(BaseModel):
     cores: int = Field(0, description="The number of cores used by VASP")
 
     @classmethod
-    def from_outcar(cls, outcar: Outcar) -> "RunStatistics":
+    def from_outcar(cls, outcar: Outcar) -> Self:
         """
         Create a run statistics document from an Outcar object.
 
@@ -353,25 +353,25 @@ class RunStatistics(BaseModel):
 class FrequencyDependentDielectric(BaseModel):
     """Frequency-dependent dielectric data."""
 
-    real: Optional[list[list[float]]] = Field(
+    real: list[list[float]] | None = Field(
         None,
         description="Real part of the frequency dependent dielectric constant, given at"
         " each energy as 6 components according to XX, YY, ZZ, XY, YZ, ZX",
     )
-    imaginary: Optional[list[list[float]]] = Field(
+    imaginary: list[list[float]] | None = Field(
         None,
         description="Imaginary part of the frequency dependent dielectric constant, "
         "given at each energy as 6 components according to XX, YY, ZZ, XY, "
         "YZ, ZX",
     )
-    energy: Optional[list[float]] = Field(
+    energy: list[float] | None = Field(
         None,
         description="Energies at which the real and imaginary parts of the dielectric"
         "constant are given",
     )
 
     @classmethod
-    def from_vasprun(cls, vasprun: Vasprun) -> "FrequencyDependentDielectric":
+    def from_vasprun(cls, vasprun: Vasprun) -> Self:
         """
         Create a frequency-dependent dielectric calculation document from a vasprun.
 
@@ -392,12 +392,12 @@ class FrequencyDependentDielectric(BaseModel):
 class ElectronPhononDisplacedStructures(BaseModel):
     """Document defining electron phonon displaced structures."""
 
-    temperatures: Optional[list[float]] = Field(
+    temperatures: list[float] | None = Field(
         None,
         description="The temperatures at which the electron phonon displacements "
         "were generated.",
     )
-    structures: Optional[list[Structure]] = Field(
+    structures: list[Structure] | None = Field(
         None, description="The displaced structures corresponding to each temperature."
     )
 
@@ -408,22 +408,22 @@ class ElectronicStep(BaseModel):  # type: ignore
     Note, not all the information will be available at every step.
     """
 
-    alphaZ: Optional[float] = Field(None, description="The alpha Z term.")
-    ewald: Optional[float] = Field(None, description="The ewald energy.")
-    hartreedc: Optional[float] = Field(None, description="Negative Hartree energy.")
-    XCdc: Optional[float] = Field(None, description="Negative exchange energy.")
-    pawpsdc: Optional[float] = Field(
+    alphaZ: float | None = Field(None, description="The alpha Z term.")
+    ewald: float | None = Field(None, description="The ewald energy.")
+    hartreedc: float | None = Field(None, description="Negative Hartree energy.")
+    XCdc: float | None = Field(None, description="Negative exchange energy.")
+    pawpsdc: float | None = Field(
         None, description="Negative potential energy with exchange-correlation energy."
     )
-    pawaedc: Optional[float] = Field(None, description="The PAW double counting term.")
-    eentropy: Optional[float] = Field(None, description="The entropy (T * S).")
-    bandstr: Optional[float] = Field(
+    pawaedc: float | None = Field(None, description="The PAW double counting term.")
+    eentropy: float | None = Field(None, description="The entropy (T * S).")
+    bandstr: float | None = Field(
         None, description="The band energy (from eigenvalues)."
     )
-    atom: Optional[float] = Field(None, description="The atomic energy.")
-    e_fr_energy: Optional[float] = Field(None, description="The free energy.")
-    e_wo_entrp: Optional[float] = Field(None, description="The energy without entropy.")
-    e_0_energy: Optional[float] = Field(None, description="The internal energy.")
+    atom: float | None = Field(None, description="The atomic energy.")
+    e_fr_energy: float | None = Field(None, description="The free energy.")
+    e_wo_entrp: float | None = Field(None, description="The energy without entropy.")
+    e_0_energy: float | None = Field(None, description="The internal energy.")
 
     model_config = ConfigDict(extra="allow")
 
@@ -431,22 +431,18 @@ class ElectronicStep(BaseModel):  # type: ignore
 class IonicStep(BaseModel):  # type: ignore
     """Document defining the information at each ionic step."""
 
-    e_fr_energy: Optional[float] = Field(None, description="The free energy.")
-    e_wo_entrp: Optional[float] = Field(None, description="The energy without entropy.")
-    e_0_energy: Optional[float] = Field(None, description="The internal energy.")
-    forces: Optional[list[Vector3D]] = Field(
-        None, description="The forces on each atom."
-    )
-    stress: Optional[Matrix3D] = Field(None, description="The stress on the lattice.")
-    electronic_steps: Optional[list[ElectronicStep]] = Field(
+    e_fr_energy: float | None = Field(None, description="The free energy.")
+    e_wo_entrp: float | None = Field(None, description="The energy without entropy.")
+    e_0_energy: float | None = Field(None, description="The internal energy.")
+    forces: list[Vector3D] | None = Field(None, description="The forces on each atom.")
+    stress: Matrix3D | None = Field(None, description="The stress on the lattice.")
+    electronic_steps: list[ElectronicStep] | None = Field(
         None, description="The electronic convergence steps."
     )
-    num_electronic_steps: Optional[int] = Field(
+    num_electronic_steps: int | None = Field(
         None, description="The number of electronic steps needed to reach convergence."
     )
-    structure: Optional[Structure] = Field(
-        None, description="The structure at this step."
-    )
+    structure: Structure | None = Field(None, description="The structure at this step.")
 
     model_config = ConfigDict(extra="allow")
 
@@ -460,98 +456,98 @@ class IonicStep(BaseModel):  # type: ignore
 class CalculationOutput(BaseModel):
     """Document defining VASP calculation outputs."""
 
-    energy: Optional[float] = Field(
+    energy: float | None = Field(
         None, description="The final total DFT energy for the calculation"
     )
-    energy_per_atom: Optional[float] = Field(
+    energy_per_atom: float | None = Field(
         None, description="The final DFT energy per atom for the calculation"
     )
-    structure: Optional[Structure] = Field(
+    structure: Structure | None = Field(
         None, description="The final structure from the calculation"
     )
-    efermi: Optional[float] = Field(
+    efermi: float | None = Field(
         None, description="The Fermi level from the calculation in eV"
     )
-    is_metal: Optional[bool] = Field(None, description="Whether the system is metallic")
-    bandgap: Optional[float] = Field(
+    is_metal: bool | None = Field(None, description="Whether the system is metallic")
+    bandgap: float | None = Field(
         None, description="The band gap from the calculation in eV"
     )
-    cbm: Optional[float] = Field(
+    cbm: float | None = Field(
         None,
         description="The conduction band minimum in eV (if system is not metallic)",
     )
-    vbm: Optional[float] = Field(
+    vbm: float | None = Field(
         None, description="The valence band maximum in eV (if system is not metallic)"
     )
-    is_gap_direct: Optional[bool] = Field(
+    is_gap_direct: bool | None = Field(
         None, description="Whether the band gap is direct"
     )
-    direct_gap: Optional[float] = Field(
+    direct_gap: float | None = Field(
         None, description="Direct band gap in eV (if system is not metallic)"
     )
-    transition: Optional[str] = Field(
+    transition: str | None = Field(
         None, description="Band gap transition given by CBM and VBM k-points"
     )
-    mag_density: Optional[float] = Field(
+    mag_density: float | None = Field(
         None,
         description="The magnetization density, defined as total_mag/volume "
         "(units of A^-3)",
     )
-    optical_absorption_coeff: Optional[list] = Field(
+    optical_absorption_coeff: list | None = Field(
         None, description="Optical absorption coefficient in cm^-1"
     )
-    epsilon_static: Optional[ListMatrix3D] = Field(
+    epsilon_static: ListMatrix3D | None = Field(
         None, description="The high-frequency dielectric constant"
     )
-    epsilon_static_wolfe: Optional[ListMatrix3D] = Field(
+    epsilon_static_wolfe: ListMatrix3D | None = Field(
         None,
         description="The high-frequency dielectric constant w/o local field effects",
     )
-    epsilon_ionic: Optional[ListMatrix3D] = Field(
+    epsilon_ionic: ListMatrix3D | None = Field(
         None, description="The ionic part of the dielectric constant"
     )
-    frequency_dependent_dielectric: Optional[FrequencyDependentDielectric] = Field(
+    frequency_dependent_dielectric: FrequencyDependentDielectric | None = Field(
         None,
         description="Frequency-dependent dielectric information from an LOPTICS "
         "calculation",
     )
-    ionic_steps: Optional[list[IonicStep]] = Field(
+    ionic_steps: list[IonicStep] | None = Field(
         None, description="Energy, forces, structure, etc. for each ionic step"
     )
-    num_electronic_steps: Optional[list[int]] = Field(
+    num_electronic_steps: list[int] | None = Field(
         None, description="The number of electronic steps in each ionic step."
     )
-    locpot: Optional[dict[int, list[float]]] = Field(
+    locpot: dict[int, list[float]] | None = Field(
         None, description="Average of the local potential along the crystal axes"
     )
-    outcar: Optional[dict[str, Any]] = Field(
+    outcar: dict[str, Any] | None = Field(
         None, description="Information extracted from the OUTCAR file"
     )
-    force_constants: Optional[list[list[Matrix3D]]] = Field(
+    force_constants: list[list[Matrix3D]] | None = Field(
         None, description="Force constants between every pair of atoms in the structure"
     )
-    normalmode_frequencies: Optional[list[float]] = Field(
+    normalmode_frequencies: list[float] | None = Field(
         None, description="Frequencies in THz of the normal modes at Gamma"
     )
-    normalmode_eigenvals: Optional[list[float]] = Field(
+    normalmode_eigenvals: list[float] | None = Field(
         None,
         description="Normal mode eigenvalues of phonon modes at Gamma. "
         "Note the unit changed between VASP 5 and 6.",
     )
-    normalmode_eigenvecs: Optional[list[list[Vector3D]]] = Field(
+    normalmode_eigenvecs: list[list[Vector3D]] | None = Field(
         None, description="Normal mode eigenvectors of phonon modes at Gamma"
     )
-    elph_displaced_structures: Optional[ElectronPhononDisplacedStructures] = Field(
+    elph_displaced_structures: ElectronPhononDisplacedStructures | None = Field(
         None,
         description="Electron-phonon displaced structures, generated by setting "
         "PHON_LMC = True.",
     )
-    dos_properties: Optional[dict[str, dict[str, dict[str, float]]]] = Field(
+    dos_properties: dict[str, dict[str, dict[str, float]]] | None = Field(
         None,
         description="Element- and orbital-projected band properties (in eV) for the "
         "DOS. All properties are with respect to the Fermi level.",
     )
-    run_stats: Optional[RunStatistics] = Field(
+    run_stats: RunStatistics | None = Field(
         None, description="Summary of runtime statistics for this calculation"
     )
 
@@ -559,13 +555,13 @@ class CalculationOutput(BaseModel):
     def from_vasp_outputs(
         cls,
         vasprun: Vasprun,
-        outcar: Optional[Outcar],
-        contcar: Optional[Poscar],
-        locpot: Optional[Locpot] = None,
-        elph_poscars: Optional[list[Path]] = None,
+        outcar: Outcar | None,
+        contcar: Poscar | None,
+        locpot: Locpot | None = None,
+        elph_poscars: list[Path] | None = None,
         store_trajectory: StoreTrajectoryOption | str = StoreTrajectoryOption.NO,
         store_onsite_density_matrices: bool = False,
-    ) -> "CalculationOutput":
+    ) -> Self:
         """
         Create a VASP output document from VASP outputs.
 
@@ -722,41 +718,41 @@ class CalculationOutput(BaseModel):
 class Calculation(CalculationBaseModel):
     """Full VASP calculation inputs and outputs."""
 
-    dir_name: Optional[str] = Field(
+    dir_name: str | None = Field(
         None, description="The directory for this VASP calculation"
     )
-    vasp_version: Optional[str] = Field(
+    vasp_version: str | None = Field(
         None, description="VASP version used to perform the calculation"
     )
-    has_vasp_completed: Optional[TaskState] = Field(
+    has_vasp_completed: TaskState | bool | None = Field(
         None, description="Whether VASP completed the calculation successfully"
     )
-    input: Optional[CalculationInput] = Field(
+    input: CalculationInput | None = Field(
         None, description="VASP input settings for the calculation"
     )
-    output: Optional[CalculationOutput] = Field(
+    output: CalculationOutput | None = Field(
         None, description="The VASP calculation output"
     )
-    completed_at: Optional[str] = Field(
+    completed_at: str | None = Field(
         None, description="Timestamp for when the calculation was completed"
     )
-    task_name: Optional[str] = Field(
+    task_name: str | None = Field(
         None, description="Name of task given by custodian (e.g., relax1, relax2)"
     )
-    output_file_paths: Optional[dict[str, str]] = Field(
+    output_file_paths: dict[str, str] | None = Field(
         None,
         description="Paths (relative to dir_name) of the VASP output files "
         "associated with this calculation",
     )
-    bader: Optional[dict] = Field(None, description="Output from bader charge analysis")
-    ddec6: Optional[dict] = Field(None, description="Output from DDEC6 charge analysis")
-    run_type: Optional[RunType] = Field(
+    bader: dict | None = Field(None, description="Output from bader charge analysis")
+    ddec6: dict | None = Field(None, description="Output from DDEC6 charge analysis")
+    run_type: RunType | None = Field(
         None, description="Calculation run type (e.g., HF, HSE06, PBE)"
     )
-    task_type: Optional[TaskType] = Field(
+    task_type: TaskType | None = Field(
         None, description="Calculation task type (e.g., Structure Optimization)."
     )
-    calc_type: Optional[CalcType] = Field(
+    calc_type: CalcType | None = Field(
         None, description="Return calculation type (run type + task_type)."
     )
 
@@ -782,14 +778,14 @@ class Calculation(CalculationBaseModel):
         parse_bandstructure: str | bool = False,
         average_locpot: bool = True,
         run_bader: bool = False,
-        run_ddec6: str | bool = False,
+        run_ddec6: bool | str = False,
         strip_bandstructure_projections: bool = False,
         strip_dos_projections: bool = False,
         store_volumetric_data: tuple[str] | None = None,
         store_trajectory: StoreTrajectoryOption | str = StoreTrajectoryOption.NO,
         store_onsite_density_matrices: bool = False,
         vasprun_kwargs: dict | None = None,
-    ) -> tuple["Calculation", dict[VaspObject, Any]]:
+    ) -> tuple["Calculation", dict[VaspObject, dict]]:
         """
         Create a VASP calculation document from a directory and file paths.
 
@@ -1007,7 +1003,7 @@ class Calculation(CalculationBaseModel):
         cls,
         path: Path | str,
         task_name: str = "Unknown vapsrun.xml",
-        vasprun_kwargs: Optional[dict] = None,
+        vasprun_kwargs: dict | None = None,
     ) -> Self:
         """
         Create a VASP calculation document from a directory and file paths.
@@ -1092,7 +1088,7 @@ def _get_output_file_paths(volumetric_files: list[str]) -> dict[VaspObject, str]
 def _get_volumetric_data(
     dir_name: Path,
     output_file_paths: dict[VaspObject, str],
-    store_volumetric_data: Optional[tuple[str]],
+    store_volumetric_data: tuple[str] | None,
 ) -> dict[VaspObject, VolumetricData]:
     """
     Load volumetric data files from a directory.
@@ -1136,7 +1132,7 @@ def _get_volumetric_data(
     return volumetric_data
 
 
-def _parse_dos(parse_mode: str | bool, vasprun: Vasprun) -> Optional[Dos]:
+def _parse_dos(parse_mode: str | bool, vasprun: Vasprun) -> Dos | None:
     """Parse DOS. See Calculation.from_vasp_files for supported arguments."""
     nsw = vasprun.incar.get("NSW", 0)
     dos = None
@@ -1147,7 +1143,7 @@ def _parse_dos(parse_mode: str | bool, vasprun: Vasprun) -> Optional[Dos]:
 
 def _parse_bandstructure(
     parse_mode: str | bool, vasprun: Vasprun
-) -> Optional[BandStructure]:
+) -> BandStructure | None:
     """Parse band structure. See Calculation.from_vasp_files for supported arguments."""
     vasprun_file = vasprun.filename
 

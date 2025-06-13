@@ -1,7 +1,7 @@
 import os
 import tempfile
 from math import ceil
-from typing import Dict, Iterator, List, Optional, Tuple
+from typing import Iterator
 
 import numpy as np
 from abipy.abio.inputs import AnaddbInput
@@ -50,8 +50,8 @@ class PhononBuilder(Builder):
         ddb_files: Store,
         th_disp: Store,
         phonon_website: Store,
-        query: Optional[Dict] = None,
-        manager: Optional[TaskManager] = None,
+        query: dict | None = None,
+        manager: TaskManager | None = None,
         symprec: float = SETTINGS.SYMPREC,
         angle_tolerance: float = SETTINGS.ANGLE_TOL,
         chunk_size=100,
@@ -134,7 +134,7 @@ class PhononBuilder(Builder):
         for mpid_chunk in grouper(mats, N):
             yield {"query": {self.phonon_materials.key: {"$in": list(mpid_chunk)}}}
 
-    def get_items(self) -> Iterator[Dict]:
+    def get_items(self) -> Iterator[dict]:
         """
         Gets all materials that need phonons
 
@@ -188,7 +188,7 @@ class PhononBuilder(Builder):
 
             yield item
 
-    def process_item(self, item: Dict) -> Optional[Dict]:
+    def process_item(self, item: dict) -> dict | None:
         """
         Generates the full phonon document from an item
 
@@ -293,7 +293,7 @@ class PhononBuilder(Builder):
             )
             return None
 
-    def get_phonon_properties(self, item: Dict) -> Dict:
+    def get_phonon_properties(self, item: dict) -> dict:
         """
         Extracts the phonon properties from the item
         """
@@ -511,7 +511,7 @@ class PhononBuilder(Builder):
         dos: str = "tetra",
         lo_to_splitting: bool = True,
         use_dieflag: bool = True,
-    ) -> Tuple[AnaddbInput, Optional[List]]:
+    ) -> tuple[AnaddbInput, list | None]:
         """
         creates the AnaddbInput object to calculate the phonon properties.
         It also returns the list of qpoints labels for generating the PhononBandStructureSymmLine.
@@ -637,7 +637,7 @@ class PhononBuilder(Builder):
 
     @staticmethod
     def get_pmg_bs(
-        phbands: PhononBands, labels_list: List
+        phbands: PhononBands, labels_list: list
     ) -> PhononBandStructureSymmLine:
         """
         Generates a PhononBandStructureSymmLine starting from a abipy PhononBands object
@@ -726,7 +726,7 @@ class PhononBuilder(Builder):
 
         return data
 
-    def update_targets(self, items: List[Dict]):
+    def update_targets(self, items: list[dict]):
         """
         Inserts the new task_types into the task_types collection
 
@@ -769,7 +769,7 @@ class PhononBuilder(Builder):
 
 def get_warnings(
     asr_break: float, cnsr_break: float, ph_bs: PhononBandStructureSymmLine
-) -> List[PhononWarnings]:
+) -> list[PhononWarnings]:
     """
 
     Args:
@@ -810,7 +810,7 @@ def get_warnings(
 
 def get_thermodynamic_properties(
     ph_dos: CompletePhononDos,
-) -> Tuple[ThermodynamicProperties, VibrationalEnergy]:
+) -> tuple[ThermodynamicProperties, VibrationalEnergy]:
     """
     Calculates the thermodynamic properties from a phonon DOS
 

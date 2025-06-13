@@ -143,6 +143,7 @@ def test_task_doc(test_dir, object_name, tmpdir):
     assert test_doc.model_dump()["foo"] == "bar"
 
     assert len(test_doc.calcs_reversed) == len(test_object.task_files)
+    assert test_doc.state == TaskState.SUCCESS
 
     # ensure that number of electronic steps are correctly populated
     for cr in test_doc.calcs_reversed:

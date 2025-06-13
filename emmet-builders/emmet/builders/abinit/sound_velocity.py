@@ -1,14 +1,14 @@
 import tempfile
 import traceback
 from math import ceil
-from maggma.utils import grouper
-from typing import Optional, Dict, List, Iterator
+from typing import Iterator
 
-from abipy.dfpt.vsound import SoundVelocity as AbiSoundVelocity
 from abipy.dfpt.ddb import DdbFile
+from abipy.dfpt.vsound import SoundVelocity as AbiSoundVelocity
+from abipy.flowtk.tasks import TaskManager
 from maggma.builders import Builder
 from maggma.core import Store
-from abipy.flowtk.tasks import TaskManager
+from maggma.utils import grouper
 
 from emmet.core.phonon import SoundVelocity
 from emmet.core.utils import jsanitize
@@ -20,8 +20,8 @@ class SoundVelocityBuilder(Builder):
         phonon_materials: Store,
         ddb_source: Store,
         sound_vel: Store,
-        query: Optional[dict] = None,
-        manager: Optional[TaskManager] = None,
+        query: dict | None = None,
+        manager: TaskManager | None = None,
         **kwargs
     ):
         """
@@ -72,7 +72,7 @@ class SoundVelocityBuilder(Builder):
         for mpid_chunk in grouper(mats, N):
             yield {"query": {self.phonon_materials.key: {"$in": list(mpid_chunk)}}}
 
-    def get_items(self) -> Iterator[Dict]:
+    def get_items(self) -> Iterator[dict]:
         """
         Gets all materials that need sound velocity.
 
@@ -117,7 +117,7 @@ class SoundVelocityBuilder(Builder):
 
             yield item
 
-    def process_item(self, item: Dict) -> Optional[Dict]:
+    def process_item(self, item: dict) -> dict | None:
         """
         Generates the sound velocity document from an item
 
@@ -153,7 +153,7 @@ class SoundVelocityBuilder(Builder):
             return None
 
     @staticmethod
-    def get_sound_vel(item: Dict) -> Dict:
+    def get_sound_vel(item: dict) -> dict:
         """
         Runs anaddb and return the extracted data for the speed of sound.
 
@@ -187,7 +187,7 @@ class SoundVelocityBuilder(Builder):
 
             return sv_data
 
-    def update_targets(self, items: List[Dict]):
+    def update_targets(self, items: list[dict]):
         """
         Inserts the new task_types into the task_types collection
 

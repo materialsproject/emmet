@@ -1,6 +1,5 @@
 from math import ceil
-from typing import Dict, Optional, Iterator
-
+from typing import Iterator
 
 import numpy as np
 from maggma.builders import Builder
@@ -18,7 +17,7 @@ class DielectricBuilder(Builder):
         materials: Store,
         tasks: Store,
         dielectric: Store,
-        query: Optional[Dict] = None,
+        query: dict | None = None,
         **kwargs,
     ):
         self.materials = materials
@@ -33,7 +32,7 @@ class DielectricBuilder(Builder):
 
         super().__init__(sources=[materials, tasks], targets=[dielectric], **kwargs)
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterator[dict]:  # pragma: no cover
         """
         Prechunk method to perform chunking by the key field
         """

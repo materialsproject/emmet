@@ -1,6 +1,4 @@
-""" Core definition for Polar property Document """
-
-from typing import List, Optional
+"""Core definition for Polar property Document"""
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -15,9 +13,8 @@ from emmet.core.settings import EmmetSettings
 
 SETTINGS = EmmetSettings()
 
-Vector = List[float]
-PiezoTensor = List[Vector]
-PiezoTensor.__doc__ = "Rank 3 real space tensor in Voigt notation"  # type: ignore
+Vector = list[float]
+PiezoTensor = list[Vector]
 
 
 class DielectricDoc(PropertyDoc):
@@ -89,10 +86,10 @@ class PiezoelectricDoc(PropertyDoc):
     )
 
     e_ij_max: float = Field(description="Piezoelectric modulus")
-    max_direction: List[int] = Field(
+    max_direction: list[int] = Field(
         description="Miller direction for maximum piezo response"
     )
-    strain_for_max: List[float] = Field(
+    strain_for_max: list[float] = Field(
         description="Normalized strain direction for maximum piezo repsonse"
     )
 
@@ -144,17 +141,17 @@ class BornEffectiveCharges(BaseModel):
     A block for the Born effective charges
     """
 
-    value: Optional[List[Matrix3D]] = Field(
+    value: list[Matrix3D] | None = Field(
         None, description="Value of the Born effective charges."
     )
 
-    symmetrized_value: Optional[List[Matrix3D]] = Field(
+    symmetrized_value: list[Matrix3D] | None = Field(
         None,
         description="Value of the Born effective charges after symmetrization to obey the"
         "charge neutrality sum rule.",
     )
 
-    cnsr_break: Optional[float] = Field(
+    cnsr_break: float | None = Field(
         None,
         description="The maximum breaking of the charge neutrality sum "
         "rule (CNSR) in the Born effective charges.",
@@ -166,6 +163,6 @@ class IRDielectric(BaseModel):
     A block for the pymatgen IRDielectricTensor object
     """
 
-    ir_dielectric_tensor: Optional[dict] = Field(
+    ir_dielectric_tensor: dict | None = Field(
         None, description="Serialized version of a pymatgen IRDielectricTensor object."
     )
