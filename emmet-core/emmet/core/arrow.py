@@ -109,7 +109,7 @@ def arrowize(obj) -> pa.DataType:
         args = typing.get_args(obj)
 
         assert not isinstance(
-            args[0], typing._UnionGenericAlias | UnionType
+            args[0], typing._UnionGenericAlias | UnionType  # type: ignore[attr-defined]
         ), f"""
         Cannot construct arrow map type from: {RED}{obj}{RESET}.
         Keys for maps must resolve to single primitive data type, not Union type: {BLUE}{args[0]}{RESET}
@@ -135,7 +135,7 @@ def arrowize(obj) -> pa.DataType:
         # should have better way to handle all enums to get serialized representations
         return PY_PRIMITIVES_TO_ARROW[str]
 
-    if isinstance(obj, typing._UnionGenericAlias | UnionType):
+    if isinstance(obj, typing._UnionGenericAlias | UnionType):  # type: ignore[attr-defined]
         arrow_types = [
             (arg.__name__, arrowize(arg))
             for arg in list(
