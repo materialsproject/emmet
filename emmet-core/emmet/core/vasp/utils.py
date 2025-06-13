@@ -7,7 +7,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, PrivateAttr, computed_field, model_validator
+from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
 from emmet.core.utils import get_md5_blocked
 
@@ -23,15 +23,12 @@ class FileMetadata(BaseModel):
 
     """
 
-    name: str = Field(
-        description="Name of the VASP file without suffixes (e.g., INCAR)"
-    )
-    path: Path = Field(description="Path to the VASP file")
+    path: Path = Field(description="Path to the file")
     _md5: str | None = PrivateAttr(default=None)
 
     @model_validator(mode="before")
     def coerce_path(cls, v: Any) -> Any:
-        """Only coerce to Path. No existence check here."""
+        """Coerce to path."""
         if "path" in v:
             path = v["path"]
             if not isinstance(path, Path):
@@ -39,7 +36,12 @@ class FileMetadata(BaseModel):
             v["path"] = path
         return v
 
-    @computed_field
+    @property
+    def name(self) -> str:
+        """Return the name of the file."""
+        return self.path.name
+
+    @property
     def md5(self) -> str | None:
         """MD5 checksum of the file (computed lazily if needed)."""
         if self._md5 is not None:
@@ -155,7 +157,7 @@ def discover_vasp_files(
         for p in scan_dir:
             # Check that at least one VASP file matches the file name
             if p.is_file() and any(f for f in _vasp_files if f in p.name):
-                vasp_files.append(FileMetadata(name=p.name, path=Path(p.path)))
+                vasp_files.append(FileMetadata(path=Path(p.path)))
     return vasp_files
 
 

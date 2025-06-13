@@ -1,7 +1,8 @@
-# mypy: ignore-errors
-
 """Core definition of a Q-Chem Task Document"""
-from typing import Any, Callable
+
+from __future__ import annotations
+
+from typing import Any, TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 from pymatgen.core.structure import Molecule
@@ -19,6 +20,9 @@ from emmet.core.qchem.calc_types import (
 from emmet.core.structure import MoleculeMetadata
 from emmet.core.task import BaseTaskDocument
 from emmet.core.utils import ValueEnum
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -194,10 +198,12 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
 
     @property
     def entry(self) -> dict[str, Any]:
-        if self.output.optimized_molecule is not None:
-            mol = self.output.optimized_molecule
-        else:
-            mol = self.output.initial_molecule
+        mol = None
+        for mol_field in ("optimized_molecule", "initial_molecule"):
+            if mol := getattr(self.output, mol_field, None):
+                break
+        if not mol:
+            raise ValueError("No molecule could be associated with the calculation.")
 
         if self.charge is None:
             charge = int(mol.charge)
