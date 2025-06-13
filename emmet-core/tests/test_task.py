@@ -4,6 +4,8 @@ from emmet.core.testing_utils import assert_schemas_equal
 
 from tests.conftest import get_test_object
 
+from emmet.core.vasp.task_valid import TaskState
+
 
 @pytest.mark.parametrize(
     "object_name",
@@ -16,7 +18,7 @@ from tests.conftest import get_test_object
 def test_analysis_summary(test_dir, object_name):
     from monty.json import MontyDecoder, jsanitize
 
-    from emmet.core.tasks import AnalysisDoc
+    from emmet.core.tasks import AnalysisDoc, _get_state
     from emmet.core.vasp.calculation import Calculation
 
     test_object = get_test_object(object_name)
@@ -31,6 +33,7 @@ def test_analysis_summary(test_dir, object_name):
         # task_files are in the order of {"relax2","relax1"}
 
     test_doc = AnalysisDoc.from_vasp_calc_docs(calcs_reversed)
+    assert _get_state(calcs_reversed, test_doc) == TaskState.SUCCESS
     valid_doc = test_object.task_doc["analysis"]
     assert_schemas_equal(test_doc, valid_doc)
 

@@ -952,7 +952,10 @@ def _get_state(calcs_reversed: list[Calculation], analysis: AnalysisDoc) -> Task
     all_calcs_completed = all(
         c.has_vasp_completed == TaskState.SUCCESS for c in calcs_reversed
     )
-    if analysis.errors and len(analysis.errors) == 0 and all_calcs_completed:
+    if (
+        analysis.errors is None
+        or (isinstance(analysis.errors, list) and len(analysis.errors) == 0)
+    ) and all_calcs_completed:
         return TaskState.SUCCESS  # type: ignore
     return TaskState.FAILED  # type: ignore
 
