@@ -36,8 +36,38 @@ PY_PRIMITIVES_TO_ARROW = {
 # won't fly
 
 
-def arrowize(obj):
-    """ """
+def arrowize(obj) -> pa.DataType:
+    """
+    Converts Python type annotations to PyArrow data types.
+
+    Recursively introspects type annotations and constructs corresponding
+    PyArrow data types. This enables schema generation for Arrow-based
+    serialization but does not guarantee successful serialization.
+
+    Supported types:
+    - Python primitives
+    - Generic containers (with annotations)
+    - Literals
+    - Enum classes (with caveats)
+    - Pydantic models
+    - TypedDict
+    - MSONable objects with type adapters
+
+    Limitations:
+    - Union types must resolve to a single primitive type
+    - Container types must be homogeneous
+    - Map keys cannot be Union types
+
+    Args:
+        obj: A type annotation, class, or object with type annotations
+
+    Returns:
+        A PyArrow DataType corresponding to the input type
+
+    Note:
+        Union type serialization is currently unsupported in PyArrow.
+        All union types are narrowed to their first non-None member.
+    """
     assert obj not in (
         list,
         tuple,
