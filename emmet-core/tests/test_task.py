@@ -4,6 +4,8 @@ from emmet.core.vasp.task_valid import TaskState
 from emmet.core.testing_utils import assert_schemas_equal
 from tests.conftest import get_test_object
 
+from emmet.core.vasp.task_valid import TaskState
+
 
 @pytest.mark.parametrize(
     "object_name",
