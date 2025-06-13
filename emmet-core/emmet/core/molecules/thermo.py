@@ -1,13 +1,12 @@
-from pydantic import Field
 from hashlib import blake2b
-from typing import Optional
 
+from pydantic import Field
+
+from emmet.core.material import PropertyOrigin
+from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPculeID
 from emmet.core.qchem.calc_types import LevelOfTheory
 from emmet.core.qchem.task import TaskDocument
-from emmet.core.material import PropertyOrigin
-from emmet.core.molecules.molecule_property import PropertyDoc
-
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -46,39 +45,39 @@ class MoleculeThermoDoc(PropertyDoc):
         "theory used to correct the electronic energy?",
     )
 
-    base_level_of_theory: Optional[LevelOfTheory] = Field(
+    base_level_of_theory: LevelOfTheory | None = Field(
         None, description="Level of theory used for uncorrected thermochemistry."
     )
 
-    base_solvent: Optional[str] = Field(
+    base_solvent: str | None = Field(
         None,
         description="String representation of the solvent "
         "environment used for uncorrected thermochemistry.",
     )
 
-    base_lot_solvent: Optional[str] = Field(
+    base_lot_solvent: str | None = Field(
         None,
         description="String representation of the level of theory and solvent "
         "environment used for uncorrected thermochemistry.",
     )
 
-    correction_level_of_theory: Optional[LevelOfTheory] = Field(
+    correction_level_of_theory: LevelOfTheory | None = Field(
         None, description="Level of theory used to correct the electronic energy."
     )
 
-    correction_solvent: Optional[str] = Field(
+    correction_solvent: str | None = Field(
         None,
         description="String representation of the solvent "
         "environment used to correct the electronic energy.",
     )
 
-    correction_lot_solvent: Optional[str] = Field(
+    correction_lot_solvent: str | None = Field(
         None,
         description="String representation of the level of theory and solvent "
         "environment used to correct the electronic energy.",
     )
 
-    combined_lot_solvent: Optional[str] = Field(
+    combined_lot_solvent: str | None = Field(
         None,
         description="String representation of the level of theory and solvent "
         "environment used to generate this ThermoDoc, combining "
@@ -86,45 +85,45 @@ class MoleculeThermoDoc(PropertyDoc):
         "single-point energy correction.",
     )
 
-    zero_point_energy: Optional[float] = Field(
+    zero_point_energy: float | None = Field(
         None, description="Zero-point energy of the molecule (units: eV)"
     )
 
-    rt: Optional[float] = Field(
+    rt: float | None = Field(
         None,
         description="R*T, where R is the gas constant and T is temperature, taken "
         "to be 298.15K (units: eV)",
     )
 
-    total_enthalpy: Optional[float] = Field(
+    total_enthalpy: float | None = Field(
         None, description="Total enthalpy of the molecule at 298.15K (units: eV)"
     )
-    total_entropy: Optional[float] = Field(
+    total_entropy: float | None = Field(
         None, description="Total entropy of the molecule at 298.15K (units: eV/K)"
     )
 
-    translational_enthalpy: Optional[float] = Field(
+    translational_enthalpy: float | None = Field(
         None,
         description="Translational enthalpy of the molecule at 298.15K (units: eV)",
     )
-    translational_entropy: Optional[float] = Field(
+    translational_entropy: float | None = Field(
         None,
         description="Translational entropy of the molecule at 298.15K (units: eV/K)",
     )
-    rotational_enthalpy: Optional[float] = Field(
+    rotational_enthalpy: float | None = Field(
         None, description="Rotational enthalpy of the molecule at 298.15K (units: eV)"
     )
-    rotational_entropy: Optional[float] = Field(
+    rotational_entropy: float | None = Field(
         None, description="Rotational entropy of the molecule at 298.15K (units: eV/K)"
     )
-    vibrational_enthalpy: Optional[float] = Field(
+    vibrational_enthalpy: float | None = Field(
         None, description="Vibrational enthalpy of the molecule at 298.15K (units: eV)"
     )
-    vibrational_entropy: Optional[float] = Field(
+    vibrational_entropy: float | None = Field(
         None, description="Vibrational entropy of the molecule at 298.15K (units: eV/K)"
     )
 
-    free_energy: Optional[float] = Field(
+    free_energy: float | None = Field(
         None, description="Gibbs free energy of the molecule at 298.15K (units: eV)"
     )
 
@@ -133,7 +132,7 @@ class MoleculeThermoDoc(PropertyDoc):
         cls,
         task: TaskDocument,
         molecule_id: MPculeID,
-        correction_task: Optional[TaskDocument] = None,
+        correction_task: TaskDocument | None = None,
         deprecated: bool = False,
         **kwargs,
     ):  # type: ignore[override]

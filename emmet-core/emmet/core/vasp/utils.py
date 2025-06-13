@@ -1,17 +1,21 @@
 """Define utilities needed for parsing VASP calculations."""
 
 from __future__ import annotations
+
+import os
 from collections import defaultdict
 import logging
 import os
 from pathlib import Path
-from pydantic import BaseModel, Field, PrivateAttr, computed_field, model_validator
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
+
+from pydantic import BaseModel, Field, model_validator
 
 from emmet.core.utils import get_hash_blocked
 
 if TYPE_CHECKING:
     from typing import Any
+
     from emmet.core.typing import PathLike
 
 logger = logging.getLogger(__name__)
@@ -28,7 +32,7 @@ class FileMetadata(BaseModel):
         description="Name of the VASP file without suffixes (e.g., INCAR)"
     )
     path: Path = Field(description="Path to the VASP file")
-    hash: Optional[str] = Field(
+    hash: str | None = Field(
         description="Hash of the file (computed only when requested)",
         default=None,
     )
@@ -43,7 +47,7 @@ class FileMetadata(BaseModel):
             v["path"] = path
         return v
 
-    def compute_hash(self) -> Optional[str]:
+    def compute_hash(self) -> str | None:
         """Compute the hash of the file."""
         if self.validate_path_exists():
             try:

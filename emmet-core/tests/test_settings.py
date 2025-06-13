@@ -36,9 +36,9 @@ def test_allow_extra_fields(tmp_path: PosixPath):
 def test_from_url():
     """Makes sure loading from a URL Works"""
 
-    os.environ[
-        "EMMET_CONFIG_FILE"
-    ] = "https://raw.githubusercontent.com/materialsproject/emmet/master/test_files/test_settings.json"
+    os.environ["EMMET_CONFIG_FILE"] = (
+        "https://raw.githubusercontent.com/materialsproject/emmet/master/test_files/test_settings.json"
+    )
 
     test_config = EmmetSettings()
 

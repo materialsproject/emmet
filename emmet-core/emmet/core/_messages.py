@@ -1,7 +1,9 @@
-from typing import List, Optional
 from datetime import datetime
-from pydantic import BaseModel, Field
 from enum import Enum
+
+from pydantic import BaseModel, Field
+
+from emmet.core.utils import utcnow
 
 
 class MessageType(Enum):
@@ -14,17 +16,17 @@ class MessagesDoc(BaseModel):
     Defines data for user messages
     """
 
-    title: Optional[str] = Field(
+    title: str | None = Field(
         None,
         title="Title",
         description="Generic title or short summary for the message.",
     )
 
-    body: Optional[str] = Field(
+    body: str | None = Field(
         None, title="Body", description="Main text body of message."
     )
 
-    authors: Optional[List[str]] = Field(
+    authors: list[str] | None = Field(
         None,
         title="Title",
         description="Generic title or short summary for the message.",
@@ -37,7 +39,7 @@ class MessagesDoc(BaseModel):
     )
 
     last_updated: datetime = Field(
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
         title="Last Updated",
         description="The last updated UTC timestamp for the message.",
     )

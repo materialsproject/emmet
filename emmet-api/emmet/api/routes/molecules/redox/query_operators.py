@@ -1,4 +1,5 @@
-from typing import Any, Optional, Dict
+from typing import Any
+
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
@@ -11,20 +12,20 @@ class RedoxPotentialQuery(QueryOperator):
 
     def query(
         self,
-        reduction_potential_min: Optional[float] = Query(
+        reduction_potential_min: float | None = Query(
             None, description="Minimum reduction potential."
         ),
-        reduction_potential_max: Optional[float] = Query(
+        reduction_potential_max: float | None = Query(
             None, description="Maximum reduction potential."
         ),
-        oxidation_potential_min: Optional[float] = Query(
+        oxidation_potential_min: float | None = Query(
             None, description="Minimum oxidation potential."
         ),
-        oxidation_potential_max: Optional[float] = Query(
+        oxidation_potential_max: float | None = Query(
             None, description="Maximum oxidation potential."
         ),
     ) -> STORE_PARAMS:
-        crit: Dict[str, Any] = dict()  # type: ignore
+        crit: dict[str, Any] = dict()  # type: ignore
 
         d = {
             "oxidation_potential": [oxidation_potential_min, oxidation_potential_max],

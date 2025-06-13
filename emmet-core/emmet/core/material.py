@@ -1,9 +1,9 @@
-""" Core definition of a Materials Document """
+"""Core definition of a Materials Document"""
 
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Mapping, Optional, Type, TypeVar, Union
+from typing import Mapping, Type, TypeVar
 
 from pydantic import BaseModel, Field, field_validator
 from pymatgen.core import Structure
@@ -12,6 +12,7 @@ from pymatgen.core.structure import Molecule
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID, MPculeID
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
+from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
 
 
@@ -21,12 +22,12 @@ class PropertyOrigin(BaseModel):
     """
 
     name: str = Field(..., description="The property name")
-    task_id: Union[MPID, MPculeID] = Field(
+    task_id: MPID | MPculeID = Field(
         ..., description="The calculation ID this property comes from"
     )
     last_updated: datetime = Field(  # type: ignore
         description="The timestamp when this calculation was last updated",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     @field_validator("last_updated", mode="before")
@@ -60,43 +61,43 @@ class MaterialsDoc(StructureMetadata):
         description="Whether this materials document is deprecated.",
     )
 
-    deprecation_reasons: Optional[List[Union[DeprecationMessage, str]]] = Field(
+    deprecation_reasons: list[DeprecationMessage | str] | None = Field(
         None,
         description="List of deprecation tags detailing why this materials document isn't valid.",
     )
 
-    initial_structures: List[Structure] = Field(
+    initial_structures: list[Structure] = Field(
         [],
         description="Initial structures used in the DFT optimizations corresponding to this material.",
     )
 
-    task_ids: List[MPID] = Field(
+    task_ids: list[MPID] = Field(
         [],
         description="List of Calculations IDs used to make this Materials Document.",
     )
 
-    deprecated_tasks: List[str] = Field([], title="Deprecated Tasks")
+    deprecated_tasks: list[str] = Field([], title="Deprecated Tasks")
 
-    calc_types: Optional[Mapping[str, str]] = Field(
+    calc_types: Mapping[str, str] | None = Field(
         None,
         description="Calculation types for all the calculations that make up this material.",
     )
 
     last_updated: datetime = Field(
         description="Timestamp for when this document was last updated.",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created.",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
-    origins: Optional[List[PropertyOrigin]] = Field(
+    origins: list[PropertyOrigin] | None = Field(
         None, description="Dictionary for tracking the provenance of properties."
     )
 
-    warnings: List[str] = Field(
+    warnings: list[str] = Field(
         [], description="Any warnings related to this material."
     )
 
@@ -114,6 +115,11 @@ class MaterialsDoc(StructureMetadata):
             structure=structure,
             **kwargs,
         )
+
+    @field_validator("last_updated", "created_at", mode="before")
+    @classmethod
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)
 
 
 class CoreMoleculeDoc(MoleculeMetadata):
@@ -139,45 +145,45 @@ class CoreMoleculeDoc(MoleculeMetadata):
     )
 
     # TODO: Why might a molecule be deprecated?
-    deprecation_reasons: Optional[List[str]] = Field(
+    deprecation_reasons: list[str] | None = Field(
         None,
         description="List of deprecation tags detailing why this molecules document isn't valid",
     )
 
-    initial_molecules: List[Molecule] = Field(
+    initial_molecules: list[Molecule] = Field(
         [],
         description="Initial molecules used in the DFT geometry optimizations corresponding to this molecule",
     )
 
-    task_ids: List[MPID] = Field(
+    task_ids: list[MPID] = Field(
         [],
         title="Calculation IDs",
         description="List of Calculations IDs used to make this Molecule Document",
     )
 
     # TODO: Should this be MPID?
-    deprecated_tasks: List[str] = Field([], title="Deprecated Tasks")
+    deprecated_tasks: list[str] = Field([], title="Deprecated Tasks")
 
-    calc_types: Optional[Mapping[str, str]] = Field(
+    calc_types: Mapping[str, str] | None = Field(
         None,
         description="Calculation types for all the tasks that make up this molecule",
     )
 
     last_updated: datetime = Field(
         description="Timestamp for when this document was last updated",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
     created_at: datetime = Field(
         description="Timestamp for when this document was first created",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
-    origins: Optional[List[PropertyOrigin]] = Field(
+    origins: list[PropertyOrigin] | None = Field(
         None, description="Dictionary for tracking the provenance of properties"
     )
 
-    warnings: List[str] = Field([], description="Any warnings related to this molecule")
+    warnings: list[str] = Field([], description="Any warnings related to this molecule")
 
     @classmethod
     def from_molecule(
@@ -190,3 +196,8 @@ class CoreMoleculeDoc(MoleculeMetadata):
         return super().from_molecule(  # type: ignore
             meta_molecule=molecule, molecule_id=molecule_id, molecule=molecule, **kwargs
         )
+
+    @field_validator("last_updated", "created_at", mode="before")
+    @classmethod
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)

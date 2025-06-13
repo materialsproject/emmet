@@ -1,27 +1,27 @@
-from collections import defaultdict
-from math import ceil
 import itertools
 import re
+from collections import defaultdict
+from math import ceil
+
 import boto3
 import numpy as np
 from botocore.handlers import disable_signing
 from maggma.builders import Builder
 from maggma.utils import grouper
 from pymatgen.analysis.magnetism.analyzer import CollinearMagneticStructureAnalyzer
-from pymatgen.core import Structure
-from pymatgen.electronic_structure.core import Spin
-from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
-from pymatgen.electronic_structure.dos import CompleteDos
-from pymatgen.symmetry.bandstructure import HighSymmKpath
 from pymatgen.analysis.structure_matcher import StructureMatcher
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pymatgen.core import Structure
+from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
+from pymatgen.electronic_structure.core import Spin
+from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.io.vasp.sets import MPStaticSet
-
-from emmet.core.settings import EmmetSettings
-from emmet.core.electronic_structure import ElectronicStructureDoc
-from emmet.core.utils import jsanitize
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pymatgen.symmetry.bandstructure import HighSymmKpath
 
 from emmet.builders.utils import query_open_data
+from emmet.core.electronic_structure import ElectronicStructureDoc
+from emmet.core.settings import EmmetSettings
+from emmet.core.utils import jsanitize
 
 SETTINGS = EmmetSettings()
 
@@ -297,7 +297,7 @@ class ElectronicStructureBuilder(Builder):
         Inserts electronic structure documents into the electronic_structure collection
 
         Args:
-            items ([Dict]): A list of ElectronicStructureDoc dictionaries to update
+            items ([dict]): A list of ElectronicStructureDoc dictionaries to update
         """
 
         items = list(filter(None, items))
@@ -577,9 +577,9 @@ class ElectronicStructureBuilder(Builder):
 
                 other_calcs.append(
                     {
-                        "is_static": True
-                        if "Static" in mat["task_types"][task_id]
-                        else False,
+                        "is_static": (
+                            True if "Static" in mat["task_types"][task_id] else False
+                        ),
                         "task_id": task_id,
                         "is_hubbard": int(is_hubbard),
                         "nkpoints": int(nkpoints),
@@ -640,9 +640,9 @@ class ElectronicStructureBuilder(Builder):
                     bs_obj["data"] if bs_obj is not None else None
                 )
 
-                materials_doc["bandstructure"][bs_type][
-                    "output_structure"
-                ] = sorted_bs_data[0]["output_structure"]
+                materials_doc["bandstructure"][bs_type]["output_structure"] = (
+                    sorted_bs_data[0]["output_structure"]
+                )
 
                 materials_doc["origins"].append(
                     {

@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Any
+from typing import Any
 
 import numpy as np
 from pydantic import Field
@@ -23,18 +23,18 @@ class BondingDoc(PropertyDoc):
 
     method: str = Field(description="Method used to compute structure graph.")
 
-    bond_types: Dict[str, List[float]] = Field(
+    bond_types: dict[str, list[float]] = Field(
         description="Dictionary of bond types to their length, e.g. a Fe-O to "
         "a list of the lengths of Fe-O bonds in Angstrom."
     )
-    bond_length_stats: Dict[str, Any] = Field(
+    bond_length_stats: dict[str, Any] = Field(
         description="Dictionary of statistics of bonds in structure "
         "with keys all_weights, min, max, mean and variance."
     )
-    coordination_envs: List[str] = Field(
+    coordination_envs: list[str] = Field(
         description="List of co-ordination environments, e.g. ['Mo-S(6)', 'S-Mo(3)']."
     )
-    coordination_envs_anonymous: List[str] = Field(
+    coordination_envs_anonymous: list[str] = Field(
         description="List of co-ordination environments without elements "
         "present, e.g. ['A-B(6)', 'A-B(3)']."
     )

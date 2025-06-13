@@ -1,5 +1,6 @@
 """Current MP tools to validate VASP calculations."""
 
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -7,6 +8,7 @@ from pydantic import Field, field_validator
 
 from emmet.core.vasp.calculation import Calculation
 from emmet.core.base import EmmetBaseModel
+from emmet.core.common import convert_datetime
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
 from emmet.core.utils import utcnow

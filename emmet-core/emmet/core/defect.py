@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-from pydantic import Field
+from typing import TYPE_CHECKING
 
-from emmet.core.tasks import TaskDoc, _VOLUMETRIC_FILES
-from typing import TYPE_CHECKING, Optional
-from pymatgen.analysis.defects.core import Defect
 from monty.json import MontyDecoder
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from pymatgen.analysis.defects.core import Defect
+
+from emmet.core.tasks import _VOLUMETRIC_FILES, TaskDoc
 
 if TYPE_CHECKING:
-    from typing import Any, Dict, Tuple, Union
     from pathlib import Path
+    from typing import Any
 
 mdecoder = MontyDecoder().process_decoded
 
@@ -32,13 +32,13 @@ class DefectInfo(BaseModel):
         description="Unit cell representation of the defect object.",
     )
 
-    charge_state: Optional[int] = Field(
+    charge_state: int | None = Field(
         None,
         title="Charge State",
         description="Charge state of the defect.",
     )
 
-    supercell_matrix: Optional[list] = Field(
+    supercell_matrix: list | None = Field(
         None,
         title="Supercell Matrix",
         description="Supercell matrix used to construct the defect supercell.",
@@ -54,9 +54,9 @@ class DefectTaskDoc(DefectInfo, TaskDoc):
     @classmethod
     def from_directory(
         cls,
-        dir_name: Union[Path, str],
-        volumetric_files: Tuple[str, ...] = _VOLUMETRIC_FILES,
-        additional_fields: Optional[Dict[str, Any]] = None,
+        dir_name: Path | str,
+        volumetric_files: tuple[str, ...] = _VOLUMETRIC_FILES,
+        additional_fields: dict[str, Any] | None = None,
         volume_change_warning_tol: float = 0.2,
         defect_info_key: str = "info",
         **vasp_calculation_kwargs,
