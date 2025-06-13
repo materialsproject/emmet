@@ -10,7 +10,7 @@ from emmet.core.base import EmmetBaseModel
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
 from emmet.core.utils import utcnow
-from emmet.core.vasp.utils import FileMetadata
+from emmet.core.vasp.utils import FileMetadata, REQUIRED_VASP_FILES
 from emmet.core.vasp.task_valid import TaskDocument
 
 from pymatgen.io.vasp import Incar
@@ -22,7 +22,7 @@ from pymatgen.io.validation.common import (
     VaspFiles,
     VaspInputSafe,
 )
-from pymatgen.io.validation.validation import REQUIRED_VASP_FILES, VaspValidator
+from pymatgen.io.validation.validation import VaspValidator
 
 from typing import TYPE_CHECKING
 

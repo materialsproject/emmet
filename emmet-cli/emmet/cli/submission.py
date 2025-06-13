@@ -17,7 +17,7 @@ from emmet.core.vasp.utils import (
     recursive_discover_vasp_files,
 )
 
-# from pymatgen.io.validation.validation import VaspValidator
+from emmet.core.vasp.validation import ValidationDoc
 
 logger = logging.getLogger("emmet")
 
@@ -44,11 +44,12 @@ class CalculationMetadata(BaseModel):
         """Validate the calculation. Returns whether it's valid."""
         self.refresh()
         if self.calc_valid is None:
-            # print(f"Validating calculation at {locator.path}")
-            # validator = VaspValidator.from_directory(dir_name=locator.path, fast=True) # TODO: add modifier
-            # self.calc_valid = validator.valid
-            # self.calc_validation_errors = validator.reasons
-            self.calc_valid = True
+            print(f"Validating calculation at {locator.path}")
+            validator = ValidationDoc.from_file_metadata(
+                file_meta=self.files, fast=True
+            )
+            self.calc_valid = validator.valid
+            self.calc_validation_errors = validator.reasons
         return self.calc_valid
 
     def refresh(self) -> None:
