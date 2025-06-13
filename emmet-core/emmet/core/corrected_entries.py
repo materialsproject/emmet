@@ -11,14 +11,15 @@ from emmet.core.base import EmmetBaseModel
 from emmet.core.serialization_adapters.computed_entries_adapter import (
     AnnotatedComputedStructureEntry,
 )
-from emmet.core.thermo import ThermoType
-from emmet.core.utils import utcnow
+from emmet.core.thermo import RunType, ThermoType
+from emmet.core.utils import type_override, utcnow
 
 ComputedStructureEntryType: TypeAlias = (
     AnnotatedComputedStructureEntry if ARROW_COMPATIBLE else ComputedStructureEntry  # type: ignore[valid-type]
 )
 
 
+@type_override({"entries": dict[ThermoType, list[ComputedStructureEntryType]]})
 class CorrectedEntriesDoc(EmmetBaseModel):
     """
     A corrected entries document
@@ -32,9 +33,11 @@ class CorrectedEntriesDoc(EmmetBaseModel):
         description="Dash-delimited string of elements in the material.",
     )
 
-    entries: dict[ThermoType, list[ComputedStructureEntryType] | None] = Field(
-        ...,
-        description="List of all corrected entries that are valid for the specified thermo type.",
+    entries: dict[RunType | ThermoType, list[ComputedStructureEntryType] | None] = (
+        Field(
+            ...,
+            description="List of all corrected entries that are valid for the specified thermo type.",
+        )
     )
 
     last_updated: datetime = Field(
