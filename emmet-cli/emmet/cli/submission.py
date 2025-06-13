@@ -11,32 +11,15 @@ from emmet.cli.utils import EmmetCliError
 from pydantic import BaseModel, Field, PrivateAttr
 from uuid import UUID, uuid4
 
-from emmet.core.vasp.utils import FileMetadata, recursive_discover_vasp_files
+from emmet.core.vasp.utils import (
+    CalculationLocator,
+    FileMetadata,
+    recursive_discover_vasp_files,
+)
 
 # from pymatgen.io.validation.validation import VaspValidator
 
 logger = logging.getLogger("emmet")
-
-
-class CalculationLocator(BaseModel):
-    path: Path = Field(description="The path to the calculation directory")
-    modifier: str | None = Field(
-        description="Optional modifier for the calculation", default=None
-    )
-
-    def __hash__(self) -> int:
-        # Resolve path to handle different representations of same path
-        return hash((self.path.resolve(), self.modifier))
-
-    # You might not need custom __eq__ in Pydantic v2
-    # But if you keep it, consider path resolution:
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, CalculationLocator):
-            return False
-        return (
-            self.path.resolve() == other.path.resolve()
-            and self.modifier == other.modifier
-        )
 
 
 class CalculationMetadata(BaseModel):
@@ -327,15 +310,19 @@ class Submission(BaseModel):
 
         return [item for sublist in changes.values() for item in sublist]
 
-    def get_changed_files_per_calc_path(self, previous, current):
-        changes = {}
+    def get_changed_files_per_calc_path(
+        self,
+        previous: list[tuple[CalculationLocator, CalculationMetadata]] | None,
+        current: list[tuple[CalculationLocator, CalculationMetadata]],
+    ) -> dict[CalculationLocator, list[FileMetadata]]:
+        changes: dict[CalculationLocator, list[FileMetadata]] = {}
         if not previous:
             changes = {k: v.files for k, v in current}
         else:
-            for p, cm in current:
-                prev_cm = next((v for loc, v in previous if loc == p), None)
+            for loc, cm in current:
+                prev_cm = next((cm_p for loc_p, cm_p in previous if loc_p == loc), None)
                 if prev_cm is None:
-                    changes[p] = cm.files
+                    changes[loc] = cm.files
                 else:
                     file_changes = []
                     for fm in cm.files:
@@ -345,7 +332,7 @@ class Submission(BaseModel):
                         if match is None or fm.hash != match.hash:
                             file_changes.append(fm)
                     if file_changes:
-                        changes[p] = file_changes
+                        changes[loc] = file_changes
         return changes
 
     def push(self) -> None:
@@ -390,13 +377,11 @@ def find_all_calculations(paths: Iterable[PathLike]):
         logger.info(f"Checking path: {path}")
         if path.is_dir():
             calcs = recursive_discover_vasp_files(path)
-            all_calculations.update(
-                {CalculationLocator(path=k): v for k, v in calcs.items()}
-            )
+            all_calculations.update(calcs)
         else:
             parent = path.parent
             fm = FileMetadata(name=path.name, path=path)
-            locator = CalculationLocator(path=parent)
+            locator = CalculationLocator(path=parent, modifier=fm.calc_suffix)
             if locator in all_calculations:
                 if fm not in all_calculations[locator]:
                     all_calculations[locator].append(fm)

@@ -41,15 +41,25 @@ def verify_submission_calculations_against_tmp_dir_data(calculations):
     for locator, cm in calculations:
         path = locator.path
         if path.name == "00":
+            assert locator.modifier == "standard"
             assert len(cm.files) == 3
         elif path.name == "01":
+            assert locator.modifier == "standard"
             assert len(cm.files) == 8
         elif path.name == "02":
+            assert locator.modifier == "standard"
             assert len(cm.files) == 3
         elif path.name == "neb_calc":
+            assert locator.modifier == "standard"
             assert len(cm.files) == 4
         elif path.name == "launcher_2025_02_31_0001":
-            assert len(cm.files) == 19
+            if locator.modifier == "relax1":
+                assert len(cm.files) == 9
+            elif locator.modifier == "relax2":
+                assert len(cm.files) == 6
+            else:
+                assert locator.modifier == "standard"
+                assert len(cm.files) == 4
         else:
             assert path is None
 
@@ -57,8 +67,8 @@ def verify_submission_calculations_against_tmp_dir_data(calculations):
 def test_from_paths(tmp_dir):
     submission = Submission.from_paths(paths=[tmp_dir])
 
+    assert len(submission.calculations) == 7
     verify_submission_calculations_against_tmp_dir_data(submission.calculations)
-    assert len(submission.calculations) == 5
 
 
 def test_save_and_load(sub_file):
@@ -75,8 +85,10 @@ def test_add_to(sub_file, tmp_structure):
     for locator, cm in sub.calculations:
         if "neb_calc/01" in str(locator.path):
             to_add_path.append(locator.path)
-        elif "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001" in str(
-            locator.path
+        elif (
+            "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001"
+            in str(locator.path)
+            and locator.modifier == "relax1"
         ):
             to_add_path.append(cm.files[0].path)
 
@@ -87,9 +99,10 @@ def test_add_to(sub_file, tmp_structure):
 
     # test adding new paths and files too
     to_add_path = to_add_path + list(tmp_structure.values())
+    assert len(to_add_path) == 4
     added = sub.add_to(to_add_path)
     assert len(added) == 4
-    assert len(sub.calculations) == 7
+    assert len(sub.calculations) == 9
 
 
 def test_remove_from(sub_file, tmp_structure):
@@ -104,8 +117,10 @@ def test_remove_from(sub_file, tmp_structure):
     for locator, cm in sub.calculations:
         if "neb_calc/01" in str(locator.path):
             to_remove_path.append(locator.path)
-        elif "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001" in str(
-            locator.path
+        elif (
+            "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001"
+            in str(locator.path)
+            and locator.modifier == "relax1"
         ):
             to_remove_path.append(cm.files[0].path)
 
@@ -120,7 +135,7 @@ def test_changed_files(sub_file):
     changed = sub.get_changed_files_per_calc_path(
         sub.calculations, sub._create_calculations_copy(refresh=True)
     )
-    assert len(changed) == 5
+    assert len(changed) == 7
 
     sub.calculations = sub._create_calculations_copy(refresh=True)
 
@@ -131,7 +146,7 @@ def test_changed_files(sub_file):
     changed = sub.get_changed_files_per_calc_path(
         sub.last_pushed(), sub._create_calculations_copy(refresh=True)
     )
-    assert len(changed) == 5
+    assert len(changed) == 7
 
 
 def test_validate_submission(sub_file):
