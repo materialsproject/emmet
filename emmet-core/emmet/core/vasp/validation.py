@@ -9,7 +9,6 @@ from pydantic import Field, field_validator
 from emmet.core.vasp.calculation import Calculation
 from emmet.core.base import EmmetBaseModel
 from emmet.core.common import convert_datetime
-from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
 from emmet.core.utils import utcnow
 from emmet.core.vasp.utils import FileMetadata, REQUIRED_VASP_FILES
