@@ -2,12 +2,13 @@ import importlib
 import inspect
 import itertools
 import os
+from pathlib import Path
 from typing import Optional, Union
 
 import pytest
 from pydantic._internal._model_construction import ModelMetaclass
 
-from emmet.core import ARROW_COMPATIBLE, core_path
+from emmet.core import ARROW_COMPATIBLE
 
 pa = pytest.importorskip("pyarrow")
 
@@ -16,6 +17,7 @@ if ARROW_COMPATIBLE:
 
 
 def import_models():
+    core_path = Path(__file__).parent.parent.joinpath("emmet/core")
     core_models = []
     for root, dirs, files in os.walk(core_path):
         if "__pycache__" in dirs:
