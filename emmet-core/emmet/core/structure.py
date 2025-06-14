@@ -4,13 +4,15 @@ from __future__ import annotations
 
 from typing import Type, TypeVar
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Molecule, Structure
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.base import EmmetBaseModel
 from emmet.core.symmetry import PointGroupData, SymmetryData
+from emmet.core.typing import CompositionType
 from emmet.core.utils import get_graph_hash
 
 T = TypeVar("T", bound="StructureMetadata")
@@ -33,10 +35,10 @@ class StructureMetadata(EmmetBaseModel):
         None, description="List of elements in the material."
     )
     nelements: int | None = Field(None, description="Number of elements.")
-    composition: Composition | None = Field(
+    composition: CompositionType | None = Field(
         None, description="Full composition for the material."
     )
-    composition_reduced: Composition | None = Field(
+    composition_reduced: CompositionType | None = Field(
         None,
         title="Reduced Composition",
         description="Simplified representation of the composition.",
@@ -75,6 +77,14 @@ class StructureMetadata(EmmetBaseModel):
     symmetry: SymmetryData | None = Field(
         None, description="Symmetry data for this material."
     )
+
+    @field_validator("composition", "composition_reduced", mode="before")
+    def composition_deserializer(cls, comp):
+        if ARROW_COMPATIBLE:
+            if isinstance(comp, list):
+                comp = {k: v for k, v in comp}
+
+        return comp
 
     @classmethod
     def from_composition(
@@ -178,10 +188,10 @@ class MoleculeMetadata(EmmetBaseModel):
         title="Number of electrons",
         description="The total number of electrons for the molecule",
     )
-    composition: Composition | None = Field(
+    composition: CompositionType | None = Field(
         None, description="Full composition for the molecule"
     )
-    composition_reduced: Composition | None = Field(
+    composition_reduced: CompositionType | None = Field(
         None,
         title="Reduced Composition",
         description="Simplified representation of the composition",

@@ -3,7 +3,10 @@ from MDAnalysis.analysis.dielectric import DielectricConstant
 from pydantic import BaseModel, Field
 from transport_analysis.viscosity import ViscosityHelfand
 
+from emmet.core.utils import arrow_incompatible
 
+
+@arrow_incompatible
 class SolventBenchmarkingDoc(BaseModel, arbitrary_types_allowed=True):
     density: float | None = Field(None, description="Density of the solvent")
 

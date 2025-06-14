@@ -1,11 +1,23 @@
 from datetime import datetime
 from enum import Enum
+from typing import TypeAlias
 
 from pydantic import BaseModel, Field, field_validator
 from pymatgen.core.interface import GrainBoundary
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.common import convert_datetime
 from emmet.core.utils import utcnow
+
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters.grain_boundary_adapter import (
+        AnnotatedGrainBoundary,
+    )
+
+
+GrainBoundaryType: TypeAlias = (
+    AnnotatedGrainBoundary if ARROW_COMPATIBLE else GrainBoundary  # type: ignore[valid-type]
+)
 
 
 class GBTypeEnum(Enum):
@@ -57,11 +69,11 @@ class GrainBoundaryDoc(BaseModel):
         description="Grain boundary energy in J/m^2.",
     )
 
-    initial_structure: GrainBoundary | None = Field(
+    initial_structure: GrainBoundaryType | None = Field(
         None, description="Initial grain boundary structure."
     )
 
-    final_structure: GrainBoundary | None = Field(
+    final_structure: GrainBoundaryType | None = Field(
         None, description="Final grain boundary structure."
     )
 

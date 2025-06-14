@@ -6,13 +6,13 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.core.structure import Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.structure import StructureMetadata
 from emmet.core.task import BaseTaskDocument
-from emmet.core.utils import ValueEnum
+from emmet.core.typing import StructureType
+from emmet.core.utils import ValueEnum, arrow_incompatible
 from emmet.core.vasp.calc_types import RunType, calc_type, run_type, task_type
 
 
@@ -26,12 +26,15 @@ class TaskState(ValueEnum):
     ERROR = "error"
 
 
+@arrow_incompatible
 class InputSummary(BaseModel):
     """
     Summary of inputs for a VASP calculation
     """
 
-    structure: Structure | None = Field(None, description="The input structure object")
+    structure: StructureType | None = Field(
+        None, description="The input structure object"
+    )
     parameters: dict = Field(
         {},
         description="Input parameters from VASPRUN for the last calculation in the series",
@@ -54,7 +57,9 @@ class OutputSummary(BaseModel):
     Summary of the outputs for a VASP calculation
     """
 
-    structure: Structure | None = Field(None, description="The output structure object")
+    structure: StructureType | None = Field(
+        None, description="The output structure object"
+    )
     energy: float | None = Field(
         None, description="The final total DFT energy for the last calculation"
     )
@@ -72,6 +77,7 @@ class OutputSummary(BaseModel):
     )
 
 
+@arrow_incompatible
 class RunStatistics(BaseModel):
     """
     Summary of the Run statistics for a VASP calculation
@@ -99,6 +105,7 @@ class RunStatistics(BaseModel):
     )
 
 
+@arrow_incompatible
 class TaskDocument(BaseTaskDocument, StructureMetadata):
     """
     Definition of VASP Task Document

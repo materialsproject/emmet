@@ -1,5 +1,6 @@
 import warnings
 from itertools import groupby
+from typing import TypeAlias
 
 import numpy as np
 from pydantic import Field, field_validator
@@ -7,10 +8,17 @@ from pymatgen.analysis.xas.spectrum import XAS, site_weighted_spectrum
 from pymatgen.core.periodic_table import Element
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.feff.task import TaskDocument
 from emmet.core.mpid import MPID
 from emmet.core.spectrum import SpectrumDoc
 from emmet.core.utils import ValueEnum
+
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters.xas_adapter import AnnotatedXAS
+
+
+XASType: TypeAlias = AnnotatedXAS if ARROW_COMPATIBLE else XAS  # type: ignore[valid-type]
 
 
 class Edge(ValueEnum):
@@ -49,7 +57,7 @@ class XASDoc(SpectrumDoc):
 
     spectrum_name: str = "XAS"
 
-    spectrum: XAS | dict | None = Field(
+    spectrum: XASType | None = Field(
         None, description="The XAS spectrum for this calculation."
     )
 
@@ -67,10 +75,9 @@ class XASDoc(SpectrumDoc):
 
     @field_validator("spectrum", mode="before")
     @classmethod
-    def check_spectrum_non_positive_values(cls, v, eps=1.0e-12) -> XAS:
+    def check_spectrum_non_positive_values(cls, v, eps=1.0e-12) -> dict:
         if isinstance(v, dict):
             v["y"] = [y if y > 0.0 else abs(eps) for y in v["y"]]
-            v = XAS.from_dict(v)
         return v
 
     @classmethod

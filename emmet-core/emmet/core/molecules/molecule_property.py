@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Sequence, Type, TypeVar
+from typing import Type, TypeVar
 
 from pydantic import Field
 from pymatgen.core.structure import Molecule
@@ -70,13 +70,11 @@ class PropertyDoc(MoleculeMetadata):
         default_factory=utcnow,
     )
 
-    origins: Sequence[PropertyOrigin] = Field(
+    origins: list[PropertyOrigin] = Field(
         [], description="Dictionary for tracking the provenance of properties"
     )
 
-    warnings: Sequence[str] = Field(
-        [], description="Any warnings related to this property"
-    )
+    warnings: list[str] = Field([], description="Any warnings related to this property")
 
     @classmethod
     def from_molecule(  # type: ignore[override]

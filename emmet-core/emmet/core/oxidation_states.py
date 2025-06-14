@@ -9,6 +9,7 @@ from pymatgen.core.periodic_table import Specie
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
+from emmet.core.typing import StructureType
 
 
 class OxidationStateDoc(PropertyDoc):
@@ -16,7 +17,7 @@ class OxidationStateDoc(PropertyDoc):
 
     property_name: str = "oxidation"
 
-    structure: Structure = Field(
+    structure: StructureType = Field(
         ...,
         description="The structure used in the generation of the oxidation state data.",
     )

@@ -45,9 +45,10 @@ setup(
             "solvation-analysis>=0.4.1",
             "transport-analysis",
             "MDAnalysis>=2.7.0",
-            "pyarrow",
         ],
+        "arrow": ["pyarrow>=20.0.0"],
         "ml": ["matcalc>=0.3.1"],
+        "optimade": ["optimade"],
         "test": [
             "pre-commit",
             "pytest",

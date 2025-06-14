@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field
 
+from emmet.core.typing import TypedUserSettingsDict
+
 
 class UserSettingsDoc(BaseModel):
     """
@@ -10,7 +12,7 @@ class UserSettingsDoc(BaseModel):
         None, title="Consumer ID", description="Consumer ID for a specific user."
     )
 
-    settings: dict | None = Field(
+    settings: TypedUserSettingsDict | None = Field(
         None,
         title="Consumer ID settings",
         description="Settings defined for a specific user.",

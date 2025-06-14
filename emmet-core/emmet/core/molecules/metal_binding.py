@@ -11,6 +11,7 @@ from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.molecules.thermo import MoleculeThermoDoc
 from emmet.core.mpid import MPculeID
 from emmet.core.qchem.molecule import MoleculeDoc
+from emmet.core.utils import arrow_incompatible
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -19,6 +20,7 @@ METAL_BINDING_METHODS = ["nbo", "mulliken-OB-mee"]
 T = TypeVar("T", bound="MetalBindingDoc")
 
 
+@arrow_incompatible
 class MetalBindingData(BaseModel):
     """
     Metal binding information for one metal or ion in a molecule
@@ -110,6 +112,7 @@ class MetalBindingData(BaseModel):
         return id_str
 
 
+@arrow_incompatible
 class MetalBindingDoc(PropertyDoc):
     """Metal binding properties of a molecule"""
 

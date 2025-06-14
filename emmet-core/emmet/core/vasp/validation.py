@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
-from pydantic import ConfigDict, Field, ImportString, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ImportString, field_validator
 from pymatgen.core.structure import Structure
 from pymatgen.io.vasp.inputs import Kpoints
 from pymatgen.io.vasp.sets import VaspInputSet
@@ -48,6 +48,13 @@ class DeprecationMessage(DocEnum):
     UNKNOWN = "U001", "Cannot validate due to unknown calc type"
 
 
+class ValidationDataDict(BaseModel):
+    encut_ratio: float | None = Field(None)
+    max_gradient: Optional[float] = Field(None)
+    kspacing_delta: float | None = Field(None)
+    kpts_ratio: float | None = Field(None)
+
+
 class ValidationDoc(EmmetBaseModel):
     """
     Validation document for a VASP calculation
@@ -65,9 +72,10 @@ class ValidationDoc(EmmetBaseModel):
     warnings: list[str] = Field(
         [], description="List of potential warnings about this calculation"
     )
-    data: dict = Field(
+    data: ValidationDataDict | None = Field(
+        None,
         description="Dictioary of data used to perform validation."
-        " Useful for post-mortem analysis"
+        " Useful for post-mortem analysis",
     )
     model_config = ConfigDict(extra="allow")
     nelements: int | None = Field(None, description="Number of elements.")

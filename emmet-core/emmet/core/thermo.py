@@ -1,18 +1,79 @@
 """Core definition of a Thermo Document"""
 
+import json
 from collections import defaultdict
+from collections.abc import Callable
 from datetime import datetime
+from enum import Enum, auto
+from itertools import chain, islice
+from typing import TypeAlias
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer, field_validator
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.base import EmmetMeta
 from emmet.core.material import PropertyOrigin
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
-from emmet.core.utils import ValueEnum, utcnow
+from emmet.core.serialization_adapters.computed_entries_adapter import (
+    AnnotatedComputedStructureEntry,
+)
+from emmet.core.utils import ValueEnum, jsanitize, type_override, utcnow
 from emmet.core.vasp.calc_types.enums import RunType
+
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters.phase_diagram_adapter import (
+        AnnotatedPhaseDiagram,
+    )
+
+PhaseDiagramType: TypeAlias = (
+    AnnotatedPhaseDiagram if ARROW_COMPATIBLE else PhaseDiagram  # type: ignore[valid-type]
+)
+
+
+class Mode(Enum):
+    SHRED = auto()
+    STITCH = auto()
+
+
+def batch(iterable, n):
+    "Replace with more complete itertools version when min python>=3.12"
+    iterator = iter(iterable)
+    while batch := tuple(islice(iterator, n)):
+        yield batch
+
+
+def el_refs_serde(d: dict, mode: Mode):
+    match mode:
+        case Mode.SHRED:
+            el_ref_pairs = batch(d.pop("el_refs"), 2)
+
+            elements = []
+            entries = []
+            for element, entry in el_ref_pairs:
+                entry["energy_adjustments"] = json.dumps(entry["energy_adjustments"])
+                elements.append(element)
+                entries.append(entry)
+
+            d["el_refs_elements"] = elements
+            d["el_refs_entries"] = entries
+
+        case Mode.STITCH:
+            elements = d.pop("el_refs_elements")
+            entries = d.pop("el_refs_entries")
+            for entry in entries:
+                entry["energy_adjustments"] = json.loads(entry["energy_adjustments"])
+
+            d["el_refs"] = list(
+                chain.from_iterable((i, j) for i, j in zip(elements, entries))
+            )
+
+
+def entries_energy_adjustments_serde(d: dict, serde_fn: Callable):
+    for entry in d.values():
+        entry["energy_adjustments"] = serde_fn(entry["energy_adjustments"])
 
 
 class DecompositionProduct(BaseModel):
@@ -35,12 +96,14 @@ class DecompositionProduct(BaseModel):
 
 
 class ThermoType(ValueEnum):
+    GGA = "GGA"
     GGA_GGA_U = "GGA_GGA+U"
     GGA_GGA_U_R2SCAN = "GGA_GGA+U_R2SCAN"
     R2SCAN = "R2SCAN"
     UNKNOWN = "UNKNOWN"
 
 
+@type_override({"thermo_type": ThermoType})
 class ThermoDoc(PropertyDoc):
     """
     A thermo entry document
@@ -111,12 +174,34 @@ class ThermoDoc(PropertyDoc):
     entry_types: list[str] = Field(
         description="List of available energy types computed for this material."
     )
-
-    entries: dict[str, ComputedEntry | ComputedStructureEntry] = Field(
+    entries: dict[str, AnnotatedComputedStructureEntry] = Field(
         ...,
         description="List of all entries that are valid for this material."
         " The keys for this dictionary are names of various calculation types.",
     )
+
+    @field_serializer("entries", mode="wrap")
+    def entries_serializer(self, entries, default_serializer, info):
+        default_serialized_object = default_serializer(entries, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            arrow_compat_object = jsanitize(default_serialized_object, allow_bson=True)
+            entries_energy_adjustments_serde(arrow_compat_object, json.dumps)
+            return arrow_compat_object
+
+        return default_serialized_object
+
+    @field_validator("entries", mode="before")
+    def entries_deserializer(cls, entries):
+        if ARROW_COMPATIBLE:
+            first_entry = next(iter(entries.values()))
+            if isinstance(first_entry, dict) and isinstance(
+                first_entry["energy_adjustments"], str
+            ):
+                entries_energy_adjustments_serde(entries, json.loads)
+
+        return entries
 
     @classmethod
     def from_entries(
@@ -125,7 +210,7 @@ class ThermoDoc(PropertyDoc):
         thermo_type: ThermoType | RunType,
         phase_diagram: PhaseDiagram | None = None,
         use_max_chemsys: bool = False,
-        **kwargs
+        **kwargs,
     ):
         """Produce a list of ThermoDocs from a list of Entry objects
 
@@ -316,7 +401,7 @@ class PhaseDiagramDoc(BaseModel):
         description="Functional types of calculations involved in the energy mixing scheme.",
     )
 
-    phase_diagram: PhaseDiagram = Field(
+    phase_diagram: PhaseDiagramType = Field(
         ...,
         description="Phase diagram for the chemical system.",
     )
@@ -325,3 +410,24 @@ class PhaseDiagramDoc(BaseModel):
         description="Timestamp for the most recent calculation update for this property",
         default_factory=utcnow,
     )
+
+    @field_serializer("phase_diagram", mode="wrap")
+    def phase_diagram_serializer(self, phase_diagram, default_serializer, info):
+        default_serialized_object = default_serializer(phase_diagram, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            arrow_compat_object = jsanitize(default_serialized_object, allow_bson=True)
+            el_refs_serde(arrow_compat_object, mode=Mode.SHRED)
+            return arrow_compat_object
+
+        return default_serialized_object
+
+    @field_validator("phase_diagram", mode="before")
+    def phase_diagram_deserializer(cls, phase_diagram):
+        if ARROW_COMPATIBLE:
+            if isinstance(phase_diagram, dict):
+                if isinstance(phase_diagram["el_refs"], str):
+                    el_refs_serde(phase_diagram, mode=Mode.STITCH)
+
+        return phase_diagram
