@@ -81,7 +81,7 @@ def tasks(directory, nmax, pattern):
 
 def make_comment(ctx, txt):
     gh = ctx.grand_parent.obj["GH"]
-    user = gh.me().login
+    gh.me().login
     issue_number = ctx.grand_parent.params["issue"]
     issue = gh.issue(SETTINGS.tracker["org"], SETTINGS.tracker["repo"], issue_number)
     comment = issue.create_comment("\n".join(txt))
@@ -528,9 +528,9 @@ def group_strings_by_prefix(strings, prefix_length):
 @click.pass_context
 def parsers(ctx, task_ids):
     """Scan root directory and submit separate parser jobs"""
-    ctx.parent.params[
-        "nmax"
-    ] = sys.maxsize  # disable maximum launchers to determine parser jobs
+    ctx.parent.params["nmax"] = (
+        sys.maxsiz
+    )  # disable maximum launchers to determine parser jobs
     run = ctx.parent.parent.params["run"]
     directory = ctx.parent.params["directory"]
     check_pattern()

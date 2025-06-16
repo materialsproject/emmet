@@ -460,7 +460,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
             logger.warn(validation_doc.warnings)
 
         try:
-            entry = MaterialsProject2020Compatibility().process_entry(
+            MaterialsProject2020Compatibility().process_entry(
                 task_document.structure_entry
             )
         except Exception as exc:

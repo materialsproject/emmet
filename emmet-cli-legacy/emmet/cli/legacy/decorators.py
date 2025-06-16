@@ -49,7 +49,6 @@ def track(func):
 
             # create or retrieve gist for log files
             gist_name = f"{SETTINGS.tracker['repo']}-issue{issue_number}.md"
-            directory = ctx.parent.params["directory"]
             emmet_dir = os.path.join(os.path.expanduser("~"), ".emmet")
             if not os.path.exists(emmet_dir):
                 os.mkdir(emmet_dir)
