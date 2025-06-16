@@ -409,8 +409,8 @@ class AtomTrajectory(BaseModel):
                     lattice=(
                         self.constant_lattice
                         if self.constant_lattice
-                        else self.lattice[i]
-                    ),  # type: ignore[index]
+                        else self.lattice[i]  # type: ignore[index]
+                    ),
                     species=species,
                     coords=self.cart_coords[i],  # type: ignore[arg-type]
                     coords_are_cartesian=True,
