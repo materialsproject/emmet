@@ -45,11 +45,18 @@ class CalculationMetadata(BaseModel):
         self.refresh()
         if self.calc_valid is None:
             logger.info(f"Validating calculation at {locator.path}")
-            validator = ValidationDoc.from_file_metadata(
-                file_meta=self.files, fast=True
-            )
-            self.calc_valid = validator.valid
-            self.calc_validation_errors = validator.reasons
+            try:
+                validator = ValidationDoc.from_file_metadata(
+                    file_meta=self.files, fast=True
+                )
+                self.calc_valid = validator.valid
+                self.calc_validation_errors = validator.reasons
+            except Exception as e:
+                logger.info(f"Error tripped validating calculation: {str(e)}")
+                self.calc_valid = False
+                self.calc_validation_errors.append(
+                    f"Error tripped validating calculation: {str(e)}"
+                )
         return self.calc_valid
 
     def refresh(self) -> None:
