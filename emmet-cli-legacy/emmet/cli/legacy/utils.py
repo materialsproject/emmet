@@ -111,7 +111,7 @@ def aggregate_by_formula(coll, q, key=None):
                 f"could not find one of the aggregation keys {SETTINGS.aggregation_keys} in {coll.full_name}!"
             )
 
-    push = {k.split(".")[-1]: f"${k}" for k in structure_keys[nested]}
+    push = {k.split(".")[-1]: f"${k}" for k in SETTINGS.structure_keys[nested]}
     return coll.aggregate(
         [
             {"$match": query},
