@@ -1,9 +1,12 @@
 """Utilities to determine level of theory, task type, and calculation type for Q-Chem calculations"""
 
-from typing import Any
+from typing import TYPE_CHECKING
 
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.qchem.calc_types.calc_types import BASIS_SETS, FUNCTIONALS
+
+if TYPE_CHECKING:
+    from typing import Any
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 

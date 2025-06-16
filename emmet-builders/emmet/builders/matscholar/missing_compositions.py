@@ -1,12 +1,16 @@
 import itertools
 from itertools import combinations
 from math import ceil
-from typing import Iterator
 
 from maggma.core import Builder
 from maggma.stores import MongoStore, MongoURIStore, S3Store
 from maggma.utils import grouper
 from pymatgen.core import Composition, Element
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 class MissingCompositionsBuilder(Builder):

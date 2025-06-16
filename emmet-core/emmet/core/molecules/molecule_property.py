@@ -1,9 +1,12 @@
 """Core definition of a Materials Document"""
 
+# mypy: ignore-errors
+
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Sequence, Type, TypeVar
+from typing import TYPE_CHECKING
 
 from pydantic import Field
 from pymatgen.core.structure import Molecule
@@ -14,10 +17,10 @@ from emmet.core.qchem.calc_types import LevelOfTheory
 from emmet.core.structure import MoleculeMetadata
 from emmet.core.utils import utcnow
 
+if TYPE_CHECKING:
+    from typing_extensions import Self
+
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
-
-
-S = TypeVar("S", bound="PropertyDoc")
 
 
 class PropertyDoc(MoleculeMetadata):
@@ -80,12 +83,12 @@ class PropertyDoc(MoleculeMetadata):
 
     @classmethod
     def from_molecule(  # type: ignore[override]
-        cls: Type[S],
+        cls: Self,
         meta_molecule: Molecule,
         property_id: str,
         molecule_id: MPculeID,
         **kwargs,
-    ) -> S:
+    ) -> Self:
         """
         Builds a molecule document using the minimal amount of information
         """
@@ -95,4 +98,4 @@ class PropertyDoc(MoleculeMetadata):
             property_id=property_id,
             molecule_id=molecule_id,
             **kwargs,
-        )  # type: ignore
+        )

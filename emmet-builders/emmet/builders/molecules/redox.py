@@ -3,7 +3,6 @@ from collections import defaultdict
 from datetime import datetime
 from itertools import chain, groupby
 from math import ceil
-from typing import Any, Iterable, Iterator
 
 from maggma.builders import Builder
 from maggma.core import Store
@@ -16,6 +15,12 @@ from emmet.core.molecules.thermo import MoleculeThermoDoc
 from emmet.core.qchem.molecule import MoleculeDoc
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.utils import confirm_molecule, get_graph_hash, jsanitize
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
+    from typing import Any
 
 __author__ = "Evan Spotte-Smith"
 

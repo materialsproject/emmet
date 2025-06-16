@@ -2,7 +2,7 @@ from collections import defaultdict
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Iterable, Iterator
+from typing import TYPE_CHECKING
 
 from maggma.builders import Builder
 from maggma.core import Store
@@ -13,6 +13,9 @@ from emmet.core.molecules.vibration import VibrationDoc
 from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.utils import jsanitize
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
 
 __author__ = "Evan Spotte-Smith"
 

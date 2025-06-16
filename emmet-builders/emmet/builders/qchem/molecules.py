@@ -1,7 +1,6 @@
 from datetime import datetime
 from itertools import chain, groupby
 from math import ceil
-from typing import Any, Iterable, Iterator, Set
 
 import networkx as nx
 from maggma.builders import Builder
@@ -18,6 +17,12 @@ from emmet.core.qchem.molecule import (
 )
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.utils import get_molecule_id, group_molecules, jsanitize, make_mol_graph
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
+    from typing import Any
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -554,11 +559,11 @@ class MoleculesBuilder(Builder):
             levels_of_theory = dict()
             solvents = dict()
             lot_solvents = dict()
-            unique_calc_types: Set[str | CalcType] = set()
-            unique_task_types: Set[str | TaskType] = set()
-            unique_levels_of_theory: Set[str | LevelOfTheory] = set()
-            unique_solvents: Set[str] = set()
-            unique_lot_solvents: Set[str] = set()
+            unique_calc_types: set[str | CalcType] = set()
+            unique_task_types: set[str | TaskType] = set()
+            unique_levels_of_theory: set[str | LevelOfTheory] = set()
+            unique_solvents: set[str] = set()
+            unique_lot_solvents: set[str] = set()
             origins = list()
             entries = list()
             best_entries: dict[str, Any] = dict()

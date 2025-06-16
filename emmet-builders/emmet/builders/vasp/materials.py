@@ -1,7 +1,6 @@
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Iterable, Iterator
 
 from maggma.builders import Builder
 from maggma.stores import Store
@@ -12,6 +11,11 @@ from emmet.core.tasks import TaskDoc
 from emmet.core.utils import group_structures, jsanitize, undeform_structure
 from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 

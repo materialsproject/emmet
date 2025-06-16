@@ -4,7 +4,6 @@ from collections import defaultdict
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Iterable, Iterator
 
 from maggma.core import Builder, Store
 from maggma.utils import grouper
@@ -15,6 +14,11 @@ from emmet.builders.utils import HiddenPrints, chemsys_permutations
 from emmet.core.corrected_entries import CorrectedEntriesDoc
 from emmet.core.thermo import ThermoType
 from emmet.core.utils import jsanitize
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
 
 
 class CorrectedEntriesBuilder(Builder):

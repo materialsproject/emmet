@@ -1,7 +1,6 @@
 import os
 import tempfile
 from math import ceil
-from typing import Iterator
 
 import numpy as np
 from abipy.abio.inputs import AnaddbInput
@@ -35,6 +34,11 @@ from emmet.core.phonon import (
 )
 from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
 from emmet.core.utils import jsanitize
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 SETTINGS = EmmetBuildSettings()
 

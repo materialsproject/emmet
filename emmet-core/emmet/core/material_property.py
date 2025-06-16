@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Sequence, Type, TypeVar
+from typing import TYPE_CHECKING
 
 from pydantic import Field, field_validator
 from pymatgen.core import Structure
@@ -15,7 +16,8 @@ from emmet.core.structure import StructureMetadata
 from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
 
-S = TypeVar("S", bound="PropertyDoc")
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 class PropertyDoc(StructureMetadata):
@@ -62,11 +64,11 @@ class PropertyDoc(StructureMetadata):
 
     @classmethod
     def from_structure(  # type: ignore[override]
-        cls: Type[S],
+        cls,
         meta_structure: Structure,
         material_id: MPID | None = None,
         **kwargs,
-    ) -> S:
+    ) -> Self:
         """
         Builds a materials document using the minimal amount of information
         """

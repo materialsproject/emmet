@@ -1,5 +1,4 @@
 from math import ceil
-from typing import Iterator
 
 import numpy as np
 from maggma.builders import Builder
@@ -9,6 +8,11 @@ from pymatgen.core.structure import Structure
 
 from emmet.core.polar import DielectricDoc
 from emmet.core.utils import jsanitize
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 class DielectricBuilder(Builder):

@@ -1,6 +1,6 @@
 from enum import Enum
 from hashlib import blake2b
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 from pymatgen.core.structure import Molecule
@@ -10,10 +10,11 @@ from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPID, MPculeID
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 
+if TYPE_CHECKING:
+    from typing import Any
+    from typing_extensions import Self
+
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
-
-
-T = TypeVar("T", bound="MoleculeSummaryDoc")
 
 
 class HasProps(Enum):
@@ -477,7 +478,7 @@ class MoleculeSummaryDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_docs(cls, molecule_id: MPculeID, docs: dict[str, Any]):
+    def from_docs(cls, molecule_id: MPculeID, docs: dict[str, Any]) -> Self:
         """Converts a bunch of property docs into a SummaryDoc"""
 
         doc = _copy_from_docs(**docs)
