@@ -22,7 +22,7 @@ from pymatgen.io.validation.common import (
     VaspFiles,
     VaspInputSafe,
 )
-from pymatgen.io.validation.validation import VaspValidator
+from pymatgen.io.validation.validation import REQUIRED_VASP_FILES, VaspValidator
 
 from typing import TYPE_CHECKING
 
@@ -31,14 +31,6 @@ if TYPE_CHECKING:
     from typing_extensions import Self
     from emmet.core.tasks import TaskDoc
 
-REQUIRED_VASP_FILES: set[str] = {
-    "INCAR",
-    "KPOINTS",
-    "POSCAR",
-    "POTCAR",
-    "OUTCAR",
-    "vasprun.xml",
-}
 class ValidationDoc(VaspValidator, EmmetBaseModel):
     """
     Validation document for a VASP calculation

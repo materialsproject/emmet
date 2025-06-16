@@ -15,7 +15,7 @@ setup(
         "click",
         "colorama",
         "emmet-core",
-        "pymatgen-io-validation>=0.1.0rc0",
+        "pymatgen-io-validation>=0.1.0rc1",
         "psutil>=5.9.0",
     ],
     extras_require={
