@@ -6,7 +6,7 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.12.9
+aiohttp==3.12.12
     # via fsspec
 aioitertools==0.12.0
     # via maggma
@@ -28,9 +28,9 @@ attrs==25.3.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.38.31
+boto3==1.38.35
     # via maggma
-botocore==1.38.31
+botocore==1.38.35
     # via
     #   boto3
     #   s3transfer
@@ -54,15 +54,15 @@ colorama==0.4.6
     # via griffe
 contourpy==1.3.2
     # via matplotlib
-coverage[toml]==7.8.2
+coverage[toml]==7.9.0
     # via pytest-cov
-cryptography==45.0.3
+cryptography==45.0.4
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
 cycler==0.12.1
     # via matplotlib
-cython==3.1.1
+cython==3.1.2
     # via chgnet
 dgl==2.1.0
     # via
@@ -83,9 +83,9 @@ filelock==3.18.0
     #   virtualenv
 flake8==7.2.0
     # via emmet-builders (setup.py)
-fonttools==4.58.1
+fonttools==4.58.2
     # via matplotlib
-frozenlist==1.6.2
+frozenlist==1.7.0
     # via
     #   aiohttp
     #   aiosignal
@@ -101,7 +101,7 @@ griddataformats==1.0.2
     # via mdanalysis
 griffe==1.7.3
     # via mkdocstrings-python
-h5py==3.13.0
+h5py==3.14.0
     # via phonopy
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
@@ -269,7 +269,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-builders (setup.py)
     #   mypy
-narwhals==1.41.0
+narwhals==1.42.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -393,7 +393,7 @@ pathspec==0.12.1
     #   mypy
 patsy==1.0.1
     # via statsmodels
-phonopy==2.38.2
+phonopy==2.39.0
     # via matcalc
 pillow==11.2.1
     # via
@@ -413,7 +413,7 @@ pluggy==1.6.0
     # via pytest
 pre-commit==4.2.0
     # via emmet-builders (setup.py)
-propcache==0.3.1
+propcache==0.3.2
     # via
     #   aiohttp
     #   yarl
@@ -489,7 +489,7 @@ pytest==8.4.0
     #   emmet-builders (setup.py)
     #   pytest-cov
     #   solvation-analysis
-pytest-cov==6.1.1
+pytest-cov==6.2.0
     # via emmet-builders (setup.py)
 python-dateutil==2.9.0.post0
     # via
@@ -528,7 +528,7 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.3
+requests==2.32.4
     # via
     #   dgl
     #   matminer
@@ -540,7 +540,7 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruamel-yaml==0.18.12
+ruamel-yaml==0.18.14
     # via
     #   maggma
     #   monty
@@ -648,7 +648,7 @@ triton==3.3.1
     # via torch
 typeguard==4.4.3
     # via inflect
-types-requests==2.32.0.20250602
+types-requests==2.32.4.20250611
     # via emmet-builders (setup.py)
 types-setuptools==80.9.0.20250529
     # via emmet-builders (setup.py)
@@ -690,7 +690,7 @@ wcmatch==10.0
     # via mkdocs-awesome-pages-plugin
 wincertstore==0.2.1
     # via emmet-builders (setup.py)
-yarl==1.20.0
+yarl==1.20.1
     # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:

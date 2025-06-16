@@ -1,4 +1,5 @@
 """Define identifier schemas used in MP."""
+
 from __future__ import annotations
 
 from math import log, floor
@@ -6,9 +7,8 @@ import re
 from string import ascii_lowercase, digits
 from typing import TYPE_CHECKING
 
-from pydantic_core import CoreSchema, core_schema
-
 from pydantic import GetJsonSchemaHandler
+from pydantic_core import CoreSchema, core_schema
 from pydantic.json_schema import JsonSchemaValue
 
 if TYPE_CHECKING:
@@ -47,7 +47,7 @@ class MPID(str):
             Numbers stored as strings are coerced to ints
     """
 
-    def __init__(self, val: MPID | int | str):
+    def __init__(self, val: MPID | int | str) -> None:
         if isinstance(val, MPID):
             self.parts = val.parts  # type: ignore
             self.string = val.string  # type: ignore
@@ -77,19 +77,19 @@ class MPID(str):
                 "Must provide an MPID, int, or string of the format prefix-number or start with a valid ULID."
             )
 
-    def __eq__(self, other: object):
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, MPID):
             return self.string == other.string
         elif isinstance(other, (int, str)):
             return self.string == MPID(other).string
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.string
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"MPID({self})"
 
-    def __lt__(self, other: MPID | int | str):
+    def __lt__(self, other: MPID | int | str) -> bool:
         other_parts = MPID(other).parts
 
         if self.parts[0] and other_parts[0]:
@@ -106,7 +106,7 @@ class MPID(str):
             # both are pure ints; normal comparison
             return self.parts[1] < other_parts[1]
 
-    def __gt__(self, other: MPID | int | str):
+    def __gt__(self, other: MPID | int | str) -> bool:
         """Define greater than for MPID.
 
         Note that `__gt__` is not the same as `not __lt__`.
@@ -125,7 +125,7 @@ class MPID(str):
             return self.parts[1] > other_parts[1]
         return not self.__lt__(other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.string)
 
     @classmethod
@@ -200,29 +200,29 @@ class MPculeID(str):
                 "or hash-formula-charge-spin"
             )
 
-    def __eq__(self, other: object):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, MPculeID):
             return self.string == other.string
         elif isinstance(other, str):
             return self.string == MPculeID(other).string
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.string
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"MPculeID({self})"
 
-    def __lt__(self, other: MPculeID | str):
+    def __lt__(self, other: MPculeID | str) -> bool:
         other_parts = MPculeID(other).parts
 
         return "-".join([str(x) for x in self.parts[-4:]]) < "-".join(
             [str(x) for x in other_parts[-4:]]
         )
 
-    def __gt__(self, other: MPculeID | str):
+    def __gt__(self, other: MPculeID | str) -> bool:
         return not self.__lt__(other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.string)
 
     @classmethod
@@ -380,7 +380,7 @@ class AlphaID(str):
                     break
         return string
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Ensure hashability."""
         return hash(str(self))
 

@@ -2,18 +2,17 @@ from collections import defaultdict
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Optional, Iterable, Iterator, List, Dict
+from typing import Iterable, Iterator
 
 from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper
 
-from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
-from emmet.core.molecules.trajectory import ForcesDoc, TrajectoryDoc
-from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
-
+from emmet.core.molecules.trajectory import ForcesDoc, TrajectoryDoc
+from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
+from emmet.core.qchem.task import TaskDocument
+from emmet.core.utils import jsanitize
 
 __author__ = "Evan Spotte-Smith"
 
@@ -41,8 +40,8 @@ class ForcesBuilder(Builder):
         tasks: Store,
         molecules: Store,
         forces: Store,
-        query: Optional[Dict] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        query: dict | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
         self.tasks = tasks
@@ -88,7 +87,7 @@ class ForcesBuilder(Builder):
         self.forces.ensure_index("last_updated")
         self.forces.ensure_index("formula_alphabetical")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
         """Prechunk the builder for distributed computation"""
 
         temp_query = dict(self.query)
@@ -114,7 +113,7 @@ class ForcesBuilder(Builder):
             query["species_hash"] = {"$in": list(hash_chunk)}
             yield {"query": query}
 
-    def get_items(self) -> Iterator[List[Dict]]:
+    def get_items(self) -> Iterator[list[dict]]:
         """
         Gets all items to process into force documents.
         This does no datetime checking; relying on on whether
@@ -161,12 +160,12 @@ class ForcesBuilder(Builder):
 
             yield molecules
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
+    def process_item(self, items: list[dict]) -> list[dict]:
         """
         Process the tasks into ForcesDoc
 
         Args:
-            items List[Dict] : a list of MoleculeDocs in dict form
+            items list[dict] : a list of MoleculeDocs in dict form
 
         Returns:
             [dict] : a list of new forces docs
@@ -242,7 +241,7 @@ class ForcesBuilder(Builder):
 
         return jsanitize([doc.model_dump() for doc in force_docs], allow_bson=True)
 
-    def update_targets(self, items: List[List[Dict]]):
+    def update_targets(self, items: list[list[dict]]):
         """
         Inserts the new force docs into the forces collection
 
@@ -294,8 +293,8 @@ class TrajectoryBuilder(Builder):
         tasks: Store,
         molecules: Store,
         trajectories: Store,
-        query: Optional[Dict] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        query: dict | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
         self.tasks = tasks
@@ -341,7 +340,7 @@ class TrajectoryBuilder(Builder):
         self.trajectories.ensure_index("last_updated")
         self.trajectories.ensure_index("formula_alphabetical")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
         """Prechunk the builder for distributed computation"""
 
         temp_query = dict(self.query)
@@ -365,7 +364,7 @@ class TrajectoryBuilder(Builder):
         for hash_chunk in grouper(to_process_hashes, N):
             yield {"query": {"species_hash": {"$in": list(hash_chunk)}}}
 
-    def get_items(self) -> Iterator[List[Dict]]:
+    def get_items(self) -> Iterator[list[dict]]:
         """
         Gets all items to process into trajectory documents.
         This does no datetime checking; relying on on whether
@@ -412,12 +411,12 @@ class TrajectoryBuilder(Builder):
 
             yield molecules
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
+    def process_item(self, items: list[dict]) -> list[dict]:
         """
         Process the tasks into TrajectoryDocs
 
         Args:
-            items List[Dict] : a list of MoleculeDocs in dict form
+            items list[dict] : a list of MoleculeDocs in dict form
 
         Returns:
             [dict] : a list of new trajectory docs
@@ -492,7 +491,7 @@ class TrajectoryBuilder(Builder):
 
         return jsanitize([doc.model_dump() for doc in trajectory_docs], allow_bson=True)
 
-    def update_targets(self, items: List[List[Dict]]):
+    def update_targets(self, items: list[list[dict]]):
         """
         Inserts the new force docs into the trajectories collection
 

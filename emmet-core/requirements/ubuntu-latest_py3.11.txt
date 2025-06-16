@@ -16,7 +16,7 @@ contourpy==1.3.2
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-fonttools==4.58.1
+fonttools==4.58.2
     # via matplotlib
 idna==3.10
     # via requests
@@ -34,11 +34,11 @@ monty==2025.3.3
     #   pymatgen
 mpmath==1.3.0
     # via sympy
-narwhals==1.41.0
+narwhals==1.42.0
     # via plotly
 networkx==3.5
     # via pymatgen
-numpy==2.2.6
+numpy==2.3.0
     # via
     #   contourpy
     #   matplotlib
@@ -87,9 +87,9 @@ pytz==2025.2
     # via pandas
 pyyaml==6.0.2
     # via pybtex
-requests==2.32.3
+requests==2.32.4
     # via pymatgen
-ruamel-yaml==0.18.12
+ruamel-yaml==0.18.14
     # via
     #   monty
     #   pymatgen

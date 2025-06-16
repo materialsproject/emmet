@@ -1,17 +1,17 @@
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Dict, Iterable, Iterator, List, Optional, Union
+from typing import Iterable, Iterator
 
 from maggma.builders import Builder
 from maggma.stores import Store
 from maggma.utils import grouper
 
 from emmet.builders.settings import EmmetBuildSettings
+from emmet.core.tasks import TaskDoc
 from emmet.core.utils import group_structures, jsanitize, undeform_structure
 from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
-from emmet.core.tasks import TaskDoc
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -38,9 +38,9 @@ class MaterialsBuilder(Builder):
         self,
         tasks: Store,
         materials: Store,
-        task_validation: Optional[Store] = None,
-        query: Optional[Dict] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        task_validation: Store | None = None,
+        query: dict | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
         """
@@ -84,7 +84,7 @@ class MaterialsBuilder(Builder):
             self.task_validation.ensure_index("task_id")
             self.task_validation.ensure_index("valid")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
         """Prechunk the materials builder for distributed computation"""
         temp_query = dict(self.query)
         temp_query["state"] = "successful"
@@ -114,7 +114,7 @@ class MaterialsBuilder(Builder):
         for formula_chunk in grouper(to_process_forms, N):
             yield {"query": {"formula_pretty": {"$in": list(formula_chunk)}}}
 
-    def get_items(self) -> Iterator[List[Dict]]:
+    def get_items(self) -> Iterator[list[dict]]:
         """
         Gets all items to process into materials documents.
         This does no datetime checking; relying on whether
@@ -213,7 +213,7 @@ class MaterialsBuilder(Builder):
 
             yield tasks
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
+    def process_item(self, items: list[dict]) -> list[dict]:
         """
         Process the tasks into a list of materials
 
@@ -273,7 +273,7 @@ class MaterialsBuilder(Builder):
 
         return jsanitize([mat.model_dump() for mat in materials], allow_bson=True)
 
-    def update_targets(self, items: List[List[Dict]]):
+    def update_targets(self, items: list[list[dict]]):
         """
         Inserts the new task_types into the task_types collection
 
@@ -297,8 +297,8 @@ class MaterialsBuilder(Builder):
             self.logger.info("No items to update")
 
     def filter_and_group_tasks(
-        self, tasks: List[TaskDoc], task_transformations: List[Union[Dict, None]]
-    ) -> Iterator[List[TaskDoc]]:
+        self, tasks: list[TaskDoc], task_transformations: list[dict | None]
+    ) -> Iterator[list[TaskDoc]]:
         """
         Groups tasks by structure matching
         """

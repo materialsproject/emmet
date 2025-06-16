@@ -4,7 +4,6 @@
 This module stubs some pymatgen classes that implement custom behavior
 outside the standard MSONable model
 """
-from typing import Dict
 
 import pymatgen.core.composition
 from pydantic import RootModel
@@ -20,7 +19,7 @@ in as Stubbed classes to prevent name clashing
 class StubComposition(RootModel):
     """A dictionary mapping element to total quantity"""
 
-    root: Dict[Element, float]
+    root: dict[Element, float]
 
 
 @classmethod  # type: ignore

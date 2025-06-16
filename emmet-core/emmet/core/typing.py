@@ -1,4 +1,5 @@
 """Define custom type annotations for emmet-core."""
+
 from __future__ import annotations
 
 import os

@@ -1,10 +1,10 @@
-from itertools import combinations
 import itertools
+from itertools import combinations
 from math import ceil
-from typing import Dict, List, Iterator, Optional
+from typing import Iterator
 
 from maggma.core import Builder
-from maggma.stores import S3Store, MongoURIStore, MongoStore
+from maggma.stores import MongoStore, MongoURIStore, S3Store
 from maggma.utils import grouper
 from pymatgen.core import Composition, Element
 
@@ -21,7 +21,7 @@ class MissingCompositionsBuilder(Builder):
         phase_diagram: S3Store,
         mpcontribs: MongoURIStore,
         missing_compositions: MongoStore,
-        query: Optional[Dict] = None,
+        query: dict | None = None,
         **kwargs,
     ):
         """
@@ -47,7 +47,7 @@ class MissingCompositionsBuilder(Builder):
             **kwargs,
         )
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterator[dict]:  # pragma: no cover
         """
         Prechunk method to perform chunking by the key field
         """
@@ -61,7 +61,7 @@ class MissingCompositionsBuilder(Builder):
         for split in grouper(keys, N):
             yield {"query": {self.phase_diagram.key: {"$in": list(split)}}}
 
-    def get_items(self) -> Iterator[Dict]:
+    def get_items(self) -> Iterator[dict]:
         """
         Returns all chemical systems (combinations of elements)
         to process.
@@ -112,7 +112,7 @@ class MissingCompositionsBuilder(Builder):
                 self.logger.error(f"Erro looking for phase diagram for {sys}: {ex}")
                 continue
 
-    def process_item(self, item: Dict) -> Dict:
+    def process_item(self, item: dict) -> dict:
         """
         Processes a chemical system and finds missing c
         ompositions for that system.
@@ -195,7 +195,7 @@ class MissingCompositionsBuilder(Builder):
         else:
             self.logger.info("No items to update")
 
-    def _get_entries_in_chemsys(self, chemsys) -> List:
+    def _get_entries_in_chemsys(self, chemsys) -> list:
         """Queries the MPContribs Store for entries in a chemical system."""
         # get sub-systems
         chemsys_subsystems = []

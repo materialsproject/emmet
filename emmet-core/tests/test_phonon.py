@@ -1,9 +1,12 @@
 """Test phonon document models."""
 
+from copy import deepcopy
 import numpy as np
 from monty.serialization import loadfn
 from pymatgen.core import Structure
 import pytest
+
+from pymatgen.phonon.dos import PhononDos as PmgPhononDos, CompletePhononDos
 
 from emmet.core.phonon import PhononDOS, PhononBS, PhononBSDOSDoc
 from tests.conftest import assert_schemas_equal
@@ -47,6 +50,18 @@ def test_legacy_migration(legacy_ph_task):
             )
             < 1e-6
         )
+
+    # check that Phonon DOS converst to CompletePhononDOS object
+    assert isinstance(ph_doc.phonon_dos.to_pmg, CompletePhononDos)
+    # when structure or projected DOS fields are missing, `to_pmg` returns a PhononDos object
+    for k in (
+        "structure",
+        "projected_densities",
+    ):
+        model_config = deepcopy(ph_doc.model_dump())
+        model_config["phonon_dos"].pop(k)
+        new_task = PhononBSDOSDoc(**model_config)
+        assert isinstance(new_task.phonon_dos.to_pmg, PmgPhononDos)
 
     temps = [5, 100, 300, 500, 800]
     ref_data = {
@@ -93,6 +108,10 @@ def test_legacy_migration(legacy_ph_task):
     assert ph_doc.volume == ph_doc.structure.volume
     assert ph_doc.nelements == len(ph_doc.structure.composition.elements)
     assert sorted(ph_doc.elements) == sorted(ph_doc.structure.composition.elements)
+
+    # check that crystal toolkit convenience function works
+    assert ph_doc.phonon_bandstructure._to_pmg_es_bs.get_vbm()
+    assert ph_doc.phonon_bandstructure._to_pmg_es_bs.get_cbm()
 
 
 @pytest.mark.skipif(pq is None, reason="pyarrow must be installed to run this test.")

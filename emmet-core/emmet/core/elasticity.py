@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -21,70 +21,66 @@ SETTINGS = EmmetSettings()
 
 
 class ElasticTensorDoc(BaseModel):
-    raw: Optional[MatrixVoigt] = Field(
+    raw: MatrixVoigt | None = Field(
         None,
         description="Elastic tensor corresponding to structure orientation (GPa)",
     )
-    ieee_format: Optional[MatrixVoigt] = Field(
+    ieee_format: MatrixVoigt | None = Field(
         None,
         description="Elastic tensor corresponding to IEEE orientation (GPa)",
     )
 
 
 class ComplianceTensorDoc(BaseModel):
-    raw: Optional[MatrixVoigt] = Field(
+    raw: MatrixVoigt | None = Field(
         None,
         description="Compliance tensor corresponding to structure orientation (TPa^-1)",
     )
-    ieee_format: Optional[MatrixVoigt] = Field(
+    ieee_format: MatrixVoigt | None = Field(
         None,
         description="Compliance tensor corresponding to IEEE orientation (TPa^-1)",
     )
 
 
 class BulkModulus(BaseModel):
-    voigt: Optional[float] = Field(None, description="Bulk modulus Voigt average (GPa)")
-    reuss: Optional[float] = Field(None, description="Bulk modulus Reuss average (GPa)")
-    vrh: Optional[float] = Field(
+    voigt: float | None = Field(None, description="Bulk modulus Voigt average (GPa)")
+    reuss: float | None = Field(None, description="Bulk modulus Reuss average (GPa)")
+    vrh: float | None = Field(
         None, description="Bulk modulus Voigt-Reuss-Hill average (GPa)"
     )
 
 
 class ShearModulus(BaseModel):
-    voigt: Optional[float] = Field(
-        None, description="Shear modulus Voigt average (GPa)"
-    )
-    reuss: Optional[float] = Field(
-        None, description="Shear modulus Reuss average (GPa)"
-    )
-    vrh: Optional[float] = Field(
+    voigt: float | None = Field(None, description="Shear modulus Voigt average (GPa)")
+    reuss: float | None = Field(None, description="Shear modulus Reuss average (GPa)")
+    vrh: float | None = Field(
         None, description="Shear modulus Voigt-Reuss-Hill average (GPa)"
     )
 
 
 class SoundVelocity(BaseModel):
-    transverse: Optional[float] = Field(
+    transverse: float | None = Field(
         None, description="Transverse sound velocity (SI units)"
     )
-    longitudinal: Optional[float] = Field(
+    longitudinal: float | None = Field(
         None, description="Longitudinal sound velocity (SI units)"
     )
-    snyder_acoustic: Optional[float] = Field(
+    snyder_acoustic: float | None = Field(
         None, description="Snyder's acoustic sound velocity (SI units)"
     )
-    snyder_optical: Optional[float] = Field(
+    snyder_optical: float | None = Field(
         None, description="Snyder's optical sound velocity (SI units)"
     )
-    snyder_total: Optional[float] = Field(
+    snyder_total: float | None = Field(
         None, description="Snyder's total sound velocity (SI units)"
     )
 
 
 class ThermalConductivity(BaseModel):
-    clarke: Optional[float] = Field(
+    clarke: float | None = Field(
         None, description="Clarke's thermal conductivity (SI units)"
     )
-    cahill: Optional[float] = Field(
+    cahill: float | None = Field(
         None, description="Cahill's thermal conductivity (SI units)"
     )
 
@@ -99,39 +95,39 @@ class FittingData(BaseModel):
     """
 
     # data of strained structures
-    deformations: List[Matrix3D] = Field(
+    deformations: list[Matrix3D] = Field(
         description="Deformations corresponding to the strained structures"
     )
-    strains: List[Matrix3D] = Field(
+    strains: list[Matrix3D] = Field(
         description="Lagrangian strain tensors applied to structures"
     )
-    cauchy_stresses: List[Matrix3D] = Field(
+    cauchy_stresses: list[Matrix3D] = Field(
         description="Cauchy stress tensors on strained structures"
     )
-    second_pk_stresses: List[Matrix3D] = Field(
+    second_pk_stresses: list[Matrix3D] = Field(
         description="Second Piola-Kirchhoff stress tensors on structures"
     )
-    deformation_tasks: Optional[List[MPID]] = Field(
+    deformation_tasks: list[MPID] | None = Field(
         None,
         description="Deformation task ids corresponding to the strained structures",
     )
-    deformation_dir_names: Optional[List[str]] = Field(
+    deformation_dir_names: list[str] | None = Field(
         None, description="Paths to the running directories of deformation tasks"
     )
 
     # data of equilibrium structure
-    equilibrium_cauchy_stress: Optional[Matrix3D] = Field(
+    equilibrium_cauchy_stress: Matrix3D | None = Field(
         None, description="Cauchy stress tensor of the relaxed structure"
     )
-    optimization_task: Optional[MPID] = Field(
+    optimization_task: MPID | None = Field(
         None, description="Optimization task corresponding to the relaxed structure"
     )
-    optimization_dir_name: Optional[str] = Field(
+    optimization_dir_name: str | None = Field(
         None, description="Path to the running directory of the optimization task"
     )
 
     # derived strains stresses
-    num_total_strain_stress_states: Optional[int] = Field(
+    num_total_strain_stress_states: int | None = Field(
         None,
         description="Number of total strain--stress states used for fitting, i.e. the "
         "sum of explicitly calculated deformations and derived deformations from "
@@ -172,7 +168,7 @@ class WarningMessage(BaseModel):
 class ElasticityDoc(PropertyDoc):
     property_name: str = "elasticity"
 
-    structure: Optional[Structure] = Field(
+    structure: Structure | None = Field(
         None, description="Structure to compute the elasticity"
     )
 
@@ -180,43 +176,41 @@ class ElasticityDoc(PropertyDoc):
         default=2, description="Order of the expansion of the elastic tensor"
     )
 
-    elastic_tensor: Optional[ElasticTensorDoc] = Field(
-        None, description="Elastic tensor"
-    )
+    elastic_tensor: ElasticTensorDoc | None = Field(None, description="Elastic tensor")
 
-    compliance_tensor: Optional[ComplianceTensorDoc] = Field(
+    compliance_tensor: ComplianceTensorDoc | None = Field(
         None, description="Compliance tensor"
     )
 
     # derived properties
-    bulk_modulus: Optional[BulkModulus] = Field(None, description="Bulk modulus")
-    shear_modulus: Optional[ShearModulus] = Field(None, description="Shear modulus")
-    sound_velocity: Optional[SoundVelocity] = Field(None, description="Sound velocity")
-    thermal_conductivity: Optional[ThermalConductivity] = Field(
+    bulk_modulus: BulkModulus | None = Field(None, description="Bulk modulus")
+    shear_modulus: ShearModulus | None = Field(None, description="Shear modulus")
+    sound_velocity: SoundVelocity | None = Field(None, description="Sound velocity")
+    thermal_conductivity: ThermalConductivity | None = Field(
         None, description="Thermal conductivity"
     )
-    young_modulus: Optional[float] = Field(
+    young_modulus: float | None = Field(
         None, description="Young's modulus (SI units)", alias="youngs_modulus"
     )
-    universal_anisotropy: Optional[float] = Field(
+    universal_anisotropy: float | None = Field(
         None, description="Universal elastic anisotropy"
     )
-    homogeneous_poisson: Optional[float] = Field(
+    homogeneous_poisson: float | None = Field(
         None, description="Homogeneous Poisson ratio"
     )
-    debye_temperature: Optional[float] = Field(
+    debye_temperature: float | None = Field(
         None, description="Debye temperature (SI units)"
     )
 
-    fitting_data: Optional[FittingData] = Field(
+    fitting_data: FittingData | None = Field(
         None, description="Data used to fit the elastic tensor"
     )
 
-    fitting_method: Optional[str] = Field(
+    fitting_method: str | None = Field(
         None, description="Method used to fit the elastic tensor"
     )
 
-    state: Optional[Status] = Field(
+    state: Status | None = Field(
         None,
         description="State of the fitting/analysis: `successful` or `failed`",
     )
@@ -225,14 +219,14 @@ class ElasticityDoc(PropertyDoc):
     def from_deformations_and_stresses(
         cls,
         structure: Structure,
-        deformations: List[Deformation],
-        stresses: List[Stress],
+        deformations: list[Deformation],
+        stresses: list[Stress],
         material_id: MPID | None = None,
-        deformation_task_ids: Optional[List[MPID]] = None,
-        deformation_dir_names: Optional[List[str]] = None,
-        equilibrium_stress: Optional[Stress] = None,
-        optimization_task_id: Optional[MPID] = None,
-        optimization_dir_name: Optional[str] = None,
+        deformation_task_ids: list[MPID] | None = None,
+        deformation_dir_names: list[str] | None = None,
+        equilibrium_stress: Stress | None = None,
+        optimization_task_id: MPID | None = None,
+        optimization_dir_name: str | None = None,
         fitting_method: str = "finite_difference",
         **kwargs,
     ):
@@ -377,16 +371,11 @@ class ElasticityDoc(PropertyDoc):
 
 
 def generate_primary_fitting_data(
-    deforms: List[Deformation],
-    stresses: List[Stress],
-    task_ids: Optional[List[MPID]] = None,
-    dir_names: Optional[List[str]] = None,
-) -> Tuple[
-    List[Strain],
-    List[Stress],
-    Union[List[MPID], None],
-    Union[List[str], None],
-]:
+    deforms: list[Deformation],
+    stresses: list[Stress],
+    task_ids: list[MPID] | None = None,
+    dir_names: list[str] | None = None,
+) -> tuple[list[Strain], list[Stress], list[MPID] | None, list[str] | None]:
     """
     Get the primary fitting data, i.e. data obtained from a calculation.
 
@@ -417,11 +406,11 @@ def generate_primary_fitting_data(
 
 def generate_derived_fitting_data(
     structure: Structure,
-    strains: List[Strain],
-    stresses: List[Stress],
+    strains: list[Strain],
+    stresses: list[Stress],
     symprec=SETTINGS.SYMPREC,
     tol: float = 0.002,
-) -> Tuple[List[Deformation], List[Strain], List[Stress], List[Stress]]:
+) -> tuple[list[Deformation], list[Strain], list[Stress], list[Stress]]:
     """
     Get the derived fitting data from symmetry operations on the primary fitting data.
 
@@ -522,12 +511,12 @@ def generate_derived_fitting_data(
 
 
 def symmetrize_stresses(
-    stresses: List[Stress],
-    strains: List[Strain],
+    stresses: list[Stress],
+    strains: list[Strain],
     structure: Structure,
     symprec=SETTINGS.SYMPREC,
     tol: float = 0.002,
-) -> List[Stress]:
+) -> list[Stress]:
     """
     Symmetrize stresses by averaging over all symmetry operations.
 
@@ -547,7 +536,7 @@ def symmetrize_stresses(
     symmops = sga.get_symmetry_operations(cartesian=True)
 
     # for each strain, get the stresses from other strain states related by symmetry
-    symmmetrized_stresses = []  # type: List[Stress]
+    symmmetrized_stresses = []  # type: list[Stress]
     for strain, _stress in zip(strains, stresses):
         mapping = TensorMapping([strain], [[]], tol=tol)
         for strain2, stress2 in zip(strains, stresses):
@@ -561,8 +550,8 @@ def symmetrize_stresses(
 
 
 def fit_elastic_tensor(
-    strains: List[Strain],
-    stresses: List[Stress],
+    strains: list[Strain],
+    stresses: list[Stress],
     eq_stress: Stress | None,
     fitting_method: str = "finite_difference",
     order: int = 2,
@@ -602,7 +591,7 @@ def fit_elastic_tensor(
 
 def get_derived_properties(
     structure: Structure, tensor: ElasticTensor
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get derived elasticity properties.
 
@@ -663,9 +652,9 @@ def get_derived_properties(
 def sanity_check(
     structure: Structure,
     elastic_doc: ElasticTensorDoc,
-    strains: List[Strain],
-    derived_props: Dict[str, Any],
-) -> Tuple[Status, List[str]]:
+    strains: list[Strain],
+    derived_props: dict[str, Any],
+) -> tuple[Status, list[str]]:
     """
     Post analysis to generate warnings if any.
 

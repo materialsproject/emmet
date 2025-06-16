@@ -1,4 +1,5 @@
 """Define schemas for trajectories."""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -405,9 +406,11 @@ class AtomTrajectory(BaseModel):
 
             if is_structure:
                 structure: Structure | Molecule = Structure(
-                    lattice=self.constant_lattice
-                    if self.constant_lattice
-                    else self.lattice[i],  # type: ignore[index]
+                    lattice=(
+                        self.constant_lattice
+                        if self.constant_lattice
+                        else self.lattice[i]
+                    ),  # type: ignore[index]
                     species=species,
                     coords=self.cart_coords[i],  # type: ignore[arg-type]
                     coords_are_cartesian=True,

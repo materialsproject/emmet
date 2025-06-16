@@ -1,8 +1,7 @@
-from typing import Dict, Optional
 from maggma.builders.map_builder import MapBuilder
 from maggma.core import Store
-
 from pymatgen.core.structure import Structure
+
 from emmet.core.robocrys import RobocrystallogapherDoc
 from emmet.core.utils import jsanitize
 
@@ -12,7 +11,7 @@ class RobocrystallographerBuilder(MapBuilder):
         self,
         oxidation_states: Store,
         robocrys: Store,
-        query: Optional[Dict] = None,
+        query: dict | None = None,
         **kwargs
     ):
         self.oxidation_states = oxidation_states

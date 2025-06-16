@@ -1,8 +1,8 @@
-from math import ceil
 import warnings
-from itertools import chain
-from typing import Dict, Iterator, List, Optional, Set
 from datetime import datetime
+from itertools import chain
+from math import ceil
+from typing import Iterator, Set
 
 from maggma.core import Builder, Store
 from maggma.stores import S3Store
@@ -12,7 +12,7 @@ from pymatgen.analysis.phase_diagram import PhaseDiagramError
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 from emmet.builders.utils import HiddenPrints
-from emmet.core.thermo import ThermoDoc, PhaseDiagramDoc
+from emmet.core.thermo import PhaseDiagramDoc, ThermoDoc
 from emmet.core.utils import jsanitize
 
 
@@ -21,9 +21,9 @@ class ThermoBuilder(Builder):
         self,
         thermo: Store,
         corrected_entries: Store,
-        phase_diagram: Optional[Store] = None,
-        query: Optional[Dict] = None,
-        num_phase_diagram_eles: Optional[int] = None,
+        phase_diagram: Store | None = None,
+        query: dict | None = None,
+        num_phase_diagram_eles: int | None = None,
         chunk_size: int = 1000,
         **kwargs,
     ):
@@ -111,7 +111,7 @@ class ThermoBuilder(Builder):
             coll.ensure_index("chemsys")
             coll.ensure_index("phase_diagram_id")
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterator[dict]:  # pragma: no cover
         to_process_chemsys = self._get_chemsys_to_process()
 
         N = ceil(len(to_process_chemsys) / number_splits)
@@ -119,7 +119,7 @@ class ThermoBuilder(Builder):
         for chemsys_chunk in grouper(to_process_chemsys, N):
             yield {"query": {"chemsys": {"$in": list(chemsys_chunk)}}}
 
-    def get_items(self) -> Iterator[List[Dict]]:
+    def get_items(self) -> Iterator[list[dict]]:
         """
         Gets whole chemical systems of entries to process
         """
@@ -224,7 +224,7 @@ class ThermoBuilder(Builder):
         """
         Inserts the thermo and phase diagram docs into the thermo collection
         Args:
-            items ([[tuple(List[dict],List[dict])]]): a list of a list of thermo and phase diagram dict pairs to update
+            items ([[tuple(list[dict],list[dict])]]): a list of a list of thermo and phase diagram dict pairs to update
         """
 
         thermo_docs = [pair[0] for pair_list in items for pair in pair_list]

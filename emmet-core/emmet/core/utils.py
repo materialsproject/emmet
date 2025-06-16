@@ -1,4 +1,5 @@
 """Define utility functions used across the emmet namespace packages."""
+
 from __future__ import annotations
 
 import copy
@@ -7,7 +8,7 @@ import hashlib
 from enum import Enum
 from itertools import groupby
 from math import gcd
-from typing import Any, Dict, Iterator, List, Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Iterator
 
 import numpy as np
 from monty.io import zopen
@@ -38,6 +39,7 @@ except ImportError:
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
+
     from emmet.core.typing import PathLike
 
 
@@ -70,13 +72,13 @@ def get_num_formula_units(composition: Mapping[Any, int | float]) -> int:
 
 
 def group_structures(
-    structures: List[Structure],
+    structures: list[Structure],
     ltol: float = SETTINGS.LTOL,
     stol: float = SETTINGS.STOL,
     angle_tol: float = SETTINGS.ANGLE_TOL,
     symprec: float = SETTINGS.SYMPREC,
     comparator: AbstractComparator = ElementComparator(),
-) -> Iterator[List[Structure]]:
+) -> Iterator[list[Structure]]:
     """
     Groups structures according to space group and structure matching
 
@@ -108,7 +110,7 @@ def group_structures(
             yield group
 
 
-def undeform_structure(structure: Structure, transformations: Dict) -> Structure:
+def undeform_structure(structure: Structure, transformations: dict) -> Structure:
     """
     Get an undeformed structure by applying transformations in a reverse order.
 
@@ -193,7 +195,7 @@ def generate_robocrys_condensed_struct_and_description(
     return condensed_structure, description
 
 
-def group_molecules(molecules: List[Molecule]):
+def group_molecules(molecules: list[Molecule]):
     """
     Groups molecules according to composition, charge, and equality
 
@@ -203,7 +205,7 @@ def group_molecules(molecules: List[Molecule]):
         graph isomorphism happens at a later stage.
 
     Args:
-        molecules (List[Molecule])
+        molecules (list[Molecule])
     """
 
     def _mol_form(mol_solv):
@@ -220,7 +222,7 @@ def group_molecules(molecules: List[Molecule]):
     # First, group by formula
     # Hopefully this step is unnecessary - builders should already be doing this
     for mol_key, pregroup in groupby(sorted(molecules, key=_mol_form), key=_mol_form):
-        groups: List[Dict[str, Any]] = list()
+        groups: list[dict[str, Any]] = list()
         for mol in pregroup:
             mol_copy = copy.deepcopy(mol)
 
@@ -249,7 +251,7 @@ def group_molecules(molecules: List[Molecule]):
             yield group["mol_list"]
 
 
-def confirm_molecule(mol: Union[Molecule, Dict]):
+def confirm_molecule(mol: Molecule | dict):
     """
     Check that something that we expect to be a molecule is actually a Molecule
     object, and not a dictionary representation.
@@ -258,14 +260,14 @@ def confirm_molecule(mol: Union[Molecule, Dict]):
     :return:
     """
 
-    if isinstance(mol, Dict):
+    if isinstance(mol, dict):
         return Molecule.from_dict(mol)
     else:
         return mol
 
 
 def make_mol_graph(
-    mol: Molecule, critic_bonds: Optional[List[List[int]]] = None
+    mol: Molecule, critic_bonds: list[list[int]] | None = None
 ) -> MoleculeGraph:
     """
     Construct a MoleculeGraph using OpenBabelNN with metal_edge_extender and
@@ -293,7 +295,7 @@ def make_mol_graph(
     return mol_graph
 
 
-def get_graph_hash(mol: Molecule, node_attr: Optional[str] = None):
+def get_graph_hash(mol: Molecule, node_attr: str | None = None):
     """
     Return the Weisfeiler Lehman (WL) graph hash of the MoleculeGraph described
     by this molecule, using the OpenBabelNN strategy with extension for
@@ -311,7 +313,7 @@ def get_graph_hash(mol: Molecule, node_attr: Optional[str] = None):
     )
 
 
-def get_molecule_id(mol: Molecule, node_attr: Optional[str] = None):
+def get_molecule_id(mol: Molecule, node_attr: str | None = None):
     """
     Return an MPculeID for a molecule, with the hash component
     based on a particular attribute of the molecule graph representation.

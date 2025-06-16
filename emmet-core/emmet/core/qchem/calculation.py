@@ -3,28 +3,22 @@
 # mypy: ignore-errors
 
 import logging
+import re
+import warnings
+from collections import OrderedDict
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import numpy as np
-import warnings
-from pydantic import field_validator, BaseModel, Field, ConfigDict
-from datetime import datetime
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pymatgen.core.structure import Molecule
 from pymatgen.io.qchem.inputs import QCInput
 from pymatgen.io.qchem.outputs import QCOutput
-from pymatgen.core.structure import Molecule
-from collections import OrderedDict
-import re
 
-from emmet.core.qchem.calc_types import (
-    LevelOfTheory,
-    CalcType,
-    TaskType,
-)
-from emmet.core.qchem.calc_types.calc_types import (
-    FUNCTIONALS,
-    BASIS_SETS,
-)
+from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
+from emmet.core.qchem.calc_types.calc_types import BASIS_SETS, FUNCTIONALS
+from emmet.core.qchem.task import QChemStatus
 
 # from emmet.core.qchem.calc_types.em_utils import (
 #     level_of_theory,
@@ -32,7 +26,6 @@ from emmet.core.qchem.calc_types.calc_types import (
 #     calc_type,
 # )
 
-from emmet.core.qchem.task import QChemStatus
 
 functional_synonyms = {
     "b97mv": "b97m-v",
@@ -61,17 +54,17 @@ class CalculationInput(BaseModel):
     Document defining QChem calculation inputs.
     """
 
-    initial_molecule: Optional[Molecule] = Field(
+    initial_molecule: Molecule | None = Field(
         None, description="input molecule geometry before the QChem calculation"
     )
 
-    # parameters: Dict[str, Any] = Field(
+    # parameters: dict[str, Any] = Field(
     #     None, description = "Parameters from a previous QChem calculation."
     # )
 
     charge: int = Field(None, description="The charge of the input molecule")
 
-    rem: Optional[Dict[str, Any]] = Field(
+    rem: dict[str, Any] | None = Field(
         None,
         description="The rem dict of the input file which has all the input parameters",
     )
@@ -80,40 +73,40 @@ class CalculationInput(BaseModel):
         None, description="The type of QChem calculation being performed"
     )
 
-    opt: Optional[Dict[str, Any]] = Field(
+    opt: dict[str, Any] | None = Field(
         None,
         description="A dictionary of opt section. For instance atom constraints and fixed atoms. Go to QCInput definition for more details.",
     )
 
-    pcm: Optional[Dict[str, Any]] = Field(
+    pcm: dict[str, Any] | None = Field(
         None, description="A dictionary for the PCM solvent details if used"
     )
 
-    solvent: Optional[Dict[str, Any]] = Field(
+    solvent: dict[str, Any] | None = Field(
         None,
         description="The solvent parameters used if the PCM solvent model has been employed",
     )
 
-    smx: Optional[Dict[str, Any]] = Field(
+    smx: dict[str, Any] | None = Field(
         None,
         description="A dictionary for the solvent parameters if the SMD solvent method has been employed",
     )
 
-    vdw_mode: Optional[str] = Field(
+    vdw_mode: str | None = Field(
         None,
         description="Either atomic or sequential. Used when custon van der Waals radii are used to construct pcm cavity",
     )
 
-    van_der_waals: Optional[Dict[str, Any]] = Field(
+    van_der_waals: dict[str, Any] | None = Field(
         None, description="The dictionary of the custom van der Waals radii if used"
     )
 
-    scan_variables: Optional[Dict[str, Any]] = Field(
+    scan_variables: dict[str, Any] | None = Field(
         None,
         description="The dictionary of scan variables for torsions or bond stretches",
     )
 
-    tags: Optional[Union[Dict[str, Any], str]] = Field(
+    tags: dict[str, Any] | str | None = Field(
         None, description="Any tags associated with the QChem calculation."
     )
 
@@ -135,9 +128,11 @@ class CalculationInput(BaseModel):
 
         return cls(
             initial_molecule=qcinput.molecule,
-            charge=int(qcinput.molecule.as_dict()["charge"])
-            if qcinput.molecule.as_dict()
-            else None,
+            charge=(
+                int(qcinput.molecule.as_dict()["charge"])
+                if qcinput.molecule.as_dict()
+                else None
+            ),
             rem=qcinput.rem,
             job_type=qcinput.rem.get("job_type", None),
             opt=qcinput.opt,
@@ -153,68 +148,68 @@ class CalculationInput(BaseModel):
 class CalculationOutput(BaseModel):
     """Document defining QChem calculation outputs."""
 
-    optimized_molecule: Optional[Molecule] = Field(
+    optimized_molecule: Molecule | None = Field(
         None,
         description="optimized geometry of the molecule after calculation in case of opt, optimization or ts",
     )
 
-    mulliken: Optional[Union[List, Dict[str, Any]]] = Field(
+    mulliken: list | dict[str, Any] | None = Field(
         None, description="Calculate Mulliken charges on the atoms"
     )
 
-    esp: Optional[Union[List, Dict[str, Any]]] = Field(
+    esp: list | dict[str, Any] | None = Field(
         None,
         description="Calculated charges on the atoms if esp calculation has been performed",
     )
 
-    resp: Optional[Union[List, Dict[str, Any]]] = Field(
+    resp: list | dict[str, Any] | None = Field(
         None,
         description="Calculated charges on the atoms if resp calculation has been performed",
     )
 
-    nbo_data: Optional[Dict[str, Any]] = Field(
+    nbo_data: dict[str, Any] | None = Field(
         None, description="NBO data if analysis has been performed."
     )
 
-    frequencies: Optional[Union[Dict[str, Any], List]] = Field(
+    frequencies: dict[str, Any] | list | None = Field(
         None,
         description="Calculated frequency modes if the job type is freq or frequency",
     )
 
-    frequency_modes: Optional[Union[List, str]] = Field(
+    frequency_modes: list | str | None = Field(
         None, description="The list of calculated frequency mode vectors"
     )
 
-    final_energy: Optional[Union[str, float]] = Field(
+    final_energy: str | float | None = Field(
         None,
         description="The final energy of the molecule after the calculation is complete",
     )
 
-    enthalpy: Optional[Union[str, float]] = Field(
+    enthalpy: str | float | None = Field(
         None,
         description="The total enthalpy correction if a frequency calculation has been performed",
     )
 
-    entropy: Optional[Union[str, float]] = Field(
+    entropy: str | float | None = Field(
         None,
         description="The total entropy of the system if a frequency calculation has been performed",
     )
 
-    scan_energies: Optional[Dict[str, Any]] = Field(
+    scan_energies: dict[str, Any] | None = Field(
         None,
         description="A dictionary of the scan energies with their respective parameters",
     )
 
-    scan_geometries: Optional[Union[List, Dict[str, Any]]] = Field(
+    scan_geometries: list | dict[str, Any] | None = Field(
         None, description="optimized geometry of the molecules after the geometric scan"
     )
 
-    scan_molecules: Optional[Union[List, Dict[str, Any], Molecule]] = Field(
+    scan_molecules: list | dict[str, Any] | Molecule | None = Field(
         None,
         description="The constructed pymatgen molecules from the optimized scan geometries",
     )
 
-    pcm_gradients: Optional[Union[Dict[str, Any], np.ndarray, List]] = Field(
+    pcm_gradients: dict[str, Any] | np.ndarray | list | None = Field(
         None,
         description="The parsed total gradients after adding the PCM contributions.",
     )
@@ -222,30 +217,30 @@ class CalculationOutput(BaseModel):
     @field_validator("pcm_gradients", mode="before")
     @classmethod
     def validate_pcm_gradients(cls, v):
-        if v is not None and not isinstance(v, (np.ndarray, Dict, List)):
+        if v is not None and not isinstance(v, (np.ndarray, dict, list)):
             raise ValueError(
                 "pcm_gradients must be a numpy array, a dict or a list or None."
             )
         return v
 
-    cds_gradients: Optional[Union[Dict[str, Any], np.ndarray, List]] = Field(
+    cds_gradients: dict[str, Any] | np.ndarray | list | None = Field(
         None, description="The parsed CDS gradients."
     )
 
     @field_validator("cds_gradients", mode="before")
     @classmethod
     def validate_cds_gradients(cls, v):
-        if v is not None and not isinstance(v, (np.ndarray, Dict, List)):
+        if v is not None and not isinstance(v, (np.ndarray, dict, list)):
             raise ValueError(
                 "cds_gradients must be a numpy array, a dict or a list or None."
             )
         return v
 
-    dipoles: Optional[Dict[str, Any]] = Field(
+    dipoles: dict[str, Any] | None = Field(
         None, description="The associated dipoles for Mulliken/RESP/ESP charges"
     )
 
-    gap_info: Optional[Dict[str, Any]] = Field(
+    gap_info: dict[str, Any] | None = Field(
         None, description="The Kohn-Sham HOMO-LUMO gaps and associated Eigenvalues"
     )
 
@@ -297,7 +292,7 @@ class Calculation(BaseModel):
     qchem_version: str = Field(
         None, description="QChem version used to perform the current calculation"
     )
-    has_qchem_completed: Union[QChemStatus, bool] = Field(
+    has_qchem_completed: QChemStatus | bool = Field(
         None, description="Whether QChem calculated the calculation successfully"
     )
     input: CalculationInput = Field(
@@ -313,15 +308,15 @@ class Calculation(BaseModel):
         None,
         description="Name of task given by custodian (e.g. opt1, opt2, freq1, freq2)",
     )
-    output_file_paths: Dict[str, Union[str, Path, Dict[str, Path]]] = Field(
+    output_file_paths: dict[str, str | Path | dict[str, Path]] = Field(
         None,
         description="Paths (relative to dir_name) of the QChem output files associated with this calculation",
     )
-    level_of_theory: Union[LevelOfTheory, str] = Field(
+    level_of_theory: LevelOfTheory | str = Field(
         None,
         description="Levels of theory used for the QChem calculation: For instance, B97-D/6-31g*",
     )
-    solvation_lot_info: Optional[str] = Field(
+    solvation_lot_info: str | None = Field(
         None,
         description="A condensed string representation of the comboned LOT and Solvent info",
     )
@@ -329,7 +324,7 @@ class Calculation(BaseModel):
         None,
         description="Calculation task type like Single Point, Geometry Optimization. Frequency...",
     )
-    calc_type: Union[CalcType, str] = Field(
+    calc_type: CalcType | str = Field(
         None,
         description="Combination dict of LOT + TaskType: B97-D/6-31g*/VACUUM Geometry Optimization",
     )
@@ -337,14 +332,14 @@ class Calculation(BaseModel):
     @classmethod
     def from_qchem_files(
         cls,
-        dir_name: Union[Path, str],
+        dir_name: Path | str,
         task_name: str,
-        qcinput_file: Union[Path, str],
-        qcoutput_file: Union[Path, str],
+        qcinput_file: Path | str,
+        qcoutput_file: Path | str,
         validate_lot: bool = True,
         store_energy_trajectory: bool = False,
-        qcinput_kwargs: Optional[Dict] = None,
-        qcoutput_kwargs: Optional[Dict] = None,
+        qcinput_kwargs: dict | None = None,
+        qcoutput_kwargs: dict | None = None,
     ) -> "Calculation":
         """
         Create a QChem calculation document from a directory and file paths.
@@ -407,9 +402,11 @@ class Calculation(BaseModel):
             input=input_doc,
             output=output_doc,
             output_file_paths={
-                k.lower(): Path(v)
-                if isinstance(v, str)
-                else {k2: Path(v2) for k2, v2 in v.items()}
+                k.lower(): (
+                    Path(v)
+                    if isinstance(v, str)
+                    else {k2: Path(v2) for k2, v2 in v.items()}
+                )
                 for k, v in output_file_paths.items()
             },
             level_of_theory=level_of_theory(input_doc, validate_lot=validate_lot),
@@ -420,8 +417,8 @@ class Calculation(BaseModel):
 
 
 def _find_qchem_files(
-    path: Union[str, Path],
-) -> Dict[str, Any]:
+    path: str | Path,
+) -> dict[str, Any]:
     """
     Find QChem files in a directory.
 
@@ -436,7 +433,7 @@ def _find_qchem_files(
 
     Returns
     -------
-    Dict[str, Any]
+    dict[str, Any]
         The filenames of the calculation outputs for each QChem task, given as a ordered dictionary of::
 
             {
@@ -512,7 +509,7 @@ def level_of_theory(
     based on the input parameters given to Q-Chem
 
     Args:
-        parameters: Dict of Q-Chem input parameters
+        parameters: dict of Q-Chem input parameters
 
     """
 
@@ -591,13 +588,13 @@ def level_of_theory(
 def solvent(
     parameters: CalculationInput,
     validate_lot: bool = True,
-    custom_smd: Optional[str] = None,
+    custom_smd: str | None = None,
 ) -> str:
     """
     Returns the solvent used for this calculation.
 
     Args:
-        parameters: Dict of Q-Chem input parameters
+        parameters: dict of Q-Chem input parameters
         custom_smd: (Optional) string representing SMD parameters for a
         non-standard solvent
     """
@@ -662,13 +659,13 @@ def solvent(
 def lot_solvent_string(
     parameters: CalculationInput,
     validate_lot: bool = True,
-    custom_smd: Optional[str] = None,
+    custom_smd: str | None = None,
 ) -> str:
     """
     Returns a string representation of the level of theory and solvent used for this calculation.
 
     Args:
-        parameters: Dict of Q-Chem input parameters
+        parameters: dict of Q-Chem input parameters
         custom_smd: (Optional) string representing SMD parameters for a
         non-standard solvent
     """
@@ -681,7 +678,7 @@ def lot_solvent_string(
 
 
 def task_type(
-    parameters: CalculationInput, special_run_type: Optional[str] = None
+    parameters: CalculationInput, special_run_type: str | None = None
 ) -> TaskType:
     if special_run_type == "frequency_flattener":
         return TaskType("Frequency Flattening Geometry Optimization")
@@ -705,7 +702,7 @@ def task_type(
 def calc_type(
     parameters: CalculationInput,
     validate_lot: bool = True,
-    special_run_type: Optional[str] = None,
+    special_run_type: str | None = None,
 ) -> CalcType:
     """
     Determines the calc type
