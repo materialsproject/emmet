@@ -82,6 +82,7 @@ class MPID(str):
             return self.string == other.string
         elif isinstance(other, (int, str)):
             return self.string == MPID(other).string
+        return NotImplemented
 
     def __str__(self) -> str:
         return self.string
@@ -102,9 +103,9 @@ class MPID(str):
         elif other_parts[0]:
             # self is pure int, other is prefixed
             return False
-        else:
-            # both are pure ints; normal comparison
-            return self.parts[1] < other_parts[1]
+
+        # both are pure ints; normal comparison
+        return self.parts[1] < other_parts[1]
 
     def __gt__(self, other: MPID | int | str) -> bool:
         """Define greater than for MPID.
@@ -205,6 +206,7 @@ class MPculeID(str):
             return self.string == other.string
         elif isinstance(other, str):
             return self.string == MPculeID(other).string
+        return NotImplemented
 
     def __str__(self) -> str:
         return self.string
