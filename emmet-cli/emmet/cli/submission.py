@@ -44,7 +44,7 @@ class CalculationMetadata(BaseModel):
         """Validate the calculation. Returns whether it's valid."""
         self.refresh()
         if self.calc_valid is None:
-            print(f"Validating calculation at {locator.path}")
+            logger.info(f"Validating calculation at {locator.path}")
             validator = ValidationDoc.from_file_metadata(
                 file_meta=self.files, fast=True
             )
