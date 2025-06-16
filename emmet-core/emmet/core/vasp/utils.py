@@ -177,12 +177,7 @@ def discover_and_sort_vasp_files(
     by_type: dict[str, list[FileMetadata]] = defaultdict(list)
     for _f in discover_vasp_files(target_dir):
         f = _f.name.lower()
-        for k in (
-            "vasprun",
-            "contcar",
-            "outcar",
-            "oszicar"
-        ):
+        for k in ("vasprun", "contcar", "outcar", "oszicar"):
             if k in f:
                 by_type[f"{k}_file"].append(_f)
                 break
