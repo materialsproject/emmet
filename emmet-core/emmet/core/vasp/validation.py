@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self
     from emmet.core.tasks import TaskDoc
 
+
 class ValidationDoc(VaspValidator, EmmetBaseModel):
     """
     Validation document for a VASP calculation

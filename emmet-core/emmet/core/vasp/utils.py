@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 TASK_NAMES = {"precondition"}.union([f"relax{i+1}" for i in range(9)])
 
+
 class FileMetadata(BaseModel):
     """
     Lightweight model to enable validation on files via MD5.
