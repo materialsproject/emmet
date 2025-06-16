@@ -1,5 +1,7 @@
 """Utilities to determine level of theory, task type, and calculation type for Q-Chem calculations"""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType

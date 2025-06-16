@@ -17,6 +17,8 @@ The build proceeds in the below steps:
 7. Fit the elastic tensor.
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 
 import numpy as np

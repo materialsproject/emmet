@@ -1,6 +1,7 @@
 """Core definition of a Q-Chem Task Document"""
 
 # mypy: ignore-errors
+from __future__ import annotations
 
 from typing import Any, TYPE_CHECKING
 

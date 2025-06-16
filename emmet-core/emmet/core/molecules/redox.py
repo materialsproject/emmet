@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from hashlib import blake2b
 from typing import TYPE_CHECKING
 
