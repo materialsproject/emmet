@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import json
 import logging
+import time
 from multiprocessing import Pool
 from os import PathLike
 from pathlib import Path
@@ -254,8 +255,15 @@ class Submission(BaseModel):
                 f"Running validation in parallel for {len(calcs_to_check)} calculations"
             )
             with Pool() as pool:
-                results = pool.map(invoke_calc_validation, calcs_to_check)
-                logger.debug("Gathered validation results from map")
+                async_result = pool.map_async(invoke_calc_validation, calcs_to_check)
+                # Monitor progress
+                while not async_result.ready():
+                    logger.debug(f"Still processing... {time.time()}")
+                    time.sleep(10)
+
+                logger.debug("Validation results ready - calling get with timeout")
+                results = async_result.get(timeout=60)
+                logger.debug(f"Gathered {len(results)} validation results from map")
 
             logger.debug("Starting to process validation results from map")
             for locator, _, cm in results:
