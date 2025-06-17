@@ -86,6 +86,7 @@ def invoke_calc_validation(args):
 
 class Submission(BaseModel):
     PARALLEL_THRESHOLD: ClassVar[int] = 100
+    ITEMS_PER_OUTER_CHUNK: ClassVar[int] = 10 * PARALLEL_THRESHOLD
 
     id: UUID = Field(
         description="The identifier for this submission", default_factory=uuid4
@@ -249,31 +250,38 @@ class Submission(BaseModel):
             else self.calculations
         )
 
-        if len(calcs_to_check) > Submission.PARALLEL_THRESHOLD:
+        total_items = len(calcs_to_check)
+        chunk_size = Submission.ITEMS_PER_OUTER_CHUNK
+        if total_items > Submission.PARALLEL_THRESHOLD:
             logger.debug(
-                f"Running validation in parallel for {len(calcs_to_check)} calculations"
+                f"Running validation in parallel for {total_items} calculations "
+                f"splitting into {len(calcs_to_check)/chunk_size}"
             )
-            with Pool() as pool:
-                results = pool.imap_unordered(
-                    invoke_calc_validation, calcs_to_check, chunksize=10
+            for i in range(0, total_items, chunk_size):
+                chunk = calcs_to_check[i : i + chunk_size]
+                logger.debug(
+                    f"Processing chunk {i//chunk_size + 1}: items {i}-{min(i+chunk_size, total_items)}"
                 )
-                processed = 0
-                for locator, _, cm in results:
-                    # Update the calculation metadata in the list
-                    for i, (loc, _) in enumerate(calcs_to_check):
-                        if loc == locator:
-                            calcs_to_check[i] = (loc, cm)
-                    processed += 1
-                if processed <= 10 or processed % 100 == 0:
-                    logger.debug(
-                        f"Processed {processed}/{len(calcs_to_check)} calculations "
+
+                with Pool() as pool:
+                    results = pool.imap_unordered(
+                        invoke_calc_validation, chunk, chunksize=10
                     )
-                logger.debug(f"Completed processing {processed} calculation")
-                return all(val for _, val, _ in results)
+                    processed = 0
+                    for locator, _, cm in results:
+                        # Update the calculation metadata in the list
+                        for i, (loc, _) in enumerate(calcs_to_check):
+                            if loc == locator:
+                                calcs_to_check[i] = (loc, cm)
+                        processed += 1
+                    if processed <= 10 or processed % 100 == 0:
+                        logger.debug(
+                            f"Processed {processed}/{total_items} calculations "
+                        )
+                    logger.debug(f"Completed processing {processed} calculation")
+                    return all(val for _, val, _ in results)
         else:
-            logger.debug(
-                f"Running validation serially for {len(calcs_to_check)} calculations"
-            )
+            logger.debug(f"Running validation serially for {total_items} calculations")
             if not check_all:
                 logger.debug("Will fail fast if any calculation is invalid")
             for i, (locator, cm) in enumerate(calcs_to_check):
