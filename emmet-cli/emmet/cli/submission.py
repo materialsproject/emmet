@@ -255,12 +255,15 @@ class Submission(BaseModel):
             )
             with Pool() as pool:
                 results = pool.map(invoke_calc_validation, calcs_to_check)
-                for locator, _, cm in results:
-                    # Update the calculation metadata in the list
-                    for i, (loc, _) in enumerate(calcs_to_check):
-                        if loc == locator:
-                            calcs_to_check[i] = (loc, cm)
-                return all(val for _, val, _ in results)
+                logger.debug("Gathered validation results from map")
+
+            logger.debug("Starting to process validation results from map")
+            for locator, _, cm in results:
+                # Update the calculation metadata in the list
+                for i, (loc, _) in enumerate(calcs_to_check):
+                    if loc == locator:
+                        calcs_to_check[i] = (loc, cm)
+            return all(val for _, val, _ in results)
         else:
             logger.debug(
                 f"Running validation serially for {len(calcs_to_check)} calculations"
