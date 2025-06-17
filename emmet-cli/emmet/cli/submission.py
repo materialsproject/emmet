@@ -254,7 +254,7 @@ class Submission(BaseModel):
                 f"Running validation in parallel for {len(calcs_to_check)} calculations"
             )
             with Pool() as pool:
-                results = pool.imap(
+                results = pool.imap_unordered(
                     invoke_calc_validation, calcs_to_check, chunksize=10
                 )
                 processed = 0
@@ -264,8 +264,10 @@ class Submission(BaseModel):
                         if loc == locator:
                             calcs_to_check[i] = (loc, cm)
                     processed += 1
-                    if processed % 100 == 0:
-                        logger.debug(f"Processed {processed} calculations")
+                if processed <= 10 or processed % 100 == 0:
+                    logger.debug(
+                        f"Processed {processed}/{len(calcs_to_check)} calculations "
+                    )
                 logger.debug(f"Completed processing {processed} calculation")
                 return all(val for _, val, _ in results)
         else:
