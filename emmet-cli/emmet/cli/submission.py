@@ -3,11 +3,10 @@ from __future__ import annotations
 import copy
 import json
 import logging
-import time
 from multiprocessing import Pool
 from os import PathLike
 from pathlib import Path
-from typing import Any, ClassVar, Iterable
+from typing import ClassVar, Iterable
 from emmet.cli.utils import EmmetCliError
 from pydantic import BaseModel, Field, PrivateAttr
 from uuid import UUID, uuid4
@@ -255,23 +254,20 @@ class Submission(BaseModel):
                 f"Running validation in parallel for {len(calcs_to_check)} calculations"
             )
             with Pool() as pool:
-                async_result = pool.map_async(invoke_calc_validation, calcs_to_check)
-                # Monitor progress
-                while not async_result.ready():
-                    logger.debug(f"Still processing... {time.time()}")
-                    time.sleep(10)
-
-                logger.debug("Validation results ready - calling get with timeout")
-                results = async_result.get(timeout=60)
-                logger.debug(f"Gathered {len(results)} validation results from map")
-
-            logger.debug("Starting to process validation results from map")
-            for locator, _, cm in results:
-                # Update the calculation metadata in the list
-                for i, (loc, _) in enumerate(calcs_to_check):
-                    if loc == locator:
-                        calcs_to_check[i] = (loc, cm)
-            return all(val for _, val, _ in results)
+                results = pool.imap(
+                    invoke_calc_validation, calcs_to_check, chunksize=10
+                )
+                processed = 0
+                for locator, _, cm in results:
+                    # Update the calculation metadata in the list
+                    for i, (loc, _) in enumerate(calcs_to_check):
+                        if loc == locator:
+                            calcs_to_check[i] = (loc, cm)
+                    processed += 1
+                    if processed % 100 == 0:
+                        logger.debug(f"Processed {processed} calculations")
+                logger.debug(f"Completed processing {processed} calculation")
+                return all(val for _, val, _ in results)
         else:
             logger.debug(
                 f"Running validation serially for {len(calcs_to_check)} calculations"
