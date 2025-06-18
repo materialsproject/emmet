@@ -40,6 +40,32 @@ def mg_for_sc_fields(test_dir):
     return mg_for_sc
 
 
+@pytest.fixture(scope="session")
+def match_mgdoc_npr(test_dir):
+    """
+    get the MigrationGraphDoc and NebPathwayResult objects to test matching functions
+    """
+    match_mgdoc = loadfn(test_dir / "mobility/test_match_mgdoc.json")
+    match_npr = loadfn(test_dir / "mobility/test_match_npr_doc.json")
+    return (match_mgdoc, match_npr)
+
+
+@pytest.fixture(scope="session")
+def match_mgd_prop():
+    """
+    set the epected parameters for migrationgraph docs after matching with NebPathwayResult
+    """
+    return {"num_paths": 2, "len_of_paths": [2, 2], "max_costs": [0.82334, 0.82334]}
+
+
+@pytest.fixture(scope="session")
+def match_mgd_w_cost_prop():
+    """
+    set the epected parameters for migrationgraph docs after matching with NebPathwayResult
+    """
+    return {"costs": [0.82334, 0.03334], "hop_keys": ["0+1", "2+1"]}
+
+
 @pytest.mark.skip(
     reason="Incompatible with Pymatgen>=2024.9.10, regression testing in progress..."
 )
@@ -81,7 +107,9 @@ def test_generate_sc_fields(mg_for_sc_fields):
         min_max_num_atoms,
         coords_dict,
         combo,
-    ) = MigrationGraphDoc.generate_sc_fields(mg_for_sc_fields, 7, (80, 160), sm)
+    ) = MigrationGraphDoc.generate_sc_fields(
+        mg_for_sc_fields, 7, (80, 160), sm, "complete"
+    )
     sc_mat_inv = np.linalg.inv(sc_mat)
     expected_sc_list = []
 
@@ -134,3 +162,36 @@ def test_get_distinct_hop_sites(get_entries):
         "1+7": "4+0",
         "1+2": "4+8",
     }
+
+
+def test_get_paths_summary_with_neb_res(match_mgdoc_npr, match_mgd_prop):
+    mgdoc, npr = match_mgdoc_npr
+    paths_summary, mg_new = MigrationGraphDoc.get_paths_summary_with_neb_res(
+        mgdoc.migration_graph, npr, "energy_range"
+    )
+    res_prop = {
+        "num_paths": len(paths_summary),
+        "len_of_paths": [len(v) for v in paths_summary.values()],
+        "max_costs": [
+            max([i["cost"] for i in path]) for path in paths_summary.values()
+        ],
+    }
+
+    for k, v in match_mgd_prop.items():
+        assert res_prop[k] == pytest.approx(v, 0.01)
+
+
+def test_augment_from_mgd_and_npr(match_mgdoc_npr, match_mgd_w_cost_prop):
+    mgdoc, npr = match_mgdoc_npr
+    mgd_w_cost = MigrationGraphDoc.augment_from_mgd_and_npr(
+        mgd=mgdoc, npr=npr, barrier_type="energy_range"
+    )
+    assert mgd_w_cost.migration_graph_w_cost is not None
+    res_uhops = mgd_w_cost.migration_graph_w_cost.unique_hops
+    res_uhops = [v for k, v in sorted(res_uhops.items())]
+    res_prop = {
+        "costs": [uhop["cost"] for uhop in res_uhops],
+        "hop_keys": [uhop["hop_key"] for uhop in res_uhops],
+    }
+    for k, v in match_mgd_w_cost_prop.items():
+        assert res_prop[k] == pytest.approx(v, 0.01)

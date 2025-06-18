@@ -3,14 +3,22 @@ from typing import List, Union, Dict, Tuple, Sequence, Optional
 
 from pydantic import Field
 import numpy as np
+import copy
+import logging
 from emmet.core.base import EmmetBaseModel
+from emmet.core.vasp.task_valid import TaskState
+from emmet.core.neb import NebPathwayResult
 from pymatgen.core import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from pymatgen.analysis.diffusion.utils.edge_data_from_sc import add_edge_data_from_sc
 
 try:
     from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
-    from pymatgen.analysis.diffusion.utils.supercells import get_sc_fromstruct
+    from pymatgen.analysis.diffusion.utils.supercells import (
+        get_sc_fromstruct,
+        get_start_end_structures,
+    )
 except ImportError:
     raise ImportError("Install pymatgen-analysis-diffusion to use MigrationGraphDoc")
 
@@ -67,6 +75,12 @@ class MigrationGraphDoc(EmmetBaseModel):
         description="Flag indicating whether this document has populated the supercell fields",
     )
 
+    sc_gen_schema: Optional[str] = Field(
+        None,
+        description="The schema used to generate supercell fields. "
+        "hops_only: contains only endpoints for sc hops; complete: contains all transformed uc sites.",
+    )
+
     min_length_sc: Optional[float] = Field(
         None,
         description="The minimum length used to generate supercell using pymatgen.",
@@ -99,6 +113,16 @@ class MigrationGraphDoc(EmmetBaseModel):
         description="A list of combinations 'a+b' to designate hops in the supercell. Each combo should correspond to one unique hop in MigrationGraph.",  # noqa: E501
     )
 
+    paths_summary: Optional[Dict[int, List]] = Field(
+        None,
+        description="A dictionary of ranked intercalation pathways given cost (e.g. migration barrier from transition state calcs) of each unique_hop.",  # noqa: E501
+    )
+
+    migration_graph_w_cost: Optional[MigrationGraph] = Field(
+        None,
+        description="MigrationGraph instance that contains cost (e.g. from NEB) information",
+    )
+
     @classmethod
     def from_entries_and_distance(
         cls,
@@ -107,6 +131,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         working_ion_entry: Union[ComputedEntry, ComputedStructureEntry],
         hop_cutoff: float,
         populate_sc_fields: bool = True,
+        sc_gen_schema: str = "complete",
         ltol: float = 0.2,
         stol: float = 0.3,
         angle_tol: float = 5,
@@ -151,11 +176,12 @@ class MigrationGraphDoc(EmmetBaseModel):
                     minmax_num_atoms,
                     coords_list,
                     combo,
-                ) = MigrationGraphDoc.generate_sc_fields(
+                ) = cls.generate_sc_fields(
                     mg=migration_graph,
                     min_length_sc=kwargs["min_length_sc"],
                     minmax_num_atoms=kwargs["minmax_num_atoms"],
                     sm=sm,
+                    sc_gen_schema=sc_gen_schema,
                 )
 
                 return cls(
@@ -168,6 +194,7 @@ class MigrationGraphDoc(EmmetBaseModel):
                     conversion_matrix=sc_mat,
                     inserted_ion_coords=coords_list,
                     insert_coords_combo=combo,
+                    sc_gen_schema=sc_gen_schema,
                     **kwargs,
                 )
 
@@ -176,13 +203,42 @@ class MigrationGraphDoc(EmmetBaseModel):
                     "Please make sure to have kwargs min_length_sc and minmax_num_atoms if populate_sc_fields is set to True."  # noqa: E501
                 )
 
+    @classmethod
+    def augment_from_mgd_and_npr(
+        cls,
+        mgd: "MigrationGraphDoc",
+        npr: NebPathwayResult,
+        barrier_type: str,
+    ) -> "MigrationGraphDoc":
+        """
+        This class method takes an existing MigrationGraphDoc and augments it by populating
+        the paths_summary and migration_graph_w_cost fields with transition state data from
+        NebPathwayResult.
+
+        barrier_type can be set to 'barrier' or 'energy_range'.
+        See docstring of get_paths_summary_with_neb_res for detail.
+        """
+        mgd_w_cost = copy.deepcopy(mgd)
+        paths_summary, mg_new = cls.get_paths_summary_with_neb_res(
+            mg=mgd_w_cost.migration_graph, npr=npr, barrier_type=barrier_type
+        )
+        mgd_w_cost.paths_summary = paths_summary
+        mgd_w_cost.migration_graph_w_cost = mg_new
+        return mgd_w_cost
+
     @staticmethod
     def generate_sc_fields(
         mg: MigrationGraph,
         min_length_sc: float,
         minmax_num_atoms: Tuple[int, int],
         sm: StructureMatcher,
+        sc_gen_schema: str,
     ):
+        if sc_gen_schema not in ["hops_only", "complete"]:
+            raise ValueError(
+                f"Invalid sc_gen_schema: {sc_gen_schema}. Specify 'hops_only' or 'complete'."
+            )
+
         min_length_sc = min_length_sc
         minmax_num_atoms = minmax_num_atoms
 
@@ -197,12 +253,57 @@ class MigrationGraphDoc(EmmetBaseModel):
         host_sc = mg.host_structure * sc_mat
         working_ion = mg.only_sites[0].species_string
 
-        coords_list = MigrationGraphDoc.ordered_sc_site_list(mg.only_sites, sc_mat)
-        combo, coords_list = MigrationGraphDoc.get_hop_sc_combo(
-            mg.unique_hops, sc_mat, sm, host_sc, working_ion, coords_list
-        )
+        if sc_gen_schema == "hops_only":
+            coords_list, combo = MigrationGraphDoc.get_sc_info_hops_only(mg, sc_mat)
+
+        if sc_gen_schema == "complete":
+            coords_list = MigrationGraphDoc.ordered_sc_site_list(mg.only_sites, sc_mat)
+            combo, coords_list = MigrationGraphDoc.get_hop_sc_combo(
+                mg.unique_hops, sc_mat, sm, host_sc, working_ion, coords_list
+            )
 
         return host_sc, sc_mat, min_length_sc, minmax_num_atoms, coords_list, combo
+
+    @staticmethod
+    def get_sc_info_hops_only(mg: MigrationGraph, sc_mat: list[list[int | float]]):
+        coords_list = []
+        combo = []
+        base_struct = mg.host_structure
+
+        for one_hop in mg.unique_hops.values():
+            migration_hop = one_hop["hop"]
+            isite, iindex = migration_hop.isite, one_hop["iindex"]
+            esite, eindex = migration_hop.esite, one_hop["eindex"]
+            start_structure, end_structure, _ = get_start_end_structures(
+                isite=isite,
+                esite=esite,
+                base_struct=base_struct,
+                sc_mat=sc_mat,
+                vac_mode=False,
+            )
+
+            sc_ini_info = {
+                "uc_site_type": iindex,
+                "site_frac_coords": tuple(start_structure[0].frac_coords),
+            }
+            if sc_ini_info not in coords_list:
+                coords_list.append(sc_ini_info)
+            combo_ini = coords_list.index(sc_ini_info)
+
+            sc_fin_info = {
+                "uc_site_type": eindex,
+                "site_frac_coords": tuple(end_structure[0].frac_coords),
+            }
+            if sc_fin_info not in coords_list:
+                coords_list.append(sc_fin_info)
+            combo_fin = coords_list.index(sc_fin_info)
+
+            combo.append(f"{combo_ini}+{combo_fin}")
+
+        for coords in coords_list:
+            coords["site_frac_coords"] = list(coords["site_frac_coords"])
+
+        return coords_list, combo
 
     @staticmethod
     def ordered_sc_site_list(uc_sites_only: Structure, sc_mat: List[List[int]]):
@@ -357,6 +458,7 @@ class MigrationGraphDoc(EmmetBaseModel):
 
         return f"{sc_iindex}+{sc_eindex}", ordered_sc_site_list
 
+    @staticmethod
     def get_distinct_hop_sites(
         inserted_ion_coords: List[str], insert_coords_combo: List
     ) -> Tuple[List, List[str], Dict]:
@@ -389,3 +491,141 @@ class MigrationGraphDoc(EmmetBaseModel):
             combo_mapping[dis_combo] = one_combo
 
         return dis_sites_list, dis_combo_list, combo_mapping
+
+    @staticmethod
+    def get_paths_summary_with_neb_res(
+        mg: MigrationGraph,
+        npr: NebPathwayResult,
+        barrier_type: str,
+        zero_short_hop_cost: bool = True,
+    ) -> Tuple[Dict[int, List], MigrationGraph]:
+        """
+        This is a post-processing function that matches the results of transition state cals (NEB or ApproxNEB)
+        and unique_hops in the MigrationGraph, and then outputs a ranked list according to the calculated barrier
+
+        Parameters
+        ----------
+        mgd: MigrationGraph
+            The MigrationGraph to be matched and get paths from
+        npr: NebPathwayResult
+            The doc used to get transition state calc info
+        barrier_type: str
+            The type of barrier used to assign cost. Currently supporting
+            'barrier': max of forward & reverse barrier (max energy - ep energy)
+            'energy_range': max of energies - min of energies
+        """
+        if not barrier_type or barrier_type not in ["max_barrier", "energy_range"]:
+            raise ValueError(
+                f"Invalid barrier_type: {barrier_type}. Specify 'max_barrier' or 'energy_range'."
+            )
+
+        energy_struct_info = MigrationGraphDoc._get_energy_struct_info(npr)
+        mg_new = copy.deepcopy(mg)
+
+        for info in energy_struct_info.values():
+            try:
+                add_edge_data_from_sc(
+                    mg_new,
+                    i_sc=info["input_endpoints"][0],
+                    e_sc=info["input_endpoints"][-1],
+                    data_array=info,
+                    key="energy_struct_info",
+                )
+            except (RuntimeError, ValueError) as e:
+                logging.warning(f"{e} occured to during matching")
+
+        unmatched_uhops = []
+        failed_neb_uhops = []
+
+        for k, v in mg_new.unique_hops.items():
+            # if a unique_hop failed to match with an NEB hops calc (no symmetry match, missing calc, etc.)
+            # the cost is set to infinity.
+            # if a unique_hops matches to an NEB hop in the FAILED state
+            # cost is set to the insertion energy diff (barrier from NebResult)
+            # but the failed state is explicitly stated in paths_summary
+            if "energy_struct_info" not in v:
+                cost, hop_key, state = float("inf"), "", "unmatched"
+                unmatched_uhops.append(k)
+            else:
+                state = v["energy_struct_info"]["state"]
+                if state == TaskState.FAILED:
+                    failed_neb_uhops.append(k)
+                cost, hop_key = (
+                    v["energy_struct_info"][barrier_type],
+                    v["energy_struct_info"]["hop_key"],
+                )
+                # for short hops with low barrier, set cost to 0
+                if zero_short_hop_cost:
+                    cutoff = 2 * MigrationGraphDoc._get_wi_ionic_radius(mg_new)
+                    if MigrationGraphDoc._check_short_hop(
+                        v, current_cost=cost, length_cutoff=cutoff
+                    ):
+                        cost = 0
+            mg_new.add_data_to_similar_edges(
+                target_label=v["hop_label"],
+                data={"cost": cost, "hop_key": hop_key, "match_state": state},
+            )
+
+        logging.warning(
+            f"The following unique hops have not matched: {unmatched_uhops}"
+        )
+        logging.warning(
+            f"The following unique_hops matched but the corresponding calculation "
+            f"is in the FAILED state: {failed_neb_uhops}"
+        )
+
+        paths = list(mg_new.get_path())
+        paths_summary = {}
+        for one_path in paths:
+            path_summary = []
+            for one_hop in one_path[1]:
+                hop_summary = {
+                    key: value
+                    for key, value in one_hop.items()
+                    if key
+                    in ["hop_label", "hop_key", "hop_distance", "cost", "match_state"]
+                }
+                path_summary.append(hop_summary)
+            paths_summary[one_path[0]] = path_summary
+
+        return paths_summary, mg_new
+
+    @staticmethod
+    def _get_energy_struct_info(npr: NebPathwayResult) -> Dict:
+        """
+        This is a helper function that converts results in NebPathWayResult into
+        an info dict to be inserted into unique_hops of MigrationGraph
+        """
+        energy_struct_info = {}
+        for hop_key, data in npr.hops.items():
+            energy_struct_info[hop_key] = {
+                "hop_key": hop_key,
+                "max_barrier": npr.max_barriers[hop_key],
+                "energy_range": data.barrier_energy_range,
+                "energies": data.energies,
+                "state": data.state,
+                "calc_fail_info": data.failure_reasons,
+                "input_endpoints": [data.initial_images[0], data.initial_images[-1]],
+                "output_structs": data.images,
+            }
+        return energy_struct_info
+
+    @staticmethod
+    def _get_wi_ionic_radius(mg: MigrationGraph):
+        wi = mg.only_sites[0].specie
+        wi_oxi_state_guess = mg.structure.composition.oxi_state_guesses()[0][wi.name]
+        if wi_oxi_state_guess in wi.ionic_radii:
+            return wi.ionic_radii[wi_oxi_state_guess]
+        return wi.ionic_radii[min(wi.ionic_radii)]
+
+    @staticmethod
+    def _check_short_hop(
+        unique_hop: dict,
+        current_cost: float,
+        length_cutoff: float,
+        barrier_cutoff: float = 0.02,
+    ):
+        hop_length = unique_hop["hop_distance"]
+        if hop_length < length_cutoff and current_cost < barrier_cutoff:
+            return True
+        return False
