@@ -8,6 +8,8 @@ annotated-types==0.7.0
     # via pydantic
 bibtexparser==1.4.3
     # via pymatgen
+blake3==1.0.5
+    # via emmet-core (setup.py)
 certifi==2025.4.26
     # via requests
 charset-normalizer==3.4.2
