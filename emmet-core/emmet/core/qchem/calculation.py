@@ -135,9 +135,11 @@ class CalculationInput(BaseModel):
 
         return cls(
             initial_molecule=qcinput.molecule,
-            charge=int(qcinput.molecule.as_dict()["charge"])
-            if qcinput.molecule.as_dict()
-            else None,
+            charge=(
+                int(qcinput.molecule.as_dict()["charge"])
+                if qcinput.molecule.as_dict()
+                else None
+            ),
             rem=qcinput.rem,
             job_type=qcinput.rem.get("job_type", None),
             opt=qcinput.opt,
@@ -407,9 +409,11 @@ class Calculation(BaseModel):
             input=input_doc,
             output=output_doc,
             output_file_paths={
-                k.lower(): Path(v)
-                if isinstance(v, str)
-                else {k2: Path(v2) for k2, v2 in v.items()}
+                k.lower(): (
+                    Path(v)
+                    if isinstance(v, str)
+                    else {k2: Path(v2) for k2, v2 in v.items()}
+                )
                 for k, v in output_file_paths.items()
             },
             level_of_theory=level_of_theory(input_doc, validate_lot=validate_lot),

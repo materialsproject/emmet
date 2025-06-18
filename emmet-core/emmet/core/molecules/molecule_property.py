@@ -1,4 +1,5 @@
-""" Core definition of a Materials Document """
+"""Core definition of a Materials Document"""
+
 from __future__ import annotations
 
 from datetime import datetime

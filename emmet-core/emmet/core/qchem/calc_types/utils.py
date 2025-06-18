@@ -1,4 +1,5 @@
-""" Utilities to determine level of theory, task type, and calculation type for Q-Chem calculations"""
+"""Utilities to determine level of theory, task type, and calculation type for Q-Chem calculations"""
+
 from typing import Any, Dict, Optional
 
 from emmet.core.qchem.calc_types import LevelOfTheory, CalcType, TaskType

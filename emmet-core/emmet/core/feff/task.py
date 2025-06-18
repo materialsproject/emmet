@@ -1,4 +1,4 @@
-""" Core definition of a VASP Task Document """
+"""Core definition of a VASP Task Document"""
 
 from __future__ import annotations
 

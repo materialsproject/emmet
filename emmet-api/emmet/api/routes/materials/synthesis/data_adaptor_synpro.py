@@ -3,6 +3,7 @@ This script converts synthesis recipes data fetched directly
 from Ceder Group Synthesis Mining team MongoDB into MP compatible
 formats.
 """
+
 import json
 import os
 import re
@@ -29,19 +30,21 @@ def convert_conditions(cond, op_type):
     return {
         "heating_temperature": [convert_value(x) for x in cond["temperature"]],
         "heating_time": [convert_value(x) for x in cond["time"]],
-        "heating_atmosphere": [x.strip() for x in cond["environment"] if x.strip()]
-        if op_type == "HeatingOperation"
-        else [],
+        "heating_atmosphere": (
+            [x.strip() for x in cond["environment"] if x.strip()]
+            if op_type == "HeatingOperation"
+            else []
+        ),
         "mixing_device": (
-            cond["environment"][1].strip() if cond["environment"][1].strip() else None
-        )
-        if op_type == "MixingOperation"
-        else None,
+            (cond["environment"][1].strip() if cond["environment"][1].strip() else None)
+            if op_type == "MixingOperation"
+            else None
+        ),
         "mixing_media": (
-            cond["environment"][0].strip() if cond["environment"][0].strip() else None
-        )
-        if op_type == "MixingOperation"
-        else None,
+            (cond["environment"][0].strip() if cond["environment"][0].strip() else None)
+            if op_type == "MixingOperation"
+            else None
+        ),
     }
 
 
@@ -91,9 +94,9 @@ def convert_material(mat):
             for x, y in mat["elements_vars"].items()
         },
         "additives": [str(x.strip()) for x in mat["additives"] if x.strip()],
-        "oxygen_deficiency": str(mat["oxygen_deficiency"])
-        if mat["oxygen_deficiency"]
-        else None,
+        "oxygen_deficiency": (
+            str(mat["oxygen_deficiency"]) if mat["oxygen_deficiency"] else None
+        ),
     }
 
 

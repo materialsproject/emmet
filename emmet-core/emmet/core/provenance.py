@@ -1,4 +1,4 @@
-""" Core definition of a Provenance Document """
+"""Core definition of a Provenance Document"""
 
 import warnings
 from datetime import datetime

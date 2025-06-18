@@ -1,6 +1,7 @@
 """
 Settings for defaults in the build pipelines for the Materials Project
 """
+
 from typing import List
 
 from pydantic.fields import Field

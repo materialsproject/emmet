@@ -1,4 +1,4 @@
-""" Core definition of a CorrectedEntriesDoc Document """
+"""Core definition of a CorrectedEntriesDoc Document"""
 
 from typing import Dict, Union, List, Optional
 from datetime import datetime

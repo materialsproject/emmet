@@ -1,4 +1,4 @@
-""" Core definition for Polar property Document """
+"""Core definition for Polar property Document"""
 
 from typing import List, Optional
 

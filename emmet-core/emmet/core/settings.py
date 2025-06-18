@@ -1,4 +1,5 @@
 """Settings for defaults in the core definitions of Materials Project Documents."""
+
 from __future__ import annotations
 import json
 from pathlib import Path

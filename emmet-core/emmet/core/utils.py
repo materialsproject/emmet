@@ -1,4 +1,5 @@
 """Define utility functions used across the emmet namespace packages."""
+
 from __future__ import annotations
 
 import copy

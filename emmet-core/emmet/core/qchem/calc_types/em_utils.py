@@ -1,4 +1,5 @@
-""" Utilities to determine level of theory, task type, and calculation type for Q-Chem calculations in the pydantic Docs paradigm"""
+"""Utilities to determine level of theory, task type, and calculation type for Q-Chem calculations in the pydantic Docs paradigm"""
+
 from typing import Optional
 
 from emmet.core.qchem.calc_types import LevelOfTheory, CalcType, TaskType

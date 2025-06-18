@@ -1,4 +1,5 @@
 """Define core schemas for VASP calculations."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

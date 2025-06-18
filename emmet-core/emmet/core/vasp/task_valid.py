@@ -1,4 +1,4 @@
-""" Core definition of a VASP Task Document """
+"""Core definition of a VASP Task Document"""
 
 from __future__ import annotations
 
@@ -178,9 +178,9 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
                 "run_type": str(self.run_type),
             },
             "data": {
-                "oxide_type": oxide_type(self.output.structure)
-                if self.output.structure
-                else None,
+                "oxide_type": (
+                    oxide_type(self.output.structure) if self.output.structure else None
+                ),
                 "aspherical": self.input.parameters.get("LASPH", True),
                 "last_updated": self.last_updated,
             },

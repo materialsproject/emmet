@@ -1,4 +1,5 @@
 """Current MP tools to validate VASP calculations."""
+
 from __future__ import annotations
 
 from datetime import datetime

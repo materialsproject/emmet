@@ -115,9 +115,9 @@ class StructureGroupBuilder(Builder):
         self.check_newer = check_newer
         self.chunk_size = chunk_size
 
-        self.query[
-            "deprecated"
-        ] = False  # Ensure only non-deprecated materials are chosen
+        self.query["deprecated"] = (
+            False  # Ensure only non-deprecated materials are chosen
+        )
 
         super().__init__(
             sources=[materials], targets=[sgroups], chunk_size=chunk_size, **kwargs
@@ -465,9 +465,9 @@ class InsertionElectrodeBuilder(Builder):
         if len(items) > 0:
             self.logger.info("Updating {} battery documents".format(len(items)))
             for struct_group_dict in items:
-                struct_group_dict[
-                    self.grouped_materials.last_updated_field
-                ] = datetime.utcnow()
+                struct_group_dict[self.grouped_materials.last_updated_field] = (
+                    datetime.utcnow()
+                )
             self.insertion_electrode.update(docs=items, key=["battery_id"])
         else:
             self.logger.info("No items to update")

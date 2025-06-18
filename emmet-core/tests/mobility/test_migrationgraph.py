@@ -172,9 +172,7 @@ def test_get_paths_summary_with_neb_res(match_mgdoc_npr, match_mgd_prop):
     res_prop = {
         "num_paths": len(paths_summary),
         "len_of_paths": [len(v) for v in paths_summary.values()],
-        "max_costs": [
-            max([i["cost"] for i in path]) for path in paths_summary.values()
-        ],
+        "max_costs": [max([i.cost for i in path]) for path in paths_summary.values()],
     }
 
     for k, v in match_mgd_prop.items():
