@@ -86,7 +86,7 @@ def invoke_calc_validation(args):
 
 class Submission(BaseModel):
     PARALLEL_THRESHOLD: ClassVar[int] = 100
-    ITEMS_PER_OUTER_CHUNK: ClassVar[int] = 10 * PARALLEL_THRESHOLD
+    ITEMS_PER_OUTER_CHUNK: ClassVar[int] = 2 * PARALLEL_THRESHOLD
 
     id: UUID = Field(
         description="The identifier for this submission", default_factory=uuid4
@@ -264,22 +264,16 @@ class Submission(BaseModel):
                 )
 
                 with Pool() as pool:
-                    results = pool.imap_unordered(
-                        invoke_calc_validation, chunk, chunksize=10
-                    )
+                    results = pool.imap_unordered(invoke_calc_validation, chunk)
                     processed = 0
                     for locator, _, cm in results:
                         # Update the calculation metadata in the list
-                        for i, (loc, _) in enumerate(calcs_to_check):
+                        for j, (loc, _) in enumerate(chunk):
                             if loc == locator:
-                                calcs_to_check[i] = (loc, cm)
+                                calcs_to_check[i + j] = (loc, cm)
                         processed += 1
-                    if processed <= 10 or processed % 100 == 0:
-                        logger.debug(
-                            f"Processed {processed}/{total_items} calculations "
-                        )
                     logger.debug(f"Completed processing {processed} calculation")
-                    return all(val for _, val, _ in results)
+            return all(cm.calc_valid for _, cm in calcs_to_check)
         else:
             logger.debug(f"Running validation serially for {total_items} calculations")
             if not check_all:
