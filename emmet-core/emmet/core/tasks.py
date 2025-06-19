@@ -970,7 +970,7 @@ def _parse_custodian(dir_name: Path) -> dict | None:
 
 
 def _parse_orig_inputs(
-    dir_name: Path,
+    dir_name: Path, suffix: str | None = ".orig"
 ) -> dict[str, Kpoints | Poscar | PotcarSpec | Incar]:
     """
     Parse original input files.
@@ -982,6 +982,8 @@ def _parse_orig_inputs(
     ----------
     dir_name
         Path to calculation directory.
+    suffix : str or None = ".orig"
+        The suffix of the original input files to use.
 
     Returns
     -------
@@ -995,9 +997,13 @@ def _parse_orig_inputs(
         "POTCAR": VaspPotcar,
         "POSCAR": Poscar,
     }
-    for filename in dir_name.glob("*.orig*"):
+    suffix = suffix or ""
+    for filename in dir_name.glob("*".join(f"{suffix}.".split("."))):
+        if "POTCAR.spec" in str(filename):
+            # Can't parse POTCAR.spec files
+            continue
         for name, vasp_input in input_mapping.items():
-            if f"{name}.orig" in str(filename):
+            if f"{name}{suffix}" in str(filename):
                 if name == "POTCAR":
                     # can't serialize POTCAR
                     orig_inputs[name.lower()] = PotcarSpec.from_potcar(
