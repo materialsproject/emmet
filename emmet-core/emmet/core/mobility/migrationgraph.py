@@ -160,7 +160,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         ),
     )
 
-    paths_summary: dict[int, HopSummary] | None = Field(
+    paths_summary: dict[int, list[HopSummary]] | None = Field(
         None,
         description=(
             "A dictionary of ranked intercalation pathways given cost "
@@ -260,7 +260,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         cls,
         mgd: "MigrationGraphDoc",
         npr: NebPathwayResult,
-        barrier_type: Literal["barrier", "energy_range"],
+        barrier_type: Literal["max_barrier", "energy_range"],
     ) -> Self:
         """
         Takes an existing MigrationGraphDoc and augment it.
@@ -272,8 +272,12 @@ class MigrationGraphDoc(EmmetBaseModel):
         See docstring of get_paths_summary_with_neb_res for detail.
         """
         mgd_w_cost = copy.deepcopy(mgd)
+        if not mgd_w_cost.migration_graph:
+            raise ValueError("A MigrationGraph must be provided to augment it.")
         paths_summary, mg_new = cls.get_paths_summary_with_neb_res(
-            mg=mgd_w_cost.migration_graph, npr=npr, barrier_type=barrier_type
+            mg=mgd_w_cost.migration_graph,
+            npr=npr,
+            barrier_type=barrier_type
         )
         mgd_w_cost.paths_summary = paths_summary
         mgd_w_cost.migration_graph_w_cost = mg_new
@@ -556,7 +560,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         barrier_type: Literal["max_barrier", "energy_range"],
         zero_short_hop_cost: bool = True,
         verbose: bool = False,
-    ) -> tuple[dict[int, list], MigrationGraph]:
+    ) -> tuple[dict[int, list[HopSummary]], MigrationGraph]:
         """
         This is a post-processing function that matches the results of transition state cals (NEB or ApproxNEB)
         and unique_hops in the MigrationGraph, and then outputs a ranked list according to the calculated barrier
