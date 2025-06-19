@@ -1,13 +1,10 @@
-from typing import List
-
 import numpy as np
-
 from fastapi import HTTPException
 from pymatgen.core import Molecule
 from pymatgen.core.trajectory import Trajectory
 
 
-def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
+def calcs_reversed_to_trajectory(calcs_reversed: list[dict]):
     """
     Converts data from calc_reversed to pymatgen Trajectory objects
     that contain structure, energy, and gradient data for each

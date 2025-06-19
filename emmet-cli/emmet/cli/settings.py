@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Dict, List
 
 from pydantic import Field
 
@@ -7,17 +6,17 @@ from emmet.core.settings import EmmetSettings
 
 
 class EmmetCLISettings(EmmetSettings):
-    exclude: Dict[str, Dict] = Field(
+    exclude: dict[str, dict] = Field(
         {
             "about.remarks": {"$nin": ["DEPRECATED", "deprecated"]},
             "snl.about.remarks": {"$nin": ["DEPRECATED", "deprecated"]},
         },
         description="",
     )
-    skip_labels: List[str] = Field(
+    skip_labels: list[str] = Field(
         ["He", "He0+", "Ar", "Ar0+", "Ne", "Ne0+", "D", "D+", "T", "M"], description=""
     )
-    base_query: Dict = Field(
+    base_query: dict = Field(
         {
             "is_ordered": True,
             "is_valid": True,
@@ -27,7 +26,7 @@ class EmmetCLISettings(EmmetSettings):
         },
         description="",
     )
-    task_base_query: Dict = Field(
+    task_base_query: dict = Field(
         {
             "tags": {"$nin": ["DEPRECATED", "deprecated"]},
             "_mpworks_meta": {"$exists": 0},
@@ -35,15 +34,15 @@ class EmmetCLISettings(EmmetSettings):
         description="",
     )
 
-    aggregation_keys: List[str] = Field(
+    aggregation_keys: list[str] = Field(
         ["formula_pretty", "reduced_cell_formula"], description=""
     )
 
-    meta_keys: List[str] = Field(
+    meta_keys: list[str] = Field(
         ["formula_pretty", "nelements", "nsites", "is_ordered", "is_valid"],
         description="",
     )
-    structure_keys: Dict[bool, List[str]] = Field(
+    structure_keys: dict[bool, list[str]] = Field(
         {
             False: [
                 "snl_id",
@@ -61,7 +60,7 @@ class EmmetCLISettings(EmmetSettings):
         },
         description="",
     )
-    NO_POTCARS: List[str] = Field(
+    NO_POTCARS: list[str] = Field(
         [
             "Po",
             "At",
@@ -80,7 +79,7 @@ class EmmetCLISettings(EmmetSettings):
         ],
         description="",
     )
-    snl_indexes: List[str] = Field(
+    snl_indexes: list[str] = Field(
         [
             "snl_id",
             "task_id",
@@ -99,7 +98,7 @@ class EmmetCLISettings(EmmetSettings):
         ],
         description="",
     )
-    log_fields: List[str] = Field(
+    log_fields: list[str] = Field(
         [
             "level",
             "message",
@@ -116,11 +115,11 @@ class EmmetCLISettings(EmmetSettings):
         description="",
     )
 
-    tracker: Dict[str, str] = Field(
+    tracker: dict[str, str] = Field(
         {"org": "materialsproject", "repo": "devops"}, description=""
     )
 
-    year_tags: List[str] = Field(
+    year_tags: list[str] = Field(
         ["mp_{}".format(y) for y in range(2018, int(datetime.today().year) + 1)],
         description="list of years to tag tasks",
     )

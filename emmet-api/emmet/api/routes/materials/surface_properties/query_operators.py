@@ -1,4 +1,3 @@
-from typing import Optional
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
@@ -12,7 +11,7 @@ class ReconstructedQuery(QueryOperator):
 
     def query(
         self,
-        has_reconstructed: Optional[bool] = Query(
+        has_reconstructed: bool | None = Query(
             None,
             description="Whether the entry has a reconstructed surface.",
         ),

@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 import numpy as np
 from pydantic import Field
 from pymatgen.core import Structure
@@ -15,30 +13,30 @@ class AbsorptionDoc(PropertyDoc):
 
     task_id: str = Field(..., description="Calculation id")
 
-    energies: List[float] = Field(
+    energies: list[float] = Field(
         ..., description="Absorption energy in eV starting from 0"
     )
 
     energy_max: float = Field(..., description="Maximum energy")
 
-    absorption_coefficient: List[float] = Field(
+    absorption_coefficient: list[float] = Field(
         ..., description="Absorption coefficient in cm^-1"
     )
 
-    average_imaginary_dielectric: List[float] = Field(
+    average_imaginary_dielectric: list[float] = Field(
         ...,
         description="Imaginary part of the dielectric function corresponding to the "
         "energies",
     )
 
-    average_real_dielectric: List[float] = Field(
+    average_real_dielectric: list[float] = Field(
         ...,
         description="Real part of the dielectric function corresponding to the energies",
     )
 
-    bandgap: Optional[float] = Field(None, description="The electronic band gap")
+    bandgap: float | None = Field(None, description="The electronic band gap")
 
-    nkpoints: Optional[float] = Field(
+    nkpoints: float | None = Field(
         None, description="The number of kpoints used in the calculation"
     )
 
@@ -51,11 +49,11 @@ class AbsorptionDoc(PropertyDoc):
     @classmethod
     def from_structure(
         cls,
-        energies: List,
+        energies: list,
         task_id: str,
-        real_d: List[np.ndarray],
-        imag_d: List[np.ndarray],
-        absorption_co: List,
+        real_d: list[np.ndarray],
+        imag_d: list[np.ndarray],
+        absorption_co: list,
         bandgap: float,
         structure: Structure,
         nkpoints: float,

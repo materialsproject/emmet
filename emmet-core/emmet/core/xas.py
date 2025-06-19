@@ -1,6 +1,5 @@
 import warnings
 from itertools import groupby
-from typing import List, Optional, Union
 
 import numpy as np
 from pydantic import Field, field_validator
@@ -50,11 +49,11 @@ class XASDoc(SpectrumDoc):
 
     spectrum_name: str = "XAS"
 
-    spectrum: Optional[Union[XAS, dict]] = Field(
+    spectrum: XAS | dict | None = Field(
         None, description="The XAS spectrum for this calculation."
     )
 
-    task_ids: Optional[List[str]] = Field(
+    task_ids: list[str] | None = Field(
         None,
         title="Calculation IDs",
         description="List of Calculations IDs used to make this XAS spectrum.",
@@ -103,10 +102,10 @@ class XASDoc(SpectrumDoc):
     @classmethod
     def from_task_docs(
         cls,
-        all_tasks: List[TaskDocument],
+        all_tasks: list[TaskDocument],
         material_id: MPID | None = None,
         num_samples: int = 200,
-    ) -> List["XASDoc"]:
+    ) -> list["XASDoc"]:
         """
         Converts a set of FEFF Task Documents into XASDocs by merging XANES + EXAFS into XAFS spectra first
         and then merging along equivalent elements to get element averaged spectra
@@ -117,8 +116,8 @@ class XASDoc(SpectrumDoc):
             num_samples: number of sampled points for site-weighted averaging
         """
 
-        all_spectra: List[XAS] = []
-        averaged_spectra: List[XAS] = []
+        all_spectra: list[XAS] = []
+        averaged_spectra: list[XAS] = []
 
         # This is a hack using extra attributes within this function to carry some extra information
         # without generating new objects
@@ -236,7 +235,7 @@ class XASDoc(SpectrumDoc):
         return spectra_docs
 
 
-def _is_missing_sites(spectra: List[XAS]):
+def _is_missing_sites(spectra: list[XAS]):
     """
     Determines if the collection of spectra are missing any indicies for the given element
     """

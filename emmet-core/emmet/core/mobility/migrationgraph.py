@@ -19,6 +19,7 @@ from pymatgen.core import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
+
 try:
     from pymatgen.analysis.diffusion.utils.edge_data_from_sc import (
         add_edge_data_from_sc,
@@ -79,7 +80,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         None, description="The battery id for this MigrationGraphDoc"
     )
 
-    last_updated: datetime | None = Field(
+    last_updated: datetime = Field(
         default_factory=utcnow,
         description="Timestamp for the most recent calculation for this MigrationGraph document.",
     )

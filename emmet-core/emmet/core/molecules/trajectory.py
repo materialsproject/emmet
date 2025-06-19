@@ -1,19 +1,15 @@
-from typing import List, Optional, Union
 from hashlib import blake2b
 
 import numpy as np
-
 from pydantic import Field
-
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Molecule
 from pymatgen.core.trajectory import Trajectory
 
-from emmet.core.mpid import MPculeID
 from emmet.core.material import PropertyOrigin
-from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.molecule_property import PropertyDoc
-
+from emmet.core.mpid import MPculeID
+from emmet.core.qchem.task import TaskDocument
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -21,35 +17,35 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 class ForcesDoc(PropertyDoc):
     property_name: str = "forces"
 
-    forces: List[List[float]] = Field(..., description="Atomic forces (units: Ha/Bohr)")
+    forces: list[list[float]] = Field(..., description="Atomic forces (units: Ha/Bohr)")
 
-    precise_forces: List[Optional[List[float]]] = Field(
+    precise_forces: list[list[float] | None] = Field(
         default_factory=list,
         description="High-precision atomic forces (units: Ha/Bohr)",
     )
 
-    pcm_forces: Optional[List[List[float]]] = Field(
+    pcm_forces: list[list[float]] | None = Field(
         None,
         description="Electrostatic atomic forces from polarizable continuum model (PCM) implicit solvation "
         "(units: Ha/Bohr).",
     )
 
-    cds_forces: Optional[List[List[float]]] = Field(
+    cds_forces: list[list[float]] | None = Field(
         None,
         description="Atomic force contributions from cavitation, dispersion, and structural rearrangement in the SMx "
         "family of implicit solvent models (units: Ha/Bohr)",
     )
 
-    average_force_magnitude: Optional[float] = Field(
+    average_force_magnitude: float | None = Field(
         None, description="Average magnitude of atomic forces (units: Ha/Bohr)"
     )
 
-    max_force_magnitude: Optional[float] = Field(
+    max_force_magnitude: float | None = Field(
         None,
         description="Maximum magnitude of atomic forces (units: Ha/Bohr)",
     )
 
-    min_force_magnitude: Optional[float] = Field(
+    min_force_magnitude: float | None = Field(
         None,
         description="Minimum magnitude of atomic forces (units: Ha/Bohr)",
     )
@@ -138,72 +134,72 @@ class TrajectoryDoc(PropertyDoc):
         description="Number of separate optimization trajectories extracted from this task",
     )
 
-    species: List[Union[Element, str]] = Field(
+    species: list[Element | str] = Field(
         ...,
         description="Element or element name for each atom in the molecule for each optimization step",
     )
 
-    geometries: List[List[List[List[float]]]] = Field(
+    geometries: list[list[list[list[float]]]] = Field(
         ...,
         description="XYZ positions of each atom in the molecule for each optimization step for each optimization "
         "trajectory (units: Angstrom)",
     )
 
-    energies: List[List[float]] = Field(
+    energies: list[list[float]] = Field(
         ...,
         description="Electronic energies for each optimization step for each optimization trajectory (units: Hartree)",
     )
 
-    forces: List[List[List[List[float]]]] = Field(
+    forces: list[list[list[list[float]]]] = Field(
         ...,
         description="Forces on each atom for each optimization step for each optimization trajectory (units: Ha/Bohr)",
     )
 
-    pcm_forces: List[Optional[List[List[List[float]]]]] = Field(
+    pcm_forces: list[list[list[list[float]]] | None] = Field(
         default_factory=list,
         description="Electrostatic atomic forces from polarizable continuum model (PCM) implicit solvation "
         "for each optimization step for each optimization trajectory (units: Ha/Bohr).",
     )
 
-    cds_forces: List[Optional[List[List[List[float]]]]] = Field(
+    cds_forces: list[list[list[list[float]]] | None] = Field(
         default_factory=list,
         description="Atomic force contributions from cavitation, dispersion, and structural rearrangement in the SMx "
         "family of implicit solvent models, for each optimization step for each optimization trajectory "
         "(units: Ha/Bohr)",
     )
 
-    mulliken_partial_charges: List[Optional[List[List[float]]]] = Field(
+    mulliken_partial_charges: list[list[list[float]] | None] = Field(
         default_factory=list,
         description="Partial charges of each atom for each optimization step for each optimization trajectory, using "
         "the Mulliken method",
     )
 
-    mulliken_partial_spins: List[Optional[List[List[float]]]] = Field(
+    mulliken_partial_spins: list[list[list[float]] | None] = Field(
         default_factory=list,
         description="Partial spins of each atom for each optimization step for each optimization trajectory, using "
         "the Mulliken method",
     )
 
-    resp_partial_charges: List[Optional[List[List[float]]]] = Field(
+    resp_partial_charges: list[list[list[float]] | None] = Field(
         default_factory=list,
         description="Partial charges of each atom for each optimization step for each optimization trajectory, using "
         "the restrained electrostatic potential (RESP) method",
     )
 
-    dipole_moments: List[Optional[List[List[float]]]] = Field(
+    dipole_moments: list[list[list[float]] | None] = Field(
         default_factory=list,
         description="Molecular dipole moment for each optimization step for each optimization trajectory, "
         "(units: Debye)",
     )
 
-    resp_dipole_moments: List[Optional[List[List[float]]]] = Field(
+    resp_dipole_moments: list[list[list[float]] | None] = Field(
         default_factory=list,
         description="Molecular dipole moment for each optimization step for each optimization trajectory, "
         "using the restrainted electrostatic potential (RESP) method (units: Debye)",
     )
 
     @property
-    def molecules(self) -> List[List[Molecule]]:
+    def molecules(self) -> list[list[Molecule]]:
         """
         Geometries along the optimization trajectory, represented as pymatgen Molecule objects.
 
@@ -211,7 +207,7 @@ class TrajectoryDoc(PropertyDoc):
             self
 
         Returns:
-            List[Molecule]: the optimization trajectory as a list of Molecules
+            list[Molecule]: the optimization trajectory as a list of Molecules
 
         """
 
@@ -228,7 +224,7 @@ class TrajectoryDoc(PropertyDoc):
             for trajectory in self.geometries
         ]
 
-    def as_trajectories(self) -> List[Trajectory]:
+    def as_trajectories(self) -> list[Trajectory]:
         """
         Represent this TrajectoryDoc as a list of pymatgen Trajectory objects.
 
@@ -236,7 +232,7 @@ class TrajectoryDoc(PropertyDoc):
             self
 
         Returns:
-            trajectories (List[Trajectory]): TrajectoryDoc represented as a collection of pymatgen Trajectory objects
+            trajectories (list[Trajectory]): TrajectoryDoc represented as a collection of pymatgen Trajectory objects
 
         """
 

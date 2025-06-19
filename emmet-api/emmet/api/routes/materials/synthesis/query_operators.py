@@ -1,9 +1,11 @@
-from typing import Optional, List, Dict, Union, Any
+from typing import Any
+
 from fastapi import Query
-from pymatgen.core import Composition
 from maggma.api.query_operator import QueryOperator
-from emmet.core.synthesis import SynthesisTypeEnum, OperationTypeEnum
+from pymatgen.core import Composition
+
 from emmet.api.routes.materials.synthesis.utils import mask_highlights, mask_paragraphs
+from emmet.core.synthesis import OperationTypeEnum, SynthesisTypeEnum
 
 
 class SynthesisSearchQuery(QueryOperator):
@@ -13,41 +15,41 @@ class SynthesisSearchQuery(QueryOperator):
 
     def query(  # noqa: C901
         self,
-        keywords: Optional[str] = Query(
+        keywords: str | None = Query(
             None,
             description="Comma delimited string keywords to search synthesis paragraph text with.",
         ),
-        synthesis_type: Optional[List[SynthesisTypeEnum]] = Query(
+        synthesis_type: list[SynthesisTypeEnum] | None = Query(
             None, description="Type of synthesis to include."
         ),
-        target_formula: Optional[str] = Query(
+        target_formula: str | None = Query(
             None, description="Chemical formula of the target material."
         ),
-        precursor_formula: Optional[str] = Query(
+        precursor_formula: str | None = Query(
             None, description="Chemical formula of the precursor material."
         ),
-        operations: Optional[List[OperationTypeEnum]] = Query(
+        operations: list[OperationTypeEnum] | None = Query(
             None, description="List of operations that syntheses must have."
         ),
-        condition_heating_temperature_min: Optional[float] = Query(
+        condition_heating_temperature_min: float | None = Query(
             None, description="Minimal heating temperature."
         ),
-        condition_heating_temperature_max: Optional[float] = Query(
+        condition_heating_temperature_max: float | None = Query(
             None, description="Maximal heating temperature."
         ),
-        condition_heating_time_min: Optional[float] = Query(
+        condition_heating_time_min: float | None = Query(
             None, description="Minimal heating time."
         ),
-        condition_heating_time_max: Optional[float] = Query(
+        condition_heating_time_max: float | None = Query(
             None, description="Maximal heating time."
         ),
-        condition_heating_atmosphere: Optional[List[str]] = Query(
+        condition_heating_atmosphere: list[str] | None = Query(
             None, description='Required heating atmosphere, such as "air", "argon".'
         ),
-        condition_mixing_device: Optional[List[str]] = Query(
+        condition_mixing_device: list[str] | None = Query(
             None, description='Required mixing device, such as "zirconia", "Al2O3".'
         ),
-        condition_mixing_media: Optional[List[str]] = Query(
+        condition_mixing_media: list[str] | None = Query(
             None, description='Required mixing media, such as "alcohol", "water".'
         ),
         _skip: int = Query(0, description="Number of entries to skip in the search"),
@@ -56,7 +58,7 @@ class SynthesisSearchQuery(QueryOperator):
             description="Max number of entries to return in a single query. Limited to 10.",
         ),
     ):
-        project_dict: Dict[str, Union[Dict, int]] = {
+        project_dict: dict[str, dict | int] = {
             "_id": 0,
             "doi": 1,
             "synthesis_type": 1,
@@ -71,7 +73,7 @@ class SynthesisSearchQuery(QueryOperator):
             "paragraph_string": 1,
         }
 
-        pipeline: List[Any] = []
+        pipeline: list[Any] = []
 
         if keywords:
             pipeline.insert(
@@ -107,7 +109,7 @@ class SynthesisSearchQuery(QueryOperator):
 
         pipeline.append({"$project": project_dict})
 
-        crit: Dict[str, Any] = {}
+        crit: dict[str, Any] = {}
 
         if synthesis_type:
             crit["synthesis_type"] = {"$in": synthesis_type}

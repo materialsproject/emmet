@@ -1,7 +1,6 @@
 import traceback
 from datetime import datetime
 from itertools import chain
-from typing import Dict, List
 
 from maggma.builders import GroupBuilder
 from maggma.core import Store
@@ -27,7 +26,7 @@ class XASBuilder(GroupBuilder):
         super().__init__(source=tasks, target=xas, grouping_keys=["mp_id"])
         self._target_keys_field = "xas_ids"
 
-    def process_item(self, spectra: List[Dict]) -> Dict:
+    def process_item(self, spectra: list[dict]) -> dict:
         # TODO: Change this to do structure matching against materials collection
         mpid = spectra[0]["mp_id"]
 

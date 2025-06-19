@@ -6,10 +6,10 @@ from collections import defaultdict
 from datetime import datetime
 from enum import Enum
 from math import isnan
-from typing import Dict, List, Optional, Type, TypeVar, Union
+from typing import Type, TypeVar
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from pymatgen.analysis.magnetism.analyzer import (
     CollinearMagneticStructureAnalyzer,
     Ordering,
@@ -23,9 +23,11 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 from typing_extensions import Literal
 
+from emmet.core.common import convert_datetime
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
 from emmet.core.settings import EmmetSettings
+from emmet.core.utils import utcnow
 
 SETTINGS = EmmetSettings()
 
@@ -47,7 +49,7 @@ class BSObjectDoc(BaseModel):
     Band object document.
     """
 
-    task_id: Optional[MPID] = Field(
+    task_id: MPID | None = Field(
         None,
         description="The source calculation (task) ID that this band structure comes from. "
         "This has the same form as a Materials Project ID.",
@@ -55,12 +57,17 @@ class BSObjectDoc(BaseModel):
 
     last_updated: datetime = Field(
         description="The timestamp when this calculation was last updated",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
-    data: Optional[Union[Dict, BandStructureSymmLine]] = Field(
+    data: dict | BandStructureSymmLine | None = Field(
         None, description="The band structure object for the given calculation ID"
     )
+
+    @field_validator("last_updated", mode="before")
+    @classmethod
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)
 
 
 class DOSObjectDoc(BaseModel):
@@ -68,7 +75,7 @@ class DOSObjectDoc(BaseModel):
     DOS object document.
     """
 
-    task_id: Optional[MPID] = Field(
+    task_id: MPID | None = Field(
         None,
         description="The source calculation (task) ID that this density of states comes from. "
         "This has the same form as a Materials Project ID.",
@@ -76,12 +83,17 @@ class DOSObjectDoc(BaseModel):
 
     last_updated: datetime = Field(
         description="The timestamp when this calculation was last updated.",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
 
-    data: Optional[CompleteDos] = Field(
+    data: CompleteDos | None = Field(
         None, description="The density of states object for the given calculation ID."
     )
+
+    @field_validator("last_updated", mode="before")
+    @classmethod
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)
 
 
 class ElectronicStructureBaseData(BaseModel):
@@ -93,15 +105,11 @@ class ElectronicStructureBaseData(BaseModel):
 
     band_gap: float = Field(..., description="Band gap energy in eV.")
 
-    cbm: Optional[Union[float, Dict]] = Field(
-        None, description="Conduction band minimum data."
-    )
+    cbm: float | dict | None = Field(None, description="Conduction band minimum data.")
 
-    vbm: Optional[Union[float, Dict]] = Field(
-        None, description="Valence band maximum data."
-    )
+    vbm: float | dict | None = Field(None, description="Valence band maximum data.")
 
-    efermi: Optional[float] = Field(None, description="Fermi energy in eV.")
+    efermi: float | None = Field(None, description="Fermi energy in eV.")
 
 
 class ElectronicStructureSummary(ElectronicStructureBaseData):
@@ -109,7 +117,7 @@ class ElectronicStructureSummary(ElectronicStructureBaseData):
 
     is_metal: bool = Field(..., description="Whether the material is a metal.")
 
-    magnetic_ordering: Union[str, Ordering] = Field(
+    magnetic_ordering: str | Ordering = Field(
         ..., description="Magnetic ordering of the calculation."
     )
 
@@ -117,7 +125,7 @@ class ElectronicStructureSummary(ElectronicStructureBaseData):
 class BandStructureSummaryData(ElectronicStructureSummary):
     nbands: float = Field(..., description="Number of bands.")
 
-    equivalent_labels: Dict = Field(
+    equivalent_labels: dict = Field(
         ..., description="Equivalent k-point labels in other k-path conventions."
     )
 
@@ -125,57 +133,59 @@ class BandStructureSummaryData(ElectronicStructureSummary):
 
 
 class DosSummaryData(ElectronicStructureBaseData):
-    spin_polarization: Optional[float] = Field(
+    spin_polarization: float | None = Field(
         None, description="Spin polarization at the fermi level."
     )
 
 
 class BandstructureData(BaseModel):
-    setyawan_curtarolo: Optional[BandStructureSummaryData] = Field(
+    setyawan_curtarolo: BandStructureSummaryData | None = Field(
         None,
         description="Band structure summary data using the Setyawan-Curtarolo path convention.",
     )
 
-    hinuma: Optional[BandStructureSummaryData] = Field(
+    hinuma: BandStructureSummaryData | None = Field(
         None,
         description="Band structure summary data using the Hinuma et al. path convention.",
     )
 
-    latimer_munro: Optional[BandStructureSummaryData] = Field(
+    latimer_munro: BandStructureSummaryData | None = Field(
         None,
         description="Band structure summary data using the Latimer-Munro path convention.",
     )
 
 
 class DosData(BaseModel):
-    total: Optional[Dict[Union[Spin, str], DosSummaryData]] = Field(
+    total: dict[Spin | str, DosSummaryData] | None = Field(
         None, description="Total DOS summary data."
     )
 
-    elemental: Optional[
-        Dict[
+    elemental: (
+        dict[
             Element,
-            Dict[
-                Union[Literal["total", "s", "p", "d", "f"], OrbitalType],
-                Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
+            dict[
+                Literal["total", "s", "p", "d", "f"] | OrbitalType,
+                dict[Literal["1", "-1"] | Spin, DosSummaryData],
             ],
         ]
-    ] = Field(
+        | None
+    ) = Field(
         None,
         description="Band structure summary data using the Hinuma et al. path convention.",
     )
 
-    orbital: Optional[
-        Dict[
-            Union[Literal["total", "s", "p", "d", "f"], OrbitalType],
-            Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
+    orbital: (
+        dict[
+            Literal["total", "s", "p", "d", "f"] | OrbitalType,
+            dict[Literal["1", "-1"] | Spin, DosSummaryData],
         ]
-    ] = Field(
+        | None
+    ) = Field(
         None,
         description="Band structure summary data using the Latimer-Munro path convention.",
     )
 
-    magnetic_ordering: Optional[Union[Ordering, str]] = Field(
+    magnetic_ordering: Ordering | str | None = Field(
         None, description="Magnetic ordering of the calculation."
     )
 
@@ -190,31 +200,26 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
     property_name: str = "electronic_structure"
 
-    bandstructure: Optional[BandstructureData] = Field(
+    bandstructure: BandstructureData | None = Field(
         None, description="Band structure data for the material."
     )
 
-    dos: Optional[DosData] = Field(
+    dos: DosData | None = Field(
         None, description="Density of states data for the material."
-    )
-
-    last_updated: datetime = Field(
-        description="Timestamp for when this document was last updated.",
-        default_factory=datetime.utcnow,
     )
 
     @classmethod
     def from_bsdos(  # type: ignore[override]
         cls: Type[T],
-        dos: Dict[MPID, CompleteDos],
+        dos: dict[MPID, CompleteDos],
         is_gap_direct: bool,
         is_metal: bool,
         material_id: MPID | None = None,
-        origins: List[dict] = [],
-        structures: Optional[Dict[MPID, Structure]] = None,
-        setyawan_curtarolo: Optional[Dict[MPID, BandStructureSymmLine]] = None,
-        hinuma: Optional[Dict[MPID, BandStructureSymmLine]] = None,
-        latimer_munro: Optional[Dict[MPID, BandStructureSymmLine]] = None,
+        origins: list[dict] = [],
+        structures: dict[MPID, Structure] | None = None,
+        setyawan_curtarolo: dict[MPID, BandStructureSymmLine] | None = None,
+        hinuma: dict[MPID, BandStructureSymmLine] | None = None,
+        latimer_munro: dict[MPID, BandStructureSymmLine] | None = None,
         **kwargs,
     ) -> T:
         """
@@ -222,18 +227,18 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
         Args:
             material_id (MPID): A material ID.
-            dos (Dict[MPID, CompleteDos]): Dictionary mapping a calculation (task) ID to a CompleteDos object.
+            dos (dict[MPID, CompleteDos]): Dictionary mapping a calculation (task) ID to a CompleteDos object.
             is_gap_direct (bool): Direct gap indicator included at root level of document.
             is_metal (bool): Metallic indicator included at root level of document.
-            structures (Dict[MPID, Structure]) = Dictionary mapping a calculation (task) ID to the structures used
+            structures (dict[MPID, Structure]) = Dictionary mapping a calculation (task) ID to the structures used
                 as inputs. This is to ensures correct magnetic moment information is included.
-            setyawan_curtarolo (Dict[MPID, BandStructureSymmLine]): Dictionary mapping a calculation (task) ID to a
+            setyawan_curtarolo (dict[MPID, BandStructureSymmLine]): Dictionary mapping a calculation (task) ID to a
                 BandStructureSymmLine object from a calculation run using the Setyawan-Curtarolo k-path convention.
-            hinuma (Dict[MPID, BandStructureSymmLine]): Dictionary mapping a calculation (task) ID to a
+            hinuma (dict[MPID, BandStructureSymmLine]): Dictionary mapping a calculation (task) ID to a
                 BandStructureSymmLine object from a calculation run using the Hinuma et al. k-path convention.
-            latimer_munro (Dict[MPID, BandStructureSymmLine]): Dictionary mapping a calculation (task) ID to a
+            latimer_munro (dict[MPID, BandStructureSymmLine]): Dictionary mapping a calculation (task) ID to a
                 BandStructureSymmLine object from a calculation run using the Latimer-Munro k-path convention.
-            origins (List[dict]): Optional origins information for final doc
+            origins (list[dict]): Optional origins information for final doc
 
         """
 

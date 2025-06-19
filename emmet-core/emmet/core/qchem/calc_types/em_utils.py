@@ -1,14 +1,8 @@
 """Utilities to determine level of theory, task type, and calculation type for Q-Chem calculations in the pydantic Docs paradigm"""
 
-from typing import Optional
-
-from emmet.core.qchem.calc_types import LevelOfTheory, CalcType, TaskType
+from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
+from emmet.core.qchem.calc_types.calc_types import BASIS_SETS, FUNCTIONALS
 from emmet.core.qchem.calculation import CalculationInput
-from emmet.core.qchem.calc_types.calc_types import (
-    FUNCTIONALS,
-    BASIS_SETS,
-)
-
 
 __author__ = (
     "Evan Spotte-Smith <ewcspottesmith@lbl.gov>, Rishabh Debraj Guha <rdguha@lbl.gov>"
@@ -37,7 +31,7 @@ def level_of_theory(parameters: CalculationInput) -> LevelOfTheory:
     based on the input parameters given to Q-Chem
 
     Args:
-        parameters: Dict of Q-Chem input parameters
+        parameters: dict of Q-Chem input parameters
 
     """
 
@@ -96,12 +90,12 @@ def level_of_theory(parameters: CalculationInput) -> LevelOfTheory:
     return LevelOfTheory(lot)
 
 
-def solvent(parameters: CalculationInput, custom_smd: Optional[str] = None) -> str:
+def solvent(parameters: CalculationInput, custom_smd: str | None = None) -> str:
     """
     Returns the solvent used for this calculation.
 
     Args:
-        parameters: Dict of Q-Chem input parameters
+        parameters: dict of Q-Chem input parameters
         custom_smd: (Optional) string representing SMD parameters for a
         non-standard solvent
     """
@@ -159,13 +153,13 @@ def solvent(parameters: CalculationInput, custom_smd: Optional[str] = None) -> s
 
 
 def lot_solvent_string(
-    parameters: CalculationInput, custom_smd: Optional[str] = None
+    parameters: CalculationInput, custom_smd: str | None = None
 ) -> str:
     """
     Returns a string representation of the level of theory and solvent used for this calculation.
 
     Args:
-        parameters: Dict of Q-Chem input parameters
+        parameters: dict of Q-Chem input parameters
         custom_smd: (Optional) string representing SMD parameters for a
         non-standard solvent
     """
@@ -176,7 +170,7 @@ def lot_solvent_string(
 
 
 def task_type(
-    parameters: CalculationInput, special_run_type: Optional[str] = None
+    parameters: CalculationInput, special_run_type: str | None = None
 ) -> TaskType:
     if special_run_type == "frequency_flattener":
         return TaskType("Frequency Flattening Geometry Optimization")
@@ -198,7 +192,7 @@ def task_type(
 
 
 def calc_type(
-    parameters: CalculationInput, special_run_type: Optional[str] = None
+    parameters: CalculationInput, special_run_type: str | None = None
 ) -> CalcType:
     """
     Determines the calc type

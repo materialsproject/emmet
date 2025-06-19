@@ -1,15 +1,14 @@
 from hashlib import blake2b
-from typing import Any, Dict, Optional, Type, TypeVar
+from typing import Any, Type, TypeVar
 
 from pydantic import Field
 
-from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.molecule import MoleculeDoc
 from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
-from emmet.core.molecules.thermo import get_free_energy, MoleculeThermoDoc
+from emmet.core.molecules.thermo import MoleculeThermoDoc, get_free_energy
 from emmet.core.mpid import MPID, MPculeID
-
+from emmet.core.qchem.molecule import MoleculeDoc
+from emmet.core.qchem.task import TaskDocument
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -33,69 +32,69 @@ class RedoxDoc(PropertyDoc):
         description="Property ID for the thermodynamic data of the " "base molecule"
     )
 
-    electron_affinity: Optional[float] = Field(
+    electron_affinity: float | None = Field(
         None, description="Vertical electron affinity (units: eV)"
     )
 
-    ea_task_id: Optional[MPID] = Field(
+    ea_task_id: MPID | None = Field(
         None, description="Task ID for the electron affinity calculation"
     )
 
-    ionization_energy: Optional[float] = Field(
+    ionization_energy: float | None = Field(
         None, description="Vertical ionization energy (units: eV)"
     )
 
-    ie_task_id: Optional[MPID] = Field(
+    ie_task_id: MPID | None = Field(
         None, description="Task ID for the ionization energy calculation"
     )
 
-    reduction_energy: Optional[float] = Field(
+    reduction_energy: float | None = Field(
         None, description="Adiabatic electronic energy of reduction (units: eV)"
     )
 
-    reduction_free_energy: Optional[float] = Field(
+    reduction_free_energy: float | None = Field(
         None, description="Adiabatic free energy of reduction (units: eV)"
     )
 
-    red_molecule_id: Optional[MPculeID] = Field(
+    red_molecule_id: MPculeID | None = Field(
         None, description="Molecule ID for adiabatic reduction"
     )
 
-    red_property_id: Optional[str] = Field(
+    red_property_id: str | None = Field(
         None,
         description="Property ID for the thermodynamic data of the " "reduced molecule",
     )
 
-    oxidation_energy: Optional[float] = Field(
+    oxidation_energy: float | None = Field(
         None, description="Adiabatic electronic energy of oxidation (units: eV)"
     )
 
-    oxidation_free_energy: Optional[float] = Field(
+    oxidation_free_energy: float | None = Field(
         None, description="Adiabatic free energy of oxidation (units: eV)"
     )
 
-    ox_molecule_id: Optional[MPculeID] = Field(
+    ox_molecule_id: MPculeID | None = Field(
         None, description="Molecule ID for adiabatic oxidation"
     )
 
-    ox_property_id: Optional[str] = Field(
+    ox_property_id: str | None = Field(
         None,
         description="Property ID for the thermodynamic data of the "
         "oxidized molecule",
     )
 
-    reduction_potential: Optional[float] = Field(
+    reduction_potential: float | None = Field(
         None,
         description="Reduction potential referenced to the standard hydrogen electrode (SHE) (units: V)",
     )
 
-    oxidation_potential: Optional[float] = Field(
+    oxidation_potential: float | None = Field(
         None,
         description="Oxidation potential referenced to the standard hydrogen electrode (SHE) (units: V)",
     )
 
     @classmethod
-    def _g_or_e(cls: Type[T], entry: Dict[str, Any]) -> float:
+    def _g_or_e(cls: Type[T], entry: dict[str, Any]) -> float:
         """
         Single atoms may not have free energies like more complex molecules do.
         This function returns the free energy of a TaskDocument entry if
@@ -121,10 +120,10 @@ class RedoxDoc(PropertyDoc):
         cls: Type[T],
         base_molecule_doc: MoleculeDoc,
         base_thermo_doc: MoleculeThermoDoc,
-        red_doc: Optional[MoleculeThermoDoc] = None,
-        ox_doc: Optional[MoleculeThermoDoc] = None,
-        ea_doc: Optional[TaskDocument] = None,
-        ie_doc: Optional[TaskDocument] = None,
+        red_doc: MoleculeThermoDoc | None = None,
+        ox_doc: MoleculeThermoDoc | None = None,
+        ea_doc: TaskDocument | None = None,
+        ie_doc: TaskDocument | None = None,
         deprecated: bool = False,
         **kwargs,
     ):  # type: ignore[override]

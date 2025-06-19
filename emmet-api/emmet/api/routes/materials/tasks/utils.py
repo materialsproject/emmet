@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import HTTPException
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core import Structure
@@ -7,7 +5,7 @@ from pymatgen.core.trajectory import Trajectory
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 
-def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
+def calcs_reversed_to_trajectory(calcs_reversed: list[dict]):
     """
     Converts data from calc_reversed to pymatgen Trajectory objects
     that contain structure, energy, force and stress data for each
@@ -60,11 +58,12 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
 def task_to_entry(doc: dict, include_structure: bool = True):
     """Turns a Task Doc into a ComputedStructureEntry"""
 
-    input = doc.get("input", None)
-    output = doc.get("output", None)
+    input = doc.get("input", {})
+    output = doc.get("output", {})
 
     try:
-        output_struct = Structure.from_dict(output["structure"])
+        # NB: Structure.from_dict({}) raises KeyError
+        output_struct = Structure.from_dict(output.get("structure", {}))
 
         entry_dict = {
             "correction": 0.0,

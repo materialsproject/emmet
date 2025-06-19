@@ -2,18 +2,17 @@ from collections import defaultdict
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Optional, Iterable, Iterator, List, Dict
+from typing import Iterable, Iterator
 
 from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper
 
-from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
-from emmet.core.molecules.bonds import MoleculeBondingDoc, BOND_METHODS
-from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
-
+from emmet.core.molecules.bonds import BOND_METHODS, MoleculeBondingDoc
+from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
+from emmet.core.qchem.task import TaskDocument
+from emmet.core.utils import jsanitize
 
 __author__ = "Evan Spotte-Smith"
 
@@ -54,9 +53,9 @@ class BondingBuilder(Builder):
         tasks: Store,
         molecules: Store,
         bonds: Store,
-        query: Optional[Dict] = None,
-        methods: Optional[List] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        query: dict | None = None,
+        methods: list | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
         self.tasks = tasks
@@ -104,7 +103,7 @@ class BondingBuilder(Builder):
         self.bonds.ensure_index("last_updated")
         self.bonds.ensure_index("formula_alphabetical")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
         """Prechunk the builder for distributed computation"""
 
         temp_query = dict(self.query)
@@ -130,7 +129,7 @@ class BondingBuilder(Builder):
             query["species_hash"] = {"$in": list(hash_chunk)}
             yield {"query": query}
 
-    def get_items(self) -> Iterator[List[Dict]]:
+    def get_items(self) -> Iterator[list[dict]]:
         """
         Gets all items to process into bonding documents.
         This does no datetime checking; relying on on whether
@@ -177,12 +176,12 @@ class BondingBuilder(Builder):
 
             yield molecules
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
+    def process_item(self, items: list[dict]) -> list[dict]:
         """
         Process the tasks into MoleculeBondingDocs
 
         Args:
-            tasks List[Dict] : a list of MoleculeDocs in dict form
+            tasks list[dict] : a list of MoleculeDocs in dict form
 
         Returns:
             [dict] : a list of new bonding docs
@@ -292,7 +291,7 @@ class BondingBuilder(Builder):
 
         return jsanitize([doc.model_dump() for doc in bonding_docs], allow_bson=True)
 
-    def update_targets(self, items: List[List[Dict]]):
+    def update_targets(self, items: list[list[dict]]):
         """
         Inserts the new documents into the bonds collection
 

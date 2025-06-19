@@ -1,9 +1,10 @@
-from typing import List
 from datetime import datetime
-from fastapi import Query, Body
-from emmet.core._messages import MessageType
-from maggma.api.utils import STORE_PARAMS
+
+from fastapi import Body, Query
 from maggma.api.query_operator import QueryOperator
+from maggma.api.utils import STORE_PARAMS
+
+from emmet.core._messages import MessageType
 
 
 class MessagesPostQuery(QueryOperator):
@@ -19,7 +20,7 @@ class MessagesPostQuery(QueryOperator):
             ...,
             title="Message text body",
         ),
-        authors: List[str] = Body(
+        authors: list[str] = Body(
             [],
             title="Message authors",
         ),

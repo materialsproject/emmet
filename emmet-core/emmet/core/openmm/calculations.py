@@ -1,4 +1,3 @@
-from typing import List, Optional, Union
 from datetime import datetime
 
 from pydantic import BaseModel, Field
@@ -13,54 +12,54 @@ class CalculationsDoc(BaseModel):
     In each field, calculations are listed sequentially, in the order they were run.
     """
 
-    task_names: Optional[List[str]] = Field(None, description="Names of tasks.")
+    task_names: list[str] | None = Field(None, description="Names of tasks.")
 
-    calc_types: Optional[List[str]] = Field(None, description="Types of calculations.")
+    calc_types: list[str] | None = Field(None, description="Types of calculations.")
 
-    elapsed_times: Optional[List[Union[float, None]]] = Field(
+    elapsed_times: list[float | None] | None = Field(
         None, description="Elapsed time for calculations."
     )
 
-    steps: Optional[List[Union[float, None]]] = Field(
+    steps: list[float | None] | None = Field(
         None, description="n_steps for calculations."
     )
 
-    step_sizes: Optional[List[Union[float, None]]] = Field(
+    step_sizes: list[float | None] | None = Field(
         None, description="Step sizes for each calculations."
     )
 
-    temperatures: Optional[List[Union[float, None]]] = Field(
+    temperatures: list[float | None] | None = Field(
         None, description="Temperature for each calculations."
     )
 
-    pressures: Optional[List[Union[float, None]]] = Field(
+    pressures: list[float | None] | None = Field(
         None, description="Pressure for each calculations."
     )
 
-    friction_coefficients: Optional[List[Union[float, None]]] = Field(
+    friction_coefficients: list[float | None] | None = Field(
         None,
         description="Friction coefficients for each calculations.",
     )
 
-    completed_at: Optional[datetime] = Field(
+    completed_at: datetime | None = Field(
         None,
         description="Timestamp for when the final calculation completed.",
     )
 
-    job_uuid: Optional[str] = Field(
+    job_uuid: str | None = Field(
         None, description="The UUID of the flow that generated this data."
     )
 
-    flow_uuid: Optional[str] = Field(
+    flow_uuid: str | None = Field(
         None, description="The UUID of the top level host from that job."
     )
 
     @classmethod
     def from_calcs_reversed(
         cls,
-        calcs_reversed: List[Calculation],
-        job_uuid: Optional[str] = None,
-        flow_uuid: Optional[str] = None,
+        calcs_reversed: list[Calculation],
+        job_uuid: str | None = None,
+        flow_uuid: str | None = None,
     ) -> "CalculationsDoc":
         calcs = calcs_reversed[::-1]
         return CalculationsDoc(

@@ -1,5 +1,68 @@
 # Changelog
 
+## [v0.84.8](https://github.com/materialsproject/emmet/tree/v0.84.8) (2025-06-13)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.84.7...v0.84.8)
+
+**Merged pull requests:**
+
+- Fix TaskDoc bugs in latest emmet-core [\#1250](https://github.com/materialsproject/emmet/pull/1250) ([esoteric-ephemera](https://github.com/esoteric-ephemera))
+- Updating all type annotations to \>3.10 conventions [\#1246](https://github.com/materialsproject/emmet/pull/1246) ([tsmathis](https://github.com/tsmathis))
+
+## [v0.84.7](https://github.com/materialsproject/emmet/tree/v0.84.7) (2025-06-11)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/0.84.7rc4...v0.84.7)
+
+**Merged pull requests:**
+
+- Automated dependency upgrades [\#1247](https://github.com/materialsproject/emmet/pull/1247) ([tschaume](https://github.com/tschaume))
+- make all datetime factories consistent to use utcnow func in utils [\#1245](https://github.com/materialsproject/emmet/pull/1245) ([tsmathis](https://github.com/tsmathis))
+- Automated dependency upgrades [\#1241](https://github.com/materialsproject/emmet/pull/1241) ([tschaume](https://github.com/tschaume))
+
+## [0.84.7rc4](https://github.com/materialsproject/emmet/tree/0.84.7rc4) (2025-06-06)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/0.84.7rc3...0.84.7rc4)
+
+**Fixed bugs:**
+
+- \[Bug\]: The path error of oszicar\_file in the calculation.py [\#1234](https://github.com/materialsproject/emmet/issues/1234)
+
+**Merged pull requests:**
+
+- Expand phonon schema to intake CompletePhononDos [\#1240](https://github.com/materialsproject/emmet/pull/1240) ([esoteric-ephemera](https://github.com/esoteric-ephemera))
+- fix phonon test typos [\#1239](https://github.com/materialsproject/emmet/pull/1239) ([esoteric-ephemera](https://github.com/esoteric-ephemera))
+- Automated dependency upgrades [\#1238](https://github.com/materialsproject/emmet/pull/1238) ([tschaume](https://github.com/tschaume))
+
+## [0.84.7rc3](https://github.com/materialsproject/emmet/tree/0.84.7rc3) (2025-06-05)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/0.84.7rc2...0.84.7rc3)
+
+**Merged pull requests:**
+
+- fix ci issues from mypy version bump [\#1237](https://github.com/materialsproject/emmet/pull/1237) ([esoteric-ephemera](https://github.com/esoteric-ephemera))
+- Automated dependency upgrades [\#1236](https://github.com/materialsproject/emmet/pull/1236) ([tschaume](https://github.com/tschaume))
+
+## [0.84.7rc2](https://github.com/materialsproject/emmet/tree/0.84.7rc2) (2025-06-04)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.84.7rc1...0.84.7rc2)
+
+**Closed issues:**
+
+- \[Feature Request\]: Support pymatgen\>2025.1.9 [\#1216](https://github.com/materialsproject/emmet/issues/1216)
+- Bug: The `.as_dict()` method on `CrystalSystem` is not Monty compatible [\#914](https://github.com/materialsproject/emmet/issues/914)
+- `NELMDL` mispelled, check not accurate [\#795](https://github.com/materialsproject/emmet/issues/795)
+
+**Merged pull requests:**
+
+- Automated dependency upgrades [\#1235](https://github.com/materialsproject/emmet/pull/1235) ([tschaume](https://github.com/tschaume))
+- \[WIP\] Update phonon schema [\#1231](https://github.com/materialsproject/emmet/pull/1231) ([esoteric-ephemera](https://github.com/esoteric-ephemera))
+- updates to use FileMetadata in discovery \(and add lazy md5 calculation\) [\#1228](https://github.com/materialsproject/emmet/pull/1228) ([kbuma](https://github.com/kbuma))
+- Automated dependency upgrades [\#1227](https://github.com/materialsproject/emmet/pull/1227) ([tschaume](https://github.com/tschaume))
+- Automated dependency upgrades [\#1224](https://github.com/materialsproject/emmet/pull/1224) ([tschaume](https://github.com/tschaume))
+- Update VASP file discovery [\#1223](https://github.com/materialsproject/emmet/pull/1223) ([esoteric-ephemera](https://github.com/esoteric-ephemera))
+- Define machine learning / MatPES schemas [\#1222](https://github.com/materialsproject/emmet/pull/1222) ([esoteric-ephemera](https://github.com/esoteric-ephemera))
+- Automated dependency upgrades [\#1221](https://github.com/materialsproject/emmet/pull/1221) ([tschaume](https://github.com/tschaume))
+
 ## [v0.84.7rc1](https://github.com/materialsproject/emmet/tree/v0.84.7rc1) (2025-04-03)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.84.7rc...v0.84.7rc1)
@@ -155,7 +218,7 @@
 
 ## [v0.84.4](https://github.com/materialsproject/emmet/tree/v0.84.4) (2024-12-12)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.84.3rc5...v0.84.4)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.84.3rc6...v0.84.4)
 
 **Merged pull requests:**
 
@@ -163,13 +226,13 @@
 - Automated dependency upgrades [\#1154](https://github.com/materialsproject/emmet/pull/1154) ([tschaume](https://github.com/tschaume))
 - Automated dependency upgrades [\#1153](https://github.com/materialsproject/emmet/pull/1153) ([tschaume](https://github.com/tschaume))
 
-## [v0.84.3rc5](https://github.com/materialsproject/emmet/tree/v0.84.3rc5) (2024-12-03)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.84.3rc6...v0.84.3rc5)
-
 ## [v0.84.3rc6](https://github.com/materialsproject/emmet/tree/v0.84.3rc6) (2024-12-03)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.84.3rc3...v0.84.3rc6)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.84.3rc5...v0.84.3rc6)
+
+## [v0.84.3rc5](https://github.com/materialsproject/emmet/tree/v0.84.3rc5) (2024-12-03)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.84.3rc3...v0.84.3rc5)
 
 ## [v0.84.3rc3](https://github.com/materialsproject/emmet/tree/v0.84.3rc3) (2024-12-03)
 
@@ -455,7 +518,7 @@
 
 ## [v0.83.6rc](https://github.com/materialsproject/emmet/tree/v0.83.6rc) (2024-05-09)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.83.2...v0.83.6rc)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.83.5...v0.83.6rc)
 
 **Merged pull requests:**
 
@@ -465,17 +528,17 @@
 - Automated dependency upgrades [\#1000](https://github.com/materialsproject/emmet/pull/1000) ([tschaume](https://github.com/tschaume))
 - move undeform\_structure function to core utils [\#999](https://github.com/materialsproject/emmet/pull/999) ([tsmathis](https://github.com/tsmathis))
 
-## [v0.83.2](https://github.com/materialsproject/emmet/tree/v0.83.2) (2024-05-02)
+## [v0.83.5](https://github.com/materialsproject/emmet/tree/v0.83.5) (2024-05-02)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.83.6...v0.83.2)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.83.6...v0.83.5)
 
 ## [v0.83.6](https://github.com/materialsproject/emmet/tree/v0.83.6) (2024-05-02)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.83.5...v0.83.6)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.83.1...v0.83.6)
 
-## [v0.83.5](https://github.com/materialsproject/emmet/tree/v0.83.5) (2024-05-02)
+## [v0.83.1](https://github.com/materialsproject/emmet/tree/v0.83.1) (2024-05-02)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.83.4...v0.83.5)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.83.4...v0.83.1)
 
 ## [v0.83.4](https://github.com/materialsproject/emmet/tree/v0.83.4) (2024-05-02)
 
@@ -483,11 +546,11 @@
 
 ## [v0.83.3](https://github.com/materialsproject/emmet/tree/v0.83.3) (2024-05-02)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.83.1...v0.83.3)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.83.2...v0.83.3)
 
-## [v0.83.1](https://github.com/materialsproject/emmet/tree/v0.83.1) (2024-05-02)
+## [v0.83.2](https://github.com/materialsproject/emmet/tree/v0.83.2) (2024-05-02)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.83.0...v0.83.1)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.83.0...v0.83.2)
 
 **Merged pull requests:**
 
@@ -572,44 +635,44 @@
 
 ## [v0.78.7](https://github.com/materialsproject/emmet/tree/v0.78.7) (2024-03-02)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.6...v0.78.7)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.2...v0.78.7)
 
 **Merged pull requests:**
 
 - Fix hydrogen element injection in anonymous formula queries [\#957](https://github.com/materialsproject/emmet/pull/957) ([munrojm](https://github.com/munrojm))
 - Automated dependency upgrades [\#956](https://github.com/materialsproject/emmet/pull/956) ([tschaume](https://github.com/tschaume))
 
+## [v0.78.2](https://github.com/materialsproject/emmet/tree/v0.78.2) (2024-03-01)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.6...v0.78.2)
+
 ## [v0.78.6](https://github.com/materialsproject/emmet/tree/v0.78.6) (2024-03-01)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.4...v0.78.6)
-
-## [v0.78.4](https://github.com/materialsproject/emmet/tree/v0.78.4) (2024-03-01)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.5...v0.78.4)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.5...v0.78.6)
 
 ## [v0.78.5](https://github.com/materialsproject/emmet/tree/v0.78.5) (2024-03-01)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.2...v0.78.5)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.4...v0.78.5)
 
-## [v0.78.2](https://github.com/materialsproject/emmet/tree/v0.78.2) (2024-03-01)
+## [v0.78.4](https://github.com/materialsproject/emmet/tree/v0.78.4) (2024-03-01)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.3...v0.78.2)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.3...v0.78.4)
 
 ## [v0.78.3](https://github.com/materialsproject/emmet/tree/v0.78.3) (2024-03-01)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.1...v0.78.3)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.0...v0.78.3)
 
 **Merged pull requests:**
 
 - Fix docs wflow python version [\#948](https://github.com/materialsproject/emmet/pull/948) ([munrojm](https://github.com/munrojm))
 
-## [v0.78.1](https://github.com/materialsproject/emmet/tree/v0.78.1) (2024-02-29)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.0...v0.78.1)
-
 ## [v0.78.0](https://github.com/materialsproject/emmet/tree/v0.78.0) (2024-02-29)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.0rc4...v0.78.0)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.1...v0.78.0)
+
+## [v0.78.1](https://github.com/materialsproject/emmet/tree/v0.78.1) (2024-02-29)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.78.0rc4...v0.78.1)
 
 **Fixed bugs:**
 
@@ -757,19 +820,19 @@
 
 ## [v0.74.7](https://github.com/materialsproject/emmet/tree/v0.74.7) (2023-12-05)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.74.5...v0.74.7)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.74.4...v0.74.7)
 
 **Merged pull requests:**
 
 - Transition wildcard chemsys queries to comp reduced [\#909](https://github.com/materialsproject/emmet/pull/909) ([munrojm](https://github.com/munrojm))
 
-## [v0.74.5](https://github.com/materialsproject/emmet/tree/v0.74.5) (2023-11-28)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.74.4...v0.74.5)
-
 ## [v0.74.4](https://github.com/materialsproject/emmet/tree/v0.74.4) (2023-11-28)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.74.3...v0.74.4)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.74.5...v0.74.4)
+
+## [v0.74.5](https://github.com/materialsproject/emmet/tree/v0.74.5) (2023-11-28)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.74.3...v0.74.5)
 
 **Merged pull requests:**
 
@@ -778,19 +841,19 @@
 
 ## [v0.74.3](https://github.com/materialsproject/emmet/tree/v0.74.3) (2023-11-27)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.74.2...v0.74.3)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.74.1...v0.74.3)
 
 **Merged pull requests:**
 
 - Ensure RunType enum variants are case insensitive [\#905](https://github.com/materialsproject/emmet/pull/905) ([munrojm](https://github.com/munrojm))
 
-## [v0.74.2](https://github.com/materialsproject/emmet/tree/v0.74.2) (2023-11-22)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.74.1...v0.74.2)
-
 ## [v0.74.1](https://github.com/materialsproject/emmet/tree/v0.74.1) (2023-11-22)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.74.0...v0.74.1)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.74.2...v0.74.1)
+
+## [v0.74.2](https://github.com/materialsproject/emmet/tree/v0.74.2) (2023-11-22)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.74.0...v0.74.2)
 
 **Merged pull requests:**
 
@@ -898,15 +961,15 @@
 
 ## [v0.72.13](https://github.com/materialsproject/emmet/tree/v0.72.13) (2023-11-07)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.72.11...v0.72.13)
-
-## [v0.72.11](https://github.com/materialsproject/emmet/tree/v0.72.11) (2023-11-07)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.72.12...v0.72.11)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.72.12...v0.72.13)
 
 ## [v0.72.12](https://github.com/materialsproject/emmet/tree/v0.72.12) (2023-11-07)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.72.10...v0.72.12)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.72.11...v0.72.12)
+
+## [v0.72.11](https://github.com/materialsproject/emmet/tree/v0.72.11) (2023-11-07)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.72.10...v0.72.11)
 
 ## [v0.72.10](https://github.com/materialsproject/emmet/tree/v0.72.10) (2023-11-07)
 
@@ -943,20 +1006,20 @@
 
 ## [v0.72.5](https://github.com/materialsproject/emmet/tree/v0.72.5) (2023-11-01)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.72.3...v0.72.5)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.72.4...v0.72.5)
 
 **Merged pull requests:**
 
 - Add material ID query to elasticity [\#881](https://github.com/materialsproject/emmet/pull/881) ([munrojm](https://github.com/munrojm))
 - Fix `TaskDoc.from_directory` when `dir_name != "."` [\#873](https://github.com/materialsproject/emmet/pull/873) ([esoteric-ephemera](https://github.com/esoteric-ephemera))
 
-## [v0.72.3](https://github.com/materialsproject/emmet/tree/v0.72.3) (2023-10-31)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.72.4...v0.72.3)
-
 ## [v0.72.4](https://github.com/materialsproject/emmet/tree/v0.72.4) (2023-10-31)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.72.2...v0.72.4)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.72.3...v0.72.4)
+
+## [v0.72.3](https://github.com/materialsproject/emmet/tree/v0.72.3) (2023-10-31)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.72.2...v0.72.3)
 
 ## [v0.72.2](https://github.com/materialsproject/emmet/tree/v0.72.2) (2023-10-31)
 
@@ -1071,19 +1134,19 @@
 
 ## [v0.69.9](https://github.com/materialsproject/emmet/tree/v0.69.9) (2023-10-08)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.69.8...v0.69.9)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.69.7...v0.69.9)
 
 **Merged pull requests:**
 
 - Enable querying based on license data in builder meta [\#848](https://github.com/materialsproject/emmet/pull/848) ([munrojm](https://github.com/munrojm))
 
-## [v0.69.8](https://github.com/materialsproject/emmet/tree/v0.69.8) (2023-10-06)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.69.7...v0.69.8)
-
 ## [v0.69.7](https://github.com/materialsproject/emmet/tree/v0.69.7) (2023-10-06)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.69.6...v0.69.7)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.69.8...v0.69.7)
+
+## [v0.69.8](https://github.com/materialsproject/emmet/tree/v0.69.8) (2023-10-06)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.69.6...v0.69.8)
 
 ## [v0.69.6](https://github.com/materialsproject/emmet/tree/v0.69.6) (2023-10-06)
 
@@ -1140,7 +1203,7 @@
 
 ## [v0.68.0](https://github.com/materialsproject/emmet/tree/v0.68.0) (2023-09-12)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.67.5...v0.68.0)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.67.4...v0.68.0)
 
 **Closed issues:**
 
@@ -1153,13 +1216,13 @@
 - Automated dependency upgrades [\#821](https://github.com/materialsproject/emmet/pull/821) ([tschaume](https://github.com/tschaume))
 - Several `TaskDoc` improvements [\#794](https://github.com/materialsproject/emmet/pull/794) ([mkhorton](https://github.com/mkhorton))
 
-## [v0.67.5](https://github.com/materialsproject/emmet/tree/v0.67.5) (2023-08-30)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.67.4...v0.67.5)
-
 ## [v0.67.4](https://github.com/materialsproject/emmet/tree/v0.67.4) (2023-08-30)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.67.3...v0.67.4)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.67.5...v0.67.4)
+
+## [v0.67.5](https://github.com/materialsproject/emmet/tree/v0.67.5) (2023-08-30)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.67.3...v0.67.5)
 
 **Merged pull requests:**
 
@@ -1269,7 +1332,7 @@
 
 ## [v0.63.1](https://github.com/materialsproject/emmet/tree/v0.63.1) (2023-07-25)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.62.0...v0.63.1)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.63.0...v0.63.1)
 
 **Merged pull requests:**
 
@@ -1278,13 +1341,13 @@
 - CI run pytest even if `mypy` errors [\#791](https://github.com/materialsproject/emmet/pull/791) ([janosh](https://github.com/janosh))
 - Fix molecules hint scheme [\#775](https://github.com/materialsproject/emmet/pull/775) ([munrojm](https://github.com/munrojm))
 
-## [v0.62.0](https://github.com/materialsproject/emmet/tree/v0.62.0) (2023-07-20)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.63.0...v0.62.0)
-
 ## [v0.63.0](https://github.com/materialsproject/emmet/tree/v0.63.0) (2023-07-20)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.61.0...v0.63.0)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.62.0...v0.63.0)
+
+## [v0.62.0](https://github.com/materialsproject/emmet/tree/v0.62.0) (2023-07-20)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.61.0...v0.62.0)
 
 ## [v0.61.0](https://github.com/materialsproject/emmet/tree/v0.61.0) (2023-07-20)
 
@@ -1923,15 +1986,15 @@
 
 ## [v0.42.0](https://github.com/materialsproject/emmet/tree/v0.42.0) (2023-01-27)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.41.0...v0.42.0)
-
-## [v0.41.0](https://github.com/materialsproject/emmet/tree/v0.41.0) (2023-01-27)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.40.0...v0.41.0)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.40.0...v0.42.0)
 
 ## [v0.40.0](https://github.com/materialsproject/emmet/tree/v0.40.0) (2023-01-27)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.39.13...v0.40.0)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.41.0...v0.40.0)
+
+## [v0.41.0](https://github.com/materialsproject/emmet/tree/v0.41.0) (2023-01-27)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.39.13...v0.41.0)
 
 **Merged pull requests:**
 

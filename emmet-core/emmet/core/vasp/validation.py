@@ -6,16 +6,17 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 import numpy as np
-from pydantic import ConfigDict, Field, ImportString
+from pydantic import ConfigDict, Field, ImportString, field_validator
 from pymatgen.core.structure import Structure
 from pymatgen.io.vasp.inputs import Kpoints
 from pymatgen.io.vasp.sets import VaspInputSet
 
-from emmet.core.settings import EmmetSettings
 from emmet.core.base import EmmetBaseModel
+from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
-from emmet.core.utils import DocEnum
+from emmet.core.settings import EmmetSettings
 from emmet.core.tasks import TaskDoc
+from emmet.core.utils import DocEnum, utcnow
 from emmet.core.vasp.calc_types.enums import CalcType, TaskType
 from emmet.core.vasp.task_valid import TaskDocument
 
@@ -56,7 +57,7 @@ class ValidationDoc(EmmetBaseModel):
     valid: bool = Field(False, description="Whether this task is valid or not")
     last_updated: datetime = Field(
         description="Last updated date for this document",
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
     )
     reasons: list[DeprecationMessage | str] | None = Field(
         None, description="List of deprecation tags detailing why this task isn't valid"
@@ -75,6 +76,11 @@ class ValidationDoc(EmmetBaseModel):
         title="Space Group Number",
         description="The spacegroup number for the lattice.",
     )
+
+    @field_validator("last_updated", mode="before")
+    @classmethod
+    def handle_datetime(cls, v):
+        return convert_datetime(cls, v)
 
     @classmethod
     def from_task_doc(

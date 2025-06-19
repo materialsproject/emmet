@@ -1,17 +1,14 @@
 import re
-
-from typing import List, Optional, Dict, Any
 from hashlib import blake2b
-
-from pydantic import Field
+from typing import Any
 
 from monty.json import MSONable
+from pydantic import Field
 
-from emmet.core.mpid import MPculeID
 from emmet.core.material import PropertyOrigin
-from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.molecule_property import PropertyDoc
-
+from emmet.core.mpid import MPculeID
+from emmet.core.qchem.task import TaskDocument
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -295,10 +292,10 @@ class Interaction(MSONable):
         acceptor_type: str,
         donor_atom1_index: int,
         acceptor_atom1_index: int,
-        donor_atom2_index: Optional[int] = None,
-        acceptor_atom2_index: Optional[int] = None,
-        donor_atom3_index: Optional[int] = None,
-        acceptor_atom3_index: Optional[int] = None,
+        donor_atom2_index: int | None = None,
+        acceptor_atom2_index: int | None = None,
+        donor_atom3_index: int | None = None,
+        acceptor_atom3_index: int | None = None,
     ):
         """
         Description of an interaction between two orbitals
@@ -428,86 +425,86 @@ class OrbitalDoc(PropertyDoc):
         ..., description="Is this molecule open-shell (spin multiplicity != 1)?"
     )
 
-    nbo_population: List[NaturalPopulation] = Field(
+    nbo_population: list[NaturalPopulation] = Field(
         ..., description="Natural electron populations of the molecule"
     )
 
     # Populated for closed-shell molecules
-    nbo_lone_pairs: Optional[List[LonePair]] = Field(
+    nbo_lone_pairs: list[LonePair] | None = Field(
         None, description="Lone pair orbitals of a closed-shell molecule"
     )
 
-    nbo_bonds: Optional[List[Bond]] = Field(
+    nbo_bonds: list[Bond] | None = Field(
         None, description="Bond-like orbitals of a closed-shell molecule"
     )
 
-    nbo_three_center_bonds: Optional[List[ThreeCenterBond]] = Field(
+    nbo_three_center_bonds: list[ThreeCenterBond] | None = Field(
         None, description="Three-center bond-like orbitals of a closed-shell molecule"
     )
 
-    nbo_hyperbonds: Optional[List[Hyperbond]] = Field(
+    nbo_hyperbonds: list[Hyperbond] | None = Field(
         None, description="3-center hyperbond-like orbitals of a closed-shell molecule"
     )
 
-    nbo_interactions: Optional[List[Interaction]] = Field(
+    nbo_interactions: list[Interaction] | None = Field(
         None, description="Orbital-orbital interactions of a closed-shell molecule"
     )
 
     # Populated for open-shell molecules
-    alpha_population: Optional[List[NaturalPopulation]] = Field(
+    alpha_population: list[NaturalPopulation] | None = Field(
         None,
         description="Natural electron populations of the alpha electrons of an "
         "open-shell molecule",
     )
-    beta_population: Optional[List[NaturalPopulation]] = Field(
+    beta_population: list[NaturalPopulation] | None = Field(
         None,
         description="Natural electron populations of the beta electrons of an "
         "open-shell molecule",
     )
 
-    alpha_lone_pairs: Optional[List[LonePair]] = Field(
+    alpha_lone_pairs: list[LonePair] | None = Field(
         None, description="Alpha electron lone pair orbitals of an open-shell molecule"
     )
-    beta_lone_pairs: Optional[List[LonePair]] = Field(
+    beta_lone_pairs: list[LonePair] | None = Field(
         None, description="Beta electron lone pair orbitals of an open-shell molecule"
     )
 
-    alpha_bonds: Optional[List[Bond]] = Field(
+    alpha_bonds: list[Bond] | None = Field(
         None, description="Alpha electron bond-like orbitals of an open-shell molecule"
     )
-    beta_bonds: Optional[List[Bond]] = Field(
+    beta_bonds: list[Bond] | None = Field(
         None, description="Beta electron bond-like orbitals of an open-shell molecule"
     )
 
-    alpha_three_center_bonds: Optional[List[ThreeCenterBond]] = Field(
+    alpha_three_center_bonds: list[ThreeCenterBond] | None = Field(
         None,
         description="Alpha electron three-center bond-like orbitals of an open-shell molecule",
     )
-    beta_three_center_bonds: Optional[List[ThreeCenterBond]] = Field(
+    beta_three_center_bonds: list[ThreeCenterBond] | None = Field(
         None,
         description="Beta electron three-center bond-like orbitals of an open-shell molecule",
     )
 
-    alpha_hyperbonds: Optional[List[Hyperbond]] = Field(
+    alpha_hyperbonds: list[Hyperbond] | None = Field(
         None,
         description="Alpha electron hyperbond-like orbitals of an open-shell molecule",
     )
-    beta_hyperbonds: Optional[List[Hyperbond]] = Field(
+    beta_hyperbonds: list[Hyperbond] | None = Field(
         None,
         description="Beta electron hyperbond-like orbitals of an open-shell molecule",
     )
 
-    alpha_interactions: Optional[List[Interaction]] = Field(
+    alpha_interactions: list[Interaction] | None = Field(
         None,
         description="Alpha electron orbital-orbital interactions of an open-shell molecule",
     )
-    beta_interactions: Optional[List[Interaction]] = Field(
+    beta_interactions: list[Interaction] | None = Field(
         None,
         description="Beta electron orbital-orbital interactions of an open-shell molecule",
     )
 
     @staticmethod
-    def get_populations(nbo: Dict[str, Any], indices: List[int]):
+    def get_populations(nbo: dict[str, Any], indices: list[int]):
         """
         Helper function to extract natural population information
         from NBO output
@@ -537,7 +534,7 @@ class OrbitalDoc(PropertyDoc):
         return population_sets
 
     @staticmethod
-    def get_lone_pairs(nbo: Dict[str, Any], indices: List[int]):
+    def get_lone_pairs(nbo: dict[str, Any], indices: list[int]):
         """
         Helper function to extract lone pair information from NBO output
 
@@ -569,7 +566,7 @@ class OrbitalDoc(PropertyDoc):
         return lone_pair_sets
 
     @staticmethod
-    def get_bonds(nbo: Dict[str, Any], indices: List[int]):
+    def get_bonds(nbo: dict[str, Any], indices: list[int]):
         """
         Helper function to extract bonding information from NBO output
 
@@ -610,7 +607,7 @@ class OrbitalDoc(PropertyDoc):
         return bond_sets
 
     @staticmethod
-    def get_three_center_bonds(nbo: Dict[str, Any], indices: List[int]):
+    def get_three_center_bonds(nbo: dict[str, Any], indices: list[int]):
         """
         Helper function to extract bonding information from NBO output
 
@@ -661,7 +658,7 @@ class OrbitalDoc(PropertyDoc):
         return threec_sets
 
     @staticmethod
-    def get_hyperbonds(nbo: Dict[str, Any], indices: List[int]):
+    def get_hyperbonds(nbo: dict[str, Any], indices: list[int]):
         """
         Helper function to extract hyperbond information form NBO output
 
@@ -710,7 +707,7 @@ class OrbitalDoc(PropertyDoc):
         return hyperbond_sets
 
     @staticmethod
-    def get_interactions(nbo: Dict[str, Any], indices: List[int]):
+    def get_interactions(nbo: dict[str, Any], indices: list[int]):
         """
         Helper function to extract orbital interaction information
         from NBO output

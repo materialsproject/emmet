@@ -1,5 +1,3 @@
-from typing import Dict, Optional
-
 from maggma.builders import MapBuilder
 from maggma.core import Store
 
@@ -15,9 +13,9 @@ class TaskValidator(MapBuilder):
         self,
         tasks: Store,
         task_validation: Store,
-        potcar_stats: Optional[Dict[CalcType, Dict[str, str]]] = None,
-        settings: Optional[EmmetBuildSettings] = None,
-        query: Optional[Dict] = None,
+        potcar_stats: dict[CalcType, dict[str, str]] | None = None,
+        settings: EmmetBuildSettings | None = None,
+        query: dict | None = None,
         **kwargs,
     ):
         """

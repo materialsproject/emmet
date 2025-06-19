@@ -7,7 +7,8 @@ import datetime
 import hashlib
 from enum import Enum
 from itertools import groupby
-from typing import Any, Dict, Iterator, List, Optional, Union, TYPE_CHECKING
+from math import gcd
+from typing import TYPE_CHECKING, Any, Iterator
 
 import numpy as np
 from monty.io import zopen
@@ -37,6 +38,8 @@ except ImportError:
     bson = None  # type: ignore
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from emmet.core.typing import PathLike
 
 
@@ -51,14 +54,31 @@ def get_sg(struc, symprec=SETTINGS.SYMPREC) -> int:
         return -1
 
 
+def get_num_formula_units(composition: Mapping[Any, int | float]) -> int:
+    """Get the number of formula units in a dict-like composition.
+
+    This implementation differs slightly from how some pymatgen/atomate2
+    internals work. In those, certain formulas, e.g., N, will assume
+    a smallest formula unit of N2. Thus even if a specified composition is
+    `{"N": 1}`, the reduced composition will be `{"N": 2}`, and the number of
+    formula units 1/2.
+
+    This always just returns the greatest common divisor of a composition.
+    """
+    num_form_u = 1
+    if all(abs(int(val) - val) < 1e-6 for val in composition.values()):
+        num_form_u = gcd(*[int(sc) for sc in composition.values()])
+    return num_form_u
+
+
 def group_structures(
-    structures: List[Structure],
+    structures: list[Structure],
     ltol: float = SETTINGS.LTOL,
     stol: float = SETTINGS.STOL,
     angle_tol: float = SETTINGS.ANGLE_TOL,
     symprec: float = SETTINGS.SYMPREC,
     comparator: AbstractComparator = ElementComparator(),
-) -> Iterator[List[Structure]]:
+) -> Iterator[list[Structure]]:
     """
     Groups structures according to space group and structure matching
 
@@ -90,7 +110,7 @@ def group_structures(
             yield group
 
 
-def undeform_structure(structure: Structure, transformations: Dict) -> Structure:
+def undeform_structure(structure: Structure, transformations: dict) -> Structure:
     """
     Get an undeformed structure by applying transformations in a reverse order.
 
@@ -120,7 +140,7 @@ def generate_robocrys_condensed_struct_and_description(
     structure: Structure,
     mineral_matcher=None,
     symprecs: list[float] = [0.01, 0.1, 1.0e-3],
-) -> tuple[dict[str, Any], str]:
+) -> tuple[dict[str, Any], Any]:
     """
     Get robocrystallographer description of a structure.
 
@@ -175,7 +195,7 @@ def generate_robocrys_condensed_struct_and_description(
     return condensed_structure, description
 
 
-def group_molecules(molecules: List[Molecule]):
+def group_molecules(molecules: list[Molecule]):
     """
     Groups molecules according to composition, charge, and equality
 
@@ -185,7 +205,7 @@ def group_molecules(molecules: List[Molecule]):
         graph isomorphism happens at a later stage.
 
     Args:
-        molecules (List[Molecule])
+        molecules (list[Molecule])
     """
 
     def _mol_form(mol_solv):
@@ -202,7 +222,7 @@ def group_molecules(molecules: List[Molecule]):
     # First, group by formula
     # Hopefully this step is unnecessary - builders should already be doing this
     for mol_key, pregroup in groupby(sorted(molecules, key=_mol_form), key=_mol_form):
-        groups: List[Dict[str, Any]] = list()
+        groups: list[dict[str, Any]] = list()
         for mol in pregroup:
             mol_copy = copy.deepcopy(mol)
 
@@ -231,7 +251,7 @@ def group_molecules(molecules: List[Molecule]):
             yield group["mol_list"]
 
 
-def confirm_molecule(mol: Union[Molecule, Dict]):
+def confirm_molecule(mol: Molecule | dict):
     """
     Check that something that we expect to be a molecule is actually a Molecule
     object, and not a dictionary representation.
@@ -240,14 +260,14 @@ def confirm_molecule(mol: Union[Molecule, Dict]):
     :return:
     """
 
-    if isinstance(mol, Dict):
+    if isinstance(mol, dict):
         return Molecule.from_dict(mol)
     else:
         return mol
 
 
 def make_mol_graph(
-    mol: Molecule, critic_bonds: Optional[List[List[int]]] = None
+    mol: Molecule, critic_bonds: list[list[int]] | None = None
 ) -> MoleculeGraph:
     """
     Construct a MoleculeGraph using OpenBabelNN with metal_edge_extender and
@@ -275,7 +295,7 @@ def make_mol_graph(
     return mol_graph
 
 
-def get_graph_hash(mol: Molecule, node_attr: Optional[str] = None):
+def get_graph_hash(mol: Molecule, node_attr: str | None = None):
     """
     Return the Weisfeiler Lehman (WL) graph hash of the MoleculeGraph described
     by this molecule, using the OpenBabelNN strategy with extension for
@@ -293,7 +313,7 @@ def get_graph_hash(mol: Molecule, node_attr: Optional[str] = None):
     )
 
 
-def get_molecule_id(mol: Molecule, node_attr: Optional[str] = None):
+def get_molecule_id(mol: Molecule, node_attr: str | None = None):
     """
     Return an MPculeID for a molecule, with the hash component
     based on a particular attribute of the molecule graph representation.

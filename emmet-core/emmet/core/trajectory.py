@@ -373,8 +373,8 @@ class Trajectory(BaseModel):
         for i, coords in enumerate(self.cart_coords):
             structure = Structure(
                 lattice=(
-                    self.constant_lattice if self.constant_lattice else self.lattice[i]
-                ),  # type: ignore[index]
+                    self.constant_lattice if self.constant_lattice else self.lattice[i]  # type: ignore[index]
+                ),
                 species=species,
                 coords=coords,
                 coords_are_cartesian=True,

@@ -7,7 +7,14 @@ repos:
     rev: v0.12.0
     hooks:
       - id: ruff
-        args: [--fix, --ignore, "D,E501,E741,E402", --exclude, "__init__.py,emmet-cli,*_resources.py"]
+        args:
+          [
+            --fix,
+            --ignore,
+            "D,E501,E741,E402",
+            --exclude,
+            "__init__.py,emmet-cli,*_resources.py",
+          ]
 
   - repo: https://github.com/psf/black
     rev: 25.1.0
