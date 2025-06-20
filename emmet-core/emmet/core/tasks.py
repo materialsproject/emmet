@@ -489,7 +489,7 @@ class TaskDoc(ProductionTaskDoc, extra="allow", use_enum_values=True):
         title="Calcs reversed data",
         description="Detailed custodian data for each VASP calculation contributing to the task document.",
     )
-    entry: ComputedEntry | None = Field(
+    entry: ComputedEntryType | None = Field(
         None, description="The ComputedEntry from the task doc"
     )
     included_objects: list[VaspObject] | None = Field(
