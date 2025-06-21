@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 import warnings
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Iterator, Set
 
 from maggma.core import Builder, Store
 from maggma.stores import S3Store
@@ -14,6 +15,11 @@ from pymatgen.entries.computed_entries import ComputedStructureEntry
 from emmet.builders.utils import HiddenPrints
 from emmet.core.thermo import PhaseDiagramDoc, ThermoDoc
 from emmet.core.utils import jsanitize
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 class ThermoBuilder(Builder):
@@ -49,7 +55,7 @@ class ThermoBuilder(Builder):
         self.phase_diagram = phase_diagram
         self.num_phase_diagram_eles = num_phase_diagram_eles
         self.chunk_size = chunk_size
-        self._completed_tasks: Set[str] = set()
+        self._completed_tasks: set[str] = set()
 
         if self.thermo.key != "thermo_id":
             warnings.warn(

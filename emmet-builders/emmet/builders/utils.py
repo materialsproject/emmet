@@ -7,7 +7,6 @@ from gzip import GzipFile
 from io import BytesIO
 from itertools import chain, combinations
 from pathlib import Path
-from typing import Any, Literal, Set
 
 import orjson
 from botocore.exceptions import ClientError
@@ -18,8 +17,13 @@ from pymatgen.io.vasp.inputs import PotcarSingle
 
 from emmet.builders.settings import EmmetBuildSettings
 
+from typing import TYPE_CHECKING
 
-def maximal_spanning_non_intersecting_subsets(sets) -> Set[Set]:
+if TYPE_CHECKING:
+    from typing import Any, Literal
+
+
+def maximal_spanning_non_intersecting_subsets(sets) -> set[set[Any]]:
     """
     Finds the maximal spanning non intersecting subsets of a group of sets
     This is usefull for parsing out the sandboxes and figuring out how to group
@@ -47,7 +51,7 @@ def maximal_spanning_non_intersecting_subsets(sets) -> Set[Set]:
     return set(to_return_subsets)
 
 
-def chemsys_permutations(chemsys) -> Set:
+def chemsys_permutations(chemsys) -> set[str]:
     # Function to get all relevant chemical subsystems
     # e.g. for Li-Mn-O returns Li, Li-Mn, Li-Mn-O, Li-O, Mn, Mn-O, O
     elements = chemsys.split("-")

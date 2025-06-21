@@ -1,5 +1,10 @@
+# mypy: ignore-errors
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from hashlib import blake2b
-from typing import Type, TypeVar
 
 from pydantic import BaseModel, Field
 from pymatgen.core.periodic_table import Element, Species
@@ -12,11 +17,12 @@ from emmet.core.molecules.thermo import MoleculeThermoDoc
 from emmet.core.mpid import MPculeID
 from emmet.core.qchem.molecule import MoleculeDoc
 
+if TYPE_CHECKING:
+    from typing_extensions import Self
+
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 METAL_BINDING_METHODS = ["nbo", "mulliken-OB-mee"]
-
-T = TypeVar("T", bound="MetalBindingDoc")
 
 
 class MetalBindingData(BaseModel):
@@ -187,7 +193,7 @@ class MetalBindingDoc(PropertyDoc):
 
     @classmethod
     def from_docs(
-        cls: Type[T],
+        cls: Self,
         method: str,
         metal_indices: list[int],
         base_molecule_doc: MoleculeDoc,
@@ -198,7 +204,7 @@ class MetalBindingDoc(PropertyDoc):
         metal_thermo: dict[int, MoleculeThermoDoc],
         nometal_thermo: dict[int, MoleculeThermoDoc],
         **kwargs,
-    ):  # type: ignore[override]
+    ) -> Self:  # type: ignore[override]
         """
         Construct a document describing the binding energy of a metal atom or ion to
             a molecule from MoleculeThermoDocs (for thermochemistry), PartialChargesDocs

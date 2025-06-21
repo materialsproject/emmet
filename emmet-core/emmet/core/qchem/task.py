@@ -1,7 +1,9 @@
-# mypy: ignore-errors
-
 """Core definition of a Q-Chem Task Document"""
-from typing import Any, Callable
+
+# mypy: ignore-errors
+from __future__ import annotations
+
+from typing import Any, TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 from pymatgen.core.structure import Molecule
@@ -19,6 +21,9 @@ from emmet.core.qchem.calc_types import (
 from emmet.core.structure import MoleculeMetadata
 from emmet.core.task import BaseTaskDocument
 from emmet.core.utils import ValueEnum
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 

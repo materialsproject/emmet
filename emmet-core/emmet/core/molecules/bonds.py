@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import copy
 from hashlib import blake2b
-from typing import Any
+from typing import TYPE_CHECKING
 
 import networkx as nx
 from pydantic import Field
@@ -12,6 +14,9 @@ from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPculeID
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.utils import make_mol_graph
+
+if TYPE_CHECKING:
+    from typing import Any
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 

@@ -1144,8 +1144,7 @@ def _find_vasp_files(
     def _update_task_files(tpath) -> None:
         for category, files in discover_and_sort_vasp_files(tpath).items():
             for f in files:
-                f = f.name
-                tasks = sorted([t for t in task_names if t in f])
+                tasks = sorted([t for t in task_names if t in f.name])
                 task = "standard" if len(tasks) == 0 else tasks[0]
                 if task not in task_files:
                     task_files[task] = {}
@@ -1154,11 +1153,10 @@ def _find_vasp_files(
                 ) and category not in task_files[task]:
                     task_files[task][category] = []
 
-                abs_f = Path(base_path) / f
                 if is_list_like:
-                    task_files[task][category].append(abs_f)  # type: ignore[union-attr]
+                    task_files[task][category].append(f.path.absolute())  # type: ignore[union-attr]
                 else:
-                    task_files[task][category] = abs_f
+                    task_files[task][category] = f.path.absolute()
 
     _update_task_files(base_path)
 

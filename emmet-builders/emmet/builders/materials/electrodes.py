@@ -4,7 +4,6 @@ from datetime import datetime
 from functools import lru_cache
 from itertools import chain
 from math import ceil
-from typing import Any, Iterator
 
 from maggma.builders import Builder
 from maggma.stores import MongoStore
@@ -17,6 +16,12 @@ from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.electrode import ConversionElectrodeDoc, InsertionElectrodeDoc
 from emmet.core.structure_group import StructureGroupDoc, _get_id_lexi
 from emmet.core.utils import jsanitize
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Any
+    from collections.abc import Iterator
 
 
 def s_hash(el):

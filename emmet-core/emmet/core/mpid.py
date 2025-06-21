@@ -2,11 +2,15 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Callable
+from typing import TYPE_CHECKING
 
 from pydantic import GetJsonSchemaHandler
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import CoreSchema, core_schema
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import Any
 
 # matches "mp-1234" or "1234" followed by and optional "-(Alphanumeric)"
 mpid_regex = re.compile(r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$")

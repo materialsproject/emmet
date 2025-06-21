@@ -17,8 +17,9 @@ The build proceeds in the below steps:
 7. Fit the elastic tensor.
 """
 
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Any, Generator
 
 import numpy as np
 from maggma.core import Builder, Store
@@ -32,6 +33,12 @@ from emmet.core.elasticity import ElasticityDoc
 from emmet.core.mpid import MPID
 from emmet.core.utils import jsanitize
 from emmet.core.vasp.calc_types import CalcType
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+    from typing import Any
 
 
 class ElasticityBuilder(Builder):
