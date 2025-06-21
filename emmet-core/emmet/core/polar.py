@@ -40,6 +40,10 @@ class DielectricDoc(PropertyDoc):
 
     n: float = Field(description="Refractive index.")
 
+    structure: Structure | None = Field(
+        None, description="The structure associated with this calculation."
+    )
+
     @classmethod
     def from_ionic_and_electronic(
         cls,
@@ -91,6 +95,10 @@ class PiezoelectricDoc(PropertyDoc):
     )
     strain_for_max: list[float] = Field(
         description="Normalized strain direction for maximum piezo repsonse"
+    )
+
+    structure: Structure | None = Field(
+        None, description="The structure associated with this calculation."
     )
 
     @classmethod
