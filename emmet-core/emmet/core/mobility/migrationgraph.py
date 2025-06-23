@@ -15,7 +15,7 @@ from emmet.core.base import EmmetBaseModel
 from emmet.core.neb import NebPathwayResult
 from emmet.core.utils import utcnow
 
-from pymatgen.core import Structure
+from pymatgen.core import Element, Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
@@ -275,9 +275,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         if not mgd_w_cost.migration_graph:
             raise ValueError("A MigrationGraph must be provided to augment it.")
         paths_summary, mg_new = cls.get_paths_summary_with_neb_res(
-            mg=mgd_w_cost.migration_graph,
-            npr=npr,
-            barrier_type=barrier_type
+            mg=mgd_w_cost.migration_graph, npr=npr, barrier_type=barrier_type
         )
         mgd_w_cost.paths_summary = paths_summary
         mgd_w_cost.migration_graph_w_cost = mg_new
@@ -517,14 +515,31 @@ class MigrationGraphDoc(EmmetBaseModel):
 
     @staticmethod
     def get_distinct_hop_sites(
-        inserted_ion_coords: list[str], insert_coords_combo: list[str]
-    ) -> tuple[list[Sequence[float]], list[str], dict]:
+        inserted_ion_coords: list[dict[str, list[float]]],
+        insert_coords_combo: list[str],
+    ) -> tuple[list[list[float]], list[str], dict[str, str]]:
         """
-        This is a utils function that converts the site dict and combo into a site list and combo that contain only distince endpoints used the combos. # noqa: E501
+        Expand the list of inserted coordinates and hop indices.
+
+        Parameters
+        -----------
+        inserted_ion_coords: list[dict[str, list[float]]]
+            List of dict's containing the working ion coordinates.
+        insert_coords_combo: list[str]
+            List of hop indices of the form "<int>+<int>"
+
+        Returns
+        -----------
+        list of list of float
+            List of working ion coordinates
+        list of str
+            List of hop keys
+        dict of str to str
+            Dict mapping of hop keys in different formats
         """
-        dis_sites_list: list[list[Sequence[float]]] = []
+        dis_sites_list: list[list[float]] = []
         dis_combo_list: list[str] = []
-        mgdoc_sites_mapping: dict[str, str] = {}
+        mgdoc_sites_mapping: dict[int, int] = {}
         combo_mapping = {}
 
         for one_combo in insert_coords_combo:
@@ -590,7 +605,7 @@ class MigrationGraphDoc(EmmetBaseModel):
                     mg_new,
                     i_sc=info["input_endpoints"][0],
                     e_sc=info["input_endpoints"][-1],
-                    data_array=info,
+                    data_array=info,  # type: ignore[arg-type]
                     key="energy_struct_info",
                 )
             except (RuntimeError, ValueError) as e:
@@ -668,8 +683,9 @@ class MigrationGraphDoc(EmmetBaseModel):
     @staticmethod
     def _get_energy_struct_info(npr: NebPathwayResult) -> dict[str, dict[str, Any]]:
         """
-        This is a helper function that converts results in NebPathWayResult into
-        an info dict to be inserted into unique_hops of MigrationGraph
+        Convert results in an NebPathWayResult object to a dict.
+
+        This method exists primarily to populate MigrationGraph.unique_hops.
         """
         energy_struct_info = {}
         for hop_key, data in npr.hops.items():
@@ -687,10 +703,16 @@ class MigrationGraphDoc(EmmetBaseModel):
 
     @staticmethod
     def _get_wi_ionic_radius(mg: MigrationGraph) -> float:
-        wi = mg.only_sites[0].specie
-        wi_oxi_state_guess = mg.structure.composition.oxi_state_guesses()[0][wi.name]
-        if wi_oxi_state_guess in wi.ionic_radii:
-            return wi.ionic_radii[wi_oxi_state_guess]
+        """
+        Guess the ionic radius of the working ion from a MigrationGraph.
+        """
+        wi = Element(mg.only_sites[0].species.elements[0].name)  # type: ignore[arg-type]
+        if (
+            wi_oxi_state_guess := mg.structure.composition.oxi_state_guesses()[0][
+                wi.name
+            ]
+        ) in wi.ionic_radii:
+            return wi.ionic_radii[wi_oxi_state_guess]  # type: ignore[index]
         return wi.ionic_radii[min(wi.ionic_radii)]
 
     @staticmethod
@@ -700,6 +722,20 @@ class MigrationGraphDoc(EmmetBaseModel):
         length_cutoff: float,
         barrier_cutoff: float = 0.02,
     ) -> bool:
+        """
+        Check whether a migration hop is within distance and barrier cutoffs.
+
+        Parameters
+        -----------
+        unique_hop : dict of str to Any
+            Representation of the hop, including distance
+        current_cost : float
+            Penalty associated with the migration event
+        length_cutoff : float
+            Distance cutoff for a single hop
+        barrier_cutoff : float, default 0.02
+            Cutoff for the energy barrier of the hop.
+        """
         hop_length = unique_hop["hop_distance"]
         if hop_length < length_cutoff and current_cost < barrier_cutoff:
             return True
