@@ -69,7 +69,7 @@ class BondingDoc(PropertyDoc):
 
         for method in preferred_methods:
             try:
-                sg = StructureGraph.with_local_env_strategy(structure, method)
+                sg = StructureGraph.from_local_env_strategy(structure, method)
 
                 # ensure edge weights are specifically bond lengths
                 edge_weights = []
