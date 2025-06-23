@@ -226,8 +226,8 @@ class MigrationGraphDoc(EmmetBaseModel):
                 combo,
             ) = cls.generate_sc_fields(
                 mg=migration_graph,
-                min_length_sc=kwargs["min_length_sc"],
-                minmax_num_atoms=kwargs["minmax_num_atoms"],
+                min_length_sc=min_length_sc,
+                minmax_num_atoms=minmax_num_atoms,
                 sm=sm,
                 sc_gen_schema=sc_gen_schema,
             )

@@ -33,8 +33,10 @@ def test_chemsys_permutations(test_dir):
 
 
 def test_get_hop_cutoff(test_dir):
-    spinel_mg = loadfn(test_dir / "mobility/migration_graph_spinel_MgMn2O4.json")
-    nasicon_mg = loadfn(test_dir / "mobility/migration_graph_nasicon_MgV2(PO4)3.json")
+    spinel_mg = loadfn(test_dir / "mobility/migration_graph_spinel_MgMn2O4.json.gz")
+    nasicon_mg = loadfn(
+        test_dir / "mobility/migration_graph_nasicon_MgV2(PO4)3.json.gz"
+    )
 
     # tests for "min_distance" algorithm
     assert_almost_equal(

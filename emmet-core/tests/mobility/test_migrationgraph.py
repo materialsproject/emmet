@@ -9,7 +9,7 @@ from emmet.core.mobility.migrationgraph import MigrationGraphDoc
 @pytest.fixture(scope="session")
 def get_entries(test_dir):
     entry_Li = ComputedEntry("Li", -1.90753119)
-    entries = loadfn(test_dir / "mobility/LiMnP2O7_batt.json")
+    entries = loadfn(test_dir / "mobility/LiMnP2O7_batt.json.gz")
     return (entries, entry_Li)
 
 
@@ -36,7 +36,7 @@ def mg_for_sc_fields(test_dir):
     """
     get MigrationGraph object generated with methods from pymatgen.analysis.diffusion for testing generate_sc_fields
     """
-    mg_for_sc = loadfn(test_dir / "mobility/mg_for_sc.json")
+    mg_for_sc = loadfn(test_dir / "mobility/mg_for_sc.json.gz")
     return mg_for_sc
 
 
@@ -45,8 +45,8 @@ def match_mgdoc_npr(test_dir):
     """
     get the MigrationGraphDoc and NebPathwayResult objects to test matching functions
     """
-    match_mgdoc = loadfn(test_dir / "mobility/test_match_mgdoc.json")
-    match_npr = loadfn(test_dir / "mobility/test_match_npr_doc.json")
+    match_mgdoc = loadfn(test_dir / "mobility/test_match_mgdoc.json.gz")
+    match_npr = loadfn(test_dir / "mobility/test_match_npr_doc.json.gz")
     return (match_mgdoc, match_npr)
 
 
