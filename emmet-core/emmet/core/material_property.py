@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator
 from pydantic.json_schema import SkipJsonSchema
 from pymatgen.core import Structure
 
@@ -65,12 +65,10 @@ class PropertyDoc(StructureMetadata):
         None, description="The structure associated with this property.", exclude=True
     )
 
-    @model_validator(mode="before")
+    @field_validator("last_updated", mode="before")
     @classmethod
-    def handle_datetime(cls, config: Any) -> Any:
-        if dt := config.get("last_updated"):
-            config["last_updated"] = convert_datetime(cls, dt)
-        return config
+    def handle_datetime(cls, v: Any) -> datetime:
+        return convert_datetime(v)
 
     @classmethod
     def from_structure(  # type: ignore[override]

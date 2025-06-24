@@ -462,7 +462,6 @@ class ChemEnvDoc(PropertyDoc):
             return super().from_structure(
                 meta_structure=structure,
                 material_id=material_id,
-                structure=structure,
                 **d,
                 **kwargs,
             )

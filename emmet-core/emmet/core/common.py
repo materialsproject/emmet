@@ -23,6 +23,7 @@ def convert_datetime(cls, v):
         return dt
 
     v = MontyDecoder().process_decoded(v)
+    print(v)
     if not v.tzinfo:
         v = v.replace(tzinfo=timezone.utc)
     return v

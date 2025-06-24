@@ -1,4 +1,6 @@
-from typing import Any
+from __future__ import annotations
+
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 from pydantic import Field
@@ -8,6 +10,14 @@ from pymatgen.analysis.local_env import NearNeighbors
 from emmet.core.material_property import PropertyDoc
 
 AVAILABLE_METHODS = {nn.__name__: nn for nn in NearNeighbors.__subclasses__()}
+
+if TYPE_CHECKING:
+
+    from typing_extensions import Self
+
+    from pymatgen.core import Structure
+
+    from emmet.core.mpid import MPID
 
 
 class BondingDoc(PropertyDoc):
@@ -41,14 +51,14 @@ class BondingDoc(PropertyDoc):
     @classmethod
     def from_structure(
         cls,
-        structure,
-        material_id,
-        preferred_methods=(
+        structure: Structure,
+        material_id: str | MPID,
+        preferred_methods: tuple[str | NearNeighbors, ...] = (
             "CrystalNN",
             "MinimumDistanceNN",
         ),
         **kwargs,
-    ):
+    ) -> Self | None:
         """
         Calculate
 
@@ -61,14 +71,14 @@ class BondingDoc(PropertyDoc):
         """
 
         bonding_info = None
-        preferred_methods = [  # type: ignore
+        bond_analysis_methods: list[NearNeighbors] = [
             AVAILABLE_METHODS[method]() if isinstance(method, str) else method
             for method in preferred_methods
         ]
 
         warnings: list[str] = []
 
-        for method in preferred_methods:
+        for method in bond_analysis_methods:
             try:
                 sg = StructureGraph.from_local_env_strategy(structure, method)
 
@@ -107,3 +117,4 @@ class BondingDoc(PropertyDoc):
                 **bonding_info,
                 **kwargs,
             )
+        return None

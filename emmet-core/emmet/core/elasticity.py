@@ -356,7 +356,6 @@ class ElasticityDoc(PropertyDoc):
         return cls.from_structure(
             structure,
             material_id,
-            structure=structure,
             order=2,
             elastic_tensor=et_doc,
             compliance_tensor=ct_doc,
