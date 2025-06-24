@@ -278,7 +278,7 @@ def nbo_molecule_graph(mol: Molecule, nbo: dict[str, Any]):
     :return:
     """
 
-    mg = MoleculeGraph.with_empty_graph(mol)
+    mg = MoleculeGraph.from_empty_graph(mol)
 
     alpha_bonds, warnings = _bonds_hybridization(nbo, 1)
     beta_bonds, new_warnings = _bonds_hybridization(nbo, 3)
