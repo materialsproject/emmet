@@ -2,8 +2,12 @@ import pytest
 from pymatgen.core import Lattice, Structure
 from pymatgen.util.provenance import Author, HistoryNode, StructureNL
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.provenance import Database, ProvenanceDoc, SNLDict
 from emmet.core.utils import utcnow
+
+if ARROW_COMPATIBLE:
+    import pyarrow as pa
 
 
 @pytest.fixture
@@ -55,3 +59,18 @@ def test_from_snls(snls, structure):
         is False
     )
     assert doc.dict(exclude_none=True)["property_name"] == "provenance"
+
+
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
+def test_arrow(snls, structure):
+    doc = ProvenanceDoc.from_SNLs(
+        material_id="mp-3", structure=structure, snls=snls, deprecated=False
+    )
+    arrow_struct = pa.scalar(
+        doc.model_dump(context={"format": "arrow"}), type=ProvenanceDoc.arrow_type()
+    )
+    test_arrow_doc = ProvenanceDoc(**arrow_struct.as_py(maps_as_pydicts="strict"))
+
+    assert doc == test_arrow_doc

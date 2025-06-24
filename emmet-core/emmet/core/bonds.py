@@ -1,14 +1,25 @@
 import logging
-from typing import Any
+from typing import TypeAlias
 
 import numpy as np
 from pydantic import Field
 from pymatgen.analysis.graphs import StructureGraph
 from pymatgen.analysis.local_env import NearNeighbors
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.material_property import PropertyDoc
+from emmet.core.typing import TypedBondLengthStatsDict
 
 AVAILABLE_METHODS = {nn.__name__: nn for nn in NearNeighbors.__subclasses__()}
+
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters.structure_graph_adapter import (
+        AnnotatedStructureGraph,
+    )
+
+StructureGraphType: TypeAlias = (
+    AnnotatedStructureGraph if ARROW_COMPATIBLE else StructureGraph  # type: ignore[valid-type]
+)
 
 
 class BondingDoc(PropertyDoc):
@@ -17,7 +28,7 @@ class BondingDoc(PropertyDoc):
 
     property_name: str = "bonding"
 
-    structure_graph: StructureGraph = Field(
+    structure_graph: StructureGraphType = Field(
         description="Structure graph",
     )
 
@@ -27,9 +38,8 @@ class BondingDoc(PropertyDoc):
         description="Dictionary of bond types to their length, e.g. a Fe-O to "
         "a list of the lengths of Fe-O bonds in Angstrom."
     )
-    bond_length_stats: dict[str, Any] = Field(
+    bond_length_stats: TypedBondLengthStatsDict = Field(
         description="Dictionary of statistics of bonds in structure "
-        "with keys all_weights, min, max, mean and variance."
     )
     coordination_envs: list[str] = Field(
         description="List of co-ordination environments, e.g. ['Mo-S(6)', 'S-Mo(3)']."

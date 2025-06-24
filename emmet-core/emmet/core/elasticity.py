@@ -16,6 +16,7 @@ from emmet.core.material_property import PropertyDoc
 from emmet.core.math import Matrix3D, MatrixVoigt
 from emmet.core.mpid import MPID
 from emmet.core.settings import EmmetSettings
+from emmet.core.typing import StructureType
 
 SETTINGS = EmmetSettings()
 
@@ -168,8 +169,9 @@ class WarningMessage(BaseModel):
 class ElasticityDoc(PropertyDoc):
     property_name: str = "elasticity"
 
-    structure: Structure | None = Field(
-        None, description="Structure to compute the elasticity"
+    structure: StructureType | None = Field(
+        None,
+        description="Structure to compute the elasticity",
     )
 
     order: int = Field(

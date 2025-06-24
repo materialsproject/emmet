@@ -4,37 +4,38 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
 from pymatgen.command_line.bader_caller import bader_analysis_from_path
 from pymatgen.command_line.chargemol_caller import ChargemolAnalysis
-from pymatgen.core.lattice import Lattice
 from pymatgen.core.structure import Structure
 from pymatgen.core.trajectory import Trajectory
 from pymatgen.electronic_structure.bandstructure import BandStructure
 from pymatgen.electronic_structure.core import OrbitalType
 from pymatgen.electronic_structure.dos import CompleteDos, Dos
-from pymatgen.io.vasp import (
-    BSVasprun,
-    Kpoints,
-    Locpot,
-    Oszicar,
-    Outcar,
-    Poscar,
-    Potcar,
-    PotcarSingle,
-    Vasprun,
-    VolumetricData,
-)
+from pymatgen.io.vasp import BSVasprun, Kpoints, Locpot, Oszicar, Outcar, Poscar
+from pymatgen.io.vasp import Potcar as VaspPotcar
+from pymatgen.io.vasp import PotcarSingle, Vasprun, VolumetricData
+from typing_extensions import NotRequired, TypedDict
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
-from emmet.core.utils import ValueEnum
+from emmet.core.typing import LatticeType, StructureType
+from emmet.core.utils import ValueEnum, jsanitize, type_override
 from emmet.core.vasp.calc_types import (
     CalcType,
     RunType,
@@ -45,10 +46,16 @@ from emmet.core.vasp.calc_types import (
 )
 from emmet.core.vasp.task_valid import TaskState
 
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters.kpoints_adapter import KpointsTypeVar
+
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
 logger = logging.getLogger(__name__)
+
+
+KpointsType: TypeAlias = KpointsTypeVar if ARROW_COMPATIBLE else Kpoints
 
 
 class VaspObject(ValueEnum):
@@ -81,13 +88,37 @@ class CalculationBaseModel(BaseModel):
         return getattr(self, key, default_value)
 
 
+class TypedStatisticsDict(TypedDict):
+    MEAN: float
+    ABSMEAN: float
+    VAR: float
+    MIN: float
+    MAX: float
+
+
+class TypedPotcarKeywordsDict(TypedDict):
+    header: list[str]
+    data: list[str]
+
+
+class TypedPotcarStatsDict(TypedDict):
+    header: TypedStatisticsDict
+    data: TypedStatisticsDict
+
+
+class TypedPotcarSummaryStatsDict(TypedDict):
+    keywords: NotRequired[TypedPotcarKeywordsDict | None]
+    stats: NotRequired[TypedPotcarStatsDict | None]
+
+
 class PotcarSpec(BaseModel):
     """Document defining a VASP POTCAR specification."""
 
     titel: str | None = Field(None, description="TITEL field from POTCAR header")
     hash: str | None = Field(None, description="md5 hash of POTCAR file")
-    summary_stats: dict | None = Field(
-        None, description="summary statistics used to ID POTCARs without hashing"
+    summary_stats: TypedPotcarSummaryStatsDict | None = Field(
+        None,
+        description="summary statistics used to ID POTCARs without hashing",
     )
 
     @classmethod
@@ -112,7 +143,7 @@ class PotcarSpec(BaseModel):
         )
 
     @classmethod
-    def from_potcar(cls, potcar: Potcar) -> list["PotcarSpec"]:
+    def from_potcar(cls, potcar: VaspPotcar) -> list["PotcarSpec"]:
         """
         Get a list of PotcarSpecs from a Potcar.
 
@@ -128,16 +159,29 @@ class PotcarSpec(BaseModel):
         """
         return [cls.from_potcar_single(p) for p in potcar]
 
+    @classmethod
+    def from_file(cls, file_path: str | Path) -> list["PotcarSpec"]:
+        """
+        Get a list of PotcarSpecs from a Potcar.
+        Parameters
+        ----------
+        file_path : str or Path of the POTCAR
+        Returns
+        -------
+        list[PotcarSpec]
+            A list of potcar specs.
+        """
+        return cls.from_potcar(VaspPotcar.from_file(str(file_path)))
 
+
+@type_override({"incar": str, "parameters": str})
 class CalculationInput(CalculationBaseModel):
     """Document defining VASP calculation inputs."""
 
     incar: dict[str, Any] | None = Field(
         None, description="INCAR parameters for the calculation"
     )
-    kpoints: dict[str, Any] | Kpoints | None = Field(
-        None, description="KPOINTS for the calculation"
-    )
+    kpoints: KpointsType | None = Field(None, description="KPOINTS for the calculation")
     nkpoints: int | None = Field(None, description="Total number of k-points")
     potcar: list[str] | None = Field(
         None, description="POTCAR symbols in the calculation"
@@ -149,16 +193,66 @@ class CalculationInput(CalculationBaseModel):
         None, description="List of POTCAR functional types."
     )
     parameters: dict | None = Field(None, description="Parameters from vasprun")
-    lattice_rec: Lattice | None = Field(
+    lattice_rec: LatticeType | None = Field(
         None, description="Reciprocal lattice of the structure"
     )
-    structure: Structure | None = Field(
+    structure: StructureType | None = Field(
         None, description="Input structure for the calculation"
     )
     is_hubbard: bool = Field(
         default=False, description="Is this a Hubbard +U calculation"
     )
-    hubbards: dict | None = Field(None, description="The hubbard parameters used")
+    hubbards: dict[str, float] | None = Field(
+        None, description="The hubbard parameters used"
+    )
+
+    @field_validator("hubbards", mode="before")
+    def hubbards_deserializer(cls, hubbards):
+        if ARROW_COMPATIBLE:
+            if isinstance(hubbards, list):
+                hubbards = {k: v for k, v in hubbards}
+
+        return hubbards
+
+    @field_serializer("incar", "parameters", mode="wrap")
+    def incar_params_serializer(self, d, default_serializer, info):
+        default_serialized_object = default_serializer(d, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            return json.dumps(default_serialized_object)
+
+        return default_serialized_object
+
+    @field_validator("incar", "parameters", mode="before")
+    def incar_params_deserializer(cls, d):
+        if ARROW_COMPATIBLE:
+            if isinstance(d, str):
+                d = json.loads(d)
+        return d
+
+    @field_serializer("kpoints", mode="wrap")
+    def kpoints_serializer(self, kpoints, default_serializer, info):
+        default_serialized_object = default_serializer(kpoints, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow" and default_serialized_object:
+            arrow_compat_object = jsanitize(default_serialized_object, allow_bson=True)
+            arrow_compat_object["tet_connections"] = json.dumps(
+                arrow_compat_object["tet_connections"]
+            )
+            return arrow_compat_object
+
+        return default_serialized_object
+
+    @field_validator("kpoints", mode="before")
+    def kpoints_deserializer(cls, kpoints):
+        if ARROW_COMPATIBLE:
+            if isinstance(kpoints, dict):
+                if isinstance(kpoints["tet_connections"], str):
+                    kpoints["tet_connections"] = json.loads(kpoints["tet_connections"])
+
+        return kpoints
 
     @classmethod
     def from_vasprun(cls, vasprun: Vasprun) -> "CalculationInput":
@@ -302,7 +396,7 @@ class ElectronPhononDisplacedStructures(BaseModel):
         description="The temperatures at which the electron phonon displacements "
         "were generated.",
     )
-    structures: list[Structure] | None = Field(
+    structures: list[StructureType] | None = Field(
         None, description="The displaced structures corresponding to each temperature."
     )
 
@@ -347,7 +441,9 @@ class IonicStep(BaseModel):  # type: ignore
     num_electronic_steps: int | None = Field(
         None, description="The number of electronic steps needed to reach convergence."
     )
-    structure: Structure | None = Field(None, description="The structure at this step.")
+    structure: StructureType | None = Field(
+        None, description="The structure at this step."
+    )
 
     model_config = ConfigDict(extra="allow")
 
@@ -358,6 +454,7 @@ class IonicStep(BaseModel):  # type: ignore
         return self
 
 
+@type_override({"outcar": str, "locpot": dict[str, list[float]]})
 class CalculationOutput(BaseModel):
     """Document defining VASP calculation outputs."""
 
@@ -367,7 +464,7 @@ class CalculationOutput(BaseModel):
     energy_per_atom: float | None = Field(
         None, description="The final DFT energy per atom for the calculation"
     )
-    structure: Structure | None = Field(
+    structure: StructureType | None = Field(
         None, description="The final structure from the calculation"
     )
     efermi: float | None = Field(
@@ -398,7 +495,7 @@ class CalculationOutput(BaseModel):
         description="The magnetization density, defined as total_mag/volume "
         "(units of A^-3)",
     )
-    optical_absorption_coeff: list | None = Field(
+    optical_absorption_coeff: list[float] | None = Field(
         None, description="Optical absorption coefficient in cm^-1"
     )
     epsilon_static: ListMatrix3D | None = Field(
@@ -455,6 +552,54 @@ class CalculationOutput(BaseModel):
     run_stats: RunStatistics | None = Field(
         None, description="Summary of runtime statistics for this calculation"
     )
+
+    @field_validator("locpot", mode="before")
+    def locpot_deserializer(cls, locpot):
+        if ARROW_COMPATIBLE:
+            if isinstance(locpot, list):
+                locpot = {k: v for k, v in locpot}
+
+        return locpot
+
+    @field_validator("dos_properties", mode="before")
+    def dos_properties_deserializer(cls, dos_properties):
+        if ARROW_COMPATIBLE:
+            if dos_properties and isinstance(dos_properties, list):
+                dos_properties = {
+                    element: {
+                        orbital: {key: value for key, value in property}
+                        for orbital, property in properties
+                    }
+                    for element, properties in dos_properties
+                }
+            elif dos_properties and isinstance(
+                next(iter(dos_properties.values())), list
+            ):
+                dos_properties = {
+                    element: {
+                        orbital: {key: value for key, value in property}
+                        for orbital, property in properties
+                    }
+                    for element, properties in dos_properties.items()
+                }
+        return dos_properties
+
+    @field_serializer("outcar", mode="wrap")
+    def outcar_serializer(self, outcar, default_serializer, info):
+        default_serialized_object = default_serializer(outcar, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            return json.dumps(default_serialized_object)
+
+        return default_serialized_object
+
+    @field_validator("outcar", mode="before")
+    def outcar_deserializer(cls, outcar):
+        if ARROW_COMPATIBLE:
+            if isinstance(outcar, str):
+                outcar = json.loads(outcar)
+        return outcar
 
     @classmethod
     def from_vasp_outputs(
@@ -619,6 +764,7 @@ class CalculationOutput(BaseModel):
         )
 
 
+@type_override({"bader": str, "ddec6": str})
 class Calculation(CalculationBaseModel):
     """Full VASP calculation inputs and outputs."""
 
@@ -628,7 +774,7 @@ class Calculation(CalculationBaseModel):
     vasp_version: str | None = Field(
         None, description="VASP version used to perform the calculation"
     )
-    has_vasp_completed: TaskState | bool | None = Field(
+    has_vasp_completed: TaskState | None = Field(
         None, description="Whether VASP completed the calculation successfully"
     )
     input: CalculationInput | None = Field(
@@ -659,6 +805,32 @@ class Calculation(CalculationBaseModel):
     calc_type: CalcType | None = Field(
         None, description="Return calculation type (run type + task_type)."
     )
+
+    @field_serializer("bader", "ddec6", mode="wrap")
+    def bader_ddec6__serializer(self, d, default_serializer, info):
+        default_serialized_object = default_serializer(d, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            return json.dumps(jsanitize(default_serialized_object, allow_bson=True))
+
+        return default_serialized_object
+
+    @field_validator("bader", "ddec6", mode="before")
+    def bader_ddec6_deserializer(cls, d):
+        if ARROW_COMPATIBLE:
+            if isinstance(d, str):
+                d = json.loads(d)
+
+        return d
+
+    @field_validator("output_file_paths", mode="before")
+    def output_fps_deserializer(cls, output_fps):
+        if ARROW_COMPATIBLE:
+            if isinstance(output_fps, list):
+                output_fps = {k: v for k, v in output_fps}
+
+        return output_fps
 
     @classmethod
     def from_vasp_files(

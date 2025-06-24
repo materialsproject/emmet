@@ -6,6 +6,8 @@ from pydantic import BaseModel, Field, PlainSerializer, PlainValidator, WithJson
 from solvation_analysis.solute import Solute
 from typing_extensions import Annotated
 
+from emmet.core.utils import arrow_incompatible
+
 
 def data_frame_validater(o: Any) -> pd.DataFrame:
     if isinstance(o, pd.DataFrame):
@@ -28,6 +30,7 @@ DataFrame = Annotated[
 
 
 # class SolvationDoc(ClassicalMDDoc, arbitrary_types_allowed=True):
+@arrow_incompatible
 class SolvationDoc(BaseModel, arbitrary_types_allowed=True):
     solute_name: str | None = Field(None, description="Name of the solute")
 

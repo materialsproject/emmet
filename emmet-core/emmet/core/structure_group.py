@@ -4,12 +4,13 @@ from datetime import datetime
 from itertools import groupby
 from typing import Iterable
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, field_validator
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 from pymatgen.core.composition import Composition
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
+from emmet.core.base import ContextModel
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID
 from emmet.core.utils import utcnow
@@ -26,7 +27,7 @@ def generic_groupby(list_in, comp=operator.eq) -> list[int]:
     Returns:
         [int] list of labels for the input list
     """
-    list_out = [None] * len(list_in)  # type: list[int| None]
+    list_out: list[int | None] = [None] * len(list_in)
     label_num = 0
     for i1, ls1 in enumerate(list_out):
         if ls1 is not None:
@@ -47,7 +48,7 @@ def s_hash(el):
     return el.data["comp_delith"]
 
 
-class StructureGroupDoc(BaseModel):
+class StructureGroupDoc(ContextModel):
     """
     Group of structure
     """
@@ -62,18 +63,18 @@ class StructureGroupDoc(BaseModel):
         None, description="True if multiple compositions are present in the group."
     )
 
-    material_ids: list | None = Field(
+    material_ids: list[str] | None = Field(
         None,
         description="A list of materials ids for all of the materials that were grouped together.",
     )
 
-    host_material_ids: list | None = Field(
+    host_material_ids: list[str] | None = Field(
         None,
         description="Material id(s) that correspond(s) to the host structure(s), which has/have the lowest"
         "concentration of ignored specie.",
     )
 
-    insertion_material_ids: list | None = Field(
+    insertion_material_ids: list[str] | None = Field(
         None,
         description="Material ids that correspond to the non-host structures identified in a given structure group.",
     )

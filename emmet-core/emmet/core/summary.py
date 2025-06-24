@@ -3,12 +3,12 @@ from typing import TypeVar
 
 from pydantic import BaseModel, Field
 from pymatgen.core.periodic_table import Element
-from pymatgen.core.structure import Structure
 
 from emmet.core.electronic_structure import BandstructureData, DosData
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
 from emmet.core.thermo import DecompositionProduct
+from emmet.core.typing import StructureType
 from emmet.core.xas import Edge, Type
 
 T = TypeVar("T", bound="SummaryDoc")
@@ -144,7 +144,7 @@ class SummaryDoc(PropertyDoc):
 
     # Materials
 
-    structure: Structure = Field(
+    structure: StructureType = Field(
         ...,
         description="The lowest energy structure for this material.",
     )
@@ -214,12 +214,12 @@ class SummaryDoc(PropertyDoc):
         description="Band gap energy in eV.",
     )
 
-    cbm: float | dict | None = Field(
+    cbm: float | None = Field(
         None,
         description="Conduction band minimum data.",
     )
 
-    vbm: float | dict | None = Field(
+    vbm: float | None = Field(
         None,
         description="Valence band maximum data.",
     )
@@ -239,7 +239,7 @@ class SummaryDoc(PropertyDoc):
         description="Whether the material is a metal.",
     )
 
-    es_source_calc_id: MPID | int | None = Field(
+    es_source_calc_id: MPID | None = Field(
         None,
         description="The source calculation ID for the electronic structure data.",
     )
@@ -310,24 +310,24 @@ class SummaryDoc(PropertyDoc):
 
     # Elasticity
 
-    # k_voigt: float | None= Field(None, description="Voigt average of the bulk modulus.")
+    # k_voigt: float | None = Field(None, description="Voigt average of the bulk modulus.")
 
-    # k_reuss: float | None= Field(None, description="Reuss average of the bulk modulus in GPa.")
+    # k_reuss: float | None = Field(None, description="Reuss average of the bulk modulus in GPa.")
 
-    # k_vrh: float | None= Field(None, description="Voigt-Reuss-Hill average of the bulk modulus in GPa.")
+    # k_vrh: float | None = Field(None, description="Voigt-Reuss-Hill average of the bulk modulus in GPa.")
 
-    # g_voigt: float | None= Field(None, description="Voigt average of the shear modulus in GPa.")
+    # g_voigt: float | None = Field(None, description="Voigt average of the shear modulus in GPa.")
 
-    # g_reuss: float | None= Field(None, description="Reuss average of the shear modulus in GPa.")
+    # g_reuss: float | None = Field(None, description="Reuss average of the shear modulus in GPa.")
 
-    # g_vrh: float | None= Field(None, description="Voigt-Reuss-Hill average of the shear modulus in GPa.")
+    # g_vrh: float | None = Field(None, description="Voigt-Reuss-Hill average of the shear modulus in GPa.")
 
-    bulk_modulus: dict | None = Field(
+    bulk_modulus: dict[str, float] | None = Field(
         None,
         description="Voigt, Reuss, and Voigt-Reuss-Hill averages of the bulk modulus in GPa.",
     )
 
-    shear_modulus: dict | None = Field(
+    shear_modulus: dict[str, float] | None = Field(
         None,
         description="Voigt, Reuss, and Voigt-Reuss-Hill averages of the shear modulus in GPa.",
     )

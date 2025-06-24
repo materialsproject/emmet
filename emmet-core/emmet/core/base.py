@@ -5,14 +5,43 @@
 from datetime import datetime
 from typing import Literal, TypeVar
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    SerializationInfo,
+    field_validator,
+    model_serializer,
+)
 from pymatgen.core import __version__ as pmg_version
 
-from emmet.core import __version__
+from emmet.core import ARROW_COMPATIBLE, __version__
 from emmet.core.common import convert_datetime
-from emmet.core.utils import utcnow
+from emmet.core.utils import jsanitize, utcnow
+
+if ARROW_COMPATIBLE:
+    from emmet.core.arrow import arrowize
 
 T = TypeVar("T", bound="EmmetBaseModel")
+
+
+class ContextModel(BaseModel):
+    @classmethod
+    def arrow_type(cls):
+        if not ARROW_COMPATIBLE:
+            raise RuntimeError(
+                "pyarrow must be installed to generate arrow type defs for emmet models"
+            )
+        return arrowize(cls)
+
+    @model_serializer(mode="wrap")
+    def model_serialization(self, default_serializer, info: SerializationInfo):
+        default_serialized_model = default_serializer(self, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            return jsanitize(default_serialized_model, strict=True, allow_bson=True)
+
+        return default_serialized_model
 
 
 class EmmetMeta(BaseModel):
@@ -53,7 +82,7 @@ class EmmetMeta(BaseModel):
         return convert_datetime(cls, v)
 
 
-class EmmetBaseModel(BaseModel):
+class EmmetBaseModel(ContextModel):
     """Base Model for default emmet data."""
 
     builder_meta: EmmetMeta | None = Field(

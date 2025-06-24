@@ -18,7 +18,7 @@ from emmet.core.qchem.calc_types import (
 )
 from emmet.core.structure import MoleculeMetadata
 from emmet.core.task import BaseTaskDocument
-from emmet.core.utils import ValueEnum
+from emmet.core.utils import ValueEnum, arrow_incompatible
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -32,6 +32,7 @@ class QChemStatus(ValueEnum):
     FAILED = "unsuccessful"
 
 
+@arrow_incompatible
 class OutputSummary(BaseModel):
     """
     Summary of an output for a Q-Chem calculation
@@ -110,6 +111,7 @@ class OutputSummary(BaseModel):
         }
 
 
+@arrow_incompatible
 class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     """
     Definition of a Q-Chem task document
