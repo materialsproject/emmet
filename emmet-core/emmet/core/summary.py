@@ -147,11 +147,6 @@ class SummaryDoc(PropertyDoc):
 
     # Materials
 
-    structure: Structure = Field(
-        ...,
-        description="The lowest energy structure for this material.",
-    )
-
     task_ids: list[MPID] = Field(
         [],
         title="Calculation IDs",
@@ -423,6 +418,12 @@ class SummaryDoc(PropertyDoc):
 
     database_Ids: dict[str, list[str]] = Field(
         {}, description="External database IDs corresponding to this material."
+    )
+
+    structure: Structure | None = Field(
+        None,
+        description="The lowest energy structure for this material.",
+        exclude=False,
     )
 
     @classmethod

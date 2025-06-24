@@ -1,4 +1,3 @@
-import logging
 from typing import Any
 
 import numpy as np
@@ -48,7 +47,7 @@ class BondingDoc(PropertyDoc):
             "CrystalNN",
             "MinimumDistanceNN",
         ),
-        **kwargs
+        **kwargs,
     ):
         """
         Calculate
@@ -66,6 +65,8 @@ class BondingDoc(PropertyDoc):
             AVAILABLE_METHODS[method]() if isinstance(method, str) else method
             for method in preferred_methods
         ]
+
+        warnings: list[str] = []
 
         for method in preferred_methods:
             try:
@@ -94,16 +95,15 @@ class BondingDoc(PropertyDoc):
                 break
 
             except Exception as e:
-                logging.warning(
-                    "Failed to calculate bonding: {} {} {}".format(
-                        material_id, method, e
-                    )
+                warnings.append(
+                    f"Failed to calculate bonding: {material_id} {method} {e}"
                 )
 
         if bonding_info:
             return super().from_structure(
                 meta_structure=structure,
                 material_id=material_id,
+                warnings=warnings,
                 **bonding_info,
-                **kwargs
+                **kwargs,
             )

@@ -1,5 +1,7 @@
 """Core definition for Polar property Document"""
 
+from __future__ import annotations
+
 import numpy as np
 from pydantic import BaseModel, Field
 from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
@@ -39,10 +41,6 @@ class DielectricDoc(PropertyDoc):
     )
 
     n: float = Field(description="Refractive index.")
-
-    structure: Structure | None = Field(
-        None, description="The structure associated with this calculation."
-    )
 
     @classmethod
     def from_ionic_and_electronic(
@@ -95,10 +93,6 @@ class PiezoelectricDoc(PropertyDoc):
     )
     strain_for_max: list[float] = Field(
         description="Normalized strain direction for maximum piezo repsonse"
-    )
-
-    structure: Structure | None = Field(
-        None, description="The structure associated with this calculation."
     )
 
     @classmethod
