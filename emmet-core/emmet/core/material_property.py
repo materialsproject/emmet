@@ -68,7 +68,7 @@ class PropertyDoc(StructureMetadata):
     @field_validator("last_updated", mode="before")
     @classmethod
     def handle_datetime(cls, v: Any) -> datetime:
-        return convert_datetime(v)
+        return convert_datetime(cls, v)
 
     @classmethod
     def from_structure(  # type: ignore[override]
