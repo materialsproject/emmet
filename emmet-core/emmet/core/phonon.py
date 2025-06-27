@@ -229,8 +229,8 @@ class PhononBS(BaseModel):
         """Convenience method for crystal toolkit to create electronic-structure style band structure object."""
         rlatt = Lattice(self.reciprocal_lattice)
         return BandStructureSymmLine(
-            [Kpoint(q, lattice=rlatt).frac_coords for q in self.qpoints],  # type: ignore[misc]
-            {Spin.up: np.array(self.frequencies)},
+            [Kpoint(q, lattice=rlatt).frac_coords for q in self.qpoints],  # type: ignore[arg-type]
+            {Spin.up: np.array(self.frequencies)},  # type: ignore[dict-item]
             rlatt,
             1e-6,  # There is no Fermi level in a Phonon DOS (these are bosons definitionally) but we want to plot the bands from zero.
             {
