@@ -168,10 +168,6 @@ class WarningMessage(BaseModel):
 class ElasticityDoc(PropertyDoc):
     property_name: str = "elasticity"
 
-    structure: Structure | None = Field(
-        None, description="Structure to compute the elasticity"
-    )
-
     order: int = Field(
         default=2, description="Order of the expansion of the elastic tensor"
     )
@@ -213,6 +209,10 @@ class ElasticityDoc(PropertyDoc):
     state: Status | None = Field(
         None,
         description="State of the fitting/analysis: `successful` or `failed`",
+    )
+
+    structure: Structure | None = Field(
+        None, description="Structure used to compute the elasticity.", exclude=False
     )
 
     @classmethod
@@ -356,7 +356,6 @@ class ElasticityDoc(PropertyDoc):
         return cls.from_structure(
             structure,
             material_id,
-            structure=structure,
             order=2,
             elastic_tensor=et_doc,
             compliance_tensor=ct_doc,

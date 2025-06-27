@@ -1,11 +1,10 @@
+from __future__ import annotations
+
 from pydantic import BaseModel, Field
 
 from emmet.core.utils import utcnow
 
-try:
-    from typing import Literal  # type: ignore
-except ImportError:
-    from typing_extensions import Literal  # type: ignore
+from typing import Literal
 
 from datetime import datetime
 

@@ -8,7 +8,7 @@ import hashlib
 from enum import Enum
 from itertools import groupby
 from math import gcd
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import TYPE_CHECKING
 
 import numpy as np
 from monty.io import zopen
@@ -38,7 +38,8 @@ except ImportError:
     bson = None  # type: ignore
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Iterator, Mapping
+    from typing import Any
 
     from emmet.core.typing import PathLike
 

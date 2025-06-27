@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 from pydantic import Field

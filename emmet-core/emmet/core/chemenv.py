@@ -316,11 +316,6 @@ class ChemEnvDoc(PropertyDoc):
 
     property_name: str = "coord_environment"
 
-    structure: Structure = Field(
-        ...,
-        description="The structure used in the generation of the chemical environment data",
-    )
-
     valences: list[int | float] = Field(
         description="List of valences for each site in this material to determine cations"
     )
@@ -371,6 +366,10 @@ class ChemEnvDoc(PropertyDoc):
     )
 
     warnings: str | None = Field(None, description="Warning")
+
+    structure: Structure | None = Field(
+        None, description="The structure associated with this property.", exclude=True
+    )
 
     @classmethod
     def from_structure(
@@ -463,7 +462,6 @@ class ChemEnvDoc(PropertyDoc):
             return super().from_structure(
                 meta_structure=structure,
                 material_id=material_id,
-                structure=structure,
                 **d,
                 **kwargs,
             )
@@ -527,7 +525,6 @@ class ChemEnvDoc(PropertyDoc):
         return super().from_structure(
             meta_structure=structure,
             material_id=material_id,
-            structure=structure,
             **d,
             **kwargs,
         )

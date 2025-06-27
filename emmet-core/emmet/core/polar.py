@@ -1,5 +1,7 @@
 """Core definition for Polar property Document"""
 
+from __future__ import annotations
+
 import numpy as np
 from pydantic import BaseModel, Field
 from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
