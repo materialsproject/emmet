@@ -181,6 +181,7 @@ def discover_and_sort_vasp_files(
             "vasprun",
             "contcar",
             "outcar",
+            "oszicar"
         ):
             if k in f:
                 by_type[f"{k}_file"].append(_f)

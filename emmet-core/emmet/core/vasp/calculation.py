@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 import os
+import copy
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -835,27 +836,44 @@ class Calculation(CalculationBaseModel):
             exclude_from_trajectory = ["structure"]
             if store_trajectory == StoreTrajectoryOption.PARTIAL:
                 exclude_from_trajectory.append("electronic_steps")
-            frame_properties = [
-                IonicStep(**x).model_dump(exclude=exclude_from_trajectory)
-                for x in vasprun.ionic_steps
-            ]
+
+            
+            # In the case of MLMD, not every ionic step is captured.
+            # We should instead use md_data instead
+            if vasprun.incar.get("ML_LMLFF"):
+                # Note that md_data includes the structures, but 
+                # to avoid redundance, we'll copy then remove them
+                frame_properties = copy.deepcopy(vasprun.md_data)
+                structures = [d["structure"] for d in vasprun.md_data]
+                for fp in frame_properties:
+                    del fp['structure']
+            else:
+                structures = [d["structure"] for d in vasprun.ionic_steps]
+                frame_properties = [
+                    IonicStep(**x).model_dump(exclude=exclude_from_trajectory)
+                    for x in vasprun.ionic_steps
+                ]
+
             if oszicar_file:
                 try:
+                    oszicar_file = dir_name / oszicar_file
                     oszicar = Oszicar(oszicar_file)
                     if "T" in oszicar.ionic_steps[0]:
                         for frame_property, oszicar_is in zip(
                             frame_properties, oszicar.ionic_steps
                         ):
                             frame_property["temperature"] = oszicar_is.get("T")
-                except ValueError:
+                except ValueError as e:
                     # there can be errors in parsing the floats from OSZICAR
+                    print("Error parsing OSZICAR file, skipping temperature assignment.", e.message)
                     pass
 
             traj = Trajectory.from_structures(
-                [d["structure"] for d in vasprun.ionic_steps],
+                structures,
                 frame_properties=frame_properties,
                 constant_lattice=False,
             )
+
             vasp_objects[VaspObject.TRAJECTORY] = traj  # type: ignore
 
         # MD run
