@@ -3,17 +3,20 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Sequence, Type, TypeVar
+from typing import Sequence, Type, TypeVar, TYPE_CHECKING
 
 from pydantic import Field, field_validator
 from pymatgen.core import Structure
 
 from emmet.core.common import convert_datetime
 from emmet.core.material import PropertyOrigin
-from emmet.core.mpid import MPID
+from emmet.core.mpid import AlphaID
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
+
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID
 
 S = TypeVar("S", bound="PropertyDoc")
 
@@ -26,7 +29,7 @@ class PropertyDoc(StructureMetadata):
     """
 
     property_name: str
-    material_id: MPID | None = Field(
+    material_id: AlphaID | None = Field(
         None,
         description="The Materials Project ID of the material, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
@@ -64,7 +67,7 @@ class PropertyDoc(StructureMetadata):
     def from_structure(  # type: ignore[override]
         cls: Type[S],
         meta_structure: Structure,
-        material_id: MPID | None = None,
+        material_id: AlphaID | MPID | None = None,
         **kwargs,
     ) -> S:
         """

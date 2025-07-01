@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import logging
 from collections import defaultdict
+from typing import TYPE_CHECKING
 
 import numpy as np
 from pydantic import Field
@@ -8,7 +11,9 @@ from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Specie
 
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import MPID
+
+if TYPE_CHECKING:
+    from emmet.core.mpid import AlphaID, MPID
 
 
 class OxidationStateDoc(PropertyDoc):
@@ -34,7 +39,7 @@ class OxidationStateDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_structure(cls, structure: Structure, material_id: MPID | None = None, **kwargs):  # type: ignore[override]
+    def from_structure(cls, structure: Structure, material_id: AlphaID | MPID | None = None, **kwargs):  # type: ignore[override]
         # TODO: add check for if it already has oxidation states, if so pass this along unchanged ("method": "manual")
         structure.remove_oxidation_states()
 
@@ -109,5 +114,5 @@ class OxidationStateDoc(PropertyDoc):
             material_id=material_id,
             structure=structure,
             **d,
-            **kwargs
+            **kwargs,
         )

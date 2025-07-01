@@ -9,7 +9,7 @@ from pymatgen.core.periodic_table import Element
 from pymatgen.electronic_structure.core import OrbitalType, Spin
 
 from emmet.core.electronic_structure import BSPathType, DOSProjectionType
-from emmet.core.mpid import MPID
+from emmet.core.mpid import MPID, AlphaID
 
 if version_info >= (3, 8):
     from typing import Literal  # type: ignore
@@ -237,7 +237,7 @@ class ObjectQuery(QueryOperator):
 
     def query(
         self,
-        task_id: MPID = Query(
+        task_id: MPID | AlphaID = Query(
             ...,
             description="The calculation (task) ID associated with the data object",
         ),

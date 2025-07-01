@@ -14,7 +14,7 @@ from pymatgen.core.periodic_table import DummySpecies, Element, Species
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.common import convert_datetime
-from emmet.core.mpid import MPID
+from emmet.core.mpid import AlphaID
 from emmet.core.utils import ValueEnum, utcnow
 
 
@@ -97,11 +97,11 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
         None, description="The energy above hull of the discharged material in eV/atom."
     )
 
-    id_charge: MPID | int | None | None = Field(
+    id_charge: AlphaID | int | None | None = Field(
         None, description="The Materials Project ID of the charged structure."
     )
 
-    id_discharge: MPID | int | None | None = Field(
+    id_discharge: AlphaID | int | None | None = Field(
         None, description="The Materials Project ID of the discharged structure."
     )
 
@@ -267,7 +267,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
         None, description="Returns all of the voltage steps material pairs."
     )
 
-    material_ids: list[MPID] | None = Field(
+    material_ids: list[AlphaID] | None = Field(
         None,
         description="The ids of all structures that matched to the present host lattice, regardless of stability. "
         "The stable entries can be found in the adjacent pairs.",

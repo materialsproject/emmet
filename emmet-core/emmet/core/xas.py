@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import warnings
 from itertools import groupby
+from typing import TYPE_CHECKING
 
 import numpy as np
 from pydantic import Field, field_validator
@@ -8,9 +11,11 @@ from pymatgen.core.periodic_table import Element
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.core.feff.task import TaskDocument
-from emmet.core.mpid import MPID
 from emmet.core.spectrum import SpectrumDoc
 from emmet.core.utils import ValueEnum
+
+if TYPE_CHECKING:
+    from emmet.core.mpid import AlphaID, MPID
 
 
 class Edge(ValueEnum):
@@ -77,7 +82,7 @@ class XASDoc(SpectrumDoc):
     def from_spectrum(
         cls,
         xas_spectrum: XAS,
-        material_id: MPID | None = None,
+        material_id: AlphaID | MPID | None = None,
         **kwargs,
     ):
         spectrum_type = xas_spectrum.spectrum_type
@@ -103,7 +108,7 @@ class XASDoc(SpectrumDoc):
     def from_task_docs(
         cls,
         all_tasks: list[TaskDocument],
-        material_id: MPID | None = None,
+        material_id: AlphaID | MPID | None = None,
         num_samples: int = 200,
     ) -> list["XASDoc"]:
         """

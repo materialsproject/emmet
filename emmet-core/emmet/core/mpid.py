@@ -238,7 +238,7 @@ class MPculeID(str):
         cls, core_schema: CoreSchema, handler: GetJsonSchemaHandler
     ) -> JsonSchemaValue:
         return dict(
-            pattern=MPCULE_REGEX_PATTERN,
+            pattern=r"^^([A-Za-z]+-)?([A-Fa-f0-9]+)-([A-Za-z0-9]+)-(m?[0-9]+)-([0-9]+)$",
             examples=[
                 "1a525231bdac3f13e2fac0962fe8d053-Mg1-0-1",
                 "22b40b99719ac570fc7e6225e855ec6e-F5Li1P1-m1-2",
@@ -267,7 +267,7 @@ class AlphaID(str):
         _prefix (str) : The ID prefix, ex. "mp"
         _separator (str) : The separator between `_prefix` and `_identifier`, ex: "-"
         _cut_point (int or None) : For legacy purposes, all MPIDs minted before the
-            transition to AlphaID will use the legacy __repr__ as `mp-<int>` when
+            transition to AlphaID will use the legacy format as `mp-<int>` when
             calling `AlphaID(...).string`.
 
             Thus `_cut_point`, if not `None`, defines the maximum MPID at which
@@ -408,7 +408,9 @@ class AlphaID(str):
         If other is an AlphaID, returns True only if the prefix, separator,
         and value of the two are equal.
         """
-        if isinstance(other, MPID):
+        if isinstance(other, MPID) or (
+            isinstance(other, str) and other.startswith("mp-")
+        ):
             test = AlphaID(other)
         else:
             test = other
@@ -422,7 +424,7 @@ class AlphaID(str):
                 and int(self) == int(test)
             )
         elif isinstance(test, str):
-            return self == str(test)
+            return str(self) == test
         raise NotImplementedError(f"Cannot compare AlphaID with {type(test)}")
 
     def __ne__(self, other: Any) -> bool:
@@ -548,6 +550,15 @@ class AlphaID(str):
         return core_schema.with_info_plain_validator_function(cls.validate)
 
     @classmethod
+    def __get_pydantic_json_schema__(
+        cls, _core_schema: CoreSchema, handler: GetJsonSchemaHandler
+    ) -> JsonSchemaValue:
+        json_schema = handler(core_schema.str_schema())
+        json_schema = handler.resolve_ref_schema(json_schema)
+        json_schema["examples"] = ["mp-ft", "task-pqrs"]
+        return json_schema
+
+    @classmethod
     def validate(cls, __input_value: Any, _: core_schema.ValidationInfo) -> AlphaID:
         """Define pydantic validator for AlphaID."""
         if isinstance(__input_value, AlphaID):
@@ -556,3 +567,11 @@ class AlphaID(str):
             return AlphaID(__input_value)
 
         raise ValueError(f"Invalid AlphaID Format {__input_value}")
+
+    @property
+    def parts(self) -> tuple[str, int]:
+        """Mimic the parts attribute of MPID (prefix, integer value)."""
+        return (
+            self._prefix or "",
+            int(self),
+        )

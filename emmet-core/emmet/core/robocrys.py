@@ -1,9 +1,14 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, Field
 from pymatgen.core.structure import Structure
 
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import MPID
 from emmet.core.utils import generate_robocrys_condensed_struct_and_description
+
+if TYPE_CHECKING:
+    from emmet.core.mpid import AlphaID, MPID
 
 
 class MineralData(BaseModel):
@@ -76,9 +81,9 @@ class RobocrystallogapherDoc(PropertyDoc):
         cls,
         structure: Structure,
         robocrys_version: str,
-        material_id: MPID | None = None,
+        material_id: AlphaID | MPID | None = None,
         mineral_matcher=None,
-        **kwargs
+        **kwargs,
     ):
         (
             condensed_structure,
@@ -93,5 +98,5 @@ class RobocrystallogapherDoc(PropertyDoc):
             condensed_structure=condensed_structure,
             description=description,
             robocrys_version=robocrys_version,
-            **kwargs
+            **kwargs,
         )

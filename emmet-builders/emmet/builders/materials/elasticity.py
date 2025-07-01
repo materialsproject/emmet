@@ -17,8 +17,11 @@ The build proceeds in the below steps:
 7. Fit the elastic tensor.
 """
 
+from __future__ import annotations
+
+from collections.abc import Generator
 from datetime import datetime
-from typing import Any, Generator
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 from maggma.core import Builder, Store
@@ -29,9 +32,11 @@ from pymatgen.core import Structure
 from pymatgen.core.tensors import TensorMapping
 
 from emmet.core.elasticity import ElasticityDoc
-from emmet.core.mpid import MPID
 from emmet.core.utils import jsanitize
 from emmet.core.vasp.calc_types import CalcType
+
+if TYPE_CHECKING:
+    from emmet.core.mpid import AlphaID, MPID
 
 
 class ElasticityBuilder(Builder):
@@ -129,7 +134,7 @@ class ElasticityBuilder(Builder):
             yield material_id, calc_types, tasks
 
     def process_item(
-        self, item: tuple[MPID, dict[str, str], list[dict]]
+        self, item: tuple[AlphaID | MPID, dict[str, str], list[dict]]
     ) -> dict | None:
         """
         Process all tasks belong to the same material into an elasticity doc.

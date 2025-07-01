@@ -1,7 +1,11 @@
 """Core definition of a Provenance Document"""
 
+from __future__ import annotations
+
 import warnings
 from datetime import datetime
+from typing import TYPE_CHECKING
+
 
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
@@ -10,8 +14,10 @@ from pymatgen.core.structure import Structure
 
 from emmet.core.common import convert_datetime
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import MPID
 from emmet.core.utils import ValueEnum, utcnow
+
+if TYPE_CHECKING:
+    from emmet.core.mpid import AlphaID, MPID
 
 
 class Database(ValueEnum):
@@ -149,7 +155,7 @@ class ProvenanceDoc(PropertyDoc):
         cls,
         structure: Structure,
         snls: list[SNLDict],
-        material_id: MPID | None = None,
+        material_id: AlphaID | MPID | None = None,
         **kwargs,
     ) -> "ProvenanceDoc":
         """

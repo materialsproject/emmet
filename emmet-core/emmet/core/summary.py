@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from enum import Enum
-from typing import TypeVar
+from typing import TypeVar, TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 from pymatgen.core.periodic_table import Element
@@ -7,9 +9,12 @@ from pymatgen.core.structure import Structure
 
 from emmet.core.electronic_structure import BandstructureData, DosData
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import MPID
+from emmet.core.mpid import AlphaID
 from emmet.core.thermo import DecompositionProduct
 from emmet.core.xas import Edge, Type
+
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID
 
 T = TypeVar("T", bound="SummaryDoc")
 
@@ -149,7 +154,7 @@ class SummaryDoc(PropertyDoc):
         description="The lowest energy structure for this material.",
     )
 
-    task_ids: list[MPID] = Field(
+    task_ids: list[AlphaID] = Field(
         [],
         title="Calculation IDs",
         description="List of Calculations IDs associated with this material.",
@@ -239,7 +244,7 @@ class SummaryDoc(PropertyDoc):
         description="Whether the material is a metal.",
     )
 
-    es_source_calc_id: MPID | int | None = Field(
+    es_source_calc_id: AlphaID | None = Field(
         None,
         description="The source calculation ID for the electronic structure data.",
     )
@@ -423,7 +428,9 @@ class SummaryDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_docs(cls, material_id: MPID | None = None, **docs: dict[str, dict]):
+    def from_docs(
+        cls, material_id: AlphaID | MPID | None = None, **docs: dict[str, dict]
+    ):
         """Converts a bunch of summary docs into a SummaryDoc"""
         doc = _copy_from_doc(docs)
 

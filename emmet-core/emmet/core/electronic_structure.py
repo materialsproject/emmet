@@ -6,7 +6,7 @@ from collections import defaultdict
 from datetime import datetime
 from enum import Enum
 from math import isnan
-from typing import Type, TypeVar
+from typing import Type, TypeVar, TYPE_CHECKING
 
 import numpy as np
 from pydantic import BaseModel, Field, field_validator
@@ -25,9 +25,12 @@ from typing_extensions import Literal
 
 from emmet.core.common import convert_datetime
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import MPID
+from emmet.core.mpid import AlphaID
 from emmet.core.settings import EmmetSettings
 from emmet.core.utils import utcnow
+
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID
 
 SETTINGS = EmmetSettings()
 
@@ -49,7 +52,7 @@ class BSObjectDoc(BaseModel):
     Band object document.
     """
 
-    task_id: MPID | None = Field(
+    task_id: AlphaID | None = Field(
         None,
         description="The source calculation (task) ID that this band structure comes from. "
         "This has the same form as a Materials Project ID.",
@@ -75,7 +78,7 @@ class DOSObjectDoc(BaseModel):
     DOS object document.
     """
 
-    task_id: MPID | None = Field(
+    task_id: AlphaID | None = Field(
         None,
         description="The source calculation (task) ID that this density of states comes from. "
         "This has the same form as a Materials Project ID.",
@@ -97,7 +100,7 @@ class DOSObjectDoc(BaseModel):
 
 
 class ElectronicStructureBaseData(BaseModel):
-    task_id: MPID = Field(
+    task_id: AlphaID = Field(
         ...,
         description="The source calculation (task) ID for the electronic structure data. "
         "This has the same form as a Materials Project ID.",
@@ -211,32 +214,32 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
     @classmethod
     def from_bsdos(  # type: ignore[override]
         cls: Type[T],
-        dos: dict[MPID, CompleteDos],
+        dos: dict[MPID | AlphaID, CompleteDos],
         is_gap_direct: bool,
         is_metal: bool,
-        material_id: MPID | None = None,
+        material_id: MPID | AlphaID | None = None,
         origins: list[dict] = [],
-        structures: dict[MPID, Structure] | None = None,
-        setyawan_curtarolo: dict[MPID, BandStructureSymmLine] | None = None,
-        hinuma: dict[MPID, BandStructureSymmLine] | None = None,
-        latimer_munro: dict[MPID, BandStructureSymmLine] | None = None,
+        structures: dict[MPID | AlphaID, Structure] | None = None,
+        setyawan_curtarolo: dict[MPID | AlphaID, BandStructureSymmLine] | None = None,
+        hinuma: dict[MPID | AlphaID, BandStructureSymmLine] | None = None,
+        latimer_munro: dict[MPID | AlphaID, BandStructureSymmLine] | None = None,
         **kwargs,
     ) -> T:
         """
         Builds a electronic structure document using band structure and density of states data.
 
         Args:
-            material_id (MPID): A material ID.
-            dos (dict[MPID, CompleteDos]): Dictionary mapping a calculation (task) ID to a CompleteDos object.
+            material_id (AlphaID or MPID): A material ID.
+            dos (dict[AlphaID or MPID, CompleteDos]): Dictionary mapping a calculation (task) ID to a CompleteDos object.
             is_gap_direct (bool): Direct gap indicator included at root level of document.
             is_metal (bool): Metallic indicator included at root level of document.
-            structures (dict[MPID, Structure]) = Dictionary mapping a calculation (task) ID to the structures used
+            structures (dict[AlphaID or MPID, Structure]) = Dictionary mapping a calculation (task) ID to the structures used
                 as inputs. This is to ensures correct magnetic moment information is included.
-            setyawan_curtarolo (dict[MPID, BandStructureSymmLine]): Dictionary mapping a calculation (task) ID to a
+            setyawan_curtarolo (dict[AlphaID or MPID, BandStructureSymmLine]): Dictionary mapping a calculation (task) ID to a
                 BandStructureSymmLine object from a calculation run using the Setyawan-Curtarolo k-path convention.
-            hinuma (dict[MPID, BandStructureSymmLine]): Dictionary mapping a calculation (task) ID to a
+            hinuma (dict[AlphaID or MPID, BandStructureSymmLine]): Dictionary mapping a calculation (task) ID to a
                 BandStructureSymmLine object from a calculation run using the Hinuma et al. k-path convention.
-            latimer_munro (dict[MPID, BandStructureSymmLine]): Dictionary mapping a calculation (task) ID to a
+            latimer_munro (dict[AlphaID or MPID, BandStructureSymmLine]): Dictionary mapping a calculation (task) ID to a
                 BandStructureSymmLine object from a calculation run using the Latimer-Munro k-path convention.
             origins (list[dict]): Optional origins information for final doc
 
@@ -498,7 +501,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         ).ordering
 
         return cls.from_structure(
-            material_id=MPID(material_id),
+            material_id=AlphaID(material_id),
             task_id=summary_task,
             band_gap=summary_band_gap,
             cbm=summary_cbm,

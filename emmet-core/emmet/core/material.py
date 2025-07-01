@@ -10,7 +10,7 @@ from pymatgen.core import Structure
 from pymatgen.core.structure import Molecule
 
 from emmet.core.common import convert_datetime
-from emmet.core.mpid import MPID, MPculeID
+from emmet.core.mpid import MPID, AlphaID, MPculeID
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
 from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
@@ -22,7 +22,7 @@ class PropertyOrigin(BaseModel):
     """
 
     name: str = Field(..., description="The property name")
-    task_id: MPID | MPculeID = Field(
+    task_id: AlphaID | MPculeID = Field(
         ..., description="The calculation ID this property comes from"
     )
     last_updated: datetime = Field(  # type: ignore
@@ -45,7 +45,7 @@ class MaterialsDoc(StructureMetadata):
     Definition for a core Materials Document
     """
 
-    material_id: MPID | None = Field(
+    material_id: AlphaID | None = Field(
         None,
         description="The Materials Project ID of the material, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
@@ -71,7 +71,7 @@ class MaterialsDoc(StructureMetadata):
         description="Initial structures used in the DFT optimizations corresponding to this material.",
     )
 
-    task_ids: list[MPID] = Field(
+    task_ids: list[AlphaID] = Field(
         [],
         description="List of Calculations IDs used to make this Materials Document.",
     )
@@ -103,7 +103,10 @@ class MaterialsDoc(StructureMetadata):
 
     @classmethod
     def from_structure(
-        cls: Type[T], structure: Structure, material_id: MPID | None = None, **kwargs
+        cls: Type[T],
+        structure: Structure,
+        material_id: MPID | AlphaID | None = None,
+        **kwargs,
     ) -> T:  # type: ignore[override]
         """
         Builds a materials document using the minimal amount of information
@@ -155,7 +158,7 @@ class CoreMoleculeDoc(MoleculeMetadata):
         description="Initial molecules used in the DFT geometry optimizations corresponding to this molecule",
     )
 
-    task_ids: list[MPID] = Field(
+    task_ids: list[MPID | AlphaID | MPculeID] = Field(
         [],
         title="Calculation IDs",
         description="List of Calculations IDs used to make this Molecule Document",

@@ -7,7 +7,7 @@ from pymatgen.analysis.elasticity.elastic import ElasticTensor
 from pymatgen.core.structure import Structure
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
-from emmet.core.mpid import MPID
+from emmet.core.mpid import AlphaID
 from emmet.core.substrates import SubstratesDoc
 from emmet.core.utils import jsanitize
 
@@ -108,7 +108,7 @@ class SubstratesBuilder(Builder):
             dict: a diffraction dict
         """
 
-        mpid = MPID(item["material_id"])
+        mpid = AlphaID(item["material_id"])
         elastic_tensor = item.get("elastic_tensor", None)
         elastic_tensor = (
             ElasticTensor.from_voigt(elastic_tensor) if elastic_tensor else None

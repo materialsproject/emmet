@@ -17,7 +17,7 @@ from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.core.structure import Molecule, Structure
 
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import MPID
+from emmet.core.mpid import MPID, AlphaID
 
 DEFAULT_DISTANCE_CUTOFF = 1.4
 DEFAULT_ANGLE_CUTOFF = 0.3
@@ -376,7 +376,7 @@ class ChemEnvDoc(PropertyDoc):
     def from_structure(
         cls,
         structure: Structure,
-        material_id: MPID | None = None,
+        material_id: MPID | AlphaID | None = None,
         **kwargs,
     ):  # type: ignore[override]
         """

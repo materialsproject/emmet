@@ -7,7 +7,7 @@ from pymatgen.core.structure import Molecule
 
 from emmet.core.molecules.metal_binding import MetalBindingData
 from emmet.core.molecules.molecule_property import PropertyDoc
-from emmet.core.mpid import MPID, MPculeID
+from emmet.core.mpid import AlphaID, MPculeID
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
@@ -225,7 +225,7 @@ class RedoxComposite(BaseModel):
         None, description="Vertical electron affinity in eV"
     )
 
-    ea_task_id: MPID | None = Field(
+    ea_task_id: AlphaID | None = Field(
         None, description="Molecule ID for electron affinity"
     )
 
@@ -233,7 +233,7 @@ class RedoxComposite(BaseModel):
         None, description="Vertical ionization energy in eV"
     )
 
-    ie_task_id: MPID | None = Field(
+    ie_task_id: AlphaID | None = Field(
         None, description="Molecule ID for ionization energy"
     )
 
@@ -380,7 +380,7 @@ class MoleculeSummaryDoc(PropertyDoc):
         None, description="Standardized hash of the InChI for this molecule"
     )
 
-    task_ids: list[MPID] = Field(
+    task_ids: list[AlphaID] = Field(
         [],
         title="Calculation IDs",
         description="List of Calculation IDs associated with this molecule.",

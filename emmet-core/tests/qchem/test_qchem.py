@@ -10,7 +10,7 @@ from emmet.core.qchem.calc_types import (
     lot_solvent_string,
 )
 from emmet.core.qchem.task import TaskDocument
-from emmet.core.mpid import MPID
+from emmet.core.mpid import AlphaID
 
 
 def test_task_type():
@@ -210,7 +210,7 @@ def test_computed_entry(tasks):
     entries = [task.entry for task in tasks]
     ids = {e["entry_id"] for e in entries}
     expected = {
-        MPID(i)
+        AlphaID(i)
         for i in {
             675022,
             674849,

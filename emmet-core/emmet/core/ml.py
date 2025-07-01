@@ -30,7 +30,7 @@ from emmet.core.elasticity import (
     ShearModulus,
 )
 from emmet.core.math import Vector3D, Matrix3D, Vector6D, matrix_3x3_to_voigt
-from emmet.core.mpid import MPID
+from emmet.core.mpid import AlphaID
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import RunType as VaspRunType
 from emmet.core.tasks import TaskDoc
@@ -361,7 +361,7 @@ class MLTrainDoc(StructureMetadata):
 class MatPESProvenanceDoc(BaseModel):
     """Information regarding the origins of a MatPES structure."""
 
-    original_mp_id: MPID | str | None = Field(
+    original_mp_id: AlphaID | None = Field(
         None,
         description="MP identifier corresponding to the Materials Project structure from which this entry was sourced from.",
     )

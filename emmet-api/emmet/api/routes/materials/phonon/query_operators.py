@@ -1,5 +1,5 @@
 from fastapi import Query
-from emmet.core.mpid import MPID
+from emmet.core.mpid import MPID, AlphaID
 
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
@@ -14,7 +14,7 @@ class PhononImgQuery(QueryOperator):
 
     def query(
         self,
-        task_id: MPID = Path(
+        task_id: MPID | AlphaID = Path(
             ...,
             description="The calculation (task) ID associated with the data object",
         ),

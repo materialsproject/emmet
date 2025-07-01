@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import string
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from monty.fractions import gcd
 from optimade.models import Species, StructureResourceAttributes
@@ -8,7 +11,10 @@ from pymatgen.core.composition import Composition, formula_double_format
 from pymatgen.core.structure import Structure
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.mpid import MPID
+from emmet.core.mpid import AlphaID
+
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID
 
 letters = "ABCDEFGHIJKLMNOPQRSTUVXYZ"
 
@@ -84,7 +90,7 @@ class OptimadeMaterialsDoc(StructureResourceAttributes, EmmetBaseModel):
     used to perform stability calc, i.e., R2SCAN, GGA_GGA+U_R2SCAN, or GGA_GGA+U
     """
 
-    material_id: MPID | None = Field(None, description="The ID of the material")
+    material_id: AlphaID | None = Field(None, description="The ID of the material")
     chemical_system: str
     stability: dict
 
