@@ -63,7 +63,7 @@ def test_thermo_builder(corrected_entries_store, thermo_store, phase_diagram_sto
     builder.run()
 
     assert thermo_store.count() == 1
-    assert thermo_store.count({"material_id": "mp-149"}) == 1
+    assert thermo_store.count({"material_id": "mp-ft"}) == 1
 
     assert phase_diagram_store.count() == 1
 

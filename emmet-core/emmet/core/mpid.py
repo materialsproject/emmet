@@ -559,7 +559,7 @@ class AlphaID(str):
     ) -> JsonSchemaValue:
         json_schema = handler(core_schema.str_schema())
         json_schema = handler.resolve_ref_schema(json_schema)
-        json_schema["examples"] = ["mp-ft", "task-pqrs"]
+        json_schema["examples"] = ["mp-ft", "task:pqrs"]
         return json_schema
 
     @classmethod
