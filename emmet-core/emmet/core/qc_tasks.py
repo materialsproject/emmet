@@ -1,11 +1,13 @@
-# mypy: ignore-errors
-
 """Core definition of a Q-Chem Task Document"""
+
+# mypy: ignore-errors
+from __future__ import annotations
+
 import logging
 import re
 from collections import OrderedDict
 from pathlib import Path
-from typing import Any, Type, TypeVar
+from typing import Any, TYPE_CHECKING
 
 from custodian.qchem.jobs import QCJob
 from monty.serialization import loadfn
@@ -18,12 +20,14 @@ from emmet.core.qchem.calculation import Calculation, CalculationInput
 from emmet.core.qchem.task import QChemStatus
 from emmet.core.structure import MoleculeMetadata
 
+if TYPE_CHECKING:
+    from typing_extensions import Self
+
 __author__ = (
     "Evan Spotte-Smith <ewcspottesmith@lbl.gov>, Rishabh D. Guha <rdguha@lbl.gov>"
 )
 
 logger = logging.getLogger(__name__)
-_T = TypeVar("_T", bound="TaskDoc")
 # _DERIVATIVE_FILES = ("GRAD", "HESS")
 
 
@@ -283,13 +287,13 @@ class TaskDoc(MoleculeMetadata):
 
     @classmethod
     def from_directory(
-        cls: Type[_T],
+        cls,
         dir_name: Path | str,
         validate_lot: bool = True,
         store_additional_json: bool = True,
         additional_fields: dict[str, Any] = None,
         **qchem_calculation_kwargs,
-    ) -> _T:
+    ) -> Self:
         """
         Create a task document from a directory containing QChem files.
 

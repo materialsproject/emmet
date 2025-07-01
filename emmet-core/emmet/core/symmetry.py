@@ -1,4 +1,6 @@
-from typing import Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 from pymatgen.core import Structure
@@ -12,6 +14,9 @@ from pymatgen.symmetry.analyzer import (
 
 from emmet.core.settings import EmmetSettings
 from emmet.core.utils import ValueEnum
+
+if TYPE_CHECKING:
+    from typing import Any
 
 SETTINGS = EmmetSettings()
 
