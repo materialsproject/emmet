@@ -3,8 +3,8 @@ from __future__ import annotations
 import copy
 import json
 import logging
-from multiprocessing import Pool
-from os import PathLike
+from multiprocessing import get_context, Pool
+from os import cpu_count, PathLike
 from pathlib import Path
 from typing import ClassVar, Iterable
 from emmet.cli.utils import EmmetCliError
@@ -42,21 +42,21 @@ class CalculationMetadata(BaseModel):
 
     def validate_calculation(self, locator: CalculationLocator) -> bool:
         """Validate the calculation. Returns whether it's valid."""
-        self.refresh()
-        if self.calc_valid is None:
-            logger.debug(f"Validating calculation at {locator.path}")
-            try:
+        try:
+            self.refresh()
+            if self.calc_valid is None:
+                logger.debug(f"Validating calculation at {locator.path}")
                 validator = ValidationDoc.from_file_metadata(
                     file_meta=self.files, fast=True
                 )
                 self.calc_valid = validator.valid
                 self.calc_validation_errors = validator.reasons
-            except Exception as e:
-                logger.info(f"Error validating calculation: {str(e)}")
-                self.calc_valid = False
-                self.calc_validation_errors.append(
-                    f"Error validating calculation: {str(e)}"
-                )
+        except Exception as e:
+            logger.info(f"Error validating calculation: {str(e)}")
+            self.calc_valid = False
+            self.calc_validation_errors.append(
+                f"Error validating calculation: {str(e)}"
+            )
         return self.calc_valid
 
     def refresh(self) -> None:
@@ -86,7 +86,7 @@ def invoke_calc_validation(args):
 
 class Submission(BaseModel):
     PARALLEL_THRESHOLD: ClassVar[int] = 100
-    ITEMS_PER_OUTER_CHUNK: ClassVar[int] = 2 * PARALLEL_THRESHOLD
+    ITEMS_PER_OUTER_CHUNK: ClassVar[int] = 4 * PARALLEL_THRESHOLD
 
     id: UUID = Field(
         description="The identifier for this submission", default_factory=uuid4
@@ -252,18 +252,29 @@ class Submission(BaseModel):
 
         total_items = len(calcs_to_check)
         chunk_size = Submission.ITEMS_PER_OUTER_CHUNK
+
+        def num_procs():
+            num_processes = 1
+            if cpu_count() > 100:
+                num_processes = 100
+            else:
+                num_processes = cpu_count()
+            logger.debug(f"Recommending {num_processes} for pool size.")
+            return num_processes
+
         if total_items > Submission.PARALLEL_THRESHOLD:
             logger.debug(
                 f"Running validation in parallel for {total_items} calculations "
                 f"splitting into {len(calcs_to_check)/chunk_size}"
             )
+            ctx = get_context("fork")
             for i in range(0, total_items, chunk_size):
                 chunk = calcs_to_check[i : i + chunk_size]
                 logger.debug(
                     f"Processing chunk {i//chunk_size + 1}: items {i}-{min(i+chunk_size, total_items)}"
                 )
 
-                with Pool() as pool:
+                with ctx.Pool(processes=num_procs()) as pool:
                     results = pool.imap_unordered(invoke_calc_validation, chunk)
                     processed = 0
                     for locator, _, cm in results:

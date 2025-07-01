@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import logging
 import multiprocessing as mp
-from datetime import datetime
-import time
 import os
-from typing import Any, Callable, Literal
+import resource
+import sys
+import time
+from datetime import datetime
+from typing import Any, Callable, cast, Literal
 from uuid import uuid4
 import psutil
-from typing import cast
 
 from emmet.cli.state_manager import StateManager
 
@@ -41,12 +42,22 @@ def _detach_process() -> bool:
     except OSError:
         os._exit(0)
 
-    # Second child (fully detached)
-    try:
-        # Close all file descriptors
-        os.closerange(3, 256)
-    except OSError:
-        pass
+    sys.stdout.flush()
+    sys.stderr.flush()
+    with open(os.devnull, "rb", 0) as fnull:
+        os.dup2(fnull.fileno(), sys.stdin.fileno())
+    with open(os.path.expanduser("~/.emmet/daemon.log"), "a+") as f:
+        os.dup2(f.fileno(), sys.stdout.fileno())
+        os.dup2(f.fileno(), sys.stderr.fileno())
+
+    maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
+    if maxfd == resource.RLIM_INFINITY:
+        maxfd = 1024  # sensible default
+    for fd in range(3, maxfd):
+        try:
+            os.close(fd)
+        except OSError:
+            pass
 
     return False  # We are in the detached process
 
