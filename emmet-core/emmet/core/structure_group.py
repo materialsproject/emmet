@@ -4,7 +4,7 @@ import logging
 import operator
 from datetime import datetime
 from itertools import groupby
-from typing import Iterable
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, field_validator
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
@@ -15,6 +15,9 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import AlphaID
 from emmet.core.utils import utcnow
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 logger = logging.getLogger(__name__)
 

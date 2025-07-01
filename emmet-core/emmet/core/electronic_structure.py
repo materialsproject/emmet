@@ -6,7 +6,7 @@ from collections import defaultdict
 from datetime import datetime
 from enum import Enum
 from math import isnan
-from typing import Type, TypeVar, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import numpy as np
 from pydantic import BaseModel, Field, field_validator
@@ -31,6 +31,7 @@ from emmet.core.utils import utcnow
 
 if TYPE_CHECKING:
     from emmet.core.mpid import MPID
+    from typing_extensions import Self
 
 SETTINGS = EmmetSettings()
 
@@ -193,9 +194,6 @@ class DosData(BaseModel):
     )
 
 
-T = TypeVar("T", bound="ElectronicStructureDoc")
-
-
 class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
     """
     Definition for a core Electronic Structure Document
@@ -213,7 +211,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
     @classmethod
     def from_bsdos(  # type: ignore[override]
-        cls: Type[T],
+        cls,
         dos: dict[MPID | AlphaID, CompleteDos],
         is_gap_direct: bool,
         is_metal: bool,
@@ -224,7 +222,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         hinuma: dict[MPID | AlphaID, BandStructureSymmLine] | None = None,
         latimer_munro: dict[MPID | AlphaID, BandStructureSymmLine] | None = None,
         **kwargs,
-    ) -> T:
+    ) -> Self:
         """
         Builds a electronic structure document using band structure and density of states data.
 

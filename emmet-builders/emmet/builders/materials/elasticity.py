@@ -19,9 +19,7 @@ The build proceeds in the below steps:
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from datetime import datetime
-from typing import Any, TYPE_CHECKING
 
 import numpy as np
 from maggma.core import Builder, Store
@@ -35,7 +33,12 @@ from emmet.core.elasticity import ElasticityDoc
 from emmet.core.utils import jsanitize
 from emmet.core.vasp.calc_types import CalcType
 
+from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
+    from collections.abc import Generator
+    from typing import Any
+
     from emmet.core.mpid import AlphaID, MPID
 
 

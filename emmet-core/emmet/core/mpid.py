@@ -17,6 +17,10 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import Any
+
 # matches "mp-1234" or "1234" followed by and optional "-(Alphanumeric)"
 MPID_REGEX_PATTERN = r"^([A-Za-z]+-)?(\d+)(-[A-Za-z0-9]+)*$"
 mpid_regex = re.compile(MPID_REGEX_PATTERN)

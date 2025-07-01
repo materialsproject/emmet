@@ -1,7 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
 from math import ceil
-from typing import Iterable
 
 from maggma.core import Builder, Store
 from maggma.utils import grouper
@@ -11,6 +10,11 @@ from pymatgen.core.structure import Structure
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.provenance import ProvenanceDoc, SNLDict
 from emmet.core.utils import get_sg, jsanitize
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 class ProvenanceBuilder(Builder):

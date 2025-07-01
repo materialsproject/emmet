@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TypeVar, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 from pymatgen.core.periodic_table import Element
@@ -14,9 +14,8 @@ from emmet.core.thermo import DecompositionProduct
 from emmet.core.xas import Edge, Type
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
     from emmet.core.mpid import MPID
-
-T = TypeVar("T", bound="SummaryDoc")
 
 
 class HasProps(Enum):
@@ -148,11 +147,6 @@ class SummaryDoc(PropertyDoc):
     property_name: str = "summary"
 
     # Materials
-
-    structure: Structure = Field(
-        ...,
-        description="The lowest energy structure for this material.",
-    )
 
     task_ids: list[AlphaID] = Field(
         [],
@@ -427,10 +421,16 @@ class SummaryDoc(PropertyDoc):
         {}, description="External database IDs corresponding to this material."
     )
 
+    structure: Structure | None = Field(
+        None,
+        description="The lowest energy structure for this material.",
+        exclude=False,
+    )
+
     @classmethod
     def from_docs(
         cls, material_id: AlphaID | MPID | None = None, **docs: dict[str, dict]
-    ):
+    ) -> Self:
         """Converts a bunch of summary docs into a SummaryDoc"""
         doc = _copy_from_doc(docs)
 

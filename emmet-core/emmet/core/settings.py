@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Type, TypeVar
+from typing import TYPE_CHECKING
 
 import requests  # type: ignore[import-untyped]
 from monty.json import MontyDecoder
@@ -13,11 +13,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 if TYPE_CHECKING:
     from typing import Any
+    from typing_extensions import Self
 
 DEFAULT_CONFIG_FILE_PATH = str(Path.home().joinpath(".emmet.json"))
-
-
-S = TypeVar("S", bound="EmmetSettings")
 
 
 class EmmetSettings(BaseSettings):
@@ -196,7 +194,7 @@ class EmmetSettings(BaseSettings):
         return new_values
 
     @classmethod
-    def autoload(cls: Type[S], settings: None | dict | S) -> S:
+    def autoload(cls, settings: None | dict | Self) -> Self:
         if settings is None:
             return cls(**{})
         elif isinstance(settings, dict):

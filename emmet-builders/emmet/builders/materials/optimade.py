@@ -1,5 +1,4 @@
 from math import ceil
-from typing import Iterator
 
 from maggma.builders import Builder
 from maggma.core import Store
@@ -8,6 +7,11 @@ from pymatgen.core.structure import Structure
 
 from emmet.core.optimade import OptimadeMaterialsDoc
 from emmet.core.utils import jsanitize
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 class OptimadeMaterialsBuilder(Builder):

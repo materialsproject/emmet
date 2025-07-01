@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Sequence, Type, TypeVar, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from pydantic import Field, field_validator
+from pydantic.json_schema import SkipJsonSchema
 from pymatgen.core import Structure
 
 from emmet.core.common import convert_datetime
@@ -16,16 +18,19 @@ from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
 
 if TYPE_CHECKING:
-    from emmet.core.mpid import MPID
+    from typing import Any
+    from typing_extensions import Self
 
-S = TypeVar("S", bound="PropertyDoc")
+    from emmet.core.mpid import MPID
 
 
 class PropertyDoc(StructureMetadata):
     """
-    Base model definition for any singular materials property. This may contain any amount
-    of structure metadata for the purpose of search
-    This is intended to be inherited and extended not used directly
+    Base model definition for any singular materials property.
+
+    This may contain any amount of structure metadata for the
+    purpose of search. This is intended to be inherited and
+    extended, not used directly
     """
 
     property_name: str
@@ -58,22 +63,32 @@ class PropertyDoc(StructureMetadata):
         [], description="Any warnings related to this property."
     )
 
+    structure: SkipJsonSchema[Structure | None] = Field(
+        None, description="The structure associated with this property.", exclude=True
+    )
+
     @field_validator("last_updated", mode="before")
     @classmethod
-    def handle_datetime(cls, v):
+    def handle_datetime(cls, v: Any) -> datetime:
         return convert_datetime(cls, v)
 
     @classmethod
     def from_structure(  # type: ignore[override]
-        cls: Type[S],
+        cls,
         meta_structure: Structure,
         material_id: AlphaID | MPID | None = None,
         **kwargs,
-    ) -> S:
+    ) -> Self:
         """
-        Builds a materials document using the minimal amount of information
+        Builds a materials document using a minimal amount of information.
+
+        Note that structure is stored as a private attr, and will not
+        be included in `PropertyDoc().model_dump()`
         """
 
         return super().from_structure(
-            meta_structure=meta_structure, material_id=material_id, **kwargs
+            meta_structure=meta_structure,
+            structure=meta_structure,
+            material_id=material_id,
+            **kwargs,
         )  # type: ignore

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from hashlib import blake2b
-from typing import Any, Type, TypeVar
+from typing import TYPE_CHECKING
 
 from pydantic import Field
 
@@ -10,13 +12,13 @@ from emmet.core.mpid import AlphaID, MPculeID
 from emmet.core.qchem.molecule import MoleculeDoc
 from emmet.core.qchem.task import TaskDocument
 
+if TYPE_CHECKING:
+    from typing import Any
+
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
 reference_potential = 4.44
-
-
-T = TypeVar("T", bound="RedoxDoc")
 
 
 class RedoxDoc(PropertyDoc):
@@ -94,7 +96,7 @@ class RedoxDoc(PropertyDoc):
     )
 
     @classmethod
-    def _g_or_e(cls: Type[T], entry: dict[str, Any]) -> float:
+    def _g_or_e(cls, entry: dict[str, Any]) -> float:
         """
         Single atoms may not have free energies like more complex molecules do.
         This function returns the free energy of a TaskDocument entry if
@@ -117,7 +119,7 @@ class RedoxDoc(PropertyDoc):
 
     @classmethod
     def from_docs(
-        cls: Type[T],
+        cls,
         base_molecule_doc: MoleculeDoc,
         base_thermo_doc: MoleculeThermoDoc,
         red_doc: MoleculeThermoDoc | None = None,

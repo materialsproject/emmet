@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
-from typing import Mapping, Type, TypeVar
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, field_validator
 from pymatgen.core import Structure
@@ -14,6 +15,9 @@ from emmet.core.mpid import MPID, AlphaID, MPculeID
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
 from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 class PropertyOrigin(BaseModel):
@@ -34,10 +38,6 @@ class PropertyOrigin(BaseModel):
     @classmethod
     def handle_datetime(cls, v):
         return convert_datetime(cls, v)
-
-
-T = TypeVar("T", bound="MaterialsDoc")
-S = TypeVar("S", bound="CoreMoleculeDoc")
 
 
 class MaterialsDoc(StructureMetadata):
@@ -103,11 +103,8 @@ class MaterialsDoc(StructureMetadata):
 
     @classmethod
     def from_structure(
-        cls: Type[T],
-        structure: Structure,
-        material_id: MPID | AlphaID | None = None,
-        **kwargs,
-    ) -> T:  # type: ignore[override]
+        cls, structure: Structure, material_id: AlphaID | MPID | None = None, **kwargs
+    ) -> Self:  # type: ignore[override]
         """
         Builds a materials document using the minimal amount of information
         """
@@ -190,8 +187,8 @@ class CoreMoleculeDoc(MoleculeMetadata):
 
     @classmethod
     def from_molecule(
-        cls: Type[S], molecule: Molecule, molecule_id: MPculeID, **kwargs
-    ) -> S:  # type: ignore[override]
+        cls, molecule: Molecule, molecule_id: MPculeID, **kwargs
+    ) -> Self:  # type: ignore[override]
         """
         Builds a molecule document using the minimal amount of information
         """

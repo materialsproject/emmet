@@ -1,10 +1,13 @@
 from io import StringIO
-from typing import Any
+from typing import TYPE_CHECKING
 
 import pandas as pd
 from pydantic import BaseModel, Field, PlainSerializer, PlainValidator, WithJsonSchema
 from solvation_analysis.solute import Solute
 from typing_extensions import Annotated
+
+if TYPE_CHECKING:
+    from typing import Any
 
 
 def data_frame_validater(o: Any) -> pd.DataFrame:

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Type, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from pydantic import Field
 from pymatgen.core.composition import Composition
@@ -12,6 +12,9 @@ from pymatgen.core.structure import Molecule, Structure
 from emmet.core.base import EmmetBaseModel
 from emmet.core.symmetry import PointGroupData, SymmetryData
 from emmet.core.utils import get_graph_hash
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 T = TypeVar("T", bound="StructureMetadata")
 S = TypeVar("S", bound="MoleculeMetadata")
@@ -78,11 +81,11 @@ class StructureMetadata(EmmetBaseModel):
 
     @classmethod
     def from_composition(
-        cls: Type[T],
+        cls,
         composition: Composition,
         fields: list[str] | None = None,
         **kwargs,
-    ) -> T:
+    ) -> Self:
         fields = (
             [
                 "elements",
@@ -114,11 +117,11 @@ class StructureMetadata(EmmetBaseModel):
 
     @classmethod
     def from_structure(
-        cls: Type[T],
+        cls,
         meta_structure: Structure,
         fields: list[str] | None = None,
         **kwargs,
-    ) -> T:
+    ) -> Self:
         fields = (
             [
                 "nsites",
@@ -222,11 +225,11 @@ class MoleculeMetadata(EmmetBaseModel):
 
     @classmethod
     def from_composition(
-        cls: Type[S],
+        cls,
         comp: Composition,
         fields: list[str] | None = None,
         **kwargs,
-    ) -> S:
+    ) -> Self:
         """
         Create a MoleculeMetadata model from a composition.
 
@@ -275,11 +278,11 @@ class MoleculeMetadata(EmmetBaseModel):
 
     @classmethod
     def from_molecule(
-        cls: Type[S],
+        cls,
         meta_molecule: Molecule,
         fields: list[str] | None = None,
         **kwargs,
-    ) -> S:
+    ) -> Self:
         fields = (
             [
                 "charge",
