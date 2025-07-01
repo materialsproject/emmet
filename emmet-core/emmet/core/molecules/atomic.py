@@ -2,7 +2,7 @@ from hashlib import blake2b
 
 from pydantic import Field
 
-from emmet.core.material import PropertyOrigin
+from emmet.core.molecules import MolPropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPculeID
 from emmet.core.qchem.task import TaskDocument
@@ -96,7 +96,7 @@ class PartialChargesDoc(PropertyDoc):
             lot_solvent=task.lot_solvent,
             partial_charges=charges,
             method=method,
-            origins=[PropertyOrigin(name="partial_charges", task_id=task.task_id)],
+            origins=[MolPropertyOrigin(name="partial_charges", task_id=task.task_id)],
             deprecated=deprecated,
             **kwargs,
         )
@@ -175,7 +175,7 @@ class PartialSpinsDoc(PropertyDoc):
             lot_solvent=task.lot_solvent,
             partial_spins=spins,
             method=method,
-            origins=[PropertyOrigin(name="partial_spins", task_id=task.task_id)],
+            origins=[MolPropertyOrigin(name="partial_spins", task_id=task.task_id)],
             deprecated=deprecated,
             **kwargs,
         )

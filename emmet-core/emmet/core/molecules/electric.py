@@ -2,7 +2,7 @@ from hashlib import blake2b
 
 from pydantic import Field
 
-from emmet.core.material import PropertyOrigin
+from emmet.core.molecules import MolPropertyOrigin
 from emmet.core.math import Vector3D
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPculeID
@@ -180,7 +180,7 @@ class ElectricMultipoleDoc(PropertyDoc):
             octopole_moment=octopole_moment,
             hexadecapole_moment=hexadecapole_moment,
             warnings=list(),  # No warnings currently available
-            origins=[PropertyOrigin(name="multipole_moments", task_id=task.task_id)],
+            origins=[MolPropertyOrigin(name="multipole_moments", task_id=task.task_id)],
             deprecated=deprecated,
             **kwargs,
         )

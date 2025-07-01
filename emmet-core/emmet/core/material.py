@@ -26,8 +26,8 @@ class PropertyOrigin(BaseModel):
     """
 
     name: str = Field(..., description="The property name")
-    task_id: AlphaID | MPculeID = Field(
-        ..., description="The calculation ID this property comes from"
+    task_id: AlphaID = Field(
+        ..., description="The calculation ID this property comes from."
     )
     last_updated: datetime = Field(  # type: ignore
         description="The timestamp when this calculation was last updated",
@@ -155,7 +155,7 @@ class CoreMoleculeDoc(MoleculeMetadata):
         description="Initial molecules used in the DFT geometry optimizations corresponding to this molecule",
     )
 
-    task_ids: list[MPID | AlphaID | MPculeID] = Field(
+    task_ids: list[MPID | MPculeID] = Field(
         [],
         title="Calculation IDs",
         description="List of Calculations IDs used to make this Molecule Document",
