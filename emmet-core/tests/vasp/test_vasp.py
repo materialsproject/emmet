@@ -105,7 +105,7 @@ def test_validator_failed_symmetry(test_dir):
 def test_computed_entry(tasks):
     entries = [task.entry for task in tasks]
     ids = {e.entry_id for e in entries}
-    assert ids == {"mp-1141021", "mp-149", "mp-1686587", "mp-1440634"}
+    assert ids == {"mp-ddzda", "mp-dryyt", "mp-cmxxl", "mp-ft"}
 
 
 @pytest.fixture(scope="session")
