@@ -5,7 +5,7 @@ from datetime import datetime
 from pydantic import Field
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.mpid import AlphaID, MPculeID
+from emmet.core.mpid import AlphaID, MPID, MPculeID
 from emmet.core.utils import utcnow
 
 
@@ -17,7 +17,7 @@ class BaseTaskDocument(EmmetBaseModel):
     calc_code: str = Field(description="The calculation code used to compute this task")
     version: str | None = Field(None, description="The version of the calculation code")
     dir_name: str | None = Field(None, description="The directory for this task")
-    task_id: AlphaID | MPculeID | None = Field(
+    task_id: MPID | AlphaID | MPculeID | None = Field(
         None, description="the Task ID For this document"
     )
 

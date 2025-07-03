@@ -82,7 +82,7 @@ class XASDoc(SpectrumDoc):
     def from_spectrum(
         cls,
         xas_spectrum: XAS,
-        material_id: AlphaID | MPID | None = None,
+        material_id: MPID | AlphaID | None = None,
         **kwargs,
     ):
         spectrum_type = xas_spectrum.spectrum_type
@@ -108,7 +108,7 @@ class XASDoc(SpectrumDoc):
     def from_task_docs(
         cls,
         all_tasks: list[TaskDocument],
-        material_id: AlphaID | MPID | None = None,
+        material_id: MPID | AlphaID | None = None,
         num_samples: int = 200,
     ) -> list["XASDoc"]:
         """

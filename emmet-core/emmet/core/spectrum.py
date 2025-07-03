@@ -5,7 +5,7 @@ from datetime import datetime
 from pydantic import Field, field_validator
 
 from emmet.core.common import convert_datetime
-from emmet.core.mpid import AlphaID
+from emmet.core.mpid import AlphaID, MPID
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import utcnow
 
@@ -18,7 +18,7 @@ class SpectrumDoc(StructureMetadata):
 
     spectrum_name: str
 
-    material_id: AlphaID | None = Field(
+    material_id: MPID | AlphaID | None = Field(
         None,
         description="The ID of the material, used as a universal reference across proeprty documents. "
         "This comes in the form: mp-******.",

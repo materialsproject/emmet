@@ -13,7 +13,7 @@ from pymatgen.io.vasp.sets import VaspInputSet
 
 from emmet.core.base import EmmetBaseModel
 from emmet.core.common import convert_datetime
-from emmet.core.mpid import AlphaID
+from emmet.core.mpid import AlphaID, MPID
 from emmet.core.settings import EmmetSettings
 from emmet.core.tasks import TaskDoc
 from emmet.core.utils import DocEnum, utcnow
@@ -53,7 +53,7 @@ class ValidationDoc(EmmetBaseModel):
     Validation document for a VASP calculation
     """
 
-    task_id: AlphaID = Field(
+    task_id: MPID | AlphaID = Field(
         ..., description="The task_id for this validation document"
     )
     valid: bool = Field(False, description="Whether this task is valid or not")

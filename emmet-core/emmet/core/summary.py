@@ -9,13 +9,12 @@ from pymatgen.core.structure import Structure
 
 from emmet.core.electronic_structure import BandstructureData, DosData
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import AlphaID
+from emmet.core.mpid import AlphaID, MPID
 from emmet.core.thermo import DecompositionProduct
 from emmet.core.xas import Edge, Type
 
 if TYPE_CHECKING:
     from typing_extensions import Self
-    from emmet.core.mpid import MPID
 
 
 class HasProps(Enum):
@@ -148,7 +147,7 @@ class SummaryDoc(PropertyDoc):
 
     # Materials
 
-    task_ids: list[AlphaID] = Field(
+    task_ids: list[MPID | AlphaID] = Field(
         [],
         title="Calculation IDs",
         description="List of Calculations IDs associated with this material.",
@@ -238,7 +237,7 @@ class SummaryDoc(PropertyDoc):
         description="Whether the material is a metal.",
     )
 
-    es_source_calc_id: AlphaID | None = Field(
+    es_source_calc_id: MPID | AlphaID | None = Field(
         None,
         description="The source calculation ID for the electronic structure data.",
     )
@@ -429,7 +428,7 @@ class SummaryDoc(PropertyDoc):
 
     @classmethod
     def from_docs(
-        cls, material_id: AlphaID | MPID | None = None, **docs: dict[str, dict]
+        cls, material_id: MPID | AlphaID | None = None, **docs: dict[str, dict]
     ) -> Self:
         """Converts a bunch of summary docs into a SummaryDoc"""
         doc = _copy_from_doc(docs)

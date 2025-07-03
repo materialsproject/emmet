@@ -137,7 +137,7 @@ class ElasticityBuilder(Builder):
             yield material_id, calc_types, tasks
 
     def process_item(
-        self, item: tuple[AlphaID | MPID, dict[str, str], list[dict]]
+        self, item: tuple[MPID | AlphaID, dict[str, str], list[dict]]
     ) -> dict | None:
         """
         Process all tasks belong to the same material into an elasticity doc.

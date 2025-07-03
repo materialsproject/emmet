@@ -25,7 +25,7 @@ from typing_extensions import Literal
 
 from emmet.core.common import convert_datetime
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import AlphaID
+from emmet.core.mpid import AlphaID, MPID
 from emmet.core.settings import EmmetSettings
 from emmet.core.utils import utcnow
 
@@ -53,7 +53,7 @@ class BSObjectDoc(BaseModel):
     Band object document.
     """
 
-    task_id: AlphaID | None = Field(
+    task_id: MPID | AlphaID | None = Field(
         None,
         description="The source calculation (task) ID that this band structure comes from. "
         "This has the same form as a Materials Project ID.",
@@ -79,7 +79,7 @@ class DOSObjectDoc(BaseModel):
     DOS object document.
     """
 
-    task_id: AlphaID | None = Field(
+    task_id: MPID | AlphaID | None = Field(
         None,
         description="The source calculation (task) ID that this density of states comes from. "
         "This has the same form as a Materials Project ID.",
@@ -101,7 +101,7 @@ class DOSObjectDoc(BaseModel):
 
 
 class ElectronicStructureBaseData(BaseModel):
-    task_id: AlphaID = Field(
+    task_id: MPID | AlphaID = Field(
         ...,
         description="The source calculation (task) ID for the electronic structure data. "
         "This has the same form as a Materials Project ID.",

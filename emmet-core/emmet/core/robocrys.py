@@ -81,7 +81,7 @@ class RobocrystallogapherDoc(PropertyDoc):
         cls,
         structure: Structure,
         robocrys_version: str,
-        material_id: AlphaID | MPID | None = None,
+        material_id: MPID | AlphaID | None = None,
         mineral_matcher=None,
         **kwargs,
     ):

@@ -1,4 +1,6 @@
-from typing import Literal
+from __future__ import annotations
+
+from typing import Literal, TYPE_CHECKING
 
 from pydantic import Field
 from pymatgen.analysis.chemenv.coordination_environments.chemenv_strategies import (
@@ -17,7 +19,9 @@ from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.core.structure import Molecule, Structure
 
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import MPID, AlphaID
+
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID, AlphaID
 
 DEFAULT_DISTANCE_CUTOFF = 1.4
 DEFAULT_ANGLE_CUTOFF = 0.3

@@ -2,16 +2,22 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 from pydantic import BaseModel, Field
 from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
-from pymatgen.core.structure import Structure
 from pymatgen.core.tensors import Tensor
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.math import Matrix3D
-from emmet.core.mpid import MPID, AlphaID
 from emmet.core.settings import EmmetSettings
+
+if TYPE_CHECKING:
+    from pymatgen.core.structure import Structure
+
+    from emmet.core.mpid import MPID, AlphaID
+
 
 SETTINGS = EmmetSettings()
 

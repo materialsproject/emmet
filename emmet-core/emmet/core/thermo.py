@@ -10,7 +10,7 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 from emmet.core.base import EmmetMeta
 from emmet.core.material import PropertyOrigin
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import AlphaID
+from emmet.core.mpid import AlphaID, MPID
 from emmet.core.utils import ValueEnum, utcnow
 from emmet.core.vasp.calc_types.enums import RunType
 
@@ -20,7 +20,7 @@ class DecompositionProduct(BaseModel):
     Entry metadata for a decomposition process
     """
 
-    material_id: AlphaID | None = Field(
+    material_id: MPID | AlphaID | None = Field(
         None,
         description="The Materials Project ID for the material this decomposition points to.",
     )

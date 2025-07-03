@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from emmet.core.mpid import AlphaID, MPculeID
+from emmet.core.mpid import AlphaID, MPID, MPculeID
 
 
 class FindStructure(BaseModel):
@@ -8,7 +8,7 @@ class FindStructure(BaseModel):
     Class defining find structure return data
     """
 
-    material_id: AlphaID | None = Field(
+    material_id: MPID | AlphaID | None = Field(
         None,
         description="The ID of this material, used as a universal reference across property documents."
         "This comes in the form: mp-******.",

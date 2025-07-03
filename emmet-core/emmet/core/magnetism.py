@@ -7,10 +7,9 @@ from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 from pymatgen.core import Structure
 
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import AlphaID
 
 if TYPE_CHECKING:
-    from emmet.core.mpid import MPID
+    from emmet.core.mpid import AlphaID, MPID
 
 
 class MagnetismDoc(PropertyDoc):
@@ -75,7 +74,7 @@ class MagnetismDoc(PropertyDoc):
         cls,
         structure: Structure,
         total_magnetization: float,
-        material_id: AlphaID | MPID | None = None,
+        material_id: MPID | AlphaID | None = None,
         **kwargs,
     ):  # noqa: E501
         struct_has_magmoms = "magmom" in structure.site_properties

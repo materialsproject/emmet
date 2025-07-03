@@ -11,7 +11,7 @@ from pymatgen.core.composition import Composition, formula_double_format
 from pymatgen.core.structure import Structure
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.mpid import AlphaID
+from emmet.core.mpid import AlphaID, MPID
 
 if TYPE_CHECKING:
     from emmet.core.mpid import MPID
@@ -90,7 +90,9 @@ class OptimadeMaterialsDoc(StructureResourceAttributes, EmmetBaseModel):
     used to perform stability calc, i.e., R2SCAN, GGA_GGA+U_R2SCAN, or GGA_GGA+U
     """
 
-    material_id: AlphaID | None = Field(None, description="The ID of the material")
+    material_id: MPID | AlphaID | None = Field(
+        None, description="The ID of the material"
+    )
     chemical_system: str
     stability: dict
 

@@ -167,6 +167,10 @@ class NebResult(BaseModel):
         None, description="Energies corresponding the structures in `images`."
     )
 
+    dir_name: str | None = Field(
+        None, description="Top-level NEB calculation directory."
+    )
+
     state: TaskState | None = Field(
         None, description="Whether the NEB calculation succeeded."
     )
@@ -261,9 +265,6 @@ class NebTaskDoc(NebResult):
     )
     image_calculations: list[Calculation] | None = Field(
         None, description="Full calculation output for the NEB images."
-    )
-    dir_name: str | None = Field(
-        None, description="Top-level NEB calculation directory."
     )
 
     image_directories: list[str] | None = Field(

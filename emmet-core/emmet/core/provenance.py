@@ -155,7 +155,7 @@ class ProvenanceDoc(PropertyDoc):
         cls,
         structure: Structure,
         snls: list[SNLDict],
-        material_id: AlphaID | MPID | None = None,
+        material_id: MPID | AlphaID | None = None,
         **kwargs,
     ) -> "ProvenanceDoc":
         """

@@ -1,10 +1,14 @@
-from fastapi import Query
-from emmet.core.mpid import MPID, AlphaID
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from fastapi import Path, Query
 
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
 
-from fastapi import Path
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID, AlphaID
 
 
 class PhononImgQuery(QueryOperator):

@@ -41,7 +41,7 @@ class OxidationStateDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_structure(cls, structure: Structure, material_id: AlphaID | MPID | None = None, **kwargs):  # type: ignore[override]
+    def from_structure(cls, structure: Structure, material_id: MPID | AlphaID | None = None, **kwargs):  # type: ignore[override]
         # TODO: add check for if it already has oxidation states, if so pass this along unchanged ("method": "manual")
         structure.remove_oxidation_states()
 

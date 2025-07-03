@@ -22,7 +22,7 @@ from pymatgen.io.vasp import Potcar as VaspPotcar
 
 from emmet.core.common import convert_datetime
 from emmet.core.math import Vector3D
-from emmet.core.mpid import AlphaID
+from emmet.core.mpid import AlphaID, MPID
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import utcnow
 from emmet.core.vasp.calc_types import (
@@ -386,7 +386,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
         None, description="The functional and task type used in the calculation."
     )
 
-    task_id: AlphaID | None = Field(
+    task_id: MPID | AlphaID | None = Field(
         None,
         description="The (task) ID of this calculation, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
@@ -724,7 +724,7 @@ class TaskDoc(StructureMetadata, extra="allow"):
     @staticmethod
     def get_entry(
         calcs_reversed: list[Calculation | dict],
-        task_id: AlphaID | str | int | None = None,
+        task_id: MPID | AlphaID | str | int | None = None,
     ) -> ComputedEntry:
         """
         Get a computed entry from a list of VASP calculation documents.

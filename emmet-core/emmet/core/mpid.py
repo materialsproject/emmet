@@ -539,12 +539,59 @@ class AlphaID(str):
         """
         return int(self) > self._coerce_value(self, other, exception_on_mismatch=False)
 
+    @staticmethod
+    def _format_legacy_ids(
+        alpha_id: AlphaID,
+        cutoff: int | None,
+        prefix: str | None,
+        separator: str | None,
+        as_object: bool = False,
+    ) -> str | MPID | AlphaID:
+        """Format an AlphaID as either an MPID for legacy data, or AlphaID for newer data.
+
+        Parameters
+        -----------
+        alpha_id : AlphaID
+            An instance of AlphaID
+        cutoff : int | None
+            The largest legacy ID value to format as an MPID.
+            If None, this returns the original AlphaID.
+        prefix : str or None
+            Identifier prefix
+        separator : str or None
+            Identifier separator. If returning an MPID and the prefix is not None,
+            will override as a hyphen ("-")
+        as_object : bool = False
+            Whether to return objects (True) or a str (False)
+
+        Returns
+        -----------
+        MPID if as_object and int(alpha_id) <= cutoff
+        AlphaID if as_object and int(alpha_id) > cutoff
+        str otherwise
+        """
+        if cutoff and ((v := int(alpha_id)) <= cutoff):
+            idx = f"{prefix or ''}{'-' if prefix else ''}{v}"
+            if as_object:
+                return MPID(idx)
+            return idx
+        if as_object:
+            return alpha_id
+        return str(alpha_id)
+
     @property
     def string(self) -> str:
         """Legacy access to .string attr as in MPID."""
-        if self._cut_point is None or int(self) > self._cut_point:
-            return str(self)
-        return f"{self._prefix}{self._separator}{int(self)}"
+        return self._format_legacy_ids(
+            self, self._cut_point, self._prefix, self._separator, as_object=False
+        )
+
+    @property
+    def formatted(self) -> MPID | AlphaID:
+        """Return an MPID for legacy indices, and AlphaID otherwise."""
+        return self._format_legacy_ids(  # type: ignore[return-value]
+            self, self._cut_point, self._prefix, self._separator, as_object=True
+        )
 
     @classmethod
     def __get_pydantic_core_schema__(
