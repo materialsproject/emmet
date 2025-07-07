@@ -4,6 +4,7 @@ import json
 import pytest
 from monty.io import zopen
 
+from emmet.core.mpid import AlphaID
 from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calc_types import RunType, TaskType, run_type, task_type
 from emmet.core.vasp.task_valid import TaskDocument
@@ -105,7 +106,12 @@ def test_validator_failed_symmetry(test_dir):
 def test_computed_entry(tasks):
     entries = [task.entry for task in tasks]
     ids = {e.entry_id for e in entries}
-    assert ids == {"mp-ddzda", "mp-dryyt", "mp-cmxxl", "mp-ft"}
+    assert ids == set(
+        [
+            AlphaID(id_str).string
+            for id_str in {"mp-ddzda", "mp-dryyt", "mp-cmxxl", "mp-ft"}
+        ]
+    )
 
 
 @pytest.fixture(scope="session")
