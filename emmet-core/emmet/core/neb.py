@@ -118,7 +118,7 @@ class BarrierAnalysis(BaseModel):
         spline_fit = CubicSpline(frame_index, energies, **spline_kwargs)
         analysis["cubic_spline_pars"] = spline_fit.c.tolist()
 
-        crit_points = spline_fit.derivative().roots()
+        crit_points = spline_fit.derivative().roots(extrapolate=False)
         analysis["ts_frame_index"] = -1
         analysis["ts_energy"] = -np.inf
         for crit_point in crit_points:
