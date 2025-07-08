@@ -27,9 +27,20 @@ from emmet.core.vasp.calculation import Calculation, VaspObject
 from emmet.core.vasp.task_valid import TaskState
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
 
     from numpy.typing import NDArray
+
+
+def _join_endpoint_and_image_data(
+    endpoint_data: list[Any],
+    image_data: list[Any] | None,
+    map_fun: Callable | None = None,
+) -> list[Any]:
+    data = [endpoint_data[0], *(image_data or []), endpoint_data[1]]
+    if map_fun:
+        data = list(map(map_fun, data))
+    return data
 
 
 class NebMethod(ValueEnum):
@@ -149,13 +160,14 @@ class NebResult(BaseModel):
     images: list[Structure | Molecule] | None = Field(
         None,
         description=(
-            "Relaxed structures/molecules along the reaction pathway, "
-            "including endpoints."
+            "Structures/molecules along the reaction pathway, "
+            "including endpoints, after NEB."
         ),
     )
 
     initial_images: list[Structure | Molecule] | None = Field(
-        None, description="Unrelaxed structures/molecules along the reaction pathway."
+        None,
+        description="Structures/molecules along the reaction pathway, prior to NEB.",
     )
 
     image_indices: list[int] | None = Field(
@@ -207,6 +219,10 @@ class NebResult(BaseModel):
 
     identifier: str | None = Field(None, description="Identifier for the calculation.")
 
+    dir_name: str | None = Field(
+        None, description="Directory where calculation was run."
+    )
+
     @model_validator(mode="after")
     def set_barriers(self) -> Self:
         """Perform analysis on barrier if needed."""
@@ -231,51 +247,55 @@ class NebResult(BaseModel):
         """The maximum computed energy minus the minimum computed energy along the path."""
         if self.energies:
             return max(self.energies) - min(self.energies)
-        return None  # mypy is not happy with implicit `None` return
+        return None
+
+    @property
+    def num_images(self) -> int | None:
+        if self.images:
+            return len(self.images)
+        return None
 
 
-class NebTaskDoc(NebResult):
-    """Define schema for VASP NEB tasks."""
+class NebIntermediateImageDoc(BaseModel):
+    """Schema for high-level intermediate image NEB data."""
 
-    endpoint_structures: list[Structure] = Field(
-        description="The initial and final configurations (reactants and products) of the barrier.",
+    energies: list[float] | None = Field(
+        None, description="The final energies of the intermediate images."
     )
-    endpoint_energies: list[float] | None = Field(
-        None, description="Energies of the endpoint structures."
-    )
-    endpoint_calculations: list[Calculation] | None = Field(
-        None, description="Calculation information for the endpoint structures"
-    )
-    endpoint_objects: list[dict[VaspObject, Any]] | None = Field(
-        None, description="VASP objects for each endpoint calculation."
-    )
-    endpoint_directories: list[str] | None = Field(
-        None, description="List of the directories for the endpoint calculations."
+    images: list[Structure] | None = Field(
+        None, description="Final structures for each intermediate image."
     )
 
-    image_structures: list[Structure] | None = Field(
-        None, description="Final structures for each NEB images."
+    initial_images: list[Structure] | None = Field(
+        None, description="The initial intermediate image structures."
     )
-    image_energies: list[float] | None = Field(
-        None, description="Final energies for each image"
+
+    calculations: list[Calculation] | None = Field(
+        None, description="Full calculation output for the intermediate images."
     )
-    image_calculations: list[Calculation] | None = Field(
-        None, description="Full calculation output for the NEB images."
-    )
+
     dir_name: str | None = Field(
         None, description="Top-level NEB calculation directory."
     )
 
-    image_directories: list[str] | None = Field(
-        None, description="List of the directories where the NEB images are located"
+    directories: list[str] | None = Field(
+        None, description="List of the directories where the NEB images are located."
     )
-    image_objects: dict[int, dict[VaspObject, Any]] | None = Field(
-        None, description="VASP objects for each image calculation."
+
+    state: TaskState | None = Field(
+        None, description="Whether the NEB calculation succeeded."
+    )
+    neb_method: NebMethod | None = Field(
+        None, description="The NEB method used for this calculation."
     )
 
     orig_inputs: OrigInputs | None = Field(
         None,
         description="The exact set of input parameters used to generate the current task document.",
+    )
+
+    objects: list[dict[VaspObject, Any]] | None = Field(
+        None, description="VASP objects for each image calculation."
     )
 
     inputs: InputDoc | None = Field(
@@ -287,11 +307,6 @@ class NebTaskDoc(NebResult):
         description="Detailed custodian data for each VASP calculation contributing to the task document.",
     )
 
-    last_updated: datetime | None = Field(
-        utcnow(),
-        description="Timestamp for the most recent calculation for this task document",
-    )
-
     completed_at: datetime | None = Field(
         None, description="Timestamp for when this task was completed"
     )
@@ -300,56 +315,13 @@ class NebTaskDoc(NebResult):
         None, description="Label for the NEB calculation(s)."
     )
 
-    def model_post_init(self, __context: Any) -> None:
-        """Ensure base model fields are populated for analysis."""
-
-        if self.energies is None:
-            if self.endpoint_energies is not None:
-                self.energies = [  # type: ignore[misc]
-                    self.endpoint_energies[0],
-                    *self.image_energies,
-                    self.endpoint_energies[1],
-                ]
-            else:
-                self.energies = self.image_energies
-
-        self.images = self.images or [
-            self.endpoint_structures[0],
-            *(self.image_structures or []),
-            self.endpoint_structures[1],
-        ]
-
-        if self.initial_images is None:
-            if self.endpoint_calculations:
-                ep_structures = [
-                    calc.input.structure for calc in self.endpoint_calculations
-                ]
-            else:
-                ep_structures = self.endpoint_structures
-
-            intermed_structs = []
-            if self.image_calculations:
-                intermed_structs = [
-                    calc.input.structure for calc in self.image_calculations
-                ]
-
-            self.initial_images = [
-                ep_structures[0],
-                *intermed_structs,
-                ep_structures[1],
-            ]
-
-    @property
-    def num_images(self) -> int | None:
-        return len(self.image_structures) if self.image_structures else None
-
     @classmethod
     def from_directory(
         cls,
         dir_name: str | Path,
         volumetric_files: Sequence[str] = _VOLUMETRIC_FILES,
         store_calculations: bool = True,
-        **neb_task_doc_kwargs,
+        **kwargs,
     ) -> Self:
         """
         Return an NebTaskDoc from a single NEB calculation directory.
@@ -362,27 +334,16 @@ class NebTaskDoc(NebResult):
 
         neb_directories = sorted(dir_name.glob("[0-9][0-9]"))
 
-        if (ep_calcs := neb_task_doc_kwargs.pop("endpoint_calculations", None)) is None:
-            endpoint_directories = [neb_directories[0], neb_directories[-1]]
-            endpoint_structures = [
-                Structure.from_file(zpath(f"{endpoint_dir}/POSCAR"))
-                for endpoint_dir in endpoint_directories
-            ]
-            endpoint_energies = None
-        else:
-            endpoint_directories = neb_task_doc_kwargs.pop("endpoint_directories")
-            endpoint_structures = [ep_calc.output.structure for ep_calc in ep_calcs]
-            endpoint_energies = [ep_calc.output.energy for ep_calc in ep_calcs]
-
         image_directories = neb_directories[1:-1]
 
         image_calculations = []
+        initial_structures = []
         image_structures = []
-        image_objects = {}
+        image_objects = []
         for iimage, image_dir in enumerate(image_directories):
             vasp_files = _find_vasp_files(image_dir, volumetric_files=volumetric_files)
 
-            calc, image_objects[iimage] = Calculation.from_vasp_files(
+            calc, objects = Calculation.from_vasp_files(
                 dir_name=image_dir,
                 task_name=f"NEB image {iimage + 1}",
                 vasprun_file=vasp_files["standard"]["vasprun_file"],
@@ -396,13 +357,14 @@ class NebTaskDoc(NebResult):
             )
             image_calculations.append(calc)
             image_structures.append(calc.output.structure)
-
-        calcs_to_check = image_calculations + (ep_calcs or [])
+            initial_structures.append(calc.input.structure)
+            image_objects.append(objects)
 
         task_state = (
             TaskState.SUCCESS
             if all(
-                calc.has_vasp_completed == TaskState.SUCCESS for calc in calcs_to_check
+                calc.has_vasp_completed == TaskState.SUCCESS
+                for calc in image_calculations
             )
             else TaskState.FAILED
         )
@@ -431,24 +393,54 @@ class NebTaskDoc(NebResult):
         )
 
         return cls(
-            endpoint_structures=endpoint_structures,
-            endpoint_energies=endpoint_energies,
-            endpoint_directories=[str(ep_dir) for ep_dir in endpoint_directories],
-            endpoint_calculations=ep_calcs if store_calculations else None,
-            image_calculations=image_calculations if store_calculations else None,
-            image_structures=image_structures,
+            calculations=image_calculations if store_calculations else None,
+            images=image_structures,
+            initial_images=initial_structures,
             dir_name=str(dir_name),
-            image_directories=[str(img_dir) for img_dir in image_directories],
+            directories=[str(img_dir) for img_dir in image_directories],
             orig_inputs=inputs["orig_inputs"],
             inputs=inputs["inputs"],
-            image_objects=image_objects,
+            objects=image_objects,
             neb_method=neb_method,  # type: ignore[arg-type]
             state=task_state,
-            image_energies=[calc.output.energy for calc in image_calculations],
+            energies=[calc.output.energy for calc in image_calculations],
             custodian=_parse_custodian(dir_name),
-            completed_at=max(calc.completed_at for calc in calcs_to_check),
-            **neb_task_doc_kwargs,
+            completed_at=max(calc.completed_at for calc in image_calculations),
+            **kwargs,
         )
+
+
+class NebTaskDoc(NebResult):
+    """Define schema for VASP NEB tasks."""
+
+    images: list[Structure] | None = Field(  # type: ignore[assignment]
+        None,
+        description=(
+            "Structures (including endpoints) along the reaction pathway after NEB."
+        ),
+    )
+
+    initial_images: list[Structure] | None = Field(  # type: ignore[assignment]
+        None,
+        description="Structures (including endpoints) along the reaction pathway prior to NEB.",
+    )
+
+    directories: list[str] | None = Field(
+        None, description="Calculation directories for each image."
+    )
+
+    calculations: list[Calculation] | None = Field(
+        None, description="The VASP calculations associated with each image."
+    )
+
+    last_updated: datetime | None = Field(
+        default_factory=utcnow,
+        description="Timestamp for the most recent calculation for this task document",
+    )
+
+    objects: list[dict[VaspObject, Any] | None] | None = Field(
+        None, description="VASP objects associated with each image calculation."
+    )
 
     @classmethod
     def from_directories(
@@ -456,7 +448,8 @@ class NebTaskDoc(NebResult):
         endpoint_directories: list[str | Path],
         neb_directory: str | Path,
         volumetric_files: Sequence[str] = _VOLUMETRIC_FILES,
-        **neb_task_doc_kwargs,
+        store_calculations: bool = True,
+        **kwargs,
     ) -> Self:
         """
         Return an NebTaskDoc from endpoint and NEB calculation directories.
@@ -464,24 +457,26 @@ class NebTaskDoc(NebResult):
         This method populates the endpoint and image fields completely,
         permitting an analysis of the barrier.
         """
-        endpoint_calculations = [None for _ in range(2)]
-        endpoint_objects = [None for _ in range(2)]
-        for idx, endpoint_dir in enumerate(endpoint_directories):
+
+        ep_dirs = [Path(ep_dir).resolve() for ep_dir in endpoint_directories]
+        neb_dir = Path(neb_directory).resolve()
+
+        endpoint_calculations: list[Calculation | None] = [None, None]
+        endpoint_objects = [None, None]
+        for idx, endpoint_dir in enumerate(ep_dirs):
             vasp_files = _find_vasp_files(
                 endpoint_dir, volumetric_files=volumetric_files
             )
-            ep_key = (
-                "standard"
-                if vasp_files.get("standard")
-                else "relax"
-                + str(
-                    max(
-                        int(k.split("relax")[-1])
-                        for k in vasp_files
-                        if k.startswith("relax")
-                    )
+
+            if vasp_files.get("standard"):
+                ep_key = "standard"
+            else:
+                max_rel_idx = max(
+                    int(k.split("relax")[-1])
+                    for k in vasp_files
+                    if k.startswith("relax")
                 )
-            )
+                ep_key = f"relax{max_rel_idx}"
 
             (
                 endpoint_calculations[idx],
@@ -499,13 +494,67 @@ class NebTaskDoc(NebResult):
                 },
             )
 
-        return cls.from_directory(
-            neb_directory,
+        img_dirs = sorted(neb_dir.glob("[0-9][0-9]"))
+        ep_img_dirs = [img_dirs[0], img_dirs[-1]]
+        endpoint_energies: list[float | None] = [None, None]
+        endpoint_structures: list[Structure | None] = [None, None]
+        for idx, ep_calc in enumerate(endpoint_calculations):
+            if ep_calc is None:
+                ep_dirs[idx] = ep_img_dirs[idx]
+                endpoint_structures[idx] = Structure.from_file(
+                    zpath(f"{ep_dirs[idx]}/POSCAR")
+                )
+            else:
+                endpoint_structures[idx] = ep_calc.output.structure
+                endpoint_energies[idx] = ep_calc.output.energy
+
+        intermediate_images = NebIntermediateImageDoc.from_directory(
+            neb_dir,
             volumetric_files=volumetric_files,
-            endpoint_calculations=endpoint_calculations,
-            endpoint_objects=endpoint_objects,
-            endpoint_directories=endpoint_directories,
-            **neb_task_doc_kwargs,
+            store_calculations=store_calculations,
+            **kwargs,
+        )
+
+        states = [
+            getattr(ep_calc, "state", TaskState.FAILED)
+            for ep_calc in endpoint_calculations
+        ] + [intermediate_images.state]
+
+        state = TaskState.SUCCESS
+        if any(calc_state == TaskState.FAILED for calc_state in states):
+            state = TaskState.FAILED
+        elif any(calc_state == TaskState.ERROR for calc_state in states):
+            state = TaskState.ERROR
+
+        images = _join_endpoint_and_image_data(
+            endpoint_structures, intermediate_images.images
+        )
+        calculations = None
+        if store_calculations:
+            calculations = _join_endpoint_and_image_data(
+                endpoint_calculations, intermediate_images.calculations
+            )
+
+        return cls(
+            images=images,
+            initial_images=_join_endpoint_and_image_data(
+                endpoint_structures, intermediate_images.initial_images
+            ),
+            image_indices=list(range(len(images))),
+            energies=_join_endpoint_and_image_data(
+                endpoint_energies, intermediate_images.energies
+            ),
+            state=state,
+            neb_method=intermediate_images.neb_method,
+            dir_name=str(intermediate_images.dir_name),
+            directories=_join_endpoint_and_image_data(
+                ep_dirs, intermediate_images.directories, map_fun=str
+            ),
+            calculations=calculations,
+            objects=_join_endpoint_and_image_data(
+                endpoint_objects, intermediate_images.objects
+            ),
+            **kwargs,
         )
 
 
