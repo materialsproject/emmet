@@ -1,19 +1,19 @@
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 from emmet.core.math import Vector3D
 
 
 class TypedSiteProperitesDict(TypedDict):
-    magmom: float
-    charge: float
-    velocities: Vector3D
-    selective_dynamics: tuple[bool, bool, bool]
-    coordination_no: int
-    forces: list[float, float, float]  # type: ignore[type-arg]
+    magmom: NotRequired[float | None]
+    charge: NotRequired[float | None]
+    velocities: NotRequired[Vector3D | None]
+    selective_dynamics: NotRequired[tuple[bool, bool, bool] | None]
+    coordination_no: NotRequired[int | None]
+    forces: NotRequired[list[float, float, float] | None]  # type: ignore[type-arg]
 
 
 class TypedAggregateProperitesDict(TypedDict):
-    magmom: list[float]
-    charge: list[float]
-    velocities: list[Vector3D]
-    selective_dynamics: list[tuple[bool, bool, bool]]
+    magmom: NotRequired[list[float] | None]
+    charge: NotRequired[list[float] | None]
+    velocities: NotRequired[list[Vector3D] | None]
+    selective_dynamics: NotRequired[list[tuple[bool, bool, bool]] | None]

@@ -10,7 +10,7 @@ from pymatgen.core import Structure
 from pymatgen.core.structure import Molecule
 
 from emmet.core.common import convert_datetime
-from emmet.core.mpid import MPID, MPculeID
+from emmet.core.mpid import MPID, AlphaID, MPculeID
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
 from emmet.core.typing import MoleculeType, StructureType
 from emmet.core.utils import utcnow
@@ -23,7 +23,7 @@ class PropertyOrigin(BaseModel):
     """
 
     name: str = Field(..., description="The property name")
-    task_id: MPID | MPculeID = Field(
+    task_id: AlphaID | MPID | MPculeID = Field(
         ..., description="The calculation ID this property comes from"
     )
     last_updated: datetime = Field(  # type: ignore
@@ -46,7 +46,7 @@ class MaterialsDoc(StructureMetadata):
     Definition for a core Materials Document
     """
 
-    material_id: MPID | None = Field(
+    material_id: AlphaID | MPID | None = Field(
         None,
         description="The Materials Project ID of the material, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
@@ -72,7 +72,7 @@ class MaterialsDoc(StructureMetadata):
         description="Initial structures used in the DFT optimizations corresponding to this material.",
     )
 
-    task_ids: list[MPID] = Field(
+    task_ids: list[AlphaID | MPID] = Field(
         [],
         description="List of Calculations IDs used to make this Materials Document.",
     )

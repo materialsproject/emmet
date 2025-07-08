@@ -379,7 +379,7 @@ class AnalysisDoc(BaseModel):
         "vasp_objects": str,
     }
 )
-class ProductionTaskDoc(StructureMetadata, arbitrary_types_allowed=True):
+class ProductionTaskDoc(StructureMetadata):
     """Calculation-level details about VASP calculations that power Materials Project."""
 
     batch_id: str | None = Field(
@@ -440,7 +440,7 @@ class ProductionTaskDoc(StructureMetadata, arbitrary_types_allowed=True):
 
     @model_validator(mode="before")
     @classmethod
-    def set_prod_model_pre_fields(cls, values: Any) -> Any:
+    def set_model_pre_fields(cls, values: Any) -> Any:
         """Ensure all important model fields are set and refreshed."""
         values["last_updated"] = convert_datetime(
             cls, values.get("last_updated", utcnow())
@@ -457,6 +457,26 @@ class ProductionTaskDoc(StructureMetadata, arbitrary_types_allowed=True):
                     f"Invalid characters in batch_id: {' '.join(invalid_chars)}"
                 )
 
+        return values
+
+    @field_serializer("transformations", "vasp_objects", mode="wrap")
+    def type_overrides_serializer(self, d, default_serializer, info):
+        default_serialized_object = default_serializer(d, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            return json.dumps(default_serialized_object)
+
+        return default_serialized_object
+
+    @field_validator("transformations", "vasp_objects", mode="before")
+    def type_overrides_deserializer(cls, d):
+        if ARROW_COMPATIBLE:
+            if isinstance(d, str):
+                d = json.loads(d)
+
+        return d
+
 
 @type_override(
     {
@@ -465,7 +485,7 @@ class ProductionTaskDoc(StructureMetadata, arbitrary_types_allowed=True):
         "vasp_objects": str,
     }
 )
-class TaskDoc(ProductionTaskDoc, extra="allow", use_enum_values=True):
+class TaskDoc(ProductionTaskDoc, extra="allow"):
     """Flexible wrapper around ProductionTaskDoc"""
 
     additional_json: dict[str, Any] | None = Field(
@@ -519,6 +539,25 @@ class TaskDoc(ProductionTaskDoc, extra="allow", use_enum_values=True):
     @classmethod
     def set_model_pre_fields(cls, values: Any) -> Any:
         """Ensure all important model fields are set and refreshed."""
+
+        # Make sure that the datetime field is properly formatted
+        # (Unclear when this is not the case, please leave comment if observed)
+        values["last_updated"] = convert_datetime(
+            cls, values.get("last_updated", utcnow())
+        )
+
+        # Ensure batch_id includes only valid characters
+        if (batch_id := values.get("batch_id")) is not None:
+            invalid_chars = set(
+                char
+                for char in batch_id
+                if (not char.isalnum()) and (char not in {"-", "_"})
+            )
+            if len(invalid_chars) > 0:
+                raise ValueError(
+                    f"Invalid characters in batch_id: {' '.join(invalid_chars)}"
+                )
+
         # Always refresh task_type, calc_type, run_type
         # if attributes containing input sets are available.
         # See, e.g. https://github.com/materialsproject/emmet/issues/960
@@ -559,8 +598,8 @@ class TaskDoc(ProductionTaskDoc, extra="allow", use_enum_values=True):
 
         return values
 
-    @field_serializer("additional_json", "transformations", "vasp_objects", mode="wrap")
-    def blobs_serializer(self, d, default_serializer, info):
+    @field_serializer("additional_json", mode="wrap")
+    def additional_json_serializer(self, d, default_serializer, info):
         default_serialized_object = default_serializer(d, info)
 
         format = info.context.get("format") if info.context else "standard"
@@ -569,10 +608,8 @@ class TaskDoc(ProductionTaskDoc, extra="allow", use_enum_values=True):
 
         return default_serialized_object
 
-    @field_validator(
-        "additional_json", "transformations", "vasp_objects", mode="before"
-    )
-    def blobs_deserializer(cls, d):
+    @field_validator("additional_json", mode="before")
+    def additional_json_deserializer(cls, d):
         if ARROW_COMPATIBLE:
             if isinstance(d, str):
                 d = json.loads(d)
