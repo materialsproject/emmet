@@ -12,10 +12,9 @@ from emmet.api.routes.materials.summary.query_operators import (
     SearchESQuery,
 )
 
-from emmet.core.summary import SummaryStats
+from emmet.core.summary import SummaryDoc, SummaryStats
 
 from pymatgen.analysis.magnetism import Ordering
-from emmet.core.summary import SummaryDoc
 
 
 def test_has_props_query():

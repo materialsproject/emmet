@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Any, Iterable, Iterator
 
 from maggma.builders import Builder
 from maggma.core import Store
@@ -10,6 +11,13 @@ from maggma.utils import grouper
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.molecules.summary import MoleculeSummaryDoc
 from emmet.core.utils import jsanitize
+
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
+    from typing import Any
 
 # from monty.serialization import loadfn, dumpfn
 

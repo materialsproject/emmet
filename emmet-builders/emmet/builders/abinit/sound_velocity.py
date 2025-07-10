@@ -1,7 +1,6 @@
 import tempfile
 import traceback
 from math import ceil
-from typing import Iterator
 
 from abipy.dfpt.ddb import DdbFile
 from abipy.dfpt.vsound import SoundVelocity as AbiSoundVelocity
@@ -12,6 +11,11 @@ from maggma.utils import grouper
 
 from emmet.core.phonon import SoundVelocity
 from emmet.core.utils import jsanitize
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 class SoundVelocityBuilder(Builder):

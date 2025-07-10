@@ -7,7 +7,7 @@ from emmet.builders.mobility.migration_graph import MigrationGraphBuilder
 @pytest.fixture(scope="session")
 def ie_store(test_dir):
     return JSONStore(
-        test_dir / "mobility/builder_migration_graph_set.json", key="battery_id"
+        test_dir / "mobility/builder_migration_graph_set.json.gz", key="battery_id"
     )
 
 

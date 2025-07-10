@@ -16,10 +16,6 @@ class OxidationStateDoc(PropertyDoc):
 
     property_name: str = "oxidation"
 
-    structure: Structure = Field(
-        ...,
-        description="The structure used in the generation of the oxidation state data.",
-    )
     possible_species: list[str] = Field(
         description="Possible charged species in this material."
     )
@@ -31,6 +27,12 @@ class OxidationStateDoc(PropertyDoc):
     )
     method: str | None = Field(
         None, description="Method used to compute oxidation states."
+    )
+
+    structure: Structure | None = Field(
+        None,
+        description="The structure used in the generation of the oxidation state data.",
+        exclude=False,
     )
 
     @classmethod
@@ -105,9 +107,5 @@ class OxidationStateDoc(PropertyDoc):
                 d["state"] = "unsuccessful"
 
         return super().from_structure(
-            meta_structure=structure,
-            material_id=material_id,
-            structure=structure,
-            **d,
-            **kwargs
+            meta_structure=structure, material_id=material_id, **d, **kwargs
         )

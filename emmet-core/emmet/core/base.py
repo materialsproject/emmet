@@ -1,16 +1,13 @@
 """Base emmet model to add default metadata."""
 
 from datetime import datetime
-from typing import Literal, TypeVar
-
+from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 from pymatgen.core import __version__ as pmg_version
 
 from emmet.core import __version__
 from emmet.core.common import convert_datetime
 from emmet.core.utils import utcnow
-
-T = TypeVar("T", bound="EmmetBaseModel")
 
 
 class EmmetMeta(BaseModel):

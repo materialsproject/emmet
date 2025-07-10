@@ -1194,35 +1194,40 @@ def _get_band_props(
         A dictionary of element and orbital-projected DOS properties.
     """
     dosprop_dict: dict[str, dict[str, dict[str, float]]] = {}
+    if not complete_dos.pdos:
+        # It's possible to have a CompleteDos object with only structure info and no projected DOS info
+        return dosprop_dict
+
     for el in structure.composition.elements:
         el_name = str(el.name)
         dosprop_dict[el_name] = {}
+
         for orb_type in [
-            OrbitalType.s,
-            OrbitalType.p,
-            OrbitalType.d,
+            OrbitalType(x) for x in range(OrbitalType[el.block].value + 1)  # type: ignore[misc]
         ]:
-            orb_name = str(orb_type)  # NB this is the same as orb_type.name
-            if (
-                (el.block == "s" and orb_name in ["p", "d", "f"])
-                or (el.block == "p" and orb_name in ["d", "f"])
-                or (el.block == "d" and orb_name == "f")
-            ):
+            try:
+                dosprop_dict[el_name][str(orb_type)] = {
+                    "filling": complete_dos.get_band_filling(
+                        band=orb_type, elements=[el]
+                    ),
+                    "center": complete_dos.get_band_center(
+                        band=orb_type, elements=[el]
+                    ),
+                    "bandwidth": complete_dos.get_band_width(
+                        band=orb_type, elements=[el]
+                    ),
+                    "skewness": complete_dos.get_band_skewness(
+                        band=orb_type, elements=[el]
+                    ),
+                    "kurtosis": complete_dos.get_band_kurtosis(
+                        band=orb_type, elements=[el]
+                    ),
+                    "upper_edge": complete_dos.get_upper_band_edge(
+                        band=orb_type, elements=[el]
+                    ),
+                }
+            except KeyError:
+                # No projected DOS available for that particular element + orbital character
                 continue
-            dosprops = {
-                "filling": complete_dos.get_band_filling(band=orb_type, elements=[el]),
-                "center": complete_dos.get_band_center(band=orb_type, elements=[el]),
-                "bandwidth": complete_dos.get_band_width(band=orb_type, elements=[el]),
-                "skewness": complete_dos.get_band_skewness(
-                    band=orb_type, elements=[el]
-                ),
-                "kurtosis": complete_dos.get_band_kurtosis(
-                    band=orb_type, elements=[el]
-                ),
-                "upper_edge": complete_dos.get_upper_band_edge(
-                    band=orb_type, elements=[el]
-                ),
-            }
-            dosprop_dict[el_name][orb_name] = dosprops
 
     return dosprop_dict

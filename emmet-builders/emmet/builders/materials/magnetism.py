@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from math import ceil
-from typing import Iterator
 
 from maggma.builders import Builder
 from maggma.stores import Store
@@ -8,6 +9,11 @@ from pymatgen.core.structure import Structure
 
 from emmet.core.magnetism import MagnetismDoc
 from emmet.core.utils import jsanitize
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>, Matthew Horton <mkhorton@lbl.gov>"
 
