@@ -256,7 +256,7 @@ class NebResult(BaseModel):
         return None
 
 
-class NebIntermediateImageDoc(BaseModel):
+class NebIntermediateImagesDoc(BaseModel):
     """Schema for high-level intermediate image NEB data."""
 
     energies: list[float] | None = Field(
@@ -508,7 +508,7 @@ class NebTaskDoc(NebResult):
                 endpoint_structures[idx] = ep_calc.output.structure
                 endpoint_energies[idx] = ep_calc.output.energy
 
-        intermediate_images = NebIntermediateImageDoc.from_directory(
+        intermediate_images = NebIntermediateImagesDoc.from_directory(
             neb_dir,
             volumetric_files=volumetric_files,
             store_calculations=store_calculations,

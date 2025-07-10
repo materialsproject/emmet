@@ -12,7 +12,7 @@ from emmet.core.neb import (
     NebTaskDoc,
     NebMethod,
     BarrierAnalysis,
-    NebIntermediateImageDoc,
+    NebIntermediateImagesDoc,
 )
 from emmet.core.tasks import InputDoc, OrigInputs
 from emmet.core.vasp.calculation import Calculation, CalculationInput
@@ -30,7 +30,7 @@ def test_neb_task_doc(neb_test_dir, from_dir: bool):
     if from_dir:
         with TemporaryDirectory() as tmpdir:
             shutil.unpack_archive(neb_test_dir / "neb_sample_calc.zip", tmpdir, "zip")
-            neb_doc = NebIntermediateImageDoc.from_directory(Path(tmpdir) / "neb")
+            neb_doc = NebIntermediateImagesDoc.from_directory(Path(tmpdir) / "neb")
         num_images = 3
         intermed_idxs = (0, 1, 2)
         assert isinstance(neb_doc.orig_inputs, OrigInputs)
