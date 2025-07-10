@@ -14,7 +14,7 @@ from emmet.core.tasks import InputDoc, OrigInputs
 from emmet.core.utils import jsanitize
 from emmet.core.vasp.calculation import Calculation
 
-from tests.conftest import assert_schemas_equal
+from emmet.core.testing_utils import assert_schemas_equal
 
 
 @pytest.mark.parametrize("from_dir", [True, False])
