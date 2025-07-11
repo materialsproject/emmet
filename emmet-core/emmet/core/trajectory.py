@@ -5,6 +5,7 @@ from __future__ import annotations
 from copy import deepcopy
 from collections import defaultdict
 from collections.abc import Iterable
+from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
 import numpy as np
@@ -495,18 +496,6 @@ class AtomTrajectory(BaseModel):
 
         return traj
 
-    @cached_property
-    def msd(self) -> np.ndarray:
-        """Obtain the mean-squared displacement (MSD).
-
-        This returns a numpy array where each row contains the
-        MSD of the corresponding atom in the structure, i.e., an
-        (# of atoms) x (# of ionic steps)
-        array.
-        """
-        coords = np.array(self.cart_coords)
-        return (np.linalg.norm(coords - coords[0], axis=2) ** 2).T
-
 
 class Trajectory(AtomTrajectory):
     """Low memory schema for trajectories that can interface with parquet, pymatgen, and ASE.
@@ -782,3 +771,76 @@ class Trajectory(AtomTrajectory):
             pa_pq.write_table(pa_table, file_name, **write_file_kwargs)
 
         return pa_table
+
+
+@dataclass
+class TrajectoryAnalyzer:
+
+    elements: list[int]
+    element_groups: dict[str, list[int]]
+    cart_coords: np.ndarray
+    lattice: np.ndarray | None = None
+
+    @classmethod
+    def from_trajectory(cls, traj: AtomTrajectory | Trajectory, unfold: bool = False):
+
+        lattice = None
+        if traj.lattice:
+            lattice = np.array(traj.lattice)
+
+        if traj.constant_lattice:
+            lattice = np.array(traj.constant_lattice)
+
+        if unfold:
+            # TODO check for umklapp scattering
+            cart_coords = traj.cart_coords
+        else:
+            cart_coords = traj.cart_coords
+
+        element_groups: dict[str, list[int]] = {}
+        for i, atomic_num in enumerate(traj.elements):
+            ele = Element.from_Z(atomic_num).name
+            if ele not in element_groups:
+                element_groups[ele] = []
+            element_groups[ele].append(i)
+
+        return cls(
+            elements=traj.elements,
+            element_groups=element_groups,
+            cart_coords=np.array(cart_coords),
+            lattice=lattice,
+        )
+
+    @cached_property
+    def msd(self) -> dict[str, np.ndarray]:
+        """Obtain the mean-squared displacement (MSD).
+
+        This returns a dict of element name to a numpy
+        array containing the MSD averaged over the
+        square displacements of those elements.
+        """
+        msd: dict[str, np.ndarray] = {}
+        disp = self.cart_coords - self.cart_coords[0]
+        for ele, ele_idx in self.element_groups.items():
+            msd[ele] = np.einsum(
+                "ikj,ikj->i", disp[:, ele_idx, :], disp[:, ele_idx, :]
+            ) / len(ele_idx)
+        return msd
+
+    @cached_property
+    def rmsd(self) -> dict[str, np.ndarray]:
+        """Get the root mean-squared deviation (RMSD)."""
+        return {ele: msd ** (0.5) for ele, msd in self.msd.items()}
+
+    @cached_property
+    def rmsf(self) -> dict[str, np.ndarray]:
+        """Get the root mean-squared fluctuation (RMSF)."""
+        rmsf = {}
+        avg_pos = np.einsum("ijk->jk", self.cart_coords) / self.cart_coords.shape[0]
+        disp = self.cart_coords - avg_pos
+        for ele, ele_idx in self.element_groups.items():
+            rmsf[ele] = (
+                np.einsum("ikj,ikj->i", disp[:, ele_idx, :], disp[:, ele_idx, :])
+                / len(ele_idx)
+            ) ** (0.5)
+        return rmsf
