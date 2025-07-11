@@ -998,7 +998,7 @@ class TrajectoryAnalyzer:
                     "conversion features of this class."
                 )
             unit_reg = UnitRegistry()
-            time_step_unitized = unit_reg(time_step)
+            time_step_unitized = unit_reg(time_step)  # type: ignore[arg-type]
             dt = time_step_unitized.m
             input_units = f"{distance_unit}^2/{time_step_unitized.u}"
             inp_units = unit_reg(input_units)
@@ -1029,11 +1029,11 @@ class TrajectoryAnalyzer:
                 intercept = None
                 slope = None
                 if verbose:
-                    logger.log(str(exc))
+                    logger.warning(str(exc))
 
             if slope < 0:
                 if verbose:
-                    logger.log(
+                    logger.warning(
                         f"Zeroing negative {ele} diffusion coefficient "
                         f"{slope* unit_conv['diffusivity'] / 6:.2e}"
                     )
