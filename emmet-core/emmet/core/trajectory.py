@@ -1040,10 +1040,14 @@ class TrajectoryAnalyzer:
                 slope = 0.0
 
             processed[ele] = DiffusionCoeff(
-                t=time * unit_conv["time"],
+                t=time[window] * unit_conv["time"],
                 msd=msd[ele][window] * unit_conv["length"] ** 2,
-                d=slope * unit_conv["diffusivity"] / 6 if slope else None,
-                intercept=intercept * unit_conv["length"] ** 2 if intercept else None,
+                d=slope * unit_conv["diffusivity"] / 6 if slope is not None else None,
+                intercept=(
+                    intercept * unit_conv["length"] ** 2
+                    if intercept is not None
+                    else None
+                ),
                 d_units=convert_to,
             )
 
