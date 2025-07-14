@@ -29,7 +29,7 @@ botocore==1.39.4
     #   s3transfer
 bracex==2.6
     # via wcmatch
-certifi==2025.7.9
+certifi==2025.7.14
     # via requests
 cffi==1.17.1
     # via

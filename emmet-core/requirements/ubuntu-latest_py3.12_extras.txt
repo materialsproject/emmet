@@ -14,7 +14,7 @@ bibtexparser==1.4.3
     # via pymatgen
 bracex==2.6
     # via wcmatch
-certifi==2025.7.9
+certifi==2025.7.14
     # via requests
 cfgv==3.4.0
     # via pre-commit
