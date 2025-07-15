@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -15,14 +16,9 @@ except ImportError:
     CrystalNNFingerprint = None
 
 try:
-    from matgl import load_model as load_matgl_model
-
-    if TYPE_CHECKING:
-        from matgl.models import MatGLModel
+    import matgl
 except ImportError:
-    load_matgl_model = None
-    if TYPE_CHECKING:
-        MatGLModel = None
+    matgl = None  # type: ignore[assignment]
 
 
 if TYPE_CHECKING:
@@ -225,19 +221,17 @@ class M3GNetSimilarity(SimilarityScorer):
 
     Parameters
     -----------
-    model :  str or MatGLModel
+    model :  str or Path
         Model for computing feature vectors of a structure.
         Defaults to "M3GNet-MP-2018.6.1-Eform"
     """
 
-    def __init__(self, model: str | MatGLModel = "M3GNet-MP-2018.6.1-Eform"):
+    def __init__(self, model: str | Path = "M3GNet-MP-2018.6.1-Eform"):
 
-        if load_matgl_model is None:
+        if matgl is None:
             raise ValueError("`pip install matgl` to use these features.")
 
-        if isinstance(model, str):
-            model = load_matgl_model(model).model
-        self.model: MatGLModel = model
+        self.model = matgl.load_model(Path(model)).model
 
     def _featurize_structure(self, structure: Structure) -> np.ndarray:
         """Featurize a single structure using M3GNet-Eform.
