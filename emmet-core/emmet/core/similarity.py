@@ -152,6 +152,39 @@ class SimilarityScorer:
         distances = vector_difference_matrix(feature_vectors)
         return feature_vectors, self._post_process_distance(distances)
 
+    @staticmethod
+    def get_vendi_score(feature_vectors: np.ndarray) -> float:
+        """Get the Vendi score of a set of feature vectors.
+
+        Uses the conventions described in arXiv:2210.02410
+        Describes the diveristy of a set of structures.
+
+        Parameters
+        -----------
+        feature_vectors : np.ndarray
+            The feature vectors, such as those from
+            SimilarityScorer._featurize_structure
+            Each row should be a distinct feature vector.
+
+        Returns
+        -----------
+        float, the Vendi score.
+            A Vendi score close to feature_vectors.shape[0] indicates
+            high sample diversity, and a Vendi score close to
+            1 indicates low sample diversity.
+        """
+        norms = np.einsum("ik,ik->i", feature_vectors, feature_vectors) ** (-0.5)
+        norm_fv = np.einsum("ij,i->ij", feature_vectors, norms)
+
+        k_mat = np.einsum("ik,jk->ij", norm_fv, norm_fv)
+
+        num_samp = feature_vectors.shape[0]
+        eigs = np.linalg.eigvalsh(k_mat) / num_samp
+        log_eigs = np.zeros(num_samp)
+        mask = eigs > 0.0
+        log_eigs[mask] = np.log(eigs[mask])
+        return np.exp(-np.einsum("i,i", eigs, log_eigs))
+
 
 class CrystalNNSimilarity(SimilarityScorer):
     """Rank the similarity between structures using CrystalNN.
