@@ -1,8 +1,19 @@
 """Test structure similarity features."""
 
-from emmet.core.similarity import CrystalNNSimilarity, M3GNetSimilarity
+import pytest
+
 from pymatgen.core import Structure
 import numpy as np
+
+from emmet.core.similarity import (
+    CrystalNNSimilarity,
+    M3GNetSimilarity,
+    CrystalNNFingerprint,
+    matgl,
+    vector_difference_matrix,
+    SimilarityScorer,
+)
+
 
 structures = [
     Structure(
@@ -33,6 +44,7 @@ structures = [
 ]
 
 
+@pytest.mark.skipif(CrystalNNFingerprint is None, reason="matminer is not installed.")
 def test_crystalnn_featurize():
 
     scorer = CrystalNNSimilarity()
@@ -54,6 +66,7 @@ def test_crystalnn_featurize():
     assert np.all(np.abs(dist_matrix - ref_matrix) < 1e-6)
 
 
+@pytest.mark.skipif(matgl is None, reason="matminer is not installed.")
 def test_m3gnet_featurize():
 
     scorer = M3GNetSimilarity()
@@ -71,3 +84,26 @@ def test_m3gnet_featurize():
 
     assert np.all(np.abs(dist_matrix - dist_matrix.T) < 1e-6)  # should be symmetric
     assert np.all(np.abs(dist_matrix - ref_matrix) < 1e-6)
+
+
+def test_vector_diff_mat():
+
+    vectors = np.random.random((7, 11))
+    brute_force_diffs = np.zeros(2 * (vectors.shape[0],))
+    for i in range(vectors.shape[0]):
+        for j in range(vectors.shape[0]):
+            brute_force_diffs[i, j] = np.linalg.norm(vectors[i] - vectors[j])
+    assert np.all(np.abs(brute_force_diffs - vector_difference_matrix(vectors)) < 1e-12)
+
+
+def test_vendi():
+
+    assert all(
+        abs(rank - SimilarityScorer.get_vendi_score(np.eye(rank))) < 1e-12
+        for rank in range(1, 6)
+    )
+
+    assert all(
+        abs(1.0 - SimilarityScorer.get_vendi_score(np.ones((rank, rank)))) < 1e-12
+        for rank in range(1, 6)
+    )
