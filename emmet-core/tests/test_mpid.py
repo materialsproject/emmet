@@ -1,4 +1,9 @@
-from emmet.core.mpid import MPID, MPculeID, AlphaID, VALID_ALPHA_SEPARATORS
+from emmet.core.mpid import (
+    MPID,
+    MPculeID,
+    AlphaID,
+    VALID_ALPHA_SEPARATORS,
+)
 import pytest
 
 import json
@@ -213,6 +218,16 @@ def test_alpha_id():
     }.items():
         with pytest.raises(ValueError, match=msg):
             AlphaID(invalid_val)
+
+    # Test next safe AlphaID
+    # The following words are "obscene" in a
+    # non-English language but are safe in English
+    # Test works by ensuring that the AlphaID less than
+    # a profane word skips the profane word.
+    for word in ("pano", "johny", "sega"):
+        curr_alpha_id = AlphaID(word)
+        prev_alpha_id = curr_alpha_id - 1
+        assert prev_alpha_id.next_safe == curr_alpha_id + 1
 
 
 @pytest.mark.parametrize("id_cls", [MPID, AlphaID])

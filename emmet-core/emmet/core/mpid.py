@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from math import log, floor
 import re
+from pathlib import Path
 from string import ascii_lowercase, digits
 from typing import TYPE_CHECKING
 
@@ -11,15 +12,16 @@ from pydantic import GetJsonSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 from pydantic.json_schema import JsonSchemaValue
 
+# For dev_scripts compatibility, safe import this list
+if (Path(__file__).parent / "_forbidden_alpha_id.py").exists():
+    from emmet.core._forbidden_alpha_id import FORBIDDEN_ALPHA_ID_VALUES
+else:
+    FORBIDDEN_ALPHA_ID_VALUES = set()
+
 if TYPE_CHECKING:
     from collections.abc import Callable
     from typing import Any
     from typing_extensions import Self
-
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-    from typing import Any
 
 # matches "mp-1234" or "1234" followed by and optional "-(Alphanumeric)"
 MPID_REGEX_PATTERN = r"^([A-Za-z]+-)?(\d+)(-[A-Za-z0-9]+)*$"
@@ -648,3 +650,37 @@ class AlphaID(str):
             self._prefix or "",
             int(self),
         )
+
+    @property
+    def next_safe(self) -> AlphaID:
+        """Return the next multi-lingually "safe" AlphaID."""
+        return _next_safe_alpha_id(self)
+
+
+def _next_safe_alpha_id(
+    start: int | str | AlphaID = 0,
+) -> AlphaID:
+    """Get the next "safe" (non-obscene) AlphaID.
+
+    Returns the least AlphaID > AlphaID(start) such that its
+    string value is "non-obscene".
+
+    Uses a multi-lingual list of profanity from the shutter stock team
+    (see emmet-core/dev_scripts/generate_identifier_exclude_list.py)
+    to exclude generally-accepted crude language in AlphaIDs.
+
+    Parameters
+    -----------
+    start : int | str | AlphaID = 0
+        The AlphaID to start from.
+
+    Returns
+    -----------
+    AlphaID : the next sequential AlphaID that is (mostly-)profanity free.
+        (We're not perfect, there are so many languages.)
+    """
+
+    start_id = AlphaID(start) + 1
+    while int(start_id) in FORBIDDEN_ALPHA_ID_VALUES:
+        start_id += 1
+    return start_id
