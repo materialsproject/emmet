@@ -173,12 +173,16 @@ class SimilarityScorer:
             high sample diversity, and a Vendi score close to
             1 indicates low sample diversity.
         """
-        norms = np.einsum("ik,ik->i", feature_vectors, feature_vectors) ** (-0.5)
-        norm_fv = np.einsum("ij,i->ij", feature_vectors, norms)
+
+        # Remove NaN rows
+        non_nan_fv = feature_vectors[~np.any(np.isnan(feature_vectors), axis=1)]
+
+        norms = np.einsum("ik,ik->i", non_nan_fv, non_nan_fv) ** (-0.5)
+        norm_fv = np.einsum("ij,i->ij", non_nan_fv, norms)
 
         k_mat = np.einsum("ik,jk->ij", norm_fv, norm_fv)
 
-        num_samp = feature_vectors.shape[0]
+        num_samp = non_nan_fv.shape[0]
         eigs = np.linalg.eigvalsh(k_mat) / num_samp
         log_eigs = np.zeros(num_samp)
         mask = eigs > 0.0
