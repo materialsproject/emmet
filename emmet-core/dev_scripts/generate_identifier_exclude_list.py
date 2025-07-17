@@ -78,9 +78,8 @@ def generate_exclude_list(
                 continue
 
             # Only retain "obscene AlphaIDs" that
-            #  1. Haven't been minted as MPIDs (can't change those)
-            #  2. Are longer than two characters, with leading "a"'s removed
-            if int(alpha_id) > AlphaID._cut_point and len(AlphaID(int(alpha_id))) > 2:
+            # are longer than two characters, with leading "a"'s removed
+            if len(AlphaID(int(alpha_id))) > 2:
                 obscene_alpha_ids.update({alpha_id})
 
     if any(alpha_id._prefix for alpha_id in obscene_alpha_ids):
