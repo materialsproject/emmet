@@ -1,4 +1,4 @@
-from emmet.core.mpid import MPID, MPculeID, AlphaID
+from emmet.core.mpid import MPID, MPculeID, AlphaID, VALID_ALPHA_SEPARATORS
 import pytest
 
 import json
@@ -116,7 +116,7 @@ def test_alpha_id():
 
     # Test initialization from int
     for pfx in (None, "task"):
-        for separator in ("-", ":", ">"):
+        for separator in VALID_ALPHA_SEPARATORS:
             idx = AlphaID(majik_num, prefix=pfx, separator=separator)
             assert isinstance(hash(idx), int)
 

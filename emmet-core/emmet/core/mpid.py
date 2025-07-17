@@ -34,6 +34,12 @@ mpculeid_regex = re.compile(MPCULE_REGEX_PATTERN)
 # followed by and optional "-(Alphanumeric)"
 check_ulid = re.compile(r"^[A-Z0-9]{26}(-[A-Za-z0-9]+)*$")
 
+VALID_ALPHA_SEPARATORS: set[str] = {
+    "-",
+    ":",
+    "_",
+}
+
 
 class MPID(str):
     """
@@ -276,6 +282,22 @@ class AlphaID(str):
 
             Thus `_cut_point`, if not `None`, defines the maximum MPID at which
             the integer in `AlphaID(...).string` is preferred.
+
+
+    Notes:
+        There is possibility for "obscene" strings to be used in AlphaID.
+        For a comprehensive list of integer values of these IDs, you can
+        import them:
+        ```
+        from pathlib import Path
+        from importlib_resources import files as import_resource_file
+        if (Path(import_resource_file("emmet.core")) / "_forbidden_alpha_id.py").exists():
+            from emmet.core._forbidden_alpha_id import FORBIDDEN_ALPHA_ID_VALUES
+        else:
+            FORBIDDEN_ALPHA_ID_VALUES = set()
+        ```
+
+        Or run `generate_identifier_exclude_list.py` in `emmet-core/dev_scripts`
     """
 
     _identifier: str
@@ -311,12 +333,10 @@ class AlphaID(str):
         """
 
         if isinstance(identifier, str):
-            if (
-                len(
-                    non_alpha_char := set(identifier).difference(cls._alphabet + digits)
-                )
-                == 1
-            ):
+            identifier = identifier.lower()
+            non_alpha_char = set(identifier).difference(cls._alphabet + digits)
+            valid_seps = non_alpha_char.intersection(VALID_ALPHA_SEPARATORS) > set()
+            if len(non_alpha_char) == 1 and valid_seps:
                 separator = list(non_alpha_char)[0]
                 prefix, identifier = identifier.split(separator)
 
@@ -326,7 +346,9 @@ class AlphaID(str):
                         "To specify an AlphaID without a prefix, provide only the identifier."
                     )
 
-            elif len(non_alpha_char) > 1:
+            elif len(non_alpha_char) > 1 or (
+                len(non_alpha_char) == 1 and not valid_seps
+            ):
                 raise ValueError(
                     f"Too many non-alpha-numeric characters: {', '.join(non_alpha_char)}"
                 )
