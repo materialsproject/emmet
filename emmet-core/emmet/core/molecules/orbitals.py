@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from monty.json import MSONable
 from pydantic import Field
 
-from emmet.core.material import PropertyOrigin
+from emmet.core.molecules import MolPropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPculeID
 from emmet.core.qchem.task import TaskDocument
@@ -911,7 +911,7 @@ class OrbitalDoc(PropertyDoc):
                 nbo_hyperbonds=hyperbond,
                 nbo_interactions=interaction_sets[0],
                 origins=[
-                    PropertyOrigin(
+                    MolPropertyOrigin(
                         name="natural_bonding_orbitals", task_id=task.task_id
                     )
                 ],
@@ -957,7 +957,7 @@ class OrbitalDoc(PropertyDoc):
                 alpha_interactions=interaction_sets[0],
                 beta_interactions=interaction_sets[1],
                 origins=[
-                    PropertyOrigin(
+                    MolPropertyOrigin(
                         name="natural bonding orbitals", task_id=task.task_id
                     )
                 ],

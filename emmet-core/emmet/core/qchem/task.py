@@ -18,6 +18,7 @@ from emmet.core.qchem.calc_types import (
     solvent,
     task_type,
 )
+from emmet.core.mpid import MPID, MPculeID
 from emmet.core.structure import MoleculeMetadata
 from emmet.core.task import BaseTaskDocument
 from emmet.core.utils import ValueEnum
@@ -119,6 +120,10 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     """
     Definition of a Q-Chem task document
     """
+
+    task_id: MPID | MPculeID | None = Field(
+        None, description="the Task ID For this document"
+    )
 
     calc_code: str = "Q-Chem"
     completed: bool = True

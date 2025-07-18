@@ -6,7 +6,7 @@ from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Molecule
 from pymatgen.core.trajectory import Trajectory
 
-from emmet.core.material import PropertyOrigin
+from emmet.core.molecules import MolPropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPculeID
 from emmet.core.qchem.task import TaskDocument
@@ -120,7 +120,7 @@ class ForcesDoc(PropertyDoc):
             average_force_magnitude=average_force_magnitude,
             max_force_magnitude=max_force_magnitude,
             min_force_magnitude=min_force_magnitude,
-            origins=[PropertyOrigin(name="forces", task_id=task.task_id)],
+            origins=[MolPropertyOrigin(name="forces", task_id=task.task_id)],
             deprecated=deprecated,
             **kwargs,
         )
@@ -503,7 +503,7 @@ class TrajectoryDoc(PropertyDoc):
             resp_partial_charges=resp_partial_charges,
             dipole_moments=dipole_moments,
             resp_dipole_moments=resp_dipole_moments,
-            origins=[PropertyOrigin(name="trajectory", task_id=task.task_id)],
+            origins=[MolPropertyOrigin(name="trajectory", task_id=task.task_id)],
             deprecated=deprecated,
             **kwargs,
         )

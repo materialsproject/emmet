@@ -8,7 +8,7 @@ import numpy as np
 
 @pytest.fixture(scope="session")
 def absorption_test_data(test_dir):
-    return loadfn(test_dir / "sample_absorptions.json")
+    return loadfn(test_dir / "sample_absorptions.json.gz")
 
 
 def test_absorption_doc(absorption_test_data):

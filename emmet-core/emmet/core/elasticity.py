@@ -14,8 +14,9 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from emmet.core.common import Status
 from emmet.core.material_property import PropertyDoc
 from emmet.core.math import Matrix3D, MatrixVoigt
-from emmet.core.mpid import MPID
+from emmet.core.mpid import AlphaID, MPID
 from emmet.core.settings import EmmetSettings
+
 
 SETTINGS = EmmetSettings()
 
@@ -107,7 +108,7 @@ class FittingData(BaseModel):
     second_pk_stresses: list[Matrix3D] = Field(
         description="Second Piola-Kirchhoff stress tensors on structures"
     )
-    deformation_tasks: list[MPID] | None = Field(
+    deformation_tasks: list[MPID | AlphaID] | None = Field(
         None,
         description="Deformation task ids corresponding to the strained structures",
     )
@@ -119,7 +120,7 @@ class FittingData(BaseModel):
     equilibrium_cauchy_stress: Matrix3D | None = Field(
         None, description="Cauchy stress tensor of the relaxed structure"
     )
-    optimization_task: MPID | None = Field(
+    optimization_task: MPID | AlphaID | None = Field(
         None, description="Optimization task corresponding to the relaxed structure"
     )
     optimization_dir_name: str | None = Field(
@@ -221,11 +222,11 @@ class ElasticityDoc(PropertyDoc):
         structure: Structure,
         deformations: list[Deformation],
         stresses: list[Stress],
-        material_id: MPID | None = None,
-        deformation_task_ids: list[MPID] | None = None,
+        material_id: MPID | AlphaID | None = None,
+        deformation_task_ids: list[MPID | AlphaID] | None = None,
         deformation_dir_names: list[str] | None = None,
         equilibrium_stress: Stress | None = None,
-        optimization_task_id: MPID | None = None,
+        optimization_task_id: MPID | AlphaID | None = None,
         optimization_dir_name: str | None = None,
         fitting_method: str = "finite_difference",
         **kwargs,
@@ -372,9 +373,9 @@ class ElasticityDoc(PropertyDoc):
 def generate_primary_fitting_data(
     deforms: list[Deformation],
     stresses: list[Stress],
-    task_ids: list[MPID] | None = None,
+    task_ids: list[MPID | AlphaID] | None = None,
     dir_names: list[str] | None = None,
-) -> tuple[list[Strain], list[Stress], list[MPID] | None, list[str] | None]:
+) -> tuple[list[Strain], list[Stress], list[MPID | AlphaID] | None, list[str] | None]:
     """
     Get the primary fitting data, i.e. data obtained from a calculation.
 
