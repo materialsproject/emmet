@@ -2,9 +2,11 @@ import os
 from pathlib import Path
 from click.testing import CliRunner
 from emmet.cli.state_manager import StateManager
-from emmet.cli.submission import Submission
+from emmet.cli.submission import CalculationMetadata, Submission
 from emmet.cli.submit import submit
 from emmet.cli.task_manager import TaskManager
+from emmet.core.vasp.validation import ValidationDoc
+
 import pytest
 
 
@@ -21,11 +23,15 @@ def cli_runner(task_manager):
     return invoke_wrapper
 
 
-def wait_for_task_completion_and_assert_success(result, task_manager):
+def wait_for_task_completion_and_assert_status(result, task_manager, status):
     task_id = result.output.split("\n")[0].split()[-1]
     final_status = task_manager.wait_for_task_completion(task_id)
-    assert final_status["status"] == "completed"
+    assert final_status["status"] == status
     return final_status
+
+
+def wait_for_task_completion_and_assert_success(result, task_manager):
+    return wait_for_task_completion_and_assert_status(result, task_manager, "completed")
 
 
 @pytest.fixture
@@ -116,3 +122,56 @@ def sub_file(tmp_dir, cli_runner, tmp_path_factory, task_manager):
     sub.save(output_file)
 
     return str(output_file)
+
+
+@pytest.fixture(scope="session")
+def validation_test_dir():
+    return (
+        Path(__file__)
+        .parent.parent.parent.joinpath("test_files/vasp/Si_uniform")
+        .resolve()
+    )
+
+
+@pytest.fixture()
+def validation_sub_file(
+    validation_test_dir, cli_runner, tmp_path_factory, task_manager
+):
+    result = cli_runner(submit, ["create", str(validation_test_dir)])
+
+    assert result.exit_code == 0
+    final_status = wait_for_task_completion_and_assert_success(result, task_manager)
+    matches = final_status["result"][1]
+
+    sub = Submission.load(Path(matches))
+
+    # clean up side-effect of calling create
+    os.remove(matches)
+
+    output_file = tmp_path_factory.mktemp("sub_test_dir") / "validation_sub.json"
+    sub.save(output_file)
+
+    return str(output_file)
+
+
+# TODO: remove this when monkeypatch tests to use fake POTCARs rather than skipping them
+@pytest.fixture(autouse=True)
+def patch_validate_calc(monkeypatch):
+    def validate_without_checking_potcar(self, locator):
+        try:
+            self.refresh()
+            if self.calc_valid is None:
+                validator = ValidationDoc.from_file_metadata(
+                    file_meta=self.files, fast=True, check_potcar=False
+                )
+                self.calc_valid = validator.valid
+                self.calc_validation_errors = validator.reasons
+        except Exception as e:
+            self.calc_valid = False
+            self.calc_validation_errors.append(f"Error validating calculation: {e}")
+        return self.calc_valid
+
+    # Bind it onto the class under test
+    monkeypatch.setattr(
+        CalculationMetadata, "validate_calculation", validate_without_checking_potcar
+    )

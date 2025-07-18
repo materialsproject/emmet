@@ -149,16 +149,14 @@ def test_changed_files(sub_file):
     assert len(changed) == 7
 
 
-def test_validate_submission(sub_file):
+def test_validate_submission(sub_file, validation_sub_file):
     sub = Submission.load(Path(sub_file))
 
+    assert sub.validate_submission() is False
+
+    sub = Submission.load(Path(validation_sub_file))
+
     assert sub.validate_submission() is True
-
-    # TODO: once validation is implemented check invalid and then check that staging fails this way
-    # with pytest.raises(EmmetCliError) as ex_info:
-    #     sub.stage_for_push()
-
-    # assert "Submission does not pass validation" in str(ex_info.value)
 
     # test parallel validation mode correctness by creating submission more calculations than threshold
     files = next(iter(sub.calculations))[1].files
@@ -174,8 +172,8 @@ def test_validate_submission(sub_file):
     assert lsub.validate_submission() is True
 
 
-def test_changed_files_to_push(sub_file):
-    sub = Submission.load(Path(sub_file))
+def test_changed_files_to_push(validation_sub_file):
+    sub = Submission.load(Path(validation_sub_file))
 
     with pytest.raises(EmmetCliError) as ex_info:
         sub.push()
@@ -183,15 +181,12 @@ def test_changed_files_to_push(sub_file):
     assert "Nothing is staged" in str(ex_info.value)
 
     changed = sub.stage_for_push()
-    assert len(changed) == 37
-    verify_submission_calculations_against_tmp_dir_data(sub.pending_calculations)
+    assert len(changed) == 10
     changed = sub.stage_for_push()
-    assert len(changed) == 37
-    verify_submission_calculations_against_tmp_dir_data(sub.pending_calculations)
+    assert len(changed) == 10
 
     sub.push()
     changed = sub.stage_for_push()
     assert len(changed) == 0
-    verify_submission_calculations_against_tmp_dir_data(sub.pending_calculations)
 
     # check that if file changed after stage then push raises exception
