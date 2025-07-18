@@ -115,6 +115,39 @@ class SimilarityScorer:
         """
         return distances
 
+    def featurize_structures(
+        self,
+        structures: list[Structure],
+        num_procs: int = 1,
+    ):
+        """Featurize structures using the user-defined _featurize_structure.
+
+        This method may be preferred when dealing with huge sets
+        of structures. In those cases, getting distances between
+        structures may lead to memory errors.
+
+        Parameters
+        -----------
+        structures : list of Structure objects
+        num_procs : int = 1
+            Number of parallel processes to run in featurizing structures.
+
+        Returns
+        -----------
+        np.ndarray : the feature vectors of the input structures.
+        """
+        if num_procs > 1:
+            import multiprocessing
+
+            with multiprocessing.Pool(num_procs) as pool:
+                _feature_vectors = pool.map(self._featurize_structure, structures)
+        else:
+            _feature_vectors = [
+                self._featurize_structure(structure) for structure in structures
+            ]
+
+        return np.array(_feature_vectors)
+
     def get_similarity_scores(
         self,
         structures: list[Structure],
@@ -122,7 +155,7 @@ class SimilarityScorer:
     ) -> tuple[np.ndarray, np.ndarray]:
         """Rank the similarity between structures using CrystalNN.
 
-        Reference: 10.1039/C9RA07755C
+        This method defines the build pipeline for a similarity database.
 
         Parameters
         -----------
@@ -137,18 +170,7 @@ class SimilarityScorer:
             and the second their similarity scores.
         """
 
-        if num_procs > 1:
-            import multiprocessing
-
-            with multiprocessing.Pool(num_procs) as pool:
-                _feature_vectors = pool.map(self._featurize_structure, structures)
-        else:
-            _feature_vectors = [
-                self._featurize_structure(structure) for structure in structures
-            ]
-
-        feature_vectors = np.array(_feature_vectors)
-
+        feature_vectors = self.featurize_structures(structures, num_procs=num_procs)
         distances = vector_difference_matrix(feature_vectors)
         return feature_vectors, self._post_process_distance(distances)
 
@@ -324,4 +346,8 @@ class SimilarityDoc(BaseModel):
     material_id: str | None = Field(
         None,
         description="The Materials Project ID for the material. This comes in the form: mp-******",
+    )
+
+    feature_vector: list[float] | None = Field(
+        None, description="The feature / embedding vector of the structure."
     )
