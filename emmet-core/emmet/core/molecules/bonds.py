@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import copy
 from hashlib import blake2b
-from typing import Any
+from typing import TYPE_CHECKING
 
 import networkx as nx
 from pydantic import Field
@@ -12,6 +14,9 @@ from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPculeID
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.utils import make_mol_graph
+
+if TYPE_CHECKING:
+    from typing import Any
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -273,7 +278,7 @@ def nbo_molecule_graph(mol: Molecule, nbo: dict[str, Any]):
     :return:
     """
 
-    mg = MoleculeGraph.with_empty_graph(mol)
+    mg = MoleculeGraph.from_empty_graph(mol)
 
     alpha_bonds, warnings = _bonds_hybridization(nbo, 1)
     beta_bonds, new_warnings = _bonds_hybridization(nbo, 3)

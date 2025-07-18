@@ -8,7 +8,7 @@ from enum import Enum
 from itertools import groupby
 import logging
 from math import gcd
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import TYPE_CHECKING
 
 import numpy as np
 from monty.json import MSONable
@@ -42,7 +42,8 @@ except ImportError:
     bson = None  # type: ignore
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Iterator, Mapping
+    from typing import Any
 
     from emmet.core.typing import PathLike
 
@@ -287,7 +288,7 @@ def make_mol_graph(
 
     :return: mol_graph, a MoleculeGraph
     """
-    mol_graph = MoleculeGraph.with_local_env_strategy(mol, OpenBabelNN())
+    mol_graph = MoleculeGraph.from_local_env_strategy(mol, OpenBabelNN())
     mol_graph = metal_edge_extender(mol_graph)
     if critic_bonds:
         mg_edges = mol_graph.graph.edges()

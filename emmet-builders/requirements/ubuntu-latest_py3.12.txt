@@ -9,9 +9,7 @@ aioitertools==0.12.0
 annotated-types==0.7.0
     # via pydantic
 ase==3.25.0
-    # via
-    #   matcalc
-    #   pymatgen-analysis-diffusion
+    # via pymatgen-analysis-diffusion
 attrs==25.3.0
     # via
     #   jsonlines
@@ -19,13 +17,15 @@ attrs==25.3.0
     #   referencing
 bcrypt==4.3.0
     # via paramiko
-boto3==1.38.35
+bibtexparser==1.4.3
+    # via pymatgen
+boto3==1.39.4
     # via maggma
-botocore==1.38.35
+botocore==1.39.4
     # via
     #   boto3
     #   s3transfer
-certifi==2025.4.26
+certifi==2025.7.9
     # via requests
 cffi==1.17.1
     # via
@@ -35,7 +35,7 @@ charset-normalizer==3.4.2
     # via requests
 contourpy==1.3.2
     # via matplotlib
-cryptography==45.0.4
+cryptography==45.0.5
     # via paramiko
 cycler==0.12.1
     # via matplotlib
@@ -43,18 +43,14 @@ dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.84.6
+emmet-core[all]==0.84.8
     # via emmet-builders (setup.py)
 filelock==3.18.0
     # via mdanalysis
-fonttools==4.58.2
+fonttools==4.58.5
     # via matplotlib
-fsspec==2025.5.1
-    # via matcalc
 griddataformats==1.0.2
     # via mdanalysis
-h5py==3.14.0
-    # via phonopy
 idna==3.10
     # via requests
 imageio==2.37.0
@@ -69,7 +65,6 @@ jmespath==1.0.1
     #   botocore
 joblib==1.5.1
     # via
-    #   matcalc
     #   mdanalysis
     #   pymatgen
     #   pymatgen-analysis-diffusion
@@ -82,14 +77,12 @@ jsonschema-specifications==2025.4.1
     # via jsonschema
 kiwisolver==1.4.8
     # via matplotlib
-latexcodec==3.0.0
+latexcodec==3.0.1
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
 maggma==0.71.5
     # via emmet-builders (setup.py)
-matcalc==0.3.1
-    # via emmet-core
 matminer==0.9.3
     # via
     #   emmet-builders (setup.py)
@@ -98,7 +91,6 @@ matplotlib==3.10.3
     # via
     #   ase
     #   mdanalysis
-    #   phonopy
     #   pymatgen
     #   seaborn
     #   solvation-analysis
@@ -109,6 +101,7 @@ mdanalysis==2.9.0
     #   emmet-builders (setup.py)
     #   emmet-core
     #   solvation-analysis
+    #   transport-analysis
 mmtf-python==1.1.3
     # via mdanalysis
 mongomock==4.3.0
@@ -128,11 +121,11 @@ mpmath==1.3.0
     # via sympy
 mrcfile==1.5.4
     # via griddataformats
-msgpack==1.1.0
+msgpack==1.1.1
     # via
     #   maggma
     #   mmtf-python
-narwhals==1.42.0
+narwhals==1.46.0
     # via plotly
 networkx==3.5
     # via
@@ -144,10 +137,8 @@ numpy==1.26.4
     #   ase
     #   contourpy
     #   griddataformats
-    #   h5py
     #   imageio
     #   maggma
-    #   matcalc
     #   matminer
     #   matplotlib
     #   mdanalysis
@@ -155,7 +146,6 @@ numpy==1.26.4
     #   mrcfile
     #   pandas
     #   patsy
-    #   phonopy
     #   pymatgen
     #   pymatgen-analysis-defects
     #   pymatgen-analysis-diffusion
@@ -170,10 +160,12 @@ numpy==1.26.4
     #   solvation-analysis
     #   spglib
     #   statsmodels
-    #   symfc
+    #   tidynamics
     #   tifffile
 orjson==3.10.18
-    # via maggma
+    # via
+    #   maggma
+    #   pymatgen
 packaging==25.0
     # via
     #   lazy-loader
@@ -186,7 +178,7 @@ packaging==25.0
     #   statsmodels
 palettable==3.3.3
     # via pymatgen
-pandas==2.3.0
+pandas==2.3.1
     # via
     #   maggma
     #   matminer
@@ -198,15 +190,13 @@ paramiko==3.5.1
     # via sshtunnel
 patsy==1.0.1
     # via statsmodels
-phonopy==2.39.0
-    # via matcalc
-pillow==11.2.1
+pillow==11.3.0
     # via
     #   imageio
     #   matplotlib
     #   rdkit
     #   scikit-image
-plotly==6.1.2
+plotly==6.2.0
     # via
     #   pymatgen
     #   solvation-analysis
@@ -214,32 +204,32 @@ pluggy==1.6.0
     # via pytest
 pubchempy==1.0.4
     # via robocrys
-pybtex==0.24.0
+pyarrow==20.0.0
+    # via emmet-core
+pybtex==0.25.1
     # via
     #   emmet-core
-    #   pymatgen
     #   robocrys
 pycparser==2.22
     # via cffi
-pydantic==2.11.5
+pydantic==2.11.7
     # via
     #   emmet-core
     #   maggma
     #   pydantic-settings
 pydantic-core==2.33.2
     # via pydantic
-pydantic-settings==2.9.1
+pydantic-settings==2.10.1
     # via
     #   emmet-core
     #   maggma
 pydash==8.0.5
     # via maggma
-pygments==2.19.1
+pygments==2.19.2
     # via pytest
-pymatgen==2025.1.9
+pymatgen==2025.6.14
     # via
     #   emmet-core
-    #   matcalc
     #   matminer
     #   mp-pyrho
     #   pymatgen-analysis-alloys
@@ -259,8 +249,10 @@ pymongo==4.10.1
 pynacl==1.5.0
     # via paramiko
 pyparsing==3.2.3
-    # via matplotlib
-pytest==8.4.0
+    # via
+    #   bibtexparser
+    #   matplotlib
+pytest==8.4.1
     # via solvation-analysis
 python-dateutil==2.9.0.post0
     # via
@@ -268,19 +260,17 @@ python-dateutil==2.9.0.post0
     #   maggma
     #   matplotlib
     #   pandas
-python-dotenv==1.1.0
+python-dotenv==1.1.1
     # via pydantic-settings
 pytz==2025.2
     # via
     #   mongomock
     #   pandas
 pyyaml==6.0.2
-    # via
-    #   phonopy
-    #   pybtex
-pyzmq==26.4.0
+    # via pybtex
+pyzmq==27.0.0
     # via maggma
-rdkit==2025.3.2
+rdkit==2025.3.3
     # via solvation-analysis
 referencing==0.36.2
     # via
@@ -292,7 +282,7 @@ requests==2.32.4
     #   pymatgen
 robocrys==0.2.11
     # via emmet-core
-rpds-py==0.25.1
+rpds-py==0.26.0
     # via
     #   jsonschema
     #   referencing
@@ -309,10 +299,8 @@ s3transfer==0.13.0
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
 scikit-learn==1.7.0
-    # via
-    #   matcalc
-    #   matminer
-scipy==1.15.3
+    # via matminer
+scipy==1.16.0
     # via
     #   ase
     #   griddataformats
@@ -323,7 +311,6 @@ scipy==1.15.3
     #   scikit-learn
     #   solvation-analysis
     #   statsmodels
-    #   symfc
 seaborn==0.13.2
     # via pymatgen-analysis-diffusion
 seekpath==2.1.0
@@ -333,26 +320,20 @@ sentinels==1.0.0
 shapely==2.1.1
     # via pymatgen-analysis-alloys
 six==1.17.0
-    # via
-    #   pybtex
-    #   python-dateutil
+    # via python-dateutil
 solvation-analysis==0.4.1
     # via
     #   emmet-builders (setup.py)
     #   emmet-core
 spglib==2.6.0
     # via
-    #   phonopy
     #   pymatgen
     #   robocrys
     #   seekpath
-    #   symfc
 sshtunnel==0.4.0
     # via maggma
-statsmodels==0.14.4
+statsmodels==0.14.5
     # via solvation-analysis
-symfc==1.4.0
-    # via phonopy
 sympy==1.14.0
     # via
     #   matminer
@@ -363,7 +344,9 @@ threadpoolctl==3.6.0
     # via
     #   mdanalysis
     #   scikit-learn
-tifffile==2025.6.1
+tidynamics==1.1.2
+    # via transport-analysis
+tifffile==2025.6.11
     # via scikit-image
 tqdm==4.67.1
     # via
@@ -371,9 +354,11 @@ tqdm==4.67.1
     #   matminer
     #   mdanalysis
     #   pymatgen
-typeguard==4.4.3
+transport-analysis==0.1.2
+    # via emmet-core
+typeguard==4.4.4
     # via inflect
-typing-extensions==4.14.0
+typing-extensions==4.14.1
     # via
     #   emmet-core
     #   pydantic
@@ -391,7 +376,7 @@ tzdata==2025.2
     # via pandas
 uncertainties==3.2.3
     # via pymatgen
-urllib3==2.4.0
+urllib3==2.5.0
     # via
     #   botocore
     #   requests

@@ -1,6 +1,6 @@
 """Core definition of a Materials Document"""
 
-from typing import Mapping
+from collections.abc import Mapping
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer

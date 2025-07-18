@@ -970,7 +970,7 @@ def _parse_custodian(dir_name: Path) -> dict | None:
 
 
 def _parse_orig_inputs(
-    dir_name: Path,
+    dir_name: Path, suffix: str | None = ".orig"
 ) -> dict[str, Kpoints | Poscar | PotcarSpec | Incar]:
     """
     Parse original input files.
@@ -982,6 +982,8 @@ def _parse_orig_inputs(
     ----------
     dir_name
         Path to calculation directory.
+    suffix : str or None = ".orig"
+        The suffix of the original input files to use.
 
     Returns
     -------
@@ -995,9 +997,13 @@ def _parse_orig_inputs(
         "POTCAR": VaspPotcar,
         "POSCAR": Poscar,
     }
-    for filename in dir_name.glob("*.orig*"):
+    suffix = suffix or ""
+    for filename in dir_name.glob("*".join(f"{suffix}.".split("."))):
+        if "POTCAR.spec" in str(filename):
+            # Can't parse POTCAR.spec files
+            continue
         for name, vasp_input in input_mapping.items():
-            if f"{name}.orig" in str(filename):
+            if f"{name}{suffix}" in str(filename):
                 if name == "POTCAR":
                     # can't serialize POTCAR
                     orig_inputs[name.lower()] = PotcarSpec.from_potcar(
@@ -1144,8 +1150,7 @@ def _find_vasp_files(
     def _update_task_files(tpath) -> None:
         for category, files in discover_and_sort_vasp_files(tpath).items():
             for f in files:
-                f = f.name
-                tasks = sorted([t for t in task_names if t in f])
+                tasks = sorted([t for t in task_names if t in f.name])
                 task = "standard" if len(tasks) == 0 else tasks[0]
                 if task not in task_files:
                     task_files[task] = {}
@@ -1154,11 +1159,10 @@ def _find_vasp_files(
                 ) and category not in task_files[task]:
                     task_files[task][category] = []
 
-                abs_f = Path(base_path) / f
                 if is_list_like:
-                    task_files[task][category].append(abs_f)  # type: ignore[union-attr]
+                    task_files[task][category].append(f.path.absolute())  # type: ignore[union-attr]
                 else:
-                    task_files[task][category] = abs_f
+                    task_files[task][category] = f.path.absolute()
 
     _update_task_files(base_path)
 
