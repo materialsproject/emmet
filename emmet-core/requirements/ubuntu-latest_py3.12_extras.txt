@@ -14,7 +14,7 @@ bibtexparser==1.4.3
     # via pymatgen
 bracex==2.6
     # via wcmatch
-certifi==2025.7.9
+certifi==2025.7.14
     # via requests
 cfgv==3.4.0
     # via pre-commit
@@ -34,7 +34,7 @@ custodian==2025.5.12
     # via emmet-core (setup.py)
 cycler==0.12.1
     # via matplotlib
-distlib==0.3.9
+distlib==0.4.0
     # via virtualenv
 dnspython==2.7.0
     # via pymongo
@@ -44,9 +44,9 @@ filelock==3.18.0
     #   virtualenv
 flake8==7.3.0
     # via emmet-core (setup.py)
-fonttools==4.58.5
+fonttools==4.59.0
     # via matplotlib
-fsspec==2025.5.1
+fsspec==2025.7.0
     # via matcalc
 ghp-import==2.1.0
     # via mkdocs
@@ -184,13 +184,13 @@ mrcfile==1.5.4
     # via griddataformats
 msgpack==1.1.1
     # via mmtf-python
-mypy==1.16.1
+mypy==1.17.0
     # via emmet-core (setup.py)
 mypy-extensions==1.1.0
     # via
     #   emmet-core (setup.py)
     #   mypy
-narwhals==1.46.0
+narwhals==1.47.1
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -235,7 +235,7 @@ numpy==1.26.4
     #   symfc
     #   tidynamics
     #   tifffile
-orjson==3.10.18
+orjson==3.11.0
     # via pymatgen
 packaging==25.0
     # via
@@ -264,7 +264,7 @@ patsy==1.0.1
     # via statsmodels
 phono3py==3.17.1
     # via matcalc
-phonopy==2.41.1
+phonopy==2.41.4
     # via
     #   matcalc
     #   phono3py
@@ -292,7 +292,7 @@ psutil==7.0.0
     # via custodian
 pubchempy==1.0.4
     # via robocrys
-pyarrow==20.0.0
+pyarrow==21.0.0
     # via emmet-core (setup.py)
 pybtex==0.25.1
     # via
@@ -391,7 +391,7 @@ ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
-scikit-learn==1.7.0
+scikit-learn==1.7.1
     # via
     #   matcalc
     #   matminer
@@ -430,7 +430,7 @@ spglib==2.6.0
     #   symfc
 statsmodels==0.14.5
     # via solvation-analysis
-symfc==1.5.1
+symfc==1.5.4
     # via phonopy
 sympy==1.14.0
     # via
@@ -482,7 +482,7 @@ urllib3==2.5.0
     # via
     #   requests
     #   types-requests
-virtualenv==20.31.2
+virtualenv==20.32.0
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
