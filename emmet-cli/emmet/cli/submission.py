@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import defaultdict
 import copy
 import json
 import logging
@@ -28,7 +29,7 @@ class CalculationMetadata(BaseModel):
     )
 
     files: list[FileMetadata] = Field(
-        description="List of file metadata for the the files for this calculation."
+        description="List of file metadata for the files for this calculation."
     )
 
     calc_valid: bool | None = Field(
@@ -65,8 +66,7 @@ class CalculationMetadata(BaseModel):
         for f in self.files:
             cached_hash = f.hash
             f.compute_hash()
-            if cached_hash != f.hash:
-                changed_files = True
+            changed_files = cached_hash != f.hash
         if changed_files:
             self.calc_valid = None
             self.calc_validation_errors.clear()
@@ -106,7 +106,7 @@ class Submission(BaseModel):
     pending_calculations: (
         list[tuple[CalculationLocator, CalculationMetadata]] | None
     ) = Field(
-        description="The calculations in this submission as a list of (locator, metadata) tuples",
+        description="The calculations pending a push in this submission as a list of (locator, metadata) tuples",
         default=None,
     )
 
@@ -190,20 +190,13 @@ class Submission(BaseModel):
     def remove_from(self, paths: Iterable[Path]) -> list[FileMetadata]:
         """Remove all files in the submission that match one of the provided paths."""
 
-        def is_subpath(child: Path, parent: Path) -> bool:
-            try:
-                child.relative_to(parent)
-                return True
-            except ValueError:
-                return False
-
         removed_files = []
         calculations_to_remove = set()
         files_to_remove = {}
 
         for calc_locator, calc_metadata in self.calculations:
             matched_entire_calc = any(
-                is_subpath(calc_locator.path, rm_path) for rm_path in paths
+                calc_locator.path.is_relative_to(rm_path) for rm_path in paths
             )
 
             if matched_entire_calc:
@@ -215,7 +208,7 @@ class Submission(BaseModel):
             matching_files = [
                 fm
                 for fm in calc_metadata.files
-                if any(is_subpath(fm.path, rm_path) for rm_path in paths)
+                if any(fm.path.is_relative_to(rm_path) for rm_path in paths)
             ]
             if matching_files:
                 files_to_remove[calc_locator] = matching_files
@@ -401,7 +394,7 @@ class Submission(BaseModel):
 
 
 def find_all_calculations(paths: Iterable[PathLike]):
-    all_calculations = {}
+    all_calculations = defaultdict(list)
     for path in paths:
         path = Path(path).resolve()
         logger.info(f"Checking path: {path}")
@@ -412,10 +405,7 @@ def find_all_calculations(paths: Iterable[PathLike]):
             parent = path.parent
             fm = FileMetadata(name=path.name, path=path)
             locator = CalculationLocator(path=parent, modifier=fm.calc_suffix)
-            if locator in all_calculations:
-                if fm not in all_calculations[locator]:
-                    all_calculations[locator].append(fm)
-            else:
-                all_calculations[locator] = [fm]
+            if fm not in all_calculations[locator]:
+                all_calculations[locator].append(fm)
 
     return [(k, CalculationMetadata(files=v)) for k, v in all_calculations.items()]
