@@ -1,8 +1,10 @@
-from typing import Literal, Optional, List
-from pydantic import Field
-from emmet.api import __file__ as root_dir
 import os
+from typing import Literal
+
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from emmet.api import __file__ as root_dir
 
 
 class MAPISettings(BaseSettings):
@@ -20,11 +22,11 @@ class MAPISettings(BaseSettings):
 
     DB_VERSION: str = Field("2021.11.10", description="Database version")
 
-    DB_NAME_SUFFIX: Optional[Literal["blue", "green"]] = Field(
+    DB_NAME_SUFFIX: Literal["blue", "green"] | None = Field(
         None, description="Database name suffix. Either blue or green."
     )
 
-    SORT_FIELDS: List[str] = Field(
+    SORT_FIElDS: list[str] = Field(
         [
             "nsites",
             "nelements",

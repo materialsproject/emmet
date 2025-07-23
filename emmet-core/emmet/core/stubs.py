@@ -1,14 +1,17 @@
-# mypy: ignore-errors
 # isort: off
+# mypy: ignore-errors
+
 """
 This module stubs some pymatgen classes that implement custom behavior
 outside the standard MSONable model
 """
-from typing import Dict
-
+from typing import TYPE_CHECKING
 import pymatgen.core.composition
 from pydantic import RootModel
 from pymatgen.core.periodic_table import Element
+
+if TYPE_CHECKING:
+    from typing import Any
 
 """
 The stub names are kept in sync with the actual classes so they
@@ -20,7 +23,7 @@ in as Stubbed classes to prevent name clashing
 class StubComposition(RootModel):
     """A dictionary mapping element to total quantity"""
 
-    root: Dict[Element, float]
+    root: dict[Element, float]
 
 
 @classmethod  # type: ignore
@@ -28,7 +31,7 @@ def get_validators(cls):
     yield validate_composition
 
 
-def validate_composition(cls, v):
+def validate_composition(cls, v: Any) -> pymatgen.core.composition.Composition:
     if isinstance(v, pymatgen.core.structure.Composition):
         return v
     return pymatgen.core.composition.Composition(**v)

@@ -4,7 +4,6 @@ from datetime import datetime
 from functools import lru_cache
 from itertools import chain
 from math import ceil
-from typing import Any, Dict, Iterator, List, Optional
 
 from maggma.builders import Builder
 from maggma.stores import MongoStore
@@ -17,6 +16,12 @@ from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.electrode import ConversionElectrodeDoc, InsertionElectrodeDoc
 from emmet.core.structure_group import StructureGroupDoc, _get_id_lexi
 from emmet.core.utils import jsanitize
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Any
+    from collections.abc import Iterator
 
 
 def s_hash(el):
@@ -85,7 +90,7 @@ class StructureGroupBuilder(Builder):
         materials: MongoStore,
         sgroups: MongoStore,
         working_ion: str,
-        query: Optional[dict] = None,
+        query: dict | None = None,
         ltol: float = default_build_settings.LTOL,
         stol: float = default_build_settings.STOL,
         angle_tol: float = default_build_settings.ANGLE_TOL,
@@ -115,15 +120,15 @@ class StructureGroupBuilder(Builder):
         self.check_newer = check_newer
         self.chunk_size = chunk_size
 
-        self.query[
-            "deprecated"
-        ] = False  # Ensure only non-deprecated materials are chosen
+        self.query["deprecated"] = (
+            False  # Ensure only non-deprecated materials are chosen
+        )
 
         super().__init__(
             sources=[materials], targets=[sgroups], chunk_size=chunk_size, **kwargs
         )
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterator[dict]:  # pragma: no cover
         """
         Prechunk method to perform chunking by the key field
         """
@@ -268,7 +273,7 @@ class StructureGroupBuilder(Builder):
             else:
                 yield {"chemsys": chemsys, "materials": all_mats_in_chemsys}
 
-    def update_targets(self, items: List):
+    def update_targets(self, items: list):
         items = list(filter(None, chain.from_iterable(items)))
         if len(items) > 0:
             self.logger.info("Updating {} sgroups documents".format(len(items)))
@@ -319,7 +324,7 @@ class InsertionElectrodeBuilder(Builder):
         grouped_materials: MongoStore,
         thermo: MongoStore,
         insertion_electrode: MongoStore,
-        query: Optional[Dict] = None,
+        query: dict | None = None,
         strip_structures: bool = False,
         **kwargs,
     ):
@@ -335,7 +340,7 @@ class InsertionElectrodeBuilder(Builder):
             **kwargs,
         )
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:
+    def prechunk(self, number_splits: int) -> Iterator[dict]:
         """
         Prechunk method to perform chunking by the key field
         """
@@ -418,7 +423,7 @@ class InsertionElectrodeBuilder(Builder):
             else:
                 yield None
 
-    def process_item(self, item) -> Dict:
+    def process_item(self, item) -> dict:
         """
         - Add volume information to each entry to create the insertion electrode document
         - Add the host structure
@@ -460,14 +465,14 @@ class InsertionElectrodeBuilder(Builder):
             # {"failed_reason": "unable to create InsertionElectrode document"}
         return jsanitize(ie.model_dump())
 
-    def update_targets(self, items: List):
+    def update_targets(self, items: list):
         items = list(filter(None, items))
         if len(items) > 0:
             self.logger.info("Updating {} battery documents".format(len(items)))
             for struct_group_dict in items:
-                struct_group_dict[
-                    self.grouped_materials.last_updated_field
-                ] = datetime.utcnow()
+                struct_group_dict[self.grouped_materials.last_updated_field] = (
+                    datetime.utcnow()
+                )
             self.insertion_electrode.update(docs=items, key=["battery_id"])
         else:
             self.logger.info("No items to update")
@@ -480,7 +485,7 @@ class ConversionElectrodeBuilder(Builder):
         conversion_electrode_store: MongoStore,
         working_ion: str,
         thermo_type: str,
-        query: Optional[dict] = None,
+        query: dict | None = None,
         **kwargs,
     ):
         self.phase_diagram_store = phase_diagram_store
@@ -499,7 +504,7 @@ class ConversionElectrodeBuilder(Builder):
             **kwargs,
         )
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:
+    def prechunk(self, number_splits: int) -> Iterator[dict]:
         """
         Prechunk method to perform chunking by the key field
         """
@@ -532,7 +537,7 @@ class ConversionElectrodeBuilder(Builder):
         for phase_diagram_doc in self.phase_diagram_store.query(criteria=q):
             yield phase_diagram_doc
 
-    def process_item(self, item) -> Dict:
+    def process_item(self, item) -> dict:
         """
         - For each phase diagram doc, find all possible conversion electrodes and create conversion electrode docs
         """
@@ -611,7 +616,7 @@ class ConversionElectrodeBuilder(Builder):
 
         return new_docs  # type: ignore
 
-    def update_targets(self, items: List):
+    def update_targets(self, items: list):
         combined_items = []
         for _items in items:
             _items = list(filter(None, _items))

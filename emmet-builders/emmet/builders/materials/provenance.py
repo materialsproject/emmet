@@ -1,7 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
 from math import ceil
-from typing import Dict, Iterable, List, Optional, Tuple
 
 from maggma.core import Builder, Store
 from maggma.utils import grouper
@@ -12,15 +11,20 @@ from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.provenance import ProvenanceDoc, SNLDict
 from emmet.core.utils import get_sg, jsanitize
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
 
 class ProvenanceBuilder(Builder):
     def __init__(
         self,
         materials: Store,
         provenance: Store,
-        source_snls: List[Store],
-        settings: Optional[EmmetBuildSettings] = None,
-        query: Optional[Dict] = None,
+        source_snls: list[Store],
+        settings: EmmetBuildSettings | None = None,
+        query: dict | None = None,
         **kwargs,
     ):
         """
@@ -59,7 +63,7 @@ class ProvenanceBuilder(Builder):
             s.ensure_index("snl_id")
             s.ensure_index("formula_pretty")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
         self.ensure_indicies()
 
         # Find all formulas for materials that have been updated since this
@@ -101,7 +105,7 @@ class ProvenanceBuilder(Builder):
         for chunk in grouper(mat_ids, N):
             yield {"query": {"material_id": {"$in": chunk}}}
 
-    def get_items(self) -> Tuple[List[Dict], List[Dict]]:  # type: ignore
+    def get_items(self) -> tuple[list[dict], list[dict]]:  # type: ignore
         """
         Gets all materials to assocaite with SNLs
         Returns:
@@ -178,7 +182,7 @@ class ProvenanceBuilder(Builder):
             self.logger.debug(f"Found {len(snl_structs)} potential snls for {mat_id}")
             yield mat, snl_structs
 
-    def process_item(self, item) -> Dict:
+    def process_item(self, item) -> dict:
         """
         Matches SNLS and Materials
         Args:

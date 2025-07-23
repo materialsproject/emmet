@@ -1,8 +1,9 @@
-from math import ceil
+from __future__ import annotations
+
 import warnings
-from itertools import chain
-from typing import Dict, Iterator, List, Optional, Set
 from datetime import datetime
+from itertools import chain
+from math import ceil
 
 from maggma.core import Builder, Store
 from maggma.stores import S3Store
@@ -12,8 +13,13 @@ from pymatgen.analysis.phase_diagram import PhaseDiagramError
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 from emmet.builders.utils import HiddenPrints
-from emmet.core.thermo import ThermoDoc, PhaseDiagramDoc
+from emmet.core.thermo import PhaseDiagramDoc, ThermoDoc
 from emmet.core.utils import jsanitize
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 class ThermoBuilder(Builder):
@@ -21,9 +27,9 @@ class ThermoBuilder(Builder):
         self,
         thermo: Store,
         corrected_entries: Store,
-        phase_diagram: Optional[Store] = None,
-        query: Optional[Dict] = None,
-        num_phase_diagram_eles: Optional[int] = None,
+        phase_diagram: Store | None = None,
+        query: dict | None = None,
+        num_phase_diagram_eles: int | None = None,
         chunk_size: int = 1000,
         **kwargs,
     ):
@@ -49,7 +55,7 @@ class ThermoBuilder(Builder):
         self.phase_diagram = phase_diagram
         self.num_phase_diagram_eles = num_phase_diagram_eles
         self.chunk_size = chunk_size
-        self._completed_tasks: Set[str] = set()
+        self._completed_tasks: set[str] = set()
 
         if self.thermo.key != "thermo_id":
             warnings.warn(
@@ -111,7 +117,7 @@ class ThermoBuilder(Builder):
             coll.ensure_index("chemsys")
             coll.ensure_index("phase_diagram_id")
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterator[dict]:  # pragma: no cover
         to_process_chemsys = self._get_chemsys_to_process()
 
         N = ceil(len(to_process_chemsys) / number_splits)
@@ -119,7 +125,7 @@ class ThermoBuilder(Builder):
         for chemsys_chunk in grouper(to_process_chemsys, N):
             yield {"query": {"chemsys": {"$in": list(chemsys_chunk)}}}
 
-    def get_items(self) -> Iterator[List[Dict]]:
+    def get_items(self) -> Iterator[list[dict]]:
         """
         Gets whole chemical systems of entries to process
         """
@@ -224,7 +230,7 @@ class ThermoBuilder(Builder):
         """
         Inserts the thermo and phase diagram docs into the thermo collection
         Args:
-            items ([[tuple(List[dict],List[dict])]]): a list of a list of thermo and phase diagram dict pairs to update
+            items ([[tuple(list[dict],list[dict])]]): a list of a list of thermo and phase diagram dict pairs to update
         """
 
         thermo_docs = [pair[0] for pair_list in items for pair in pair_list]

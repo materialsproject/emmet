@@ -1,15 +1,12 @@
-from typing import List, Optional
 from hashlib import blake2b
 
 from pydantic import Field
-
 from pymatgen.core.structure import Molecule
 
-from emmet.core.mpid import MPculeID
 from emmet.core.material import PropertyOrigin
-from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.molecule_property import PropertyDoc
-
+from emmet.core.mpid import MPculeID
+from emmet.core.qchem.task import TaskDocument
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -19,33 +16,33 @@ class VibrationDoc(PropertyDoc):
 
     molecule: Molecule = Field(..., description="Molecular structure")
 
-    frequencies: List[float] = Field(
+    frequencies: list[float] = Field(
         ..., description="List of molecular vibrational frequencies"
     )
 
-    frequency_modes: List[List[List[float]]] = Field(
+    frequency_modes: list[list[list[float]]] = Field(
         ..., description="Vibrational frequency modes of the molecule"
     )
 
-    ir_intensities: List[float] = Field(
+    ir_intensities: list[float] = Field(
         ...,
         title="IR intensities",
         description="Intensities for IR vibrational spectrum peaks",
     )
 
-    ir_activities: List[bool] = Field(
+    ir_activities: list[bool] = Field(
         ...,
         title="IR activities",
         description="List indicating if frequency-modes are IR-active",
     )
 
-    raman_intensities: Optional[List[float]] = Field(
+    raman_intensities: list[float] | None = Field(
         None,
         title="Raman intensities",
         description="Intensities for Raman spectrum peaks",
     )
 
-    raman_activities: Optional[List[float]] = Field(
+    raman_activities: list[float] | None = Field(
         None,
         title="Raman activities",
         description="List indicating if frequency-modes are Raman-active",

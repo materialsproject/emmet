@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -12,18 +11,18 @@ class FermiDoc(BaseModel):
     Fermi surfaces.
     """
 
-    fermi_surfaces: Optional[List[dict]] = Field(
+    fermi_surfaces: list[dict] | None = Field(
         None,
         description="List of IFermi FermiSurface objects.",
     )
 
-    surface_types: Optional[List[str]] = Field(
+    surface_types: list[str] | None = Field(
         None,
         description="Type of each fermi surface in the fermi_surfaces list.\
             Is either CBM or VBM for semiconductors, or fermi_surface for metals.",
     )
 
-    material_id: Optional[str] = Field(
+    material_id: str | None = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )

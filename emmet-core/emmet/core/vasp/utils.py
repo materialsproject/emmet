@@ -1,16 +1,19 @@
 """Define utilities needed for parsing VASP calculations."""
 
 from __future__ import annotations
-from collections import defaultdict
+
 import os
+from collections import defaultdict
 from pathlib import Path
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, Field, PrivateAttr, computed_field, model_validator
-from typing import TYPE_CHECKING, Optional
 
 from emmet.core.utils import get_hash_blocked
 
 if TYPE_CHECKING:
     from typing import Any
+
     from emmet.core.typing import PathLike
 
 TASK_NAMES = {"precondition"}.union([f"relax{i+1}" for i in range(9)])
@@ -26,7 +29,7 @@ class FileMetadata(BaseModel):
         description="Name of the VASP file without suffixes (e.g., INCAR)"
     )
     path: Path = Field(description="Path to the VASP file")
-    _md5: Optional[str] = PrivateAttr(default=None)
+    _md5: str | None = PrivateAttr(default=None)
 
     @model_validator(mode="before")
     def coerce_path(cls, v: Any) -> Any:
@@ -39,7 +42,7 @@ class FileMetadata(BaseModel):
         return v
 
     @computed_field
-    def md5(self) -> Optional[str]:
+    def md5(self) -> str | None:
         """MD5 checksum of the file (computed lazily if needed)."""
         if self._md5 is not None:
             return self._md5

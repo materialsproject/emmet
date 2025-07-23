@@ -1,19 +1,24 @@
+from __future__ import annotations
+
 from collections import defaultdict
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Optional, Iterable, Iterator, List, Dict
 
 from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper
 
-from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
-from emmet.core.molecules.electric import ElectricMultipoleDoc
-from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
+from emmet.core.molecules.electric import ElectricMultipoleDoc
+from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
+from emmet.core.qchem.task import TaskDocument
+from emmet.core.utils import jsanitize
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
 
 __author__ = "Evan Spotte-Smith"
 
@@ -41,8 +46,8 @@ class ElectricMultipoleBuilder(Builder):
         tasks: Store,
         molecules: Store,
         multipoles: Store,
-        query: Optional[Dict] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        query: dict | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
         self.tasks = tasks
@@ -89,7 +94,7 @@ class ElectricMultipoleBuilder(Builder):
         self.multipoles.ensure_index("last_updated")
         self.multipoles.ensure_index("formula_alphabetical")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
         """Prechunk the builder for distributed computation"""
 
         temp_query = dict(self.query)
@@ -115,7 +120,7 @@ class ElectricMultipoleBuilder(Builder):
             query["species_hash"] = {"$in": list(hash_chunk)}
             yield {"query": query}
 
-    def get_items(self) -> Iterator[List[Dict]]:
+    def get_items(self) -> Iterator[list[dict]]:
         """
         Gets all items to process into multipole documents.
         This does no datetime checking; relying on on whether
@@ -162,12 +167,12 @@ class ElectricMultipoleBuilder(Builder):
 
             yield molecules
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
+    def process_item(self, items: list[dict]) -> list[dict]:
         """
         Process the tasks into ElectricMultipoleDocs
 
         Args:
-            tasks List[Dict] : a list of MoleculeDocs in dict form
+            tasks list[dict] : a list of MoleculeDocs in dict form
 
         Returns:
             [dict] : a list of new electric multipole docs
@@ -250,7 +255,7 @@ class ElectricMultipoleBuilder(Builder):
 
         return jsanitize([doc.model_dump() for doc in multipole_docs], allow_bson=True)
 
-    def update_targets(self, items: List[List[Dict]]):
+    def update_targets(self, items: list[list[dict]]):
         """
         Inserts the new documents into the multipoles collection
 

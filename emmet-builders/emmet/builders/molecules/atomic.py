@@ -1,24 +1,29 @@
+from __future__ import annotations
+
 from collections import defaultdict
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Optional, Iterable, Iterator, List, Dict
 
 from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper
 
-from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
+from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.molecules.atomic import (
-    PartialChargesDoc,
-    PartialSpinsDoc,
     CHARGES_METHODS,
     SPINS_METHODS,
+    PartialChargesDoc,
+    PartialSpinsDoc,
 )
+from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
+from emmet.core.qchem.task import TaskDocument
 from emmet.core.utils import jsanitize
-from emmet.builders.settings import EmmetBuildSettings
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
 
 __author__ = "Evan Spotte-Smith"
 
@@ -55,9 +60,9 @@ class PartialChargesBuilder(Builder):
         tasks: Store,
         molecules: Store,
         charges: Store,
-        query: Optional[Dict] = None,
-        methods: Optional[List] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        query: dict | None = None,
+        methods: list | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
         self.tasks = tasks
@@ -105,7 +110,7 @@ class PartialChargesBuilder(Builder):
         self.charges.ensure_index("last_updated")
         self.charges.ensure_index("formula_alphabetical")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
         """Prechunk the builder for distributed computation"""
 
         temp_query = dict(self.query)
@@ -131,7 +136,7 @@ class PartialChargesBuilder(Builder):
             query["species_hash"] = {"$in": list(hash_chunk)}
             yield {"query": query}
 
-    def get_items(self) -> Iterator[List[Dict]]:
+    def get_items(self) -> Iterator[list[dict]]:
         """
         Gets all items to process into partial charges documents.
         This does no datetime checking; relying on on whether
@@ -178,12 +183,12 @@ class PartialChargesBuilder(Builder):
 
             yield molecules
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
+    def process_item(self, items: list[dict]) -> list[dict]:
         """
         Process the tasks into PartialChargesDocs
 
         Args:
-            tasks List[Dict] : a list of MoleculeDocs in dict form
+            tasks list[dict] : a list of MoleculeDocs in dict form
 
         Returns:
             [dict] : a list of new partial charges docs
@@ -275,7 +280,7 @@ class PartialChargesBuilder(Builder):
 
         return jsanitize([doc.model_dump() for doc in charges_docs], allow_bson=True)
 
-    def update_targets(self, items: List[List[Dict]]):
+    def update_targets(self, items: list[list[dict]]):
         """
         Inserts the new documents into the charges collection
 
@@ -334,9 +339,9 @@ class PartialSpinsBuilder(Builder):
         tasks: Store,
         molecules: Store,
         spins: Store,
-        query: Optional[Dict] = None,
-        methods: Optional[List] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        query: dict | None = None,
+        methods: list | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
         self.tasks = tasks
@@ -384,7 +389,7 @@ class PartialSpinsBuilder(Builder):
         self.spins.ensure_index("last_updated")
         self.spins.ensure_index("formula_alphabetical")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
         """Prechunk the builder for distributed computation"""
 
         temp_query = dict(self.query)
@@ -410,7 +415,7 @@ class PartialSpinsBuilder(Builder):
             query["species_hash"] = {"$in": list(hash_chunk)}
             yield {"query": query}
 
-    def get_items(self) -> Iterator[List[Dict]]:
+    def get_items(self) -> Iterator[list[dict]]:
         """
         Gets all items to process into partial spins documents.
         This does no datetime checking; relying on on whether
@@ -457,12 +462,12 @@ class PartialSpinsBuilder(Builder):
 
             yield molecules
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
+    def process_item(self, items: list[dict]) -> list[dict]:
         """
         Process the tasks into PartialSpinsDocs
 
         Args:
-            tasks List[Dict] : a list of MoleculeDocs in dict form
+            tasks list[dict] : a list of MoleculeDocs in dict form
 
         Returns:
             [dict] : a list of new partial spins docs
@@ -555,7 +560,7 @@ class PartialSpinsBuilder(Builder):
 
         return jsanitize([doc.model_dump() for doc in spins_docs], allow_bson=True)
 
-    def update_targets(self, items: List[List[Dict]]):
+    def update_targets(self, items: list[list[dict]]):
         """
         Inserts the new documents into the spins collection
 

@@ -1,6 +1,5 @@
 import logging
 from collections import defaultdict
-from typing import Dict, List, Optional
 
 import numpy as np
 from pydantic import Field
@@ -17,21 +16,23 @@ class OxidationStateDoc(PropertyDoc):
 
     property_name: str = "oxidation"
 
-    structure: Structure = Field(
-        ...,
-        description="The structure used in the generation of the oxidation state data.",
-    )
-    possible_species: List[str] = Field(
+    possible_species: list[str] = Field(
         description="Possible charged species in this material."
     )
-    possible_valences: List[float] = Field(
+    possible_valences: list[float] = Field(
         description="List of valences for each site in this material."
     )
-    average_oxidation_states: Dict[str, float] = Field(
+    average_oxidation_states: dict[str, float] = Field(
         description="Average oxidation states for each unique species."
     )
-    method: Optional[str] = Field(
+    method: str | None = Field(
         None, description="Method used to compute oxidation states."
+    )
+
+    structure: Structure | None = Field(
+        None,
+        description="The structure used in the generation of the oxidation state data.",
+        exclude=False,
     )
 
     @classmethod
@@ -106,9 +107,5 @@ class OxidationStateDoc(PropertyDoc):
                 d["state"] = "unsuccessful"
 
         return super().from_structure(
-            meta_structure=structure,
-            material_id=material_id,
-            structure=structure,
-            **d,
-            **kwargs
+            meta_structure=structure, material_id=material_id, **d, **kwargs
         )

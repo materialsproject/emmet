@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -17,17 +16,17 @@ class MessagesDoc(BaseModel):
     Defines data for user messages
     """
 
-    title: Optional[str] = Field(
+    title: str | None = Field(
         None,
         title="Title",
         description="Generic title or short summary for the message.",
     )
 
-    body: Optional[str] = Field(
+    body: str | None = Field(
         None, title="Body", description="Main text body of message."
     )
 
-    authors: Optional[List[str]] = Field(
+    authors: list[str] | None = Field(
         None,
         title="Title",
         description="Generic title or short summary for the message.",

@@ -1,5 +1,4 @@
 from pydantic import BaseModel, Field
-from typing import Optional
 
 
 class DOIDoc(BaseModel):
@@ -7,17 +6,17 @@ class DOIDoc(BaseModel):
     DOIs to reference specific materials on Materials Project.
     """
 
-    doi: Optional[str] = Field(
+    doi: str | None = Field(
         None,
         description="DOI of the material.",
     )
 
-    bibtex: Optional[str] = Field(
+    bibtex: str | None = Field(
         None,
         description="Bibtex reference of the material.",
     )
 
-    material_id: Optional[str] = Field(
+    material_id: str | None = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )

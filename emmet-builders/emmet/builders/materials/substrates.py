@@ -1,14 +1,15 @@
-from typing import Optional, Dict, Iterable
-from emmet.core.mpid import MPID
-from maggma.core.store import Store
+from typing import Iterable
+
 from maggma.core.builder import Builder
-from pymatgen.core.structure import Structure
+from maggma.core.store import Store
+from maggma.utils import grouper
 from pymatgen.analysis.elasticity.elastic import ElasticTensor
+from pymatgen.core.structure import Structure
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
+from emmet.core.mpid import MPID
 from emmet.core.substrates import SubstratesDoc
 from emmet.core.utils import jsanitize
-from maggma.utils import grouper
 
 
 class SubstratesBuilder(Builder):
@@ -17,7 +18,7 @@ class SubstratesBuilder(Builder):
         materials: Store,
         substrates: Store,
         elasticity: Store,
-        query: Optional[Dict] = None,
+        query: dict | None = None,
         **kwargs,
     ):
         """
@@ -47,7 +48,7 @@ class SubstratesBuilder(Builder):
             **kwargs,
         )
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
         to_process_mat_ids = self._find_to_process()
 
         return [

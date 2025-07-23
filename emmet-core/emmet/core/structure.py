@@ -1,16 +1,20 @@
 """Core definition of Structure and Molecule metadata."""
+
 from __future__ import annotations
 
-from typing import List, Optional, Type, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from pydantic import Field
 from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Molecule, Structure
 
-from emmet.core.utils import get_graph_hash
 from emmet.core.base import EmmetBaseModel
 from emmet.core.symmetry import PointGroupData, SymmetryData
+from emmet.core.utils import get_graph_hash
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 T = TypeVar("T", bound="StructureMetadata")
 S = TypeVar("S", bound="MoleculeMetadata")
@@ -25,63 +29,63 @@ class StructureMetadata(EmmetBaseModel):
     """Mix-in class for structure metadata."""
 
     # Structure metadata
-    nsites: Optional[int] = Field(
+    nsites: int | None = Field(
         None, description="Total number of sites in the structure."
     )
-    elements: Optional[List[Element]] = Field(
+    elements: list[Element] | None = Field(
         None, description="List of elements in the material."
     )
-    nelements: Optional[int] = Field(None, description="Number of elements.")
-    composition: Optional[Composition] = Field(
+    nelements: int | None = Field(None, description="Number of elements.")
+    composition: Composition | None = Field(
         None, description="Full composition for the material."
     )
-    composition_reduced: Optional[Composition] = Field(
+    composition_reduced: Composition | None = Field(
         None,
         title="Reduced Composition",
         description="Simplified representation of the composition.",
     )
-    formula_pretty: Optional[str] = Field(
+    formula_pretty: str | None = Field(
         None,
         title="Pretty Formula",
         description="Cleaned representation of the formula.",
     )
-    formula_anonymous: Optional[str] = Field(
+    formula_anonymous: str | None = Field(
         None,
         title="Anonymous Formula",
         description="Anonymized representation of the formula.",
     )
-    chemsys: Optional[str] = Field(
+    chemsys: str | None = Field(
         None,
         title="Chemical System",
         description="dash-delimited string of elements in the material.",
     )
-    volume: Optional[float] = Field(
+    volume: float | None = Field(
         None,
         title="Volume",
         description="Total volume for this structure in Angstroms^3.",
     )
 
-    density: Optional[float] = Field(
+    density: float | None = Field(
         None, title="Density", description="Density in grams per cm^3."
     )
 
-    density_atomic: Optional[float] = Field(
+    density_atomic: float | None = Field(
         None,
         title="Packing Density",
         description="The atomic packing density in atoms per cm^3.",
     )
 
-    symmetry: Optional[SymmetryData] = Field(
+    symmetry: SymmetryData | None = Field(
         None, description="Symmetry data for this material."
     )
 
     @classmethod
     def from_composition(
-        cls: Type[T],
+        cls,
         composition: Composition,
-        fields: Optional[List[str]] = None,
+        fields: list[str] | None = None,
         **kwargs,
-    ) -> T:
+    ) -> Self:
         fields = (
             [
                 "elements",
@@ -113,11 +117,11 @@ class StructureMetadata(EmmetBaseModel):
 
     @classmethod
     def from_structure(
-        cls: Type[T],
+        cls,
         meta_structure: Structure,
-        fields: Optional[List[str]] = None,
+        fields: list[str] | None = None,
         **kwargs,
-    ) -> T:
+    ) -> Self:
         fields = (
             [
                 "nsites",
@@ -161,59 +165,59 @@ class StructureMetadata(EmmetBaseModel):
 class MoleculeMetadata(EmmetBaseModel):
     """Mix-in class for molecule metadata."""
 
-    charge: Optional[int] = Field(None, description="Charge of the molecule")
-    spin_multiplicity: Optional[int] = Field(
+    charge: int | None = Field(None, description="Charge of the molecule")
+    spin_multiplicity: int | None = Field(
         None, description="Spin multiplicity of the molecule"
     )
-    natoms: Optional[int] = Field(
+    natoms: int | None = Field(
         None, description="Total number of atoms in the molecule"
     )
-    elements: Optional[List[Element]] = Field(
+    elements: list[Element] | None = Field(
         None, description="List of elements in the molecule"
     )
-    nelements: Optional[int] = Field(None, title="Number of Elements")
-    nelectrons: Optional[int] = Field(
+    nelements: int | None = Field(None, title="Number of Elements")
+    nelectrons: int | None = Field(
         None,
         title="Number of electrons",
         description="The total number of electrons for the molecule",
     )
-    composition: Optional[Composition] = Field(
+    composition: Composition | None = Field(
         None, description="Full composition for the molecule"
     )
-    composition_reduced: Optional[Composition] = Field(
+    composition_reduced: Composition | None = Field(
         None,
         title="Reduced Composition",
         description="Simplified representation of the composition",
     )
-    formula_alphabetical: Optional[str] = Field(
+    formula_alphabetical: str | None = Field(
         None,
         title="Alphabetical Formula",
         description="Alphabetical molecular formula",
     )
-    formula_pretty: Optional[str] = Field(
+    formula_pretty: str | None = Field(
         None,
         title="Pretty Formula",
         description="Cleaned representation of the formula.",
     )
-    formula_anonymous: Optional[str] = Field(
+    formula_anonymous: str | None = Field(
         None,
         title="Anonymous Formula",
         description="Anonymized representation of the formula",
     )
-    chemsys: Optional[str] = Field(
+    chemsys: str | None = Field(
         None,
         title="Chemical System",
         description="dash-delimited string of elements in the molecule",
     )
-    symmetry: Optional[PointGroupData] = Field(
+    symmetry: PointGroupData | None = Field(
         None, description="Symmetry data for this molecule"
     )
-    species_hash: Optional[str] = Field(
+    species_hash: str | None = Field(
         None,
         description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph "
         "node attribute.",
     )
-    coord_hash: Optional[str] = Field(
+    coord_hash: str | None = Field(
         None,
         description="Weisfeiler Lehman (WL) graph hash using the atom coordinates as the graph "
         "node attribute.",
@@ -221,11 +225,11 @@ class MoleculeMetadata(EmmetBaseModel):
 
     @classmethod
     def from_composition(
-        cls: Type[S],
+        cls,
         comp: Composition,
-        fields: Optional[List[str]] = None,
+        fields: list[str] | None = None,
         **kwargs,
-    ) -> S:
+    ) -> Self:
         """
         Create a MoleculeMetadata model from a composition.
 
@@ -274,11 +278,11 @@ class MoleculeMetadata(EmmetBaseModel):
 
     @classmethod
     def from_molecule(
-        cls: Type[S],
+        cls,
         meta_molecule: Molecule,
-        fields: Optional[List[str]] = None,
+        fields: list[str] | None = None,
         **kwargs,
-    ) -> S:
+    ) -> Self:
         fields = (
             [
                 "charge",

@@ -1,8 +1,8 @@
-""" Core definition of a VASP Task Document """
+"""Core definition of a VASP Task Document"""
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any
 
 from pydantic import Field
 from pymatgen.analysis.xas.spectrum import XAS
@@ -33,10 +33,10 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
     calc_code: str = "FEFF"
 
     structure: Structure
-    input_parameters: Dict[str, Any] = Field(
+    input_parameters: dict[str, Any] = Field(
         {}, description="Input parameters for the FEFF calculation"
     )
-    spectrum: List[List[float]] = Field(
+    spectrum: list[list[float]] = Field(
         [[]], description="Raw spectrum data from FEFF xmu.dat or eels.dat"
     )
 

@@ -1,22 +1,28 @@
-from collections import defaultdict
+from __future__ import annotations
+
 import copy
+from collections import defaultdict
 from datetime import datetime
 from itertools import chain, groupby
 from math import ceil
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Union
 
 from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper
 
-from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.molecule import MoleculeDoc
-from emmet.core.molecules.bonds import metals
-from emmet.core.molecules.thermo import MoleculeThermoDoc
-from emmet.core.molecules.redox import RedoxDoc
-from emmet.core.utils import confirm_molecule, get_graph_hash, jsanitize
 from emmet.builders.settings import EmmetBuildSettings
+from emmet.core.molecules.bonds import metals
+from emmet.core.molecules.redox import RedoxDoc
+from emmet.core.molecules.thermo import MoleculeThermoDoc
+from emmet.core.qchem.molecule import MoleculeDoc
+from emmet.core.qchem.task import TaskDocument
+from emmet.core.utils import confirm_molecule, get_graph_hash, jsanitize
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
+    from typing import Any
 
 __author__ = "Evan Spotte-Smith"
 
@@ -51,8 +57,8 @@ class RedoxBuilder(Builder):
         molecules: Store,
         thermo: Store,
         redox: Store,
-        query: Optional[Dict] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        query: dict | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
         self.tasks = tasks
@@ -107,7 +113,7 @@ class RedoxBuilder(Builder):
         self.redox.ensure_index("last_updated")
         self.redox.ensure_index("formula_alphabetical")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
         """Prechunk the builder for distributed computation"""
 
         temp_query = dict(self.query)
@@ -133,7 +139,7 @@ class RedoxBuilder(Builder):
             query["species_hash"] = {"$in": list(hash_chunk)}
             yield {"query": query}
 
-    def get_items(self) -> Iterator[List[Dict]]:
+    def get_items(self) -> Iterator[list[dict]]:
         """
         Gets all items to process into redox documents.
         This does no datetime checking; relying on on whether
@@ -180,12 +186,12 @@ class RedoxBuilder(Builder):
 
             yield molecules
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
+    def process_item(self, items: list[dict]) -> list[dict]:
         """
         Process the tasks into a RedoxDoc
 
         Args:
-            tasks List[Dict] : a list of MoleculeDocs in dict form
+            tasks list[dict] : a list of MoleculeDocs in dict form
 
         Returns:
             [dict] : a list of new redox docs
@@ -203,7 +209,7 @@ class RedoxBuilder(Builder):
 
         for graph_group in group_by_graph.values():
             # Molecule docs will be grouped by charge
-            charges: Dict[int, Any] = dict()
+            charges: dict[int, Any] = dict()
 
             for gg in graph_group:
                 # First, grab relevant MoleculeThermoDocs and identify possible IE/EA single-points
@@ -360,7 +366,7 @@ class RedoxBuilder(Builder):
             [doc.model_dump() for doc in redox_docs if doc is not None], allow_bson=True
         )
 
-    def update_targets(self, items: List[List[Dict]]):
+    def update_targets(self, items: list[list[dict]]):
         """
         Inserts the new documents into the orbitals collection
 
@@ -391,7 +397,7 @@ class RedoxBuilder(Builder):
             self.logger.info("No items to update")
 
     @staticmethod
-    def _group_by_graph(mol_docs: List[MoleculeDoc]) -> Dict[int, List[MoleculeDoc]]:
+    def _group_by_graph(mol_docs: list[MoleculeDoc]) -> dict[int, list[MoleculeDoc]]:
         """
         Group molecule docs by molecular graph connectivity
 
@@ -399,7 +405,7 @@ class RedoxBuilder(Builder):
         :return: Grouped molecule entries
         """
 
-        graph_hashes_nometal: List[str] = list()
+        graph_hashes_nometal: list[str] = list()
         results = defaultdict(list)
 
         # Within each group, group by the covalent molecular graph
@@ -430,10 +436,10 @@ class RedoxBuilder(Builder):
 
     @staticmethod
     def _collect_by_lot_solvent(
-        thermo_docs: List[MoleculeThermoDoc],
-        ie_docs: List[TaskDocument],
-        ea_docs: List[TaskDocument],
-    ) -> Dict[str, Any]:
+        thermo_docs: list[MoleculeThermoDoc],
+        ie_docs: list[TaskDocument],
+        ea_docs: list[TaskDocument],
+    ) -> dict[str, Any]:
         """
         For a given MoleculeDoc, group potential MoleculeThermoDocs and TaskDocs for
         IE/EA calculations based on level of theory and solvent.
@@ -452,7 +458,7 @@ class RedoxBuilder(Builder):
                  }
         """
 
-        def _lot_solv(doc: Union[MoleculeThermoDoc, TaskDocument]):
+        def _lot_solv(doc: MoleculeThermoDoc | TaskDocument):
             if isinstance(doc, MoleculeThermoDoc):
                 if doc.correction:
                     return doc.correction_lot_solvent

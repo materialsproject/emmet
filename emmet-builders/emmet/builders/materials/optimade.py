@@ -1,5 +1,4 @@
 from math import ceil
-from typing import Dict, Iterator, Optional
 
 from maggma.builders import Builder
 from maggma.core import Store
@@ -9,6 +8,11 @@ from pymatgen.core.structure import Structure
 from emmet.core.optimade import OptimadeMaterialsDoc
 from emmet.core.utils import jsanitize
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
 
 class OptimadeMaterialsBuilder(Builder):
     def __init__(
@@ -16,7 +20,7 @@ class OptimadeMaterialsBuilder(Builder):
         materials: Store,
         thermo: Store,
         optimade: Store,
-        query: Optional[Dict] = None,
+        query: dict | None = None,
         **kwargs,
     ):
         """
@@ -42,7 +46,7 @@ class OptimadeMaterialsBuilder(Builder):
 
         super().__init__(sources=[materials, thermo], targets=optimade, **kwargs)
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterator[dict]:  # pragma: no cover
         """
         Prechunk method to perform chunking by the key field
         """

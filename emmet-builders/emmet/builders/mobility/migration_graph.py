@@ -1,10 +1,10 @@
 from maggma.builders.map_builder import MapBuilder
 from maggma.stores import MongoStore
-from typing import Tuple
-from emmet.core.mobility.migrationgraph import MigrationGraphDoc
-from emmet.builders.utils import get_hop_cutoff
-from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
+from pymatgen.apps.battery.insertion_battery import InsertionElectrode
+
+from emmet.builders.utils import get_hop_cutoff
+from emmet.core.mobility.migrationgraph import MigrationGraphDoc
 from emmet.core.utils import jsanitize
 
 
@@ -18,7 +18,7 @@ class MigrationGraphBuilder(MapBuilder):
         max_hop_distance: float = 7,
         populate_sc_fields: bool = True,
         min_length_sc: float = 8,
-        minmax_num_atoms: Tuple[int, int] = (80, 120),
+        minmax_num_atoms: tuple[int, int] = (80, 120),
         ltol: float = 0.2,
         stol: float = 0.3,
         angle_tol: float = 5,

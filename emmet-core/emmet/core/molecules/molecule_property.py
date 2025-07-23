@@ -1,23 +1,26 @@
-""" Core definition of a Materials Document """
+"""Core definition of a Materials Document"""
+
+# mypy: ignore-errors
+
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Sequence, Type, TypeVar, List, Optional
+from typing import TYPE_CHECKING
 
 from pydantic import Field
 from pymatgen.core.structure import Molecule
 
-from emmet.core.qchem.calc_types import LevelOfTheory
 from emmet.core.material import PropertyOrigin
 from emmet.core.mpid import MPculeID
+from emmet.core.qchem.calc_types import LevelOfTheory
 from emmet.core.structure import MoleculeMetadata
-
 from emmet.core.utils import utcnow
 
+if TYPE_CHECKING:
+    from typing_extensions import Self
+
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
-
-
-S = TypeVar("S", bound="PropertyDoc")
 
 
 class PropertyDoc(MoleculeMetadata):
@@ -44,22 +47,22 @@ class PropertyDoc(MoleculeMetadata):
         description="Whether this property document is deprecated.",
     )
 
-    deprecation_reasons: Optional[List[str]] = Field(
+    deprecation_reasons: list[str] | None = Field(
         None,
         description="List of deprecation tags detailing why this document isn't valid",
     )
 
-    level_of_theory: Optional[LevelOfTheory] = Field(
+    level_of_theory: LevelOfTheory | None = Field(
         None, description="Level of theory used to generate this property document."
     )
 
-    solvent: Optional[str] = Field(
+    solvent: str | None = Field(
         None,
         description="String representation of the solvent "
         "environment used to generate this property document.",
     )
 
-    lot_solvent: Optional[str] = Field(
+    lot_solvent: str | None = Field(
         None,
         description="String representation of the level of theory and solvent "
         "environment used to generate this property document.",
@@ -80,12 +83,12 @@ class PropertyDoc(MoleculeMetadata):
 
     @classmethod
     def from_molecule(  # type: ignore[override]
-        cls: Type[S],
+        cls: Self,
         meta_molecule: Molecule,
         property_id: str,
         molecule_id: MPculeID,
         **kwargs,
-    ) -> S:
+    ) -> Self:
         """
         Builds a molecule document using the minimal amount of information
         """
@@ -95,4 +98,4 @@ class PropertyDoc(MoleculeMetadata):
             property_id=property_id,
             molecule_id=molecule_id,
             **kwargs,
-        )  # type: ignore
+        )

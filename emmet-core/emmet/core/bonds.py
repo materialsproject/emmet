@@ -1,5 +1,6 @@
-import logging
-from typing import Dict, List, Any
+from __future__ import annotations
+
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 from pydantic import Field
@@ -9,6 +10,14 @@ from pymatgen.analysis.local_env import NearNeighbors
 from emmet.core.material_property import PropertyDoc
 
 AVAILABLE_METHODS = {nn.__name__: nn for nn in NearNeighbors.__subclasses__()}
+
+if TYPE_CHECKING:
+
+    from typing_extensions import Self
+
+    from pymatgen.core import Structure
+
+    from emmet.core.mpid import MPID
 
 
 class BondingDoc(PropertyDoc):
@@ -23,18 +32,18 @@ class BondingDoc(PropertyDoc):
 
     method: str = Field(description="Method used to compute structure graph.")
 
-    bond_types: Dict[str, List[float]] = Field(
+    bond_types: dict[str, list[float]] = Field(
         description="Dictionary of bond types to their length, e.g. a Fe-O to "
         "a list of the lengths of Fe-O bonds in Angstrom."
     )
-    bond_length_stats: Dict[str, Any] = Field(
+    bond_length_stats: dict[str, Any] = Field(
         description="Dictionary of statistics of bonds in structure "
         "with keys all_weights, min, max, mean and variance."
     )
-    coordination_envs: List[str] = Field(
+    coordination_envs: list[str] = Field(
         description="List of co-ordination environments, e.g. ['Mo-S(6)', 'S-Mo(3)']."
     )
-    coordination_envs_anonymous: List[str] = Field(
+    coordination_envs_anonymous: list[str] = Field(
         description="List of co-ordination environments without elements "
         "present, e.g. ['A-B(6)', 'A-B(3)']."
     )
@@ -42,14 +51,14 @@ class BondingDoc(PropertyDoc):
     @classmethod
     def from_structure(
         cls,
-        structure,
-        material_id,
-        preferred_methods=(
+        structure: Structure,
+        material_id: str | MPID,
+        preferred_methods: tuple[str | NearNeighbors, ...] = (
             "CrystalNN",
             "MinimumDistanceNN",
         ),
-        **kwargs
-    ):
+        **kwargs,
+    ) -> Self | None:
         """
         Calculate
 
@@ -62,14 +71,16 @@ class BondingDoc(PropertyDoc):
         """
 
         bonding_info = None
-        preferred_methods = [  # type: ignore
+        bond_analysis_methods: list[NearNeighbors] = [
             AVAILABLE_METHODS[method]() if isinstance(method, str) else method
             for method in preferred_methods
         ]
 
-        for method in preferred_methods:
+        warnings: list[str] = []
+
+        for method in bond_analysis_methods:
             try:
-                sg = StructureGraph.with_local_env_strategy(structure, method)
+                sg = StructureGraph.from_local_env_strategy(structure, method)
 
                 # ensure edge weights are specifically bond lengths
                 edge_weights = []
@@ -94,16 +105,16 @@ class BondingDoc(PropertyDoc):
                 break
 
             except Exception as e:
-                logging.warning(
-                    "Failed to calculate bonding: {} {} {}".format(
-                        material_id, method, e
-                    )
+                warnings.append(
+                    f"Failed to calculate bonding: {material_id} {method} {e}"
                 )
 
         if bonding_info:
             return super().from_structure(
                 meta_structure=structure,
                 material_id=material_id,
+                warnings=warnings,
                 **bonding_info,
-                **kwargs
+                **kwargs,
             )
+        return None

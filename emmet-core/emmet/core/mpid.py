@@ -1,12 +1,16 @@
 # %%
-import re
-from typing import Union, Any, Callable
+from __future__ import annotations
 
-from pydantic_core import CoreSchema, core_schema
+import re
+from typing import TYPE_CHECKING
 
 from pydantic import GetJsonSchemaHandler
 from pydantic.json_schema import JsonSchemaValue
+from pydantic_core import CoreSchema, core_schema
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import Any
 
 # matches "mp-1234" or "1234" followed by and optional "-(Alphanumeric)"
 mpid_regex = re.compile(r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$")
@@ -34,7 +38,7 @@ class MPID(str):
             Numbers stored as strings are coerced to ints
     """
 
-    def __init__(self, val: Union["MPID", int, str]):
+    def __init__(self, val: MPID | int | str):
         if isinstance(val, MPID):
             self.parts = val.parts  # type: ignore
             self.string = val.string  # type: ignore
@@ -74,7 +78,7 @@ class MPID(str):
     def __repr__(self):
         return f"MPID({self})"
 
-    def __lt__(self, other: Union["MPID", int, str]):
+    def __lt__(self, other: MPID | int | str):
         other_parts = MPID(other).parts
 
         if self.parts[0] != "" and other_parts[0] != "":
@@ -91,7 +95,7 @@ class MPID(str):
             # both are pure ints; normal comparison
             return self.parts[1] < other_parts[1]
 
-    def __gt__(self, other: Union["MPID", int, str]):
+    def __gt__(self, other: MPID | int | str):
         return not self.__lt__(other)
 
     def __hash__(self):
@@ -144,7 +148,7 @@ class MPculeID(str):
             Numbers stored as strings are coerced to ints
     """
 
-    def __init__(self, val: Union["MPculeID", str]):
+    def __init__(self, val: MPculeID | str):
         if isinstance(val, MPculeID):
             self.parts = val.parts  # type: ignore
             self.string = val.string  # type: ignore
@@ -184,14 +188,14 @@ class MPculeID(str):
     def __repr__(self):
         return f"MPculeID({self})"
 
-    def __lt__(self, other: Union["MPculeID", str]):
+    def __lt__(self, other: MPculeID | str):
         other_parts = MPculeID(other).parts
 
         return "-".join([str(x) for x in self.parts[-4:]]) < "-".join(
             [str(x) for x in other_parts[-4:]]
         )
 
-    def __gt__(self, other: Union["MPculeID", str]):
+    def __gt__(self, other: MPculeID | str):
         return not self.__lt__(other)
 
     def __hash__(self):

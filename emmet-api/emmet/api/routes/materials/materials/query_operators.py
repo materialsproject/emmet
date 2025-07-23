@@ -1,5 +1,5 @@
 from itertools import permutations
-from typing import Dict, Literal, Optional
+from typing import Literal
 
 from fastapi import Body, HTTPException, Query
 from maggma.api.query_operator import QueryOperator
@@ -25,7 +25,7 @@ class FormulaQuery(QueryOperator):
 
     def query(
         self,
-        formula: Optional[str] = Query(
+        formula: str | None = Query(
             None,
             description="Query by formula including anonymized formula or by including wild cards. \
 A comma delimited string list of anonymous formulas or regular formulas can also be provided.",
@@ -51,7 +51,7 @@ class ChemsysQuery(QueryOperator):
 
     def query(
         self,
-        chemsys: Optional[str] = Query(
+        chemsys: str | None = Query(
             None,
             description="A comma delimited string list of chemical systems. \
 Wildcards for unknown elements only supported for single chemsys queries",
@@ -76,12 +76,12 @@ class ElementsQuery(QueryOperator):
 
     def query(
         self,
-        elements: Optional[str] = Query(
+        elements: str | None = Query(
             None,
             description="Query by elements in the material composition as a comma-separated list",
             max_length=60,
         ),
-        exclude_elements: Optional[str] = Query(
+        exclude_elements: str | None = Query(
             None,
             description="Query by excluded elements in the material composition as a comma-separated list",
             max_length=60,
@@ -126,7 +126,7 @@ class DeprecationQuery(QueryOperator):
 
     def query(
         self,
-        deprecated: Optional[bool] = Query(
+        deprecated: bool | None = Query(
             False,
             description="Whether the material is marked as deprecated",
         ),
@@ -146,15 +146,15 @@ class SymmetryQuery(QueryOperator):
 
     def query(
         self,
-        crystal_system: Optional[CrystalSystem] = Query(
+        crystal_system: CrystalSystem | None = Query(
             None,
             description="Crystal system of the material",
         ),
-        spacegroup_number: Optional[int] = Query(
+        spacegroup_number: int | None = Query(
             None,
             description="Space group number of the material",
         ),
-        spacegroup_symbol: Optional[str] = Query(
+        spacegroup_symbol: str | None = Query(
             None,
             description="Space group symbol of the material",
         ),
@@ -184,7 +184,7 @@ class MultiTaskIDQuery(QueryOperator):
 
     def query(
         self,
-        task_ids: Optional[str] = Query(
+        task_ids: str | None = Query(
             None, description="Comma-separated list of task_ids to query on"
         ),
     ) -> STORE_PARAMS:
@@ -215,10 +215,10 @@ class BlessedCalcsQuery(QueryOperator):
         run_type: RunType = Query(
             ..., description="Calculation run type of blessed task data"
         ),
-        energy_min: Optional[float] = Query(
+        energy_min: float | None = Query(
             None, description="Minimum total uncorrected DFT energy in eV/atom"
         ),
-        energy_max: Optional[float] = Query(
+        energy_max: float | None = Query(
             None, description="Maximum total uncorrected DFT energy in eV/atom"
         ),
     ) -> STORE_PARAMS:
@@ -256,7 +256,7 @@ class MultiMaterialIDQuery(QueryOperator):
 
     def query(
         self,
-        material_ids: Optional[str] = Query(
+        material_ids: str | None = Query(
             None, description="Comma-separated list of material_id values to query on"
         ),
     ) -> STORE_PARAMS:
@@ -282,7 +282,7 @@ class FindStructureQuery(QueryOperator):
 
     def query(
         self,
-        structure: Dict = Body(
+        structure: dict = Body(
             ...,
             description="Dictionary representaion of Pymatgen structure object to query with",
         ),
@@ -462,7 +462,7 @@ class LicenseQuery(QueryOperator):
 
     def query(
         self,
-        license: Optional[Literal["BY-C", "BY-NC", "All"]] = Query(
+        license: Literal["BY-C", "BY-NC", "All"] | None = Query(
             "BY-C",
             description="Query by license. Can be commercial or non-commercial, or both",
         ),
@@ -476,19 +476,19 @@ class BatchIdQuery(QueryOperator):
 
     def query(
         self,
-        batch_id: Optional[str] = Query(
+        batch_id: str | None = Query(
             None,
             description="Query by batch identifier",
         ),
-        batch_id_not_eq: Optional[str] = Query(
+        batch_id_not_eq: str | None = Query(
             None,
             description="Exclude batch identifier",
         ),
-        batch_id_eq_any: Optional[str] = Query(
+        batch_id_eq_any: str | None = Query(
             None,
             description="Query by a comma-separated list of batch identifiers",
         ),
-        batch_id_neq_any: Optional[str] = Query(
+        batch_id_neq_any: str | None = Query(
             None,
             description="Exclude a comma-separated list of batch identifiers",
         ),

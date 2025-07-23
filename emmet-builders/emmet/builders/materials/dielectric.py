@@ -1,6 +1,6 @@
-from math import ceil
-from typing import Dict, Optional, Iterator
+from __future__ import annotations
 
+from math import ceil
 
 import numpy as np
 from maggma.builders import Builder
@@ -11,6 +11,11 @@ from pymatgen.core.structure import Structure
 from emmet.core.polar import DielectricDoc
 from emmet.core.utils import jsanitize
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
 
 class DielectricBuilder(Builder):
     def __init__(
@@ -18,7 +23,7 @@ class DielectricBuilder(Builder):
         materials: Store,
         tasks: Store,
         dielectric: Store,
-        query: Optional[Dict] = None,
+        query: dict | None = None,
         **kwargs,
     ):
         self.materials = materials
@@ -33,7 +38,7 @@ class DielectricBuilder(Builder):
 
         super().__init__(sources=[materials, tasks], targets=[dielectric], **kwargs)
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterator[dict]:  # pragma: no cover
         """
         Prechunk method to perform chunking by the key field
         """

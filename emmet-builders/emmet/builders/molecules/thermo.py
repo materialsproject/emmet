@@ -1,22 +1,27 @@
+from __future__ import annotations
+
 from collections import defaultdict
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Optional, Iterable, Iterator, List, Dict
-
-from pymatgen.core.structure import Molecule
-from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
 from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper
+from pymatgen.analysis.molecule_matcher import MoleculeMatcher
+from pymatgen.core.structure import Molecule
 
-from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
-from emmet.core.molecules.thermo import get_free_energy, MoleculeThermoDoc
-from emmet.core.qchem.calc_types import TaskType
-from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
+from emmet.core.molecules.thermo import MoleculeThermoDoc, get_free_energy
+from emmet.core.qchem.calc_types import TaskType
+from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
+from emmet.core.qchem.task import TaskDocument
+from emmet.core.utils import jsanitize
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
 
 
 __author__ = "Evan Spotte-Smith"
@@ -119,8 +124,8 @@ class ThermoBuilder(Builder):
         tasks: Store,
         molecules: Store,
         thermo: Store,
-        query: Optional[Dict] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        query: dict | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
         self.tasks = tasks
@@ -166,7 +171,7 @@ class ThermoBuilder(Builder):
         self.thermo.ensure_index("last_updated")
         self.thermo.ensure_index("formula_alphabetical")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
         """Prechunk the builder for distributed computation"""
 
         temp_query = dict(self.query)
@@ -192,7 +197,7 @@ class ThermoBuilder(Builder):
             query["species_hash"] = {"$in": list(hash_chunk)}
             yield {"query": query}
 
-    def get_items(self) -> Iterator[List[Dict]]:
+    def get_items(self) -> Iterator[list[dict]]:
         """
         Gets all items to process into thermo documents.
         This does no datetime checking; relying on on whether
@@ -239,12 +244,12 @@ class ThermoBuilder(Builder):
 
             yield molecules
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
+    def process_item(self, items: list[dict]) -> list[dict]:
         """
         Process the tasks into a MoleculeThermoDoc
 
         Args:
-            items List[dict] : a list of MoleculeDocs in dict form
+            items list[dict] : a list of MoleculeDocs in dict form
 
         Returns:
             [dict] : a list of new thermo docs
@@ -469,7 +474,7 @@ class ThermoBuilder(Builder):
 
         return jsanitize([doc.model_dump() for doc in thermo_docs], allow_bson=True)
 
-    def update_targets(self, items: List[List[Dict]]):
+    def update_targets(self, items: list[list[dict]]):
         """
         Inserts the new thermo docs into the thermo collection
 

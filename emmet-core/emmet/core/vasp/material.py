@@ -1,6 +1,6 @@
-""" Core definition of a Materials Document """
+"""Core definition of a Materials Document"""
 
-from typing import Dict, List, Mapping, Optional
+from collections.abc import Mapping
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
@@ -19,41 +19,41 @@ SETTINGS = EmmetSettings()
 
 
 class BlessedCalcs(BaseModel, populate_by_name=True):
-    GGA: Optional[ComputedStructureEntry] = None
-    GGA_U: Optional[ComputedStructureEntry] = Field(None, alias="GGA+U")
-    PBESol: Optional[ComputedStructureEntry] = Field(None, alias="PBEsol")
-    SCAN: Optional[ComputedStructureEntry] = None
-    R2SCAN: Optional[ComputedStructureEntry] = Field(None, alias="r2SCAN")
-    HSE: Optional[ComputedStructureEntry] = None
+    GGA: ComputedStructureEntry | None = None
+    GGA_U: ComputedStructureEntry | None = Field(None, alias="GGA+U")
+    PBESol: ComputedStructureEntry | None = Field(None, alias="PBEsol")
+    SCAN: ComputedStructureEntry | None = None
+    R2SCAN: ComputedStructureEntry | None = Field(None, alias="r2SCAN")
+    HSE: ComputedStructureEntry | None = None
 
 
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
-    calc_types: Optional[Mapping[str, CalcType]] = Field(  # type: ignore
+    calc_types: Mapping[str, CalcType] | None = Field(  # type: ignore
         None,
         description="Calculation types for all the calculations that make up this material",
     )
-    task_types: Optional[Mapping[str, TaskType]] = Field(
+    task_types: Mapping[str, TaskType] | None = Field(
         None,
         description="Task types for all the calculations that make up this material",
     )
-    run_types: Optional[Mapping[str, RunType]] = Field(
+    run_types: Mapping[str, RunType] | None = Field(
         None,
         description="Run types for all the calculations that make up this material",
     )
 
-    origins: Optional[List[PropertyOrigin]] = Field(
+    origins: list[PropertyOrigin] | None = Field(
         None, description="Mappingionary for tracking the provenance of properties"
     )
 
-    entries: Optional[BlessedCalcs] = Field(
+    entries: BlessedCalcs | None = Field(
         None, description="Dictionary for tracking entries for VASP calculations"
     )
 
     @classmethod
     def from_tasks(
         cls,
-        task_group: List[TaskDoc],
-        structure_quality_scores: Dict[
+        task_group: list[TaskDoc],
+        structure_quality_scores: dict[
             str, int
         ] = SETTINGS.VASP_STRUCTURE_QUALITY_SCORES,
         use_statics: bool = SETTINGS.VASP_USE_STATICS,
@@ -242,7 +242,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
     @classmethod
     def construct_deprecated_material(
         cls,
-        task_group: List[TaskDoc],
+        task_group: list[TaskDoc],
         commercial_license: bool = True,
     ) -> "MaterialsDoc":
         """

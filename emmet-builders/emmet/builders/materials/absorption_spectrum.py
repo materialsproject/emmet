@@ -1,5 +1,5 @@
+from __future__ import annotations
 from math import ceil
-from typing import Dict, Iterator, List, Optional
 
 import numpy as np
 from maggma.builders import Builder
@@ -10,6 +10,11 @@ from pymatgen.core.structure import Structure
 from emmet.core.absorption import AbsorptionDoc
 from emmet.core.utils import jsanitize
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
 
 class AbsorptionBuilder(Builder):
     def __init__(
@@ -17,7 +22,7 @@ class AbsorptionBuilder(Builder):
         materials: Store,
         tasks: Store,
         absorption: Store,
-        query: Optional[Dict] = None,
+        query: dict | None = None,
         **kwargs,
     ):
         self.materials = materials
@@ -32,7 +37,7 @@ class AbsorptionBuilder(Builder):
 
         super().__init__(sources=[materials, tasks], targets=[absorption], **kwargs)
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterator[dict]:  # pragma: no cover
         """
         Prechunk method to perform chunking by the key field
         """
@@ -44,7 +49,7 @@ class AbsorptionBuilder(Builder):
         for split in grouper(keys, N):
             yield {"query": {self.materials.key: {"$in": list(split)}}}
 
-    def get_items(self) -> Iterator[List[Dict]]:
+    def get_items(self) -> Iterator[list[dict]]:
         """
         Gets all items to process
 

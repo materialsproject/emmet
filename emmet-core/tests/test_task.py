@@ -1,6 +1,7 @@
 import pytest
 
 from tests.conftest import assert_schemas_equal, get_test_object
+from emmet.core.vasp.task_valid import TaskState
 
 
 @pytest.mark.parametrize(
@@ -14,7 +15,7 @@ from tests.conftest import assert_schemas_equal, get_test_object
 def test_analysis_summary(test_dir, object_name):
     from monty.json import MontyDecoder, jsanitize
 
-    from emmet.core.tasks import AnalysisDoc
+    from emmet.core.tasks import AnalysisDoc, _get_state
     from emmet.core.vasp.calculation import Calculation
 
     test_object = get_test_object(object_name)
@@ -29,6 +30,7 @@ def test_analysis_summary(test_dir, object_name):
         # task_files are in the order of {"relax2","relax1"}
 
     test_doc = AnalysisDoc.from_vasp_calc_docs(calcs_reversed)
+    assert _get_state(calcs_reversed, test_doc) == TaskState.SUCCESS
     valid_doc = test_object.task_doc["analysis"]
     assert_schemas_equal(test_doc, valid_doc)
 
@@ -139,6 +141,7 @@ def test_task_doc(test_dir, object_name, tmpdir):
     assert test_doc.model_dump()["foo"] == "bar"
 
     assert len(test_doc.calcs_reversed) == len(test_object.task_files)
+    assert test_doc.state == TaskState.SUCCESS
 
     # ensure that number of electronic steps are correctly populated
     for cr in test_doc.calcs_reversed:
@@ -227,3 +230,37 @@ def test_lda_and_pseudo_format(test_dir, tmpdir):
         getattr(task.input.pseudo_potentials, k) == v
         for k, v in expected_pseudo.items()
     )
+
+
+def test_orig_inp_parsing(tmp_dir):
+    """Test parsing of VASP input with variable suffix, like `.orig`."""
+
+    from pathlib import Path
+    from pymatgen.core import Structure
+    from pymatgen.io.vasp import Incar, Kpoints
+
+    from emmet.core.tasks import _parse_orig_inputs
+
+    # demo simple cubic Copper structure
+    structure = Structure(
+        [[3 if i != j else 0.0 for j in range(3)] for i in range(3)],
+        ["Cu"],
+        [[0.0, 0.0, 0.0]],
+    )
+
+    incar = Incar.from_dict(
+        {
+            "ALGO": "Normal",
+            "ENCUT": 600,
+        }
+    )
+    kpoints = Kpoints()
+
+    for suffix in (".orig", ".image", ".mangoes"):
+        structure.to(f"POSCAR{suffix}")
+        incar.write_file(f"INCAR{suffix}")
+        kpoints.write_file(f"KPOINTS{suffix}")
+
+        vi = _parse_orig_inputs(Path("."), suffix=suffix)
+        assert all(k in vi for k in ("incar", "kpoints", "poscar"))
+        assert len(vi) == 3

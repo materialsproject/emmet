@@ -1,24 +1,27 @@
+from __future__ import annotations
+
+import copy
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Optional, Iterable, Iterator, List, Dict
-import copy
-
-from pymatgen.core.structure import Molecule
-from pymatgen.util.graph_hashing import weisfeiler_lehman_graph_hash
+from typing import TYPE_CHECKING
 
 from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper
+from pymatgen.core.structure import Molecule
+from pymatgen.util.graph_hashing import weisfeiler_lehman_graph_hash
 
-from emmet.core.qchem.molecule import MoleculeDoc
+from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.molecules.atomic import PartialChargesDoc, PartialSpinsDoc
 from emmet.core.molecules.bonds import MoleculeBondingDoc, metals
+from emmet.core.molecules.metal_binding import METAL_BINDING_METHODS, MetalBindingDoc
 from emmet.core.molecules.thermo import MoleculeThermoDoc
-from emmet.core.molecules.metal_binding import MetalBindingDoc, METAL_BINDING_METHODS
+from emmet.core.qchem.molecule import MoleculeDoc
 from emmet.core.utils import jsanitize
-from emmet.builders.settings import EmmetBuildSettings
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
 
 __author__ = "Evan Spotte-Smith"
 
@@ -73,9 +76,9 @@ class MetalBindingBuilder(Builder):
         bonds: Store,
         thermo: Store,
         metal_binding: Store,
-        query: Optional[Dict] = None,
-        methods: Optional[List] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        query: dict | None = None,
+        methods: list | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
         self.molecules = molecules
@@ -161,7 +164,7 @@ class MetalBindingBuilder(Builder):
         self.metal_binding.ensure_index("formula_alphabetical")
         self.metal_binding.ensure_index("method")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
         """Prechunk the builder for distributed computation"""
 
         temp_query = dict(self.query)
@@ -187,7 +190,7 @@ class MetalBindingBuilder(Builder):
             query["species_hash"] = {"$in": list(hash_chunk)}
             yield {"query": query}
 
-    def get_items(self) -> Iterator[List[Dict]]:
+    def get_items(self) -> Iterator[list[dict]]:
         """
         Gets all items to process into metal_binding documents.
 
@@ -232,12 +235,12 @@ class MetalBindingBuilder(Builder):
 
             yield molecules
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
+    def process_item(self, items: list[dict]) -> list[dict]:
         """
         Process molecule, bonding, partial charges, partial spins, and thermo documents into MetalBindingDocs
 
         Args:
-            tasks List[Dict] : a list of MoleculeDocs in dict form
+            tasks list[dict] : a list of MoleculeDocs in dict form
 
         Returns:
             [dict] : a list of new metal binding docs
@@ -491,7 +494,7 @@ class MetalBindingBuilder(Builder):
 
         return jsanitize([doc.model_dump() for doc in binding_docs], allow_bson=True)
 
-    def update_targets(self, items: List[List[Dict]]):
+    def update_targets(self, items: list[list[dict]]):
         """
         Inserts the new documents into the metal_binding collection
 

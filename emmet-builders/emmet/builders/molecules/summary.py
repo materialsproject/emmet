@@ -1,17 +1,25 @@
+from __future__ import annotations
+
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Any, Optional, Iterable, Iterator, List, Dict
-
-# from monty.serialization import loadfn, dumpfn
 
 from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper
 
+from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.molecules.summary import MoleculeSummaryDoc
 from emmet.core.utils import jsanitize
-from emmet.builders.settings import EmmetBuildSettings
+
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
+    from typing import Any
+
+# from monty.serialization import loadfn, dumpfn
 
 
 __author__ = "Evan Spotte-Smith"
@@ -43,8 +51,8 @@ class SummaryBuilder(Builder):
         thermo: Store,
         vibes: Store,
         summary: Store,
-        query: Optional[Dict] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        query: dict | None = None,
+        settings: EmmetBuildSettings | None = None,
         **kwargs,
     ):
         self.molecules = molecules
@@ -198,7 +206,7 @@ class SummaryBuilder(Builder):
         self.summary.ensure_index("last_updated")
         self.summary.ensure_index("formula_alphabetical")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
+    def prechunk(self, number_splits: int) -> Iterable[dict]:  # pragma: no cover
         """Prechunk the builder for distributed computation"""
 
         temp_query = dict(self.query)
@@ -224,7 +232,7 @@ class SummaryBuilder(Builder):
             query["species_hash"] = {"$in": list(hash_chunk)}
             yield {"query": query}
 
-    def get_items(self) -> Iterator[List[Dict]]:
+    def get_items(self) -> Iterator[list[dict]]:
         """
         Gets all items to process into summary documents.
         This does no datetime checking; relying on on whether
@@ -271,20 +279,20 @@ class SummaryBuilder(Builder):
 
             yield molecules
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
+    def process_item(self, items: list[dict]) -> list[dict]:
         """
         Process the tasks into a MoleculeSummaryDoc
 
         Args:
-            tasks List[Dict] : a list of MoleculeDocs in dict form
+            tasks list[dict] : a list of MoleculeDocs in dict form
 
         Returns:
             [dict] : a list of new orbital docs
         """
 
-        def _group_docs(docs: List[Dict[str, Any]], by_method: bool = False):
+        def _group_docs(docs: list[dict[str, Any]], by_method: bool = False):
             """Helper function to group docs by solvent"""
-            grouped: Dict[str, Any] = dict()
+            grouped: dict[str, Any] = dict()
 
             for doc in docs:
                 solvent = doc.get("solvent")
@@ -367,7 +375,7 @@ class SummaryBuilder(Builder):
 
         return jsanitize([doc.model_dump() for doc in summary_docs], allow_bson=True)
 
-    def update_targets(self, items: List[List[Dict]]):
+    def update_targets(self, items: list[list[dict]]):
         """
         Inserts the new documents into the summary collection
 

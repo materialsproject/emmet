@@ -1,9 +1,8 @@
-from typing import Optional
+from collections import defaultdict
+
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
-
-from collections import defaultdict
 
 
 class BulkModulusQuery(QueryOperator):
@@ -13,27 +12,27 @@ class BulkModulusQuery(QueryOperator):
 
     def query(
         self,
-        k_voigt_max: Optional[float] = Query(
+        k_voigt_max: float | None = Query(
             None,
             description="Maximum value for the Voigt average of the bulk modulus in GPa.",
         ),
-        k_voigt_min: Optional[float] = Query(
+        k_voigt_min: float | None = Query(
             None,
             description="Minimum value for the Voigt average of the bulk modulus in GPa.",
         ),
-        k_reuss_max: Optional[float] = Query(
+        k_reuss_max: float | None = Query(
             None,
             description="Maximum value for the Reuss average of the bulk modulus in GPa.",
         ),
-        k_reuss_min: Optional[float] = Query(
+        k_reuss_min: float | None = Query(
             None,
             description="Minimum value for the Reuss average of the bulk modulus in GPa.",
         ),
-        k_vrh_max: Optional[float] = Query(
+        k_vrh_max: float | None = Query(
             None,
             description="Maximum value for the Voigt-Reuss-Hill average of the bulk modulus in GPa.",
         ),
-        k_vrh_min: Optional[float] = Query(
+        k_vrh_min: float | None = Query(
             None,
             description="Minimum value for the Voigt-Reuss-Hill average of the bulk modulus in GPa.",
         ),
@@ -63,27 +62,27 @@ class ShearModulusQuery(QueryOperator):
 
     def query(
         self,
-        g_voigt_max: Optional[float] = Query(
+        g_voigt_max: float | None = Query(
             None,
             description="Maximum value for the Voigt average of the shear modulus in GPa.",
         ),
-        g_voigt_min: Optional[float] = Query(
+        g_voigt_min: float | None = Query(
             None,
             description="Minimum value for the Voigt average of the shear modulus in GPa.",
         ),
-        g_reuss_max: Optional[float] = Query(
+        g_reuss_max: float | None = Query(
             None,
             description="Maximum value for the Reuss average of the shear modulus in GPa.",
         ),
-        g_reuss_min: Optional[float] = Query(
+        g_reuss_min: float | None = Query(
             None,
             description="Minimum value for the Reuss average of the shear modulus in GPa.",
         ),
-        g_vrh_max: Optional[float] = Query(
+        g_vrh_max: float | None = Query(
             None,
             description="Maximum value for the Voigt-Reuss-Hill average of the shear modulus in GPa.",
         ),
-        g_vrh_min: Optional[float] = Query(
+        g_vrh_min: float | None = Query(
             None,
             description="Minimum value for the Voigt-Reuss-Hill average of the shear modulus in GPa.",
         ),
@@ -114,19 +113,19 @@ class PoissonQuery(QueryOperator):
 
     def query(
         self,
-        elastic_anisotropy_max: Optional[float] = Query(
+        elastic_anisotropy_max: float | None = Query(
             None,
             description="Maximum value for the elastic anisotropy.",
         ),
-        elastic_anisotropy_min: Optional[float] = Query(
+        elastic_anisotropy_min: float | None = Query(
             None,
             description="Maximum value for the elastic anisotropy.",
         ),
-        poisson_max: Optional[float] = Query(
+        poisson_max: float | None = Query(
             None,
             description="Maximum value for Poisson's ratio.",
         ),
-        poisson_min: Optional[float] = Query(
+        poisson_min: float | None = Query(
             None,
             description="Minimum value for Poisson's ratio.",
         ),
@@ -158,7 +157,7 @@ class ElasticityChemsysQuery(QueryOperator):
 
     def query(
         self,
-        chemsys: Optional[str] = Query(
+        chemsys: str | None = Query(
             None,
             description="A comma delimited string list of chemical systems.",
         ),

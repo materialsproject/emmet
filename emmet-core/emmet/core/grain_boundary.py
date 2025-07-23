@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 from pymatgen.core.interface import GrainBoundary
@@ -23,58 +22,58 @@ class GrainBoundaryDoc(BaseModel):
     Grain boundary energies, work of separation...
     """
 
-    material_id: Optional[str] = Field(
+    material_id: str | None = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )
 
-    sigma: Optional[int] = Field(
+    sigma: int | None = Field(
         None,
         description="Sigma value of the boundary.",
     )
 
-    type: Optional[GBTypeEnum] = Field(
+    type: GBTypeEnum | None = Field(
         None,
         description="Grain boundary type.",
     )
 
-    rotation_axis: Optional[List[int]] = Field(
+    rotation_axis: list[int] | None = Field(
         None,
         description="Rotation axis.",
     )
 
-    gb_plane: Optional[List[int]] = Field(
+    gb_plane: list[int] | None = Field(
         None,
         description="Grain boundary plane.",
     )
 
-    rotation_angle: Optional[float] = Field(
+    rotation_angle: float | None = Field(
         None,
         description="Rotation angle in degrees.",
     )
 
-    gb_energy: Optional[float] = Field(
+    gb_energy: float | None = Field(
         None,
         description="Grain boundary energy in J/m^2.",
     )
 
-    initial_structure: Optional[GrainBoundary] = Field(
+    initial_structure: GrainBoundary | None = Field(
         None, description="Initial grain boundary structure."
     )
 
-    final_structure: Optional[GrainBoundary] = Field(
+    final_structure: GrainBoundary | None = Field(
         None, description="Final grain boundary structure."
     )
 
-    pretty_formula: Optional[str] = Field(
+    pretty_formula: str | None = Field(
         None, description="Reduced formula of the material."
     )
 
-    w_sep: Optional[float] = Field(None, description="Work of separation in J/m^2.")
+    w_sep: float | None = Field(None, description="Work of separation in J/m^2.")
 
-    cif: Optional[str] = Field(None, description="CIF file of the structure.")
+    cif: str | None = Field(None, description="CIF file of the structure.")
 
-    chemsys: Optional[str] = Field(
+    chemsys: str | None = Field(
         None, description="Dash-delimited string of elements in the material."
     )
 
