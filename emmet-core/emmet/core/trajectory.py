@@ -105,7 +105,7 @@ class AtomTrajectory(BaseModel):
     def reset_num_ionic_steps(cls, config: Any) -> Any:
         config["num_ionic_steps"] = len(config["cart_coords"])
         config["elements"] = [
-            ele if isinstance(ele, int) else Element(ele).Z
+            Element(ele).Z if isinstance(ele, str) else int(ele)
             for ele in config["elements"]
         ]
         return config
