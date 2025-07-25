@@ -32,43 +32,26 @@ class RoboTextSearchQuery(QueryOperator):
                         "path": "description",
                         "allowAnalyzedField": True,
                     },
+                    "sort": {"score": {"$meta": "searchScore"}, "description": 1},
+                    "count": {"type": "total"},
                 }
             },
-            {
-                "$facet": {
-                    "total_doc": [{"$count": "count"}],
-                    "results": [
-                        {
-                            "$project": {
-                                "_id": 0,
-                                "task_id": 1,
-                                "material_id": 1,
-                                "description": 1,
-                                "condensed_structure": 1,
-                                "last_updates": 1,
-                                "search_score": {"$meta": "searchScore"},
-                            }
-                        }
-                    ],
-                }
-            },
-            {"$unwind": "$results"},
-            {"$unwind": "$total_doc"},
-            {
-                "$replaceRoot": {
-                    "newRoot": {
-                        "$mergeObjects": ["$results", {"total_doc": "$total_doc.count"}]
-                    }
-                }
-            },
-            {"$sort": {"search_score": -1}},
             {"$skip": _skip},
             {"$limit": _limit},
+            {
+                "$project": {
+                    "_id": 0,
+                    "meta": "$$SEARCH_META",
+                    "material_id": 1,
+                    "description": 1,
+                    "condensed_structure": 1,
+                }
+            },
         ]
         return {"pipeline": pipeline}
 
     def post_process(self, docs, query):
-        self.total_doc = docs[0]["total_doc"]
+        self.total_doc = docs[0]["meta"]["count"]["total"]
         return docs
 
     def meta(self):
