@@ -45,6 +45,7 @@ class RoboTextSearchQuery(QueryOperator):
                     "material_id": 1,
                     "description": 1,
                     "condensed_structure": 1,
+                    "last_updated": 1,
                 }
             },
         ]
