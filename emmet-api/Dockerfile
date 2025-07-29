@@ -17,11 +17,11 @@ RUN SETUPTOOLS_SCM_PRETEND_VERSION=${API_VERSION} pip install $PIP_FLAGS --no-de
 RUN wget -q https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && \
   chmod +x wait-for-it.sh && mv wait-for-it.sh /root/.local/bin/
 
-FROM base
-COPY --from=builder /root/.local/lib/python3.11/site-packages /root/.local/lib/python3.11/site-packages
-COPY --from=builder /root/.local/bin /root/.local/bin
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libsnappy* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /emmet-api /emmet-api
+#FROM base
+#COPY --from=builder /root/.local/lib/python3.11/site-packages /root/.local/lib/python3.11/site-packages
+#COPY --from=builder /root/.local/bin /root/.local/bin
+#COPY --from=builder /usr/lib/x86_64-linux-gnu/libsnappy* /usr/lib/x86_64-linux-gnu/
+#COPY --from=builder /emmet-api /emmet-api
 WORKDIR /emmet-api
 ARG VERSION
 ENV PATH=/root/.local/bin:$PATH \
