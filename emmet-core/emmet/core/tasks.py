@@ -45,9 +45,7 @@ from emmet.core.vasp.utils import discover_and_sort_vasp_files
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
-
     from typing_extensions import Self
-
 
 monty_decoder = MontyDecoder()
 logger = logging.getLogger(__name__)
@@ -140,9 +138,9 @@ class OutputDoc(BaseModel):
         """
         Create a summary of VASP calculation outputs from a VASP calculation document.
 
-        This will first look for ionic steps in the calculation document. If found, will
-        use it and ignore the trajectory. I not, will get ionic steps from the
-        trajectory.
+        This will first look for ionic steps in the calculation document.
+        If found, will use it and ignore the trajectory.
+        If not, will get ionic steps from the trajectory.
 
         Parameters
         ----------
