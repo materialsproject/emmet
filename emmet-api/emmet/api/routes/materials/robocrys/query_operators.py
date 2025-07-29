@@ -16,8 +16,8 @@ class RoboTextSearchQuery(QueryOperator):
         ),
         _skip: int = Query(0, description="Number of entries to skip in the search"),
         _limit: int = Query(
-            100,
-            description="Max number of entries to return in a single query. Limited to 100",
+            1000,
+            description="Max number of entries to return in a single query. Limited to 1000 by default",
         ),
     ) -> STORE_PARAMS:
         if not keywords.strip():
