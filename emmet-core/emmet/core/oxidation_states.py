@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from enum import Enum
 import logging
 from collections import defaultdict
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 import numpy as np
 from pydantic import Field
@@ -14,6 +15,13 @@ from emmet.core.material_property import PropertyDoc
 
 if TYPE_CHECKING:
     from emmet.core.mpid import AlphaID, MPID
+
+
+class OxiStateAssigner(Enum):
+
+    MANUAL = "Manual"
+    BVA = "Bond Valence Analysis"
+    GUESS = "Oxidation State Guess"
 
 
 class OxidationStateDoc(PropertyDoc):
@@ -30,7 +38,7 @@ class OxidationStateDoc(PropertyDoc):
     average_oxidation_states: dict[str, float] = Field(
         description="Average oxidation states for each unique species."
     )
-    method: Literal["manual", "bva", "guess"] | None = Field(
+    method: OxiStateAssigner | None = Field(
         None, description="Method used to compute oxidation states."
     )
 
@@ -73,7 +81,7 @@ class OxidationStateDoc(PropertyDoc):
                 "possible_species": species,
                 "possible_valences": struct_valences,
                 "average_oxidation_states": average_oxidation_states,
-                "method": "manual",
+                "method": OxiStateAssigner.MANUAL,
                 "state": "successful",
             }
             return super().from_structure(
@@ -89,11 +97,11 @@ class OxidationStateDoc(PropertyDoc):
             "possible_species": [],
             "possible_valences": [],
             "average_oxidation_states": {},
-            "method": method or "bva",
+            "method": method or OxiStateAssigner.BVA,
             "material_id": material_id,
         }
 
-        if d["method"] == "bva":
+        if d["method"] == OxiStateAssigner.BVA:
             try:
                 bva = BVAnalyzer()
                 valences = bva.get_valences(structure)
@@ -129,9 +137,9 @@ class OxidationStateDoc(PropertyDoc):
                 logging.debug(
                     f"BVAnalyzer failed for {structure.composition.reduced_composition}. Trying oxi_state_guesses."
                 )
-                d["method"] = "guess"
+                d["method"] = OxiStateAssigner.GUESS
 
-        if d["method"] == "guess":
+        if d["method"] == OxiStateAssigner.GUESS:
             try:
                 first_oxi_state_guess = structure.composition.oxi_state_guesses(
                     max_sites=-50
