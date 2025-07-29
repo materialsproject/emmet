@@ -1,5 +1,5 @@
 import pytest
-from emmet.core.oxidation_states import OxidationStateDoc
+from emmet.core.oxidation_states import OxidationStateDoc, OxiStateAssigner
 from pymatgen.core import Structure
 
 from . import test_structures
@@ -24,8 +24,8 @@ def test_oxidation_state(structure: Structure):
         assert doc.structure is not None
 
         if struct_has_charges_assigned and not method:
-            assert doc.method == "manual"
+            assert doc.method == OxiStateAssigner.MANUAL
         elif doc.possible_valences:
-            assert doc.method in {"bva", "guess"}
+            assert doc.method in {OxiStateAssigner.BVA, OxiStateAssigner.GUESS}
         else:
             assert doc.method is None
