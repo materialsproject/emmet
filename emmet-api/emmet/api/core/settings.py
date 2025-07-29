@@ -26,7 +26,7 @@ class MAPISettings(BaseSettings):
         None, description="Database name suffix. Either blue or green."
     )
 
-    SORT_FIElDS: list[str] = Field(
+    SORT_FIELDS: list[str] = Field(
         [
             "nsites",
             "nelements",
