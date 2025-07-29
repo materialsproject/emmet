@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 from pydantic import Field
@@ -30,7 +30,7 @@ class OxidationStateDoc(PropertyDoc):
     average_oxidation_states: dict[str, float] = Field(
         description="Average oxidation states for each unique species."
     )
-    method: str | None = Field(
+    method: Literal["manual", "bva", "guess"] | None = Field(
         None, description="Method used to compute oxidation states."
     )
 
@@ -41,8 +41,47 @@ class OxidationStateDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_structure(cls, structure: Structure, material_id: MPID | AlphaID | None = None, **kwargs):  # type: ignore[override]
-        # TODO: add check for if it already has oxidation states, if so pass this along unchanged ("method": "manual")
+    def from_structure(
+        cls, structure: Structure, material_id: MPID | AlphaID, **kwargs
+    ):
+
+        # Check if structure already has oxidation states,
+        # if so pass this along unchanged with "method" == "manualx"
+        struct_valences: list[float | None] = []
+        species = []
+
+        method = None
+        if _method := kwargs.pop("method", None):
+            method = _method.lower()
+
+        site_oxidation_list = defaultdict(list)
+        for site in structure:
+            if (oxi_state := getattr(site.species, "oxi_state", None)) and hasattr(
+                site.species, "element"
+            ):
+                site_oxidation_list[site.species.element].append(oxi_state)
+                species.append(site.species)
+            struct_valences.append(oxi_state)
+
+        average_oxidation_states: dict[str, float] = {
+            str(el): np.mean(oxi_states)
+            for el, oxi_states in site_oxidation_list.items()
+        }
+
+        if any(struct_valences) and (not method):
+            d = {
+                "possible_species": species,
+                "possible_valences": struct_valences,
+                "average_oxidation_states": average_oxidation_states,
+                "method": "manual",
+                "state": "successful",
+            }
+            return super().from_structure(
+                meta_structure=structure, material_id=material_id, **d, **kwargs
+            )
+
+        # otherwise, continue with assignment
+
         structure.remove_oxidation_states()
 
         # Null document
@@ -50,41 +89,49 @@ class OxidationStateDoc(PropertyDoc):
             "possible_species": [],
             "possible_valences": [],
             "average_oxidation_states": {},
-        }  # type: dict
+            "method": method or "bva",
+            "material_id": material_id,
+        }
 
-        try:
-            bva = BVAnalyzer()
-            valences = bva.get_valences(structure)
-            possible_species = {
-                str(Specie(structure[idx].specie, oxidation_state=valence))
-                for idx, valence in enumerate(valences)
-            }
+        if d["method"] == "bva":
+            try:
+                bva = BVAnalyzer()
+                valences = bva.get_valences(structure)
+                possible_species = {
+                    str(Specie(structure[idx].specie, oxidation_state=valence))
+                    for idx, valence in enumerate(valences)
+                }
 
-            structure.add_oxidation_state_by_site(valences)
+                structure.add_oxidation_state_by_site(valences)
 
-            # construct a dict of average oxi_states for use
-            # by MP2020 corrections. The format should mirror
-            # the output of the first element from Composition.oxi_state_guesses()
-            # e.g. {'Li': 1.0, 'O': -2.0}
+                # construct a dict of average oxi_states for use
+                # by MP2020 corrections. The format should mirror
+                # the output of the first element from Composition.oxi_state_guesses()
+                # e.g. {'Li': 1.0, 'O': -2.0}
 
-            site_oxidation_list = defaultdict(list)
-            for site in structure:
-                site_oxidation_list[site.specie.element].append(site.specie.oxi_state)
+                site_oxidation_list = defaultdict(list)
+                for site in structure:
+                    site_oxidation_list[site.specie.element].append(
+                        site.specie.oxi_state
+                    )
 
-            oxi_state_dict = {
-                str(el): np.mean(oxi_states) for el, oxi_states in site_oxidation_list.items()  # type: ignore
-            }
+                oxi_state_dict = {
+                    str(el): np.mean(oxi_states) for el, oxi_states in site_oxidation_list.items()  # type: ignore
+                }
 
-            d = {
-                "possible_species": list(possible_species),
-                "possible_valences": valences,
-                "average_oxidation_states": oxi_state_dict,
-                "method": "Bond Valence Analysis",
-            }
+                d.update(
+                    possible_species=list(possible_species),
+                    possible_valences=valences,
+                    average_oxidation_states=oxi_state_dict,
+                )
 
-        except Exception as e:
-            logging.error("BVAnalyzer failed with: {}".format(e))
+            except Exception:
+                logging.debug(
+                    f"BVAnalyzer failed for {structure.composition.reduced_composition}. Trying oxi_state_guesses."
+                )
+                d["method"] = "guess"
 
+        if d["method"] == "guess":
             try:
                 first_oxi_state_guess = structure.composition.oxi_state_guesses(
                     max_sites=-50
@@ -99,21 +146,20 @@ class OxidationStateDoc(PropertyDoc):
 
                 structure.add_oxidation_state_by_site(valences)
 
-                d = {
-                    "possible_species": list(possible_species),
-                    "possible_valences": valences,
-                    "average_oxidation_states": first_oxi_state_guess,
-                    "method": "Oxidation State Guess",
-                }
+                d.update(
+                    possible_species=list(possible_species),
+                    possible_valences=valences,
+                    average_oxidation_states=first_oxi_state_guess,
+                )
 
             except Exception as e:
                 logging.error("Oxidation state guess failed with: {}".format(e))
                 d["warnings"] = ["Oxidation state guessing failed."]
                 d["state"] = "unsuccessful"
+                d["method"] = None
 
         return super().from_structure(
             meta_structure=structure,
-            material_id=material_id,
             **d,
             **kwargs,
         )

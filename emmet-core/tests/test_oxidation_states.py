@@ -8,7 +8,24 @@ from . import test_structures
 @pytest.mark.parametrize("structure", test_structures.values())
 def test_oxidation_state(structure: Structure):
     """Very simple test to make sure this actually works"""
-    print(f"Should work : {structure.composition}")
-    doc = OxidationStateDoc.from_structure(structure, material_id=33, deprecated=False)
-    assert doc is not None
-    assert doc.structure is not None
+    struct_has_charges_assigned = (
+        structure.composition.copy().remove_charges() != structure.composition
+    )
+
+    for method in (
+        None,
+        "bva",
+    ):
+
+        doc = OxidationStateDoc.from_structure(
+            structure, material_id=33, deprecated=False
+        )
+        assert doc is not None
+        assert doc.structure is not None
+
+        if struct_has_charges_assigned and not method:
+            assert doc.method == "manual"
+        elif doc.possible_valences:
+            assert doc.method in {"bva", "guess"}
+        else:
+            assert doc.method is None

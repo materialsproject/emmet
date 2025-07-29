@@ -98,8 +98,8 @@ class ForcesDoc(PropertyDoc):
             magnitudes = [np.linalg.norm(np.asarray(f)) for f in forces]
 
         average_force_magnitude = np.mean(magnitudes)
-        max_force_magnitude = max(magnitudes)
-        min_force_magnitude = min(magnitudes)
+        max_force_magnitude = max(magnitudes)  # type: ignore[type-var]
+        min_force_magnitude = min(magnitudes)  # type: ignore[type-var]
 
         id_string = f"forces-{molecule_id}-{task.task_id}-{task.lot_solvent}"
         h = blake2b()
