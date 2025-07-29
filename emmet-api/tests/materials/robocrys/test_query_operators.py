@@ -43,7 +43,6 @@ def test_robocrys_search_query():
         query = {"pipeline": pipeline}
         assert new_op.query(keywords="cubic, octahedra", _skip=0, _limit=10) == query
 
-    assert op.post_process([{"meta": {"count": {"total": 10}}}], query) == [
-        {"total_doc": 10}
-    ]
+    doc = [{"meta": {"count": {"total": 10}}}]
+    assert op.post_process(doc, query) == doc
     assert op.meta() == {"total_doc": 10}
