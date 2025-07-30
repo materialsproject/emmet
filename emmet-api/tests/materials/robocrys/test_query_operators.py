@@ -15,38 +15,22 @@ def test_robocrys_search_query():
                     "path": "description",
                     "allowAnalyzedField": True,
                 },
+                "sort": {"score": {"$meta": "searchScore"}, "description": 1},
+                "count": {"type": "total"},
             }
         },
-        {
-            "$facet": {
-                "total_doc": [{"$count": "count"}],
-                "results": [
-                    {
-                        "$project": {
-                            "_id": 0,
-                            "task_id": 1,
-                            "material_id": 1,
-                            "description": 1,
-                            "condensed_structure": 1,
-                            "last_updates": 1,
-                            "search_score": {"$meta": "searchScore"},
-                        }
-                    }
-                ],
-            }
-        },
-        {"$unwind": "$results"},
-        {"$unwind": "$total_doc"},
-        {
-            "$replaceRoot": {
-                "newRoot": {
-                    "$mergeObjects": ["$results", {"total_doc": "$total_doc.count"}]
-                }
-            }
-        },
-        {"$sort": {"search_score": -1}},
         {"$skip": 0},
         {"$limit": 10},
+        {
+            "$project": {
+                "_id": 0,
+                "meta": "$$SEARCH_META",
+                "material_id": 1,
+                "description": 1,
+                "condensed_structure": 1,
+                "last_updated": 1,
+            }
+        },
     ]
 
     assert op.query(keywords="cubic, octahedra", _skip=0, _limit=10) == {
@@ -59,5 +43,6 @@ def test_robocrys_search_query():
         query = {"pipeline": pipeline}
         assert new_op.query(keywords="cubic, octahedra", _skip=0, _limit=10) == query
 
-    assert op.post_process([{"total_doc": 10}], query) == [{"total_doc": 10}]
+    doc = [{"meta": {"count": {"total": 10}}}]
+    assert op.post_process(doc, query) == doc
     assert op.meta() == {"total_doc": 10}
