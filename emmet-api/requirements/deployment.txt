@@ -23,11 +23,11 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.39.15
+boto3==1.39.16
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.39.15
+botocore==1.39.16
     # via
     #   boto3
     #   s3transfer
@@ -114,7 +114,7 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.1.1
     # via maggma
-narwhals==2.0.0
+narwhals==2.0.1
     # via plotly
 networkx==3.5
     # via
@@ -136,7 +136,7 @@ numpy==1.26.4
     #   shapely
     #   spglib
     #   tifffile
-opentelemetry-api==1.35.0
+opentelemetry-api==1.36.0
     # via ddtrace
 orjson==3.11.1
     # via
