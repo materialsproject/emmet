@@ -1,4 +1,5 @@
 """Common volumetric data archival framework."""
+
 from __future__ import annotations
 
 from enum import Enum
@@ -83,7 +84,7 @@ class VolumetricArchive(Archiver):
 
     @staticmethod
     def parse_augmentation_charge_data(
-        aug_data: dict[str, list[str]]
+        aug_data: dict[str, list[str]],
     ) -> dict[VolumetricLabel, list[AugChargeData]]:
         aug_data_arr = {}
         for k, unfmt_data in aug_data.items():

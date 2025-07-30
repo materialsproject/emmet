@@ -23,17 +23,17 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.39.4
+boto3==1.39.16
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.39.4
+botocore==1.39.16
     # via
     #   boto3
     #   s3transfer
 bytecode==0.16.2
     # via ddtrace
-certifi==2025.7.9
+certifi==2025.7.14
     # via requests
 cffi==1.17.1
     # via
@@ -43,13 +43,13 @@ charset-normalizer==3.4.2
     # via requests
 click==8.2.1
     # via uvicorn
-contourpy==1.3.2
+contourpy==1.3.3
     # via matplotlib
 cryptography==45.0.5
     # via paramiko
 cycler==0.12.1
     # via matplotlib
-ddtrace==2.21.9
+ddtrace==2.21.11
     # via emmet-api (emmet/emmet-api/setup.py)
 dnspython==2.7.0
     # via
@@ -59,11 +59,11 @@ emmet-core==0.84.9rc0
     # via emmet-api (emmet/emmet-api/setup.py)
 envier==0.5.2
     # via ddtrace
-fastapi==0.116.0
+fastapi==0.116.1
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-fonttools==4.58.5
+fonttools==4.59.0
     # via matplotlib
 gunicorn==23.0.0
     # via emmet-api (emmet/emmet-api/setup.py)
@@ -85,7 +85,7 @@ joblib==1.5.1
     # via pymatgen
 jsonlines==4.0.0
     # via maggma
-jsonschema==4.24.0
+jsonschema==4.25.0
     # via maggma
 jsonschema-specifications==2025.4.1
     # via jsonschema
@@ -114,7 +114,7 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.1.1
     # via maggma
-narwhals==1.46.0
+narwhals==2.0.1
     # via plotly
 networkx==3.5
     # via
@@ -136,9 +136,9 @@ numpy==1.26.4
     #   shapely
     #   spglib
     #   tifffile
-opentelemetry-api==1.34.1
+opentelemetry-api==1.36.0
     # via ddtrace
-orjson==3.10.18
+orjson==3.11.1
     # via
     #   maggma
     #   pymatgen
@@ -237,11 +237,11 @@ ruamel-yaml==0.18.14
     #   pymatgen
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-s3transfer==0.13.0
+s3transfer==0.13.1
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
-scipy==1.16.0
+scipy==1.16.1
     # via
     #   -r python/requirements.txt
     #   pymatgen
@@ -262,7 +262,7 @@ spglib==2.6.0
     # via pymatgen
 sshtunnel==0.4.0
     # via maggma
-starlette==0.46.2
+starlette==0.47.2
     # via fastapi
 sympy==1.14.0
     # via pymatgen
@@ -286,6 +286,7 @@ typing-extensions==4.14.1
     #   pydash
     #   referencing
     #   spglib
+    #   starlette
     #   typing-inspection
 typing-inspection==0.4.1
     # via

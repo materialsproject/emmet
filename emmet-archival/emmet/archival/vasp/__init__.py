@@ -1,4 +1,5 @@
 """Define common variables in the VASP sub-library."""
+
 from __future__ import annotations
 
 from pymatgen.io.vasp.inputs import Incar, Kpoints, Poscar

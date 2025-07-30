@@ -1,4 +1,5 @@
 """Archive collections of atoms (crystals, molecules,...)."""
+
 from __future__ import annotations
 
 from collections import defaultdict

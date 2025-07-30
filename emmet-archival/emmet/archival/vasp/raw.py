@@ -1,4 +1,5 @@
 """Define archival formats for raw VASP calculation data."""
+
 from __future__ import annotations
 
 import json
@@ -164,9 +165,11 @@ class RawArchive(Archiver):
         if keys is None:
             keys = []
             group.visit(
-                lambda x: keys.append(x)
-                if getattr(group[x], "attrs", {}).get("md5")
-                else None
+                lambda x: (
+                    keys.append(x)
+                    if getattr(group[x], "attrs", {}).get("md5")
+                    else None
+                )
             )
 
         for k in [_k for _k in keys if _k in group]:

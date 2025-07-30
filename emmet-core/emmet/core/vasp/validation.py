@@ -79,15 +79,15 @@ class ValidationDoc(VaspValidator, EmmetBaseModel):
                     titel=ps.titel,
                     keywords=ps.summary_stats["keywords"] if ps.summary_stats else None,
                     stats=ps.summary_stats["stats"] if ps.summary_stats else None,
-                    lexch="pe"
-                    if final_calc.input.potcar_type[0] == "PAW_PBE"
-                    else "ca",
+                    lexch=(
+                        "pe" if final_calc.input.potcar_type[0] == "PAW_PBE" else "ca"
+                    ),
                 )
                 for ps in final_calc.input.potcar_spec
             ]
 
         return VaspFiles(
-            user_input=VaspInputSafe(
+            user_input=VaspInputSafe(  # type: ignore[call-arg]
                 incar=Incar(final_calc.input.incar),
                 kpoints=final_calc.input.kpoints,
                 structure=final_calc.input.structure,
@@ -99,7 +99,7 @@ class ValidationDoc(VaspValidator, EmmetBaseModel):
                     for k in ("drift", "magnetization")
                 }
             ),
-            vasprun=LightVasprun(
+            vasprun=LightVasprun(  # type: ignore[call-arg]
                 vasp_version=final_calc.vasp_version,
                 ionic_steps=[
                     ionic_step.model_dump()

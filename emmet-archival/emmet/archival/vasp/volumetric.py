@@ -5,19 +5,18 @@ import h5py
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from monty.serialization import loadfn
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 from pydantic import Field
 import zarr
 
+from emmet.core.band_theory import ElectronicBS
 from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calculation import VaspObject
 from emmet.core.vasp.utils import VASP_VOLUMETRIC_FILES
 
 from pymatgen.core import Structure
-from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
 from pymatgen.electronic_structure.core import Orbital, Spin
 from pymatgen.electronic_structure.dos import CompleteDos, Dos
 from pymatgen.io.vasp.outputs import Vasprun
@@ -212,24 +211,8 @@ class DosArchive(Archiver):
 
 
 class BandStructureArchive(Archiver):
-    # parsed_objects : dict[str,Any] = {"BS": None}
 
-    def __post_init__(self) -> None:
-        if isinstance(self.parsed_objects["BS"], dict):
-            self.parsed_objects["BS"] = BandStructureSymmLine.from_dict(
-                self.parsed_objects["BS"]
-            )
-
-        super().__post_init__()
-
-    @classmethod
-    def from_parsed_data(cls, bs_path: str | Path, **kwargs):
-        bs_data = loadfn(bs_path)
-        return cls(
-            parsed_objects={"BS": bs_data["data"]},
-            metadata={k: v for k, v in bs_data.items() if k != "data"},
-            **kwargs,
-        )
+    band_structure: ElectronicBS = Field(description="The electronic band structure.")
 
     def to_group(
         self, group: h5py.Group | zarr.Group, group_key: str = "group"
