@@ -1,4 +1,5 @@
 import os
+from monty.io import zopen
 from json import load
 from emmet.api.routes.materials.synthesis.utils import (
     make_ellipsis,
@@ -19,7 +20,7 @@ def test_make_ellipsis():
 
 
 def test_mask_paragraphs():
-    with open(os.path.join(MAPISettings().TEST_FILES, "synth_doc.json")) as file:
+    with zopen(os.path.join(MAPISettings().TEST_FILES, "synth_doc.json.gz")) as file:
         synth_doc = load(file)
 
     doc = SynthesisSearchResultModel(**synth_doc)
@@ -29,7 +30,7 @@ def test_mask_paragraphs():
 
 
 def test_mask_highlights():
-    with open(os.path.join(MAPISettings().TEST_FILES, "synth_doc.json")) as file:
+    with zopen(os.path.join(MAPISettings().TEST_FILES, "synth_doc.json.gz")) as file:
         synth_doc = load(file)
 
     doc = SynthesisSearchResultModel(**synth_doc)
