@@ -9,7 +9,7 @@ def structure(test_dir):
     """
     Fe (mp-13) structure with correct magmoms
     """
-    structure = loadfn(test_dir / "electronic_structure/Fe_structure.json")
+    structure = loadfn(test_dir / "electronic_structure/Fe_structure.json.gz")
     return structure
 
 
@@ -18,7 +18,7 @@ def bandstructure(test_dir):
     """
     Fe (mp-13) line-mode band structure
     """
-    bs = loadfn(test_dir / "electronic_structure/Fe_bs.json")
+    bs = loadfn(test_dir / "electronic_structure/Fe_bs.json.gz")
     return bs
 
 
@@ -27,7 +27,7 @@ def dos(test_dir):
     """
     Fe (mp-13) dos
     """
-    dos = loadfn(test_dir / "electronic_structure/Fe_dos.json")
+    dos = loadfn(test_dir / "electronic_structure/Fe_dos.json.gz")
     return dos
 
 
