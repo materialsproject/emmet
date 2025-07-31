@@ -50,7 +50,7 @@ class OxidationStateDoc(PropertyDoc):
 
     @classmethod
     def from_structure(
-        cls, structure: Structure, material_id: MPID | AlphaID, **kwargs
+        cls, structure: Structure, material_id: MPID | AlphaID | None = None, **kwargs
     ):
 
         # Check if structure already has oxidation states,

@@ -105,7 +105,7 @@ class XRDDoc(SpectrumDoc):
         **kwargs,
     ) -> "XRDDoc":
         if f"{target}{edge}" not in WAVELENGTHS:
-            raise ValueError(f"{target}{edge} not in pymatgen wavelenghts dictionarty")
+            raise ValueError(f"{target}{edge} not in pymatgen wavelengths dictionary")
 
         wavelength = WAVELENGTHS[f"{target}{edge}"]
         spectrum_id = f"{material_id}-{target}{edge}"
