@@ -106,11 +106,11 @@ markupsafe==3.0.2
     #   mkdocs
     #   mkdocs-autorefs
     #   mkdocstrings
-matcalc==0.4.1
+matcalc==0.4.2
     # via emmet-core (setup.py)
 matminer==0.9.3
     # via robocrys
-matplotlib==3.10.3
+matplotlib==3.10.5
     # via
     #   ase
     #   mdanalysis
@@ -184,13 +184,13 @@ mrcfile==1.5.4
     # via griddataformats
 msgpack==1.1.1
     # via mmtf-python
-mypy==1.17.0
+mypy==1.17.1
     # via emmet-core (setup.py)
 mypy-extensions==1.1.0
     # via
     #   emmet-core (setup.py)
     #   mypy
-narwhals==2.0.0
+narwhals==2.0.1
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -373,7 +373,7 @@ pyyaml==6.0.2
     #   pyyaml-env-tag
 pyyaml-env-tag==1.1
     # via mkdocs
-rdkit==2025.3.3
+rdkit==2025.3.4
     # via solvation-analysis
 requests==2.32.4
     # via
