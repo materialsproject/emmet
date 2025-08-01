@@ -42,8 +42,13 @@ try:
 except ImportError:
     bson = None  # type: ignore
 
+try:
+    import pyarrow
+except ImportError:
+    pyarrow = None  # type: ignore
+
 if TYPE_CHECKING:
-    from collections.abc import Iterator, Mapping
+    from collections.abc import Callable, Iterator, Mapping
     from typing import Any
 
     from emmet.core.typing import PathLike
@@ -507,3 +512,16 @@ def get_hash_blocked(
                 break
             hasher.update(data)
         return hasher.hexdigest()
+
+
+def requires_arrow(func: Callable) -> Callable:
+    """Decorator for pyarrow-dependent functionality."""
+
+    def wrap(*args, **kwargs):
+        if pyarrow is None:
+            raise ImportError(
+                "You must `pip install pyarrow` to use this functionality."
+            )
+        return func(*args, **kwargs)
+
+    return wrap
