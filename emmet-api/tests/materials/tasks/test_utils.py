@@ -1,5 +1,6 @@
 import os
 from json import load
+from monty.io import zopen
 
 from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.tasks.utils import (
@@ -9,7 +10,7 @@ from emmet.api.routes.materials.tasks.utils import (
 
 
 def test_calcs_reversed_to_trajectory():
-    with open(
+    with zopen(
         os.path.join(MAPISettings().TEST_FILES, "calcs_reversed_mp_1031016.json.gz")
     ) as file:
         calcs_reversed = load(file)
@@ -24,7 +25,7 @@ def test_calcs_reversed_to_trajectory():
 
 
 def test_task_to_entry():
-    with open(os.path.join(MAPISettings().TEST_FILES, "test_task.json.gz")) as file:
+    with zopen(os.path.join(MAPISettings().TEST_FILES, "test_task.json.gz")) as file:
         doc = load(file)
 
     entry_dict = task_to_entry(doc)

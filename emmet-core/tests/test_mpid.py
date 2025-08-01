@@ -96,10 +96,10 @@ def test_alpha_id():
 
     majik_num = 137
 
-    ref_idx = AlphaID(majik_num, prefix="cats", separator="^")
+    ref_idx = AlphaID(majik_num, prefix="cats", separator=":")
     assert (
         ref_idx.__repr__()
-        == f"AlphaID(cats^{AlphaID._integer_to_alpha_rep(majik_num)})"
+        == f"AlphaID(cats:{AlphaID._integer_to_alpha_rep(majik_num)})"
     )
     assert ref_idx < AlphaID(
         majik_num + 100, prefix=ref_idx._prefix, separator=ref_idx._separator
@@ -109,19 +109,31 @@ def test_alpha_id():
     )
 
     # test padding
-    padded_idx = AlphaID(majik_num, prefix="cats", separator="^", padlen=8)
+    padded_idx = AlphaID(majik_num, prefix="cats", separator=":", padlen=8)
     assert ref_idx == padded_idx
     assert int(ref_idx) == int(padded_idx)
     assert str(padded_idx) == ref_idx._prefix + ref_idx._separator + (
         8 - len(str(ref_idx._identifier))
     ) * "a" + str(ref_idx._identifier)
 
+    # test invalid sep
+    for sep in ("^", "&", "%", "$", "#"):
+        with pytest.raises(ValueError, match="Invalid separator"):
+            AlphaID(majik_num, prefix="v", separator=sep)
+
+    # test copy
+    ref_idx_copy = ref_idx.copy()
+    ref_idx += 1
+    assert ref_idx != ref_idx_copy
+
     assert AlphaID(majik_num, padlen=10) < AlphaID(majik_num + 1)
     assert AlphaID(majik_num, padlen=10) > AlphaID(majik_num - 1)
 
     # Test initialization from int
+
+    ordered_seps = list(VALID_ALPHA_SEPARATORS)
     for pfx in (None, "task"):
-        for separator in VALID_ALPHA_SEPARATORS:
+        for isep, separator in enumerate(ordered_seps):
             idx = AlphaID(majik_num, prefix=pfx, separator=separator)
             assert isinstance(hash(idx), int)
 
@@ -138,7 +150,13 @@ def test_alpha_id():
 
             # Test equality when separators differ but prefixes are None
             # (separators are unset)
-            idx_diff_sep = AlphaID(majik_num, prefix=pfx, separator="&")
+            idx_diff_sep = AlphaID(
+                majik_num,
+                prefix=pfx,
+                separator=ordered_seps[
+                    (isep + 1) % len(ordered_seps)
+                ],  # ensures separator differs
+            )
             if pfx is None:
                 assert idx == idx_diff_sep
             else:

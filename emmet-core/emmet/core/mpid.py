@@ -371,6 +371,10 @@ class AlphaID(str):
             separator = ""
 
         padded = max(0, padlen - len(identifier)) * cls._alphabet[0]
+        if separator and separator not in VALID_ALPHA_SEPARATORS:
+            raise ValueError(
+                f"Invalid separator: {separator}. Use one of: {', '.join(VALID_ALPHA_SEPARATORS)}"
+            )
         new_cls = str.__new__(cls, prefix + separator + padded + identifier)
         new_cls._identifier = identifier
         new_cls._padlen = padlen
@@ -616,6 +620,10 @@ class AlphaID(str):
         return self._format_legacy_ids(  # type: ignore[return-value]
             self, self._cut_point, self._prefix, self._separator, as_object=True
         )
+
+    def copy(self) -> AlphaID:
+        """Return a deep copy of the current instance."""
+        return AlphaID(str(self))
 
     @classmethod
     def __get_pydantic_core_schema__(
