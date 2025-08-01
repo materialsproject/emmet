@@ -14,7 +14,7 @@ from emmet.core.elasticity import (
 @pytest.fixture(scope="session")
 def fitting_data(test_dir):
     """Primary fitting data"""
-    data = loadfn(test_dir / "elasticity/SiC_fitting_data.json")
+    data = loadfn(test_dir / "elasticity/SiC_fitting_data.json.gz")
     structure = data["structure"]
     deformations = [Deformation(x) for x in data["deformations"]]
     stresses = [Stress(x) for x in data["stresses"]]
@@ -26,7 +26,7 @@ def fitting_data(test_dir):
 @pytest.fixture(scope="session")
 def reference_data(test_dir):
     """Reference data"""
-    data = loadfn(test_dir / "elasticity/SiC_reference_data.json")
+    data = loadfn(test_dir / "elasticity/SiC_reference_data.json.gz")
     derived_strains = [Strain(x) for x in data["derived_strains"]]
     derived_stresses = [Stress(x) for x in data["derived_stresses"]]
     elastic_tensor_raw = data["elastic_tensor_raw"]

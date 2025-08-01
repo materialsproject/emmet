@@ -3,7 +3,7 @@ from hashlib import blake2b
 from pydantic import Field
 from pymatgen.core.structure import Molecule
 
-from emmet.core.material import PropertyOrigin
+from emmet.core.molecules import MolPropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPculeID
 from emmet.core.qchem.task import TaskDocument
@@ -131,7 +131,7 @@ class VibrationDoc(PropertyDoc):
             raman_intensities=raman_intensities,
             raman_activities=raman_active,
             warnings=warnings,
-            origins=[PropertyOrigin(name="vibrations", task_id=task.task_id)],
+            origins=[MolPropertyOrigin(name="vibrations", task_id=task.task_id)],
             deprecated=deprecated,
             **kwargs,
         )

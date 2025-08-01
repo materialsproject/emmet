@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 from pydantic import Field, model_validator
 from pymatgen.analysis.diffraction.xrd import (
@@ -8,9 +12,11 @@ from pymatgen.analysis.diffraction.xrd import (
 from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
 
-from emmet.core.mpid import MPID
 from emmet.core.spectrum import SpectrumDoc
 from emmet.core.utils import ValueEnum
+
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID, AlphaID
 
 
 class Edge(ValueEnum):
@@ -64,7 +70,7 @@ class XRDDoc(SpectrumDoc):
         spectrum_id: str,
         structure: Structure,
         wavelength: float,
-        material_id: MPID | None = None,
+        material_id: MPID | AlphaID | None = None,
         min_two_theta=0,
         max_two_theta=180,
         symprec=0.1,
@@ -92,14 +98,14 @@ class XRDDoc(SpectrumDoc):
         structure: Structure,
         target: Element,
         edge: Edge,
-        material_id: MPID | None = None,
+        material_id: MPID | AlphaID | None = None,
         min_two_theta=0,
         max_two_theta=180,
         symprec=0.1,
         **kwargs,
     ) -> "XRDDoc":
         if f"{target}{edge}" not in WAVELENGTHS:
-            raise ValueError(f"{target}{edge} not in pymatgen wavelenghts dictionarty")
+            raise ValueError(f"{target}{edge} not in pymatgen wavelengths dictionary")
 
         wavelength = WAVELENGTHS[f"{target}{edge}"]
         spectrum_id = f"{material_id}-{target}{edge}"
@@ -113,5 +119,6 @@ class XRDDoc(SpectrumDoc):
             edge=edge,
             min_two_theta=min_two_theta,
             max_two_theta=max_two_theta,
+            symprec=symprec,
             **kwargs,
         )

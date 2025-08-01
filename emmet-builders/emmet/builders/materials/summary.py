@@ -3,7 +3,7 @@ from math import ceil
 from maggma.builders import Builder
 from maggma.utils import grouper
 
-from emmet.core.mpid import MPID
+from emmet.core.mpid import AlphaID
 from emmet.core.summary import SummaryDoc, HasProps
 from emmet.core.utils import jsanitize
 from emmet.core.thermo import ThermoType
@@ -214,7 +214,7 @@ class SummaryBuilder(Builder):
             yield {"query": {self.materials.key: {"$in": list(split)}}}
 
     def process_item(self, item):
-        material_id = MPID(item[HasProps.materials.value]["material_id"])
+        material_id = AlphaID(item[HasProps.materials.value]["material_id"])
         doc = SummaryDoc.from_docs(material_id=material_id, **item)
         return jsanitize(doc.model_dump(exclude_none=False), allow_bson=True)
 

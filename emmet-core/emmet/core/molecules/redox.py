@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import Field
 
-from emmet.core.material import PropertyOrigin
+from emmet.core.molecules import MolPropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.molecules.thermo import MoleculeThermoDoc, get_free_energy
 from emmet.core.mpid import MPID, MPculeID
@@ -227,7 +227,9 @@ class RedoxDoc(PropertyDoc):
         if ea_doc is not None:
             ea_task_id = ea_doc.task_id
             id_string += f"-{ea_task_id}"
-            origins.append(PropertyOrigin(name="electron_affinity", task_id=ea_task_id))
+            origins.append(
+                MolPropertyOrigin(name="electron_affinity", task_id=ea_task_id)
+            )
             electron_affinity = (
                 ea_doc.output.final_energy * 27.2114 - base_thermo_doc.electronic_energy
             )
@@ -236,7 +238,9 @@ class RedoxDoc(PropertyDoc):
         if ie_doc is not None:
             ie_task_id = ie_doc.task_id
             id_string += f"-{ie_task_id}"
-            origins.append(PropertyOrigin(name="ionization_energy", task_id=ie_task_id))
+            origins.append(
+                MolPropertyOrigin(name="ionization_energy", task_id=ie_task_id)
+            )
             ionization_energy = (
                 ie_doc.output.final_energy * 27.2114 - base_thermo_doc.electronic_energy
             )

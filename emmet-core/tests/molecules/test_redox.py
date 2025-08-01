@@ -10,42 +10,42 @@ from emmet.core.molecules.redox import RedoxDoc
 
 @pytest.fixture(scope="session")
 def base_mol(test_dir):
-    mol = loadfn((test_dir / "redox_doc" / "base_mol.json").as_posix())
+    mol = loadfn((test_dir / "redox_doc" / "base_mol.json.gz").as_posix())
     mol_doc = MoleculeDoc(**mol)
     return mol_doc
 
 
 @pytest.fixture(scope="session")
 def base_thermo(test_dir):
-    thermo = loadfn((test_dir / "redox_doc" / "thermo.json").as_posix())
+    thermo = loadfn((test_dir / "redox_doc" / "thermo.json.gz").as_posix())
     thermo_doc = MoleculeThermoDoc(**thermo)
     return thermo_doc
 
 
 @pytest.fixture(scope="session")
 def red_thermo(test_dir):
-    thermo = loadfn((test_dir / "redox_doc" / "red_thermo.json").as_posix())
+    thermo = loadfn((test_dir / "redox_doc" / "red_thermo.json.gz").as_posix())
     thermo_doc = MoleculeThermoDoc(**thermo)
     return thermo_doc
 
 
 @pytest.fixture(scope="session")
 def ox_thermo(test_dir):
-    thermo = loadfn((test_dir / "redox_doc" / "ox_thermo.json").as_posix())
+    thermo = loadfn((test_dir / "redox_doc" / "ox_thermo.json.gz").as_posix())
     thermo_doc = MoleculeThermoDoc(**thermo)
     return thermo_doc
 
 
 @pytest.fixture(scope="session")
 def ie_task(test_dir):
-    task = loadfn((test_dir / "redox_doc" / "ie_task.json").as_posix())
+    task = loadfn((test_dir / "redox_doc" / "ie_task.json.gz").as_posix())
     task_doc = TaskDocument(**task)
     return task_doc
 
 
 @pytest.fixture(scope="session")
 def ea_task(test_dir):
-    task = loadfn((test_dir / "redox_doc" / "ea_task.json").as_posix())
+    task = loadfn((test_dir / "redox_doc" / "ea_task.json.gz").as_posix())
     task_doc = TaskDocument(**task)
     return task_doc
 

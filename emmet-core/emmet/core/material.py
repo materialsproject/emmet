@@ -6,17 +6,18 @@ from collections.abc import Mapping
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from pymatgen.core import Structure
 from pymatgen.core.structure import Molecule
 
 from emmet.core.common import convert_datetime
-from emmet.core.mpid import MPID, MPculeID
+from emmet.core.mpid import MPID, AlphaID, MPculeID
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
 from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
 
 if TYPE_CHECKING:
+    from typing import Any
     from typing_extensions import Self
 
 
@@ -26,18 +27,23 @@ class PropertyOrigin(BaseModel):
     """
 
     name: str = Field(..., description="The property name")
-    task_id: MPID | MPculeID = Field(
-        ..., description="The calculation ID this property comes from"
+    task_id: MPID | AlphaID = Field(
+        ..., description="The calculation ID this property comes from."
     )
     last_updated: datetime = Field(  # type: ignore
         description="The timestamp when this calculation was last updated",
         default_factory=utcnow,
     )
 
-    @field_validator("last_updated", mode="before")
+    @model_validator(mode="before")
     @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)
+    def handle_datetime_and_idx(cls, config: Any) -> Any:
+        if v := config.get("last_updated"):
+            config["last_updated"] = convert_datetime(cls, v)
+
+        if idx := config.get("task_id"):
+            config["task_id"] = AlphaID(idx).formatted
+        return config
 
 
 class MaterialsDoc(StructureMetadata):
@@ -45,7 +51,7 @@ class MaterialsDoc(StructureMetadata):
     Definition for a core Materials Document
     """
 
-    material_id: MPID | None = Field(
+    material_id: MPID | AlphaID | None = Field(
         None,
         description="The Materials Project ID of the material, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
@@ -71,7 +77,7 @@ class MaterialsDoc(StructureMetadata):
         description="Initial structures used in the DFT optimizations corresponding to this material.",
     )
 
-    task_ids: list[MPID] = Field(
+    task_ids: list[MPID | AlphaID] = Field(
         [],
         description="List of Calculations IDs used to make this Materials Document.",
     )
@@ -103,7 +109,7 @@ class MaterialsDoc(StructureMetadata):
 
     @classmethod
     def from_structure(
-        cls, structure: Structure, material_id: MPID | None = None, **kwargs
+        cls, structure: Structure, material_id: MPID | AlphaID | None = None, **kwargs
     ) -> Self:  # type: ignore[override]
         """
         Builds a materials document using the minimal amount of information
@@ -116,10 +122,19 @@ class MaterialsDoc(StructureMetadata):
             **kwargs,
         )
 
-    @field_validator("last_updated", "created_at", mode="before")
+    @model_validator(mode="before")
     @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)
+    def handle_datetime_and_idx(cls, config: Any) -> Any:
+        for k in ("last_updated", "created_at"):
+            if v := config.get(k):
+                config[k] = convert_datetime(cls, v)
+
+        if idx := config.get("material_id"):
+            config["material_id"] = AlphaID(idx).formatted
+        if task_idxs := config.get("task_ids"):
+            config["task_ids"] = [AlphaID(idx).formatted for idx in task_idxs]
+
+        return config
 
 
 class CoreMoleculeDoc(MoleculeMetadata):
@@ -155,7 +170,7 @@ class CoreMoleculeDoc(MoleculeMetadata):
         description="Initial molecules used in the DFT geometry optimizations corresponding to this molecule",
     )
 
-    task_ids: list[MPID] = Field(
+    task_ids: list[MPID | MPculeID] = Field(
         [],
         title="Calculation IDs",
         description="List of Calculations IDs used to make this Molecule Document",

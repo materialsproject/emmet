@@ -10,7 +10,7 @@ from emmet.builders.vasp.materials import MaterialsBuilder
 
 @pytest.fixture(scope="session")
 def tasks_store(test_dir):
-    return JSONStore(test_dir / "sample_absorptions.json")
+    return JSONStore(test_dir / "sample_absorptions.json.gz")
 
 
 @pytest.fixture(scope="session")
