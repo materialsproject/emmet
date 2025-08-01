@@ -166,9 +166,9 @@ class ElectronicBS(BandStructure):
         bands = {}
         projections = {}
         for spin in Spin:
-            if v := getattr(self, f"spin_{spin.name}_bands"):
+            if v := getattr(self, f"spin_{spin.name}_bands", None):
                 bands[spin] = np.array(v)
-            if v := getattr(self, f"spin_{spin.name}_projections"):
+            if v := getattr(self, f"spin_{spin.name}_projections", None):
                 projections[spin] = np.array(v)
 
         return PmgBandStructure(
