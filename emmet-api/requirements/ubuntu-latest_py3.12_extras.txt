@@ -23,11 +23,11 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.39.15
+boto3==1.40.0
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.39.15
+botocore==1.40.0
     # via
     #   boto3
     #   s3transfer
@@ -148,7 +148,7 @@ markupsafe==3.0.2
     #   mkdocs
     #   mkdocs-autorefs
     #   mkdocstrings
-matplotlib==3.10.3
+matplotlib==3.10.5
     # via pymatgen
 mccabe==0.7.0
     # via flake8
@@ -202,13 +202,13 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.1.1
     # via maggma
-mypy==1.17.0
+mypy==1.17.1
     # via emmet-api (setup.py)
 mypy-extensions==1.1.0
     # via
     #   emmet-api (setup.py)
     #   mypy
-narwhals==2.0.0
+narwhals==2.0.1
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -233,7 +233,7 @@ numpy==1.26.4
     #   shapely
     #   spglib
     #   tifffile
-opentelemetry-api==1.35.0
+opentelemetry-api==1.36.0
     # via ddtrace
 orjson==3.11.1
     # via
