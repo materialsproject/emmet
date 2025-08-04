@@ -19,13 +19,13 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.0
+boto3==1.40.1
     # via maggma
-botocore==1.40.0
+botocore==1.40.1
     # via
     #   boto3
     #   s3transfer
-certifi==2025.7.14
+certifi==2025.8.3
     # via requests
 cffi==1.17.1
     # via
@@ -59,6 +59,8 @@ inflect==7.5.0
     # via robocrys
 iniconfig==2.1.0
     # via pytest
+invoke==2.2.0
+    # via paramiko
 jmespath==1.0.1
     # via
     #   boto3
@@ -186,7 +188,7 @@ pandas==2.3.1
     #   seaborn
     #   solvation-analysis
     #   statsmodels
-paramiko==3.5.1
+paramiko==4.0.0
     # via sshtunnel
 patsy==1.0.1
     # via statsmodels
@@ -268,9 +270,9 @@ pytz==2025.2
     #   pandas
 pyyaml==6.0.2
     # via pybtex
-pyzmq==27.0.0
+pyzmq==27.0.1
     # via maggma
-rdkit==2025.3.4
+rdkit==2025.3.5
     # via solvation-analysis
 referencing==0.36.2
     # via
