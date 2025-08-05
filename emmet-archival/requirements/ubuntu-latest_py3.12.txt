@@ -8,7 +8,7 @@ annotated-types==0.7.0
     # via pydantic
 bibtexparser==1.4.3
     # via pymatgen
-certifi==2025.8.3
+certifi==2025.7.14
     # via requests
 charset-normalizer==3.4.2
     # via requests
@@ -128,3 +128,9 @@ uncertainties==3.2.3
     # via pymatgen
 urllib3==2.5.0
     # via requests
+
+# The following dependencies have been added manually as emmet-archival is not yet stable.
+emmet-core==0.84.9rc0
+h5py==3.14.0
+pyarrow==21.0.0
+zarr==3.1.1
