@@ -1149,33 +1149,33 @@
 <span class="sd">    Defines symmetry for a molecule document</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">point_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">point_group</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Point Group Symbol&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The point group for the lattice&quot;</span>
     <span class="p">)</span>
 
-    <span class="n">rotation_number</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">rotation_number</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Rotational Symmetry Number&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Rotational symmetry number for the molecule&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">linear</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">linear</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Molecule Linearity&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Is the molecule linear?&quot;</span>
     <span class="p">)</span>
 
-    <span class="n">tolerance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Point Group Analyzer Tolerance&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Distance tolerance to consider sites as symmetrically equivalent.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">eigen_tolerance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">eigen_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Interia Tensor Eigenvalue Tolerance&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Tolerance to compare eigen values of the inertia tensor.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">matrix_tolerance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">matrix_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Symmetry Operation Matrix Element Tolerance&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Tolerance used to generate the full set of symmetry operations of the point group.&quot;</span><span class="p">,</span>
@@ -1192,7 +1192,7 @@
             <span class="n">eigen_tolerance</span><span class="o">=</span><span class="n">eigentol</span><span class="p">,</span>
             <span class="n">matrix_tolerance</span><span class="o">=</span><span class="n">matrixtol</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">symmetry</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">symmetry</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;tolerance&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span>
             <span class="s2">&quot;eigen_tolerance&quot;</span><span class="p">:</span> <span class="n">eigentol</span><span class="p">,</span>
             <span class="s2">&quot;matrix_tolerance&quot;</span><span class="p">:</span> <span class="n">matrixtol</span><span class="p">,</span>
@@ -1363,43 +1363,43 @@
 <span class="sd">    Defines a symmetry data set for materials documents</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">crystal_system</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CrystalSystem</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">crystal_system</span><span class="p">:</span> <span class="n">CrystalSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Crystal System&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The crystal system for this lattice.&quot;</span>
     <span class="p">)</span>
 
-    <span class="n">symbol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">symbol</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Space Group Symbol&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The spacegroup symbol for the lattice.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">number</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Space Group Number&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The spacegroup number for the lattice.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">point_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">point_group</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Point Group Symbol&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The point group for the lattice.&quot;</span>
     <span class="p">)</span>
 
-    <span class="n">symprec</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">symprec</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Symmetry Finding Precision&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The precision provided to spglib to determine the symmetry of this structure.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">angle_tolerance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">angle_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Angle Tolerance&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Angle tolerance provided to spglib to determine the symmetry of this structure.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;spglib version&quot;</span><span class="p">)</span>
+    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;spglib version&quot;</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_structure</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">structure</span><span class="p">:</span> <span class="n">Structure</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SymmetryData&quot;</span><span class="p">:</span>
-        <span class="n">symmetry</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">symmetry</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="s2">&quot;spglib&quot;</span><span class="p">,</span>
             <span class="s2">&quot;symbol&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
             <span class="s2">&quot;number&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
@@ -1524,8 +1524,7 @@
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/structure.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">161</span>
-<span class="normal">162</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">162</span>
 <span class="normal">163</span>
 <span class="normal">164</span>
 <span class="normal">165</span>
@@ -1689,62 +1688,63 @@
 <span class="normal">323</span>
 <span class="normal">324</span>
 <span class="normal">325</span>
-<span class="normal">326</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MoleculeMetadata</span><span class="p">(</span><span class="n">EmmetBaseModel</span><span class="p">):</span>
+<span class="normal">326</span>
+<span class="normal">327</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MoleculeMetadata</span><span class="p">(</span><span class="n">EmmetBaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Mix-in class for molecule metadata.&quot;&quot;&quot;</span>
 
-    <span class="n">charge</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Charge of the molecule&quot;</span><span class="p">)</span>
-    <span class="n">spin_multiplicity</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">charge</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Charge of the molecule&quot;</span><span class="p">)</span>
+    <span class="n">spin_multiplicity</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Spin multiplicity of the molecule&quot;</span>
     <span class="p">)</span>
-    <span class="n">natoms</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">natoms</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Total number of atoms in the molecule&quot;</span>
     <span class="p">)</span>
-    <span class="n">elements</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Element</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">elements</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Element</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of elements in the molecule&quot;</span>
     <span class="p">)</span>
-    <span class="n">nelements</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Number of Elements&quot;</span><span class="p">)</span>
-    <span class="n">nelectrons</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">nelements</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Number of Elements&quot;</span><span class="p">)</span>
+    <span class="n">nelectrons</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Number of electrons&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The total number of electrons for the molecule&quot;</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">composition</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Composition</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">composition</span><span class="p">:</span> <span class="n">Composition</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Full composition for the molecule&quot;</span>
     <span class="p">)</span>
-    <span class="n">composition_reduced</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Composition</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">composition_reduced</span><span class="p">:</span> <span class="n">Composition</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Reduced Composition&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Simplified representation of the composition&quot;</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">formula_alphabetical</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">formula_alphabetical</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Alphabetical Formula&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Alphabetical molecular formula&quot;</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">formula_pretty</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">formula_pretty</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Pretty Formula&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Cleaned representation of the formula.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">formula_anonymous</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">formula_anonymous</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Anonymous Formula&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Anonymized representation of the formula&quot;</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">chemsys</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">chemsys</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Chemical System&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;dash-delimited string of elements in the molecule&quot;</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">symmetry</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PointGroupData</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">symmetry</span><span class="p">:</span> <span class="n">PointGroupData</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Symmetry data for this molecule&quot;</span>
     <span class="p">)</span>
-    <span class="n">species_hash</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">species_hash</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Weisfeiler Lehman (WL) graph hash using the atom species as the graph &quot;</span>
         <span class="s2">&quot;node attribute.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">coord_hash</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">coord_hash</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Weisfeiler Lehman (WL) graph hash using the atom coordinates as the graph &quot;</span>
         <span class="s2">&quot;node attribute.&quot;</span><span class="p">,</span>
@@ -1754,7 +1754,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">from_composition</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">S</span><span class="p">],</span>
         <span class="n">comp</span><span class="p">:</span> <span class="n">Composition</span><span class="p">,</span>
-        <span class="n">fields</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">fields</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">S</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1807,7 +1807,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">from_molecule</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">S</span><span class="p">],</span>
         <span class="n">meta_molecule</span><span class="p">:</span> <span class="n">Molecule</span><span class="p">,</span>
-        <span class="n">fields</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">fields</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">S</span><span class="p">:</span>
         <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span>
@@ -1900,8 +1900,7 @@ fields : list of str or None
 
             <details class="quote">
               <summary>Source code in <code>emmet/core/structure.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">222</span>
-<span class="normal">223</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">223</span>
 <span class="normal">224</span>
 <span class="normal">225</span>
 <span class="normal">226</span>
@@ -1951,11 +1950,12 @@ fields : list of str or None
 <span class="normal">270</span>
 <span class="normal">271</span>
 <span class="normal">272</span>
-<span class="normal">273</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">273</span>
+<span class="normal">274</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">from_composition</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">S</span><span class="p">],</span>
     <span class="n">comp</span><span class="p">:</span> <span class="n">Composition</span><span class="p">,</span>
-    <span class="n">fields</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">fields</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">S</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -2043,8 +2043,7 @@ fields : list of str or None
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/structure.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 24</span>
-<span class="normal"> 25</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 25</span>
 <span class="normal"> 26</span>
 <span class="normal"> 27</span>
 <span class="normal"> 28</span>
@@ -2177,57 +2176,58 @@ fields : list of str or None
 <span class="normal">155</span>
 <span class="normal">156</span>
 <span class="normal">157</span>
-<span class="normal">158</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">StructureMetadata</span><span class="p">(</span><span class="n">EmmetBaseModel</span><span class="p">):</span>
+<span class="normal">158</span>
+<span class="normal">159</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">StructureMetadata</span><span class="p">(</span><span class="n">EmmetBaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Mix-in class for structure metadata.&quot;&quot;&quot;</span>
 
     <span class="c1"># Structure metadata</span>
-    <span class="n">nsites</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">nsites</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Total number of sites in the structure.&quot;</span>
     <span class="p">)</span>
-    <span class="n">elements</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Element</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">elements</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Element</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of elements in the material.&quot;</span>
     <span class="p">)</span>
-    <span class="n">nelements</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Number of elements.&quot;</span><span class="p">)</span>
-    <span class="n">composition</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Composition</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">nelements</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Number of elements.&quot;</span><span class="p">)</span>
+    <span class="n">composition</span><span class="p">:</span> <span class="n">Composition</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Full composition for the material.&quot;</span>
     <span class="p">)</span>
-    <span class="n">composition_reduced</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Composition</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">composition_reduced</span><span class="p">:</span> <span class="n">Composition</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Reduced Composition&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Simplified representation of the composition.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">formula_pretty</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">formula_pretty</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Pretty Formula&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Cleaned representation of the formula.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">formula_anonymous</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">formula_anonymous</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Anonymous Formula&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Anonymized representation of the formula.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">chemsys</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">chemsys</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Chemical System&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;dash-delimited string of elements in the material.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">volume</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">volume</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Volume&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Total volume for this structure in Angstroms^3.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">density</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">density</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Density&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Density in grams per cm^3.&quot;</span>
     <span class="p">)</span>
 
-    <span class="n">density_atomic</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">density_atomic</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Packing Density&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The atomic packing density in atoms per cm^3.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">symmetry</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SymmetryData</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">symmetry</span><span class="p">:</span> <span class="n">SymmetryData</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Symmetry data for this material.&quot;</span>
     <span class="p">)</span>
 
@@ -2235,7 +2235,7 @@ fields : list of str or None
     <span class="k">def</span><span class="w"> </span><span class="nf">from_composition</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">T</span><span class="p">],</span>
         <span class="n">composition</span><span class="p">:</span> <span class="n">Composition</span><span class="p">,</span>
-        <span class="n">fields</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">fields</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
         <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span>
@@ -2271,7 +2271,7 @@ fields : list of str or None
     <span class="k">def</span><span class="w"> </span><span class="nf">from_structure</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">T</span><span class="p">],</span>
         <span class="n">meta_structure</span><span class="p">:</span> <span class="n">Structure</span><span class="p">,</span>
-        <span class="n">fields</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">fields</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
         <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span>
@@ -2396,13 +2396,7 @@ fields : list of str or None
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/material.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">125</span>
 <span class="normal">126</span>
 <span class="normal">127</span>
 <span class="normal">128</span>
@@ -2469,7 +2463,18 @@ fields : list of str or None
 <span class="normal">189</span>
 <span class="normal">190</span>
 <span class="normal">191</span>
-<span class="normal">192</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">CoreMoleculeDoc</span><span class="p">(</span><span class="n">MoleculeMetadata</span><span class="p">):</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">CoreMoleculeDoc</span><span class="p">(</span><span class="n">MoleculeMetadata</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Definition for a core Molecule Document</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -2492,45 +2497,45 @@ fields : list of str or None
     <span class="p">)</span>
 
     <span class="c1"># TODO: Why might a molecule be deprecated?</span>
-    <span class="n">deprecation_reasons</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">deprecation_reasons</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of deprecation tags detailing why this molecules document isn&#39;t valid&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">initial_molecules</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Molecule</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">initial_molecules</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Molecule</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="p">[],</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Initial molecules used in the DFT geometry optimizations corresponding to this molecule&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">task_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">MPID</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">task_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">MPID</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="p">[],</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Calculation IDs&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of Calculations IDs used to make this Molecule Document&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="c1"># TODO: Should this be MPID?</span>
-    <span class="n">deprecated_tasks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">([],</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Deprecated Tasks&quot;</span><span class="p">)</span>
+    <span class="n">deprecated_tasks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">([],</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Deprecated Tasks&quot;</span><span class="p">)</span>
 
-    <span class="n">calc_types</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">calc_types</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Calculation types for all the tasks that make up this molecule&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">last_updated</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Timestamp for when this document was last updated&quot;</span><span class="p">,</span>
-        <span class="n">default_factory</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">,</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="n">utcnow</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">created_at</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Timestamp for when this document was first created&quot;</span><span class="p">,</span>
-        <span class="n">default_factory</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">,</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="n">utcnow</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">origins</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">PropertyOrigin</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">origins</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">PropertyOrigin</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Dictionary for tracking the provenance of properties&quot;</span>
     <span class="p">)</span>
 
-    <span class="n">warnings</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">([],</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Any warnings related to this molecule&quot;</span><span class="p">)</span>
+    <span class="n">warnings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">([],</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Any warnings related to this molecule&quot;</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_molecule</span><span class="p">(</span>
@@ -2543,6 +2548,11 @@ fields : list of str or None
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">from_molecule</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
             <span class="n">meta_molecule</span><span class="o">=</span><span class="n">molecule</span><span class="p">,</span> <span class="n">molecule_id</span><span class="o">=</span><span class="n">molecule_id</span><span class="p">,</span> <span class="n">molecule</span><span class="o">=</span><span class="n">molecule</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
         <span class="p">)</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;last_updated&quot;</span><span class="p">,</span> <span class="s2">&quot;created_at&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">handle_datetime</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">convert_datetime</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -2578,17 +2588,17 @@ fields : list of str or None
 
             <details class="quote">
               <summary>Source code in <code>emmet/core/material.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">188</span>
 <span class="normal">189</span>
 <span class="normal">190</span>
 <span class="normal">191</span>
-<span class="normal">192</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">from_molecule</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">S</span><span class="p">],</span> <span class="n">molecule</span><span class="p">:</span> <span class="n">Molecule</span><span class="p">,</span> <span class="n">molecule_id</span><span class="p">:</span> <span class="n">MPculeID</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">S</span><span class="p">:</span>  <span class="c1"># type: ignore[override]</span>
@@ -2639,8 +2649,7 @@ fields : list of str or None
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/material.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 42</span>
-<span class="normal"> 43</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 43</span>
 <span class="normal"> 44</span>
 <span class="normal"> 45</span>
 <span class="normal"> 46</span>
@@ -2713,7 +2722,13 @@ fields : list of str or None
 <span class="normal">113</span>
 <span class="normal">114</span>
 <span class="normal">115</span>
-<span class="normal">116</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MaterialsDoc</span><span class="p">(</span><span class="n">StructureMetadata</span><span class="p">):</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MaterialsDoc</span><span class="p">(</span><span class="n">StructureMetadata</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Definition for a core Materials Document</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -2734,43 +2749,43 @@ fields : list of str or None
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Whether this materials document is deprecated.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">deprecation_reasons</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">DeprecationMessage</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">deprecation_reasons</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">DeprecationMessage</span> <span class="o">|</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of deprecation tags detailing why this materials document isn&#39;t valid.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">initial_structures</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Structure</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">initial_structures</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Structure</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="p">[],</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Initial structures used in the DFT optimizations corresponding to this material.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">task_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">MPID</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">task_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">MPID</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="p">[],</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of Calculations IDs used to make this Materials Document.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">deprecated_tasks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">([],</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Deprecated Tasks&quot;</span><span class="p">)</span>
+    <span class="n">deprecated_tasks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">([],</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Deprecated Tasks&quot;</span><span class="p">)</span>
 
-    <span class="n">calc_types</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">calc_types</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Calculation types for all the calculations that make up this material.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">last_updated</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Timestamp for when this document was last updated.&quot;</span><span class="p">,</span>
-        <span class="n">default_factory</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">,</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="n">utcnow</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">created_at</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Timestamp for when this material document was first created.&quot;</span><span class="p">,</span>
-        <span class="n">default_factory</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">,</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="n">utcnow</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">origins</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">PropertyOrigin</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">origins</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">PropertyOrigin</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Dictionary for tracking the provenance of properties.&quot;</span>
     <span class="p">)</span>
 
-    <span class="n">warnings</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">warnings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="p">[],</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Any warnings related to this material.&quot;</span>
     <span class="p">)</span>
 
@@ -2788,6 +2803,11 @@ fields : list of str or None
             <span class="n">structure</span><span class="o">=</span><span class="n">structure</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;last_updated&quot;</span><span class="p">,</span> <span class="s2">&quot;created_at&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">handle_datetime</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">convert_datetime</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -2823,8 +2843,7 @@ fields : list of str or None
 
             <details class="quote">
               <summary>Source code in <code>emmet/core/material.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">103</span>
-<span class="normal">104</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">104</span>
 <span class="normal">105</span>
 <span class="normal">106</span>
 <span class="normal">107</span>
@@ -2836,7 +2855,8 @@ fields : list of str or None
 <span class="normal">113</span>
 <span class="normal">114</span>
 <span class="normal">115</span>
-<span class="normal">116</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">116</span>
+<span class="normal">117</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">from_structure</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">T</span><span class="p">],</span> <span class="n">structure</span><span class="p">:</span> <span class="n">Structure</span><span class="p">,</span> <span class="n">material_id</span><span class="p">:</span> <span class="n">MPID</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>  <span class="c1"># type: ignore[override]</span>
@@ -2890,8 +2910,7 @@ fields : list of str or None
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/material.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">18</span>
-<span class="normal">19</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">19</span>
 <span class="normal">20</span>
 <span class="normal">21</span>
 <span class="normal">22</span>
@@ -2907,18 +2926,19 @@ fields : list of str or None
 <span class="normal">32</span>
 <span class="normal">33</span>
 <span class="normal">34</span>
-<span class="normal">35</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PropertyOrigin</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">35</span>
+<span class="normal">36</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PropertyOrigin</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Provenance document for the origin of properties in a material document</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The property name&quot;</span><span class="p">)</span>
-    <span class="n">task_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MPID</span><span class="p">,</span> <span class="n">MPculeID</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">task_id</span><span class="p">:</span> <span class="n">MPID</span> <span class="o">|</span> <span class="n">MPculeID</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The calculation ID this property comes from&quot;</span>
     <span class="p">)</span>
     <span class="n">last_updated</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The timestamp when this calculation was last updated&quot;</span><span class="p">,</span>
-        <span class="n">default_factory</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">,</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="n">utcnow</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;last_updated&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
@@ -3009,7 +3029,8 @@ fields : list of str or None
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/thermo.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">19</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">18</span>
+<span class="normal">19</span>
 <span class="normal">20</span>
 <span class="normal">21</span>
 <span class="normal">22</span>
@@ -3024,21 +3045,20 @@ fields : list of str or None
 <span class="normal">31</span>
 <span class="normal">32</span>
 <span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">DecompositionProduct</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">34</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">DecompositionProduct</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Entry metadata for a decomposition process</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">material_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MPID</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">material_id</span><span class="p">:</span> <span class="n">MPID</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The Materials Project ID for the material this decomposition points to.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">formula</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">formula</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The formula of the decomposed material this material decomposes to.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">amount</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">amount</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The amount of the decomposed material by formula units this this material decomposes to.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
@@ -3091,7 +3111,8 @@ fields : list of str or None
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/thermo.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">298</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">297</span>
+<span class="normal">298</span>
 <span class="normal">299</span>
 <span class="normal">300</span>
 <span class="normal">301</span>
@@ -3120,8 +3141,7 @@ fields : list of str or None
 <span class="normal">324</span>
 <span class="normal">325</span>
 <span class="normal">326</span>
-<span class="normal">327</span>
-<span class="normal">328</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PhaseDiagramDoc</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">327</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PhaseDiagramDoc</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A phase diagram document</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -3138,7 +3158,7 @@ fields : list of str or None
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Dash-delimited string of elements in the material&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">thermo_type</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ThermoType</span><span class="p">,</span> <span class="n">RunType</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">thermo_type</span><span class="p">:</span> <span class="n">ThermoType</span> <span class="o">|</span> <span class="n">RunType</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="o">...</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Functional types of calculations involved in the energy mixing scheme.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
@@ -3150,7 +3170,7 @@ fields : list of str or None
 
     <span class="n">last_updated</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Timestamp for the most recent calculation update for this property&quot;</span><span class="p">,</span>
-        <span class="n">default_factory</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">,</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="n">utcnow</span><span class="p">,</span>
     <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
               </details>
@@ -3201,7 +3221,8 @@ fields : list of str or None
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/thermo.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 45</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 44</span>
+<span class="normal"> 45</span>
 <span class="normal"> 46</span>
 <span class="normal"> 47</span>
 <span class="normal"> 48</span>
@@ -3450,15 +3471,14 @@ fields : list of str or None
 <span class="normal">291</span>
 <span class="normal">292</span>
 <span class="normal">293</span>
-<span class="normal">294</span>
-<span class="normal">295</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ThermoDoc</span><span class="p">(</span><span class="n">PropertyDoc</span><span class="p">):</span>
+<span class="normal">294</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ThermoDoc</span><span class="p">(</span><span class="n">PropertyDoc</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A thermo entry document</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">property_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;thermo&quot;</span>
 
-    <span class="n">thermo_type</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ThermoType</span><span class="p">,</span> <span class="n">RunType</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">thermo_type</span><span class="p">:</span> <span class="n">ThermoType</span> <span class="o">|</span> <span class="n">RunType</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="o">...</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Functional types of calculations involved in the energy mixing scheme.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
@@ -3477,9 +3497,9 @@ fields : list of str or None
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The total corrected DFT energy of this material per atom in eV/atom.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">energy_uncertainy_per_atom</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">energy_uncertainy_per_atom</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-    <span class="n">formation_energy_per_atom</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">formation_energy_per_atom</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The formation energy per atom in eV/atom.&quot;</span>
     <span class="p">)</span>
 
@@ -3492,23 +3512,23 @@ fields : list of str or None
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Flag for whether this material is on the hull and therefore stable.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">equilibrium_reaction_energy_per_atom</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">equilibrium_reaction_energy_per_atom</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The reaction energy of a stable entry from the neighboring equilibrium stable materials in eV.&quot;</span>
         <span class="s2">&quot; Also known as the inverse distance to hull.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">decomposes_to</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">DecompositionProduct</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">decomposes_to</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">DecompositionProduct</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of decomposition data for this material. Only valid for metastable or unstable material.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">decomposition_enthalpy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">decomposition_enthalpy</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">decomposition_enthalpy_decomposes_to</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">DecompositionProduct</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">decomposition_enthalpy_decomposes_to</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">DecompositionProduct</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of decomposition data associated with the decomposition_enthalpy quantity.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
@@ -3518,11 +3538,11 @@ fields : list of str or None
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The type of calculation this energy evaluation comes from.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">entry_types</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">entry_types</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of available energy types computed for this material.&quot;</span>
     <span class="p">)</span>
 
-    <span class="n">entries</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">ComputedEntry</span><span class="p">,</span> <span class="n">ComputedStructureEntry</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">entries</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ComputedEntry</span> <span class="o">|</span> <span class="n">ComputedStructureEntry</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="o">...</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of all entries that are valid for this material.&quot;</span>
         <span class="s2">&quot; The keys for this dictionary are names of various calculation types.&quot;</span><span class="p">,</span>
@@ -3531,23 +3551,23 @@ fields : list of str or None
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_entries</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
-        <span class="n">entries</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ComputedEntry</span><span class="p">,</span> <span class="n">ComputedStructureEntry</span><span class="p">]],</span>
-        <span class="n">thermo_type</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ThermoType</span><span class="p">,</span> <span class="n">RunType</span><span class="p">],</span>
-        <span class="n">phase_diagram</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PhaseDiagram</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ComputedEntry</span> <span class="o">|</span> <span class="n">ComputedStructureEntry</span><span class="p">],</span>
+        <span class="n">thermo_type</span><span class="p">:</span> <span class="n">ThermoType</span> <span class="o">|</span> <span class="n">RunType</span><span class="p">,</span>
+        <span class="n">phase_diagram</span><span class="p">:</span> <span class="n">PhaseDiagram</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">use_max_chemsys</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Produce a list of ThermoDocs from a list of Entry objects</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            entries (List[Union[ComputedEntry, ComputedStructureEntry]]): List of Entry objects</span>
-<span class="sd">            thermo_type (Union[ThermoType, RunType]): Thermo type</span>
-<span class="sd">            phase_diagram (Optional[PhaseDiagram], optional): Already built phase diagram. Defaults to None.</span>
+<span class="sd">            entries (list[ComputedEntry| ComputedStructureEntry]): list of Entry objects</span>
+<span class="sd">            thermo_type (ThermoType| RunType): Thermo type</span>
+<span class="sd">            phase_diagram (PhaseDiagram | None, optional): Already built phase diagram. Defaults to None.</span>
 <span class="sd">            use_max_chemsys (bool, optional): Whether to only produce thermo docs for materials</span>
 <span class="sd">                that match the largest chemsys represented in the list. Defaults to False.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            List[ThermoDoc]: List of built thermo doc objects.</span>
+<span class="sd">            list[ThermoDoc]: list of built thermo doc objects.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">pd</span> <span class="o">=</span> <span class="n">phase_diagram</span> <span class="ow">or</span> <span class="bp">cls</span><span class="o">.</span><span class="n">construct_phase_diagram</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
@@ -3562,7 +3582,7 @@ fields : list of str or None
 
         <span class="n">entry_quality_scores</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;GGA&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;GGA+U&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;SCAN&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;r2SCAN&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">_energy_eval</span><span class="p">(</span><span class="n">entry</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ComputedStructureEntry</span><span class="p">,</span> <span class="n">ComputedEntry</span><span class="p">]):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_energy_eval</span><span class="p">(</span><span class="n">entry</span><span class="p">:</span> <span class="n">ComputedStructureEntry</span> <span class="o">|</span> <span class="n">ComputedEntry</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            Helper function to order entries for thermo energy data selection</span>
 <span class="sd">            - Run type</span>
@@ -3660,7 +3680,7 @@ fields : list of str or None
                 <span class="n">PropertyOrigin</span><span class="p">(</span>
                     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
                     <span class="n">task_id</span><span class="o">=</span><span class="n">blessed_entry</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;task_id&quot;</span><span class="p">],</span>
-                    <span class="n">last_updated</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;last_updated&quot;</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()),</span>
+                    <span class="n">last_updated</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;last_updated&quot;</span><span class="p">,</span> <span class="n">utcnow</span><span class="p">()),</span>
                 <span class="p">)</span>
             <span class="p">]</span>
 
@@ -3679,7 +3699,7 @@ fields : list of str or None
 <span class="sd">        represented in the entry data passed.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            entries (List[ComputedStructureEntry]): List of corrected pymatgen entry objects.</span>
+<span class="sd">            entries (list[ComputedStructureEntry]): list of corrected pymatgen entry objects.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            PhaseDiagram: Pymatgen PhaseDiagram object</span>
@@ -3752,11 +3772,11 @@ represented in the entry data passed.</p>
                 <code>entries</code>
             </td>
             <td>
-                  <code><span title="typing.List">List</span>[<span title="pymatgen.entries.computed_entries.ComputedStructureEntry">ComputedStructureEntry</span>]</code>
+                  <code><span title="list">list</span>[<span title="pymatgen.entries.computed_entries.ComputedStructureEntry">ComputedStructureEntry</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>List of corrected pymatgen entry objects.</p>
+                <p>list of corrected pymatgen entry objects.</p>
               </div>
             </td>
             <td>
@@ -3792,7 +3812,8 @@ represented in the entry data passed.</p>
 
             <details class="quote">
               <summary>Source code in <code>emmet/core/thermo.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">266</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">265</span>
+<span class="normal">266</span>
 <span class="normal">267</span>
 <span class="normal">268</span>
 <span class="normal">269</span>
@@ -3820,15 +3841,14 @@ represented in the entry data passed.</p>
 <span class="normal">291</span>
 <span class="normal">292</span>
 <span class="normal">293</span>
-<span class="normal">294</span>
-<span class="normal">295</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">294</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">construct_phase_diagram</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PhaseDiagram</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Efficienty construct a phase diagram using only the lowest entries at every composition</span>
 <span class="sd">    represented in the entry data passed.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        entries (List[ComputedStructureEntry]): List of corrected pymatgen entry objects.</span>
+<span class="sd">        entries (list[ComputedStructureEntry]): list of corrected pymatgen entry objects.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        PhaseDiagram: Pymatgen PhaseDiagram object</span>
@@ -3891,11 +3911,11 @@ represented in the entry data passed.</p>
                 <code>entries</code>
             </td>
             <td>
-                  <code><span title="typing.List">List</span>[<span title="typing.Union">Union</span>[<span title="pymatgen.entries.computed_entries.ComputedEntry">ComputedEntry</span>, <span title="pymatgen.entries.computed_entries.ComputedStructureEntry">ComputedStructureEntry</span>]]</code>
+                  <code><span title="list">list</span>[<span title="pymatgen.entries.computed_entries.ComputedEntry">ComputedEntry</span> | <span title="pymatgen.entries.computed_entries.ComputedStructureEntry">ComputedStructureEntry</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>List of Entry objects</p>
+                <p>list of Entry objects</p>
               </div>
             </td>
             <td>
@@ -3907,7 +3927,7 @@ represented in the entry data passed.</p>
                 <code>thermo_type</code>
             </td>
             <td>
-                  <code><span title="typing.Union">Union</span>[<span title="emmet.core.thermo.ThermoType">ThermoType</span>, <span title="emmet.core.vasp.calc_types.enums.RunType">RunType</span>]</code>
+                  <code><span title="emmet.core.thermo.ThermoType">ThermoType</span> | <span title="emmet.core.vasp.calc_types.enums.RunType">RunType</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3923,7 +3943,7 @@ represented in the entry data passed.</p>
                 <code>phase_diagram</code>
             </td>
             <td>
-                  <code><span title="typing.Optional">Optional</span>[<span title="pymatgen.analysis.phase_diagram.PhaseDiagram">PhaseDiagram</span>]</code>
+                  <code><span title="pymatgen.analysis.phase_diagram.PhaseDiagram">PhaseDiagram</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3969,7 +3989,7 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>List[ThermoDoc]: List of built thermo doc objects.</p>
+                <p>list[ThermoDoc]: list of built thermo doc objects.</p>
               </div>
             </td>
           </tr>
@@ -3979,7 +3999,8 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
             <details class="quote">
               <summary>Source code in <code>emmet/core/thermo.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">122</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">121</span>
+<span class="normal">122</span>
 <span class="normal">123</span>
 <span class="normal">124</span>
 <span class="normal">125</span>
@@ -4120,27 +4141,26 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 <span class="normal">260</span>
 <span class="normal">261</span>
 <span class="normal">262</span>
-<span class="normal">263</span>
-<span class="normal">264</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">263</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">from_entries</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">,</span>
-    <span class="n">entries</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ComputedEntry</span><span class="p">,</span> <span class="n">ComputedStructureEntry</span><span class="p">]],</span>
-    <span class="n">thermo_type</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ThermoType</span><span class="p">,</span> <span class="n">RunType</span><span class="p">],</span>
-    <span class="n">phase_diagram</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PhaseDiagram</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ComputedEntry</span> <span class="o">|</span> <span class="n">ComputedStructureEntry</span><span class="p">],</span>
+    <span class="n">thermo_type</span><span class="p">:</span> <span class="n">ThermoType</span> <span class="o">|</span> <span class="n">RunType</span><span class="p">,</span>
+    <span class="n">phase_diagram</span><span class="p">:</span> <span class="n">PhaseDiagram</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">use_max_chemsys</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="o">**</span><span class="n">kwargs</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Produce a list of ThermoDocs from a list of Entry objects</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        entries (List[Union[ComputedEntry, ComputedStructureEntry]]): List of Entry objects</span>
-<span class="sd">        thermo_type (Union[ThermoType, RunType]): Thermo type</span>
-<span class="sd">        phase_diagram (Optional[PhaseDiagram], optional): Already built phase diagram. Defaults to None.</span>
+<span class="sd">        entries (list[ComputedEntry| ComputedStructureEntry]): list of Entry objects</span>
+<span class="sd">        thermo_type (ThermoType| RunType): Thermo type</span>
+<span class="sd">        phase_diagram (PhaseDiagram | None, optional): Already built phase diagram. Defaults to None.</span>
 <span class="sd">        use_max_chemsys (bool, optional): Whether to only produce thermo docs for materials</span>
 <span class="sd">            that match the largest chemsys represented in the list. Defaults to False.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        List[ThermoDoc]: List of built thermo doc objects.</span>
+<span class="sd">        list[ThermoDoc]: list of built thermo doc objects.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">pd</span> <span class="o">=</span> <span class="n">phase_diagram</span> <span class="ow">or</span> <span class="bp">cls</span><span class="o">.</span><span class="n">construct_phase_diagram</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
@@ -4155,7 +4175,7 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
     <span class="n">entry_quality_scores</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;GGA&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;GGA+U&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;SCAN&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;r2SCAN&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_energy_eval</span><span class="p">(</span><span class="n">entry</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ComputedStructureEntry</span><span class="p">,</span> <span class="n">ComputedEntry</span><span class="p">]):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_energy_eval</span><span class="p">(</span><span class="n">entry</span><span class="p">:</span> <span class="n">ComputedStructureEntry</span> <span class="o">|</span> <span class="n">ComputedEntry</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Helper function to order entries for thermo energy data selection</span>
 <span class="sd">        - Run type</span>
@@ -4253,7 +4273,7 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
             <span class="n">PropertyOrigin</span><span class="p">(</span>
                 <span class="n">name</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
                 <span class="n">task_id</span><span class="o">=</span><span class="n">blessed_entry</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;task_id&quot;</span><span class="p">],</span>
-                <span class="n">last_updated</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;last_updated&quot;</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()),</span>
+                <span class="n">last_updated</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;last_updated&quot;</span><span class="p">,</span> <span class="n">utcnow</span><span class="p">()),</span>
             <span class="p">)</span>
         <span class="p">]</span>
 
@@ -4339,19 +4359,19 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/provenance.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">28</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">27</span>
+<span class="normal">28</span>
 <span class="normal">29</span>
 <span class="normal">30</span>
 <span class="normal">31</span>
 <span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Author</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">33</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Author</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Author information</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-    <span class="n">email</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">email</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -4401,14 +4421,14 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/provenance.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">18</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">17</span>
+<span class="normal">18</span>
 <span class="normal">19</span>
 <span class="normal">20</span>
 <span class="normal">21</span>
 <span class="normal">22</span>
 <span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Database</span><span class="p">(</span><span class="n">ValueEnum</span><span class="p">):</span>
+<span class="normal">24</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Database</span><span class="p">(</span><span class="n">ValueEnum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Database identifiers for provenance IDs</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -4465,7 +4485,8 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/provenance.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">37</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">36</span>
+<span class="normal">37</span>
 <span class="normal">38</span>
 <span class="normal">39</span>
 <span class="normal">40</span>
@@ -4480,15 +4501,14 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 <span class="normal">49</span>
 <span class="normal">50</span>
 <span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">History</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">52</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">History</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    History of the material provenance</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">url</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Dictionary of extra data for this history node.&quot;</span>
     <span class="p">)</span>
 
@@ -4547,7 +4567,8 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/provenance.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 99</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 98</span>
+<span class="normal"> 99</span>
 <span class="normal">100</span>
 <span class="normal">101</span>
 <span class="normal">102</span>
@@ -4674,8 +4695,7 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 <span class="normal">223</span>
 <span class="normal">224</span>
 <span class="normal">225</span>
-<span class="normal">226</span>
-<span class="normal">227</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ProvenanceDoc</span><span class="p">(</span><span class="n">PropertyDoc</span><span class="p">):</span>
+<span class="normal">226</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ProvenanceDoc</span><span class="p">(</span><span class="n">PropertyDoc</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A provenance property block</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -4687,33 +4707,33 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;creation date for the first structure corresponding to this material&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">references</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">references</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="p">[],</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Bibtex reference strings for this material&quot;</span>
     <span class="p">)</span>
 
-    <span class="n">authors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Author</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">([],</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of authors for this material&quot;</span><span class="p">)</span>
+    <span class="n">authors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Author</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">([],</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;list of authors for this material&quot;</span><span class="p">)</span>
 
-    <span class="n">remarks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">remarks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="p">[],</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of remarks for the provenance of this material&quot;</span>
     <span class="p">)</span>
 
-    <span class="n">tags</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">([])</span>
+    <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">([])</span>
 
     <span class="n">theoretical</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">True</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;If this material has any experimental provenance or not&quot;</span>
     <span class="p">)</span>
 
-    <span class="n">database_IDs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Database</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">database_IDs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Database</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="nb">dict</span><span class="p">(),</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Database IDs corresponding to this material&quot;</span>
     <span class="p">)</span>
 
-    <span class="n">history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">History</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">history</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">History</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="p">[],</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of history nodes specifying the transformations or orignation&quot;</span>
         <span class="s2">&quot; of this material for the entry closest matching the material input&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;created_at&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;last_updated&quot;</span><span class="p">,</span> <span class="s2">&quot;created_at&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">handle_datetime</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">convert_datetime</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
@@ -4728,7 +4748,7 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_SNLs</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">structure</span><span class="p">:</span> <span class="n">Structure</span><span class="p">,</span>
-        <span class="n">snls</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">SNLDict</span><span class="p">],</span>
+        <span class="n">snls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SNLDict</span><span class="p">],</span>
         <span class="n">material_id</span><span class="p">:</span> <span class="n">MPID</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ProvenanceDoc&quot;</span><span class="p">:</span>
@@ -4839,7 +4859,8 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
             <details class="quote">
               <summary>Source code in <code>emmet/core/provenance.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">148</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">147</span>
+<span class="normal">148</span>
 <span class="normal">149</span>
 <span class="normal">150</span>
 <span class="normal">151</span>
@@ -4917,12 +4938,11 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 <span class="normal">223</span>
 <span class="normal">224</span>
 <span class="normal">225</span>
-<span class="normal">226</span>
-<span class="normal">227</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">226</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">from_SNLs</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">,</span>
     <span class="n">structure</span><span class="p">:</span> <span class="n">Structure</span><span class="p">,</span>
-    <span class="n">snls</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">SNLDict</span><span class="p">],</span>
+    <span class="n">snls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SNLDict</span><span class="p">],</span>
     <span class="n">material_id</span><span class="p">:</span> <span class="n">MPID</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ProvenanceDoc&quot;</span><span class="p">:</span>
@@ -5038,7 +5058,8 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/provenance.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">56</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">55</span>
+<span class="normal">56</span>
 <span class="normal">57</span>
 <span class="normal">58</span>
 <span class="normal">59</span>
@@ -5069,34 +5090,33 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 <span class="normal">84</span>
 <span class="normal">85</span>
 <span class="normal">86</span>
-<span class="normal">87</span>
-<span class="normal">88</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SNLAbout</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">87</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SNLAbout</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A data dictionary defining extra fields in a SNL&quot;&quot;&quot;</span>
 
     <span class="n">references</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Bibtex reference strings for this material.&quot;</span>
     <span class="p">)</span>
 
-    <span class="n">authors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Author</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">([],</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of authors for this material.&quot;</span><span class="p">)</span>
+    <span class="n">authors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Author</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">([],</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;list of authors for this material.&quot;</span><span class="p">)</span>
 
-    <span class="n">remarks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">remarks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="p">[],</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of remarks for the provenance of this material.&quot;</span>
     <span class="p">)</span>
 
-    <span class="n">tags</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">([])</span>
+    <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">([])</span>
 
-    <span class="n">database_IDs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Database</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">database_IDs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Database</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="nb">dict</span><span class="p">(),</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Database IDs corresponding to this material.&quot;</span>
     <span class="p">)</span>
 
-    <span class="n">history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">History</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">history</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">History</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="p">[],</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of history nodes specifying the transformations or orignation&quot;</span>
         <span class="s2">&quot; of this material for the entry closest matching the material input.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">created_at</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default_factory</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The creation date for this SNL.&quot;</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="n">utcnow</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The creation date for this SNL.&quot;</span>
     <span class="p">)</span>
 
     <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;created_at&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
@@ -5152,12 +5172,12 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/provenance.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">91</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">90</span>
+<span class="normal">91</span>
 <span class="normal">92</span>
 <span class="normal">93</span>
 <span class="normal">94</span>
-<span class="normal">95</span>
-<span class="normal">96</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SNLDict</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">95</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SNLDict</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Pydantic validated dictionary for SNL&quot;&quot;&quot;</span>
 
     <span class="n">about</span><span class="p">:</span> <span class="n">SNLAbout</span>
@@ -5247,7 +5267,10 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/polar.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">142</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
 <span class="normal">143</span>
 <span class="normal">144</span>
 <span class="normal">145</span>
@@ -5263,25 +5286,22 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 <span class="normal">155</span>
 <span class="normal">156</span>
 <span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">BornEffectiveCharges</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">158</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">BornEffectiveCharges</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A block for the Born effective charges</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Matrix3D</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">value</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Matrix3D</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Value of the Born effective charges.&quot;</span>
     <span class="p">)</span>
 
-    <span class="n">symmetrized_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Matrix3D</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">symmetrized_value</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Matrix3D</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Value of the Born effective charges after symmetrization to obey the&quot;</span>
         <span class="s2">&quot;charge neutrality sum rule.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">cnsr_break</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">cnsr_break</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The maximum breaking of the charge neutrality sum &quot;</span>
         <span class="s2">&quot;rule (CNSR) in the Born effective charges.&quot;</span><span class="p">,</span>
@@ -5335,7 +5355,10 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/polar.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">23</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
 <span class="normal">24</span>
 <span class="normal">25</span>
 <span class="normal">26</span>
@@ -5382,10 +5405,7 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 <span class="normal">67</span>
 <span class="normal">68</span>
 <span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">DielectricDoc</span><span class="p">(</span><span class="n">PropertyDoc</span><span class="p">):</span>
+<span class="normal">70</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">DielectricDoc</span><span class="p">(</span><span class="n">PropertyDoc</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A dielectric property block</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -5485,19 +5505,19 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/polar.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">164</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
 <span class="normal">165</span>
 <span class="normal">166</span>
 <span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">IRDielectric</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">168</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">IRDielectric</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A block for the pymatgen IRDielectricTensor object</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">ir_dielectric_tensor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">ir_dielectric_tensor</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Serialized version of a pymatgen IRDielectricTensor object.&quot;</span>
     <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -5549,7 +5569,10 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 
               <details class="quote">
                 <summary>Source code in <code>emmet/core/polar.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 76</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
 <span class="normal"> 77</span>
 <span class="normal"> 78</span>
 <span class="normal"> 79</span>
@@ -5609,10 +5632,7 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
 <span class="normal">133</span>
 <span class="normal">134</span>
 <span class="normal">135</span>
-<span class="normal">136</span>
-<span class="normal">137</span>
-<span class="normal">138</span>
-<span class="normal">139</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PiezoelectricDoc</span><span class="p">(</span><span class="n">PropertyDoc</span><span class="p">):</span>
+<span class="normal">136</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PiezoelectricDoc</span><span class="p">(</span><span class="n">PropertyDoc</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A dielectric package block</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -5628,10 +5648,10 @@ that match the largest chemsys represented in the list. Defaults to False.</p>
     <span class="p">)</span>
 
     <span class="n">e_ij_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Piezoelectric modulus&quot;</span><span class="p">)</span>
-    <span class="n">max_direction</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">max_direction</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Miller direction for maximum piezo response&quot;</span>
     <span class="p">)</span>
-    <span class="n">strain_for_max</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">strain_for_max</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Normalized strain direction for maximum piezo repsonse&quot;</span>
     <span class="p">)</span>
 
