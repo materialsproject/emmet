@@ -9,7 +9,7 @@ import pytest
 from pymatgen.phonon.dos import PhononDos as PmgPhononDos, CompletePhononDos
 
 from emmet.core.phonon import PhononDOS, PhononBS, PhononBSDOSDoc
-from tests.conftest import assert_schemas_equal
+from emmet.core.testing_utils import assert_schemas_equal
 
 try:
     import pyarrow.parquet as pq
