@@ -1,4 +1,4 @@
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 from emmet.core.serialization_adapters.properties import TypedSiteProperitesDict
 from emmet.core.serialization_adapters.species_adapter import TypedSpeciesDict
@@ -19,9 +19,9 @@ MSONableTypedSiteDict = TypedDict(
 
 
 class TypedSiteDict(TypedDict):
-    label: str
-    name: str
-    properties: TypedSiteProperitesDict
-    species: list[TypedSpeciesDict]
-    abc: list[float, float, float]  # type: ignore[type-arg]
-    xyz: list[float, float, float]  # type: ignore[type-arg]
+    label: NotRequired[str | None]
+    name: NotRequired[str | None]
+    properties: NotRequired[TypedSiteProperitesDict | None]
+    species: NotRequired[list[TypedSpeciesDict] | None]
+    abc: NotRequired[list[float, float, float] | None]  # type: ignore[type-arg]
+    xyz: NotRequired[list[float, float, float] | None]  # type: ignore[type-arg]

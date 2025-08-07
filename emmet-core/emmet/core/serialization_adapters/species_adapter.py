@@ -1,7 +1,7 @@
 from typing import TypeVar
 
 from pymatgen.core.periodic_table import Species
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 MSONableTypedSpeciesDict = TypedDict(
     "MSONableTypedSpeciesDict",
@@ -16,10 +16,10 @@ MSONableTypedSpeciesDict = TypedDict(
 
 
 class TypedSpeciesDict(TypedDict):
-    element: str
-    oxidation_state: float
-    spin: float
-    occu: int
+    element: NotRequired[str | None]
+    oxidation_state: NotRequired[float | None]
+    spin: NotRequired[float | None]
+    occu: NotRequired[int | None]
 
 
 SpeciesTypeVar = TypeVar("SpeciesTypeVar", Species, TypedSpeciesDict)
