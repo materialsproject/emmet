@@ -8,7 +8,7 @@ aioitertools==0.12.0
     # via maggma
 annotated-types==0.7.0
     # via pydantic
-anyio==4.9.0
+anyio==4.10.0
     # via starlette
 asgi-logger==0.1.0
     # via emmet-api (setup.py)
@@ -23,29 +23,29 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.0
+boto3==1.40.7
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.40.0
+botocore==1.40.7
     # via
     #   boto3
     #   s3transfer
 bytecode==0.16.2
     # via ddtrace
-certifi==2025.7.14
+certifi==2025.8.3
     # via requests
 cffi==1.17.1
     # via
     #   cryptography
     #   pynacl
-charset-normalizer==3.4.2
+charset-normalizer==3.4.3
     # via requests
 click==8.2.1
     # via uvicorn
 contourpy==1.3.3
     # via matplotlib
-cryptography==45.0.5
+cryptography==45.0.6
     # via paramiko
 cycler==0.12.1
     # via matplotlib
@@ -55,7 +55,7 @@ dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.9rc0
+emmet-core==0.84.9
     # via emmet-api (setup.py)
 envier==0.5.2
     # via ddtrace
@@ -77,6 +77,8 @@ imageio==2.37.0
     # via scikit-image
 importlib-metadata==8.7.0
     # via opentelemetry-api
+invoke==2.2.0
+    # via paramiko
 jmespath==1.0.1
     # via
     #   boto3
@@ -89,7 +91,7 @@ jsonschema==4.25.0
     # via maggma
 jsonschema-specifications==2025.4.1
     # via jsonschema
-kiwisolver==1.4.8
+kiwisolver==1.4.9
     # via matplotlib
 latexcodec==3.0.1
     # via pybtex
@@ -112,7 +114,7 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.1.1
     # via maggma
-narwhals==2.0.1
+narwhals==2.1.0
     # via plotly
 networkx==3.5
     # via
@@ -128,6 +130,7 @@ numpy==1.26.4
     #   pandas
     #   pymatgen
     #   pymatgen-analysis-defects
+    #   pymatgen-io-validation
     #   scikit-image
     #   scipy
     #   shapely
@@ -153,7 +156,7 @@ pandas==2.3.1
     # via
     #   maggma
     #   pymatgen
-paramiko==3.5.1
+paramiko==4.0.0
     # via sshtunnel
 pillow==11.3.0
     # via
@@ -174,12 +177,14 @@ pydantic==2.11.7
     #   fastapi
     #   maggma
     #   pydantic-settings
+    #   pymatgen-io-validation
 pydantic-core==2.33.2
     # via pydantic
 pydantic-settings==2.10.1
     # via
     #   emmet-core
     #   maggma
+    #   pymatgen-io-validation
 pydash==8.0.5
     # via maggma
 pymatgen==2025.6.14
@@ -188,9 +193,12 @@ pymatgen==2025.6.14
     #   mp-pyrho
     #   pymatgen-analysis-alloys
     #   pymatgen-analysis-defects
+    #   pymatgen-io-validation
 pymatgen-analysis-alloys==0.0.7
     # via emmet-api (setup.py)
 pymatgen-analysis-defects==2025.1.18
+    # via emmet-api (setup.py)
+pymatgen-io-validation==0.1.0rc2
     # via emmet-api (setup.py)
 pymongo==4.10.1
     # via maggma
@@ -214,15 +222,17 @@ pytz==2025.2
     #   pandas
 pyyaml==6.0.2
     # via pybtex
-pyzmq==27.0.0
+pyzmq==27.0.1
     # via maggma
 referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
 requests==2.32.4
-    # via pymatgen
-rpds-py==0.26.0
+    # via
+    #   pymatgen
+    #   pymatgen-io-validation
+rpds-py==0.27.0
     # via
     #   jsonschema
     #   referencing
