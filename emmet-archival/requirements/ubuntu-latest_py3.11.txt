@@ -92,6 +92,8 @@ pydantic-settings==2.10.1
     # via emmet-core
 pymatgen==2025.6.14
     # via emmet-core
+pymatgen-io-validation==0.1.0rc2
+    # via emmet-archival (setup.py)
 pyparsing==3.2.3
     # via
     #   bibtexparser
