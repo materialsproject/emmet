@@ -18,7 +18,7 @@ class SparseFieldsQuery(QueryOperator):
         self.model = model
 
         model_name = self.model.__name__  # type: ignore
-        model_fields = list(self.model.__fields__.keys())
+        model_fields = list(self.model.__fields__.keys())  # type: ignore
 
         self.default_fields = model_fields if default_fields is None else list(default_fields)
 

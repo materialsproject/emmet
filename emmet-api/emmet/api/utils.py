@@ -54,10 +54,10 @@ def merge_queries(queries: list[STORE_PARAMS]) -> STORE_PARAMS:
     }
 
 
-def merge_atlas_querires(queries: list[STORE_PARAMS]) -> STORE_PARAMS:
+def merge_atlas_queries(queries: list[STORE_PARAMS]) -> STORE_PARAMS:
     """Merge queries for atlas search, same keys, e.g. "equals", are merged into a list."""
     criteria: list[dict] = []
-    facets: dict[dict] = {}
+    facets: dict[Any, Any] = {}
     properties: list[str] = []
     for sub_query in queries:
         if "criteria" in sub_query:
@@ -113,7 +113,7 @@ def attach_signature(function: Callable, defaults: dict, annotations: dict):
         for param in defaults
     ]
 
-    function.__signature__ = inspect.Signature(required_params + optional_params)
+    function.__signature__ = inspect.Signature(required_params + optional_params)  # type: ignore[attr-defined]
 
 
 def api_sanitize(
@@ -138,12 +138,12 @@ def api_sanitize(
         model for model in get_flat_models_from_model(pydantic_model) if issubclass(model, BaseModel)
     ]  # type: list[BaseModel]
 
-    fields_to_leave = fields_to_leave or []
-    fields_tuples = [f.split(".") for f in fields_to_leave]
+    fields_to_leave = fields_to_leave or []  # type: ignore
+    fields_tuples = [f.split(".") for f in fields_to_leave]  # type: ignore
     assert all(len(f) == 2 for f in fields_tuples)
 
     for model in models:
-        model_fields_to_leave = {f[1] for f in fields_tuples if model.__name__ == f[0]}
+        model_fields_to_leave = {f[1] for f in fields_tuples if model.__name__ == f[0]}  # type: ignore
         for name in model.model_fields:
             field = model.model_fields[name]
             field_type = field.annotation
@@ -157,7 +157,7 @@ def api_sanitize(
                             allow_msonable_dict(sub_type)
 
             if name not in model_fields_to_leave:
-                new_field = FieldInfo.from_annotated_attribute(Optional[field_type], None)
+                new_field = FieldInfo.from_annotated_attribute(Optional[field_type], None)  # type: ignore
                 model.model_fields[name] = new_field
 
         model.model_rebuild(force=True)
@@ -192,7 +192,7 @@ def allow_msonable_dict(monty_cls: type[MSONable]):
         else:
             raise ValueError(f"Must provide {cls.__name__} or MSONable dictionary")
 
-    monty_cls.validate_monty_v2 = classmethod(validate_monty)
+    monty_cls.validate_monty_v2 = classmethod(validate_monty)  # type: ignore
 
     return monty_cls
 

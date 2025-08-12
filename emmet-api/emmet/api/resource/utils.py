@@ -89,12 +89,12 @@ def generate_atlas_search_pipeline(query: dict):
     # for quicker document retrieval, otherwise, do a full lookup
     return_stored_source = not any(prop in NON_STORED_SOURCES for prop in query.get("properties", []))
     if return_stored_source:
-        pipeline[0]["$search"]["returnStoredSource"] = True
+        pipeline[0]["$search"]["returnStoredSource"] = True  # type: ignore
 
     sorting = query.get("sort", False)
     if sorting:
         # no $ sign for atlas search
-        sort_dict = {"sort": {}}
+        sort_dict = {"sort": {}}  # type: ignore
         sort_dict["sort"].update(query["sort"])
         # add sort to $search stage
         pipeline[0]["$search"].update(sort_dict)
@@ -102,7 +102,7 @@ def generate_atlas_search_pipeline(query: dict):
     projection_dict = {"_id": 0}
     if query.get("properties", False):
         projection_dict.update({p: 1 for p in query["properties"]})
-    pipeline.insert(1, {"$project": projection_dict})
+    pipeline.insert(1, {"$project": projection_dict})  # type: ignore
 
     pipeline.append({"$skip": query.get("skip", 0)})
 
@@ -110,6 +110,6 @@ def generate_atlas_search_pipeline(query: dict):
         pipeline.append({"$limit": query["limit"]})
 
     if query.get("facets", False):
-        pipeline.append({"$facet": {"docs": [], "meta": [{"$replaceWith": "$$SEARCH_META"}, {"$limit": 1}]}})
+        pipeline.append({"$facet": {"docs": [], "meta": [{"$replaceWith": "$$SEARCH_META"}, {"$limit": 1}]}})  # type: ignore
 
     return pipeline

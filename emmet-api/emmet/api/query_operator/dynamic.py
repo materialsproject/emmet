@@ -70,7 +70,7 @@ class DynamicQueryOperator(QueryOperator):
             for op in ops
         ]
 
-        query.__signature__ = inspect.Signature(signatures)
+        query.__signature__ = inspect.Signature(signatures)  # type: ignore
 
         self.query = query  # type: ignore
 
@@ -119,7 +119,7 @@ class NumericQuery(DynamicQueryOperator):
         field_type = field.annotation
 
         if field_type in [int, float, Union[float, None], Union[int, None]]:
-            title: str = name or field.alias
+            title: str = name or field.alias  # type: ignore
 
             ops = [
                 (
@@ -200,7 +200,7 @@ class StringQueryOperator(DynamicQueryOperator):
         and callable to convert it into a query dict.
         """
         ops = []
-        field_type: type = field.annotation
+        field_type: type = field.annotation  # type: ignore
 
         if field_type in [str, Union[str, None]]:
             title: str = name
