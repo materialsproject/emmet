@@ -229,7 +229,11 @@ class SubmissionResource(Resource):
                         data = list(
                             self.store._collection.aggregate(
                                 pipeline,
-                                **{field: query[field] for field in query if field in ["hint"]},
+                                **{
+                                    field: query[field]
+                                    for field in query
+                                    if field in ["hint"]
+                                },
                             )
                         )
             except (NetworkTimeout, PyMongoError) as e:

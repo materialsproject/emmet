@@ -99,7 +99,9 @@ def test_get_by_key(owner_store):
 
 
 def test_key_fields(owner_store):
-    endpoint = ReadOnlyResource(owner_store, Owner, key_fields=["name"], enable_get_by_key=True)
+    endpoint = ReadOnlyResource(
+        owner_store, Owner, key_fields=["name"], enable_get_by_key=True
+    )
     app = FastAPI()
     app.include_router(endpoint.router)
 
