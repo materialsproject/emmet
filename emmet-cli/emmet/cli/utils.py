@@ -409,7 +409,6 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                     logger.warning(f"{name} {launcher} already parsed -> would remove.")
                 continue
 
-        additional_fields = {"tags": []}
         snl_metas_avail = isinstance(snl_metas, dict)
         task_id = (
             task_ids.get(launcher) if manual_taskid else task_ids[chunk_idx][count]
@@ -419,24 +418,23 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
             logger.error(f"Unable to determine task_id for {launcher}")
             continue
 
-        additional_fields["task_id"] = task_id
         logger.info(f"Using {task_id} for {launcher}.")
 
         if docs:
             if docs[0]["tags"]:
                 existing_tags = list(set(docs[0]["tags"]))
-                additional_fields["tags"] += existing_tags
+                tags += existing_tags
                 logger.info(f"Adding existing tags {existing_tags} to {tags}.")
 
         try:
             task_doc = TaskDoc.from_directory(
                 dir_name=vaspdir,
-                additional_fields=additional_fields,
                 volumetric_files=ctx.params["store_volumetric_data"],
                 task_names=ctx.params["runs"],
                 store_additional_json=False,
             )
 
+            task_doc.task_id = task_id
             task_doc.tags = tags
             task_doc.batch_id = tag
 
