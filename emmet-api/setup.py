@@ -36,6 +36,7 @@ setup(
             "mypy-extensions",
             "types-setuptools",
             "types-requests",
+            "starlette[full]",
             "wincertstore",
         ],
         "docs": [

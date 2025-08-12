@@ -1,5 +1,5 @@
-from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery, NumericQuery
-from maggma.api.resource import ReadOnlyResource
+from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery, NumericQuery
+from emmet.api.resource import ReadOnlyResource
 
 from emmet.core.phonon import PhononBSDOSDoc
 from emmet.api.routes.materials.materials.query_operators import (

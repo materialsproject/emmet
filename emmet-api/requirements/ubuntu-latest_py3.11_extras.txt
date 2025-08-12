@@ -19,6 +19,7 @@ attrs==25.3.0
     #   jsonlines
     #   jsonschema
     #   referencing
+babel==2.17.0
 bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3

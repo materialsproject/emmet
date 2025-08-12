@@ -1,9 +1,9 @@
-from maggma.api.resource import SubmissionResource
+from emmet.api.resource import SubmissionResource
 from emmet.api.routes._general_store.query_operator import (
     GeneralStorePostQuery,
     GeneralStoreGetQuery,
 )
-from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
+from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
 from emmet.core._general_store import GeneralStoreDoc
 
 

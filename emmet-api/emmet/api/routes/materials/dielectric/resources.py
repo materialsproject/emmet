@@ -1,7 +1,7 @@
-from maggma.api.resource import ReadOnlyResource
+from emmet.api.resource import ReadOnlyResource
 from emmet.core.polar import DielectricDoc
 
-from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
+from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
 from emmet.api.routes.materials.dielectric.query_operators import DielectricQuery
 from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery
 from emmet.api.core.global_header import GlobalHeaderProcessor
