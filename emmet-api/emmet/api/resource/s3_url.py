@@ -91,7 +91,9 @@ class S3URLResource(Resource):
             except ClientError:
                 raise HTTPException(
                     status_code=404,
-                    detail="No object found for {} = {}".format(self.store.key, key.split("/")[-1]),
+                    detail="No object found for {} = {}".format(
+                        self.store.key, key.split("/")[-1]
+                    ),
                 )
 
             # Get URL
@@ -104,7 +106,9 @@ class S3URLResource(Resource):
             except Exception:
                 raise HTTPException(
                     status_code=404,
-                    detail="Problem obtaining URL for {} = {}".format(self.store.key, key.split("/")[-1]),
+                    detail="Problem obtaining URL for {} = {}".format(
+                        self.store.key, key.split("/")[-1]
+                    ),
                 )
 
             requested_datetime = datetime.utcnow()

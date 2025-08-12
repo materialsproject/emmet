@@ -16,7 +16,9 @@ class SubmissionQuery(QueryOperator):
         self.status_enum = status_enum
 
         def query(
-            state: Optional[status_enum] = Query(None, description="Latest status of the submission"),
+            state: Optional[status_enum] = Query(
+                None, description="Latest status of the submission"
+            ),
             last_updated: Optional[datetime] = Query(
                 None,
                 description="Minimum datetime of status update for submission",
@@ -29,7 +31,11 @@ class SubmissionQuery(QueryOperator):
                 crit.update(s_dict)
 
             if last_updated:
-                l_dict = {"$expr": {"$gt": [{"$arrayElemAt": ["$last_updated", -1]}, last_updated]}}
+                l_dict = {
+                    "$expr": {
+                        "$gt": [{"$arrayElemAt": ["$last_updated", -1]}, last_updated]
+                    }
+                }
                 crit.update(l_dict)
 
             if state and last_updated:

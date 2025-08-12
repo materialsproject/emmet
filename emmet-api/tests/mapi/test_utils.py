@@ -8,7 +8,12 @@ from monty.json import MSONable
 from pydantic import BaseModel, Field
 
 from emmet.api.resource.utils import generate_atlas_search_pipeline
-from emmet.api.utils import api_sanitize, merge_atlas_querires, merge_queries, serialization_helper
+from emmet.api.utils import (
+    api_sanitize,
+    merge_atlas_queries,
+    merge_queries,
+    serialization_helper,
+)
 
 
 class SomeEnum(Enum):
@@ -116,16 +121,26 @@ def test_merge_queries():
         "criteria": {"nested": {"$and": [{"field3": "value3"}, {"field4": "value4"}]}},
         "properties": ["prop4"],
     }
-    nested_query2 = {"criteria": {"nested": {"$or": [{"field5": "value5"}]}}, "properties": ["prop5"]}
+    nested_query2 = {
+        "criteria": {"nested": {"$or": [{"field5": "value5"}]}},
+        "properties": ["prop5"],
+    }
     merged_nested = merge_queries([nested_query1, nested_query2])
-    assert merged_nested["criteria"]["nested"] == {"$or": [{"field5": "value5"}]}  # Later query overwrites earlier one
+    assert merged_nested["criteria"]["nested"] == {
+        "$or": [{"field5": "value5"}]
+    }  # Later query overwrites earlier one
     assert set(merged_nested["properties"]) == {"prop4", "prop5"}
 
     # Test merging queries with array operators
-    array_query1 = {"criteria": {"tags": {"$in": ["tag1", "tag2"]}}, "properties": ["prop6"]}
+    array_query1 = {
+        "criteria": {"tags": {"$in": ["tag1", "tag2"]}},
+        "properties": ["prop6"],
+    }
     array_query2 = {"criteria": {"tags": {"$all": ["tag3"]}}, "properties": ["prop7"]}
     merged_array = merge_queries([array_query1, array_query2])
-    assert merged_array["criteria"]["tags"] == {"$all": ["tag3"]}  # Later query overwrites
+    assert merged_array["criteria"]["tags"] == {
+        "$all": ["tag3"]
+    }  # Later query overwrites
     assert set(merged_array["properties"]) == {"prop6", "prop7"}
 
     # Test merging queries with null properties
@@ -149,7 +164,11 @@ def test_merge_queries():
 
 def test_merge_atlas_queries():
     # Test merging empty queries
-    assert merge_atlas_querires([]) == {"criteria": [], "properties": None, "facets": None}
+    assert merge_atlas_queries([]) == {
+        "criteria": [],
+        "properties": None,
+        "facets": None,
+    }
 
     # Test merging single operator queries
     query1 = {
@@ -162,19 +181,26 @@ def test_merge_atlas_queries():
         "facets": {"calc_typeFacet": {"type": "string", "path": "calc_type"}},
     }
 
-    merged = merge_atlas_querires([query1, query2])
+    merged = merge_atlas_queries([query1, query2])
     assert len(merged["criteria"]) == 2
     assert {"equals": {"path": "field1", "value": "value1"}} in merged["criteria"]
     assert {"equals": {"path": "field2", "value": "value2"}} in merged["criteria"]
     assert set(merged["properties"]) == {"prop1", "prop2"}
-    assert merged["facets"] == {"calc_typeFacet": {"type": "string", "path": "calc_type"}}
+    assert merged["facets"] == {
+        "calc_typeFacet": {"type": "string", "path": "calc_type"}
+    }
 
     # Test merging list criteria
     query3 = {
-        "criteria": {"in": [{"path": "field3", "value": "val1"}, {"path": "field4", "value": "val2"}]},
+        "criteria": {
+            "in": [
+                {"path": "field3", "value": "val1"},
+                {"path": "field4", "value": "val2"},
+            ]
+        },
         "skip": 10,
     }
-    merged = merge_atlas_querires([query3])
+    merged = merge_atlas_queries([query3])
     assert len(merged["criteria"]) == 2
     assert {"in": {"path": "field3", "value": "val1"}} in merged["criteria"]
     assert {"in": {"path": "field4", "value": "val2"}} in merged["criteria"]

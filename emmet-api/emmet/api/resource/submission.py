@@ -65,7 +65,9 @@ class SubmissionResource(Resource):
             patch_sub_path: PATCH sub-URL path for the resource.
         """
         if isinstance(state_enum, Enum) and default_state not in [entry.value for entry in state_enum]:  # type: ignore
-            raise RuntimeError("If data is stateful a state enum and valid default value must be provided")
+            raise RuntimeError(
+                "If data is stateful a state enum and valid default value must be provided"
+            )
 
         self.state_enum = state_enum
         self.default_state = default_state
@@ -203,7 +205,9 @@ class SubmissionResource(Resource):
             if any(overlap):
                 raise HTTPException(
                     status_code=404,
-                    detail="Request contains query parameters which cannot be used: {}".format(", ".join(overlap)),
+                    detail="Request contains query parameters which cannot be used: {}".format(
+                        ", ".join(overlap)
+                    ),
                 )
 
             self.store.connect(force_reset=True)
@@ -211,7 +215,11 @@ class SubmissionResource(Resource):
             try:
                 with query_timeout(self.timeout):
                     count = self.store.count(  # type: ignore
-                        **{field: query[field] for field in query if field in ["criteria", "hint"]}
+                        **{
+                            field: query[field]
+                            for field in query
+                            if field in ["criteria", "hint"]
+                        }
                     )
                     if isinstance(self.store, S3Store):
                         data = list(self.store.query(**query))  # type: ignore
@@ -273,7 +281,9 @@ class SubmissionResource(Resource):
             if any(overlap):
                 raise HTTPException(
                     status_code=404,
-                    detail="Request contains query parameters which cannot be used: {}".format(", ".join(overlap)),
+                    detail="Request contains query parameters which cannot be used: {}".format(
+                        ", ".join(overlap)
+                    ),
                 )
 
             self.store.connect(force_reset=True)
@@ -281,7 +291,10 @@ class SubmissionResource(Resource):
             # Check for duplicate entry
             if self.duplicate_fields_check:
                 duplicate = self.store.query_one(
-                    criteria={field: query["criteria"][field] for field in self.duplicate_fields_check}
+                    criteria={
+                        field: query["criteria"][field]
+                        for field in self.duplicate_fields_check
+                    }
                 )
 
                 if duplicate:
@@ -341,7 +354,9 @@ class SubmissionResource(Resource):
             if any(overlap):
                 raise HTTPException(
                     status_code=404,
-                    detail="Request contains query parameters which cannot be used: {}".format(", ".join(overlap)),
+                    detail="Request contains query parameters which cannot be used: {}".format(
+                        ", ".join(overlap)
+                    ),
                 )
 
             self.store.connect(force_reset=True)
@@ -349,7 +364,10 @@ class SubmissionResource(Resource):
             # Check for duplicate entry
             if self.duplicate_fields_check:
                 duplicate = self.store.query_one(
-                    criteria={field: query["criteria"][field] for field in self.duplicate_fields_check}
+                    criteria={
+                        field: query["criteria"][field]
+                        for field in self.duplicate_fields_check
+                    }
                 )
 
                 if duplicate:

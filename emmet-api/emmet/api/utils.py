@@ -45,7 +45,12 @@ def merge_queries(queries: list[STORE_PARAMS]) -> STORE_PARAMS:
         if "properties" in sub_query:
             properties.extend(sub_query["properties"])
 
-    remainder = {k: v for query in queries for k, v in query.items() if k not in ["criteria", "properties"]}
+    remainder = {
+        k: v
+        for query in queries
+        for k, v in query.items()
+        if k not in ["criteria", "properties"]
+    }
 
     return {
         "criteria": criteria,
@@ -73,7 +78,12 @@ def merge_atlas_queries(queries: list[STORE_PARAMS]) -> STORE_PARAMS:
         if sub_query.get("properties", False):
             properties.extend(sub_query["properties"])
 
-    remainder = {k: v for query in queries for k, v in query.items() if k not in ["criteria", "properties", "facets"]}
+    remainder = {
+        k: v
+        for query in queries
+        for k, v in query.items()
+        if k not in ["criteria", "properties", "facets"]
+    }
 
     return {
         "criteria": criteria,
@@ -135,7 +145,9 @@ def api_sanitize(
             Defaults to False
     """
     models = [
-        model for model in get_flat_models_from_model(pydantic_model) if issubclass(model, BaseModel)
+        model
+        for model in get_flat_models_from_model(pydantic_model)
+        if issubclass(model, BaseModel)
     ]  # type: list[BaseModel]
 
     fields_to_leave = fields_to_leave or []  # type: ignore
@@ -186,7 +198,9 @@ def allow_msonable_dict(monty_cls: type[MSONable]):
                 errors.append("@class")
 
             if len(errors) > 0:
-                raise ValueError("Missing Monty serialization fields in dictionary: {errors}")
+                raise ValueError(
+                    "Missing Monty serialization fields in dictionary: {errors}"
+                )
 
             return v
         else:

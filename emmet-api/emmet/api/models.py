@@ -26,7 +26,9 @@ class Meta(BaseModel):
         default_factory=datetime.utcnow,
     )
 
-    total_doc: Optional[int] = Field(None, description="the total number of documents available for this query", ge=0)
+    total_doc: Optional[int] = Field(
+        None, description="the total number of documents available for this query", ge=0
+    )
 
     facet: Optional[dict] = Field(
         None,
@@ -56,7 +58,9 @@ class Response(BaseModel, Generic[DataT]):
     """
 
     data: Optional[list[DataT]] = Field(None, description="List of returned data")
-    errors: Optional[list[Error]] = Field(None, description="Any errors on processing this query")
+    errors: Optional[list[Error]] = Field(
+        None, description="Any errors on processing this query"
+    )
     meta: Optional[Meta] = Field(None, description="Extra information for the query")
 
     @validator("errors", always=True)
@@ -89,6 +93,8 @@ class S3URLDoc(BaseModel):
         description="Pre-signed download URL",
     )
 
-    requested_datetime: datetime = Field(..., description="Datetime for when URL was requested")
+    requested_datetime: datetime = Field(
+        ..., description="Datetime for when URL was requested"
+    )
 
     expiry_datetime: datetime = Field(..., description="Expiry datetime of the URL")

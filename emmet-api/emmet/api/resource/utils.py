@@ -77,17 +77,32 @@ def generate_atlas_search_pipeline(query: dict):
     pipeline = []
 
     # generate the operator, if more than one
-    operator = {"compound": {"must": [q for q in query["criteria"] if not q.get("mustNot", False)]}}
+    operator = {
+        "compound": {
+            "must": [q for q in query["criteria"] if not q.get("mustNot", False)]
+        }
+    }
     # append the mustNot criteria to the compound operator
-    operator["compound"]["mustNot"] = [q["mustNot"] for q in query["criteria"] if q.get("mustNot", False)]
+    operator["compound"]["mustNot"] = [
+        q["mustNot"] for q in query["criteria"] if q.get("mustNot", False)
+    ]
 
     if query.get("facets", False):
-        pipeline.append({"$search": {"index": "default", "facet": {"operator": operator, "facets": query["facets"]}}})
+        pipeline.append(
+            {
+                "$search": {
+                    "index": "default",
+                    "facet": {"operator": operator, "facets": query["facets"]},
+                }
+            }
+        )
     else:
         pipeline.append({"$search": {"index": "default", **operator}})
     # add returnedStoredSource: True if non-stored source are not present in "properties"
     # for quicker document retrieval, otherwise, do a full lookup
-    return_stored_source = not any(prop in NON_STORED_SOURCES for prop in query.get("properties", []))
+    return_stored_source = not any(
+        prop in NON_STORED_SOURCES for prop in query.get("properties", [])
+    )
     if return_stored_source:
         pipeline[0]["$search"]["returnStoredSource"] = True  # type: ignore
 

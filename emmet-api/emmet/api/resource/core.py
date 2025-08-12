@@ -109,7 +109,9 @@ class HeaderProcessor(MSONable, metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def configure_query_on_request(self, request: Request, query_operator: QueryOperator) -> STORE_PARAMS:
+    def configure_query_on_request(
+        self, request: Request, query_operator: QueryOperator
+    ) -> STORE_PARAMS:
         """
         This method takes in a FastAPI Request object and returns a query to be used in the store.
         """

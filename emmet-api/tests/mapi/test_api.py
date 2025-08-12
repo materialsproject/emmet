@@ -11,7 +11,12 @@ from requests import Response
 from starlette.testclient import TestClient
 
 from emmet.api.API import API
-from emmet.api.query_operator import NumericQuery, PaginationQuery, SparseFieldsQuery, StringQueryOperator
+from emmet.api.query_operator import (
+    NumericQuery,
+    PaginationQuery,
+    SparseFieldsQuery,
+    StringQueryOperator,
+)
 from emmet.api.resource import ReadOnlyResource
 from maggma.stores import MemoryStore
 
@@ -33,7 +38,10 @@ class Pet(BaseModel):
     owner_name: str = Field(..., title="Owner's name")
 
 
-owners = [Owner(name=f"Person{i}", age=randint(10, 100), weight=randint(100, 200)) for i in list(range(10))]
+owners = [
+    Owner(name=f"Person{i}", age=randint(10, 100), weight=randint(100, 200))
+    for i in list(range(10))
+]
 
 
 pets = [

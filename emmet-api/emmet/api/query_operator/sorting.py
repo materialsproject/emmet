@@ -10,7 +10,9 @@ from emmet.api.utils import STORE_PARAMS
 class SortQuery(QueryOperator):
     """Method to generate the sorting portion of a query."""
 
-    def __init__(self, fields: Optional[list[str]] = None, max_num: Optional[int] = None):
+    def __init__(
+        self, fields: Optional[list[str]] = None, max_num: Optional[int] = None
+    ):
         """Sort query configuration.
 
         Args:
@@ -38,7 +40,8 @@ class SortQuery(QueryOperator):
             field_list = _sort_fields.split(",")
             if self.max_num and len(field_list) > self.max_num:
                 raise HTTPException(
-                    status_code=400, detail=f"Please provide at most {self.max_num} field(s) to sort with"
+                    status_code=400,
+                    detail=f"Please provide at most {self.max_num} field(s) to sort with",
                 )
 
             for sort_field in field_list:

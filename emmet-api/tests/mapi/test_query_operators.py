@@ -7,7 +7,12 @@ from monty.serialization import dumpfn, loadfn
 from monty.tempfile import ScratchDir
 from pydantic import BaseModel, Field
 
-from emmet.api.query_operator import NumericQuery, PaginationQuery, SortQuery, SparseFieldsQuery
+from emmet.api.query_operator import (
+    NumericQuery,
+    PaginationQuery,
+    SortQuery,
+    SparseFieldsQuery,
+)
 from emmet.api.query_operator.submission import SubmissionQuery
 
 
@@ -69,7 +74,9 @@ def test_sparse_query_serialization():
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query() == {"properties": ["name", "age", "weight", "last_updated"]}
+        assert new_op.query() == {
+            "properties": ["name", "age", "weight", "last_updated"]
+        }
 
 
 def test_numeric_query_functionality():
@@ -95,7 +102,9 @@ def test_numeric_query_serialization():
 
 def test_sort_query_functionality():
     op = SortQuery()
-    assert op.query(_sort_fields="volume,-density") == {"sort": {"volume": 1, "density": -1}}
+    assert op.query(_sort_fields="volume,-density") == {
+        "sort": {"volume": 1, "density": -1}
+    }
 
 
 def test_sort_query_fail():
@@ -110,7 +119,9 @@ def test_sort_serialization():
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(_sort_fields="volume,-density") == {"sort": {"volume": 1, "density": -1}}
+        assert new_op.query(_sort_fields="volume,-density") == {
+            "sort": {"volume": 1, "density": -1}
+        }
 
 
 @pytest.fixture()

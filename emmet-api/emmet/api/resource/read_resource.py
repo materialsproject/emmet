@@ -114,7 +114,9 @@ class ReadOnlyResource(Resource):
         model_name = self.model.__name__
 
         if self.key_fields is None:
-            field_input = SparseFieldsQuery(self.model, [self.store.key, self.store.last_updated_field]).query
+            field_input = SparseFieldsQuery(
+                self.model, [self.store.key, self.store.last_updated_field]
+            ).query
         else:
 
             def field_input():
@@ -207,7 +209,9 @@ class ReadOnlyResource(Resource):
                 )
             # allowed query parameters
             query_params = [
-                entry for _, i in enumerate(self.query_operators) for entry in signature(i.query).parameters
+                entry
+                for _, i in enumerate(self.query_operators)
+                for entry in signature(i.query).parameters
             ]
             # check for overlap between allowed query parameters and request query parameters
             overlap = [key for key in request.query_params if key not in query_params]
@@ -221,7 +225,9 @@ class ReadOnlyResource(Resource):
                 else:
                     raise HTTPException(
                         status_code=400,
-                        detail="Request contains query parameters which cannot be used: {}".format(", ".join(overlap)),
+                        detail="Request contains query parameters which cannot be used: {}".format(
+                            ", ".join(overlap)
+                        ),
                     )
             query: dict[Any, Any] = merge_queries(list(queries.values()))  # type: ignore
 
@@ -251,7 +257,9 @@ class ReadOnlyResource(Resource):
                         if query.get("agg_hint"):
                             agg_kwargs["hint"] = query["agg_hint"]
 
-                        data = list(self.store._collection.aggregate(pipeline, **agg_kwargs))
+                        data = list(
+                            self.store._collection.aggregate(pipeline, **agg_kwargs)
+                        )
 
             except (NetworkTimeout, PyMongoError) as e:
                 if e.timeout:

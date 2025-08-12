@@ -9,7 +9,11 @@ from pydantic import BaseModel, Field
 from requests import Response
 from starlette.testclient import TestClient
 
-from emmet.api.query_operator import NumericQuery, SparseFieldsQuery, StringQueryOperator
+from emmet.api.query_operator import (
+    NumericQuery,
+    SparseFieldsQuery,
+    StringQueryOperator,
+)
 from emmet.api.resource import ReadOnlyResource
 from emmet.api.resource.core import HeaderProcessor, HintScheme
 from maggma.stores import AliasingStore, MemoryStore
@@ -59,7 +63,12 @@ def test_init(owner_store):
     resource = ReadOnlyResource(store=owner_store, model=Owner, enable_get_by_key=False)
     assert len(resource.router.routes) == 2
 
-    resource = ReadOnlyResource(store=owner_store, model=Owner, enable_default_search=False, enable_get_by_key=True)
+    resource = ReadOnlyResource(
+        store=owner_store,
+        model=Owner,
+        enable_default_search=False,
+        enable_get_by_key=True,
+    )
     assert len(resource.router.routes) == 2
 
 
@@ -75,7 +84,9 @@ def test_msonable(owner_store):
 
 
 def test_get_by_key(owner_store):
-    endpoint = ReadOnlyResource(owner_store, Owner, disable_validation=True, enable_get_by_key=True)
+    endpoint = ReadOnlyResource(
+        owner_store, Owner, disable_validation=True, enable_get_by_key=True
+    )
     app = FastAPI()
     app.include_router(endpoint.router)
 
