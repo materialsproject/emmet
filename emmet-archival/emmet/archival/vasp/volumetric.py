@@ -17,10 +17,12 @@ from emmet.archival.vasp import PMG_OBJ
 if TYPE_CHECKING:
 
     from collections.abc import Sequence
+    from typing_extensions import Self
 
     from pymatgen.electronic_structure.bandstructure import BandStructure
     from pymatgen.electronic_structure.dos import CompleteDos, Dos
     from pymatgen.io.common import VolumetricData as PmgVolumetricData
+    from pymatgen.io.vasp import Vasprun
 
 
 class DosArchive(Archiver):
@@ -31,12 +33,18 @@ class DosArchive(Archiver):
     )
 
     def to_arrow(self) -> pa.Table:
-        """"""
+        """Convert DOS archive to arrow table."""
         return self.dos.to_arrow()
 
     @classmethod
     def from_arrow(cls, table: pa.Table) -> Dos | CompleteDos:
+        """Extract a pymatgen DOS from an arrow table."""
         return ElectronicDos.from_arrow(table).to_pmg()
+
+    @classmethod
+    def from_vasprun(cls, vasprun: Vasprun) -> Self:
+        """Create a DOS archive from a vasprun object."""
+        return cls(dos=ElectronicDos.from_pmg(vasprun.complete_dos))
 
 
 class BandStructureArchive(Archiver):
@@ -116,7 +124,7 @@ class VaspVolumetricArchive(Archiver):
         Defaults to extracting all available data within an archive.
         """
         all_file_names = table["file_name"].to_pylist()[0]
-        file_names = set(file_names or all_file_names).intersection(all_file_names)
+        files = set(file_names or all_file_names).intersection(all_file_names)
 
         output_data: list[dict[str, PmgVolumetricData | str]] = []
         for identifier in set(table["identifier"].to_pylist()):
@@ -125,7 +133,7 @@ class VaspVolumetricArchive(Archiver):
             else:
                 id_filter = pa.compute.field("identifier") == identifier
 
-            for file_name in file_names:
+            for file_name in files:
                 output_data.append(
                     {
                         "identifier": identifier,

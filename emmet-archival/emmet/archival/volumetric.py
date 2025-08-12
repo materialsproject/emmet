@@ -17,6 +17,7 @@ from emmet.archival.atoms import CrystalArchive
 
 if TYPE_CHECKING:
     from pathlib import Path
+    from typing import Any
 
 
 class VolumetricLabel(Enum):
@@ -45,7 +46,7 @@ class VolumetricArchive(Archiver):
     """
 
     data: dict[VolumetricLabel, list[list[list[float]]] | None] = Field(
-        None, description="The primary volumetric data."
+        description="The primary volumetric data."
     )
     data_aug: dict[VolumetricLabel, list[AugChargeData]] | None = Field(
         None, description="The augmentation charge volumetric data."
@@ -58,14 +59,15 @@ class VolumetricArchive(Archiver):
     def parse_augmentation_charge_data(
         aug_data: dict[str, list[str]],
     ) -> dict[VolumetricLabel, list[AugChargeData]]:
-        aug_data_arr = {}
+        aug_data_arr: dict[VolumetricLabel, list[AugChargeData]] = {}
         for k, unfmt_data in aug_data.items():
             if not any(line.strip() for line in unfmt_data):
                 continue
             parse_meta = True
             num_vals = -1
             aug_data_arr[VolumetricLabel(k)] = []
-            atom_data = {}
+            atom_data: list[float] = []
+            atom_label: str | None = None
             for row in unfmt_data:
                 data = row.replace("\n", "").split()
                 if parse_meta:
@@ -77,15 +79,16 @@ class VolumetricArchive(Archiver):
 
                     label = " ".join([x for x in data[:-1] if x.isalpha()])
 
-                    atom_data = {"label": label, "data": []}
+                    atom_label = label
+                    atom_data = []
                     num_vals = int(data[-1])
                     parse_meta = False
                 else:
-                    atom_data["data"].extend([float(x) for x in data])
-                    if len(atom_data["data"]) >= num_vals:
+                    atom_data.extend([float(x) for x in data])
+                    if len(atom_data) >= num_vals:
                         parse_meta = True
                         aug_data_arr[VolumetricLabel(k)].append(
-                            AugChargeData(**atom_data)
+                            AugChargeData(label=atom_label, data=atom_data)
                         )
 
         return aug_data_arr
@@ -95,7 +98,7 @@ class VolumetricArchive(Archiver):
         """Convert generic pymatgen volumetric data to an archive format."""
         return cls(
             data={VolumetricLabel(k): v.tolist() for k, v in vd.data.items()},
-            data_aug=cls.parse_augmentation_charge_data(vd.data_aug) or None,
+            data_aug=cls.parse_augmentation_charge_data(vd.data_aug) or None,  # type: ignore[arg-type]
             structure=vd.structure,
         )
 
@@ -123,7 +126,7 @@ class VolumetricArchive(Archiver):
 
     @classmethod
     def from_arrow(cls, table: pa.Table) -> PmgVolumetricData:
-        cls_config = {}
+        cls_config: dict[str, Any] = {}
         for data_key in ("data", "data_aug"):
             cls_config[data_key] = {}
             for vlab in VolumetricLabel:

@@ -19,6 +19,8 @@ from emmet.core.math import Matrix3D, ListVector3D
 from emmet.archival.base import Archiver
 
 if TYPE_CHECKING:
+    from collections.abc import MutableMapping
+    from typing import Any
     from typing_extensions import Self
 
 _CARTESIAN = ("x", "y", "z")
@@ -72,7 +74,7 @@ class CrystalArchive(Archiver):
         oxi_states = data["oxi_states"] or [
             None for _ in range(len(data["atomic_num"]))
         ]
-        species = []
+        species: list[str | Element | Species] = []
         for i, z in enumerate(data["atomic_num"]):
             ele = Element.from_Z(z).value
             if oxi_states[i]:
@@ -145,7 +147,9 @@ class StructureArchive(Archiver):
             if structure.site_properties.get(k):
                 cols.extend([f"{k}_{vec_dir}" for vec_dir in _CARTESIAN])
 
-        data = {k: [None for _ in range(len(structure))] for k in cols}
+        data: dict[str, list[Any]] = {
+            k: [None for _ in range(len(structure))] for k in cols
+        }
         for isite, site in enumerate(structure):
             if structure.is_ordered:
                 data["atomic_num"][isite] = next(iter(site.species)).Z
@@ -167,9 +171,9 @@ class StructureArchive(Archiver):
                     data[f"{k}_{v}"][isite] = sp[iv]
 
             if magmom := site.properties.get("magmom"):
-                data["magmom"].append(magmom)
+                data["magmom"][isite] = magmom
 
-        for k, v in data.items():
+        for k, v in data.items():  # type: ignore[assignment]
             if k.startswith("atomic_num"):
                 _dtype = pd.Int64Dtype()
             elif k.startswith("selective_dynamics"):
@@ -187,7 +191,7 @@ class StructureArchive(Archiver):
 
     @staticmethod
     def columnar_to_structure(df: pd.DataFrame) -> Structure:
-        sites = [None for _ in range(len(df))]
+        sites: list[PeriodicSite] = []
         max_dis = len([col for col in df.columns if "occu" in col])
         has_oxi = any("oxi_state" in col for col in df.columns)
         has_vector_site_props = set(
@@ -197,21 +201,25 @@ class StructureArchive(Archiver):
             [k for k in ("magmom",) if any(k in col for col in df.columns)]
         )
 
-        for isite in df.index:
+        for isite in sorted(df.index):
+            comp: MutableMapping[Element | Species, float] = defaultdict(float)
             if max_dis:
-                comp = defaultdict(float)
                 for icomp in range(max_dis):
                     if (
                         pd.isna(df[f"atomic_num_{icomp}"][isite])
                         or df[f"atomic_num_{icomp}"][isite] < 0
                     ):
                         break
-                    spec = Element.from_Z(df[f"atomic_num_{icomp}"][isite])
+
+                    spec: Element | Species = Element.from_Z(
+                        df[f"atomic_num_{icomp}"][isite]
+                    )
                     if has_oxi and not pd.isna(oxi := df[f"oxi_state_{icomp}"][isite]):
                         spec = Species(spec.value, oxidation_state=oxi)
                     comp[spec] = df[f"occu_{icomp}"][isite]
             else:
-                comp = Element.from_Z(df["atomic_num"][isite])
+                comp[Element.from_Z(df["atomic_num"][isite])] = 1
+
             props = {}
             for k in has_scalar_site_props:
                 if not pd.isna(df[k][isite]):
@@ -220,13 +228,15 @@ class StructureArchive(Archiver):
                 if any(pd.isna(df[f"{k}_{v}"][isite]) for v in _CARTESIAN):
                     continue
                 props[k] = [df[f"{k}_{v}"][isite] for v in _CARTESIAN]
-            sites[isite] = PeriodicSite(
-                comp,
-                [df[v][isite] for v in _RECIPROCAL],
-                Lattice(df.attrs["lattice"]),
-                coords_are_cartesian=False,
-                properties=props or None,
-            )
+            sites += [
+                PeriodicSite(
+                    dict(comp),
+                    [df[v][isite] for v in _RECIPROCAL],
+                    Lattice(df.attrs["lattice"]),
+                    coords_are_cartesian=False,
+                    properties=props or None,
+                )
+            ]
         return Structure.from_sites(sites, charge=df.attrs.get("charge"))
 
     def as_columnar(self) -> pd.DataFrame:

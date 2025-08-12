@@ -54,6 +54,8 @@ monty==2025.3.3
     #   pymatgen
 mpmath==1.3.0
     # via sympy
+mypy==1.17.1
+    # via emmet-archival (setup.py)
 narwhals==2.1.0
     # via plotly
 networkx==3.5

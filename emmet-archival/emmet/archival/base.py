@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from os import PathLike
+from enum import StrEnum
 from pathlib import Path
 from pydantic import BaseModel
 from typing import TYPE_CHECKING, Any
@@ -14,12 +14,11 @@ import zarr
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from emmet.archival.utils import StrEnum
-import zarr.storage
+from emmet.core.typing import PathLike
 
 if TYPE_CHECKING:
     from typing import Literal
-    from collections.abc import Generator
+    from collections.abc import Generator, MutableMapping
 
 
 class ArchivalFormat(StrEnum):
@@ -74,7 +73,7 @@ class Archiver(BaseModel):
         fmt: str | ArchivalFormat | None = None,
         mode: Literal["r", "w", "a"] = "r",
         group_key: str | None = None,
-        zarr_store: zarr.storage.Store | None = None,
+        zarr_store: MutableMapping | None = None,
     ) -> Generator:
         """
         Load an archive from a file name.
@@ -88,7 +87,7 @@ class Archiver(BaseModel):
             The mode to open the file in, either "r", "w", or "a".
         group_key : str | None = None
             If not None, the name of a specific file hierarchy to retrieve.
-        zarr_store : zarr.storage.Store or None (default)
+        zarr_store : MutableMapping or None (default)
             If specified, the ZARR store to begin file root at.
             Could be an FSStore, default is same as ZARR's default: MemoryStore.
         """
@@ -97,7 +96,7 @@ class Archiver(BaseModel):
         if fmt == ArchivalFormat.HDF5:
             group = h5py.File(archive_name, mode)
         elif fmt == ArchivalFormat.ZARR:
-            group = zarr.open_group(store=zarr_store, path=archive_name, mode=mode)
+            group = zarr.open_group(store=zarr_store, path=str(archive_name), mode=mode)
         else:
             raise TypeError(f"Specified format = {fmt} is not HDF5-like.")
 
@@ -139,7 +138,7 @@ class Archiver(BaseModel):
         file_name: PathLike = "archive.h5",
         metadata: dict[str, Any] | None = None,
         compression: dict | None = None,
-        zarr_store: zarr.storage.Store | None = None,
+        zarr_store: MutableMapping | None = None,
     ) -> None:
         """Create a new data archive from the parsed objects.
 
@@ -152,7 +151,7 @@ class Archiver(BaseModel):
         metadata (dict[str,Any]) : JSON-like metadata, optional
         compression (dict[str,Any] or None) : If specified, compression
             kwargs to pass to the file writer.
-        zarr_store : zarr.storage.Store or None (default)
+        zarr_store : MutableMapping or None (default)
             If specified, the ZARR store to begin file root at.
             Could be an FSStore, default is same as ZARR's default: MemoryStore.
         """
@@ -188,7 +187,7 @@ class Archiver(BaseModel):
     def extract(
         cls,
         archive_path: str | Path,
-        zarr_store: zarr.storage.Store | None = None,
+        zarr_store: MutableMapping | None = None,
         *args,
         **kwargs,
     ) -> Any:
@@ -197,7 +196,7 @@ class Archiver(BaseModel):
         Parameters
         -----------
         file_name (str or Path) : defaults to "archive.h5"
-        zarr_store : zarr.storage.Store or None (default)
+        zarr_store : MutableMapping or None (default)
             If specified, the ZARR store to begin file root at.
             Could be an FSStore, default is same as ZARR's default: MemoryStore.
         *args : args to pass to _extract_from_{hdf5_like, parquet}

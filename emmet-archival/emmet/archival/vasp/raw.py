@@ -26,8 +26,9 @@ from emmet.core.vasp.utils import VASP_RAW_DATA_ORG, discover_vasp_files, FileMe
 from emmet.archival.base import Archiver
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Sequence, MutableMapping
     from os import PathLike
+    from typing import Any
     from typing_extensions import Self
 
 
@@ -75,10 +76,13 @@ class RawArchive(Archiver):
     @staticmethod
     def convert_potcar_to_spec(potcar: str | Potcar) -> str:
         """Convert a VASP POTCAR to JSON-dumped string."""
-        if isinstance(potcar, str):
-            potcar = Potcar.from_str(potcar)
         return json.dumps(
-            [p.model_dump() for p in PotcarSummaryStats.from_file(potcar)]
+            [
+                p.model_dump()
+                for p in PotcarSummaryStats.from_file(
+                    Potcar.from_str(potcar) if isinstance(potcar, str) else potcar
+                )
+            ]
         )
 
     @classmethod
@@ -120,11 +124,12 @@ class RawArchive(Archiver):
                     pdata = np.array(group[ppath]).tolist().decode()
                     pspec = self.convert_potcar_to_spec(pdata)
 
-                    if "spec" in group[file_arch]["input/potcar"]:
-                        old_spec = group[file_arch]["input/potcar/spec"]
-                        old_spec[...] = pspec
+                    # mypy has a lot of issues with h5py / zarr Group-like objects
+                    if "spec" in group[file_arch]["input/potcar"]:  # type: ignore[operator,index]
+                        old_spec = group[file_arch]["input/potcar/spec"]  # type: ignore[index]
+                        old_spec[...] = pspec  # type: ignore[index]
                     else:
-                        group[file_arch]["input/potcar"].create_dataset(
+                        group[file_arch]["input/potcar"].create_dataset(  # type: ignore[union-attr,index]
                             "spec",
                             data=pspec,
                         )
@@ -133,7 +138,7 @@ class RawArchive(Archiver):
             else:
                 # insert plaintext / binary files into HDF5 datasets
                 with zopen(file_meta.path, "rt") as _f:
-                    data = _f.read()
+                    data: str = _f.read()  # type: ignore[assignment]
 
                 file_key = file_arch
                 if "POTCAR" in file_arch and "spec" not in file_arch:
@@ -164,7 +169,7 @@ class RawArchive(Archiver):
         extracted_files = []
         if keys is None:
             keys = []
-            group.visit(
+            group.visit(  # type: ignore[union-attr]
                 lambda x: (
                     keys.append(x)
                     if getattr(group[x], "attrs", {}).get("md5")
@@ -177,8 +182,8 @@ class RawArchive(Archiver):
 
             if ".h5" in (file_name := p.name):
                 with h5py.File(output_dir / file_name, "w") as f:
-                    for _key in group[k]:
-                        f.copy(group[k][_key], f, name=_key)
+                    for _key in group[k]:  # type: ignore[union-attr]
+                        f.copy(group[k][_key], f, name=_key)  # type: ignore[index]
             else:
                 with open(output_dir / file_name, "wt") as f:
                     f.write(np.array(group[k])[0].decode())
@@ -194,7 +199,7 @@ class RawArchive(Archiver):
         archive_path: PathLike,
         group_key: str | None = None,
         files_to_extract: list[str] | None = None,
-        zarr_store: zarr.storage.Store | None = None,
+        zarr_store: MutableMapping | None = None,
         **kwargs,
     ) -> VaspValidator:
         """
@@ -210,7 +215,7 @@ class RawArchive(Archiver):
             If specified, this is a list of all keys in the archive which
             should be extracted for validation.
             Defaults to the minimal files needed for a comprehensive validation.
-        zarr_store : zarr.storage.Store or None (default)
+        zarr_store : MutableMapping or None (default)
             If specified, the ZARR store to begin file root at.
         **kwargs to pass to VaspValidator.from_vasp_input
         """
@@ -220,7 +225,7 @@ class RawArchive(Archiver):
             *[f"output/{k}" for k in ("OUTCAR", "vasprun.xml")],
         ]
 
-        fname_to_type = {
+        fname_to_type: dict[str, type] = {
             "incar": Incar,
             "kpoints": Kpoints,
             "poscar": Structure,
@@ -229,7 +234,7 @@ class RawArchive(Archiver):
             "vasprun.xml": Vasprun,
         }
 
-        vasp_io = {"user_input": {}}
+        vasp_io: dict[str, dict[str, Any]] = {"user_input": {}}
         with cls._open_hdf5_like(
             archive_path, mode="r", group_key=group_key, zarr_store=zarr_store
         ) as group:
@@ -253,7 +258,7 @@ class RawArchive(Archiver):
                                 data, fmt="poscar"
                             )
                         else:
-                            vasp_io["user_input"][fname] = fname_to_type[
+                            vasp_io["user_input"][fname] = fname_to_type[  # type: ignore[attr-defined]
                                 fname
                             ].from_str(
                                 data,
@@ -267,7 +272,7 @@ class RawArchive(Archiver):
                                 temp_file.name
                             )
 
-        vasp_files = VaspFiles(**vasp_io)
+        vasp_files = VaspFiles(**vasp_io)  # type: ignore[arg-type]
         return VaspValidator.from_vasp_input(vasp_files=vasp_files, **kwargs)
 
     @classmethod
@@ -331,7 +336,7 @@ class RawArchive(Archiver):
         cls,
         archive_path: PathLike,
         group_key: str | None = None,
-        zarr_store: zarr.storage.Store | None = None,
+        zarr_store: MutableMapping | None = None,
         **task_doc_kwargs,
     ) -> TaskDoc:
         """
@@ -343,7 +348,7 @@ class RawArchive(Archiver):
             The name of the archive
         group_key : str | None = None
             If not None, the name of a file hierarchy to retrieve.
-        zarr_store : zarr.storage.Store or None (default)
+        zarr_store : MutableMapping or None (default)
             If specified, the ZARR store to begin file root at.
         **task_doc_kwargs
             kwargs to pass to TaskDoc.from_directory

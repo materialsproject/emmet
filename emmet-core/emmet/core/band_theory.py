@@ -251,7 +251,7 @@ class BaseElectronicDos(BandTheoryBase):
         """Convert to a pymatgen DOS object."""
         densities = {}
         for spin in Spin:
-            if sr_density := getattr(self, f"spin_{spin.name}", None):
+            if sr_density := getattr(self, f"spin_{spin.name}_densities", None):
                 densities[spin] = sr_density
         return Dos(self.efermi, self.energies, densities)  # type: ignore[arg-type]
 
@@ -283,18 +283,18 @@ class ElectronicDos(BaseElectronicDos):
 
         if isinstance(dos, CompleteDos):
 
-            pdos: list[BaseElectronicDos] | None = None
+            pdos: list[list[BaseElectronicDos] | None] | None = None
             if (vrun_pdos := dos.pdos) and dos.structure:
-                pdos = [None for _ in range(len(dos.structure))]
+                pdos_dct: dict[int, list[BaseElectronicDos] | None] = {}
                 for site, orb_spin_dos in vrun_pdos.items():
                     site_idx: int = [
                         idx
                         for idx, ref_site in enumerate(dos.structure)
                         if ref_site == site
                     ][0]
-                    pdos[site_idx] = [
+                    pdos_dct[site_idx] = [
                         BaseElectronicDos(
-                            **{
+                            **{  # type: ignore[arg-type]
                                 f"spin_{spin.name}_densities": sr_dos
                                 for spin, sr_dos in spin_dos.items()
                             },
@@ -302,39 +302,53 @@ class ElectronicDos(BaseElectronicDos):
                         )
                         for orbital, spin_dos in orb_spin_dos.items()
                     ]
+                pdos = [pdos_dct[idx] for idx in sorted(pdos_dct)]
 
         return cls(
-            **densities,
+            **densities,  # type: ignore[arg-type]
             efermi=dos.efermi,
-            energies=dos.energies,
-            structure=dos.structure,
+            energies=dos.energies.tolist(),
+            structure=getattr(dos, "structure", None),
             projected_densities=pdos,
             **kwargs,
         )
 
     def to_pmg(self) -> Dos | CompleteDos:
         """Serialize to pymatgen."""
+        if self.efermi is None:
+            raise ValueError(
+                "Fermi level unspecified, cannot create a pymatgen (Complete)Dos object."
+            )
 
-        dos = Dos(
-            self.efermi,
-            np.array(self.energies),
-            {
-                spin: getattr(self, f"spin_{spin.name}_densities", None)
-                for spin in self._available_spins
-            },
-        )
+        densities: dict[Spin, np.ndarray] = {}
+        for spin in self._available_spins:
+            if (
+                _dens := getattr(self, f"spin_{spin.name}_densities", None)
+            ) is not None:
+                densities[spin] = np.array(_dens)
+
+        dos = Dos(self.efermi, np.array(self.energies), densities)
         if self.structure and self.projected_densities:
 
-            pdos: dict[PeriodicSite, dict[Orbital, dict[Spin, np.ndarray]]] = {
-                site: {
-                    Orbital[site_dos.orbital]: {
-                        spin: getattr(site_dos, f"spin_{spin.name}_densities", None)
-                        for spin in self._available_spins
-                    }
-                    for site_dos in self.projected_densities[isite]
-                }
-                for isite, site in enumerate(self.structure)
-            }
+            pdos: dict[PeriodicSite, dict[Orbital, dict[Spin, np.ndarray]]] = {}
+            for isite, site in enumerate(self.structure):
+                pdos[site] = {}
+                if not self.projected_densities[isite]:
+                    continue
+                for site_dos in self.projected_densities[
+                    isite
+                ]:  # type:ignore[union-attr]
+                    if not site_dos.orbital:
+                        continue
+                    orbital = Orbital[site_dos.orbital]
+                    pdos[site][orbital] = {}
+                    for spin in self._available_spins:
+                        if (
+                            _pdos := getattr(
+                                site_dos, f"spin_{spin.name}_densities", None
+                            )
+                        ) is not None:
+                            pdos[site][orbital][spin] = np.array(_pdos)
 
             return CompleteDos(self.structure, dos, pdos)
 
