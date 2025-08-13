@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 import numpy as np
-from pydantic import ConfigDict, Field, ImportString, field_validator
+from pydantic import Field, ImportString, field_validator
 from pymatgen.core.structure import Structure
 from pymatgen.io.vasp.inputs import Kpoints
 from pymatgen.io.vasp.sets import VaspInputSet
@@ -17,7 +17,7 @@ from emmet.core.mpid import MPID
 from emmet.core.settings import EmmetSettings
 from emmet.core.tasks import TaskDoc
 from emmet.core.utils import utcnow
-from emmet.core.vasp.calc_types.enums import CalcType, TaskType
+from emmet.core.vasp.calc_types.enums import CalcType, TaskType, RunType
 from emmet.core.vasp.task_valid import TaskDocument
 from emmet.core.vasp.validation import DeprecationMessage
 
@@ -48,13 +48,17 @@ class ValidationDoc(EmmetBaseModel):
         description="Dictioary of data used to perform validation."
         " Useful for post-mortem analysis"
     )
-    model_config = ConfigDict(extra="allow")
+
     nelements: int | None = Field(None, description="Number of elements.")
     symmetry_number: int | None = Field(
         None,
         title="Space Group Number",
         description="The spacegroup number for the lattice.",
     )
+    run_type: RunType | None = Field(
+        None, description="The run type of the calculation"
+    )
+    calc_type: CalcType | None = Field(None, description="The calculation type.")
 
     @field_validator("last_updated", mode="before")
     @classmethod

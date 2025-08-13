@@ -198,7 +198,7 @@ pymatgen-analysis-alloys==0.0.7
     # via emmet-api (setup.py)
 pymatgen-analysis-defects==2025.1.18
     # via emmet-api (setup.py)
-pymatgen-io-validation==0.1.0rc2
+pymatgen-io-validation==0.1.0
     # via emmet-api (setup.py)
 pymongo==4.10.1
     # via maggma

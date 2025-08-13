@@ -27,7 +27,7 @@ dependencies = [
   "pandas",
   "zarr",
   "pydantic>=2.0.1",
-  "pymatgen-io-validation>=0.1.0rc2",
+  "pymatgen-io-validation>=0.1.0",
 ]
 description = "Tools for archiving electronic structure calculations."
 dynamic = ["version"]

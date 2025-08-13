@@ -28,7 +28,7 @@ setup(
         "pyarrow",
         "pandas",
         "pymatgen>=2025.3.10",
-        "pymatgen-io-validation>=0.1.0rc2",
+        "pymatgen-io-validation>=0.1.0",
     ],
     extras_require={
         "ase": [

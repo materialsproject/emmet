@@ -248,7 +248,7 @@ pymatgen-analysis-defects==2025.1.18
     # via emmet-core
 pymatgen-analysis-diffusion==2024.7.15
     # via emmet-core
-pymatgen-io-validation==0.1.0rc2
+pymatgen-io-validation==0.1.0
     # via emmet-builders (setup.py)
 pymongo==4.10.1
     # via

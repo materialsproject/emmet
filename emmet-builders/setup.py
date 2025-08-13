@@ -18,7 +18,7 @@ setup(
         "matminer>=0.9.1",
         "solvation-analysis>=0.4.0",
         "MDAnalysis>=2.7.0",
-        "pymatgen-io-validation>=0.1.0rc2",
+        "pymatgen-io-validation>=0.1.0",
     ],
     extras_require={
         "test": [

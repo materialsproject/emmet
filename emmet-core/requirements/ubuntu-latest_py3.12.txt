@@ -79,7 +79,7 @@ pymatgen==2025.6.14
     # via
     #   emmet-core (setup.py)
     #   pymatgen-io-validation
-pymatgen-io-validation==0.1.0rc2
+pymatgen-io-validation==0.1.0
     # via emmet-core (setup.py)
 pyparsing==3.2.3
     # via

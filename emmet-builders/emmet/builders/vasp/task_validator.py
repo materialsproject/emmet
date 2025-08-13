@@ -2,7 +2,6 @@ from maggma.builders import MapBuilder
 from maggma.core import Store
 
 from emmet.builders.settings import EmmetBuildSettings
-from emmet.builders.utils import get_potcar_stats
 from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calc_types.enums import CalcType
 from emmet.core.vasp.validation import DeprecationMessage, ValidationDoc
@@ -34,23 +33,20 @@ class TaskValidator(MapBuilder):
         self.kwargs = kwargs
         self.potcar_stats = potcar_stats
 
-        # Set up potcar cache if appropriate
-        if self.settings.VASP_VALIDATE_POTCAR_STATS:
-            if not self.potcar_stats:
-                self.potcar_stats = get_potcar_stats(method="stored")
-        else:
-            self.potcar_stats = None
-
         super().__init__(
             source=tasks,
             target=task_validation,
             projection=[
-                "orig_inputs",
-                "input.hubbards",
                 "output.structure",
-                "output.bandgap",
-                "chemsys",
+                "output.energy",
+                "output.ionic_steps",
+                "input.parameters",
+                "input.potcar_spec",
                 "calcs_reversed",
+                "symmetry.number",
+                "run_type",
+                "calc_type",
+                "nelements",
             ],
             query=query,
             **kwargs,
@@ -66,18 +62,24 @@ class TaskValidator(MapBuilder):
         task_doc = TaskDoc(**item)
         validation_doc = ValidationDoc.from_task_doc(
             task_doc=task_doc,
-            kpts_tolerance=self.settings.VASP_KPTS_TOLERANCE,
-            kspacing_tolerance=self.settings.VASP_KSPACING_TOLERANCE,
-            input_sets=self.settings.VASP_DEFAULT_INPUT_SETS,
-            LDAU_fields=self.settings.VASP_CHECKED_LDAU_FIELDS,
-            max_allowed_scf_gradient=self.settings.VASP_MAX_SCF_GRADIENT,
-            potcar_stats=self.potcar_stats,
+            check_potcar=self.settings.VASP_VALIDATE_POTCAR_STATS,
+            # kpts_tolerance=self.settings.VASP_KPTS_TOLERANCE,
+            # kspacing_tolerance=self.settings.VASP_KSPACING_TOLERANCE,
+            # input_sets=self.settings.VASP_DEFAULT_INPUT_SETS,
+            # LDAU_fields=self.settings.VASP_CHECKED_LDAU_FIELDS,
+            # max_allowed_scf_gradient=self.settings.VASP_MAX_SCF_GRADIENT,
+            # potcar_stats=self.potcar_stats,
         )
 
-        bad_tags = list(set(task_doc.tags).intersection(self.settings.DEPRECATED_TAGS))
-        if len(bad_tags) > 0:
+        if (
+            len(
+                bad_tags := list(
+                    set(task_doc.tags).intersection(self.settings.DEPRECATED_TAGS)
+                )
+            )
+            > 0
+        ):
             validation_doc.warnings.append(f"Manual Deprecation by tags: {bad_tags}")
-            validation_doc.valid = False
-            validation_doc.reasons.append(DeprecationMessage.MANUAL)
+            validation_doc.reasons.append(DeprecationMessage.MANUAL.value)
 
-        return validation_doc
+        return validation_doc.model_dump()  # ensures that computed field is returned
