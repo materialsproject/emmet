@@ -1,48 +1,49 @@
+"""Define the Materials API Response."""
+
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Generic, Optional, TypeVar
+from typing import Generic, TypeVar, TYPE_CHECKING
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
-from maggma import __version__
+from emmet.core import __version__
+from emmet.core.utils import utcnow
 
-""" Describes the Materials API Response """
-
+if TYPE_CHECKING:
+    from typing import Any
+    from pydantic import ValidationInfo
 
 DataT = TypeVar("DataT")
 
 
-class Meta(BaseModel):
+class Meta(BaseModel, extra="allow"):
     """
     Meta information for the MAPI Response.
     """
 
     api_version: str = Field(
         __version__,
-        description="a string containing the version of the Materials API implementation, e.g. v0.9.5",
+        description="A string containing the version of the Materials API implementation, e.g. v0.9.5",
     )
 
     time_stamp: datetime = Field(
-        description="a string containing the date and time at which the query was executed",
-        default_factory=datetime.utcnow,
+        description="A string containing the date and time at which the query was executed",
+        default_factory=utcnow,
     )
 
-    total_doc: Optional[int] = Field(
-        None, description="the total number of documents available for this query", ge=0
+    total_doc: int | None = Field(
+        None, description="The total number of documents available for this query", ge=0
     )
 
-    facet: Optional[dict] = Field(
+    facet: dict | None = Field(
         None,
-        description="a dictionary containing the facets available for this query",
+        description="A dictionary containing the facets available for this query",
     )
-
-    class Config:
-        extra = "allow"
 
 
 class Error(BaseModel):
-    """
-    Base Error model for General API.
-    """
+    """Base Error model for General API."""
 
     code: int = Field(..., description="The error code")
     message: str = Field(..., description="The description of the error")
@@ -57,27 +58,29 @@ class Response(BaseModel, Generic[DataT]):
     A Generic API Response.
     """
 
-    data: Optional[list[DataT]] = Field(None, description="List of returned data")
-    errors: Optional[list[Error]] = Field(
+    data: list[DataT] | None = Field(None, description="List of returned data")
+    errors: list[Error] | None = Field(
         None, description="Any errors on processing this query"
     )
-    meta: Optional[Meta] = Field(None, description="Extra information for the query")
+    meta: Meta | None = Field(None, description="Extra information for the query")
 
-    @validator("errors", always=True)
-    def check_consistency(cls, v, values):
-        if v is not None and values["data"] is not None:
+    @field_validator("errors", mode="before")
+    @classmethod
+    def check_consistency(cls, v, values: ValidationInfo):
+        if v is not None and getattr(values, "data", None) is not None:
             raise ValueError("must not provide both data and error")
-        if v is None and values.get("data") is None:
+        if v is None and getattr(values, "data", None) is None:
             raise ValueError("must provide data or error")
         return v
 
-    @validator("meta", pre=True, always=True)
-    def default_meta(cls, v, values):
-        if v is None:
-            v = Meta().dict()
+    @field_validator("meta", mode="before")
+    @classmethod
+    def default_meta(cls, v: Any, values: ValidationInfo):
+        if v is None or hasattr(v, "model_dump"):
+            v = Meta().model_dump()
         if v.get("total_doc", None) is None:
-            if values.get("data", None) is not None:
-                v["total_doc"] = len(values["data"])
+            if getattr(values, "data", None) is not None:
+                v["total_doc"] = len(values.data)
             else:
                 v["total_doc"] = 0
         return v
