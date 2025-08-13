@@ -22,6 +22,7 @@ setup(
         "asgi-logger",
         "pymatgen-analysis-alloys>=0.0.3",
         "pymatgen-analysis-defects>=2024.10.22",
+        "uvicorn>=0.18.3",
     ],
     extras_require={
         "test": [

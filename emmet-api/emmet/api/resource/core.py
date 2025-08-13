@@ -7,8 +7,7 @@ from pydantic import BaseModel
 from starlette.responses import RedirectResponse
 
 from emmet.api.query_operator import QueryOperator
-from emmet.api.utils import STORE_PARAMS, api_sanitize
-from maggma.utils import dynamic_import
+from emmet.api.utils import STORE_PARAMS, api_sanitize, dynamic_import
 
 
 class Resource(MSONable, metaclass=ABCMeta):

@@ -1,12 +1,16 @@
+"""Define utilities for emmet-api."""
+
+from __future__ import annotations
+
 import base64
 import inspect
+from importlib import import_module
 from typing import (
     Any,
-    Callable,
     Literal,
     Optional,
-    Union,
     get_args,  # pragma: no cover
+    TYPE_CHECKING,
 )
 
 from bson.objectid import ObjectId
@@ -15,7 +19,9 @@ from pydantic import BaseModel
 from pydantic._internal._utils import lenient_issubclass
 from pydantic.fields import FieldInfo
 
-from maggma.utils import get_flat_models_from_model
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 QUERY_PARAMS = ["criteria", "properties", "skip", "limit"]
 STORE_PARAMS = dict[
@@ -34,6 +40,37 @@ STORE_PARAMS = dict[
     ],
     Any,
 ]
+
+
+def dynamic_import(module_path: str) -> Any:
+    """Import arbitrary module or object."""
+    paths = module_path.split(".")
+    for i in range(len(paths), 1, -1):
+        try:
+            ob = import_module(".".join(paths[:i]))
+            for path in paths[i:]:
+                ob = getattr(ob, path)
+            return ob
+        except Exception:
+            continue
+    raise ValueError(f"Could not import string:\n{module_path}")
+
+
+def get_flat_models_from_model(model: BaseModel) -> set[BaseModel]:
+    """Get all sub-models from a pydantic model.
+
+    Args:
+        model (BaseModel): Pydantic model
+
+    Returns:
+        (set[BaseModel]): Set of pydantic models
+    """
+    known_models = set()
+    known_models.add(model)
+    for field_info in model.__class__.model_fields.values():
+        if lenient_issubclass(field_type := field_info.annotation, BaseModel):
+            get_flat_models_from_model(field_type, known_models)
+    return known_models
 
 
 def merge_queries(queries: list[STORE_PARAMS]) -> STORE_PARAMS:
@@ -128,7 +165,7 @@ def attach_signature(function: Callable, defaults: dict, annotations: dict):
 
 def api_sanitize(
     pydantic_model: BaseModel,
-    fields_to_leave: Optional[Union[str, None]] = None,
+    fields_to_leave: str | None = None,
     allow_dict_msonable=False,
 ):
     """Function to clean up pydantic models for the API by:
@@ -144,11 +181,11 @@ def api_sanitize(
         allow_dict_msonable (bool): Whether to allow dictionaries in place of MSONable quantities.
             Defaults to False
     """
-    models = [
+    models: list[BaseModel] = [
         model
         for model in get_flat_models_from_model(pydantic_model)
         if issubclass(model, BaseModel)
-    ]  # type: list[BaseModel]
+    ]
 
     fields_to_leave = fields_to_leave or []  # type: ignore
     fields_tuples = [f.split(".") for f in fields_to_leave]  # type: ignore
@@ -156,8 +193,8 @@ def api_sanitize(
 
     for model in models:
         model_fields_to_leave = {f[1] for f in fields_tuples if model.__name__ == f[0]}  # type: ignore
-        for name in model.model_fields:
-            field = model.model_fields[name]
+        for name in model.__class__.model_fields:
+            field = model.__class__.model_fields[name]
             field_type = field.annotation
 
             if field_type is not None and allow_dict_msonable:
@@ -170,7 +207,7 @@ def api_sanitize(
 
             if name not in model_fields_to_leave:
                 new_field = FieldInfo.from_annotated_attribute(Optional[field_type], None)  # type: ignore
-                model.model_fields[name] = new_field
+                model.__class__.model_fields[name] = new_field
 
         model.model_rebuild(force=True)
 

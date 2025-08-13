@@ -7,7 +7,7 @@ from typing import Generic, TypeVar, TYPE_CHECKING
 
 from pydantic import BaseModel, Field, field_validator
 
-from emmet.core import __version__
+from emmet.api import __version__
 from emmet.core.utils import utcnow
 
 if TYPE_CHECKING:
