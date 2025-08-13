@@ -17,7 +17,7 @@ jobs:
         package: ["emmet-core", "emmet-builders", "emmet-api"]
         python-version: ["3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - uses: actions/setup-python@v5
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: upgrade
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: detect auto-upgrade-dependency branches
