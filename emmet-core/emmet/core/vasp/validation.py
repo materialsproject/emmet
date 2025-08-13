@@ -139,7 +139,7 @@ class ValidationDoc(VaspValidator, EmmetBaseModel):
                 }
             ),
             vasprun=LightVasprun(  # type: ignore[call-arg]
-                vasp_version=vasp_version,
+                vasp_version=vasp_version,  # type: ignore[arg-type]
                 ionic_steps=[
                     ionic_step.model_dump()
                     for ionic_step in final_calc.output.ionic_steps
