@@ -77,7 +77,7 @@ class Response(BaseModel, Generic[DataT]):
     @classmethod
     def default_meta(cls, v: Any, values: ValidationInfo):
         if v is None or hasattr(v, "model_dump"):
-            v = Meta().model_dump()
+            v = Meta().model_dump()  # type: ignore[call-arg]
         if v.get("total_doc", None) is None:
             if getattr(values, "data", None) is not None:
                 v["total_doc"] = len(values.data)

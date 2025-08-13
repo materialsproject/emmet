@@ -45,7 +45,7 @@ STORE_PARAMS = dict[
 def dynamic_import(module_path: str) -> Any:
     """Import arbitrary module or object."""
     paths = module_path.split(".")
-    for i in range(len(paths), 1, -1):
+    for i in range(len(paths), 0, -1):
         try:
             ob = import_module(".".join(paths[:i]))
             for path in paths[i:]:
@@ -56,20 +56,30 @@ def dynamic_import(module_path: str) -> Any:
     raise ValueError(f"Could not import string:\n{module_path}")
 
 
-def get_flat_models_from_model(model: BaseModel) -> set[BaseModel]:
+def get_flat_models_from_model(
+    model: BaseModel, known_models: set[BaseModel] = set()
+) -> set[BaseModel]:
     """Get all sub-models from a pydantic model.
 
     Args:
         model (BaseModel): Pydantic model
+        known_models (set[BaseModel]) : set of identified pydantic sub-models
 
     Returns:
         (set[BaseModel]): Set of pydantic models
     """
     known_models = set()
-    known_models.add(model)
-    for field_info in model.__class__.model_fields.values():
-        if lenient_issubclass(field_type := field_info.annotation, BaseModel):
-            get_flat_models_from_model(field_type, known_models)
+
+    def get_sub_models(model: Any):
+        if lenient_issubclass(model, BaseModel):
+            known_models.add(model)
+            for field_info in model.model_fields.values():
+                get_sub_models(field_info.annotation)
+        else:
+            for type_anno in get_args(model):
+                get_sub_models(type_anno)
+
+    get_sub_models(model)
     return known_models
 
 
@@ -184,7 +194,7 @@ def api_sanitize(
     models: list[BaseModel] = [
         model
         for model in get_flat_models_from_model(pydantic_model)
-        if issubclass(model, BaseModel)
+        if issubclass(model, BaseModel)  # type: ignore[arg-type]
     ]
 
     fields_to_leave = fields_to_leave or []  # type: ignore
@@ -193,8 +203,8 @@ def api_sanitize(
 
     for model in models:
         model_fields_to_leave = {f[1] for f in fields_tuples if model.__name__ == f[0]}  # type: ignore
-        for name in model.__class__.model_fields:
-            field = model.__class__.model_fields[name]
+        for name in model.model_fields:
+            field = model.model_fields[name]
             field_type = field.annotation
 
             if field_type is not None and allow_dict_msonable:
@@ -207,7 +217,7 @@ def api_sanitize(
 
             if name not in model_fields_to_leave:
                 new_field = FieldInfo.from_annotated_attribute(Optional[field_type], None)  # type: ignore
-                model.__class__.model_fields[name] = new_field
+                model.model_fields[name] = new_field
 
         model.model_rebuild(force=True)
 
