@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import base64
 import inspect
-from importlib import import_module
 from typing import (
     Any,
     Literal,
@@ -18,6 +17,8 @@ from monty.json import MSONable
 from pydantic import BaseModel
 from pydantic._internal._utils import lenient_issubclass
 from pydantic.fields import FieldInfo
+
+from emmet.core.utils import get_flat_models_from_model
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -40,47 +41,6 @@ STORE_PARAMS = dict[
     ],
     Any,
 ]
-
-
-def dynamic_import(module_path: str) -> Any:
-    """Import arbitrary module or object."""
-    paths = module_path.split(".")
-    for i in range(len(paths), 0, -1):
-        try:
-            ob = import_module(".".join(paths[:i]))
-            for path in paths[i:]:
-                ob = getattr(ob, path)
-            return ob
-        except Exception:
-            continue
-    raise ValueError(f"Could not import string:\n{module_path}")
-
-
-def get_flat_models_from_model(
-    model: BaseModel, known_models: set[BaseModel] = set()
-) -> set[BaseModel]:
-    """Get all sub-models from a pydantic model.
-
-    Args:
-        model (BaseModel): Pydantic model
-        known_models (set[BaseModel]) : set of identified pydantic sub-models
-
-    Returns:
-        (set[BaseModel]): Set of pydantic models
-    """
-    known_models = set()
-
-    def get_sub_models(model: Any):
-        if lenient_issubclass(model, BaseModel):
-            known_models.add(model)
-            for field_info in model.model_fields.values():
-                get_sub_models(field_info.annotation)
-        else:
-            for type_anno in get_args(model):
-                get_sub_models(type_anno)
-
-    get_sub_models(model)
-    return known_models
 
 
 def merge_queries(queries: list[STORE_PARAMS]) -> STORE_PARAMS:

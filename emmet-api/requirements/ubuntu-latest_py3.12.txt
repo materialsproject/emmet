@@ -214,6 +214,7 @@ urllib3==2.5.0
     # via
     #   botocore
     #   requests
+uvicorn==0.35.0
 wrapt==1.17.3
     # via ddtrace
 xmltodict==0.14.2

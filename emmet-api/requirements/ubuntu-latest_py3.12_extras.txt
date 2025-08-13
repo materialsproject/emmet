@@ -392,6 +392,7 @@ urllib3==2.5.0
     #   botocore
     #   requests
     #   types-requests
+uvicorn==0.35.0
 virtualenv==20.33.1
     # via pre-commit
 watchdog==6.0.0

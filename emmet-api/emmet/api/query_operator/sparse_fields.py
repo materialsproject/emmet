@@ -4,7 +4,8 @@ from fastapi import Query
 from pydantic import BaseModel
 
 from emmet.api.query_operator import QueryOperator
-from emmet.api.utils import STORE_PARAMS, dynamic_import
+from emmet.api.utils import STORE_PARAMS
+from emmet.core.utils import dynamic_import
 
 
 class SparseFieldsQuery(QueryOperator):
