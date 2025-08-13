@@ -367,7 +367,7 @@ class AlphaID(str):
             identifier = cls._integer_to_alpha_rep(identifier)
 
         prefix = prefix or ""
-        if len(prefix) == 0:
+        if not prefix:
             separator = ""
 
         padded = max(0, padlen - len(identifier)) * cls._alphabet[0]
@@ -383,25 +383,25 @@ class AlphaID(str):
         return new_cls
 
     @classmethod
-    def _string_to_base_10_value(cls, string: str) -> int:
+    def _string_to_base_10_value(cls, string_value: str) -> int:
         """Obtain the integer value of an alphabetical string."""
         value = 0
         rev_codex = {letter: idx for idx, letter in enumerate(cls._alphabet)}
         base = len(cls._alphabet)
-        for ipow, char in enumerate(string[::-1]):
+        for ipow, char in enumerate(string_value[::-1]):
             value += rev_codex[char] * base**ipow
         return value
 
     @classmethod
-    def _integer_to_alpha_rep(cls, integer: int) -> str:
+    def _integer_to_alpha_rep(cls, integer_val: int) -> str:
         """Obtain the string representation of an integer."""
-        if integer == 0:
+        if integer_val == 0:
             return cls._alphabet[0]
 
         base = len(cls._alphabet)
-        max_pow = floor(log(integer) / log(base))
+        max_pow = floor(log(integer_val) / log(base))
         string: str = ""
-        rem = integer
+        rem = integer_val
         for pow in range(max_pow, -1, -1):
             if rem == 0:
                 string += cls._alphabet[0]
@@ -412,6 +412,11 @@ class AlphaID(str):
                     string += cls._alphabet[coeff]
                     rem -= coeff * mult
                     break
+            else:
+                # Should never reach this point but still good to have this here
+                raise ValueError(
+                    f"Could not parse integer into string representation: {integer_val}"
+                )
         return string
 
     def __hash__(self) -> int:
@@ -434,7 +439,7 @@ class AlphaID(str):
         If other is an int, returns True if the integer value of the
         current instance equals the other.
 
-        If other is a base str, returns True if the string reprentations
+        If other is a base str, returns True if the string representations
         are equal.
 
         If other is an AlphaID, returns True only if the prefix, separator,
@@ -485,10 +490,7 @@ class AlphaID(str):
             integer reprsenting the other value if possible.
             Raises exceptions if `other` cannot be compared to `alpha_id`.
         """
-        if isinstance(other, MPID):
-            test = AlphaID(other)
-        else:
-            test = other
+        test = AlphaID(other) if isinstance(other, MPID) else other
 
         if isinstance(test, AlphaID):
             if exception_on_mismatch:
