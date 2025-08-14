@@ -358,22 +358,9 @@ class IonicStep(BaseModel):  # type: ignore
         return self
 
 
-class CalculationOutput(BaseModel):
-    """Document defining VASP calculation outputs."""
+class CoreCalculationOutput(BaseModel):
+    """Document defining core VASP calculation outputs."""
 
-    energy: float | None = Field(
-        None, description="The final total DFT energy for the calculation"
-    )
-    energy_per_atom: float | None = Field(
-        None, description="The final DFT energy per atom for the calculation"
-    )
-    structure: Structure | None = Field(
-        None, description="The final structure from the calculation"
-    )
-    efermi: float | None = Field(
-        None, description="The Fermi level from the calculation in eV"
-    )
-    is_metal: bool | None = Field(None, description="Whether the system is metallic")
     bandgap: float | None = Field(
         None, description="The band gap from the calculation in eV"
     )
@@ -381,17 +368,47 @@ class CalculationOutput(BaseModel):
         None,
         description="The conduction band minimum in eV (if system is not metallic)",
     )
-    vbm: float | None = Field(
-        None, description="The valence band maximum in eV (if system is not metallic)"
-    )
-    is_gap_direct: bool | None = Field(
-        None, description="Whether the band gap is direct"
+    density: float | None = Field(
+        None, description="Density of final structure in units of g/cc."
     )
     direct_gap: float | None = Field(
         None, description="Direct band gap in eV (if system is not metallic)"
     )
-    transition: str | None = Field(
-        None, description="Band gap transition given by CBM and VBM k-points"
+    dos_properties: dict[str, dict[str, dict[str, float]]] | None = Field(
+        None,
+        description="Element- and orbital-projected band properties (in eV) for the "
+        "DOS. All properties are with respect to the Fermi level.",
+    )
+    efermi: float | None = Field(
+        None, description="The Fermi level from the calculation in eV"
+    )
+    energy: float | None = Field(
+        None, description="The final total DFT energy for the calculation"
+    )
+    energy_per_atom: float | None = Field(
+        None, description="The final DFT energy per atom for the calculation"
+    )
+    epsilon_ionic: ListMatrix3D | None = Field(
+        None, description="The ionic part of the dielectric constant"
+    )
+    epsilon_static: ListMatrix3D | None = Field(
+        None, description="The high-frequency dielectric constant"
+    )
+    epsilon_static_wolfe: ListMatrix3D | None = Field(
+        None,
+        description="The high-frequency dielectric constant w/o local field effects",
+    )
+    frequency_dependent_dielectric: FrequencyDependentDielectric | None = Field(
+        None,
+        description="Frequency-dependent dielectric information from an LOPTICS "
+        "calculation",
+    )
+    is_gap_direct: bool | None = Field(
+        None, description="Whether the band gap is direct"
+    )
+    is_metal: bool | None = Field(None, description="Whether the system is metallic")
+    locpot: dict[int, list[float]] | None = Field(
+        None, description="Average of the local potential along the crystal axes"
     )
     mag_density: float | None = Field(
         None,
@@ -401,38 +418,33 @@ class CalculationOutput(BaseModel):
     optical_absorption_coeff: list | None = Field(
         None, description="Optical absorption coefficient in cm^-1"
     )
-    epsilon_static: ListMatrix3D | None = Field(
-        None, description="The high-frequency dielectric constant"
-    )
-    epsilon_static_wolfe: ListMatrix3D | None = Field(
-        None,
-        description="The high-frequency dielectric constant w/o local field effects",
-    )
-    epsilon_ionic: ListMatrix3D | None = Field(
-        None, description="The ionic part of the dielectric constant"
-    )
-    frequency_dependent_dielectric: FrequencyDependentDielectric | None = Field(
-        None,
-        description="Frequency-dependent dielectric information from an LOPTICS "
-        "calculation",
-    )
-    ionic_steps: list[IonicStep] | None = Field(
-        None, description="Energy, forces, structure, etc. for each ionic step"
-    )
-    num_electronic_steps: list[int] | None = Field(
-        None, description="The number of electronic steps in each ionic step."
-    )
-    locpot: dict[int, list[float]] | None = Field(
-        None, description="Average of the local potential along the crystal axes"
-    )
     outcar: dict[str, Any] | None = Field(
         None, description="Information extracted from the OUTCAR file"
+    )
+    structure: Structure | None = Field(
+        None, description="The final structure from the calculation"
+    )
+    transition: str | None = Field(
+        None, description="Band gap transition given by CBM and VBM k-points"
+    )
+    vbm: float | None = Field(
+        None, description="The valence band maximum in eV (if system is not metallic)"
+    )
+
+
+class CalculationOutput(CoreCalculationOutput):
+    """Wrapper for CoreCalculationOutput for parsing and storing larger fields."""
+
+    elph_displaced_structures: ElectronPhononDisplacedStructures | None = Field(
+        None,
+        description="Electron-phonon displaced structures, generated by setting "
+        "PHON_LMC = True.",
     )
     force_constants: list[list[Matrix3D]] | None = Field(
         None, description="Force constants between every pair of atoms in the structure"
     )
-    normalmode_frequencies: list[float] | None = Field(
-        None, description="Frequencies in THz of the normal modes at Gamma"
+    ionic_steps: list[IonicStep] | None = Field(
+        None, description="Energy, forces, structure, etc. for each ionic step"
     )
     normalmode_eigenvals: list[float] | None = Field(
         None,
@@ -442,15 +454,11 @@ class CalculationOutput(BaseModel):
     normalmode_eigenvecs: list[list[Vector3D]] | None = Field(
         None, description="Normal mode eigenvectors of phonon modes at Gamma"
     )
-    elph_displaced_structures: ElectronPhononDisplacedStructures | None = Field(
-        None,
-        description="Electron-phonon displaced structures, generated by setting "
-        "PHON_LMC = True.",
+    normalmode_frequencies: list[float] | None = Field(
+        None, description="Frequencies in THz of the normal modes at Gamma"
     )
-    dos_properties: dict[str, dict[str, dict[str, float]]] | None = Field(
-        None,
-        description="Element- and orbital-projected band properties (in eV) for the "
-        "DOS. All properties are with respect to the Fermi level.",
+    num_electronic_steps: list[int] | None = Field(
+        None, description="The number of electronic steps in each ionic step."
     )
     run_stats: RunStatistics | None = Field(
         None, description="Summary of runtime statistics for this calculation"
@@ -466,7 +474,7 @@ class CalculationOutput(BaseModel):
         elph_poscars: list[Path] | None = None,
         store_trajectory: StoreTrajectoryOption | str = StoreTrajectoryOption.NO,
         store_onsite_density_matrices: bool = False,
-    ) -> "CalculationOutput":
+    ) -> "CoreCalculationOutput":
         """
         Create a VASP output document from VASP outputs.
 
