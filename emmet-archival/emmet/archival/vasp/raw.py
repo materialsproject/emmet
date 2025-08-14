@@ -15,7 +15,6 @@ import zarr
 from monty.io import zopen
 from pymatgen.core import Structure
 from pymatgen.io.vasp import Incar, Kpoints, Potcar, Outcar, Vasprun
-import zarr.storage
 
 from pymatgen.io.validation.common import PotcarSummaryStats, VaspFiles
 from pymatgen.io.validation.validation import VaspValidator

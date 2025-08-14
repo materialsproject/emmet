@@ -60,6 +60,9 @@ def test_elec_band_struct(test_dir):
         table = elec_bs.to_arrow()
         assert isinstance(table, pyarrow.Table)
         assert set(ElectronicBS.model_fields) == set(table.column_names)
+        md2 = ElectronicBS.from_arrow(table).model_dump()
+        for k, v in md2.items():
+            print(k, v == elec_bs.model_dump()[k])
         assert ElectronicBS.from_arrow(table) == elec_bs
 
 

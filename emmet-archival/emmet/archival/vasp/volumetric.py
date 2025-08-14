@@ -60,6 +60,11 @@ class BandStructureArchive(Archiver):
     def from_arrow(cls, table: pa.Table) -> BandStructure:
         return ElectronicBS.from_arrow(table).to_pmg()
 
+    @classmethod
+    def from_vasprun(cls, vasprun: Vasprun) -> Self:
+        """Create a band structure archive from a vasprun object."""
+        return cls(band_structure=ElectronicBS.from_pmg(vasprun.get_band_structure()))
+
 
 class VaspVolumetricArchive(Archiver):
     """Archive all CHGCAR-like volumetric data associated with a VASP calculation."""

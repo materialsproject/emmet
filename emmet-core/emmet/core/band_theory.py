@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Any
+import types
+from typing import TYPE_CHECKING, Any, get_args
 
 import numpy as np
 from pydantic import BaseModel, Field, model_validator, model_serializer
@@ -68,15 +69,30 @@ class BandTheoryBase(BaseModel):
         config = self.model_dump()
         if struct_dict := config.get("structure"):
             config["structure"] = json.dumps(struct_dict)
-        return pa.Table.from_pydict({k: [v] for k, v in config.items()})
+        # Sanitize empty python objects that arrow struggles with currently
+        arrow_config = {}
+        for k, v in config.items():
+            if isinstance(v, dict) and not v:
+                arrow_config[k] = [None]
+            else:
+                arrow_config[k] = [v]
+        return pa.Table.from_pydict(arrow_config)
 
     @classmethod
     @requires_arrow
     def from_arrow(cls, table: ArrowTable) -> Self:
         """Create an object from an arrow table."""
-        dct = {}
-        for k in cls.model_fields:
+        dct: dict[str, Any] = {}
+        for k, anno in cls.model_fields.items():
             dct[k] = table[k].to_pylist()[0]
+
+            # Unsanitize null from arrow
+            is_union_type = isinstance(anno.annotation, types.UnionType)
+            if dct[k] is None and (
+                (is_union_type and (type(None) not in get_args(anno.annotation)))
+                or not is_union_type
+            ):
+                dct[k] = anno.default
         return cls(**dct)
 
 
@@ -93,8 +109,8 @@ class BandStructure(BandTheoryBase):
 
     reciprocal_lattice: Matrix3D = Field(description="The reciprocal lattice.")
 
-    labels_dict: dict[str, Vector3D] | None = Field(
-        None, description="The high-symmetry labels of specific q-points."
+    labels_dict: dict[str, Vector3D] = Field(
+        {}, description="The high-symmetry labels of specific q-points."
     )
 
     structure: Structure | None = Field(

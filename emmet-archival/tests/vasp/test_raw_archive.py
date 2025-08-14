@@ -3,6 +3,8 @@ import json
 import numpy as np
 
 from monty.io import zopen
+
+from emmet.core.tasks import TaskDoc
 from emmet.core.utils import get_hash_blocked
 
 from emmet.archival.vasp.raw import RawArchive
@@ -10,7 +12,7 @@ from emmet.archival.utils import zpath
 
 
 def test_from_directory(tmp_dir, test_dir):
-    vasp_files_dir = test_dir / "test_raw_archive"
+    vasp_files_dir = test_dir / "raw_vasp"
     archiver = RawArchive.from_directory(vasp_files_dir)
     archiver.to_archive("archive.h5")
 
@@ -47,3 +49,35 @@ def test_from_directory(tmp_dir, test_dir):
         if not any(f in fname.lower() for f in ("potcar", ".h5")):
             with zopen(orig_file, "rt") as f_orig, zopen(file_meta.path, "rt") as f_new:
                 assert f_orig.read() == f_new.read()
+
+    # Test validation from RawArchive
+    for valid_method in ("validate", "fast_validate"):
+        valid_doc = getattr(RawArchive, valid_method)("archive.h5")
+        assert not valid_doc.valid
+        assert len(valid_doc.reasons) == 1
+        assert any(
+            "PSEUDOPOTENTIALS --> Incorrect POTCAR files" in r
+            for r in valid_doc.reasons
+        )
+        assert valid_doc.vasp_files.run_type == "relax"
+        assert valid_doc.vasp_files.functional == "r2scan"
+        assert valid_doc.vasp_files.valid_input_set_name == "MPScanRelaxSet"
+
+    # Test round trip TaskDoc
+    # Note that some fields (those with datetimes or with POTCAR info stripped)
+    # will differ in resultant RawArchive
+    expected_diff_keys = {
+        "builder_meta",
+        "dir_name",
+        "calcs_reversed",
+        "orig_inputs",
+        "input",
+        "last_updated",
+        "completed_at",
+    }
+    orig_task_dict = TaskDoc.from_directory(test_dir / "raw_vasp").model_dump()
+    extracted_task_dict = RawArchive.to_task_doc("archive.h5").model_dump()
+    assert all(
+        orig_task_dict[k] == extracted_task_dict[k]
+        for k in set(TaskDoc.model_fields).difference(expected_diff_keys)
+    )
