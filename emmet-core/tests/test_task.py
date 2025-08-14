@@ -1,6 +1,6 @@
 import pytest
-
 from tests.conftest import assert_schemas_equal, get_test_object
+
 from emmet.core.vasp.task_valid import TaskState
 
 
@@ -112,15 +112,16 @@ def test_output_summary(test_dir, object_name, task_name):
     ],
 )
 def test_task_doc(test_dir, object_name, tmpdir):
+    import os
+    import shutil
+
     from monty.json import jsanitize
     from monty.serialization import dumpfn
-    import os
     from pymatgen.alchemy.materials import TransformedStructure
     from pymatgen.entries.computed_entries import ComputedEntry
     from pymatgen.transformations.standard_transformations import (
         DeformStructureTransformation,
     )
-    import shutil
 
     from emmet.core.tasks import TaskDoc
 
@@ -218,7 +219,7 @@ def test_lda_and_pseudo_format(test_dir, tmpdir):
     os.listdir(tmpdir)
 
     task = TaskDoc.from_directory(tmpdir / top_level)
-    assert task.run_type.name == "LDA"
+    assert task.run_type == "LDA"
     assert all(task.input.incar.get(k) is None for k in ("GGA", "METAGGA"))
 
     expected_pseudo = {
@@ -236,6 +237,7 @@ def test_orig_inp_parsing(tmp_dir):
     """Test parsing of VASP input with variable suffix, like `.orig`."""
 
     from pathlib import Path
+
     from pymatgen.core import Structure
     from pymatgen.io.vasp import Incar, Kpoints
 
