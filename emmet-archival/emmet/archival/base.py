@@ -101,9 +101,7 @@ class Archiver(BaseModel):
             raise TypeError(f"Specified format = {fmt} is not HDF5-like.")
 
         try:
-            if group_key is not None:
-                yield group[group_key]
-            yield group
+            yield group[group_key] if group_key else group
 
         finally:
             if fmt == ArchivalFormat.HDF5:

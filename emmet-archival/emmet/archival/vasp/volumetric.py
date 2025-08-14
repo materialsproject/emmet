@@ -89,7 +89,7 @@ class VaspVolumetricArchive(Archiver):
         return cls(file_names=file_names, volumetric_archives=vol_archs)
 
     def to_arrow(self) -> pa.Table:
-        """Create an arrow table of voumetric data."""
+        """Create an arrow table of volumetric data."""
 
         # to ensure that the pyarrow schema contains augmentation data,
         # use either CHGCAR or POT first

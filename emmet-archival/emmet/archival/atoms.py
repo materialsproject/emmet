@@ -71,9 +71,7 @@ class CrystalArchive(Archiver):
         data = {
             k: struct_table[f"{prefix}{k}"].to_pylist()[0] for k in cls.model_fields
         }
-        oxi_states = data["oxi_states"] or [
-            None for _ in range(len(data["atomic_num"]))
-        ]
+        oxi_states = data["oxi_states"] or [None] * len(data["atomic_num"])
         species: list[str | Element | Species] = []
         for i, z in enumerate(data["atomic_num"]):
             ele = Element.from_Z(z).value
@@ -145,9 +143,7 @@ class StructureArchive(Archiver):
             if structure.site_properties.get(k):
                 cols.extend([f"{k}_{vec_dir}" for vec_dir in _CARTESIAN])
 
-        data: dict[str, list[Any]] = {
-            k: [None for _ in range(len(structure))] for k in cols
-        }
+        data: dict[str, list[Any]] = {k: [None] * len(structure) for k in cols}
         for isite, site in enumerate(structure):
             if structure.is_ordered:
                 data["atomic_num"][isite] = next(iter(site.species)).Z
@@ -195,9 +191,8 @@ class StructureArchive(Archiver):
         has_vector_site_props = set(
             [k for k in _VECTOR_SITE_PROPS if any(k in col for col in df.columns)]
         )
-        has_scalar_site_props = set(
-            [k for k in ("magmom",) if any(k in col for col in df.columns)]
-        )
+        # @esoteric-ephemera: TODO, check other scalar properties?
+        has_scalar_site_props = set(df.columns).intersection({"magmom"})
 
         for isite in sorted(df.index):
             comp: MutableMapping[Element | Species, float] = defaultdict(float)
