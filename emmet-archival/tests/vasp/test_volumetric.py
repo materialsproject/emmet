@@ -61,7 +61,7 @@ def test_volumetric_archive():
     assert chg.structure == chg_arch.structure
 
 
-def test_dos(test_dir):
+def test_dos(test_dir, tmp_dir):
     vasprun = Vasprun(test_dir / "raw_vasp" / "vasprun.xml.gz")
     dos_arch = DosArchive.from_vasprun(vasprun)
 
@@ -82,7 +82,7 @@ def test_dos(test_dir):
                 assert v == orig_dos_dict[k]
 
 
-def test_bs(test_dir):
+def test_bs(test_dir, tmp_dir):
 
     vasprun = Vasprun(test_dir / "raw_vasp" / "vasprun.xml.gz")
     pmg_bs_dict = vasprun.get_band_structure().as_dict()
