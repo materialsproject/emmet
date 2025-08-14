@@ -49,7 +49,7 @@ def raw_archive_hierarchy_from_files(
     """
     file_paths: dict[str, FileMetadata] = {}
     for file_meta in file_metas:
-        file_name = ".".join(file_meta.name.split(".")[:-1])
+        file_name = file_meta.name.rsplit(".", 1)[0]
         ref_file_name = None
         for calc_type, base_file_names in VASP_RAW_DATA_ORG.items():
             if matches := sorted(
@@ -107,6 +107,12 @@ class RawArchive(Archiver):
 
     def _to_hdf5_like(self, group: h5py.Group | zarr.Group, **kwargs) -> None:
         """Add VASP files to an existing archival group."""
+
+        if isinstance(group, h5py.Group):
+            dataset_constructor = "create_dataset"
+        else:
+            dataset_constructor = "create_array"
+
         for file_arch, file_meta in self.file_paths.items():
             if ".h5" in file_arch:
                 file_key = file_arch
@@ -129,7 +135,7 @@ class RawArchive(Archiver):
                         old_spec = group[file_arch]["input/potcar/spec"]  # type: ignore[index]
                         old_spec[...] = pspec  # type: ignore[index]
                     else:
-                        group[file_arch]["input/potcar"].create_dataset(  # type: ignore[union-attr,index]
+                        getattr(group[file_arch]["input/potcar"], dataset_constructor)(  # type: ignore[union-attr,index]
                             "spec",
                             data=pspec,
                         )
@@ -142,15 +148,13 @@ class RawArchive(Archiver):
 
                 file_key = file_arch
                 if "POTCAR" in file_arch and "spec" not in file_arch:
-                    if len(_split_arch := file_arch.split(".")) > 1:
-                        file_key = ".".join(
-                            [*_split_arch[:-1], "spec", _split_arch[-1]]
-                        )
+                    if len(_split_arch := file_arch.rsplit(".", 1)) > 1:
+                        file_key = f"{_split_arch[0]}.spec.{_split_arch[1]}"
                     else:
                         file_key = f"{file_arch}.spec"
                     data = self.convert_potcar_to_spec(data)
 
-                group.create_dataset(file_key, data=[data], **kwargs)
+                getattr(group, dataset_constructor)(file_key, data=[data], **kwargs)
 
             group[file_key].attrs["file_path"] = str(file_meta.path)
             group[file_key].attrs["md5"] = file_meta.md5
@@ -258,9 +262,7 @@ class RawArchive(Archiver):
                                 data, fmt="poscar"
                             )
                         else:
-                            vasp_io["user_input"][fname] = fname_to_type[  # type: ignore[attr-defined]
-                                fname
-                            ].from_str(
+                            vasp_io["user_input"][fname] = fname_to_type[fname].from_str(  # type: ignore[attr-defined]
                                 data,
                             )
                     else:

@@ -99,9 +99,7 @@ class CrystalArchive(Archiver):
             [getattr(ion, "oxi_state", None) for ion in site.species][0]
             for site in structure
         ]
-        oxi_states = None
-        if any(_oxi_states):
-            oxi_states = _oxi_states
+        oxi_states = _oxi_states if any(_oxi_states) else None
         return cls(
             atomic_num=[site.species.elements[0].Z for site in structure],
             direct_coords=[site.frac_coords for site in structure],
@@ -205,15 +203,11 @@ class StructureArchive(Archiver):
             comp: MutableMapping[Element | Species, float] = defaultdict(float)
             if max_dis:
                 for icomp in range(max_dis):
-                    if (
-                        pd.isna(df[f"atomic_num_{icomp}"][isite])
-                        or df[f"atomic_num_{icomp}"][isite] < 0
-                    ):
+                    zval = df[f"atomic_num_{icomp}"][isite]
+                    if pd.isna(zval) or zval < 0:
                         break
 
-                    spec: Element | Species = Element.from_Z(
-                        df[f"atomic_num_{icomp}"][isite]
-                    )
+                    spec: Element | Species = Element.from_Z(zval)
                     if has_oxi and not pd.isna(oxi := df[f"oxi_state_{icomp}"][isite]):
                         spec = Species(spec.value, oxidation_state=oxi)
                     comp[spec] = df[f"occu_{icomp}"][isite]
@@ -265,8 +259,13 @@ class StructureArchive(Archiver):
                 if slist[idx][jdx] is None:
                     slist[idx][jdx] = -1 if jdx in int_cols else np.nan
 
-        print(slist, dtype)
-        group.create_dataset("structure", data=np.array(slist, dtype=dtype), **kwargs)
+        if isinstance(group, h5py.Group):
+            dataset_constructor = "create_dataset"
+        else:
+            dataset_constructor = "create_array"
+        getattr(group, dataset_constructor)(
+            "structure", data=np.array(slist, dtype=dtype), **kwargs
+        )
 
     @classmethod
     def _extract_from_hdf5_like(cls, group: h5py.Group | zarr.Group) -> Structure:

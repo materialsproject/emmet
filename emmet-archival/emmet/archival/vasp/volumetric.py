@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pyarrow as pa
+import pyarrow.compute as pa_co
 from pydantic import Field
 
 from emmet.core.band_theory import ElectronicBS, ElectronicDos
@@ -70,7 +71,7 @@ class VaspVolumetricArchive(Archiver):
         description="Individual volumetric archives for the files in file_names."
     )
     identifier: str | None = Field(
-        None, description="The identifier associated with this set of volumetric d"
+        None, description="The identifier associated with this set of volumetric data."
     )
 
     @classmethod
@@ -129,9 +130,9 @@ class VaspVolumetricArchive(Archiver):
         output_data: list[dict[str, PmgVolumetricData | str]] = []
         for identifier in set(table["identifier"].to_pylist()):
             if identifier is None:
-                id_filter = ~pa.compute.field("identifier").is_valid()
+                id_filter = ~pa_co.field("identifier").is_valid()
             else:
-                id_filter = pa.compute.field("identifier") == identifier
+                id_filter = pa_co.field("identifier") == identifier
 
             for file_name in files:
                 output_data.append(
@@ -140,7 +141,7 @@ class VaspVolumetricArchive(Archiver):
                         "file_name": file_name,
                         "data": VolumetricArchive.from_arrow(
                             table.filter(
-                                id_filter & (pa.compute.field("file_name") == file_name)
+                                id_filter & (pa_co.field("file_name") == file_name)
                             )
                         ),
                     }
