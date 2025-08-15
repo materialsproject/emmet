@@ -4,6 +4,8 @@
 #
 #    pip-compile --output-file=requirements/ubuntu-latest_py3.11.txt
 #
+aioitertools==0.12.0
+    # via maggma
 annotated-types==0.7.0
     # via pydantic
 anyio==4.10.0
@@ -12,6 +14,13 @@ asgi-logger==0.1.0
     # via emmet-api (setup.py)
 asgiref==3.9.1
     # via asgi-logger
+attrs==25.3.0
+    # via
+    #   jsonlines
+    #   jsonschema
+    #   referencing
+bcrypt==4.3.0
+    # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
 boto3==1.40.10
@@ -32,13 +41,15 @@ cffi==1.17.1
     #   pynacl
 charset-normalizer==3.4.3
     # via requests
+click==8.2.1
+    # via uvicorn
 contourpy==1.3.3
     # via matplotlib
 cryptography==45.0.6
     # via paramiko
 cycler==0.12.1
     # via matplotlib
-ddtrace==3.11.3
+ddtrace==3.12.0
     # via emmet-api (setup.py)
 dnspython==2.7.0
     # via
@@ -49,13 +60,13 @@ emmet-core==0.84.9
 envier==0.6.1
     # via ddtrace
 fastapi==0.116.1
-    # via
-    #   emmet-api (setup.py)
-    #   maggma
+    # via emmet-api (setup.py)
 fonttools==4.59.1
     # via matplotlib
 gunicorn==23.0.0
     # via emmet-api (setup.py)
+h11==0.16.0
+    # via uvicorn
 idna==3.10
     # via
     #   anyio
@@ -64,6 +75,8 @@ imageio==2.37.0
     # via scikit-image
 importlib-metadata==8.7.0
     # via opentelemetry-api
+invoke==2.2.0
+    # via paramiko
 jmespath==1.0.1
     # via
     #   boto3
@@ -82,13 +95,16 @@ latexcodec==3.0.1
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
-maggma[api]==0.72.0
+maggma==0.72.0
     # via emmet-api (setup.py)
 matplotlib==3.10.5
     # via pymatgen
+mongomock==4.3.0
+    # via maggma
 monty==2025.3.3
     # via
     #   emmet-core
+    #   maggma
     #   pymatgen
 mp-pyrho==0.4.5
     # via pymatgen-analysis-defects
@@ -96,7 +112,7 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.1.1
     # via maggma
-narwhals==2.1.1
+narwhals==2.1.2
     # via plotly
 networkx==3.5
     # via
@@ -106,6 +122,7 @@ numpy==1.26.4
     # via
     #   contourpy
     #   imageio
+    #   maggma
     #   matplotlib
     #   monty
     #   pandas
@@ -127,12 +144,17 @@ packaging==25.0
     #   gunicorn
     #   lazy-loader
     #   matplotlib
+    #   mongomock
     #   plotly
     #   scikit-image
 palettable==3.3.3
     # via pymatgen
 pandas==2.3.1
-    # via pymatgen
+    # via
+    #   maggma
+    #   pymatgen
+paramiko==4.0.0
+    # via sshtunnel
 pillow==11.3.0
     # via
     #   imageio
@@ -144,15 +166,22 @@ protobuf==6.32.0
     # via ddtrace
 pybtex==0.25.1
     # via emmet-core
+pycparser==2.22
+    # via cffi
 pydantic==2.11.7
     # via
     #   emmet-core
     #   fastapi
+    #   maggma
     #   pydantic-settings
 pydantic-core==2.33.2
     # via pydantic
 pydantic-settings==2.10.1
-    # via emmet-core
+    # via
+    #   emmet-core
+    #   maggma
+pydash==8.0.5
+    # via maggma
 pymatgen==2025.6.14
     # via
     #   emmet-core
@@ -163,6 +192,12 @@ pymatgen-analysis-alloys==0.0.8
     # via emmet-api (setup.py)
 pymatgen-analysis-defects==2025.1.18
     # via emmet-api (setup.py)
+pymongo==4.10.1
+    # via
+    #   emmet-api (setup.py)
+    #   maggma
+pynacl==1.5.0
+    # via paramiko
 pyparsing==3.2.3
     # via
     #   bibtexparser
@@ -170,14 +205,23 @@ pyparsing==3.2.3
 python-dateutil==2.9.0.post0
     # via
     #   botocore
+    #   maggma
     #   matplotlib
     #   pandas
 python-dotenv==1.1.1
     # via pydantic-settings
 pytz==2025.2
-    # via pandas
+    # via
+    #   mongomock
+    #   pandas
 pyyaml==6.0.2
     # via pybtex
+pyzmq==27.0.1
+    # via maggma
+referencing==0.36.2
+    # via
+    #   jsonschema
+    #   jsonschema-specifications
 requests==2.32.4
     # via pymatgen
 rpds-py==0.27.0
@@ -186,6 +230,7 @@ rpds-py==0.27.0
     #   referencing
 ruamel-yaml==0.18.14
     # via
+    #   maggma
     #   monty
     #   pymatgen
 ruamel-yaml-clib==0.2.12
@@ -212,6 +257,8 @@ sniffio==1.3.1
     # via anyio
 spglib==2.6.0
     # via pymatgen
+sshtunnel==0.4.0
+    # via maggma
 starlette==0.47.2
     # via fastapi
 sympy==1.14.0
@@ -221,7 +268,9 @@ tabulate==0.9.0
 tifffile==2025.6.11
     # via scikit-image
 tqdm==4.67.1
-    # via pymatgen
+    # via
+    #   maggma
+    #   pymatgen
 typing-extensions==4.14.1
     # via
     #   anyio
@@ -231,6 +280,8 @@ typing-extensions==4.14.1
     #   opentelemetry-api
     #   pydantic
     #   pydantic-core
+    #   pydash
+    #   referencing
     #   spglib
     #   starlette
     #   typing-inspection
@@ -247,10 +298,11 @@ urllib3==2.5.0
     #   botocore
     #   requests
 uvicorn==0.35.0
-    # via maggma
+    # via emmet-api (setup.py)
 wrapt==1.17.3
-    # via ddtrace
-xmltodict==0.14.2
     # via ddtrace
 zipp==3.23.0
     # via importlib-metadata
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools
