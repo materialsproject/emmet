@@ -4,6 +4,7 @@ import json
 import pytest
 from monty.io import zopen
 
+from emmet.core.mpid import AlphaID
 from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calc_types import RunType, TaskType, run_type, task_type
 from emmet.core.vasp.task_valid import TaskDocument
@@ -105,12 +106,17 @@ def test_validator_failed_symmetry(test_dir):
 def test_computed_entry(tasks):
     entries = [task.entry for task in tasks]
     ids = {e.entry_id for e in entries}
-    assert ids == {"mp-1141021", "mp-149", "mp-1686587", "mp-1440634"}
+    assert ids == set(
+        [
+            AlphaID(id_str).string
+            for id_str in {"mp-ddzda", "mp-dryyt", "mp-cmxxl", "mp-ft"}
+        ]
+    )
 
 
 @pytest.fixture(scope="session")
 def task_ldau(test_dir):
-    with zopen(test_dir / "test_task.json") as f:
+    with zopen(test_dir / "test_task.json.gz") as f:
         data = json.load(f)
 
     return TaskDoc(**data)
@@ -123,7 +129,7 @@ def test_ldau(task_ldau):
 
 
 def test_ldau_validation(test_dir):
-    with open(test_dir / "old_aflow_ggau_task.json") as f:
+    with zopen(test_dir / "old_aflow_ggau_task.json.gz") as f:
         data = json.load(f)
 
     task = TaskDoc(**data)
@@ -137,7 +143,7 @@ def test_ldau_validation(test_dir):
 def test_potcar_stats_check(test_dir):
     from pymatgen.io.vasp import PotcarSingle
 
-    with zopen(test_dir / "CoF_TaskDoc.json") as f:
+    with zopen(test_dir / "CoF_TaskDoc.json.gz") as f:
         data = json.load(f)
 
     """

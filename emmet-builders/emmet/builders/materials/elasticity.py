@@ -30,7 +30,6 @@ from pymatgen.core import Structure
 from pymatgen.core.tensors import TensorMapping
 
 from emmet.core.elasticity import ElasticityDoc
-from emmet.core.mpid import MPID
 from emmet.core.utils import jsanitize
 from emmet.core.vasp.calc_types import CalcType
 
@@ -39,6 +38,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Generator
     from typing import Any
+
+    from emmet.core.mpid import AlphaID, MPID
 
 
 class ElasticityBuilder(Builder):
@@ -136,7 +137,7 @@ class ElasticityBuilder(Builder):
             yield material_id, calc_types, tasks
 
     def process_item(
-        self, item: tuple[MPID, dict[str, str], list[dict]]
+        self, item: tuple[MPID | AlphaID, dict[str, str], list[dict]]
     ) -> dict | None:
         """
         Process all tasks belong to the same material into an elasticity doc.

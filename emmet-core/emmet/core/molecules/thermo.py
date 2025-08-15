@@ -2,7 +2,7 @@ from hashlib import blake2b
 
 from pydantic import Field
 
-from emmet.core.material import PropertyOrigin
+from emmet.core.molecules import MolPropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPculeID
 from emmet.core.qchem.calc_types import LevelOfTheory
@@ -175,11 +175,11 @@ class MoleculeThermoDoc(PropertyDoc):
         total_enthalpy = task.output.enthalpy
         total_entropy = task.output.entropy
 
-        origins = [PropertyOrigin(name="thermo", task_id=task.task_id)]
+        origins = [MolPropertyOrigin(name="thermo", task_id=task.task_id)]
         id_string = f"thermo-{molecule_id}-{task.task_id}-{task.lot_solvent}"
         if correction and correction_task is not None:
             origins.append(
-                PropertyOrigin(
+                MolPropertyOrigin(
                     name="thermo_energy_correction", task_id=correction_task.task_id
                 )
             )

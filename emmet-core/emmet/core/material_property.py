@@ -6,13 +6,13 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from pydantic import Field, field_validator
+from pydantic import Field, model_validator
 from pydantic.json_schema import SkipJsonSchema
 from pymatgen.core import Structure
 
 from emmet.core.common import convert_datetime
 from emmet.core.material import PropertyOrigin
-from emmet.core.mpid import MPID
+from emmet.core.mpid import AlphaID, MPID
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
@@ -20,6 +20,8 @@ from emmet.core.vasp.validation import DeprecationMessage
 if TYPE_CHECKING:
     from typing import Any
     from typing_extensions import Self
+
+    from emmet.core.mpid import MPID
 
 
 class PropertyDoc(StructureMetadata):
@@ -32,7 +34,7 @@ class PropertyDoc(StructureMetadata):
     """
 
     property_name: str
-    material_id: MPID | None = Field(
+    material_id: MPID | AlphaID | None = Field(
         None,
         description="The Materials Project ID of the material, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
@@ -65,16 +67,21 @@ class PropertyDoc(StructureMetadata):
         None, description="The structure associated with this property.", exclude=True
     )
 
-    @field_validator("last_updated", mode="before")
+    @model_validator(mode="before")
     @classmethod
-    def handle_datetime(cls, v: Any) -> datetime:
-        return convert_datetime(cls, v)
+    def handle_datetime_and_idx(cls, config: Any) -> Any:
+        if v := config.get("last_updated"):
+            config["last_updated"] = convert_datetime(cls, v)
+
+        if idx := config.get("material_id"):
+            config["material_id"] = AlphaID(idx).formatted
+        return config
 
     @classmethod
     def from_structure(  # type: ignore[override]
         cls,
         meta_structure: Structure,
-        material_id: MPID | None = None,
+        material_id: MPID | AlphaID | None = None,
         **kwargs,
     ) -> Self:
         """

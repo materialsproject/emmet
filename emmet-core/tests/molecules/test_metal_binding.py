@@ -11,14 +11,14 @@ from emmet.core.molecules.metal_binding import MetalBindingDoc
 
 @pytest.fixture(scope="session")
 def base_mol(test_dir):
-    mol = loadfn((test_dir / "metal_binding_doc" / "base_mol_doc.json").as_posix())
+    mol = loadfn((test_dir / "metal_binding_doc" / "base_mol_doc.json.gz").as_posix())
     mol_doc = MoleculeDoc(**mol)
     return mol_doc
 
 
 @pytest.fixture(scope="session")
 def base_thermo(test_dir):
-    thermo = loadfn((test_dir / "metal_binding_doc" / "thermo.json").as_posix())
+    thermo = loadfn((test_dir / "metal_binding_doc" / "thermo.json.gz").as_posix())
     thermo_doc = MoleculeThermoDoc(**thermo)
     return thermo_doc
 
@@ -26,7 +26,7 @@ def base_thermo(test_dir):
 @pytest.fixture(scope="session")
 def charges(test_dir):
     charges = loadfn(
-        (test_dir / "metal_binding_doc" / "partial_charges.json").as_posix()
+        (test_dir / "metal_binding_doc" / "partial_charges.json.gz").as_posix()
     )
     charges_doc = PartialChargesDoc(**charges)
     return charges_doc
@@ -34,28 +34,34 @@ def charges(test_dir):
 
 @pytest.fixture(scope="session")
 def spins(test_dir):
-    spins = loadfn((test_dir / "metal_binding_doc" / "partial_spins.json").as_posix())
+    spins = loadfn(
+        (test_dir / "metal_binding_doc" / "partial_spins.json.gz").as_posix()
+    )
     spins_doc = PartialSpinsDoc(**spins)
     return spins_doc
 
 
 @pytest.fixture(scope="session")
 def bonds(test_dir):
-    bonds = loadfn((test_dir / "metal_binding_doc" / "bonds.json").as_posix())
+    bonds = loadfn((test_dir / "metal_binding_doc" / "bonds.json.gz").as_posix())
     bonds_doc = MoleculeBondingDoc(**bonds)
     return bonds_doc
 
 
 @pytest.fixture(scope="session")
 def metal_thermo(test_dir):
-    thermo = loadfn((test_dir / "metal_binding_doc" / "metal_thermo.json").as_posix())
+    thermo = loadfn(
+        (test_dir / "metal_binding_doc" / "metal_thermo.json.gz").as_posix()
+    )
     metal_thermo_doc = MoleculeThermoDoc(**thermo)
     return metal_thermo_doc
 
 
 @pytest.fixture(scope="session")
 def nometal_thermo(test_dir):
-    thermo = loadfn((test_dir / "metal_binding_doc" / "nometal_thermo.json").as_posix())
+    thermo = loadfn(
+        (test_dir / "metal_binding_doc" / "nometal_thermo.json.gz").as_posix()
+    )
     nometal_thermo_doc = MoleculeThermoDoc(**thermo)
     return nometal_thermo_doc
 

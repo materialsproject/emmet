@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 from pydantic import Field
 from pymatgen.core.structure import Molecule
 
-from emmet.core.material import PropertyOrigin
+from emmet.core.molecules import MolPropertyOrigin
 from emmet.core.mpid import MPculeID
 from emmet.core.qchem.calc_types import LevelOfTheory
 from emmet.core.structure import MoleculeMetadata
@@ -73,7 +73,7 @@ class PropertyDoc(MoleculeMetadata):
         default_factory=utcnow,
     )
 
-    origins: Sequence[PropertyOrigin] = Field(
+    origins: Sequence[MolPropertyOrigin] = Field(
         [], description="Dictionary for tracking the provenance of properties"
     )
 

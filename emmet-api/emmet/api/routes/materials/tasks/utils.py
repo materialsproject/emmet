@@ -23,6 +23,12 @@ def calcs_reversed_to_trajectory(calcs_reversed: list[dict]):
 
         steps = calculation.get("output", {}).get("ionic_steps", None)
 
+        time_step = None
+        if (inp_params := calculation.get("input", {}).get("parameters", {})).get(
+            "IBRION", -1
+        ) == 0:
+            time_step = inp_params.get("POTIM", None)
+
         if steps is None:
             raise HTTPException(
                 status_code=404, detail="No ionic step data found for task"
@@ -48,7 +54,7 @@ def calcs_reversed_to_trajectory(calcs_reversed: list[dict]):
                 frame_props.append(step_dict)
 
             traj = Trajectory.from_structures(
-                structures, frame_properties=frame_props, time_step=None
+                structures, frame_properties=frame_props, time_step=time_step
             ).as_dict()
             trajectories.append(traj)
 
