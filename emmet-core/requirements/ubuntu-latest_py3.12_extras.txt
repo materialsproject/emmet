@@ -6,7 +6,7 @@
 #
 annotated-types==0.7.0
     # via pydantic
-ase==3.25.0
+ase==3.26.0
     # via
     #   matcalc
     #   pymatgen-analysis-diffusion
@@ -14,11 +14,11 @@ bibtexparser==1.4.3
     # via pymatgen
 bracex==2.6
     # via wcmatch
-certifi==2025.7.14
+certifi==2025.8.3
     # via requests
 cfgv==3.4.0
     # via pre-commit
-charset-normalizer==3.4.2
+charset-normalizer==3.4.3
     # via requests
 click==8.2.1
     # via mkdocs
@@ -26,11 +26,11 @@ colorama==0.4.6
     # via griffe
 contourpy==1.3.3
     # via matplotlib
-coverage[toml]==7.10.1
+coverage[toml]==7.10.3
     # via pytest-cov
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
-custodian==2025.5.12
+custodian==2025.8.13
     # via emmet-core (setup.py)
 cycler==0.12.1
     # via matplotlib
@@ -38,13 +38,13 @@ distlib==0.4.0
     # via virtualenv
 dnspython==2.7.0
     # via pymongo
-filelock==3.18.0
+filelock==3.19.1
     # via
     #   mdanalysis
     #   virtualenv
 flake8==7.3.0
     # via emmet-core (setup.py)
-fonttools==4.59.0
+fonttools==4.59.1
     # via matplotlib
 fsspec==2025.7.0
     # via matcalc
@@ -52,7 +52,7 @@ ghp-import==2.1.0
     # via mkdocs
 griddataformats==1.0.2
     # via mdanalysis
-griffe==1.9.0
+griffe==1.12.1
     # via mkdocstrings-python
 h5py==3.14.0
     # via
@@ -60,7 +60,7 @@ h5py==3.14.0
     #   phonopy
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
-identify==2.6.12
+identify==2.6.13
     # via pre-commit
 idna==3.10
     # via requests
@@ -85,7 +85,7 @@ joblib==1.5.1
     #   scikit-learn
 jsmin==3.0.1
     # via mkdocs-minify-plugin
-kiwisolver==1.4.8
+kiwisolver==1.4.9
     # via matplotlib
 latexcodec==3.0.1
     # via pybtex
@@ -106,11 +106,11 @@ markupsafe==3.0.2
     #   mkdocs
     #   mkdocs-autorefs
     #   mkdocstrings
-matcalc==0.4.1
+matcalc==0.4.2
     # via emmet-core (setup.py)
 matminer==0.9.3
     # via robocrys
-matplotlib==3.10.3
+matplotlib==3.10.5
     # via
     #   ase
     #   mdanalysis
@@ -163,7 +163,7 @@ mkdocstrings[python]==0.30.0
     # via
     #   emmet-core (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.16.12
+mkdocstrings-python==1.17.0
     # via mkdocstrings
 mmtf-python==1.1.3
     # via mdanalysis
@@ -184,13 +184,13 @@ mrcfile==1.5.4
     # via griddataformats
 msgpack==1.1.1
     # via mmtf-python
-mypy==1.17.0
+mypy==1.17.1
     # via emmet-core (setup.py)
 mypy-extensions==1.1.0
     # via
     #   emmet-core (setup.py)
     #   mypy
-narwhals==2.0.0
+narwhals==2.1.1
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -235,7 +235,7 @@ numpy==1.26.4
     #   symfc
     #   tidynamics
     #   tifffile
-orjson==3.11.1
+orjson==3.11.2
     # via pymatgen
 packaging==25.0
     # via
@@ -262,9 +262,9 @@ pathspec==0.12.1
     #   mypy
 patsy==1.0.1
     # via statsmodels
-phono3py==3.18.0
+phono3py==3.19.2
     # via matcalc
-phonopy==2.42.0
+phonopy==2.43.1
     # via
     #   matcalc
     #   phono3py
@@ -278,7 +278,7 @@ platformdirs==4.3.8
     # via
     #   mkdocs-get-deps
     #   virtualenv
-plotly==6.2.0
+plotly==6.3.0
     # via
     #   pymatgen
     #   solvation-analysis
@@ -286,7 +286,7 @@ pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
-pre-commit==4.2.0
+pre-commit==4.3.0
     # via emmet-core (setup.py)
 psutil==7.0.0
     # via custodian
@@ -328,7 +328,7 @@ pymatgen==2025.6.14
     #   pymatgen-analysis-defects
     #   pymatgen-analysis-diffusion
     #   robocrys
-pymatgen-analysis-alloys==0.0.7
+pymatgen-analysis-alloys==0.0.8
     # via emmet-core (setup.py)
 pymatgen-analysis-defects==2025.1.18
     # via emmet-core (setup.py)
@@ -338,7 +338,7 @@ pymdown-extensions==10.16.1
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.13.2
+pymongo==4.14.0
     # via matminer
 pyparsing==3.2.3
     # via
@@ -373,7 +373,7 @@ pyyaml==6.0.2
     #   pyyaml-env-tag
 pyyaml-env-tag==1.1
     # via mkdocs
-rdkit==2025.3.3
+rdkit==2025.3.5
     # via solvation-analysis
 requests==2.32.4
     # via
@@ -446,7 +446,7 @@ tidynamics==1.1.2
     # via transport-analysis
 tifffile==2025.6.11
     # via scikit-image
-tornado==6.5.1
+tornado==6.5.2
     # via livereload
 tqdm==4.67.1
     # via
@@ -457,9 +457,9 @@ transport-analysis==0.1.2
     # via emmet-core (setup.py)
 typeguard==4.4.4
     # via inflect
-types-requests==2.32.4.20250611
+types-requests==2.32.4.20250809
     # via emmet-core (setup.py)
-types-setuptools==80.9.0.20250529
+types-setuptools==80.9.0.20250809
     # via emmet-core (setup.py)
 typing-extensions==4.14.1
     # via
@@ -482,7 +482,7 @@ urllib3==2.5.0
     # via
     #   requests
     #   types-requests
-virtualenv==20.32.0
+virtualenv==20.34.0
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
