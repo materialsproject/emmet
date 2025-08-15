@@ -21,9 +21,9 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.8
+boto3==1.40.10
     # via maggma
-botocore==1.40.8
+botocore==1.40.10
     # via
     #   boto3
     #   s3transfer
@@ -61,13 +61,13 @@ dnspython==2.7.0
     #   pymongo
 emmet-core[all,ml]==0.84.9
     # via emmet-builders (setup.py)
-filelock==3.18.0
+filelock==3.19.1
     # via
     #   mdanalysis
     #   virtualenv
 flake8==7.3.0
     # via emmet-builders (setup.py)
-fonttools==4.59.0
+fonttools==4.59.1
     # via matplotlib
 fsspec==2025.7.0
     # via matcalc
@@ -75,7 +75,7 @@ ghp-import==2.1.0
     # via mkdocs
 griddataformats==1.0.2
     # via mdanalysis
-griffe==1.11.1
+griffe==1.12.1
     # via mkdocstrings-python
 h5py==3.14.0
     # via
@@ -128,7 +128,7 @@ lazy-loader==0.4
     # via scikit-image
 livereload==2.7.1
     # via emmet-builders (setup.py)
-maggma==0.71.5
+maggma==0.72.0
     # via emmet-builders (setup.py)
 markdown==3.8.2
     # via
@@ -203,7 +203,7 @@ mkdocstrings[python]==0.30.0
     # via
     #   emmet-builders (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.16.12
+mkdocstrings-python==1.17.0
     # via mkdocstrings
 mmtf-python==1.1.3
     # via mdanalysis
@@ -570,7 +570,7 @@ urllib3==2.5.0
     #   botocore
     #   requests
     #   types-requests
-virtualenv==20.33.1
+virtualenv==20.34.0
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs

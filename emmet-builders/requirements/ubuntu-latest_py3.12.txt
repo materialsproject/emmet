@@ -19,9 +19,9 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.8
+boto3==1.40.10
     # via maggma
-botocore==1.40.8
+botocore==1.40.10
     # via
     #   boto3
     #   s3transfer
@@ -45,9 +45,9 @@ dnspython==2.7.0
     #   pymongo
 emmet-core[all]==0.84.9
     # via emmet-builders (setup.py)
-filelock==3.18.0
+filelock==3.19.1
     # via mdanalysis
-fonttools==4.59.0
+fonttools==4.59.1
     # via matplotlib
 griddataformats==1.0.2
     # via mdanalysis
@@ -83,7 +83,7 @@ latexcodec==3.0.1
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
-maggma==0.71.5
+maggma==0.72.0
     # via emmet-builders (setup.py)
 matminer==0.9.3
     # via
