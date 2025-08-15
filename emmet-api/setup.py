@@ -23,7 +23,6 @@ setup(
         "pymatgen-analysis-alloys>=0.0.3",
         "pymatgen-analysis-defects>=2024.10.22",
         "uvicorn>=0.18.3",
-        "pymongo>4.0.0,<=4.10.1",
         "maggma",
     ],
     extras_require={
