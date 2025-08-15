@@ -2,8 +2,8 @@ from itertools import permutations
 from typing import Literal
 
 from fastapi import Body, HTTPException, Query
-from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+from emmet.api.query_operator import QueryOperator
+from emmet.api.utils import STORE_PARAMS
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 from pymatgen.core.composition import Composition, CompositionError
 from pymatgen.core.periodic_table import Element

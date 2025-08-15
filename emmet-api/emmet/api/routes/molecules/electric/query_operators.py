@@ -1,8 +1,8 @@
 from typing import Any, Literal
 
 from fastapi import Query
-from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+from emmet.api.query_operator import QueryOperator
+from emmet.api.utils import STORE_PARAMS
 
 allowed_components = {
     "dipole": {"X", "Y", "Z"},

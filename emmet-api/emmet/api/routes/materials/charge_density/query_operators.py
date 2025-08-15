@@ -1,6 +1,6 @@
 from fastapi import Query
-from maggma.api.query_operator.core import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+from emmet.api.query_operator.core import QueryOperator
+from emmet.api.utils import STORE_PARAMS
 
 
 class ChgcarTaskIDQuery(QueryOperator):

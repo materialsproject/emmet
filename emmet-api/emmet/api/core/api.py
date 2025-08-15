@@ -1,6 +1,6 @@
 from fastapi.openapi.utils import get_openapi
-from maggma.api.API import API
-from maggma.api.resource.core import Resource
+from emmet.api.API import API
+from emmet.api.resource.core import Resource
 from pymatgen.core import __version__ as pmg_version  # type: ignore
 
 from emmet.api import __version__ as api_version

@@ -1,6 +1,6 @@
-from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
-from maggma.api.query_operator.dynamic import NumericQuery
-from maggma.api.resource import ReadOnlyResource
+from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
+from emmet.api.query_operator.dynamic import NumericQuery
+from emmet.api.resource import ReadOnlyResource
 from emmet.api.core.settings import MAPISettings
 
 from emmet.api.core.global_header import GlobalHeaderProcessor

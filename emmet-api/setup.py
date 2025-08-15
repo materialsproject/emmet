@@ -16,13 +16,14 @@ setup(
         "fastapi",
         "gunicorn",
         "boto3",
-        "maggma[api]",
-        "ddtrace<3",
+        "ddtrace",
         "setproctitle",
         "shapely",
         "asgi-logger",
         "pymatgen-analysis-alloys>=0.0.3",
         "pymatgen-analysis-defects>=2024.10.22",
+        "uvicorn>=0.18.3",
+        "maggma",
     ],
     extras_require={
         "test": [
@@ -36,6 +37,7 @@ setup(
             "mypy-extensions",
             "types-setuptools",
             "types-requests",
+            "starlette[full]",
             "wincertstore",
         ],
         "docs": [

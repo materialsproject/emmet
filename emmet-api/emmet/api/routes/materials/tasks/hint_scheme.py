@@ -1,4 +1,4 @@
-from maggma.api.resource import HintScheme
+from emmet.api.resource import HintScheme
 
 
 class TasksHintScheme(HintScheme):

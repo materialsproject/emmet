@@ -1,13 +1,13 @@
-from maggma.api.resource.read_resource import ReadOnlyResource
-from maggma.api.resource.post_resource import PostOnlyResource
-from maggma.api.resource.aggregation import AggregationResource
+from emmet.api.resource.read_resource import ReadOnlyResource
+from emmet.api.resource.post_resource import PostOnlyResource
+from emmet.api.resource.aggregation import AggregationResource
 
 
 from emmet.core.vasp.material import MaterialsDoc
 from emmet.core.find_structure import FindStructure
 from emmet.core.formula_autocomplete import FormulaAutocomplete
 
-from maggma.api.query_operator import (
+from emmet.api.query_operator import (
     PaginationQuery,
     SparseFieldsQuery,
     NumericQuery,

@@ -1,8 +1,8 @@
 from collections import defaultdict
 
 from fastapi import HTTPException, Query
-from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+from emmet.api.query_operator import QueryOperator
+from emmet.api.utils import STORE_PARAMS
 from pymatgen.core.periodic_table import Element
 
 from emmet.api.routes.materials.insertion_electrodes.utils import (

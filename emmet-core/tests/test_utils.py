@@ -5,9 +5,18 @@ from pathlib import Path
 import numpy as np
 import pytest
 from bson.objectid import ObjectId
-from emmet.core.utils import DocEnum, ValueEnum, jsanitize, get_md5_blocked
+from emmet.core.utils import (
+    DocEnum,
+    ValueEnum,
+    jsanitize,
+    get_md5_blocked,
+    get_flat_models_from_model,
+    dynamic_import,
+)
 from monty.json import MSONable
 from monty.serialization import dumpfn
+
+from emmet.core.tasks import TaskDoc
 
 
 def test_jsanitize():
@@ -103,3 +112,33 @@ def test_blocked_md5(tmp_dir):
         f.write(file_text)
 
     assert get_md5_blocked("test_md5.gz") == hashlib.md5(file_text).hexdigest()
+
+
+def test_model_flatten():
+
+    sub_models = get_flat_models_from_model(TaskDoc)
+    assert {model.__name__ for model in sub_models} == {
+        "AnalysisDoc",
+        "Calculation",
+        "CalculationInput",
+        "CalculationOutput",
+        "CustodianDoc",
+        "ElectronPhononDisplacedStructures",
+        "ElectronicStep",
+        "EmmetMeta",
+        "FrequencyDependentDielectric",
+        "InputDoc",
+        "IonicStep",
+        "OrigInputs",
+        "OutputDoc",
+        "Potcar",
+        "PotcarSpec",
+        "RunStatistics",
+        "SymmetryData",
+        "TaskDoc",
+    }
+
+
+def test_import():
+
+    assert dynamic_import("emmet.core.tasks.TaskDoc") == TaskDoc

@@ -1,4 +1,4 @@
-from maggma.api.resource import AggregationResource
+from emmet.api.resource import AggregationResource
 from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.synthesis.query_operators import SynthesisSearchQuery
 from emmet.api.core.global_header import GlobalHeaderProcessor

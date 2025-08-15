@@ -1,12 +1,12 @@
 from emmet.core.summary import SummaryDoc
 
-from maggma.api.query_operator import (
+from emmet.api.query_operator import (
     PaginationQuery,
     SparseFieldsQuery,
     NumericQuery,
     SortQuery,
 )
-from maggma.api.resource import ReadOnlyResource, AggregationResource
+from emmet.api.resource import ReadOnlyResource, AggregationResource
 from emmet.api.routes.materials.materials.query_operators import (
     DeprecationQuery,
     ElementsQuery,

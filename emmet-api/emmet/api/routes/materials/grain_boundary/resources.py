@@ -1,4 +1,4 @@
-from maggma.api.resource import ReadOnlyResource
+from emmet.api.resource import ReadOnlyResource
 from emmet.core.grain_boundary import GrainBoundaryDoc
 
 from emmet.api.routes.materials.grain_boundary.query_operators import (
@@ -6,7 +6,7 @@ from emmet.api.routes.materials.grain_boundary.query_operators import (
     GBTaskIDQuery,
 )
 from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery
-from maggma.api.query_operator import (
+from emmet.api.query_operator import (
     PaginationQuery,
     SparseFieldsQuery,
     NumericQuery,

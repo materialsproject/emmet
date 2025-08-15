@@ -1,5 +1,5 @@
-from maggma.api.resource import SubmissionResource
-from maggma.api.query_operator import PaginationQuery
+from emmet.api.resource import SubmissionResource
+from emmet.api.query_operator import PaginationQuery
 from emmet.core.mpcomplete import MPCompleteDoc, MPCompleteDataStatus
 from emmet.api.routes.materials.mpcomplete.query_operator import (
     MPCompletePostQuery,

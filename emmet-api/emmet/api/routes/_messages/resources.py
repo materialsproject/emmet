@@ -1,9 +1,9 @@
-from maggma.api.resource import SubmissionResource
+from emmet.api.resource import SubmissionResource
 from emmet.api.routes._messages.query_operator import (
     MessagesPostQuery,
     MessagesGetQuery,
 )
-from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery, SortQuery
+from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery, SortQuery
 from emmet.core._messages import MessagesDoc
 
 

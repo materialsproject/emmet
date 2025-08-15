@@ -1,10 +1,10 @@
-from maggma.api.query_operator import (
+from emmet.api.query_operator import (
     NumericQuery,
     PaginationQuery,
     SparseFieldsQuery,
     StringQueryOperator,
 )
-from maggma.api.resource import ReadOnlyResource
+from emmet.api.resource import ReadOnlyResource
 
 from emmet.api.routes.materials.substrates.query_operators import (
     SubstrateStructureQuery,

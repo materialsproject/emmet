@@ -1,5 +1,5 @@
-from maggma.api.resource import ReadOnlyResource
-from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
+from emmet.api.resource import ReadOnlyResource
+from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
 from emmet.core.charge_density import ChgcarDataDoc
 from emmet.api.routes.materials.charge_density.query_operators import ChgcarTaskIDQuery
 from emmet.api.core.global_header import GlobalHeaderProcessor

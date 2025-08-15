@@ -1,7 +1,7 @@
 from fastapi import Query, Body
 from pymatgen.core.structure import Structure
-from maggma.api.utils import STORE_PARAMS
-from maggma.api.query_operator import QueryOperator
+from emmet.api.utils import STORE_PARAMS
+from emmet.api.query_operator import QueryOperator
 
 
 class MPCompletePostQuery(QueryOperator):

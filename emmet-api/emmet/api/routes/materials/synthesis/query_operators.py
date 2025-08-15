@@ -1,7 +1,7 @@
 from typing import Any
 
 from fastapi import Query
-from maggma.api.query_operator import QueryOperator
+from emmet.api.query_operator import QueryOperator
 from pymatgen.core import Composition
 
 from emmet.api.routes.materials.synthesis.utils import mask_highlights, mask_paragraphs

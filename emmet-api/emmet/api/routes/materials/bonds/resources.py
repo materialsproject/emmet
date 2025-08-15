@@ -1,7 +1,7 @@
-from maggma.api.resource import ReadOnlyResource
+from emmet.api.resource import ReadOnlyResource
 from emmet.core.bonds import BondingDoc
 
-from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
+from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
 
 from emmet.api.routes.materials.bonds.query_operators import (
     BondLengthQuery,
