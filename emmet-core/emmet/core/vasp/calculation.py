@@ -174,6 +174,9 @@ class CalculationInput(CalculationBaseModel):
     potcar_spec: list[PotcarSpec] | None = Field(
         None, description="Title and hash of POTCAR files used in the calculation"
     )
+    potcar: list[str] | None = Field(
+        None, description="The symbols of the POTCARs used in the calculation."
+    )
     potcar_type: list[str] | None = Field(
         None, description="List of POTCAR functional types."
     )
@@ -206,6 +209,54 @@ class CalculationInput(CalculationBaseModel):
         }
         if (kpts := config.get("kpoints")) and isinstance(kpts, dict):
             config["kpoints"] = Kpoints.from_dict(kpts)
+
+        # Issue: older tasks don't always contain `input.potcar`
+        # and `input.potcar_spec`
+        # Newer tasks contain `input.potcar`, `input.potcar_spec`,
+        # and `orig_inputs.potcar_spec`
+
+        # orig_inputs.potcar used to be what is now potcar_spec
+        # try to coerce back here, but not guaranteed
+        if (pcar := config.get("potcar")) and not config.get("potcar_spec"):
+            if isinstance(pcar, dict):
+                if pcar.get("@class") == "Potcar":
+                    pcar = VaspPotcar.from_dict(pcar)
+                else:
+                    pcar = Potcar(**pcar)
+
+            if isinstance(pcar, VaspPotcar):
+                config["potcar_spec"] = PotcarSpec.from_potcar(pcar)
+                config.pop("potcar")
+            elif isinstance(pcar, Potcar):
+                config["potcar_type"] = [pcar.pot_type] if pcar.pot_type else None
+                config["potcar"] = pcar.symbols
+            else:
+                try:
+                    pspec = [PotcarSpec(**x) for x in pcar]
+                    config["potcar_spec"] = pspec
+                    config.pop("potcar")
+                except Exception:
+                    if not isinstance(pcar, list) or not all(
+                        isinstance(x, str) for x in pcar
+                    ):
+                        config.pop("potcar")
+
+        if (pspec := config.get("potcar_spec")) and config.get("potcar") is None:
+            config["potcar"] = []
+            for spec in pspec:
+                if isinstance(spec, PotcarSpec) and spec.titel:
+                    titel = spec.titel
+                elif isinstance(spec, dict) and spec.get("titel"):
+                    titel = spec["titel"]
+                else:
+                    continue
+                symbs = titel.split()
+                if len(symbs) >= 2:
+                    symb = symbs[1]
+                else:
+                    symb = symbs[0]
+                config["potcar"].append(symb)
+
         return config
 
     @cached_property
@@ -213,13 +264,6 @@ class CalculationInput(CalculationBaseModel):
         "Return pymatgen object representing the POSCAR file."
         if self.structure:
             return Poscar(self.structure)
-        return None
-
-    @property
-    def potcar(self) -> list[str] | None:
-        "Return POTCAR symbols in the calculation."
-        if self.potcar_spec:
-            return [spec.titel.split()[1] for spec in self.potcar_spec if spec.titel]
         return None
 
     @property
