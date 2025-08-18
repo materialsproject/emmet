@@ -49,7 +49,7 @@ cryptography==45.0.6
     # via paramiko
 cycler==0.12.1
     # via matplotlib
-ddtrace==2.21.11
+ddtrace==3.12.1
     # via emmet-api (setup.py)
 dnspython==2.7.0
     # via
@@ -57,12 +57,10 @@ dnspython==2.7.0
     #   pymongo
 emmet-core==0.84.9
     # via emmet-api (setup.py)
-envier==0.5.2
+envier==0.6.1
     # via ddtrace
 fastapi==0.116.1
-    # via
-    #   emmet-api (setup.py)
-    #   maggma
+    # via emmet-api (setup.py)
 fonttools==4.59.1
     # via matplotlib
 gunicorn==23.0.0
@@ -97,7 +95,7 @@ latexcodec==3.0.1
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
-maggma[api]==0.72.0
+maggma==0.72.0
     # via emmet-api (setup.py)
 matplotlib==3.10.5
     # via pymatgen
@@ -130,6 +128,7 @@ numpy==1.26.4
     #   pandas
     #   pymatgen
     #   pymatgen-analysis-defects
+    #   pymatgen-io-validation
     #   scikit-image
     #   scipy
     #   shapely
@@ -176,12 +175,14 @@ pydantic==2.11.7
     #   fastapi
     #   maggma
     #   pydantic-settings
+    #   pymatgen-io-validation
 pydantic-core==2.33.2
     # via pydantic
 pydantic-settings==2.10.1
     # via
     #   emmet-core
     #   maggma
+    #   pymatgen-io-validation
 pydash==8.0.5
     # via maggma
 pymatgen==2025.6.14
@@ -193,6 +194,8 @@ pymatgen==2025.6.14
 pymatgen-analysis-alloys==0.0.8
     # via emmet-api (setup.py)
 pymatgen-analysis-defects==2025.1.18
+    # via emmet-api (setup.py)
+pymatgen-io-validation==0.1.0
     # via emmet-api (setup.py)
 pymongo==4.10.1
     # via maggma
@@ -298,10 +301,8 @@ urllib3==2.5.0
     #   botocore
     #   requests
 uvicorn==0.35.0
-    # via maggma
+    # via emmet-api (setup.py)
 wrapt==1.17.3
-    # via ddtrace
-xmltodict==0.14.2
     # via ddtrace
 zipp==3.23.0
     # via importlib-metadata

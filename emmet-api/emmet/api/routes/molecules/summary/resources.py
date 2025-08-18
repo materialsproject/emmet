@@ -1,11 +1,11 @@
 from emmet.core.molecules.summary import MoleculeSummaryDoc
 
-from maggma.api.query_operator import (
+from emmet.api.query_operator import (
     PaginationQuery,
     SparseFieldsQuery,
     NumericQuery,
 )
-from maggma.api.resource import ReadOnlyResource
+from emmet.api.resource import ReadOnlyResource
 from emmet.api.routes.molecules.molecules.query_operators import (
     FormulaQuery,
     ChemsysQuery,

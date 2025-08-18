@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING
 
 from fastapi import Path, Query
 
-from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+from emmet.api.query_operator import QueryOperator
+from emmet.api.utils import STORE_PARAMS
 
 if TYPE_CHECKING:
     from emmet.core.mpid import MPID, AlphaID

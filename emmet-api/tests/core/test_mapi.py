@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 from emmet.api.core import MAPI
 
-from maggma.api.resource import ReadOnlyResource
+from emmet.api.resource import ReadOnlyResource
 from maggma.stores import MemoryStore
 
 

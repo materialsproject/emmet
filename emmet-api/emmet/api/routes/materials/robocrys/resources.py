@@ -1,6 +1,6 @@
-from maggma.api.resource import ReadOnlyResource
-from maggma.api.resource.aggregation import AggregationResource
-from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
+from emmet.api.resource import ReadOnlyResource
+from emmet.api.resource.aggregation import AggregationResource
+from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
 
 from emmet.api.routes.materials.robocrys.query_operators import RoboTextSearchQuery
 from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery
