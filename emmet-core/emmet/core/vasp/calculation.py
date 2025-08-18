@@ -269,21 +269,28 @@ class CalculationInput(CalculationBaseModel):
 
     @cached_property
     def poscar(self) -> Poscar | None:
-        "Return pymatgen object representing the POSCAR file."
+        """Return pymatgen object representing the POSCAR file."""
         if self.structure:
             return Poscar(self.structure)
         return None
 
     @property
     def is_lasph(self) -> bool | None:
-        "Report if the calculation was run with aspherical corrections."
+        """Report if the calculation was run with aspherical corrections.
+
+        If `self.parameters` is populated, returns the value of `LASPH`
+        from vasprun.xml, or its default value if not set (`False`).
+
+        If `self.parameters` isn't populated (vasprun.xml wasn't parsed),
+        returns `None`.
+        """
         if self.parameters:
             return self.parameters.get("LASPH", False)
         return None
 
     @property
     def pseudo_potentials(self) -> Potcar | None:
-        "Get summary of the pseudo-potentials used in this calculation."
+        """Summarize the pseudo-potentials used."""
         if not self.potcar_type:
             return None
 
@@ -297,7 +304,7 @@ class CalculationInput(CalculationBaseModel):
 
     @property
     def xc_override(self) -> str | None:
-        "Report the exchange-correlation functional used."
+        """Report the exchange-correlation functional used."""
         xc = None
         if self.incar:
             xc = self.incar.get("GGA") or self.incar.get("METAGGA")
@@ -996,11 +1003,7 @@ class Calculation(CalculationBaseModel):
         if store_trajectory != StoreTrajectoryOption.NO:
             exclude_from_trajectory = set(["structure"])
             if store_trajectory == StoreTrajectoryOption.PARTIAL:
-                exclude_from_trajectory.update(
-                    {
-                        "electronic_steps",
-                    }
-                )
+                exclude_from_trajectory.add("electronic_steps")
             frame_properties = [
                 IonicStep(**x).model_dump(exclude=exclude_from_trajectory)
                 for x in vasprun.ionic_steps
