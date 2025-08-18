@@ -25,11 +25,11 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.10
+boto3==1.40.11
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.40.10
+botocore==1.40.11
     # via
     #   boto3
     #   s3transfer
@@ -58,7 +58,7 @@ colorama==0.4.6
     # via griffe
 contourpy==1.3.3
     # via matplotlib
-coverage[toml]==7.10.3
+coverage[toml]==7.10.4
     # via pytest-cov
 cryptography==45.0.6
     # via paramiko
@@ -66,7 +66,7 @@ csscompressor==0.9.5
     # via mkdocs-minify-plugin
 cycler==0.12.1
     # via matplotlib
-ddtrace==3.12.0
+ddtrace==3.12.1
     # via emmet-api (setup.py)
 distlib==0.4.0
     # via virtualenv
@@ -136,7 +136,7 @@ jsmin==3.0.1
     # via mkdocs-minify-plugin
 jsonlines==4.0.0
     # via maggma
-jsonschema==4.25.0
+jsonschema==4.25.1
     # via maggma
 jsonschema-specifications==2025.4.1
     # via jsonschema
@@ -340,9 +340,7 @@ pymdown-extensions==10.16.1
     #   mkdocs-material
     #   mkdocstrings
 pymongo==4.10.1
-    # via
-    #   emmet-api (setup.py)
-    #   maggma
+    # via maggma
 pynacl==1.5.0
     # via paramiko
 pyparsing==3.2.3
