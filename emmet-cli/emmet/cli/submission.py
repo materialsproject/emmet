@@ -296,7 +296,8 @@ class Submission(BaseModel):
                 logger.debug(
                     f"Running refresh in parallel for {len(pending_calculations)} calculations"
                 )
-                with Pool() as pool:
+                ctx = get_context("fork")
+                with ctx.Pool(processes=cpu_count()) as pool:
                     results = pool.map(
                         invoke_calc_refresh,
                         [(locator.path, cm) for locator, cm in pending_calculations],
