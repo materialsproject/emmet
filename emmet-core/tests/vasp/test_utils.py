@@ -9,8 +9,6 @@ from emmet.core.vasp.utils import (
     FileMetadata,
 )
 
-from emmet.core.utils import get_hash_blocked
-
 
 def test_file_meta(tmp_dir):
     import blake3
