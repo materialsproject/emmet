@@ -1,8 +1,8 @@
-from maggma.api.query_operator.dynamic import NumericQuery
-from maggma.api.resource import ReadOnlyResource
+from emmet.api.query_operator.dynamic import NumericQuery
+from emmet.api.resource import ReadOnlyResource
 from emmet.core.thermo import ThermoDoc
 
-from maggma.api.query_operator import (
+from emmet.api.query_operator import (
     PaginationQuery,
     SparseFieldsQuery,
 )

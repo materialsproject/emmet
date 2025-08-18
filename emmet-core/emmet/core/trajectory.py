@@ -19,7 +19,6 @@ from monty.dev import requires
 from monty.serialization import dumpfn
 
 from emmet.core.math import Vector3D, Matrix3D
-from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calc_types import RunType, TaskType, run_type, task_type, calc_type
 from emmet.core.vasp.calculation import ElectronicStep
 
@@ -657,7 +656,7 @@ class Trajectory(AtomTrajectory):
         return dict(props), rt, tt, ct
 
     @classmethod
-    def from_task_doc(cls, task_doc: TaskDoc, **kwargs) -> list["Trajectory"]:
+    def from_task_doc(cls, task_doc: Any, **kwargs) -> list["Trajectory"]:
         """
         Create trajectories from a TaskDoc.
 

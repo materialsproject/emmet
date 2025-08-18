@@ -22,7 +22,7 @@ def insertion_elec(test_dir):
     """
     entry_Li = ComputedEntry("Li", -1.90753119)
     # more cases can be added later if problems are found
-    entries_LTO = loadfn(test_dir / "LiTiO2_batt.json")
+    entries_LTO = loadfn(test_dir / "LiTiO2_batt.json.gz")
     ie_LTO = InsertionElectrode.from_entries(entries_LTO, entry_Li)
 
     d = {
@@ -35,7 +35,7 @@ def insertion_elec(test_dir):
 def conversion_elec(test_dir):
     conversion_electrodes = {}
 
-    entries_LCO = loadfn(test_dir / "LiCoO2_batt.json")
+    entries_LCO = loadfn(test_dir / "LiCoO2_batt.json.gz")
     c = ConversionElectrode.from_composition_and_entries(
         Composition("LiCoO2"), entries_LCO, working_ion_symbol="Li"
     )
@@ -94,7 +94,7 @@ def test_ConversionDocs_from_entries(conversion_elec):
 
 
 def test_ConversionDocs_from_composition_and_pd(conversion_elec, test_dir):
-    entries_LCO = loadfn(test_dir / "LiCoO2_batt.json")
+    entries_LCO = loadfn(test_dir / "LiCoO2_batt.json.gz")
     pd = PhaseDiagram(entries_LCO)
     for k, (elec, expected) in conversion_elec.items():
         vp = ConversionElectrodeDoc.from_composition_and_pd(

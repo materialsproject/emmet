@@ -13,7 +13,7 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.core.common import convert_datetime
-from emmet.core.mpid import MPID
+from emmet.core.mpid import AlphaID, MPID
 from emmet.core.utils import utcnow
 
 if TYPE_CHECKING:
@@ -286,11 +286,13 @@ def group_entries_with_structure_matcher(
         yield [el for el in sub_g]
 
 
-def _get_id_lexi(task_id) -> int | str:
+def _get_id_lexi(task_id: str | MPID | AlphaID) -> tuple[str, int]:
     """Get a lexicographic representation for a task ID"""
     # matches "mp-1234" or "1234" followed by and optional "-(Alphanumeric)"
-    mpid = MPID(task_id)
-    return mpid.parts
+    try:
+        return AlphaID(task_id).parts
+    except ValueError:
+        return (str(task_id), 0)
 
 
 def _get_framework(formula, ignored_specie) -> str:

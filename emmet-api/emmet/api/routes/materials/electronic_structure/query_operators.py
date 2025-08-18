@@ -1,15 +1,20 @@
+from __future__ import annotations
+
 from collections import defaultdict
 from sys import version_info
+from typing import TYPE_CHECKING
 
 from fastapi import HTTPException, Query
-from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+from emmet.api.query_operator import QueryOperator
+from emmet.api.utils import STORE_PARAMS
 from pymatgen.analysis.magnetism.analyzer import Ordering
 from pymatgen.core.periodic_table import Element
 from pymatgen.electronic_structure.core import OrbitalType, Spin
 
 from emmet.core.electronic_structure import BSPathType, DOSProjectionType
-from emmet.core.mpid import MPID
+
+if TYPE_CHECKING:
+    from emmet.core.mpid import MPID, AlphaID
 
 if version_info >= (3, 8):
     from typing import Literal  # type: ignore
@@ -237,7 +242,7 @@ class ObjectQuery(QueryOperator):
 
     def query(
         self,
-        task_id: MPID = Query(
+        task_id: MPID | AlphaID = Query(
             ...,
             description="The calculation (task) ID associated with the data object",
         ),

@@ -6,31 +6,31 @@ from emmet.core.thermo import ThermoDoc
 
 @pytest.fixture(scope="session")
 def Fe3O4_structure(test_dir):
-    structure = loadfn(test_dir / "thermo/Fe3O4_structure.json")
+    structure = loadfn(test_dir / "thermo/Fe3O4_structure.json.gz")
     return structure
 
 
 @pytest.fixture(scope="session")
 def Fe2O3a_structure(test_dir):
-    structure = loadfn(test_dir / "thermo/Fe2O3a_structure.json")
+    structure = loadfn(test_dir / "thermo/Fe2O3a_structure.json.gz")
     return structure
 
 
 @pytest.fixture(scope="session")
 def Fe2O3b_structure(test_dir):
-    structure = loadfn(test_dir / "thermo/Fe2O3b_structure.json")
+    structure = loadfn(test_dir / "thermo/Fe2O3b_structure.json.gz")
     return structure
 
 
 @pytest.fixture(scope="session")
 def Fe_structure(test_dir):
-    structure = loadfn(test_dir / "thermo/Fe_structure.json")
+    structure = loadfn(test_dir / "thermo/Fe_structure.json.gz")
     return structure
 
 
 @pytest.fixture(scope="session")
 def O_structure(test_dir):
-    structure = loadfn(test_dir / "thermo/O_structure.json")
+    structure = loadfn(test_dir / "thermo/O_structure.json.gz")
     return structure
 
 

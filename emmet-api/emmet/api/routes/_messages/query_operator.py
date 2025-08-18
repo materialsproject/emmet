@@ -1,8 +1,8 @@
 from datetime import datetime
 
 from fastapi import Body, Query
-from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+from emmet.api.query_operator import QueryOperator
+from emmet.api.utils import STORE_PARAMS
 
 from emmet.core._messages import MessageType
 

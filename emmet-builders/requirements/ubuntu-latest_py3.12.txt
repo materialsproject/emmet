@@ -19,9 +19,9 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.10
+boto3==1.40.11
     # via maggma
-botocore==1.40.10
+botocore==1.40.11
     # via
     #   boto3
     #   s3transfer
@@ -73,7 +73,7 @@ joblib==1.5.1
     #   scikit-learn
 jsonlines==4.0.0
     # via maggma
-jsonschema==4.25.0
+jsonschema==4.25.1
     # via maggma
 jsonschema-specifications==2025.4.1
     # via jsonschema
@@ -127,7 +127,7 @@ msgpack==1.1.1
     # via
     #   maggma
     #   mmtf-python
-narwhals==2.1.1
+narwhals==2.1.2
     # via plotly
 networkx==3.5
     # via
@@ -151,6 +151,7 @@ numpy==1.26.4
     #   pymatgen
     #   pymatgen-analysis-defects
     #   pymatgen-analysis-diffusion
+    #   pymatgen-io-validation
     #   rdkit
     #   robocrys
     #   scikit-image
@@ -219,12 +220,14 @@ pydantic==2.11.7
     #   emmet-core
     #   maggma
     #   pydantic-settings
+    #   pymatgen-io-validation
 pydantic-core==2.33.2
     # via pydantic
 pydantic-settings==2.10.1
     # via
     #   emmet-core
     #   maggma
+    #   pymatgen-io-validation
 pydash==8.0.5
     # via maggma
 pygments==2.19.2
@@ -237,6 +240,7 @@ pymatgen==2025.6.14
     #   pymatgen-analysis-alloys
     #   pymatgen-analysis-defects
     #   pymatgen-analysis-diffusion
+    #   pymatgen-io-validation
     #   robocrys
 pymatgen-analysis-alloys==0.0.8
     # via emmet-core
@@ -244,6 +248,8 @@ pymatgen-analysis-defects==2025.1.18
     # via emmet-core
 pymatgen-analysis-diffusion==2024.7.15
     # via emmet-core
+pymatgen-io-validation==0.1.0
+    # via emmet-builders (setup.py)
 pymongo==4.10.1
     # via
     #   maggma
@@ -282,6 +288,7 @@ requests==2.32.4
     # via
     #   matminer
     #   pymatgen
+    #   pymatgen-io-validation
 robocrys==0.2.11
     # via emmet-core
 rpds-py==0.27.0

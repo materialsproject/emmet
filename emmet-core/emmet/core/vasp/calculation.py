@@ -751,14 +751,20 @@ class CalculationOutput(BaseModel):
                 for ionic_step in ionic_steps
             ]
 
+        # The `epsilon_*` attrs of vasprun are now numpy arrays
+        # and need to be explicitly checked if they are empty
+        epsilons: dict[str, np.ndarray | list | None] = {}
+        for attr in ("epsilon_static", "epsilon_static_wolfe", "epsilon_ionic"):
+            if (v := getattr(vasprun, attr, None)) is not None and len(v) > 0:
+                epsilons[attr] = v
+            else:
+                epsilons[attr] = None
+
         return cls(
             structure=structure,
             energy=vasprun.final_energy,
             energy_per_atom=vasprun.final_energy / len(structure),
             mag_density=mag_density,
-            epsilon_static=vasprun.epsilon_static or None,
-            epsilon_static_wolfe=vasprun.epsilon_static_wolfe or None,
-            epsilon_ionic=vasprun.epsilon_ionic or None,
             frequency_dependent_dielectric=freq_dependent_diel,
             elph_displaced_structures=elph_structures,
             dos_properties=dosprop_dict,
@@ -767,6 +773,7 @@ class CalculationOutput(BaseModel):
             locpot=locpot_avg,
             outcar=outcar_dict,
             run_stats=RunStatistics.from_outcar(outcar) if outcar else None,
+            **epsilons,
             **electronic_output,
             **phonon_output,
         )
@@ -1001,7 +1008,7 @@ class Calculation(CalculationBaseModel):
             ]
             if oszicar_file:
                 try:
-                    oszicar = Oszicar(oszicar_file)
+                    oszicar = Oszicar(dir_name / oszicar_file)
                     if "T" in oszicar.ionic_steps[0]:
                         for frame_property, oszicar_is in zip(
                             frame_properties, oszicar.ionic_steps
