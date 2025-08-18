@@ -202,18 +202,15 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
         for mol_field in ("optimized_molecule", "initial_molecule"):
             if mol := getattr(self.output, mol_field, None):
                 break
-        if not mol:
+        else:
             raise ValueError("No molecule could be associated with the calculation.")
 
-        if self.charge is None:
-            charge = int(mol.charge)
-        else:
-            charge = int(self.charge)
-
-        if self.spin_multiplicity is None:
-            spin = mol.spin_multiplicity
-        else:
-            spin = self.spin_multiplicity
+        charge = int(mol.charge) if self.charge is None else int(self.charge)
+        spin = (
+            mol.spin_multiplicity
+            if self.spin_multiplicity is None
+            else self.spin_multiplicity
+        )
 
         entry_dict = {
             "entry_id": self.task_id,
@@ -257,8 +254,4 @@ def filter_task_type(
     """
 
     filtered = [f for f in entries if f["task_type"] == task_type]
-
-    if sort_by is not None:
-        return sorted(filtered, key=sort_by)
-    else:
-        return filtered
+    return sorted(filtered, key=sort_by) if sort_by is not None else filtered
