@@ -1,6 +1,6 @@
-from maggma.api.resource.core import HeaderProcessor
+from emmet.api.resource.core import HeaderProcessor
 from fastapi import Response, Request
-from maggma.api.utils import STORE_PARAMS
+from emmet.api.utils import STORE_PARAMS
 from emmet.api.routes.materials.materials.query_operators import LicenseQuery
 
 

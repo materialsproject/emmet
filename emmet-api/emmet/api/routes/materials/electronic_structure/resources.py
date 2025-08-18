@@ -1,7 +1,7 @@
-from maggma.api.query_operator.dynamic import NumericQuery
-from maggma.api.resource import ReadOnlyResource
+from emmet.api.query_operator.dynamic import NumericQuery
+from emmet.api.resource import ReadOnlyResource
 from emmet.core.electronic_structure import ElectronicStructureDoc
-from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
+from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
 
 from emmet.api.routes.materials.materials.query_operators import (
     ElementsQuery,
