@@ -26,7 +26,7 @@ from emmet.core.band_theory import BandStructure
 from emmet.core.base import CalcMeta
 from emmet.core.common import convert_datetime
 from emmet.core.math import Matrix3D, Tensor4R, Vector3D
-from emmet.core.mpid import MPID
+from emmet.core.mpid import AlphaID, MPID
 from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import DocEnum, get_num_formula_units, utcnow, requires_arrow
@@ -793,7 +793,7 @@ class PhononBSDOSTask(StructureMetadata):
 class PhononBSDOSDoc(PhononBSDOSTask):
     """Built data version of PhononBSDOSTask."""
 
-    material_id: MPID | None = Field(
+    material_id: MPID | AlphaID | None = Field(
         None,
         description="The Materials Project ID of the material, of the form mp-******.",
     )

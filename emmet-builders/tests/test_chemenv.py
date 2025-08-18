@@ -8,7 +8,7 @@ from emmet.builders.materials.oxidation_states import OxidationStatesBuilder
 
 @pytest.fixture(scope="session")
 def fake_materials(test_dir):
-    entries = JSONStore(test_dir / "LiTiO2_batt.json", key="entry_id")
+    entries = JSONStore(test_dir / "LiTiO2_batt.json.gz", key="entry_id")
     entries.connect()
 
     materials_store = MemoryStore(key="material_id")

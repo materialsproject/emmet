@@ -42,4 +42,4 @@ def test_from_target(structure, target):
 
 
 def test_schema():
-    XRDDoc.schema()
+    XRDDoc.model_json_schema()

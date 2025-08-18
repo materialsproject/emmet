@@ -8,7 +8,8 @@ from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 from pymatgen.core.structure import Molecule
 from pymatgen.io.babel import BabelMolAdaptor
 
-from emmet.core.material import CoreMoleculeDoc, PropertyOrigin
+from emmet.core.material import CoreMoleculeDoc
+from emmet.core.molecules import MolPropertyOrigin
 from emmet.core.mpid import MPculeID
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.qchem.task import TaskDocument
@@ -208,7 +209,7 @@ class MoleculeDoc(CoreMoleculeDoc):
         description="Collection of all unique combinations of level of theory and solvent used for this molecule",
     )
 
-    origins: list[PropertyOrigin] | None = Field(
+    origins: list[MolPropertyOrigin] | None = Field(
         None,
         description="List of property origins for tracking the provenance of properties",
     )
@@ -293,7 +294,7 @@ class MoleculeDoc(CoreMoleculeDoc):
 
             # Origins
             origins = [
-                PropertyOrigin(
+                MolPropertyOrigin(
                     name="molecule",
                     task_id=sorted_tasks[0].task_id,
                     last_updated=sorted_tasks[0].last_updated,
@@ -361,7 +362,7 @@ class MoleculeDoc(CoreMoleculeDoc):
 
             # Origins
             origins = [
-                PropertyOrigin(
+                MolPropertyOrigin(
                     name="molecule",
                     task_id=best_molecule_calc.task_id,
                     last_updated=best_molecule_calc.last_updated,

@@ -1,4 +1,5 @@
 import os
+from monty.io import zopen
 from json import load
 
 from pymatgen.core import Composition
@@ -110,8 +111,8 @@ def test_get_material_formula():
 
 
 def test_convert_one():
-    with open(
-        os.path.join(MAPISettings().TEST_FILES, "synth_doc_adaptor_synpro.json")
+    with zopen(
+        os.path.join(MAPISettings().TEST_FILES, "synth_doc_adaptor_synpro.json.gz")
     ) as file:
         synth_doc = load(file)
 
