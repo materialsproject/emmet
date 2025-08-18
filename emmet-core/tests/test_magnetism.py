@@ -8,7 +8,7 @@ from pymatgen.core import Structure
 def test_magnetism_doc(test_dir):
     test_orderings = {"mp-1034331": "FM", "mp-753472": "NM"}
 
-    for material in loadfn(test_dir / "magnetism/magnetism_mats_sample.json"):
+    for material in loadfn(test_dir / "magnetism/magnetism_mats_sample.json.gz"):
         structure = Structure.from_dict(jsanitize(material["structure"]))
         total_magnetization = material["magnetism"]["total_magnetization"]
         material_id = material["task_id"]

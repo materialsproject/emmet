@@ -10,7 +10,7 @@ def entries_lto(test_dir):
     """
     Recycle the test cases from pymatgen
     """
-    entries = loadfn(test_dir / "LiTiO2_batt.json")
+    entries = loadfn(test_dir / "LiTiO2_batt.json.gz")
     for itr, ient in enumerate(entries):
         ient.entry_id = f"mp-{itr}"
     return entries
@@ -21,7 +21,7 @@ def entries_lfeo(test_dir):
     """
     Recycle the test cases from pymatgen
     """
-    entries = loadfn(test_dir / "Li-Fe-O.json")
+    entries = loadfn(test_dir / "Li-Fe-O.json.gz")
     return entries
 
 

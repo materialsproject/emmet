@@ -6,6 +6,7 @@ from monty.serialization import dumpfn, loadfn
 
 from emmet.builders.materials.magnetism import MagneticBuilder
 from emmet.builders.vasp.materials import MaterialsBuilder
+from emmet.core.mpid import AlphaID
 
 
 @pytest.fixture(scope="session")
@@ -42,11 +43,9 @@ def test_magnetism_builder(tasks_store, magnetism_store, materials_store):
         "mp-1867075": "FM",
     }
 
-    print(list([doc["material_id"] for doc in magnetism_store.query({})]))
-
-    for mpid in test_mpids:
-        doc = magnetism_store.query_one({"material_id": mpid})
-        assert doc["ordering"] == test_mpids[mpid]
+    for mpid, ordering in test_mpids.items():
+        doc = magnetism_store.query_one({"material_id": AlphaID(mpid).string})
+        assert doc["ordering"] == ordering
 
 
 def test_serialization(tmpdir):

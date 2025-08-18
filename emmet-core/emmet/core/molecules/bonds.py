@@ -9,7 +9,7 @@ from pydantic import Field
 from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.core.structure import Molecule
 
-from emmet.core.material import PropertyOrigin
+from emmet.core.molecules import MolPropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPculeID
 from emmet.core.qchem.task import TaskDocument
@@ -469,7 +469,7 @@ class MoleculeBondingDoc(PropertyDoc):
             bond_types=bond_types,
             bonds=bonds,
             bonds_nometal=bonds_nometal,
-            origins=[PropertyOrigin(name="bonding", task_id=task.task_id)],
+            origins=[MolPropertyOrigin(name="bonding", task_id=task.task_id)],
             deprecated=deprecated,
             **kwargs,
         )

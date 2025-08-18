@@ -9,7 +9,7 @@ def structure(test_dir):
     """
     Fe (mp-13) structure with correct magmoms
     """
-    structure = loadfn(test_dir / "electronic_structure/Fe_structure.json")
+    structure = loadfn(test_dir / "electronic_structure/Fe_structure.json.gz")
     return structure
 
 
@@ -18,7 +18,7 @@ def bandstructure(test_dir):
     """
     Fe (mp-13) line-mode band structure
     """
-    bs = loadfn(test_dir / "electronic_structure/Fe_bs.json")
+    bs = loadfn(test_dir / "electronic_structure/Fe_bs.json.gz")
     return bs
 
 
@@ -27,7 +27,7 @@ def dos(test_dir):
     """
     Fe (mp-13) dos
     """
-    dos = loadfn(test_dir / "electronic_structure/Fe_dos.json")
+    dos = loadfn(test_dir / "electronic_structure/Fe_dos.json.gz")
     return dos
 
 
@@ -43,7 +43,7 @@ def test_from_bsdos_1(bandstructure, dos, structure):
         meta_structure=structure,
     )
 
-    assert str(es_doc.material_id) == "mp-13"
+    assert es_doc.material_id == "mp-13"
     assert es_doc.band_gap == 0.0
     assert es_doc.cbm is None
     assert es_doc.vbm is None
@@ -52,7 +52,7 @@ def test_from_bsdos_1(bandstructure, dos, structure):
     assert es_doc.is_metal is True
     assert str(es_doc.magnetic_ordering) == "Ordering.FM"
 
-    assert str(es_doc.bandstructure.setyawan_curtarolo.task_id) == "mp-1056141"
+    assert es_doc.bandstructure.setyawan_curtarolo.task_id == "mp-1056141"
     assert es_doc.bandstructure.setyawan_curtarolo.band_gap == 0.0
     assert es_doc.bandstructure.setyawan_curtarolo.efermi == 5.18804178
     assert es_doc.bandstructure.setyawan_curtarolo.nbands == 96.0
@@ -84,7 +84,7 @@ def test_from_bsdos_2(bandstructure_fs, dos_fs):
         meta_structure=dos.structure,
     )
 
-    assert str(es_doc.material_id) == "mp-25375"
+    assert es_doc.material_id == "mp-25375"
     assert es_doc.band_gap == pytest.approx(0.0)
     assert es_doc.cbm == pytest.approx(2.75448867)
     assert es_doc.vbm == pytest.approx(2.75448867)
@@ -93,7 +93,7 @@ def test_from_bsdos_2(bandstructure_fs, dos_fs):
     assert es_doc.is_metal is True
     assert str(es_doc.magnetic_ordering) == "Ordering.NM"
 
-    assert str(es_doc.bandstructure.setyawan_curtarolo.task_id) == "mp-1612487"
+    assert es_doc.bandstructure.setyawan_curtarolo.task_id == "mp-1612487"
     assert es_doc.bandstructure.setyawan_curtarolo.band_gap == pytest.approx(1.9916)
     assert es_doc.bandstructure.setyawan_curtarolo.efermi == pytest.approx(2.49084067)
     assert es_doc.bandstructure.setyawan_curtarolo.nbands == pytest.approx(64.0)

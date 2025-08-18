@@ -1,9 +1,16 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 from pydantic import Field
-from pymatgen.core import Structure
 
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import MPID
+
+if TYPE_CHECKING:
+    from pymatgen.core import Structure
+
+    from emmet.core.mpid import MPID, AlphaID
 
 
 class AbsorptionDoc(PropertyDoc):
@@ -57,7 +64,7 @@ class AbsorptionDoc(PropertyDoc):
         bandgap: float,
         structure: Structure,
         nkpoints: float,
-        material_id: MPID | None = None,
+        material_id: MPID | AlphaID | None = None,
         **kwargs,
     ):
         real_d_average = [

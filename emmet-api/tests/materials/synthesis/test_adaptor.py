@@ -1,4 +1,5 @@
 import os
+from monty.io import zopen
 from json import load
 
 from pymatgen.core import Composition
@@ -17,8 +18,8 @@ def test_string2comp():
 
 
 def test_convert_recipe():
-    with open(
-        os.path.join(MAPISettings().TEST_FILES, "synth_doc_adaptor.json")
+    with zopen(
+        os.path.join(MAPISettings().TEST_FILES, "synth_doc_adaptor.json.gz")
     ) as file:
         synth_doc = load(file)
 
