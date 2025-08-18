@@ -23,11 +23,11 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.7
+boto3==1.40.10
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.40.7
+botocore==1.40.10
     # via
     #   boto3
     #   s3transfer
@@ -63,7 +63,7 @@ fastapi==0.116.1
     # via
     #   emmet-api (setup.py)
     #   maggma
-fonttools==4.59.0
+fonttools==4.59.1
     # via matplotlib
 gunicorn==23.0.0
     # via emmet-api (setup.py)
@@ -97,7 +97,7 @@ latexcodec==3.0.1
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
-maggma[api]==0.71.5
+maggma[api]==0.72.0
     # via emmet-api (setup.py)
 matplotlib==3.10.5
     # via pymatgen
@@ -114,7 +114,7 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.1.1
     # via maggma
-narwhals==2.1.0
+narwhals==2.1.1
     # via plotly
 networkx==3.5
     # via
@@ -138,7 +138,7 @@ numpy==1.26.4
     #   tifffile
 opentelemetry-api==1.36.0
     # via ddtrace
-orjson==3.11.1
+orjson==3.11.2
     # via
     #   maggma
     #   pymatgen
@@ -163,9 +163,9 @@ pillow==11.3.0
     #   imageio
     #   matplotlib
     #   scikit-image
-plotly==6.2.0
+plotly==6.3.0
     # via pymatgen
-protobuf==6.31.1
+protobuf==6.32.0
     # via ddtrace
 pybtex==0.25.1
     # via emmet-core
@@ -193,8 +193,7 @@ pymatgen==2025.6.14
     #   mp-pyrho
     #   pymatgen-analysis-alloys
     #   pymatgen-analysis-defects
-    #   pymatgen-io-validation
-pymatgen-analysis-alloys==0.0.7
+pymatgen-analysis-alloys==0.0.8
     # via emmet-api (setup.py)
 pymatgen-analysis-defects==2025.1.18
     # via emmet-api (setup.py)
@@ -229,9 +228,7 @@ referencing==0.36.2
     #   jsonschema
     #   jsonschema-specifications
 requests==2.32.4
-    # via
-    #   pymatgen
-    #   pymatgen-io-validation
+    # via pymatgen
 rpds-py==0.27.0
     # via
     #   jsonschema
@@ -251,7 +248,7 @@ scipy==1.16.1
     # via
     #   pymatgen
     #   scikit-image
-sentinels==1.0.0
+sentinels==1.1.1
     # via mongomock
 setproctitle==1.3.6
     # via emmet-api (setup.py)
@@ -307,7 +304,7 @@ urllib3==2.5.0
     #   requests
 uvicorn==0.35.0
     # via maggma
-wrapt==1.17.2
+wrapt==1.17.3
     # via ddtrace
 xmltodict==0.14.2
     # via ddtrace
