@@ -220,7 +220,13 @@ class CalculationInput(CalculationBaseModel):
         if (pcar := config.get("potcar")) and not config.get("potcar_spec"):
             if isinstance(pcar, dict):
                 if pcar.get("@class") == "Potcar":
-                    pcar = VaspPotcar.from_dict(pcar)
+                    try:
+                        # If POTCAR library is available
+                        pcar = VaspPotcar.from_dict(pcar)
+                    except ValueError:
+                        # No POTCAR library available
+                        config["potcar"] = pcar.get("symbols")
+                        config["potcar_type"] = [pcar.get("functional")]
                 else:
                     pcar = Potcar(**pcar)
 
