@@ -5,14 +5,17 @@ from __future__ import annotations
 import copy
 import datetime
 from enum import Enum
+import hashlib
+from importlib import import_module
 from itertools import groupby
 import logging
 from math import gcd
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, get_args
 
 import numpy as np
 from monty.json import MSONable
 from pydantic import BaseModel
+from pydantic._internal._utils import lenient_issubclass
 from pymatgen.analysis.elasticity.strain import Deformation
 from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
@@ -41,8 +44,13 @@ try:
 except ImportError:
     bson = None  # type: ignore
 
+try:
+    import pyarrow
+except ImportError:
+    pyarrow = None  # type: ignore
+
 if TYPE_CHECKING:
-    from collections.abc import Iterator, Mapping
+    from collections.abc import Callable, Iterator, Mapping
     from typing import Any
 
     from emmet.core.typing import PathLike
@@ -475,7 +483,9 @@ def utcnow() -> datetime.datetime:
     return datetime.datetime.now(datetime.timezone.utc)
 
 
-def get_hash_blocked(file_path: PathLike, chunk_size: int = 4 * 1024 * 1024) -> str:
+def get_hash_blocked(
+    file_path: PathLike, chunk_size: int = 4 * 1024 * 1024, hasher: Any | None = None
+) -> str:
     """
     Get the hash of a file in byte chunks.
 
@@ -483,17 +493,78 @@ def get_hash_blocked(file_path: PathLike, chunk_size: int = 4 * 1024 * 1024) -> 
     -----------
     file_path : PathLike
     chunk_size : int = 1,000,000 bytes (default)
-        The byte chunk size to use in iteratively computing the MD5
+        The byte chunk size to use in iteratively computing the hash.
+    hahser : function to compute hashes. Defaults to blake3 if available,
+        and MD5 if not.
 
     Returns
     -----------
     The hash as a str
     """
-    h = blake3.blake3()
+    if hasher is None:
+        if blake3:
+            hasher = blake3.blake3()
+        else:
+            hasher = hashlib.md5()
+
     with open(str(file_path), "rb") as f:
         while True:
             data = f.read(chunk_size)
             if not data:
                 break
-            h.update(data)
-        return h.hexdigest()
+            hasher.update(data)
+        return hasher.hexdigest()
+
+
+def dynamic_import(module_path: str) -> Any:
+    """Import arbitrary module or object."""
+    paths = module_path.split(".")
+    for i in range(len(paths), 0, -1):
+        try:
+            ob = import_module(".".join(paths[:i]))
+            for path in paths[i:]:
+                ob = getattr(ob, path)
+            return ob
+        except Exception:
+            continue
+    raise ValueError(f"Could not import string:\n{module_path}")
+
+
+def get_flat_models_from_model(
+    model: BaseModel, known_models: set[BaseModel] = set()
+) -> set[BaseModel]:
+    """Get all sub-models from a pydantic model.
+
+    Args:
+        model (BaseModel): Pydantic model
+        known_models (set[BaseModel]) : set of identified pydantic sub-models
+
+    Returns:
+        (set[BaseModel]): Set of pydantic models
+    """
+    known_models = set()
+
+    def get_sub_models(model: Any):
+        if lenient_issubclass(model, BaseModel):
+            known_models.add(model)
+            for field_info in model.model_fields.values():
+                get_sub_models(field_info.annotation)
+        else:
+            for type_anno in get_args(model):
+                get_sub_models(type_anno)
+
+    get_sub_models(model)
+    return known_models
+
+
+def requires_arrow(func: Callable) -> Callable:
+    """Decorator for pyarrow-dependent functionality."""
+
+    def wrap(*args, **kwargs):
+        if pyarrow is None:
+            raise ImportError(
+                "You must `pip install pyarrow` to use this functionality."
+            )
+        return func(*args, **kwargs)
+
+    return wrap

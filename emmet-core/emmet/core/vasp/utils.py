@@ -85,6 +85,8 @@ class FileMetadata(BaseModel):
 
 
 class CalculationLocator(BaseModel):
+    """Object to represent calculation directory with possible file suffixes."""
+
     path: Path = Field(description="The path to the calculation directory")
     modifier: str | None = Field(
         description="Optional modifier for the calculation", default=None

@@ -1,8 +1,8 @@
 from typing import Any
 
 from fastapi import Body, HTTPException, Query
-from maggma.api.query_operator import QueryOperator
-from maggma.api.utils import STORE_PARAMS
+from emmet.api.query_operator import QueryOperator
+from emmet.api.utils import STORE_PARAMS
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Molecule

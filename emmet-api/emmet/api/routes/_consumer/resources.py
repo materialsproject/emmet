@@ -1,4 +1,4 @@
-from maggma.api.resource import SubmissionResource
+from emmet.api.resource import SubmissionResource
 from emmet.api.routes._consumer.query_operator import (
     UserSettingsPostQuery,
     UserSettingsGetQuery,

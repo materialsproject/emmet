@@ -8,7 +8,7 @@ aioitertools==0.12.0
     # via maggma
 annotated-types==0.7.0
     # via pydantic
-anyio==4.9.0
+anyio==4.10.0
     # via starlette
 asgi-logger==0.1.0
     # via emmet-api (setup.py)
@@ -23,47 +23,45 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.39.9
+boto3==1.40.11
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.39.9
+botocore==1.40.11
     # via
     #   boto3
     #   s3transfer
 bytecode==0.16.2
     # via ddtrace
-certifi==2025.7.14
+certifi==2025.8.3
     # via requests
 cffi==1.17.1
     # via
     #   cryptography
     #   pynacl
-charset-normalizer==3.4.2
+charset-normalizer==3.4.3
     # via requests
 click==8.2.1
     # via uvicorn
-contourpy==1.3.2
+contourpy==1.3.3
     # via matplotlib
-cryptography==45.0.5
+cryptography==45.0.6
     # via paramiko
 cycler==0.12.1
     # via matplotlib
-ddtrace==2.21.9
+ddtrace==3.12.1
     # via emmet-api (setup.py)
 dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.9rc0
+emmet-core==0.84.9
     # via emmet-api (setup.py)
-envier==0.5.2
+envier==0.6.1
     # via ddtrace
 fastapi==0.116.1
-    # via
-    #   emmet-api (setup.py)
-    #   maggma
-fonttools==4.59.0
+    # via emmet-api (setup.py)
+fonttools==4.59.1
     # via matplotlib
 gunicorn==23.0.0
     # via emmet-api (setup.py)
@@ -77,6 +75,8 @@ imageio==2.37.0
     # via scikit-image
 importlib-metadata==8.7.0
     # via opentelemetry-api
+invoke==2.2.0
+    # via paramiko
 jmespath==1.0.1
     # via
     #   boto3
@@ -85,19 +85,19 @@ joblib==1.5.1
     # via pymatgen
 jsonlines==4.0.0
     # via maggma
-jsonschema==4.25.0
+jsonschema==4.25.1
     # via maggma
 jsonschema-specifications==2025.4.1
     # via jsonschema
-kiwisolver==1.4.8
+kiwisolver==1.4.9
     # via matplotlib
 latexcodec==3.0.1
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
-maggma[api]==0.71.5
+maggma==0.72.0
     # via emmet-api (setup.py)
-matplotlib==3.10.3
+matplotlib==3.10.5
     # via pymatgen
 mongomock==4.3.0
     # via maggma
@@ -112,7 +112,7 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.1.1
     # via maggma
-narwhals==1.47.1
+narwhals==2.1.2
     # via plotly
 networkx==3.5
     # via
@@ -128,14 +128,15 @@ numpy==1.26.4
     #   pandas
     #   pymatgen
     #   pymatgen-analysis-defects
+    #   pymatgen-io-validation
     #   scikit-image
     #   scipy
     #   shapely
     #   spglib
     #   tifffile
-opentelemetry-api==1.35.0
+opentelemetry-api==1.36.0
     # via ddtrace
-orjson==3.11.0
+orjson==3.11.2
     # via
     #   maggma
     #   pymatgen
@@ -153,16 +154,16 @@ pandas==2.3.1
     # via
     #   maggma
     #   pymatgen
-paramiko==3.5.1
+paramiko==4.0.0
     # via sshtunnel
 pillow==11.3.0
     # via
     #   imageio
     #   matplotlib
     #   scikit-image
-plotly==6.2.0
+plotly==6.3.0
     # via pymatgen
-protobuf==6.31.1
+protobuf==6.32.0
     # via ddtrace
 pybtex==0.25.1
     # via emmet-core
@@ -174,12 +175,14 @@ pydantic==2.11.7
     #   fastapi
     #   maggma
     #   pydantic-settings
+    #   pymatgen-io-validation
 pydantic-core==2.33.2
     # via pydantic
 pydantic-settings==2.10.1
     # via
     #   emmet-core
     #   maggma
+    #   pymatgen-io-validation
 pydash==8.0.5
     # via maggma
 pymatgen==2025.6.14
@@ -188,9 +191,11 @@ pymatgen==2025.6.14
     #   mp-pyrho
     #   pymatgen-analysis-alloys
     #   pymatgen-analysis-defects
-pymatgen-analysis-alloys==0.0.7
+pymatgen-analysis-alloys==0.0.8
     # via emmet-api (setup.py)
 pymatgen-analysis-defects==2025.1.18
+    # via emmet-api (setup.py)
+pymatgen-io-validation==0.1.1
     # via emmet-api (setup.py)
 pymongo==4.10.1
     # via maggma
@@ -214,7 +219,7 @@ pytz==2025.2
     #   pandas
 pyyaml==6.0.2
     # via pybtex
-pyzmq==27.0.0
+pyzmq==27.0.1
     # via maggma
 referencing==0.36.2
     # via
@@ -222,7 +227,7 @@ referencing==0.36.2
     #   jsonschema-specifications
 requests==2.32.4
     # via pymatgen
-rpds-py==0.26.0
+rpds-py==0.27.0
     # via
     #   jsonschema
     #   referencing
@@ -237,11 +242,11 @@ s3transfer==0.13.1
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
-scipy==1.16.0
+scipy==1.16.1
     # via
     #   pymatgen
     #   scikit-image
-sentinels==1.0.0
+sentinels==1.1.1
     # via mongomock
 setproctitle==1.3.6
     # via emmet-api (setup.py)
@@ -257,7 +262,7 @@ spglib==2.6.0
     # via pymatgen
 sshtunnel==0.4.0
     # via maggma
-starlette==0.47.1
+starlette==0.47.2
     # via fastapi
 sympy==1.14.0
     # via pymatgen
@@ -296,10 +301,8 @@ urllib3==2.5.0
     #   botocore
     #   requests
 uvicorn==0.35.0
-    # via maggma
-wrapt==1.17.2
-    # via ddtrace
-xmltodict==0.14.2
+    # via emmet-api (setup.py)
+wrapt==1.17.3
     # via ddtrace
 zipp==3.23.0
     # via importlib-metadata

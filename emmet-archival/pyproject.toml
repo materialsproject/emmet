@@ -1,0 +1,102 @@
+[build-system]
+requires = ["setuptools>=80.0.0","setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+root = ".."
+relative_to = "__file__"
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["tests"]
+include = ["emmet.archival"]
+
+[project]
+name = "emmet-archival"
+dynamic = ["version"]
+authors = [
+  { name = "The Materials Project", email = "feedback@materialsproject.org"},
+]
+classifiers = [
+  "Programming Language :: Python :: 3.11",
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Materials Science",
+  "Topic :: Scientific/Engineering :: Physics",
+  "Topic :: Scientific/Engineering :: Chemistry",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+  "emmet-core>=0.84.9",
+  "h5py",
+  "pyarrow",
+  "pandas",
+  "zarr>=3.0.0",
+  "pymatgen-io-validation>=0.1.0", # required right now because this isn't getting pick up in auto-gen dependences
+]
+description = "Emmet Archival library"
+keywords = ["data storage","dft","vasp"]
+license = { text = "modified BSD" }
+readme = "README.md"
+requires-python = '>=3.11'
+
+[project.optional-dependencies]
+tests = [
+  "pre-commit>=2.12.1",
+  "pytest>=8.3.5",
+  "pytest-cov>=6.0.0",
+  "pycodestyle",
+  "pydocstyle",
+  "flake8",
+  "mypy",
+  "mypy-extensions",
+  "types-setuptools",
+  "types-requests",
+]
+
+[tool.setuptools.dynamic]
+readme = { file = ["README.md"] }
+
+[project.urls]
+repository = "https://github.com/materialsproject/emmet/tree/main/emmet-archival"
+
+[tool.flake8]
+extend-ignore = "E203, Wv503, E501, F401, RST21"
+max-line-length = 120
+max-doc-length = 120
+min-python-version = "3.8.0"
+rst-roles = "class, func, ref, obj"
+select = "C, E, F, W, B, B950"
+
+[tool.mypy]
+explicit_package_bases = true
+namespace_packages = true
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+
+[tool.coverage.run]
+branch = true
+include = ["emmet-archival/emmet*"]
+parallel = true
+
+[tool.coverage.paths]
+source = ["emmet-archival/emmet"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
+[tool.pydocstyle]
+convention = 'google'
+match = '^emmet-archival/emmet/(?!_).*\.py'
+inherit = false
+add-ignore = "D107, "
+
+[tool.autoflake]
+in-place = true
+remove-unused-variables = true
+remove-all-unused-imports = true
+expand-star-imports = true
+ignore-init-module-imports = true

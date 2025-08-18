@@ -1,7 +1,7 @@
-from maggma.api.resource import ReadOnlyResource
+from emmet.api.resource import ReadOnlyResource
 from emmet.core.molecules.atomic import PartialSpinsDoc
 
-from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
+from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
 
 from emmet.api.routes.molecules.molecules.query_operators import (
     MultiMPculeIDQuery,
