@@ -8,7 +8,6 @@ from enum import Enum
 import hashlib
 from importlib import import_module
 from itertools import groupby
-import hashlib
 import logging
 from math import gcd
 from typing import TYPE_CHECKING, get_args
@@ -556,6 +555,7 @@ def get_flat_models_from_model(
 
     get_sub_models(model)
     return known_models
+
 
 def requires_arrow(func: Callable) -> Callable:
     """Decorator for pyarrow-dependent functionality."""
