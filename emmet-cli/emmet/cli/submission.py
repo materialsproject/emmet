@@ -4,7 +4,7 @@ from collections import defaultdict
 import copy
 import json
 import logging
-from multiprocessing import get_context, Pool
+from multiprocessing import get_context
 from os import cpu_count, PathLike
 from pathlib import Path
 from typing import ClassVar, Iterable
