@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import yaml  # type: ignore[import-untyped]
-from monty.dev import requires
 from monty.io import zopen
 from monty.os.path import zpath
 from pydantic import BaseModel, Field, PrivateAttr, computed_field, model_validator
@@ -23,13 +22,14 @@ from pymatgen.phonon.dos import CompletePhononDos
 from pymatgen.phonon.dos import PhononDos as PhononDosObject
 from typing_extensions import Literal
 
+from emmet.core.band_theory import BandStructure
 from emmet.core.base import CalcMeta
 from emmet.core.common import convert_datetime
 from emmet.core.math import Matrix3D, Tensor4R, Vector3D
 from emmet.core.mpid import MPID
 from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
 from emmet.core.structure import StructureMetadata
-from emmet.core.utils import DocEnum, get_num_formula_units, utcnow
+from emmet.core.utils import DocEnum, get_num_formula_units, utcnow, requires_arrow
 
 try:
     import pyarrow as pa
@@ -100,7 +100,7 @@ class PhononDOS(BaseModel):
             )
         return dos
 
-    @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
+    @requires_arrow
     def to_arrow(self, col_prefix: str | None = None) -> ArrowTable:
         """Convert PhononDOS to a pyarrow Table."""
         col_prefix = col_prefix or ""
@@ -118,7 +118,7 @@ class PhononDOS(BaseModel):
         return pa.Table.from_pydict(config)
 
     @classmethod
-    @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
+    @requires_arrow
     def from_arrow(cls, table: ArrowTable, col_prefix: str | None = None) -> Self:
         """Create a PhononDOS from a pyarrow Table."""
         col_prefix = col_prefix or ""
@@ -147,33 +147,26 @@ class PhononDOS(BaseModel):
         return cls(**phonopy_dos)
 
 
-class PhononBS(BaseModel):
+class PhononBS(BandStructure):
     """Define schema of pymatgen phonon band structure."""
 
-    qpoints: list[Vector3D] = Field(
-        description="The q-kpoints at which the band structure was sampled, in direct coordinates.",
-    )
-    frequencies: list[list[float]] = Field(
-        description="The phonon frequencies in THz, with the first index representing the band, and the second the q-point.",
-    )
-    reciprocal_lattice: Matrix3D = Field(description="The reciprocal lattice.")
     has_nac: bool = Field(
         False,
         description="Whether the calculation includes non-analytical corrections at Gamma.",
     )
+
+    frequencies: list[list[float]] = Field(
+        description="The eigen-frequencies, with the first index representing the band, and the second the k-point.",
+    )
+
     eigendisplacements: list[list[list[tuple[complex, complex, complex]]]] | None = (
         Field(None, description="Phonon eigendisplacements in Cartesian coordinates.")
     )
-    labels_dict: dict[str, Vector3D] | None = Field(
-        None, description="The high-symmetry labels of specific q-points."
-    )
-    structure: Structure | None = Field(
-        None, description="The structure associated with the calculation."
-    )
+
     _primitive_structure: Structure | None = PrivateAttr(None)
 
     @model_validator(mode="before")
-    def rehydrate(cls, config: Any) -> Any:
+    def deserialize_pmg(cls, config: Any) -> Any:
         """Ensure fields are correctly populated."""
         if isinstance(egd := config.get("eigendisplacements"), dict) and all(
             egd.get(k) is not None for k in ("real", "imag")
@@ -197,7 +190,7 @@ class PhononBS(BaseModel):
         if isinstance(config["reciprocal_lattice"], dict):
             config["reciprocal_lattice"] = config["reciprocal_lattice"].get("matrix")
 
-        return config
+        return super(PhononBS, cls).deserialize_pmg(config)
 
     @property
     def primitive_structure(self) -> Structure | None:
@@ -241,12 +234,14 @@ class PhononBS(BaseModel):
             structure=self.structure,
         )
 
-    @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
+    @requires_arrow
     def to_arrow(self, col_prefix: str | None = None) -> ArrowTable:
         """Convert a PhononBS to an arrow table."""
         config = self.model_dump()
         if structure := config.pop("structure", None):
-            config["structure"] = json.dumps(structure.as_dict())
+            config["structure"] = json.dumps(
+                structure
+            )  # model_dump converts structure to dict
 
         for k in ("qpoints", "frequencies", "reciprocal_lattice", "eigendisplacements"):
             if (vals := config.pop(k, None)) and k == "eigendisplacements":
@@ -269,7 +264,7 @@ class PhononBS(BaseModel):
         )
 
     @classmethod
-    @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
+    @requires_arrow
     def from_arrow(cls, table: ArrowTable, col_prefix: str | None = None) -> Self:
         """Create a PhononBS from an arrow table."""
         col_prefix = col_prefix or ""
@@ -686,7 +681,7 @@ class PhononBSDOSTask(StructureMetadata):
         thermo_props["temperature"] = temperatures
         return thermo_props
 
-    @requires(pa is not None, "`pip install pyarrow` to use this functionality.")
+    @requires_arrow
     def objects_to_arrow(self) -> ArrowTable:
         """Convert band structure and DOS to pyarrow table row."""
         table = pa.Table.from_pydict({"material_id": [self.material_id]})

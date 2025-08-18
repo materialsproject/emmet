@@ -221,6 +221,7 @@ numpy==1.26.4
     #   pymatgen
     #   pymatgen-analysis-defects
     #   pymatgen-analysis-diffusion
+    #   pymatgen-io-validation
     #   rdkit
     #   robocrys
     #   scikit-image
@@ -306,10 +307,13 @@ pydantic==2.11.7
     # via
     #   emmet-core (setup.py)
     #   pydantic-settings
+    #   pymatgen-io-validation
 pydantic-core==2.33.2
     # via pydantic
 pydantic-settings==2.10.1
-    # via emmet-core (setup.py)
+    # via
+    #   emmet-core (setup.py)
+    #   pymatgen-io-validation
 pydocstyle==6.3.0
     # via emmet-core (setup.py)
 pyflakes==3.4.0
@@ -327,12 +331,15 @@ pymatgen==2025.6.14
     #   pymatgen-analysis-alloys
     #   pymatgen-analysis-defects
     #   pymatgen-analysis-diffusion
+    #   pymatgen-io-validation
     #   robocrys
 pymatgen-analysis-alloys==0.0.8
     # via emmet-core (setup.py)
 pymatgen-analysis-defects==2025.1.18
     # via emmet-core (setup.py)
 pymatgen-analysis-diffusion==2024.7.15
+    # via emmet-core (setup.py)
+pymatgen-io-validation==0.1.0
     # via emmet-core (setup.py)
 pymdown-extensions==10.16.1
     # via
@@ -379,6 +386,7 @@ requests==2.32.4
     # via
     #   matminer
     #   pymatgen
+    #   pymatgen-io-validation
 robocrys==0.2.11
     # via emmet-core (setup.py)
 ruamel-yaml==0.18.14

@@ -5,7 +5,8 @@ from emmet.builders.settings import EmmetBuildSettings
 from emmet.builders.utils import get_potcar_stats
 from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calc_types.enums import CalcType
-from emmet.core.vasp.validation import DeprecationMessage, ValidationDoc
+from emmet.core.vasp.validation import DeprecationMessage
+from emmet.core.vasp.validation_legacy import ValidationDoc
 
 
 class TaskValidator(MapBuilder):

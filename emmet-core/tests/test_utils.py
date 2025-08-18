@@ -9,7 +9,7 @@ from emmet.core.utils import (
     DocEnum,
     ValueEnum,
     jsanitize,
-    get_md5_blocked,
+    get_hash_blocked,
     get_flat_models_from_model,
     dynamic_import,
 )
@@ -101,17 +101,19 @@ def test_doc_enum():
 
 def test_blocked_md5(tmp_dir):
     import hashlib
-    from monty.io import zopen
 
     file_text = (
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, "
         "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
     ).encode()
 
-    with zopen("test_md5.gz", "wb") as f:
+    with open("test_md5.txt", "wb") as f:
         f.write(file_text)
 
-    assert get_md5_blocked("test_md5.gz") == hashlib.md5(file_text).hexdigest()
+    assert (
+        get_hash_blocked("test_md5.txt", hasher=hashlib.md5())
+        == hashlib.md5(file_text).hexdigest()
+    )
 
 
 def test_model_flatten():
