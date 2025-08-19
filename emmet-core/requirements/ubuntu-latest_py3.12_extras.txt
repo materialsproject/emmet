@@ -12,6 +12,8 @@ ase==3.26.0
     #   pymatgen-analysis-diffusion
 bibtexparser==1.4.3
     # via pymatgen
+blake3==1.0.5
+    # via emmet-core (setup.py)
 bracex==2.6
     # via wcmatch
 certifi==2025.8.3
@@ -339,7 +341,7 @@ pymatgen-analysis-defects==2025.1.18
     # via emmet-core (setup.py)
 pymatgen-analysis-diffusion==2024.7.15
     # via emmet-core (setup.py)
-pymatgen-io-validation==0.1.0
+pymatgen-io-validation==0.1.1
     # via emmet-core (setup.py)
 pymdown-extensions==10.16.1
     # via
@@ -382,14 +384,14 @@ pyyaml-env-tag==1.1
     # via mkdocs
 rdkit==2025.3.5
     # via solvation-analysis
-requests==2.32.4
+requests==2.32.5
     # via
     #   matminer
     #   pymatgen
     #   pymatgen-io-validation
 robocrys==0.2.11
     # via emmet-core (setup.py)
-ruamel-yaml==0.18.14
+ruamel-yaml==0.18.15
     # via
     #   custodian
     #   monty

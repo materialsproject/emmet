@@ -21,9 +21,9 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.11
+boto3==1.40.12
     # via maggma
-botocore==1.40.11
+botocore==1.40.12
     # via
     #   boto3
     #   s3transfer
@@ -394,7 +394,7 @@ pymatgen-analysis-defects==2025.1.18
     # via emmet-core
 pymatgen-analysis-diffusion==2024.7.15
     # via emmet-core
-pymatgen-io-validation==0.1.0
+pymatgen-io-validation==0.1.1
     # via emmet-builders (setup.py)
 pymdown-extensions==10.16.1
     # via
@@ -451,7 +451,7 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.4
+requests==2.32.5
     # via
     #   matminer
     #   pymatgen
@@ -462,7 +462,7 @@ rpds-py==0.27.0
     # via
     #   jsonschema
     #   referencing
-ruamel-yaml==0.18.14
+ruamel-yaml==0.18.15
     # via
     #   maggma
     #   monty

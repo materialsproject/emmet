@@ -156,7 +156,9 @@ class RawArchive(Archiver):
                 getattr(group, dataset_constructor)(file_key, data=[data], **kwargs)
 
             group[file_key].attrs["file_path"] = str(file_meta.path)
-            group[file_key].attrs["md5"] = file_meta.md5
+            group[file_key].attrs["md5"] = str(
+                file_meta.compute_hash() if file_meta.hash is None else file_meta.hash
+            )
 
     @classmethod
     def _extract_from_hdf5_like(

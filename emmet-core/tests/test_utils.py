@@ -99,21 +99,18 @@ def test_doc_enum():
     assert TestEnum.B.__doc__ == "Might describe B"
 
 
-def test_blocked_md5(tmp_dir):
-    import hashlib
+def test_blocked_hash(tmp_dir):
+    import blake3
 
     file_text = (
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, "
         "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
     ).encode()
 
-    with open("test_md5.txt", "wb") as f:
+    with open("test_md5.gz", "wb") as f:
         f.write(file_text)
 
-    assert (
-        get_hash_blocked("test_md5.txt", hasher=hashlib.md5())
-        == hashlib.md5(file_text).hexdigest()
-    )
+    assert get_hash_blocked("test_md5.gz") == blake3.blake3(file_text).hexdigest()
 
 
 def test_model_flatten():

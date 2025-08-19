@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import os
 from collections import defaultdict
+import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, PrivateAttr, computed_field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from emmet.core.utils import get_hash_blocked
 
@@ -15,6 +16,8 @@ if TYPE_CHECKING:
     from typing import Any
 
     from emmet.core.typing import PathLike
+
+logger = logging.getLogger(__name__)
 
 TASK_NAMES = {"precondition"}.union([f"relax{i+1}" for i in range(9)])
 
@@ -29,7 +32,10 @@ class FileMetadata(BaseModel):
         description="Name of the VASP file without suffixes (e.g., INCAR)"
     )
     path: Path = Field(description="Path to the VASP file")
-    _md5: str | None = PrivateAttr(default=None)
+    hash: str | None = Field(
+        description="Hash of the file (computed only when requested)",
+        default=None,
+    )
 
     @model_validator(mode="before")
     def coerce_path(cls, v: Any) -> Any:
@@ -41,19 +47,15 @@ class FileMetadata(BaseModel):
             v["path"] = path
         return v
 
-    @computed_field
-    def md5(self) -> str | None:
-        """MD5 checksum of the file (computed lazily if needed)."""
-        if self._md5 is not None:
-            return self._md5
-
+    def compute_hash(self) -> str | None:
+        """Compute the hash of the file."""
         if self.validate_path_exists():
             try:
-                self._md5 = get_hash_blocked(self.path)
+                self.hash = get_hash_blocked(self.path)
             except Exception:
-                self._md5 = None
+                self.hash = None
 
-        return self._md5
+        return self.hash
 
     def validate_path_exists(self):
         if not self.path.exists():
@@ -61,10 +63,6 @@ class FileMetadata(BaseModel):
         if not self.path.is_file():
             raise ValueError(f"Path is not a file: {self.path}")
         return True
-
-    def reset_md5(self):
-        """Force recomputation of MD5 checksum on next call to md5 property."""
-        self._md5 = None
 
     def __hash__(self):
         return hash(self.path)

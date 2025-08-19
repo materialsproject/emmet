@@ -2,94 +2,90 @@
 ```
 Usage: emmet [OPTIONS] COMMAND [ARGS]...
 
-  Command line interface for emmet
+  Command line interface for Emmet
 
 Options:
-  --spec HOST/DB   MongoGrant spec for user database.  [required]
-  --run            Run DB/filesystem write operations.
-  --no-dupe-check  Skip duplicate check(s).
-  --verbose        Show debug messages.
-  --version        Show the version and exit.
-  --help           Show this message and exit.
-
-Commands:
-  admin  Administrative and utility commands
-  calc   Set up calculations to optimize structures using VASP
-```
-## admin
-```
-Usage: emmet admin [OPTIONS] COMMAND [ARGS]...
-
-  Administrative and utility commands
-
-Options:
-  --help  Show this message and exit.
-
-Commands:
-  index  Create index(es) for fields of a collection
-  meta   Create meta-data fields and indexes for SNL collection
-  reset  Reset collections for tag(s)
-```
-### index
-```
-Usage: emmet admin index [OPTIONS] [FIELDS]... COLLECTION
-
-  Create index(es) for fields of a collection
-
-Options:
-  --help  Show this message and exit.
-```
-### meta
-```
-Usage: emmet admin meta [OPTIONS] COLLECTION
-
-  Create meta-data fields and indexes for SNL collection
-
-Options:
-  --help  Show this message and exit.
-```
-### reset
-```
-Usage: emmet admin reset [OPTIONS] [TAGS]...
-
-  Reset collections for tag(s)
-
-Options:
-  --help  Show this message and exit.
-```
-## calc
-```
-Usage: emmet calc [OPTIONS] COMMAND [ARGS]...
-
-  Set up calculations to optimize structures using VASP
-
-Options:
-  -s SPEC             Add DB(s) with SNL/task collection(s) to dupe-check.
-  -m INTEGER          Maximum #structures to scan.  [default: 1000]
-  --skip / --no-skip  Skip already scanned structures.  [default: True]
-  --help              Show this message and exit.
-
-Commands:
-  add   Add workflows for structures with tag in SNL collection
-  prep  prep structures from an archive for submission
-```
-### prep
-```
-Usage: emmet calc prep [OPTIONS] ARCHIVE
-
-  prep structures from an archive for submission
-
-Options:
-  -a AUTHOR  Author to assign to all structures.  [default: Materials Project
-             <feedback@materialsproject.org>]
-
+  --verbose  Show debug messages.
+  --version  Show the version and exit.
   --help     Show this message and exit.
-```
-### add
-```
-Usage: emmet calc add [OPTIONS] TAG
 
-  Add workflows for structures with tag in SNL collection
+Commands:
+  submit  Commands for managing an MP data submission.
+```
+## submit
+```
+Usage: emmet submit [OPTIONS] COMMAND [ARGS]...
+
+  Commands for managing an MP data submission.
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  add-to       Adds more files to the submission.
+  create       Creates a new MP data submission.
+  push         Pushes the latest version of an MP data submission.
+  remove-from  Removes files from the submission.
+  validate     Locally validates the latest version of an MP data...
+```
+### create
+```
+Usage: emmet submit create [OPTIONS] [PATHS]...
+
+  Creates a new MP data submission.
+
+  This only creates metadata about the submission. The submission will
+  include all the files located in the provided files and directories paths.
+  The output will contain the metadata filename path. That path will be used
+  for all other actions related to this submission.
+
+Options:
+  --help  Show this message and exit.
+```
+### add-to
+```
+Usage: emmet submit add-to [OPTIONS] SUBMISSION [ADDITIONAL_PATHS]...
+
+  Adds more files to the submission.
+
+  This only updates the metadata about the submission.
+
+Options:
+  --help  Show this message and exit.
+```
+### remove-from
+```
+Usage: emmet submit remove-from [OPTIONS] SUBMISSION [ADDITIONAL_PATHS]...
+
+  Removes files from the submission.
+
+  This only updates the metadata about the submission.
+
+Options:
+  --help  Show this message and exit.
+```
+### validate
+```
+Usage: emmet submit validate [OPTIONS] SUBMISSION
+
+  Locally validates the latest version of an MP data submission.
+
+  The metadata submission filename path is a required argument.
+
+Options:
+  --help  Show this message and exit.
+```
+### push
+```
+Usage: emmet submit push [OPTIONS] SUBMISSION
+
+  Pushes the latest version of an MP data submission.
+
+  The metadata submission filename path is a required argument.
+
+  If the files for this submission have not changed since the most recent push
+  return with an error message. If the files for this submission do not pass
+  local validation return with an error message.
 
 Options:
   --help  Show this message and exit.
