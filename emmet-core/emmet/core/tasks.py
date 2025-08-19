@@ -324,7 +324,7 @@ class CoreTaskDoc(StructureMetadata):
                 for char in batch_id
                 if (not char.isalnum()) and (char not in {"-", "_"})
             )
-            if len(invalid_chars) > 0:
+            if invalid_chars:
                 raise ValueError(
                     f"Invalid characters in batch_id: {' '.join(invalid_chars)}"
                 )
