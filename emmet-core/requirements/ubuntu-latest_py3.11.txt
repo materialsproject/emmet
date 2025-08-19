@@ -97,11 +97,11 @@ pytz==2025.2
     # via pandas
 pyyaml==6.0.2
     # via pybtex
-requests==2.32.4
+requests==2.32.5
     # via
     #   pymatgen
     #   pymatgen-io-validation
-ruamel-yaml==0.18.14
+ruamel-yaml==0.18.15
     # via
     #   monty
     #   pymatgen

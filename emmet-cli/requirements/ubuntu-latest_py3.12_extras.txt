@@ -12,11 +12,11 @@ blake3==1.0.5
     # via emmet-cli (setup.py)
 bracex==2.6
     # via wcmatch
-certifi==2025.7.14
+certifi==2025.8.3
     # via requests
 cfgv==3.4.0
     # via pre-commit
-charset-normalizer==3.4.2
+charset-normalizer==3.4.3
     # via requests
 click==8.2.1
     # via
@@ -26,9 +26,9 @@ colorama==0.4.6
     # via
     #   emmet-cli (setup.py)
     #   griffe
-contourpy==1.3.2
+contourpy==1.3.3
     # via matplotlib
-coverage[toml]==7.9.2
+coverage[toml]==7.10.4
     # via pytest-cov
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -36,21 +36,21 @@ cycler==0.12.1
     # via matplotlib
 distlib==0.4.0
     # via virtualenv
-emmet-core==0.84.8
+emmet-core==0.84.9
     # via emmet-cli (setup.py)
-filelock==3.18.0
+filelock==3.19.1
     # via virtualenv
 flake8==7.3.0
     # via emmet-cli (setup.py)
-fonttools==4.59.0
+fonttools==4.59.1
     # via matplotlib
 ghp-import==2.1.0
     # via mkdocs
-griffe==1.7.3
+griffe==1.12.1
     # via mkdocstrings-python
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
-identify==2.6.12
+identify==2.6.13
     # via pre-commit
 idna==3.10
     # via requests
@@ -66,7 +66,7 @@ joblib==1.5.1
     # via pymatgen
 jsmin==3.0.1
     # via mkdocs-minify-plugin
-kiwisolver==1.4.8
+kiwisolver==1.4.9
     # via matplotlib
 latexcodec==3.0.1
     # via pybtex
@@ -85,7 +85,7 @@ markupsafe==3.0.2
     #   mkdocs
     #   mkdocs-autorefs
     #   mkdocstrings
-matplotlib==3.10.3
+matplotlib==3.10.5
     # via pymatgen
 mccabe==0.7.0
     # via flake8
@@ -120,11 +120,11 @@ mkdocs-material-extensions==1.3.1
     #   mkdocs-material
 mkdocs-minify-plugin==0.8.0
     # via emmet-cli (setup.py)
-mkdocstrings[python]==0.29.1
+mkdocstrings[python]==0.30.0
     # via
     #   emmet-cli (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==1.16.12
+mkdocstrings-python==1.17.0
     # via mkdocstrings
 monty==2025.3.3
     # via
@@ -132,13 +132,13 @@ monty==2025.3.3
     #   pymatgen
 mpmath==1.3.0
     # via sympy
-mypy==1.17.0
+mypy==1.17.1
     # via emmet-cli (setup.py)
 mypy-extensions==1.1.0
     # via
     #   emmet-cli (setup.py)
     #   mypy
-narwhals==1.47.1
+narwhals==2.1.2
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -146,7 +146,7 @@ networkx==3.5
     # via pymatgen
 nodeenv==1.9.1
     # via pre-commit
-numpy==2.3.1
+numpy==2.3.2
     # via
     #   contourpy
     #   matplotlib
@@ -156,7 +156,7 @@ numpy==2.3.1
     #   pymatgen-io-validation
     #   scipy
     #   spglib
-orjson==3.11.0
+orjson==3.11.2
     # via pymatgen
 packaging==25.0
     # via
@@ -178,13 +178,13 @@ platformdirs==4.3.8
     # via
     #   mkdocs-get-deps
     #   virtualenv
-plotly==6.2.0
+plotly==6.3.0
     # via pymatgen
 pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
-pre-commit==4.2.0
+pre-commit==4.3.0
     # via emmet-cli (setup.py)
 psutil==7.0.0
     # via emmet-cli (setup.py)
@@ -219,7 +219,7 @@ pymatgen==2025.6.14
     #   pymatgen-io-validation
 pymatgen-io-validation==0.1.1
     # via emmet-cli (setup.py)
-pymdown-extensions==10.16
+pymdown-extensions==10.16.1
     # via
     #   mkdocs-material
     #   mkdocstrings
@@ -253,17 +253,17 @@ pyyaml==6.0.2
     #   pyyaml-env-tag
 pyyaml-env-tag==1.1
     # via mkdocs
-requests==2.32.4
+requests==2.32.5
     # via
     #   pymatgen
     #   pymatgen-io-validation
-ruamel-yaml==0.18.14
+ruamel-yaml==0.18.15
     # via
     #   monty
     #   pymatgen
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-scipy==1.16.0
+scipy==1.16.1
     # via pymatgen
 six==1.17.0
     # via python-dateutil
@@ -275,13 +275,13 @@ sympy==1.14.0
     # via pymatgen
 tabulate==0.9.0
     # via pymatgen
-tornado==6.5.1
+tornado==6.5.2
     # via livereload
 tqdm==4.67.1
     # via pymatgen
-types-requests==2.32.4.20250611
+types-requests==2.32.4.20250809
     # via emmet-cli (setup.py)
-types-setuptools==80.9.0.20250529
+types-setuptools==80.9.0.20250809
     # via emmet-cli (setup.py)
 typing-extensions==4.14.1
     # via
@@ -303,7 +303,7 @@ urllib3==2.5.0
     # via
     #   requests
     #   types-requests
-virtualenv==20.31.2
+virtualenv==20.34.0
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
