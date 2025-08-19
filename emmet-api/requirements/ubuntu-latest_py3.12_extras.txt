@@ -25,11 +25,11 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.11
+boto3==1.40.12
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.40.11
+botocore==1.40.12
     # via
     #   boto3
     #   s3transfer
@@ -74,7 +74,7 @@ dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.84.9
+emmet-core==0.84.10rc2
     # via emmet-api (setup.py)
 envier==0.6.1
     # via ddtrace
@@ -334,12 +334,15 @@ pymatgen==2025.6.14
     #   mp-pyrho
     #   pymatgen-analysis-alloys
     #   pymatgen-analysis-defects
+    #   pymatgen-io-validation
 pymatgen-analysis-alloys==0.0.8
     # via emmet-api (setup.py)
 pymatgen-analysis-defects==2025.1.18
     # via emmet-api (setup.py)
 pymatgen-io-validation==0.1.1
-    # via emmet-api (setup.py)
+    # via
+    #   emmet-api (setup.py)
+    #   emmet-core
 pymdown-extensions==10.16.1
     # via
     #   mkdocs-material
@@ -391,13 +394,15 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.4
-    # via pymatgen
+requests==2.32.5
+    # via
+    #   pymatgen
+    #   pymatgen-io-validation
 rpds-py==0.27.0
     # via
     #   jsonschema
     #   referencing
-ruamel-yaml==0.18.14
+ruamel-yaml==0.18.15
     # via
     #   maggma
     #   monty
