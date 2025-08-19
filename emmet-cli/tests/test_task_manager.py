@@ -62,7 +62,11 @@ class MockDateTime:
 def task_manager(temp_state_dir):
     """Creates a TaskManager instance with a temporary state directory."""
     state_manager = StateManager(state_dir=temp_state_dir)
-    return TaskManager(state_manager=state_manager, running_status_update_interval=1)
+    return TaskManager(
+        state_manager=state_manager,
+        running_status_update_interval=1,
+        daemon_log=temp_state_dir / "test_task_manager_daemon.log",
+    )
 
 
 def test_start_task(task_manager):

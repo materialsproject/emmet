@@ -42,9 +42,12 @@ def temp_state_dir(tmp_path):
 
 
 @pytest.fixture
-def task_manager(state_manager):
+def task_manager(state_manager, temp_state_dir):
     """Creates a TaskManager instance with a temporary state directory."""
-    return TaskManager(state_manager=state_manager)
+    return TaskManager(
+        state_manager=state_manager,
+        daemon_log=temp_state_dir / "task_manager_daemon.log",
+    )
 
 
 @pytest.fixture
