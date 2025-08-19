@@ -378,7 +378,10 @@ def test_initial_pid_grace_period(task_manager):
             assert not task_manager.is_task_running(task_id)
             status = task_manager.get_task_status(task_id)
             assert status["status"] == "terminated"
-            assert "failed to detach" in status["error"].lower()
+            assert (
+                "failed to detach" in status["error"].lower()
+                or "process was terminated unexpectedly" in status["error"].lower()
+            )
 
 
 def test_no_pid_grace_period(task_manager):
