@@ -19,7 +19,7 @@ logger = logging.getLogger("emmet")
 TaskStatus = Literal["running", "completed", "failed", "terminated", "not_found"]
 
 
-def _detach_process(daemon_log: Path) -> bool:
+def _detach_process(daemon_log: str) -> bool:
     """
     Detach the process using double fork to ensure it becomes independent of the parent.
     Returns True in the parent process, False in the child process.
