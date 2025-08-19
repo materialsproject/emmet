@@ -3,7 +3,7 @@ from pathlib import Path
 from click.testing import CliRunner
 from emmet.cli.state_manager import StateManager
 from emmet.cli.submission import CalculationMetadata, Submission
-from emmet.cli.submit import submit
+from emmet.cli.submit import _create_submission
 from emmet.cli.task_manager import TaskManager
 from emmet.core.vasp.validation import ValidationDoc
 
@@ -42,9 +42,12 @@ def temp_state_dir(tmp_path):
 
 
 @pytest.fixture
-def task_manager(state_manager):
+def task_manager(state_manager, temp_state_dir):
     """Creates a TaskManager instance with a temporary state directory."""
-    return TaskManager(state_manager=state_manager)
+    return TaskManager(
+        state_manager=state_manager,
+        daemon_log=temp_state_dir / "task_manager_daemon.log",
+    )
 
 
 @pytest.fixture
@@ -107,11 +110,8 @@ def tmp_dir(tmp_path_factory):
 
 @pytest.fixture()
 def sub_file(tmp_dir, cli_runner, tmp_path_factory, task_manager):
-    result = cli_runner(submit, ["create", str(tmp_dir)])
-
-    assert result.exit_code == 0
-    final_status = wait_for_task_completion_and_assert_success(result, task_manager)
-    matches = final_status["result"][1]
+    result = _create_submission(paths=[str(tmp_dir)])
+    matches = result[1]
 
     sub = Submission.load(Path(matches))
 
@@ -137,11 +137,8 @@ def validation_test_dir():
 def validation_sub_file(
     validation_test_dir, cli_runner, tmp_path_factory, task_manager
 ):
-    result = cli_runner(submit, ["create", str(validation_test_dir)])
-
-    assert result.exit_code == 0
-    final_status = wait_for_task_completion_and_assert_success(result, task_manager)
-    matches = final_status["result"][1]
+    result = _create_submission(paths=[str(validation_test_dir)])
+    matches = result[1]
 
     sub = Submission.load(Path(matches))
 

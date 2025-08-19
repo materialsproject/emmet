@@ -395,7 +395,7 @@ class Submission(BaseModel):
 
 
 def find_all_calculations(paths: Iterable[PathLike]):
-    all_calculations = defaultdict(list)
+    all_calculations: dict[CalculationLocator, list[FileMetadata]] = defaultdict(list)
     for path in paths:
         path = Path(path).resolve()
         logger.info(f"Checking path: {path}")

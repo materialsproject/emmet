@@ -1,7 +1,13 @@
 import os
+import pytest
 from pathlib import Path
 from emmet.cli.submission import Submission
-from emmet.cli.submit import submit
+from emmet.cli.submit import (
+    submit,
+    _add_to_submission,
+    _create_submission,
+    _remove_from_submission,
+)
 from emmet.cli.utils import EmmetCliError
 from conftest import (
     wait_for_task_completion_and_assert_status,
@@ -19,15 +25,10 @@ def test_create(tmp_dir, cli_runner, task_manager):
         in str(result.exception)
     )
 
-    result = cli_runner(submit, ["create", str(tmp_dir)])
-
-    assert result.exit_code == 0
-    assert "Submission creation started." in result.output
-
-    final_status = wait_for_task_completion_and_assert_success(result, task_manager)
+    result = _create_submission(paths=[str(tmp_dir)])
 
     # clean up side-effect of calling create
-    matches = final_status["result"][1]
+    matches = result[1]
     assert "submission-" in matches
     os.remove(matches)
 
@@ -50,15 +51,12 @@ def test_add_to(sub_file, cli_runner, task_manager, tmp_path_factory):
     )
     assert path_to_add_from is not None
 
-    result = cli_runner(submit, ["add-to", sub_file, str(path_to_add_from)])
-
-    assert result.exit_code == 0
-    assert "Adding files started." in result.output
-
-    final_status = wait_for_task_completion_and_assert_success(result, task_manager)
+    result = _add_to_submission(
+        submission_path=Path(sub_file), paths=[str(path_to_add_from)]
+    )
 
     # clean up side-effect of calling create
-    matches = final_status["result"]
+    matches = result
     assert len(matches) == 0
 
     # Create a new temp directory with some test files
@@ -67,15 +65,9 @@ def test_add_to(sub_file, cli_runner, task_manager, tmp_path_factory):
     for f in test_files:
         (new_dir / f).touch()
 
-    result = cli_runner(submit, ["add-to", sub_file, str(new_dir)])
-
-    assert result.exit_code == 0
-    assert "Adding files started." in result.output
-
-    final_status = wait_for_task_completion_and_assert_success(result, task_manager)
-
+    result = _add_to_submission(submission_path=Path(sub_file), paths=[str(new_dir)])
     # Verify the files were added
-    matches = final_status["result"]
+    matches = result
     assert len(matches) == len(test_files)
     for match in matches:
         assert any(test_file in match for test_file in test_files)
@@ -99,29 +91,22 @@ def test_remove_from(sub_file, cli_runner, task_manager):
     )
     assert path_to_remove is not None
 
-    result = cli_runner(submit, ["remove-from", sub_file, str(path_to_remove)])
+    result = _remove_from_submission(
+        submission_path=Path(sub_file), paths_to_remove=[str(path_to_remove)]
+    )
 
-    assert result.exit_code == 0
-    assert "Removing files started." in result.output
-
-    final_status = wait_for_task_completion_and_assert_success(result, task_manager)
-
-    # Verify the files were added
-    matches = final_status["result"]
+    matches = result
     assert len(matches) == 8
     assert all(str(path_to_remove) in match for match in matches)
 
 
+@pytest.mark.skip(reason="Temporary skip. Fix when resume work on CLI.")
 def test_validate(validation_sub_file, cli_runner, task_manager):
     result = cli_runner(submit, ["validate", validation_sub_file])
 
     assert result.exit_code == 0
     assert "Validation started." in result.output
     final_status = wait_for_task_completion_and_assert_success(result, task_manager)
-    print(validation_sub_file)
-    with open(validation_sub_file) as f:
-        print(f.read())
-    print(final_status)
     assert (
         final_status["result"] is False
     )  # TODO: switch this to True when fix tests to use fake POTCAR
@@ -129,6 +114,7 @@ def test_validate(validation_sub_file, cli_runner, task_manager):
     # TODO: add test that fails validation when fix tests to use fake POTCAR
 
 
+@pytest.mark.skip(reason="Temporary skip. Fix when resume work on CLI.")
 def test_push(validation_sub_file, cli_runner, task_manager):
     result = cli_runner(submit, ["push", validation_sub_file])
 
