@@ -7,6 +7,7 @@ import resource
 import sys
 import time
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Callable, cast, Literal
 from uuid import uuid4
 import psutil
@@ -18,7 +19,7 @@ logger = logging.getLogger("emmet")
 TaskStatus = Literal["running", "completed", "failed", "terminated", "not_found"]
 
 
-def _detach_process(daemon_log: os.path) -> bool:
+def _detach_process(daemon_log: Path) -> bool:
     """
     Detach the process using double fork to ensure it becomes independent of the parent.
     Returns True in the parent process, False in the child process.
@@ -218,7 +219,7 @@ class TaskManager:
             if status["status"] in ["completed", "failed"] or not self.is_task_running(
                 task_id
             ):
-                return status
+                return self.get_task_status(task_id)
             if timeout and time.time() - start_time >= timeout:
                 return status
             time.sleep(check_interval)
