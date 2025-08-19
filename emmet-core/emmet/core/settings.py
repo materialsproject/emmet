@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import gzip
 import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import requests  # type: ignore[import-untyped]
+from monty.io import zopen
 from monty.json import MontyDecoder
 from pydantic import Field, ImportString, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -183,10 +185,15 @@ class EmmetSettings(BaseSettings):
 
         new_values = {}
 
+        # TODO: do we want to support gzipped config files?
         if config_file_path.startswith("http"):
-            new_values = requests.get(config_file_path).json()
+            response = requests.get(config_file_path)
+            if response.content.startswith(b"\x1f\x8b"):
+                new_values = json.loads(gzip.decompress(response.content))
+            else:
+                new_values = json.loads(response.content.decode())
         elif Path(config_file_path).exists():
-            with open(config_file_path) as f:
+            with zopen(config_file_path, "rt") as f:
                 new_values = json.load(f)
 
         new_values.update(values)

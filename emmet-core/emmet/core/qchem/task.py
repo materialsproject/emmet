@@ -1,6 +1,5 @@
 """Core definition of a Q-Chem Task Document"""
 
-# mypy: ignore-errors
 from __future__ import annotations
 
 from typing import Any, TYPE_CHECKING
@@ -204,20 +203,19 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
 
     @property
     def entry(self) -> dict[str, Any]:
-        if self.output.optimized_molecule is not None:
-            mol = self.output.optimized_molecule
+        mol = None
+        for mol_field in ("optimized_molecule", "initial_molecule"):
+            if mol := getattr(self.output, mol_field, None):
+                break
         else:
-            mol = self.output.initial_molecule
+            raise ValueError("No molecule could be associated with the calculation.")
 
-        if self.charge is None:
-            charge = int(mol.charge)
-        else:
-            charge = int(self.charge)
-
-        if self.spin_multiplicity is None:
-            spin = mol.spin_multiplicity
-        else:
-            spin = self.spin_multiplicity
+        charge = int(mol.charge) if self.charge is None else int(self.charge)
+        spin = (
+            mol.spin_multiplicity
+            if self.spin_multiplicity is None
+            else self.spin_multiplicity
+        )
 
         entry_dict = {
             "entry_id": self.task_id,
@@ -261,8 +259,4 @@ def filter_task_type(
     """
 
     filtered = [f for f in entries if f["task_type"] == task_type]
-
-    if sort_by is not None:
-        return sorted(filtered, key=sort_by)
-    else:
-        return filtered
+    return sorted(filtered, key=sort_by) if sort_by is not None else filtered
