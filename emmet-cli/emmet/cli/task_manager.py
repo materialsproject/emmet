@@ -18,7 +18,7 @@ logger = logging.getLogger("emmet")
 TaskStatus = Literal["running", "completed", "failed", "terminated", "not_found"]
 
 
-def _detach_process() -> bool:
+def _detach_process(daemon_log: os.path) -> bool:
     """
     Detach the process using double fork to ensure it becomes independent of the parent.
     Returns True in the parent process, False in the child process.
@@ -46,7 +46,7 @@ def _detach_process() -> bool:
     sys.stderr.flush()
     with open(os.devnull, "rb", 0) as fnull:
         os.dup2(fnull.fileno(), sys.stdin.fileno())
-    with open(os.path.expanduser("~/.emmet/daemon.log"), "a+") as f:
+    with open(daemon_log, "a+") as f:
         os.dup2(f.fileno(), sys.stdout.fileno())
         os.dup2(f.fileno(), sys.stderr.fileno())
 
@@ -88,10 +88,12 @@ class TaskManager:
         self,
         state_manager: StateManager,
         running_status_update_interval: int = 30,
+        daemon_log: str = "~/.emmet/daemon.log",
     ) -> None:
         """Initialize the TaskManager with an optional StateManager instance."""
         self.state_manager = state_manager
         self.running_status_update_interval = running_status_update_interval
+        self.daemon_log = os.path.expanduser(daemon_log)
 
     def _get_current_timestamp(self) -> str:
         """Get current timestamp in ISO format."""
@@ -136,7 +138,7 @@ class TaskManager:
         self, task_id: str, func: Callable[..., Any], *args: Any, **kwargs: Any
     ) -> None:
         """Wrapper function that executes the task and stores its result."""
-        if _detach_process():
+        if _detach_process(self.daemon_log):
             return  # Parent process returns immediately
 
         # Store the detached process PID
