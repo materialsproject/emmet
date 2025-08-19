@@ -383,7 +383,7 @@ class CoreTaskDoc(StructureMetadata):
             vasp_objects=vasp_objects,
         )
 
-        props = {
+        props: dict[str, Any] = {
             "structure": [],
             "cart_coords": [],
             "electronic_steps": [],
