@@ -53,7 +53,7 @@ class OutputDoc(BaseModel):
     # )
 
     final_energy: float = Field(
-        None, description="Final electronic energy for the calculation (units: Hartree)"
+        description="Final electronic energy for the calculation (units: Hartree)"
     )
     enthalpy: float | None = Field(
         None, description="Total enthalpy of the molecule (units: kcal/mol)"
@@ -122,7 +122,6 @@ class OutputDoc(BaseModel):
 
 class InputDoc(BaseModel):
     initial_molecule: Molecule = Field(
-        None,
         title="Input Structure",
         description="Input molecule and calc details for the QChem calculation",
     )
@@ -319,7 +318,7 @@ class TaskDoc(MoleculeMetadata):
         """
         logger.info(f"Getting task doc in: {dir_name}")
 
-        additional_fields = {} if additional_fields is None else additional_fields
+        additional_fields = additional_fields or {}
         dir_name = Path(dir_name)
         task_files = _find_qchem_files(dir_name)
 
@@ -363,10 +362,9 @@ class TaskDoc(MoleculeMetadata):
                 elif key == "solvent_data":
                     custom_smd = additional_json["solvent_data"]
 
+        _orig_inputs = _parse_orig_inputs(dir_name)
         orig_inputs = (
-            CalculationInput.from_qcinput(_parse_orig_inputs(dir_name))
-            if _parse_orig_inputs(dir_name)
-            else {}
+            CalculationInput.from_qcinput(_orig_inputs) if _orig_inputs else {}
         )
 
         dir_name = get_uri(dir_name)  # convert to full path
@@ -502,7 +500,7 @@ def _parse_custodian(dir_name: Path) -> dict | None:
 
 def _parse_orig_inputs(
     dir_name: Path,
-) -> dict[str, Any]:
+) -> dict[str, Any] | QCInput:
     """
     Parse original input files.
 
@@ -519,12 +517,9 @@ def _parse_orig_inputs(
     dict[str, Any]
         The original molecule, rem, solvent and other data.
     """
-    orig_inputs = {}
-    orig_file_path = next(dir_name.glob("*.orig*"), None)
-
-    if orig_file_path:
+    orig_inputs: dict[str, Any] | QCInput = {}
+    if orig_file_path := next(dir_name.glob("*.orig*"), None):
         orig_inputs = QCInput.from_file(orig_file_path)
-
     return orig_inputs
 
 

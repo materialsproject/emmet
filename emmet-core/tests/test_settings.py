@@ -37,7 +37,7 @@ def test_from_url():
     """Makes sure loading from a URL Works"""
 
     os.environ["EMMET_CONFIG_FILE"] = (
-        "https://raw.githubusercontent.com/materialsproject/emmet/master/test_files/test_settings.json"
+        "https://raw.githubusercontent.com/materialsproject/emmet/master/test_files/test_settings.json.gz"
     )
 
     test_config = EmmetSettings()

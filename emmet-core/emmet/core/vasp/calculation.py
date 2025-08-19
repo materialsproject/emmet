@@ -1,9 +1,8 @@
 """Core definitions of a VASP calculation documents."""
 
-# mypy: ignore-errors
-
 from __future__ import annotations
 
+from functools import cached_property
 import logging
 import os
 from datetime import datetime
@@ -11,7 +10,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator, field_validator
 from pymatgen.command_line.bader_caller import bader_analysis_from_path
 from pymatgen.command_line.chargemol_caller import ChargemolAnalysis
 from pymatgen.core.lattice import Lattice
@@ -27,7 +26,7 @@ from pymatgen.io.vasp import (
     Oszicar,
     Outcar,
     Poscar,
-    Potcar,
+    Potcar as VaspPotcar,
     PotcarSingle,
     Vasprun,
     VolumetricData,
@@ -46,9 +45,19 @@ from emmet.core.vasp.calc_types import (
 from emmet.core.vasp.task_valid import TaskState
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from typing_extensions import Self
 
 logger = logging.getLogger(__name__)
+
+
+class Potcar(BaseModel):
+    pot_type: str | None = Field(None, description="Pseudo-potential type, e.g. PAW")
+    functional: str | None = Field(
+        None, description="Functional type use in the calculation."
+    )
+    symbols: list[str] | None = Field(
+        None, description="List of VASP potcar symbols used in the calculation."
+    )
 
 
 class VaspObject(ValueEnum):
@@ -91,7 +100,7 @@ class PotcarSpec(BaseModel):
     )
 
     @classmethod
-    def from_potcar_single(cls, potcar_single: PotcarSingle) -> "PotcarSpec":
+    def from_potcar_single(cls, potcar_single: PotcarSingle) -> Self:
         """
         Get a PotcarSpec from a PotcarSingle.
 
@@ -106,13 +115,13 @@ class PotcarSpec(BaseModel):
             A potcar spec.
         """
         return cls(
-            titel=potcar_single.symbol,
+            titel=potcar_single.TITEL,
             hash=potcar_single.md5_header_hash,
             summary_stats=potcar_single._summary_stats,
         )
 
     @classmethod
-    def from_potcar(cls, potcar: Potcar) -> list["PotcarSpec"]:
+    def from_potcar(cls, potcar: VaspPotcar) -> list["PotcarSpec"]:
         """
         Get a list of PotcarSpecs from a Potcar.
 
@@ -128,22 +137,45 @@ class PotcarSpec(BaseModel):
         """
         return [cls.from_potcar_single(p) for p in potcar]
 
+    @classmethod
+    def from_file(cls, file_path: str | Path) -> list["PotcarSpec"]:
+        """
+        Get a list of PotcarSpecs from a Potcar.
+
+        Parameters
+        ----------
+        file_path : str or Path of the POTCAR
+
+        Returns
+        -------
+        list[PotcarSpec]
+            A list of potcar specs.
+        """
+        return cls.from_potcar(VaspPotcar.from_file(str(file_path)))
+
 
 class CalculationInput(CalculationBaseModel):
-    """Document defining VASP calculation inputs."""
+    """Document defining VASP calculation inputs.
+
+    Note that the following fields were formerly top-level fields on InputDoc,
+    but are now properties of `CalculationInput`:
+        pseudo_potentials (Potcar) : summary of the POTCARs used in the calculation
+        xc_override (str) : the exchange-correlation functional used if not
+            the one specified by POTCAR
+        is_lasph (bool) : how the calculation set LASPH (aspherical corrections)
+        magnetic_moments (list of floats) : on-site magnetic moments
+    """
 
     incar: dict[str, Any] | None = Field(
         None, description="INCAR parameters for the calculation"
     )
-    kpoints: dict[str, Any] | Kpoints | None = Field(
-        None, description="KPOINTS for the calculation"
-    )
+    kpoints: Kpoints | None = Field(None, description="KPOINTS for the calculation")
     nkpoints: int | None = Field(None, description="Total number of k-points")
-    potcar: list[str] | None = Field(
-        None, description="POTCAR symbols in the calculation"
-    )
     potcar_spec: list[PotcarSpec] | None = Field(
         None, description="Title and hash of POTCAR files used in the calculation"
+    )
+    potcar: list[str] | None = Field(
+        None, description="The symbols of the POTCARs used in the calculation."
     )
     potcar_type: list[str] | None = Field(
         None, description="List of POTCAR functional types."
@@ -160,8 +192,129 @@ class CalculationInput(CalculationBaseModel):
     )
     hubbards: dict | None = Field(None, description="The hubbard parameters used")
 
+    @model_validator(mode="before")
     @classmethod
-    def from_vasprun(cls, vasprun: Vasprun) -> "CalculationInput":
+    def clean_inputs(cls, config: Any) -> Any:
+        """Ensure whitespace in parameters and Kpoints are serialized.
+
+        NOTE:
+        ------
+        A change in VASP introduced whitespace into some parameters,
+        for example `<i type="string" name="GGA    ">PE</I>` was observed in
+        VASP 6.4.3. This will lead to an incorrect return value from RunType.
+        This validator will ensure that any already-parsed documents are fixed.
+        """
+        config["parameters"] = {
+            k.strip(): v for k, v in (config.get("parameters", {}) or {}).items()
+        }
+        if (kpts := config.get("kpoints")) and isinstance(kpts, dict):
+            config["kpoints"] = Kpoints.from_dict(kpts)
+
+        # Issue: older tasks don't always contain `input.potcar`
+        # and `input.potcar_spec`
+        # Newer tasks contain `input.potcar`, `input.potcar_spec`,
+        # and `orig_inputs.potcar_spec`
+
+        # orig_inputs.potcar used to be what is now potcar_spec
+        # try to coerce back here, but not guaranteed
+        if (pcar := config.get("potcar")) and not config.get("potcar_spec"):
+            if isinstance(pcar, dict):
+                if pcar.get("@class") == "Potcar":
+                    try:
+                        # If POTCAR library is available
+                        pcar = VaspPotcar.from_dict(pcar)
+                    except ValueError:
+                        # No POTCAR library available
+                        config["potcar"] = pcar.get("symbols")
+                        config["potcar_type"] = [pcar.get("functional")]
+                else:
+                    pcar = Potcar(**pcar)
+
+            if isinstance(pcar, VaspPotcar):
+                config["potcar_spec"] = PotcarSpec.from_potcar(pcar)
+                config.pop("potcar")
+            elif isinstance(pcar, Potcar):
+                config["potcar_type"] = [pcar.pot_type] if pcar.pot_type else None
+                config["potcar"] = pcar.symbols
+            else:
+                try:
+                    pspec = [PotcarSpec(**x) for x in pcar]
+                    config["potcar_spec"] = pspec
+                    config.pop("potcar")
+                except Exception:
+                    if not isinstance(pcar, list) or not all(
+                        isinstance(x, str) for x in pcar
+                    ):
+                        config.pop("potcar")
+
+        if (pspec := config.get("potcar_spec")) and config.get("potcar") is None:
+            config["potcar"] = []
+            for spec in pspec:
+                if isinstance(spec, PotcarSpec) and spec.titel:
+                    titel = spec.titel
+                elif isinstance(spec, dict) and spec.get("titel"):
+                    titel = spec["titel"]
+                else:
+                    continue
+                symbs = titel.split()
+                if len(symbs) >= 2:
+                    symb = symbs[1]
+                else:
+                    symb = symbs[0]
+                config["potcar"].append(symb)
+
+        return config
+
+    @cached_property
+    def poscar(self) -> Poscar | None:
+        """Return pymatgen object representing the POSCAR file."""
+        if self.structure:
+            return Poscar(self.structure)
+        return None
+
+    @property
+    def is_lasph(self) -> bool | None:
+        """Report if the calculation was run with aspherical corrections.
+
+        If `self.parameters` is populated, returns the value of `LASPH`
+        from vasprun.xml, or its default value if not set (`False`).
+
+        If `self.parameters` isn't populated (vasprun.xml wasn't parsed),
+        returns `None`.
+        """
+        if self.parameters:
+            return self.parameters.get("LASPH", False)
+        return None
+
+    @property
+    def pseudo_potentials(self) -> Potcar | None:
+        """Summarize the pseudo-potentials used."""
+        if not self.potcar_type:
+            return None
+
+        if len(potcar_meta := self.potcar_type[0].split("_")) == 2:
+            pot_type, func = potcar_meta
+        elif len(potcar_meta) == 1:
+            pot_type = potcar_meta[0]
+            func = "LDA"
+
+        return Potcar(pot_type=pot_type, functional=func, symbols=self.potcar)
+
+    @property
+    def xc_override(self) -> str | None:
+        """Report the exchange-correlation functional used."""
+        xc = None
+        if self.incar:
+            xc = self.incar.get("GGA") or self.incar.get("METAGGA")
+        return xc.upper() if isinstance(xc, str) else xc
+
+    @property
+    def magnetic_moments(self) -> list[float] | None:
+        """Report initial magnetic moments assigned to each atom."""
+        return (self.parameters or {}).get("MAGMOM", None)
+
+    @classmethod
+    def from_vasprun(cls, vasprun: Vasprun) -> Self:
         """
         Create a VASP input document from a Vasprun object.
 
@@ -191,9 +344,8 @@ class CalculationInput(CalculationBaseModel):
         return cls(
             structure=vasprun.initial_structure,
             incar=incar,
-            kpoints=kpoints_dict,
+            kpoints=Kpoints.from_dict(kpoints_dict),
             nkpoints=len(kpoints_dict["actual_kpoints"]),
-            potcar=[s.split()[1] for s in vasprun.potcar_symbols],
             potcar_spec=[PotcarSpec(**ps) for ps in vasprun.potcar_spec],
             potcar_type=[s.split()[0] for s in vasprun.potcar_symbols],
             parameters=parameters,
@@ -217,7 +369,7 @@ class RunStatistics(BaseModel):
     cores: int = Field(0, description="The number of cores used by VASP")
 
     @classmethod
-    def from_outcar(cls, outcar: Outcar) -> "RunStatistics":
+    def from_outcar(cls, outcar: Outcar) -> Self:
         """
         Create a run statistics document from an Outcar object.
 
@@ -276,7 +428,7 @@ class FrequencyDependentDielectric(BaseModel):
     )
 
     @classmethod
-    def from_vasprun(cls, vasprun: Vasprun) -> "FrequencyDependentDielectric":
+    def from_vasprun(cls, vasprun: Vasprun) -> Self:
         """
         Create a frequency-dependent dielectric calculation document from a vasprun.
 
@@ -466,7 +618,7 @@ class CalculationOutput(BaseModel):
         elph_poscars: list[Path] | None = None,
         store_trajectory: StoreTrajectoryOption | str = StoreTrajectoryOption.NO,
         store_onsite_density_matrices: bool = False,
-    ) -> "CalculationOutput":
+    ) -> Self:
         """
         Create a VASP output document from VASP outputs.
 
@@ -586,6 +738,7 @@ class CalculationOutput(BaseModel):
                 elph_structures["temperatures"].append(temp)
                 elph_structures["structures"].append(Structure.from_file(elph_poscar))
 
+        store_trajectory = StoreTrajectoryOption(store_trajectory)
         ionic_steps = (
             vasprun.ionic_steps
             if store_trajectory == StoreTrajectoryOption.NO
@@ -667,6 +820,13 @@ class Calculation(CalculationBaseModel):
         None, description="Return calculation type (run type + task_type)."
     )
 
+    @field_validator("has_vasp_completed", mode="before")
+    @classmethod
+    def ensure_enum(cls, v: Any) -> TaskState:
+        if isinstance(v, bool):
+            v = TaskState.SUCCESS if v else TaskState.FAILED
+        return v
+
     @classmethod
     def from_vasp_files(
         cls,
@@ -675,8 +835,8 @@ class Calculation(CalculationBaseModel):
         vasprun_file: Path | str,
         outcar_file: Path | str,
         contcar_file: Path | str,
-        volumetric_files: list[str] = None,
-        elph_poscars: list[Path] = None,
+        volumetric_files: list[str] | None = None,
+        elph_poscars: list[Path] | None = None,
         oszicar_file: Path | str | None = None,
         parse_dos: str | bool = False,
         parse_bandstructure: str | bool = False,
@@ -686,7 +846,7 @@ class Calculation(CalculationBaseModel):
         strip_bandstructure_projections: bool = False,
         strip_dos_projections: bool = False,
         store_volumetric_data: tuple[str] | None = None,
-        store_trajectory: StoreTrajectoryOption = StoreTrajectoryOption.NO,
+        store_trajectory: StoreTrajectoryOption | str = StoreTrajectoryOption.NO,
         store_onsite_density_matrices: bool = False,
         vasprun_kwargs: dict | None = None,
     ) -> tuple["Calculation", dict[VaspObject, dict]]:
@@ -736,7 +896,7 @@ class Calculation(CalculationBaseModel):
             Whether to store the average of the LOCPOT along the crystal axes.
         run_bader : bool = False
             Whether to run bader on the charge density.
-        run_ddec6 : bool | str = False
+        run_ddec6 : bool or str = False
             Whether to run DDEC6 on the charge density. If a string, it's interpreted
             as the path to the atomic densities directory. Can also be set via the
             DDEC6_ATOMIC_DENSITIES_DIR environment variable. The files are available at
@@ -795,10 +955,9 @@ class Calculation(CalculationBaseModel):
             dir_name, output_file_paths, store_volumetric_data
         )
 
-        dos = _parse_dos(parse_dos, vasprun)
-        if dos is not None:
+        if (dos := _parse_dos(parse_dos, vasprun)) is not None:
             if strip_dos_projections:
-                dos = Dos(dos.efermi, dos.energies, dos.densities)
+                dos = Dos(dos.efermi, dos.energies, dos.densities)  # type: ignore[arg-type]
             vasp_objects[VaspObject.DOS] = dos  # type: ignore
 
         bandstructure = _parse_bandstructure(parse_bandstructure, vasprun)
@@ -810,7 +969,7 @@ class Calculation(CalculationBaseModel):
         bader = None
         if run_bader and VaspObject.CHGCAR in output_file_paths:
             suffix = "" if task_name == "standard" else f".{task_name}"
-            bader = bader_analysis_from_path(dir_name, suffix=suffix)
+            bader = bader_analysis_from_path(str(dir_name), suffix=suffix)
 
         ddec6 = None
         if run_ddec6 and VaspObject.CHGCAR in output_file_paths:
@@ -829,6 +988,7 @@ class Calculation(CalculationBaseModel):
 
         input_doc = CalculationInput.from_vasprun(vasprun)
 
+        store_trajectory = StoreTrajectoryOption(store_trajectory)
         output_doc = CalculationOutput.from_vasp_outputs(
             vasprun,
             outcar,
@@ -839,9 +999,9 @@ class Calculation(CalculationBaseModel):
             store_onsite_density_matrices=store_onsite_density_matrices,
         )
         if store_trajectory != StoreTrajectoryOption.NO:
-            exclude_from_trajectory = ["structure"]
+            exclude_from_trajectory = set(["structure"])
             if store_trajectory == StoreTrajectoryOption.PARTIAL:
-                exclude_from_trajectory.append("electronic_steps")
+                exclude_from_trajectory.add("electronic_steps")
             frame_properties = [
                 IonicStep(**x).model_dump(exclude=exclude_from_trajectory)
                 for x in vasprun.ionic_steps
@@ -904,7 +1064,7 @@ class Calculation(CalculationBaseModel):
         path: Path | str,
         task_name: str = "Unknown vapsrun.xml",
         vasprun_kwargs: dict | None = None,
-    ) -> tuple["Calculation", dict[VaspObject, dict]]:
+    ) -> Self:
         """
         Create a VASP calculation document from a directory and file paths.
 
@@ -989,7 +1149,7 @@ def _get_volumetric_data(
     dir_name: Path,
     output_file_paths: dict[VaspObject, str],
     store_volumetric_data: tuple[str] | None,
-) -> Mapping[VaspObject, VolumetricData]:
+) -> dict[VaspObject, VolumetricData]:
     """
     Load volumetric data files from a directory.
 
@@ -1016,7 +1176,7 @@ def _get_volumetric_data(
     if store_volumetric_data is None or len(store_volumetric_data) == 0:
         return {}
 
-    volumetric_data = {}
+    volumetric_data: dict[VaspObject, VolumetricData] = {}
     for file_type, file in output_file_paths.items():
         if (
             file_type.name not in store_volumetric_data
@@ -1026,7 +1186,7 @@ def _get_volumetric_data(
 
         try:
             # assume volumetric data is all in CHGCAR format
-            volumetric_data[file_type] = Chgcar.from_file(dir_name / file)
+            volumetric_data[file_type] = Chgcar.from_file(str(dir_name / file))
         except Exception:
             raise ValueError(f"Failed to parse {file_type} at {file}.")
     return volumetric_data
@@ -1090,7 +1250,7 @@ def _get_band_props(
 
     Returns
     -------
-    Dict
+    dict
         A dictionary of element and orbital-projected DOS properties.
     """
     dosprop_dict: dict[str, dict[str, dict[str, float]]] = {}
@@ -1101,8 +1261,9 @@ def _get_band_props(
     for el in structure.composition.elements:
         el_name = str(el.name)
         dosprop_dict[el_name] = {}
+
         for orb_type in [
-            OrbitalType(x) for x in range(OrbitalType[el.block].value + 1)
+            OrbitalType(x) for x in range(OrbitalType[el.block].value + 1)  # type: ignore[misc]
         ]:
             try:
                 dosprop_dict[el_name][str(orb_type)] = {

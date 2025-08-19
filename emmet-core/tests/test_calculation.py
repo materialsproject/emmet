@@ -1,6 +1,7 @@
 import pytest
 
-from tests.conftest import assert_schemas_equal, get_test_object
+from emmet.core.testing_utils import assert_schemas_equal
+from tests.conftest import get_test_object
 
 
 def test_init():
@@ -188,7 +189,7 @@ def test_PotcarSpec(test_dir):
         potcar = PotcarSingle.from_symbol_and_functional(symbol="Si", functional="PBE")
         ps_spec = PotcarSpec.from_potcar_single(potcar_single=potcar)
 
-        assert ps_spec.titel == potcar.symbol
+        assert ps_spec.titel.split("")[1] == potcar.symbol
         assert ps_spec.hash == potcar.md5_header_hash
         assert ps_spec.summary_stats == potcar._summary_stats
 
