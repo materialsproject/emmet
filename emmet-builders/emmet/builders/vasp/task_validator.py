@@ -75,7 +75,9 @@ class TaskValidator(MapBuilder):
             potcar_stats=self.potcar_stats,
         )
 
-        bad_tags = list(set(task_doc.tags).intersection(self.settings.DEPRECATED_TAGS))
+        bad_tags = list(
+            set(task_doc.tags or []).intersection(self.settings.DEPRECATED_TAGS)
+        )
         if len(bad_tags) > 0:
             validation_doc.warnings.append(f"Manual Deprecation by tags: {bad_tags}")
             validation_doc.valid = False
