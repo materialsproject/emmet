@@ -136,6 +136,12 @@ class SymmetryData(BaseModel):
         description="The spacegroup symbol for the lattice.",
     )
 
+    hall: str | None = Field(
+        None,
+        title="Hall Symbol",
+        description="Hall symbol for the lattice",
+    )
+
     number: int | None = Field(
         None,
         title="Space Group Number",
@@ -163,7 +169,6 @@ class SymmetryData(BaseModel):
     @classmethod
     def from_structure(cls, structure: Structure) -> "SymmetryData":
         symmetry: dict[str, Any] = {
-            "source": "spglib",
             "symbol": None,
             "number": None,
             "point_group": None,
