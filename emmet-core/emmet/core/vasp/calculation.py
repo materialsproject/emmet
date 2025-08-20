@@ -341,7 +341,7 @@ class CalculationInput(CalculationBaseModel):
             # INCAR field of vasprun.xml, and not parameters
             parameters.update({"METAGGA": metagga})
 
-        return cls(
+        return cls(  # type: ignore[call-arg]
             structure=vasprun.initial_structure,
             incar=incar,
             kpoints=Kpoints.from_dict(kpoints_dict),
@@ -730,13 +730,19 @@ class CalculationOutput(BaseModel):
             else {}
         )
 
-        elph_structures: dict[str, list[Any]] = {}
+        elph_structures: ElectronPhononDisplacedStructures | None = None
         if elph_poscars is not None:
-            elph_structures.update({"temperatures": [], "structures": []})
+            elph_structures_dct: dict[str, list[Any]] = {
+                "temperatures": [],
+                "structures": [],
+            }
             for elph_poscar in elph_poscars:
                 temp = str(elph_poscar.name).replace("POSCAR.T=", "").replace(".gz", "")
-                elph_structures["temperatures"].append(temp)
-                elph_structures["structures"].append(Structure.from_file(elph_poscar))
+                elph_structures_dct["temperatures"].append(temp)
+                elph_structures_dct["structures"].append(
+                    Structure.from_file(elph_poscar)
+                )
+            elph_structures = ElectronPhononDisplacedStructures(**elph_structures_dct)
 
         store_trajectory = StoreTrajectoryOption(store_trajectory)
         ionic_steps = (
@@ -768,12 +774,14 @@ class CalculationOutput(BaseModel):
             frequency_dependent_dielectric=freq_dependent_diel,
             elph_displaced_structures=elph_structures,
             dos_properties=dosprop_dict,
-            ionic_steps=ionic_steps,
+            ionic_steps=(
+                [IonicStep(**step) for step in ionic_steps] if ionic_steps else None
+            ),
             num_electronic_steps=num_elec_steps,
             locpot=locpot_avg,
             outcar=outcar_dict,
             run_stats=RunStatistics.from_outcar(outcar) if outcar else None,
-            **epsilons,
+            **epsilons,  # type: ignore[arg-type]
             **electronic_output,
             **phonon_output,
         )
@@ -1108,7 +1116,7 @@ class Calculation(CalculationBaseModel):
                 TaskState.SUCCESS if vasprun.converged else TaskState.FAILED
             )
 
-        return cls(
+        return cls(  # type: ignore[call-arg]
             dir_name=str(path.resolve().parent),
             task_name=task_name,
             vasp_version=vasprun.vasp_version,

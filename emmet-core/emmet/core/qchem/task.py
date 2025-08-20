@@ -142,7 +142,7 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     orig: dict[str, Any] = Field(
         {}, description="Summary of the original Q-Chem inputs"
     )
-    output: OutputSummary = Field(OutputSummary())
+    output: OutputSummary = Field(OutputSummary())  # type: ignore[call-arg]
 
     critic2: dict[str, Any] | None = Field(
         None, description="Output from Critic2 critical point analysis code"

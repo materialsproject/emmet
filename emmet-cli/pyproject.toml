@@ -12,50 +12,30 @@ include-package-data = true
 [tool.setuptools.packages.find]
 where = ["."]
 exclude = ["tests"]
-include = ["emmet.core"]
-
-[tool.setuptools.package-data]
-"emmet.core.vasp.calc_types" = ["*.yaml"]
-"emmet.core.qchem.calc_types" =  ["*.yaml"]
-"emmet.core.subtrates" = ["*.json"]
+include = ["emmet.cli"]
 
 [project]
-name = "emmet-core"
+name = "emmet-cli"
 dynamic = ["version"]
 requires-python = ">=3.10"
-description="Core Emmet Library"
+description="Command line interface for MP contributors"
 license = {text = "Modified BSD"}
 authors = [
     {name = "The Materials Project", email="feedback@materialsproject.org"},
 ]
 dependencies = [
-    "pymatgen>=2024.6.10",
-    "monty>=2024.2.2",
-    "pydantic>=2.0",
-    "pydantic-settings>=2.0",
+    "click",
+    "colorama",
+    "emmet-core",
     "pymatgen-io-validation>=0.1.1",
-    "pybtex~=0.24",
-    "typing-extensions>=3.7",
-    "blake3",
+    "psutil>=5.9.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/materialsproject/emmet"
+Homepage = "https://github.com/materialsproject/emmet/tree/main/emmet-cli/"
 Documentation = "https://materialsproject.github.io/emmet/"
 
 [project.optional-dependencies]
-all = [
-    "seekpath>=2.0.1",
-    "robocrys>=0.2.11",
-    "pymatgen-analysis-defects>=2024.7.18",
-    "pymatgen-analysis-diffusion>=2024.7.15",
-    "pymatgen-analysis-alloys>=0.0.6",
-    "solvation-analysis>=0.4.1",
-    "transport-analysis",
-    "MDAnalysis>=2.7.0",
-    "pyarrow",
-]
-ml = ["matcalc>=0.3.1"]
 test = [
     "pre-commit",
     "pytest",
@@ -68,7 +48,7 @@ test = [
     "types-setuptools",
     "types-requests",
     "wincertstore",
-    "custodian",
+    "blake3",
 ]
 docs = [
     "mkdocs",
@@ -82,3 +62,6 @@ docs = [
     "livereload",
     "jinja2",
 ]
+
+[project.scripts]
+emmet = "emmet.cli.entry_point:safe_entry_point"
