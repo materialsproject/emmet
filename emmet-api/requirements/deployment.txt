@@ -168,7 +168,7 @@ pillow==11.3.0
     #   scikit-image
 plotly==6.3.0
     # via pymatgen
-protobuf==6.32.0
+protobuf==6.31.1
     # via ddtrace
 pybtex==0.25.1
     # via emmet-core
