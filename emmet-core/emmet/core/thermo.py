@@ -5,7 +5,6 @@ from collections import defaultdict
 from collections.abc import Callable
 from datetime import datetime
 from enum import Enum, auto
-from itertools import chain, islice
 from typing import TypeAlias
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
@@ -13,7 +12,7 @@ from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core import ARROW_COMPATIBLE
-from emmet.core.base import EmmetMeta
+from emmet.core.base import ContextModel, EmmetMeta
 from emmet.core.material import PropertyOrigin
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID, AlphaID
@@ -25,11 +24,11 @@ from emmet.core.vasp.calc_types.enums import RunType
 
 if ARROW_COMPATIBLE:
     from emmet.core.serialization_adapters.phase_diagram_adapter import (
-        AnnotatedPhaseDiagram,
+        PhaseDiagramTypeVar,
     )
 
 PhaseDiagramType: TypeAlias = (
-    AnnotatedPhaseDiagram if ARROW_COMPATIBLE else PhaseDiagram  # type: ignore[valid-type]
+    PhaseDiagramTypeVar if ARROW_COMPATIBLE else PhaseDiagram  # type: ignore[valid-type]
 )
 
 
@@ -38,42 +37,44 @@ class Mode(Enum):
     STITCH = auto()
 
 
-def batch(iterable, n):
-    "Replace with more complete itertools version when min python>=3.12"
-    iterator = iter(iterable)
-    while batch := tuple(islice(iterator, n)):
-        yield batch
-
-
-def el_refs_serde(d: dict, mode: Mode):
-    match mode:
-        case Mode.SHRED:
-            el_ref_pairs = batch(d.pop("el_refs"), 2)
-
-            elements = []
-            entries = []
-            for element, entry in el_ref_pairs:
-                entry["energy_adjustments"] = json.dumps(entry["energy_adjustments"])
-                elements.append(element)
-                entries.append(entry)
-
-            d["el_refs_elements"] = elements
-            d["el_refs_entries"] = entries
-
-        case Mode.STITCH:
-            elements = d.pop("el_refs_elements")
-            entries = d.pop("el_refs_entries")
-            for entry in entries:
-                entry["energy_adjustments"] = json.loads(entry["energy_adjustments"])
-
-            d["el_refs"] = list(
-                chain.from_iterable((i, j) for i, j in zip(elements, entries))
-            )
+def entries_list_serde(entries_list: list[dict], serde_fn: Callable):
+    for entry in entries_list:
+        entry["energy_adjustments"] = serde_fn(entry["energy_adjustments"])
 
 
 def entries_energy_adjustments_serde(d: dict, serde_fn: Callable):
-    for entry in d.values():
-        entry["energy_adjustments"] = serde_fn(entry["energy_adjustments"])
+    entries_list_serde(d.values(), serde_fn)
+
+
+def phase_diagram_serde(d: dict, mode: Mode, serde_fn: Callable):
+    entries_list_serde(d["all_entries"], serde_fn)
+    entries_list_serde(d["computed_data"]["all_entries"], serde_fn)
+    entries_list_serde(d["computed_data"]["qhull_entries"], serde_fn)
+
+    match mode:
+        case Mode.SHRED:
+            el_ref_pairs = d["computed_data"].pop("el_refs")
+
+            elements = []
+            el_refs_entries = []
+            for element, entry in el_ref_pairs:
+                elements.append(element)
+                el_refs_entries.append(entry)
+
+            entries_list_serde(el_refs_entries, serde_fn)
+
+            d["computed_data"]["el_refs_elements"] = elements
+            d["computed_data"]["el_refs_entries"] = el_refs_entries
+
+        case Mode.STITCH:
+            elements = d["computed_data"].pop("el_refs_elements")
+            el_refs_entries = d["computed_data"].pop("el_refs_entries")
+
+            entries_list_serde(el_refs_entries, serde_fn)
+
+            d["computed_data"]["el_refs"] = [
+                (i, j) for i, j in zip(elements, el_refs_entries)
+            ]
 
 
 class DecompositionProduct(BaseModel):
@@ -379,7 +380,7 @@ class ThermoDoc(PropertyDoc):
         return new_pd
 
 
-class PhaseDiagramDoc(BaseModel):
+class PhaseDiagramDoc(ContextModel):
     """
     A phase diagram document
     """
@@ -418,7 +419,9 @@ class PhaseDiagramDoc(BaseModel):
         format = info.context.get("format") if info.context else "standard"
         if format == "arrow":
             arrow_compat_object = jsanitize(default_serialized_object, allow_bson=True)
-            el_refs_serde(arrow_compat_object, mode=Mode.SHRED)
+            phase_diagram_serde(
+                arrow_compat_object, mode=Mode.SHRED, serde_fn=json.dumps
+            )
             return arrow_compat_object
 
         return default_serialized_object
@@ -427,7 +430,12 @@ class PhaseDiagramDoc(BaseModel):
     def phase_diagram_deserializer(cls, phase_diagram):
         if ARROW_COMPATIBLE:
             if isinstance(phase_diagram, dict):
-                if isinstance(phase_diagram["el_refs"], str):
-                    el_refs_serde(phase_diagram, mode=Mode.STITCH)
+                if all(
+                    key in phase_diagram["computed_data"]
+                    for key in ["el_refs_elements", "el_refs_entries"]
+                ):
+                    phase_diagram_serde(
+                        phase_diagram, mode=Mode.STITCH, serde_fn=json.loads
+                    )
 
         return phase_diagram
