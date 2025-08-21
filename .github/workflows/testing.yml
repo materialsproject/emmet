@@ -59,9 +59,8 @@ jobs:
         os: ["ubuntu-latest"] # TODO openbabel for windows and mac
         package: ["emmet-core", "emmet-builders", "emmet-api", "emmet-archival", "emmet-cli"]
         python-version: ["3.11", "3.12"]
-        split: [1,2]
 
-    name: ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }} split ${{ matrix.split }} )
+    name: ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
@@ -77,9 +76,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
           channels: anaconda, conda-forge
 
+      # These dependencies seem to only be used in emmet-core and builders
       - name: Install all conda requirements
         shell: bash -l {0}
-        run: conda install -c conda-forge openbabel openff-toolkit==0.16.2 openff-interchange==0.3.22 sqlite -y
+        if: (matrix.package == 'emmet-core') || (matrix.package == 'emmet-builders')
+        run: conda install -c conda-forge openbabel openff-toolkit==0.16.2 openff-interchange==0.3.22 -y
 
       - name: Install Python dependencies
         shell: bash -l {0}
@@ -105,10 +106,10 @@ jobs:
         run: python${{ matrix.python-version }} -m mypy --config-file .mypy.ini ${{ matrix.package }}/emmet
 
       # create durations file with `pytest --store-durations --durations-path test_files/.pytest_split_durations/.{pkg} {pkg}` where pkg = emmet-core, emmet-builders, etc.
-      - name: Test split ${{ matrix.split}} with pytest
+      - name: Test with pytest
         if: always() # run tests even if linting failed
         shell: bash -l {0}
-        run: python${{ matrix.python-version }} -m pytest --splits 2 --group ${{ matrix.split }} --durations-path test_files/.pytest_split_durations/.${{ matrix.package }} --splitting-algorithm least_duration --cov=emmet --cov-report=xml ${{ matrix.package }}/tests
+        run: python${{ matrix.python-version }} -m pytest --cov=emmet --cov-report=xml ${{ matrix.package }}/tests
 
       - uses: codecov/codecov-action@v5.4.3
         with:

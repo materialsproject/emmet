@@ -44,7 +44,6 @@ test = [
     "pre-commit",
     "pytest",
     "pytest-cov",
-    "pytest-split",
     "pycodestyle",
     "pydocstyle",
     "flake8",
