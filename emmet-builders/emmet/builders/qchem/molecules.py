@@ -26,6 +26,9 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
     from typing import Any
 
+    from emmet.core.molecules import MolPropertyOrigin
+
+
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
@@ -51,8 +54,8 @@ def evaluate_molecule(
     """
 
     opt_lot = None
-    for origin in mol_doc.origins:
-        if origin.name == "molecule":
+    for origin in mol_doc.origins or []:
+        if origin.name == "molecule" and mol_doc.levels_of_theory:
             opt_lot = mol_doc.levels_of_theory[origin.task_id]
             if isinstance(opt_lot, LevelOfTheory):
                 opt_lot = opt_lot.value
@@ -70,7 +73,7 @@ def evaluate_molecule(
         -1 * int(mol_doc.deprecated),
         sum(best_eval),
         sum(opt_eval),
-        mol_doc.best_entries[best]["energy"],
+        (mol_doc.best_entries or {}).get(best, {}).get("energy", float("inf")),
     )
 
 
@@ -340,7 +343,7 @@ class MoleculesAssociationBuilder(Builder):
             if task.output.optimized_molecule:
                 m = task.output.optimized_molecule
             else:
-                m = task.output.initial_molecule
+                m = task.output.initial_molecule  # type: ignore[assignment]
             m.ind: int = idx  # type: ignore
             molecules.append(m)
 
@@ -556,18 +559,18 @@ class MoleculesBuilder(Builder):
             mol_lots = dict()
 
             task_ids = list()
-            calc_types = dict()
-            task_types = dict()
-            levels_of_theory = dict()
-            solvents = dict()
-            lot_solvents = dict()
+            calc_types: dict[str, CalcType] = dict()
+            task_types: dict[str, TaskType] = dict()
+            levels_of_theory: dict[str, LevelOfTheory] = dict()
+            solvents: dict[str, str] = dict()
+            lot_solvents: dict[str, str] = dict()
             unique_calc_types: set[str | CalcType] = set()
             unique_task_types: set[str | TaskType] = set()
             unique_levels_of_theory: set[str | LevelOfTheory] = set()
             unique_solvents: set[str] = set()
             unique_lot_solvents: set[str] = set()
-            origins = list()
-            entries = list()
+            origins: list[MolPropertyOrigin] = list()
+            entries: list[dict[str, Any]] = list()
             best_entries: dict[str, Any] = dict()
             constituent_molecules = list()
             similar_molecules = list()
