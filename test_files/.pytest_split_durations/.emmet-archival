@@ -1,0 +1,7 @@
+{
+    "emmet-archival/tests/test_atoms.py::test_structure_archive": 0.00289462530054152,
+    "emmet-archival/tests/vasp/test_raw_archive.py::test_from_directory": 1.863629792118445,
+    "emmet-archival/tests/vasp/test_volumetric.py::test_bs": 0.19603549898602068,
+    "emmet-archival/tests/vasp/test_volumetric.py::test_dos": 0.21928720897994936,
+    "emmet-archival/tests/vasp/test_volumetric.py::test_volumetric_archive": 0.0009591667912900448
+}

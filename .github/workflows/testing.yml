@@ -59,6 +59,8 @@ jobs:
         os: ["ubuntu-latest"] # TODO openbabel for windows and mac
         package: ["emmet-core", "emmet-builders", "emmet-api", "emmet-archival", "emmet-cli"]
         python-version: ["3.11", "3.12"]
+        split: [1,2]
+
     name: ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
     steps:
@@ -102,10 +104,11 @@ jobs:
         shell: bash -l {0}
         run: python${{ matrix.python-version }} -m mypy --config-file .mypy.ini ${{ matrix.package }}/emmet
 
-      - name: Test with pytest
+      # create durations file with `pytest --store-durations --durations-path test_files/.pytest_split_durations/.{pkg} {pkg}` where pkg = emmet-core, emmet-builders, etc.
+      - name: Test split ${{ matrix.split}} with pytest
         if: always() # run tests even if linting failed
         shell: bash -l {0}
-        run: python${{ matrix.python-version }} -m pytest --cov=emmet --cov-report=xml ${{ matrix.package }}/tests
+        run: python${{ matrix.python-version }} -m pytest --splits 3 --group ${{ matrix.split }} --durations-path test_files/.pytest_split_durations/.${{ matrix.package }} --splitting-algorithm least_duration --cov=emmet --cov-report=xml ${{ matrix.package }}/tests
 
       - uses: codecov/codecov-action@v5.4.3
         with:
