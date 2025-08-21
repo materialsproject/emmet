@@ -61,7 +61,7 @@ jobs:
         python-version: ["3.11", "3.12"]
         split: [1,2]
 
-    name: ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }})
+    name: ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }} split ${{ matrix.split }} )
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
@@ -108,7 +108,7 @@ jobs:
       - name: Test split ${{ matrix.split}} with pytest
         if: always() # run tests even if linting failed
         shell: bash -l {0}
-        run: python${{ matrix.python-version }} -m pytest --splits 3 --group ${{ matrix.split }} --durations-path test_files/.pytest_split_durations/.${{ matrix.package }} --splitting-algorithm least_duration --cov=emmet --cov-report=xml ${{ matrix.package }}/tests
+        run: python${{ matrix.python-version }} -m pytest --splits 2 --group ${{ matrix.split }} --durations-path test_files/.pytest_split_durations/.${{ matrix.package }} --splitting-algorithm least_duration --cov=emmet --cov-report=xml ${{ matrix.package }}/tests
 
       - uses: codecov/codecov-action@v5.4.3
         with:
