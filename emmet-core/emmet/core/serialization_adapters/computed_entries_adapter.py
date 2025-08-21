@@ -3,7 +3,7 @@ from typing import Annotated, TypeVar
 from pydantic.functional_validators import BeforeValidator
 from pymatgen.core.periodic_table import Element
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 from emmet.core.serialization_adapters.structure_adapter import (
     TypedStructureDict,
@@ -72,7 +72,7 @@ class TypedCEParameterDict(TypedDict):
     potcar_spec: list[PotcarSpec]
     run_type: str
     is_hubbard: bool
-    hubbards: dict[str, float]
+    hubbards: NotRequired[dict[str, float] | None]  # type: ignore[type-arg]
 
 
 TypedComputedEntryDict = TypedDict(
