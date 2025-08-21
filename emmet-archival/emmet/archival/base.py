@@ -69,7 +69,7 @@ class Archiver(BaseModel):
     @staticmethod
     @contextmanager
     def _open_hdf5_like(
-        archive_name: str | Path,
+        archive_name: PathLike,
         fmt: str | ArchivalFormat | None = None,
         mode: Literal["r", "w", "a"] = "r",
         group_key: str | None = None,
