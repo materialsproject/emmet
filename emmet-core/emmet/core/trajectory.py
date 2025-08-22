@@ -2,24 +2,23 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
+import logging
 from collections import defaultdict
 from collections.abc import Iterable
+from copy import deepcopy
 from enum import Enum
-import logging
-import numpy as np
-from pydantic import BaseModel, Field, model_validator
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pymatgen.core import Element, Structure, Molecule
-from pymatgen.core.trajectory import Trajectory as PmgTrajectory
-
+import numpy as np
 from monty.dev import requires
 from monty.serialization import dumpfn
+from pydantic import BaseModel, Field, model_validator
+from pymatgen.core import Element, Molecule, Structure
+from pymatgen.core.trajectory import Trajectory as PmgTrajectory
 
-from emmet.core.math import Vector3D, Matrix3D
-from emmet.core.vasp.calc_types import RunType, TaskType, run_type, task_type, calc_type
+from emmet.core.math import Matrix3D, Vector3D
+from emmet.core.vasp.calc_types import RunType, TaskType, calc_type, run_type, task_type
 from emmet.core.vasp.calculation import ElectronicStep
 
 logger = logging.getLogger(__name__)
@@ -36,10 +35,11 @@ except ImportError:
 
 if TYPE_CHECKING:
     from typing import Any
+
     from typing_extensions import Self
 
-    from emmet.core.vasp.calculation import Calculation
     from emmet.core.vasp.calc_types import CalcType
+    from emmet.core.vasp.calculation import Calculation
 
 
 class TrajFormat(Enum):
@@ -656,7 +656,7 @@ class Trajectory(AtomTrajectory):
         return dict(props), rt, tt, ct
 
     @classmethod
-    def from_task_doc(cls, task_doc: Any, **kwargs) -> list["Trajectory"]:
+    def from_task_doc(cls, task_doc, **kwargs) -> list["Trajectory"]:
         """
         Create trajectories from a TaskDoc.
 
