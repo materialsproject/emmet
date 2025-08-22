@@ -19,9 +19,9 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.12
+boto3==1.40.15
     # via maggma
-botocore==1.40.12
+botocore==1.40.15
     # via
     #   boto3
     #   s3transfer
@@ -181,7 +181,7 @@ packaging==25.0
     #   statsmodels
 palettable==3.3.3
     # via pymatgen
-pandas==2.3.1
+pandas==2.3.2
     # via
     #   maggma
     #   matminer
@@ -276,7 +276,7 @@ pytz==2025.2
     #   pandas
 pyyaml==6.0.2
     # via pybtex
-pyzmq==27.0.1
+pyzmq==27.0.2
     # via maggma
 rdkit==2025.3.5
     # via solvation-analysis
