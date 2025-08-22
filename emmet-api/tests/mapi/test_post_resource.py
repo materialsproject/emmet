@@ -36,12 +36,12 @@ def owner_store():
 
 
 def test_init(owner_store):
-    resource = PostOnlyResource(store=owner_store, model=Owner)
+    resource = PostOnlyResource(collection=owner_store, model=Owner)
     assert len(resource.router.routes) == 2
 
 
 def test_msonable(owner_store):
-    owner_resource = PostOnlyResource(store=owner_store, model=Owner)
+    owner_resource = PostOnlyResource(collection=owner_store, model=Owner)
     endpoint_dict = owner_resource.as_dict()
 
     for k in ["@class", "@module", "store", "model"]:
