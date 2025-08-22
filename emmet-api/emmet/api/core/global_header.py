@@ -16,6 +16,9 @@ class GlobalHeaderProcessor(HeaderProcessor):
         consumer_id = request.headers.get("X-Consumer-Id", "-")
         response.headers["X-Consumer-Id"] = consumer_id
 
+        if "Content-Type" not in response.headers:
+            response.headers["Content-Type"] = "application/json"
+
     def configure_query_on_request(
         self, request: Request, query_operator: LicenseQuery
     ) -> STORE_PARAMS:
