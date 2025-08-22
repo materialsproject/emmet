@@ -51,14 +51,14 @@ def pipeline_query_op():
 
 def test_init(owner_store, pipeline_query_op):
     resource = AggregationResource(
-        store=owner_store, pipeline_query_operator=pipeline_query_op, model=Owner
+        collection=owner_store, pipeline_query_operator=pipeline_query_op, model=Owner
     )
     assert len(resource.router.routes) == 2
 
 
 def test_msonable(owner_store, pipeline_query_op):
     owner_resource = AggregationResource(
-        store=owner_store, pipeline_query_operator=pipeline_query_op, model=Owner
+        collection=owner_store, pipeline_query_operator=pipeline_query_op, model=Owner
     )
     endpoint_dict = owner_resource.as_dict()
 

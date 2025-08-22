@@ -24,7 +24,7 @@ setup(
         "pymatgen-analysis-defects>=2024.10.22",
         "pymatgen-io-validation>=0.1.1",
         "uvicorn>=0.18.3",
-        "maggma",
+        "pymongo>=4.13.0",
     ],
     extras_require={
         "test": [
