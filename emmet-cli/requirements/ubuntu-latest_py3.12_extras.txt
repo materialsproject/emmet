@@ -280,9 +280,9 @@ tornado==6.5.2
 tqdm==4.67.1
     # via pymatgen
 types-requests==2.32.4.20250809
-    # via emmet-cli (pyproject.toml)
+    # via emmet-cli (setup.py)
 types-setuptools==80.9.0.20250822
-    # via emmet-cli (pyproject.toml)
+    # via emmet-cli (setup.py)
 typing-extensions==4.15.0
     # via
     #   emmet-core

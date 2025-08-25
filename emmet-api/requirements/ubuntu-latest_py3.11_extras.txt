@@ -25,11 +25,11 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.16
+boto3==1.40.17
     # via
     #   emmet-api (pyproject.toml)
     #   maggma
-botocore==1.40.16
+botocore==1.40.17
     # via
     #   boto3
     #   s3transfer
@@ -67,7 +67,7 @@ csscompressor==0.9.5
 cycler==0.12.1
     # via matplotlib
 ddtrace==3.12.2
-    # via emmet-api (pyproject.toml)
+    # via emmet-api (setup.py)
 distlib==0.4.0
     # via virtualenv
 dnspython==2.7.0
@@ -452,9 +452,9 @@ tqdm==4.67.1
     #   maggma
     #   pymatgen
 types-requests==2.32.4.20250809
-    # via emmet-api (pyproject.toml)
+    # via emmet-api (setup.py)
 types-setuptools==80.9.0.20250822
-    # via emmet-api (pyproject.toml)
+    # via emmet-api (setup.py)
 typing-extensions==4.15.0
     # via
     #   anyio

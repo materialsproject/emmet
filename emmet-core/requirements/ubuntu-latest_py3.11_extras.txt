@@ -109,7 +109,7 @@ markupsafe==3.0.2
     #   mkdocs-autorefs
     #   mkdocstrings
 matcalc==0.4.3
-    # via emmet-core (pyproject.toml)
+    # via emmet-core (setup.py)
 matminer==0.9.3
     # via robocrys
 matplotlib==3.10.5
@@ -468,9 +468,9 @@ transport-analysis==0.1.2
 typeguard==4.4.4
     # via inflect
 types-requests==2.32.4.20250809
-    # via emmet-core (pyproject.toml)
+    # via emmet-core (setup.py)
 types-setuptools==80.9.0.20250822
-    # via emmet-core (pyproject.toml)
+    # via emmet-core (setup.py)
 typing-extensions==4.15.0
     # via
     #   emmet-core (pyproject.toml)

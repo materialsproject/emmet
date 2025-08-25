@@ -23,11 +23,11 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.16
+boto3==1.40.17
     # via
     #   emmet-api (pyproject.toml)
     #   maggma
-botocore==1.40.16
+botocore==1.40.17
     # via
     #   boto3
     #   s3transfer
@@ -50,7 +50,7 @@ cryptography==45.0.6
 cycler==0.12.1
     # via matplotlib
 ddtrace==3.12.2
-    # via emmet-api (pyproject.toml)
+    # via emmet-api (setup.py)
 dnspython==2.7.0
     # via
     #   maggma

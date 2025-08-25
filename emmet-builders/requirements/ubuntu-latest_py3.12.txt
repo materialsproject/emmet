@@ -19,9 +19,9 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.16
+boto3==1.40.17
     # via maggma
-botocore==1.40.16
+botocore==1.40.17
     # via
     #   boto3
     #   s3transfer

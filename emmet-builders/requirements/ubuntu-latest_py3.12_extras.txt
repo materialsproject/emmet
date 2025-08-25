@@ -21,9 +21,9 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.16
+boto3==1.40.17
     # via maggma
-botocore==1.40.16
+botocore==1.40.17
     # via
     #   boto3
     #   s3transfer
@@ -550,9 +550,9 @@ transport-analysis==0.1.2
 typeguard==4.4.4
     # via inflect
 types-requests==2.32.4.20250809
-    # via emmet-builders (pyproject.toml)
+    # via emmet-builders (setup.py)
 types-setuptools==80.9.0.20250822
-    # via emmet-builders (pyproject.toml)
+    # via emmet-builders (setup.py)
 typing-extensions==4.15.0
     # via
     #   emmet-core
