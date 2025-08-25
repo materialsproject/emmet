@@ -189,13 +189,17 @@ class ElectricMultipoleBuilder(Builder):
             # Relevant tasks are those with the correct charge and spin
             # for which there are AT LEAST electric dipoles present
             # (ideally, multipole information would also be present)
-            multip_entries = [
-                e
-                for e in mol.entries
-                if e["charge"] == mol.charge
-                and e["spin_multiplicity"] == mol.spin_multiplicity
-                and (e["output"].get("dipoles") is not None)
-            ]
+            multip_entries = (
+                []
+                if not mol.entries
+                else [
+                    e
+                    for e in mol.entries
+                    if e["charge"] == mol.charge
+                    and e["spin_multiplicity"] == mol.spin_multiplicity
+                    and (e["output"].get("dipoles") is not None)
+                ]
+            )
 
             # Organize by solvent environment
             by_solvent = defaultdict(list)

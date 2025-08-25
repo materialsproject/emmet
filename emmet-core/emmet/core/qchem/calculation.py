@@ -131,7 +131,7 @@ class CalculationInput(BaseModel):
         if not isinstance(qcinput.molecule, Molecule):
             raise ValueError("QCInput contains multiple molecules.")
 
-        return cls(
+        return cls(  # type: ignore[call-arg]
             initial_molecule=qcinput.molecule,
             charge=(
                 int(qcinput.molecule.as_dict()["charge"])

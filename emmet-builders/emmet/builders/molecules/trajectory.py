@@ -185,11 +185,15 @@ class ForcesBuilder(Builder):
         force_docs = list()
 
         for mol in mols:
-            force_entries = [
-                e
-                for e in mol.entries
-                if e["charge"] == mol.charge and e["task_type"] == "Force"
-            ]
+            force_entries = (
+                []
+                if not mol.entries
+                else [
+                    e
+                    for e in mol.entries
+                    if e["charge"] == mol.charge and e["task_type"] == "Force"
+                ]
+            )
 
             # Organize by solvent environment
             by_solvent = defaultdict(list)
@@ -436,21 +440,21 @@ class TrajectoryBuilder(Builder):
         trajectory_docs = list()
 
         for mol in mols:
-            entries = mol.best_entries
+            entries = mol.best_entries or {}
 
             # Organize by solvent environment
             by_solvent = defaultdict(list)
             for entry in entries.values():
                 by_solvent[entry["solvent"]].append(entry)
 
-            for solvent, entries in by_solvent.items():
+            for solv_entries in by_solvent.values():
                 # No "best" entry - shouldn't happen, but just in case
-                if len(entries) == 0:
+                if len(solv_entries) == 0:
                     continue
                 else:
                     # In case there are multiple optimized structures with the same solvent but different LOT
                     best = sorted(
-                        entries,
+                        solv_entries,
                         key=lambda x: (
                             sum(evaluate_lot(x["level_of_theory"])),
                             x["energy"],

@@ -9,6 +9,7 @@ from emmet.core.vasp.calc_types import RunType, TaskType, run_type, task_type
 from emmet.core.vasp.validation import ValidationDoc
 from emmet.core.vasp.validation_legacy import ValidationDoc as LegacyValidationDoc
 from emmet.core.vasp.task_valid import TaskDocument
+from emmet.core.testing_utils import DataArchive
 from emmet.core.vasp.utils import discover_vasp_files
 
 # As the validator itself is a separate package with its own tests,
@@ -151,7 +152,8 @@ def test_validator_integration(test_dir):
         "Si_static": [],
     }
     for calc_dir, ref_reasons in calc_dirs.items():
-        task_doc = TaskDoc.from_directory(test_dir / "vasp" / calc_dir)
+        with DataArchive.extract(test_dir / "vasp" / f"{calc_dir}.json.gz") as tmp_dir:
+            task_doc = TaskDoc.from_directory(tmp_dir)
         valid_doc = ValidationDoc.from_task_doc(task_doc, check_potcar=False)
         if len(ref_reasons) == 0:
             assert valid_doc.valid
@@ -164,15 +166,17 @@ def test_validator_integration(test_dir):
 
 
 def test_from_file_meta_and_dir(test_dir):
-    files_by_suffix = discover_vasp_files(test_dir / "vasp" / "Si_static")
-    valid_doc_from_meta = ValidationDoc.from_file_metadata(
-        files_by_suffix["standard"], check_potcar=False
-    )
+    with DataArchive.extract(test_dir / "vasp" / "Si_static.json.gz") as tmp_dir:
+        files_by_suffix = discover_vasp_files(tmp_dir)
+
+        valid_doc_from_meta = ValidationDoc.from_file_metadata(
+            files_by_suffix["standard"], check_potcar=False
+        )
+
+        valid_doc_from_dir = ValidationDoc.from_directory(tmp_dir, check_potcar=False)
+
     assert valid_doc_from_meta.valid
 
-    valid_doc_from_dir = ValidationDoc.from_directory(
-        test_dir / "vasp" / "Si_static", check_potcar=False
-    )
     for k in ValidationDoc.model_fields:
         if k in {"last_updated", "builder_meta"}:
             # these contain time-stamped fields that won't match

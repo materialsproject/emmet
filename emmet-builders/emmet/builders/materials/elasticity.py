@@ -199,7 +199,7 @@ class ElasticityBuilder(Builder):
 
         # convert to elasticity doc
         deforms = []
-        stresses = []
+        stresses: list[Stress] = []  # TODO: mypy misfires on `Stress`
         deform_task_ids = []
         deform_dir_names = []
         for doc in final_deform:
@@ -208,7 +208,7 @@ class ElasticityBuilder(Builder):
             )
             # 0.1 to convert to GPa from kBar, and the minus sign to flip the stress
             # direction from compressive as positive (in vasp) to tensile as positive
-            stresses.append(-0.1 * Stress(doc["output"]["stress"]))
+            stresses.append(-0.1 * Stress(doc["output"]["stress"]))  # type: ignore[arg-type]
             deform_task_ids.append(doc["task_id"])
             deform_dir_names.append(doc["dir_name"])
 
@@ -216,10 +216,10 @@ class ElasticityBuilder(Builder):
             structure=Structure.from_dict(final_opt["output"]["structure"]),
             material_id=material_id,
             deformations=deforms,
-            stresses=stresses,
+            stresses=stresses,  # type: ignore[arg-type]
             deformation_task_ids=deform_task_ids,
             deformation_dir_names=deform_dir_names,
-            equilibrium_stress=-0.1 * Stress(final_opt["output"]["stress"]),
+            equilibrium_stress=-0.1 * Stress(final_opt["output"]["stress"]),  # type: ignore[arg-type]
             optimization_task_id=final_opt["task_id"],
             optimization_dir_name=final_opt["dir_name"],
             fitting_method="finite_difference",
@@ -243,7 +243,7 @@ class ElasticityBuilder(Builder):
 def filter_opt_tasks(
     tasks: list[dict],
     calc_types: dict[str, str],
-    target_calc_type: str = CalcType.GGA_Structure_Optimization,
+    target_calc_type: str | CalcType = CalcType.GGA_Structure_Optimization,
 ) -> list[dict]:
     """
     Filter optimization tasks, by
@@ -257,7 +257,7 @@ def filter_opt_tasks(
 def filter_deform_tasks(
     tasks: list[dict],
     calc_types: dict[str, str],
-    target_calc_type: str = CalcType.GGA_Deformation,
+    target_calc_type: str | CalcType = CalcType.GGA_Deformation,
 ) -> list[dict]:
     """
     Filter deformation tasks, by
