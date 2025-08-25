@@ -4,11 +4,6 @@ from maggma.stores import MemoryStore
 # from matcalc.utils import get_universal_calculator
 from pymatgen.core import Lattice, Structure
 
-from emmet.builders.materials.ml import MLBuilder
-
-# if TYPE_CHECKING:
-#    from ase.calculators.calculator import Calculator
-
 material_id = "1234"
 
 
@@ -32,6 +27,9 @@ def materials_store():
 # @pytest.mark.parametrize("model", [get_universal_calculator("chgnet"), "m3gnet"])
 @pytest.mark.skip(reason="Temporary skip. Needs attention.")
 def test_ml_ip_builder(materials_store: MemoryStore, model):
+
+    from emmet.builders.materials.ml import MLBuilder
+
     ml_store = MemoryStore(key="material_id")
 
     builder = MLBuilder(materials=materials_store, ml_potential=ml_store, model=model)
