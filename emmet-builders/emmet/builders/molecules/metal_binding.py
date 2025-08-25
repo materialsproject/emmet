@@ -22,6 +22,8 @@ from emmet.core.utils import jsanitize
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
+    from typing import Any
+    from pydantic import BaseModel
 
 __author__ = "Evan Spotte-Smith"
 
@@ -251,11 +253,11 @@ class MetalBindingBuilder(Builder):
         mol_ids = [m.molecule_id for m in mols]
         self.logger.debug(f"Processing {shash} : {mol_ids}")
 
-        binding_docs = list()
+        binding_docs: list[BaseModel] = []
 
         for mol in mols:
             # First: do we need to do this? Are there actually metals in this molecule? And species other than metals?
-            species = mol.species
+            species = mol.species or []
             metal_indices = [i for i, e in enumerate(species) if e in metals]
             if len(metal_indices) == 0 or len(species) == 1:
                 # print(mol.molecule_id, mol.formula_alphabetical)
@@ -263,7 +265,7 @@ class MetalBindingBuilder(Builder):
 
             # Grab the basic documents needed to create a metal binding document
             molecule_id = mol.molecule_id
-            solvents = mol.unique_solvents
+            solvents = mol.unique_solvents or []
             charges = [
                 PartialChargesDoc(**e)
                 for e in self.charges.query({"molecule_id": molecule_id})
@@ -284,7 +286,7 @@ class MetalBindingBuilder(Builder):
                 for e in self.thermo.query({"molecule_id": molecule_id})
             ]
 
-            if any([len(x) == 0 for x in [charges, bonds, thermo]]):
+            if any([len(x) == 0 for x in [charges, bonds, thermo]]):  # type: ignore[arg-type]
                 # Not enough information to construct MetalBindingDoc
                 continue
             elif mol.spin_multiplicity != 1 and len(spins) == 0:
@@ -323,7 +325,7 @@ class MetalBindingBuilder(Builder):
 
                 # Do we have the requisite docs for this solvent?
                 if mol.spin_multiplicity == 1:
-                    needed = [this_charge, this_bond, base_thermo_doc]
+                    needed: list[Any] = [this_charge, this_bond, base_thermo_doc]
                 else:
                     needed = [this_charge, this_spin, this_bond, base_thermo_doc]
 
@@ -400,7 +402,7 @@ class MetalBindingBuilder(Builder):
                             spin = round(abs(partial_spin)) + 1
 
                         # Sanity check that charge and spin are compatible
-                        metal_species = species[metal_index]
+                        metal_species = species[metal_index]  # type: ignore[index]
                         try:
                             _ = Molecule(
                                 [metal_species],
@@ -432,13 +434,12 @@ class MetalBindingBuilder(Builder):
                         if len(this_metal_thermo) == 0:
                             continue
 
-                        this_metal_thermo = this_metal_thermo[0]
-                        metal_thermo[metal_index] = this_metal_thermo
+                        metal_thermo[metal_index] = this_metal_thermo[0]
 
                         # Now the (somewhat) harder part - finding the document for this molecule without the metal
                         # Make sure charges and spins add up
-                        nometal_charge = mol.charge - charge
-                        nometal_spin = mol.spin_multiplicity - spin + 1
+                        nometal_charge = mol.charge - charge  # type: ignore[operator]
+                        nometal_spin = mol.spin_multiplicity - spin + 1  # type: ignore[operator]
                         mg_copy = copy.deepcopy(bond_doc.molecule_graph)  # type: ignore
                         mg_copy.remove_nodes([metal_index])
                         new_hash = weisfeiler_lehman_graph_hash(
@@ -470,29 +471,28 @@ class MetalBindingBuilder(Builder):
                         if len(this_nometal_thermo) == 0:
                             continue
 
-                        this_nometal_thermo = this_nometal_thermo[0]
-                        nometal_thermo[metal_index] = this_nometal_thermo
+                        nometal_thermo[metal_index] = this_nometal_thermo[0]
 
-                    doc = MetalBindingDoc.from_docs(
+                    doc = MetalBindingDoc.from_docs(  # type: ignore[misc]
                         method=method,
                         metal_indices=metal_indices,
                         base_molecule_doc=mol,
-                        partial_charges=charge_doc,
+                        partial_charges=charge_doc,  # type: ignore[arg-type]
                         partial_spins=spin_doc,
-                        bonding=bond_doc,
-                        base_thermo=base_thermo_doc,
+                        bonding=bond_doc,  # type: ignore[arg-type]
+                        base_thermo=base_thermo_doc,  # type: ignore[arg-type]
                         metal_thermo=metal_thermo,
                         nometal_thermo=nometal_thermo,
                     )
 
-                    if doc is not None and len(doc.binding_data) != 0:
+                    if doc is not None and len(doc.binding_data or []) != 0:
                         binding_docs.append(doc)
 
         self.logger.debug(
             f"Produced {len(binding_docs)} metal binding docs for {shash}"
         )
 
-        return jsanitize([doc.model_dump() for doc in binding_docs], allow_bson=True)
+        return jsanitize([doc.model_dump() for doc in binding_docs], allow_bson=True)  # type: ignore[call-arg]
 
     def update_targets(self, items: list[list[dict]]):
         """

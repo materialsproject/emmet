@@ -187,13 +187,17 @@ class VibrationBuilder(Builder):
         vibe_docs = list()
 
         for mol in mols:
-            vibe_entries = [
-                e
-                for e in mol.entries
-                if e["charge"] == mol.charge
-                and e["spin_multiplicity"] == mol.spin_multiplicity
-                and e["output"].get("frequencies") is not None
-            ]
+            vibe_entries = (
+                []
+                if not mol.entries
+                else [
+                    e
+                    for e in mol.entries
+                    if e["charge"] == mol.charge
+                    and e["spin_multiplicity"] == mol.spin_multiplicity
+                    and e["output"].get("frequencies") is not None
+                ]
+            )
 
             # Organize by solvent environment
             by_solvent = defaultdict(list)

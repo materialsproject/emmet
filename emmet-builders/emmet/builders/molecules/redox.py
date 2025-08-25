@@ -222,10 +222,12 @@ class RedoxBuilder(Builder):
                     # Current building scheme requires a MoleculeThermoDoc
                     continue
 
+                charge: int = gg.charge or 0
+                entries: list[dict] = gg.entries or []
                 ie_sp_task_ids = [
                     e["task_id"]
-                    for e in gg.entries
-                    if e["charge"] == gg.charge + 1
+                    for e in entries
+                    if e["charge"] == charge + 1
                     and e["task_type"] in ["Single Point", "Force"]
                     and e["output"].get("final_energy")
                 ]
@@ -258,8 +260,8 @@ class RedoxBuilder(Builder):
 
                 ea_sp_task_ids = [
                     e["task_id"]
-                    for e in gg.entries
-                    if e["charge"] == gg.charge - 1
+                    for e in entries
+                    if e["charge"] == charge - 1
                     and e["task_type"] in ["Single Point", "Force"]
                     and e["output"].get("final_energy")
                 ]
@@ -293,10 +295,10 @@ class RedoxBuilder(Builder):
                 grouped_docs = self._collect_by_lot_solvent(
                     thermo_docs, ie_tasks, ea_tasks
                 )
-                if gg.charge in charges:
-                    charges[gg.charge].append((gg, grouped_docs))
+                if charge in charges:
+                    charges[charge].append((gg, grouped_docs))
                 else:
-                    charges[gg.charge] = [(gg, grouped_docs)]
+                    charges[charge] = [(gg, grouped_docs)]
 
             for charge, collection in charges.items():
                 for mol, docs in collection:
@@ -483,20 +485,27 @@ class RedoxBuilder(Builder):
 
             groups[k] = {"thermo_doc": this_thermo_doc}
 
-        for k, g in ie_grouped:
+        for k, ieg in ie_grouped:
             # Must be a MoleculeThermoDoc to make a RedoxDoc
             if k not in groups:
                 continue
 
-            this_ie_doc = sorted(list(g), key=lambda x: x.output.final_energy)[0]
-            groups[k]["ie_doc"] = this_ie_doc
+            # TODO: Double check these lines: are the `x` MoleculeThermoDoc?
+            # If so, these have no attr `output`
+            groups[k]["ie_doc"] = sorted(
+                list(ieg),
+                key=lambda x: x.output.final_energy,  # type: ignore[attr-defined]
+            )[0]
 
-        for k, g in ea_grouped:
+        for k, eag in ea_grouped:
             # Must be a MoleculeThermoDoc to make a RedoxDoc
             if k not in groups:
                 continue
 
-            this_ea_doc = sorted(list(g), key=lambda x: x.output.final_energy)[0]
-            groups[k]["ea_doc"] = this_ea_doc
+            # Same check as before on `output`
+            groups[k]["ea_doc"] = sorted(
+                list(eag),
+                key=lambda x: x.output.final_energy,  # type: ignore[attr-defined]
+            )[0]
 
         return groups

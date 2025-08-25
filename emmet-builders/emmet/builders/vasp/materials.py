@@ -337,8 +337,8 @@ class MaterialsBuilder(Builder):
                 else:
                     s = undeform_structure(task.input.structure, transformations)
 
-            elif task.output:
-                s = task.output.structure
+            elif task.output and task.output.structure:
+                s = task.output.structure  # type: ignore[assignment]
             else:
                 self.logger.debug(
                     f"Skipping task {task.task_id}, missing output structure."

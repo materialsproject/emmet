@@ -202,12 +202,16 @@ class PartialChargesBuilder(Builder):
         charges_docs = list()
 
         for mol in mols:
-            correct_charge_spin = [
-                e
-                for e in mol.entries
-                if e["charge"] == mol.charge
-                and e["spin_multiplicity"] == mol.spin_multiplicity
-            ]
+            correct_charge_spin = (
+                []
+                if not mol.entries
+                else [
+                    e
+                    for e in mol.entries
+                    if e["charge"] == mol.charge
+                    and e["spin_multiplicity"] == mol.spin_multiplicity
+                ]
+            )
 
             # Organize by solvent environment
             by_solvent = defaultdict(list)
@@ -485,12 +489,16 @@ class PartialSpinsBuilder(Builder):
             if mol.spin_multiplicity == 1:
                 continue
 
-            correct_charge_spin = [
-                e
-                for e in mol.entries
-                if e["charge"] == mol.charge
-                and e["spin_multiplicity"] == mol.spin_multiplicity
-            ]
+            correct_charge_spin = (
+                []
+                if not mol.entries
+                else [
+                    e
+                    for e in mol.entries
+                    if e["charge"] == mol.charge
+                    and e["spin_multiplicity"] == mol.spin_multiplicity
+                ]
+            )
 
             # Organize by solvent environment
             by_solvent = defaultdict(list)

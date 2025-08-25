@@ -260,7 +260,7 @@ class ThermoBuilder(Builder):
         ):
             initial_mol = task.output.initial_molecule
             # If single atom, try to add enthalpy and entropy
-            if len(initial_mol) == 1:
+            if initial_mol and len(initial_mol) == 1:
                 if doc.total_enthalpy is None or doc.total_entropy is None:
                     formula = initial_mol.composition.alphabetical_formula
                     if formula in single_mol_thermo:
@@ -282,24 +282,25 @@ class ThermoBuilder(Builder):
         mol_ids = [m.molecule_id for m in mols]
         self.logger.debug(f"Processing {shash} : {mol_ids}")
 
-        thermo_docs = list()
+        thermo_docs = []
 
         mm = MoleculeMatcher(tolerance=0.000001)
 
         for mol in mols:
-            this_thermo_docs = list()
+            this_thermo_docs = []
             # Collect DICTs and SPECs
+            mol_entries = mol.entries or []
             thermo_entries = [
                 e
-                for e in mol.entries
+                for e in mol_entries
                 if e["output"]["enthalpy"] is not None
                 and e["output"]["entropy"] is not None
                 and e["charge"] == mol.charge
                 and e["spin_multiplicity"] == mol.spin_multiplicity
             ]
 
-            sp_entries = list()
-            for entry in mol.entries:
+            sp_entries = []
+            for entry in mol_entries:
                 if isinstance(entry["task_type"], TaskType):
                     task_type = entry["task_type"].value
                 else:
@@ -383,7 +384,7 @@ class ThermoBuilder(Builder):
                 for best_spec in spec_sorted:
                     task_spec = best_spec["task_id"]
 
-                    matching_structures = list()
+                    matching_structures = []
                     for entry in thermo_entries:
                         mol1 = Molecule.from_dict(entry["molecule"])
                         mol2 = Molecule.from_dict(best_spec["molecule"])
@@ -445,7 +446,7 @@ class ThermoBuilder(Builder):
 
             # If multiple documents exist for the same solvent, grab the best one
             for _, collection in docs_by_solvent.items():
-                with_eval_e = list()
+                with_eval_e = []
                 for member in collection:
                     if member.correction_level_of_theory is None:
                         with_eval_e.append(

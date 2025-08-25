@@ -53,12 +53,15 @@ def evaluate_molecule(
     :return:
     """
 
-    opt_lot = None
+    opt_lot: str | None = None
     for origin in mol_doc.origins or []:
         if origin.name == "molecule" and mol_doc.levels_of_theory:
-            opt_lot = mol_doc.levels_of_theory[origin.task_id]
-            if isinstance(opt_lot, LevelOfTheory):
-                opt_lot = opt_lot.value
+            if isinstance(
+                _opt_lot := mol_doc.levels_of_theory[origin.task_id], LevelOfTheory
+            ):
+                opt_lot = _opt_lot.value  # type: ignore[assignment]
+            else:
+                opt_lot = _opt_lot
 
     if opt_lot is None:
         opt_eval = [0]
@@ -128,7 +131,7 @@ class MoleculesAssociationBuilder(Builder):
 
         self.tasks = tasks
         self.assoc = assoc
-        self.query = query if query else dict()
+        self.query = query if query else {}
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
@@ -244,7 +247,7 @@ class MoleculesAssociationBuilder(Builder):
             tasks = list(
                 self.tasks.query(criteria=tasks_query, properties=projected_fields)
             )
-            to_yield = list()
+            to_yield = []
             for t in tasks:
                 # TODO: Validation
                 # basic validation here ensures that tasks with invalid levels of
@@ -272,11 +275,11 @@ class MoleculesAssociationBuilder(Builder):
         """
 
         if len(tasks) == 0:
-            return list()
+            return []
         shash = tasks[0].species_hash
         task_ids = [task.task_id for task in tasks]
         self.logger.debug(f"Processing {shash} : {task_ids}")
-        molecules = list()
+        molecules = []
 
         for group in self.filter_and_group_tasks(tasks):
             try:
@@ -337,7 +340,7 @@ class MoleculesAssociationBuilder(Builder):
             )
         ]
 
-        molecules = list()
+        molecules = []
 
         for idx, task in enumerate(filtered_tasks):
             if task.output.optimized_molecule:
@@ -385,7 +388,7 @@ class MoleculesBuilder(Builder):
 
         self.assoc = assoc
         self.molecules = molecules
-        self.query = query if query else dict()
+        self.query = query if query else {}
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
@@ -433,7 +436,7 @@ class MoleculesBuilder(Builder):
         processed_docs = set(list(self.molecules.distinct("molecule_id")))
         assoc_ids = set()
 
-        xyz_species_id_map = dict()
+        xyz_species_id_map = {}
         for d in all_assoc:
             this_id = "{}-{}-{}-{}".format(
                 d["species_hash"],
@@ -497,7 +500,7 @@ class MoleculesBuilder(Builder):
         processed_docs = set(list(self.molecules.distinct("molecule_id")))
         assoc_ids = set()
 
-        xyz_species_id_map = dict()
+        xyz_species_id_map = {}
         for d in all_assoc:
             this_id = "{}-{}-{}-{}".format(
                 d["species_hash"],
@@ -544,7 +547,7 @@ class MoleculesBuilder(Builder):
         mol_ids = [a.molecule_id for a in assoc]
         self.logger.debug(f"Processing {shash} : {mol_ids}")
 
-        complete_mol_docs = list()
+        complete_mol_docs = []
 
         # This is only slightly unholy
         # Need to combine many variables of the various constituent associated docs
@@ -554,26 +557,26 @@ class MoleculesBuilder(Builder):
             if len(group) == 0:
                 continue
 
-            docs_by_solvent = dict()
-            mols_by_solvent = dict()
-            mol_lots = dict()
+            docs_by_solvent = {}
+            mols_by_solvent = {}
+            mol_lots = {}
 
-            task_ids = list()
-            calc_types: dict[str, CalcType] = dict()
-            task_types: dict[str, TaskType] = dict()
-            levels_of_theory: dict[str, LevelOfTheory] = dict()
-            solvents: dict[str, str] = dict()
-            lot_solvents: dict[str, str] = dict()
+            task_ids = []
+            calc_types: dict[str, CalcType] = {}
+            task_types: dict[str, TaskType] = {}
+            levels_of_theory: dict[str, LevelOfTheory] = {}
+            solvents: dict[str, str] = {}
+            lot_solvents: dict[str, str] = {}
             unique_calc_types: set[str | CalcType] = set()
             unique_task_types: set[str | TaskType] = set()
             unique_levels_of_theory: set[str | LevelOfTheory] = set()
             unique_solvents: set[str] = set()
             unique_lot_solvents: set[str] = set()
-            origins: list[MolPropertyOrigin] = list()
-            entries: list[dict[str, Any]] = list()
-            best_entries: dict[str, Any] = dict()
-            constituent_molecules = list()
-            similar_molecules = list()
+            origins: list[MolPropertyOrigin] = []
+            entries: list[dict[str, Any]] = []
+            best_entries: dict[str, Any] = {}
+            constituent_molecules = []
+            similar_molecules = []
 
             base_doc: MoleculeDoc | None = None
 
@@ -585,8 +588,8 @@ class MoleculesBuilder(Builder):
                 sorted_docs = sorted(subgroup, key=evaluate_molecule)
                 docs_by_solvent[solv] = sorted_docs[0]
                 mols_by_solvent[solv] = sorted_docs[0].molecule
-                mol_lots[solv] = sorted_docs[0].levels_of_theory[
-                    sorted_docs[0].origins[0].task_id
+                mol_lots[solv] = sorted_docs[0].levels_of_theory[  # type: ignore[index]
+                    sorted_docs[0].origins[0].task_id  # type: ignore[index]
                 ]
                 constituent_molecules.append(sorted_docs[0].molecule_id)
 
@@ -611,22 +614,22 @@ class MoleculesBuilder(Builder):
                     solvents.update(doc.solvents)
                     lot_solvents.update(doc.lot_solvents)
                     unique_calc_types = unique_calc_types.union(
-                        set(doc.unique_calc_types)
+                        set(doc.unique_calc_types or [])
                     )
                     unique_task_types = unique_task_types.union(
-                        set(doc.unique_task_types)
+                        set(doc.unique_task_types or [])
                     )
                     unique_levels_of_theory = unique_levels_of_theory.union(
-                        set(doc.unique_levels_of_theory)
+                        set(doc.unique_levels_of_theory or [])
                     )
                     unique_solvents = unique_solvents.union(set(doc.unique_solvents))
                     unique_lot_solvents = unique_lot_solvents.union(
-                        set(doc.unique_lot_solvents)
+                        set(doc.unique_lot_solvents or [])
                     )
-                    origins.extend(doc.origins)
-                    entries.extend(doc.entries)
+                    origins.extend(doc.origins or [])
+                    entries.extend(doc.entries or [])
 
-                    for lot_solv, entry in doc.best_entries.items():
+                    for lot_solv, entry in (doc.best_entries or {}).items():
                         if lot_solv in best_entries:
                             current_eval = evaluate_task_entry(best_entries[lot_solv])
                             this_eval = evaluate_task_entry(entry)
@@ -647,11 +650,11 @@ class MoleculesBuilder(Builder):
                 base_doc.levels_of_theory = levels_of_theory
                 base_doc.solvents = solvents
                 base_doc.lot_solvents = lot_solvents
-                base_doc.unique_calc_types = unique_calc_types
-                base_doc.unique_task_types = unique_task_types
-                base_doc.unique_levels_of_theory = unique_levels_of_theory
-                base_doc.unique_solvents = unique_solvents
-                base_doc.unique_lot_solvents = unique_lot_solvents
+                base_doc.unique_calc_types = list(unique_calc_types)
+                base_doc.unique_task_types = list(unique_task_types)
+                base_doc.unique_levels_of_theory = list(unique_levels_of_theory)
+                base_doc.unique_solvents = list(unique_solvents)
+                base_doc.unique_lot_solvents = list(unique_lot_solvents)
                 base_doc.origins = origins
                 base_doc.entries = entries
                 base_doc.best_entries = best_entries
@@ -719,7 +722,7 @@ class MoleculesBuilder(Builder):
 
         # Group by charge and spin
         for c_s, group in groupby(sorted(assoc, key=charge_spin), key=charge_spin):
-            subgroups: list[dict[str, Any]] = list()
+            subgroups: list[dict[str, Any]] = []
             for mol_doc in group:
                 mol_graph = make_mol_graph(mol_doc.molecule)
                 mol_hash = mol_doc.species_hash

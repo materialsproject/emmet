@@ -64,8 +64,9 @@ class BandTheoryBase(BaseModel):
         return config
 
     @requires_arrow
-    def to_arrow(self) -> ArrowTable:
+    def to_arrow(self, col_prefix: str | None = None) -> ArrowTable:
         """Serialize to arrow."""
+        col_prefix = col_prefix or ""
         config = self.model_dump()
         if struct_dict := config.get("structure"):
             config["structure"] = json.dumps(struct_dict)
@@ -73,18 +74,19 @@ class BandTheoryBase(BaseModel):
         arrow_config = {}
         for k, v in config.items():
             if isinstance(v, dict) and not v:
-                arrow_config[k] = [None]
+                arrow_config[f"{col_prefix}{k}"] = [None]
             else:
-                arrow_config[k] = [v]
+                arrow_config[f"{col_prefix}{k}"] = [v]
         return pa.Table.from_pydict(arrow_config)
 
     @classmethod
     @requires_arrow
-    def from_arrow(cls, table: ArrowTable) -> Self:
+    def from_arrow(cls, table: ArrowTable, col_prefix: str | None = None) -> Self:
         """Create an object from an arrow table."""
         dct: dict[str, Any] = {}
+        col_prefix = col_prefix or ""
         for k, anno in cls.model_fields.items():
-            dct[k] = table[k].to_pylist()[0]
+            dct[k] = table[f"{col_prefix}{k}"].to_pylist()[0]
 
             # Unsanitize null from arrow
             is_union_type = isinstance(anno.annotation, types.UnionType)
