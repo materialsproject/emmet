@@ -21,9 +21,9 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.12
+boto3==1.40.16
     # via maggma
-botocore==1.40.12
+botocore==1.40.16
     # via
     #   boto3
     #   s3transfer
@@ -45,7 +45,7 @@ colorama==0.4.6
     # via griffe
 contourpy==1.3.3
     # via matplotlib
-coverage[toml]==7.10.4
+coverage[toml]==7.10.5
     # via pytest-cov
 cryptography==45.0.6
     # via paramiko
@@ -143,7 +143,7 @@ markupsafe==3.0.2
     #   mkdocs
     #   mkdocs-autorefs
     #   mkdocstrings
-matcalc==0.4.2
+matcalc==0.4.3
     # via emmet-core
 matminer==0.9.3
     # via
@@ -234,7 +234,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-builders (setup.py)
     #   mypy
-narwhals==2.1.2
+narwhals==2.2.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -298,7 +298,7 @@ packaging==25.0
     #   statsmodels
 palettable==3.3.3
     # via pymatgen
-pandas==2.3.1
+pandas==2.3.2
     # via
     #   maggma
     #   matminer
@@ -443,7 +443,7 @@ pyyaml==6.0.2
     #   pyyaml-env-tag
 pyyaml-env-tag==1.1
     # via mkdocs
-pyzmq==27.0.1
+pyzmq==27.0.2
     # via maggma
 rdkit==2025.3.5
     # via solvation-analysis
@@ -551,9 +551,9 @@ typeguard==4.4.4
     # via inflect
 types-requests==2.32.4.20250809
     # via emmet-builders (setup.py)
-types-setuptools==80.9.0.20250809
+types-setuptools==80.9.0.20250822
     # via emmet-builders (setup.py)
-typing-extensions==4.14.1
+typing-extensions==4.15.0
     # via
     #   emmet-core
     #   mypy
