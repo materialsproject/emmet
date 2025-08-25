@@ -23,7 +23,6 @@ from emmet.core.utils import jsanitize
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
     from typing import Any
-    from pydantic import BaseModel
 
 __author__ = "Evan Spotte-Smith"
 
@@ -253,7 +252,7 @@ class MetalBindingBuilder(Builder):
         mol_ids = [m.molecule_id for m in mols]
         self.logger.debug(f"Processing {shash} : {mol_ids}")
 
-        binding_docs: list[BaseModel] = []
+        binding_docs: list[MetalBindingDoc] = []
 
         for mol in mols:
             # First: do we need to do this? Are there actually metals in this molecule? And species other than metals?

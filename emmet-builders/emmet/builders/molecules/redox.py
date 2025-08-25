@@ -492,9 +492,9 @@ class RedoxBuilder(Builder):
 
             # TODO: Double check these lines: are the `x` MoleculeThermoDoc?
             # If so, these have no attr `output`
-            groups[k]["ie_doc"] = sorted(
+            groups[k]["ie_doc"] = sorted(  # type: ignore[assignment]
                 list(ieg),
-                key=lambda x: x.output.final_energy,  # type: ignore[attr-defined]
+                key=lambda x: x.output.final_energy,  # type: ignore
             )[0]
 
         for k, eag in ea_grouped:
@@ -503,9 +503,9 @@ class RedoxBuilder(Builder):
                 continue
 
             # Same check as before on `output`
-            groups[k]["ea_doc"] = sorted(
+            groups[k]["ea_doc"] = sorted(  # type: ignore[assignment]
                 list(eag),
-                key=lambda x: x.output.final_energy,  # type: ignore[attr-defined]
+                key=lambda x: x.output.final_energy,  # type: ignore
             )[0]
 
         return groups

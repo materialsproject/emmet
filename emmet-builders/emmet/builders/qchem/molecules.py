@@ -608,11 +608,11 @@ class MoleculesBuilder(Builder):
                 # Compile data on each constituent doc
                 for solv, doc in docs_by_solvent.items():
                     task_ids.extend(doc.task_ids)
-                    calc_types.update(doc.calc_types)
-                    task_types.update(doc.task_types)
-                    levels_of_theory.update(doc.levels_of_theory)
-                    solvents.update(doc.solvents)
-                    lot_solvents.update(doc.lot_solvents)
+                    calc_types.update(doc.calc_types)  # type: ignore[arg-type]
+                    task_types.update(doc.task_types)  # type: ignore[arg-type]
+                    levels_of_theory.update(doc.levels_of_theory)  # type: ignore[arg-type]
+                    solvents.update(doc.solvents)  # type: ignore[arg-type]
+                    lot_solvents.update(doc.lot_solvents)  # type: ignore[arg-type]
                     unique_calc_types = unique_calc_types.union(
                         set(doc.unique_calc_types or [])
                     )
@@ -622,7 +622,9 @@ class MoleculesBuilder(Builder):
                     unique_levels_of_theory = unique_levels_of_theory.union(
                         set(doc.unique_levels_of_theory or [])
                     )
-                    unique_solvents = unique_solvents.union(set(doc.unique_solvents))
+                    unique_solvents = unique_solvents.union(
+                        set(doc.unique_solvents or [])
+                    )
                     unique_lot_solvents = unique_lot_solvents.union(
                         set(doc.unique_lot_solvents or [])
                     )
@@ -643,16 +645,18 @@ class MoleculesBuilder(Builder):
                     base_doc.molecule, node_attr="specie"
                 )
                 base_doc.molecules = mols_by_solvent
-                base_doc.molecule_levels_of_theory = mol_lots
+                base_doc.molecule_levels_of_theory = mol_lots or {}
                 base_doc.task_ids = task_ids
                 base_doc.calc_types = calc_types
                 base_doc.task_types = task_types
                 base_doc.levels_of_theory = levels_of_theory
                 base_doc.solvents = solvents
                 base_doc.lot_solvents = lot_solvents
-                base_doc.unique_calc_types = list(unique_calc_types)
-                base_doc.unique_task_types = list(unique_task_types)
-                base_doc.unique_levels_of_theory = list(unique_levels_of_theory)
+                base_doc.unique_calc_types = list(map(CalcType, unique_calc_types))
+                base_doc.unique_task_types = list(map(TaskType, unique_task_types))
+                base_doc.unique_levels_of_theory = list(
+                    map(LevelOfTheory, unique_levels_of_theory)
+                )
                 base_doc.unique_solvents = list(unique_solvents)
                 base_doc.unique_lot_solvents = list(unique_lot_solvents)
                 base_doc.origins = origins
