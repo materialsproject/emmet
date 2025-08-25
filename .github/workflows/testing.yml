@@ -111,19 +111,9 @@ jobs:
         run: python${{ matrix.python-version }} -m mypy --config-file .mypy.ini ${{ matrix.package }}/emmet
 
       - name: Test with pytest
-        if: matrix.package != 'emmet-builders' # run tests even if linting failed
+        if: always() # run tests even if linting failed
         shell: bash -l {0}
         run: python${{ matrix.python-version }} -m pytest --cov=emmet --cov-report=xml ${{ matrix.package }}/tests
-
-      - name: Test non-molecule builder tests with pytest
-        if: matrix.package == 'emmet-builders'
-        shell: bash -l {0}
-        run: python${{ matrix.python-version }} -m pytest --cov=emmet --cov-report=xml --ignore=tests/molecules ${{ matrix.package }}/tests
-
-      - name: Test molecule builder tests with pytest
-        if: matrix.package == 'emmet-builders'
-        shell: bash -l {0}
-        run: python${{ matrix.python-version }} -m pytest --cov=emmet --cov-report=xml ${{ matrix.package }}/tests/molecules
 
       - uses: codecov/codecov-action@v5.4.3
         with:
