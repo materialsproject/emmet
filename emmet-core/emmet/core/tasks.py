@@ -16,7 +16,6 @@ from monty.serialization import loadfn
 from pydantic import BaseModel, Field, model_validator
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core.structure import Structure
-from pymatgen.core.trajectory import Trajectory
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.io.vasp import Incar, Kpoints, Poscar
 
@@ -38,8 +37,10 @@ from emmet.core.vasp.calculation import (
     PotcarSpec,
     RunStatistics,
     VaspObject,
+    get_trajectories_from_calculations,
 )
 from emmet.core.vasp.task_valid import TaskState
+from emmet.core.trajectory import Trajectory
 from emmet.core.vasp.utils import TASK_NAMES, discover_and_sort_vasp_files
 
 if TYPE_CHECKING:
@@ -121,7 +122,7 @@ class OutputDoc(BaseModel):
         calc_doc
             A VASP calculation document.
         trajectory
-            A pymatgen Trajectory.
+            An emmet-core Trajectory.
 
         Returns
         -------
@@ -131,9 +132,11 @@ class OutputDoc(BaseModel):
         if calc_doc.output.ionic_steps:
             forces = calc_doc.output.ionic_steps[-1].forces
             stress = calc_doc.output.ionic_steps[-1].stress
-        elif trajectory and (ionic_steps := trajectory.frame_properties) is not None:
-            forces = ionic_steps[-1].get("forces")
-            stress = ionic_steps[-1].get("stress")
+        elif trajectory and all(
+            getattr(trajectory, k) is not None for k in ("forces", "stress")
+        ):
+            forces = trajectory.forces[-1]
+            stress = trajectory.stress[-1]
         else:
             raise RuntimeError("Unable to find ionic steps.")
 
@@ -727,6 +730,24 @@ class TaskDoc(StructureMetadata, extra="allow"):
             data=self.entry.data,
             entry_id=self.entry.entry_id,
         )
+
+    @property
+    def trajectories(self) -> list[Trajectory] | None:
+        """Get Trajectory objects representing calcs_reversed.
+
+        Note that the Trajectory objects represent the proper
+        calculation order, not the reversed.
+
+        Thus the first Trajectory represents the first calculation
+        that was performed (`self.calcs_reversed[-1]`).
+        """
+        if self.calcs_reversed:
+            return get_trajectories_from_calculations(
+                self.calcs_reversed[::-1],
+                separate=False,
+                identifier=str(self.task_id) if self.task_id else None,
+            )
+        return None
 
 
 class TrajectoryDoc(BaseModel):

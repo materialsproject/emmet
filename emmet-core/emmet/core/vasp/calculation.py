@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
+from copy import deepcopy
 from functools import cached_property
 import logging
 import os
@@ -15,7 +17,6 @@ from pymatgen.command_line.bader_caller import bader_analysis_from_path
 from pymatgen.command_line.chargemol_caller import ChargemolAnalysis
 from pymatgen.core.lattice import Lattice
 from pymatgen.core.structure import Structure
-from pymatgen.core.trajectory import Trajectory
 from pymatgen.electronic_structure.bandstructure import BandStructure
 from pymatgen.electronic_structure.core import OrbitalType
 from pymatgen.electronic_structure.dos import CompleteDos, Dos
@@ -33,7 +34,9 @@ from pymatgen.io.vasp import (
 )
 
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
+from emmet.core.trajectory import Trajectory
 from emmet.core.utils import ValueEnum
+from emmet.core.vasp import ElectronicStep
 from emmet.core.vasp.calc_types import (
     CalcType,
     RunType,
@@ -457,32 +460,6 @@ class ElectronPhononDisplacedStructures(BaseModel):
     structures: list[Structure] | None = Field(
         None, description="The displaced structures corresponding to each temperature."
     )
-
-
-class ElectronicStep(BaseModel):  # type: ignore
-    """Document defining the information at each electronic step.
-
-    Note, not all the information will be available at every step.
-    """
-
-    alphaZ: float | None = Field(None, description="The alpha Z term.")
-    ewald: float | None = Field(None, description="The ewald energy.")
-    hartreedc: float | None = Field(None, description="Negative Hartree energy.")
-    XCdc: float | None = Field(None, description="Negative exchange energy.")
-    pawpsdc: float | None = Field(
-        None, description="Negative potential energy with exchange-correlation energy."
-    )
-    pawaedc: float | None = Field(None, description="The PAW double counting term.")
-    eentropy: float | None = Field(None, description="The entropy (T * S).")
-    bandstr: float | None = Field(
-        None, description="The band energy (from eigenvalues)."
-    )
-    atom: float | None = Field(None, description="The atomic energy.")
-    e_fr_energy: float | None = Field(None, description="The free energy.")
-    e_wo_entrp: float | None = Field(None, description="The energy without entropy.")
-    e_0_energy: float | None = Field(None, description="The internal energy.")
-
-    model_config = ConfigDict(extra="allow")
 
 
 class IonicStep(BaseModel):  # type: ignore
@@ -999,31 +976,24 @@ class Calculation(CalculationBaseModel):
             store_onsite_density_matrices=store_onsite_density_matrices,
         )
         if store_trajectory != StoreTrajectoryOption.NO:
-            exclude_from_trajectory = set(["structure"])
-            if store_trajectory == StoreTrajectoryOption.PARTIAL:
-                exclude_from_trajectory.add("electronic_steps")
-            frame_properties = [
-                IonicStep(**x).model_dump(exclude=exclude_from_trajectory)
-                for x in vasprun.ionic_steps
-            ]
+            temperatures: list[float] | None = None
             if oszicar_file:
                 try:
                     oszicar = Oszicar(dir_name / oszicar_file)
-                    if "T" in oszicar.ionic_steps[0]:
-                        for frame_property, oszicar_is in zip(
-                            frame_properties, oszicar.ionic_steps
-                        ):
-                            frame_property["temperature"] = oszicar_is.get("T")
+                    _temperatures: list[float | None] = [
+                        osz_is.get("T") for osz_is in oszicar.ionic_steps
+                    ]
+                    if all(t is not None for t in _temperatures):
+                        temperatures = _temperatures  # type: ignore[assignment]
                 except ValueError:
                     # there can be errors in parsing the floats from OSZICAR
                     pass
 
-            traj = Trajectory.from_structures(
-                [d["structure"] for d in vasprun.ionic_steps],
-                frame_properties=frame_properties,
-                constant_lattice=False,
+            vasp_objects[VaspObject.TRAJECTORY] = Trajectory.from_vasprun(  # type: ignore[index]
+                vasprun,
+                store_electronic_steps=(store_trajectory == StoreTrajectoryOption.FULL),
+                temperature=temperatures,
             )
-            vasp_objects[VaspObject.TRAJECTORY] = traj  # type: ignore
 
         # MD run
         if vasprun.parameters.get("IBRION", -1) == 0:
@@ -1291,3 +1261,125 @@ def _get_band_props(
                 continue
 
     return dosprop_dict
+
+
+def _calculation_to_trajectory_dict(
+    calc: Calculation,
+) -> tuple[dict[str, list[Any]], RunType, TaskType, CalcType, float | None]:
+    """Convert a single VASP calculation to Trajectory._from_dict compatible dict.
+
+    Parameters
+    -----------
+    calc (emmet.core.vasp.calculation.Calculation)
+
+    Returns
+    -----------
+    dict, RunType, TaskType, CalcType, float | None
+    """
+
+    ct: CalcType | None = None
+    rt: RunType | None = None
+    tt: TaskType | None = None
+    time_step: float | None = None
+
+    ionic_step_props = set(
+        Trajectory.model_fields["ionic_step_properties"].default
+    ).difference(
+        {
+            "energy",
+            "magmoms",
+        }
+    )
+    # refresh calc, run, and task type if possible
+    if calc.input:
+        vis = calc.input.model_dump()
+        padded_params = {
+            **(calc.input.parameters or {}),
+            **(calc.input.incar or {}),
+        }
+        ct = calc_type(vis, padded_params)
+        rt = run_type(padded_params)
+        tt = task_type(vis)
+        time_step = (
+            padded_params.get("POTIM") if padded_params.get("IBRION", -1) == 0 else None
+        )
+
+    props: defaultdict[str, list[Any]] = defaultdict(list)
+
+    if calc.output:
+        for ionic_step in calc.output.ionic_steps or []:
+            props["structure"].append(ionic_step.structure)
+
+            props["energy"].append(ionic_step.e_0_energy)
+            for k in ionic_step_props:
+                props[k].append(getattr(ionic_step, k))
+
+    return dict(props), rt, tt, ct, time_step
+
+
+def get_trajectories_from_calculations(
+    calculations: list[Calculation], separate: bool = True, **kwargs
+) -> list[Trajectory]:
+    """
+    Create trajectories from a list of Calculation Objects.
+
+    Includes an option to join trajectories with the same `calc_type`.
+    Note that if no input is provided in the calculation, the calculation
+    is split off into its own trajectory.
+
+    By default, splits every calculation into a separate `Trajectory`.
+
+    Parameters
+    -----------
+    task_doc : emmet.core.TaskDoc
+    separate : bool = True by default
+        Whether to split all calculations into separate Trajectory
+        objects, or to join them if their calc types are identical.
+    kwargs
+        Other kwargs to pass to Trajectory
+
+    Returns
+    -----------
+    list of Trajectory
+    """
+
+    trajs: list[Trajectory] = []
+
+    props: dict[str, list[Any]] = {}
+    old_meta: dict[str, Any] = {
+        k: None for k in ("run_type", "task_type", "calc_type", "time_step")
+    }
+    new_meta = deepcopy(old_meta)
+    for icr, cr in enumerate(calculations):
+        (
+            new_props,
+            new_meta["run_type"],
+            new_meta["task_type"],
+            new_meta["calc_type"],
+            new_meta["time_step"],
+        ) = _calculation_to_trajectory_dict(cr)
+
+        if (
+            separate
+            or old_meta["calc_type"] != new_meta["calc_type"]
+            or new_meta["calc_type"] is None
+            or icr == 0
+        ):
+            # Either CalcType changed or no calculation input was provided
+            # or this is the first calculation in `calcs_reversed`
+            # Append existing trajectory to list of trajectories, and restart
+            if icr > 0:
+                trajs.append(Trajectory._from_dict(props, **old_meta, **kwargs))  # type: ignore[arg-type]
+
+            props = deepcopy(new_props)
+        else:
+            for k, new_vals in new_props.items():
+                props[k].extend(new_vals)
+
+        for k, v in new_meta.items():
+            old_meta[k] = v
+
+    # create final trajectory
+    trajs.append(Trajectory._from_dict(props, **old_meta, **kwargs))  # type: ignore[arg-type]
+
+    return trajs
