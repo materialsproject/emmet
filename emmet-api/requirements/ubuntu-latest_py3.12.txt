@@ -23,11 +23,11 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.12
+boto3==1.40.16
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.40.12
+botocore==1.40.16
     # via
     #   boto3
     #   s3transfer
@@ -49,7 +49,7 @@ cryptography==45.0.6
     # via paramiko
 cycler==0.12.1
     # via matplotlib
-ddtrace==3.12.1
+ddtrace==3.12.2
     # via emmet-api (setup.py)
 dnspython==2.7.0
     # via
@@ -112,7 +112,7 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.1.1
     # via maggma
-narwhals==2.1.2
+narwhals==2.2.0
     # via plotly
 networkx==3.5
     # via
@@ -150,7 +150,7 @@ packaging==25.0
     #   scikit-image
 palettable==3.3.3
     # via pymatgen
-pandas==2.3.1
+pandas==2.3.2
     # via
     #   maggma
     #   pymatgen
@@ -222,7 +222,7 @@ pytz==2025.2
     #   pandas
 pyyaml==6.0.2
     # via pybtex
-pyzmq==27.0.1
+pyzmq==27.0.2
     # via maggma
 referencing==0.36.2
     # via
@@ -267,7 +267,7 @@ spglib==2.6.0
     # via pymatgen
 sshtunnel==0.4.0
     # via maggma
-starlette==0.47.2
+starlette==0.47.3
     # via fastapi
 sympy==1.14.0
     # via pymatgen
@@ -279,7 +279,7 @@ tqdm==4.67.1
     # via
     #   maggma
     #   pymatgen
-typing-extensions==4.14.1
+typing-extensions==4.15.0
     # via
     #   anyio
     #   ddtrace
