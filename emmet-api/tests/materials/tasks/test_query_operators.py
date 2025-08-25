@@ -12,6 +12,8 @@ from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
 from json import load
 
+from emmet.core.trajectory import Trajectory
+
 
 def test_multiple_task_ids_query():
     op = MultipleTaskIDsQuery()
@@ -70,7 +72,7 @@ def test_trajectory_query():
     ) as file:
         tasks = load(file)
     docs = op.post_process(tasks, query)
-    assert docs[0]["trajectories"][0]["@class"] == "Trajectory"
+    assert all(k in docs[0]["trajectories"][0] for k in Trajectory.model_fields)
 
 
 def test_deprecation_query():

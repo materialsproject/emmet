@@ -17,7 +17,7 @@ from monty.dev import requires
 from monty.serialization import dumpfn
 
 from emmet.core.math import Vector3D, Matrix3D
-from emmet.core.vasp import ElectronicStep
+from emmet.core.vasp.models import ElectronicStep
 from emmet.core.vasp.calc_types import RunType, TaskType
 
 logger = logging.getLogger(__name__)

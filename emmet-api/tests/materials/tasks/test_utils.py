@@ -17,10 +17,12 @@ def test_calcs_reversed_to_trajectory():
         trajectories = calcs_reversed_to_trajectory(calcs_reversed)
 
     assert len(trajectories) == 1
-    assert trajectories[0]["lattice"] == [
-        [9.054455, 0.0, 0.0],
-        [0.0, 4.500098, 0.0],
-        [0.0, 0.0, 4.500098],
+    assert trajectories[0].lattice == [
+        (
+            (9.054455, 0.0, 0.0),
+            (0.0, 4.500098, 0.0),
+            (0.0, 0.0, 4.500098),
+        ),
     ]
 
 

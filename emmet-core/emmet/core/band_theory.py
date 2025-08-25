@@ -28,6 +28,7 @@ except ImportError:
     ArrowTable = None
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from typing_extensions import Self
     from pymatgen.core.sites import PeriodicSite
 
@@ -208,7 +209,7 @@ class ElectronicBS(BandStructure):
                 config[f"spin_{spin.name}_projections"] = ebs.projections.get(spin)
         return cls(**config)
 
-    def to_pmg(self, pmg_cls: PmgBandStructure = PmgBandStructure) -> PmgBandStructure:
+    def to_pmg(self, pmg_cls: Callable = PmgBandStructure) -> PmgBandStructure:
         """Construct the pymatgen object from the current instance.
 
         Parameters

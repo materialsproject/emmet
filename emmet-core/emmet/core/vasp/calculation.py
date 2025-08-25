@@ -18,7 +18,6 @@ from pymatgen.command_line.chargemol_caller import ChargemolAnalysis
 from pymatgen.core.lattice import Lattice
 from pymatgen.core.structure import Structure
 from pymatgen.electronic_structure.core import OrbitalType
-from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.io.vasp import (
     BSVasprun,
     Kpoints,
@@ -36,7 +35,7 @@ from emmet.core.band_theory import ElectronicBS, ElectronicDos
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
 from emmet.core.trajectory import Trajectory
 from emmet.core.utils import ValueEnum
-from emmet.core.vasp import ElectronicStep
+from emmet.core.vasp.models import ElectronicStep, ChgcarLike
 from emmet.core.vasp.calc_types import (
     CalcType,
     RunType,
@@ -49,6 +48,7 @@ from emmet.core.vasp.task_valid import TaskState
 
 if TYPE_CHECKING:
     from typing_extensions import Self
+    from pymatgen.electronic_structure.dos import CompleteDos
 
 logger = logging.getLogger(__name__)
 
@@ -1120,7 +1120,7 @@ def _get_volumetric_data(
     dir_name: Path,
     output_file_paths: dict[VaspObject, str],
     store_volumetric_data: tuple[str] | None,
-) -> dict[VaspObject, VolumetricData]:
+) -> dict[VaspObject, ChgcarLike]:
     """
     Load volumetric data files from a directory.
 
@@ -1138,7 +1138,7 @@ def _get_volumetric_data(
 
     Returns
     -------
-    dict[VaspObject, VolumetricData]
+    dict[VaspObject, ChgcarLike]
         A dictionary mapping the VASP object data type (`VaspObject.LOCPOT`,
         `VaspObject.CHGCAR`, etc) to the volumetric data object.
     """
@@ -1157,7 +1157,9 @@ def _get_volumetric_data(
 
         try:
             # assume volumetric data is all in CHGCAR format
-            volumetric_data[file_type] = Chgcar.from_file(str(dir_name / file))
+            volumetric_data[file_type] = ChgcarLike.from_pmg(
+                Chgcar.from_file(str(dir_name / file))
+            )
         except Exception:
             raise ValueError(f"Failed to parse {file_type} at {file}.")
     return volumetric_data
