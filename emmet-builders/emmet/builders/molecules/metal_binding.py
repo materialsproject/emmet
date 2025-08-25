@@ -485,7 +485,7 @@ class MetalBindingBuilder(Builder):
                     )
 
                     if doc is not None and len(doc.binding_data or []) != 0:
-                        binding_docs.append(doc)
+                        binding_docs.append(doc)  # type: ignore[arg-type]
 
         self.logger.debug(
             f"Produced {len(binding_docs)} metal binding docs for {shash}"

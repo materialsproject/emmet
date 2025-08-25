@@ -645,7 +645,7 @@ class MoleculesBuilder(Builder):
                     base_doc.molecule, node_attr="specie"
                 )
                 base_doc.molecules = mols_by_solvent
-                base_doc.molecule_levels_of_theory = mol_lots or {}
+                base_doc.molecule_levels_of_theory = mol_lots or {}  # type: ignore[assignment]
                 base_doc.task_ids = task_ids
                 base_doc.calc_types = calc_types
                 base_doc.task_types = task_types
