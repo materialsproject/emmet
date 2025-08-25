@@ -28,7 +28,6 @@ except ImportError:
     ArrowTable = None
 
 if TYPE_CHECKING:
-
     from typing_extensions import Self
     from pymatgen.core.sites import PeriodicSite
 
@@ -209,10 +208,16 @@ class ElectronicBS(BandStructure):
                 config[f"spin_{spin.name}_projections"] = ebs.projections.get(spin)
         return cls(**config)
 
-    def to_pmg(
-        self,
-    ) -> PmgBandStructure:
-        """Construct the pymatgen object from the current instance."""
+    def to_pmg(self, pmg_cls: PmgBandStructure = PmgBandStructure) -> PmgBandStructure:
+        """Construct the pymatgen object from the current instance.
+
+        Parameters
+        -----------
+        pmg_cls : PmgBandStructure or a subclass
+            Because BandStructureSymmLine has the same constructor
+            signature as PmgBandStructure, any PmgBandStructure-derived
+            class which has the same signature can be used here.
+        """
         rlatt = Lattice(self.reciprocal_lattice)
 
         bands = {}
@@ -223,7 +228,7 @@ class ElectronicBS(BandStructure):
             if v := getattr(self, f"spin_{spin.name}_projections", None):
                 projections[spin] = np.array(v)
 
-        return PmgBandStructure(
+        return pmg_cls(
             [Kpoint(q, lattice=rlatt).frac_coords for q in self.qpoints],  # type: ignore[misc]
             bands,
             rlatt,

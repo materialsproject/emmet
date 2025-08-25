@@ -17,9 +17,8 @@ from pymatgen.command_line.bader_caller import bader_analysis_from_path
 from pymatgen.command_line.chargemol_caller import ChargemolAnalysis
 from pymatgen.core.lattice import Lattice
 from pymatgen.core.structure import Structure
-from pymatgen.electronic_structure.bandstructure import BandStructure
 from pymatgen.electronic_structure.core import OrbitalType
-from pymatgen.electronic_structure.dos import CompleteDos, Dos
+from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.io.vasp import (
     BSVasprun,
     Kpoints,
@@ -33,6 +32,7 @@ from pymatgen.io.vasp import (
     VolumetricData,
 )
 
+from emmet.core.band_theory import ElectronicBS, ElectronicDos
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
 from emmet.core.trajectory import Trajectory
 from emmet.core.utils import ValueEnum
@@ -934,13 +934,14 @@ class Calculation(CalculationBaseModel):
 
         if (dos := _parse_dos(parse_dos, vasprun)) is not None:
             if strip_dos_projections:
-                dos = Dos(dos.efermi, dos.energies, dos.densities)  # type: ignore[arg-type]
+                dos.projected_densities = None
             vasp_objects[VaspObject.DOS] = dos  # type: ignore
 
         bandstructure = _parse_bandstructure(parse_bandstructure, vasprun)
         if bandstructure is not None:
             if strip_bandstructure_projections:
-                bandstructure.projections = {}
+                for spin in ("up", "down"):
+                    setattr(bandstructure, f"spin_{spin}_projections", None)
             vasp_objects[VaspObject.BANDSTRUCTURE] = bandstructure  # type: ignore
 
         bader = None
@@ -1162,22 +1163,24 @@ def _get_volumetric_data(
     return volumetric_data
 
 
-def _parse_dos(parse_mode: str | bool, vasprun: Vasprun) -> Dos | None:
+def _parse_dos(parse_mode: str | bool, vasprun: Vasprun) -> ElectronicDos | None:
     """Parse DOS. See Calculation.from_vasp_files for supported arguments."""
     nsw = vasprun.incar.get("NSW", 0)
     dos = None
     if parse_mode is True or (parse_mode == "auto" and nsw < 1):
-        dos = vasprun.complete_dos
+        dos = ElectronicDos.from_pmg(vasprun.complete_dos)
     return dos
 
 
 def _parse_bandstructure(
     parse_mode: str | bool, vasprun: Vasprun
-) -> BandStructure | None:
+) -> ElectronicBS | None:
     """Parse band structure. See Calculation.from_vasp_files for supported arguments."""
     vasprun_file = vasprun.filename
 
-    if parse_mode == "auto":
+    bs: ElectronicBS | None = None
+    # only save the bandstructure if not moving ions
+    if parse_mode == "auto" and vasprun.incar.get("NSW", 0) <= 1:
         if vasprun.incar.get("ICHARG", 0) > 10:
             # NSCF calculation
             bs_vrun = BSVasprun(vasprun_file, parse_projected_eigen=True)
@@ -1192,16 +1195,13 @@ def _parse_bandstructure(
             bs_vrun = BSVasprun(vasprun_file, parse_projected_eigen=False)
             bs = bs_vrun.get_band_structure(efermi="smart")
 
-        # only save the bandstructure if not moving ions
-        if vasprun.incar.get("NSW", 0) <= 1:
-            return bs
-
     elif parse_mode:
         # legacy line/True behavior for bandstructure_mode
         bs_vrun = BSVasprun(vasprun_file, parse_projected_eigen=True)
         bs = bs_vrun.get_band_structure(line_mode=parse_mode == "line", efermi="smart")
-        return bs
 
+    if bs:
+        return ElectronicBS.from_pmg(bs)
     return None
 
 
