@@ -66,5 +66,4 @@ docs = [
     "livereload",
     "jinja2",
 ]
-ml = ["emmet-core[ml]"]
 openmm = ["transport-analysis>=0.1.0"]

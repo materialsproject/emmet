@@ -55,7 +55,6 @@ all = [
     "MDAnalysis>=2.7.0",
     "pyarrow",
 ]
-ml = ["matcalc>=0.3.1"]
 test = [
     "pre-commit",
     "pytest",

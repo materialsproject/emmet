@@ -6,13 +6,6 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-try:
-    from matcalc import ElasticityCalc, EOSCalc, PESCalculator, PhononCalc, RelaxCalc
-
-    matcalc_installed = True
-except ImportError:
-    matcalc_installed = False
-
 from pydantic import (
     Field,
     BaseModel,
@@ -40,17 +33,9 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
     from typing_extensions import Self
 
-    try:
-        from ase.calculators.calculator import Calculator as AseCalculator
-
-        ase_installed = True
-    except ImportError:
-        ase_installed = False
-
 
 class MLDoc(ElasticityDoc):
-    """Document model for matcalc-generated material properties from machine learning
-    interatomic potential predictions.
+    """Schema for machine learning interatomic potential calculations.
 
     Attributes:
     - metadata
@@ -83,9 +68,6 @@ class MLDoc(ElasticityDoc):
 
     # metadata
     structure: Structure = Field(description="Original structure")
-    matcalc_version: str | None = Field(
-        None, description="Version of matcalc used to generate this document"
-    )
     model: str | None = Field(None, description="Name of model used as ML potential.")
     version: str | None = Field(
         None, description="Version of model used as ML potential"
@@ -152,54 +134,6 @@ class MLDoc(ElasticityDoc):
         """Map field shear_modulus_vrh to shear_modulus."""
         val = values.get("shear_modulus_vrh", new_key)
         return ShearModulus(vrh=val)
-
-    def __init__(
-        cls,
-        structure,
-        material_id,
-        calculator: str | AseCalculator,
-        prop_kwargs: dict | None = None,
-        **kwargs,
-    ) -> None:
-        """
-        Args:
-            structure (Structure): Pymatgen Structure object.
-            material_id (str): MP ID.
-            calculator (str | Calculator): ASE calculator or name of model to use as ML
-                potential. See matcalc.utils.UNIVERSAL_CALCULATORS for recognized names.
-            prop_kwargs (dict): Keyword arguments for each matcalc PropCalc class.
-                Recognized keys are RelaxCalc, ElasticityCalc, PhononCalc, EOSCalc.
-            **kwargs: Passed to the PropertyDoc constructor.
-
-        Returns:
-            MLDoc
-        """
-
-        if not matcalc_installed or not ase_installed:
-            raise ImportError("Please `pip install matcalc` to use `MLDoc`.")
-
-        calculator = PESCalculator.load_universal(calculator)
-
-        results = {}  # type: ignore
-        for prop_cls in (RelaxCalc, PhononCalc, EOSCalc, ElasticityCalc):
-            kwds = (prop_kwargs or {}).get(prop_cls.__name__, {})
-            output = prop_cls(calculator, **kwds).calc(structure)
-            # extract thermal_properties from PhononCalc output
-            if isinstance(output, dict) and {*output} == {
-                "phonon",
-                "thermal_properties",
-            }:
-                output = output["thermal_properties"]
-            results.update(output)
-
-        for key, val in results.items():
-            # convert arrays to lists
-            if hasattr(val, "tolist"):
-                results[key] = val.tolist()
-
-        super().__init__(
-            structure=structure, material_id=material_id, **results, **kwargs
-        )
 
 
 class MLTrainDoc(StructureMetadata):
