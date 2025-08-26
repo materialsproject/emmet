@@ -50,7 +50,7 @@ cryptography==45.0.6
 cycler==0.12.1
     # via matplotlib
 ddtrace==3.12.2
-    # via emmet-api (setup.py)
+    # via emmet-api (pyproject.toml)
 dnspython==2.7.0
     # via
     #   maggma

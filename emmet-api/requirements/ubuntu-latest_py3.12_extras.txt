@@ -67,7 +67,7 @@ csscompressor==0.9.5
 cycler==0.12.1
     # via matplotlib
 ddtrace==3.12.2
-    # via emmet-api (setup.py)
+    # via emmet-api (pyproject.toml)
 distlib==0.4.0
     # via virtualenv
 dnspython==2.7.0
@@ -78,6 +78,8 @@ emmet-core==0.84.10rc2
     # via emmet-api (pyproject.toml)
 envier==0.6.1
     # via ddtrace
+execnet==2.1.1
+    # via pytest-xdist
 fastapi==0.116.1
     # via emmet-api (pyproject.toml)
 filelock==3.19.1
@@ -88,7 +90,7 @@ fonttools==4.59.1
     # via matplotlib
 ghp-import==2.1.0
     # via mkdocs
-griffe==1.12.1
+griffe==1.13.0
     # via mkdocstrings-python
 gunicorn==23.0.0
     # via emmet-api (pyproject.toml)
@@ -180,7 +182,7 @@ mkdocs==1.6.1
     #   mkdocs-material
     #   mkdocs-minify-plugin
     #   mkdocstrings
-mkdocs-autorefs==1.4.2
+mkdocs-autorefs==1.4.3
     # via
     #   mkdocstrings
     #   mkdocstrings-python
@@ -202,7 +204,7 @@ mkdocstrings[python]==0.30.0
     # via
     #   emmet-api (pyproject.toml)
     #   mkdocstrings-python
-mkdocstrings-python==1.17.0
+mkdocstrings-python==1.18.0
     # via mkdocstrings
 mongomock==4.3.0
     # via maggma
@@ -282,7 +284,7 @@ pillow==11.3.0
     #   imageio
     #   matplotlib
     #   scikit-image
-platformdirs==4.3.8
+platformdirs==4.4.0
     # via
     #   mkdocs-get-deps
     #   virtualenv
@@ -359,7 +361,10 @@ pytest==8.4.1
     # via
     #   emmet-api (pyproject.toml)
     #   pytest-cov
+    #   pytest-xdist
 pytest-cov==6.2.1
+    # via emmet-api (pyproject.toml)
+pytest-xdist==3.8.0
     # via emmet-api (pyproject.toml)
 python-dateutil==2.9.0.post0
     # via
@@ -452,9 +457,9 @@ tqdm==4.67.1
     #   maggma
     #   pymatgen
 types-requests==2.32.4.20250809
-    # via emmet-api (setup.py)
+    # via emmet-api (pyproject.toml)
 types-setuptools==80.9.0.20250822
-    # via emmet-api (setup.py)
+    # via emmet-api (pyproject.toml)
 typing-extensions==4.15.0
     # via
     #   anyio
