@@ -28,6 +28,8 @@ donfig==0.8.1.post1
     # via zarr
 emmet-core==0.84.9
     # via emmet-archival (pyproject.toml)
+execnet==2.1.1
+    # via pytest-xdist
 filelock==3.19.1
     # via virtualenv
 flake8==7.3.0
@@ -103,7 +105,7 @@ pathspec==0.12.1
     # via mypy
 pillow==11.3.0
     # via matplotlib
-platformdirs==4.3.8
+platformdirs==4.4.0
     # via virtualenv
 plotly==6.3.0
     # via pymatgen
@@ -152,7 +154,10 @@ pytest==8.4.1
     # via
     #   emmet-archival (pyproject.toml)
     #   pytest-cov
+    #   pytest-xdist
 pytest-cov==6.2.1
+    # via emmet-archival (pyproject.toml)
+pytest-xdist==3.8.0
     # via emmet-archival (pyproject.toml)
 python-dateutil==2.9.0.post0
     # via
