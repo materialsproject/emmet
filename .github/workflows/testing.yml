@@ -113,7 +113,7 @@ jobs:
       - name: Test with pytest
         if: always() # run tests even if linting failed
         shell: bash -l {0}
-        run: python${{ matrix.python-version }} -m pytest --cov=emmet --cov-report=xml ${{ matrix.package }}/tests
+        run: python${{ matrix.python-version }} -m pytest -n auto --cov=emmet --cov-report=xml ${{ matrix.package }}/tests
 
       - uses: codecov/codecov-action@v5.4.3
         with:

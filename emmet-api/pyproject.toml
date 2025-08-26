@@ -53,6 +53,7 @@ test = [
     "pre-commit",
     "pytest",
     "pytest-cov",
+    "pytest-xdist",
     "pycodestyle",
     "pydocstyle",
     "flake8",
