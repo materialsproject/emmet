@@ -223,16 +223,13 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
                     reasons.append(DeprecationMessage.MANUAL)
 
                 # Check for magmom anomalies for specific elements
-                if calcs_reversed:
-                    if _magmom_check(
-                        calcs_reversed, structure, max_magmoms=max_magmoms
-                    ):
-                        reasons.append(DeprecationMessage.MAG)
-                else:
-                    if _magmom_check(
-                        task_doc.output, structure, max_magmoms=max_magmoms
-                    ):
-                        reasons.append(DeprecationMessage.MAG)
+                if _magmom_check(
+                    calcs_reversed or task_doc.output,
+                    structure,
+                    max_magmoms=max_magmoms,
+                ):
+                    reasons.append(DeprecationMessage.MAG)
+
             else:
                 if "Unrecognized" in str(calc_type):
                     reasons.append(DeprecationMessage.UNKNOWN)
@@ -473,21 +470,16 @@ def _magmom_check(
     """
 
     if isinstance(calc, CoreCalculationOutput):
-        if (outcar := calc.outcar) and (mag_info := outcar.get("magnetization", [])):
-            return any(
-                abs(mag_info[isite].get("tot", 0.0))
-                > abs(max_magmoms.get(site.label, np.inf))
-                for isite, site in enumerate(structure)
-            )
+        outcar = calc.outcar
     else:
-        if (outcar := calc[0]["output"]["outcar"]) and (
-            mag_info := outcar.get("magnetization", [])
-        ):
-            return any(
-                abs(mag_info[isite].get("tot", 0.0))
-                > abs(max_magmoms.get(site.label, np.inf))
-                for isite, site in enumerate(structure)
-            )
+        outcar = calc[0]["output"]["outcar"]
+
+    if outcar and (mag_info := outcar.get("magnetization", [])):
+        return any(
+            abs(mag_info[isite].get("tot", 0.0))
+            > abs(max_magmoms.get(site.label, np.inf))
+            for isite, site in enumerate(structure)
+        )
 
     return False
 
