@@ -5,6 +5,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 from bson.objectid import ObjectId
+
+from emmet.core.common import convert_datetime
 from emmet.core.utils import (
     DocEnum,
     ValueEnum,
@@ -12,11 +14,23 @@ from emmet.core.utils import (
     get_hash_blocked,
     get_flat_models_from_model,
     dynamic_import,
+    utcnow,
 )
 from monty.json import MSONable
 from monty.serialization import dumpfn, loadfn
 
 from emmet.core.tasks import TaskDoc
+
+
+def test_dt():
+
+    ref_dt = utcnow()
+
+    for test_dt in (
+        jsanitize(ref_dt),
+        {"$date": jsanitize(ref_dt)},
+    ):
+        assert convert_datetime(None, test_dt) == ref_dt
 
 
 def test_jsanitize():

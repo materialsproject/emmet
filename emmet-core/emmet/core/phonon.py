@@ -29,6 +29,7 @@ from emmet.core.math import Matrix3D, Tensor4R, Vector3D
 from emmet.core.mpid import AlphaID, MPID
 from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
 from emmet.core.structure import StructureMetadata
+from emmet.core.typing import PathLike
 from emmet.core.utils import DocEnum, get_num_formula_units, utcnow, requires_arrow
 
 try:
@@ -94,8 +95,16 @@ class PhononDOS(BandTheoryBase):
         return dos
 
     @classmethod
-    def from_phonopy(cls, phonon_dos_file: str | Path) -> Self:
-        """Create a PhononDOS from phonopy .dat output."""
+    def from_phonopy(
+        cls,
+        phonon_dos_file: PathLike,
+    ) -> Self:
+        """Create a PhononDOS from phonopy .dat output.
+
+        Parameters
+        -----------
+        phonon_dos_file (PathLike) : path to total_dos.dat
+        """
         phonopy_dos: dict[str, Any] = {
             k: []
             for k in (
@@ -109,6 +118,11 @@ class PhononDOS(BandTheoryBase):
                 if len(cols := non_comment_text.split()) == 2:
                     phonopy_dos["frequencies"].append(float(cols[0]))
                     phonopy_dos["densities"].append(float(cols[1]))
+                elif len(cols) > 2:
+                    raise ValueError(
+                        f"File {phonon_dos_file} does not have the correct "
+                        "phonopy total_dos.dat format."
+                    )
 
         return cls(**phonopy_dos)
 
@@ -266,7 +280,7 @@ class PhononBS(BandStructure):
         return cls(**config)
 
     @classmethod
-    def from_phonopy(cls, phonon_bandstructure_file: str | Path):
+    def from_phonopy(cls, phonon_bandstructure_file: PathLike):
         """Create a PhononBS from phonopy .yaml output."""
         with zopen(phonon_bandstructure_file, "rt") as f:
             phonopy_bandstructure = yaml.safe_load(f.read())
@@ -666,13 +680,13 @@ class PhononBSDOSTask(StructureMetadata):
     @classmethod
     def from_phonopy_pheasy_files(
         cls,
-        structure_file: str | Path,
-        phonon_bandstructure_file: str | Path | None = None,
-        phonon_dos_file: str | Path | None = None,
-        force_constants_file: str | Path | None = None,
-        born_file: str | Path | None = None,
-        epsilon_static_file: str | Path | None = None,
-        phonopy_output_file: str | Path | None = None,
+        structure_file: PathLike,
+        phonon_bandstructure_file: PathLike | None = None,
+        phonon_dos_file: PathLike | None = None,
+        force_constants_file: PathLike | None = None,
+        born_file: PathLike | None = None,
+        epsilon_static_file: PathLike | None = None,
+        phonopy_output_file: PathLike | None = None,
         **kwargs,
     ) -> Self:
         """
