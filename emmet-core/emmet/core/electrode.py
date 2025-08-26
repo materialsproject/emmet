@@ -293,11 +293,12 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
     def deserialize(self) -> Self:
         """Ensure that voltage pairs are correctly deserialized for __repr__."""
         if self.electrode_object:
-            for idx, vp in enumerate(self.electrode_object.voltage_pairs):
-                if isinstance(vp, dict):
-                    self.electrode_object.voltage_pairs[idx] = (
-                        InsertionVoltagePair.from_dict(vp)
-                    )
+            self.electrode_object.voltage_pairs = tuple(
+                [
+                    InsertionVoltagePair.from_dict(vp) if isinstance(vp, dict) else vp
+                    for vp in self.electrode_object.voltage_pairs
+                ]
+            )
         return self
 
     @classmethod
