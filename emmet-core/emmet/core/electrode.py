@@ -3,12 +3,16 @@ from __future__ import annotations
 import re
 from collections import defaultdict
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.apps.battery.battery_abc import AbstractElectrode
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
-from pymatgen.apps.battery.insertion_battery import InsertionElectrode
+from pymatgen.apps.battery.insertion_battery import (
+    InsertionElectrode,
+    InsertionVoltagePair,
+)
 from pymatgen.core import Composition, Structure
 from pymatgen.core.periodic_table import DummySpecies, Element, Species
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
@@ -16,6 +20,9 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import AlphaID, MPID
 from emmet.core.utils import ValueEnum, utcnow
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 class BatteryType(str, ValueEnum):
@@ -281,6 +288,17 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
     electrode_object: InsertionElectrode | None = Field(
         None, description="The Pymatgen electrode object."
     )
+
+    @model_validator(mode="after")
+    def deserialize(self) -> Self:
+        """Ensure that voltage pairs are correctly deserialized for __repr__."""
+        if self.electrode_object:
+            for idx, vp in enumerate(self.electrode_object.voltage_pairs):
+                if isinstance(vp, dict):
+                    self.electrode_object.voltage_pairs[idx] = (
+                        InsertionVoltagePair.from_dict(vp)
+                    )
+        return self
 
     @classmethod
     def from_entries(
