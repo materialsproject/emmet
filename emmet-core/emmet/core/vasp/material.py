@@ -11,7 +11,6 @@ from emmet.core.base import EmmetMeta
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin
 from emmet.core.settings import EmmetSettings
-from emmet.core.structure import StructureMetadata
 from emmet.core.tasks import TaskDoc
 from emmet.core.utils import utcnow
 from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
@@ -28,7 +27,7 @@ class BlessedCalcs(BaseModel, populate_by_name=True):
     HSE: ComputedStructureEntry | None = None
 
 
-class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
+class MaterialsDoc(CoreMaterialsDoc):
     calc_types: Mapping[str, CalcType] | None = Field(  # type: ignore
         None,
         description="Calculation types for all the calculations that make up this material",
