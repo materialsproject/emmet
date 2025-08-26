@@ -40,6 +40,8 @@ distlib==0.4.0
     # via virtualenv
 dnspython==2.7.0
     # via pymongo
+execnet==2.1.1
+    # via pytest-xdist
 filelock==3.19.1
     # via
     #   mdanalysis
@@ -54,7 +56,7 @@ ghp-import==2.1.0
     # via mkdocs
 griddataformats==1.0.2
     # via mdanalysis
-griffe==1.12.1
+griffe==1.13.0
     # via mkdocstrings-python
 h5py==3.14.0
     # via
@@ -109,7 +111,7 @@ markupsafe==3.0.2
     #   mkdocs-autorefs
     #   mkdocstrings
 matcalc==0.4.3
-    # via emmet-core (setup.py)
+    # via emmet-core (pyproject.toml)
 matminer==0.9.3
     # via robocrys
 matplotlib==3.10.5
@@ -143,7 +145,7 @@ mkdocs==1.6.1
     #   mkdocs-material
     #   mkdocs-minify-plugin
     #   mkdocstrings
-mkdocs-autorefs==1.4.2
+mkdocs-autorefs==1.4.3
     # via
     #   mkdocstrings
     #   mkdocstrings-python
@@ -165,7 +167,7 @@ mkdocstrings[python]==0.30.0
     # via
     #   emmet-core (pyproject.toml)
     #   mkdocstrings-python
-mkdocstrings-python==1.17.0
+mkdocstrings-python==1.18.0
     # via mkdocstrings
 mmtf-python==1.1.3
     # via mdanalysis
@@ -277,7 +279,7 @@ pillow==11.3.0
     #   matplotlib
     #   rdkit
     #   scikit-image
-platformdirs==4.3.8
+platformdirs==4.4.0
     # via
     #   mkdocs-get-deps
     #   virtualenv
@@ -357,8 +359,11 @@ pytest==8.4.1
     # via
     #   emmet-core (pyproject.toml)
     #   pytest-cov
+    #   pytest-xdist
     #   solvation-analysis
 pytest-cov==6.2.1
+    # via emmet-core (pyproject.toml)
+pytest-xdist==3.8.0
     # via emmet-core (pyproject.toml)
 python-dateutil==2.9.0.post0
     # via
@@ -468,9 +473,9 @@ transport-analysis==0.1.2
 typeguard==4.4.4
     # via inflect
 types-requests==2.32.4.20250809
-    # via emmet-core (setup.py)
+    # via emmet-core (pyproject.toml)
 types-setuptools==80.9.0.20250822
-    # via emmet-core (setup.py)
+    # via emmet-core (pyproject.toml)
 typing-extensions==4.15.0
     # via
     #   emmet-core (pyproject.toml)
