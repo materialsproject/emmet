@@ -33,6 +33,7 @@ from pymatgen.transformations.standard_transformations import (
 from pymatgen.util.graph_hashing import weisfeiler_lehman_graph_hash
 from typing_extensions import TypedDict
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.mpid import MPculeID
 from emmet.core.settings import EmmetSettings
 
@@ -46,9 +47,9 @@ try:
 except ImportError:
     bson = None  # type: ignore
 
-try:
+if ARROW_COMPATIBLE:
     import pyarrow
-except ImportError:
+else:
     pyarrow = None  # type: ignore
 
 if TYPE_CHECKING:
@@ -74,7 +75,7 @@ def type_override(overrides: dict[str, Any]):
     """
 
     def wrapped(cls):
-        cls.type_overrides = overrides
+        cls.type_overrides = {**getattr(cls, "type_overrides", {}), **overrides}
         return cls
 
     return wrapped
@@ -623,7 +624,7 @@ def requires_arrow(func: Callable) -> Callable:
     """Decorator for pyarrow-dependent functionality."""
 
     def wrap(*args, **kwargs):
-        if pyarrow is None:
+        if not ARROW_COMPATIBLE:
             raise ImportError(
                 "You must `pip install pyarrow` to use this functionality."
             )

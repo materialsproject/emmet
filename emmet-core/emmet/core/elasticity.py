@@ -15,7 +15,6 @@ from emmet.core.common import Status
 from emmet.core.material_property import PropertyDoc
 from emmet.core.math import Matrix3D, MatrixVoigt
 from emmet.core.mpid import MPID, AlphaID
-from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
 from emmet.core.settings import EmmetSettings
 from emmet.core.typing import StructureType
 
@@ -216,10 +215,6 @@ class ElasticityDoc(PropertyDoc):
     state: Status | None = Field(
         None,
         description="State of the fitting/analysis: `successful` or `failed`",
-    )
-
-    structure: Structure | None = Field(
-        None, description="Structure used to compute the elasticity.", exclude=False
     )
 
     @classmethod

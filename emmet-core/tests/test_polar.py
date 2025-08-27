@@ -66,7 +66,7 @@ def test_arrow_dielectric(dielectric_structure, epsilon_static, epsilon_ionic):
     )
     test_arrow_doc = DielectricDoc(**arrow_struct.as_py(maps_as_pydicts="strict"))
 
-    assert doc == test_arrow_doc
+    assert doc.model_dump() == test_arrow_doc.model_dump()
 
 
 @pytest.fixture(scope="module")
@@ -332,4 +332,4 @@ def test_arrow_piezo(piezoelectric_structure, piezo_static, piezo_ionic):
     )
     test_arrow_doc = PiezoelectricDoc(**arrow_struct.as_py(maps_as_pydicts="strict"))
 
-    assert doc == test_arrow_doc
+    assert doc.model_dump() == test_arrow_doc.model_dump()

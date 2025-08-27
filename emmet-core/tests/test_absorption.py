@@ -92,4 +92,4 @@ def test_arrow(absorption_test_doc):
 
     test_arrow_doc = AbsorptionDoc(**arrow_struct.as_py(maps_as_pydicts="strict"))
 
-    assert absorption_test_doc == test_arrow_doc
+    assert absorption_test_doc.model_dump() == test_arrow_doc.model_dump()

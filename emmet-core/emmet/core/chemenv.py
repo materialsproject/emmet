@@ -369,19 +369,11 @@ class ChemEnvDoc(PropertyDoc):
         description="List of Molecule Objects describing the detected environment."
     )
 
-    # structure_environment: StructureEnvironments| None = Field(
-    #     description="Structure environment object"
-    # )
-
     wyckoff_positions: list[str] = Field(
         description="List of Wyckoff positions for unique (cationic) species in structure."
     )
 
     warnings: str | None = Field(None, description="Warning")
-
-    structure: Structure | None = Field(
-        None, description="The structure associated with this property.", exclude=True
-    )
 
     @classmethod
     def from_structure(

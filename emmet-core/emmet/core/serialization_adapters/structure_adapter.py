@@ -14,7 +14,7 @@ TypedStructureDict = TypedDict(
     {
         "@module": str,
         "@class": str,
-        "charge": NotRequired[int | None],
+        "charge": NotRequired[float | None],
         "lattice": TypedLatticeDict,
         "sites": list[TypedSiteDict],
         "properties": NotRequired[TypedAggregateProperitesDict | None],

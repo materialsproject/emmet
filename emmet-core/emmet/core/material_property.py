@@ -14,6 +14,7 @@ from emmet.core.common import convert_datetime
 from emmet.core.material import PropertyOrigin
 from emmet.core.mpid import MPID, AlphaID
 from emmet.core.structure import StructureMetadata
+from emmet.core.typing import StructureType
 from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
 
@@ -64,7 +65,7 @@ class PropertyDoc(StructureMetadata, EmmetBaseModel):
         None, description="Any warnings related to this property."
     )
 
-    structure: SkipJsonSchema[Structure | None] = Field(
+    structure: SkipJsonSchema[StructureType | None] = Field(
         None, description="The structure associated with this property.", exclude=True
     )
 

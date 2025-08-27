@@ -248,6 +248,10 @@ class CalculationInput(CalculationBaseModel):
         if ARROW_COMPATIBLE:
             if isinstance(d, str):
                 d = json.loads(d)
+
+        if d and d == "parameters":
+            d = {k.strip(): v for k, v in d.items()}
+
         return d
 
     @field_serializer("kpoints", mode="wrap")
@@ -285,9 +289,6 @@ class CalculationInput(CalculationBaseModel):
         VASP 6.4.3. This will lead to an incorrect return value from RunType.
         This validator will ensure that any already-parsed documents are fixed.
         """
-        config["parameters"] = {
-            k.strip(): v for k, v in (config.get("parameters", {}) or {}).items()
-        }
         if (kpts := config.get("kpoints")) and isinstance(kpts, dict):
             config["kpoints"] = Kpoints.from_dict(kpts)
 
@@ -651,7 +652,7 @@ class CoreCalculationOutput(BaseModel):
         description="The magnetization density, defined as total_mag/volume "
         "(units of A^-3)",
     )
-    optical_absorption_coeff: list | None = Field(
+    optical_absorption_coeff: list[float] | None = Field(
         None, description="Optical absorption coefficient in cm^-1"
     )
     outcar: dict[str, Any] | None = Field(

@@ -12,7 +12,7 @@ if ARROW_COMPATIBLE:
 
 @pytest.fixture(scope="module")
 def magnetism_mats(test_dir):
-    return loadfn(test_dir / "magnetism/magnetism_mats_sample.json")
+    return loadfn(test_dir / "magnetism/magnetism_mats_sample.json.gz")
 
 
 def test_magnetism_doc(magnetism_mats):
@@ -51,4 +51,4 @@ def test_arrow(magnetism_mats):
     )
     test_arrow_doc = MagnetismDoc(**arrow_struct.as_py(maps_as_pydicts="strict"))
 
-    assert doc == test_arrow_doc
+    assert doc.model_dump() == test_arrow_doc.model_dump()

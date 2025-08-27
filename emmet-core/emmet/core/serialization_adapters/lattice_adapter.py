@@ -23,7 +23,7 @@ MSONableTypedLatticeDict = TypedDict(
 
 class TypedLatticeDict(TypedDict):
     matrix: list[list[float]]
-    pbc: NotRequired[list[bool] | None]
+    pbc: NotRequired[tuple[bool, bool, bool] | None]
     a: float
     b: float
     c: float

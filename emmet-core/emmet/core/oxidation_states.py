@@ -47,12 +47,6 @@ class OxidationStateDoc(PropertyDoc):
         None, description="Method used to compute oxidation states."
     )
 
-    structure: Structure | None = Field(
-        None,
-        description="The structure used in the generation of the oxidation state data.",
-        exclude=False,
-    )
-
     @classmethod
     def from_structure(
         cls, structure: Structure, material_id: MPID | AlphaID | None = None, **kwargs

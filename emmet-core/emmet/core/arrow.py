@@ -1,9 +1,10 @@
 import sys
 import types
 import typing
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from datetime import datetime
 from enum import Enum
+from pathlib import Path
 from types import UnionType
 
 import pyarrow as pa
@@ -86,7 +87,7 @@ def arrowize(obj) -> pa.DataType:
     if obj in PY_PRIMITIVES_TO_ARROW:
         return PY_PRIMITIVES_TO_ARROW[obj]
 
-    if typing.get_origin(obj) in (list, tuple, set):
+    if typing.get_origin(obj) in (list, tuple, set, Iterable):
         args = obj.__args__
         if len(args) == 1:
             return pa.list_(arrowize(args[0]))
@@ -172,10 +173,11 @@ def arrowize(obj) -> pa.DataType:
                     ),
                 )
                 for field_name, value in obj.model_fields.items()
+                if not value.exclude
             ]
         )
 
-    if obj is ImportString:
+    if any(obj is str_like for str_like in (ImportString, Path)):
         return PY_PRIMITIVES_TO_ARROW[str]
 
     if isinstance(obj, typing._TypedDictMeta | typing_extensions._TypedDictMeta):

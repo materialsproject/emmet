@@ -10,6 +10,7 @@ from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Molecule, Structure
 
 from emmet.core import ARROW_COMPATIBLE
+from emmet.core.base import ContextModel
 from emmet.core.symmetry import PointGroupData, SymmetryData
 from emmet.core.typing import CompositionType
 from emmet.core.utils import get_graph_hash
@@ -26,7 +27,7 @@ except Exception:
     openbabel = None
 
 
-class StructureMetadata(BaseModel):
+class StructureMetadata(ContextModel):
     """Mix-in class for structure metadata."""
 
     # Structure metadata

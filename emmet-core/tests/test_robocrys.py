@@ -42,4 +42,4 @@ def test_arrow():
         **arrow_struct.as_py(maps_as_pydicts="strict")
     )
 
-    assert doc == test_arrow_doc
+    assert doc.model_dump() == test_arrow_doc.model_dump()
