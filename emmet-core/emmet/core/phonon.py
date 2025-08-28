@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from datetime import datetime
 from enum import Enum
 from functools import cached_property
@@ -42,7 +41,6 @@ from emmet.core.typing import PhononWebsiteDict, StructureType, TypedAbinitInput
 from emmet.core.utils import (
     DocEnum,
     get_num_formula_units,
-    requires_arrow,
     type_override,
     utcnow,
 )

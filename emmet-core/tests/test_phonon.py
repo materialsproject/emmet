@@ -10,12 +10,11 @@ from pymatgen.phonon.dos import CompletePhononDos
 from pymatgen.phonon.dos import PhononDos as PmgPhononDos
 
 from emmet.core import ARROW_COMPATIBLE
-from emmet.core.phonon import PhononBS, PhononBSDOSDoc, PhononDOS
+from emmet.core.phonon import PhononBSDOSDoc
 from emmet.core.testing_utils import assert_schemas_equal
 
 if ARROW_COMPATIBLE:
     import pyarrow as pa
-    import pyarrow.parquet as pq
 
 
 @pytest.fixture(scope="module")
