@@ -1,13 +1,14 @@
 from fastapi import HTTPException
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core import Structure
-from pymatgen.core.trajectory import Trajectory
 from pymatgen.entries.computed_entries import ComputedStructureEntry
+
+from emmet.core.vasp.calculation import Calculation, get_trajectories_from_calculations
 
 
 def calcs_reversed_to_trajectory(calcs_reversed: list[dict]):
     """
-    Converts data from calc_reversed to pymatgen Trajectory objects
+    Converts data from calc_reversed to emmet-core Trajectory objects
     that contain structure, energy, force and stress data for each
     ionic step.
 
@@ -18,45 +19,15 @@ def calcs_reversed_to_trajectory(calcs_reversed: list[dict]):
     trajectories = []
 
     for calculation in calcs_reversed:
-        structures = []
-        frame_props = []
 
-        steps = calculation.get("output", {}).get("ionic_steps", None)
-
-        time_step = None
-        if (inp_params := calculation.get("input", {}).get("parameters", {})).get(
-            "IBRION", -1
-        ) == 0:
-            time_step = inp_params.get("POTIM", None)
-
-        if steps is None:
+        if calculation.get("output", {}).get("ionic_steps", None) is None:
             raise HTTPException(
                 status_code=404, detail="No ionic step data found for task"
             )
         else:
-            for step in steps:
-                step_dict = {}
-
-                structure_dict = step.get("structure", None)
-
-                if structure_dict is not None:
-                    structure = Structure.from_dict(structure_dict)
-
-                structures.append(structure)
-
-                step_dict["e_fr_energy"] = step.get("e_fr_energy", None)
-                step_dict["e_wo_entrp"] = step.get("e_wo_entrp", None)
-                step_dict["e_0_energy"] = step.get("e_0_energy", None)
-                step_dict["forces"] = step.get("forces", None)
-                step_dict["stresses"] = step.get("stress", None)
-                step_dict["electronic_steps"] = step.get("electronic_steps", None)
-
-                frame_props.append(step_dict)
-
-            traj = Trajectory.from_structures(
-                structures, frame_properties=frame_props, time_step=time_step
-            ).as_dict()
-            trajectories.append(traj)
+            trajectories.extend(
+                get_trajectories_from_calculations([Calculation(**calculation)])
+            )
 
     return trajectories
 
