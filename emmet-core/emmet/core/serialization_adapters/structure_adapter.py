@@ -1,8 +1,9 @@
-from typing import Annotated, TypeVar
+from typing import Annotated, Any, TypeVar
 
-import pymatgen.core.structure
+from pydantic.functional_serializers import WrapSerializer
 from pydantic.functional_validators import BeforeValidator
-from typing_extensions import TypedDict
+from pymatgen.core import Structure
+from typing_extensions import NotRequired, TypedDict
 
 from emmet.core.serialization_adapters.lattice_adapter import TypedLatticeDict
 from emmet.core.serialization_adapters.properties import TypedAggregateProperitesDict
@@ -13,16 +14,14 @@ TypedStructureDict = TypedDict(
     {
         "@module": str,
         "@class": str,
-        "charge": int,
+        "charge": NotRequired[int | None],
         "lattice": TypedLatticeDict,
         "sites": list[TypedSiteDict],
-        "properties": TypedAggregateProperitesDict,
+        "properties": NotRequired[TypedAggregateProperitesDict | None],
     },
 )
 
-StructureTypeVar = TypeVar(
-    "StructureTypeVar", pymatgen.core.structure.Structure, TypedStructureDict
-)
+StructureTypeVar = TypeVar("StructureTypeVar", Structure, TypedStructureDict)
 
 
 def pop_empty_structure_keys(structure: StructureTypeVar):
@@ -47,9 +46,19 @@ def pop_empty_structure_keys(structure: StructureTypeVar):
                     if val is None:
                         del species[prop]
 
+        return Structure.from_dict(structure)
+
     return structure
 
 
+def structure_as_dict(value: Any, handler, info) -> dict[str, Any]:
+    if isinstance(value, dict):
+        return value
+    return value.as_dict()
+
+
 AnnotatedStructure = Annotated[
-    StructureTypeVar, BeforeValidator(pop_empty_structure_keys)
+    StructureTypeVar,
+    BeforeValidator(pop_empty_structure_keys),
+    WrapSerializer(structure_as_dict),
 ]

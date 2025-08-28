@@ -30,6 +30,7 @@ from pymatgen.phonon.dos import CompletePhononDos
 from pymatgen.phonon.dos import PhononDos as PhononDosObject
 from typing_extensions import Literal, TypedDict
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.band_theory import BandStructure
 from emmet.core.base import CalcMeta, ContextModel
 from emmet.core.common import convert_datetime
@@ -46,10 +47,10 @@ from emmet.core.utils import (
     utcnow,
 )
 
-try:
+if ARROW_COMPATIBLE:
     import pyarrow as pa
     from pyarrow import Table as ArrowTable
-except ImportError:
+else:
     pa = None
     ArrowTable = None
 
@@ -98,10 +99,6 @@ class PhononDOS(ContextModel):
         if config.get("pdos"):
             config["projected_densities"] = config.pop("pdos")
 
-        # legacy data contains abipy structure objects
-        if (struct := config.get("structure")) and not isinstance(struct, Structure):
-            config["structure"] = Structure.from_dict(struct)
-
         return config
 
     @cached_property
@@ -115,33 +112,6 @@ class PhononDOS(ContextModel):
                 dict(zip(self.structure, self.projected_densities, strict=True)),
             )
         return dos
-
-    @requires_arrow
-    def to_arrow(self, col_prefix: str | None = None) -> ArrowTable:
-        """Convert PhononDOS to a pyarrow Table."""
-        col_prefix = col_prefix or ""
-        config = {
-            f"{col_prefix}{k}": [getattr(self, k)]
-            for k in (
-                "frequencies",
-                "densities",
-                "projected_densities",
-            )
-        }
-        config[f"{col_prefix}structure"] = [
-            json.dumps(self.structure.as_dict()) if self.structure else None
-        ]
-        return pa.Table.from_pydict(config)
-
-    @classmethod
-    @requires_arrow
-    def from_arrow(cls, table: ArrowTable, col_prefix: str | None = None) -> Self:
-        """Create a PhononDOS from a pyarrow Table."""
-        col_prefix = col_prefix or ""
-        config = {k: table[f"{col_prefix}{k}"].to_pylist()[0] for k in cls.model_fields}
-        if structure_str := config.pop("structure"):
-            config["structure"] = Structure.from_dict(json.loads(structure_str))
-        return cls(**config)
 
     @classmethod
     def from_phonopy(cls, phonon_dos_file: str | Path) -> Self:
@@ -164,12 +134,14 @@ class PhononDOS(ContextModel):
 
 
 class ShreddedEigendisplacements(TypedDict):
-    eigendisplacements_real: list[list[list[tuple[float, float, float]]]]
-    eigendisplacements_imag: list[list[list[tuple[float, float, float]]]]
+    real: list[list[list[tuple[float, float, float]]]]
+    imag: list[list[list[tuple[float, float, float]]]]
 
 
 @type_override({"eigendisplacements": ShreddedEigendisplacements})
-class PhononBS(ContextModel):
+class PhononBS(
+    BandStructure, populate_by_name=True, validate_by_alias=True, validate_by_name=True
+):
     """Define schema of pymatgen phonon band structure."""
 
     has_nac: bool = Field(
@@ -179,62 +151,30 @@ class PhononBS(ContextModel):
 
     frequencies: list[list[float]] = Field(
         description="The eigen-frequencies, with the first index representing the band, and the second the k-point.",
+        validation_alias="bands",
     )
 
     eigendisplacements: list[list[list[tuple[complex, complex, complex]]]] | None = (
         Field(None, description="Phonon eigendisplacements in Cartesian coordinates.")
     )
 
-    labels_dict: dict[str, Vector3D] | None = Field(
-        None, description="The high-symmetry labels of specific q-points."
-    )
-    structure: StructureType | None = Field(
-        None, description="The structure associated with the calculation."
-    )
     _primitive_structure: Structure | None = PrivateAttr(None)
-
-    @model_validator(mode="before")
-    def deserialize_pmg(cls, config: Any) -> Any:
-        """Ensure fields are correctly populated."""
-        if isinstance(egd := config.get("eigendisplacements"), dict) and all(
-            egd.get(k) is not None for k in ("real", "imag")
-        ):
-            config["eigendisplacements"] = (
-                np.array(egd["real"]) + 1j * np.array(egd["imag"])
-            ).tolist()
-
-        if (struct := config.get("structure")) and not isinstance(struct, Structure):
-            config["structure"] = Structure.from_dict(struct)
-
-        # remap legacy fields
-        for k, v in {
-            "lattice_rec": "reciprocal_lattice",
-            "bands": "frequencies",
-        }.items():
-            if config.get(k):
-                config[v] = config.pop(k)
-
-        if isinstance(config["reciprocal_lattice"], dict):
-            config["reciprocal_lattice"] = config["reciprocal_lattice"].get("matrix")
-
-        return super(PhononBS, cls).deserialize_pmg(config)
 
     @field_serializer("eigendisplacements", mode="wrap")
     def eigendisplacements_serializer(self, eigen, default_serializer, info):
         arr = np.array(default_serializer(eigen, info))
         return {
-            "eigendisplacements_real": arr.real.tolist(),
-            "eigendisplacements_imag": arr.imag.tolist(),
+            "real": arr.real.tolist(),
+            "imag": arr.imag.tolist(),
         }
 
     @field_validator("eigendisplacements", mode="before")
     def eigendisplacements_deserializer(cls, eigen):
         if isinstance(eigen, dict) and all(
-            eigen.get(k) is not None
-            for k in ("eigendisplacements_real", "eigendisplacements_imag")
+            eigen.get(k) is not None for k in ("real", "imag")
         ):
-            real = np.array(eigen["eigendisplacements_real"])
-            imag = np.array(eigen["eigendisplacements_imag"])
+            real = np.array(eigen["real"])
+            imag = np.array(eigen["imag"])
             return real + 1.0j * imag
 
         return eigen
@@ -280,71 +220,6 @@ class PhononBS(ContextModel):
             coords_are_cartesian=False,
             structure=self.structure,
         )
-
-    @requires_arrow
-    def to_arrow(self, col_prefix: str | None = None) -> ArrowTable:
-        """Convert a PhononBS to an arrow table."""
-        config = self.model_dump()
-        if structure := config.pop("structure", None):
-            config["structure"] = json.dumps(
-                structure
-            )  # model_dump converts structure to dict
-
-        for k in ("qpoints", "frequencies", "reciprocal_lattice", "eigendisplacements"):
-            if (vals := config.pop(k, None)) and k == "eigendisplacements":
-                cvals = np.array(vals)
-                config["eigendisplacements_real"] = cvals.real.tolist()
-                config["eigendisplacements_imag"] = cvals.imag.tolist()
-            elif vals:
-                rvals = np.array(vals)
-                config[k] = rvals.tolist()
-
-        if qpt_labels := config.pop("labels_dict"):
-            config["qpoint_labels"] = list(qpt_labels)
-            config["qpoint_labelled_points"] = [
-                qpt_labels[k] for k in config["qpoint_labels"]
-            ]
-
-        col_prefix = col_prefix or ""
-        return pa.Table.from_pydict(
-            {f"{col_prefix}{k}": [v] for k, v in config.items()}
-        )
-
-    @classmethod
-    @requires_arrow
-    def from_arrow(cls, table: ArrowTable, col_prefix: str | None = None) -> Self:
-        """Create a PhononBS from an arrow table."""
-        col_prefix = col_prefix or ""
-        config: dict[str, Any] = {}
-        for k in (
-            "structure",
-            "has_nac",
-            "qpoints",
-            "frequencies",
-            "reciprocal_lattice",
-            "eigendisplacements_real",
-            "qpoint_labels",
-        ):
-            _k = f"{col_prefix}{k}"
-            if _k not in table.column_names:
-                continue
-            v = table[_k].to_pylist()[0]
-            if k == "structure":
-                config[k] = Structure.from_dict(json.loads(v))
-            elif k in ("qpoints", "frequencies", "reciprocal_lattice"):
-                config[k] = np.array(v)
-            elif k == "eigendisplacements_real":
-                config["eigendisplacements"] = (
-                    table[f"{col_prefix}eigendisplacements_real"].to_numpy()[0]
-                    + 1.0j * table[f"{col_prefix}eigendisplacements_imag"].to_numpy()[0]
-                )
-            elif k == "qpoint_labels":
-                config["labels_dict"] = dict(
-                    zip(v, table[f"{col_prefix}qpoint_labelled_points"].to_pylist()[0])
-                )
-            else:
-                config[k] = v
-        return cls(**config)
 
     @classmethod
     def from_phonopy(cls, phonon_bandstructure_file: str | Path):
@@ -505,67 +380,64 @@ class PhononBSDOSTask(StructureMetadata):
     def handle_datetime(cls, v):
         return convert_datetime(cls, v)
 
+    @model_validator(mode="before")
     @classmethod
-    def migrate_legacy_doc(cls, legacy_doc: dict) -> PhononBSDOSTask:
-        """Migrate legacy DFPT data."""
+    def migrate_fields(cls, config: Any) -> Any:
+        """Migrate legacy input fields."""
+
+        # This block is for older DFPT data
         for k, v in {
             "ph_dos": "phonon_dos",
+            "ph_bs": "phonon_bandstructure",
             "e_total": "epsilon_static",
             "e_electronic": "epsilon_electronic",
             "becs": "born",
         }.items():
-            if legacy_doc.get(k):
-                legacy_doc[v] = legacy_doc.pop(k)
-
-        if legacy_doc.get("ph_bs"):
-            legacy_doc["phonon_bandstructure"] = PhononBS.migrate_legacy_bs(
-                legacy_doc.pop("ph_bs")
-            )
+            if config.get(k):
+                config[v] = config.pop(k)
 
         # Make sure that the datetime field is properly formatted
-        if legacy_doc.get("last_updated"):
-            legacy_doc["last_updated"] = convert_datetime(
-                cls, legacy_doc["last_updated"]
-            )
+        if config.get("last_updated"):
+            config["last_updated"] = convert_datetime(cls, config["last_updated"])
 
-        if (ph_bs := legacy_doc.get("phonon_bandstructure")) and not legacy_doc.get(
+        if (ph_bs := config.get("phonon_bandstructure")) and not config.get(
             "structure"
         ):
             if isinstance(ph_bs, PhononBandStructureSymmLine | PhononBS):
-                legacy_doc["structure"] = ph_bs.structure
+                config["structure"] = ph_bs.structure
             else:
-                legacy_doc["structure"] = ph_bs.get("structure")
+                config["structure"] = ph_bs.get("structure")
 
         # This block is for the migration from atomate2 --> emmet-core schemas
-        if legacy_doc.get("structure"):
-            if isinstance(legacy_doc["structure"], dict):
-                legacy_doc["structure"] = Structure.from_dict(legacy_doc["structure"])
+        if config.get("structure"):
+            if isinstance(config["structure"], dict):
+                config["structure"] = Structure.from_dict(config["structure"])
 
-            old_formula_units = legacy_doc.pop("formula_units", 1)
-            if toten := legacy_doc.pop("total_dft_energy", None):
-                legacy_doc["total_energy"] = (
-                    toten * old_formula_units / legacy_doc["structure"].num_sites
+            old_formula_units = config.pop("formula_units", 1)
+            if toten := config.pop("total_dft_energy", None):
+                config["total_energy"] = (
+                    toten * old_formula_units / config["structure"].num_sites
                 )
 
-            legacy_doc["formula_units"] = get_num_formula_units(
-                legacy_doc["structure"].composition
+            config["formula_units"] = get_num_formula_units(
+                config["structure"].composition
             )
 
-        if (fc := legacy_doc.get("force_constants")) and isinstance(fc, dict):
-            legacy_doc["force_constants"] = fc["force_constants"]
+        if (fc := config.get("force_constants")) and isinstance(fc, dict):
+            config["force_constants"] = fc["force_constants"]
 
-        if comp_sett := legacy_doc.get("phonopy_settings"):
-            legacy_doc["post_process_settings"] = comp_sett
+        if comp_sett := config.get("phonopy_settings"):
+            config["post_process_settings"] = comp_sett
 
         calc_meta_migrate = {
             "uuids": "_uuid",
             "jobdirs": "_job_dir",
         }
         calc_meta_remap = {"uuids": "identifier", "jobdirs": "dir_name"}
-        if any(legacy_doc.get(k) for k in calc_meta_migrate):
+        if any(config.get(k) for k in calc_meta_migrate):
             calc_meta: dict[str, dict[str, str]] = {}
             for field_name, splitter in calc_meta_migrate.items():
-                if vals := legacy_doc.get(field_name):
+                if vals := config.get(field_name):
                     if not isinstance(vals, dict):
                         vals = vals.model_dump()
                     for k, v in vals.items():
@@ -580,7 +452,7 @@ class PhononBSDOSTask(StructureMetadata):
                                 calc_meta[job_name] = {}
                             calc_meta[job_name][calc_meta_remap[field_name]] = v
 
-            legacy_doc["calc_meta"] = [
+            config["calc_meta"] = [
                 CalcMeta(
                     name=job_name,
                     **meta,
@@ -588,7 +460,7 @@ class PhononBSDOSTask(StructureMetadata):
                 for job_name, meta in calc_meta.items()
             ]
 
-        return cls.from_structure(meta_structure=legacy_doc["structure"], **legacy_doc)
+        return config
 
     @computed_field  # type: ignore[prop-decorator]
     @cached_property
@@ -772,22 +644,6 @@ class PhononBSDOSTask(StructureMetadata):
         }
         thermo_props["temperature"] = temperatures
         return thermo_props
-
-    @requires_arrow
-    def objects_to_arrow(self) -> ArrowTable:
-        """Convert band structure and DOS to pyarrow table row."""
-        table = pa.Table.from_pydict({"material_id": [self.material_id]})
-        if self.phonon_bandstructure:
-            bst = self.phonon_bandstructure.to_arrow(col_prefix="bs_")
-            for k in bst.column_names:
-                table = table.append_column(k, bst[k])
-
-        if self.phonon_dos:
-            dost = self.phonon_dos.to_arrow(col_prefix="dos_")
-
-            for k in dost.column_names:
-                table = table.append_column(k, dost[k])
-        return table
 
     @classmethod
     def from_phonopy_pheasy_files(

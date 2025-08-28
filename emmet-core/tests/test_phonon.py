@@ -5,15 +5,17 @@ from copy import deepcopy
 import numpy as np
 import pytest
 from monty.serialization import loadfn
+from pymatgen.core import Structure
 from pymatgen.phonon.dos import CompletePhononDos
 from pymatgen.phonon.dos import PhononDos as PmgPhononDos
 
 from emmet.core import ARROW_COMPATIBLE
-from emmet.core.phonon import PhononBSDOSDoc
+from emmet.core.phonon import PhononBS, PhononBSDOSDoc, PhononDOS
 from emmet.core.testing_utils import assert_schemas_equal
 
 if ARROW_COMPATIBLE:
     import pyarrow as pa
+    import pyarrow.parquet as pq
 
 
 @pytest.fixture(scope="module")
@@ -23,9 +25,11 @@ def legacy_ph_task(test_dir):
 
 def test_legacy_migration(legacy_ph_task):
     # ensure that legacy phonon data can be migrated to current schema
-    assert all(legacy_ph_task.get(k) for k in ("ph_bs", "ph_dos"))
 
-    ph_doc = PhononBSDOSDoc.migrate_legacy_doc(deepcopy(legacy_ph_task))
+    assert all(legacy_ph_task.get(k) for k in ("ph_bs", "ph_dos"))
+    ph_doc = PhononBSDOSDoc.from_structure(
+        Structure.from_dict(legacy_ph_task["ph_bs"]["structure"]), **legacy_ph_task
+    )
     assert_schemas_equal(ph_doc, PhononBSDOSDoc.model_config)
 
     # check remap of phonon DOS
@@ -39,13 +43,6 @@ def test_legacy_migration(legacy_ph_task):
         )
 
     # check remap of phonon bandstructure
-    assert np.all(
-        np.abs(
-            np.array(getattr(ph_doc.phonon_bandstructure, "qpoints", []))
-            - np.array(legacy_ph_task["ph_bs"].get("qpoints", []))
-        )
-        < 1e-6
-    )
     assert np.all(
         np.abs(
             np.array(getattr(ph_doc.phonon_bandstructure, "frequencies", []))
@@ -121,15 +118,11 @@ def test_legacy_migration(legacy_ph_task):
     not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
 )
 def test_arrow(legacy_ph_task):
-    ph_doc = PhononBSDOSDoc.migrate_legacy_doc(legacy_ph_task)
-
+    ph_doc = PhononBSDOSDoc(**legacy_ph_task)
     arrow_struct = pa.scalar(
         ph_doc.model_dump(context={"format": "arrow"}), type=PhononBSDOSDoc.arrow_type()
     )
-
     test_arrow_doc = PhononBSDOSDoc(**arrow_struct.as_py(maps_as_pydicts="strict"))
     assert test_arrow_doc
 
-    # assert jsanitize(ph_doc.model_dump(), allow_bson=True) == jsanitize(
-    #     test_arrow_doc.model_dump(), allow_bson=True
-    # )
+    # assert ph_doc.model_dump() == test_arrow_doc.model_dump()

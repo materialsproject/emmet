@@ -1,7 +1,7 @@
 from typing import TypeVar
 
 from pymatgen.core import Lattice
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 MSONableTypedLatticeDict = TypedDict(
     "MSONableTypedLatticeDict",
@@ -23,7 +23,7 @@ MSONableTypedLatticeDict = TypedDict(
 
 class TypedLatticeDict(TypedDict):
     matrix: list[list[float]]
-    pbc: list[bool]
+    pbc: NotRequired[list[bool] | None]
     a: float
     b: float
     c: float
