@@ -5,13 +5,12 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from monty.json import MSONable
 from starlette.responses import RedirectResponse
 
 from emmet.api.resource import Resource
 
 
-class API(MSONable):
+class API:
     """
     Basic API manager to tie together various resources.
     """
