@@ -311,7 +311,10 @@ pyparsing==3.2.3
 pytest==8.4.1
     # via
     #   emmet-api (setup.py)
+    #   pytest-asyncio
     #   pytest-cov
+pytest-asyncio==1.1.0
+    # via emmet-api (setup.py)
 pytest-cov==6.2.1
     # via emmet-api (setup.py)
 python-dateutil==2.9.0.post0
