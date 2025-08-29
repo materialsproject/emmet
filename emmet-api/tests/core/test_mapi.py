@@ -2,13 +2,12 @@ from enum import Enum
 from random import choice, randint
 
 import pytest
-from fastapi.encoders import jsonable_encoder
+import pytest_asyncio
 from pydantic import BaseModel, Field
 
 from emmet.api.core import MAPI
-
 from emmet.api.resource import ReadOnlyResource
-from maggma.stores import MemoryStore
+from emmet.api.resource.utils import CollectionWithKey
 
 
 class PetType(str, Enum):
@@ -44,32 +43,34 @@ pets = [
 ]
 
 
-@pytest.fixture
-def owner_store():
-    store = MemoryStore("owners", key="name")
-    store.connect()
-    store.update([jsonable_encoder(d) for d in owners])
-    return store
+@pytest_asyncio.fixture
+async def owner_collection(mock_database):
+    collection = mock_database["owners"]
+
+    # Insert test data
+    owner_docs = [owner.model_dump() for owner in owners]
+    await collection.insert_many(owner_docs)
+
+    return CollectionWithKey(collection=collection, key="name")
 
 
-@pytest.fixture
-def pet_store():
-    store = MemoryStore("pets", key="name")
-    store.connect()
-    store.update([jsonable_encoder(d) for d in pets])
-    return store
+@pytest_asyncio.fixture
+async def pet_collection(mock_database):
+    collection = mock_database["pets"]
+
+    # Insert test data
+    pet_docs = [pet.model_dump() for pet in pets]
+    await collection.insert_many(pet_docs)
+
+    return CollectionWithKey(collection=collection, key="name")
 
 
-def test_mapi(owner_store, pet_store):
-    owner_endpoint = ReadOnlyResource(owner_store, Owner)
-    pet_endpoint = ReadOnlyResource(pet_store, Pet)
+@pytest.mark.asyncio
+async def test_mapi(owner_collection, pet_collection):
+    owner_endpoint = ReadOnlyResource(owner_collection, Owner)
+    pet_endpoint = ReadOnlyResource(pet_collection, Pet)
 
     manager = MAPI({"owners": [owner_endpoint], "pets": [pet_endpoint]})
-
-    api_dict = manager.as_dict()
-
-    for k in ["@class", "@module", "resources"]:
-        assert k in api_dict
 
     assert manager.app.openapi()["components"]["securitySchemes"] == {
         "ApiKeyAuth": {
