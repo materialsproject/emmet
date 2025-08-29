@@ -5,21 +5,19 @@ from __future__ import annotations
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Literal, TypeAlias
+from typing import Annotated, Literal, TypeAlias, TypeVar
 
-from pymatgen.core import Composition, Lattice, Molecule, Structure
-from pymatgen.electronic_structure.bandstructure import Kpoint
+from pydantic import BeforeValidator, WrapSerializer
+from pymatgen.electronic_structure.core import Spin
 from typing_extensions import TypedDict
 
-from emmet.core import ARROW_COMPATIBLE
-
-if ARROW_COMPATIBLE:
-    from emmet.core.serialization_adapters.composition_adapter import CompositionTypeVar
-    from emmet.core.serialization_adapters.kpoint_adapter import KpointTypeVar
-    from emmet.core.serialization_adapters.lattice_adapter import LatticeTypeVar
-    from emmet.core.serialization_adapters.molecule_adapter import AnnotatedMolecule
-    from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
-
+from emmet.core.serialization_adapters.composition_adapter import AnnotatedComposition
+from emmet.core.serialization_adapters.element_adapter import AnnotatedElement
+from emmet.core.serialization_adapters.kpoint_adapter import AnnotatedKpoint
+from emmet.core.serialization_adapters.lattice_adapter import AnnotatedLattice
+from emmet.core.serialization_adapters.molecule_adapter import AnnotatedMolecule
+from emmet.core.serialization_adapters.structure_adapter import AnnotatedStructure
+from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
 
 ############################################################
 # ALIASES
@@ -27,11 +25,28 @@ if ARROW_COMPATIBLE:
 PathLike: TypeAlias = str | Path | os.DirEntry[str]
 """Type of a generic path-like object"""
 
-CompositionType: TypeAlias = CompositionTypeVar if ARROW_COMPATIBLE else Composition  # type: ignore[valid-type]
-KpointType: TypeAlias = KpointTypeVar if ARROW_COMPATIBLE else Kpoint  # type: ignore[valid-type]
-LatticeType: TypeAlias = LatticeTypeVar if ARROW_COMPATIBLE else Lattice  # type: ignore[valid-type]
-MoleculeType: TypeAlias = AnnotatedMolecule if ARROW_COMPATIBLE else Molecule  # type: ignore[valid-type]
-StructureType: TypeAlias = AnnotatedStructure if ARROW_COMPATIBLE else Structure  # type: ignore[valid-type]
+CompositionType: TypeAlias = AnnotatedComposition
+ElementType: TypeAlias = AnnotatedElement
+KpointType: TypeAlias = AnnotatedKpoint
+LatticeType: TypeAlias = AnnotatedLattice
+MoleculeType: TypeAlias = AnnotatedMolecule
+StructureType: TypeAlias = AnnotatedStructure
+
+CalcTypeAlias: TypeAlias = Annotated[
+    CalcType,
+    BeforeValidator(lambda x: CalcType(x) if isinstance(x, str) else x),
+    WrapSerializer(lambda x, nxt, info: x.value),
+]
+RunTypeAlias: TypeAlias = Annotated[
+    RunType,
+    BeforeValidator(lambda x: RunType(x) if isinstance(x, str) else x),
+    WrapSerializer(lambda x, nxt, info: x.value),
+]
+TaskTypeAlias: TypeAlias = Annotated[
+    TaskType,
+    BeforeValidator(lambda x: TaskType(x) if isinstance(x, str) else x),
+    WrapSerializer(lambda x, nxt, info: x.value),
+]
 
 
 ############################################################
@@ -75,8 +90,11 @@ class TypedBondLengthStatsDict(TypedDict):
 ############################################################
 # ELECTRONIC STRUCTURE
 ############################################################
-StrSpin: TypeAlias = Literal["1", "-1"]
-StrOrbital: TypeAlias = Literal["total", "s", "p", "d", "f"]
+SpinType: TypeAlias = Annotated[
+    TypeVar("SpinTypeVar", Spin, Literal["1", "-1"]),
+    BeforeValidator(lambda x: Spin(int(x)) if isinstance(x, str) else x),
+    WrapSerializer(lambda x, nxt, info: str(x), return_type=str),
+]
 
 
 class TypedBandDict(TypedDict):

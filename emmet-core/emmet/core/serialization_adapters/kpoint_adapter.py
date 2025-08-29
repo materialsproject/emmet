@@ -1,5 +1,6 @@
-from typing import TypeVar
+from typing import Annotated, TypeVar
 
+from pydantic import BeforeValidator, WrapSerializer
 from pymatgen.electronic_structure.bandstructure import Kpoint
 from typing_extensions import TypedDict
 
@@ -19,3 +20,9 @@ TypedKpointDict = TypedDict(
 
 
 KpointTypeVar = TypeVar("KpointTypeVar", Kpoint, TypedKpointDict)
+
+AnnotatedKpoint = Annotated[
+    KpointTypeVar,
+    BeforeValidator(lambda x: Kpoint.from_dict(x) if isinstance(x, dict) else x),
+    WrapSerializer(lambda x, nxt, info: x.as_dict(), return_type=TypedKpointDict),
+]

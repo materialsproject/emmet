@@ -33,7 +33,7 @@ from emmet.core.tasks import (
 from emmet.core.typing import StructureType
 from emmet.core.utils import ValueEnum, arrow_incompatible, type_override, utcnow
 from emmet.core.vasp.calculation import Calculation, VaspObject
-from emmet.core.vasp.task_valid import TaskState
+from emmet.core.vasp.task_valid import TaskState, TaskStateType
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -189,7 +189,7 @@ class NebResult(BaseModel):
         None, description="Energies corresponding the structures in `images`."
     )
 
-    state: TaskState | None = Field(
+    state: TaskStateType | None = Field(
         None, description="Whether the NEB calculation succeeded."
     )
 
@@ -293,7 +293,7 @@ class NebIntermediateImagesDoc(BaseModel):
         None, description="List of the directories where the NEB images are located."
     )
 
-    state: TaskState | None = Field(
+    state: TaskStateType | None = Field(
         None, description="Whether the NEB calculation succeeded."
     )
     neb_method: NebMethod | None = Field(

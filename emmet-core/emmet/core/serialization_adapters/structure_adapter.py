@@ -1,7 +1,6 @@
-from typing import Annotated, Any, TypeVar
+from typing import Annotated, TypeVar
 
-from pydantic.functional_serializers import WrapSerializer
-from pydantic.functional_validators import BeforeValidator
+from pydantic import BeforeValidator, WrapSerializer
 from pymatgen.core import Structure
 from typing_extensions import NotRequired, TypedDict
 
@@ -51,14 +50,8 @@ def pop_empty_structure_keys(structure: StructureTypeVar):
     return structure
 
 
-def structure_as_dict(value: Any, handler, info) -> dict[str, Any]:
-    if isinstance(value, dict):
-        return value
-    return value.as_dict()
-
-
 AnnotatedStructure = Annotated[
     StructureTypeVar,
     BeforeValidator(pop_empty_structure_keys),
-    WrapSerializer(structure_as_dict),
+    WrapSerializer(lambda x, nxt, info: x.as_dict(), return_type=TypedStructureDict),
 ]

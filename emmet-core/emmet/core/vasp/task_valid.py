@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Annotated, Any, TypeAlias
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, BeforeValidator, Field, WrapSerializer
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
@@ -24,6 +24,13 @@ class TaskState(ValueEnum):
     SUCCESS = "successful"
     FAILED = "failed"
     ERROR = "error"
+
+
+TaskStateType: TypeAlias = Annotated[
+    TaskState,
+    BeforeValidator(lambda x: TaskState(x) if isinstance(x, str) else x),
+    WrapSerializer(lambda x, nxt, info: x.value),
+]
 
 
 @arrow_incompatible

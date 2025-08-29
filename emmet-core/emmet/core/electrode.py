@@ -21,12 +21,12 @@ from emmet.core import ARROW_COMPATIBLE
 from emmet.core.base import EmmetBaseModel
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID, AlphaID
-from emmet.core.typing import CompositionType, StructureType
+from emmet.core.typing import CompositionType, ElementType, StructureType
 from emmet.core.utils import ValueEnum, jsanitize, type_override, utcnow
 
 if ARROW_COMPATIBLE:
     from emmet.core.serialization_adapters.balanced_reaction_adapter import (
-        BalancedReactionTypeVar,
+        AnnotatedBalancedReaction,
     )
     from emmet.core.serialization_adapters.electrode_adapter import (
         AnnotatedConversionElectrode,
@@ -34,7 +34,7 @@ if ARROW_COMPATIBLE:
     )
 
 BalancedReactionType: TypeAlias = (
-    BalancedReactionTypeVar if ARROW_COMPATIBLE else BalancedReaction  # type: ignore[valid-type]
+    AnnotatedBalancedReaction if ARROW_COMPATIBLE else BalancedReaction  # type: ignore[valid-type]
 )
 InsertionElectrodeType: TypeAlias = (
     AnnotatedInsertionElectrode if ARROW_COMPATIBLE else InsertionElectrode  # type: ignore[valid-type]
@@ -180,7 +180,7 @@ class ConversionVoltagePairDoc(VoltagePairDoc):
     )
 
 
-@type_override({"all_elements": list[Element]})
+@type_override({"all_elements": list[ElementType]})
 class EntriesCompositionSummary(BaseModel):
     """
     Composition summary data for all material entries associated with this electrode.
@@ -202,7 +202,7 @@ class EntriesCompositionSummary(BaseModel):
         description="Anonymous formulas for material entries across all voltage pairs.",
     )
 
-    all_elements: list[Element | Species | DummySpecies] | None = Field(
+    all_elements: list[ElementType | Species | DummySpecies] | None = Field(
         None,
         description="Elements in material entries across all voltage pairs.",
     )
@@ -259,7 +259,7 @@ class BaseElectrode(EmmetBaseModel):
         description="Reduced formula with working ion range produced by combining the charge and discharge formulas.",
     )
 
-    working_ion: Element | None = Field(
+    working_ion: ElementType | None = Field(
         None, description="The working ion as an Element object."
     )
 
@@ -286,7 +286,7 @@ class BaseElectrode(EmmetBaseModel):
         None, description="The id for this battery document."
     )
 
-    elements: list[Element] | None = Field(
+    elements: list[ElementType] | None = Field(
         None,
         description="The atomic species contained in this electrode (not including the working ion).",
     )

@@ -1,6 +1,6 @@
-from typing import Annotated, TypeVar
+from typing import Annotated, Any, TypeVar
 
-from pydantic import BeforeValidator
+from pydantic import BeforeValidator, WrapSerializer
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
 from typing_extensions import TypedDict
 
@@ -47,5 +47,7 @@ def pop_empty_bs_keys(bs: BandStructureSymmLineTypeVar):
 
 
 AnnotatedBandStructureSymmLine = Annotated[
-    BandStructureSymmLineTypeVar, BeforeValidator(pop_empty_bs_keys)
+    BandStructureSymmLineTypeVar,
+    BeforeValidator(pop_empty_bs_keys),
+    WrapSerializer(lambda x, nxt, info: x.as_dict(), return_type=dict[str, Any]),
 ]

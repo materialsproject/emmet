@@ -1,5 +1,6 @@
-from typing import TypeVar
+from typing import Annotated, TypeVar
 
+from pydantic import BeforeValidator, WrapSerializer
 from pymatgen.analysis.reaction_calculator import BalancedReaction
 from typing_extensions import TypedDict
 
@@ -16,3 +17,13 @@ TypedBalancedReactionDict = TypedDict(
 BalancedReactionTypeVar = TypeVar(
     "BalancedReactionTypeVar", BalancedReaction, TypedBalancedReactionDict
 )
+
+AnnotatedBalancedReaction = Annotated[
+    BalancedReactionTypeVar,
+    BeforeValidator(
+        lambda x: BalancedReaction.from_dict(x) if isinstance(x, dict) else x
+    ),
+    WrapSerializer(
+        lambda x, nxt, info: x.as_dict(), return_type=TypedBalancedReactionDict
+    ),
+]

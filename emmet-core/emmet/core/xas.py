@@ -2,27 +2,22 @@ from __future__ import annotations
 
 import warnings
 from itertools import groupby
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING, Annotated, TypeAlias
 
 import numpy as np
-from pydantic import Field, field_validator
+from pydantic import BeforeValidator, Field, WrapSerializer, field_validator
 from pymatgen.analysis.xas.spectrum import XAS, site_weighted_spectrum
-from pymatgen.core.periodic_table import Element
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
-from emmet.core import ARROW_COMPATIBLE
 from emmet.core.feff.task import TaskDocument
 from emmet.core.mpid import MPID
+from emmet.core.serialization_adapters.xas_adapter import AnnotatedXAS
 from emmet.core.spectrum import SpectrumDoc
+from emmet.core.typing import ElementType
 from emmet.core.utils import ValueEnum
 
 if TYPE_CHECKING:
     from emmet.core.mpid import MPID, AlphaID
-if ARROW_COMPATIBLE:
-    from emmet.core.serialization_adapters.xas_adapter import AnnotatedXAS
-
-
-XASType: TypeAlias = AnnotatedXAS if ARROW_COMPATIBLE else XAS  # type: ignore[valid-type]
 
 
 class Edge(ValueEnum):
@@ -41,7 +36,7 @@ class Edge(ValueEnum):
     L2_3 = "L2,3"
 
 
-class Type(ValueEnum):
+class SpectrumType(ValueEnum):
     """
     The type of XAS Spectrum
     XANES - Just the near-edge region
@@ -52,6 +47,19 @@ class Type(ValueEnum):
     XANES = "XANES"
     EXAFS = "EXAFS"
     XAFS = "XAFS"
+
+
+EdgeType: TypeAlias = Annotated[
+    Edge,
+    BeforeValidator(lambda x: Edge(x) if isinstance(x, str) else x),
+    WrapSerializer(lambda x, nxt, info: x.value, return_type=str),
+]
+SpectrumTypeAlias: TypeAlias = Annotated[
+    SpectrumType,
+    BeforeValidator(lambda x: SpectrumType(x) if isinstance(x, str) else x),
+    WrapSerializer(lambda x, nxt, info: x.value, return_type=str),
+]
+XASType: TypeAlias = AnnotatedXAS
 
 
 class XASDoc(SpectrumDoc):
@@ -71,9 +79,9 @@ class XASDoc(SpectrumDoc):
         description="List of Calculations IDs used to make this XAS spectrum.",
     )
 
-    absorbing_element: Element = Field(..., description="Absoring element.")
-    spectrum_type: Type = Field(..., description="XAS spectrum type.")
-    edge: Edge = Field(
+    absorbing_element: ElementType = Field(..., description="Absoring element.")
+    spectrum_type: SpectrumTypeAlias = Field(..., description="XAS spectrum type.")
+    edge: EdgeType = Field(
         ..., title="Absorption Edge", description="The interaction edge for XAS."
     )
 

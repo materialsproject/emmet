@@ -31,16 +31,9 @@ from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID, AlphaID
 from emmet.core.structure import StructureMetadata
 from emmet.core.trajectory import Trajectory as CoreTrajectory
-from emmet.core.typing import StructureType
+from emmet.core.typing import CalcTypeAlias, RunTypeAlias, StructureType, TaskTypeAlias
 from emmet.core.utils import jsanitize, type_override, utcnow
-from emmet.core.vasp.calc_types import (
-    CalcType,
-    RunType,
-    TaskType,
-    calc_type,
-    run_type,
-    task_type,
-)
+from emmet.core.vasp.calc_types import CalcType, RunType, calc_type, run_type, task_type
 from emmet.core.vasp.calculation import (
     Calculation,
     CalculationInput,
@@ -49,7 +42,7 @@ from emmet.core.vasp.calculation import (
     RunStatistics,
     VaspObject,
 )
-from emmet.core.vasp.task_valid import TaskState
+from emmet.core.vasp.task_valid import TaskState, TaskStateType
 from emmet.core.vasp.utils import TASK_NAMES, discover_and_sort_vasp_files
 
 if TYPE_CHECKING:
@@ -300,7 +293,7 @@ class CoreTaskDoc(StructureMetadata):
         None,
         description="Identifier for this calculation; should provide rough information about the calculation origin and purpose.",
     )
-    calc_type: CalcType | None = Field(
+    calc_type: CalcTypeAlias | None = Field(
         None, description="The functional and task type used in the calculation."
     )
     completed_at: datetime | None = Field(
@@ -326,7 +319,7 @@ class CoreTaskDoc(StructureMetadata):
         None,
         description="VASP calculation outputs.",
     )
-    run_type: RunType | None = Field(
+    run_type: RunTypeAlias | None = Field(
         None, description="The functional used in the calculation."
     )
     structure: StructureType | None = Field(
@@ -340,7 +333,7 @@ class CoreTaskDoc(StructureMetadata):
         description="The (task) ID of this calculation, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
     )
-    task_type: TaskType | CalcType | None = Field(
+    task_type: TaskTypeAlias | CalcTypeAlias | None = Field(
         None, description="The type of calculation."
     )
     transformations: Any | None = Field(
@@ -517,7 +510,7 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
         None,
         description="Summary of runtime statistics for each calculation in this task",
     )
-    state: TaskState | None = Field(None, description="State of this calculation")
+    state: TaskStateType | None = Field(None, description="State of this calculation")
     task_label: str | None = Field(None, description="A description of the task")
 
     @model_validator(mode="before")

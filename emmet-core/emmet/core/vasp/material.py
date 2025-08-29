@@ -17,8 +17,9 @@ from emmet.core.serialization_adapters.computed_entries_adapter import (
 )
 from emmet.core.settings import EmmetSettings
 from emmet.core.tasks import TaskDoc
+from emmet.core.typing import CalcTypeAlias, RunTypeAlias, TaskTypeAlias
 from emmet.core.utils import jsanitize, utcnow
-from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
+from emmet.core.vasp.calc_types import RunType, TaskType
 
 SETTINGS = EmmetSettings()
 
@@ -59,15 +60,15 @@ class BlessedCalcs(BaseModel, populate_by_name=True):
 
 
 class MaterialsDoc(CoreMaterialsDoc):
-    calc_types: Mapping[str, CalcType] | None = Field(  # type: ignore
+    calc_types: Mapping[str, CalcTypeAlias] | None = Field(  # type: ignore
         None,
         description="Calculation types for all the calculations that make up this material",
     )
-    task_types: Mapping[str, TaskType] | None = Field(
+    task_types: Mapping[str, TaskTypeAlias] | None = Field(
         None,
         description="Task types for all the calculations that make up this material",
     )
-    run_types: Mapping[str, RunType] | None = Field(
+    run_types: Mapping[str, RunTypeAlias] | None = Field(
         None,
         description="Run types for all the calculations that make up this material",
     )

@@ -4,14 +4,13 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
-from pymatgen.core.periodic_table import Element
 
 from emmet.core.electronic_structure import BandstructureData, DosData
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID, AlphaID
 from emmet.core.thermo import DecompositionProduct
-from emmet.core.typing import StructureType
-from emmet.core.xas import Edge, Type
+from emmet.core.typing import ElementType, StructureType
+from emmet.core.xas import EdgeType, SpectrumTypeAlias
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -95,17 +94,17 @@ class XASSearchData(BaseModel):
     Fields in XAS sub docs in summary
     """
 
-    edge: Edge | None = Field(
+    edge: EdgeType | None = Field(
         None,
         title="Absorption Edge",
         description="The interaction edge for XAS",
     )
-    absorbing_element: Element | None = Field(
+    absorbing_element: ElementType | None = Field(
         None,
         description="Absorbing element.",
     )
 
-    spectrum_type: Type | None = Field(
+    spectrum_type: SpectrumTypeAlias | None = Field(
         None,
         description="Type of XAS spectrum.",
     )
@@ -306,7 +305,7 @@ class SummaryDoc(PropertyDoc):
         description="The number of unique magnetic sites.",
     )
 
-    types_of_magnetic_species: list[Element] | None = Field(
+    types_of_magnetic_species: list[ElementType] | None = Field(
         None,
         description="Magnetic specie elements.",
     )

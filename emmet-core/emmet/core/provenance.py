@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import warnings
 from datetime import datetime
-from typing import TYPE_CHECKING
-
+from typing import TYPE_CHECKING, Annotated, TypeAlias
 
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, WrapSerializer, field_validator, model_validator
 from pymatgen.core.structure import Structure
 
 from emmet.core.common import convert_datetime
@@ -17,7 +16,7 @@ from emmet.core.material_property import PropertyDoc
 from emmet.core.utils import ValueEnum, utcnow
 
 if TYPE_CHECKING:
-    from emmet.core.mpid import AlphaID, MPID
+    from emmet.core.mpid import MPID, AlphaID
 
 
 class Database(ValueEnum):
@@ -28,6 +27,11 @@ class Database(ValueEnum):
     ICSD = "icsd"
     Pauling_Files = "pf"
     COD = "cod"
+
+
+DatabaseType: TypeAlias = Annotated[
+    Database, WrapSerializer(lambda x, nxt, info: x.value, return_type=str)
+]
 
 
 class Author(BaseModel):
@@ -75,7 +79,7 @@ class SNLAbout(BaseModel):
 
     tags: list[str] | None = Field(None)
 
-    database_IDs: dict[Database, list[str]] | None = Field(
+    database_IDs: dict[DatabaseType, list[str]] | None = Field(
         None, description="Database IDs corresponding to this material."
     )
 
@@ -133,7 +137,7 @@ class ProvenanceDoc(PropertyDoc):
         True, description="If this material has any experimental provenance or not"
     )
 
-    database_IDs: dict[Database, list[str]] | None = Field(
+    database_IDs: dict[DatabaseType, list[str]] | None = Field(
         None, description="Database IDs corresponding to this material"
     )
 

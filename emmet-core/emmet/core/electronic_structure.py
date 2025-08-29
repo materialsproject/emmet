@@ -6,16 +6,15 @@ from collections import defaultdict
 from datetime import datetime
 from enum import Enum
 from math import isnan
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING, Annotated, Literal, TypeAlias
 
 import numpy as np
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, BeforeValidator, Field, WrapSerializer, field_validator
 from pymatgen.analysis.magnetism.analyzer import (
     CollinearMagneticStructureAnalyzer,
     Ordering,
 )
 from pymatgen.core import Structure
-from pymatgen.core.periodic_table import Element
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
 from pymatgen.electronic_structure.core import OrbitalType, Spin
 from pymatgen.electronic_structure.dos import CompleteDos
@@ -27,8 +26,8 @@ from emmet.core.common import convert_datetime
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID, AlphaID
 from emmet.core.settings import EmmetSettings
-from emmet.core.typing import StrOrbital, StrSpin, TypedBandDict
-from emmet.core.utils import type_override, utcnow
+from emmet.core.typing import ElementType, SpinType, TypedBandDict
+from emmet.core.utils import utcnow
 
 if ARROW_COMPATIBLE:
     from emmet.core.serialization_adapters.bandstructure_symm_line_adapter import (
@@ -40,6 +39,12 @@ BandStructureSymmLineType: TypeAlias = (
     AnnotatedBandStructureSymmLine if ARROW_COMPATIBLE else BandStructureSymmLine  # type: ignore[valid-type]
 )
 CompleteDosType: TypeAlias = AnnotatedCompleteDos if ARROW_COMPATIBLE else CompleteDos  # type: ignore[valid-type]
+OrderingType: TypeAlias = Annotated[
+    Ordering,
+    BeforeValidator(lambda x: Ordering(x) if isinstance(x, str) else x),
+    WrapSerializer(lambda x, nxt, info: x.value, return_type=str),
+]
+
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -129,7 +134,7 @@ class ElectronicStructureBaseData(BaseModel):
 class ElectronicStructureSummary(ElectronicStructureBaseData):
     is_gap_direct: bool = Field(..., description="Whether the band gap is direct.")
     is_metal: bool = Field(..., description="Whether the material is a metal.")
-    magnetic_ordering: Ordering = Field(
+    magnetic_ordering: OrderingType = Field(
         ..., description="Magnetic ordering of the calculation."
     )
 
@@ -187,22 +192,15 @@ class BandstructureData(BaseModel):
     )
 
 
-@type_override(
-    {
-        "total": dict[StrSpin, DosSummaryData],
-        "elemental": dict[Element, dict[StrOrbital, dict[StrSpin, DosSummaryData]]],
-        "orbital": dict[StrOrbital, dict[StrSpin, DosSummaryData]],
-    }
-)
 class DosData(BaseModel):
-    total: dict[Spin | StrSpin, DosSummaryData] | None = Field(
+    total: dict[SpinType, DosSummaryData] | None = Field(
         None, description="Total DOS summary data."
     )
 
     elemental: (
         dict[
-            Element,
-            dict[OrbitalType | StrOrbital, dict[Spin | StrSpin, DosSummaryData]],
+            ElementType,
+            dict[Literal["s", "p", "d", "f", "total"], dict[SpinType, DosSummaryData]],
         ]
         | None
     ) = Field(
@@ -211,13 +209,14 @@ class DosData(BaseModel):
     )
 
     orbital: (
-        dict[OrbitalType | StrOrbital, dict[Spin | StrSpin, DosSummaryData]] | None
+        dict[Literal["s", "p", "d", "f", "total"], dict[SpinType, DosSummaryData]]
+        | None
     ) = Field(
         None,
         description="Band structure summary data using the Latimer-Munro path convention.",
     )
 
-    magnetic_ordering: Ordering | None = Field(
+    magnetic_ordering: OrderingType | None = Field(
         None, description="Magnetic ordering of the calculation."
     )
 
@@ -361,7 +360,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
                 spin_polarization = None
 
-                dos_data["orbital"][orbital][spin] = DosSummaryData(  # type: ignore[index]
+                dos_data["orbital"][str(orbital)][spin] = DosSummaryData(  # type: ignore[index]
                     task_id=dos_task,
                     band_gap=band_gap,
                     cbm=cbm,
@@ -388,7 +387,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
                     spin_polarization = None
 
-                    dos_data["elemental"][ele][orbital][spin] = DosSummaryData(  # type: ignore[index]
+                    dos_data["elemental"][ele][str(orbital)][spin] = DosSummaryData(  # type: ignore[index]
                         task_id=dos_task,
                         band_gap=band_gap,
                         cbm=cbm,
@@ -535,7 +534,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                     new_origin_task_id = origin["task_id"]
 
         else:
-            summary_task = dos_entry.model_dump()["total"][Spin.up]["task_id"]
+            summary_task = dos_entry.model_dump()["total"][str(Spin.up)]["task_id"]
             summary_band_gap = dos_gap
             summary_cbm = dos_cbm
             summary_vbm = dos_vbm

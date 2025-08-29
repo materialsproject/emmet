@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from monty.json import MontyDecoder
 
-from emmet.core.utils import ValueEnum, utcnow
+from emmet.core.utils import utcnow
 
 
 def convert_datetime(cls, v):
@@ -26,12 +26,3 @@ def convert_datetime(cls, v):
     if not v.tzinfo:
         v = v.replace(tzinfo=timezone.utc)
     return v
-
-
-class Status(ValueEnum):
-    """
-    State of a calculation/analysis.
-    """
-
-    SUCCESS = "successful"
-    FAILED = "failed"

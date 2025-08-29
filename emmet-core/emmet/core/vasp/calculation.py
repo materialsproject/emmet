@@ -33,17 +33,16 @@ from typing_extensions import NotRequired, TypedDict
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
-from emmet.core.typing import LatticeType, StructureType
-from emmet.core.utils import ValueEnum, jsanitize, type_override
-from emmet.core.vasp.calc_types import (
-    CalcType,
-    RunType,
-    TaskType,
-    calc_type,
-    run_type,
-    task_type,
+from emmet.core.typing import (
+    CalcTypeAlias,
+    LatticeType,
+    RunTypeAlias,
+    StructureType,
+    TaskTypeAlias,
 )
-from emmet.core.vasp.task_valid import TaskState
+from emmet.core.utils import ValueEnum, jsanitize, type_override
+from emmet.core.vasp.calc_types import calc_type, run_type, task_type
+from emmet.core.vasp.task_valid import TaskState, TaskStateType
 
 if ARROW_COMPATIBLE:
     from emmet.core.serialization_adapters.kpoints_adapter import KpointsTypeVar
@@ -930,7 +929,7 @@ class Calculation(CalculationBaseModel):
     vasp_version: str | None = Field(
         None, description="VASP version used to perform the calculation"
     )
-    has_vasp_completed: TaskState | None = Field(
+    has_vasp_completed: TaskStateType | None = Field(
         None, description="Whether VASP completed the calculation successfully"
     )
     input: CalculationInput | None = Field(
@@ -952,13 +951,13 @@ class Calculation(CalculationBaseModel):
     )
     bader: dict | None = Field(None, description="Output from bader charge analysis")
     ddec6: dict | None = Field(None, description="Output from DDEC6 charge analysis")
-    run_type: RunType | None = Field(
+    run_type: RunTypeAlias | None = Field(
         None, description="Calculation run type (e.g., HF, HSE06, PBE)"
     )
-    task_type: TaskType | None = Field(
+    task_type: TaskTypeAlias | None = Field(
         None, description="Calculation task type (e.g., Structure Optimization)."
     )
-    calc_type: CalcType | None = Field(
+    calc_type: CalcTypeAlias | None = Field(
         None, description="Return calculation type (run type + task_type)."
     )
 

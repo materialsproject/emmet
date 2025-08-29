@@ -1,5 +1,6 @@
-from typing import TypeVar
+from typing import Annotated, TypeVar
 
+from pydantic import BeforeValidator, WrapSerializer
 from pymatgen.analysis.diffraction.xrd import DiffractionPattern
 from typing_extensions import TypedDict
 
@@ -24,3 +25,13 @@ TypedDiffractionPatternDict = TypedDict(
 DiffractionPatternTypeVar = TypeVar(
     "DiffractionPatternTypeVar", DiffractionPattern, TypedDiffractionPatternDict
 )
+
+AnnotatedDiffractionPattern = Annotated[
+    DiffractionPatternTypeVar,
+    BeforeValidator(
+        lambda x: DiffractionPattern.from_dict(x) if isinstance(x, dict) else x
+    ),
+    WrapSerializer(
+        lambda x, nxt, info: x.as_dict(), return_type=TypedDiffractionPatternDict
+    ),
+]

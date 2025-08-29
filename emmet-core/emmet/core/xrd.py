@@ -1,14 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated, TypeAlias
 
 import numpy as np
-from pydantic import Field, model_validator
-from pymatgen.analysis.diffraction.xrd import (
-    WAVELENGTHS,
-    DiffractionPattern,
-    XRDCalculator,
-)
+from pydantic import BeforeValidator, Field, WrapSerializer, model_validator
+from pymatgen.analysis.diffraction.xrd import WAVELENGTHS, XRDCalculator
 from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
 
@@ -18,17 +14,11 @@ from emmet.core.utils import ValueEnum
 if TYPE_CHECKING:
     from emmet.core.mpid import MPID, AlphaID
 
-from emmet.core import ARROW_COMPATIBLE
 from emmet.core.mpid import MPID
-
-if ARROW_COMPATIBLE:
-    from emmet.core.serialization_adapters.diffraction_pattern_adapter import (
-        DiffractionPatternTypeVar,
-    )
-
-DiffractionPatternType = (
-    DiffractionPatternTypeVar if ARROW_COMPATIBLE else DiffractionPattern  # type: ignore[valid-type]
+from emmet.core.serialization_adapters.diffraction_pattern_adapter import (
+    AnnotatedDiffractionPattern,
 )
+from emmet.core.typing import ElementType
 
 
 class Edge(ValueEnum):
@@ -38,6 +28,15 @@ class Edge(ValueEnum):
     K_Beta = "Kb"
     K_Beta1 = "Kb1"
     K_Beta2 = "Kb2"
+
+
+EdgeType: TypeAlias = Annotated[
+    Edge,
+    BeforeValidator(lambda x: Edge(x) if isinstance(x, str) else x),
+    WrapSerializer(lambda x, nxt, info: x.value, return_type=str),
+]
+
+DiffractionPatternType: TypeAlias = AnnotatedDiffractionPattern
 
 
 class XRDDoc(SpectrumDoc):
@@ -51,10 +50,10 @@ class XRDDoc(SpectrumDoc):
     min_two_theta: float
     max_two_theta: float
     wavelength: float = Field(..., description="Wavelength for the diffraction source.")
-    target: Element | None = Field(
+    target: ElementType | None = Field(
         None, description="Target element for the diffraction source."
     )
-    edge: Edge | None = Field(
+    edge: EdgeType | None = Field(
         None, description="Atomic edge for the diffraction source."
     )
 

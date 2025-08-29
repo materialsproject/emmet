@@ -5,9 +5,16 @@ from collections import defaultdict
 from collections.abc import Callable
 from datetime import datetime
 from enum import Enum, auto
-from typing import TypeAlias
+from typing import Annotated, TypeAlias
 
-from pydantic import BaseModel, Field, field_serializer, field_validator
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    Field,
+    WrapSerializer,
+    field_serializer,
+    field_validator,
+)
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
@@ -19,6 +26,7 @@ from emmet.core.mpid import MPID, AlphaID
 from emmet.core.serialization_adapters.computed_entries_adapter import (
     AnnotatedComputedStructureEntry,
 )
+from emmet.core.typing import RunTypeAlias
 from emmet.core.utils import ValueEnum, jsanitize, type_override, utcnow
 from emmet.core.vasp.calc_types.enums import RunType
 
@@ -104,7 +112,14 @@ class ThermoType(ValueEnum):
     UNKNOWN = "UNKNOWN"
 
 
-@type_override({"thermo_type": ThermoType})
+ThermoTypeAlias: TypeAlias = Annotated[
+    ThermoType,
+    BeforeValidator(lambda x: ThermoType(x) if isinstance(x, str) else x),
+    WrapSerializer(lambda x, nxt, info: x.value, return_type=str),
+]
+
+
+@type_override({"thermo_type": ThermoTypeAlias})
 class ThermoDoc(PropertyDoc):
     """
     A thermo entry document
@@ -112,7 +127,7 @@ class ThermoDoc(PropertyDoc):
 
     property_name: str = "thermo"
 
-    thermo_type: ThermoType | RunType = Field(
+    thermo_type: ThermoTypeAlias | RunTypeAlias = Field(
         ...,
         description="Functional types of calculations involved in the energy mixing scheme.",
     )

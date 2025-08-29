@@ -1,5 +1,6 @@
-from typing import TypeVar
+from typing import Annotated, TypeVar
 
+from pydantic import BeforeValidator, WrapSerializer
 from pymatgen.core import Lattice
 from typing_extensions import NotRequired, TypedDict
 
@@ -9,7 +10,7 @@ MSONableTypedLatticeDict = TypedDict(
         "@module": str,
         "@class": str,
         "matrix": list[list[float]],
-        "pbc": list[bool],
+        "pbc": tuple[bool, bool, bool],
         "a": float,
         "b": float,
         "c": float,
@@ -34,3 +35,11 @@ class TypedLatticeDict(TypedDict):
 
 
 LatticeTypeVar = TypeVar("LatticeTypeVar", Lattice, MSONableTypedLatticeDict)
+
+AnnotatedLattice = Annotated[
+    LatticeTypeVar,
+    BeforeValidator(lambda x: Lattice.from_dict(x) if isinstance(x, dict) else x),
+    WrapSerializer(
+        lambda x, nxt, info: x.as_dict(), return_type=MSONableTypedLatticeDict
+    ),
+]

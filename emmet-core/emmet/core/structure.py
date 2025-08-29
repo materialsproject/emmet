@@ -6,13 +6,12 @@ from typing import TYPE_CHECKING, TypeVar
 
 from pydantic import BaseModel, Field, field_validator
 from pymatgen.core.composition import Composition
-from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Molecule, Structure
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.base import ContextModel
 from emmet.core.symmetry import PointGroupData, SymmetryData
-from emmet.core.typing import CompositionType
+from emmet.core.typing import CompositionType, ElementType
 from emmet.core.utils import get_graph_hash
 
 if TYPE_CHECKING:
@@ -34,7 +33,7 @@ class StructureMetadata(ContextModel):
     nsites: int | None = Field(
         None, description="Total number of sites in the structure."
     )
-    elements: list[Element] | None = Field(
+    elements: list[ElementType] | None = Field(
         None, description="List of elements in the material."
     )
     nelements: int | None = Field(None, description="Number of elements.")
@@ -182,7 +181,7 @@ class MoleculeMetadata(BaseModel):
     natoms: int | None = Field(
         None, description="Total number of atoms in the molecule"
     )
-    elements: list[Element] | None = Field(
+    elements: list[ElementType] | None = Field(
         None, description="List of elements in the molecule"
     )
     nelements: int | None = Field(None, title="Number of Elements")
