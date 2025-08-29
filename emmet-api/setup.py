@@ -30,6 +30,7 @@ setup(
         "test": [
             "pre-commit",
             "pytest",
+            "pytest-asyncio",
             "pytest-cov",
             "pycodestyle",
             "pydocstyle",
