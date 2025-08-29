@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 from fastapi import APIRouter, FastAPI, Request, Response
-from monty.json import MontyDecoder
 from pydantic import BaseModel
 from starlette.responses import RedirectResponse
 
@@ -11,7 +10,6 @@ from emmet.api.models import Response as ResponseModel
 from emmet.api.query_operator import PaginationQuery, QueryOperator, SparseFieldsQuery
 from emmet.api.resource.utils import CollectionWithKey
 from emmet.api.utils import STORE_PARAMS
-from emmet.core.utils import dynamic_import
 
 
 class HintScheme(ABC):
