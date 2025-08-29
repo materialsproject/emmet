@@ -10,7 +10,7 @@ from starlette.responses import RedirectResponse
 from emmet.api.models import Response as ResponseModel
 from emmet.api.query_operator import PaginationQuery, QueryOperator, SparseFieldsQuery
 from emmet.api.resource.utils import CollectionWithKey
-from emmet.api.utils import STORE_PARAMS, api_sanitize
+from emmet.api.utils import STORE_PARAMS
 from emmet.core.utils import dynamic_import
 
 
@@ -121,21 +121,6 @@ class Resource(ABC):
         app = FastAPI()
         app.include_router(self.router, prefix="")
         uvicorn.run(app)
-
-    def as_dict(self) -> dict:
-        """
-        Special as_dict implemented to convert pydantic models into strings.
-        """
-        d = super().as_dict()  # Ensures sub-classes serialize correctly
-        d["model"] = f"{self.model.__module__}.{self.model.__name__}"
-        return d
-
-    @classmethod
-    def from_dict(cls, d: dict):
-        if isinstance(d["model"], str):
-            d["model"] = dynamic_import(d["model"])
-        d = {k: MontyDecoder().process_decoded(v) for k, v in d.items()}
-        return cls(**d)
 
 
 class CollectionResource(Resource):

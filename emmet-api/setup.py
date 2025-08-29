@@ -34,6 +34,7 @@ setup(
             "pycodestyle",
             "pydocstyle",
             "flake8",
+            "mongomock",
             "mypy",
             "mypy-extensions",
             "types-setuptools",
