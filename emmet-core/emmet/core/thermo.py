@@ -2,9 +2,7 @@
 
 import json
 from collections import defaultdict
-from collections.abc import Callable
 from datetime import datetime
-from enum import Enum, auto
 from typing import Annotated, TypeAlias
 
 from pydantic import (
@@ -26,63 +24,13 @@ from emmet.core.mpid import MPID, AlphaID
 from emmet.core.serialization_adapters.computed_entries_adapter import (
     AnnotatedComputedStructureEntry,
 )
+from emmet.core.serialization_adapters.phase_diagram_adapter import (
+    PhaseDiagramType,
+    entries_energy_adjustments_serde,
+)
 from emmet.core.typing import RunTypeAlias
 from emmet.core.utils import ValueEnum, jsanitize, type_override, utcnow
 from emmet.core.vasp.calc_types.enums import RunType
-
-if ARROW_COMPATIBLE:
-    from emmet.core.serialization_adapters.phase_diagram_adapter import (
-        PhaseDiagramTypeVar,
-    )
-
-PhaseDiagramType: TypeAlias = (
-    PhaseDiagramTypeVar if ARROW_COMPATIBLE else PhaseDiagram  # type: ignore[valid-type]
-)
-
-
-class Mode(Enum):
-    SHRED = auto()
-    STITCH = auto()
-
-
-def entries_list_serde(entries_list: list[dict], serde_fn: Callable):
-    for entry in entries_list:
-        entry["energy_adjustments"] = serde_fn(entry["energy_adjustments"])
-
-
-def entries_energy_adjustments_serde(d: dict, serde_fn: Callable):
-    entries_list_serde(d.values(), serde_fn)
-
-
-def phase_diagram_serde(d: dict, mode: Mode, serde_fn: Callable):
-    entries_list_serde(d["all_entries"], serde_fn)
-    entries_list_serde(d["computed_data"]["all_entries"], serde_fn)
-    entries_list_serde(d["computed_data"]["qhull_entries"], serde_fn)
-
-    match mode:
-        case Mode.SHRED:
-            el_ref_pairs = d["computed_data"].pop("el_refs")
-
-            elements = []
-            el_refs_entries = []
-            for element, entry in el_ref_pairs:
-                elements.append(element)
-                el_refs_entries.append(entry)
-
-            entries_list_serde(el_refs_entries, serde_fn)
-
-            d["computed_data"]["el_refs_elements"] = elements
-            d["computed_data"]["el_refs_entries"] = el_refs_entries
-
-        case Mode.STITCH:
-            elements = d["computed_data"].pop("el_refs_elements")
-            el_refs_entries = d["computed_data"].pop("el_refs_entries")
-
-            entries_list_serde(el_refs_entries, serde_fn)
-
-            d["computed_data"]["el_refs"] = [
-                (i, j) for i, j in zip(elements, el_refs_entries)
-            ]
 
 
 class DecompositionProduct(BaseModel):
@@ -395,6 +343,7 @@ class ThermoDoc(PropertyDoc):
         return new_pd
 
 
+@type_override({"thermo_type": ThermoTypeAlias})
 class PhaseDiagramDoc(ContextModel):
     """
     A phase diagram document
@@ -412,7 +361,7 @@ class PhaseDiagramDoc(ContextModel):
         description="Dash-delimited string of elements in the material",
     )
 
-    thermo_type: ThermoType | RunType = Field(
+    thermo_type: ThermoTypeAlias | RunTypeAlias = Field(
         ...,
         description="Functional types of calculations involved in the energy mixing scheme.",
     )
@@ -426,31 +375,3 @@ class PhaseDiagramDoc(ContextModel):
         description="Timestamp for the most recent calculation update for this property",
         default_factory=utcnow,
     )
-
-    @field_serializer("phase_diagram", mode="wrap")
-    def phase_diagram_serializer(self, phase_diagram, default_serializer, info):
-        default_serialized_object = default_serializer(phase_diagram, info)
-
-        format = info.context.get("format") if info.context else "standard"
-        if format == "arrow":
-            arrow_compat_object = jsanitize(default_serialized_object, allow_bson=True)
-            phase_diagram_serde(
-                arrow_compat_object, mode=Mode.SHRED, serde_fn=json.dumps
-            )
-            return arrow_compat_object
-
-        return default_serialized_object
-
-    @field_validator("phase_diagram", mode="before")
-    def phase_diagram_deserializer(cls, phase_diagram):
-        if ARROW_COMPATIBLE:
-            if isinstance(phase_diagram, dict):
-                if all(
-                    key in phase_diagram["computed_data"]
-                    for key in ["el_refs_elements", "el_refs_entries"]
-                ):
-                    phase_diagram_serde(
-                        phase_diagram, mode=Mode.STITCH, serde_fn=json.loads
-                    )
-
-        return phase_diagram
