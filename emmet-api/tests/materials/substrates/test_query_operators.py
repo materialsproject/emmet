@@ -10,7 +10,9 @@ from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_substrate_structure_operator():
     op = SubstrateStructureQuery()
 
@@ -27,7 +29,9 @@ def test_substrate_structure_operator():
         ) == {"criteria": {"film_orient": "0 1 1", "orient": "1 0 1"}}
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_energy_area_operator():
     op = EnergyAreaQuery()
 

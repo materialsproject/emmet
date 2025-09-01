@@ -5,7 +5,9 @@ from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_chgcar_test_id_query():
     op = ChgcarTaskIDQuery()
 

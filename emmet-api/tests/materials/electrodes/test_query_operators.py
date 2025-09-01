@@ -15,7 +15,9 @@ from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_electrode_formula_query():
     op = ElectrodeFormulaQuery()
 
@@ -41,7 +43,9 @@ def test_electrode_formula_query():
         }
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_electrodes_chemsys_query():
     op = ElectrodesChemsysQuery()
     assert op.query("Si-O") == {
@@ -63,7 +67,9 @@ def test_electrodes_chemsys_query():
         }
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_electrodes_elements_query():
     eles = ["Si", "O"]
     neles = ["N", "P"]
@@ -93,7 +99,9 @@ def test_electrodes_elements_query():
         }
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_voltage_step_query():
     op = VoltageStepQuery()
 
@@ -163,7 +171,9 @@ def test_voltage_step_query():
         assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_insertion_voltage_step_query():
     op = InsertionVoltageStepQuery()
 
@@ -193,7 +203,9 @@ def test_insertion_voltage_step_query():
         assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_insertion_electrode_query():
     op = WorkingIonQuery()
 
@@ -213,7 +225,9 @@ def test_insertion_electrode_query():
         assert q == {"criteria": {"working_ion": "Li"}}
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_electrodes_multi_material_id_query():
     op = ElectrodeMultiMaterialIDQuery()
     assert op.query(material_ids="mp-149, mp-13") == {
@@ -228,7 +242,9 @@ def test_electrodes_multi_material_id_query():
         }
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_multi_battery_id_query():
     op = MultiBatteryIDQuery()
     assert op.query(battery_ids="mp-149_Ca, mp-13_Li") == {

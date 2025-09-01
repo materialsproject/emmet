@@ -9,7 +9,9 @@ from emmet.core.xas import Edge, Type
 from pymatgen.core.periodic_table import Element
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_xas_operator():
     op = XASQuery()
 
@@ -34,7 +36,9 @@ def test_xas_operator():
         }
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_xas_task_id_operator():
     op = XASIDQuery()
 

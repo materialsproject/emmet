@@ -22,7 +22,9 @@ from monty.serialization import loadfn, dumpfn
 from pymatgen.core.structure import Molecule
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_formula_query():
     op = FormulaQuery()
     assert op.query("C1 Li2 O3") == {"criteria": {"formula_alphabetical": "C1 Li2 O3"}}
@@ -35,7 +37,9 @@ def test_formula_query():
         }
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_chemsys_query():
     op = ChemsysQuery()
     assert op.query("O-C") == {"criteria": {"chemsys": "C-O"}}
@@ -50,7 +54,9 @@ def test_chemsys_query():
         assert new_op.query("O-C") == {"criteria": {"chemsys": "C-O"}}
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_composition_query():
     eles = ["C", "O"]
     neles = ["N", "P"]
@@ -80,7 +86,9 @@ def test_composition_query():
         }
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_charge_spin_query():
     op = ChargeSpinQuery()
     assert op.query(charge=1, spin_multiplicity=2) == {
@@ -95,7 +103,9 @@ def test_charge_spin_query():
         }
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_deprecation_query():
     op = DeprecationQuery()
     assert op.query(True) == {"criteria": {"deprecated": True}}
@@ -106,7 +116,9 @@ def test_deprecation_query():
         assert new_op.query(True) == {"criteria": {"deprecated": True}}
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_multi_task_id_query():
     op = MultiTaskIDQuery()
     assert op.query(task_ids="mpcule-149, mpcule-13") == {
@@ -121,7 +133,9 @@ def test_multi_task_id_query():
         }
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_multi_mpculeid_query():
     op = MultiMPculeIDQuery()
     assert op.query(
@@ -207,7 +221,9 @@ def test_find_molecule_query():
     assert pp["rmsd"] < 1e-15
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_calc_method_query():
     op = CalcMethodQuery()
 
@@ -239,7 +255,9 @@ def test_calc_method_query():
         }
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_hash_query():
     op = HashQuery()
 
@@ -267,7 +285,9 @@ def test_hash_query():
         }
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_string_rep_query():
     op = StringRepQuery()
 

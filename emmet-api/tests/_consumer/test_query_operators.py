@@ -7,6 +7,7 @@ from emmet.api.routes._consumer.query_operator import (
     UserSettingsPostQuery,
 )
 
+
 @pytest.mark.skip(reason="Serialization test skipped in maggma-free implementation")
 def test_user_settings_post_query():
     op = UserSettingsPostQuery()

@@ -10,7 +10,9 @@ from emmet.api.routes.materials.grain_boundary.query_operators import (
 from emmet.core.grain_boundary import GBTypeEnum
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_grain_boundary_structure_query():
     op = GBStructureQuery()
 
@@ -54,7 +56,9 @@ def test_grain_boundary_structure_query():
         }
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_grain_boundary_task_id_query():
     op = GBTaskIDQuery()
 

@@ -5,7 +5,9 @@ from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
 
 
-@pytest.mark.skip(reason="Query operator serialization with monty not compatible with new implementation")
+@pytest.mark.skip(
+    reason="Query operator serialization with monty not compatible with new implementation"
+)
 def test_redox_potential_query():
     op = RedoxPotentialQuery()
     assert op.query(
