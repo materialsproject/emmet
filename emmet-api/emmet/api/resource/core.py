@@ -68,6 +68,10 @@ class Resource(ABC):
             self.response_model = ResponseModel[model]  # type: ignore
 
         if not hasattr(self, "query_operators"):
+            default_fields = ["last_updated"]
+            if hasattr(self, "collection_key"):
+                default_fields.insert(0, self.collection_key)
+
             self.query_operators = (
                 query_operators
                 if query_operators is not None
@@ -75,7 +79,7 @@ class Resource(ABC):
                     PaginationQuery(),
                     SparseFieldsQuery(
                         model,
-                        default_fields=[self.collection_key, "last_updated"],
+                        default_fields=default_fields,
                     ),
                 ]
             )
