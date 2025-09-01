@@ -1,11 +1,8 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 import pytest
 from fastapi import HTTPException
-from monty.serialization import dumpfn, loadfn
-from monty.tempfile import ScratchDir
 from pydantic import BaseModel, Field
 
 from emmet.api.query_operator import (
@@ -19,9 +16,9 @@ from emmet.api.query_operator.submission import SubmissionQuery
 
 class Owner(BaseModel):
     name: str = Field(..., title="Owner's name")
-    age: int = Field(None, title="Owne'r Age")
+    age: int = Field(None, title="Owner's Age")
     weight: float = Field(None, title="Owner's weight")
-    last_updated: Optional[datetime] = Field(
+    last_updated: datetime | None = Field(
         None, title="Last updated date for this record"
     )
 
@@ -52,40 +49,11 @@ def test_pagination_functionality():
         op.query(_page=-1, _per_page=100, _skip=None, _limit=None)
 
 
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
-def test_pagination_serialization():
-    op = PaginationQuery()
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(_skip=10, _limit=20, _page=None, _per_page=None) == {
-            "limit": 20,
-            "skip": 10,
-        }
-
-
 def test_sparse_query_functionality():
     op = SparseFieldsQuery(model=Owner)
 
     assert op.meta()["default_fields"] == ["name", "age", "weight", "last_updated"]
     assert op.query() == {"properties": ["name", "age", "weight", "last_updated"]}
-
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
-def test_sparse_query_serialization():
-    op = SparseFieldsQuery(model=Owner)
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query() == {
-            "properties": ["name", "age", "weight", "last_updated"]
-        }
 
 
 def test_numeric_query_functionality():
@@ -100,18 +68,6 @@ def test_numeric_query_functionality():
     }
 
 
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
-def test_numeric_query_serialization():
-    op = NumericQuery(model=Owner)
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(age_max=10) == {"criteria": {"age": {"$lte": 10}}}
-
-
 def test_sort_query_functionality():
     op = SortQuery()
     assert op.query(_sort_fields="volume,-density") == {
@@ -123,20 +79,6 @@ def test_sort_query_fail():
     op = SortQuery(max_num=1)
     with pytest.raises(HTTPException):
         op.query(_sort_fields="volume,-density")
-
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
-def test_sort_serialization():
-    op = SortQuery()
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(_sort_fields="volume,-density") == {
-            "sort": {"volume": 1, "density": -1}
-        }
 
 
 @pytest.fixture()

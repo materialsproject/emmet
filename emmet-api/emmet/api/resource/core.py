@@ -1,13 +1,12 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Optional
 
 from fastapi import APIRouter, FastAPI, Request, Response
 from pydantic import BaseModel
 from starlette.responses import RedirectResponse
 
 from emmet.api.models import Response as ResponseModel
-from emmet.api.query_operator import PaginationQuery, QueryOperator, SparseFieldsQuery
+from emmet.api.query_operator import QueryOperator
 from emmet.api.resource.utils import CollectionWithKey
 from emmet.api.utils import STORE_PARAMS
 
@@ -54,7 +53,7 @@ class Resource(ABC):
     def __init__(
         self,
         model: type[BaseModel],
-        query_operators: Optional[list[QueryOperator]] = None,
+        query_operators: list[QueryOperator] | None = None,
     ):
         """
         Args:
@@ -69,15 +68,7 @@ class Resource(ABC):
 
         if not hasattr(self, "query_operators"):
             self.query_operators = (
-                query_operators
-                if query_operators is not None
-                else [
-                    PaginationQuery(),
-                    SparseFieldsQuery(
-                        model,
-                        default_fields=[self.collection_key, "last_updated"],
-                    ),
-                ]
+                query_operators if query_operators is not None else []
             )
 
         self.model = model
@@ -130,12 +121,12 @@ class CollectionResource(Resource):
         self,
         store: CollectionWithKey,
         *args,
-        header_processor: Optional[HeaderProcessor] = None,
-        include_in_schema: Optional[bool] = True,
-        key_fields: Optional[list[str]] = None,
-        sub_path: Optional[str] = "/",
-        tags: Optional[list[str]] = None,
-        timeout: Optional[int] = None,
+        header_processor: HeaderProcessor | None = None,
+        include_in_schema: bool = True,
+        key_fields: list[str] | None = None,
+        sub_path: str | None = "/",
+        tags: list[str] | None = None,
+        timeout: int | None = None,
         **kwargs,
     ):
         """

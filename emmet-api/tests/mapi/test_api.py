@@ -53,32 +53,6 @@ pets = [
 ]
 
 
-@pytest.mark.skip(
-    reason="Legacy as_dict serialization test not applicable to new implementation"
-)
-async def test_msonable(mock_database):
-    owner_collection = mock_database["owners"]
-    owner_docs = [owner.model_dump() for owner in owners]
-    await owner_collection.insert_many(owner_docs)
-    owner_store = CollectionWithKey(collection=owner_collection, key="name")
-
-    pet_collection = mock_database["pets"]
-    pet_docs = [pet.model_dump() for pet in pets]
-    await pet_collection.insert_many(pet_docs)
-    pet_store = CollectionWithKey(collection=pet_collection, key="name")
-
-    owner_endpoint = ReadOnlyResource(owner_store, Owner)
-    pet_endpoint = ReadOnlyResource(pet_store, Pet)
-
-    manager = API({"owners": owner_endpoint, "pets": pet_endpoint})
-
-    # Test that the API has the expected structure
-    assert hasattr(manager, "app")
-    assert hasattr(manager, "resources")
-    assert "owners" in manager.resources
-    assert "pets" in manager.resources
-
-
 async def search_helper(
     payload, base: str = "/?", debug=True, mock_database=None
 ) -> tuple[Response, Any]:

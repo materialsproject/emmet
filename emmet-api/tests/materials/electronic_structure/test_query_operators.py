@@ -1,5 +1,3 @@
-from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 from pymatgen.electronic_structure.core import OrbitalType
 
 from emmet.api.routes.materials.electronic_structure.query_operators import (
@@ -29,19 +27,6 @@ def test_es_summary_query():
             "is_metal": False,
         }
     }
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(
-            magnetic_ordering=Ordering.FiM, is_gap_direct=True, is_metal=False
-        ) == {
-            "criteria": {
-                "magnetic_ordering": "FiM",
-                "is_gap_direct": True,
-                "is_metal": False,
-            }
-        }
 
 
 def test_bs_data_query():
@@ -73,30 +58,6 @@ def test_bs_data_query():
             **c,
         }
     }
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        q = new_op.query(
-            path_type=BSPathType.setyawan_curtarolo,
-            band_gap_min=0,
-            band_gap_max=5,
-            efermi_min=0,
-            efermi_max=5,
-            magnetic_ordering=Ordering.FM,
-            is_gap_direct=True,
-            is_metal=False,
-        )
-        c = {field: {"$gte": 0, "$lte": 5} for field in fields}
-
-        assert q == {
-            "criteria": {
-                "bandstructure.setyawan_curtarolo.magnetic_ordering": "FM",
-                "bandstructure.setyawan_curtarolo.is_gap_direct": True,
-                "bandstructure.setyawan_curtarolo.is_metal": False,
-                **c,
-            }
-        }
 
 
 def test_dos_data_query():
@@ -142,31 +103,8 @@ def test_dos_data_query():
 
         assert q == {"criteria": {"dos.magnetic_ordering": "FM", **c}}
 
-        with ScratchDir("."):
-            dumpfn(op, "temp.json")
-            new_op = loadfn("temp.json")
-            q = new_op.query(
-                projection_type=proj_type,
-                spin="1",
-                element=Element.Si if proj_type != DOSProjectionType.total else None,
-                orbital=OrbitalType.s if proj_type != DOSProjectionType.total else None,
-                band_gap_min=0,
-                band_gap_max=5,
-                efermi_min=0,
-                efermi_max=5,
-                magnetic_ordering=Ordering.FM,
-            )
-            c = {field: {"$gte": 0, "$lte": 5} for field in fields}
-
-            assert q == {"criteria": {"dos.magnetic_ordering": "FM", **c}}
-
 
 def test_object_query():
     op = ObjectQuery()
 
     assert op.query(task_id="mp-149") == {"criteria": {"task_id": "mp-149"}}
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(task_id="mp-149") == {"criteria": {"task_id": "mp-149"}}

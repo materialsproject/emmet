@@ -1,5 +1,5 @@
 from inspect import signature
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import HTTPException, Request
 from pymongo.errors import NetworkTimeout, PyMongoError
@@ -21,7 +21,7 @@ class PostOnlyResource(CollectionResource):
     def __init__(
         self,
         *args,
-        query: Optional[dict] = None,
+        query: dict | None = None,
         **kwargs,
     ):
         """
@@ -72,10 +72,10 @@ class PostOnlyResource(CollectionResource):
 
                 cursor = await self.collection.aggregate(
                     pipeline,
-                    **{field: query[field] for field in query if field in ["hint"]},
+                    hint=query.get("hint"),
                     maxTimeMS=self.timeout,
                 )
-                data = await cursor.to_list(length=None)
+                data = await cursor.to_list()
             except (NetworkTimeout, PyMongoError) as e:
                 if e.timeout:
                     raise HTTPException(

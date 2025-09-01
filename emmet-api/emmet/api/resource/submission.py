@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from inspect import signature
-from typing import Any, Optional
+from typing import Any
 from uuid import uuid4
 
 from fastapi import HTTPException, Path, Request
@@ -27,17 +27,17 @@ class SubmissionResource(CollectionResource):
     def __init__(
         self,
         *args,
-        calculate_submission_id: Optional[bool] = False,
-        default_state: Optional[Any] = None,
-        duplicate_fields_check: Optional[list[str]] = None,
-        enable_default_search: Optional[bool] = True,
+        calculate_submission_id: bool = False,
+        default_state: Any = None,
+        duplicate_fields_check: list[str] | None = None,
+        enable_default_search: bool = True,
         get_query_operators: list[QueryOperator],
-        patch_query_operators: Optional[list[QueryOperator]] = None,
+        patch_query_operators: list[QueryOperator] | None = None,
         post_query_operators: list[QueryOperator],
-        state_enum: Optional[Enum] = None,
-        get_sub_path: Optional[str] = "/",
-        patch_sub_path: Optional[str] = "/",
-        post_sub_path: Optional[str] = "/",
+        state_enum: Enum | None = None,
+        get_sub_path: str | None = "/",
+        patch_sub_path: str | None = "/",
+        post_sub_path: str | None = "/",
         **kwargs,
     ):
         """
@@ -207,7 +207,7 @@ class SubmissionResource(CollectionResource):
                 cursor = await self.collection.aggregate(
                     pipeline, hint=query.get("hint")
                 )
-                data = await cursor.to_list(length=None)
+                data = await cursor.to_list()
             except (NetworkTimeout, PyMongoError) as e:
                 if e.timeout:
                     raise HTTPException(

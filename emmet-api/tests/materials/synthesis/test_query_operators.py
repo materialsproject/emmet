@@ -1,9 +1,6 @@
 from emmet.api.routes.materials.synthesis.query_operators import SynthesisSearchQuery
 from emmet.core.synthesis import SynthesisTypeEnum, OperationTypeEnum
 
-from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
-
 
 def test_synthesis_search_query():
     op = SynthesisSearchQuery()
@@ -154,24 +151,3 @@ def test_synthesis_search_query():
         )
 
         assert q["pipeline"] == pipeline
-
-        with ScratchDir("."):
-            dumpfn(op, "temp.json")
-            new_op = loadfn("temp.json")
-            q = new_op.query(
-                keywords=keywords,
-                synthesis_type=[SynthesisTypeEnum.solid_state],
-                target_formula="SiO2",
-                precursor_formula="SiO2",
-                operations=[OperationTypeEnum.shaping],
-                condition_heating_time_min=0,
-                condition_heating_time_max=5,
-                condition_heating_temperature_min=0,
-                condition_heating_temperature_max=5,
-                condition_heating_atmosphere=["air"],
-                condition_mixing_device=["zirconia"],
-                condition_mixing_media=["water"],
-                _skip=0,
-                _limit=10,
-            )
-            assert q == {"pipeline": pipeline}

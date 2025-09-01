@@ -39,6 +39,12 @@ def charge_density_url_resource(s3_store):
             "requested_datetime",
             "expiry_datetime",
         ],
+        query_operators=[
+            PaginationQuery(),
+            SparseFieldsQuery(
+                ChgcarDataDoc, default_fields=["task_id", "last_updated", "fs_id"]
+            ),
+        ],
         tags=["Materials Charge Density"],
         sub_path="/charge_density/",
         enable_default_search=False,

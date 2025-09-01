@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 import uvicorn
 from fastapi import FastAPI
@@ -21,9 +20,9 @@ class API:
         title: str = "Generic API",
         version: str = "v0.0.0",
         debug: bool = False,
-        heartbeat_meta: Optional[dict] = None,
-        description: Optional[str] = None,
-        tags_meta: Optional[list[dict]] = None,
+        heartbeat_meta: dict | None = None,
+        description: str | None = None,
+        tags_meta: list[dict] | None = None,
     ):
         """
         Args:

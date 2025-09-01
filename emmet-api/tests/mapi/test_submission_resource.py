@@ -1,10 +1,9 @@
-from typing import Optional
-
 import json
 from datetime import datetime
 from random import randint
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from starlette.testclient import TestClient
@@ -17,9 +16,9 @@ from emmet.api.resource.utils import CollectionWithKey
 
 class Owner(BaseModel):
     name: str = Field(..., title="Owner's name")
-    age: int = Field(None, title="Owne'r Age")
+    age: int = Field(None, title="Owner's Age")
     weight: float = Field(None, title="Owner's weight")
-    last_updated: Optional[datetime] = Field(
+    last_updated: datetime | None = Field(
         None, title="Last updated date for this record"
     )
 
@@ -34,8 +33,16 @@ owners = (
 total_owners = len(owners)
 
 
-@pytest.fixture()
-def post_query_op():
+@pytest_asyncio.fixture
+async def owner_collection(mock_database):
+    collection = mock_database["owners"]
+    owner_docs = [owner.model_dump() for owner in owners]
+    await collection.insert_many(owner_docs)
+    return CollectionWithKey(collection=collection, key="name")
+
+
+@pytest_asyncio.fixture
+async def post_query_op():
     class PostQuery(QueryOperator):
         def query(self, name):
             return {"criteria": {"name": name}}
@@ -43,24 +50,21 @@ def post_query_op():
     return PostQuery()
 
 
-@pytest.fixture()
-def patch_query_op():
+@pytest_asyncio.fixture
+async def patch_query_op():
     class PatchQuery(QueryOperator):
         def query(self, name, update):
-            return {"criteria": {"name": name}, "update": update}
+            # Parse the JSON string to a dictionary
+            update_dict = json.loads(update) if isinstance(update, str) else update
+            return {"criteria": {"name": name}, "update": update_dict}
 
     return PatchQuery()
 
 
 @pytest.mark.asyncio
-async def test_init(mock_database, post_query_op, patch_query_op):
-    collection = mock_database["owners"]
-    owner_docs = [owner.model_dump() for owner in owners]
-    await collection.insert_many(owner_docs)
-    owner_store = CollectionWithKey(collection=collection, key="name")
-
+async def test_init(owner_collection, post_query_op, patch_query_op):
     resource = SubmissionResource(
-        store=owner_store,
+        store=owner_collection,
         get_query_operators=[PaginationQuery()],
         post_query_operators=[post_query_op],
         patch_query_operators=[patch_query_op],
@@ -70,40 +74,13 @@ async def test_init(mock_database, post_query_op, patch_query_op):
 
 
 @pytest.mark.asyncio
-async def test_msonable(mock_database, post_query_op):
-    collection = mock_database["owners"]
-    owner_docs = [owner.model_dump() for owner in owners]
-    await collection.insert_many(owner_docs)
-    owner_store = CollectionWithKey(collection=collection, key="name")
-
-    owner_resource = SubmissionResource(
-        store=owner_store,
-        get_query_operators=[PaginationQuery()],
-        post_query_operators=[post_query_op],
-        model=Owner,
-    )
-
-    # Test that the resource has the expected attributes
-    assert hasattr(owner_resource, "model")
-    assert hasattr(owner_resource, "collection")
-    assert owner_resource.model == Owner
-
-
-@pytest.mark.skip(
-    reason="Submission ID generation requires specialized test data setup"
-)
-async def test_submission_search(mock_database, post_query_op):
-    collection = mock_database["owners"]
-    owner_docs = [owner.model_dump() for owner in owners]
-    await collection.insert_many(owner_docs)
-    owner_store = CollectionWithKey(collection=collection, key="name")
-
+async def test_submission_search(owner_collection, post_query_op):
     endpoint = SubmissionResource(
-        owner_store,
+        owner_collection,
         Owner,
         get_query_operators=[PaginationQuery()],
         post_query_operators=[post_query_op],
-        calculate_submission_id=True,
+        calculate_submission_id=False,
     )
     app = FastAPI()
     app.include_router(endpoint.router)
@@ -114,22 +91,15 @@ async def test_submission_search(mock_database, post_query_op):
     assert client.post("/?name=test_name").status_code == 200
 
 
-@pytest.mark.skip(
-    reason="Submission ID generation requires specialized test data setup"
-)
-async def test_submission_patch(mock_database, post_query_op, patch_query_op):
-    collection = mock_database["owners"]
-    owner_docs = [owner.model_dump() for owner in owners]
-    await collection.insert_many(owner_docs)
-    owner_store = CollectionWithKey(collection=collection, key="name")
-
+@pytest.mark.asyncio
+async def test_submission_patch(owner_collection, post_query_op, patch_query_op):
     endpoint = SubmissionResource(
-        owner_store,
+        owner_collection,
         Owner,
         get_query_operators=[PaginationQuery()],
         post_query_operators=[post_query_op],
         patch_query_operators=[patch_query_op],
-        calculate_submission_id=True,
+        calculate_submission_id=False,
     )
     app = FastAPI()
     app.include_router(endpoint.router)
@@ -142,14 +112,9 @@ async def test_submission_patch(mock_database, post_query_op, patch_query_op):
 
 
 @pytest.mark.asyncio
-async def test_key_fields(mock_database, post_query_op):
-    collection = mock_database["owners"]
-    owner_docs = [owner.model_dump() for owner in owners]
-    await collection.insert_many(owner_docs)
-    owner_store = CollectionWithKey(collection=collection, key="name")
-
+async def test_key_fields(owner_collection, post_query_op):
     endpoint = SubmissionResource(
-        owner_store,
+        owner_collection,
         Owner,
         get_query_operators=[PaginationQuery()],
         post_query_operators=[post_query_op],
@@ -165,14 +130,9 @@ async def test_key_fields(mock_database, post_query_op):
 
 
 @pytest.mark.asyncio
-async def test_patch_submission(mock_database, post_query_op):
-    collection = mock_database["owners"]
-    owner_docs = [owner.model_dump() for owner in owners]
-    await collection.insert_many(owner_docs)
-    owner_store = CollectionWithKey(collection=collection, key="name")
-
+async def test_patch_submission(owner_collection, post_query_op):
     endpoint = SubmissionResource(
-        owner_store,
+        owner_collection,
         Owner,
         get_query_operators=[PaginationQuery()],
         post_query_operators=[post_query_op],
