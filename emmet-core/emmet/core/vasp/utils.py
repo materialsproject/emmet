@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-TASK_NAMES = {"precondition"}.union([f"relax{i+1}" for i in range(9)])
+TASK_NAMES = {"precondition"} | {f"relax{i+1}" for i in range(9)}
 
 
 class FileMetadata(BaseModel):
@@ -153,7 +153,7 @@ VASP_RAW_DATA_ORG = {
     "workflow": ["FW.json", "custodian.json", "transformations.json"],
 }
 
-REQUIRED_VASP_FILES = ["INCAR", "POSCAR", "POTCAR", "CONTCAR", "OUTCAR", "vasprun.xml"]
+REQUIRED_VASP_FILES = {"INCAR", "POSCAR", "POTCAR", "CONTCAR", "OUTCAR", "vasprun.xml"}
 
 _vasp_files = set()
 for v in VASP_RAW_DATA_ORG.values():
@@ -258,7 +258,7 @@ def recursive_discover_vasp_files(
     only_valid : bool = False (default)
         Whether to only include directories which have the required
         minimum number of input and output files for parsing.
-    max_depth : int or None (default)
+    max_depth : non-negative int or None (default)
         If an int, the maximum depth with which directories are scanned
         for VASP files. For example, if max_depth == 1, this would only
         search `target_dir` and any immediate sub-directories in `target_dir`.
@@ -269,6 +269,13 @@ def recursive_discover_vasp_files(
     """
 
     head_dir = Path(target_dir).resolve()
+
+    if max_depth and (max_depth < 0 or not isinstance(max_depth, int)):
+        raise ValueError(
+            "The maximum path depth should be a non-negative integer, "
+            "with zero indicating that only the current directory should "
+            "be searched."
+        )
 
     def _path_depth_check(tpath: PathLike) -> bool:
         if max_depth and (tp := Path(tpath).resolve()) != head_dir:

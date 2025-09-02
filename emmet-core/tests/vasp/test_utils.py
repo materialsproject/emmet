@@ -2,6 +2,7 @@
 
 from tempfile import TemporaryDirectory
 from pathlib import Path
+import pytest
 
 from emmet.core.vasp.utils import (
     recursive_discover_vasp_files,
@@ -85,16 +86,18 @@ def test_file_discovery():
             tmp_dir / "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001"
         )
 
+        for max_depth in (-1, 1.5):
+            with pytest.raises(ValueError, match="non-negative integer"):
+                _ = recursive_discover_vasp_files(tmp_dir, max_depth=max_depth)
+
     assert files_by_calc_suffix["relax1"]["contcar_file"].name == "CONTCAR.relax1"
     assert files_by_calc_suffix["relax1"]["vasprun_file"].name == "vasprun.xml.relax1"
     assert files_by_calc_suffix["relax1"]["outcar_file"].name == "OUTCAR.relax1"
-    assert set(
-        [b.name for b in files_by_calc_suffix["standard"]["volumetric_files"]]
-    ) == {
+    assert {b.name for b in files_by_calc_suffix["standard"]["volumetric_files"]} == {
         "AECCAR0.bz2",
         "LOCPOT.gz",
     }
-    assert set([b.name for b in files_by_calc_suffix["standard"]["elph_poscars"]]) == {
+    assert {b.name for b in files_by_calc_suffix["standard"]["elph_poscars"]} == {
         "POSCAR.T=300.gz",
         "POSCAR.T=1000.gz",
     }
@@ -105,9 +108,9 @@ def test_file_discovery():
     found_files = set()
     ref_files = set()
     for calc_dir, files in directory_structure.items():
-        ref_files.update([tmp_dir / calc_dir / file for file in files])
-    for calc_id, file_metas in vasp_files.items():
-        found_files.update([file_meta.path for file_meta in file_metas])
+        ref_files.update({tmp_dir / calc_dir / file for file in files})
+    for file_metas in vasp_files.values():
+        found_files.update({file_meta.path for file_meta in file_metas})
 
     assert found_files == ref_files
 
@@ -117,9 +120,5 @@ def test_file_discovery():
         "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001",
     )
     assert len(valid_vasp_files) == 2
-    found_valid_dirs = set()
-    for calc_loc in valid_vasp_files:
-        found_valid_dirs.update({calc_loc.path})
-    assert (
-        set([tmp_dir / valid_dir for valid_dir in valid_calc_dirs]) == found_valid_dirs
-    )
+    found_valid_dirs = {calc_loc.path for calc_loc in valid_vasp_files}
+    assert {tmp_dir / valid_dir for valid_dir in valid_calc_dirs} == found_valid_dirs
