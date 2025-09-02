@@ -10,21 +10,23 @@ from pydantic import Field, model_validator
 from pydantic.json_schema import SkipJsonSchema
 from pymatgen.core import Structure
 
+from emmet.core.base import EmmetBaseModel
 from emmet.core.common import convert_datetime
 from emmet.core.material import PropertyOrigin
-from emmet.core.mpid import AlphaID, MPID
+from emmet.core.mpid import MPID, AlphaID
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
 
 if TYPE_CHECKING:
     from typing import Any
+
     from typing_extensions import Self
 
     from emmet.core.mpid import MPID
 
 
-class PropertyDoc(StructureMetadata):
+class PropertyDoc(StructureMetadata, EmmetBaseModel):
     """
     Base model definition for any singular materials property.
 
