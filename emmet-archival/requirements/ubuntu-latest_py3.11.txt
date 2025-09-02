@@ -22,13 +22,13 @@ donfig==0.8.1.post1
     # via zarr
 emmet-core==0.84.9
     # via emmet-archival (pyproject.toml)
-fonttools==4.59.1
+fonttools==4.59.2
     # via matplotlib
 h5py==3.14.0
     # via emmet-archival (pyproject.toml)
 idna==3.10
     # via requests
-joblib==1.5.1
+joblib==1.5.2
     # via pymatgen
 kiwisolver==1.4.9
     # via matplotlib
@@ -61,7 +61,7 @@ numpy==2.3.2
     #   scipy
     #   spglib
     #   zarr
-orjson==3.11.2
+orjson==3.11.3
     # via pymatgen
 packaging==25.0
     # via

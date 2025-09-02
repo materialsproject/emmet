@@ -1,11 +1,9 @@
-from abc import ABCMeta, abstractmethod
-
-from monty.json import MSONable
+from abc import ABC, abstractmethod
 
 from emmet.api.utils import STORE_PARAMS
 
 
-class QueryOperator(MSONable, metaclass=ABCMeta):
+class QueryOperator(ABC):
     """
     Base Query Operator class for defining powerful query language
     in the Materials API.

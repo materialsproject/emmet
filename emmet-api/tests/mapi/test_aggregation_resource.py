@@ -8,7 +8,7 @@ from starlette.testclient import TestClient
 
 from emmet.api.query_operator.core import QueryOperator
 from emmet.api.resource import AggregationResource
-from maggma.stores import MemoryStore
+from emmet.api.resource.utils import CollectionWithKey
 
 
 class Owner(BaseModel):
@@ -28,15 +28,7 @@ owners = (
 total_owners = len(owners)
 
 
-@pytest.fixture()
-def owner_store():
-    store = MemoryStore("owners", key="name")
-    store.connect()
-    store.update([d.dict() for d in owners])
-    return store
-
-
-@pytest.fixture()
+@pytest.fixture
 def pipeline_query_op():
     class PipelineQuery(QueryOperator):
         def query(self):
@@ -49,27 +41,43 @@ def pipeline_query_op():
     return PipelineQuery()
 
 
-def test_init(owner_store, pipeline_query_op):
+@pytest.mark.asyncio
+async def test_init(mock_database, pipeline_query_op):
+    collection = mock_database["owners"]
+    owner_docs = [owner.model_dump() for owner in owners]
+    await collection.insert_many(owner_docs)
+    owner_store = CollectionWithKey(collection=collection, key="name")
+
     resource = AggregationResource(
         store=owner_store, pipeline_query_operator=pipeline_query_op, model=Owner
     )
     assert len(resource.router.routes) == 2
 
 
-def test_msonable(owner_store, pipeline_query_op):
+@pytest.mark.asyncio
+async def test_msonable(mock_database, pipeline_query_op):
+    collection = mock_database["owners"]
+    owner_docs = [owner.model_dump() for owner in owners]
+    await collection.insert_many(owner_docs)
+    owner_store = CollectionWithKey(collection=collection, key="name")
+
     owner_resource = AggregationResource(
         store=owner_store, pipeline_query_operator=pipeline_query_op, model=Owner
     )
-    endpoint_dict = owner_resource.as_dict()
-
-    for k in ["@class", "@module", "store", "model"]:
-        assert k in endpoint_dict
-
-    assert isinstance(endpoint_dict["model"], str)
-    assert endpoint_dict["model"] == "test_aggregation_resource.Owner"
+    # Test that the resource has the expected attributes
+    assert hasattr(owner_resource, "model")
+    assert hasattr(owner_resource, "collection")
+    assert hasattr(owner_resource, "pipeline_query_operator")
+    assert owner_resource.model == Owner
 
 
-def test_aggregation_search(owner_store, pipeline_query_op):
+@pytest.mark.asyncio
+async def test_aggregation_search(mock_database, pipeline_query_op):
+    collection = mock_database["owners"]
+    owner_docs = [owner.model_dump() for owner in owners]
+    await collection.insert_many(owner_docs)
+    owner_store = CollectionWithKey(collection=collection, key="name")
+
     endpoint = AggregationResource(
         owner_store, pipeline_query_operator=pipeline_query_op, model=Owner
     )

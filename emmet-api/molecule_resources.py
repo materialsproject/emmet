@@ -1,6 +1,7 @@
 import os
 from emmet.api.core.settings import MAPISettings
-from maggma.stores import MongoURIStore
+from pymongo import AsyncMongoClient
+from emmet.api.resource.utils import CollectionWithKey
 
 from emmet.api.routes.molecules.tasks.resources import (
     task_resource,
@@ -39,100 +40,25 @@ if db_uri:
     if len(db_uri.split("://", 1)) < 2:
         db_uri = "mongodb+srv://" + db_uri
 
-    task_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_molecules",
-        key="task_id",
-        collection_name="molecules_tasks",
-    )
+    mongo_client = AsyncMongoClient(db_uri)
+    db = mongo_client["mp_molecules"]
 
-    assoc_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_molecules",
-        key="molecule_id",
-        collection_name="molecules_assoc",
+    task_store = CollectionWithKey(db["molecules_tasks"], "task_id")
+    assoc_store = CollectionWithKey(db["molecules_assoc"], "molecule_id")
+    mol_store = CollectionWithKey(db["molecules_molecules"], "molecule_id")
+    charges_store = CollectionWithKey(db["molecules_charges"], "property_id")
+    spins_store = CollectionWithKey(db["molecules_spins"], "property_id")
+    bonds_store = CollectionWithKey(db["molecules_bonds"], "property_id")
+    multipole_store = CollectionWithKey(db["molecules_multipole"], "property_id")
+    metal_binding_store = CollectionWithKey(
+        db["molecules_metal_binding"], "property_id"
     )
-
-    mol_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_molecules",
-        key="molecule_id",
-        collection_name="molecules_molecules",
-    )
-
-    charges_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_molecules",
-        key="property_id",
-        collection_name="molecules_charges",
-    )
-
-    spins_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_molecules",
-        key="property_id",
-        collection_name="molecules_spins",
-    )
-
-    bonds_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_molecules",
-        key="property_id",
-        collection_name="molecules_bonds",
-    )
-
-    multipole_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_molecules",
-        key="property_id",
-        collection_name="molecules_multipole",
-    )
-
-    metal_binding_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_molecules",
-        key="property_id",
-        collection_name="molecules_metal_binding",
-    )
-
-    orbitals_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_molecules",
-        key="property_id",
-        collection_name="molecules_orbitals",
-    )
-
-    redox_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_molecules",
-        key="property_id",
-        collection_name="molecules_redox",
-    )
-
-    thermo_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_molecules",
-        key="property_id",
-        collection_name="molecules_thermo",
-    )
-
-    vibes_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_molecules",
-        key="property_id",
-        collection_name="molecules_vibes",
-    )
-
-    summary_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_molecules",
-        key="molecule_id",
-        collection_name="molecules_summary",
-    )
-
-    jcesr_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="task_id", collection_name="jcesr"
-    )
+    orbitals_store = CollectionWithKey(db["molecules_orbitals"], "property_id")
+    redox_store = CollectionWithKey(db["molecules_redox"], "property_id")
+    thermo_store = CollectionWithKey(db["molecules_thermo"], "property_id")
+    vibes_store = CollectionWithKey(db["molecules_vibes"], "property_id")
+    summary_store = CollectionWithKey(db["molecules_summary"], "molecule_id")
+    jcesr_store = CollectionWithKey(db["jcesr"], "task_id")
 
 else:
     raise RuntimeError("Must specify MongoDB URI containing inputs.")

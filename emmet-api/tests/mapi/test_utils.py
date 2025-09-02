@@ -9,7 +9,6 @@ from pydantic import BaseModel, Field
 
 from emmet.api.resource.utils import generate_atlas_search_pipeline
 from emmet.api.utils import (
-    api_sanitize,
     merge_atlas_queries,
     merge_queries,
     serialization_helper,
@@ -48,53 +47,9 @@ class Owner(BaseModel):
     other: SomeEnum = Field(..., title="A enum?")
 
 
+@pytest.mark.skip(reason="api_sanitize function no longer exists after maggma removal")
 def test_api_sanitize():
-    # Ensure model validation fails
-    with pytest.raises(ValueError):
-        Owner()
-
-    # This should still fail validation
-    new_owner = api_sanitize(Owner, fields_to_leave=["Owner.name"])
-    with pytest.raises(ValueError):
-        new_owner()
-
-    new_owner(name="owner")
-
-    # These will fail if non-optional fields are not turned off
-    new_owner2 = api_sanitize(Owner)
-    new_owner()  # api_sanitize is in-place
-    new_owner2()
-    Owner()
-
-    # This should fail type validation for pet
-    with pytest.raises(Exception):
-        Owner(pet="fido")
-
-    temp_pet_dict = Pet(name="fido", age=3).as_dict()
-    bad_pet_dict = dict(temp_pet_dict)
-    del bad_pet_dict["@module"]
-    del bad_pet_dict["@class"]
-
-    # This should fail because of bad data type
-    with pytest.raises(Exception):
-        Owner(pet=bad_pet_dict)
-
-    assert isinstance(Owner(pet=temp_pet_dict).pet, Pet)
-
-    api_sanitize(Owner, allow_dict_msonable=True)
-
-    # This should still fail because of bad data type
-    with pytest.raises(Exception):
-        Owner(pet=bad_pet_dict)
-
-    # This should work
-    assert isinstance(Owner(pet=temp_pet_dict).pet, dict)
-
-    # This should work evne though AnotherPet is inside the Union type
-    api_sanitize(AnotherOwner, allow_dict_msonable=True)
-    temp_pet_dict = AnotherPet(name="fido", age=3).as_dict()
-
-    assert isinstance(AnotherPet.validate_monty_v2(temp_pet_dict, None), dict)
+    pass  # Test removed - api_sanitize was a maggma-specific function
 
 
 def test_serialization_helper():
