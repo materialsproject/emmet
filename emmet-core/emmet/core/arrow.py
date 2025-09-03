@@ -93,7 +93,11 @@ def arrowize(obj) -> pa.DataType:
             return pa.list_(arrowize(args[0]))
 
         assert all(
-            [member == args[0] for member in args]
+            [
+                member == args[0]
+                for member in args
+                if not isinstance(member, types.EllipsisType)
+            ]
         ), f"Cannot infer arrow compatible primitive from iterable type containing mixed types: {RED}{obj}{RESET} "
 
         # once union type roundtripping is supported in pyarrow, something like this could work:

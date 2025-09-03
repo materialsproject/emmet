@@ -35,6 +35,7 @@ from typing_extensions import NotRequired, TypedDict
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
+from emmet.core.serialization_adapters.outcar_adapter import TypedOutcarDict
 from emmet.core.typing import (
     CalcTypeAlias,
     LatticeType,
@@ -602,7 +603,6 @@ class IonicStep(BaseModel):  # type: ignore
         return self
 
 
-@type_override({"outcar": str, "locpot": dict[str, list[float]]})
 class CoreCalculationOutput(BaseModel):
     """Document defining core VASP calculation outputs."""
 
@@ -652,7 +652,7 @@ class CoreCalculationOutput(BaseModel):
         None, description="Whether the band gap is direct"
     )
     is_metal: bool | None = Field(None, description="Whether the system is metallic")
-    locpot: dict[int, list[float]] | None = Field(
+    locpot: dict[str, list[float]] | None = Field(
         None, description="Average of the local potential along the crystal axes"
     )
     mag_density: float | None = Field(
@@ -663,7 +663,7 @@ class CoreCalculationOutput(BaseModel):
     optical_absorption_coeff: list[float] | None = Field(
         None, description="Optical absorption coefficient in cm^-1"
     )
-    outcar: dict[str, Any] | None = Field(
+    outcar: TypedOutcarDict | None = Field(
         None, description="Information extracted from the OUTCAR file"
     )
     structure: StructureType | None = Field(
@@ -675,14 +675,6 @@ class CoreCalculationOutput(BaseModel):
     vbm: float | None = Field(
         None, description="The valence band maximum in eV (if system is not metallic)"
     )
-
-    @field_validator("locpot", mode="before")
-    def locpot_deserializer(cls, locpot):
-        if ARROW_COMPATIBLE:
-            if isinstance(locpot, list):
-                locpot = {k: v for k, v in locpot}
-
-        return locpot
 
     @field_validator("dos_properties", mode="before")
     def dos_properties_deserializer(cls, dos_properties):
@@ -706,23 +698,6 @@ class CoreCalculationOutput(BaseModel):
                     for element, properties in dos_properties.items()
                 }
         return dos_properties
-
-    @field_serializer("outcar", mode="wrap")
-    def outcar_serializer(self, outcar, default_serializer, info):
-        default_serialized_object = default_serializer(outcar, info)
-
-        format = info.context.get("format") if info.context else "standard"
-        if format == "arrow":
-            return json.dumps(default_serialized_object)
-
-        return default_serialized_object
-
-    @field_validator("outcar", mode="before")
-    def outcar_deserializer(cls, outcar):
-        if ARROW_COMPATIBLE:
-            if isinstance(outcar, str):
-                outcar = json.loads(outcar)
-        return outcar
 
 
 class CalculationOutput(CoreCalculationOutput):
@@ -766,7 +741,6 @@ class CalculationOutput(CoreCalculationOutput):
         locpot: Locpot | None = None,
         elph_poscars: list[Path] | None = None,
         store_trajectory: StoreTrajectoryOption | str = StoreTrajectoryOption.NO,
-        store_onsite_density_matrices: bool = False,
     ) -> Self:
         """
         Create a VASP output document from VASP outputs.
@@ -789,8 +763,6 @@ class CalculationOutput(CoreCalculationOutput):
             Different value tune the amount of data from the ionic_steps
             stored in the Trajectory.
             If not NO, the `ionic_steps` field is left as None.
-        store_onsite_density_matrices
-            Whether to store the onsite density matrices from the OUTCAR.
         Returns
         -------
             The VASP calculation output document.
@@ -823,7 +795,7 @@ class CalculationOutput(CoreCalculationOutput):
         locpot_avg = None
         if locpot:
             locpot_avg = {
-                i: locpot.get_average_along_axis(i).tolist() for i in range(3)
+                str(i): locpot.get_average_along_axis(i).tolist() for i in range(3)
             }
 
         # parse force constants
@@ -847,9 +819,7 @@ class CalculationOutput(CoreCalculationOutput):
 
         if outcar and contcar:
             outcar_dict = outcar.as_dict()
-            outcar_dict.pop("run_stats")
-            if not store_onsite_density_matrices and outcar.has_onsite_density_matrices:
-                outcar_dict.pop("onsite_density_matrices")
+
             # use structure from CONTCAR as it is written to
             # greater precision than in the vasprun
             # but still need to copy the charge over
@@ -1023,7 +993,6 @@ class Calculation(CalculationBaseModel):
         strip_dos_projections: bool = False,
         store_volumetric_data: tuple[str] | None = None,
         store_trajectory: StoreTrajectoryOption | str = StoreTrajectoryOption.NO,
-        store_onsite_density_matrices: bool = False,
         vasprun_kwargs: dict | None = None,
     ) -> tuple["Calculation", dict[VaspObject, dict]]:
         """
@@ -1098,8 +1067,6 @@ class Calculation(CalculationBaseModel):
             - NO: Trajectory is not Stored.
             If not NO, :obj:'.CalculationOutput.ionic_steps' is set to None
             to reduce duplicating information.
-        store_onsite_density_matrices
-            Whether to store the onsite density matrices from the OUTCAR.
         vasprun_kwargs
             Additional keyword arguments that will be passed to the Vasprun init.
 
@@ -1172,7 +1139,6 @@ class Calculation(CalculationBaseModel):
             locpot=locpot,
             elph_poscars=elph_poscars,
             store_trajectory=store_trajectory,
-            store_onsite_density_matrices=store_onsite_density_matrices,
         )
         if store_trajectory != StoreTrajectoryOption.NO:
             exclude_from_trajectory = set(["structure"])
