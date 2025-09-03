@@ -9,9 +9,7 @@ aioitertools==0.12.0
 annotated-types==0.7.0
     # via pydantic
 ase==3.26.0
-    # via
-    #   matcalc
-    #   pymatgen-analysis-diffusion
+    # via pymatgen-analysis-diffusion
 attrs==25.3.0
     # via
     #   jsonlines
@@ -21,9 +19,9 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.17
+boto3==1.40.23
     # via maggma
-botocore==1.40.17
+botocore==1.40.23
     # via
     #   boto3
     #   s3transfer
@@ -45,9 +43,9 @@ colorama==0.4.6
     # via griffe
 contourpy==1.3.3
     # via matplotlib
-coverage[toml]==7.10.5
+coverage[toml]==7.10.6
     # via pytest-cov
-cryptography==45.0.6
+cryptography==45.0.7
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -59,7 +57,7 @@ dnspython==2.7.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all,ml]==0.84.9
+emmet-core[all]==0.84.9
     # via emmet-builders (pyproject.toml)
 execnet==2.1.1
     # via pytest-xdist
@@ -69,20 +67,14 @@ filelock==3.19.1
     #   virtualenv
 flake8==7.3.0
     # via emmet-builders (pyproject.toml)
-fonttools==4.59.1
+fonttools==4.59.2
     # via matplotlib
-fsspec==2025.7.0
-    # via matcalc
 ghp-import==2.1.0
     # via mkdocs
 griddataformats==1.0.2
     # via mdanalysis
 griffe==1.13.0
     # via mkdocstrings-python
-h5py==3.14.0
-    # via
-    #   phono3py
-    #   phonopy
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
 identify==2.6.13
@@ -107,9 +99,8 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-joblib==1.5.1
+joblib==1.5.2
     # via
-    #   matcalc
     #   mdanalysis
     #   pymatgen
     #   pymatgen-analysis-diffusion
@@ -145,18 +136,14 @@ markupsafe==3.0.2
     #   mkdocs
     #   mkdocs-autorefs
     #   mkdocstrings
-matcalc==0.4.3
-    # via emmet-core
 matminer==0.9.3
     # via
     #   emmet-builders (pyproject.toml)
     #   robocrys
-matplotlib==3.10.5
+matplotlib==3.10.6
     # via
     #   ase
     #   mdanalysis
-    #   phono3py
-    #   phonopy
     #   pymatgen
     #   seaborn
     #   solvation-analysis
@@ -166,7 +153,6 @@ mda-xdrlib==0.2.0
     # via mdanalysis
 mdanalysis==2.9.0
     # via
-    #   emmet-builders (pyproject.toml)
     #   emmet-core
     #   solvation-analysis
     #   transport-analysis
@@ -205,7 +191,7 @@ mkdocstrings[python]==0.30.0
     # via
     #   emmet-builders (pyproject.toml)
     #   mkdocstrings-python
-mkdocstrings-python==1.18.0
+mkdocstrings-python==1.18.2
     # via mkdocstrings
 mmtf-python==1.1.3
     # via mdanalysis
@@ -218,7 +204,7 @@ monty==2025.3.3
     #   matminer
     #   pymatgen
     #   robocrys
-more-itertools==10.7.0
+more-itertools==10.8.0
     # via inflect
 mp-pyrho==0.4.5
     # via pymatgen-analysis-defects
@@ -236,7 +222,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-builders (pyproject.toml)
     #   mypy
-narwhals==2.2.0
+narwhals==2.3.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -252,10 +238,8 @@ numpy==1.26.4
     #   ase
     #   contourpy
     #   griddataformats
-    #   h5py
     #   imageio
     #   maggma
-    #   matcalc
     #   matminer
     #   matplotlib
     #   mdanalysis
@@ -263,8 +247,6 @@ numpy==1.26.4
     #   mrcfile
     #   pandas
     #   patsy
-    #   phono3py
-    #   phonopy
     #   pymatgen
     #   pymatgen-analysis-defects
     #   pymatgen-analysis-diffusion
@@ -280,10 +262,9 @@ numpy==1.26.4
     #   solvation-analysis
     #   spglib
     #   statsmodels
-    #   symfc
     #   tidynamics
     #   tifffile
-orjson==3.11.2
+orjson==3.11.3
     # via
     #   maggma
     #   pymatgen
@@ -316,12 +297,6 @@ pathspec==0.12.1
     #   mypy
 patsy==1.0.1
     # via statsmodels
-phono3py==3.19.2
-    # via matcalc
-phonopy==2.43.1
-    # via
-    #   matcalc
-    #   phono3py
 pillow==11.3.0
     # via
     #   imageio
@@ -382,7 +357,6 @@ pygments==2.19.2
 pymatgen==2025.6.14
     # via
     #   emmet-core
-    #   matcalc
     #   matminer
     #   mp-pyrho
     #   pymatgen-analysis-alloys
@@ -440,8 +414,6 @@ pyyaml==6.0.2
     #   mkdocs
     #   mkdocs-get-deps
     #   mkdocs-markdownextradata-plugin
-    #   phono3py
-    #   phonopy
     #   pre-commit
     #   pybtex
     #   pymdown-extensions
@@ -463,7 +435,7 @@ requests==2.32.5
     #   pymatgen-io-validation
 robocrys==0.2.11
     # via emmet-core
-rpds-py==0.27.0
+rpds-py==0.27.1
     # via
     #   jsonschema
     #   referencing
@@ -480,22 +452,18 @@ s3transfer==0.13.1
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
 scikit-learn==1.7.1
-    # via
-    #   matcalc
-    #   matminer
+    # via matminer
 scipy==1.16.1
     # via
     #   ase
     #   griddataformats
     #   mdanalysis
-    #   phono3py
     #   pymatgen
     #   robocrys
     #   scikit-image
     #   scikit-learn
     #   solvation-analysis
     #   statsmodels
-    #   symfc
 seaborn==0.13.2
     # via pymatgen-analysis-diffusion
 seekpath==2.1.0
@@ -514,18 +482,13 @@ solvation-analysis==0.4.1
     #   emmet-core
 spglib==2.6.0
     # via
-    #   phono3py
-    #   phonopy
     #   pymatgen
     #   robocrys
     #   seekpath
-    #   symfc
 sshtunnel==0.4.0
     # via maggma
 statsmodels==0.14.5
     # via solvation-analysis
-symfc==1.5.4
-    # via phonopy
 sympy==1.14.0
     # via
     #   matminer
@@ -538,7 +501,7 @@ threadpoolctl==3.6.0
     #   scikit-learn
 tidynamics==1.1.2
     # via transport-analysis
-tifffile==2025.6.11
+tifffile==2025.8.28
     # via scikit-image
 tornado==6.5.2
     # via livereload
@@ -549,9 +512,7 @@ tqdm==4.67.1
     #   mdanalysis
     #   pymatgen
 transport-analysis==0.1.2
-    # via
-    #   emmet-builders (pyproject.toml)
-    #   emmet-core
+    # via emmet-core
 typeguard==4.4.4
     # via inflect
 types-requests==2.32.4.20250809
