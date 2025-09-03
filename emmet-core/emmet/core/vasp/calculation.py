@@ -8,13 +8,15 @@ import os
 from datetime import datetime
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypeAlias
+from typing import TYPE_CHECKING, Annotated, Any, TypeAlias
 
 import numpy as np
 from pydantic import (
     BaseModel,
+    BeforeValidator,
     ConfigDict,
     Field,
+    WrapSerializer,
     field_serializer,
     field_validator,
     model_validator,
@@ -80,6 +82,13 @@ class VaspObject(ValueEnum):
     LOCPOT = "locpot"
     OPTIC = "optic"
     PROCAR = "procar"
+
+
+VaspObjectAlias: TypeAlias = Annotated[
+    VaspObject,
+    BeforeValidator(lambda x: VaspObject(x) if isinstance(x, str) else x),
+    WrapSerializer(lambda x, nxt, info: x.value, return_type=str),
+]
 
 
 class StoreTrajectoryOption(ValueEnum):

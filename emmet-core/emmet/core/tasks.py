@@ -41,6 +41,7 @@ from emmet.core.vasp.calculation import (
     PotcarSpec,
     RunStatistics,
     VaspObject,
+    VaspObjectAlias,
 )
 from emmet.core.vasp.task_valid import TaskState, TaskStateType
 from emmet.core.vasp.utils import TASK_NAMES, discover_and_sort_vasp_files
@@ -341,7 +342,7 @@ class CoreTaskDoc(StructureMetadata):
         description="Information on the structural transformations, parsed from a "
         "transformations.json file",
     )
-    vasp_objects: dict[VaspObject, Any] | None = Field(
+    vasp_objects: dict[VaspObjectAlias, Any] | None = Field(
         None, description="Vasp objects associated with this task"
     )
 
