@@ -77,14 +77,9 @@ jobs:
           channels: anaconda, conda-forge
 
       # These dependencies seem to only be used in emmet-core and builders
-      - name: Install core and builders conda requirements
+      - name: Install openbabel for core, builders, api
         shell: bash -l {0}
-        if: (matrix.package == 'emmet-core') || (matrix.package == 'emmet-builders')
-        run: conda install -c conda-forge openbabel openff-toolkit==0.16.2 openff-interchange==0.3.22 -y
-
-      - name: Install api conda requirements
-        shell: bash -l {0}
-        if: matrix.package == 'emmet-api'
+        if: (matrix.package == 'emmet-core') || (matrix.package == 'emmet-builders') || (matrix.package == 'emmet-api')
         run: conda install -c conda-forge openbabel -y
 
       - name: Install Python dependencies
