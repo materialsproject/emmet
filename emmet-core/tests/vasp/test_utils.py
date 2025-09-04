@@ -70,7 +70,7 @@ def test_file_discovery():
         )
 
     _tmp_dir = TemporaryDirectory()
-    tmp_dir = Path(_tmp_dir).resolve()
+    tmp_dir = Path(_tmp_dir.name).resolve()
     for calc_dir, files in directory_structure.items():
         p = tmp_dir / calc_dir
         if not p.exists():
