@@ -302,7 +302,7 @@ def recursive_discover_vasp_files(
                         for f in REQUIRED_VASP_FILES
                     ):
                         # Incomplete calculation input/output
-                        return
+                        continue
                     paths[
                         CalculationLocator(
                             path=Path(tdir).resolve(), modifier=calc_suffix
