@@ -477,9 +477,7 @@ six==1.17.0
 snowballstemmer==3.0.1
     # via pydocstyle
 solvation-analysis==0.4.1
-    # via
-    #   emmet-builders (pyproject.toml)
-    #   emmet-core
+    # via emmet-core
 spglib==2.6.0
     # via
     #   pymatgen
