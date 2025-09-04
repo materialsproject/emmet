@@ -68,27 +68,28 @@ def test_file_discovery():
                 f"POTCAR.orig.relax{idx}",
             ]
         )
-    with TemporaryDirectory() as _tmp_dir:
-        tmp_dir = Path(_tmp_dir).resolve()
-        for calc_dir, files in directory_structure.items():
-            p = tmp_dir / calc_dir
-            if not p.exists():
-                p.mkdir(parents=True, exist_ok=True)
-            for f in files:
-                (p / f).touch()
-        vasp_files = recursive_discover_vasp_files(tmp_dir)
-        valid_vasp_files = recursive_discover_vasp_files(tmp_dir, only_valid=True)
 
-        assert len(recursive_discover_vasp_files(tmp_dir, max_depth=2)) == 4
-        assert len(recursive_discover_vasp_files(tmp_dir, max_depth=1)) == 1
+    _tmp_dir = TemporaryDirectory()
+    tmp_dir = Path(_tmp_dir).resolve()
+    for calc_dir, files in directory_structure.items():
+        p = tmp_dir / calc_dir
+        if not p.exists():
+            p.mkdir(parents=True, exist_ok=True)
+        for f in files:
+            (p / f).touch()
+    vasp_files = recursive_discover_vasp_files(tmp_dir)
+    valid_vasp_files = recursive_discover_vasp_files(tmp_dir, only_valid=True)
 
-        files_by_calc_suffix = discover_and_sort_vasp_files(
-            tmp_dir / "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001"
-        )
+    assert len(recursive_discover_vasp_files(tmp_dir, max_depth=2)) == 4
+    assert len(recursive_discover_vasp_files(tmp_dir, max_depth=1)) == 1
 
-        for max_depth in (-1, 1.5):
-            with pytest.raises(ValueError, match="non-negative integer"):
-                _ = recursive_discover_vasp_files(tmp_dir, max_depth=max_depth)
+    files_by_calc_suffix = discover_and_sort_vasp_files(
+        tmp_dir / "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001"
+    )
+
+    for max_depth in (-1, 1.5):
+        with pytest.raises(ValueError, match="non-negative integer"):
+            _ = recursive_discover_vasp_files(tmp_dir, max_depth=max_depth)
 
     assert files_by_calc_suffix["relax1"]["contcar_file"].name == "CONTCAR.relax1"
     assert files_by_calc_suffix["relax1"]["vasprun_file"].name == "vasprun.xml.relax1"
@@ -119,10 +120,8 @@ def test_file_discovery():
         "neb_calc/01/",
         "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001",
     )
-    print(
-        "marker-debug",
-        [f.name for f in found_files if "launcher_2025_02_31_0001" in str(f)],
-    )
+
     assert len(valid_vasp_files) == 2
     found_valid_dirs = {calc_loc.path for calc_loc in valid_vasp_files}
     assert {tmp_dir / valid_dir for valid_dir in valid_calc_dirs} == found_valid_dirs
+    _tmp_dir.cleanup()
