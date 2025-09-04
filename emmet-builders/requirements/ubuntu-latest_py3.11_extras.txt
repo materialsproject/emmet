@@ -151,11 +151,6 @@ mccabe==0.7.0
     # via flake8
 mda-xdrlib==0.2.0
     # via mdanalysis
-mdanalysis==2.9.0
-    # via
-    #   emmet-core
-    #   solvation-analysis
-    #   transport-analysis
 mergedeep==1.3.4
     # via
     #   mkdocs
@@ -476,8 +471,6 @@ six==1.17.0
     # via python-dateutil
 snowballstemmer==3.0.1
     # via pydocstyle
-solvation-analysis==0.4.1
-    # via emmet-core
 spglib==2.6.0
     # via
     #   pymatgen
@@ -509,8 +502,6 @@ tqdm==4.67.1
     #   matminer
     #   mdanalysis
     #   pymatgen
-transport-analysis==0.1.2
-    # via emmet-core
 typeguard==4.4.4
     # via inflect
 types-requests==2.32.4.20250809

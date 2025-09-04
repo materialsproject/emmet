@@ -119,6 +119,10 @@ def test_file_discovery():
         "neb_calc/01/",
         "block_2025_02_30/launcher_2025_02_31/launcher_2025_02_31_0001",
     )
+    print(
+        "marker-debug",
+        [f.name for f in found_files if "launcher_2025_02_31_0001" in str(f)],
+    )
     assert len(valid_vasp_files) == 2
     found_valid_dirs = {calc_loc.path for calc_loc in valid_vasp_files}
     assert {tmp_dir / valid_dir for valid_dir in valid_calc_dirs} == found_valid_dirs
