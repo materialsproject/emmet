@@ -302,13 +302,6 @@ def recursive_discover_vasp_files(
                         for f in REQUIRED_VASP_FILES
                     ):
                         # Incomplete calculation input/output
-                        print(
-                            tdir,
-                            {
-                                f: any(f in file.name for file in tpaths)
-                                for f in REQUIRED_VASP_FILES
-                            },
-                        )
                         return
                     paths[
                         CalculationLocator(

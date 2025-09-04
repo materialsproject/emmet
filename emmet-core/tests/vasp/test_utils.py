@@ -79,7 +79,6 @@ def test_file_discovery():
             (p / f).touch()
     vasp_files = recursive_discover_vasp_files(tmp_dir)
     valid_vasp_files = recursive_discover_vasp_files(tmp_dir, only_valid=True)
-
     assert len(recursive_discover_vasp_files(tmp_dir, max_depth=2)) == 4
     assert len(recursive_discover_vasp_files(tmp_dir, max_depth=1)) == 1
 
@@ -105,6 +104,9 @@ def test_file_discovery():
 
     # should find all of the defined calculation directories + suffixes within those
     assert len(vasp_files) == 7
+
+    for cl in vasp_files:
+        print(cl.path, cl.modifier, cl in valid_vasp_files)
 
     found_files = set()
     ref_files = set()
