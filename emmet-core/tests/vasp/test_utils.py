@@ -105,9 +105,11 @@ def test_file_discovery():
     # should find all of the defined calculation directories + suffixes within those
     assert len(vasp_files) == 7
 
-    for cl in vasp_files:
-        print(cl.path, cl.modifier, cl in valid_vasp_files)
-
+    for cl, vf in vasp_files.items():
+        print(
+            cl.path, cl.modifier, cl in valid_vasp_files, hash(cl), [f.name for f in vf]
+        )
+    assert False
     found_files = set()
     ref_files = set()
     for calc_dir, files in directory_structure.items():
