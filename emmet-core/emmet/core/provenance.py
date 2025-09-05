@@ -17,7 +17,7 @@ from emmet.core.material_property import PropertyDoc
 from emmet.core.utils import ValueEnum, utcnow
 
 if TYPE_CHECKING:
-    from emmet.core.mpid import AlphaID, MPID
+    from emmet.core.mpid import IdentifierType
 
 
 class Database(ValueEnum):
@@ -155,7 +155,7 @@ class ProvenanceDoc(PropertyDoc):
         cls,
         structure: Structure,
         snls: list[SNLDict],
-        material_id: MPID | AlphaID | None = None,
+        material_id: IdentifierType | None = None,
         **kwargs,
     ) -> "ProvenanceDoc":
         """

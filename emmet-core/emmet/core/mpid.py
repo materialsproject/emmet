@@ -6,9 +6,9 @@ from math import log, floor
 import re
 from pathlib import Path
 from string import ascii_lowercase, digits
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated, Union
 
-from pydantic import GetJsonSchemaHandler
+from pydantic import GetJsonSchemaHandler, PlainSerializer, BeforeValidator
 from pydantic_core import CoreSchema, core_schema
 from pydantic.json_schema import JsonSchemaValue
 
@@ -694,3 +694,10 @@ def _next_safe_alpha_id(
     while int(start_id) in FORBIDDEN_ALPHA_ID_VALUES:
         start_id += 1
     return start_id
+
+
+IdentifierType = Annotated[
+    Union[MPID, AlphaID, str],
+    BeforeValidator(lambda x: AlphaID(x).formatted),
+    PlainSerializer(lambda x: str(AlphaID(x))),
+]

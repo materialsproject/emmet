@@ -25,12 +25,11 @@ from typing_extensions import Literal
 
 from emmet.core.common import convert_datetime
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import AlphaID, MPID
+from emmet.core.mpid import AlphaID, IdentifierType
 from emmet.core.settings import EmmetSettings
 from emmet.core.utils import utcnow
 
 if TYPE_CHECKING:
-    from emmet.core.mpid import MPID
     from typing_extensions import Self
 
 SETTINGS = EmmetSettings()
@@ -53,7 +52,7 @@ class BSObjectDoc(BaseModel):
     Band object document.
     """
 
-    task_id: MPID | AlphaID | None = Field(
+    task_id: IdentifierType | None = Field(
         None,
         description="The source calculation (task) ID that this band structure comes from. "
         "This has the same form as a Materials Project ID.",
@@ -79,7 +78,7 @@ class DOSObjectDoc(BaseModel):
     DOS object document.
     """
 
-    task_id: MPID | AlphaID | None = Field(
+    task_id: IdentifierType | None = Field(
         None,
         description="The source calculation (task) ID that this density of states comes from. "
         "This has the same form as a Materials Project ID.",
@@ -101,7 +100,7 @@ class DOSObjectDoc(BaseModel):
 
 
 class ElectronicStructureBaseData(BaseModel):
-    task_id: MPID | AlphaID = Field(
+    task_id: IdentifierType = Field(
         ...,
         description="The source calculation (task) ID for the electronic structure data. "
         "This has the same form as a Materials Project ID.",
@@ -212,15 +211,15 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
     @classmethod
     def from_bsdos(  # type: ignore[override]
         cls,
-        dos: dict[MPID | AlphaID, CompleteDos],
+        dos: dict[IdentifierType, CompleteDos],
         is_gap_direct: bool,
         is_metal: bool,
-        material_id: MPID | AlphaID | None = None,
+        material_id: IdentifierType | None = None,
         origins: list[dict] = [],
-        structures: dict[MPID | AlphaID, Structure] | None = None,
-        setyawan_curtarolo: dict[MPID | AlphaID, BandStructureSymmLine] | None = None,
-        hinuma: dict[MPID | AlphaID, BandStructureSymmLine] | None = None,
-        latimer_munro: dict[MPID | AlphaID, BandStructureSymmLine] | None = None,
+        structures: dict[IdentifierType, Structure] | None = None,
+        setyawan_curtarolo: dict[IdentifierType, BandStructureSymmLine] | None = None,
+        hinuma: dict[IdentifierType, BandStructureSymmLine] | None = None,
+        latimer_munro: dict[IdentifierType, BandStructureSymmLine] | None = None,
         **kwargs,
     ) -> Self:
         """

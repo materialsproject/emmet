@@ -8,7 +8,7 @@ from pydantic import Field, field_validator
 from emmet.core.vasp.calculation import Calculation
 from emmet.core.base import EmmetBaseModel
 from emmet.core.common import convert_datetime
-from emmet.core.mpid import MPID, AlphaID
+from emmet.core.mpid import IdentifierType
 from emmet.core.utils import utcnow, DocEnum
 from emmet.core.vasp.calc_types.enums import CalcType, RunType
 from emmet.core.vasp.utils import FileMetadata, discover_vasp_files
@@ -60,7 +60,7 @@ class ValidationDoc(VaspValidator, EmmetBaseModel):
     Validation document for a VASP calculation
     """
 
-    task_id: MPID | AlphaID | None = Field(
+    task_id: IdentifierType | None = Field(
         None, description="The task_id for this validation document"
     )
 

@@ -15,7 +15,7 @@ from emmet.core.spectrum import SpectrumDoc
 from emmet.core.utils import ValueEnum
 
 if TYPE_CHECKING:
-    from emmet.core.mpid import AlphaID, MPID
+    from emmet.core.mpid import IdentifierType
 
 
 class Edge(ValueEnum):
@@ -82,7 +82,7 @@ class XASDoc(SpectrumDoc):
     def from_spectrum(
         cls,
         xas_spectrum: XAS,
-        material_id: MPID | AlphaID | None = None,
+        material_id: IdentifierType | None = None,
         **kwargs,
     ):
         spectrum_type = xas_spectrum.spectrum_type
@@ -108,7 +108,7 @@ class XASDoc(SpectrumDoc):
     def from_task_docs(
         cls,
         all_tasks: list[TaskDocument],
-        material_id: MPID | AlphaID | None = None,
+        material_id: IdentifierType | None = None,
         num_samples: int = 200,
     ) -> list["XASDoc"]:
         """

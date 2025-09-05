@@ -8,7 +8,7 @@ from emmet.core.material_property import PropertyDoc
 from emmet.core.utils import generate_robocrys_condensed_struct_and_description
 
 if TYPE_CHECKING:
-    from emmet.core.mpid import AlphaID, MPID
+    from emmet.core.mpid import IdentifierType
 
 
 class MineralData(BaseModel):
@@ -81,7 +81,7 @@ class RobocrystallogapherDoc(PropertyDoc):
         cls,
         structure: Structure,
         robocrys_version: str,
-        material_id: MPID | AlphaID | None = None,
+        material_id: IdentifierType | None = None,
         mineral_matcher=None,
         **kwargs,
     ):

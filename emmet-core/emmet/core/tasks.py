@@ -21,7 +21,7 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 from pymatgen.io.vasp import Incar, Kpoints, Poscar
 
 from emmet.core.common import convert_datetime
-from emmet.core.mpid import MPID, AlphaID
+from emmet.core.mpid import IdentifierType
 from emmet.core.structure import StructureMetadata
 from emmet.core.trajectory import Trajectory as CoreTrajectory
 from emmet.core.utils import utcnow
@@ -288,7 +288,7 @@ class CoreTaskDoc(StructureMetadata):
     tags: list[str] | None = Field(
         None, title="tag", description="Metadata tagged to a given task."
     )
-    task_id: MPID | AlphaID | None = Field(
+    task_id: IdentifierType | None = Field(
         None,
         description="The (task) ID of this calculation, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
@@ -687,7 +687,7 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
     @staticmethod
     def get_entry(
         calcs_reversed: list[Calculation | dict],
-        task_id: MPID | AlphaID | str | int | None = None,
+        task_id: IdentifierType | str | int | None = None,
     ) -> ComputedEntry:
         """
         Get a computed entry from a list of VASP calculation documents.

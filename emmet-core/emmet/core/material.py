@@ -12,7 +12,7 @@ from pymatgen.core.structure import Molecule
 
 from emmet.core.base import EmmetBaseModel
 from emmet.core.common import convert_datetime
-from emmet.core.mpid import MPID, AlphaID, MPculeID
+from emmet.core.mpid import IdentifierType, MPID, MPculeID
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
 from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
@@ -29,7 +29,7 @@ class PropertyOrigin(BaseModel):
     """
 
     name: str = Field(..., description="The property name")
-    task_id: MPID | AlphaID = Field(
+    task_id: IdentifierType = Field(
         ..., description="The calculation ID this property comes from."
     )
     last_updated: datetime = Field(  # type: ignore
@@ -42,9 +42,6 @@ class PropertyOrigin(BaseModel):
     def handle_datetime_and_idx(cls, config: Any) -> Any:
         if v := config.get("last_updated"):
             config["last_updated"] = convert_datetime(cls, v)
-
-        if idx := config.get("task_id"):
-            config["task_id"] = AlphaID(idx).formatted
         return config
 
 
@@ -53,7 +50,7 @@ class MaterialsDoc(StructureMetadata, EmmetBaseModel):
     Definition for a core Materials Document
     """
 
-    material_id: MPID | AlphaID | None = Field(
+    material_id: IdentifierType | None = Field(
         None,
         description="The Materials Project ID of the material, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
@@ -79,7 +76,7 @@ class MaterialsDoc(StructureMetadata, EmmetBaseModel):
         description="Initial structures used in the DFT optimizations corresponding to this material.",
     )
 
-    task_ids: list[MPID | AlphaID] = Field(
+    task_ids: list[IdentifierType] = Field(
         [],
         description="List of Calculations IDs used to make this Materials Document.",
     )
@@ -111,7 +108,7 @@ class MaterialsDoc(StructureMetadata, EmmetBaseModel):
 
     @classmethod
     def from_structure(
-        cls, structure: Structure, material_id: MPID | AlphaID | None = None, **kwargs
+        cls, structure: Structure, material_id: IdentifierType | None = None, **kwargs
     ) -> Self:  # type: ignore[override]
         """
         Builds a materials document using the minimal amount of information
@@ -130,11 +127,6 @@ class MaterialsDoc(StructureMetadata, EmmetBaseModel):
         for k in ("last_updated", "created_at"):
             if v := config.get(k):
                 config[k] = convert_datetime(cls, v)
-
-        if idx := config.get("material_id"):
-            config["material_id"] = AlphaID(idx).formatted
-        if task_idxs := config.get("task_ids"):
-            config["task_ids"] = [AlphaID(idx).formatted for idx in task_idxs]
 
         return config
 
