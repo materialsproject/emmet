@@ -35,6 +35,7 @@ from typing_extensions import NotRequired, TypedDict
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
+from emmet.core.serialization_adapters.kpoints_adapter import KpointsType
 from emmet.core.serialization_adapters.outcar_adapter import TypedOutcarDict
 from emmet.core.typing import (
     CalcTypeAlias,
@@ -47,13 +48,9 @@ from emmet.core.utils import ValueEnum, jsanitize, type_override
 from emmet.core.vasp.calc_types import calc_type, run_type, task_type
 from emmet.core.vasp.task_valid import TaskState, TaskStateType
 
-if ARROW_COMPATIBLE:
-    from emmet.core.serialization_adapters.kpoints_adapter import KpointsTypeVar
-
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-KpointsType: TypeAlias = KpointsTypeVar if ARROW_COMPATIBLE else Kpoints
 
 logger = logging.getLogger(__name__)
 
@@ -262,29 +259,6 @@ class CalculationInput(CalculationBaseModel):
             d = {k.strip(): v for k, v in d.items()}
 
         return d
-
-    @field_serializer("kpoints", mode="wrap")
-    def kpoints_serializer(self, kpoints, default_serializer, info):
-        default_serialized_object = default_serializer(kpoints, info)
-
-        format = info.context.get("format") if info.context else "standard"
-        if format == "arrow" and default_serialized_object:
-            arrow_compat_object = jsanitize(default_serialized_object, allow_bson=True)
-            arrow_compat_object["tet_connections"] = json.dumps(
-                arrow_compat_object["tet_connections"]
-            )
-            return arrow_compat_object
-
-        return default_serialized_object
-
-    @field_validator("kpoints", mode="before")
-    def kpoints_deserializer(cls, kpoints):
-        if ARROW_COMPATIBLE:
-            if isinstance(kpoints, dict):
-                if isinstance(kpoints["tet_connections"], str):
-                    kpoints["tet_connections"] = json.loads(kpoints["tet_connections"])
-
-        return kpoints
 
     @model_validator(mode="before")
     @classmethod
