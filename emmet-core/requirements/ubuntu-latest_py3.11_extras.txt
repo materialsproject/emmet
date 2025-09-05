@@ -54,7 +54,7 @@ ghp-import==2.1.0
     # via mkdocs
 griddataformats==1.0.2
     # via mdanalysis
-griffe==1.13.0
+griffe==1.14.0
     # via mkdocstrings-python
 h5py==3.14.0
     # via
@@ -382,7 +382,7 @@ pyyaml==6.0.2
     #   pyyaml-env-tag
 pyyaml-env-tag==1.1
     # via mkdocs
-rdkit==2025.3.5
+rdkit==2025.3.6
     # via solvation-analysis
 requests==2.32.5
     # via

@@ -46,7 +46,7 @@ fonttools==4.59.2
     # via matplotlib
 ghp-import==2.1.0
     # via mkdocs
-griffe==1.13.0
+griffe==1.14.0
     # via mkdocstrings-python
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
