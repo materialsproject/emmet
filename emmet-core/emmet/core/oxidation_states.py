@@ -3,10 +3,10 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated, TypeAlias
 
 import numpy as np
-from pydantic import Field
+from pydantic import BeforeValidator, Field, WrapSerializer
 from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Specie
@@ -23,6 +23,13 @@ class OxiStateAssigner(Enum):
     MANUAL = "Manual"
     BVA = "Bond Valence Analysis"
     GUESS = "Oxidation State Guess"
+
+
+OxiStateAssignerType: TypeAlias = Annotated[
+    OxiStateAssigner,
+    BeforeValidator(lambda x: OxiStateAssigner(x) if isinstance(x, str) else x),
+    WrapSerializer(lambda x, nxt, info: x.value, return_type=str),
+]
 
 
 class OxidationStateDoc(PropertyDoc):
@@ -43,7 +50,7 @@ class OxidationStateDoc(PropertyDoc):
     average_oxidation_states: dict[str, float] = Field(
         description="Average oxidation states for each unique species."
     )
-    method: OxiStateAssigner | None = Field(
+    method: OxiStateAssignerType | None = Field(
         None, description="Method used to compute oxidation states."
     )
 

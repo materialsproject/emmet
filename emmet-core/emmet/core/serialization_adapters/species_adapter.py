@@ -19,7 +19,7 @@ class TypedSpeciesDict(TypedDict):
     element: NotRequired[str | None]
     oxidation_state: NotRequired[float | None]
     spin: NotRequired[float | None]
-    occu: NotRequired[int | None]
+    occu: NotRequired[float | None]
 
 
 SpeciesTypeVar = TypeVar("SpeciesTypeVar", Species, TypedSpeciesDict)
