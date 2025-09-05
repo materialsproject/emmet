@@ -1,4 +1,3 @@
-import json
 from typing import Annotated, Any, TypeAlias, TypeVar
 
 from pydantic import BeforeValidator, WrapSerializer
@@ -18,7 +17,8 @@ TypedKpointsDict = TypedDict(
         "labels": list[str],
         "nkpoints": int,
         # "tet_connections": tuple[float, list[float]],
-        "tet_connections": str,
+        "sym_weight": float,  # tet_connections
+        "tet_vertices": list[float],  # tet_connections
         "tet_number": int,
         "tet_weight": float,
         "usershift": list[float],
@@ -30,8 +30,13 @@ KpointsTypeVar = TypeVar("KpointsTypeVar", Kpoints, TypedKpointsDict)
 
 def kpoints_deserializer(kpoints: KpointsTypeVar):
     if isinstance(kpoints, dict):
-        if isinstance(kpoints["tet_connections"], str):
-            kpoints["tet_connections"] = json.loads(kpoints["tet_connections"])
+        if "sym_weight" in kpoints:
+            kpoints["tet_connections"] = [
+                (sym, vert)
+                for sym, vert in zip(kpoints["sym_weight"], kpoints["tet_vertices"])
+            ]
+            del kpoints["sym_weight"]
+            del kpoints["tet_vertices"]
 
         return Kpoints.from_dict(kpoints)
 
@@ -43,9 +48,15 @@ def kpoints_serializer(kpoints, nxt, info):
 
     format = info.context.get("format") if info.context else "standard"
     if format == "arrow" and default_serialized_object:
-        default_serialized_object["tet_connections"] = json.dumps(
-            default_serialized_object["tet_connections"]
-        )
+        if default_serialized_object["tet_connections"]:
+            default_serialized_object["sym_weight"] = [
+                conn[0] for conn in default_serialized_object["tet_connections"]
+            ]
+            default_serialized_object["tet_vertices"] = [
+                conn[1] for conn in default_serialized_object["tet_connections"]
+            ]
+
+        del default_serialized_object["tet_connections"]
 
     return default_serialized_object
 
