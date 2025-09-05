@@ -1,4 +1,6 @@
 from datetime import datetime, timezone
+from typing import Annotated
+from pydantic import PlainSerializer, BeforeValidator
 
 from monty.json import MontyDecoder
 
@@ -26,6 +28,13 @@ def convert_datetime(cls, v):
     if not v.tzinfo:
         v = v.replace(tzinfo=timezone.utc)
     return v
+
+
+DateTimeType = Annotated[
+    datetime,
+    PlainSerializer(lambda x: x.isoformat()),
+    BeforeValidator(lambda x: convert_datetime(None, x)),
+]
 
 
 class Status(ValueEnum):
