@@ -381,7 +381,7 @@ pyparsing==3.2.3
     # via
     #   bibtexparser
     #   matplotlib
-pytest==8.4.1
+pytest==8.4.2
     # via
     #   emmet-builders (pyproject.toml)
     #   pytest-cov
