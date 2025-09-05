@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
 from enum import Enum
 from functools import cached_property
 from pathlib import Path
@@ -24,7 +23,7 @@ from typing_extensions import Literal
 
 from emmet.core.band_theory import BandTheoryBase, BandStructure
 from emmet.core.base import CalcMeta
-from emmet.core.common import convert_datetime
+from emmet.core.common import DateTimeType
 from emmet.core.math import Matrix3D, Tensor4R, Vector3D
 from emmet.core.mpid import IdentifierType
 from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
@@ -346,7 +345,7 @@ class PhononBSDOSTask(StructureMetadata):
         None, description="Force constants between every pair of atoms in the structure"
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         default_factory=utcnow,
         description="Timestamp for the most recent calculation for this Material document.",
     )
@@ -411,10 +410,6 @@ class PhononBSDOSTask(StructureMetadata):
         }.items():
             if config.get(k):
                 config[v] = config.pop(k)
-
-        # Make sure that the datetime field is properly formatted
-        if config.get("last_updated"):
-            config["last_updated"] = convert_datetime(cls, config["last_updated"])
 
         if (ph_bs := config.get("phonon_bandstructure")) and not config.get(
             "structure"
@@ -863,12 +858,12 @@ class PhononWebsiteBS(BaseModel):
         description="Phononwebsite dictionary to plot the animated " "phonon modes.",
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation update for this property",
         default_factory=utcnow,
     )
 
-    created_at: datetime = Field(
+    created_at: DateTimeType = Field(
         description="Timestamp for when this material document was first created",
         default_factory=utcnow,
     )
@@ -891,12 +886,12 @@ class Ddb(BaseModel):
 
     ddb: str | None = Field(None, description="The string of the DDB file.")
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation update for this property",
         default_factory=utcnow,
     )
 
-    created_at: datetime = Field(
+    created_at: DateTimeType = Field(
         description="Timestamp for when this material document was first created",
         default_factory=utcnow,
     )
@@ -992,12 +987,12 @@ class Phonon(StructureMetadata):
         None, description="The vibrational contributions to the total energy."
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="Timestamp for when this document was last updated",
         default_factory=utcnow,
     )
 
-    created_at: datetime = Field(
+    created_at: DateTimeType = Field(
         description="Timestamp for when this material document was first created",
         default_factory=utcnow,
     )
@@ -1051,12 +1046,12 @@ class SoundVelocity(BaseModel):
         "None if not correctly identified.",
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="Timestamp for when this document was last updated",
         default_factory=utcnow,
     )
 
-    created_at: datetime = Field(
+    created_at: DateTimeType = Field(
         description="Timestamp for when this material document was first created",
         default_factory=utcnow,
     )
@@ -1074,12 +1069,12 @@ class ThermalDisplacement(BaseModel):
         "This comes in the form: mp-******",
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation update for this property",
         default_factory=utcnow,
     )
 
-    created_at: datetime = Field(
+    created_at: DateTimeType = Field(
         description="Timestamp for when this material document was first created",
         default_factory=utcnow,
     )

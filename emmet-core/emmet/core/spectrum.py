@@ -1,11 +1,9 @@
 """Core definition of Spectrum document"""
 
-from datetime import datetime
-
-from pydantic import Field, field_validator
+from pydantic import Field
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.common import convert_datetime
+from emmet.core.common import DateTimeType
 from emmet.core.mpid import IdentifierType
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import utcnow
@@ -31,7 +29,7 @@ class SpectrumDoc(StructureMetadata, EmmetBaseModel):
         description="The unique ID for this spectrum document.",
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation update for this property.",
         default_factory=utcnow,
     )
@@ -39,8 +37,3 @@ class SpectrumDoc(StructureMetadata, EmmetBaseModel):
     warnings: list[str] = Field(
         [], description="Any warnings related to this property."
     )
-
-    @field_validator("last_updated", mode="before")
-    @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)

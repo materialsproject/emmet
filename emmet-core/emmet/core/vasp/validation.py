@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from pydantic import Field, field_validator
+from pydantic import Field
 
 from emmet.core.vasp.calculation import Calculation
 from emmet.core.base import EmmetBaseModel
-from emmet.core.common import convert_datetime
+from emmet.core.common import DateTimeType
 from emmet.core.mpid import IdentifierType
 from emmet.core.utils import utcnow, DocEnum
 from emmet.core.vasp.calc_types.enums import CalcType, RunType
@@ -64,7 +63,7 @@ class ValidationDoc(VaspValidator, EmmetBaseModel):
         None, description="The task_id for this validation document"
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="The most recent time when this document was updated.",
         default_factory=utcnow,
     )
@@ -79,11 +78,6 @@ class ValidationDoc(VaspValidator, EmmetBaseModel):
         None, description="The run type of the calculation"
     )
     calc_type: CalcType | None = Field(None, description="The calculation type.")
-
-    @field_validator("last_updated", mode="before")
-    @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)
 
     @classmethod
     def from_file_metadata(cls, file_meta: list[FileMetadata], **kwargs) -> Self:

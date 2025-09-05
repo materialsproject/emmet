@@ -2,17 +2,16 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 import numpy as np
-from pydantic import BaseModel, Field, ImportString, field_validator
+from pydantic import BaseModel, Field, ImportString
 from pymatgen.core.structure import Structure
 from pymatgen.io.vasp.inputs import Kpoints
 from pymatgen.io.vasp.sets import VaspInputSet
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.common import convert_datetime
+from emmet.core.common import DateTimeType
 from emmet.core.mpid import IdentifierType
 from emmet.core.settings import EmmetSettings
 from emmet.core.tasks import CoreTaskDoc, TaskDoc
@@ -44,7 +43,7 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
         ..., description="The task_id for this validation document"
     )
     valid: bool = Field(False, description="Whether this task is valid or not")
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="Last updated date for this document",
         default_factory=utcnow,
     )
@@ -67,11 +66,6 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
     )
     chemsys: str | None = Field(None)
     formula_pretty: str | None = Field(None)
-
-    @field_validator("last_updated", mode="before")
-    @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)
 
     @classmethod
     def from_task_doc(

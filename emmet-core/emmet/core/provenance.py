@@ -3,16 +3,15 @@
 from __future__ import annotations
 
 import warnings
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator
 from pymatgen.core.structure import Structure
 
-from emmet.core.common import convert_datetime
+from emmet.core.common import DateTimeType
 from emmet.core.material_property import PropertyDoc
 from emmet.core.utils import ValueEnum, utcnow
 
@@ -50,12 +49,12 @@ class History(BaseModel):
         None, description="Dictionary of extra data for this history node."
     )
 
-    @model_validator(mode="before")
+    @field_validator("description", mode="before")
     @classmethod
-    def str_to_dict(cls, values):
-        if isinstance(values.get("description"), str):
-            values["description"] = {"string": values.get("description")}
-        return values
+    def str_to_dict(cls, v: dict | str | None) -> dict | None:
+        if isinstance(v, str):
+            return {"string": v}
+        return v
 
 
 class SNLAbout(BaseModel):
@@ -83,14 +82,9 @@ class SNLAbout(BaseModel):
         " of this material for the entry closest matching the material input.",
     )
 
-    created_at: datetime = Field(
+    created_at: DateTimeType = Field(
         default_factory=utcnow, description="The creation date for this SNL."
     )
-
-    @field_validator("created_at", mode="before")
-    @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)
 
 
 class SNLDict(BaseModel):
@@ -108,7 +102,7 @@ class ProvenanceDoc(PropertyDoc):
 
     property_name: str = "provenance"
 
-    created_at: datetime = Field(
+    created_at: DateTimeType = Field(
         ...,
         description="creation date for the first structure corresponding to this material",
     )
@@ -138,11 +132,6 @@ class ProvenanceDoc(PropertyDoc):
         description="List of history nodes specifying the transformations or orignation"
         " of this material for the entry closest matching the material input",
     )
-
-    @field_validator("last_updated", "created_at", mode="before")
-    @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)
 
     @field_validator("authors")
     @classmethod

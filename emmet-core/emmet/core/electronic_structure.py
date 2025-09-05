@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime
 from enum import Enum
 from math import isnan
 from typing import TYPE_CHECKING
 
 import numpy as np
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 from pymatgen.analysis.magnetism.analyzer import (
     CollinearMagneticStructureAnalyzer,
     Ordering,
@@ -23,7 +22,7 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 from typing_extensions import Literal
 
-from emmet.core.common import convert_datetime
+from emmet.core.common import DateTimeType
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import AlphaID, IdentifierType
 from emmet.core.settings import EmmetSettings
@@ -58,7 +57,7 @@ class BSObjectDoc(BaseModel):
         "This has the same form as a Materials Project ID.",
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="The timestamp when this calculation was last updated",
         default_factory=utcnow,
     )
@@ -66,11 +65,6 @@ class BSObjectDoc(BaseModel):
     data: dict | BandStructureSymmLine | None = Field(
         None, description="The band structure object for the given calculation ID"
     )
-
-    @field_validator("last_updated", mode="before")
-    @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)
 
 
 class DOSObjectDoc(BaseModel):
@@ -84,7 +78,7 @@ class DOSObjectDoc(BaseModel):
         "This has the same form as a Materials Project ID.",
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="The timestamp when this calculation was last updated.",
         default_factory=utcnow,
     )
@@ -92,11 +86,6 @@ class DOSObjectDoc(BaseModel):
     data: CompleteDos | None = Field(
         None, description="The density of states object for the given calculation ID."
     )
-
-    @field_validator("last_updated", mode="before")
-    @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)
 
 
 class ElectronicStructureBaseData(BaseModel):

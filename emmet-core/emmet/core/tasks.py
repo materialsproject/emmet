@@ -6,7 +6,6 @@ import logging
 import re
 import warnings
 from collections.abc import Mapping
-from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -20,7 +19,7 @@ from pymatgen.core.trajectory import Trajectory
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.io.vasp import Incar, Kpoints, Poscar
 
-from emmet.core.common import convert_datetime
+from emmet.core.common import DateTimeType
 from emmet.core.mpid import IdentifierType
 from emmet.core.structure import StructureMetadata
 from emmet.core.trajectory import Trajectory as CoreTrajectory
@@ -256,7 +255,7 @@ class CoreTaskDoc(StructureMetadata):
     calc_type: CalcType | None = Field(
         None, description="The functional and task type used in the calculation."
     )
-    completed_at: datetime | None = Field(
+    completed_at: DateTimeType | None = Field(
         None, description="Timestamp for when this task was completed"
     )
     dir_name: str | None = Field(None, description="The directory for this VASP task")
@@ -267,7 +266,7 @@ class CoreTaskDoc(StructureMetadata):
         None,
         description="VASP calculation inputs",
     )
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation for this task document",
         default_factory=utcnow,
     )
@@ -318,11 +317,6 @@ class CoreTaskDoc(StructureMetadata):
                     f"Invalid characters in batch_id: {' '.join(invalid_chars)}"
                 )
         return batch_id
-
-    @field_validator("last_updated", mode="before")
-    @classmethod
-    def handle_datetime(cls, last_updated) -> Any:
-        return convert_datetime(cls, last_updated)
 
     @classmethod
     def from_directory(

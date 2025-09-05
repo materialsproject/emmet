@@ -2,17 +2,16 @@ from __future__ import annotations
 
 import logging
 import operator
-from datetime import datetime
 from itertools import groupby
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 from pymatgen.core.composition import Composition
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
-from emmet.core.common import convert_datetime
+from emmet.core.common import DateTimeType
 from emmet.core.mpid import IdentifierType, AlphaID
 from emmet.core.utils import utcnow
 
@@ -99,15 +98,9 @@ class StructureGroupDoc(BaseModel):
         "present the chemsys will also include the ignored species.",
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         default_factory=utcnow, description="Timestamp when this document was built."
     )
-
-    # Make sure that the datetime field is properly formatted
-    @field_validator("last_updated", mode="before")
-    @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)
 
     @classmethod
     def from_grouped_entries(

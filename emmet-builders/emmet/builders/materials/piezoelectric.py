@@ -7,6 +7,7 @@ from maggma.utils import grouper
 from pymatgen.core.structure import Structure
 
 from emmet.core.polar import PiezoelectricDoc
+from emmet.core.mpid import AlphaID
 from emmet.core.utils import jsanitize
 
 
@@ -192,11 +193,10 @@ class PiezoelectricBuilder(Builder):
                     "orig_inputs.structure",
                     "input.parameters",
                     "input.structure",
-                    "output.piezo_tensor",
-                    "output.piezo_ionic_tensor",
+                    "calcs_reversed",
                     "output.bandgap",
                 ],
-                criteria={self.tasks.key: str(task_id)},
+                criteria={self.tasks.key: str(AlphaID(task_id))},
             )
             if task_query["output"]["bandgap"] > 0:
                 try:
@@ -222,19 +222,23 @@ class PiezoelectricBuilder(Builder):
                 lu_dt = mat_doc["last_updated"]
                 task_updated = task_query["last_updated"]
 
-                final_docs.append(
-                    {
-                        "task_id": task_id,
-                        "is_hubbard": int(is_hubbard),
-                        "nkpoints": int(nkpoints),
-                        "piezo_static": task_query["output"]["piezo_tensor"],
-                        "piezo_ionic": task_query["output"]["piezo_ionic_tensor"],
-                        "structure": structure,
-                        "updated_on": lu_dt,
-                        "task_updated": task_updated,
-                        self.materials.key: mat_doc[self.materials.key],
-                    }
-                )
+                if (cr := task_query.get("calcs_reversed", [])) and (
+                    outcar := cr[0].get("output", {}).get("outcar", {})
+                ):
+
+                    final_docs.append(
+                        {
+                            "task_id": task_id,
+                            "is_hubbard": int(is_hubbard),
+                            "nkpoints": int(nkpoints),
+                            "piezo_static": outcar.get("piezo_tensor"),
+                            "piezo_ionic": outcar.get("piezo_ionic_tensor"),
+                            "structure": structure,
+                            "updated_on": lu_dt,
+                            "task_updated": task_updated,
+                            self.materials.key: mat_doc[self.materials.key],
+                        }
+                    )
 
         if len(final_docs) > 0:
             sorted_final_docs = sorted(

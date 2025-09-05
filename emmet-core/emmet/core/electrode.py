@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
-from datetime import datetime
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, model_validator
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.apps.battery.battery_abc import AbstractElectrode
 from pymatgen.apps.battery.conversion_battery import (
@@ -20,7 +19,7 @@ from pymatgen.core import Composition, Structure
 from pymatgen.core.periodic_table import DummySpecies, Element, Species
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
-from emmet.core.common import convert_datetime
+from emmet.core.common import DateTimeType
 from emmet.core.mpid import IdentifierType
 from emmet.core.utils import ValueEnum, utcnow
 
@@ -221,7 +220,7 @@ class BaseElectrode(BaseModel):
         None, description="Maximum absolute difference in adjacent voltage steps."
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         default_factory=utcnow,
         description="Timestamp for the most recent calculation for this Material document.",
     )
@@ -258,12 +257,6 @@ class BaseElectrode(BaseModel):
     warnings: list[str] = Field(
         [], description="Any warnings related to this electrode data."
     )
-
-    # Make sure that the datetime field is properly formatted
-    @field_validator("last_updated", mode="before")
-    @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)
 
 
 class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):

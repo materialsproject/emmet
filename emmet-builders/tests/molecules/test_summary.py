@@ -100,9 +100,14 @@ def summary():
     return MemoryStore(key="molecule_id")
 
 
-def test_summary_one(
+# This once was two tests but the use of common stores
+# contaminates results when the tests are run on separate
+# workers - joined into one test since it was built that way.
+def test_summary(
     tasks_one,
     mols_one,
+    tasks_two,
+    mols_two,
     charges,
     spins,
     bonds,
@@ -160,21 +165,6 @@ def test_summary_one(
 
     assert summary.count() == 25
 
-
-def test_summary_two(
-    tasks_two,
-    mols_two,
-    charges,
-    spins,
-    bonds,
-    multipoles,
-    metal_binding,
-    orbitals,
-    redox,
-    thermo,
-    vibes,
-    summary,
-):
     charge_build = PartialChargesBuilder(tasks_two, mols_two, charges)
     charge_build.run()
 

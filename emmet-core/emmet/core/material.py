@@ -3,22 +3,20 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field
 from pymatgen.core import Structure
 from pymatgen.core.structure import Molecule
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.common import convert_datetime
+from emmet.core.common import DateTimeType
 from emmet.core.mpid import IdentifierType, MPID, MPculeID
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
 from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
 
 if TYPE_CHECKING:
-    from typing import Any
 
     from typing_extensions import Self
 
@@ -32,17 +30,10 @@ class PropertyOrigin(BaseModel):
     task_id: IdentifierType = Field(
         ..., description="The calculation ID this property comes from."
     )
-    last_updated: datetime = Field(  # type: ignore
+    last_updated: DateTimeType = Field(  # type: ignore
         description="The timestamp when this calculation was last updated",
         default_factory=utcnow,
     )
-
-    @model_validator(mode="before")
-    @classmethod
-    def handle_datetime_and_idx(cls, config: Any) -> Any:
-        if v := config.get("last_updated"):
-            config["last_updated"] = convert_datetime(cls, v)
-        return config
 
 
 class BasePropertyMetadata(StructureMetadata, EmmetBaseModel):
@@ -70,7 +61,7 @@ class BasePropertyMetadata(StructureMetadata, EmmetBaseModel):
         description="List of deprecation tags detailing why this document isn't valid.",
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation update for this property.",
         default_factory=utcnow,
     )
@@ -87,14 +78,6 @@ class BasePropertyMetadata(StructureMetadata, EmmetBaseModel):
         ...,
         description="The structure of the this material.",
     )
-
-    @model_validator(mode="before")
-    @classmethod
-    def handle_datetime_and_idx(cls, config: Any) -> Any:
-        for k in ("last_updated", "created_at"):
-            if v := config.get(k):
-                config[k] = convert_datetime(cls, v)
-        return config
 
     @classmethod
     def from_structure(  # type: ignore[override]
@@ -140,7 +123,7 @@ class MaterialsDoc(BasePropertyMetadata):
         description="Calculation types for all the calculations that make up this material.",
     )
 
-    created_at: datetime = Field(
+    created_at: DateTimeType = Field(
         description="Timestamp for when this material document was first created.",
         default_factory=utcnow,
     )
@@ -193,12 +176,12 @@ class CoreMoleculeDoc(MoleculeMetadata, EmmetBaseModel):
         description="Calculation types for all the tasks that make up this molecule",
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="Timestamp for when this document was last updated",
         default_factory=utcnow,
     )
 
-    created_at: datetime = Field(
+    created_at: DateTimeType = Field(
         description="Timestamp for when this document was first created",
         default_factory=utcnow,
     )
@@ -220,8 +203,3 @@ class CoreMoleculeDoc(MoleculeMetadata, EmmetBaseModel):
         return super().from_molecule(  # type: ignore
             meta_molecule=molecule, molecule_id=molecule_id, molecule=molecule, **kwargs
         )
-
-    @field_validator("last_updated", "created_at", mode="before")
-    @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)

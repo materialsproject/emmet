@@ -10,6 +10,7 @@ from pymatgen.entries.computed_entries import ComputedStructureEntry
 from emmet.core.base import EmmetMeta
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin
+from emmet.core.mpid import IdentifierType
 from emmet.core.settings import EmmetSettings
 from emmet.core.tasks import TaskDoc
 from emmet.core.utils import utcnow
@@ -28,15 +29,15 @@ class BlessedCalcs(BaseModel, populate_by_name=True):
 
 
 class MaterialsDoc(CoreMaterialsDoc):
-    calc_types: Mapping[str, CalcType] | None = Field(  # type: ignore
+    calc_types: Mapping[IdentifierType, CalcType] | None = Field(  # type: ignore
         None,
         description="Calculation types for all the calculations that make up this material",
     )
-    task_types: Mapping[str, TaskType] | None = Field(
+    task_types: Mapping[IdentifierType, TaskType] | None = Field(
         None,
         description="Task types for all the calculations that make up this material",
     )
-    run_types: Mapping[str, RunType] | None = Field(
+    run_types: Mapping[IdentifierType, RunType] | None = Field(
         None,
         description="Run types for all the calculations that make up this material",
     )

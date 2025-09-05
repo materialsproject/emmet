@@ -32,7 +32,7 @@ def convert_datetime(cls, v):
 
 DateTimeType = Annotated[
     datetime,
-    PlainSerializer(lambda x: x.isoformat()),
+    PlainSerializer(lambda x: x.isoformat(), return_type=str),
     BeforeValidator(lambda x: convert_datetime(None, x)),
 ]
 
