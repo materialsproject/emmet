@@ -578,7 +578,7 @@ class ConversionElectrodeBuilder(Builder):
                     for e in pd.entries
                 ]
                 material_ids = list(filter(None, material_ids))
-                lowest_id = min(material_ids, key=_get_id_lexi)
+                lowest_id = min(material_ids, key=_get_id_lexi)  # type: ignore[arg-type]
                 conversion_electrode_doc = (
                     ConversionElectrodeDoc.from_composition_and_pd(
                         comp=v[1],

@@ -16,7 +16,7 @@ from emmet.core.settings import EmmetSettings
 if TYPE_CHECKING:
     from pymatgen.core.structure import Structure
 
-    from emmet.core.mpid import MPID, AlphaID
+    from emmet.core.mpid import IdentifierType
 
 
 SETTINGS = EmmetSettings()
@@ -54,7 +54,7 @@ class DielectricDoc(PropertyDoc):
         ionic: Matrix3D,
         electronic: Matrix3D,
         structure: Structure,
-        material_id: MPID | AlphaID | None = None,
+        material_id: IdentifierType | None = None,
         **kwargs,
     ):
         ionic_tensor = Tensor(ionic).convert_to_ieee(structure)
@@ -107,7 +107,7 @@ class PiezoelectricDoc(PropertyDoc):
         ionic: PiezoTensor,
         electronic: PiezoTensor,
         structure: Structure,
-        material_id: MPID | AlphaID | None = None,
+        material_id: IdentifierType | None = None,
         **kwargs,
     ):
         ionic_tensor = BasePiezoTensor.from_vasp_voigt(ionic)

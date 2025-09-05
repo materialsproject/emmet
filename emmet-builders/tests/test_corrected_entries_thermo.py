@@ -4,6 +4,8 @@ import pytest
 from maggma.stores import JSONStore, MemoryStore
 from monty.serialization import dumpfn, loadfn
 
+from emmet.core.mpid import AlphaID
+
 from emmet.builders.materials.corrected_entries import CorrectedEntriesBuilder
 from emmet.builders.materials.thermo import ThermoBuilder
 from emmet.builders.vasp.materials import MaterialsBuilder
@@ -37,16 +39,6 @@ def phase_diagram_store():
     return MemoryStore(key="phase_diagram_id")
 
 
-def test_corrected_entries_builder(corrected_entries_store, materials_store):
-    builder = CorrectedEntriesBuilder(
-        materials=materials_store, corrected_entries=corrected_entries_store
-    )
-    builder.run()
-
-    assert corrected_entries_store.count() == 1
-    assert corrected_entries_store.count({"chemsys": "Si"}) == 1
-
-
 def test_corrected_entries_serialization(tmpdir):
     builder = CorrectedEntriesBuilder(MemoryStore(), MemoryStore(), MemoryStore())
 
@@ -54,16 +46,27 @@ def test_corrected_entries_serialization(tmpdir):
     loadfn(Path(tmpdir) / "test.json")
 
 
-def test_thermo_builder(corrected_entries_store, thermo_store, phase_diagram_store):
-    builder = ThermoBuilder(
+def test_thermo_builder(
+    corrected_entries_store, materials_store, thermo_store, phase_diagram_store
+):
+
+    ce_builder = CorrectedEntriesBuilder(
+        materials=materials_store, corrected_entries=corrected_entries_store
+    )
+    ce_builder.run()
+
+    assert corrected_entries_store.count() == 1
+    assert corrected_entries_store.count({"chemsys": "Si"}) == 1
+
+    thermo_builder = ThermoBuilder(
         thermo=thermo_store,
         corrected_entries=corrected_entries_store,
         phase_diagram=phase_diagram_store,
     )
-    builder.run()
+    thermo_builder.run()
 
     assert thermo_store.count() == 1
-    assert thermo_store.count({"material_id": "mp-149"}) == 1
+    assert thermo_store.count({"material_id": str(AlphaID("mp-149"))}) == 1
 
     assert phase_diagram_store.count() == 1
 

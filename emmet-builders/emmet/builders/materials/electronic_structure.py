@@ -23,7 +23,7 @@ from emmet.core.electronic_structure import ElectronicStructureDoc
 from emmet.core.settings import EmmetSettings
 from emmet.core.utils import jsanitize
 
-SETTINGS = EmmetSettings()
+SETTINGS = EmmetSettings()  # type: ignore[call-arg]
 
 
 class ElectronicStructureBuilder(Builder):

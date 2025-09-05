@@ -47,15 +47,16 @@ def test_absorption_doc(absorption_test_data):
     task_id = data["task_id"]
     kpoints = data["orig_inputs"]["kpoints"]
 
+    cr = data["calcs_reversed"][0]["output"]
     doc = AbsorptionDoc.from_structure(
         structure=structure,
         material_id="mp-{}".format(task_id),
         task_id=task_id,
         deprecated=False,
-        energies=data["output"]["dielectric"]["energy"],
-        real_d=data["output"]["dielectric"]["real"],
-        imag_d=data["output"]["dielectric"]["imag"],
-        absorption_co=data["output"]["optical_absorption_coeff"],
+        energies=cr["frequency_dependent_dielectric"]["energy"],
+        real_d=cr["frequency_dependent_dielectric"]["real"],
+        imag_d=cr["frequency_dependent_dielectric"]["imaginary"],
+        absorption_co=cr["optical_absorption_coeff"],
         bandgap=data["output"]["bandgap"],
         nkpoints=kpoints.num_kpts,
         is_hubbard=False,

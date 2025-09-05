@@ -2,31 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from datetime import datetime
-from typing import TYPE_CHECKING
-
-from pydantic import Field, model_validator
+from pydantic import Field
 from pydantic.json_schema import SkipJsonSchema
 from pymatgen.core import Structure
 
-from emmet.core.base import EmmetBaseModel
-from emmet.core.common import convert_datetime
-from emmet.core.material import PropertyOrigin
-from emmet.core.mpid import MPID, AlphaID
-from emmet.core.structure import StructureMetadata
-from emmet.core.utils import utcnow
-from emmet.core.vasp.validation import DeprecationMessage
-
-if TYPE_CHECKING:
-    from typing import Any
-
-    from typing_extensions import Self
-
-    from emmet.core.mpid import MPID
+from emmet.core.material import BasePropertyMetadata
 
 
-class PropertyDoc(StructureMetadata, EmmetBaseModel):
+class PropertyDoc(BasePropertyMetadata):
     """
     Base model definition for any singular materials property.
 
@@ -36,66 +19,7 @@ class PropertyDoc(StructureMetadata, EmmetBaseModel):
     """
 
     property_name: str
-    material_id: MPID | AlphaID | None = Field(
-        None,
-        description="The Materials Project ID of the material, used as a universal reference across property documents."
-        "This comes in the form: mp-******.",
-    )
-
-    deprecated: bool = Field(
-        ...,
-        description="Whether this property document is deprecated.",
-    )
-
-    deprecation_reasons: list[DeprecationMessage | str] | None = Field(
-        None,
-        description="List of deprecation tags detailing why this document isn't valid.",
-    )
-
-    last_updated: datetime = Field(
-        description="Timestamp for the most recent calculation update for this property.",
-        default_factory=utcnow,
-    )
-
-    origins: Sequence[PropertyOrigin] = Field(
-        [], description="Dictionary for tracking the provenance of properties."
-    )
-
-    warnings: Sequence[str] = Field(
-        [], description="Any warnings related to this property."
-    )
 
     structure: SkipJsonSchema[Structure | None] = Field(
         None, description="The structure associated with this property.", exclude=True
     )
-
-    @model_validator(mode="before")
-    @classmethod
-    def handle_datetime_and_idx(cls, config: Any) -> Any:
-        if v := config.get("last_updated"):
-            config["last_updated"] = convert_datetime(cls, v)
-
-        if idx := config.get("material_id"):
-            config["material_id"] = AlphaID(idx).formatted
-        return config
-
-    @classmethod
-    def from_structure(  # type: ignore[override]
-        cls,
-        meta_structure: Structure,
-        material_id: MPID | AlphaID | None = None,
-        **kwargs,
-    ) -> Self:
-        """
-        Builds a materials document using a minimal amount of information.
-
-        Note that structure is stored as a private attr, and will not
-        be included in `PropertyDoc().model_dump()`
-        """
-
-        return super().from_structure(
-            meta_structure=meta_structure,
-            structure=meta_structure,
-            material_id=material_id,
-            **kwargs,
-        )  # type: ignore

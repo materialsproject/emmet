@@ -326,18 +326,25 @@ class MaterialsBuilder(Builder):
             if task.task_type == TaskType.Deformation:
                 if (
                     transformations is None
+                    or not task.input
+                    or not task.input.structure
                 ):  # Do not include deformed tasks without transformation information
                     self.logger.debug(
-                        "Cannot find transformation for deformation task {}. Excluding task.".format(
-                            task.task_id
-                        )
+                        "Cannot find transformation or original structure "
+                        f"for deformation task {task.task_id}. Excluding task."
                     )
                     continue
                 else:
                     s = undeform_structure(task.input.structure, transformations)
 
+            elif task.output and task.output.structure:
+                s = task.output.structure  # type: ignore[assignment]
             else:
-                s = task.output.structure
+                self.logger.debug(
+                    f"Skipping task {task.task_id}, missing output structure."
+                )
+                continue
+
             s.index: int = idx  # type: ignore
             structures.append(s)
 

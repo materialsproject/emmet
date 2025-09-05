@@ -6,12 +6,16 @@ from pymatgen.core import Element, Structure, Molecule
 from pymatgen.core.trajectory import Trajectory as PmgTraj
 
 from emmet.core.tasks import TaskDoc
+from emmet.core.testing_utils import DataArchive
 from emmet.core.trajectory import Trajectory
 
 
 @fixture(scope="module")
 def si_task(test_dir):
-    return TaskDoc.from_directory(test_dir / "vasp" / "Si_old_double_relax")
+    with DataArchive.extract(
+        test_dir / "vasp" / "Si_old_double_relax.json.gz"
+    ) as dir_name:
+        return TaskDoc.from_directory(dir_name)
 
 
 def test_reorder_sites():

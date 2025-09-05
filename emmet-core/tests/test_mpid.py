@@ -3,6 +3,7 @@ from emmet.core.mpid import (
     MPculeID,
     AlphaID,
     VALID_ALPHA_SEPARATORS,
+    IdentifierType,
 )
 import pytest
 
@@ -262,3 +263,24 @@ def test_pydantic(id_cls):
 
     with pytest.raises(ValueError, match=f"Invalid {id_cls.__name__} Format"):
         TestClass(ID=10.0)
+
+
+def test_identifier_type():
+
+    class TestClass(BaseModel):
+        ID: IdentifierType
+
+    tc = TestClass(ID="dogs")
+
+    # ensure that extant MPIDs are deserialized to MPID,
+    # and return AlphaID strings on model dump
+    assert isinstance(tc.ID, MPID)
+    assert tc.model_dump()["ID"].isalpha()
+    assert not tc.model_dump()["ID"].isnumeric()
+
+    tc = TestClass(ID=AlphaID._cut_point + 1)
+    # ensure that new MPIDs are deserialized to MPID,
+    # and return AlphaID strings on model dump
+    assert isinstance(tc.ID, AlphaID)
+    assert tc.model_dump()["ID"].isalpha()
+    assert not tc.model_dump()["ID"].isnumeric()

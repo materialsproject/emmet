@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import TypeAlias
+from typing import Annotated, Union
 
-PathLike: TypeAlias = str | Path | os.DirEntry[str]
+from pydantic import PlainSerializer
+
+PathLike = Annotated[
+    Union[str | Path | os.DirEntry[str]],
+    PlainSerializer(lambda x: str(x), return_type=str),
+]
 """Type of a generic path-like object"""
