@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -15,6 +14,7 @@ from emmet.core.common import convert_datetime
 from emmet.core.material import PropertyOrigin
 from emmet.core.mpid import MPID, AlphaID
 from emmet.core.structure import StructureMetadata
+from emmet.core.typing import StructureType
 from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
 
@@ -47,7 +47,7 @@ class PropertyDoc(StructureMetadata, EmmetBaseModel):
         description="Whether this property document is deprecated.",
     )
 
-    deprecation_reasons: list[DeprecationMessage | str] | None = Field(
+    deprecation_reasons: list[DeprecationMessage] | None = Field(
         None,
         description="List of deprecation tags detailing why this document isn't valid.",
     )
@@ -57,15 +57,15 @@ class PropertyDoc(StructureMetadata, EmmetBaseModel):
         default_factory=utcnow,
     )
 
-    origins: Sequence[PropertyOrigin] = Field(
-        [], description="Dictionary for tracking the provenance of properties."
+    origins: list[PropertyOrigin] | None = Field(
+        None, description="Dictionary for tracking the provenance of properties."
     )
 
-    warnings: Sequence[str] = Field(
-        [], description="Any warnings related to this property."
+    warnings: list[str] | None = Field(
+        None, description="Any warnings related to this property."
     )
 
-    structure: SkipJsonSchema[Structure | None] = Field(
+    structure: SkipJsonSchema[StructureType | None] = Field(
         None, description="The structure associated with this property.", exclude=True
     )
 

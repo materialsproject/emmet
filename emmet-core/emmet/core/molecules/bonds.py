@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import copy
 from hashlib import blake2b
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 import networkx as nx
 from pydantic import Field
 from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.core.structure import Molecule
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.molecules import MolPropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPculeID
@@ -17,6 +18,14 @@ from emmet.core.utils import make_mol_graph
 
 if TYPE_CHECKING:
     from typing import Any
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters.structure_graph_adapter import (
+        AnnotatedMoleculeGraph,
+    )
+
+MoleculeGraphType: TypeAlias = (
+    AnnotatedMoleculeGraph if ARROW_COMPATIBLE else MoleculeGraph  # type: ignore[valid-type]
+)
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -342,7 +351,7 @@ class MoleculeBondingDoc(PropertyDoc):
 
     property_name: str = "bonding"
 
-    molecule_graph: MoleculeGraph = Field(..., description="Molecule graph")
+    molecule_graph: MoleculeGraphType = Field(..., description="Molecule graph")
 
     method: str = Field(..., description="Method used to compute molecule graph")
 

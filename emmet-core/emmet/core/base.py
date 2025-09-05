@@ -1,13 +1,29 @@
 """Base emmet model to add default metadata."""
 
 from datetime import datetime
-from typing import Literal
+from typing import Literal, TypeVar
+
 from pydantic import BaseModel, Field, field_validator
 from pymatgen.core import __version__ as pmg_version
 
-from emmet.core import __version__
+from emmet.core import ARROW_COMPATIBLE, __version__
 from emmet.core.common import convert_datetime
 from emmet.core.utils import utcnow
+
+if ARROW_COMPATIBLE:
+    from emmet.core.arrow import arrowize
+
+T = TypeVar("T", bound="EmmetBaseModel")
+
+
+class ContextModel(BaseModel):
+    @classmethod
+    def arrow_type(cls):
+        if not ARROW_COMPATIBLE:
+            raise RuntimeError(
+                "pyarrow must be installed to generate arrow type defs for emmet models"
+            )
+        return arrowize(cls)
 
 
 class EmmetMeta(BaseModel):
@@ -48,7 +64,7 @@ class EmmetMeta(BaseModel):
         return convert_datetime(cls, v)
 
 
-class EmmetBaseModel(BaseModel):
+class EmmetBaseModel(ContextModel):
     """Base Model for default emmet data."""
 
     builder_meta: EmmetMeta | None = Field(

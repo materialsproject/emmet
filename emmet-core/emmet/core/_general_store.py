@@ -20,7 +20,7 @@ class GeneralStoreDoc(BaseModel):
 
     markdown: str | None = Field(None, description="Markdown data.")
 
-    meta: dict | None = Field(None, description="Metadata.")
+    meta: dict[str, str] | None = Field(None, description="Metadata.")
 
     last_updated: datetime = Field(
         description="Timestamp for when this document was last updated",

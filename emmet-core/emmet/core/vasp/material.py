@@ -1,42 +1,74 @@
 """Core definition of a Materials Document"""
 
-from collections.abc import Mapping
+import json
+from typing import Mapping
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_serializer
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer, oxide_type
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.base import EmmetMeta
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin
+from emmet.core.serialization_adapters.computed_entries_adapter import (
+    AnnotatedComputedStructureEntry,
+)
 from emmet.core.settings import EmmetSettings
 from emmet.core.tasks import TaskDoc
-from emmet.core.utils import utcnow
-from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
+from emmet.core.typing import CalcTypeAlias, RunTypeAlias, TaskTypeAlias
+from emmet.core.utils import jsanitize, utcnow
+from emmet.core.vasp.calc_types import RunType, TaskType
 
 SETTINGS = EmmetSettings()
 
 
 class BlessedCalcs(BaseModel, populate_by_name=True):
-    GGA: ComputedStructureEntry | None = None
-    GGA_U: ComputedStructureEntry | None = Field(None, alias="GGA+U")
-    PBESol: ComputedStructureEntry | None = Field(None, alias="PBEsol")
-    SCAN: ComputedStructureEntry | None = None
-    R2SCAN: ComputedStructureEntry | None = Field(None, alias="r2SCAN")
-    HSE: ComputedStructureEntry | None = None
+    GGA: AnnotatedComputedStructureEntry | None = Field(None)
+    GGA_U: AnnotatedComputedStructureEntry | None = Field(None, alias="GGA+U")
+    PBESol: AnnotatedComputedStructureEntry | None = Field(None, alias="PBEsol")
+    SCAN: AnnotatedComputedStructureEntry | None = Field(None)
+    R2SCAN: AnnotatedComputedStructureEntry | None = Field(None, alias="r2SCAN")
+    HSE: AnnotatedComputedStructureEntry | None = Field(None)
+
+    @model_serializer(mode="wrap")
+    def model_serialization(self, default_serializer, info):
+        default_serialized_model = default_serializer(self, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            arrow_compat_model = jsanitize(default_serialized_model, allow_bson=True)
+            for entry in arrow_compat_model.values():
+                # cast as str, de-serializing unions is not yet supported in pyarrow
+                if entry:
+                    entry["energy_adjustments"] = json.dumps(
+                        entry["energy_adjustments"]
+                    )
+            return arrow_compat_model
+
+        return default_serialized_model
+
+    @field_validator("*", mode="before")
+    def entry_deserializer(cls, entry):
+        if ARROW_COMPATIBLE:
+            if isinstance(entry, dict) and isinstance(
+                entry.get("energy_adjustments"), str
+            ):
+                entry["energy_adjustments"] = json.loads(entry["energy_adjustments"])
+        return entry
 
 
 class MaterialsDoc(CoreMaterialsDoc):
-    calc_types: Mapping[str, CalcType] | None = Field(  # type: ignore
+    calc_types: Mapping[str, CalcTypeAlias] | None = Field(  # type: ignore
         None,
         description="Calculation types for all the calculations that make up this material",
     )
-    task_types: Mapping[str, TaskType] | None = Field(
+    task_types: Mapping[str, TaskTypeAlias] | None = Field(
         None,
         description="Task types for all the calculations that make up this material",
     )
-    run_types: Mapping[str, RunType] | None = Field(
+    run_types: Mapping[str, RunTypeAlias] | None = Field(
         None,
         description="Run types for all the calculations that make up this material",
     )

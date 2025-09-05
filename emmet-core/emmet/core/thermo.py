@@ -1,17 +1,35 @@
 """Core definition of a Thermo Document"""
 
+import json
 from collections import defaultdict
 from datetime import datetime
+from typing import Annotated, TypeAlias
 
-from pydantic import BaseModel, Field
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    Field,
+    WrapSerializer,
+    field_serializer,
+    field_validator,
+)
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
-from emmet.core.base import EmmetMeta
+from emmet.core import ARROW_COMPATIBLE
+from emmet.core.base import ContextModel, EmmetMeta
 from emmet.core.material import PropertyOrigin
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import AlphaID, MPID
-from emmet.core.utils import ValueEnum, utcnow
+from emmet.core.mpid import MPID, AlphaID
+from emmet.core.serialization_adapters.computed_entries_adapter import (
+    AnnotatedComputedStructureEntry,
+)
+from emmet.core.serialization_adapters.phase_diagram_adapter import (
+    PhaseDiagramType,
+    entries_energy_adjustments_serde,
+)
+from emmet.core.typing import RunTypeAlias
+from emmet.core.utils import ValueEnum, jsanitize, type_override, utcnow
 from emmet.core.vasp.calc_types.enums import RunType
 
 
@@ -35,12 +53,21 @@ class DecompositionProduct(BaseModel):
 
 
 class ThermoType(ValueEnum):
+    GGA = "GGA"
     GGA_GGA_U = "GGA_GGA+U"
     GGA_GGA_U_R2SCAN = "GGA_GGA+U_R2SCAN"
     R2SCAN = "R2SCAN"
     UNKNOWN = "UNKNOWN"
 
 
+ThermoTypeAlias: TypeAlias = Annotated[
+    ThermoType,
+    BeforeValidator(lambda x: ThermoType(x) if isinstance(x, str) else x),
+    WrapSerializer(lambda x, nxt, info: x.value, return_type=str),
+]
+
+
+@type_override({"thermo_type": ThermoTypeAlias})
 class ThermoDoc(PropertyDoc):
     """
     A thermo entry document
@@ -48,7 +75,7 @@ class ThermoDoc(PropertyDoc):
 
     property_name: str = "thermo"
 
-    thermo_type: ThermoType | RunType = Field(
+    thermo_type: ThermoTypeAlias | RunTypeAlias = Field(
         ...,
         description="Functional types of calculations involved in the energy mixing scheme.",
     )
@@ -111,12 +138,34 @@ class ThermoDoc(PropertyDoc):
     entry_types: list[str] = Field(
         description="List of available energy types computed for this material."
     )
-
-    entries: dict[str, ComputedEntry | ComputedStructureEntry] = Field(
+    entries: dict[str, AnnotatedComputedStructureEntry] = Field(
         ...,
         description="List of all entries that are valid for this material."
         " The keys for this dictionary are names of various calculation types.",
     )
+
+    @field_serializer("entries", mode="wrap")
+    def entries_serializer(self, entries, default_serializer, info):
+        default_serialized_object = default_serializer(entries, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            arrow_compat_object = jsanitize(default_serialized_object, allow_bson=True)
+            entries_energy_adjustments_serde(arrow_compat_object, json.dumps)
+            return arrow_compat_object
+
+        return default_serialized_object
+
+    @field_validator("entries", mode="before")
+    def entries_deserializer(cls, entries):
+        if ARROW_COMPATIBLE:
+            first_entry = next(iter(entries.values()))
+            if isinstance(first_entry, dict) and isinstance(
+                first_entry["energy_adjustments"], str
+            ):
+                entries_energy_adjustments_serde(entries, json.loads)
+
+        return entries
 
     @classmethod
     def from_entries(
@@ -125,7 +174,7 @@ class ThermoDoc(PropertyDoc):
         thermo_type: ThermoType | RunType,
         phase_diagram: PhaseDiagram | None = None,
         use_max_chemsys: bool = False,
-        **kwargs
+        **kwargs,
     ):
         """Produce a list of ThermoDocs from a list of Entry objects
 
@@ -294,7 +343,8 @@ class ThermoDoc(PropertyDoc):
         return new_pd
 
 
-class PhaseDiagramDoc(BaseModel):
+@type_override({"thermo_type": ThermoTypeAlias})
+class PhaseDiagramDoc(ContextModel):
     """
     A phase diagram document
     """
@@ -311,12 +361,12 @@ class PhaseDiagramDoc(BaseModel):
         description="Dash-delimited string of elements in the material",
     )
 
-    thermo_type: ThermoType | RunType = Field(
+    thermo_type: ThermoTypeAlias | RunTypeAlias = Field(
         ...,
         description="Functional types of calculations involved in the energy mixing scheme.",
     )
 
-    phase_diagram: PhaseDiagram = Field(
+    phase_diagram: PhaseDiagramType = Field(
         ...,
         description="Phase diagram for the chemical system.",
     )

@@ -2,20 +2,22 @@ from __future__ import annotations
 
 import warnings
 from itertools import groupby
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated, TypeAlias
 
 import numpy as np
-from pydantic import Field, field_validator
+from pydantic import BeforeValidator, Field, WrapSerializer, field_validator
 from pymatgen.analysis.xas.spectrum import XAS, site_weighted_spectrum
-from pymatgen.core.periodic_table import Element
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.core.feff.task import TaskDocument
+from emmet.core.mpid import MPID
+from emmet.core.serialization_adapters.xas_adapter import AnnotatedXAS
 from emmet.core.spectrum import SpectrumDoc
+from emmet.core.typing import ElementType
 from emmet.core.utils import ValueEnum
 
 if TYPE_CHECKING:
-    from emmet.core.mpid import AlphaID, MPID
+    from emmet.core.mpid import MPID, AlphaID
 
 
 class Edge(ValueEnum):
@@ -34,7 +36,7 @@ class Edge(ValueEnum):
     L2_3 = "L2,3"
 
 
-class Type(ValueEnum):
+class SpectrumType(ValueEnum):
     """
     The type of XAS Spectrum
     XANES - Just the near-edge region
@@ -47,6 +49,19 @@ class Type(ValueEnum):
     XAFS = "XAFS"
 
 
+EdgeType: TypeAlias = Annotated[
+    Edge,
+    BeforeValidator(lambda x: Edge(x) if isinstance(x, str) else x),
+    WrapSerializer(lambda x, nxt, info: x.value, return_type=str),
+]
+SpectrumTypeAlias: TypeAlias = Annotated[
+    SpectrumType,
+    BeforeValidator(lambda x: SpectrumType(x) if isinstance(x, str) else x),
+    WrapSerializer(lambda x, nxt, info: x.value, return_type=str),
+]
+XASType: TypeAlias = AnnotatedXAS
+
+
 class XASDoc(SpectrumDoc):
     """
     Document describing a XAS Spectrum.
@@ -54,7 +69,7 @@ class XASDoc(SpectrumDoc):
 
     spectrum_name: str = "XAS"
 
-    spectrum: XAS | dict | None = Field(
+    spectrum: XASType | None = Field(
         None, description="The XAS spectrum for this calculation."
     )
 
@@ -64,18 +79,17 @@ class XASDoc(SpectrumDoc):
         description="List of Calculations IDs used to make this XAS spectrum.",
     )
 
-    absorbing_element: Element = Field(..., description="Absoring element.")
-    spectrum_type: Type = Field(..., description="XAS spectrum type.")
-    edge: Edge = Field(
+    absorbing_element: ElementType = Field(..., description="Absoring element.")
+    spectrum_type: SpectrumTypeAlias = Field(..., description="XAS spectrum type.")
+    edge: EdgeType = Field(
         ..., title="Absorption Edge", description="The interaction edge for XAS."
     )
 
     @field_validator("spectrum", mode="before")
     @classmethod
-    def check_spectrum_non_positive_values(cls, v, eps=1.0e-12) -> XAS:
+    def check_spectrum_non_positive_values(cls, v, eps=1.0e-12) -> dict:
         if isinstance(v, dict):
             v["y"] = [y if y > 0.0 else abs(eps) for y in v["y"]]
-            v = XAS.from_dict(v)
         return v
 
     @classmethod

@@ -2,37 +2,38 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import re
 import warnings
-from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 import numpy as np
 from monty.json import MontyDecoder
 from monty.serialization import loadfn
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    field_serializer,
+    field_validator,
+    model_serializer,
+    model_validator,
+)
 from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.core.structure import Structure
 from pymatgen.core.trajectory import Trajectory
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.io.vasp import Incar, Kpoints, Poscar
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID, AlphaID
 from emmet.core.structure import StructureMetadata
 from emmet.core.trajectory import Trajectory as CoreTrajectory
-from emmet.core.utils import utcnow
-from emmet.core.vasp.calc_types import (
-    CalcType,
-    RunType,
-    TaskType,
-    calc_type,
-    run_type,
-    task_type,
-)
+from emmet.core.typing import CalcTypeAlias, RunTypeAlias, StructureType, TaskTypeAlias
+from emmet.core.utils import jsanitize, type_override, utcnow
+from emmet.core.vasp.calc_types import CalcType, RunType, calc_type, run_type, task_type
 from emmet.core.vasp.calculation import (
     Calculation,
     CalculationInput,
@@ -40,14 +41,32 @@ from emmet.core.vasp.calculation import (
     PotcarSpec,
     RunStatistics,
     VaspObject,
+    VaspObjectAlias,
 )
-from emmet.core.vasp.task_valid import TaskState
+from emmet.core.vasp.task_valid import TaskState, TaskStateType
 from emmet.core.vasp.utils import TASK_NAMES, discover_and_sort_vasp_files
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from typing_extensions import Self
+
+if ARROW_COMPATIBLE:
+    from emmet.core.serialization_adapters.computed_entries_adapter import (
+        AnnotatedComputedStructureEntry,
+        ComputedEntryTypeVar,
+    )
+    from emmet.core.serialization_adapters.poscar_adapter import AnnotatedPoscar
+    from emmet.core.serialization_adapters.trajectory_adapter import TrajectoryTypeVar
+
+ComputedEntryType: TypeAlias = (
+    ComputedEntryTypeVar if ARROW_COMPATIBLE else ComputedEntry  # type: ignore[valid-type]
+)
+ComputedStructureEntryType: TypeAlias = (
+    AnnotatedComputedStructureEntry if ARROW_COMPATIBLE else ComputedStructureEntry  # type: ignore[valid-type]
+)
+PoscarType: TypeAlias = AnnotatedPoscar if ARROW_COMPATIBLE else Poscar  # type: ignore[valid-type]
+TrajectoryType: TypeAlias = TrajectoryTypeVar if ARROW_COMPATIBLE else Trajectory  # type: ignore[valid-type]
 
 monty_decoder = MontyDecoder()
 logger = logging.getLogger(__name__)
@@ -74,7 +93,7 @@ class InputDoc(OrigInputs):
 
 
 class OutputDoc(BaseModel):
-    structure: Structure | None = Field(
+    structure: StructureType | None = Field(
         None,
         title="Output Structure",
         description="Output Structure from the VASP calculation.",
@@ -151,6 +170,7 @@ class OutputDoc(BaseModel):
         )
 
 
+@type_override({"corrections": str, "job": str})
 class CustodianDoc(BaseModel):
     corrections: list[Any] | None = Field(
         None,
@@ -162,6 +182,26 @@ class CustodianDoc(BaseModel):
         title="Custodian Job Data",
         description="Job data logged by custodian.",
     )
+
+    @model_serializer(mode="wrap")
+    def model_serialization(self, default_serializer, info):
+        default_serialized_model = default_serializer(self, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            arrow_compat_model = jsanitize(default_serialized_model, allow_bson=True)
+            for field, value in arrow_compat_model.items():
+                arrow_compat_model[field] = json.dumps(value)
+            return arrow_compat_model
+
+        return default_serialized_model
+
+    @field_validator("*", mode="before")
+    def field_deserializer(cls, field):
+        if ARROW_COMPATIBLE:
+            if isinstance(field, str):
+                field = json.loads(field)
+        return field
 
 
 class AnalysisDoc(BaseModel):
@@ -246,6 +286,7 @@ class AnalysisDoc(BaseModel):
         )
 
 
+@type_override({"transformations": str, "vasp_objects": str})
 class CoreTaskDoc(StructureMetadata):
     """Calculation-level details about VASP calculations that power the Materials Project."""
 
@@ -253,7 +294,7 @@ class CoreTaskDoc(StructureMetadata):
         None,
         description="Identifier for this calculation; should provide rough information about the calculation origin and purpose.",
     )
-    calc_type: CalcType | None = Field(
+    calc_type: CalcTypeAlias | None = Field(
         None, description="The functional and task type used in the calculation."
     )
     completed_at: datetime | None = Field(
@@ -279,10 +320,10 @@ class CoreTaskDoc(StructureMetadata):
         None,
         description="VASP calculation outputs.",
     )
-    run_type: RunType | None = Field(
+    run_type: RunTypeAlias | None = Field(
         None, description="The functional used in the calculation."
     )
-    structure: Structure | None = Field(
+    structure: StructureType | None = Field(
         None, description="Final output structure from the task"
     )
     tags: list[str] | None = Field(
@@ -293,7 +334,7 @@ class CoreTaskDoc(StructureMetadata):
         description="The (task) ID of this calculation, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
     )
-    task_type: TaskType | CalcType | None = Field(
+    task_type: TaskTypeAlias | CalcTypeAlias | None = Field(
         None, description="The type of calculation."
     )
     transformations: Any | None = Field(
@@ -301,7 +342,7 @@ class CoreTaskDoc(StructureMetadata):
         description="Information on the structural transformations, parsed from a "
         "transformations.json file",
     )
-    vasp_objects: dict[VaspObject, Any] | None = Field(
+    vasp_objects: dict[VaspObjectAlias, Any] | None = Field(
         None, description="Vasp objects associated with this task"
     )
 
@@ -323,6 +364,24 @@ class CoreTaskDoc(StructureMetadata):
     @classmethod
     def handle_datetime(cls, last_updated) -> Any:
         return convert_datetime(cls, last_updated)
+
+    @field_serializer("transformations", "vasp_objects", mode="wrap")
+    def serialize_overrides(self, d, default_serializer, info):
+        default_serialized_object = default_serializer(d, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            return json.dumps(default_serialized_object)
+
+        return default_serialized_object
+
+    @field_validator("transformations", "vasp_objects", mode="before")
+    def deserialize_overrides(cls, d):
+        if ARROW_COMPATIBLE:
+            if isinstance(d, str):
+                d = json.loads(d)
+
+        return d
 
     @classmethod
     def from_directory(
@@ -413,6 +472,7 @@ class CoreTaskDoc(StructureMetadata):
         return (task_doc, trajectory)
 
 
+@type_override({"additional_json": str})
 class TaskDoc(CoreTaskDoc, extra="allow"):
     """Flexible wrapper around CoreTaskDoc"""
 
@@ -437,7 +497,7 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
         title="Calcs reversed data",
         description="Detailed custodian data for each VASP calculation contributing to the task document.",
     )
-    entry: ComputedEntry | None = Field(
+    entry: ComputedEntryType | None = Field(
         None, description="The ComputedEntry from the task doc"
     )
     included_objects: list[VaspObject] | None = Field(
@@ -447,11 +507,11 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
         None,
         description="The exact set of output parameters used to generate the current task document.",
     )
-    run_stats: Mapping[str, RunStatistics] | None = Field(
+    run_stats: dict[str, RunStatistics] | None = Field(
         None,
         description="Summary of runtime statistics for each calculation in this task",
     )
-    state: TaskState | None = Field(None, description="State of this calculation")
+    state: TaskStateType | None = Field(None, description="State of this calculation")
     task_label: str | None = Field(None, description="A description of the task")
 
     @model_validator(mode="before")
@@ -498,6 +558,47 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
                 )
 
         return values
+
+    @field_serializer("additional_json", mode="wrap")
+    def serialize_additional_json(self, d, default_serializer, info):
+        default_serialized_object = default_serializer(d, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            return json.dumps(default_serialized_object)
+
+        return default_serialized_object
+
+    @field_validator("additional_json", mode="before")
+    def deserialize_additional_json(cls, d):
+        if ARROW_COMPATIBLE:
+            if isinstance(d, str):
+                d = json.loads(d)
+
+        return d
+
+    @field_serializer("entry", mode="wrap")
+    def entry_serializer(self, entry, default_serializer, info):
+        default_serialized_object = default_serializer(entry, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            arrow_compat_object = jsanitize(default_serialized_object, allow_bson=True)
+            arrow_compat_object["energy_adjustments"] = json.dumps(
+                arrow_compat_object["energy_adjustments"]
+            )
+
+            return arrow_compat_object
+
+        return default_serialized_object
+
+    @field_validator("entry", mode="before")
+    def entry_deserializer(cls, entry):
+        if ARROW_COMPATIBLE:
+            if isinstance(entry, dict) and isinstance(entry["energy_adjustments"], str):
+                entry["energy_adjustments"] = json.loads(entry["energy_adjustments"])
+
+        return entry
 
     @classmethod
     def from_directory(
@@ -812,7 +913,7 @@ class TrajectoryDoc(BaseModel):
         "This comes in the form: mp-******.",
     )
 
-    trajectories: list[Trajectory] | None = Field(
+    trajectories: list[TrajectoryType] | None = Field(
         None,
         description="Trajectory data for calculations associated with a task doc.",
     )
@@ -827,7 +928,7 @@ class EntryDoc(BaseModel):
         "This comes in the form: mp-******.",
     )
 
-    entry: ComputedStructureEntry | None = Field(
+    entry: ComputedStructureEntryType | None = Field(
         None,
         description="Computed structure entry for the calculation associated with the task doc.",
     )

@@ -4,14 +4,13 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
-from pymatgen.core.periodic_table import Element
-from pymatgen.core.structure import Structure
 
 from emmet.core.electronic_structure import BandstructureData, DosData
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import AlphaID, MPID
+from emmet.core.mpid import MPID, AlphaID
 from emmet.core.thermo import DecompositionProduct
-from emmet.core.xas import Edge, Type
+from emmet.core.typing import ElementType, StructureType
+from emmet.core.xas import EdgeType, SpectrumTypeAlias
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -95,17 +94,17 @@ class XASSearchData(BaseModel):
     Fields in XAS sub docs in summary
     """
 
-    edge: Edge | None = Field(
+    edge: EdgeType | None = Field(
         None,
         title="Absorption Edge",
         description="The interaction edge for XAS",
     )
-    absorbing_element: Element | None = Field(
+    absorbing_element: ElementType | None = Field(
         None,
         description="Absorbing element.",
     )
 
-    spectrum_type: Type | None = Field(
+    spectrum_type: SpectrumTypeAlias | None = Field(
         None,
         description="Type of XAS spectrum.",
     )
@@ -146,6 +145,11 @@ class SummaryDoc(PropertyDoc):
     property_name: str = "summary"
 
     # Materials
+
+    structure: StructureType = Field(
+        ...,
+        description="The lowest energy structure for this material.",
+    )
 
     task_ids: list[MPID | AlphaID] = Field(
         [],
@@ -212,12 +216,12 @@ class SummaryDoc(PropertyDoc):
         description="Band gap energy in eV.",
     )
 
-    cbm: float | dict | None = Field(
+    cbm: float | None = Field(
         None,
         description="Conduction band minimum data.",
     )
 
-    vbm: float | dict | None = Field(
+    vbm: float | None = Field(
         None,
         description="Valence band maximum data.",
     )
@@ -301,31 +305,31 @@ class SummaryDoc(PropertyDoc):
         description="The number of unique magnetic sites.",
     )
 
-    types_of_magnetic_species: list[Element] | None = Field(
+    types_of_magnetic_species: list[ElementType] | None = Field(
         None,
         description="Magnetic specie elements.",
     )
 
     # Elasticity
 
-    # k_voigt: float | None= Field(None, description="Voigt average of the bulk modulus.")
+    # k_voigt: float | None = Field(None, description="Voigt average of the bulk modulus.")
 
-    # k_reuss: float | None= Field(None, description="Reuss average of the bulk modulus in GPa.")
+    # k_reuss: float | None = Field(None, description="Reuss average of the bulk modulus in GPa.")
 
-    # k_vrh: float | None= Field(None, description="Voigt-Reuss-Hill average of the bulk modulus in GPa.")
+    # k_vrh: float | None = Field(None, description="Voigt-Reuss-Hill average of the bulk modulus in GPa.")
 
-    # g_voigt: float | None= Field(None, description="Voigt average of the shear modulus in GPa.")
+    # g_voigt: float | None = Field(None, description="Voigt average of the shear modulus in GPa.")
 
-    # g_reuss: float | None= Field(None, description="Reuss average of the shear modulus in GPa.")
+    # g_reuss: float | None = Field(None, description="Reuss average of the shear modulus in GPa.")
 
-    # g_vrh: float | None= Field(None, description="Voigt-Reuss-Hill average of the shear modulus in GPa.")
+    # g_vrh: float | None = Field(None, description="Voigt-Reuss-Hill average of the shear modulus in GPa.")
 
-    bulk_modulus: dict | None = Field(
+    bulk_modulus: dict[str, float] | None = Field(
         None,
         description="Voigt, Reuss, and Voigt-Reuss-Hill averages of the bulk modulus in GPa.",
     )
 
-    shear_modulus: dict | None = Field(
+    shear_modulus: dict[str, float] | None = Field(
         None,
         description="Voigt, Reuss, and Voigt-Reuss-Hill averages of the shear modulus in GPa.",
     )
@@ -418,12 +422,6 @@ class SummaryDoc(PropertyDoc):
 
     database_Ids: dict[str, list[str]] = Field(
         {}, description="External database IDs corresponding to this material."
-    )
-
-    structure: Structure | None = Field(
-        None,
-        description="The lowest energy structure for this material.",
-        exclude=False,
     )
 
     @classmethod

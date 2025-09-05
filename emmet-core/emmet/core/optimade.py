@@ -11,10 +11,14 @@ from pymatgen.core.composition import Composition, formula_double_format
 from pymatgen.core.structure import Structure
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.mpid import AlphaID, MPID
+from emmet.core.mpid import MPID, AlphaID
 
 if TYPE_CHECKING:
     from emmet.core.mpid import MPID
+
+from emmet.core.mpid import MPID
+from emmet.core.typing import TypedStabilityDict
+from emmet.core.utils import arrow_incompatible
 
 letters = "ABCDEFGHIJKLMNOPQRSTUVXYZ"
 
@@ -82,6 +86,7 @@ def hill_formula(comp: Composition) -> str:
     return "".join(formula)
 
 
+@arrow_incompatible
 class OptimadeMaterialsDoc(StructureResourceAttributes, EmmetBaseModel):
     """
     Optimade Structure resource with a few extra MP specific fields for materials
@@ -94,7 +99,7 @@ class OptimadeMaterialsDoc(StructureResourceAttributes, EmmetBaseModel):
         None, description="The ID of the material"
     )
     chemical_system: str
-    stability: dict
+    stability: dict[str, TypedStabilityDict]
 
     @classmethod
     def from_structure(

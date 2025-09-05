@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Annotated, Any, TypeAlias
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, WrapSerializer
 from pymatgen.analysis.elasticity.elastic import ElasticTensor, ElasticTensorExpansion
 from pymatgen.analysis.elasticity.strain import Deformation, Strain
 from pymatgen.analysis.elasticity.stress import Stress
@@ -11,14 +11,28 @@ from pymatgen.core.structure import Structure
 from pymatgen.core.tensors import TensorMapping
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
-from emmet.core.common import Status
 from emmet.core.material_property import PropertyDoc
 from emmet.core.math import Matrix3D, MatrixVoigt
-from emmet.core.mpid import AlphaID, MPID
+from emmet.core.mpid import MPID, AlphaID
 from emmet.core.settings import EmmetSettings
-
+from emmet.core.typing import StructureType
+from emmet.core.utils import ValueEnum
 
 SETTINGS = EmmetSettings()
+
+
+class Status(ValueEnum):
+    """
+    State of a calculation/analysis.
+    """
+
+    SUCCESS = "successful"
+    FAILED = "failed"
+
+
+StatusType: TypeAlias = Annotated[
+    Status, WrapSerializer(lambda x, nxt, info: x.value, return_type=str)
+]
 
 
 class ElasticTensorDoc(BaseModel):
@@ -169,6 +183,11 @@ class WarningMessage(BaseModel):
 class ElasticityDoc(PropertyDoc):
     property_name: str = "elasticity"
 
+    structure: StructureType | None = Field(
+        None,
+        description="Structure to compute the elasticity",
+    )
+
     order: int = Field(
         default=2, description="Order of the expansion of the elastic tensor"
     )
@@ -207,13 +226,9 @@ class ElasticityDoc(PropertyDoc):
         None, description="Method used to fit the elastic tensor"
     )
 
-    state: Status | None = Field(
+    state: StatusType | None = Field(
         None,
         description="State of the fitting/analysis: `successful` or `failed`",
-    )
-
-    structure: Structure | None = Field(
-        None, description="Structure used to compute the elasticity.", exclude=False
     )
 
     @classmethod

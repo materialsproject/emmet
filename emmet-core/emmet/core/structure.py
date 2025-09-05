@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, TypeVar
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from pymatgen.core.composition import Composition
-from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Molecule, Structure
 
+from emmet.core import ARROW_COMPATIBLE
+from emmet.core.base import ContextModel
 from emmet.core.symmetry import PointGroupData, SymmetryData
+from emmet.core.typing import CompositionType, ElementType
 from emmet.core.utils import get_graph_hash
 
 if TYPE_CHECKING:
@@ -24,21 +26,21 @@ except Exception:
     openbabel = None
 
 
-class StructureMetadata(BaseModel):
+class StructureMetadata(ContextModel):
     """Mix-in class for structure metadata."""
 
     # Structure metadata
     nsites: int | None = Field(
         None, description="Total number of sites in the structure."
     )
-    elements: list[Element] | None = Field(
+    elements: list[ElementType] | None = Field(
         None, description="List of elements in the material."
     )
     nelements: int | None = Field(None, description="Number of elements.")
-    composition: Composition | None = Field(
+    composition: CompositionType | None = Field(
         None, description="Full composition for the material."
     )
-    composition_reduced: Composition | None = Field(
+    composition_reduced: CompositionType | None = Field(
         None,
         title="Reduced Composition",
         description="Simplified representation of the composition.",
@@ -77,6 +79,14 @@ class StructureMetadata(BaseModel):
     symmetry: SymmetryData | None = Field(
         None, description="Symmetry data for this material."
     )
+
+    @field_validator("composition", "composition_reduced", mode="before")
+    def composition_deserializer(cls, comp):
+        if ARROW_COMPATIBLE:
+            if isinstance(comp, list):
+                comp = {k: v for k, v in comp}
+
+        return comp
 
     @classmethod
     def from_composition(
@@ -171,7 +181,7 @@ class MoleculeMetadata(BaseModel):
     natoms: int | None = Field(
         None, description="Total number of atoms in the molecule"
     )
-    elements: list[Element] | None = Field(
+    elements: list[ElementType] | None = Field(
         None, description="List of elements in the molecule"
     )
     nelements: int | None = Field(None, title="Number of Elements")
@@ -180,10 +190,10 @@ class MoleculeMetadata(BaseModel):
         title="Number of electrons",
         description="The total number of electrons for the molecule",
     )
-    composition: Composition | None = Field(
+    composition: CompositionType | None = Field(
         None, description="Full composition for the molecule"
     )
-    composition_reduced: Composition | None = Field(
+    composition_reduced: CompositionType | None = Field(
         None,
         title="Reduced Composition",
         description="Simplified representation of the composition",

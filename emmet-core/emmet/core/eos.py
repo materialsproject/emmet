@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field
 
+from emmet.core.typing import TypedEOSDict
+
 
 class EOSDoc(BaseModel):
     """
@@ -16,7 +18,7 @@ class EOSDoc(BaseModel):
         description="Common volumes in A³/atom that the equations of state are plotted with.",
     )
 
-    eos: dict | None = Field(
+    eos: TypedEOSDict | None = Field(
         None,
         description="Data for each type of equation of state.",
     )

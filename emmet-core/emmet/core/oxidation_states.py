@@ -1,20 +1,21 @@
 from __future__ import annotations
 
-from enum import Enum
 import logging
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from enum import Enum
+from typing import TYPE_CHECKING, Annotated, TypeAlias
 
 import numpy as np
-from pydantic import Field
+from pydantic import BeforeValidator, Field, WrapSerializer
 from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Specie
 
 from emmet.core.material_property import PropertyDoc
+from emmet.core.typing import StructureType
 
 if TYPE_CHECKING:
-    from emmet.core.mpid import AlphaID, MPID
+    from emmet.core.mpid import MPID, AlphaID
 
 
 class OxiStateAssigner(Enum):
@@ -24,11 +25,22 @@ class OxiStateAssigner(Enum):
     GUESS = "Oxidation State Guess"
 
 
+OxiStateAssignerType: TypeAlias = Annotated[
+    OxiStateAssigner,
+    BeforeValidator(lambda x: OxiStateAssigner(x) if isinstance(x, str) else x),
+    WrapSerializer(lambda x, nxt, info: x.value, return_type=str),
+]
+
+
 class OxidationStateDoc(PropertyDoc):
     """Oxidation states computed from the structure"""
 
     property_name: str = "oxidation"
 
+    structure: StructureType = Field(
+        ...,
+        description="The structure used in the generation of the oxidation state data.",
+    )
     possible_species: list[str] = Field(
         description="Possible charged species in this material."
     )
@@ -38,14 +50,8 @@ class OxidationStateDoc(PropertyDoc):
     average_oxidation_states: dict[str, float] = Field(
         description="Average oxidation states for each unique species."
     )
-    method: OxiStateAssigner | None = Field(
+    method: OxiStateAssignerType | None = Field(
         None, description="Method used to compute oxidation states."
-    )
-
-    structure: Structure | None = Field(
-        None,
-        description="The structure used in the generation of the oxidation state data.",
-        exclude=False,
     )
 
     @classmethod
