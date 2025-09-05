@@ -8,6 +8,7 @@ from maggma.utils import grouper
 from pymatgen.core.structure import Structure
 
 from emmet.core.magnetism import MagnetismDoc
+from emmet.core.mpid import AlphaID
 from emmet.core.utils import jsanitize
 
 from typing import TYPE_CHECKING
@@ -102,7 +103,7 @@ class MagneticBuilder(Builder):
         mpid = item["material_id"]
         origin_entry = {
             "name": "magnetism",
-            "task_id": item["task_id"],
+            "task_id": (item["task_id"]),
             "last_updated": item["task_updated"],
         }
 
@@ -137,7 +138,7 @@ class MagneticBuilder(Builder):
 
         for origin in mat_doc["origins"]:
             if origin["name"] == "structure":
-                task_id = origin["task_id"]
+                task_id = str(AlphaID(origin["task_id"]))
 
         task_query = self.tasks.query_one(
             properties=["last_updated", "calcs_reversed"],

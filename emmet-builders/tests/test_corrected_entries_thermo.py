@@ -4,6 +4,8 @@ import pytest
 from maggma.stores import JSONStore, MemoryStore
 from monty.serialization import dumpfn, loadfn
 
+from emmet.core.mpid import AlphaID
+
 from emmet.builders.materials.corrected_entries import CorrectedEntriesBuilder
 from emmet.builders.materials.thermo import ThermoBuilder
 from emmet.builders.vasp.materials import MaterialsBuilder
@@ -64,7 +66,7 @@ def test_thermo_builder(
     thermo_builder.run()
 
     assert thermo_store.count() == 1
-    assert thermo_store.count({"material_id": "mp-149"}) == 1
+    assert thermo_store.count({"material_id": str(AlphaID("mp-149"))}) == 1
 
     assert phase_diagram_store.count() == 1
 
