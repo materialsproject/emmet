@@ -261,7 +261,7 @@ paramiko==3.5.1
     # via sshtunnel
 pathspec==0.12.1
     # via mkdocs
-pillow==11.2.1
+pillow==11.3.0
     # via
     #   imageio
     #   matplotlib
@@ -276,7 +276,7 @@ pluggy==1.6.0
     # via pytest
 pre-commit==4.2.0
     # via emmet-api (setup.py)
-protobuf==6.31.0
+protobuf==6.31.1
     # via ddtrace
 pybtex==0.24.0
     # via emmet-core
@@ -364,7 +364,7 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.3
+requests==2.32.4
     # via pymatgen
 rpds-py==0.25.0
     # via
@@ -403,7 +403,7 @@ spglib==2.6.0
     # via pymatgen
 sshtunnel==0.4.0
     # via maggma
-starlette==0.46.2
+starlette==0.47.2
     # via fastapi
 sympy==1.14.0
     # via pymatgen
@@ -439,7 +439,7 @@ tzdata==2025.2
     # via pandas
 uncertainties==3.2.3
     # via pymatgen
-urllib3==2.4.0
+urllib3==2.5.0
     # via
     #   botocore
     #   requests
