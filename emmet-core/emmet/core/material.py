@@ -45,9 +45,13 @@ class PropertyOrigin(BaseModel):
         return config
 
 
-class MaterialsDoc(StructureMetadata, EmmetBaseModel):
+class BasePropertyMetadata(StructureMetadata, EmmetBaseModel):
     """
-    Definition for a core Materials Document
+    Base model definition for a single material property.
+
+    This may contain any amount of structure metadata for the
+    purpose of search. This is intended to be inherited and
+    extended, not used directly
     """
 
     material_id: IdentifierType | None = Field(
@@ -56,20 +60,68 @@ class MaterialsDoc(StructureMetadata, EmmetBaseModel):
         "This comes in the form: mp-******.",
     )
 
+    deprecated: bool = Field(
+        True,
+        description="Whether this property document is deprecated.",
+    )
+
+    deprecation_reasons: list[DeprecationMessage | str] | None = Field(
+        None,
+        description="List of deprecation tags detailing why this document isn't valid.",
+    )
+
+    last_updated: datetime = Field(
+        description="Timestamp for the most recent calculation update for this property.",
+        default_factory=utcnow,
+    )
+
+    origins: list[PropertyOrigin] | None = Field(
+        None, description="Dictionary for tracking the provenance of properties."
+    )
+
+    warnings: list[str] = Field(
+        [], description="Any warnings related to this property."
+    )
+
     structure: Structure = Field(
         ...,
         description="The structure of the this material.",
     )
 
-    deprecated: bool = Field(
-        True,
-        description="Whether this materials document is deprecated.",
-    )
+    @model_validator(mode="before")
+    @classmethod
+    def handle_datetime_and_idx(cls, config: Any) -> Any:
+        for k in ("last_updated", "created_at"):
+            if v := config.get(k):
+                config[k] = convert_datetime(cls, v)
+        return config
 
-    deprecation_reasons: list[DeprecationMessage | str] | None = Field(
-        None,
-        description="List of deprecation tags detailing why this materials document isn't valid.",
-    )
+    @classmethod
+    def from_structure(  # type: ignore[override]
+        cls,
+        meta_structure: Structure,
+        material_id: IdentifierType | None = None,
+        **kwargs,
+    ) -> Self:
+        """
+        Builds a materials document using a minimal amount of information.
+
+        Note that structure is stored as a private attr, and will not
+        be included in `PropertyDoc().model_dump()`
+        """
+
+        return super().from_structure(
+            meta_structure=meta_structure,
+            structure=meta_structure,
+            material_id=material_id,
+            **kwargs,
+        )  # type: ignore
+
+
+class MaterialsDoc(BasePropertyMetadata):
+    """
+    Definition for a core Materials Document
+    """
 
     initial_structures: list[Structure] = Field(
         [],
@@ -88,47 +140,10 @@ class MaterialsDoc(StructureMetadata, EmmetBaseModel):
         description="Calculation types for all the calculations that make up this material.",
     )
 
-    last_updated: datetime = Field(
-        description="Timestamp for when this document was last updated.",
-        default_factory=utcnow,
-    )
-
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created.",
         default_factory=utcnow,
     )
-
-    origins: list[PropertyOrigin] | None = Field(
-        None, description="Dictionary for tracking the provenance of properties."
-    )
-
-    warnings: list[str] = Field(
-        [], description="Any warnings related to this material."
-    )
-
-    @classmethod
-    def from_structure(
-        cls, structure: Structure, material_id: IdentifierType | None = None, **kwargs
-    ) -> Self:  # type: ignore[override]
-        """
-        Builds a materials document using the minimal amount of information
-        """
-
-        return super().from_structure(  # type: ignore
-            meta_structure=structure,
-            material_id=material_id,
-            structure=structure,
-            **kwargs,
-        )
-
-    @model_validator(mode="before")
-    @classmethod
-    def handle_datetime_and_idx(cls, config: Any) -> Any:
-        for k in ("last_updated", "created_at"):
-            if v := config.get(k):
-                config[k] = convert_datetime(cls, v)
-
-        return config
 
 
 class CoreMoleculeDoc(MoleculeMetadata, EmmetBaseModel):

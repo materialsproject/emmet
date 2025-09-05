@@ -243,7 +243,7 @@ class MaterialsDoc(CoreMaterialsDoc):
         builder_meta = EmmetMeta(license="BY-C" if commercial_license else "BY-NC")
 
         return cls.from_structure(
-            structure=structure,
+            meta_structure=structure,
             material_id=material_id,
             last_updated=last_updated,
             created_at=created_at,
@@ -308,7 +308,7 @@ class MaterialsDoc(CoreMaterialsDoc):
         builder_meta = EmmetMeta(license="BY-C" if commercial_license else "BY-NC")
 
         return cls.from_structure(
-            structure=structure,
+            meta_structure=structure,
             material_id=material_id,
             last_updated=last_updated,
             created_at=created_at,
