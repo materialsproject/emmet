@@ -1,3 +1,4 @@
+import ddtrace.auto
 import time
 
 start = time.perf_counter()

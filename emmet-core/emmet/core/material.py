@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from pymatgen.core import Structure
 from pymatgen.core.structure import Molecule
 
+from emmet.core.base import EmmetBaseModel
 from emmet.core.common import convert_datetime
 from emmet.core.mpid import MPID, AlphaID, MPculeID
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
@@ -18,6 +19,7 @@ from emmet.core.vasp.validation import DeprecationMessage
 
 if TYPE_CHECKING:
     from typing import Any
+
     from typing_extensions import Self
 
 
@@ -46,7 +48,7 @@ class PropertyOrigin(BaseModel):
         return config
 
 
-class MaterialsDoc(StructureMetadata):
+class MaterialsDoc(StructureMetadata, EmmetBaseModel):
     """
     Definition for a core Materials Document
     """
@@ -137,7 +139,7 @@ class MaterialsDoc(StructureMetadata):
         return config
 
 
-class CoreMoleculeDoc(MoleculeMetadata):
+class CoreMoleculeDoc(MoleculeMetadata, EmmetBaseModel):
     """
     Definition for a core Molecule Document
     """

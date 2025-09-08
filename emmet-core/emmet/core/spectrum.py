@@ -4,13 +4,14 @@ from datetime import datetime
 
 from pydantic import Field, field_validator
 
+from emmet.core.base import EmmetBaseModel
 from emmet.core.common import convert_datetime
-from emmet.core.mpid import AlphaID, MPID
+from emmet.core.mpid import MPID, AlphaID
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import utcnow
 
 
-class SpectrumDoc(StructureMetadata):
+class SpectrumDoc(StructureMetadata, EmmetBaseModel):
     """
     Base model definition for any spectra document. This should contain
     metadata on the structure the spectra pertains to

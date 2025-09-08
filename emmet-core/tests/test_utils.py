@@ -5,18 +5,18 @@ from pathlib import Path
 import numpy as np
 import pytest
 from bson.objectid import ObjectId
-from emmet.core.utils import (
-    DocEnum,
-    ValueEnum,
-    jsanitize,
-    get_hash_blocked,
-    get_flat_models_from_model,
-    dynamic_import,
-)
 from monty.json import MSONable
 from monty.serialization import dumpfn
 
 from emmet.core.tasks import TaskDoc
+from emmet.core.utils import (
+    DocEnum,
+    ValueEnum,
+    dynamic_import,
+    get_flat_models_from_model,
+    get_hash_blocked,
+    jsanitize,
+)
 
 
 def test_jsanitize():
@@ -124,7 +124,6 @@ def test_model_flatten():
         "CustodianDoc",
         "ElectronPhononDisplacedStructures",
         "ElectronicStep",
-        "EmmetMeta",
         "FrequencyDependentDielectric",
         "IonicStep",
         "OutputDoc",
