@@ -1,8 +1,3 @@
-import pytest
-
-from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
-
 from emmet.api.routes.materials.summary.query_operators import (
     HasPropsQuery,
     MaterialIDsSearchQuery,
@@ -19,9 +14,6 @@ from emmet.core.summary import SummaryDoc, SummaryStats
 from pymatgen.analysis.magnetism import Ordering
 
 
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_has_props_query():
     op = HasPropsQuery()
 
@@ -29,20 +21,7 @@ def test_has_props_query():
         "criteria": {"has_props.electronic_structure": True, "has_props.thermo": True}
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(has_props="electronic_structure, thermo") == {
-            "criteria": {
-                "has_props.electronic_structure": True,
-                "has_props.thermo": True,
-            }
-        }
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_material_ids_query():
     op = MaterialIDsSearchQuery()
 
@@ -54,43 +33,19 @@ def test_material_ids_query():
 
     assert op.post_process(docs, {**query, "properties": ["material_id"]})[0] == docs[1]
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(material_ids="mp-149, mp-13") == query
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_is_stable_query():
     op = SearchIsStableQuery()
 
     assert op.query(is_stable=True) == {"criteria": {"is_stable": True}}
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(is_stable=True) == {"criteria": {"is_stable": True}}
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_magnetic_query():
     op = SearchMagneticQuery()
 
     assert op.query(ordering=Ordering.FiM) == {"criteria": {"ordering": "FiM"}}
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(ordering=Ordering.FiM) == {"criteria": {"ordering": "FiM"}}
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_has_reconstructed_query():
     op = SearchHasReconstructedQuery()
 
@@ -98,26 +53,11 @@ def test_has_reconstructed_query():
         "criteria": {"has_reconstructed": False}
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(has_reconstructed=False) == {
-            "criteria": {"has_reconstructed": False}
-        }
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_is_theoretical_query():
     op = SearchIsTheoreticalQuery()
 
     assert op.query(theoretical=False) == {"criteria": {"theoretical": False}}
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(theoretical=False) == {"criteria": {"theoretical": False}}
 
 
 def test_search_stats_query():

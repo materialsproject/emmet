@@ -1,18 +1,9 @@
-import pytest
-
 from emmet.api.routes.materials.substrates.query_operators import (
     SubstrateStructureQuery,
     EnergyAreaQuery,
 )
 
 
-from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
-
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_substrate_structure_operator():
     op = SubstrateStructureQuery()
 
@@ -20,18 +11,7 @@ def test_substrate_structure_operator():
         "criteria": {"film_orient": "0 1 1", "orient": "1 0 1"}
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
 
-        assert new_op.query(
-            film_orientation="0,1, 1", substrate_orientation="1, 0,1"
-        ) == {"criteria": {"film_orient": "0 1 1", "orient": "1 0 1"}}
-
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_energy_area_operator():
     op = EnergyAreaQuery()
 
@@ -40,9 +20,3 @@ def test_energy_area_operator():
     fields = ["area", "energy"]
 
     assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        q = new_op.query(area_min=0, area_max=5, energy_min=0, energy_max=5)
-        assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}

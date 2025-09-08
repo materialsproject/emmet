@@ -3,13 +3,8 @@ import pytest
 from emmet.api.routes.molecules.electric.query_operators import (
     MultipoleMomentComponentQuery,
 )
-from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 
 
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_multipole_moment_query():
     op = MultipoleMomentComponentQuery()
     assert op.query(
@@ -22,20 +17,6 @@ def test_multipole_moment_query():
             "dipole_moment.0": {"$lte": 3.1, "$gte": 0.1},
         }
     }
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(
-            moment_type="octopole",
-            component="ZZZ",
-            component_value_min=-100.00,
-            component_value_max=100.00,
-        ) == {
-            "criteria": {
-                "octopole_moment.ZZZ": {"$lte": 100.00, "$gte": -100.00},
-            }
-        }
 
     assert op.query(moment_type="hexadecapole", component="YYYY") == {
         "criteria": {

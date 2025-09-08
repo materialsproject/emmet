@@ -1,13 +1,6 @@
-import pytest
-
 from emmet.api.routes.materials.robocrys.query_operators import RoboTextSearchQuery
-from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 
 
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_robocrys_search_query():
     op = RoboTextSearchQuery()
 
@@ -38,16 +31,10 @@ def test_robocrys_search_query():
         },
     ]
 
-    assert op.query(keywords="cubic, octahedra", _skip=0, _limit=10) == {
-        "pipeline": pipeline
-    }
+    q = {"pipeline": pipeline}
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        query = {"pipeline": pipeline}
-        assert new_op.query(keywords="cubic, octahedra", _skip=0, _limit=10) == query
+    assert op.query(keywords="cubic, octahedra", _skip=0, _limit=10) == q
 
     doc = [{"meta": {"count": {"total": 10}}}]
-    assert op.post_process(doc, query) == doc
+    assert op.post_process(doc, q) == doc
     assert op.meta() == {"total_doc": 10}

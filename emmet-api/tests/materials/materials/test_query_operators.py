@@ -1,9 +1,5 @@
-import pytest
-
 import os
 
-from monty.serialization import dumpfn, loadfn
-from monty.tempfile import ScratchDir
 from pymatgen.core.structure import Structure
 
 from emmet.api.core.settings import MAPISettings
@@ -21,9 +17,6 @@ from emmet.api.routes.materials.materials.query_operators import (
 from emmet.core.symmetry import CrystalSystem
 
 
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_formula_query():
     op = FormulaQuery()
     assert op.query("Si2O4") == {
@@ -34,21 +27,7 @@ def test_formula_query():
         }
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query("Si2O4") == {
-            "criteria": {
-                "composition_reduced.O": 2.0,
-                "composition_reduced.Si": 1.0,
-                "nelements": 2,
-            }
-        }
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_chemsys_query():
     op = ChemsysQuery()
     assert op.query("Si-O") == {"criteria": {"chemsys": "O-Si"}}
@@ -57,15 +36,7 @@ def test_chemsys_query():
         "criteria": {"nelements": 2, "composition_reduced.Si": {"$exists": True}}
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query("Si-O") == {"criteria": {"chemsys": "O-Si"}}
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_elements_query():
     eles = ["Si", "O"]
     neles = ["N", "P"]
@@ -80,37 +51,12 @@ def test_elements_query():
         }
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(
-            elements=",".join(eles), exclude_elements=",".join(neles)
-        ) == {
-            "criteria": {
-                "composition_reduced.Si": {"$exists": True},
-                "composition_reduced.O": {"$exists": True},
-                "composition_reduced.N": {"$exists": False},
-                "composition_reduced.P": {"$exists": False},
-            }
-        }
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_deprecation_query():
     op = DeprecationQuery()
     assert op.query(True) == {"criteria": {"deprecated": True}}
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(True) == {"criteria": {"deprecated": True}}
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_symmetry_query():
     op = SymmetryQuery()
     assert op.query(
@@ -125,42 +71,14 @@ def test_symmetry_query():
         }
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(
-            crystal_system=CrystalSystem.cubic,
-            spacegroup_number=221,
-            spacegroup_symbol="Pm3m",
-        ) == {
-            "criteria": {
-                "symmetry.crystal_system": "Cubic",
-                "symmetry.number": 221,
-                "symmetry.symbol": "Pm3m",
-            }
-        }
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_multi_task_id_query():
     op = MultiTaskIDQuery()
     assert op.query(task_ids="mp-149, mp-13") == {
         "criteria": {"task_ids": {"$in": ["mp-149", "mp-13"]}}
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(task_ids="mp-149, mp-13") == {
-            "criteria": {"task_ids": {"$in": ["mp-149", "mp-13"]}}
-        }
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_multi_material_id_query():
     op = MultiMaterialIDQuery()
     assert op.query(material_ids="mp-149, mp-13") == {
@@ -168,17 +86,6 @@ def test_multi_material_id_query():
     }
 
     assert op.query(material_ids="mp-149") == {"criteria": {"material_id": "mp-149"}}
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(material_ids="mp-149, mp-13") == {
-            "criteria": {"material_id": {"$in": ["mp-149", "mp-13"]}}
-        }
-
-        assert op.query(material_ids="mp-149") == {
-            "criteria": {"material_id": "mp-149"}
-        }
 
 
 def test_find_structure_query():
@@ -208,9 +115,6 @@ def test_find_structure_query():
     ]
 
 
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_formula_auto_complete_query():
     op = FormulaAutoCompleteQuery()
 
@@ -263,8 +167,3 @@ def test_formula_auto_complete_query():
     ]
 
     assert op.query(formula="".join(eles), limit=10) == {"pipeline": pipeline}
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(formula="".join(eles), limit=10) == {"pipeline": pipeline}

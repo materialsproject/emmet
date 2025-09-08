@@ -1,5 +1,3 @@
-import pytest
-
 from emmet.api.routes.materials.elasticity.query_operators import (
     BulkModulusQuery,
     ShearModulusQuery,
@@ -7,13 +5,7 @@ from emmet.api.routes.materials.elasticity.query_operators import (
     ElasticityChemsysQuery,
 )
 
-from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_bulk_modulus_query():
     op = BulkModulusQuery()
 
@@ -30,23 +22,7 @@ def test_bulk_modulus_query():
 
     assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        q = new_op.query(
-            k_voigt_min=0,
-            k_voigt_max=5,
-            k_reuss_min=0,
-            k_reuss_max=5,
-            k_vrh_min=0,
-            k_vrh_max=5,
-        )
-        assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_shear_modulus_query():
     op = ShearModulusQuery()
 
@@ -63,23 +39,7 @@ def test_shear_modulus_query():
 
     assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        q = new_op.query(
-            g_voigt_min=0,
-            g_voigt_max=5,
-            g_reuss_min=0,
-            g_reuss_max=5,
-            g_vrh_min=0,
-            g_vrh_max=5,
-        )
-        assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_poisson_query():
     op = PoissonQuery()
 
@@ -94,21 +54,7 @@ def test_poisson_query():
 
     assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        q = new_op.query(
-            elastic_anisotropy_min=0,
-            elastic_anisotropy_max=5,
-            poisson_min=0,
-            poisson_max=5,
-        )
-        assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_chemsys_query():
     op = ElasticityChemsysQuery()
 
@@ -117,8 +63,3 @@ def test_chemsys_query():
     assert op.query(chemsys="Fe-Bi-O, Si-O") == {
         "criteria": {"chemsys": {"$in": ["Bi-Fe-O", "O-Si"]}}
     }
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(chemsys="Fe-Bi-O") == {"criteria": {"chemsys": "Bi-Fe-O"}}

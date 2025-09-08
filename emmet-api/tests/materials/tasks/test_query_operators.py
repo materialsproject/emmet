@@ -1,5 +1,3 @@
-import pytest
-
 import os
 from monty.io import zopen
 from emmet.api.routes.materials.tasks.query_operators import (
@@ -10,14 +8,9 @@ from emmet.api.routes.materials.tasks.query_operators import (
 )
 from emmet.api.core.settings import MAPISettings
 
-from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 from json import load
 
 
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_multiple_task_ids_query():
     op = MultipleTaskIDsQuery()
 
@@ -25,87 +18,49 @@ def test_multiple_task_ids_query():
         "criteria": {"task_id": {"$in": ["mp-149", "mp-13"]}}
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
 
-        assert new_op.query(task_ids=" mp-149, mp-13") == {
-            "criteria": {"task_id": {"$in": ["mp-149", "mp-13"]}}
-        }
-
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_entries_query():
     op = EntryQuery()
 
-    assert op.query(task_ids=" mp-149, mp-13") == {
-        "criteria": {"task_id": {"$in": ["mp-149", "mp-13"]}}
-    }
+    q = {"criteria": {"task_id": {"$in": ["mp-149", "mp-13"]}}}
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        query = {"criteria": {"task_id": {"$in": ["mp-149", "mp-13"]}}}
-
-        assert new_op.query(task_ids=" mp-149, mp-13") == query
+    assert op.query(task_ids=" mp-149, mp-13") == q
 
     with zopen(
         os.path.join(MAPISettings().TEST_FILES, "tasks_Li_Fe_V.json.gz")
     ) as file:
         tasks = load(file)
-    docs = op.post_process(tasks, query)
+    docs = op.post_process(tasks, q)
     assert docs[0]["entry"]["@class"] == "ComputedStructureEntry"
 
 
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_trajectory_query():
     op = TrajectoryQuery()
 
-    assert op.query(task_ids=" mp-149, mp-13") == {
-        "criteria": {"task_id": {"$in": ["mp-149", "mp-13"]}}
-    }
+    q = {"criteria": {"task_id": {"$in": ["mp-149", "mp-13"]}}}
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        query = {"criteria": {"task_id": {"$in": ["mp-149", "mp-13"]}}}
-
-        assert new_op.query(task_ids=" mp-149, mp-13") == query
+    assert op.query(task_ids=" mp-149, mp-13") == q
 
     with zopen(
         os.path.join(MAPISettings().TEST_FILES, "tasks_Li_Fe_V.json.gz")
     ) as file:
         tasks = load(file)
-    docs = op.post_process(tasks, query)
+    docs = op.post_process(tasks, q)
     assert docs[0]["trajectories"][0]["@class"] == "Trajectory"
 
 
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_deprecation_query():
     op = DeprecationQuery()
 
-    assert op.query(task_ids=" mp-149, mp-13") == {
-        "criteria": {"deprecated_tasks": {"$in": ["mp-149", "mp-13"]}}
-    }
+    q = {"criteria": {"deprecated_tasks": {"$in": ["mp-149", "mp-13"]}}}
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        query = {"criteria": {"deprecated_tasks": {"$in": ["mp-149", "mp-13"]}}}
-
-        assert new_op.query(task_ids=" mp-149, mp-13") == query
+    assert op.query(task_ids=" mp-149, mp-13") == q
 
     docs = [
         {"task_id": "mp-149", "deprecated_tasks": ["mp-149"]},
         {"task_id": "mp-13", "deprecated_tasks": ["mp-1234"]},
     ]
-    r = op.post_process(docs, query)
+    r = op.post_process(docs, q)
 
     assert r[0] == {
         "task_id": "mp-149",

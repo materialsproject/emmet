@@ -1,5 +1,4 @@
 import os
-import pytest
 from emmet.api.routes.materials.mpcomplete.query_operator import (
     MPCompleteGetQuery,
     MPCompletePostQuery,
@@ -8,11 +7,7 @@ from emmet.api.core.settings import MAPISettings
 
 from pymatgen.core.structure import Structure
 
-from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 
-
-@pytest.mark.skip(reason="Pmg cif reader issue")
 def test_mpcomplete_post_query():
     op = MPCompletePostQuery()
 
@@ -20,11 +15,7 @@ def test_mpcomplete_post_query():
         os.path.join(MAPISettings().TEST_FILES, "Si_mp_149.cif"), primitive=True
     )
 
-    assert op.query(
-        structure=structure.as_dict(),
-        public_name="Test Test",
-        public_email="test@test.com",
-    ) == {
+    q = {
         "criteria": {
             "structure": structure.as_dict(),
             "public_name": "Test Test",
@@ -32,24 +23,14 @@ def test_mpcomplete_post_query():
         }
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        query = {
-            "criteria": {
-                "structure": structure.as_dict(),
-                "public_name": "Test Test",
-                "public_email": "test@test.com",
-            }
-        }
-        assert (
-            new_op.query(
-                structure=structure.as_dict(),
-                public_name="Test Test",
-                public_email="test@test.com",
-            )
-            == query
+    assert (
+        op.query(
+            structure=structure.as_dict(),
+            public_name="Test Test",
+            public_email="test@test.com",
         )
+        == q
+    )
 
     docs = [
         {
@@ -58,12 +39,9 @@ def test_mpcomplete_post_query():
             "public_email": "test@test.com",
         }
     ]
-    assert op.post_process(docs, query) == docs
+    assert op.post_process(docs, q) == docs
 
 
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_mocomplete_get_query():
     op = MPCompleteGetQuery()
 
@@ -71,16 +49,3 @@ def test_mocomplete_get_query():
         public_name="Test Test",
         public_email="test@test.com",
     ) == {"criteria": {"public_name": "Test Test", "public_email": "test@test.com"}}
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(
-            public_name="Test Test",
-            public_email="test@test.com",
-        ) == {
-            "criteria": {
-                "public_name": "Test Test",
-                "public_email": "test@test.com",
-            }
-        }

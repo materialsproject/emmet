@@ -1,5 +1,3 @@
-import pytest
-
 import os
 
 from emmet.api.core.settings import MAPISettings
@@ -16,30 +14,14 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     HashQuery,
     StringRepQuery,
 )
-from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
-
 from pymatgen.core.structure import Molecule
 
 
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_formula_query():
     op = FormulaQuery()
     assert op.query("C1 Li2 O3") == {"criteria": {"formula_alphabetical": "C1 Li2 O3"}}
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query("C1 Li2 O3") == {
-            "criteria": {"formula_alphabetical": "C1 Li2 O3"}
-        }
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_chemsys_query():
     op = ChemsysQuery()
     assert op.query("O-C") == {"criteria": {"chemsys": "C-O"}}
@@ -48,15 +30,7 @@ def test_chemsys_query():
         "criteria": {"nelements": 2, "composition_reduced.C": {"$exists": True}}
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query("O-C") == {"criteria": {"chemsys": "C-O"}}
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_composition_query():
     eles = ["C", "O"]
     neles = ["N", "P"]
@@ -71,71 +45,26 @@ def test_composition_query():
         }
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(
-            elements=",".join(eles), exclude_elements=",".join(neles)
-        ) == {
-            "criteria": {
-                "composition.C": {"$exists": True},
-                "composition.O": {"$exists": True},
-                "composition.N": {"$exists": False},
-                "composition.P": {"$exists": False},
-            }
-        }
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_charge_spin_query():
     op = ChargeSpinQuery()
     assert op.query(charge=1, spin_multiplicity=2) == {
         "criteria": {"charge": 1, "spin_multiplicity": 2}
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(charge=1, spin_multiplicity=2) == {
-            "criteria": {"charge": 1, "spin_multiplicity": 2}
-        }
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_deprecation_query():
     op = DeprecationQuery()
     assert op.query(True) == {"criteria": {"deprecated": True}}
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(True) == {"criteria": {"deprecated": True}}
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_multi_task_id_query():
     op = MultiTaskIDQuery()
     assert op.query(task_ids="mpcule-149, mpcule-13") == {
         "criteria": {"task_ids": {"$in": ["mpcule-149", "mpcule-13"]}}
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(task_ids="mpcule-149, mpcule-13") == {
-            "criteria": {"task_ids": {"$in": ["mpcule-149", "mpcule-13"]}}
-        }
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_multi_mpculeid_query():
     op = MultiMPculeIDQuery()
     assert op.query(
@@ -159,32 +88,7 @@ def test_multi_mpculeid_query():
         }
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(
-            molecule_ids="21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2, 542d9adc3163002fe8dfe6d226875dde-C3H5Li2O3-0-2"
-        ) == {
-            "criteria": {
-                "molecule_id": {
-                    "$in": [
-                        "21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2",
-                        "542d9adc3163002fe8dfe6d226875dde-C3H5Li2O3-0-2",
-                    ]
-                }
-            }
-        }
 
-        assert op.query(
-            molecule_ids="21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2"
-        ) == {
-            "criteria": {
-                "molecule_id": "21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2"
-            }
-        }
-
-
-@pytest.mark.skip(reason="Test requires openbabel dependency which is not available")
 def test_find_molecule_query():
     op = FindMoleculeQuery()
 
@@ -221,9 +125,6 @@ def test_find_molecule_query():
     assert pp["rmsd"] < 1e-15
 
 
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_calc_method_query():
     op = CalcMethodQuery()
 
@@ -239,25 +140,7 @@ def test_calc_method_query():
         }
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(
-            level_of_theory="wB97X-V/def2-TZVPPD/SMD",
-            solvent="SOLVENT=THF",
-            lot_solvent="wB97X-V/def2-TZVPPD/SMD(SOLVENT=THF)",
-        ) == {
-            "criteria": {
-                "unique_levels_of_theory": "wB97X-V/def2-TZVPPD/SMD",
-                "unique_lot_solvents": "wB97X-V/def2-TZVPPD/SMD(SOLVENT=THF)",
-                "unique_solvents": "SOLVENT=THF",
-            }
-        }
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_hash_query():
     op = HashQuery()
 
@@ -271,33 +154,10 @@ def test_hash_query():
         }
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(
-            species_hash="ea83c62377feef8c8c3190562e13ffd6",
-            coord_hash="5a0282381090c5c9646d03891133d8c9",
-        ) == {
-            "criteria": {
-                "species_hash": "ea83c62377feef8c8c3190562e13ffd6",
-                "coord_hash": "5a0282381090c5c9646d03891133d8c9",
-            }
-        }
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_string_rep_query():
     op = StringRepQuery()
 
     assert op.query(inchi="InChI=1S/C2H3NO3/c3-1(4)2(5)6/h(H2,3,4)(H,5,6)") == {
         "criteria": {"inchi": "InChI=1S/C2H3NO3/c3-1(4)2(5)6/h(H2,3,4)(H,5,6)"}
     }
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(inchi_key="SOWBFZRMHSNYGE-UHFFFAOYSA-N") == {
-            "criteria": {"inchi_key": "SOWBFZRMHSNYGE-UHFFFAOYSA-N"}
-        }

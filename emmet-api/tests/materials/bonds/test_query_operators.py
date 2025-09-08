@@ -1,17 +1,9 @@
-import pytest
-
 from emmet.api.routes.materials.bonds.query_operators import (
     BondLengthQuery,
     CoordinationEnvsQuery,
 )
 
-from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_bond_length_query_operator():
     op = BondLengthQuery()
 
@@ -32,25 +24,7 @@ def test_bond_length_query_operator():
 
     assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        q = new_op.query(
-            max_bond_length_min=0,
-            max_bond_length_max=5,
-            min_bond_length_min=0,
-            min_bond_length_max=5,
-            mean_bond_length_min=0,
-            mean_bond_length_max=5,
-        )
-        assert dict(q) == {
-            "criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}
-        }
 
-
-@pytest.mark.skip(
-    reason="Query operator serialization with monty not compatible with new implementation"
-)
 def test_coordination_envs_query():
     op = CoordinationEnvsQuery()
 
@@ -63,16 +37,3 @@ def test_coordination_envs_query():
             "coordination_envs_anonymous": {"$all": ["A-B(6)", "A-B(3)"]},
         }
     }
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(
-            coordination_envs="Mo-S(6),S-Mo(3)",
-            coordination_envs_anonymous="A-B(6),A-B(3)",
-        ) == {
-            "criteria": {
-                "coordination_envs": {"$all": ["Mo-S(6)", "S-Mo(3)"]},
-                "coordination_envs_anonymous": {"$all": ["A-B(6)", "A-B(3)"]},
-            }
-        }

@@ -4,7 +4,6 @@ from typing import Union
 
 import pytest
 from bson import ObjectId
-from monty.json import MSONable
 from pydantic import BaseModel, Field
 
 from emmet.api.resource.utils import generate_atlas_search_pipeline
@@ -21,13 +20,13 @@ class SomeEnum(Enum):
     C = 3
 
 
-class Pet(MSONable):
+class Pet(BaseModel):
     def __init__(self, name, age):
         self.name = name
         self.age = age
 
 
-class AnotherPet(MSONable):
+class AnotherPet(BaseModel):
     def __init__(self, name, age):
         self.name = name
         self.age = age
@@ -45,11 +44,6 @@ class Owner(BaseModel):
     last_updated: datetime = Field(..., title="Last updated date for this record")
     pet: Pet = Field(..., title="Owner's Pet")
     other: SomeEnum = Field(..., title="A enum?")
-
-
-@pytest.mark.skip(reason="api_sanitize function no longer exists after maggma removal")
-def test_api_sanitize():
-    pass  # Test removed - api_sanitize was a maggma-specific function
 
 
 def test_serialization_helper():
