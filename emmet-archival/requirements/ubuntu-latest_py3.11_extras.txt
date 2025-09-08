@@ -36,7 +36,7 @@ fonttools==4.59.2
     # via matplotlib
 h5py==3.14.0
     # via emmet-archival (pyproject.toml)
-identify==2.6.13
+identify==2.6.14
     # via pre-commit
 idna==3.10
     # via requests
@@ -152,7 +152,7 @@ pytest==8.4.2
     # via
     #   emmet-archival (pyproject.toml)
     #   pytest-cov
-pytest-cov==6.2.1
+pytest-cov==6.3.0
     # via emmet-archival (pyproject.toml)
 python-dateutil==2.9.0.post0
     # via
