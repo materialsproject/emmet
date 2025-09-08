@@ -56,7 +56,7 @@ jobs:
     #needs: check-enums
     strategy:
       matrix:
-        os: ["ubuntu-latest"] # TODO openbabel for windows and mac
+        os: ["ubuntu-latest"]
         package: ["emmet-core", "emmet-builders", "emmet-api", "emmet-archival", "emmet-cli"]
         python-version: ["3.11", "3.12"]
 
@@ -75,12 +75,6 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
           channels: anaconda, conda-forge
-
-      # These dependencies seem to only be used in emmet-core and builders
-      - name: Install openbabel for core, builders, api
-        shell: bash -l {0}
-        if: (matrix.package == 'emmet-core') || (matrix.package == 'emmet-builders') || (matrix.package == 'emmet-api')
-        run: conda install -c conda-forge openbabel -y
 
       - name: Install Python dependencies
         shell: bash -l {0}
