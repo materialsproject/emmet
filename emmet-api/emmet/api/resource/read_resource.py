@@ -1,5 +1,5 @@
 from inspect import signature
-from typing import Any, Optional, Union
+from typing import Any
 
 import orjson
 from fastapi import Depends, HTTPException, Path, Request, Response
@@ -29,8 +29,8 @@ class ReadOnlyResource(CollectionResource):
         disable_validation: bool = False,
         enable_default_search: bool = True,
         enable_get_by_key: bool = False,
-        hint_scheme: Optional[HintScheme] = None,
-        query_to_configure_on_request: Optional[QueryOperator] = None,
+        hint_scheme: HintScheme | None = None,
+        query_to_configure_on_request: QueryOperator | None = None,
         **kwargs,
     ):
         """
@@ -99,11 +99,7 @@ class ReadOnlyResource(CollectionResource):
                 item = [
                     await self.collection.find_one(
                         {self.collection_key: key},
-                        (
-                            {field: 1 for field in _fields.get("properties", [])}
-                            if _fields and "properties" in _fields
-                            else None
-                        ),
+                        {field: 1 for field in _fields.get("properties", [])},
                         maxTimeMS=self.timeout,
                     )
                 ]
@@ -153,7 +149,7 @@ class ReadOnlyResource(CollectionResource):
     def build_dynamic_model_search(self):
         model_name = self.model.__name__
 
-        async def search(**queries: dict[str, STORE_PARAMS]) -> Union[dict, Response]:
+        async def search(**queries: dict[str, STORE_PARAMS]) -> dict | Response:
 
             request: Request = queries.pop("request")  # type: ignore
             temp_response: Response = queries.pop("temp_response")  # type: ignore
@@ -199,15 +195,10 @@ class ReadOnlyResource(CollectionResource):
                 )
 
                 pipeline = generate_query_pipeline(query)
-                agg_kwargs = {}
-
-                if query.get("agg_hint"):
-                    agg_kwargs["hint"] = query["agg_hint"]
-
                 cursor = await self.collection.aggregate(
-                    pipeline, **agg_kwargs, maxTimeMS=self.timeout
+                    pipeline, hint=query.get("agg_hint"), maxTimeMS=self.timeout
                 )
-                data = await cursor.to_list(length=None)
+                data = await cursor.to_list()
             except (NetworkTimeout, PyMongoError) as e:
                 if e.timeout:
                     raise HTTPException(

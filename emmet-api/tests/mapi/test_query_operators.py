@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 import pytest
 from fastapi import HTTPException
@@ -17,9 +16,9 @@ from emmet.api.query_operator.submission import SubmissionQuery
 
 class Owner(BaseModel):
     name: str = Field(..., title="Owner's name")
-    age: int = Field(None, title="Owne'r Age")
+    age: int = Field(None, title="Owner's Age")
     weight: float = Field(None, title="Owner's weight")
-    last_updated: Optional[datetime] = Field(
+    last_updated: datetime | None = Field(
         None, title="Last updated date for this record"
     )
 

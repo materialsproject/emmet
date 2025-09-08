@@ -1,5 +1,3 @@
-from typing import Optional
-
 import json
 from datetime import datetime
 from random import randint
@@ -18,9 +16,9 @@ from emmet.api.resource.utils import CollectionWithKey
 
 class Owner(BaseModel):
     name: str = Field(..., title="Owner's name")
-    age: int = Field(None, title="Owne'r Age")
+    age: int = Field(None, title="Owner's Age")
     weight: float = Field(None, title="Owner's weight")
-    last_updated: Optional[datetime] = Field(
+    last_updated: datetime | None = Field(
         None, title="Last updated date for this record"
     )
 

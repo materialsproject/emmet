@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from fastapi import Query
 
@@ -16,10 +15,10 @@ class SubmissionQuery(QueryOperator):
         self.status_enum = status_enum
 
         def query(
-            state: Optional[status_enum] = Query(
+            state: status_enum | None = Query(
                 None, description="Latest status of the submission"
             ),
-            last_updated: Optional[datetime] = Query(
+            last_updated: datetime | None = Query(
                 None,
                 description="Minimum datetime of status update for submission",
             ),

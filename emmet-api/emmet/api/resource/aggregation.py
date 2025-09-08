@@ -50,7 +50,7 @@ class AggregationResource(CollectionResource):
                 cursor = await self.collection.aggregate(
                     query["pipeline"], maxTimeMS=self.timeout
                 )
-                data = await cursor.to_list(length=None)
+                data = await cursor.to_list()
             except (NetworkTimeout, PyMongoError) as e:
                 if e.timeout:
                     raise HTTPException(
