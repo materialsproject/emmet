@@ -36,7 +36,7 @@ fonttools==4.59.2
     # via matplotlib
 h5py==3.14.0
     # via emmet-archival (pyproject.toml)
-identify==2.6.13
+identify==2.6.14
     # via pre-commit
 idna==3.10
     # via requests
@@ -48,7 +48,7 @@ kiwisolver==1.4.9
     # via matplotlib
 latexcodec==3.0.1
     # via pybtex
-matplotlib==3.10.5
+matplotlib==3.10.6
     # via pymatgen
 mccabe==0.7.0
     # via flake8
@@ -64,7 +64,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-archival (pyproject.toml)
     #   mypy
-narwhals==2.2.0
+narwhals==2.4.0
     # via plotly
 networkx==3.5
     # via pymatgen
@@ -148,11 +148,11 @@ pyparsing==3.2.3
     # via
     #   bibtexparser
     #   matplotlib
-pytest==8.4.1
+pytest==8.4.2
     # via
     #   emmet-archival (pyproject.toml)
     #   pytest-cov
-pytest-cov==6.2.1
+pytest-cov==6.3.0
     # via emmet-archival (pyproject.toml)
 python-dateutil==2.9.0.post0
     # via
