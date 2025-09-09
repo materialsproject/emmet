@@ -1,4 +1,4 @@
-import ddtrace.auto
+import ddtrace.auto  # noqa: F401
 import time
 
 start = time.perf_counter()
