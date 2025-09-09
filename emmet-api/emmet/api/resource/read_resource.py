@@ -105,21 +105,28 @@ class ReadOnlyResource(CollectionResource):
                 )
 
                 pipeline = generate_query_pipeline(query)
+                agg_kwargs = {}
+
+                if query.get("agg_hint"):
+                    agg_kwargs["hint"] = query["agg_hint"]
+
                 cursor = await self.collection.aggregate(
-                    pipeline, hint=query.get("agg_hint"), maxTimeMS=self.timeout
+                    pipeline, **agg_kwargs, maxTimeMS=self.timeout
                 )
                 data = await cursor.to_list()
             except (NetworkTimeout, PyMongoError) as e:
                 if e.timeout:
                     raise HTTPException(
                         status_code=504,
-                        detail="Server timed out trying to obtain data. Try again with a smaller request.",
+                        detail=f"Server error: {e.details}",
+                        # detail="Server timed out trying to obtain data. Try again with a smaller request.",
                     )
                 else:
                     raise HTTPException(
                         status_code=500,
-                        detail="Server timed out trying to obtain data. Try again with a smaller request,"
-                        " or remove sorting fields and sort data locally.",
+                        detail=f"Server error: {e.details}",
+                        # detail="Server timed out trying to obtain data. Try again with a smaller request,"
+                        # " or remove sorting fields and sort data locally.",
                     )
 
             operator_meta = {}

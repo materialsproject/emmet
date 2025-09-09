@@ -140,4 +140,9 @@ def generate_atlas_search_pipeline(query: dict):
 
 
 def get_count_kwargs(query: dict) -> dict:
-    return dict(hint=query.get("count_hint"), maxTimeMS=query.get("maxTimeMS"))
+    ret = {}
+    if query.get("count_hint") is not None:
+        ret["hint"] = query["count_hint"]
+    if query.get("maxTimeMS") is not None:
+        ret["maxTimeMS"] = query["maxTimeMS"]
+    return ret

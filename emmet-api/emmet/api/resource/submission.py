@@ -199,13 +199,14 @@ class SubmissionResource(CollectionResource):
             try:
                 count = await self.collection.count_documents(
                     query.get("criteria", {}),
-                    hint=query.get("hint"),
+                    **{field: query[field] for field in query if field in ["hint"]},
                     maxTimeMS=self.timeout,
                 )
                 pipeline = generate_query_pipeline(query)
 
                 cursor = await self.collection.aggregate(
-                    pipeline, hint=query.get("hint")
+                    pipeline,
+                    **{field: query[field] for field in query if field in ["hint"]},
                 )
                 data = await cursor.to_list()
             except (NetworkTimeout, PyMongoError) as e:
