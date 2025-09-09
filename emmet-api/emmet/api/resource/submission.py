@@ -1,24 +1,24 @@
 from datetime import datetime
 from enum import Enum
 from inspect import signature
-from typing import Any, Optional
+from typing import Any
 from uuid import uuid4
 
 from fastapi import HTTPException, Path, Request
-from pydantic import BaseModel, Field, create_model
-from pymongo import timeout as query_timeout
+from pydantic import Field, create_model
 from pymongo.errors import NetworkTimeout, PyMongoError
 
-from emmet.api.models import Meta, Response
+from emmet.api.models import Meta
 from emmet.api.query_operator import QueryOperator, SubmissionQuery
-from emmet.api.resource import Resource
-from emmet.api.resource.utils import attach_query_ops, generate_query_pipeline
+from emmet.api.resource import CollectionResource
+from emmet.api.resource.utils import (
+    attach_query_ops,
+    generate_query_pipeline,
+)
 from emmet.api.utils import STORE_PARAMS, merge_queries
-from maggma.core import Store
-from maggma.stores import S3Store
 
 
-class SubmissionResource(Resource):
+class SubmissionResource(CollectionResource):
     """
     Implements a REST Compatible Resource as POST and/or GET and/or PATCH URL endpoints
     for submitted data.
@@ -26,68 +26,55 @@ class SubmissionResource(Resource):
 
     def __init__(
         self,
-        store: Store,
-        model: type[BaseModel],
-        post_query_operators: list[QueryOperator],
+        *args,
+        calculate_submission_id: bool = False,
+        default_state: Any = None,
+        duplicate_fields_check: list[str] | None = None,
+        enable_default_search: bool = True,
         get_query_operators: list[QueryOperator],
-        patch_query_operators: Optional[list[QueryOperator]] = None,
-        tags: Optional[list[str]] = None,
-        timeout: Optional[int] = None,
-        include_in_schema: Optional[bool] = True,
-        duplicate_fields_check: Optional[list[str]] = None,
-        enable_default_search: Optional[bool] = True,
-        state_enum: Optional[Enum] = None,
-        default_state: Optional[Any] = None,
-        calculate_submission_id: Optional[bool] = False,
-        get_sub_path: Optional[str] = "/",
-        post_sub_path: Optional[str] = "/",
-        patch_sub_path: Optional[str] = "/",
+        patch_query_operators: list[QueryOperator] | None = None,
+        post_query_operators: list[QueryOperator],
+        state_enum: Enum | None = None,
+        get_sub_path: str | None = "/",
+        patch_sub_path: str | None = "/",
+        post_sub_path: str | None = "/",
+        **kwargs,
     ):
         """
         Args:
-            store: The Maggma Store to get data from
-            model: The pydantic model this resource represents
-            tags: List of tags for the Endpoint
-            timeout: Time in seconds Pymongo should wait when querying MongoDB
-                before raising a timeout error
-            post_query_operators: Operators for the query language for post data
-            get_query_operators: Operators for the query language for get data
-            patch_query_operators: Operators for the query language for patch data
-            include_in_schema: Whether to include the submission resource in the documented schema
-            duplicate_fields_check: Fields in model used to check for duplicates for POST data
-            enable_default_search: Enable default endpoint search behavior.
-            state_enum: State Enum defining possible data states
-            default_state: Default state value in provided state Enum
             calculate_submission_id: Whether to calculate and use a submission ID as primary data key.
                 If False, the store key is used instead.
+            default_state: Default state value in provided state Enum
+            duplicate_fields_check: Fields in model used to check for duplicates for POST data
+            enable_default_search: Enable default endpoint search behavior.
+            get_query_operators: Operators for the query language for get data
+            patch_query_operators: Operators for the query language for patch data
+            post_query_operators: Operators for the query language for post data
+            state_enum: State Enum defining possible data states
             get_sub_path: GET sub-URL path for the resource.
-            post_sub_path: POST sub-URL path for the resource.
             patch_sub_path: PATCH sub-URL path for the resource.
+            post_sub_path: POST sub-URL path for the resource.
         """
         if isinstance(state_enum, Enum) and default_state not in [entry.value for entry in state_enum]:  # type: ignore
             raise RuntimeError(
                 "If data is stateful a state enum and valid default value must be provided"
             )
 
-        self.state_enum = state_enum
+        self.calculate_submission_id = calculate_submission_id
         self.default_state = default_state
-        self.store = store
-        self.tags = tags or []
-        self.timeout = timeout
-        self.post_query_operators = post_query_operators
+        self.duplicate_fields_check = duplicate_fields_check
+        self.enable_default_search = enable_default_search
         self.get_query_operators = (
             [op for op in get_query_operators if op is not None] + [SubmissionQuery(state_enum)]  # type: ignore
             if state_enum is not None
             else get_query_operators
         )
         self.patch_query_operators = patch_query_operators
-        self.include_in_schema = include_in_schema
-        self.duplicate_fields_check = duplicate_fields_check
-        self.enable_default_search = enable_default_search
-        self.calculate_submission_id = calculate_submission_id
+        self.post_query_operators = post_query_operators
+        self.state_enum = state_enum
         self.get_sub_path = get_sub_path
-        self.post_sub_path = post_sub_path
         self.patch_sub_path = patch_sub_path
+        self.post_sub_path = post_sub_path
 
         new_fields = {}  # type: dict
         if self.calculate_submission_id:
@@ -108,11 +95,11 @@ class SubmissionResource(Resource):
             )
 
         if new_fields:
+            *rest, model = args
             model = create_model(model.__name__, __base__=model, **new_fields)
+            args = (*rest, model)
 
-        self.response_model = Response[model]  # type: ignore
-
-        super().__init__(model)
+        super().__init__(*args, **kwargs)
 
     def prepare_endpoint(self):
         """
@@ -132,9 +119,11 @@ class SubmissionResource(Resource):
     def build_get_by_key(self):
         model_name = self.model.__name__
 
-        key_name = "submission_id" if self.calculate_submission_id else self.store.key
+        key_name = (
+            "submission_id" if self.calculate_submission_id else self.collection_key
+        )
 
-        def get_by_key(
+        async def get_by_key(
             key: str = Path(
                 ...,
                 alias=key_name,
@@ -151,12 +140,9 @@ class SubmissionResource(Resource):
                 a single {model_name} document
             """
 
-            self.store.connect()
-
             crit = {key_name: key}
             try:
-                with query_timeout(self.timeout):
-                    item = [self.store.query_one(criteria=crit)]
+                item = [await self.collection.find_one(crit, maxTimeMS=self.timeout)]
             except (NetworkTimeout, PyMongoError) as e:
                 if e.timeout:
                     raise HTTPException(
@@ -189,7 +175,7 @@ class SubmissionResource(Resource):
     def build_search_data(self):
         model_name = self.model.__name__
 
-        def search(**queries: STORE_PARAMS):
+        async def search(**queries: STORE_PARAMS):
             request: Request = queries.pop("request")  # type: ignore
             queries.pop("temp_response")  # type: ignore
 
@@ -210,32 +196,18 @@ class SubmissionResource(Resource):
                     ),
                 )
 
-            self.store.connect(force_reset=True)
-
             try:
-                with query_timeout(self.timeout):
-                    count = self.store.count(  # type: ignore
-                        **{
-                            field: query[field]
-                            for field in query
-                            if field in ["criteria", "hint"]
-                        }
-                    )
-                    if isinstance(self.store, S3Store):
-                        data = list(self.store.query(**query))  # type: ignore
-                    else:
-                        pipeline = generate_query_pipeline(query, self.store)
+                count = await self.collection.count_documents(
+                    query.get("criteria", {}),
+                    hint=query.get("hint"),
+                    maxTimeMS=self.timeout,
+                )
+                pipeline = generate_query_pipeline(query)
 
-                        data = list(
-                            self.store._collection.aggregate(
-                                pipeline,
-                                **{
-                                    field: query[field]
-                                    for field in query
-                                    if field in ["hint"]
-                                },
-                            )
-                        )
+                cursor = await self.collection.aggregate(
+                    pipeline, hint=query.get("hint")
+                )
+                data = await cursor.to_list()
             except (NetworkTimeout, PyMongoError) as e:
                 if e.timeout:
                     raise HTTPException(
@@ -269,7 +241,7 @@ class SubmissionResource(Resource):
     def build_post_data(self):
         model_name = self.model.__name__
 
-        def post_data(**queries: STORE_PARAMS):
+        async def post_data(**queries: STORE_PARAMS):
             request: Request = queries.pop("request")  # type: ignore
             queries.pop("temp_response")  # type: ignore
 
@@ -290,12 +262,10 @@ class SubmissionResource(Resource):
                     ),
                 )
 
-            self.store.connect(force_reset=True)
-
             # Check for duplicate entry
             if self.duplicate_fields_check:
-                duplicate = self.store.query_one(
-                    criteria={
+                duplicate = await self.collection.find_one(
+                    {
                         field: query["criteria"][field]
                         for field in self.duplicate_fields_check
                     }
@@ -317,7 +287,12 @@ class SubmissionResource(Resource):
                 query["criteria"]["updated"] = [datetime.utcnow()]
 
             try:
-                self.store.update(docs=query["criteria"])  # type: ignore
+                # TODO: verify that this is only used to insert new data and one item at a time
+                await self.collection.update_one(
+                    filter=query["criteria"],
+                    update={"$set": query["criteria"]},
+                    upsert=True,
+                )
             except Exception:
                 raise HTTPException(
                     status_code=400,
@@ -342,7 +317,7 @@ class SubmissionResource(Resource):
     def build_patch_data(self):
         model_name = self.model.__name__
 
-        def patch_data(**queries: STORE_PARAMS):
+        async def patch_data(**queries: STORE_PARAMS):
             request: Request = queries.pop("request")  # type: ignore
             queries.pop("temp_response")  # type: ignore
 
@@ -363,12 +338,10 @@ class SubmissionResource(Resource):
                     ),
                 )
 
-            self.store.connect(force_reset=True)
-
             # Check for duplicate entry
             if self.duplicate_fields_check:
-                duplicate = self.store.query_one(
-                    criteria={
+                duplicate = await self.collection.find_one(
+                    {
                         field: query["criteria"][field]
                         for field in self.duplicate_fields_check
                     }
@@ -391,7 +364,7 @@ class SubmissionResource(Resource):
 
             if query.get("update"):
                 try:
-                    self.store._collection.update_one(
+                    await self.collection.update_one(
                         filter=query["criteria"],
                         update={"$set": query["update"]},
                         upsert=False,

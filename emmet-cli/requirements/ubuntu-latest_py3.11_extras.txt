@@ -138,7 +138,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-cli (setup.py)
     #   mypy
-narwhals==2.3.0
+narwhals==2.4.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin

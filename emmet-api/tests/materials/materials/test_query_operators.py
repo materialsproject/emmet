@@ -1,7 +1,5 @@
 import os
 
-from monty.serialization import dumpfn, loadfn
-from monty.tempfile import ScratchDir
 from pymatgen.core.structure import Structure
 
 from emmet.api.core.settings import MAPISettings
@@ -29,17 +27,6 @@ def test_formula_query():
         }
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query("Si2O4") == {
-            "criteria": {
-                "composition_reduced.O": 2.0,
-                "composition_reduced.Si": 1.0,
-                "nelements": 2,
-            }
-        }
-
 
 def test_chemsys_query():
     op = ChemsysQuery()
@@ -48,11 +35,6 @@ def test_chemsys_query():
     assert op.query("Si-*") == {
         "criteria": {"nelements": 2, "composition_reduced.Si": {"$exists": True}}
     }
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query("Si-O") == {"criteria": {"chemsys": "O-Si"}}
 
 
 def test_elements_query():
@@ -69,29 +51,10 @@ def test_elements_query():
         }
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(
-            elements=",".join(eles), exclude_elements=",".join(neles)
-        ) == {
-            "criteria": {
-                "composition_reduced.Si": {"$exists": True},
-                "composition_reduced.O": {"$exists": True},
-                "composition_reduced.N": {"$exists": False},
-                "composition_reduced.P": {"$exists": False},
-            }
-        }
-
 
 def test_deprecation_query():
     op = DeprecationQuery()
     assert op.query(True) == {"criteria": {"deprecated": True}}
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(True) == {"criteria": {"deprecated": True}}
 
 
 def test_symmetry_query():
@@ -108,34 +71,12 @@ def test_symmetry_query():
         }
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(
-            crystal_system=CrystalSystem.cubic,
-            spacegroup_number=221,
-            spacegroup_symbol="Pm3m",
-        ) == {
-            "criteria": {
-                "symmetry.crystal_system": "Cubic",
-                "symmetry.number": 221,
-                "symmetry.symbol": "Pm3m",
-            }
-        }
-
 
 def test_multi_task_id_query():
     op = MultiTaskIDQuery()
     assert op.query(task_ids="mp-149, mp-13") == {
         "criteria": {"task_ids": {"$in": ["mp-149", "mp-13"]}}
     }
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(task_ids="mp-149, mp-13") == {
-            "criteria": {"task_ids": {"$in": ["mp-149", "mp-13"]}}
-        }
 
 
 def test_multi_material_id_query():
@@ -145,17 +86,6 @@ def test_multi_material_id_query():
     }
 
     assert op.query(material_ids="mp-149") == {"criteria": {"material_id": "mp-149"}}
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(material_ids="mp-149, mp-13") == {
-            "criteria": {"material_id": {"$in": ["mp-149", "mp-13"]}}
-        }
-
-        assert op.query(material_ids="mp-149") == {
-            "criteria": {"material_id": "mp-149"}
-        }
 
 
 def test_find_structure_query():
@@ -237,8 +167,3 @@ def test_formula_auto_complete_query():
     ]
 
     assert op.query(formula="".join(eles), limit=10) == {"pipeline": pipeline}
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(formula="".join(eles), limit=10) == {"pipeline": pipeline}

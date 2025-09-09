@@ -4,9 +4,19 @@ from fastapi import Depends, Request, Response
 
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS, attach_signature
-from maggma.core.store import Store
+from pymongo.asynchronous.collection import AsyncCollection
 
 NON_STORED_SOURCES = ["calcs_reversed", "orig_inputs"]
+
+
+class CollectionWithKey:
+
+    collection: AsyncCollection
+    key: str
+
+    def __init__(self, collection: AsyncCollection, key: str = "material_id"):
+        self.collection = collection
+        self.key = key
 
 
 def attach_query_ops(
@@ -31,13 +41,12 @@ def attach_query_ops(
     return function
 
 
-def generate_query_pipeline(query: dict, store: Store):
+def generate_query_pipeline(query: dict):
     """
     Generate the generic aggregation pipeline used in GET endpoint queries.
 
     Args:
         query: Query parameters
-        store: Store containing endpoint data
     """
     pipeline = [
         {"$match": query["criteria"]},
@@ -128,3 +137,7 @@ def generate_atlas_search_pipeline(query: dict):
         pipeline.append({"$facet": {"docs": [], "meta": [{"$replaceWith": "$$SEARCH_META"}, {"$limit": 1}]}})  # type: ignore
 
     return pipeline
+
+
+def get_count_kwargs(query: dict) -> dict:
+    return dict(hint=query.get("count_hint"), maxTimeMS=query.get("maxTimeMS"))

@@ -64,7 +64,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-archival (pyproject.toml)
     #   mypy
-narwhals==2.3.0
+narwhals==2.4.0
     # via plotly
 networkx==3.5
     # via pymatgen

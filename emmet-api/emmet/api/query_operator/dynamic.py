@@ -1,6 +1,6 @@
 import inspect
 from abc import abstractmethod
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable
 
 from fastapi.params import Query
 from monty.json import MontyDecoder
@@ -18,8 +18,8 @@ class DynamicQueryOperator(QueryOperator):
     def __init__(
         self,
         model: type[BaseModel],
-        fields: Optional[list[str]] = None,
-        excluded_fields: Optional[list[str]] = None,
+        fields: list[str] | None = None,
+        excluded_fields: list[str] | None = None,
     ):
         self.model = model
         self.fields = fields
@@ -126,7 +126,7 @@ class NumericQuery(DynamicQueryOperator):
         ops = []
         field_type = field.annotation
 
-        if field_type in [int, float, Union[float, None], Union[int, None]]:
+        if field_type in [int, float, float | None, int | None]:
             title: str = name or field.alias  # type: ignore
 
             ops = [
@@ -150,7 +150,7 @@ class NumericQuery(DynamicQueryOperator):
                 ),
             ]
 
-        if field_type in [int, Union[int, None]]:
+        if field_type in [int, int | None]:
             ops.extend(
                 [
                     (
@@ -220,7 +220,7 @@ class StringQueryOperator(DynamicQueryOperator):
         ops = []
         field_type: type = field.annotation  # type: ignore
 
-        if field_type in [str, Union[str, None]]:
+        if field_type in [str, str | None]:
             title: str = name
 
             ops = [

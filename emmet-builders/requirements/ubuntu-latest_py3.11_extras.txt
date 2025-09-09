@@ -21,9 +21,9 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.25
+boto3==1.40.26
     # via maggma
-botocore==1.40.25
+botocore==1.40.26
     # via
     #   boto3
     #   s3transfer
@@ -234,7 +234,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-builders (setup.py)
     #   mypy
-narwhals==2.3.0
+narwhals==2.4.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -340,7 +340,7 @@ pluggy==1.6.0
     #   pytest-cov
 pre-commit==4.3.0
     # via emmet-builders (setup.py)
-pubchempy==1.0.4
+pubchempy==1.0.5
     # via robocrys
 pyarrow==21.0.0
     # via emmet-core

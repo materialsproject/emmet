@@ -84,20 +84,3 @@ class Response(BaseModel, Generic[DataT]):
             else:
                 v["total_doc"] = 0
         return v
-
-
-class S3URLDoc(BaseModel):
-    """
-    S3 pre-signed URL data returned by the S3 URL resource.
-    """
-
-    url: str = Field(
-        ...,
-        description="Pre-signed download URL",
-    )
-
-    requested_datetime: datetime = Field(
-        ..., description="Datetime for when URL was requested"
-    )
-
-    expiry_datetime: datetime = Field(..., description="Expiry datetime of the URL")
