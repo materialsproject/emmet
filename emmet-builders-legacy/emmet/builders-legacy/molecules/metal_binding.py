@@ -484,7 +484,7 @@ class MetalBindingBuilder(Builder):
                         nometal_thermo=nometal_thermo,
                     )
 
-                    if doc is not None and len(doc.binding_data or []) != 0:
+                    if doc and doc.binding_data:
                         binding_docs.append(doc)  # type: ignore[arg-type]
 
         self.logger.debug(

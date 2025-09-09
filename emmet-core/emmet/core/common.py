@@ -7,7 +7,17 @@ from monty.json import MontyDecoder
 from emmet.core.utils import ValueEnum, utcnow
 
 
-def convert_datetime(cls, v):
+def convert_datetime(v: datetime | dict[str, str] | str | None) -> datetime:
+    """Validate datetime-like objects.
+
+    Parameters
+    -----------
+    v : datetime, dict[str,str], str or None
+
+    Returns
+    -----------
+    datetime
+    """
     if not v:
         return utcnow()
 
@@ -25,22 +35,20 @@ def convert_datetime(cls, v):
         return dt
 
     v = MontyDecoder().process_decoded(v)
-    if not v.tzinfo:
+    if isinstance(v, datetime) and not v.tzinfo:
         v = v.replace(tzinfo=timezone.utc)
-    return v
+    return v  # type: ignore[return-value]
 
 
 DateTimeType = Annotated[
     datetime,
     PlainSerializer(lambda x: x.isoformat(), return_type=str),
-    BeforeValidator(lambda x: convert_datetime(None, x)),
+    BeforeValidator(lambda x: convert_datetime(x)),
 ]
 
 
 class Status(ValueEnum):
-    """
-    State of a calculation/analysis.
-    """
+    """State of a calculation/analysis."""
 
     SUCCESS = "successful"
     FAILED = "failed"

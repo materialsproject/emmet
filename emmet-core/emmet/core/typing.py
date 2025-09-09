@@ -9,7 +9,7 @@ from typing import Annotated, Union
 from pydantic import PlainSerializer
 
 PathLike = Annotated[
-    Union[str | Path | os.DirEntry[str]],
+    Union[str | Path | os.DirEntry[str] | os.PathLike[str]],
     PlainSerializer(lambda x: str(x), return_type=str),
 ]
 """Type of a generic path-like object"""

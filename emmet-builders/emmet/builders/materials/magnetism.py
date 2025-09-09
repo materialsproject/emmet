@@ -103,7 +103,7 @@ class MagneticBuilder(Builder):
         mpid = item["material_id"]
         origin_entry = {
             "name": "magnetism",
-            "task_id": (item["task_id"]),
+            "task_id": item["task_id"],
             "last_updated": item["task_updated"],
         }
 

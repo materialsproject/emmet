@@ -221,7 +221,6 @@ class BaseElectrode(BaseModel):
     )
 
     last_updated: DateTimeType = Field(
-        default_factory=utcnow,
         description="Timestamp for the most recent calculation for this Material document.",
     )
 

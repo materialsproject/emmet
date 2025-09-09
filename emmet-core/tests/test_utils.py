@@ -29,7 +29,7 @@ def test_dt():
         jsanitize(ref_dt),
         {"$date": jsanitize(ref_dt)},
     ):
-        assert convert_datetime(None, test_dt) == ref_dt
+        assert convert_datetime(test_dt) == ref_dt
 
 
 def test_jsanitize():

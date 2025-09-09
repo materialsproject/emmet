@@ -76,7 +76,7 @@ class BasePropertyMetadata(StructureMetadata, EmmetBaseModel):
 
     structure: Structure = Field(
         ...,
-        description="The structure of the this material.",
+        description="The structure of this material.",
     )
 
     @classmethod

@@ -18,7 +18,7 @@ include = ["emmet.cli"]
 name = "emmet-cli"
 dynamic = ["version"]
 requires-python = ">=3.10"
-description="Command line interface for MP contributors"
+description="Command line interface for ingestion of electronic structure calculations into MP."
 license = {text = "Modified BSD"}
 authors = [
     {name = "The Materials Project", email="feedback@materialsproject.org"},
