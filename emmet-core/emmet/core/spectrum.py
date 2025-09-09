@@ -6,7 +6,6 @@ from emmet.core.base import EmmetBaseModel
 from emmet.core.common import DateTimeType
 from emmet.core.mpid import IdentifierType
 from emmet.core.structure import StructureMetadata
-from emmet.core.utils import utcnow
 
 
 class SpectrumDoc(StructureMetadata, EmmetBaseModel):
@@ -31,7 +30,6 @@ class SpectrumDoc(StructureMetadata, EmmetBaseModel):
 
     last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation update for this property.",
-        default_factory=utcnow,
     )
 
     warnings: list[str] = Field(

@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field
 from pymatgen.core.interface import GrainBoundary
 
 from emmet.core.common import DateTimeType
-from emmet.core.utils import utcnow
 
 
 class GBTypeEnum(Enum):
@@ -77,6 +76,5 @@ class GrainBoundaryDoc(BaseModel):
     )
 
     last_updated: DateTimeType = Field(
-        default_factory=utcnow,
         description="Timestamp for the most recent calculation for this Material document.",
     )

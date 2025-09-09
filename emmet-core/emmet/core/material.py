@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
@@ -13,7 +12,6 @@ from emmet.core.base import EmmetBaseModel
 from emmet.core.common import DateTimeType
 from emmet.core.mpid import IdentifierType, MPID, MPculeID
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
-from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
 
 if TYPE_CHECKING:
@@ -32,7 +30,6 @@ class PropertyOrigin(BaseModel):
     )
     last_updated: DateTimeType = Field(  # type: ignore
         description="The timestamp when this calculation was last updated",
-        default_factory=utcnow,
     )
 
 
@@ -63,7 +60,6 @@ class BasePropertyMetadata(StructureMetadata, EmmetBaseModel):
 
     last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation update for this property.",
-        default_factory=utcnow,
     )
 
     origins: list[PropertyOrigin] | None = Field(
@@ -118,14 +114,13 @@ class MaterialsDoc(BasePropertyMetadata):
 
     deprecated_tasks: list[str] = Field([], title="Deprecated Tasks")
 
-    calc_types: Mapping[str, str] | None = Field(
+    calc_types: dict[str, str] | None = Field(
         None,
         description="Calculation types for all the calculations that make up this material.",
     )
 
     created_at: DateTimeType = Field(
         description="Timestamp for when this material document was first created.",
-        default_factory=utcnow,
     )
 
 
@@ -171,19 +166,17 @@ class CoreMoleculeDoc(MoleculeMetadata, EmmetBaseModel):
     # TODO: Should this be MPID?
     deprecated_tasks: list[str] = Field([], title="Deprecated Tasks")
 
-    calc_types: Mapping[str, str] | None = Field(
+    calc_types: dict[str, str] | None = Field(
         None,
         description="Calculation types for all the tasks that make up this molecule",
     )
 
     last_updated: DateTimeType = Field(
         description="Timestamp for when this document was last updated",
-        default_factory=utcnow,
     )
 
     created_at: DateTimeType = Field(
         description="Timestamp for when this document was first created",
-        default_factory=utcnow,
     )
 
     origins: list[PropertyOrigin] | None = Field(

@@ -15,7 +15,6 @@ from emmet.core.common import DateTimeType
 from emmet.core.mpid import IdentifierType
 from emmet.core.settings import EmmetSettings
 from emmet.core.tasks import CoreTaskDoc, TaskDoc
-from emmet.core.utils import utcnow
 from emmet.core.vasp.calc_types.enums import CalcType, TaskType
 from emmet.core.vasp.calculation import CoreCalculationOutput
 from emmet.core.vasp.task_valid import TaskDocument
@@ -45,7 +44,6 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
     valid: bool = Field(False, description="Whether this task is valid or not")
     last_updated: DateTimeType = Field(
         description="Last updated date for this document",
-        default_factory=utcnow,
     )
     reasons: list[DeprecationMessage | str] | None = Field(
         None, description="List of deprecation tags detailing why this task isn't valid"

@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import Annotated
-from pydantic import PlainSerializer, BeforeValidator
+from pydantic import PlainSerializer, BeforeValidator, Field
 
 from monty.json import MontyDecoder
 
@@ -42,6 +42,7 @@ def convert_datetime(v: datetime | dict[str, str] | str | None) -> datetime:
 
 DateTimeType = Annotated[
     datetime,
+    Field(default_factory=utcnow),
     PlainSerializer(lambda x: x.isoformat(), return_type=str),
     BeforeValidator(lambda x: convert_datetime(x)),
 ]

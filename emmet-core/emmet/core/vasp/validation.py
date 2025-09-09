@@ -8,7 +8,7 @@ from emmet.core.vasp.calculation import Calculation
 from emmet.core.base import EmmetBaseModel
 from emmet.core.common import DateTimeType
 from emmet.core.mpid import IdentifierType
-from emmet.core.utils import utcnow, DocEnum
+from emmet.core.utils import DocEnum
 from emmet.core.vasp.calc_types.enums import CalcType, RunType
 from emmet.core.vasp.utils import FileMetadata, discover_vasp_files
 from emmet.core.vasp.task_valid import TaskDocument
@@ -65,7 +65,6 @@ class ValidationDoc(VaspValidator, EmmetBaseModel):
 
     last_updated: DateTimeType = Field(
         description="The most recent time when this document was updated.",
-        default_factory=utcnow,
     )
 
     nelements: int | None = Field(None, description="Number of elements.")

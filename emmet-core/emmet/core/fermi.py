@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field
 
 from emmet.core.common import DateTimeType
-from emmet.core.utils import utcnow
 
 
 class FermiDoc(BaseModel):
@@ -26,6 +25,5 @@ class FermiDoc(BaseModel):
     )
 
     last_updated: DateTimeType = Field(
-        default_factory=utcnow,
         description="Timestamp for the most recent calculation for this fermi surface document.",
     )

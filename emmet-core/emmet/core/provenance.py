@@ -13,7 +13,7 @@ from pymatgen.core.structure import Structure
 
 from emmet.core.common import DateTimeType
 from emmet.core.material_property import PropertyDoc
-from emmet.core.utils import ValueEnum, utcnow
+from emmet.core.utils import ValueEnum
 
 if TYPE_CHECKING:
     from emmet.core.mpid import IdentifierType
@@ -82,9 +82,7 @@ class SNLAbout(BaseModel):
         " of this material for the entry closest matching the material input.",
     )
 
-    created_at: DateTimeType = Field(
-        default_factory=utcnow, description="The creation date for this SNL."
-    )
+    created_at: DateTimeType = Field(description="The creation date for this SNL.")
 
 
 class SNLDict(BaseModel):

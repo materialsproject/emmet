@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field
 
 from emmet.core.mpid import MPID, MPculeID
 from emmet.core.common import DateTimeType
-from emmet.core.utils import utcnow
 
 
 class MolPropertyOrigin(BaseModel):
@@ -18,5 +17,4 @@ class MolPropertyOrigin(BaseModel):
 
     last_updated: DateTimeType = Field(  # type: ignore
         description="The timestamp when this calculation was last updated",
-        default_factory=utcnow,
     )

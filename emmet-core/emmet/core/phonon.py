@@ -29,7 +29,7 @@ from emmet.core.mpid import IdentifierType
 from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
 from emmet.core.structure import StructureMetadata
 from emmet.core.typing import PathLike
-from emmet.core.utils import DocEnum, get_num_formula_units, utcnow, requires_arrow
+from emmet.core.utils import DocEnum, get_num_formula_units, requires_arrow
 
 try:
     import pyarrow as pa
@@ -346,7 +346,6 @@ class PhononBSDOSTask(StructureMetadata):
     )
 
     last_updated: DateTimeType = Field(
-        default_factory=utcnow,
         description="Timestamp for the most recent calculation for this Material document.",
     )
 
@@ -860,12 +859,10 @@ class PhononWebsiteBS(BaseModel):
 
     last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=utcnow,
     )
 
     created_at: DateTimeType = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=utcnow,
     )
 
 
@@ -888,12 +885,10 @@ class Ddb(BaseModel):
 
     last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=utcnow,
     )
 
     created_at: DateTimeType = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=utcnow,
     )
 
 
@@ -989,12 +984,10 @@ class Phonon(StructureMetadata):
 
     last_updated: DateTimeType = Field(
         description="Timestamp for when this document was last updated",
-        default_factory=utcnow,
     )
 
     created_at: DateTimeType = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=utcnow,
     )
 
 
@@ -1048,12 +1041,10 @@ class SoundVelocity(BaseModel):
 
     last_updated: DateTimeType = Field(
         description="Timestamp for when this document was last updated",
-        default_factory=utcnow,
     )
 
     created_at: DateTimeType = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=utcnow,
     )
 
 
@@ -1071,12 +1062,10 @@ class ThermalDisplacement(BaseModel):
 
     last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=utcnow,
     )
 
     created_at: DateTimeType = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=utcnow,
     )
 
     nsites: int = Field(

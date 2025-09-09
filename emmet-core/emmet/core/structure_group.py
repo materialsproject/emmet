@@ -13,7 +13,6 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.core.common import DateTimeType
 from emmet.core.mpid import IdentifierType, AlphaID
-from emmet.core.utils import utcnow
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -99,7 +98,7 @@ class StructureGroupDoc(BaseModel):
     )
 
     last_updated: DateTimeType = Field(
-        default_factory=utcnow, description="Timestamp when this document was built."
+        description="Timestamp when this document was built."
     )
 
     @classmethod

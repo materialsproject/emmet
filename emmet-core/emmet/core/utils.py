@@ -50,7 +50,7 @@ except ImportError:
     pyarrow = None  # type: ignore
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator, Mapping
+    from collections.abc import Callable, Iterator
     from typing import Any
 
     from emmet.core.typing import PathLike
@@ -68,7 +68,7 @@ def get_sg(struc, symprec=SETTINGS.SYMPREC) -> int:
         return -1
 
 
-def get_num_formula_units(composition: Mapping[Any, int | float]) -> int:
+def get_num_formula_units(composition: dict[Any, int | float]) -> int:
     """Get the number of formula units in a dict-like composition.
 
     This implementation differs slightly from how some pymatgen/atomate2

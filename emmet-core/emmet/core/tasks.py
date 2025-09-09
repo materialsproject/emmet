@@ -268,7 +268,6 @@ class CoreTaskDoc(StructureMetadata):
     )
     last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation for this task document",
-        default_factory=utcnow,
     )
     orig_inputs: CalculationInput | None = Field(
         None,

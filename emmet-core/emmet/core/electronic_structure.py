@@ -26,7 +26,6 @@ from emmet.core.common import DateTimeType
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import AlphaID, IdentifierType
 from emmet.core.settings import EmmetSettings
-from emmet.core.utils import utcnow
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -59,7 +58,6 @@ class BSObjectDoc(BaseModel):
 
     last_updated: DateTimeType = Field(
         description="The timestamp when this calculation was last updated",
-        default_factory=utcnow,
     )
 
     data: dict | BandStructureSymmLine | None = Field(
@@ -80,7 +78,6 @@ class DOSObjectDoc(BaseModel):
 
     last_updated: DateTimeType = Field(
         description="The timestamp when this calculation was last updated.",
-        default_factory=utcnow,
     )
 
     data: CompleteDos | None = Field(
