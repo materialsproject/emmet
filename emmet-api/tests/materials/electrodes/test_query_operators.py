@@ -5,7 +5,6 @@ from emmet.api.routes.materials.insertion_electrodes.query_operators import (
     VoltageStepQuery,
     InsertionVoltageStepQuery,
     WorkingIonQuery,
-    ElectrodeMultiMaterialIDQuery,
     MultiBatteryIDQuery,
 )
 
@@ -120,13 +119,6 @@ def test_insertion_electrode_query():
     )
 
     assert q == {"criteria": {"working_ion": "Li"}}
-
-
-def test_electrodes_multi_material_id_query():
-    op = ElectrodeMultiMaterialIDQuery()
-    assert op.query(material_ids="mp-149, mp-13") == {
-        "criteria": {"material_ids": {"$in": ["mp-149", "mp-13"]}}
-    }
 
 
 def test_multi_battery_id_query():
