@@ -23,11 +23,11 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.25
+boto3==1.40.27
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.40.25
+botocore==1.40.27
     # via
     #   boto3
     #   s3transfer
@@ -35,7 +35,7 @@ bytecode==0.17.0
     # via ddtrace
 certifi==2025.8.3
     # via requests
-cffi==1.17.1
+cffi==2.0.0
     # via
     #   cryptography
     #   pynacl
@@ -112,7 +112,7 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.1.1
     # via maggma
-narwhals==2.3.0
+narwhals==2.4.0
     # via plotly
 networkx==3.5
     # via
@@ -167,7 +167,7 @@ protobuf==6.32.0
     # via ddtrace
 pybtex==0.25.1
     # via emmet-core
-pycparser==2.22
+pycparser==2.23
     # via cffi
 pydantic==2.11.7
     # via
@@ -222,7 +222,7 @@ pytz==2025.2
     #   pandas
 pyyaml==6.0.2
     # via pybtex
-pyzmq==27.0.2
+pyzmq==27.1.0
     # via maggma
 referencing==0.36.2
     # via
@@ -243,7 +243,7 @@ ruamel-yaml==0.18.15
     #   pymatgen
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-s3transfer==0.13.1
+s3transfer==0.14.0
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
