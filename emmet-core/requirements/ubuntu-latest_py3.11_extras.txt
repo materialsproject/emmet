@@ -192,7 +192,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-core (setup.py)
     #   mypy
-narwhals==2.3.0
+narwhals==2.4.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -293,7 +293,7 @@ pre-commit==4.3.0
     # via emmet-core (setup.py)
 psutil==7.0.0
     # via custodian
-pubchempy==1.0.4
+pubchempy==1.0.5
     # via robocrys
 pyarrow==21.0.0
     # via emmet-core (setup.py)
@@ -358,7 +358,7 @@ pytest==8.4.2
     #   emmet-core (setup.py)
     #   pytest-cov
     #   solvation-analysis
-pytest-cov==6.3.0
+pytest-cov==7.0.0
     # via emmet-core (setup.py)
 python-dateutil==2.9.0.post0
     # via
@@ -401,7 +401,7 @@ ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
-scikit-learn==1.7.1
+scikit-learn==1.7.2
     # via
     #   matcalc
     #   matminer

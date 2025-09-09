@@ -25,11 +25,11 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.25
+boto3==1.40.27
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.40.25
+botocore==1.40.27
     # via
     #   boto3
     #   s3transfer
@@ -42,7 +42,7 @@ certifi==2025.8.3
     #   httpcore
     #   httpx
     #   requests
-cffi==1.17.1
+cffi==2.0.0
     # via
     #   cryptography
     #   pynacl
@@ -223,7 +223,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-api (setup.py)
     #   mypy
-narwhals==2.3.0
+narwhals==2.4.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -302,7 +302,7 @@ pycodestyle==2.14.0
     # via
     #   emmet-api (setup.py)
     #   flake8
-pycparser==2.22
+pycparser==2.23
     # via cffi
 pydantic==2.11.7
     # via
@@ -359,7 +359,7 @@ pytest==8.4.2
     # via
     #   emmet-api (setup.py)
     #   pytest-cov
-pytest-cov==6.3.0
+pytest-cov==7.0.0
     # via emmet-api (setup.py)
 python-dateutil==2.9.0.post0
     # via
@@ -388,7 +388,7 @@ pyyaml==6.0.2
     #   starlette
 pyyaml-env-tag==1.1
     # via mkdocs
-pyzmq==27.0.2
+pyzmq==27.1.0
     # via maggma
 referencing==0.36.2
     # via
@@ -409,7 +409,7 @@ ruamel-yaml==0.18.15
     #   pymatgen
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-s3transfer==0.13.1
+s3transfer==0.14.0
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
