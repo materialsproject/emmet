@@ -59,53 +59,15 @@ async def owner_collection(mock_database):
 
 @pytest.mark.asyncio
 async def test_init(owner_collection):
-    resource = ReadOnlyResource(
-        store=owner_collection, model=Owner, enable_get_by_key=True
-    )
-    assert len(resource.router.routes) == 3
-
-    resource = ReadOnlyResource(
-        store=owner_collection, model=Owner, enable_get_by_key=False
-    )
+    resource = ReadOnlyResource(store=owner_collection, model=Owner)
     assert len(resource.router.routes) == 2
 
     resource = ReadOnlyResource(
         store=owner_collection,
         model=Owner,
         enable_default_search=False,
-        enable_get_by_key=True,
     )
-    assert len(resource.router.routes) == 2
-
-
-@pytest.mark.asyncio
-async def test_get_by_key(owner_collection):
-    endpoint = ReadOnlyResource(
-        owner_collection, Owner, disable_validation=True, enable_get_by_key=True
-    )
-    app = FastAPI()
-    app.include_router(endpoint.router)
-
-    client = TestClient(app)
-
-    assert client.get("/").status_code == 200
-
-    assert client.get("/Person1/").status_code == 200
-    assert client.get("/Person1/").json()["data"][0]["name"] == "Person1"
-
-
-@pytest.mark.asyncio
-async def test_key_fields(owner_collection):
-    endpoint = ReadOnlyResource(
-        owner_collection, Owner, key_fields=["name"], enable_get_by_key=True
-    )
-    app = FastAPI()
-    app.include_router(endpoint.router)
-
-    client = TestClient(app)
-
-    assert client.get("/Person1/").status_code == 200
-    assert client.get("/Person1/").json()["data"][0]["name"] == "Person1"
+    assert len(resource.router.routes) == 1
 
 
 @pytest.mark.xfail()
