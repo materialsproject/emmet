@@ -4,6 +4,7 @@ from random import randint
 from urllib.parse import urlencode
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from requests import Response
@@ -16,12 +17,12 @@ from emmet.api.query_operator import (
 )
 from emmet.api.resource import ReadOnlyResource
 from emmet.api.resource.core import HeaderProcessor, HintScheme
-from maggma.stores import AliasingStore, MemoryStore
+from emmet.api.resource.utils import CollectionWithKey
 
 
 class Owner(BaseModel):
     name: str = Field(..., title="Owner's name")
-    age: int = Field(None, title="Owne'r Age")
+    age: int = Field(None, title="Owner's Age")
     weight: float = Field(None, title="Owner's weight")
     last_updated: datetime = Field(None, title="Last updated date for this record")
 
@@ -48,72 +49,31 @@ class TestHeaderProcessor(HeaderProcessor):
         pass
 
 
-@pytest.fixture()
-def owner_store():
-    store = MemoryStore("owners", key="name")
-    store.connect()
-    store.update([d.dict() for d in owners])
-    return store
+@pytest_asyncio.fixture
+async def owner_collection(mock_database):
+    collection = mock_database["owners"]
+    owner_docs = [owner.model_dump() for owner in owners]
+    await collection.insert_many(owner_docs)
+    return CollectionWithKey(collection=collection, key="name")
 
 
-def test_init(owner_store):
-    resource = ReadOnlyResource(store=owner_store, model=Owner, enable_get_by_key=True)
-    assert len(resource.router.routes) == 3
-
-    resource = ReadOnlyResource(store=owner_store, model=Owner, enable_get_by_key=False)
+@pytest.mark.asyncio
+async def test_init(owner_collection):
+    resource = ReadOnlyResource(store=owner_collection, model=Owner)
     assert len(resource.router.routes) == 2
 
     resource = ReadOnlyResource(
-        store=owner_store,
+        store=owner_collection,
         model=Owner,
         enable_default_search=False,
-        enable_get_by_key=True,
     )
-    assert len(resource.router.routes) == 2
-
-
-def test_msonable(owner_store):
-    owner_resource = ReadOnlyResource(store=owner_store, model=Owner)
-    endpoint_dict = owner_resource.as_dict()
-
-    for k in ["@class", "@module", "store", "model"]:
-        assert k in endpoint_dict
-
-    assert isinstance(endpoint_dict["model"], str)
-    assert endpoint_dict["model"] == "test_read_resource.Owner"
-
-
-def test_get_by_key(owner_store):
-    endpoint = ReadOnlyResource(
-        owner_store, Owner, disable_validation=True, enable_get_by_key=True
-    )
-    app = FastAPI()
-    app.include_router(endpoint.router)
-
-    client = TestClient(app)
-
-    assert client.get("/").status_code == 200
-
-    assert client.get("/Person1/").status_code == 200
-    assert client.get("/Person1/").json()["data"][0]["name"] == "Person1"
-
-
-def test_key_fields(owner_store):
-    endpoint = ReadOnlyResource(
-        owner_store, Owner, key_fields=["name"], enable_get_by_key=True
-    )
-    app = FastAPI()
-    app.include_router(endpoint.router)
-
-    client = TestClient(app)
-
-    assert client.get("/Person1/").status_code == 200
-    assert client.get("/Person1/").json()["data"][0]["name"] == "Person1"
+    assert len(resource.router.routes) == 1
 
 
 @pytest.mark.xfail()
-def test_problem_query_params(owner_store):
-    endpoint = ReadOnlyResource(owner_store, Owner)
+@pytest.mark.asyncio
+async def test_problem_query_params(owner_collection):
+    endpoint = ReadOnlyResource(owner_collection, Owner)
     app = FastAPI()
     app.include_router(endpoint.router)
 
@@ -123,36 +83,40 @@ def test_problem_query_params(owner_store):
 
 
 @pytest.mark.xfail()
-def test_problem_hint_scheme(owner_store):
+@pytest.mark.asyncio
+async def test_problem_hint_scheme(owner_collection):
     class TestHintScheme(HintScheme):
         def generate_hints(query):
             return {"hint": "test"}
 
-    test_store = AliasingStore(owner_store, {"owners": "test"}, key="name")
+    # Note: This test may need adjustment as AliasingStore equivalent
+    # might not be available with async mongomock
+    ReadOnlyResource(owner_collection, Owner, hint_scheme=TestHintScheme())
 
-    ReadOnlyResource(test_store, Owner, hint_scheme=TestHintScheme())
 
-
-def search_helper(payload, base: str = "/?", debug=True) -> Response:
+async def search_helper(
+    payload, base: str = "/?", debug=True, mock_database=None
+) -> tuple[Response, list]:
     """
     Helper function to directly query search endpoints.
 
     Args:
-        store: store f
         base: base of the query, default to /query?
-        client: TestClient generated from FastAPI
         payload: query in dictionary format
         debug: True = print out the url, false don't print anything
+        mock_database: async mock database
 
     Returns:
-        request.Response object that contains the response of the corresponding payload
+        tuple of (request.Response object, data list)
     """
-    store = MemoryStore("owners", key="name")
-    store.connect()
-    store.update([d.dict() for d in owners])
+    collection = mock_database["owners"]
+    owner_docs = [owner.model_dump() for owner in owners]
+    await collection.insert_many(owner_docs)
+
+    collection_with_key = CollectionWithKey(collection=collection, key="name")
 
     endpoint = ReadOnlyResource(
-        store,
+        collection_with_key,
         Owner,
         query_operators=[
             StringQueryOperator(model=Owner),
@@ -175,47 +139,71 @@ def search_helper(payload, base: str = "/?", debug=True) -> Response:
         print(url)
     res = client.get(url)
     json = res.json()
-    return res, json.get("data", [])  # type: ignore
+    return res, json.get("data", [])
 
 
-def test_numeric_query_operator():
+@pytest.mark.asyncio
+async def test_numeric_query_operator(mock_database):
     # Checking int
     payload = {"age": 20, "_all_fields": True}
-    res, data = search_helper(payload=payload, base="/?", debug=True)
+    res, data = await search_helper(
+        payload=payload, base="/?", debug=True, mock_database=mock_database
+    )
     assert res.status_code == 200
     assert len(data) == 1
     assert data[0]["age"] == 20
 
+    # Clear collection between tests
+    await mock_database["owners"].drop()
+
     payload = {"age_not_eq": 9, "_all_fields": True}
-    res, data = search_helper(payload=payload, base="/?", debug=True)
+    res, data = await search_helper(
+        payload=payload, base="/?", debug=True, mock_database=mock_database
+    )
     assert res.status_code == 200
     assert len(data) == 11
 
+    await mock_database["owners"].drop()
+
     payload = {"age_max": 9}
-    res, data = search_helper(payload=payload, base="/?", debug=True)
+    res, data = await search_helper(
+        payload=payload, base="/?", debug=True, mock_database=mock_database
+    )
     assert res.status_code == 200
     assert len(data) == 8
 
+    await mock_database["owners"].drop()
+
     payload = {"age_min": 0}
-    res, data = search_helper(payload=payload, base="/?", debug=True)
+    res, data = await search_helper(
+        payload=payload, base="/?", debug=True, mock_database=mock_database
+    )
     assert res.status_code == 200
     assert len(data) == 13
 
 
-def test_string_query_operator():
+@pytest.mark.asyncio
+async def test_string_query_operator(mock_database):
     payload = {"name": "PersonAge9", "_all_fields": True}
-    res, data = search_helper(payload=payload, base="/?", debug=True)
+    res, data = await search_helper(
+        payload=payload, base="/?", debug=True, mock_database=mock_database
+    )
     assert res.status_code == 200
     assert len(data) == 1
     assert data[0]["name"] == "PersonAge9"
 
+    await mock_database["owners"].drop()
+
     payload = {"name_not_eq": "PersonAge9", "_all_fields": True}
-    res, data = search_helper(payload=payload, base="/?", debug=True)
+    res, data = await search_helper(
+        payload=payload, base="/?", debug=True, mock_database=mock_database
+    )
     assert res.status_code == 200
     assert len(data) == 12
 
 
-def test_resource_compound():
+@pytest.mark.asyncio
+async def test_resource_compound(mock_database):
     payload = {
         "name": "PersonAge20Weight200",
         "_all_fields": True,
@@ -223,10 +211,14 @@ def test_resource_compound():
         "weight_max": 201.4,
         "age": 20,
     }
-    res, data = search_helper(payload=payload, base="/?", debug=True)
+    res, data = await search_helper(
+        payload=payload, base="/?", debug=True, mock_database=mock_database
+    )
     assert res.status_code == 200
     assert len(data) == 1
     assert data[0]["name"] == "PersonAge20Weight200"
+
+    await mock_database["owners"].drop()
 
     payload = {
         "name": "PersonAge20Weight200",
@@ -236,14 +228,17 @@ def test_resource_compound():
         "weight_max": 201.9,
         "age": 20,
     }
-    res, data = search_helper(payload=payload, base="/?", debug=True)
+    res, data = await search_helper(
+        payload=payload, base="/?", debug=True, mock_database=mock_database
+    )
     assert res.status_code == 200
     assert len(data) == 1
     assert data[0]["name"] == "PersonAge20Weight200"
     assert "weight" not in data[0]
 
 
-def test_configure_query_on_request():
+@pytest.mark.asyncio
+async def test_configure_query_on_request(mock_database):
     payload = {
         "name": "PersonAge20Weight200",
         "_all_fields": False,
@@ -252,5 +247,7 @@ def test_configure_query_on_request():
         "weight_max": 201.9,
         "age": 20,
     }
-    res, data = search_helper(payload=payload, base="/?", debug=True)
+    res, data = await search_helper(
+        payload=payload, base="/?", debug=True, mock_database=mock_database
+    )
     assert res.status_code == 200
