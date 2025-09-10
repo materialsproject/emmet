@@ -44,7 +44,7 @@ narwhals==2.4.0
     # via plotly
 networkx==3.5
     # via pymatgen
-numpy==2.3.2
+numpy==2.3.3
     # via
     #   contourpy
     #   matplotlib

@@ -2,9 +2,9 @@ name: Linting
 
 on:
   push:
-    branches: [main]
+    branches: [main,develop]
   pull_request:
-    branches: [main]
+    branches: [main,develop]
 
 permissions:
   contents: read
@@ -28,3 +28,4 @@ jobs:
       - name: Run pre-commit
         run: |
           pre-commit run --all-files --show-diff-on-failure
+

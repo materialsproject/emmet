@@ -48,7 +48,7 @@ networkx==3.5
     # via pymatgen
 numcodecs[crc32c]==0.16.2
     # via zarr
-numpy==2.3.2
+numpy==2.3.3
     # via
     #   contourpy
     #   h5py
