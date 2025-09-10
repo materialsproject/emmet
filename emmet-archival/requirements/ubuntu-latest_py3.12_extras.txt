@@ -155,7 +155,7 @@ pytest==8.4.2
     #   emmet-archival (pyproject.toml)
     #   pytest-cov
     #   pytest-xdist
-pytest-cov==6.2.1
+pytest-cov==7.0.0
     # via emmet-archival (pyproject.toml)
 pytest-xdist==3.8.0
     # via emmet-archival (pyproject.toml)

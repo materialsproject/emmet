@@ -19,9 +19,9 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.23
+boto3==1.40.27
     # via maggma
-botocore==1.40.23
+botocore==1.40.27
     # via
     #   boto3
     #   s3transfer
@@ -123,7 +123,7 @@ livereload==2.7.1
     # via emmet-builders (pyproject.toml)
 maggma==0.72.0
     # via emmet-builders (pyproject.toml)
-markdown==3.8.2
+markdown==3.9
     # via
     #   mkdocs
     #   mkdocs-autorefs
@@ -151,6 +151,11 @@ mccabe==0.7.0
     # via flake8
 mda-xdrlib==0.2.0
     # via mdanalysis
+mdanalysis==2.9.0
+    # via
+    #   emmet-core
+    #   solvation-analysis
+    #   transport-analysis
 mergedeep==1.3.4
     # via
     #   mkdocs
@@ -312,7 +317,7 @@ pluggy==1.6.0
     #   pytest-cov
 pre-commit==4.3.0
     # via emmet-builders (pyproject.toml)
-pubchempy==1.0.4
+pubchempy==1.0.5
     # via robocrys
 pyarrow==21.0.0
     # via emmet-core
@@ -387,7 +392,7 @@ pytest==8.4.2
     #   pytest-cov
     #   pytest-xdist
     #   solvation-analysis
-pytest-cov==6.2.1
+pytest-cov==7.0.0
     # via emmet-builders (pyproject.toml)
 pytest-xdist==3.8.0
     # via emmet-builders (pyproject.toml)
@@ -442,11 +447,11 @@ ruamel-yaml==0.18.15
     #   robocrys
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-s3transfer==0.13.1
+s3transfer==0.14.0
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
-scikit-learn==1.7.1
+scikit-learn==1.7.2
     # via matminer
 scipy==1.16.1
     # via
@@ -471,6 +476,8 @@ six==1.17.0
     # via python-dateutil
 snowballstemmer==3.0.1
     # via pydocstyle
+solvation-analysis==0.4.1
+    # via emmet-core
 spglib==2.6.0
     # via
     #   pymatgen
@@ -492,7 +499,7 @@ threadpoolctl==3.6.0
     #   scikit-learn
 tidynamics==1.1.2
     # via transport-analysis
-tifffile==2025.8.28
+tifffile==2025.9.9
     # via scikit-image
 tornado==6.5.2
     # via livereload
@@ -502,6 +509,8 @@ tqdm==4.67.1
     #   matminer
     #   mdanalysis
     #   pymatgen
+transport-analysis==0.1.2
+    # via emmet-core
 typeguard==4.4.4
     # via inflect
 types-requests==2.32.4.20250809

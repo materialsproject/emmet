@@ -19,9 +19,9 @@ bcrypt==4.3.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-boto3==1.40.23
+boto3==1.40.27
     # via maggma
-botocore==1.40.23
+botocore==1.40.27
     # via
     #   boto3
     #   s3transfer
@@ -302,7 +302,7 @@ ruamel-yaml==0.18.15
     #   robocrys
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-s3transfer==0.13.1
+s3transfer==0.14.0
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
@@ -352,7 +352,7 @@ threadpoolctl==3.6.0
     #   scikit-learn
 tidynamics==1.1.2
     # via transport-analysis
-tifffile==2025.8.28
+tifffile==2025.9.9
     # via scikit-image
 tqdm==4.67.1
     # via

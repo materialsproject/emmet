@@ -48,7 +48,7 @@ fonttools==4.59.2
     # via matplotlib
 ghp-import==2.1.0
     # via mkdocs
-griffe==1.13.0
+griffe==1.14.0
     # via mkdocstrings-python
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
@@ -83,7 +83,7 @@ lazy-loader==0.4
     # via scikit-image
 livereload==2.7.1
     # via emmet-core (pyproject.toml)
-markdown==3.8.2
+markdown==3.9
     # via
     #   mkdocs
     #   mkdocs-autorefs
@@ -287,7 +287,7 @@ pymdown-extensions==10.16.1
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.14.1
+pymongo==4.15.0
     # via matminer
 pyparsing==3.2.3
     # via
@@ -298,7 +298,7 @@ pytest==8.4.2
     #   emmet-core (pyproject.toml)
     #   pytest-cov
     #   pytest-xdist
-pytest-cov==6.2.1
+pytest-cov==7.0.0
     # via emmet-core (pyproject.toml)
 pytest-xdist==3.8.0
     # via emmet-core (pyproject.toml)
@@ -339,7 +339,7 @@ ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
-scikit-learn==1.7.1
+scikit-learn==1.7.2
     # via matminer
 scipy==1.16.1
     # via
@@ -371,7 +371,7 @@ tabulate==0.9.0
     # via pymatgen
 threadpoolctl==3.6.0
     # via scikit-learn
-tifffile==2025.8.28
+tifffile==2025.9.9
     # via scikit-image
 tornado==6.5.2
     # via livereload
