@@ -17,9 +17,7 @@ asgiref==3.9.1
 bibtexparser==1.4.3
     # via pymatgen
 boto3==1.40.27
-    # via
-    #   emmet-api (setup.py)
-    #   maggma
+    # via emmet-api (setup.py)
 botocore==1.40.27
     # via
     #   boto3
@@ -33,10 +31,6 @@ certifi==2025.8.3
     #   httpcore
     #   httpx
     #   requests
-cffi==2.0.0
-    # via
-    #   cryptography
-    #   pynacl
 cfgv==3.4.0
     # via pre-commit
 charset-normalizer==3.4.3
@@ -55,7 +49,7 @@ csscompressor==0.9.5
     # via mkdocs-minify-plugin
 cycler==0.12.1
     # via matplotlib
-ddtrace==3.13.0
+ddtrace==3.13.1
     # via emmet-api (setup.py)
 distlib==0.4.0
     # via virtualenv
@@ -269,8 +263,6 @@ pycodestyle==2.14.0
     # via
     #   emmet-api (setup.py)
     #   flake8
-pycparser==2.23
-    # via cffi
 pydantic==2.11.7
     # via
     #   emmet-core
@@ -310,7 +302,7 @@ pymdown-extensions==10.16.1
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.14.1
+pymongo==4.15.0
     # via emmet-api (setup.py)
 pyparsing==3.2.3
     # via
@@ -321,6 +313,8 @@ pytest==8.4.2
     #   emmet-api (setup.py)
     #   pytest-asyncio
     #   pytest-cov
+pytest-asyncio==1.1.0
+    # via emmet-api (setup.py)
 pytest-cov==7.0.0
     # via emmet-api (setup.py)
 python-dateutil==2.9.0.post0
@@ -349,12 +343,6 @@ pyyaml==6.0.2
     #   starlette
 pyyaml-env-tag==1.1
     # via mkdocs
-pyzmq==27.1.0
-    # via maggma
-referencing==0.36.2
-    # via
-    #   jsonschema
-    #   jsonschema-specifications
 requests==2.32.5
     # via
     #   pymatgen
@@ -397,7 +385,7 @@ sympy==1.14.0
     # via pymatgen
 tabulate==0.9.0
     # via pymatgen
-tifffile==2025.8.28
+tifffile==2025.9.9
     # via scikit-image
 tornado==6.5.2
     # via livereload
