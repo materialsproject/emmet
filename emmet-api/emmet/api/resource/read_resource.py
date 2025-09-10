@@ -11,7 +11,6 @@ from emmet.api.resource import HintScheme, CollectionResource
 from emmet.api.resource.utils import (
     attach_query_ops,
     generate_query_pipeline,
-    get_count_kwargs,
 )
 from emmet.api.utils import STORE_PARAMS, merge_queries, serialization_helper
 
@@ -56,6 +55,12 @@ class ReadOnlyResource(CollectionResource):
         if self.enable_default_search:
             self.build_dynamic_model_search()
 
+    def get_search_kwargs(self, query: dict, typ: str) -> dict:
+        kwargs = dict(maxTimeMS=self.timeout)
+        if hint := query.get(f"{typ}_hint"):
+            kwargs["hint"] = hint
+        return kwargs
+
     def build_dynamic_model_search(self):
         model_name = self.model.__name__
 
@@ -92,7 +97,6 @@ class ReadOnlyResource(CollectionResource):
                         ),
                     )
             query: dict[Any, Any] = merge_queries(list(queries.values()))  # type: ignore
-            query["maxTimeMS"] = self.timeout
 
             if self.hint_scheme is not None:  # pragma: no cover
                 hints = self.hint_scheme.generate_hints(query)
@@ -101,26 +105,19 @@ class ReadOnlyResource(CollectionResource):
             try:
                 count = await self.collection.count_documents(
                     query.get("criteria") or {},
-                    **get_count_kwargs(query),
+                    **self.get_search_kwargs(query, "count"),
                 )
-
                 pipeline = generate_query_pipeline(query)
                 cursor = await self.collection.aggregate(
-                    pipeline, hint=query.get("agg_hint"), maxTimeMS=self.timeout
+                    pipeline,
+                    **self.get_search_kwargs(query, "agg"),
                 )
                 data = await cursor.to_list()
             except (NetworkTimeout, PyMongoError) as e:
-                if e.timeout:
-                    raise HTTPException(
-                        status_code=504,
-                        detail="Server timed out trying to obtain data. Try again with a smaller request.",
-                    )
-                else:
-                    raise HTTPException(
-                        status_code=500,
-                        detail="Server timed out trying to obtain data. Try again with a smaller request,"
-                        " or remove sorting fields and sort data locally.",
-                    )
+                raise HTTPException(
+                    status_code=504 if e.timeout else 500,
+                    detail=f"Server error: {e}",
+                )
 
             operator_meta = {}
 

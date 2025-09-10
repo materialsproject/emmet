@@ -57,14 +57,12 @@ def generate_query_pipeline(query: dict):
     if sorting:
         sort_dict = {"$sort": {}}  # type: dict
         sort_dict["$sort"].update(query["sort"])
+        pipeline.append(sort_dict)
 
     projection_dict = {"_id": 0}  # Do not return _id by default
 
     if query.get("properties", False):
         projection_dict.update({p: 1 for p in query["properties"]})
-
-    if sorting:
-        pipeline.append(sort_dict)
 
     pipeline.append({"$project": projection_dict})
     pipeline.append({"$skip": query.get("skip", 0)})
@@ -137,7 +135,3 @@ def generate_atlas_search_pipeline(query: dict):
         pipeline.append({"$facet": {"docs": [], "meta": [{"$replaceWith": "$$SEARCH_META"}, {"$limit": 1}]}})  # type: ignore
 
     return pipeline
-
-
-def get_count_kwargs(query: dict) -> dict:
-    return dict(hint=query.get("count_hint"), maxTimeMS=query.get("maxTimeMS"))
