@@ -347,7 +347,7 @@ pymdown-extensions==10.16.1
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.14.1
+pymongo==4.15.0
     # via matminer
 pyparsing==3.2.3
     # via
@@ -454,7 +454,7 @@ threadpoolctl==3.6.0
     #   scikit-learn
 tidynamics==1.1.2
     # via transport-analysis
-tifffile==2025.8.28
+tifffile==2025.9.9
     # via scikit-image
 tornado==6.5.2
     # via livereload
