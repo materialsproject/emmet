@@ -52,9 +52,8 @@ class History(BaseModel):
     @field_validator("description", mode="before")
     @classmethod
     def str_to_dict(cls, v: dict | str | None) -> dict | None:
-        if isinstance(v, str):
-            return {"string": v}
-        return v
+        """Ensure description is dict if populated."""
+        return {"string": v} if isinstance(v, str) else v
 
 
 class SNLAbout(BaseModel):
