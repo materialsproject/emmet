@@ -10,7 +10,7 @@ from pymatgen.entries.computed_entries import ComputedStructureEntry
 from emmet.core.base import EmmetMeta
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin
-from emmet.core.mpid import IdentifierType
+from emmet.core.types.typing import IdentifierType
 from emmet.core.settings import EmmetSettings
 from emmet.core.tasks import TaskDoc
 from emmet.core.utils import utcnow

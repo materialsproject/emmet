@@ -23,13 +23,13 @@ from typing_extensions import Literal
 
 from emmet.core.band_theory import BandTheoryBase, BandStructure
 from emmet.core.base import CalcMeta
-from emmet.core.common import DateTimeType
 from emmet.core.math import Matrix3D, Tensor4R, Vector3D
-from emmet.core.mpid import IdentifierType
+from emmet.core.types.typing import IdentifierType
 from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
 from emmet.core.structure import StructureMetadata
-from emmet.core.typing import PathLike
-from emmet.core.utils import DocEnum, get_num_formula_units, requires_arrow
+from emmet.core.types.enums import DocEnum
+from emmet.core.types.typing import DateTimeType, PathLike
+from emmet.core.utils import get_num_formula_units, requires_arrow
 
 try:
     import pyarrow as pa

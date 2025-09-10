@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from enum import Enum
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
@@ -9,7 +8,8 @@ from pymatgen.core.structure import Structure
 
 from emmet.core.electronic_structure import BandstructureData, DosData
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import IdentifierType
+from emmet.core.types.enums import ValueEnum
+from emmet.core.types.typing import IdentifierType
 from emmet.core.thermo import DecompositionProduct
 from emmet.core.xas import Edge, Type
 
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
 
-class HasProps(Enum):
+class HasProps(ValueEnum):
     """
     Enum of possible hasprops values.
     """

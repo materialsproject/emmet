@@ -23,7 +23,7 @@ from emmet.core.elasticity import (
     ShearModulus,
 )
 from emmet.core.math import Vector3D, Matrix3D, Vector6D, matrix_3x3_to_voigt
-from emmet.core.mpid import IdentifierType
+from emmet.core.types.typing import IdentifierType
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import RunType as VaspRunType
 from emmet.core.tasks import TaskDoc

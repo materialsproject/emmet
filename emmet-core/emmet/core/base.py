@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from pymatgen.core import __version__ as pmg_version
 
 from emmet.core import __version__
-from emmet.core.common import DateTimeType
+from emmet.core.types.typing import DateTimeType
 from emmet.core.utils import utcnow
 
 

@@ -6,13 +6,11 @@ import numpy as np
 import pytest
 from bson.objectid import ObjectId
 from monty.json import MSONable
-from monty.serialization import dumpfn, loadfn
+from monty.serialization import loadfn
 
-from emmet.core.common import convert_datetime
 from emmet.core.tasks import TaskDoc
 from emmet.core.utils import (
-    DocEnum,
-    ValueEnum,
+    convert_datetime,
     dynamic_import,
     get_flat_models_from_model,
     get_hash_blocked,
@@ -89,27 +87,6 @@ class GoodMSONClass(MSONable):
             and self._d == other._d
             and self.kwargs == other.kwargs
         )
-
-
-def test_value_enum(monkeypatch, tmp_path):
-    class TempEnum(ValueEnum):
-        A = "A"
-        B = "B"
-
-    assert str(TempEnum.A) == "A"
-    assert str(TempEnum.B) == "B"
-
-    dumpfn(TempEnum, tmp_path / "temp.json")
-    assert Path(tmp_path, "temp.json").is_file()
-
-
-def test_doc_enum():
-    class TestEnum(DocEnum):
-        A = "A", "Describes A"
-        B = "B", "Might describe B"
-
-    assert str(TestEnum.A) == "A"
-    assert TestEnum.B.__doc__ == "Might describe B"
 
 
 def test_blocked_hash(tmp_dir):

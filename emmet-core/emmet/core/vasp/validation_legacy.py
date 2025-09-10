@@ -11,8 +11,7 @@ from pymatgen.io.vasp.inputs import Kpoints
 from pymatgen.io.vasp.sets import VaspInputSet
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.common import DateTimeType
-from emmet.core.mpid import IdentifierType
+from emmet.core.types.typing import DateTimeType, IdentifierType
 from emmet.core.settings import EmmetSettings
 from emmet.core.tasks import CoreTaskDoc, TaskDoc
 from emmet.core.vasp.calc_types.enums import CalcType, TaskType

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from enum import Enum
 import logging
 from collections import defaultdict
 from typing import TYPE_CHECKING
@@ -12,12 +11,13 @@ from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Specie
 
 from emmet.core.material_property import PropertyDoc
+from emmet.core.types.enums import ValueEnum
 
 if TYPE_CHECKING:
-    from emmet.core.mpid import IdentifierType
+    from emmet.core.types.typing import IdentifierType
 
 
-class OxiStateAssigner(Enum):
+class OxiStateAssigner(ValueEnum):
 
     MANUAL = "Manual"
     BVA = "Bond Valence Analysis"

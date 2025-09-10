@@ -12,10 +12,10 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.core.feff.task import TaskDocument
 from emmet.core.spectrum import SpectrumDoc
-from emmet.core.utils import ValueEnum
+from emmet.core.types.enums import ValueEnum
 
 if TYPE_CHECKING:
-    from emmet.core.mpid import IdentifierType
+    from emmet.core.types.typing import IdentifierType
 
 
 class Edge(ValueEnum):

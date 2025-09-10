@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 
-from emmet.core.mpid import IdentifierType, MPculeID
+from emmet.core.mpid import MPculeID
+from emmet.core.types.typing import IdentifierType
 
 
 class FindStructure(BaseModel):

@@ -15,7 +15,7 @@ from emmet.core.utils import get_hash_blocked
 if TYPE_CHECKING:
     from typing import Any
 
-    from emmet.core.typing import PathLike
+    from emmet.core.types.typing import PathLike
 
 logger = logging.getLogger(__name__)
 

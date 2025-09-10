@@ -6,11 +6,9 @@ from math import log, floor
 import re
 from pathlib import Path
 from string import ascii_lowercase, digits
-from typing import TYPE_CHECKING, Annotated, Union
+from typing import TYPE_CHECKING
 
-from pydantic import GetJsonSchemaHandler, PlainSerializer, BeforeValidator
 from pydantic_core import CoreSchema, core_schema
-from pydantic.json_schema import JsonSchemaValue
 
 # For dev_scripts compatibility, safe import this list
 if (Path(__file__).parent / "_forbidden_alpha_id.py").exists():
@@ -22,6 +20,9 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from typing import Any
     from typing_extensions import Self
+
+    from pydantic import GetJsonSchemaHandler
+    from pydantic.json_schema import JsonSchemaValue
 
 # matches "mp-1234" or "1234" followed by and optional "-(Alphanumeric)"
 MPID_REGEX_PATTERN = r"^([A-Za-z]+-)?(\d+)(-[A-Za-z0-9]+)*$"
@@ -694,10 +695,3 @@ def _next_safe_alpha_id(
     while int(start_id) in FORBIDDEN_ALPHA_ID_VALUES:
         start_id += 1
     return start_id
-
-
-IdentifierType = Annotated[
-    Union[MPID, AlphaID, str],
-    BeforeValidator(lambda x: AlphaID(x).formatted),
-    PlainSerializer(lambda x: str(AlphaID(x))),
-]

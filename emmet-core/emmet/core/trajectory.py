@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from copy import deepcopy
-from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -19,6 +18,7 @@ from pymatgen.core.trajectory import Trajectory as PmgTrajectory
 from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.vasp.calc_types import RunType, TaskType, calc_type, run_type, task_type
 from emmet.core.vasp.calculation import ElectronicStep
+from emmet.core.types.enums import ValueEnum
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ if TYPE_CHECKING:
     from emmet.core.vasp.calculation import Calculation
 
 
-class TrajFormat(Enum):
+class TrajFormat(ValueEnum):
     """Define known trajectory formats."""
 
     PMG = "json"
@@ -491,7 +491,7 @@ class AtomRelaxTrajectory(BaseModel):
             Any kwargs supported by Trajectory.to_* methods.
         """
         if file_name and not fmt:
-            for _fmt in TrajFormat:
+            for _fmt in TrajFormat:  # type: ignore[attr-defined]
                 if _fmt.value in str(file_name).lower():
                     fmt = _fmt
                     break
@@ -499,7 +499,7 @@ class AtomRelaxTrajectory(BaseModel):
             fmt = TrajFormat.PARQUET
 
         if isinstance(fmt, str) and fmt.upper() in TrajFormat.__members__:
-            fmt = TrajFormat[fmt.upper()]
+            fmt = TrajFormat[fmt.upper()]  # type: ignore[misc]
         else:
             fmt = TrajFormat(fmt)
 

@@ -10,8 +10,9 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 from emmet.core.base import EmmetMeta
 from emmet.core.material import PropertyOrigin
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import IdentifierType
-from emmet.core.utils import ValueEnum, utcnow
+from emmet.core.types.enums import ValueEnum
+from emmet.core.types.typing import IdentifierType
+from emmet.core.utils import utcnow
 from emmet.core.vasp.calc_types.enums import RunType
 
 

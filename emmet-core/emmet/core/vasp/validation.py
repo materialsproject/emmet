@@ -6,9 +6,8 @@ from pydantic import Field
 
 from emmet.core.vasp.calculation import Calculation
 from emmet.core.base import EmmetBaseModel
-from emmet.core.common import DateTimeType
-from emmet.core.mpid import IdentifierType
-from emmet.core.utils import DocEnum
+from emmet.core.types.typing import DateTimeType, IdentifierType
+from emmet.core.types.enums import DocEnum
 from emmet.core.vasp.calc_types.enums import CalcType, RunType
 from emmet.core.vasp.utils import FileMetadata, discover_vasp_files
 from emmet.core.vasp.task_valid import TaskDocument

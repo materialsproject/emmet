@@ -20,7 +20,7 @@ from emmet.core.qchem.calc_types import (
 from emmet.core.mpid import MPID, MPculeID
 from emmet.core.structure import MoleculeMetadata
 from emmet.core.task import BaseTaskDocument
-from emmet.core.utils import ValueEnum
+from emmet.core.types.enums import ValueEnum
 
 if TYPE_CHECKING:
     from collections.abc import Callable

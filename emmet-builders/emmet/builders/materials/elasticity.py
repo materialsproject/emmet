@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from collections.abc import Generator
     from typing import Any
 
-    from emmet.core.mpid import IdentifierType
+    from emmet.core.types.typing import IdentifierType
 
 
 class ElasticityBuilder(Builder):

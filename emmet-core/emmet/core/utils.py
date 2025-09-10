@@ -13,7 +13,7 @@ from math import gcd
 from typing import TYPE_CHECKING, get_args
 
 import numpy as np
-from monty.json import MSONable
+from monty.json import MSONable, MontyDecoder
 from pydantic import BaseModel
 from pydantic._internal._utils import lenient_issubclass
 from pymatgen.analysis.elasticity.strain import Deformation
@@ -53,7 +53,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
     from typing import Any
 
-    from emmet.core.typing import PathLike
+    from emmet.core.types.typing import PathLike
 
 logger = logging.getLogger(__name__)
 
@@ -417,70 +417,44 @@ def jsanitize(obj, strict=False, allow_bson=False):
     return jsanitize(obj.as_dict(), strict=strict, allow_bson=allow_bson)
 
 
-class ValueEnum(Enum):
-    """
-    Enum that serializes to string as the value.
-
-    While this method has an `as_dict` method, this
-    returns a `str`. This is to ensure deserialization
-    to a `str` when functions like `monty.json.jsanitize`
-    are called on a ValueEnum with `strict = True` and
-    `enum_values = False` (occurs often in jobflow).
-    """
-
-    def __str__(self):
-        return str(self.value)
-
-    def __eq__(self, obj: object) -> bool:
-        """Special Equals to enable converting strings back to the enum"""
-        if isinstance(obj, str):
-            return super().__eq__(self.__class__(obj))
-        elif isinstance(obj, self.__class__):
-            return super().__eq__(obj)
-        return False
-
-    def __hash__(self):
-        """Get a hash of the enum."""
-        return hash(str(self))
-
-
-class DocEnum(ValueEnum):
-    """
-    Enum with docstrings support
-    from: https://stackoverflow.com/a/50473952
-    """
-
-    def __new__(cls, value, doc=None):
-        """add docstring to the member of Enum if exists
-
-        Args:
-            value: Enum member value
-            doc: Enum member docstring, None if not exists
-        """
-        self = object.__new__(cls)  # calling super().__new__(value) here would fail
-        self._value_ = value
-        if doc is not None:
-            self.__doc__ = doc
-        return self
-
-
-class IgnoreCaseEnum(ValueEnum):
-    """Enum that permits case-insensitve lookup.
-
-    Reference issue:
-    https://github.com/materialsproject/api/issues/869
-    """
-
-    @classmethod
-    def _missing_(cls, value):
-        for member in cls:
-            if member.value.upper() == value.upper():
-                return member
-
-
 def utcnow() -> datetime.datetime:
     """Get UTC time right now."""
     return datetime.datetime.now(datetime.timezone.utc)
+
+
+def convert_datetime(
+    v: datetime.datetime | dict[str, str] | str | None,
+) -> datetime.datetime:
+    """Validate datetime-like objects.
+
+    Parameters
+    -----------
+    v : datetime, dict[str,str], str or None
+
+    Returns
+    -----------
+    datetime
+    """
+    if not v:
+        return utcnow()
+
+    if isinstance(v, dict):
+        if v.get("$date"):
+            dt = datetime.datetime.fromisoformat(v["$date"])
+            if not dt.tzinfo:
+                dt = dt.replace(tzinfo=datetime.timezone.utc)
+            return dt
+
+    if isinstance(v, str):
+        dt = datetime.datetime.fromisoformat(v)
+        if not dt.tzinfo:
+            dt = dt.replace(tzinfo=datetime.timezone.utc)
+        return dt
+
+    v = MontyDecoder().process_decoded(v)
+    if isinstance(v, datetime.datetime) and not v.tzinfo:
+        v = v.replace(tzinfo=datetime.timezone.utc)
+    return v  # type: ignore[return-value]
 
 
 def get_hash_blocked(

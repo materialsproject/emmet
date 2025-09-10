@@ -10,7 +10,7 @@ from pymatgen.core.composition import Composition, formula_double_format
 from pymatgen.core.structure import Structure
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.mpid import IdentifierType
+from emmet.core.types.typing import IdentifierType
 
 
 letters = "ABCDEFGHIJKLMNOPQRSTUVXYZ"

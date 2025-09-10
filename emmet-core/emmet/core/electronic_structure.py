@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from enum import Enum
 from math import isnan
 from typing import TYPE_CHECKING
 
@@ -22,10 +21,11 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 from typing_extensions import Literal
 
-from emmet.core.common import DateTimeType
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import AlphaID, IdentifierType
+from emmet.core.mpid import AlphaID
 from emmet.core.settings import EmmetSettings
+from emmet.core.types.enums import ValueEnum
+from emmet.core.types.typing import DateTimeType, IdentifierType
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -33,13 +33,13 @@ if TYPE_CHECKING:
 SETTINGS = EmmetSettings()
 
 
-class BSPathType(Enum):
+class BSPathType(ValueEnum):
     setyawan_curtarolo = "setyawan_curtarolo"
     hinuma = "hinuma"
     latimer_munro = "latimer_munro"
 
 
-class DOSProjectionType(Enum):
+class DOSProjectionType(ValueEnum):
     total = "total"
     elemental = "elemental"
     orbital = "orbital"

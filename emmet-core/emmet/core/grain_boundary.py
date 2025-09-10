@@ -1,12 +1,11 @@
-from enum import Enum
-
 from pydantic import BaseModel, Field
 from pymatgen.core.interface import GrainBoundary
 
-from emmet.core.common import DateTimeType
+from emmet.core.types.enums import ValueEnum
+from emmet.core.types.typing import DateTimeType
 
 
-class GBTypeEnum(Enum):
+class GBTypeEnum(ValueEnum):
     """
     Grain boundary types
     """

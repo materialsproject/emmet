@@ -8,7 +8,7 @@ from emmet.core.material_property import PropertyDoc
 from emmet.core.utils import generate_robocrys_condensed_struct_and_description
 
 if TYPE_CHECKING:
-    from emmet.core.mpid import IdentifierType
+    from emmet.core.types.typing import IdentifierType
 
 
 class MineralData(BaseModel):

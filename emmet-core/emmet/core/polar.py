@@ -16,7 +16,7 @@ from emmet.core.settings import EmmetSettings
 if TYPE_CHECKING:
     from pymatgen.core.structure import Structure
 
-    from emmet.core.mpid import IdentifierType
+    from emmet.core.types.typing import IdentifierType
 
 
 SETTINGS = EmmetSettings()

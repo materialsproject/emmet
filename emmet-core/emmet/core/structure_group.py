@@ -11,8 +11,8 @@ from pymatgen.core.composition import Composition
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
-from emmet.core.common import DateTimeType
-from emmet.core.mpid import IdentifierType, AlphaID
+from emmet.core.mpid import AlphaID
+from emmet.core.types.typing import DateTimeType, IdentifierType
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

@@ -5,7 +5,8 @@ from datetime import datetime
 from pydantic import Field
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.mpid import IdentifierType, MPculeID
+from emmet.core.mpid import MPculeID
+from emmet.core.types.typing import IdentifierType
 from emmet.core.utils import utcnow
 
 

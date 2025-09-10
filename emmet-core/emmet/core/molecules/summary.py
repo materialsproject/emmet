@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from enum import Enum
 from hashlib import blake2b
 from typing import TYPE_CHECKING
 
@@ -11,6 +10,7 @@ from emmet.core.molecules.metal_binding import MetalBindingData
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPID, MPculeID
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
+from emmet.core.types.enums import ValueEnum
 
 if TYPE_CHECKING:
     from typing import Any
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
-class HasProps(Enum):
+class HasProps(ValueEnum):
     """
     Enum of possible hasprops values.
     """

@@ -3,7 +3,7 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 from emmet.core.mpid import MPID, MPculeID
-from emmet.core.common import DateTimeType
+from emmet.core.types.typing import DateTimeType
 
 
 class MolPropertyOrigin(BaseModel):

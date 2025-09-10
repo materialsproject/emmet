@@ -24,7 +24,7 @@ from pymatgen.io.vasp import Potcar as VaspPotcar
 from pymatgen.io.vasp import PotcarSingle, Vasprun, VolumetricData
 
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
-from emmet.core.utils import ValueEnum
+from emmet.core.types.enums import VaspObject, StoreTrajectoryOption, TaskState
 from emmet.core.vasp.calc_types import (
     CalcType,
     RunType,
@@ -33,7 +33,6 @@ from emmet.core.vasp.calc_types import (
     run_type,
     task_type,
 )
-from emmet.core.vasp.task_valid import TaskState
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -49,29 +48,6 @@ class Potcar(BaseModel):
     symbols: list[str] | None = Field(
         None, description="List of VASP potcar symbols used in the calculation."
     )
-
-
-class VaspObject(ValueEnum):
-    """Types of VASP data objects."""
-
-    BANDSTRUCTURE = "bandstructure"
-    DOS = "dos"
-    CHGCAR = "chgcar"
-    AECCAR0 = "aeccar0"
-    AECCAR1 = "aeccar1"
-    AECCAR2 = "aeccar2"
-    TRAJECTORY = "trajectory"
-    ELFCAR = "elfcar"
-    WAVECAR = "wavecar"
-    LOCPOT = "locpot"
-    OPTIC = "optic"
-    PROCAR = "procar"
-
-
-class StoreTrajectoryOption(ValueEnum):
-    FULL = "full"
-    PARTIAL = "partial"
-    NO = "no"
 
 
 class CalculationBaseModel(BaseModel):

@@ -9,7 +9,7 @@ from pymatgen.core import Structure
 from emmet.core.material_property import PropertyDoc
 
 if TYPE_CHECKING:
-    from emmet.core.mpid import IdentifierType
+    from emmet.core.types.typing import IdentifierType
 
 
 class MagnetismDoc(PropertyDoc):

@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Generator
     from typing import Any
 
-    from emmet.core.typing import PathLike
+    from emmet.core.types.typing import PathLike
 
 
 def _get_test_files_dir(module: str) -> Path:

@@ -11,12 +11,12 @@ from pybtex.errors import set_strict_mode
 from pydantic import BaseModel, Field, field_validator
 from pymatgen.core.structure import Structure
 
-from emmet.core.common import DateTimeType
+from emmet.core.types.typing import DateTimeType
 from emmet.core.material_property import PropertyDoc
-from emmet.core.utils import ValueEnum
+from emmet.core.types.enums import ValueEnum
 
 if TYPE_CHECKING:
-    from emmet.core.mpid import IdentifierType
+    from emmet.core.types.typing import IdentifierType
 
 
 class Database(ValueEnum):
@@ -101,7 +101,6 @@ class ProvenanceDoc(PropertyDoc):
     property_name: str = "provenance"
 
     created_at: DateTimeType = Field(
-        ...,
         description="creation date for the first structure corresponding to this material",
     )
 

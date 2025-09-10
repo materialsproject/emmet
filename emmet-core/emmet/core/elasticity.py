@@ -11,10 +11,10 @@ from pymatgen.core.structure import Structure
 from pymatgen.core.tensors import TensorMapping
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
-from emmet.core.common import Status
 from emmet.core.material_property import PropertyDoc
 from emmet.core.math import Matrix3D, MatrixVoigt
-from emmet.core.mpid import IdentifierType
+from emmet.core.types.enums import TaskState
+from emmet.core.types.typing import IdentifierType
 from emmet.core.settings import EmmetSettings
 
 SETTINGS = EmmetSettings()
@@ -206,7 +206,7 @@ class ElasticityDoc(PropertyDoc):
         None, description="Method used to fit the elastic tensor"
     )
 
-    state: Status | None = Field(
+    state: TaskState | None = Field(
         None,
         description="State of the fitting/analysis: `successful` or `failed`",
     )
@@ -304,7 +304,7 @@ class ElasticityDoc(PropertyDoc):
             et_doc = None
             ct_doc = None
             derived_props = {}
-            state = Status("failed")
+            state = TaskState("failed")
             warnings = [CM.FITTING.format(e)]
 
         else:
@@ -330,7 +330,7 @@ class ElasticityDoc(PropertyDoc):
             except np.linalg.LinAlgError as e:
                 ct_doc = None
                 derived_props = {}
-                state = Status("failed")
+                state = TaskState("failed")
                 warnings = [CM.COMPLIANCE.format(e)]
 
         # fitting data
@@ -338,7 +338,7 @@ class ElasticityDoc(PropertyDoc):
         n_states = len(p_deforms) + len(d_deforms)
         if n_states != 24:
             warnings.append(CM.N_STATES.format(n_states))
-            state = Status("failed")
+            state = TaskState("failed")
 
         fitting_data = FittingData(
             deformations=[x.tolist() for x in p_deforms],  # type: ignore
@@ -363,7 +363,7 @@ class ElasticityDoc(PropertyDoc):
             fitting_method=fitting_method,
             warnings=warnings,
             state=state,
-            deprecated=state == Status("failed"),
+            deprecated=state == TaskState("failed"),
             **derived_props,
             **kwargs,
         )
@@ -653,7 +653,7 @@ def sanity_check(
     elastic_doc: ElasticTensorDoc,
     strains: list[Strain],
     derived_props: dict[str, Any],
-) -> tuple[Status, list[str]]:
+) -> tuple[TaskState, list[str]]:
     """
     Post analysis to generate warnings if any.
 
@@ -709,6 +709,6 @@ def sanity_check(
     if v > high:
         warnings.append(WM.LARGE_YOUNG_MODULUS.format(v, high))
 
-    state = Status("failed") if failed else Status("successful")
+    state = TaskState("failed") if failed else TaskState("successful")
 
     return state, warnings

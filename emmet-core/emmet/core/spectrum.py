@@ -3,8 +3,7 @@
 from pydantic import Field
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.common import DateTimeType
-from emmet.core.mpid import IdentifierType
+from emmet.core.types.typing import DateTimeType, IdentifierType
 from emmet.core.structure import StructureMetadata
 
 

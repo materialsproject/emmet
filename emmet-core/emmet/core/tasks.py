@@ -19,8 +19,8 @@ from pymatgen.core.trajectory import Trajectory
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.io.vasp import Incar, Kpoints, Poscar
 
-from emmet.core.common import DateTimeType
-from emmet.core.mpid import IdentifierType
+from emmet.core.types.enums import VaspObject, TaskState
+from emmet.core.types.typing import DateTimeType, IdentifierType
 from emmet.core.structure import StructureMetadata
 from emmet.core.trajectory import Trajectory as CoreTrajectory
 from emmet.core.utils import utcnow
@@ -38,9 +38,7 @@ from emmet.core.vasp.calculation import (
     CoreCalculationOutput,
     PotcarSpec,
     RunStatistics,
-    VaspObject,
 )
-from emmet.core.vasp.task_valid import TaskState
 from emmet.core.vasp.utils import TASK_NAMES, discover_and_sort_vasp_files
 
 if TYPE_CHECKING:

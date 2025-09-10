@@ -19,9 +19,9 @@ from pymatgen.core import Composition, Structure
 from pymatgen.core.periodic_table import DummySpecies, Element, Species
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
-from emmet.core.common import DateTimeType
-from emmet.core.mpid import IdentifierType
-from emmet.core.utils import ValueEnum, utcnow
+from emmet.core.types.enums import ValueEnum
+from emmet.core.types.typing import DateTimeType, IdentifierType
+from emmet.core.utils import utcnow
 
 if TYPE_CHECKING:
     from collections.abc import Callable

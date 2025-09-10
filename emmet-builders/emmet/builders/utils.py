@@ -14,7 +14,7 @@ from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
 from pymatgen.core import Structure
 from pymatgen.io.vasp.inputs import PotcarSingle
 
-from emmet.core.typing import PathLike
+from emmet.core.types.typing import PathLike
 
 from emmet.builders.settings import EmmetBuildSettings
 

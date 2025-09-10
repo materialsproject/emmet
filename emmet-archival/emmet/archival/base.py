@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from enum import StrEnum
 from pathlib import Path
 from pydantic import BaseModel
 from typing import TYPE_CHECKING, Any
@@ -14,14 +13,15 @@ import zarr
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from emmet.core.typing import PathLike
+from emmet.core.types.enums import ValueEnum
+from emmet.core.types.typing import PathLike
 
 if TYPE_CHECKING:
     from typing import Literal
     from collections.abc import Generator, MutableMapping
 
 
-class ArchivalFormat(StrEnum):
+class ArchivalFormat(ValueEnum):
     HDF5 = "h5"
     ZARR = "zarr"
     PARQ = "parquet"
