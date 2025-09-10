@@ -499,80 +499,83 @@ class MoleculeSummaryDoc(PropertyDoc):
 
 # Key mapping
 summary_fields: dict[str, list] = {
-    HasProps.molecules.value: [
-        "charge",
-        "spin_multiplicity",
-        "natoms",
-        "elements",
-        "nelements",
-        "composition",
-        "composition_reduced",
-        "formula_alphabetical",
-        "chemsys",
-        "symmetry",
-        "molecules",
-        "deprecated",
-        "task_ids",
-        "species_hash",
-        "coord_hash",
-        "inchi",
-        "inchi_key",
-        "unique_calc_types",
-        "unique_task_types",
-        "unique_levels_of_theory",
-        "unique_solvents",
-        "unique_lot_solvents",
-        "similar_molecules",
-        "constituent_molecules",
-        "molecule_levels_of_theory",
-    ],
-    HasProps.thermo.value: [
-        "electronic_energy",
-        "zero_point_energy",
-        "total_enthalpy",
-        "total_entropy",
-        "free_energy",
-    ],
-    HasProps.vibration.value: [
-        "frequencies",
-    ],
-    HasProps.orbitals.value: [
-        "open_shell",
-    ],
-    HasProps.partial_charges.value: ["partial_charges"],
-    HasProps.partial_spins.value: ["partial_spins"],
-    HasProps.bonding.value: ["bond_types", "bonds", "bonds_nometal"],
-    HasProps.multipole_moments.value: [
-        "total_dipole",
-        "resp_total_dipole",
-    ],
-    HasProps.redox.value: [
-        "electron_affinity",
-        "ea_task_id",
-        "ionization_energy",
-        "ie_task_id",
-        "reduction_free_energy",
-        "red_molecule_id",
-        "oxidation_free_energy",
-        "ox_molecule_id",
-        "reduction_potential",
-        "oxidation_potential",
-    ],
-    HasProps.metal_binding.value: [
-        "binding_partial_charges_property_id",
-        "binding_partial_spins_property_id",
-        "binding_partial_charges_lot_solvent",
-        "binding_partial_spins_lot_solvent",
-        "binding_charge_spin_method",
-        "binding_bonding_property_id",
-        "binding_bonding_lot_solvent",
-        "binding_bonding_method",
-        "binding_thermo_property_id",
-        "binding_thermo_lot_solvent",
-        "binding_thermo_correction_lot_solvent",
-        "binding_thermo_combined_lot_solvent",
-        "binding_data",
-    ],
+    HasProps(k).value: v
+    for k, v in {
+        "molecules": [
+            "charge",
+            "spin_multiplicity",
+            "natoms",
+            "elements",
+            "nelements",
+            "composition",
+            "composition_reduced",
+            "formula_alphabetical",
+            "chemsys",
+            "symmetry",
+            "molecules",
+            "deprecated",
+            "task_ids",
+            "species_hash",
+            "coord_hash",
+            "inchi",
+            "inchi_key",
+            "unique_calc_types",
+            "unique_task_types",
+            "unique_levels_of_theory",
+            "unique_solvents",
+            "unique_lot_solvents",
+            "similar_molecules",
+            "constituent_molecules",
+            "molecule_levels_of_theory",
+        ],
+        "thermo": [
+            "electronic_energy",
+            "zero_point_energy",
+            "total_enthalpy",
+            "total_entropy",
+            "free_energy",
+        ],
+        "vibration": [
+            "frequencies",
+        ],
+        "orbitals": [
+            "open_shell",
+        ],
+        "partial_charges": ["partial_charges"],
+        "partial_spins": ["partial_spins"],
+        "bonding": ["bond_types", "bonds", "bonds_nometal"],
+        "multipole_moments": [
+            "total_dipole",
+            "resp_total_dipole",
+        ],
+        "redox": [
+            "electron_affinity",
+            "ea_task_id",
+            "ionization_energy",
+            "ie_task_id",
+            "reduction_free_energy",
+            "red_molecule_id",
+            "oxidation_free_energy",
+            "ox_molecule_id",
+            "reduction_potential",
+            "oxidation_potential",
+        ],
+        "metal_binding": [
+            "binding_partial_charges_property_id",
+            "binding_partial_spins_property_id",
+            "binding_partial_charges_lot_solvent",
+            "binding_partial_spins_lot_solvent",
+            "binding_charge_spin_method",
+            "binding_bonding_property_id",
+            "binding_bonding_lot_solvent",
+            "binding_bonding_method",
+            "binding_thermo_property_id",
+            "binding_thermo_lot_solvent",
+            "binding_thermo_correction_lot_solvent",
+            "binding_thermo_combined_lot_solvent",
+            "binding_data",
+        ],
+    }.items()
 }
 
 
@@ -590,33 +593,42 @@ def _copy_from_docs(
 ):
     """Helper function to cut down documents to composite models and then combine to create a MoleculeSummaryDoc"""
 
-    has_props: dict[str, bool] = {str(val.value): False for val in HasProps}
+    has_props: dict[str, bool] = {str(val.value): False for val in HasProps}  # type: ignore[attr-defined]
     d: dict[str, Any] = {"has_props": has_props, "origins": []}
 
     # Molecules is special because there should only ever be one
     # MoleculeDoc for a given molecule
     # There are not multiple MoleculeDocs for different solvents
-    d["has_props"][HasProps.molecules.value] = True
-    for copy_key in summary_fields[HasProps.molecules.value]:
+
+    # NB: mypy misfires on enums. Using the following syntax works fine with mypy,
+    # but HasProps.molecules.value can raise errors about attributes being defined
+    d["has_props"][HasProps("molecules").value] = True
+    for copy_key in summary_fields[HasProps("molecules").value]:
         d[copy_key] = molecules[copy_key]
 
     doc_type_mapping = {
-        HasProps.partial_charges.value: (partial_charges, PartialChargesComposite),
-        HasProps.partial_spins.value: (partial_spins, PartialSpinsComposite),
-        HasProps.bonding.value: (bonding, BondingComposite),
-        HasProps.metal_binding.value: (metal_binding, MetalBindingComposite),
-        HasProps.multipole_moments.value: (multipole_moments, MultipolesComposite),
-        HasProps.orbitals.value: (orbitals, OrbitalComposite),
-        HasProps.redox.value: (redox, RedoxComposite),
-        HasProps.thermo.value: (thermo, ThermoComposite),
-        HasProps.vibration.value: (vibration, VibrationComposite),
+        HasProps(k).value: v
+        for k, v in {
+            "partial_charges": (partial_charges, PartialChargesComposite),
+            "partial_spins": (partial_spins, PartialSpinsComposite),
+            "bonding": (bonding, BondingComposite),
+            "metal_binding": (metal_binding, MetalBindingComposite),
+            "multipole_moments": (multipole_moments, MultipolesComposite),
+            "orbitals": (orbitals, OrbitalComposite),
+            "redox": (redox, RedoxComposite),
+            "thermo": (thermo, ThermoComposite),
+            "vibration": (vibration, VibrationComposite),
+        }.items()
     }
 
     by_method = {
-        HasProps.partial_charges.value,
-        HasProps.partial_spins.value,
-        HasProps.bonding.value,
-        HasProps.metal_binding.value,
+        HasProps(k).value
+        for k in {
+            "partial_charges",
+            "partial_spins",
+            "bonding",
+            "metal_binding",
+        }
     }
 
     # Function to grab the keys and put them in the root doc
