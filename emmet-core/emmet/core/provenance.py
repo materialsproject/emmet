@@ -3,21 +3,20 @@
 from __future__ import annotations
 
 import warnings
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator
 from pymatgen.core.structure import Structure
 
-from emmet.core.common import convert_datetime
+from emmet.core.types.typing import DateTimeType
 from emmet.core.material_property import PropertyDoc
-from emmet.core.utils import ValueEnum, utcnow
+from emmet.core.types.enums import ValueEnum
 
 if TYPE_CHECKING:
-    from emmet.core.mpid import AlphaID, MPID
+    from emmet.core.types.typing import IdentifierType
 
 
 class Database(ValueEnum):
@@ -50,12 +49,11 @@ class History(BaseModel):
         None, description="Dictionary of extra data for this history node."
     )
 
-    @model_validator(mode="before")
+    @field_validator("description", mode="before")
     @classmethod
-    def str_to_dict(cls, values):
-        if isinstance(values.get("description"), str):
-            values["description"] = {"string": values.get("description")}
-        return values
+    def str_to_dict(cls, v: dict | str | None) -> dict | None:
+        """Ensure description is dict if populated."""
+        return {"string": v} if isinstance(v, str) else v
 
 
 class SNLAbout(BaseModel):
@@ -83,14 +81,7 @@ class SNLAbout(BaseModel):
         " of this material for the entry closest matching the material input.",
     )
 
-    created_at: datetime = Field(
-        default_factory=utcnow, description="The creation date for this SNL."
-    )
-
-    @field_validator("created_at", mode="before")
-    @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)
+    created_at: DateTimeType = Field(description="The creation date for this SNL.")
 
 
 class SNLDict(BaseModel):
@@ -108,8 +99,7 @@ class ProvenanceDoc(PropertyDoc):
 
     property_name: str = "provenance"
 
-    created_at: datetime = Field(
-        ...,
+    created_at: DateTimeType = Field(
         description="creation date for the first structure corresponding to this material",
     )
 
@@ -139,11 +129,6 @@ class ProvenanceDoc(PropertyDoc):
         " of this material for the entry closest matching the material input",
     )
 
-    @field_validator("last_updated", "created_at", mode="before")
-    @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)
-
     @field_validator("authors")
     @classmethod
     def remove_duplicate_authors(cls, authors):
@@ -155,7 +140,7 @@ class ProvenanceDoc(PropertyDoc):
         cls,
         structure: Structure,
         snls: list[SNLDict],
-        material_id: MPID | AlphaID | None = None,
+        material_id: IdentifierType | None = None,
         **kwargs,
     ) -> "ProvenanceDoc":
         """

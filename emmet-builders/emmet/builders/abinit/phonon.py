@@ -24,8 +24,8 @@ from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.phonon import (
     AbinitPhonon,
     Ddb,
-    PhononBandStructure,
-    PhononDos,
+    PhononBS,
+    PhononDOS,
     PhononWarnings,
     PhononWebsiteBS,
     ThermalDisplacement,
@@ -223,7 +223,6 @@ class PhononBuilder(Builder):
             becs = None
             if phonon_properties["becs"] is not None:
                 becs = BornEffectiveCharges(
-                    material_id=item["mp_id"],
                     symmetrized_value=phonon_properties["becs"],
                     value=sr_break["becs_nosymm"],
                     cnsr_break=sr_break["cnsr"],
@@ -245,25 +244,24 @@ class PhononBuilder(Builder):
                 abinit_input_vars=abinit_input_vars,
             )
 
-            phbs = PhononBandStructure(
-                material_id=item["mp_id"],
-                band_structure=phonon_properties["ph_bs"].as_dict(),
+            phbs = PhononBS(
+                identifier=item["mp_id"],
+                **phonon_properties["ph_bs"].as_dict(),
             )
 
-            phws = PhononWebsiteBS(
+            phws = PhononWebsiteBS(  # type: ignore[call-arg]
                 material_id=item["mp_id"],
                 phononwebsite=phonon_properties["ph_bs"].as_phononwebsite(),
             )
 
-            phdos = PhononDos(
-                material_id=item["mp_id"],
-                dos=phonon_properties["ph_dos"].as_dict(),
-                dos_method=phonon_properties["ph_dos_method"],
+            phdos = PhononDOS(
+                identifier=item["mp_id"],
+                **phonon_properties["ph_dos"].as_dict(),
             )
 
-            ddb = Ddb(material_id=item["mp_id"], ddb=item["ddb_str"])
+            ddb = Ddb(material_id=item["mp_id"], ddb=item["ddb_str"])  # type: ignore[call-arg]
 
-            th_disp = ThermalDisplacement(
+            th_disp = ThermalDisplacement(  # type: ignore[call-arg]
                 material_id=item["mp_id"],
                 structure=structure,
                 nsites=len(structure),
@@ -843,7 +841,7 @@ def get_thermodynamic_properties(
     zpe = ph_dos.zero_point_energy(ph_dos.structure)
 
     temperatures = temp.tolist()
-    tp = ThermodynamicProperties(temperatures=temperatures, cv=cv, entropy=entropy)
+    tp = ThermodynamicProperties(temperatures=temperatures, cv=cv, entropy=entropy)  # type: ignore[call-arg]
 
     ve = VibrationalEnergy(
         temperatures=temperatures,

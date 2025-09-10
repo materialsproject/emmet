@@ -10,7 +10,7 @@ from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element, Species
 
 from emmet.core.structure import StructureMetadata
-from emmet.core.utils import ValueEnum
+from emmet.core.types.enums import ValueEnum
 from emmet.core.vasp.task_valid import TaskDocument as BaseTaskDocument
 
 

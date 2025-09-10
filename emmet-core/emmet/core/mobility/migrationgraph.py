@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import datetime
-from enum import Enum
 from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field
@@ -13,6 +12,7 @@ import copy
 import logging
 from emmet.core.base import EmmetBaseModel
 from emmet.core.neb import NebPathwayResult
+from emmet.core.types.enums import ValueEnum
 from emmet.core.utils import utcnow
 
 from pymatgen.core import Element, Structure
@@ -39,7 +39,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
 
-class HopState(Enum):
+class HopState(ValueEnum):
     SUCCESS = "successful"
     FAILED = "failed"
     ERROR = "error"

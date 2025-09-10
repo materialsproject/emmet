@@ -1,7 +1,13 @@
 import pytest
 import numpy as np
+from monty.io import zopen
+import json
+from monty.json import MontyDecoder
+import importlib
 
 from emmet.core.testing_utils import TEST_FILES_DIR
+
+OPENBABEL_INSTALLED = importlib.util.find_spec("openbabel") is not None
 
 
 @pytest.fixture(scope="session")
@@ -353,3 +359,11 @@ objects = {cls.__name__: cls for cls in SchemaTestData.__subclasses__()}
 def get_test_object(object_name):
     """Get the schema test data object from the class name."""
     return objects[object_name]
+
+
+def safe_load(path):
+    with zopen(path, "rt") as f:
+        data = json.load(f)
+    if not OPENBABEL_INSTALLED:
+        data.pop("custodian", None)
+    return MontyDecoder().process_decoded(data)

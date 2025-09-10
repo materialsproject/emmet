@@ -24,7 +24,7 @@ from pymatgen.io.vasp import Potcar as VaspPotcar
 from pymatgen.io.vasp import PotcarSingle, Vasprun, VolumetricData
 
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
-from emmet.core.utils import ValueEnum
+from emmet.core.types.enums import VaspObject, StoreTrajectoryOption, TaskState
 from emmet.core.vasp.calc_types import (
     CalcType,
     RunType,
@@ -33,7 +33,6 @@ from emmet.core.vasp.calc_types import (
     run_type,
     task_type,
 )
-from emmet.core.vasp.task_valid import TaskState
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -49,29 +48,6 @@ class Potcar(BaseModel):
     symbols: list[str] | None = Field(
         None, description="List of VASP potcar symbols used in the calculation."
     )
-
-
-class VaspObject(ValueEnum):
-    """Types of VASP data objects."""
-
-    BANDSTRUCTURE = "bandstructure"
-    DOS = "dos"
-    CHGCAR = "chgcar"
-    AECCAR0 = "aeccar0"
-    AECCAR1 = "aeccar1"
-    AECCAR2 = "aeccar2"
-    TRAJECTORY = "trajectory"
-    ELFCAR = "elfcar"
-    WAVECAR = "wavecar"
-    LOCPOT = "locpot"
-    OPTIC = "optic"
-    PROCAR = "procar"
-
-
-class StoreTrajectoryOption(ValueEnum):
-    FULL = "full"
-    PARTIAL = "partial"
-    NO = "no"
 
 
 class CalculationBaseModel(BaseModel):
@@ -332,7 +308,7 @@ class CalculationInput(CalculationBaseModel):
             # INCAR field of vasprun.xml, and not parameters
             parameters.update({"METAGGA": metagga})
 
-        return cls(
+        return cls(  # type: ignore[call-arg]
             structure=vasprun.initial_structure,
             incar=incar,
             kpoints=Kpoints.from_dict(kpoints_dict),
@@ -729,13 +705,19 @@ class CalculationOutput(CoreCalculationOutput):
             else {}
         )
 
-        elph_structures: dict[str, list[Any]] = {}
+        elph_structures: ElectronPhononDisplacedStructures | None = None
         if elph_poscars is not None:
-            elph_structures.update({"temperatures": [], "structures": []})
+            elph_structures_dct: dict[str, list[Any]] = {
+                "temperatures": [],
+                "structures": [],
+            }
             for elph_poscar in elph_poscars:
                 temp = str(elph_poscar.name).replace("POSCAR.T=", "").replace(".gz", "")
-                elph_structures["temperatures"].append(temp)
-                elph_structures["structures"].append(Structure.from_file(elph_poscar))
+                elph_structures_dct["temperatures"].append(temp)
+                elph_structures_dct["structures"].append(
+                    Structure.from_file(elph_poscar)
+                )
+            elph_structures = ElectronPhononDisplacedStructures(**elph_structures_dct)
 
         store_trajectory = StoreTrajectoryOption(store_trajectory)
         ionic_steps = (
@@ -767,12 +749,14 @@ class CalculationOutput(CoreCalculationOutput):
             frequency_dependent_dielectric=freq_dependent_diel,
             elph_displaced_structures=elph_structures,
             dos_properties=dosprop_dict,
-            ionic_steps=ionic_steps,
+            ionic_steps=(
+                [IonicStep(**step) for step in ionic_steps] if ionic_steps else None
+            ),
             num_electronic_steps=num_elec_steps,
             locpot=locpot_avg,
             outcar=outcar_dict,
             run_stats=RunStatistics.from_outcar(outcar) if outcar else None,
-            **epsilons,
+            **epsilons,  # type: ignore[arg-type]
             **electronic_output,
             **phonon_output,
         )
@@ -1107,7 +1091,7 @@ class Calculation(CalculationBaseModel):
                 TaskState.SUCCESS if vasprun.converged else TaskState.FAILED
             )
 
-        return cls(
+        return cls(  # type: ignore[call-arg]
             dir_name=str(path.resolve().parent),
             task_name=task_name,
             vasp_version=vasprun.vasp_version,

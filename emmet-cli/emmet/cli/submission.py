@@ -330,7 +330,7 @@ class Submission(BaseModel):
         changes = self.get_changed_files_per_calc_path(
             self.last_pushed(), self.pending_calculations
         )
-        self._pending_push = changes
+        self._pending_push = changes  # type: ignore[assignment]
 
         return [item for sublist in changes.values() for item in sublist]
 

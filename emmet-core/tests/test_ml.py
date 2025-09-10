@@ -9,6 +9,7 @@ from emmet.core.elasticity import BulkModulus, ElasticTensorDoc, ShearModulus
 from emmet.core.math import matrix_3x3_to_voigt
 from emmet.core.ml import MLDoc, MatPESTrainDoc
 from emmet.core.tasks import TaskDoc
+from emmet.core.testing_utils import DataArchive
 
 from tests.conftest import get_test_object
 
@@ -82,9 +83,12 @@ def test_ml_doc(calculator, prop_kwargs: dict) -> None:
 
 
 def test_matpes_doc_from_task_doc(test_dir):
-    task_doc = TaskDoc.from_directory(
-        test_dir / "vasp" / get_test_object("SiOptimizeDouble").folder
-    )
+
+    with DataArchive.extract(
+        test_dir / "vasp" / f"{get_test_object('SiOptimizeDouble').folder}.json.gz"
+    ) as dir_name:
+        task_doc = TaskDoc.from_directory(dir_name)
+
     matpes_train_docs = MatPESTrainDoc.from_task_doc(task_doc)
 
     assert len(matpes_train_docs) == sum(

@@ -8,9 +8,7 @@ from pathlib import Path
 from string import ascii_lowercase, digits
 from typing import TYPE_CHECKING
 
-from pydantic import GetJsonSchemaHandler
 from pydantic_core import CoreSchema, core_schema
-from pydantic.json_schema import JsonSchemaValue
 
 # For dev_scripts compatibility, safe import this list
 if (Path(__file__).parent / "_forbidden_alpha_id.py").exists():
@@ -22,6 +20,9 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from typing import Any
     from typing_extensions import Self
+
+    from pydantic import GetJsonSchemaHandler
+    from pydantic.json_schema import JsonSchemaValue
 
 # matches "mp-1234" or "1234" followed by and optional "-(Alphanumeric)"
 MPID_REGEX_PATTERN = r"^([A-Za-z]+-)?(\d+)(-[A-Za-z0-9]+)*$"

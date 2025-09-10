@@ -13,10 +13,10 @@ from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
 
 from emmet.core.spectrum import SpectrumDoc
-from emmet.core.utils import ValueEnum
+from emmet.core.types.enums import ValueEnum
 
 if TYPE_CHECKING:
-    from emmet.core.mpid import MPID, AlphaID
+    from emmet.core.types.typing import IdentifierType
 
 
 class Edge(ValueEnum):
@@ -70,7 +70,7 @@ class XRDDoc(SpectrumDoc):
         spectrum_id: str,
         structure: Structure,
         wavelength: float,
-        material_id: MPID | AlphaID | None = None,
+        material_id: IdentifierType | None = None,
         min_two_theta=0,
         max_two_theta=180,
         symprec=0.1,
@@ -98,7 +98,7 @@ class XRDDoc(SpectrumDoc):
         structure: Structure,
         target: Element,
         edge: Edge,
-        material_id: MPID | AlphaID | None = None,
+        material_id: IdentifierType | None = None,
         min_two_theta=0,
         max_two_theta=180,
         symprec=0.1,

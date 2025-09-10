@@ -150,13 +150,15 @@ class AbsorptionBuilder(Builder):
                     "output.dielectric.energy",
                     "output.dielectric.real",
                     "output.dielectric.imag",
-                    "output.optical_absorption_coeff",
+                    "calcs_reversed",
                     "output.bandgap",
                 ],
                 criteria={self.tasks.key: task_id},
             )
 
-            if task_query["output"]["optical_absorption_coeff"] is not None:
+            if (cr := task_query.get("calcs_reversed", [])) and (
+                oac := cr[0]["output"]["optical_absorption_coeff"]
+            ):
                 try:
                     structure = task_query["input"]["structure"]
                 except KeyError:
@@ -181,12 +183,16 @@ class AbsorptionBuilder(Builder):
                     {
                         "task_id": task_id,
                         "nkpoints": int(nkpoints),
-                        "energies": task_query["output"]["dielectric"]["energy"],
-                        "real_dielectric": task_query["output"]["dielectric"]["real"],
-                        "imag_dielectric": task_query["output"]["dielectric"]["imag"],
-                        "optical_absorption_coeff": task_query["output"][
-                            "optical_absorption_coeff"
+                        "energies": cr[0]["output"]["frequency_dependent_dielectric"][
+                            "energy"
                         ],
+                        "real_dielectric": cr[0]["output"][
+                            "frequency_dependent_dielectric"
+                        ]["real"],
+                        "imag_dielectric": cr[0]["output"][
+                            "frequency_dependent_dielectric"
+                        ]["imaginary"],
+                        "optical_absorption_coeff": oac,
                         "bandgap": task_query["output"]["bandgap"],
                         "structure": structure,
                         "updated_on": lu_dt,

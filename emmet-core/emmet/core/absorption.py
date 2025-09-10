@@ -10,7 +10,7 @@ from emmet.core.material_property import PropertyDoc
 if TYPE_CHECKING:
     from pymatgen.core import Structure
 
-    from emmet.core.mpid import MPID, AlphaID
+    from emmet.core.types.typing import IdentifierType
 
 
 class AbsorptionDoc(PropertyDoc):
@@ -64,7 +64,7 @@ class AbsorptionDoc(PropertyDoc):
         bandgap: float,
         structure: Structure,
         nkpoints: float,
-        material_id: MPID | AlphaID | None = None,
+        material_id: IdentifierType | None = None,
         **kwargs,
     ):
         real_d_average = [

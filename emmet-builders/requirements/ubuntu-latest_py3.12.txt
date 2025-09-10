@@ -44,7 +44,7 @@ dnspython==2.8.0
     #   maggma
     #   pymongo
 emmet-core[all]==0.84.9
-    # via emmet-builders (setup.py)
+    # via emmet-builders (pyproject.toml)
 filelock==3.19.1
     # via mdanalysis
 fonttools==4.59.2
@@ -84,10 +84,10 @@ latexcodec==3.0.1
 lazy-loader==0.4
     # via scikit-image
 maggma==0.72.0
-    # via emmet-builders (setup.py)
+    # via emmet-builders (pyproject.toml)
 matminer==0.9.3
     # via
-    #   emmet-builders (setup.py)
+    #   emmet-builders (pyproject.toml)
     #   robocrys
 matplotlib==3.10.6
     # via
@@ -100,7 +100,6 @@ mda-xdrlib==0.2.0
     # via mdanalysis
 mdanalysis==2.9.0
     # via
-    #   emmet-builders (setup.py)
     #   emmet-core
     #   solvation-analysis
     #   transport-analysis
@@ -249,7 +248,7 @@ pymatgen-analysis-defects==2025.1.18
 pymatgen-analysis-diffusion==2024.7.15
     # via emmet-core
 pymatgen-io-validation==0.1.1
-    # via emmet-builders (setup.py)
+    # via emmet-builders (pyproject.toml)
 pymongo==4.10.1
     # via
     #   maggma
@@ -331,9 +330,7 @@ shapely==2.1.1
 six==1.17.0
     # via python-dateutil
 solvation-analysis==0.4.1
-    # via
-    #   emmet-builders (setup.py)
-    #   emmet-core
+    # via emmet-core
 spglib==2.6.0
     # via
     #   pymatgen

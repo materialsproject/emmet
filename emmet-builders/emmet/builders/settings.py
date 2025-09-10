@@ -34,18 +34,23 @@ class EmmetBuildSettings(EmmetSettings):
     )
 
     VASP_ALLOWED_VASP_TYPES: list[VaspTaskType] = Field(
-        [t.value for t in VaspTaskType],
+        list(VaspTaskType),
         description="Allowed task_types to build materials from",
     )
 
     QCHEM_ALLOWED_TASK_TYPES: list[QChemTaskType] = Field(
-        [
-            "Single Point",
-            "Force",
-            "Geometry Optimization",
-            "Frequency Analysis",
-            "Frequency Flattening Geometry Optimization",
-        ],
+        list(
+            map(
+                QChemTaskType,
+                [
+                    "Single Point",
+                    "Force",
+                    "Geometry Optimization",
+                    "Frequency Analysis",
+                    "Frequency Flattening Geometry Optimization",
+                ],
+            )
+        ),
         description="Allowed task_types to build molecules from",
     )
 
@@ -70,7 +75,7 @@ class EmmetBuildSettings(EmmetSettings):
     )
 
     DEFAULT_HISTORY: History = Field(
-        History(
+        History(  # type: ignore[call-arg]
             name="Materials Project Optimized Structure",
             url="http://www.materialsproject.org",
         ),

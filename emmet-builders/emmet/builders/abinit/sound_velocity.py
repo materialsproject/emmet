@@ -136,7 +136,7 @@ class SoundVelocityBuilder(Builder):
         try:
             sound_vel_data = self.get_sound_vel(item)
 
-            sv = SoundVelocity(
+            sv = SoundVelocity(  # type: ignore[call-arg]
                 material_id=item["mp_id"],
                 structure=sound_vel_data["structure"],
                 directions=sound_vel_data["directions"],
