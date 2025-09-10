@@ -42,10 +42,6 @@ certifi==2025.8.3
     #   httpcore
     #   httpx
     #   requests
-cffi==2.0.0
-    # via
-    #   cryptography
-    #   pynacl
 cfgv==3.4.0
     # via pre-commit
 charset-normalizer==3.4.3
@@ -304,8 +300,6 @@ pycodestyle==2.14.0
     # via
     #   emmet-api (pyproject.toml)
     #   flake8
-pycparser==2.23
-    # via cffi
 pydantic==2.11.7
     # via
     #   emmet-core
@@ -396,12 +390,6 @@ pyyaml==6.0.2
     #   starlette
 pyyaml-env-tag==1.1
     # via mkdocs
-pyzmq==27.1.0
-    # via maggma
-referencing==0.36.2
-    # via
-    #   jsonschema
-    #   jsonschema-specifications
 requests==2.32.5
     # via
     #   pymatgen
