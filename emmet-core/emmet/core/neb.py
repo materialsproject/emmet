@@ -22,8 +22,10 @@ from emmet.core.tasks import (
     CustodianDoc,
     OrigInputs,
 )
-from emmet.core.utils import ValueEnum, utcnow
-from emmet.core.vasp.calculation import Calculation, VaspObject
+from emmet.core.utils import utcnow
+from emmet.core.types.enums import ValueEnum, VaspObject
+from emmet.core.types.typing import DateTimeType
+from emmet.core.vasp.calculation import Calculation
 from emmet.core.vasp.task_valid import TaskState
 
 if TYPE_CHECKING:
@@ -433,7 +435,7 @@ class NebTaskDoc(NebResult):
         None, description="The VASP calculations associated with each image."
     )
 
-    last_updated: datetime | None = Field(
+    last_updated: DateTimeType | None = Field(
         default_factory=utcnow,
         description="Timestamp for the most recent calculation for this task document",
     )

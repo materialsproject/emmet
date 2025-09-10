@@ -151,8 +151,7 @@ class DielectricBuilder(Builder):
                     "orig_inputs.structure",
                     "input.parameters",
                     "input.structure",
-                    "output.epsilon_static",
-                    "output.epsilon_ionic",
+                    "calcs_reversed",
                     "output.bandgap",
                 ],
                 criteria={self.tasks.key: str(task_id)},
@@ -187,8 +186,12 @@ class DielectricBuilder(Builder):
                         "task_id": task_id,
                         "is_hubbard": int(is_hubbard),
                         "nkpoints": int(nkpoints),
-                        "epsilon_static": task_query["output"]["epsilon_static"],
-                        "epsilon_ionic": task_query["output"]["epsilon_ionic"],
+                        "epsilon_static": task_query["calcs_reversed"][0]["output"][
+                            "epsilon_static"
+                        ],
+                        "epsilon_ionic": task_query["calcs_reversed"][0]["output"][
+                            "epsilon_ionic"
+                        ],
                         "structure": structure,
                         "updated_on": lu_dt,
                         "task_updated": task_updated,

@@ -4,9 +4,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from collections.abc import Iterable
 from copy import deepcopy
-from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -20,6 +18,7 @@ from pymatgen.core.trajectory import Trajectory as PmgTrajectory
 from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.vasp.calc_types import RunType, TaskType, calc_type, run_type, task_type
 from emmet.core.vasp.calculation import ElectronicStep
+from emmet.core.types.enums import ValueEnum
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +33,7 @@ except ImportError:
     ArrowTable = None
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
     from typing import Any
 
     from typing_extensions import Self
@@ -42,7 +42,7 @@ if TYPE_CHECKING:
     from emmet.core.vasp.calculation import Calculation
 
 
-class TrajFormat(Enum):
+class TrajFormat(ValueEnum):
     """Define known trajectory formats."""
 
     PMG = "json"
@@ -50,8 +50,37 @@ class TrajFormat(Enum):
     PARQUET = "parquet"
 
 
-class AtomTrajectory(BaseModel):
-    """Atomistic only, low-memory schema for trajectories that can interface with parquet, pymatgen, and ASE."""
+class _MDMixin(BaseModel):
+    """Mix-in for molecular dynamics runs."""
+
+    magmoms: list[list[float]] | None = Field(
+        None, description="The magnetic moments at each ionic step."
+    )
+
+    temperature: list[float] | None = Field(
+        None, description="The temperature at each ionic step."
+    )
+
+    velocities: list[list[Vector3D]] | None = Field(
+        None, description="The velocities of each atom."
+    )
+
+    ionic_step_properties: set[str] = Field(
+        {"magmoms", "temperature", "velocities"},
+        exclude=True,
+        description="The properties included at each ionic step.",
+    )
+
+    @model_validator(mode="after")
+    def add_props(self) -> Self:
+        self.ionic_step_properties = self.ionic_step_properties.union(
+            {"magmoms", "temperature", "velocities"}
+        )
+        return self
+
+
+class AtomRelaxTrajectory(BaseModel):
+    """Atomistic only, low-memory schema for relaxation trajectories that can interface with parquet, pymatgen, and ASE."""
 
     elements: list[int] = Field(
         description="The proton number Z of the elements in the sites"
@@ -62,13 +91,15 @@ class AtomTrajectory(BaseModel):
     )
     num_ionic_steps: int = Field(description="The number of ionic steps.")
 
-    constant_lattice: Matrix3D | None = Field(
-        None,
-        description="The constant lattice throughout the trajectory. If not populated, it is assumed that the lattice varies.",
-    )
     lattice: list[Matrix3D] | None = Field(
         None,
-        description="The lattice at each ionic step. If not populated, it is assumed the lattice is constant through the trajectory.",
+        description=(
+            "If a list containing only one 3x3 matrix, it is assumed that "
+            "the lattice was held constant through the simulation. "
+            "If a list of (multiple) 3x3 matrices, this should be the lattice "
+            "at each ionic step in the calculation. "
+            "If None, a non-periodic system is assumed."
+        ),
     )
 
     energy: list[float] | None = Field(
@@ -80,20 +111,12 @@ class AtomTrajectory(BaseModel):
     )
     stress: list[Matrix3D] | None = Field(None, description="The 3x3 stress tensor.")
 
-    magmoms: list[list[float]] | None = Field(
-        None, description="The magnetic moments at each ionic step."
-    )
-
-    velocities: list[list[Vector3D]] | None = Field(
-        None, description="The velocities of each atom."
-    )
-
-    temperature: list[float] | None = Field(
-        None, description="The temperature at each ionic step."
-    )
-
-    ionic_step_properties: Iterable[str] = Field(
-        {"energy", "forces", "stress", "magmoms", "velocities", "temperature"},
+    ionic_step_properties: set[str] = Field(
+        {
+            "energy",
+            "forces",
+            "stress",
+        },
         exclude=True,
         description="The properties included at each ionic step.",
     )
@@ -115,26 +138,26 @@ class AtomTrajectory(BaseModel):
         """Get number of ionic steps."""
         return self.num_ionic_steps
 
-    def __getitem__(self, index: int | slice) -> AtomTrajectory:
+    def __getitem__(self, index: int | slice) -> AtomRelaxTrajectory:
         if isinstance(index, int):
             if index < 0:
                 index = len(self) + index
         _slice: slice = slice(index, index + 1) if isinstance(index, int) else index
 
         config = {}
-        all_ionic_step_props = set(self.ionic_step_properties).union(
+        all_ionic_step_props = self.ionic_step_properties.union(
             {
                 "lattice",
                 "cart_coords",
             }
         )
-        for k in AtomTrajectory.model_fields:
+        for k in self.__class__.model_fields:
             v = getattr(self, k)
             if v and k in all_ionic_step_props:
                 config[k] = v[_slice]
             elif v:
                 config[k] = v
-        return AtomTrajectory(**config)
+        return type(self)(**config)
 
     @staticmethod
     def reorder_sites(
@@ -238,7 +261,7 @@ class AtomTrajectory(BaseModel):
                 )
             )
         ):
-            props["constant_lattice"] = structures[0].lattice.matrix
+            props["lattice"] = [structures[0].lattice.matrix]
         elif is_structure:
             props["lattice"] = [structure.lattice.matrix for structure in structures]
 
@@ -402,18 +425,16 @@ class AtomTrajectory(BaseModel):
         structures = []
         frame_properties = []
 
-        is_structure = self.lattice or self.constant_lattice
-
         for i in indices:
             site_properties = {}
-            if self.magmoms:
-                site_properties["magmoms"] = self.magmoms[i]
+            if magmoms := getattr(self, "magmoms", None):
+                site_properties["magmoms"] = magmoms[i]
 
-            if is_structure:
+            if self.lattice:
                 structure: Structure | Molecule = Structure(
                     lattice=(
-                        self.constant_lattice
-                        if self.constant_lattice
+                        self.lattice[0]
+                        if len(self.lattice) == 1
                         else self.lattice[i]  # type: ignore[index]
                     ),
                     species=species,
@@ -441,11 +462,14 @@ class AtomTrajectory(BaseModel):
 
                 frame_properties.append(props)
 
-        return getattr(
-            PmgTrajectory, f"from_{'structures' if is_structure else 'molecules'}"
-        )(
-            structures,
-            constant_lattice=self.constant_lattice is not None,
+        if self.lattice:
+            return PmgTrajectory.from_structures(
+                structures,  # type: ignore[arg-type]
+                constant_lattice=len(self.lattice) == 1,
+                frame_properties=frame_properties,
+            )
+        return PmgTrajectory.from_molecules(
+            structures,  # type: ignore[arg-type]
             frame_properties=frame_properties,
         )
 
@@ -469,7 +493,7 @@ class AtomTrajectory(BaseModel):
             Any kwargs supported by Trajectory.to_* methods.
         """
         if file_name and not fmt:
-            for _fmt in TrajFormat:
+            for _fmt in TrajFormat:  # type: ignore[attr-defined]
                 if _fmt.value in str(file_name).lower():
                     fmt = _fmt
                     break
@@ -477,7 +501,7 @@ class AtomTrajectory(BaseModel):
             fmt = TrajFormat.PARQUET
 
         if isinstance(fmt, str) and fmt.upper() in TrajFormat.__members__:
-            fmt = TrajFormat[fmt.upper()]
+            fmt = TrajFormat[fmt.upper()]  # type: ignore[misc]
         else:
             fmt = TrajFormat(fmt)
 
@@ -501,10 +525,14 @@ class AtomTrajectory(BaseModel):
         return traj
 
 
-class Trajectory(AtomTrajectory):
-    """Low memory schema for trajectories that can interface with parquet, pymatgen, and ASE.
+class AtomTrajectory(AtomRelaxTrajectory, _MDMixin):
+    """Atomistic trajectory with extra keys for molecular dynamics runs."""
 
-    This schema is intended primarily for VASP trajectories, but could be adapted to
+
+class RelaxTrajectory(AtomRelaxTrajectory):
+    """Low memory schema for relaxation trajectories that can interface with parquet, pymatgen, and ASE.
+
+    This schema is intended primarily for VASP relaxation trajectories, but could be adapted to
     generic electronic structure trajectories.
 
     Note that for VASP calculations, energies are in eV, forces in eV/Å, and stress tensors in kilobar.
@@ -539,7 +567,7 @@ class Trajectory(AtomTrajectory):
         description="The RunType of the calculation used to generate this trajectory.",
     )
 
-    ionic_step_properties: Iterable[str] = Field(
+    ionic_step_properties: set[str] = Field(
         {
             "energy",
             "forces",
@@ -547,7 +575,6 @@ class Trajectory(AtomTrajectory):
             "e_wo_entrp",
             "e_fr_energy",
             "electronic_steps",
-            "magmoms",
         },
         description="The properties included at each ionic step.",
         exclude=True,
@@ -775,3 +802,7 @@ class Trajectory(AtomTrajectory):
             pa_pq.write_table(pa_table, file_name, **write_file_kwargs)
 
         return pa_table
+
+
+class Trajectory(RelaxTrajectory, _MDMixin):
+    """Trajectory with flexibility for electronic structure molecular dynamics."""

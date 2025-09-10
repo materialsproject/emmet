@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from collections.abc import MutableMapping
     from typing import Any
     from typing_extensions import Self
+    from pandas.core.dtypes.dtypes import ExtensionDtype
 
 _CARTESIAN = ("x", "y", "z")
 _RECIPROCAL = ("a", "b", "c")
@@ -169,12 +170,12 @@ class StructureArchive(Archiver):
 
         for k, v in data.items():  # type: ignore[assignment]
             if k.startswith("atomic_num"):
-                _dtype = pd.Int64Dtype()
+                _dtype: ExtensionDtype = pd.Int64Dtype()
             elif k.startswith("selective_dynamics"):
                 _dtype = pd.BooleanDtype()
             else:
                 _dtype = pd.Float64Dtype()
-            data[k] = pd.array(v, dtype=_dtype)
+            data[k] = pd.array(v, dtype=_dtype)  # type: ignore[assignment]
 
         columnar = pd.DataFrame(data)
         columnar.attrs = {

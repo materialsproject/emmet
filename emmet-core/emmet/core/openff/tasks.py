@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 import zlib
-from dataclasses import dataclass
 from datetime import datetime
 
-from monty.json import MSONable
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -46,8 +44,7 @@ CompressedStr = Annotated[
 ]
 
 
-@dataclass
-class MoleculeSpec(MSONable):
+class MoleculeSpec(BaseModel):
     """A molecule schema to be output by OpenMMGenerators."""
 
     name: str
@@ -55,6 +52,13 @@ class MoleculeSpec(MSONable):
     charge_scaling: float
     charge_method: str
     openff_mol: str  # a tk.Molecule object serialized with to_json
+
+    # def as_dict(self) -> dict:
+    #     return self.model_dump()
+
+    # @classmethod
+    # def from_dict(cls,dct):
+    #     return cls(**dct)
 
 
 class MDTaskDocument(BaseModel):  # type: ignore[call-arg]

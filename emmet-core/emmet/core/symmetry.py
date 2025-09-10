@@ -13,7 +13,7 @@ from pymatgen.symmetry.analyzer import (
 )
 
 from emmet.core.settings import EmmetSettings
-from emmet.core.utils import ValueEnum
+from emmet.core.types.enums import ValueEnum
 
 if TYPE_CHECKING:
     from typing import Any

@@ -9,6 +9,8 @@ from monty.serialization import loadfn
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.atomic import PartialChargesDoc, PartialSpinsDoc
 
+from tests.conftest_qchem import OPENBABEL_INSTALLED
+
 
 @pytest.fixture(scope="session")
 def test_tasks(test_dir):
@@ -103,5 +105,6 @@ def test_partial_spins(open_shell):
     ]
     assert psd.partial_spins == spins
 
-    # Sanity check - do properties have hashes
-    assert psd.species_hash is not None
+    if OPENBABEL_INSTALLED:
+        # Sanity check - do properties have hashes
+        assert psd.species_hash is not None

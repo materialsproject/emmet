@@ -27,6 +27,7 @@ def piezoelectric_store():
 
 
 def test_piezoelectric_builder(tasks_store, piezoelectric_store, materials_store):
+
     builder = PiezoelectricBuilder(
         tasks=tasks_store, piezoelectric=piezoelectric_store, materials=materials_store
     )

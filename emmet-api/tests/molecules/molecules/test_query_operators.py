@@ -1,4 +1,5 @@
 import os
+import pytest
 
 from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.molecules.molecules.query_operators import (
@@ -15,6 +16,11 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     StringRepQuery,
 )
 from pymatgen.core.structure import Molecule
+
+try:
+    from openbabel import openbabel
+except ImportError:
+    openbabel = None
 
 
 def test_formula_query():
@@ -89,6 +95,9 @@ def test_multi_mpculeid_query():
     }
 
 
+@pytest.mark.skipif(
+    openbabel is None, reason="openbabel must be installed to use FindMoleculeQuery."
+)
 def test_find_molecule_query():
     op = FindMoleculeQuery()
 

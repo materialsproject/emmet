@@ -2,20 +2,31 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
-from datetime import datetime
+from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, model_validator
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.apps.battery.battery_abc import AbstractElectrode
-from pymatgen.apps.battery.conversion_battery import ConversionElectrode
-from pymatgen.apps.battery.insertion_battery import InsertionElectrode
+from pymatgen.apps.battery.conversion_battery import (
+    ConversionElectrode,
+    ConversionVoltagePair,
+)
+from pymatgen.apps.battery.insertion_battery import (
+    InsertionElectrode,
+    InsertionVoltagePair,
+)
 from pymatgen.core import Composition, Structure
 from pymatgen.core.periodic_table import DummySpecies, Element, Species
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
-from emmet.core.common import convert_datetime
-from emmet.core.mpid import AlphaID, MPID
-from emmet.core.utils import ValueEnum, utcnow
+from emmet.core.types.enums import ValueEnum
+from emmet.core.types.typing import DateTimeType, IdentifierType
+from emmet.core.utils import utcnow
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import Any
+    from typing_extensions import Self
 
 
 class BatteryType(str, ValueEnum):
@@ -97,11 +108,11 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
         None, description="The energy above hull of the discharged material in eV/atom."
     )
 
-    id_charge: MPID | AlphaID | int | None | None = Field(
+    id_charge: IdentifierType | int | None | None = Field(
         None, description="The Materials Project ID of the charged structure."
     )
 
-    id_discharge: MPID | AlphaID | int | None | None = Field(
+    id_discharge: IdentifierType | int | None | None = Field(
         None, description="The Materials Project ID of the discharged structure."
     )
 
@@ -209,8 +220,7 @@ class BaseElectrode(BaseModel):
         None, description="Maximum absolute difference in adjacent voltage steps."
     )
 
-    last_updated: datetime = Field(
-        default_factory=utcnow,
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation for this Material document.",
     )
 
@@ -247,12 +257,6 @@ class BaseElectrode(BaseModel):
         [], description="Any warnings related to this electrode data."
     )
 
-    # Make sure that the datetime field is properly formatted
-    @field_validator("last_updated", mode="before")
-    @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)
-
 
 class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
     """
@@ -267,7 +271,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
         None, description="Returns all of the voltage steps material pairs."
     )
 
-    material_ids: list[MPID | AlphaID] | None = Field(
+    material_ids: list[IdentifierType] | None = Field(
         None,
         description="The ids of all structures that matched to the present host lattice, regardless of stability. "
         "The stable entries can be found in the adjacent pairs.",
@@ -281,6 +285,14 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
     electrode_object: InsertionElectrode | None = Field(
         None, description="The Pymatgen electrode object."
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def deserialize(cls, config: Any) -> Self:
+        """Deserialize pymatgen dataclasses which lose monty info on model_dump()."""
+        return _deserialize_pymatgen_battery_dataclasses(
+            config, InsertionElectrode, InsertionVoltagePair
+        )
 
     @classmethod
     def from_entries(
@@ -451,6 +463,15 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
         None, description="The Pymatgen conversion electrode object."
     )
 
+    @model_validator(mode="before")
+    @classmethod
+    def deserialize(cls, config: Any) -> Self:
+        """Deserialize pymatgen dataclasses which lose monty info on model_dump()."""
+        config = _deserialize_pymatgen_battery_dataclasses(
+            config, ConversionElectrode, ConversionVoltagePair
+        )
+        return config
+
     @classmethod
     def from_composition_and_entries(
         cls,
@@ -577,3 +598,56 @@ def get_battery_formula(
         + "-".join(working_ion_subscripts)
         + temp_reduced.reduced_formula
     )
+
+
+def _deserialize_pymatgen_battery_dataclasses(
+    config: dict[str, Any], electrode_cls: Callable, voltage_pair_cls: Callable
+):
+    """Deserialize MSONable dataclasses.
+
+    Because pydantic uses the __dict__ attribute of a dataclass on model_dump,
+    all monty decoder info (@class and @module) is removed from
+    pymatgen dataclasses when a pydantic model containing them is
+    model dumped.
+
+    This function restores the pymatgen class.
+
+    Parameters
+    -----------
+    config : dict[str,Any]
+        The pydantic model configuration dict
+    electrode_cls : Callable
+        The pymatgen electrode class, e.g., InsertionElectrode
+    voltage_pair_cls : Callable
+        The pymatgen voltage pair class, e.g., InsertionVoltagePair
+    """
+    if elec_obj := config.get("electrode_object", {}):
+        if isinstance(elec_obj, dict):
+            vps = elec_obj.get("voltage_pairs", tuple())
+        else:
+            vps = getattr(elec_obj, "voltage_pairs", tuple())
+
+        if any(isinstance(vp, dict) for vp in vps):
+            config["electrode_object"]["voltage_pairs"] = tuple(
+                [
+                    (
+                        voltage_pair_cls.from_dict(vp)  # type: ignore[attr-defined]
+                        if isinstance(vp, dict)
+                        else vp
+                    )
+                    for vp in vps
+                ]
+            )
+        if isinstance(elec_obj, dict):
+            config["electrode_object"] = electrode_cls.from_dict(elec_obj)  # type: ignore[attr-defined]
+
+    for idx, vp in enumerate(config.get("adj_pairs", [])):
+        if isinstance(vp, dict) and hasattr(vp.get("reaction"), "as_dict"):
+            config["adj_pairs"][idx] = vp["reaction"].as_dict()
+        elif hasattr(vp, "adj_pairs") and hasattr(vp.adj_pairs, "as_dict"):
+            config["adj_pairs"][idx] = vp.reaction.as_dict()
+
+    if hasattr(config.get("reaction"), "as_dict"):
+        config["reaction"] = config["reaction"].as_dict()
+
+    return config

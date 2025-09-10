@@ -12,18 +12,8 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.structure import StructureMetadata
 from emmet.core.task import BaseTaskDocument
-from emmet.core.utils import ValueEnum
+from emmet.core.types.enums import TaskState
 from emmet.core.vasp.calc_types import RunType, calc_type, run_type, task_type
-
-
-class TaskState(ValueEnum):
-    """
-    VASP Calculation State
-    """
-
-    SUCCESS = "successful"
-    FAILED = "failed"
-    ERROR = "error"
 
 
 class InputSummary(BaseModel):

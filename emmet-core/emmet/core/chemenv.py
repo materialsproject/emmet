@@ -21,7 +21,7 @@ from pymatgen.core.structure import Molecule, Structure
 from emmet.core.material_property import PropertyDoc
 
 if TYPE_CHECKING:
-    from emmet.core.mpid import MPID, AlphaID
+    from emmet.core.types.typing import IdentifierType
 
 DEFAULT_DISTANCE_CUTOFF = 1.4
 DEFAULT_ANGLE_CUTOFF = 0.3
@@ -379,7 +379,7 @@ class ChemEnvDoc(PropertyDoc):
     def from_structure(
         cls,
         structure: Structure,
-        material_id: MPID | AlphaID | None = None,
+        material_id: IdentifierType | None = None,
         **kwargs,
     ):  # type: ignore[override]
         """

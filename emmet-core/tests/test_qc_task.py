@@ -2,7 +2,7 @@ import pytest
 
 from emmet.core.testing_utils import assert_schemas_equal
 
-from tests.conftest_qchem import get_test_object
+from tests.conftest_qchem import get_test_object, OPENBABEL_INSTALLED
 
 
 @pytest.mark.parametrize(
@@ -86,6 +86,8 @@ def test_task_doc(test_dir, object_name):
     d = jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)
 
     # and decoded
+    if not OPENBABEL_INSTALLED:
+        d.pop("custodian", None)
     MontyDecoder().process_decoded(d)
 
     # Test that additional_fields works
@@ -106,7 +108,6 @@ def test_task_doc_val_flag(test_dir, object_name):
 
     test_object = get_test_object(object_name)
     dir_name = test_dir / "qchem" / test_object.folder
-    print(f"The test object is {test_object.task_doc}")
     test_doc = TaskDoc.from_directory(dir_name, validate_lot=False)
     assert_schemas_equal(test_doc, test_object.task_doc)
 
@@ -114,6 +115,8 @@ def test_task_doc_val_flag(test_dir, object_name):
     d = jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)
 
     # and decoded
+    if not OPENBABEL_INSTALLED:
+        d.pop("custodian", None)
     MontyDecoder().process_decoded(d)
 
     # Test that additional_fields works

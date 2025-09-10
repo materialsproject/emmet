@@ -1,14 +1,11 @@
-from datetime import datetime
-from enum import Enum
-
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 from pymatgen.core.interface import GrainBoundary
 
-from emmet.core.common import convert_datetime
-from emmet.core.utils import utcnow
+from emmet.core.types.enums import ValueEnum
+from emmet.core.types.typing import DateTimeType
 
 
-class GBTypeEnum(Enum):
+class GBTypeEnum(ValueEnum):
     """
     Grain boundary types
     """
@@ -77,13 +74,6 @@ class GrainBoundaryDoc(BaseModel):
         None, description="Dash-delimited string of elements in the material."
     )
 
-    last_updated: datetime = Field(
-        default_factory=utcnow,
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation for this Material document.",
     )
-
-    # Make sure that the datetime field is properly formatted
-    @field_validator("last_updated", mode="before")
-    @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)
