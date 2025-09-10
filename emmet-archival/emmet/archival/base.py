@@ -14,7 +14,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from emmet.core.types.enums import ValueEnum
-from emmet.core.types.typing import PathLike
+from emmet.core.types.typing import FSPathType
 
 if TYPE_CHECKING:
     from typing import Literal
@@ -27,13 +27,13 @@ class ArchivalFormat(ValueEnum):
     PARQ = "parquet"
 
 
-def infer_archive_format(file_name: PathLike) -> ArchivalFormat:
+def infer_archive_format(file_name: FSPathType) -> ArchivalFormat:
     """
     Infer the format of a file.
 
     Parameters
     -----------
-    file_name (PathLike) : The name of the file
+    file_name (FSPathType) : The name of the file
 
     Returns
     -----------
@@ -69,7 +69,7 @@ class Archiver(BaseModel):
     @staticmethod
     @contextmanager
     def _open_hdf5_like(
-        archive_name: PathLike,
+        archive_name: FSPathType,
         fmt: str | ArchivalFormat | None = None,
         mode: Literal["r", "w", "a"] = "r",
         group_key: str | None = None,
@@ -127,13 +127,13 @@ class Archiver(BaseModel):
         """Extract data from an arrow table"""
         raise NotImplementedError
 
-    def _to_parquet(self, file_name: PathLike, **kwargs) -> None:
+    def _to_parquet(self, file_name: FSPathType, **kwargs) -> None:
         """Write data to a parquet file."""
         pq.write_table(self.to_arrow(), file_name, **kwargs)
 
     def to_archive(
         self,
-        file_name: PathLike = "archive.h5",
+        file_name: FSPathType = "archive.h5",
         metadata: dict[str, Any] | None = None,
         compression: dict | None = None,
         zarr_store: MutableMapping | None = None,
@@ -177,7 +177,7 @@ class Archiver(BaseModel):
         raise NotImplementedError
 
     @classmethod
-    def _extract_from_parquet(cls, archive_path: PathLike, *args, **kwargs) -> Any:
+    def _extract_from_parquet(cls, archive_path: FSPathType, *args, **kwargs) -> Any:
         """Extract data from a parquet file."""
         return cls.from_arrow(pq.read_table(archive_path))
 

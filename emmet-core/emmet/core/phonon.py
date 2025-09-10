@@ -28,7 +28,7 @@ from emmet.core.types.typing import IdentifierType
 from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
 from emmet.core.structure import StructureMetadata
 from emmet.core.types.enums import DocEnum
-from emmet.core.types.typing import DateTimeType, PathLike
+from emmet.core.types.typing import DateTimeType, FSPathType
 from emmet.core.utils import get_num_formula_units, requires_arrow
 
 try:
@@ -96,13 +96,13 @@ class PhononDOS(BandTheoryBase):
     @classmethod
     def from_phonopy(
         cls,
-        phonon_dos_file: PathLike,
+        phonon_dos_file: FSPathType,
     ) -> Self:
         """Create a PhononDOS from phonopy .dat output.
 
         Parameters
         -----------
-        phonon_dos_file (PathLike) : path to total_dos.dat
+        phonon_dos_file (FSPathType) : path to total_dos.dat
         """
         phonopy_dos: dict[str, Any] = {
             k: []
@@ -279,7 +279,7 @@ class PhononBS(BandStructure):
         return cls(**config)
 
     @classmethod
-    def from_phonopy(cls, phonon_bandstructure_file: PathLike):
+    def from_phonopy(cls, phonon_bandstructure_file: FSPathType):
         """Create a PhononBS from phonopy .yaml output."""
         with zopen(phonon_bandstructure_file, "rt") as f:
             phonopy_bandstructure = yaml.safe_load(f.read())
@@ -674,13 +674,13 @@ class PhononBSDOSTask(StructureMetadata):
     @classmethod
     def from_phonopy_pheasy_files(
         cls,
-        structure_file: PathLike,
-        phonon_bandstructure_file: PathLike | None = None,
-        phonon_dos_file: PathLike | None = None,
-        force_constants_file: PathLike | None = None,
-        born_file: PathLike | None = None,
-        epsilon_static_file: PathLike | None = None,
-        phonopy_output_file: PathLike | None = None,
+        structure_file: FSPathType,
+        phonon_bandstructure_file: FSPathType | None = None,
+        phonon_dos_file: FSPathType | None = None,
+        force_constants_file: FSPathType | None = None,
+        born_file: FSPathType | None = None,
+        epsilon_static_file: FSPathType | None = None,
+        phonopy_output_file: FSPathType | None = None,
         **kwargs,
     ) -> Self:
         """

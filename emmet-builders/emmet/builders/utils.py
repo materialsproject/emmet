@@ -14,7 +14,7 @@ from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
 from pymatgen.core import Structure
 from pymatgen.io.vasp.inputs import PotcarSingle
 
-from emmet.core.types.typing import PathLike
+from emmet.core.types.typing import FSPathType
 
 from emmet.builders.settings import EmmetBuildSettings
 
@@ -227,7 +227,7 @@ class HiddenPrints:
 
 def get_potcar_stats(
     method: Literal["potcar", "pymatgen", "stored"] = "potcar",
-    path_to_stored_stats: PathLike | None = None,
+    path_to_stored_stats: FSPathType | None = None,
 ) -> dict[str, Any]:
     """
     Get the POTCAR stats used in MP calculations to validate POTCARs.
@@ -242,8 +242,8 @@ def get_potcar_stats(
               releases. As of 25 March, 2024, it does not appear that the
               MP POTCARs have duplicates
             - "stored": load a stored dict of POTCAR stats.
-        path_to_stored_stats : PathLike or None
-            If PathLike, the path to the stored summary stats file.
+        path_to_stored_stats : FSPathType or None
+            If FSPathType, the path to the stored summary stats file.
             If None, defaults to
               `importlib.resources.file("emmet.builders.vasp") / "mp_potcar_stats.json.gz"`
     Returns:

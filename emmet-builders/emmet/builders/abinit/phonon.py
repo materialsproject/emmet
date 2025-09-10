@@ -261,7 +261,7 @@ class PhononBuilder(Builder):
 
             ddb = Ddb(material_id=item["mp_id"], ddb=item["ddb_str"])  # type: ignore[call-arg]
 
-            th_disp = ThermalDisplacement(
+            th_disp = ThermalDisplacement(  # type: ignore[call-arg]
                 material_id=item["mp_id"],
                 structure=structure,
                 nsites=len(structure),

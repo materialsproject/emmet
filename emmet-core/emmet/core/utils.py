@@ -53,7 +53,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
     from typing import Any
 
-    from emmet.core.types.typing import PathLike
+    from emmet.core.types.typing import FSPathType
 
 logger = logging.getLogger(__name__)
 
@@ -458,14 +458,14 @@ def convert_datetime(
 
 
 def get_hash_blocked(
-    file_path: PathLike, chunk_size: int = 4 * 1024 * 1024, hasher: Any | None = None
+    file_path: FSPathType, chunk_size: int = 4 * 1024 * 1024, hasher: Any | None = None
 ) -> str:
     """
     Get the hash of a file in byte chunks.
 
     Parameters
     -----------
-    file_path : PathLike
+    file_path : FSPathType
     chunk_size : int = 1,000,000 bytes (default)
         The byte chunk size to use in iteratively computing the hash.
     hahser : function to compute hashes. Defaults to blake3 if available,

@@ -23,7 +23,7 @@ from emmet.core.utils import utcnow, convert_datetime
 if TYPE_CHECKING:
     from typing_extensions import TypeAlias
 
-PathLike: TypeAlias = Annotated[
+FSPathType: TypeAlias = Annotated[
     Union[str | Path | os.DirEntry[str] | os.PathLike[str]],
     PlainSerializer(lambda x: str(x), return_type=str),
 ]
