@@ -324,6 +324,7 @@ pytest==8.4.2
     #   pytest-asyncio
     #   pytest-cov
     #   pytest-xdist
+pytest_asyncio==1.1.0
 pytest-cov==6.2.1
     # via emmet-api (pyproject.toml)
 pytest-xdist==3.8.0

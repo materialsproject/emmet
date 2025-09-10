@@ -52,6 +52,7 @@ Documentation = "https://materialsproject.github.io/emmet/"
 test = [
     "pre-commit",
     "pytest",
+    "pytest-asyncio",
     "pytest-cov",
     "pytest-xdist",
     "pycodestyle",
