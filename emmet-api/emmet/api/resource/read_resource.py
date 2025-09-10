@@ -114,16 +114,10 @@ class ReadOnlyResource(CollectionResource):
                 )
                 data = await cursor.to_list()
             except (NetworkTimeout, PyMongoError) as e:
-                if e.timeout:
-                    raise HTTPException(
-                        status_code=504,
-                        detail=f"Server error: {e.details}",
-                    )
-                else:
-                    raise HTTPException(
-                        status_code=500,
-                        detail=f"Server error: {e.details}",
-                    )
+                raise HTTPException(
+                    status_code=504 if e.timeout else 500,
+                    detail=f"Server error: {e.message}",
+                )
 
             operator_meta = {}
 
