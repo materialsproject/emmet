@@ -116,7 +116,7 @@ class ReadOnlyResource(CollectionResource):
             except (NetworkTimeout, PyMongoError) as e:
                 raise HTTPException(
                     status_code=504 if e.timeout else 500,
-                    detail=f"Server error: {e.message}",
+                    detail=f"Server error: {e}",
                 )
 
             operator_meta = {}
