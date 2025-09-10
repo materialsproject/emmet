@@ -172,6 +172,12 @@ class SubmissionResource(CollectionResource):
             include_in_schema=self.include_in_schema,
         )(get_by_key)
 
+    def get_search_kwargs(self, query: dict) -> dict:
+        kwargs = dict(maxTimeMS=self.timeout)
+        if hint := query.get("hint"):
+            kwargs["hint"] = hint
+        return kwargs
+
     def build_search_data(self):
         model_name = self.model.__name__
 
@@ -198,15 +204,12 @@ class SubmissionResource(CollectionResource):
 
             try:
                 count = await self.collection.count_documents(
-                    query.get("criteria", {}),
-                    **{field: query[field] for field in query if field in ["hint"]},
-                    maxTimeMS=self.timeout,
+                    query.get("criteria") or {}, **self.get_search_kwargs(query)
                 )
                 pipeline = generate_query_pipeline(query)
 
                 cursor = await self.collection.aggregate(
-                    pipeline,
-                    **{field: query[field] for field in query if field in ["hint"]},
+                    pipeline, **self.get_search_kwargs(query)
                 )
                 data = await cursor.to_list()
             except (NetworkTimeout, PyMongoError) as e:

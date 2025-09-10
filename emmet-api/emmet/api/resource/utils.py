@@ -137,12 +137,3 @@ def generate_atlas_search_pipeline(query: dict):
         pipeline.append({"$facet": {"docs": [], "meta": [{"$replaceWith": "$$SEARCH_META"}, {"$limit": 1}]}})  # type: ignore
 
     return pipeline
-
-
-def get_count_kwargs(query: dict) -> dict:
-    ret = {}
-    if query.get("count_hint") is not None:
-        ret["hint"] = query["count_hint"]
-    if query.get("maxTimeMS") is not None:
-        ret["maxTimeMS"] = query["maxTimeMS"]
-    return ret

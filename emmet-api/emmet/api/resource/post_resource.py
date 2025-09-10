@@ -38,6 +38,12 @@ class PostOnlyResource(CollectionResource):
         """
         self.build_dynamic_model_search()
 
+    def get_search_kwargs(self, query: dict) -> dict:
+        kwargs = dict(maxTimeMS=self.timeout)
+        if hint := query.get("hint"):
+            kwargs["hint"] = hint
+        return kwargs
+
     def build_dynamic_model_search(self):
         model_name = self.model.__name__
 
@@ -65,17 +71,13 @@ class PostOnlyResource(CollectionResource):
 
             try:
                 count = await self.collection.count_documents(
-                    query["criteria"],
-                    **{field: query[field] for field in query if field in ["hint"]},
-                    maxTimeMS=self.timeout,
+                    query["criteria"], **self.get_search_kwargs(query)
                 )
 
                 pipeline = generate_query_pipeline(query)
 
                 cursor = await self.collection.aggregate(
-                    pipeline,
-                    **{field: query[field] for field in query if field in ["hint"]},
-                    maxTimeMS=self.timeout,
+                    pipeline, **self.get_search_kwargs(query)
                 )
                 data = await cursor.to_list()
             except (NetworkTimeout, PyMongoError) as e:
