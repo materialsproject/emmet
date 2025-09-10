@@ -94,8 +94,10 @@ class AtomRelaxTrajectory(BaseModel):
     lattice: list[Matrix3D] | None = Field(
         None,
         description=(
-            "If a single list of 3x3 matrices, the constant lattice through the simulation. "
-            "If a list of 3x3 matrices, the possibly non-constant lattice. "
+            "If a list containing only one 3x3 matrix, it is assumed that "
+            "the lattice was held constant through the simulation. "
+            "If a list of (multiple) 3x3 matrices, this should be the lattice "
+            "at each ionic step in the calculation. "
             "If None, a non-periodic system is assumed."
         ),
     )
