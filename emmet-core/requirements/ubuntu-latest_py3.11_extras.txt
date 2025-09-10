@@ -36,7 +36,7 @@ cycler==0.12.1
     # via matplotlib
 distlib==0.4.0
     # via virtualenv
-dnspython==2.7.0
+dnspython==2.8.0
     # via pymongo
 execnet==2.1.1
     # via pytest-xdist
@@ -52,7 +52,7 @@ griffe==1.13.0
     # via mkdocstrings-python
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
-identify==2.6.13
+identify==2.6.14
     # via pre-commit
 idna==3.10
     # via requests
@@ -161,7 +161,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-core (pyproject.toml)
     #   mypy
-narwhals==2.3.0
+narwhals==2.4.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -234,7 +234,7 @@ pre-commit==4.3.0
     # via emmet-core (pyproject.toml)
 psutil==7.0.0
     # via custodian
-pubchempy==1.0.4
+pubchempy==1.0.5
     # via robocrys
 pyarrow==21.0.0
     # via emmet-core (pyproject.toml)

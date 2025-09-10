@@ -42,7 +42,7 @@ certifi==2025.8.3
     #   httpcore
     #   httpx
     #   requests
-cffi==1.17.1
+cffi==2.0.0
     # via
     #   cryptography
     #   pynacl
@@ -70,7 +70,7 @@ ddtrace==3.12.4
     # via emmet-api (pyproject.toml)
 distlib==0.4.0
     # via virtualenv
-dnspython==2.7.0
+dnspython==2.8.0
     # via
     #   maggma
     #   pymongo
@@ -104,7 +104,7 @@ httpcore==1.0.9
     # via httpx
 httpx==0.28.1
     # via starlette
-identify==2.6.13
+identify==2.6.14
     # via pre-commit
 idna==3.10
     # via
@@ -140,7 +140,7 @@ jsonlines==4.0.0
     # via maggma
 jsonschema==4.25.1
     # via maggma
-jsonschema-specifications==2025.4.1
+jsonschema-specifications==2025.9.1
     # via jsonschema
 kiwisolver==1.4.9
     # via matplotlib
@@ -225,7 +225,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-api (pyproject.toml)
     #   mypy
-narwhals==2.3.0
+narwhals==2.4.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -304,7 +304,7 @@ pycodestyle==2.14.0
     # via
     #   emmet-api (pyproject.toml)
     #   flake8
-pycparser==2.22
+pycparser==2.23
     # via cffi
 pydantic==2.11.7
     # via
@@ -393,7 +393,7 @@ pyyaml==6.0.2
     #   starlette
 pyyaml-env-tag==1.1
     # via mkdocs
-pyzmq==27.0.2
+pyzmq==27.1.0
     # via maggma
 referencing==0.36.2
     # via
@@ -414,7 +414,7 @@ ruamel-yaml==0.18.15
     #   pymatgen
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-s3transfer==0.13.1
+s3transfer==0.14.0
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
