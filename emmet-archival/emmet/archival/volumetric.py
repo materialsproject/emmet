@@ -52,11 +52,11 @@ class VolumetricArchive(Archiver, ChgcarLike):
     def to_arrow(self) -> pa.Table:
         config = {}
         for k in VolumetricLabel:  # type: ignore[attr-defined]
-            config[f"data_{k.value}"] = pa.array([[self.data.get(k, None)]])
+            config[f"data_{k.value}"] = pa.array([[self.data.get(k, None)]])  # type: ignore [call-overload]
 
         if self.data_aug:
             for k in VolumetricLabel:  # type: ignore[attr-defined]
-                if vals := self.data_aug.get(k, None):
+                if vals := self.data_aug.get(k, None):  # type: ignore[call-overload]
                     config[f"data_aug_{k.value}"] = pa.array(
                         [[x.model_dump() for x in vals]]
                     )
