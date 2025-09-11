@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from enum import Enum
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -10,6 +9,8 @@ from pydantic import BaseModel, Field
 
 from pymatgen.core import Structure
 from pymatgen.io.common import VolumetricData as PmgVolumetricData
+
+from emmet.core.types.enums import ValueEnum
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -40,7 +41,7 @@ class ElectronicStep(BaseModel):
     e_0_energy: float | None = Field(None, description="The internal energy.")
 
 
-class VolumetricLabel(Enum):
+class VolumetricLabel(ValueEnum):
     TOTAL = "total"
     DIFF = "diff"
 

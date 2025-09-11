@@ -4,6 +4,7 @@ from pymatgen.core import Structure
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 from emmet.core.vasp.calculation import Calculation, get_trajectories_from_calculations
+from emmet.core.trajectory import Trajectory
 
 
 def calcs_reversed_to_trajectory(calcs_reversed: list[dict]):
@@ -20,13 +21,16 @@ def calcs_reversed_to_trajectory(calcs_reversed: list[dict]):
 
     for calculation in calcs_reversed:
 
-        if calculation.get("output", {}).get("ionic_steps", None) is None:
-            raise HTTPException(
-                status_code=404, detail="No ionic step data found for task"
+        if calculation.get("output", {}).get("ionic_steps"):
+            trajectories.extend(
+                get_trajectories_from_calculations(
+                    [Calculation(**calculation)],
+                    traj_class=Trajectory,
+                )
             )
         else:
-            trajectories.extend(
-                get_trajectories_from_calculations([Calculation(**calculation)])
+            raise HTTPException(
+                status_code=404, detail="No ionic step data found for task"
             )
 
     return trajectories

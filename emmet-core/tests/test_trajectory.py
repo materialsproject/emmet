@@ -7,7 +7,7 @@ from pymatgen.core.trajectory import Trajectory as PmgTraj
 
 from emmet.core.tasks import TaskDoc
 from emmet.core.testing_utils import DataArchive
-from emmet.core.trajectory import Trajectory
+from emmet.core.trajectory import Trajectory, RelaxTrajectory
 
 
 @fixture(scope="module")
@@ -83,7 +83,7 @@ def test_parquet(si_traj, tmp_dir):
     traj = si_traj[0]
     traj.to(parqet_file, compression="GZIP")
 
-    new_traj = Trajectory.from_parquet(parqet_file)
+    new_traj = RelaxTrajectory.from_parquet(parqet_file)
     assert hash(new_traj) == hash(traj)
 
 

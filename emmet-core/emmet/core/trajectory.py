@@ -62,8 +62,12 @@ class _MDMixin(BaseModel):
         None, description="The velocities of each atom."
     )
 
+    time_step: float | None = Field(
+        None, description="The time step used in the calculation."
+    )
+
     ionic_step_properties: set[str] = Field(
-        {"magmoms", "temperature", "velocities"},
+        {"magmoms", "temperature", "velocities", "time_step"},
         exclude=True,
         description="The properties included at each ionic step.",
     )
@@ -654,6 +658,14 @@ class RelaxTrajectory(AtomRelaxTrajectory):
         remap = {"e_0_energy": "energy"}
         if store_electronic_steps:
             ionic_step_data.add("electronic_steps")
+
+        if (
+            vasprun.parameters.get("IBRION", -1) == 0
+            and "time_step" in cls.model_fields
+            and not kwargs.get("time_step")
+        ):
+            kwargs["time_step"] = vasprun.parameters.get("POTIM")
+
         return cls._from_dict(
             {
                 remap.get(k, k): [

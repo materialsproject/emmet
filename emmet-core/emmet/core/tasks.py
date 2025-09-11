@@ -133,7 +133,7 @@ class OutputDoc(BaseModel):
             forces = calc_doc.output.ionic_steps[-1].forces
             stress = calc_doc.output.ionic_steps[-1].stress
         elif trajectory and all(
-            getattr(trajectory, k) is not None for k in ("forces", "stress")
+            getattr(trajectory, k, None) is not None for k in ("forces", "stress")
         ):
             forces = trajectory.forces[-1]
             stress = trajectory.stress[-1]

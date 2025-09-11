@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
 from copy import deepcopy
 from functools import cached_property
 import logging
@@ -33,7 +32,7 @@ from pymatgen.io.vasp import (
 
 from emmet.core.band_theory import ElectronicBS, ElectronicDos
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
-from emmet.core.trajectory import Trajectory
+from emmet.core.trajectory import RelaxTrajectory, Trajectory
 from emmet.core.types.enums import VaspObject, StoreTrajectoryOption, TaskState
 from emmet.core.vasp.models import ElectronicStep, ChgcarLike
 from emmet.core.vasp.calc_types import (
@@ -957,6 +956,7 @@ class Calculation(CalculationBaseModel):
                 locpot = Locpot.from_file(dir_name / locpot_file)
 
         input_doc = CalculationInput.from_vasprun(vasprun)
+        this_task_type = task_type(input_doc.model_dump())
 
         store_trajectory = StoreTrajectoryOption(store_trajectory)
         output_doc = CalculationOutput.from_vasp_outputs(
@@ -968,6 +968,7 @@ class Calculation(CalculationBaseModel):
             store_trajectory=store_trajectory,
             store_onsite_density_matrices=store_onsite_density_matrices,
         )
+
         if store_trajectory != StoreTrajectoryOption.NO:
             temperatures: list[float] | None = None
             if oszicar_file:
@@ -982,7 +983,12 @@ class Calculation(CalculationBaseModel):
                     # there can be errors in parsing the floats from OSZICAR
                     pass
 
-            vasp_objects[VaspObject.TRAJECTORY] = Trajectory.from_vasprun(  # type: ignore[index]
+            traj_class = (
+                Trajectory
+                if this_task_type == TaskType.Molecular_Dynamics
+                else RelaxTrajectory
+            )
+            vasp_objects[VaspObject.TRAJECTORY] = traj_class.from_vasprun(  # type: ignore[index]
                 vasprun,
                 store_electronic_steps=(store_trajectory == StoreTrajectoryOption.FULL),
                 temperature=temperatures,
@@ -1015,7 +1021,7 @@ class Calculation(CalculationBaseModel):
                 bader=bader,
                 ddec6=ddec6,
                 run_type=run_type(input_doc.parameters),
-                task_type=task_type(input_doc.model_dump()),
+                task_type=this_task_type,
                 calc_type=calc_type(input_doc.model_dump(), input_doc.parameters),
             ),
             vasp_objects,
@@ -1259,12 +1265,15 @@ def _get_band_props(
 
 def _calculation_to_trajectory_dict(
     calc: Calculation,
+    traj_class: RelaxTrajectory = RelaxTrajectory,
 ) -> tuple[dict[str, list[Any]], RunType, TaskType, CalcType, float | None]:
     """Convert a single VASP calculation to Trajectory._from_dict compatible dict.
 
     Parameters
     -----------
     calc (emmet.core.vasp.calculation.Calculation)
+    traj_class : RelaxTrajectory
+        The trajectory class used in parsing ionic step properties to save.
 
     Returns
     -----------
@@ -1276,14 +1285,17 @@ def _calculation_to_trajectory_dict(
     tt: TaskType | None = None
     time_step: float | None = None
 
-    ionic_step_props = set(
-        Trajectory.model_fields["ionic_step_properties"].default
-    ).difference(
-        {
-            "energy",
-            "magmoms",
-        }
+    ionic_step_props = (
+        set(traj_class.model_fields["ionic_step_properties"].default)
+        .difference(
+            {
+                "energy",
+                "magmoms",
+            }
+        )
+        .intersection(set(IonicStep.model_fields))
     )
+
     # refresh calc, run, and task type if possible
     if calc.input:
         vis = calc.input.model_dump()
@@ -1298,22 +1310,27 @@ def _calculation_to_trajectory_dict(
             padded_params.get("POTIM") if padded_params.get("IBRION", -1) == 0 else None
         )
 
-    props: defaultdict[str, list[Any]] = defaultdict(list)
+    props: dict[str, list] = {}
 
     if calc.output:
-        for ionic_step in calc.output.ionic_steps or []:
-            props["structure"].append(ionic_step.structure)
+        remap = {"energy": "e_0_energy"}
+        ionic_steps = calc.output.ionic_steps or []
+        props.update(
+            {
+                k: [getattr(ionic_step, remap.get(k, k)) for ionic_step in ionic_steps]
+                for k in {"structure", "energy", *ionic_step_props}
+            }
+        )
 
-            props["energy"].append(ionic_step.e_0_energy)
-            for k in ionic_step_props:
-                props[k].append(getattr(ionic_step, k))
-
-    return dict(props), rt, tt, ct, time_step
+    return props, rt, tt, ct, time_step
 
 
 def get_trajectories_from_calculations(
-    calculations: list[Calculation], separate: bool = True, **kwargs
-) -> list[Trajectory]:
+    calculations: list[Calculation],
+    separate: bool = True,
+    traj_class: RelaxTrajectory = RelaxTrajectory,
+    **kwargs,
+) -> list[RelaxTrajectory]:
     """
     Create trajectories from a list of Calculation Objects.
 
@@ -1329,6 +1346,11 @@ def get_trajectories_from_calculations(
     separate : bool = True by default
         Whether to split all calculations into separate Trajectory
         objects, or to join them if their calc types are identical.
+    traj_class : RelaxTrajectory
+        Class to use in deserializing the trajectory data.
+        Defaults to RelaxTrajectory, which contains just enough fields
+        for a relaxation trajectory.
+        Could be used to return a full Trajectory if MD data is desired.
     kwargs
         Other kwargs to pass to Trajectory
 
@@ -1337,7 +1359,7 @@ def get_trajectories_from_calculations(
     list of Trajectory
     """
 
-    trajs: list[Trajectory] = []
+    trajs: list[RelaxTrajectory] = []
 
     props: dict[str, list[Any]] = {}
     old_meta: dict[str, Any] = {
@@ -1351,7 +1373,7 @@ def get_trajectories_from_calculations(
             new_meta["task_type"],
             new_meta["calc_type"],
             new_meta["time_step"],
-        ) = _calculation_to_trajectory_dict(cr)
+        ) = _calculation_to_trajectory_dict(cr, traj_class=traj_class)
 
         if (
             separate
@@ -1363,7 +1385,7 @@ def get_trajectories_from_calculations(
             # or this is the first calculation in `calcs_reversed`
             # Append existing trajectory to list of trajectories, and restart
             if icr > 0:
-                trajs.append(Trajectory._from_dict(props, **old_meta, **kwargs))  # type: ignore[arg-type]
+                trajs.append(traj_class._from_dict(props, **old_meta, **kwargs))  # type: ignore[arg-type]
 
             props = deepcopy(new_props)
         else:
@@ -1374,6 +1396,6 @@ def get_trajectories_from_calculations(
             old_meta[k] = v
 
     # create final trajectory
-    trajs.append(Trajectory._from_dict(props, **old_meta, **kwargs))  # type: ignore[arg-type]
+    trajs.append(traj_class._from_dict(props, **old_meta, **kwargs))  # type: ignore[arg-type]
 
     return trajs
