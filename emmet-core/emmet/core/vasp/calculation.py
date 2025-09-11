@@ -1265,7 +1265,7 @@ def _get_band_props(
 
 def _calculation_to_trajectory_dict(
     calc: Calculation,
-    traj_class: RelaxTrajectory = RelaxTrajectory,
+    traj_class: RelaxTrajectory | Trajectory = RelaxTrajectory,
 ) -> tuple[dict[str, list[Any]], RunType, TaskType, CalcType, float | None]:
     """Convert a single VASP calculation to Trajectory._from_dict compatible dict.
 
@@ -1328,7 +1328,7 @@ def _calculation_to_trajectory_dict(
 def get_trajectories_from_calculations(
     calculations: list[Calculation],
     separate: bool = True,
-    traj_class: RelaxTrajectory = RelaxTrajectory,
+    traj_class: RelaxTrajectory | Trajectory = RelaxTrajectory,
     **kwargs,
 ) -> list[RelaxTrajectory]:
     """
