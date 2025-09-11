@@ -35,11 +35,13 @@ def _vector_difference_matrix_row(
     norms,
 ):
     inner = np.zeros((idxs[1] - idxs[0], v.shape[0]))
-    inner = np.einsum("ik,jk->ij", v[idxs[0] : idxs[1]], v, out=inner)
-    return idxs, [
-        norms[idxs[0] : idxs[1]] + norms[i] - 2 * inner[:, i]
-        for i in range(norms.shape[0])
-    ]
+    _ = np.einsum("ik,jk->ij", v[idxs[0] : idxs[1]], v, out=inner)
+    return idxs, np.array(
+        [
+            norms[idxs[0] : idxs[1]] + norms[i] - 2 * inner[:, i]
+            for i in range(norms.shape[0])
+        ]
+    )
 
 
 def vector_difference_matrix(
@@ -158,7 +160,6 @@ class SimilarityScorer:
         np.ndarray : the feature vectors of the input structures.
         """
         if num_procs > 1:
-
             with multiprocessing.Pool(num_procs) as pool:
                 _feature_vectors = pool.map(self._featurize_structure, structures)
         else:
