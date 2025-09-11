@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from functools import partial
+import multiprocessing
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -27,10 +29,21 @@ if TYPE_CHECKING:
     from pymatgen.core import Structure
 
 
+def _vector_difference_matrix_row(
+    idxs,
+    v,
+    norms,
+):
+    inner = np.zeros((idxs[1] - idxs[0], v.shape[0]))
+    inner = np.einsum("ik,jk->ij", v[idxs[0] : idxs[1]], v, out=inner)
+    return idxs, [
+        norms[idxs[0] : idxs[1]] + norms[i] - 2 * inner[:, i]
+        for i in range(norms.shape[0])
+    ]
+
+
 def vector_difference_matrix(
-    v: np.ndarray,
-    noise_floor: float = 1e-14,
-    spread_rows: bool = False,
+    v: np.ndarray, noise_floor: float = 1e-14, spread_rows: int = 0
 ) -> np.ndarray:
     """Construct a symmetric matrix of vector differences.
 
@@ -38,21 +51,21 @@ def vector_difference_matrix(
         D_ij = | v_i - v_j |
         D_ji = D_ij
 
-    if spread_rows is True, then this will return only the
-    upper triangle of D_ij, j >= i, and perform a loop
-    over the rows of D.
+    if spread_rows is a positive int, then this will return only the
+    upper triangle of D_ij, j >= i, and parallelize construction
+    of the rows of D_ij.
 
     Parameters
     -----------
     v : numpy ndarray
         List of vectors. Axis = 0 should indicate distinct vectors,
         and axis = 1 their components.
-    noise_floor : float = 1e-15
+    noise_floor : float = 1e-14
         Any values less than noise_floor will be zeroed out.
         Helps with loss of precision.
-    spread_rows : bool = False
-        Whether to loop over rows and only construct the upper
-        triangle.
+    spread_rows : int = 0
+        The number of parallel processes to use in constructing
+        the rows of D_ij
     """
 
     vlen = v.shape[0]
@@ -67,10 +80,18 @@ def vector_difference_matrix(
         for i in range(vlen):
             v_diff[:, i] = norms + norms[i] - 2 * inner[:, i]
     else:
+        func = partial(_vector_difference_matrix_row, v=v, norms=norms)
+        with multiprocessing.Pool(spread_rows) as pool:
+            vdiff_blocks = pool.map(
+                func,
+                [
+                    (min(x), 1 + max(x))
+                    for x in np.array_split(range(vlen), spread_rows)
+                ],
+            )
 
-        for i in range(vlen):
-            inner = np.einsum("jk,k->j", v[i:], v[i])
-            v_diff[i, i:] = norms[i] + norms[i:] - 2 * inner
+        for idxs, row in vdiff_blocks:
+            v_diff[:, idxs[0] : idxs[1]] = row
 
     v_diff[v_diff < noise_floor] = 0.0
     return v_diff ** (0.5)
@@ -137,7 +158,6 @@ class SimilarityScorer:
         np.ndarray : the feature vectors of the input structures.
         """
         if num_procs > 1:
-            import multiprocessing
 
             with multiprocessing.Pool(num_procs) as pool:
                 _feature_vectors = pool.map(self._featurize_structure, structures)
