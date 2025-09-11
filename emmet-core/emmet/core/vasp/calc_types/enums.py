@@ -8,7 +8,7 @@ and/or
     emmet/core/vasp/calc_types/calc_types.yaml
 """
 
-from emmet.core.utils import ValueEnum, IgnoreCaseEnum
+from emmet.core.types.enums import ValueEnum, IgnoreCaseEnum
 
 
 class RunType(IgnoreCaseEnum):

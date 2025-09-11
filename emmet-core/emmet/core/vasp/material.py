@@ -3,16 +3,17 @@
 from collections.abc import Mapping
 
 from pydantic import BaseModel, Field
-from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
+from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer, oxide_type
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 from emmet.core.base import EmmetMeta
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin
+from emmet.core.types.typing import IdentifierType
 from emmet.core.settings import EmmetSettings
-from emmet.core.structure import StructureMetadata
 from emmet.core.tasks import TaskDoc
+from emmet.core.utils import utcnow
 from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
 
 SETTINGS = EmmetSettings()
@@ -27,16 +28,16 @@ class BlessedCalcs(BaseModel, populate_by_name=True):
     HSE: ComputedStructureEntry | None = None
 
 
-class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
-    calc_types: Mapping[str, CalcType] | None = Field(  # type: ignore
+class MaterialsDoc(CoreMaterialsDoc):
+    calc_types: Mapping[IdentifierType, CalcType] | None = Field(  # type: ignore
         None,
         description="Calculation types for all the calculations that make up this material",
     )
-    task_types: Mapping[str, TaskType] | None = Field(
+    task_types: Mapping[IdentifierType, TaskType] | None = Field(
         None,
         description="Task types for all the calculations that make up this material",
     )
-    run_types: Mapping[str, RunType] | None = Field(
+    run_types: Mapping[IdentifierType, RunType] | None = Field(
         None,
         description="Run types for all the calculations that make up this material",
     )
@@ -201,14 +202,34 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
                 key=_entry_eval,
             )
 
-            if len(relevant_calcs) > 0:
+            if relevant_calcs:
                 best_task_doc = relevant_calcs[0]
-                entry = best_task_doc.structure_entry
-                entry.data["task_id"] = entry.entry_id
-                entry.data["material_id"] = material_id
-                entry.entry_id = "{}-{}".format(material_id, rt.value)
-                entry.parameters["is_hubbard"] = best_task_doc.input.is_hubbard
-                entry.parameters["hubbards"] = best_task_doc.input.hubbards
+                entry = ComputedStructureEntry(
+                    composition=best_task_doc.output.structure.composition,
+                    correction=0.0,
+                    data={
+                        "aspherical": best_task_doc.input.parameters.get(
+                            "LASPH", False
+                        ),
+                        "last_updated": str(utcnow()),
+                        "oxide_type": oxide_type(best_task_doc.output.structure),
+                        "material_id": material_id,
+                        "task_id": best_task_doc.task_id,
+                    },
+                    energy=best_task_doc.output.energy,
+                    entry_id="{}-{}".format(material_id, rt.value),
+                    parameters={
+                        "hubbards": best_task_doc.input.hubbards,
+                        "is_hubbard": best_task_doc.input.is_hubbard,
+                        "potcar_spec": (
+                            [dict(d) for d in best_task_doc.input.potcar_spec]
+                            if best_task_doc.input.potcar_spec
+                            else []
+                        ),
+                        "run_type": str(best_task_doc.run_type),
+                    },
+                    structure=best_task_doc.output.structure,
+                )
                 entries[rt] = entry
 
         if not any(
@@ -223,7 +244,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         builder_meta = EmmetMeta(license="BY-C" if commercial_license else "BY-NC")
 
         return cls.from_structure(
-            structure=structure,
+            meta_structure=structure,
             material_id=material_id,
             last_updated=last_updated,
             created_at=created_at,
@@ -273,6 +294,14 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             task_group[0].output.structure, symprec=0.1
         ).get_conventional_standard_structure()
 
+        origins = [
+            PropertyOrigin(
+                name="structure",
+                task_id=task_group[0].task_id,
+                last_updated=task_group[0].last_updated,
+            )
+        ]
+
         # Deprecated
         deprecated = True
 
@@ -280,7 +309,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         builder_meta = EmmetMeta(license="BY-C" if commercial_license else "BY-NC")
 
         return cls.from_structure(
-            structure=structure,
+            meta_structure=structure,
             material_id=material_id,
             last_updated=last_updated,
             created_at=created_at,
@@ -291,4 +320,5 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             deprecated=deprecated,
             deprecated_tasks=deprecated_tasks,
             builder_meta=builder_meta,
+            origins=origins,
         )

@@ -1,6 +1,5 @@
-from enum import Enum
-
 from pydantic import BaseModel, Field
+from emmet.core.types.enums import ValueEnum
 
 
 class Value(BaseModel):
@@ -26,7 +25,7 @@ class Conditions(BaseModel):
     )
 
 
-class OperationTypeEnum(str, Enum):
+class OperationTypeEnum(str, ValueEnum):
     starting = "StartingSynthesis"
     mixing = "MixingOperation"
     shaping = "ShapingOperation"

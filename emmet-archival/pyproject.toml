@@ -34,12 +34,11 @@ dependencies = [
   "pyarrow",
   "pandas",
   "zarr>=3.0.0",
-  "pymatgen-io-validation>=0.1.1", # required right now because this isn't getting pick up in auto-gen dependences
+  "pymatgen-io-validation>=0.1.1", # required right now because this isn't getting picked up in auto-gen dependences
 ]
 description = "Emmet Archival library"
 keywords = ["data storage","dft","vasp"]
-license = { text = "modified BSD" }
-readme = "README.md"
+license = { text = "Modified BSD" }
 requires-python = '>=3.11'
 
 [project.optional-dependencies]
@@ -47,6 +46,7 @@ tests = [
   "pre-commit>=2.12.1",
   "pytest>=8.3.5",
   "pytest-cov>=6.0.0",
+  "pytest-xdist",
   "pycodestyle",
   "pydocstyle",
   "flake8",

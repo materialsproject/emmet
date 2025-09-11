@@ -1,6 +1,8 @@
 """Test phonon document models."""
 
 from copy import deepcopy
+from tempfile import NamedTemporaryFile
+
 import numpy as np
 from monty.serialization import loadfn
 from pymatgen.core import Structure
@@ -134,3 +136,27 @@ def test_arrow(tmp_dir, legacy_ph_task):
 
     assert ph_doc.phonon_bandstructure == bs_from_table
     assert ph_doc.phonon_bandstructure == bs_from_parquet
+
+    # test primitive structure caching
+    assert bs_from_parquet._primitive_structure is None
+    assert isinstance(bs_from_parquet.primitive_structure, Structure)
+    assert bs_from_parquet._primitive_structure == bs_from_parquet.primitive_structure
+
+
+def test_phonopy_dos_integration(tmp_dir):
+    """Test phonopy dat-file parsing."""
+
+    temp = 0.063253
+    ph_data = np.random.random((20, 2))
+    ph_str = f"# Sigma = {temp}\n\t" + "\n\t".join(
+        "\t".join(f"{x}" for x in row) for row in ph_data
+    )
+
+    temp_file = NamedTemporaryFile(suffix="dat", mode="w")
+    temp_file.write(ph_str)
+    temp_file.seek(0)
+    ph_dos = PhononDOS.from_phonopy(temp_file.name)
+    temp_file.close()
+
+    for idx, attr in enumerate(["frequencies", "densities"]):
+        assert np.all(np.abs(ph_data[:, idx] - np.array(getattr(ph_dos, attr))) < 1e-6)

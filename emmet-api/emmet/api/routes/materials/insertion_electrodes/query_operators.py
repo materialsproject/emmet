@@ -317,34 +317,6 @@ class WorkingIonQuery(QueryOperator):
         return [("working_ion", False)]
 
 
-class ElectrodeMultiMaterialIDQuery(QueryOperator):
-    """
-    Method to generate a query for different root-level material_id values
-    """
-
-    def query(
-        self,
-        material_ids: str | None = Query(
-            None, description="Comma-separated list of material_id values to query on"
-        ),
-    ) -> STORE_PARAMS:
-        crit = {}  # type: dict
-
-        if material_ids:
-            crit.update(
-                {
-                    "material_ids": {
-                        "$in": [
-                            material_id.strip()
-                            for material_id in material_ids.split(",")
-                        ]
-                    }
-                }
-            )
-
-        return {"criteria": crit}
-
-
 class MultiBatteryIDQuery(QueryOperator):
     """
     Method to generate a query for different root-level battery_id values

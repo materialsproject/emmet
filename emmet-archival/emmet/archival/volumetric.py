@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from enum import Enum
 from typing import TYPE_CHECKING
 
 import pyarrow as pa
@@ -12,6 +11,7 @@ from pydantic import BaseModel, Field
 from pymatgen.io.common import VolumetricData as PmgVolumetricData
 
 from emmet.core.vasp.models import ChgcarLike
+from emmet.core.types.enums import ValueEnum
 
 from emmet.archival.base import Archiver
 from emmet.archival.atoms import CrystalArchive
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from typing import Any
 
 
-class VolumetricLabel(Enum):
+class VolumetricLabel(ValueEnum):
     TOTAL = "total"
     DIFF = "diff"
 

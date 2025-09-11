@@ -5,7 +5,6 @@ from typing import Any
 from urllib.parse import urlencode
 
 import pytest
-from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field
 from requests import Response
 from starlette.testclient import TestClient
@@ -18,7 +17,7 @@ from emmet.api.query_operator import (
     StringQueryOperator,
 )
 from emmet.api.resource import ReadOnlyResource
-from maggma.stores import MemoryStore
+from emmet.api.resource.utils import CollectionWithKey
 
 
 class PetType(str, Enum):
@@ -54,60 +53,37 @@ pets = [
 ]
 
 
-@pytest.fixture()
-def owner_store():
-    store = MemoryStore("owners", key="name")
-    store.connect()
-    store.update([jsonable_encoder(d) for d in owners])
-    return store
-
-
-@pytest.fixture()
-def pet_store():
-    store = MemoryStore("pets", key="name")
-    store.connect()
-    store.update([jsonable_encoder(d) for d in pets])
-    return store
-
-
-def test_msonable(owner_store, pet_store):
-    owner_endpoint = ReadOnlyResource(owner_store, Owner)
-    pet_endpoint = ReadOnlyResource(pet_store, Pet)
-
-    manager = API({"owners": owner_endpoint, "pets": pet_endpoint})
-
-    api_dict = manager.as_dict()
-
-    for k in ["@class", "@module", "resources"]:
-        assert k in api_dict
-
-
-def search_helper(payload, base: str = "/?", debug=True) -> tuple[Response, Any]:
+async def search_helper(
+    payload, base: str = "/?", debug=True, mock_database=None
+) -> tuple[Response, Any]:
     """
     Helper function to directly query search endpoints
 
     Args:
-        store: store f
         base: base of the query, default to /query?
-        client: TestClient generated from FastAPI
         payload: query in dictionary format
         debug: True = print out the url, false don't print anything
+        mock_database: async mock database
 
     Returns:
         request.Response object that contains the response of the corresponding payload
     """
-    owner_store = MemoryStore("owners", key="name")
-    owner_store.connect()
-    owner_store.update([d.model_dump() for d in owners])
+    owner_collection = mock_database["owners"]
+    owner_docs = [owner.model_dump() for owner in owners]
+    await owner_collection.insert_many(owner_docs)
+    owner_collection_with_key = CollectionWithKey(
+        collection=owner_collection, key="name"
+    )
 
-    pets_store = MemoryStore("pets", key="name")
-    pets_store.connect()
-    pets_store.update([jsonable_encoder(d) for d in pets])
+    pets_collection = mock_database["pets"]
+    pet_docs = [pet.model_dump() for pet in pets]
+    await pets_collection.insert_many(pet_docs)
+    pets_collection_with_key = CollectionWithKey(collection=pets_collection, key="name")
 
     resources = {
         "owners": [
             ReadOnlyResource(
-                owner_store,
+                owner_collection_with_key,
                 Owner,
                 query_operators=[
                     StringQueryOperator(model=Owner),  # type: ignore
@@ -119,8 +95,8 @@ def search_helper(payload, base: str = "/?", debug=True) -> tuple[Response, Any]
         ],
         "pets": [
             ReadOnlyResource(
-                pets_store,
-                Owner,
+                pets_collection_with_key,
+                Pet,
                 query_operators=[
                     StringQueryOperator(model=Pet),
                     NumericQuery(model=Pet),
@@ -146,18 +122,30 @@ def search_helper(payload, base: str = "/?", debug=True) -> tuple[Response, Any]
     return res, data
 
 
-def test_cluster_run(owner_store, pet_store):
-    res, data = search_helper(payload="")
+@pytest.mark.asyncio
+async def test_cluster_run(mock_database):
+    res, data = await search_helper(payload="", mock_database=mock_database)
     assert res.status_code == 200
 
+    # Clear collections between tests
+    await mock_database["owners"].drop()
+    await mock_database["pets"].drop()
+
     payload = {"name": "Person1", "_limit": 10, "_all_fields": True}
-    res, data = search_helper(payload=payload, base="/owners/?")
+    res, data = await search_helper(
+        payload=payload, base="/owners/?", mock_database=mock_database
+    )
     assert res.status_code == 200
     assert len(data) == 1
     assert data[0]["name"] == "Person1"
 
+    await mock_database["owners"].drop()
+    await mock_database["pets"].drop()
+
     payload = {"name": "Pet1", "_limit": 10, "_all_fields": True}
-    res, data = search_helper(payload=payload, base="/pets/?")
+    res, data = await search_helper(
+        payload=payload, base="/pets/?", mock_database=mock_database
+    )
     assert res.status_code == 200
     assert len(data) == 1
     assert data[0]["name"] == "Pet1"

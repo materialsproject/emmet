@@ -2,9 +2,9 @@ name: testing
 
 on:
   push:
-    branches: [main]
+    branches: [main,develop]
   pull_request:
-    branches: [main]
+    branches: [main,develop]
 
 jobs:
   check-enums:
@@ -17,7 +17,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
           cache: pip
@@ -56,10 +56,11 @@ jobs:
     #needs: check-enums
     strategy:
       matrix:
-        os: ["ubuntu-latest"] # TODO openbabel for windows and mac
+        os: ["ubuntu-latest"]
         package: ["emmet-core", "emmet-builders", "emmet-api", "emmet-archival", "emmet-cli"]
         python-version: ["3.11", "3.12"]
-    name: ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }})
+
+    name: ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
@@ -74,10 +75,6 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
           channels: anaconda, conda-forge
-
-      - name: Install all conda requirements
-        shell: bash -l {0}
-        run: conda install -c conda-forge openbabel openff-toolkit==0.16.2 openff-interchange==0.3.22 sqlite -y
 
       - name: Install Python dependencies
         shell: bash -l {0}
@@ -100,14 +97,14 @@ jobs:
 
       - name: Lint with mypy
         shell: bash -l {0}
-        run: python${{ matrix.python-version }} -m mypy --namespace-package ${{ matrix.package }}/emmet
+        run: python${{ matrix.python-version }} -m mypy --config-file .mypy.ini ${{ matrix.package }}/emmet
 
       - name: Test with pytest
         if: always() # run tests even if linting failed
         shell: bash -l {0}
-        run: python${{ matrix.python-version }} -m pytest --cov=emmet --cov-report=xml ${{ matrix.package }}/tests
+        run: python${{ matrix.python-version }} -m pytest -n auto --cov=emmet --cov-report=xml ${{ matrix.package }}/tests
 
-      - uses: codecov/codecov-action@v5.4.3
+      - uses: codecov/codecov-action@v5.5.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml

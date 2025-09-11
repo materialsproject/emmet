@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from pydantic import Field, field_validator
+from pydantic import Field
 
 from emmet.core.vasp.calculation import Calculation
 from emmet.core.base import EmmetBaseModel
-from emmet.core.common import convert_datetime
-from emmet.core.mpid import MPID, AlphaID
-from emmet.core.utils import utcnow, DocEnum
+from emmet.core.types.typing import DateTimeType, IdentifierType
+from emmet.core.types.enums import DocEnum
 from emmet.core.vasp.calc_types.enums import CalcType, RunType
 from emmet.core.vasp.utils import FileMetadata, discover_vasp_files
 from emmet.core.vasp.task_valid import TaskDocument
@@ -60,13 +58,12 @@ class ValidationDoc(VaspValidator, EmmetBaseModel):
     Validation document for a VASP calculation
     """
 
-    task_id: MPID | AlphaID | None = Field(
+    task_id: IdentifierType | None = Field(
         None, description="The task_id for this validation document"
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="The most recent time when this document was updated.",
-        default_factory=utcnow,
     )
 
     nelements: int | None = Field(None, description="Number of elements.")
@@ -79,11 +76,6 @@ class ValidationDoc(VaspValidator, EmmetBaseModel):
         None, description="The run type of the calculation"
     )
     calc_type: CalcType | None = Field(None, description="The calculation type.")
-
-    @field_validator("last_updated", mode="before")
-    @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)
 
     @classmethod
     def from_file_metadata(cls, file_meta: list[FileMetadata], **kwargs) -> Self:

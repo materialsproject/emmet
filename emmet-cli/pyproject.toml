@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=80.0.0","setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+root = ".."
+relative_to = "__file__"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["tests"]
+include = ["emmet.cli"]
+
+[project]
+name = "emmet-cli"
+dynamic = ["version"]
+requires-python = ">=3.10"
+description="Command line interface for ingestion of electronic structure calculations into MP."
+license = {text = "Modified BSD"}
+authors = [
+    {name = "The Materials Project", email="feedback@materialsproject.org"},
+]
+dependencies = [
+    "click",
+    "colorama",
+    "emmet-core",
+    "pymatgen-io-validation>=0.1.1",
+    "psutil>=5.9.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/materialsproject/emmet/tree/main/emmet-cli/"
+Documentation = "https://materialsproject.github.io/emmet/"
+
+[project.optional-dependencies]
+test = [
+    "pre-commit",
+    "pytest",
+    "pytest-cov",
+    "pytest-xdist",
+    "pycodestyle",
+    "pydocstyle",
+    "flake8",
+    "mypy",
+    "mypy-extensions",
+    "types-setuptools",
+    "types-requests",
+    "wincertstore",
+    "blake3",
+]
+docs = [
+    "mkdocs",
+    "mkdocs-material<8.3",
+    "mkdocs-material-extensions",
+    "mkdocs-minify-plugin",
+    "mkdocstrings",
+    "mkdocs-awesome-pages-plugin",
+    "mkdocs-markdownextradata-plugin",
+    "mkdocstrings[python]",
+    "livereload",
+    "jinja2",
+]
+
+[project.scripts]
+emmet = "emmet.cli.entry_point:safe_entry_point"

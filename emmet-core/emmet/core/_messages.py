@@ -1,12 +1,12 @@
 from datetime import datetime
-from enum import Enum
 
 from pydantic import BaseModel, Field
 
 from emmet.core.utils import utcnow
+from emmet.core.types.enums import ValueEnum
 
 
-class MessageType(Enum):
+class MessageType(ValueEnum):
     generic = "generic"
     warning = "warning"
 
@@ -32,7 +32,7 @@ class MessagesDoc(BaseModel):
         description="Generic title or short summary for the message.",
     )
 
-    type: MessageType = Field(
+    type: MessageType = Field(  # type: ignore[assignment]
         MessageType.generic,
         title="Type",
         description="The type of the message.",

@@ -2,22 +2,20 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
-from pydantic import Field, ImportString, field_validator
+from pydantic import BaseModel, Field, ImportString
 from pymatgen.core.structure import Structure
 from pymatgen.io.vasp.inputs import Kpoints
 from pymatgen.io.vasp.sets import VaspInputSet
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.common import convert_datetime
-from emmet.core.mpid import MPID
+from emmet.core.types.typing import DateTimeType, IdentifierType
 from emmet.core.settings import EmmetSettings
-from emmet.core.tasks import TaskDoc
-from emmet.core.utils import utcnow
-from emmet.core.vasp.calc_types.enums import CalcType, TaskType, RunType
+from emmet.core.tasks import CoreTaskDoc, TaskDoc
+from emmet.core.vasp.calc_types.enums import CalcType, TaskType
+from emmet.core.vasp.calculation import CoreCalculationOutput
 from emmet.core.vasp.task_valid import TaskDocument
 from emmet.core.vasp.validation import DeprecationMessage
 
@@ -27,16 +25,24 @@ if TYPE_CHECKING:
 SETTINGS = EmmetSettings()
 
 
-class ValidationDoc(EmmetBaseModel):
+class ValidationDataDict(BaseModel):
+    encut_ratio: float | None = Field(None)
+    max_gradient: Optional[float] = Field(None)
+    kspacing_delta: float | None = Field(None)
+    kpts_ratio: float | None = Field(None)
+
+
+class ValidationDoc(EmmetBaseModel, extra="allow"):
     """
     Validation document for a VASP calculation
     """
 
-    task_id: MPID = Field(..., description="The task_id for this validation document")
+    task_id: IdentifierType = Field(
+        ..., description="The task_id for this validation document"
+    )
     valid: bool = Field(False, description="Whether this task is valid or not")
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="Last updated date for this document",
-        default_factory=utcnow,
     )
     reasons: list[DeprecationMessage | str] | None = Field(
         None, description="List of deprecation tags detailing why this task isn't valid"
@@ -44,31 +50,24 @@ class ValidationDoc(EmmetBaseModel):
     warnings: list[str] = Field(
         [], description="List of potential warnings about this calculation"
     )
-    data: dict = Field(
+    data: ValidationDataDict | None = Field(
+        None,
         description="Dictioary of data used to perform validation."
-        " Useful for post-mortem analysis"
+        " Useful for post-mortem analysis",
     )
-
     nelements: int | None = Field(None, description="Number of elements.")
     symmetry_number: int | None = Field(
         None,
         title="Space Group Number",
         description="The spacegroup number for the lattice.",
     )
-    run_type: RunType | None = Field(
-        None, description="The run type of the calculation"
-    )
-    calc_type: CalcType | None = Field(None, description="The calculation type.")
-
-    @field_validator("last_updated", mode="before")
-    @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)
+    chemsys: str | None = Field(None)
+    formula_pretty: str | None = Field(None)
 
     @classmethod
     def from_task_doc(
         cls,
-        task_doc: TaskDoc | TaskDocument,
+        task_doc: CoreTaskDoc | TaskDoc | TaskDocument,
         kpts_tolerance: float = SETTINGS.VASP_KPTS_TOLERANCE,
         kspacing_tolerance: float = SETTINGS.VASP_KSPACING_TOLERANCE,
         input_sets: dict[str, ImportString] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
@@ -99,16 +98,23 @@ class ValidationDoc(EmmetBaseModel):
         calc_type = task_doc.calc_type
         task_type = task_doc.task_type
         run_type = task_doc.run_type
-        inputs = task_doc.orig_inputs
         chemsys = task_doc.chemsys
-        calcs_reversed = [
-            calc if not hasattr(calc, "model_dump") else calc.model_dump()
-            for calc in task_doc.calcs_reversed
-        ]
+        formula_pretty = task_doc.formula_pretty
 
-        if calcs_reversed[0].get("input", {}).get("structure", None):
-            structure = calcs_reversed[0]["input"]["structure"]
+        if isinstance(task_doc, (TaskDoc, TaskDocument)):
+            inputs = task_doc.orig_inputs
+            calcs_reversed = [
+                calc if not hasattr(calc, "model_dump") else calc.model_dump()
+                for calc in task_doc.calcs_reversed
+            ]
+
+            if calcs_reversed[0].get("input", {}).get("structure", None):
+                structure = calcs_reversed[0]["input"]["structure"]
+            else:
+                structure = task_doc.input.structure or task_doc.output.structure
         else:
+            inputs = task_doc.input
+            calcs_reversed = None
             structure = task_doc.input.structure or task_doc.output.structure
 
         if isinstance(structure, dict):
@@ -195,11 +201,12 @@ class ValidationDoc(EmmetBaseModel):
                 if _u_value_checks(task_doc, valid_input_set, warnings):
                     reasons.append(DeprecationMessage.LDAU)
 
-                # Check the max upwards SCF step
-                if _scf_upward_check(
-                    calcs_reversed, inputs, data, max_allowed_scf_gradient, warnings
-                ):
-                    reasons.append(DeprecationMessage.MAX_SCF)
+                if calcs_reversed:
+                    # Check the max upwards SCF step
+                    if _scf_upward_check(
+                        calcs_reversed, inputs, data, max_allowed_scf_gradient, warnings
+                    ):
+                        reasons.append(DeprecationMessage.MAX_SCF)
 
                 # Check for Am and Po elements. These currently do not have proper elemental entries
                 # and will not get treated properly by the thermo builder.
@@ -207,8 +214,13 @@ class ValidationDoc(EmmetBaseModel):
                     reasons.append(DeprecationMessage.MANUAL)
 
                 # Check for magmom anomalies for specific elements
-                if _magmom_check(calcs_reversed, structure, max_magmoms=max_magmoms):
+                if _magmom_check(
+                    calcs_reversed or task_doc.output,
+                    structure,
+                    max_magmoms=max_magmoms,
+                ):
                     reasons.append(DeprecationMessage.MAG)
+
             else:
                 if "Unrecognized" in str(calc_type):
                     reasons.append(DeprecationMessage.UNKNOWN)
@@ -225,6 +237,8 @@ class ValidationDoc(EmmetBaseModel):
             warnings=warnings,
             nelements=nelements,
             symmetry_number=symmetry_number,
+            chemsys=chemsys,
+            formula_pretty=formula_pretty,
         )
 
         return doc
@@ -359,7 +373,8 @@ def _potcar_stats_check(
 
     try:
         potcar_details = task_doc.calcs_reversed[0].model_dump()["input"]["potcar_spec"]
-
+    except AttributeError:
+        potcar_details = task_doc.input.model_dump()["potcar_spec"]
     except KeyError:
         # Assume it is an old calculation without potcar_spec data and treat it as passing POTCAR hash check
         return False
@@ -436,20 +451,27 @@ def _potcar_stats_check(
 
 
 def _magmom_check(
-    calcs_reversed: list, structure: Structure, max_magmoms: dict[str, float]
+    calc: list | CoreCalculationOutput,
+    structure: Structure,
+    max_magmoms: dict[str, float],
 ):
     """
     Checks for maximum magnetization values for specific elements.
     Returns True if the maximum absolute value outlined below is exceded for the associated element.
     """
-    if (outcar := calcs_reversed[0]["output"]["outcar"]) and (
-        mag_info := outcar.get("magnetization", [])
-    ):
+
+    if isinstance(calc, CoreCalculationOutput):
+        outcar = calc.outcar
+    else:
+        outcar = calc[0]["output"]["outcar"]
+
+    if outcar and (mag_info := outcar.get("magnetization", [])):
         return any(
             abs(mag_info[isite].get("tot", 0.0))
             > abs(max_magmoms.get(site.label, np.inf))
             for isite, site in enumerate(structure)
         )
+
     return False
 
 

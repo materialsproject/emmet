@@ -1,8 +1,9 @@
 import os
 
-from maggma.stores import MongoURIStore, S3Store
+from pymongo import AsyncMongoClient
 
 from emmet.api.core.settings import MAPISettings
+from emmet.api.resource.utils import CollectionWithKey
 
 resources = {}
 
@@ -19,12 +20,9 @@ if db_uri:
     if len(db_uri.split("://", 1)) < 2:
         db_uri = "mongodb+srv://" + db_uri
 
-    task_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_dev",
-        key="task_id",
-        collection_name="msdefect_defect_tasks",
-    )
+    mongo_client = AsyncMongoClient(db_uri)
+    db = mongo_client["mp_dev"]
+    task_store = CollectionWithKey(db["msdefect_defect_tasks"], "task_id")
 else:
     raise RuntimeError("Must specify MongoDB URI containing inputs.")
 

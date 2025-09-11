@@ -4,12 +4,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, TypeVar
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Molecule, Structure
 
-from emmet.core.base import EmmetBaseModel
 from emmet.core.symmetry import PointGroupData, SymmetryData
 from emmet.core.utils import get_graph_hash
 
@@ -25,7 +24,7 @@ except Exception:
     openbabel = None
 
 
-class StructureMetadata(EmmetBaseModel):
+class StructureMetadata(BaseModel):
     """Mix-in class for structure metadata."""
 
     # Structure metadata
@@ -113,7 +112,7 @@ class StructureMetadata(EmmetBaseModel):
             "chemsys": "-".join(elsyms),
         }
 
-        return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)
+        return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)  # type: ignore[arg-type]
 
     @classmethod
     def from_structure(
@@ -162,7 +161,7 @@ class StructureMetadata(EmmetBaseModel):
         return cls(**kwargs)
 
 
-class MoleculeMetadata(EmmetBaseModel):
+class MoleculeMetadata(BaseModel):
     """Mix-in class for molecule metadata."""
 
     charge: int | None = Field(None, description="Charge of the molecule")
@@ -274,7 +273,7 @@ class MoleculeMetadata(EmmetBaseModel):
             "chemsys": "-".join(elsyms),
         }
 
-        return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)
+        return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)  # type: ignore[arg-type]
 
     @classmethod
     def from_molecule(

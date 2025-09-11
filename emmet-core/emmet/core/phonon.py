@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
 from enum import Enum
 from functools import cached_property
 from pathlib import Path
@@ -22,14 +21,15 @@ from pymatgen.phonon.dos import CompletePhononDos
 from pymatgen.phonon.dos import PhononDos as PhononDosObject
 from typing_extensions import Literal
 
-from emmet.core.band_theory import BandStructure
+from emmet.core.band_theory import BandTheoryBase, BandStructure
 from emmet.core.base import CalcMeta
-from emmet.core.common import convert_datetime
 from emmet.core.math import Matrix3D, Tensor4R, Vector3D
-from emmet.core.mpid import AlphaID, MPID
+from emmet.core.types.typing import IdentifierType
 from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
 from emmet.core.structure import StructureMetadata
-from emmet.core.utils import DocEnum, get_num_formula_units, utcnow, requires_arrow
+from emmet.core.types.enums import DocEnum
+from emmet.core.types.typing import DateTimeType, FSPathType
+from emmet.core.utils import get_num_formula_units, requires_arrow
 
 try:
     import pyarrow as pa
@@ -63,7 +63,7 @@ class PhononMethod(Enum):
     PHEASY = "pheasy"
 
 
-class PhononDOS(BaseModel):
+class PhononDOS(BandTheoryBase):
     """Define schema of pymatgen phonon density of states."""
 
     frequencies: list[float] = Field(description="The phonon frequencies in THz.")
@@ -71,22 +71,15 @@ class PhononDOS(BaseModel):
     projected_densities: list[list[float]] | None = Field(
         None, description="The projected phonon density of states."
     )
-    structure: Structure | None = Field(
-        None, description="The structure associated with this DOS."
-    )
 
     @model_validator(mode="before")
     @classmethod
-    def rehydrate(cls, config: Any) -> Any:
+    def deserialize_pmg(cls, config: Any) -> Any:
         """Correctly parse pymatgen-like keys."""
         if config.get("pdos"):
             config["projected_densities"] = config.pop("pdos")
 
-        # legacy data contains abipy structure objects
-        if (struct := config.get("structure")) and not isinstance(struct, Structure):
-            config["structure"] = Structure.from_dict(struct)
-
-        return config
+        return super(PhononDOS, cls).deserialize_pmg(config)  # type: ignore[operator]
 
     @cached_property
     def to_pmg(self) -> PhononDosObject | CompletePhononDos:
@@ -100,36 +93,17 @@ class PhononDOS(BaseModel):
             )
         return dos
 
-    @requires_arrow
-    def to_arrow(self, col_prefix: str | None = None) -> ArrowTable:
-        """Convert PhononDOS to a pyarrow Table."""
-        col_prefix = col_prefix or ""
-        config = {
-            f"{col_prefix}{k}": [getattr(self, k)]
-            for k in (
-                "frequencies",
-                "densities",
-                "projected_densities",
-            )
-        }
-        config[f"{col_prefix}structure"] = [
-            json.dumps(self.structure.as_dict()) if self.structure else None
-        ]
-        return pa.Table.from_pydict(config)
-
     @classmethod
-    @requires_arrow
-    def from_arrow(cls, table: ArrowTable, col_prefix: str | None = None) -> Self:
-        """Create a PhononDOS from a pyarrow Table."""
-        col_prefix = col_prefix or ""
-        config = {k: table[f"{col_prefix}{k}"].to_pylist()[0] for k in cls.model_fields}
-        if structure_str := config.pop("structure"):
-            config["structure"] = Structure.from_dict(json.loads(structure_str))
-        return cls(**config)
+    def from_phonopy(
+        cls,
+        phonon_dos_file: FSPathType,
+    ) -> Self:
+        """Create a PhononDOS from phonopy .dat output.
 
-    @classmethod
-    def from_phonopy(cls, phonon_dos_file: str | Path) -> Self:
-        """Create a PhononDOS from phonopy .dat output."""
+        Parameters
+        -----------
+        phonon_dos_file (FSPathType) : path to total_dos.dat
+        """
         phonopy_dos: dict[str, Any] = {
             k: []
             for k in (
@@ -143,6 +117,11 @@ class PhononDOS(BaseModel):
                 if len(cols := non_comment_text.split()) == 2:
                     phonopy_dos["frequencies"].append(float(cols[0]))
                     phonopy_dos["densities"].append(float(cols[1]))
+                elif len(cols) > 2:
+                    raise ValueError(
+                        f"File {phonon_dos_file} does not have the correct "
+                        "phonopy total_dos.dat format."
+                    )
 
         return cls(**phonopy_dos)
 
@@ -300,7 +279,7 @@ class PhononBS(BandStructure):
         return cls(**config)
 
     @classmethod
-    def from_phonopy(cls, phonon_bandstructure_file: str | Path):
+    def from_phonopy(cls, phonon_bandstructure_file: FSPathType):
         """Create a PhononBS from phonopy .yaml output."""
         with zopen(phonon_bandstructure_file, "rt") as f:
             phonopy_bandstructure = yaml.safe_load(f.read())
@@ -366,8 +345,7 @@ class PhononBSDOSTask(StructureMetadata):
         None, description="Force constants between every pair of atoms in the structure"
     )
 
-    last_updated: datetime = Field(
-        default_factory=utcnow,
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation for this Material document.",
     )
 
@@ -431,10 +409,6 @@ class PhononBSDOSTask(StructureMetadata):
         }.items():
             if config.get(k):
                 config[v] = config.pop(k)
-
-        # Make sure that the datetime field is properly formatted
-        if config.get("last_updated"):
-            config["last_updated"] = convert_datetime(cls, config["last_updated"])
 
         if (ph_bs := config.get("phonon_bandstructure")) and not config.get(
             "structure"
@@ -700,13 +674,13 @@ class PhononBSDOSTask(StructureMetadata):
     @classmethod
     def from_phonopy_pheasy_files(
         cls,
-        structure_file: str | Path,
-        phonon_bandstructure_file: str | Path | None = None,
-        phonon_dos_file: str | Path | None = None,
-        force_constants_file: str | Path | None = None,
-        born_file: str | Path | None = None,
-        epsilon_static_file: str | Path | None = None,
-        phonopy_output_file: str | Path | None = None,
+        structure_file: FSPathType,
+        phonon_bandstructure_file: FSPathType | None = None,
+        phonon_dos_file: FSPathType | None = None,
+        force_constants_file: FSPathType | None = None,
+        born_file: FSPathType | None = None,
+        epsilon_static_file: FSPathType | None = None,
+        phonopy_output_file: FSPathType | None = None,
         **kwargs,
     ) -> Self:
         """
@@ -793,7 +767,7 @@ class PhononBSDOSTask(StructureMetadata):
 class PhononBSDOSDoc(PhononBSDOSTask):
     """Built data version of PhononBSDOSTask."""
 
-    material_id: MPID | AlphaID | None = Field(
+    material_id: IdentifierType | None = Field(
         None,
         description="The Materials Project ID of the material, of the form mp-******.",
     )
@@ -883,14 +857,12 @@ class PhononWebsiteBS(BaseModel):
         description="Phononwebsite dictionary to plot the animated " "phonon modes.",
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=utcnow,
     )
 
-    created_at: datetime = Field(
+    created_at: DateTimeType = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=utcnow,
     )
 
 
@@ -911,14 +883,12 @@ class Ddb(BaseModel):
 
     ddb: str | None = Field(None, description="The string of the DDB file.")
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=utcnow,
     )
 
-    created_at: datetime = Field(
+    created_at: DateTimeType = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=utcnow,
     )
 
 
@@ -1012,14 +982,12 @@ class Phonon(StructureMetadata):
         None, description="The vibrational contributions to the total energy."
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="Timestamp for when this document was last updated",
-        default_factory=utcnow,
     )
 
-    created_at: datetime = Field(
+    created_at: DateTimeType = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=utcnow,
     )
 
 
@@ -1071,14 +1039,12 @@ class SoundVelocity(BaseModel):
         "None if not correctly identified.",
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="Timestamp for when this document was last updated",
-        default_factory=utcnow,
     )
 
-    created_at: datetime = Field(
+    created_at: DateTimeType = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=utcnow,
     )
 
 
@@ -1094,14 +1060,12 @@ class ThermalDisplacement(BaseModel):
         "This comes in the form: mp-******",
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=utcnow,
     )
 
-    created_at: datetime = Field(
+    created_at: DateTimeType = Field(
         description="Timestamp for when this material document was first created",
-        default_factory=utcnow,
     )
 
     nsites: int = Field(

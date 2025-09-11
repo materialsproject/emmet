@@ -1,8 +1,9 @@
 import os
 
-from maggma.stores import MongoURIStore
+from pymongo import AsyncMongoClient
 
 from emmet.api.core.settings import MAPISettings
+from emmet.api.resource.utils import CollectionWithKey
 
 resources = {}
 
@@ -22,212 +23,51 @@ if db_uri:
     if len(db_uri_tasks.split("://", 1)) < 2:
         db_uri_tasks = "mongodb+srv://" + db_uri_tasks
 
-    materials_store = MongoURIStore(
-        uri=db_uri,
-        database=f"mp_core_{db_suffix}",
-        key="material_id",
-        collection_name="materials",
-    )
+    mongo_client = AsyncMongoClient(db_uri)
+    suffix_db = mongo_client[f"mp_core_{db_suffix}"]
+    core_db = mongo_client["mp_core"]
+    consumer_db = mongo_client["mp_consumers"]
 
-    absorption_store = MongoURIStore(
-        uri=db_uri,
-        database=f"mp_core_{db_suffix}",
-        key="material_id",
-        collection_name="absorption",
+    materials_store = CollectionWithKey(suffix_db["materials"])
+    absorption_store = CollectionWithKey(suffix_db["absorption"])
+    bonds_store = CollectionWithKey(suffix_db["bonds"])
+    chemenv_store = CollectionWithKey(suffix_db["chemenv"])
+    thermo_store = CollectionWithKey(suffix_db["thermo"], "thermo_id")
+    dielectric_store = CollectionWithKey(suffix_db["dielectric"])
+    piezoelectric_store = CollectionWithKey(suffix_db["piezoelectric"])
+    magnetism_store = CollectionWithKey(suffix_db["magnetism"])
+    phonon_bs_store = CollectionWithKey(suffix_db["phonon"])
+    elasticity_store = CollectionWithKey(suffix_db["elasticity"])
+    formula_autocomplete_store = CollectionWithKey(
+        core_db["formula_autocomplete"], "_id"
     )
+    task_store = CollectionWithKey(core_db["tasks"], "task_id")
+    eos_store = CollectionWithKey(core_db["eos"], "task_id")
+    similarity_store = CollectionWithKey(core_db["similarity"])
+    xas_store = CollectionWithKey(core_db["xas"], "spectrum_id")
+    gb_store = CollectionWithKey(core_db["grain_boundaries"], "task_id")
+    fermi_store = CollectionWithKey(core_db["fermi_surface"], "task_id")
+    doi_store = CollectionWithKey(core_db["dois"])
+    substrates_store = CollectionWithKey(core_db["substrates"], "film_id")
+    surface_props_store = CollectionWithKey(core_db["surface_properties"], "task_id")
+    robo_store = CollectionWithKey(suffix_db["robocrys"])
+    synth_store = CollectionWithKey(core_db["synth_descriptions"], "_id")
+    insertion_electrodes_store = CollectionWithKey(
+        suffix_db["insertion_electrodes"], "battery_id"
+    )
+    conversion_electrodes_store = CollectionWithKey(
+        suffix_db["conversion_electrodes"], "battery_id"
+    )
+    oxi_states_store = CollectionWithKey(suffix_db["oxi_states"])
+    provenance_store = CollectionWithKey(suffix_db["provenance"])
+    alloy_pairs_store = CollectionWithKey(suffix_db["alloys"], "pair_id")
+    summary_store = CollectionWithKey(suffix_db["summary"])
+    es_store = CollectionWithKey(suffix_db["electronic_structure"])
+    mpcomplete_store = CollectionWithKey(consumer_db["mpcomplete"], "submission_id")
+    consumer_settings_store = CollectionWithKey(consumer_db["settings"], "consumer_id")
+    messages_store = CollectionWithKey(consumer_db["messages"], "title")
+    general_store = CollectionWithKey(consumer_db["general_store"], "submission_id")
 
-    bonds_store = MongoURIStore(
-        uri=db_uri,
-        database=f"mp_core_{db_suffix}",
-        key="material_id",
-        collection_name="bonds",
-    )
-
-    chemenv_store = MongoURIStore(
-        uri=db_uri,
-        database=f"mp_core_{db_suffix}",
-        key="material_id",
-        collection_name="chemenv",
-    )
-
-    formula_autocomplete_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_core",
-        key="_id",
-        collection_name="formula_autocomplete",
-    )
-
-    task_store = MongoURIStore(
-        uri=db_uri_tasks, database="mp_core", key="task_id", collection_name="tasks"
-    )
-
-    thermo_store = MongoURIStore(
-        uri=db_uri,
-        database=f"mp_core_{db_suffix}",
-        key="thermo_id",
-        collection_name="thermo",
-    )
-
-    dielectric_store = MongoURIStore(
-        uri=db_uri,
-        database=f"mp_core_{db_suffix}",
-        key="material_id",
-        collection_name="dielectric",
-    )
-
-    piezoelectric_store = MongoURIStore(
-        uri=db_uri,
-        database=f"mp_core_{db_suffix}",
-        key="material_id",
-        collection_name="piezoelectric",
-    )
-
-    magnetism_store = MongoURIStore(
-        uri=db_uri,
-        database=f"mp_core_{db_suffix}",
-        key="material_id",
-        collection_name="magnetism",
-    )
-
-    phonon_bs_store = MongoURIStore(
-        uri=db_uri,
-        database=f"mp_core_{db_suffix}",
-        key="material_id",
-        collection_name="phonon",
-    )
-
-    eos_store = MongoURIStore(
-        uri=db_uri, database="mp_core", key="task_id", collection_name="eos"
-    )
-
-    similarity_store = MongoURIStore(
-        uri=db_uri, database="mp_core", key="material_id", collection_name="similarity"
-    )
-
-    xas_store = MongoURIStore(
-        uri=db_uri, database="mp_core", key="spectrum_id", collection_name="xas"
-    )
-
-    gb_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_core",
-        key="task_id",
-        collection_name="grain_boundaries",
-    )
-
-    fermi_store = MongoURIStore(
-        uri=db_uri, database="mp_core", key="task_id", collection_name="fermi_surface"
-    )
-
-    elasticity_store = MongoURIStore(
-        uri=db_uri,
-        database=f"mp_core_{db_suffix}",
-        key="material_id",
-        collection_name="elasticity",
-    )
-
-    doi_store = MongoURIStore(
-        uri=db_uri, database="mp_core", key="material_id", collection_name="dois"
-    )
-
-    substrates_store = MongoURIStore(
-        uri=db_uri, database="mp_core", key="film_id", collection_name="substrates"
-    )
-
-    surface_props_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_core",
-        key="task_id",
-        collection_name="surface_properties",
-    )
-
-    robo_store = MongoURIStore(
-        uri=db_uri,
-        database=f"mp_core_{db_suffix}",
-        key="material_id",
-        collection_name="robocrys",
-    )
-
-    synth_store = MongoURIStore(
-        uri=db_uri, database="mp_core", key="_id", collection_name="synth_descriptions"
-    )
-
-    insertion_electrodes_store = MongoURIStore(
-        uri=db_uri,
-        database=f"mp_core_{db_suffix}",
-        key="battery_id",
-        collection_name="insertion_electrodes",
-    )
-
-    conversion_electrodes_store = MongoURIStore(
-        uri=db_uri,
-        database=f"mp_core_{db_suffix}",
-        key="battery_id",
-        collection_name="conversion_electrodes",
-    )
-
-    oxi_states_store = MongoURIStore(
-        uri=db_uri,
-        database=f"mp_core_{db_suffix}",
-        key="material_id",
-        collection_name="oxi_states",
-    )
-
-    provenance_store = MongoURIStore(
-        uri=db_uri,
-        database=f"mp_core_{db_suffix}",
-        key="material_id",
-        collection_name="provenance",
-    )
-
-    alloy_pairs_store = MongoURIStore(
-        uri=db_uri,
-        database=f"mp_core_{db_suffix}",
-        key="pair_id",
-        collection_name="alloys",
-    )
-
-    summary_store = MongoURIStore(
-        uri=db_uri,
-        database=f"mp_core_{db_suffix}",
-        key="material_id",
-        collection_name="summary",
-    )
-
-    es_store = MongoURIStore(
-        uri=db_uri,
-        database=f"mp_core_{db_suffix}",
-        key="material_id",
-        collection_name="electronic_structure",
-    )
-
-    mpcomplete_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_consumers",
-        key="submission_id",
-        collection_name="mpcomplete",
-    )
-
-    consumer_settings_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_consumers",
-        key="consumer_id",
-        collection_name="settings",
-    )
-
-    general_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_consumers",
-        key="submission_id",
-        collection_name="general_store",
-    )
-
-    messages_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_consumers",
-        key="title",
-        collection_name="messages",
-    )
 else:
     raise RuntimeError("Must specify MongoDB URI containing inputs.")
 
