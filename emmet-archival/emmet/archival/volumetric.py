@@ -51,11 +51,11 @@ class VolumetricArchive(Archiver, ChgcarLike):
 
     def to_arrow(self) -> pa.Table:
         config = {}
-        for k in VolumetricLabel:
+        for k in VolumetricLabel:  # type: ignore[attr-defined]
             config[f"data_{k.value}"] = pa.array([[self.data.get(k, None)]])
 
         if self.data_aug:
-            for k in VolumetricLabel:
+            for k in VolumetricLabel:  # type: ignore[attr-defined]
                 if vals := self.data_aug.get(k, None):
                     config[f"data_aug_{k.value}"] = pa.array(
                         [[x.model_dump() for x in vals]]
@@ -63,7 +63,7 @@ class VolumetricArchive(Archiver, ChgcarLike):
                 else:
                     config[f"data_aug_{k.value}"] = pa.array([[None]])
         else:
-            for k in VolumetricLabel:
+            for k in VolumetricLabel:  # type: ignore[attr-defined]
                 config[f"data_aug_{k.value}"] = pa.array([[None]])
 
         crystal_archive = CrystalArchive.from_pmg(self.structure)
@@ -76,7 +76,7 @@ class VolumetricArchive(Archiver, ChgcarLike):
         cls_config: dict[str, Any] = {}
         for data_key in ("data", "data_aug"):
             cls_config[data_key] = {}
-            for vlab in VolumetricLabel:
+            for vlab in VolumetricLabel:  # type: ignore[attr-defined]
                 comp_key = f"{data_key}_{vlab.value}"
                 if comp_key in table.column_names:
                     cls_config[data_key][vlab.value] = table[comp_key].to_pylist()[0]
