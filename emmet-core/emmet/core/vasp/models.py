@@ -117,7 +117,11 @@ class ChgcarLike(BaseModel):
         return cls(
             data={VolumetricLabel(k): v.tolist() for k, v in vd.data.items()},
             data_aug=cls.parse_augmentation_charge_data(vd.data_aug) or None,  # type: ignore[arg-type]
-            structure=vd.structure,
+            structure=(
+                vd.structure
+                if isinstance(vd.structure, Structure)
+                else Structure.from_dict(vd.structure.as_dict())
+            ),
         )
 
     def to_pmg(self, pmg_cls: Callable = PmgVolumetricData) -> PmgVolumetricData:

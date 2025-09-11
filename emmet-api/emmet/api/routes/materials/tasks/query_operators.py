@@ -102,9 +102,10 @@ class TrajectoryQuery(QueryOperator):
         d = [
             {
                 "task_id": doc["task_id"],
-                "trajectories": jsanitize(
-                    calcs_reversed_to_trajectory(doc["calcs_reversed"])
-                ),
+                "trajectories": [
+                    traj.model_dump(mode="json")
+                    for traj in calcs_reversed_to_trajectory(doc["calcs_reversed"])
+                ],
             }
             for doc in docs
         ]
