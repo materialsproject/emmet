@@ -186,13 +186,13 @@ mrcfile==1.5.4
     # via griddataformats
 msgpack==1.1.1
     # via mmtf-python
-mypy==1.17.1
+mypy==1.18.1
     # via emmet-core (setup.py)
 mypy-extensions==1.1.0
     # via
     #   emmet-core (setup.py)
     #   mypy
-narwhals==2.4.0
+narwhals==2.5.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -347,7 +347,7 @@ pymdown-extensions==10.16.1
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.14.1
+pymongo==4.15.0
     # via matminer
 pyparsing==3.2.3
     # via
@@ -405,7 +405,7 @@ scikit-learn==1.7.2
     # via
     #   matcalc
     #   matminer
-scipy==1.16.1
+scipy==1.16.2
     # via
     #   ase
     #   griddataformats
@@ -454,7 +454,7 @@ threadpoolctl==3.6.0
     #   scikit-learn
 tidynamics==1.1.2
     # via transport-analysis
-tifffile==2025.8.28
+tifffile==2025.9.9
     # via scikit-image
 tornado==6.5.2
     # via livereload

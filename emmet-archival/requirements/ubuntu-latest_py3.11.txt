@@ -42,7 +42,7 @@ monty==2025.3.3
     #   pymatgen
 mpmath==1.3.0
     # via sympy
-narwhals==2.4.0
+narwhals==2.5.0
     # via plotly
 networkx==3.5
     # via pymatgen
@@ -125,7 +125,7 @@ ruamel-yaml==0.18.15
     #   pymatgen
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-scipy==1.16.1
+scipy==1.16.2
     # via pymatgen
 six==1.17.0
     # via python-dateutil
