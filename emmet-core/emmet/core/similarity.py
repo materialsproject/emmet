@@ -122,11 +122,17 @@ class SimilarityScorer:
         """
         raise NotImplementedError
 
-    def _post_process_distance(self, distances: np.ndarray) -> np.ndarray:
-        """Optional postprocessing to be implemented by the user.
+    def _post_process_distance(
+        self,
+        distances: np.ndarray,
+    ) -> np.ndarray:
+        """Postprocess vector distances to yield consistent similarity scores.
 
-        This can allow for weighting the difference in structural feature vectors.
-        See CrystalNNSimilarity for an example.
+        This method should return a percentage where 0% indicates no
+        similarity, and 100% indicates identical structures.
+
+        Defaults to normalizing vector distances by tanh.
+        See CrystalNNSimilarity for another example.
 
         Parameters
         -----------
@@ -136,7 +142,7 @@ class SimilarityScorer:
         -----------
         np.ndarray
         """
-        return distances
+        return 100 * np.tanh(distances)
 
     def featurize_structures(
         self,
