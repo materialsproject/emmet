@@ -12,6 +12,9 @@ from pymatgen.core.tensors import Tensor
 from emmet.core.material_property import PropertyDoc
 from emmet.core.math import Matrix3D
 from emmet.core.settings import EmmetSettings
+from emmet.core.types.pymatgen_types.ir_dielectric_tensor_adapter import (
+    IRDielectricTensorType,
+)
 
 if TYPE_CHECKING:
     from pymatgen.core.structure import Structure
@@ -171,6 +174,6 @@ class IRDielectric(BaseModel):
     A block for the pymatgen IRDielectricTensor object
     """
 
-    ir_dielectric_tensor: dict | None = Field(
+    ir_dielectric_tensor: IRDielectricTensorType | None = Field(
         None, description="Serialized version of a pymatgen IRDielectricTensor object."
     )

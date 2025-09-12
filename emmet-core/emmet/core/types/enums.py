@@ -15,18 +15,21 @@ one module, can and should remain in that module.
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 from enum import Enum
+from typing import TYPE_CHECKING
 
-from pydantic_core import core_schema, CoreSchema
+from pydantic_core import CoreSchema, core_schema
 
 if TYPE_CHECKING:
     from typing import Any
-    from typing_extensions import Self
 
-    from pydantic import GetJsonSchemaHandler
-    from pydantic.json_schema import JsonSchemaValue
+    from pydantic import (
+        GetCoreSchemaHandler,
+        GetJsonSchemaHandler,
+        JsonSchemaValue,
+        Self,
+    )
 
 
 class ValueEnum(Enum):
@@ -57,10 +60,23 @@ class ValueEnum(Enum):
 
     @classmethod
     def __get_pydantic_core_schema__(
-        cls, source: Any, handler: core_schema.CoreSchema
+        cls, _source_type: Any, _handler: GetCoreSchemaHandler
     ) -> core_schema.CoreSchema:
-        """Ensure pydantic serialization."""
-        return core_schema.with_info_plain_validator_function(cls.validate)
+        """Ensure pydantic (de)serialization."""
+
+        from_str_schema = core_schema.chain_schema(
+            [
+                core_schema.str_schema(),
+                core_schema.with_info_plain_validator_function(cls.validate),
+            ]
+        )
+        return core_schema.json_or_python_schema(
+            json_schema=from_str_schema,
+            python_schema=from_str_schema,
+            serialization=core_schema.plain_serializer_function_ser_schema(
+                lambda instance: instance.value
+            ),
+        )
 
     @classmethod
     def __get_pydantic_json_schema__(
@@ -149,3 +165,12 @@ class TaskState(ValueEnum):
     SUCCESS = "successful"
     FAILED = "failed"
     ERROR = "error"
+
+
+class BatteryType(str, ValueEnum):
+    """
+    Enum for battery type
+    """
+
+    insertion = "insertion"
+    conversion = "conversion"

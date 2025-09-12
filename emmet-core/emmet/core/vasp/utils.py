@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from collections import defaultdict
-import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 

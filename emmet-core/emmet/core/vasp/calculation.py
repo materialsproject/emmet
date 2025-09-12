@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 from datetime import datetime
@@ -10,10 +11,16 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
 from pymatgen.command_line.bader_caller import bader_analysis_from_path
 from pymatgen.command_line.chargemol_caller import ChargemolAnalysis
-from pymatgen.core.lattice import Lattice
 from pymatgen.core.structure import Structure
 from pymatgen.core.trajectory import Trajectory
 from pymatgen.electronic_structure.bandstructure import BandStructure
@@ -22,9 +29,15 @@ from pymatgen.electronic_structure.dos import CompleteDos, Dos
 from pymatgen.io.vasp import BSVasprun, Kpoints, Locpot, Oszicar, Outcar, Poscar
 from pymatgen.io.vasp import Potcar as VaspPotcar
 from pymatgen.io.vasp import PotcarSingle, Vasprun, VolumetricData
+from typing_extensions import NotRequired, TypedDict
 
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
-from emmet.core.types.enums import VaspObject, StoreTrajectoryOption, TaskState
+from emmet.core.types.enums import StoreTrajectoryOption, TaskState, VaspObject
+from emmet.core.types.pymatgen_types.kpoints_adapter import KpointsType
+from emmet.core.types.pymatgen_types.lattice_adapter import LatticeType
+from emmet.core.types.pymatgen_types.outcar_adapter import OutcarType
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
+from emmet.core.utils import jsanitize, type_override
 from emmet.core.vasp.calc_types import (
     CalcType,
     RunType,
@@ -36,6 +49,7 @@ from emmet.core.vasp.calc_types import (
 
 if TYPE_CHECKING:
     from typing_extensions import Self
+
 
 logger = logging.getLogger(__name__)
 
@@ -57,13 +71,37 @@ class CalculationBaseModel(BaseModel):
         return getattr(self, key, default_value)
 
 
+class TypedStatisticsDict(TypedDict):
+    MEAN: float
+    ABSMEAN: float
+    VAR: float
+    MIN: float
+    MAX: float
+
+
+class TypedPotcarKeywordsDict(TypedDict):
+    header: list[str]
+    data: list[str]
+
+
+class TypedPotcarStatsDict(TypedDict):
+    header: TypedStatisticsDict
+    data: TypedStatisticsDict
+
+
+class TypedPotcarSummaryStatsDict(TypedDict):
+    keywords: NotRequired[TypedPotcarKeywordsDict | None]
+    stats: NotRequired[TypedPotcarStatsDict | None]
+
+
 class PotcarSpec(BaseModel):
     """Document defining a VASP POTCAR specification."""
 
     titel: str | None = Field(None, description="TITEL field from POTCAR header")
     hash: str | None = Field(None, description="md5 hash of POTCAR file")
-    summary_stats: dict | None = Field(
-        None, description="summary statistics used to ID POTCARs without hashing"
+    summary_stats: TypedPotcarSummaryStatsDict | None = Field(
+        None,
+        description="summary statistics used to ID POTCARs without hashing",
     )
 
     @classmethod
@@ -121,6 +159,7 @@ class PotcarSpec(BaseModel):
         return cls.from_potcar(VaspPotcar.from_file(str(file_path)))
 
 
+@type_override({"incar": str, "parameters": str})
 class CalculationInput(CalculationBaseModel):
     """Document defining VASP calculation inputs.
 
@@ -136,7 +175,7 @@ class CalculationInput(CalculationBaseModel):
     incar: dict[str, Any] | None = Field(
         None, description="INCAR parameters for the calculation"
     )
-    kpoints: Kpoints | None = Field(None, description="KPOINTS for the calculation")
+    kpoints: KpointsType | None = Field(None, description="KPOINTS for the calculation")
     nkpoints: int | None = Field(None, description="Total number of k-points")
     potcar_spec: list[PotcarSpec] | None = Field(
         None, description="Title and hash of POTCAR files used in the calculation"
@@ -148,16 +187,45 @@ class CalculationInput(CalculationBaseModel):
         None, description="List of POTCAR functional types."
     )
     parameters: dict | None = Field(None, description="Parameters from vasprun")
-    lattice_rec: Lattice | None = Field(
+    lattice_rec: LatticeType | None = Field(
         None, description="Reciprocal lattice of the structure"
     )
-    structure: Structure | None = Field(
+    structure: StructureType | None = Field(
         None, description="Input structure for the calculation"
     )
     is_hubbard: bool = Field(
         default=False, description="Is this a Hubbard +U calculation"
     )
-    hubbards: dict | None = Field(None, description="The hubbard parameters used")
+    hubbards: dict[str, float] | None = Field(
+        None, description="The hubbard parameters used"
+    )
+
+    @field_validator("hubbards", mode="before")
+    def hubbards_deserializer(cls, hubbards):
+        if isinstance(hubbards, list):
+            hubbards = {k: v for k, v in hubbards}
+
+        return hubbards
+
+    @field_serializer("incar", "parameters", mode="wrap")
+    def incar_params_serializer(self, d, default_serializer, info):
+        default_serialized_object = default_serializer(d, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            return json.dumps(default_serialized_object)
+
+        return default_serialized_object
+
+    @field_validator("incar", "parameters", mode="before")
+    def incar_params_deserializer(cls, d):
+        if isinstance(d, str):
+            d = json.loads(d)
+
+        if d and d == "parameters":
+            d = {k.strip(): v for k, v in d.items()}
+
+        return d
 
     @model_validator(mode="before")
     @classmethod
@@ -171,9 +239,6 @@ class CalculationInput(CalculationBaseModel):
         VASP 6.4.3. This will lead to an incorrect return value from RunType.
         This validator will ensure that any already-parsed documents are fixed.
         """
-        config["parameters"] = {
-            k.strip(): v for k, v in (config.get("parameters", {}) or {}).items()
-        }
         if (kpts := config.get("kpoints")) and isinstance(kpts, dict):
             config["kpoints"] = Kpoints.from_dict(kpts)
 
@@ -421,7 +486,7 @@ class ElectronPhononDisplacedStructures(BaseModel):
         description="The temperatures at which the electron phonon displacements "
         "were generated.",
     )
-    structures: list[Structure] | None = Field(
+    structures: list[StructureType] | None = Field(
         None, description="The displaced structures corresponding to each temperature."
     )
 
@@ -466,7 +531,9 @@ class IonicStep(BaseModel):  # type: ignore
     num_electronic_steps: int | None = Field(
         None, description="The number of electronic steps needed to reach convergence."
     )
-    structure: Structure | None = Field(None, description="The structure at this step.")
+    structure: StructureType | None = Field(
+        None, description="The structure at this step."
+    )
 
     model_config = ConfigDict(extra="allow")
 
@@ -526,7 +593,7 @@ class CoreCalculationOutput(BaseModel):
         None, description="Whether the band gap is direct"
     )
     is_metal: bool | None = Field(None, description="Whether the system is metallic")
-    locpot: dict[int, list[float]] | None = Field(
+    locpot: dict[str, list[float]] | None = Field(
         None, description="Average of the local potential along the crystal axes"
     )
     mag_density: float | None = Field(
@@ -534,13 +601,13 @@ class CoreCalculationOutput(BaseModel):
         description="The magnetization density, defined as total_mag/volume "
         "(units of A^-3)",
     )
-    optical_absorption_coeff: list | None = Field(
+    optical_absorption_coeff: list[float] | None = Field(
         None, description="Optical absorption coefficient in cm^-1"
     )
-    outcar: dict[str, Any] | None = Field(
+    outcar: OutcarType | None = Field(
         None, description="Information extracted from the OUTCAR file"
     )
-    structure: Structure | None = Field(
+    structure: StructureType | None = Field(
         None, description="The final structure from the calculation"
     )
     transition: str | None = Field(
@@ -549,6 +616,27 @@ class CoreCalculationOutput(BaseModel):
     vbm: float | None = Field(
         None, description="The valence band maximum in eV (if system is not metallic)"
     )
+
+    @field_validator("dos_properties", mode="before")
+    def dos_properties_deserializer(cls, dos_properties):
+        if dos_properties and isinstance(dos_properties, list):
+            dos_properties = {
+                element: {
+                    orbital: {key: value for key, value in property}
+                    for orbital, property in properties
+                }
+                for element, properties in dos_properties
+            }
+        elif dos_properties and isinstance(next(iter(dos_properties.values())), list):
+            dos_properties = {
+                element: {
+                    orbital: {key: value for key, value in property}
+                    for orbital, property in properties
+                }
+                for element, properties in dos_properties.items()
+            }
+
+        return dos_properties
 
 
 class CalculationOutput(CoreCalculationOutput):
@@ -592,7 +680,6 @@ class CalculationOutput(CoreCalculationOutput):
         locpot: Locpot | None = None,
         elph_poscars: list[Path] | None = None,
         store_trajectory: StoreTrajectoryOption | str = StoreTrajectoryOption.NO,
-        store_onsite_density_matrices: bool = False,
     ) -> Self:
         """
         Create a VASP output document from VASP outputs.
@@ -615,8 +702,6 @@ class CalculationOutput(CoreCalculationOutput):
             Different value tune the amount of data from the ionic_steps
             stored in the Trajectory.
             If not NO, the `ionic_steps` field is left as None.
-        store_onsite_density_matrices
-            Whether to store the onsite density matrices from the OUTCAR.
         Returns
         -------
             The VASP calculation output document.
@@ -649,7 +734,7 @@ class CalculationOutput(CoreCalculationOutput):
         locpot_avg = None
         if locpot:
             locpot_avg = {
-                i: locpot.get_average_along_axis(i).tolist() for i in range(3)
+                str(i): locpot.get_average_along_axis(i).tolist() for i in range(3)
             }
 
         # parse force constants
@@ -673,9 +758,7 @@ class CalculationOutput(CoreCalculationOutput):
 
         if outcar and contcar:
             outcar_dict = outcar.as_dict()
-            outcar_dict.pop("run_stats")
-            if not store_onsite_density_matrices and outcar.has_onsite_density_matrices:
-                outcar_dict.pop("onsite_density_matrices")
+
             # use structure from CONTCAR as it is written to
             # greater precision than in the vasprun
             # but still need to copy the charge over
@@ -762,6 +845,7 @@ class CalculationOutput(CoreCalculationOutput):
         )
 
 
+@type_override({"bader": str, "ddec6": str})
 class Calculation(CalculationBaseModel):
     """Full VASP calculation inputs and outputs."""
 
@@ -771,7 +855,7 @@ class Calculation(CalculationBaseModel):
     vasp_version: str | None = Field(
         None, description="VASP version used to perform the calculation"
     )
-    has_vasp_completed: TaskState | bool | None = Field(
+    has_vasp_completed: TaskState | None = Field(
         None, description="Whether VASP completed the calculation successfully"
     )
     input: CalculationInput | None = Field(
@@ -810,6 +894,30 @@ class Calculation(CalculationBaseModel):
             v = TaskState.SUCCESS if v else TaskState.FAILED
         return v
 
+    @field_serializer("bader", "ddec6", mode="wrap")
+    def bader_ddec6__serializer(self, d, default_serializer, info):
+        default_serialized_object = default_serializer(d, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            return json.dumps(jsanitize(default_serialized_object, allow_bson=True))
+
+        return default_serialized_object
+
+    @field_validator("bader", "ddec6", mode="before")
+    def bader_ddec6_deserializer(cls, d):
+        if isinstance(d, str):
+            d = json.loads(d)
+
+        return d
+
+    @field_validator("output_file_paths", mode="before")
+    def output_fps_deserializer(cls, output_fps):
+        if isinstance(output_fps, list):
+            output_fps = {k: v for k, v in output_fps}
+
+        return output_fps
+
     @classmethod
     def from_vasp_files(
         cls,
@@ -830,7 +938,6 @@ class Calculation(CalculationBaseModel):
         strip_dos_projections: bool = False,
         store_volumetric_data: tuple[str] | None = None,
         store_trajectory: StoreTrajectoryOption | str = StoreTrajectoryOption.NO,
-        store_onsite_density_matrices: bool = False,
         vasprun_kwargs: dict | None = None,
     ) -> tuple["Calculation", dict[VaspObject, dict]]:
         """
@@ -905,8 +1012,6 @@ class Calculation(CalculationBaseModel):
             - NO: Trajectory is not Stored.
             If not NO, :obj:'.CalculationOutput.ionic_steps' is set to None
             to reduce duplicating information.
-        store_onsite_density_matrices
-            Whether to store the onsite density matrices from the OUTCAR.
         vasprun_kwargs
             Additional keyword arguments that will be passed to the Vasprun init.
 
@@ -979,7 +1084,6 @@ class Calculation(CalculationBaseModel):
             locpot=locpot,
             elph_poscars=elph_poscars,
             store_trajectory=store_trajectory,
-            store_onsite_density_matrices=store_onsite_density_matrices,
         )
         if store_trajectory != StoreTrajectoryOption.NO:
             exclude_from_trajectory = set(["structure"])

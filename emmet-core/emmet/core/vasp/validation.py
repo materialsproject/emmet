@@ -2,18 +2,9 @@
 
 from __future__ import annotations
 
-from pydantic import Field
+from typing import TYPE_CHECKING
 
-from emmet.core.vasp.calculation import Calculation
-from emmet.core.base import EmmetBaseModel
-from emmet.core.types.typing import DateTimeType, IdentifierType
-from emmet.core.types.enums import DocEnum
-from emmet.core.vasp.calc_types.enums import CalcType, RunType
-from emmet.core.vasp.utils import FileMetadata, discover_vasp_files
-from emmet.core.vasp.task_valid import TaskDocument
-
-from pymatgen.io.vasp import Incar
-
+from pydantic import BaseModel, ConfigDict, Field
 from pymatgen.io.validation.common import (
     LightOutcar,
     LightVasprun,
@@ -21,13 +12,22 @@ from pymatgen.io.validation.common import (
     VaspFiles,
     VaspInputSafe,
 )
-from pymatgen.io.validation.validation import REQUIRED_VASP_FILES, VaspValidator
+from pymatgen.io.validation.validation import REQUIRED_VASP_FILES
+from pymatgen.io.vasp import Incar
 
-from typing import TYPE_CHECKING
+from emmet.core.base import EmmetBaseModel
+from emmet.core.types.enums import DocEnum
+from emmet.core.types.typing import DateTimeType, IdentifierType
+from emmet.core.vasp.calc_types.enums import CalcType, RunType
+from emmet.core.vasp.calculation import Calculation
+from emmet.core.vasp.task_valid import TaskDocument
+from emmet.core.vasp.utils import FileMetadata, discover_vasp_files
 
 if TYPE_CHECKING:
     from pathlib import Path
+
     from typing_extensions import Self
+
     from emmet.core.tasks import TaskDoc
 
 
@@ -53,7 +53,14 @@ class DeprecationMessage(DocEnum):
     UNKNOWN = "U001", "Cannot validate due to unknown calc type"
 
 
-class ValidationDoc(VaspValidator, EmmetBaseModel):
+class ValidationDataDict(BaseModel):
+    encut_ratio: float | None = Field(None)
+    max_gradient: float | None = Field(None)
+    kspacing_delta: float | None = Field(None)
+    kpts_ratio: float | None = Field(None)
+
+
+class ValidationDoc(EmmetBaseModel):
     """
     Validation document for a VASP calculation
     """
@@ -65,7 +72,18 @@ class ValidationDoc(VaspValidator, EmmetBaseModel):
     last_updated: DateTimeType = Field(
         description="The most recent time when this document was updated.",
     )
-
+    reasons: list[DeprecationMessage | str] | None = Field(
+        None, description="List of deprecation tags detailing why this task isn't valid"
+    )
+    warnings: list[str] = Field(
+        [], description="List of potential warnings about this calculation"
+    )
+    data: ValidationDataDict | None = Field(
+        None,
+        description="Dictioary of data used to perform validation."
+        " Useful for post-mortem analysis",
+    )
+    model_config = ConfigDict(extra="allow")
     nelements: int | None = Field(None, description="Number of elements.")
     symmetry_number: int | None = Field(
         None,
