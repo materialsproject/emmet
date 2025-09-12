@@ -1021,9 +1021,12 @@ def _parse_orig_inputs(
     }
     suffix = suffix or ""
     for filename in dir_name.glob("*".join(f"{suffix}.".split("."))):
-        if "POTCAR.spec" in str(filename):
-            # Can't parse POTCAR.spec files
-            continue
+        if f"POTCAR.spec{suffix}" in str(filename):
+            try:
+                orig_inputs["potcar_spec"] = PotcarSpec.from_file(filename)
+            except Exception:
+                # Can't parse non emmet-core style POTCAR.spec files
+                continue
         for name, vasp_input in input_mapping.items():
             if f"{name}{suffix}" in str(filename):
                 file_suffix = "_spec" if name == "POTCAR" else ""
@@ -1154,6 +1157,7 @@ def _find_vasp_files(
                     "vasprun_file": vasprun_filename,
                     "outcar_file": outcar_filename,
                     "contcar_file": contcar_filename,
+                    "potcar_spec_file": potcar_spec_filename,
                     "volumetric_files": [CHGCAR, LOCPOT, etc]
                     "elph_poscars": [POSCAR.T=300, POSCAR.T=400, etc]
                 },

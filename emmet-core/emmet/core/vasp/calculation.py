@@ -19,6 +19,7 @@ from pydantic import (
     field_validator,
     model_validator,
 )
+from monty.io import zopen
 from pymatgen.command_line.bader_caller import bader_analysis_from_path
 from pymatgen.command_line.chargemol_caller import ChargemolAnalysis
 from pymatgen.core.structure import Structure
@@ -122,7 +123,7 @@ class PotcarSpec(BaseModel):
         return cls(
             titel=potcar_single.TITEL,
             hash=potcar_single.md5_header_hash,
-            summary_stats=potcar_single._summary_stats,
+            summary_stats=potcar_single._summary_stats,  # type: ignore[arg-type]
         )
 
     @classmethod
@@ -156,6 +157,9 @@ class PotcarSpec(BaseModel):
         list[PotcarSpec]
             A list of potcar specs.
         """
+        if ".spec" in str(file_path):
+            with zopen(file_path, "rt") as psf:
+                return [cls(**ps) for ps in json.load(psf)]
         return cls.from_potcar(VaspPotcar.from_file(str(file_path)))
 
 
@@ -346,7 +350,9 @@ class CalculationInput(CalculationBaseModel):
         return (self.parameters or {}).get("MAGMOM", None)
 
     @classmethod
-    def from_vasprun(cls, vasprun: Vasprun) -> Self:
+    def from_vasprun(
+        cls, vasprun: Vasprun, potcar_spec: list[PotcarSpec] | None = None
+    ) -> Self:
         """
         Create a VASP input document from a Vasprun object.
 
@@ -354,6 +360,8 @@ class CalculationInput(CalculationBaseModel):
         ----------
         vasprun
             A vasprun object.
+        potcar_spec : list of dict
+            If specified, the POTCAR spec to override that of vasprun.xml
 
         Returns
         -------
@@ -378,7 +386,7 @@ class CalculationInput(CalculationBaseModel):
             incar=incar,
             kpoints=Kpoints.from_dict(kpoints_dict),
             nkpoints=len(kpoints_dict["actual_kpoints"]),
-            potcar_spec=[PotcarSpec(**ps) for ps in vasprun.potcar_spec],
+            potcar_spec=potcar_spec or [PotcarSpec(**ps) for ps in vasprun.potcar_spec],
             potcar_type=[s.split()[0] for s in vasprun.potcar_symbols],
             parameters=parameters,
             lattice_rec=vasprun.initial_structure.lattice.reciprocal_lattice,
@@ -929,6 +937,7 @@ class Calculation(CalculationBaseModel):
         volumetric_files: list[str] | None = None,
         elph_poscars: list[Path] | None = None,
         oszicar_file: Path | str | None = None,
+        potcar_spec_file: Path | str | None = None,
         parse_dos: str | bool = False,
         parse_bandstructure: str | bool = False,
         average_locpot: bool = True,
@@ -962,6 +971,10 @@ class Calculation(CalculationBaseModel):
             ``PHON_LMC = True``, given relative to dir_name.
         oszicar_file
             Path to the OSZICAR file, relative to dir_name
+        potcar_spec_file : Path | str | None = None
+            Path to a POTCAR.spec file, relative to dir_name.
+            Used in rehydration of a calculation from archived
+            data, where the original POTCAR is not available.
         parse_dos
             Whether to parse the DOS. Can be:
 
@@ -1074,7 +1087,10 @@ class Calculation(CalculationBaseModel):
                 locpot_file = output_file_paths[VaspObject.LOCPOT]  # type: ignore
                 locpot = Locpot.from_file(dir_name / locpot_file)
 
-        input_doc = CalculationInput.from_vasprun(vasprun)
+        potcar_spec: list[PotcarSpec] | None = None
+        if potcar_spec_file:
+            potcar_spec = PotcarSpec.from_file(potcar_spec_file)
+        input_doc = CalculationInput.from_vasprun(vasprun, potcar_spec=potcar_spec)
 
         store_trajectory = StoreTrajectoryOption(store_trajectory)
         output_doc = CalculationOutput.from_vasp_outputs(
