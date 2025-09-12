@@ -25,7 +25,7 @@ def calcs_reversed_to_trajectory(calcs_reversed: list[dict]):
             trajectories.extend(
                 get_trajectories_from_calculations(
                     [Calculation(**calculation)],
-                    traj_class=Trajectory,
+                    traj_class=Trajectory,  # type: ignore[arg-type]
                 )
             )
         else:
