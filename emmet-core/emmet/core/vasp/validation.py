@@ -12,7 +12,7 @@ from pymatgen.io.validation.common import (
     VaspFiles,
     VaspInputSafe,
 )
-from pymatgen.io.validation.validation import REQUIRED_VASP_FILES
+from pymatgen.io.validation.validation import VaspValidator, REQUIRED_VASP_FILES
 from pymatgen.io.vasp import Incar
 
 from emmet.core.base import EmmetBaseModel
@@ -24,6 +24,8 @@ from emmet.core.vasp.task_valid import TaskDocument
 from emmet.core.vasp.utils import FileMetadata, discover_vasp_files
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+    import os
     from pathlib import Path
 
     from typing_extensions import Self
@@ -94,6 +96,25 @@ class ValidationDoc(EmmetBaseModel):
         None, description="The run type of the calculation"
     )
     calc_type: CalcType | None = Field(None, description="The calculation type.")
+
+    @classmethod
+    def from_vasp_input(
+        cls,
+        vasp_file_paths: Mapping[str, str | Path | os.PathLike[str]] | None = None,
+        vasp_files: VaspFiles | None = None,
+        fast: bool = False,
+        check_potcar: bool = True,
+        **kwargs,
+    ):
+        return cls(
+            **VaspValidator.from_vasp_input(
+                vasp_file_paths=vasp_file_paths,
+                vasp_files=vasp_files,
+                fast=fast,
+                check_potcar=check_potcar,
+                **kwargs,
+            ).model_dump()
+        )
 
     @classmethod
     def from_file_metadata(cls, file_meta: list[FileMetadata], **kwargs) -> Self:
