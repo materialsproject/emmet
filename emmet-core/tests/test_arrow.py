@@ -41,6 +41,8 @@ def import_models():
                     continue
 
                 file_name = file[:-3]
+                if file_name == "optimade":
+                    continue
                 module_name = f"{parent_module}.{file_name}"
 
                 for name, obj in inspect.getmembers(
