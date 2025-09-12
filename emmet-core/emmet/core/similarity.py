@@ -169,14 +169,34 @@ class SimilarityScorer:
 
         return np.array(_feature_vectors)
 
-    def get_similarity_scores(
+    def _get_closest_vectors(
+        self, idx: int, v: np.ndarray, num: int
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Return only a subset of vectors most similar to a specified vector.
+
+        Parameters
+        -----------
+        idx : the specific index of the vector list to isolate
+        v : numpy ndarray, the list of vectors
+        num : the number of closest vectors to return
+
+        """
+        dist = np.linalg.norm(v[idx] - v, axis=1)
+        idxs = np.array([j for j in np.argpartition(dist, num) if j != idx])[:num]
+
+        subset_dist = dist[idxs]
+        sorted_subset_idx = np.argsort(subset_dist)
+
+        return idxs[sorted_subset_idx], self._post_process_distance(
+            subset_dist[sorted_subset_idx]
+        )
+
+    def get_all_similarity_scores(
         self,
         structures: list[Structure],
         num_procs: int = 1,
     ) -> tuple[np.ndarray, np.ndarray]:
         """Rank the similarity between structures using CrystalNN.
-
-        This method defines the build pipeline for a similarity database.
 
         Parameters
         -----------
@@ -194,6 +214,99 @@ class SimilarityScorer:
         feature_vectors = self.featurize_structures(structures, num_procs=num_procs)
         distances = vector_difference_matrix(feature_vectors)
         return feature_vectors, self._post_process_distance(distances)
+
+    def get_most_similar(
+        self,
+        feature_vectors: np.ndarray,
+        num_procs: int = 1,
+        num_top: int = 100,
+        labels: list[str] | None = None,
+    ) -> dict[str, dict[str, list[str] | np.ndarray]]:
+        """Rank the similarity between structures using CrystalNN.
+
+        Parameters
+        -----------
+        feature_vectors : list of feature vectors
+        num_procs : int = 1
+            Number of parallel processes to run in featurizing structures.
+        num_top : int or None
+            If an int, returns that number of most similar structures
+            indicated by their indices in the original list.
+            If None, returns all distances.
+        labels : list of str or None
+            If a list of str, the labels corresponding to the feature vectors,
+            e.g., MPIDs.
+            If None, defaults to the list indices.
+
+        Returns
+        -----------
+        dict[int,dict[str,np.ndarray]]], containing the index of
+            the structure in `structures`, with a dict containing
+            the `indices` of the top `num_top` most similar
+            structures and their corresponding `distances`.
+        """
+        wrapped = partial(self._get_closest_vectors, v=feature_vectors, num=num_top)
+        nfv = feature_vectors.shape[0]
+        with multiprocessing.Pool(num_procs) as pool:
+            meta = pool.map(wrapped, range(nfv))
+        labels = labels or [str(idx) for idx in range(nfv)]
+        return {
+            labels[idx]: {
+                "indices": [labels[idx] for idx in field[0]],
+                "distances": field[1],
+            }
+            for idx, field in enumerate(meta)
+        }
+
+    def build_similarity_collection_from_structures(
+        self,
+        structures: dict[str, Structure],
+        num_procs: int = 1,
+        num_top: int = 100,
+    ) -> list[SimilarityDoc]:
+        """Build a collection of similarity documents.
+
+        This defines the build pipeline for the MP similarity collection.
+
+        Parameters
+        -----------
+        structures : dict of str (e.g., MPID) to a corresponding structure.
+        num_procs : int = 1
+            Number of parallel processes to run in featurizing structures.
+        num_top : int or None
+            If an int, returns that number of most similar structures
+            indicated by their indices in the original list.
+            If None, returns all distances.
+
+        Returns
+        -----------
+        A list of SimilarityDoc.
+        """
+
+        identifiers = list(structures)
+        ordered_structures = [structures[idx] for idx in identifiers]
+        feature_vectors = self.featurize_structures(
+            ordered_structures, num_procs=num_procs
+        )
+        sim_meta = self.get_most_similar(
+            feature_vectors, num_procs=num_procs, num_top=num_top, labels=identifiers
+        )
+        return [
+            SimilarityDoc(
+                material_id=idx,
+                feature_vector=feature_vectors[i],
+                sim=[
+                    SimilarityEntry(
+                        task_id=jdx,
+                        nelements=len(structures[jdx].composition.elements),
+                        dissimilarity=100.0 - meta["distances"][j],  # type: ignore[operator]
+                        formula=structures[jdx].formula,
+                    )
+                    for j, jdx in enumerate(meta["indices"])
+                ],
+            )
+            for i, (idx, meta) in enumerate(sim_meta.items())
+        ]
 
     @staticmethod
     def get_vendi_score(feature_vectors: np.ndarray) -> float:
