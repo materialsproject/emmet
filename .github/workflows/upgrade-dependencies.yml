@@ -11,7 +11,14 @@ jobs:
     strategy:
       matrix:
         os: ["ubuntu-latest"]
-        package: ["emmet-core", "emmet-builders", "emmet-api", "emmet-archival", "emmet-cli"]
+        package:
+          [
+            "emmet-core",
+            "emmet-builders",
+            "emmet-api",
+            "emmet-archival",
+            "emmet-cli",
+          ]
         python-version: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@v5
@@ -61,7 +68,7 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           git checkout -b auto-dependency-upgrades
-          git branch -r | grep auto-dependency-upgrades- | xargs -I {} git merge {}
+          git branch -r | grep auto-dependency-upgrades- | xargs -I {} git merge --squash {}
           git rebase ${GITHUB_REF##*/}
           git push -f origin auto-dependency-upgrades
           git branch -r | grep auto-dependency-upgrades- | cut -d/ -f2 | xargs -I {} git push origin :{}
