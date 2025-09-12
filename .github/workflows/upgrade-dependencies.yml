@@ -68,8 +68,10 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           git checkout -b auto-dependency-upgrades
-          git branch -r | grep auto-dependency-upgrades- | xargs -I {} git merge --squash {}
+          git branch -r | grep auto-dependency-upgrades- | xargs -I {} git merge {}
           git rebase ${GITHUB_REF##*/}
+          git reset $(git merge-base ${GITHUB_REF##*/} HEAD)
+          git commit -m "auto dependency upgrades"
           git push -f origin auto-dependency-upgrades
           git branch -r | grep auto-dependency-upgrades- | cut -d/ -f2 | xargs -I {} git push origin :{}
       - name: Open pull request if needed
