@@ -9,16 +9,17 @@ one module, can and should remain in that module.
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import TYPE_CHECKING
 import os
+from datetime import datetime
 from pathlib import Path
-from typing import Annotated, Union
+from typing import TYPE_CHECKING, Annotated, Union
 
-from pydantic import PlainSerializer, Field, BeforeValidator
+from pydantic import BeforeValidator, Field, PlainSerializer
+from typing_extensions import TypedDict
 
 from emmet.core.mpid import MPID, AlphaID
-from emmet.core.utils import utcnow, convert_datetime
+from emmet.core.types.pymatgen_types.kpoint_adapter import KpointType
+from emmet.core.utils import convert_datetime, utcnow
 
 if TYPE_CHECKING:
     from typing_extensions import TypeAlias
@@ -32,7 +33,6 @@ FSPathType: TypeAlias = Annotated[
 DateTimeType: TypeAlias = Annotated[
     datetime,
     Field(default_factory=utcnow),
-    PlainSerializer(lambda x: x.isoformat(), return_type=str),
     BeforeValidator(lambda x: convert_datetime(x)),
 ]
 """Datetime serde."""
@@ -43,3 +43,13 @@ IdentifierType: TypeAlias = Annotated[
     PlainSerializer(lambda x: str(AlphaID(x))),
 ]
 """MPID / AlphaID serde."""
+
+
+class TypedBandDict(TypedDict):
+    """Type def for data stored for cbms or vbms"""
+
+    band_index: dict[str, list[int]]
+    kpoint_index: list[int]
+    kpoint: KpointType
+    energy: float
+    projections: dict[str, list[list[float]]]

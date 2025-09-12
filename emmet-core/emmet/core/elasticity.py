@@ -13,9 +13,10 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.math import Matrix3D, MatrixVoigt
-from emmet.core.types.enums import TaskState
-from emmet.core.types.typing import IdentifierType
 from emmet.core.settings import EmmetSettings
+from emmet.core.types.enums import TaskState
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
+from emmet.core.types.typing import IdentifierType
 
 SETTINGS = EmmetSettings()
 
@@ -168,6 +169,11 @@ class WarningMessage(BaseModel):
 class ElasticityDoc(PropertyDoc):
     property_name: str = "elasticity"
 
+    structure: StructureType | None = Field(
+        None,
+        description="Structure to compute the elasticity",
+    )
+
     order: int = Field(
         default=2, description="Order of the expansion of the elastic tensor"
     )
@@ -209,10 +215,6 @@ class ElasticityDoc(PropertyDoc):
     state: TaskState | None = Field(
         None,
         description="State of the fitting/analysis: `successful` or `failed`",
-    )
-
-    structure: Structure | None = Field(
-        None, description="Structure used to compute the elasticity.", exclude=False
     )
 
     @classmethod

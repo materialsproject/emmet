@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import Field
 from pymatgen.analysis.chemenv.coordination_environments.chemenv_strategies import (
@@ -22,6 +22,9 @@ from emmet.core.material_property import PropertyDoc
 
 if TYPE_CHECKING:
     from emmet.core.types.typing import IdentifierType
+
+from emmet.core.types.pymatgen_types.molecule_adapter import MoleculeType
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 
 DEFAULT_DISTANCE_CUTOFF = 1.4
 DEFAULT_ANGLE_CUTOFF = 0.3
@@ -320,7 +323,12 @@ class ChemEnvDoc(PropertyDoc):
 
     property_name: str = "coord_environment"
 
-    valences: list[int | float] = Field(
+    structure: StructureType | None = Field(
+        ...,
+        description="The structure used in the generation of the chemical environment data",
+    )
+
+    valences: list[float] = Field(
         description="List of valences for each site in this material to determine cations"
     )
 
@@ -357,23 +365,15 @@ class ChemEnvDoc(PropertyDoc):
         description="Method used to compute chemical environments"
     )
 
-    mol_from_site_environments: list[Molecule | None] = Field(
+    mol_from_site_environments: list[MoleculeType | None] = Field(
         description="List of Molecule Objects describing the detected environment."
     )
-
-    # structure_environment: StructureEnvironments| None = Field(
-    #     description="Structure environment object"
-    # )
 
     wyckoff_positions: list[str] = Field(
         description="List of Wyckoff positions for unique (cationic) species in structure."
     )
 
     warnings: str | None = Field(None, description="Warning")
-
-    structure: Structure | None = Field(
-        None, description="The structure associated with this property.", exclude=True
-    )
 
     @classmethod
     def from_structure(

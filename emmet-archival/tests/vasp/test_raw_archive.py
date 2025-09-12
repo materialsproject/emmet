@@ -29,8 +29,8 @@ def test_from_directory(tmp_dir, test_dir):
                     assert isinstance(potcar_data, list)
                     assert all(
                         isinstance(potcar_spec, dict)
-                        and potcar_spec.get("keywords")
-                        and potcar_spec.get("stats")
+                        and potcar_spec.get("summary_stats", {}).get("keywords")
+                        and potcar_spec.get("summary_stats", {}).get("stats")
                         for potcar_spec in potcar_data
                     )
 
@@ -74,6 +74,7 @@ def test_from_directory(tmp_dir, test_dir):
         "input",
         "last_updated",
         "completed_at",
+        "entry",
     }
     orig_task_dict = TaskDoc.from_directory(test_dir / "raw_vasp").model_dump()
     extracted_task_dict = RawArchive.to_task_doc("archive.h5").model_dump()

@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
-from pymatgen.core.interface import GrainBoundary
 
 from emmet.core.types.enums import ValueEnum
+from emmet.core.types.pymatgen_types.grain_boundary_adapter import GrainBoundaryType
 from emmet.core.types.typing import DateTimeType
 
 
@@ -54,11 +54,11 @@ class GrainBoundaryDoc(BaseModel):
         description="Grain boundary energy in J/m^2.",
     )
 
-    initial_structure: GrainBoundary | None = Field(
+    initial_structure: GrainBoundaryType | None = Field(
         None, description="Initial grain boundary structure."
     )
 
-    final_structure: GrainBoundary | None = Field(
+    final_structure: GrainBoundaryType | None = Field(
         None, description="Final grain boundary structure."
     )
 

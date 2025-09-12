@@ -1,6 +1,6 @@
 """Core definition of a Materials Document"""
 
-from collections.abc import Mapping
+from typing import Mapping
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer, oxide_type
@@ -10,9 +10,12 @@ from pymatgen.entries.computed_entries import ComputedStructureEntry
 from emmet.core.base import EmmetMeta
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin
-from emmet.core.types.typing import IdentifierType
 from emmet.core.settings import EmmetSettings
 from emmet.core.tasks import TaskDoc
+from emmet.core.types.pymatgen_types.computed_entries_adapter import (
+    ComputedStructureEntryType,
+)
+from emmet.core.types.typing import IdentifierType
 from emmet.core.utils import utcnow
 from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
 
@@ -20,12 +23,12 @@ SETTINGS = EmmetSettings()
 
 
 class BlessedCalcs(BaseModel, populate_by_name=True):
-    GGA: ComputedStructureEntry | None = None
-    GGA_U: ComputedStructureEntry | None = Field(None, alias="GGA+U")
-    PBESol: ComputedStructureEntry | None = Field(None, alias="PBEsol")
-    SCAN: ComputedStructureEntry | None = None
-    R2SCAN: ComputedStructureEntry | None = Field(None, alias="r2SCAN")
-    HSE: ComputedStructureEntry | None = None
+    GGA: ComputedStructureEntryType | None = Field(None)
+    GGA_U: ComputedStructureEntryType | None = Field(None, alias="GGA+U")
+    PBESol: ComputedStructureEntryType | None = Field(None, alias="PBEsol")
+    SCAN: ComputedStructureEntryType | None = Field(None)
+    R2SCAN: ComputedStructureEntryType | None = Field(None, alias="r2SCAN")
+    HSE: ComputedStructureEntryType | None = Field(None)
 
 
 class MaterialsDoc(CoreMaterialsDoc):
@@ -43,7 +46,7 @@ class MaterialsDoc(CoreMaterialsDoc):
     )
 
     origins: list[PropertyOrigin] | None = Field(
-        None, description="Mappingionary for tracking the provenance of properties"
+        None, description="Struct array for tracking the provenance of properties"
     )
 
     entries: BlessedCalcs | None = Field(

@@ -19,6 +19,7 @@ from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.qchem.calculation import Calculation, CalculationInput
 from emmet.core.qchem.task import QChemStatus
 from emmet.core.structure import MoleculeMetadata
+from emmet.core.utils import arrow_incompatible
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -31,6 +32,7 @@ logger = logging.getLogger(__name__)
 # _DERIVATIVE_FILES = ("GRAD", "HESS")
 
 
+@arrow_incompatible
 class OutputDoc(BaseModel):
     initial_molecule: Molecule = Field(None, description="Input Molecule object")
     optimized_molecule: Molecule | None = Field(
@@ -120,6 +122,7 @@ class OutputDoc(BaseModel):
         )
 
 
+@arrow_incompatible
 class InputDoc(BaseModel):
     initial_molecule: Molecule = Field(
         title="Input Structure",
@@ -207,6 +210,7 @@ class InputDoc(BaseModel):
         )
 
 
+@arrow_incompatible
 class CustodianDoc(BaseModel):
     corrections: list[Any] | None = Field(
         None,
@@ -224,6 +228,7 @@ class CustodianDoc(BaseModel):
 # AnalysisDoc? Is there a scope for AnalysisDoc in QChem?
 
 
+@arrow_incompatible
 class TaskDoc(MoleculeMetadata):
     """
     Calculation-level details about QChem calculations that would eventually take over the TaskDocument implementation

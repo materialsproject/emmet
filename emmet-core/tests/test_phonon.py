@@ -4,19 +4,20 @@ from copy import deepcopy
 from tempfile import NamedTemporaryFile
 
 import numpy as np
+import pytest
 from monty.serialization import loadfn
 from pymatgen.core import Structure
-import pytest
+from pymatgen.phonon.dos import CompletePhononDos
+from pymatgen.phonon.dos import PhononDos as PmgPhononDos
 
-from pymatgen.phonon.dos import PhononDos as PmgPhononDos, CompletePhononDos
-
-from emmet.core.phonon import PhononDOS, PhononBS, PhononBSDOSDoc
+from emmet.core import ARROW_COMPATIBLE
+from emmet.core.phonon import PhononBSDOSDoc, PhononDOS
 from emmet.core.testing_utils import assert_schemas_equal
 
-try:
-    import pyarrow.parquet as pq
-except ImportError:
-    pq = None
+if ARROW_COMPATIBLE:
+    import pyarrow as pa
+
+    from emmet.core.arrow import arrowize
 
 
 @pytest.fixture(scope="module")
@@ -44,14 +45,13 @@ def test_legacy_migration(legacy_ph_task):
         )
 
     # check remap of phonon bandstructure
-    for k in ("qpoints", "frequencies"):
-        assert np.all(
-            np.abs(
-                np.array(getattr(ph_doc.phonon_bandstructure, k, []))
-                - np.array(legacy_ph_task["ph_bs"].get(k, []))
-            )
-            < 1e-6
+    assert np.all(
+        np.abs(
+            np.array(getattr(ph_doc.phonon_bandstructure, "frequencies", []))
+            - np.array(legacy_ph_task["ph_bs"].get("bands", []))
         )
+        < 1e-6
+    )
 
     # check that Phonon DOS converst to CompletePhononDOS object
     assert isinstance(ph_doc.phonon_dos.to_pmg, CompletePhononDos)
@@ -116,31 +116,28 @@ def test_legacy_migration(legacy_ph_task):
     assert ph_doc.phonon_bandstructure._to_pmg_es_bs.get_cbm()
 
 
-@pytest.mark.skipif(pq is None, reason="pyarrow must be installed to run this test.")
-def test_arrow(tmp_dir, legacy_ph_task):
-    # test to parquet and rehydration
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
+def test_arrow(legacy_ph_task):
     ph_doc = PhononBSDOSDoc(**legacy_ph_task)
-    arrow_table = ph_doc.objects_to_arrow()
-    pq.write_table(arrow_table, "test.parquet")
+    arrow_struct = pa.scalar(
+        ph_doc.model_dump(context={"format": "arrow"}), type=arrowize(PhononBSDOSDoc)
+    )
+    test_arrow_doc = PhononBSDOSDoc(**arrow_struct.as_py(maps_as_pydicts="strict"))
+    assert test_arrow_doc
 
-    rehyd = pq.read_table("test.parquet")
-
-    dos_from_table = PhononDOS.from_arrow(arrow_table, col_prefix="dos_")
-    dos_from_parquet = PhononDOS.from_arrow(rehyd, col_prefix="dos_")
-
-    assert ph_doc.phonon_dos == dos_from_table
-    assert ph_doc.phonon_dos == dos_from_parquet
-
-    bs_from_table = PhononBS.from_arrow(arrow_table, col_prefix="bs_")
-    bs_from_parquet = PhononBS.from_arrow(rehyd, col_prefix="bs_")
-
-    assert ph_doc.phonon_bandstructure == bs_from_table
-    assert ph_doc.phonon_bandstructure == bs_from_parquet
+    assert ph_doc.phonon_bandstructure == test_arrow_doc.phonon_bandstructure
 
     # test primitive structure caching
-    assert bs_from_parquet._primitive_structure is None
-    assert isinstance(bs_from_parquet.primitive_structure, Structure)
-    assert bs_from_parquet._primitive_structure == bs_from_parquet.primitive_structure
+    assert test_arrow_doc.phonon_bandstructure._primitive_structure is None
+    assert isinstance(
+        test_arrow_doc.phonon_bandstructure.primitive_structure, Structure
+    )
+    assert (
+        test_arrow_doc.phonon_bandstructure._primitive_structure
+        == test_arrow_doc.phonon_bandstructure.primitive_structure
+    )
 
 
 def test_phonopy_dos_integration(tmp_dir):

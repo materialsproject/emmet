@@ -2,29 +2,37 @@
 
 from __future__ import annotations
 
+import json
 from datetime import datetime
-import numpy as np
 from pathlib import Path
-from pydantic import BaseModel, Field, model_validator
-from scipy.interpolate import CubicSpline
 from typing import TYPE_CHECKING, Any
-from typing_extensions import Self
 
+import numpy as np
 from monty.os.path import zpath
-from pymatgen.core import Structure, Molecule
+from pydantic import (
+    BaseModel,
+    Field,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
+from pymatgen.core import Molecule, Structure
+from scipy.interpolate import CubicSpline
+from typing_extensions import Self
 
 from emmet.core.tasks import (
     _VOLUMETRIC_FILES,
+    CustodianDoc,
+    InputDoc,
+    OrigInputs,
     _find_vasp_files,
     _parse_custodian,
     _parse_orig_inputs,
-    InputDoc,
-    CustodianDoc,
-    OrigInputs,
 )
-from emmet.core.utils import utcnow
 from emmet.core.types.enums import ValueEnum, VaspObject
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.typing import DateTimeType
+from emmet.core.utils import arrow_incompatible, type_override, utcnow
 from emmet.core.vasp.calculation import Calculation
 from emmet.core.vasp.task_valid import TaskState
 
@@ -152,6 +160,7 @@ class BarrierAnalysis(BaseModel):
         return cls(**analysis)
 
 
+@arrow_incompatible
 class NebResult(BaseModel):
     """Container class to store high-level NEB calculation info.
 
@@ -258,17 +267,18 @@ class NebResult(BaseModel):
         return None
 
 
+@type_override({"objects": str})
 class NebIntermediateImagesDoc(BaseModel):
     """Schema for high-level intermediate image NEB data."""
 
     energies: list[float] | None = Field(
         None, description="The final energies of the intermediate images."
     )
-    images: list[Structure] | None = Field(
+    images: list[StructureType] | None = Field(
         None, description="Final structures for each intermediate image."
     )
 
-    initial_images: list[Structure] | None = Field(
+    initial_images: list[StructureType] | None = Field(
         None, description="The initial intermediate image structures."
     )
 
@@ -316,6 +326,23 @@ class NebIntermediateImagesDoc(BaseModel):
     task_label: str | None = Field(
         None, description="Label for the NEB calculation(s)."
     )
+
+    @field_serializer("objects", mode="wrap")
+    def objects_serializer(self, d, default_serializer, info):
+        default_serialized_object = default_serializer(d, info)
+
+        format = info.context.get("format") if info.context else "standard"
+        if format == "arrow":
+            return json.dumps(default_serialized_object)
+
+        return default_serialized_object
+
+    @field_validator("objects", mode="before")
+    def objects_deserializer(cls, d):
+        if isinstance(d, str):
+            d = json.loads(d)
+
+        return d
 
     @classmethod
     def from_directory(
@@ -415,14 +442,14 @@ class NebIntermediateImagesDoc(BaseModel):
 class NebTaskDoc(NebResult):
     """Define schema for VASP NEB tasks."""
 
-    images: list[Structure] | None = Field(  # type: ignore[assignment]
+    images: list[StructureType] | None = Field(  # type: ignore[assignment]
         None,
         description=(
             "Structures (including endpoints) along the reaction pathway after NEB."
         ),
     )
 
-    initial_images: list[Structure] | None = Field(  # type: ignore[assignment]
+    initial_images: list[StructureType] | None = Field(  # type: ignore[assignment]
         None,
         description="Structures (including endpoints) along the reaction pathway prior to NEB.",
     )
@@ -560,6 +587,7 @@ class NebTaskDoc(NebResult):
         )
 
 
+@arrow_incompatible
 class NebPathwayResult(BaseModel):  # type: ignore[call-arg]
     """Class for containing multiple NEB calculations, as along a reaction pathway."""
 
@@ -581,7 +609,7 @@ class NebPathwayResult(BaseModel):  # type: ignore[call-arg]
         None, description="List of string metadata about the calculation."
     )
 
-    host_structure: Structure | None = Field(
+    host_structure: StructureType | None = Field(
         None, description="The structure without active/mobile site(s)."
     )
 

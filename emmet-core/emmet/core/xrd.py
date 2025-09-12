@@ -1,14 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated, TypeAlias
 
 import numpy as np
-from pydantic import Field, model_validator
-from pymatgen.analysis.diffraction.xrd import (
-    WAVELENGTHS,
-    DiffractionPattern,
-    XRDCalculator,
-)
+from pydantic import BeforeValidator, Field, WrapSerializer, model_validator
+from pymatgen.analysis.diffraction.xrd import WAVELENGTHS, XRDCalculator
 from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
 
@@ -17,6 +13,11 @@ from emmet.core.types.enums import ValueEnum
 
 if TYPE_CHECKING:
     from emmet.core.types.typing import IdentifierType
+
+from emmet.core.types.pymatgen_types.diffraction_pattern_adapter import (
+    AnnotatedDiffractionPattern,
+)
+from emmet.core.types.pymatgen_types.element_adapter import ElementType
 
 
 class Edge(ValueEnum):
@@ -28,6 +29,15 @@ class Edge(ValueEnum):
     K_Beta2 = "Kb2"
 
 
+EdgeType: TypeAlias = Annotated[
+    Edge,
+    BeforeValidator(lambda x: Edge(x) if isinstance(x, str) else x),
+    WrapSerializer(lambda x, nxt, info: x.value, return_type=str),
+]
+
+DiffractionPatternType: TypeAlias = AnnotatedDiffractionPattern
+
+
 class XRDDoc(SpectrumDoc):
     """
     Document describing a XRD Diffraction Pattern
@@ -35,14 +45,14 @@ class XRDDoc(SpectrumDoc):
 
     spectrum_name: str = "XRD"
 
-    spectrum: DiffractionPattern
+    spectrum: DiffractionPatternType  # type: ignore[valid-type]
     min_two_theta: float
     max_two_theta: float
     wavelength: float = Field(..., description="Wavelength for the diffraction source.")
-    target: Element | None = Field(
+    target: ElementType | None = Field(
         None, description="Target element for the diffraction source."
     )
-    edge: Edge | None = Field(
+    edge: EdgeType | None = Field(
         None, description="Atomic edge for the diffraction source."
     )
 

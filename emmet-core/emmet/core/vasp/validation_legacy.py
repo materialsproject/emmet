@@ -2,34 +2,27 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
-from pydantic import BaseModel, Field, ImportString
+from pydantic import Field, ImportString
 from pymatgen.core.structure import Structure
 from pymatgen.io.vasp.inputs import Kpoints
 from pymatgen.io.vasp.sets import VaspInputSet
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.types.typing import DateTimeType, IdentifierType
 from emmet.core.settings import EmmetSettings
 from emmet.core.tasks import CoreTaskDoc, TaskDoc
+from emmet.core.types.typing import DateTimeType, IdentifierType
 from emmet.core.vasp.calc_types.enums import CalcType, TaskType
 from emmet.core.vasp.calculation import CoreCalculationOutput
 from emmet.core.vasp.task_valid import TaskDocument
-from emmet.core.vasp.validation import DeprecationMessage
+from emmet.core.vasp.validation import DeprecationMessage, ValidationDataDict
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
 SETTINGS = EmmetSettings()
-
-
-class ValidationDataDict(BaseModel):
-    encut_ratio: float | None = Field(None)
-    max_gradient: Optional[float] = Field(None)
-    kspacing_delta: float | None = Field(None)
-    kpts_ratio: float | None = Field(None)
 
 
 class ValidationDoc(EmmetBaseModel, extra="allow"):

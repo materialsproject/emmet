@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
 from pymatgen.core.structure import Molecule
 
+from emmet.core.mpid import MPID, MPculeID
 from emmet.core.qchem.calc_types import (
     CalcType,
     LevelOfTheory,
@@ -17,10 +18,10 @@ from emmet.core.qchem.calc_types import (
     solvent,
     task_type,
 )
-from emmet.core.mpid import MPID, MPculeID
 from emmet.core.structure import MoleculeMetadata
 from emmet.core.task import BaseTaskDocument
 from emmet.core.types.enums import ValueEnum
+from emmet.core.utils import arrow_incompatible
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -37,6 +38,7 @@ class QChemStatus(ValueEnum):
     FAILED = "unsuccessful"
 
 
+@arrow_incompatible
 class OutputSummary(BaseModel):
     """
     Summary of an output for a Q-Chem calculation
@@ -115,6 +117,7 @@ class OutputSummary(BaseModel):
         }
 
 
+@arrow_incompatible
 class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     """
     Definition of a Q-Chem task document

@@ -20,6 +20,7 @@ from pymatgen.io.validation.common import PotcarSummaryStats, VaspFiles
 from pymatgen.io.validation.validation import VaspValidator
 
 from emmet.core.tasks import TaskDoc
+from emmet.core.vasp.calculation import PotcarSpec
 from emmet.core.vasp.utils import VASP_RAW_DATA_ORG, discover_vasp_files, FileMetadata
 
 from emmet.archival.base import Archiver
@@ -75,12 +76,18 @@ class RawArchive(Archiver):
     @staticmethod
     def convert_potcar_to_spec(potcar: str | Potcar) -> str:
         """Convert a VASP POTCAR to JSON-dumped string."""
+
+        if isinstance(potcar, str):
+            pot_obj = Potcar.from_str(potcar)
+        else:
+            pot_obj = potcar
+
+        # Note that to accommodate both validation and TaskDoc, we need to
+        # store the LEXCH kwarg here
         return json.dumps(
             [
-                p.model_dump()
-                for p in PotcarSummaryStats.from_file(
-                    Potcar.from_str(potcar) if isinstance(potcar, str) else potcar
-                )
+                {**p.model_dump(), "lexch": pot_obj[i].LEXCH}
+                for i, p in enumerate(PotcarSpec.from_potcar(pot_obj))
             ]
         )
 
@@ -234,7 +241,7 @@ class RawArchive(Archiver):
             "incar": Incar,
             "kpoints": Kpoints,
             "poscar": Structure,
-            "potcar.spec": PotcarSummaryStats,
+            "potcar.spec": PotcarSpec,
             "outcar": Outcar,
             "vasprun.xml": Vasprun,
         }
@@ -256,7 +263,13 @@ class RawArchive(Archiver):
 
                         if fname == "potcar.spec":
                             vasp_io["user_input"]["potcar"] = [
-                                PotcarSummaryStats(**ps) for ps in json.loads(data)
+                                PotcarSummaryStats(
+                                    keywords=ps["summary_stats"]["keywords"],
+                                    stats=ps["summary_stats"]["stats"],
+                                    titel=ps["titel"],
+                                    lexch=ps["lexch"],
+                                )
+                                for ps in json.loads(data)
                             ]
                         elif fname == "poscar":
                             vasp_io["user_input"]["structure"] = Structure.from_str(

@@ -1,4 +1,13 @@
 from pydantic import BaseModel, Field
+from typing_extensions import TypedDict
+
+
+class EOSType(TypedDict):
+    V0: float
+    eos_energies: list[float]
+    B: float
+    C: float
+    E0: float
 
 
 class EOSDoc(BaseModel):
@@ -16,7 +25,7 @@ class EOSDoc(BaseModel):
         description="Common volumes in A³/atom that the equations of state are plotted with.",
     )
 
-    eos: dict | None = Field(
+    eos: EOSType | None = Field(
         None,
         description="Data for each type of equation of state.",
     )

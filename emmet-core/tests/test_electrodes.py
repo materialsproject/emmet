@@ -1,14 +1,15 @@
 import pytest
 from monty.serialization import loadfn
+from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import (
     InsertionElectrode,
     InsertionVoltagePair,
 )
 from pymatgen.core import Composition, Element
-from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.entries.computed_entries import ComputedEntry
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.electrode import (
     ConversionElectrodeDoc,
     ConversionVoltagePairDoc,
@@ -16,6 +17,11 @@ from emmet.core.electrode import (
     InsertionVoltagePairDoc,
     get_battery_formula,
 )
+
+if ARROW_COMPATIBLE:
+    import pyarrow as pa
+
+    from emmet.core.arrow import arrowize
 
 
 @pytest.fixture(scope="session")
@@ -134,3 +140,59 @@ def test_get_battery_formula():
     results = [get_battery_formula(*case) for case in test_cases]
 
     assert results == ["Li2-3.5CoO3", "Al1.33-2CoO4", "Li8.5-10.5Co4O9"]
+
+
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
+def test_arrow_insertion(insertion_elec):
+    elec, struct, wion_entry = next(iter(insertion_elec.values()))
+    doc = InsertionElectrodeDoc.from_entries(
+        grouped_entries=elec.stable_entries,
+        working_ion_entry=wion_entry,
+        battery_id="mp-1234",
+    )
+
+    arrow_struct = pa.scalar(
+        doc.model_dump(context={"format": "arrow"}),
+        type=arrowize(InsertionElectrodeDoc),
+    )
+
+    test_arrow_doc = InsertionElectrodeDoc(
+        **arrow_struct.as_py(maps_as_pydicts="strict")
+    )
+
+    # can't assert doc == test_arrow_doc:
+    # 1. unstable_entries and stable_entries are constructed as a tuple in pmg,
+    # serializing into json/arrow makes tuples into arrays, so they round trip
+    # back into python lists. the type in pmg is Iterable, so the pmg object is
+    # constructed without warning when a dict is splatted in, but the container
+    # type is mismatched, i.e., list((a, b, c)) != tuple((a, b, c))...
+
+    assert doc.model_dump() == test_arrow_doc.model_dump()
+
+
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
+def test_arrow_conversion(conversion_elec):
+    k = next(iter(conversion_elec))
+    elec, expected = next(iter(conversion_elec.values()))
+    doc = ConversionElectrodeDoc.from_composition_and_entries(
+        Composition(k),
+        entries=elec["entries"],
+        working_ion_symbol=elec["working_ion"],
+        battery_id="mp-1234",
+        thermo_type="GGA_GGA+U",
+    )
+
+    arrow_struct = pa.scalar(
+        doc.model_dump(context={"format": "arrow"}),
+        type=arrowize(ConversionElectrodeDoc),
+    )
+
+    test_arrow_doc = ConversionElectrodeDoc(
+        **arrow_struct.as_py(maps_as_pydicts="strict")
+    )
+
+    assert doc == test_arrow_doc

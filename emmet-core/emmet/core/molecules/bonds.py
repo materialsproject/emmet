@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 from hashlib import blake2b
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import networkx as nx
 from pydantic import Field
@@ -13,10 +13,12 @@ from emmet.core.molecules import MolPropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPculeID
 from emmet.core.qchem.task import TaskDocument
+from emmet.core.types.pymatgen_types.structure_graph_adapter import MoleculeGraphType
 from emmet.core.utils import make_mol_graph
 
 if TYPE_CHECKING:
     from typing import Any
+
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -342,7 +344,7 @@ class MoleculeBondingDoc(PropertyDoc):
 
     property_name: str = "bonding"
 
-    molecule_graph: MoleculeGraph = Field(..., description="Molecule graph")
+    molecule_graph: MoleculeGraphType = Field(..., description="Molecule graph")
 
     method: str = Field(..., description="Method used to compute molecule graph")
 
