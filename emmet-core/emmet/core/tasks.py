@@ -15,7 +15,6 @@ from monty.serialization import loadfn
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core.structure import Structure
-from pymatgen.core.trajectory import Trajectory
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.io.vasp import Incar, Kpoints, Poscar
 
@@ -38,7 +37,9 @@ from emmet.core.vasp.calculation import (
     CoreCalculationOutput,
     PotcarSpec,
     RunStatistics,
+    get_trajectories_from_calculations,
 )
+from emmet.core.trajectory import Trajectory
 from emmet.core.vasp.utils import TASK_NAMES, discover_and_sort_vasp_files
 
 if TYPE_CHECKING:
@@ -121,7 +122,7 @@ class OutputDoc(BaseModel):
         calc_doc
             A VASP calculation document.
         trajectory
-            A pymatgen Trajectory.
+            An emmet-core Trajectory.
 
         Returns
         -------
@@ -131,9 +132,11 @@ class OutputDoc(BaseModel):
         if calc_doc.output.ionic_steps:
             forces = calc_doc.output.ionic_steps[-1].forces
             stress = calc_doc.output.ionic_steps[-1].stress
-        elif trajectory and (ionic_steps := trajectory.frame_properties) is not None:
-            forces = ionic_steps[-1].get("forces")
-            stress = ionic_steps[-1].get("stress")
+        elif trajectory and all(
+            getattr(trajectory, k, None) is not None for k in ("forces", "stress")
+        ):
+            forces = trajectory.forces[-1]
+            stress = trajectory.stress[-1]
         else:
             raise RuntimeError("Unable to find ionic steps.")
 
@@ -374,32 +377,7 @@ class CoreTaskDoc(StructureMetadata):
             vasp_objects=vasp_objects,
         )
 
-        props: dict[str, Any] = {
-            "structure": [],
-            "cart_coords": [],
-            "electronic_steps": [],
-            "energy": [],
-            "e_wo_entrp": [],
-            "e_fr_energy": [],
-            "forces": [],
-            "stress": [],
-        }
-
-        for ionic_step in calc_doc.output.ionic_steps:
-            props["structure"].append(ionic_step.structure)
-            props["energy"].append(ionic_step.e_0_energy)
-            for k in (
-                "e_fr_energy",
-                "e_wo_entrp",
-                "forces",
-                "stress",
-                "electronic_steps",
-            ):
-                props[k].append(getattr(ionic_step, k))
-
-        trajectory = CoreTrajectory._from_dict(
-            props, task_type=calc_doc.task_type, run_type=calc_doc.run_type
-        )
+        trajectory = get_trajectories_from_calculations(calc_doc)[0]
 
         return (task_doc, trajectory)
 
@@ -792,6 +770,24 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
             data=self.entry.data,
             entry_id=self.entry.entry_id,
         )
+
+    @property
+    def trajectories(self) -> list[Trajectory] | None:
+        """Get Trajectory objects representing calcs_reversed.
+
+        Note that the Trajectory objects represent the proper
+        calculation order, not the reversed.
+
+        Thus the first Trajectory represents the first calculation
+        that was performed (`self.calcs_reversed[-1]`).
+        """
+        if self.calcs_reversed:
+            return get_trajectories_from_calculations(
+                self.calcs_reversed[::-1],
+                separate=False,
+                identifier=str(self.task_id) if self.task_id else None,
+            )
+        return None
 
 
 class TrajectoryDoc(BaseModel):
