@@ -42,9 +42,7 @@ def test_arrow(
     doc = ChemEnvDoc.from_structure(
         structure=structure, material_id=33, deprecated=False
     )
-    from rich import print
 
-    print(doc.model_dump(context={"format": "arrow"}))
     arrow_struct = pa.scalar(
         doc.model_dump(context={"format": "arrow"}), type=arrowize(ChemEnvDoc)
     )
