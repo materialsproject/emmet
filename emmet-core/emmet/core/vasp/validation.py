@@ -12,12 +12,13 @@ from pymatgen.io.validation.common import (
     VaspFiles,
     VaspInputSafe,
 )
-from pymatgen.io.validation.validation import VaspValidator, REQUIRED_VASP_FILES
+from pymatgen.io.validation.validation import REQUIRED_VASP_FILES, VaspValidator
 from pymatgen.io.vasp import Incar
 
 from emmet.core.base import EmmetBaseModel
 from emmet.core.types.enums import DocEnum
 from emmet.core.types.typing import DateTimeType, IdentifierType
+from emmet.core.utils import arrow_incompatible
 from emmet.core.vasp.calc_types.enums import CalcType, RunType
 from emmet.core.vasp.calculation import Calculation
 from emmet.core.vasp.task_valid import TaskDocument
@@ -62,7 +63,8 @@ class ValidationDataDict(BaseModel):
     kpts_ratio: float | None = Field(None)
 
 
-class ValidationDoc(EmmetBaseModel):
+@arrow_incompatible
+class ValidationDoc(EmmetBaseModel, VaspValidator):
     """
     Validation document for a VASP calculation
     """
