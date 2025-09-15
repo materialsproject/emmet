@@ -104,8 +104,8 @@ AlloySystemTypeVar = TypeVar("AlloySystemTypeVar", AlloySystem, TypedAlloySystem
 
 def pop_empty_alloy_pair_structure_keys(alloy_pair: AlloyPairTypeVar):
     if isinstance(alloy_pair, dict):
-        alloy_pair["structure_a"] = pop_empty_structure_keys(alloy_pair["structure_a"])
-        alloy_pair["structure_b"] = pop_empty_structure_keys(alloy_pair["structure_b"])
+        for key in ["structure_a", "structure_b"]:
+            alloy_pair[key] = pop_empty_structure_keys(alloy_pair[key])  # type: ignore[literal-required]
 
     return alloy_pair
 

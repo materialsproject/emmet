@@ -32,7 +32,7 @@ def pop_poscar_empty_structure_keys(poscar: PoscarTypeVar):
         clean_structure = pop_empty_structure_keys(poscar["structure"])
         poscar["structure"] = clean_structure
 
-        return Poscar.from_dict(poscar)
+        return Poscar.from_dict(poscar)  # type: ignore[arg-type]
 
     return poscar
 

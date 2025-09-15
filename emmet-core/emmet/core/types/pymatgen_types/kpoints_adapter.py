@@ -2,7 +2,7 @@ from typing import Annotated, Any, TypeAlias, TypeVar
 
 from pydantic import BeforeValidator, WrapSerializer
 from pymatgen.io.vasp.inputs import Kpoints
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 TypedKpointsDict = TypedDict(
     "TypedKpointsDict",
@@ -17,8 +17,8 @@ TypedKpointsDict = TypedDict(
         "labels": list[str],
         "nkpoints": int,
         # "tet_connections": tuple[float, list[float]],
-        "sym_weight": float,  # tet_connections
-        "tet_vertices": list[float],  # tet_connections
+        "sym_weight": NotRequired[list[float]],  # tet_connections
+        "tet_vertices": NotRequired[list[list[float]]],  # tet_connections
         "tet_number": int,
         "tet_weight": float,
         "usershift": list[float],
@@ -31,14 +31,14 @@ KpointsTypeVar = TypeVar("KpointsTypeVar", Kpoints, TypedKpointsDict)
 def kpoints_deserializer(kpoints: KpointsTypeVar):
     if isinstance(kpoints, dict):
         if "sym_weight" in kpoints:
-            kpoints["tet_connections"] = [
+            kpoints["tet_connections"] = [  # type: ignore[typeddict-unknown-key]
                 (sym, vert)
                 for sym, vert in zip(kpoints["sym_weight"], kpoints["tet_vertices"])
             ]
             del kpoints["sym_weight"]
             del kpoints["tet_vertices"]
 
-        return Kpoints.from_dict(kpoints)
+        return Kpoints.from_dict(kpoints)  # type: ignore[arg-type]
 
     return kpoints
 

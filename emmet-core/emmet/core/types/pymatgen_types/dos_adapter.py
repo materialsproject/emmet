@@ -42,7 +42,7 @@ CompleteDosTypeVar = TypeVar("CompleteDosTypeVar", CompleteDos, TypedCompleteDos
 def pop_empty_dos_keys(dos: CompleteDosTypeVar):
     if isinstance(dos, dict):
         dos["structure"] = pop_empty_structure_keys(dos["structure"])
-        return CompleteDos.from_dict(dos)
+        return CompleteDos.from_dict(dos)  # type: ignore[arg-type]
 
     return dos
 

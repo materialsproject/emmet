@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated, TypeAlias
+from typing import TYPE_CHECKING
 
 import numpy as np
-from pydantic import BeforeValidator, Field, WrapSerializer, model_validator
+from pydantic import Field, model_validator
 from pymatgen.analysis.diffraction.xrd import WAVELENGTHS, XRDCalculator
 from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from emmet.core.types.typing import IdentifierType
 
 from emmet.core.types.pymatgen_types.diffraction_pattern_adapter import (
-    AnnotatedDiffractionPattern,
+    DiffractionPatternType,
 )
 from emmet.core.types.pymatgen_types.element_adapter import ElementType
 
@@ -27,15 +27,6 @@ class Edge(ValueEnum):
     K_Beta = "Kb"
     K_Beta1 = "Kb1"
     K_Beta2 = "Kb2"
-
-
-EdgeType: TypeAlias = Annotated[
-    Edge,
-    BeforeValidator(lambda x: Edge(x) if isinstance(x, str) else x),
-    WrapSerializer(lambda x, nxt, info: x.value, return_type=str),
-]
-
-DiffractionPatternType: TypeAlias = AnnotatedDiffractionPattern
 
 
 class XRDDoc(SpectrumDoc):
@@ -52,7 +43,7 @@ class XRDDoc(SpectrumDoc):
     target: ElementType | None = Field(
         None, description="Target element for the diffraction source."
     )
-    edge: EdgeType | None = Field(
+    edge: Edge | None = Field(
         None, description="Atomic edge for the diffraction source."
     )
 

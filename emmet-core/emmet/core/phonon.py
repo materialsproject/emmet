@@ -133,9 +133,7 @@ class ShreddedEigendisplacements(TypedDict):
 
 
 @type_override({"eigendisplacements": ShreddedEigendisplacements})
-class PhononBS(
-    BandStructure, populate_by_name=True, validate_by_alias=True, validate_by_name=True
-):
+class PhononBS(BandStructure):
     """Define schema of pymatgen phonon band structure."""
 
     has_nac: bool = Field(

@@ -26,9 +26,9 @@ StructureTypeVar = TypeVar("StructureTypeVar", Structure, TypedStructureDict)
 def pop_empty_structure_keys(structure: StructureTypeVar):
     if isinstance(structure, dict):
         if structure.get("properties"):
-            for prop, val in list(structure["properties"].items()):
+            for prop, val in list(structure["properties"].items()):  # type: ignore[union-attr]
                 if val is None:
-                    del structure["properties"][prop]
+                    del structure["properties"][prop]  # type: ignore[union-attr]
 
         for site in structure["sites"]:
             if "name" in site:
@@ -45,7 +45,7 @@ def pop_empty_structure_keys(structure: StructureTypeVar):
                     if val is None:
                         del species[prop]
 
-        return Structure.from_dict(structure)
+        return Structure.from_dict(structure)  # type: ignore[arg-type]
 
     return structure
 

@@ -55,7 +55,7 @@ BandStructureSymmLineTypeVar = TypeVar(
 def pop_empty_bs_keys(bs: BandStructureSymmLineTypeVar):
     if isinstance(bs, dict):
         bs["structure"] = pop_empty_structure_keys(bs["structure"])
-        return BandStructureSymmLine.from_dict(bs)
+        return BandStructureSymmLine.from_dict(bs)  # type: ignore[arg-type]
 
     return bs
 

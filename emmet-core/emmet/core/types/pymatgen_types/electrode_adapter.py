@@ -95,7 +95,10 @@ ConversionElectrodeTypeVar = TypeVar(
 )
 
 
-def walk_voltage_pairs(voltage_pairs: dict[str, Any], battery_type: BatteryType):
+def walk_voltage_pairs(voltage_pairs: list[dict[str, Any]], battery_type: BatteryType):
+    pair: dict[str, Any]
+    voltage_pair_cls: type[InsertionVoltagePair | ConversionVoltagePair]
+
     match battery_type:
         case BatteryType.insertion:
             voltage_pair_cls = InsertionVoltagePair
@@ -124,9 +127,12 @@ def walk_voltage_pairs(voltage_pairs: dict[str, Any], battery_type: BatteryType)
 def electrode_object_energy_adjustments_serde(
     d: dict, battery_type: BatteryType, serde_fn: Callable
 ):
+    pair: dict[str, Any]
+
     d["working_ion_entry"]["energy_adjustments"] = serde_fn(
         d["working_ion_entry"]["energy_adjustments"]
     )
+
     match battery_type:
         case BatteryType.insertion:
             for pair in d["voltage_pairs"]:
@@ -160,8 +166,10 @@ def electrode_object_energy_adjustments_serde(
 
 def electrode_object_deserializer(
     eo: dict[str, Any] | InsertionElectrode | ConversionElectrode,
-) -> InsertionElectrode:
+) -> InsertionElectrode | ConversionElectrode:
     if isinstance(eo, dict):
+        target_class: type[InsertionElectrode | ConversionElectrode]
+
         match eo["@class"]:
             case "InsertionElectrode":
                 target_class = InsertionElectrode
@@ -189,11 +197,13 @@ def electrode_object_deserializer(
     return eo
 
 
-def electrode_object_serializer(electrode_object, nxt, info):
+def electrode_object_serializer(electrode_object, nxt, info) -> dict[str, Any]:
     default_serialized_object = nxt(electrode_object.as_dict(), info)
 
     format = info.context.get("format") if info.context else "standard"
     if format == "arrow":
+        battery_type: type[BatteryType.insertion | BatteryType.conversion]
+
         match default_serialized_object["@class"]:
             case "InsertionElectrode":
                 battery_type = BatteryType.insertion

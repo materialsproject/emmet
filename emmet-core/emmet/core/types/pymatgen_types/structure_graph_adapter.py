@@ -69,7 +69,7 @@ def pop_empty_structure_graph_keys(sg: StructureGraphTypeVar):
     if isinstance(sg, dict):
         sg["structure"] = pop_empty_structure_keys(sg["structure"])
 
-        return StructureGraph.from_dict(sg)
+        return StructureGraph.from_dict(sg)  # type: ignore[arg-type]
 
     return sg
 
@@ -78,7 +78,7 @@ def pop_empty_molecule_graph_keys(mg: MoleculeGraphTypeVar):
     if isinstance(mg, dict):
         mg["molecule"] = pop_empty_molecule_keys(mg["molecule"])
 
-        return MoleculeGraph.from_dict(mg)
+        return MoleculeGraph.from_dict(mg)  # type: ignore[arg-type]
 
     return mg
 

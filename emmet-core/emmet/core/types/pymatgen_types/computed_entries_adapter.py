@@ -120,7 +120,7 @@ def entry_serializer(entry, nxt, info):
     return default_serialized_object
 
 
-def pop_cse_empty_keys(cse: dict):
+def pop_cse_empty_keys(cse: dict) -> dict[str, Any]:
     if cse.get("structure"):
         cse["structure"] = pop_empty_structure_keys(cse["structure"])
     cse["data"] = {k: v for k, v in cse["data"].items() if v}  # type: ignore[typeddict-item]
@@ -131,6 +131,7 @@ def pop_cse_empty_keys(cse: dict):
 
 def entry_deserializer(entry: dict[str, Any] | ComputedEntry | ComputedStructureEntry):
     if isinstance(entry, dict):
+        entry_cls: type[ComputedEntry | ComputedStructureEntry]
         match entry["@class"]:
             case "ComputedEntry":
                 entry_cls = ComputedEntry
@@ -141,7 +142,7 @@ def entry_deserializer(entry: dict[str, Any] | ComputedEntry | ComputedStructure
         if isinstance(entry["energy_adjustments"], str):
             entry["energy_adjustments"] = orjson.loads(entry["energy_adjustments"])
 
-        return entry_cls.from_dict(entry)
+        return entry_cls.from_dict(entry)  # type: ignore[arg-type]
 
     return entry
 

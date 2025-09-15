@@ -26,7 +26,7 @@ DiffractionPatternTypeVar = TypeVar(
     "DiffractionPatternTypeVar", DiffractionPattern, TypedDiffractionPatternDict
 )
 
-AnnotatedDiffractionPattern = Annotated[
+DiffractionPatternType = Annotated[
     DiffractionPatternTypeVar,
     BeforeValidator(
         lambda x: DiffractionPattern.from_dict(x) if isinstance(x, dict) else x

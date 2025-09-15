@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from enum import Enum, auto
-from typing import Annotated, Any, TypeVar
+from typing import Annotated, Any, TypeVar, ValuesView
 
 import orjson
 from pydantic import BeforeValidator, WrapSerializer
@@ -57,7 +57,7 @@ PhaseDiagramTypeVar = TypeVar(
 )
 
 
-def entries_list_serde(entries_list: list[dict], serde_fn: Callable):
+def entries_list_serde(entries_list: ValuesView | list[dict], serde_fn: Callable):
     for entry in entries_list:
         entry["energy_adjustments"] = serde_fn(entry["energy_adjustments"])
 

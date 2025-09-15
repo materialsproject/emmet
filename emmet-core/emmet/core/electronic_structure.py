@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from math import isnan
-from typing import TYPE_CHECKING, Annotated, Literal, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Annotated, Literal, TypeVar
 
 import numpy as np
 from pydantic import BaseModel, BeforeValidator, Field, WrapSerializer, field_validator
@@ -168,8 +168,10 @@ class BandstructureData(BaseModel):
     )
 
 
-SpinType: TypeAlias = Annotated[
-    TypeVar("SpinTypeVar", Spin, Literal["1", "-1"]),
+SpinTypeVar = TypeVar("SpinTypeVar", Spin, Literal["1", "-1"])
+
+SpinType = Annotated[
+    SpinTypeVar,
     BeforeValidator(lambda x: Spin(int(x)) if isinstance(x, str) else x),
     WrapSerializer(lambda x, nxt, info: str(x), return_type=str),
 ]

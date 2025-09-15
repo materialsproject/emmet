@@ -54,7 +54,7 @@ def pop_empty_gb_keys(gb: GrainBoundaryTypeVar) -> GrainBoundary:
                     if val is None:
                         del species[prop]
 
-        return GrainBoundary.from_dict(gb)
+        return GrainBoundary.from_dict(gb)  # type: ignore[arg-type]
 
     return gb
 

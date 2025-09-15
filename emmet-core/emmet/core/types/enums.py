@@ -24,12 +24,8 @@ from pydantic_core import CoreSchema, core_schema
 if TYPE_CHECKING:
     from typing import Any
 
-    from pydantic import (
-        GetCoreSchemaHandler,
-        GetJsonSchemaHandler,
-        JsonSchemaValue,
-        Self,
-    )
+    from pydantic import GetCoreSchemaHandler, GetJsonSchemaHandler
+    from typing_extensions import Self
 
 
 class ValueEnum(Enum):
@@ -81,7 +77,7 @@ class ValueEnum(Enum):
     @classmethod
     def __get_pydantic_json_schema__(
         cls, _core_schema: CoreSchema, handler: GetJsonSchemaHandler
-    ) -> JsonSchemaValue:
+    ) -> dict[str, Any]:
         json_schema = handler(core_schema.str_schema())
         json_schema = handler.resolve_ref_schema(json_schema)
         return json_schema
