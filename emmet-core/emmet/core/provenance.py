@@ -104,12 +104,12 @@ class ProvenanceDoc(PropertyDoc):
         description="creation date for the first structure corresponding to this material",
     )
 
-    references: list[str] | None = Field(
-        None, description="Bibtex reference strings for this material"
+    references: list[str] = Field(
+        default_factory=list, description="Bibtex reference strings for this material"
     )
 
-    authors: list[Author] | None = Field(
-        None, description="list of authors for this material"
+    authors: list[Author] = Field(
+        default_factory=list, description="list of authors for this material"
     )
 
     remarks: list[str] | None = Field(
@@ -126,8 +126,8 @@ class ProvenanceDoc(PropertyDoc):
         None, description="Database IDs corresponding to this material"
     )
 
-    history: list[History] | None = Field(
-        None,
+    history: list[History] = Field(
+        default_factory=list,
         description="list of history nodes specifying the transformations or orignation"
         " of this material for the entry closest matching the material input",
     )
