@@ -1,7 +1,7 @@
-import json
 from collections.abc import Callable
 from typing import Annotated, Any, TypeVar
 
+import orjson
 from pydantic import BeforeValidator, WrapSerializer
 from pymatgen.apps.battery.conversion_battery import (
     ConversionElectrode,
@@ -180,7 +180,7 @@ def electrode_object_deserializer(
                 eo["working_ion_entry"] = pop_cse_empty_keys(eo["working_ion_entry"])
 
         if isinstance(eo["working_ion_entry"].get("energy_adjustments"), str):
-            electrode_object_energy_adjustments_serde(eo, battery_type, json.loads)
+            electrode_object_energy_adjustments_serde(eo, battery_type, orjson.loads)
 
         eo["voltage_pairs"] = walk_voltage_pairs(eo["voltage_pairs"], battery_type)
 
@@ -201,7 +201,7 @@ def electrode_object_serializer(electrode_object, nxt, info):
                 battery_type = BatteryType.conversion
 
         electrode_object_energy_adjustments_serde(
-            default_serialized_object, battery_type, json.dumps
+            default_serialized_object, battery_type, orjson.dumps
         )
 
     return default_serialized_object

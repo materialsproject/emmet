@@ -1,8 +1,8 @@
-import json
 from collections.abc import Callable
 from enum import Enum, auto
 from typing import Annotated, Any, TypeVar
 
+import orjson
 from pydantic import BeforeValidator, WrapSerializer
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from typing_extensions import TypedDict
@@ -111,7 +111,7 @@ def phase_diagram_serializer(phase_diagram, nxt, info) -> dict[str, Any]:
     format = info.context.get("format") if info.context else "standard"
     if format == "arrow":
         phase_diagram_serde(
-            default_serialized_object, mode=Mode.SHRED, serde_fn=json.dumps
+            default_serialized_object, mode=Mode.SHRED, serde_fn=orjson.dumps
         )
 
     return default_serialized_object
@@ -123,7 +123,7 @@ def phase_diagram_deserializer(value) -> PhaseDiagram:
             key in value["computed_data"]
             for key in ["el_refs_elements", "el_refs_entries"]
         ):
-            phase_diagram_serde(value, mode=Mode.STITCH, serde_fn=json.loads)
+            phase_diagram_serde(value, mode=Mode.STITCH, serde_fn=orjson.loads)
         return PhaseDiagram.from_dict(value)
     return value
 

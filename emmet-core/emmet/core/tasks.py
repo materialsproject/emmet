@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import logging
 import re
 import warnings
@@ -10,6 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
+import orjson
 from monty.json import MontyDecoder
 from monty.serialization import loadfn
 from pydantic import (
@@ -182,7 +182,7 @@ class CustodianDoc(BaseModel):
         if format == "arrow":
             arrow_compat_model = jsanitize(default_serialized_model, allow_bson=True)
             for field, value in arrow_compat_model.items():
-                arrow_compat_model[field] = json.dumps(value)
+                arrow_compat_model[field] = orjson.dumps(value)
             return arrow_compat_model
 
         return default_serialized_model
@@ -190,7 +190,7 @@ class CustodianDoc(BaseModel):
     @field_validator("*", mode="before")
     def field_deserializer(cls, field):
         if isinstance(field, str):
-            field = json.loads(field)
+            field = orjson.loads(field)
         return field
 
 
@@ -355,14 +355,14 @@ class CoreTaskDoc(StructureMetadata):
 
         format = info.context.get("format") if info.context else "standard"
         if format == "arrow":
-            return json.dumps(default_serialized_object)
+            return orjson.dumps(default_serialized_object)
 
         return default_serialized_object
 
     @field_validator("transformations", "vasp_objects", mode="before")
     def deserialize_overrides(cls, d):
         if isinstance(d, str):
-            d = json.loads(d)
+            d = orjson.loads(d)
         return d
 
     @classmethod
@@ -547,14 +547,14 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
 
         format = info.context.get("format") if info.context else "standard"
         if format == "arrow":
-            return json.dumps(default_serialized_object)
+            return orjson.dumps(default_serialized_object)
 
         return default_serialized_object
 
     @field_validator("additional_json", mode="before")
     def deserialize_additional_json(cls, d):
         if isinstance(d, str):
-            d = json.loads(d)
+            d = orjson.loads(d)
         return d
 
     @classmethod

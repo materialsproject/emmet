@@ -1,6 +1,6 @@
-import json
 from typing import Annotated, Any, TypeVar
 
+import orjson
 from pydantic import BeforeValidator, WrapSerializer
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from typing_extensions import NotRequired, TypedDict
@@ -113,7 +113,7 @@ def entry_serializer(entry, nxt, info):
 
     format = info.context.get("format") if info.context else "standard"
     if format == "arrow":
-        default_serialized_object["energy_adjustments"] = json.dumps(
+        default_serialized_object["energy_adjustments"] = orjson.dumps(
             default_serialized_object["energy_adjustments"]
         )
 
@@ -139,7 +139,7 @@ def entry_deserializer(entry: dict[str, Any] | ComputedEntry | ComputedStructure
                 entry = pop_cse_empty_keys(entry)
 
         if isinstance(entry["energy_adjustments"], str):
-            entry["energy_adjustments"] = json.loads(entry["energy_adjustments"])
+            entry["energy_adjustments"] = orjson.loads(entry["energy_adjustments"])
 
         return entry_cls.from_dict(entry)
 

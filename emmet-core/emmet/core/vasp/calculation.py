@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
+import orjson
+from monty.io import zopen
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -19,7 +21,6 @@ from pydantic import (
     field_validator,
     model_validator,
 )
-from monty.io import zopen
 from pymatgen.command_line.bader_caller import bader_analysis_from_path
 from pymatgen.command_line.chargemol_caller import ChargemolAnalysis
 from pymatgen.core.structure import Structure
@@ -217,14 +218,14 @@ class CalculationInput(CalculationBaseModel):
 
         format = info.context.get("format") if info.context else "standard"
         if format == "arrow":
-            return json.dumps(default_serialized_object)
+            return orjson.dumps(default_serialized_object)
 
         return default_serialized_object
 
     @field_validator("incar", "parameters", mode="before")
     def incar_params_deserializer(cls, d):
         if isinstance(d, str):
-            d = json.loads(d)
+            d = orjson.loads(d)
 
         if d and d == "parameters":
             d = {k.strip(): v for k, v in d.items()}
@@ -908,14 +909,14 @@ class Calculation(CalculationBaseModel):
 
         format = info.context.get("format") if info.context else "standard"
         if format == "arrow":
-            return json.dumps(jsanitize(default_serialized_object, allow_bson=True))
+            return orjson.dumps(jsanitize(default_serialized_object, allow_bson=True))
 
         return default_serialized_object
 
     @field_validator("bader", "ddec6", mode="before")
     def bader_ddec6_deserializer(cls, d):
         if isinstance(d, str):
-            d = json.loads(d)
+            d = orjson.loads(d)
 
         return d
 

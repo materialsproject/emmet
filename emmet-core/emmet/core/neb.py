@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import json
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
+import orjson
 from monty.os.path import zpath
 from pydantic import (
     BaseModel,
@@ -333,14 +333,14 @@ class NebIntermediateImagesDoc(BaseModel):
 
         format = info.context.get("format") if info.context else "standard"
         if format == "arrow":
-            return json.dumps(default_serialized_object)
+            return orjson.dumps(default_serialized_object)
 
         return default_serialized_object
 
     @field_validator("objects", mode="before")
     def objects_deserializer(cls, d):
         if isinstance(d, str):
-            d = json.loads(d)
+            d = orjson.loads(d)
 
         return d
 
