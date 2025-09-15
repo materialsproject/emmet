@@ -103,20 +103,15 @@ def walk_voltage_pairs(voltage_pairs: list[dict[str, Any]], battery_type: Batter
         case BatteryType.insertion:
             voltage_pair_cls = InsertionVoltagePair
             for pair in voltage_pairs:
-                pair["entry_charge"] = pop_cse_empty_keys(pair["entry_charge"])
-                pair["entry_discharge"] = pop_cse_empty_keys(pair["entry_discharge"])
-                pair["working_ion_entry"] = pop_cse_empty_keys(
-                    pair["working_ion_entry"]
-                )
+                for key in ["entry_charge", "entry_discharge", "working_ion_entry"]:
+                    pair[key] = pop_cse_empty_keys(pair[key])
+
         case BatteryType.conversion:
             voltage_pair_cls = ConversionVoltagePair
             for pair in voltage_pairs:
-                pair["entries_charge"] = [
-                    pop_cse_empty_keys(cse) for cse in pair["entries_charge"]
-                ]
-                pair["entries_discharge"] = [
-                    pop_cse_empty_keys(cse) for cse in pair["entries_discharge"]
-                ]
+                for key in ["entries_charge", "entries_discharge"]:
+                    pair[key] = [pop_cse_empty_keys(cse) for cse in pair[key]]
+
                 pair["working_ion_entry"] = pop_cse_empty_keys(
                     pair["working_ion_entry"]
                 )
@@ -125,43 +120,28 @@ def walk_voltage_pairs(voltage_pairs: list[dict[str, Any]], battery_type: Batter
 
 
 def electrode_object_energy_adjustments_serde(
-    d: dict, battery_type: BatteryType, serde_fn: Callable
+    d: dict, battery_type: BatteryType, serde_fn: Callable, ea="energy_adjustments"
 ):
     pair: dict[str, Any]
 
-    d["working_ion_entry"]["energy_adjustments"] = serde_fn(
-        d["working_ion_entry"]["energy_adjustments"]
-    )
+    d["working_ion_entry"][ea] = serde_fn(d["working_ion_entry"][ea])
 
     match battery_type:
         case BatteryType.insertion:
             for pair in d["voltage_pairs"]:
-                pair["working_ion_entry"]["energy_adjustments"] = serde_fn(
-                    pair["working_ion_entry"]["energy_adjustments"]
-                )
-                pair["entry_charge"]["energy_adjustments"] = serde_fn(
-                    pair["entry_charge"]["energy_adjustments"]
-                )
-                pair["entry_discharge"]["energy_adjustments"] = serde_fn(
-                    pair["entry_discharge"]["energy_adjustments"]
-                )
-            for entry in d["stable_entries"]:
-                entry["energy_adjustments"] = serde_fn(entry["energy_adjustments"])
-            for entry in d["unstable_entries"]:
-                entry["energy_adjustments"] = serde_fn(entry["energy_adjustments"])
+                for key in ["working_ion_entry", "entry_charge", "entry_discharge"]:
+                    pair[key][ea] = serde_fn(pair[key][ea])
+
+            for key in ["stable_entries", "unstable_entries"]:
+                for entry in d[key]:
+                    entry[ea] = serde_fn(entry[ea])
+
         case BatteryType.conversion:
             for pair in d["voltage_pairs"]:
-                pair["working_ion_entry"]["energy_adjustments"] = serde_fn(
-                    pair["working_ion_entry"]["energy_adjustments"]
-                )
-                for charge_entry in pair["entries_charge"]:
-                    charge_entry["energy_adjustments"] = serde_fn(
-                        charge_entry["energy_adjustments"]
-                    )
-                for discharge_entry in pair["entries_discharge"]:
-                    discharge_entry["energy_adjustments"] = serde_fn(
-                        discharge_entry["energy_adjustments"]
-                    )
+                pair["working_ion_entry"][ea] = serde_fn(pair["working_ion_entry"][ea])
+                for key in ["entries_charge", "entries_discharge"]:
+                    for entry in pair[key]:
+                        entry[ea] = serde_fn(entry[ea])
 
 
 def electrode_object_deserializer(
@@ -175,12 +155,8 @@ def electrode_object_deserializer(
                 target_class = InsertionElectrode
                 battery_type = BatteryType.insertion
                 eo["working_ion_entry"] = pop_cse_empty_keys(eo["working_ion_entry"])
-                eo["stable_entries"] = [
-                    pop_cse_empty_keys(cse) for cse in eo["stable_entries"]
-                ]
-                eo["unstable_entries"] = [
-                    pop_cse_empty_keys(cse) for cse in eo["unstable_entries"]
-                ]
+                for key in ["stable_entries", "unstable_entries"]:
+                    eo[key] = [pop_cse_empty_keys(cse) for cse in eo[key]]
 
             case "ConversionElectrode":
                 target_class = ConversionElectrode
@@ -202,13 +178,11 @@ def electrode_object_serializer(electrode_object, nxt, info) -> dict[str, Any]:
 
     format = info.context.get("format") if info.context else "standard"
     if format == "arrow":
-        battery_type: type[BatteryType.insertion | BatteryType.conversion]
-
-        match default_serialized_object["@class"]:
-            case "InsertionElectrode":
-                battery_type = BatteryType.insertion
-            case "ConversionElectrode":
-                battery_type = BatteryType.conversion
+        battery_type = (
+            BatteryType.insertion
+            if default_serialized_object["@class"] == "InsertionElectrode"
+            else BatteryType.conversion
+        )
 
         electrode_object_energy_adjustments_serde(
             default_serialized_object, battery_type, orjson.dumps

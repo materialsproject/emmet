@@ -62,14 +62,10 @@ def entries_list_serde(entries_list: ValuesView | list[dict], serde_fn: Callable
         entry["energy_adjustments"] = serde_fn(entry["energy_adjustments"])
 
 
-def entries_energy_adjustments_serde(d: dict, serde_fn: Callable):
-    entries_list_serde(d.values(), serde_fn)
-
-
 def phase_diagram_serde(d: dict, mode: Mode, serde_fn: Callable):
     entries_list_serde(d["all_entries"], serde_fn)
-    entries_list_serde(d["computed_data"]["all_entries"], serde_fn)
-    entries_list_serde(d["computed_data"]["qhull_entries"], serde_fn)
+    for key in ["all_entries", "qhull_entries"]:
+        entries_list_serde(d["computed_data"][key], serde_fn)
 
     match mode:
         case Mode.SHRED:
@@ -99,14 +95,11 @@ def phase_diagram_serde(d: dict, mode: Mode, serde_fn: Callable):
 
 def phase_diagram_serializer(phase_diagram, nxt, info) -> dict[str, Any]:
     default_serialized_object = nxt(phase_diagram.as_dict(), info)
-    default_serialized_object["computed_data"]["all_entries"] = [
-        entry.as_dict()
-        for entry in default_serialized_object["computed_data"]["all_entries"]
-    ]
-    default_serialized_object["computed_data"]["qhull_entries"] = [
-        entry.as_dict()
-        for entry in default_serialized_object["computed_data"]["qhull_entries"]
-    ]
+
+    for key in ["all_entries", "qhull_entries"]:
+        default_serialized_object["computed_data"][key] = [
+            entry.as_dict() for entry in default_serialized_object["computed_data"][key]
+        ]
 
     format = info.context.get("format") if info.context else "standard"
     if format == "arrow":

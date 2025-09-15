@@ -23,8 +23,10 @@ from emmet.core.material_property import PropertyDoc
 if TYPE_CHECKING:
     from emmet.core.types.typing import IdentifierType
 
-from emmet.core.types.pymatgen_types.molecule_adapter import MoleculeType
-from emmet.core.types.pymatgen_types.structure_adapter import StructureType
+from emmet.core.types.pymatgen_types.structure_adapter import (
+    MoleculeType,
+    StructureType,
+)
 
 DEFAULT_DISTANCE_CUTOFF = 1.4
 DEFAULT_ANGLE_CUTOFF = 0.3

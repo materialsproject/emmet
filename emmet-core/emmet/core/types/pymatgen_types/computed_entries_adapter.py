@@ -108,7 +108,14 @@ ComputedEntryTypeVar = TypeVar(
 )
 
 
-def entry_serializer(entry, nxt, info):
+ComputedStructureEntryTypeVar = TypeVar(
+    "ComputedStructureEntryTypeVar",
+    ComputedStructureEntry,
+    TypedComputedStructureEntryDict,
+)
+
+
+def entry_serializer(entry, nxt, info) -> dict[str, Any]:
     default_serialized_object = nxt(entry.as_dict(), info)
 
     format = info.context.get("format") if info.context else "standard"
@@ -152,12 +159,6 @@ ComputedEntryType = Annotated[
     BeforeValidator(entry_deserializer),
     WrapSerializer(entry_serializer, return_type=dict[str, Any]),
 ]
-
-ComputedStructureEntryTypeVar = TypeVar(
-    "ComputedStructureEntryTypeVar",
-    ComputedStructureEntry,
-    TypedComputedStructureEntryDict,
-)
 
 
 ComputedStructureEntryType = Annotated[

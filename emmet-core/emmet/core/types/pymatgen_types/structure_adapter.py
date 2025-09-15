@@ -2,6 +2,7 @@ from typing import Annotated, TypeVar
 
 from pydantic import BeforeValidator, WrapSerializer
 from pymatgen.core import Structure
+from pymatgen.core.structure import Molecule
 from typing_extensions import NotRequired, TypedDict
 
 from emmet.core.types.pymatgen_types.lattice_adapter import TypedLatticeDict
@@ -22,15 +23,32 @@ TypedStructureDict = TypedDict(
 
 StructureTypeVar = TypeVar("StructureTypeVar", Structure, TypedStructureDict)
 
+TypedMoleculeDict = TypedDict(
+    "TypedMoleculeDict",
+    {
+        "@module": str,
+        "@class": str,
+        "charge": float,
+        "spin_multiplicity": int,
+        "sites": list[TypedSiteDict],
+        "properties": TypedAggregateProperitesDict,
+    },
+)
 
-def pop_empty_structure_keys(structure: StructureTypeVar):
-    if isinstance(structure, dict):
-        if structure.get("properties"):
-            for prop, val in list(structure["properties"].items()):  # type: ignore[union-attr]
+
+MoleculeTypeVar = TypeVar("MoleculeTypeVar", Molecule, TypedMoleculeDict)
+
+
+def pop_empty_structure_keys(inp: StructureTypeVar | MoleculeTypeVar):
+    if isinstance(inp, dict):
+        target_cls = Structure if inp["@class"] == "Structure" else Molecule
+
+        if inp.get("properties"):
+            for prop, val in list(inp["properties"].items()):  # type: ignore[union-attr]
                 if val is None:
-                    del structure["properties"][prop]  # type: ignore[union-attr]
+                    del inp["properties"][prop]  # type: ignore[union-attr]
 
-        for site in structure["sites"]:
+        for site in inp["sites"]:
             if "name" in site:
                 if not site["name"]:
                     del site["name"]
@@ -45,10 +63,16 @@ def pop_empty_structure_keys(structure: StructureTypeVar):
                     if val is None:
                         del species[prop]
 
-        return Structure.from_dict(structure)  # type: ignore[arg-type]
+        return target_cls.from_dict(inp)  # type: ignore[arg-type]
 
-    return structure
+    return inp
 
+
+MoleculeType = Annotated[
+    MoleculeTypeVar,
+    BeforeValidator(pop_empty_structure_keys),
+    WrapSerializer(lambda x, nxt, info: x.as_dict(), return_type=TypedMoleculeDict),
+]
 
 StructureType = Annotated[
     StructureTypeVar,

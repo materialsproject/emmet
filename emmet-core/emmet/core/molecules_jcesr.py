@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from pymatgen.core.periodic_table import Element
 
-from emmet.core.types.pymatgen_types.molecule_adapter import MoleculeType
+from emmet.core.types.pymatgen_types.structure_adapter import MoleculeType
 
 
 class MoleculesDoc(BaseModel):

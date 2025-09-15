@@ -10,7 +10,7 @@ from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPID, MPculeID
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.types.enums import ValueEnum
-from emmet.core.types.pymatgen_types.molecule_adapter import MoleculeType
+from emmet.core.types.pymatgen_types.structure_adapter import MoleculeType
 from emmet.core.utils import arrow_incompatible
 
 if TYPE_CHECKING:

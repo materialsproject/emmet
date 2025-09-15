@@ -4,11 +4,8 @@ from pydantic import BeforeValidator, WrapSerializer
 from pymatgen.analysis.graphs import MoleculeGraph, StructureGraph
 from typing_extensions import TypedDict
 
-from emmet.core.types.pymatgen_types.molecule_adapter import (
-    TypedMoleculeDict,
-    pop_empty_molecule_keys,
-)
 from emmet.core.types.pymatgen_types.structure_adapter import (
+    TypedMoleculeDict,
     TypedStructureDict,
     pop_empty_structure_keys,
 )
@@ -65,27 +62,25 @@ MoleculeGraphTypeVar = TypeVar(
 )
 
 
-def pop_empty_structure_graph_keys(sg: StructureGraphTypeVar):
-    if isinstance(sg, dict):
-        sg["structure"] = pop_empty_structure_keys(sg["structure"])
+def pop_empty_graph_keys(graph: StructureGraphTypeVar | MoleculeGraphTypeVar):
+    if isinstance(graph, dict):
+        target_cls: type[StructureGraph | MoleculeGraph]
+        match graph["@class"]:
+            case "StructureGraph":
+                target_cls = StructureGraph
+                graph["structure"] = pop_empty_structure_keys(graph["structure"])  # type: ignore[typeddict-unknown-key, typeddict-item]
+            case "MoleculeGraph":
+                target_cls = MoleculeGraph
+                graph["molecule"] = pop_empty_structure_keys(graph["molecule"])  # type: ignore[typeddict-unknown-key, typeddict-item]
 
-        return StructureGraph.from_dict(sg)  # type: ignore[arg-type]
+        return target_cls.from_dict(graph)  # type: ignore[arg-type]
 
-    return sg
-
-
-def pop_empty_molecule_graph_keys(mg: MoleculeGraphTypeVar):
-    if isinstance(mg, dict):
-        mg["molecule"] = pop_empty_molecule_keys(mg["molecule"])
-
-        return MoleculeGraph.from_dict(mg)  # type: ignore[arg-type]
-
-    return mg
+    return graph
 
 
 StructureGraphType = Annotated[
     StructureGraphTypeVar,
-    BeforeValidator(pop_empty_structure_graph_keys),
+    BeforeValidator(pop_empty_graph_keys),
     WrapSerializer(
         lambda x, nxt, info: x.as_dict(), return_type=TypedStructureGraphDict
     ),
@@ -93,7 +88,7 @@ StructureGraphType = Annotated[
 
 MoleculeGraphType = Annotated[
     MoleculeGraphTypeVar,
-    BeforeValidator(pop_empty_molecule_graph_keys),
+    BeforeValidator(pop_empty_graph_keys),
     WrapSerializer(
         lambda x, nxt, info: x.as_dict(), return_type=TypedMoleculeGraphDict
     ),

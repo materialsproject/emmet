@@ -36,23 +36,17 @@ GrainBoundaryTypeVar = TypeVar(
 
 def pop_empty_gb_keys(gb: GrainBoundaryTypeVar) -> GrainBoundary:
     if isinstance(gb, dict):
-        gb["init_cell"] = pop_empty_structure_keys(gb["init_cell"])
-        gb["oriented_unit_cell"] = pop_empty_structure_keys(gb["oriented_unit_cell"])
+        for key in ["init_cell", "oriented_unit_cell"]:
+            gb[key] = pop_empty_structure_keys(gb[key])  # type: ignore[literal-required]
 
         for site in gb["sites"]:
-            if "name" in site:
-                if not site["name"]:
-                    del site["name"]
+            if "name" in site and not site["name"]:
+                del site["name"]
 
-            if site.get("properties"):
-                for prop, val in list(site["properties"].items()):
+            for key in ["properties", "species"]:
+                for prop, val in list(site.get(key, {}).items()):
                     if val is None:
-                        del site["properties"][prop]
-
-            for species in site["species"]:
-                for prop, val in list(species.items()):
-                    if val is None:
-                        del species[prop]
+                        del site[key][prop]
 
         return GrainBoundary.from_dict(gb)  # type: ignore[arg-type]
 
