@@ -13,7 +13,6 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, Field, PrivateAttr
 
 from emmet.cli.utils import EmmetCliError
-from emmet.core.types.enums import DeprecationMessage
 from emmet.core.vasp.utils import (
     CalculationLocator,
     FileMetadata,
@@ -38,7 +37,7 @@ class CalculationMetadata(BaseModel):
         default=None,
     )
 
-    calc_validation_errors: list[DeprecationMessage | str] = Field(
+    calc_validation_errors: list[str] = Field(
         description="Validation errors for this calculation", default_factory=list
     )
 

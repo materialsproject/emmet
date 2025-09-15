@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
 from pymatgen.io.validation.common import (
     LightOutcar,
     LightVasprun,
@@ -16,7 +16,6 @@ from pymatgen.io.validation.validation import REQUIRED_VASP_FILES, VaspValidator
 from pymatgen.io.vasp import Incar
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.types.enums import DeprecationMessage
 from emmet.core.types.typing import DateTimeType, IdentifierType
 from emmet.core.utils import arrow_incompatible
 from emmet.core.vasp.calc_types.enums import CalcType, RunType
@@ -25,20 +24,11 @@ from emmet.core.vasp.task_valid import TaskDocument
 from emmet.core.vasp.utils import FileMetadata, discover_vasp_files
 
 if TYPE_CHECKING:
-    import os
-    from collections.abc import Mapping
     from pathlib import Path
 
     from typing_extensions import Self
 
     from emmet.core.tasks import TaskDoc
-
-
-class ValidationDataDict(BaseModel):
-    encut_ratio: float | None = Field(None)
-    max_gradient: float | None = Field(None)
-    kspacing_delta: float | None = Field(None)
-    kpts_ratio: float | None = Field(None)
 
 
 @arrow_incompatible
@@ -54,19 +44,6 @@ class ValidationDoc(EmmetBaseModel, VaspValidator):
     last_updated: DateTimeType = Field(
         description="The most recent time when this document was updated.",
     )
-    reasons: list[DeprecationMessage | str] = Field(
-        default_factory=list,
-        description="List of deprecation tags detailing why this task isn't valid",
-    )
-    warnings: list[str] = Field(
-        [], description="List of potential warnings about this calculation"
-    )
-    data: ValidationDataDict | None = Field(
-        None,
-        description="Dictioary of data used to perform validation."
-        " Useful for post-mortem analysis",
-    )
-    model_config = ConfigDict(extra="allow")
     nelements: int | None = Field(None, description="Number of elements.")
     symmetry_number: int | None = Field(
         None,
@@ -77,25 +54,6 @@ class ValidationDoc(EmmetBaseModel, VaspValidator):
         None, description="The run type of the calculation"
     )
     calc_type: CalcType | None = Field(None, description="The calculation type.")
-
-    @classmethod
-    def from_vasp_input(
-        cls,
-        vasp_file_paths: Mapping[str, str | Path | os.PathLike[str]] | None = None,
-        vasp_files: VaspFiles | None = None,
-        fast: bool = False,
-        check_potcar: bool = True,
-        **kwargs,
-    ):
-        return cls(
-            **VaspValidator.from_vasp_input(
-                vasp_file_paths=vasp_file_paths,
-                vasp_files=vasp_files,
-                fast=fast,
-                check_potcar=check_potcar,
-                **kwargs,
-            ).model_dump()
-        )
 
     @classmethod
     def from_file_metadata(cls, file_meta: list[FileMetadata], **kwargs) -> Self:

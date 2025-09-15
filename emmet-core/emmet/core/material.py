@@ -11,10 +11,10 @@ from pymatgen.core.structure import Molecule
 from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID, MPculeID
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
+from emmet.core.types.enums import DeprecationMessage
 from emmet.core.types.pymatgen_types.molecule_adapter import MoleculeType
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.typing import DateTimeType, IdentifierType
-from emmet.core.vasp.validation import DeprecationMessage
 
 if TYPE_CHECKING:
 
