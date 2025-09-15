@@ -1,5 +1,6 @@
 from typing import Annotated, TypeVar
 
+from monty.json import MontyDecoder
 from pydantic import BeforeValidator, WrapSerializer
 from pymatgen.analysis.defects.core import Defect
 from typing_extensions import TypedDict
@@ -33,7 +34,7 @@ DefectTypeVar = TypeVar("DefectTypeVar", Defect, TypedDefectDict)
 def pop_defect_empty_structure_fields(defect: DefectTypeVar):
     if isinstance(defect, dict):
         defect["structure"] = pop_empty_structure_keys(defect["structure"])
-        return Defect.from_dict(defect)
+        return MontyDecoder().process_decoded(defect)
 
     return defect
 
