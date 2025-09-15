@@ -1,23 +1,24 @@
 from __future__ import annotations
 
-from collections import defaultdict
 import copy
 import json
 import logging
+from collections import defaultdict
 from multiprocessing import get_context
-from os import cpu_count, PathLike
+from os import PathLike, cpu_count
 from pathlib import Path
 from typing import ClassVar, Iterable
-from emmet.cli.utils import EmmetCliError
-from pydantic import BaseModel, Field, PrivateAttr
 from uuid import UUID, uuid4
 
+from pydantic import BaseModel, Field, PrivateAttr
+
+from emmet.cli.utils import EmmetCliError
+from emmet.core.types.enums import DeprecationMessage
 from emmet.core.vasp.utils import (
     CalculationLocator,
     FileMetadata,
     recursive_discover_vasp_files,
 )
-
 from emmet.core.vasp.validation import ValidationDoc
 
 logger = logging.getLogger("emmet")
@@ -37,7 +38,7 @@ class CalculationMetadata(BaseModel):
         default=None,
     )
 
-    calc_validation_errors: list[str] = Field(
+    calc_validation_errors: list[DeprecationMessage | str] = Field(
         description="Validation errors for this calculation", default_factory=list
     )
 

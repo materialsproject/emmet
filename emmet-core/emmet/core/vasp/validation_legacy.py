@@ -13,11 +13,12 @@ from pymatgen.io.vasp.sets import VaspInputSet
 from emmet.core.base import EmmetBaseModel
 from emmet.core.settings import EmmetSettings
 from emmet.core.tasks import CoreTaskDoc, TaskDoc
+from emmet.core.types.enums import DeprecationMessage
 from emmet.core.types.typing import DateTimeType, IdentifierType
 from emmet.core.vasp.calc_types.enums import CalcType, TaskType
 from emmet.core.vasp.calculation import CoreCalculationOutput
 from emmet.core.vasp.task_valid import TaskDocument
-from emmet.core.vasp.validation import DeprecationMessage, ValidationDataDict
+from emmet.core.vasp.validation import ValidationDataDict
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

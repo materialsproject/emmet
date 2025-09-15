@@ -16,7 +16,7 @@ from pymatgen.io.validation.validation import REQUIRED_VASP_FILES, VaspValidator
 from pymatgen.io.vasp import Incar
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.types.enums import DocEnum
+from emmet.core.types.enums import DeprecationMessage
 from emmet.core.types.typing import DateTimeType, IdentifierType
 from emmet.core.utils import arrow_incompatible
 from emmet.core.vasp.calc_types.enums import CalcType, RunType
@@ -25,35 +25,13 @@ from emmet.core.vasp.task_valid import TaskDocument
 from emmet.core.vasp.utils import FileMetadata, discover_vasp_files
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
     import os
+    from collections.abc import Mapping
     from pathlib import Path
 
     from typing_extensions import Self
 
     from emmet.core.tasks import TaskDoc
-
-
-class DeprecationMessage(DocEnum):
-    MANUAL = "M", "Manual deprecation"
-    SYMMETRY = (
-        "S001",
-        "Could not determine crystalline space group, needed for input set check.",
-    )
-    KPTS = "C001", "Too few KPoints"
-    KSPACING = "C002", "KSpacing not high enough"
-    ENCUT = "C002", "ENCUT too low"
-    FORCES = "C003", "Forces too large"
-    MAG = "C004", "At least one site magnetization is too large"
-    POTCAR = (
-        "C005",
-        "At least one POTCAR used does not agree with the pymatgen input set",
-    )
-    CONVERGENCE = "E001", "Calculation did not converge"
-    MAX_SCF = "E002", "Max SCF gradient too large"
-    LDAU = "I001", "LDAU Parameters don't match the inputset"
-    SET = ("I002", "Cannot validate due to missing or problematic input set")
-    UNKNOWN = "U001", "Cannot validate due to unknown calc type"
 
 
 class ValidationDataDict(BaseModel):
@@ -76,8 +54,9 @@ class ValidationDoc(EmmetBaseModel, VaspValidator):
     last_updated: DateTimeType = Field(
         description="The most recent time when this document was updated.",
     )
-    reasons: list[DeprecationMessage | str] | None = Field(
-        None, description="List of deprecation tags detailing why this task isn't valid"
+    reasons: list[DeprecationMessage | str] = Field(
+        default_factory=list,
+        description="List of deprecation tags detailing why this task isn't valid",
     )
     warnings: list[str] = Field(
         [], description="List of potential warnings about this calculation"
