@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 from datetime import datetime
@@ -160,7 +159,7 @@ class PotcarSpec(BaseModel):
         """
         if ".spec" in str(file_path):
             with zopen(file_path, "rt") as psf:
-                return [cls(**ps) for ps in json.load(psf)]
+                return [cls(**ps) for ps in orjson.loads(psf.read())]
         return cls.from_potcar(VaspPotcar.from_file(str(file_path)))
 
 

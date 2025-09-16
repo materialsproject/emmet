@@ -61,13 +61,10 @@ SETTINGS = EmmetSettings()
 
 def type_override(overrides: dict[str, Any]):
     """
-    Pydantic model decorator for declaring
-    a field should be serialized as a type
-    that does not match the type hint for
-    for the field. Examples: narrow a union
-    type to a single value or hint at a the
-    return type of a field_serializer used
-    during model dumping.
+    Pydantic model decorator for declaring a field should be serialized
+    as a type that does not match the type hint for the field. Examples:
+    narrow a union type to a single value or hint at a the return type
+    of a field_serializer used during model dumping.
     """
 
     def wrapped(cls):
@@ -79,11 +76,9 @@ def type_override(overrides: dict[str, Any]):
 
 def set_msonable_type_adapter(cls):
     """
-    Decorator for MSONables defined in
-    emmet with arrow compatible type
-    hints. Shortcut for generating type
-    adapters rather than writing a dedicated
-    stub file.
+    Decorator for MSONables defined in emmet with arrow compatible
+    type hints. Shortcut for generating type adapters rather than
+    writing a dedicated stub file.
     """
     TypedClsDict = TypedDict(
         f"Typed{cls.__name__}Dict",
@@ -108,12 +103,9 @@ def set_msonable_type_adapter(cls):
 
 def arrow_incompatible(cls):
     """
-    Simple decorator to mark a Pydantic
-    model as being incompatible with
-    serialization using pyarrow. This
-    should only be applied as a temporary
-    measure, all document models should
-    aim for full type introspection.
+    Simple decorator to mark a Pydantic model as being incompatible with
+    serialization using pyarrow. This should only be applied as a temporary
+    measure, all document models should aim for full type introspection.
     """
     cls.arrow_incompatible = True
     return cls
