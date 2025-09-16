@@ -114,8 +114,10 @@ def arrowize(obj) -> pa.DataType:
         args = typing.get_args(obj)
 
         assert all(
-            not isinstance(
-                arg, typing._UnionGenericAlias | UnionType  # type: ignore[attr-defined]
+            not (
+                isinstance(arg, typing._UnionGenericAlias | UnionType)  # type: ignore[attr-defined]
+                and len(list(filter(lambda x: x is not types.NoneType, arg.__args__)))
+                > 1
             )
             for arg in args
         ), f"""
