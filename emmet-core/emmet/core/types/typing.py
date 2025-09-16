@@ -37,9 +37,17 @@ DateTimeType: TypeAlias = Annotated[
 ]
 """Datetime serde."""
 
+
+def _validate_index(x):
+    try:
+        return AlphaID(x).formatted
+    except ValueError:
+        return str(x)
+
+
 IdentifierType: TypeAlias = Annotated[
     Union[MPID, AlphaID, str],
-    BeforeValidator(lambda x: AlphaID(x).formatted),
+    BeforeValidator(_validate_index),
     PlainSerializer(lambda x: str(AlphaID(x))),
 ]
 """MPID / AlphaID serde."""

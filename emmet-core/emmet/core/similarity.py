@@ -30,22 +30,40 @@ if TYPE_CHECKING:
 
 
 def _vector_difference_matrix_row(
-    idxs,
-    v,
-    norms,
-):
-    inner = np.zeros((idxs[1] - idxs[0], v.shape[0]))
+    idxs: int,
+    v: np.ndarray,
+    norms: np.ndarray,
+    dtype=np.float64,
+) -> tuple[int, np.ndarray]:
+    """Compute the distance between a single vector and a list of other vectors.
+
+    Parameters
+    -----------
+    idxs : the integer index of the vector in v to use as a fixed point
+    v : the list of all possible vectors
+    norms : the norms of the vectors in v
+    dtype : the numpy dtype of working and returned arrays.
+
+    Returns
+    -----------
+    int (copy of idxs) and np.ndarray of the squared vector distances.
+    """
+    inner = np.zeros((idxs[1] - idxs[0], v.shape[0]), dtype=dtype)
     _ = np.einsum("ik,jk->ij", v[idxs[0] : idxs[1]], v, out=inner)
     return idxs, np.array(
         [
             norms[idxs[0] : idxs[1]] + norms[i] - 2 * inner[:, i]
             for i in range(norms.shape[0])
-        ]
+        ],
+        dtype=dtype,
     )
 
 
 def vector_difference_matrix(
-    v: np.ndarray, noise_floor: float = 1e-14, spread_rows: int = 0
+    v: np.ndarray,
+    noise_floor: float = 1e-14,
+    spread_rows: int = 0,
+    dtype: np.dtype = np.float64,
 ) -> np.ndarray:
     """Construct a symmetric matrix of vector differences.
 
@@ -68,21 +86,23 @@ def vector_difference_matrix(
     spread_rows : int = 0
         The number of parallel processes to use in constructing
         the rows of D_ij
+    dtype : the numpy dtype of the arrays used, defaults to float64
     """
 
-    vlen = v.shape[0]
-    v_diff = np.zeros(2 * (vlen,))
+    x = v.astype(dtype) if dtype != v.dtype else v.copy()
+    vlen = x.shape[0]
+    v_diff = np.zeros(2 * (vlen,), dtype=dtype)
 
-    norms = np.zeros(vlen)
-    _ = np.einsum("ik,ik->i", v, v, out=norms)
+    norms = np.zeros(vlen, dtype=dtype)
+    _ = np.einsum("ik,ik->i", x, x, out=norms)
 
     if not spread_rows:
-        inner = np.zeros(2 * (vlen,))
-        _ = np.einsum("ik,jk->ij", v, v, out=inner)
+        inner = np.zeros(2 * (vlen,), dtype=dtype)
+        _ = np.einsum("ik,jk->ij", x, x, out=inner)
         for i in range(vlen):
             v_diff[:, i] = norms + norms[i] - 2 * inner[:, i]
     else:
-        func = partial(_vector_difference_matrix_row, v=v, norms=norms)
+        func = partial(_vector_difference_matrix_row, v=x, norms=norms)
         with multiprocessing.Pool(spread_rows) as pool:
             vdiff_blocks = pool.map(
                 func,
@@ -201,6 +221,7 @@ class SimilarityScorer:
         self,
         structures: list[Structure],
         num_procs: int = 1,
+        **kwargs,
     ) -> tuple[np.ndarray, np.ndarray]:
         """Rank the similarity between structures using CrystalNN.
 
@@ -209,6 +230,8 @@ class SimilarityScorer:
         structures : list of Structure objects
         num_procs : int = 1
             Number of parallel processes to run in featurizing structures.
+        **kwargs
+            Kwargs to pass to `vector_difference_matrix`
 
         Returns
         -----------
@@ -218,7 +241,7 @@ class SimilarityScorer:
         """
 
         feature_vectors = self.featurize_structures(structures, num_procs=num_procs)
-        distances = vector_difference_matrix(feature_vectors)
+        distances = vector_difference_matrix(feature_vectors, **kwargs)
         return feature_vectors, self._post_process_distance(distances)
 
     def get_most_similar(
