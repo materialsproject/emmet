@@ -98,7 +98,7 @@ def arrowize(obj) -> pa.DataType:
                 for member in args
                 if not isinstance(member, types.EllipsisType)
             ]
-        ), f"Cannot infer arrow compatible primitive from iterable type containing mixed types: {RED}{obj}{RESET} "
+        ), f"Cannot infer arrow compatible primitive from iterable type containing mixed types: {RED}{obj}{RESET}"
 
         # once union type roundtripping is supported in pyarrow, something like this could work:
         #     return pa.dense_union(
@@ -113,11 +113,17 @@ def arrowize(obj) -> pa.DataType:
     if typing.get_origin(obj) in (Mapping, dict):
         args = typing.get_args(obj)
 
-        assert not isinstance(
-            args[0], typing._UnionGenericAlias | UnionType  # type: ignore[attr-defined]
+        assert all(
+            not isinstance(
+                arg, typing._UnionGenericAlias | UnionType  # type: ignore[attr-defined]
+            )
+            for arg in args
         ), f"""
         Cannot construct arrow map type from: {RED}{obj}{RESET}.
-        Keys for maps must resolve to single primitive data type, not Union type: {BLUE}{args[0]}{RESET}
+        Keys and values for map types must resolve to single primitive
+        data type, not Union type:
+            key annotation: {BLUE}{args[0]}{RESET}
+            value annotation: {BLUE}{args[1]}{RESET}
         """
 
         return pa.map_(arrowize(args[0]), arrowize(args[1]))
