@@ -361,9 +361,7 @@ class CoreTaskDoc(StructureMetadata):
 
     @field_validator("transformations", "vasp_objects", mode="before")
     def deserialize_overrides(cls, d):
-        if isinstance(d, str):
-            d = orjson.loads(d)
-        return d
+        return orjson.loads(d) if isinstance(d, str) else d
 
     @classmethod
     def from_directory(
@@ -553,9 +551,7 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
 
     @field_validator("additional_json", mode="before")
     def deserialize_additional_json(cls, d):
-        if isinstance(d, str):
-            d = orjson.loads(d)
-        return d
+        return orjson.loads(d) if isinstance(d, str) else d
 
     @classmethod
     def from_directory(

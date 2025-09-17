@@ -914,10 +914,7 @@ class Calculation(CalculationBaseModel):
 
     @field_validator("bader", "ddec6", mode="before")
     def bader_ddec6_deserializer(cls, d):
-        if isinstance(d, str):
-            d = orjson.loads(d)
-
-        return d
+        return orjson.loads(d) if isinstance(d, str) else d
 
     @field_validator("output_file_paths", mode="before")
     def output_fps_deserializer(cls, output_fps):

@@ -339,10 +339,7 @@ class NebIntermediateImagesDoc(BaseModel):
 
     @field_validator("objects", mode="before")
     def objects_deserializer(cls, d):
-        if isinstance(d, str):
-            d = orjson.loads(d)
-
-        return d
+        return orjson.loads(d) if isinstance(d, str) else d
 
     @classmethod
     def from_directory(
