@@ -1,22 +1,23 @@
 import json
+
 import numpy as np
 import pytest
-
 from pymatgen.electronic_structure.core import Spin
-from pymatgen.electronic_structure.dos import Dos, CompleteDos
+from pymatgen.electronic_structure.dos import CompleteDos, Dos
 from pymatgen.io.vasp import Vasprun
 
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.band_theory import BaseElectronicDos, ElectronicBS, ElectronicDos
 from emmet.core.testing_utils import DataArchive
 
-try:
-    import pyarrow
-except ImportError:
-    pyarrow = None
+if ARROW_COMPATIBLE:
+    import pyarrow as pa
+
+    from emmet.core.arrow import arrowize
 
 
-def test_elec_band_struct(test_dir):
-
+@pytest.fixture(scope="module")
+def bs_fixture(test_dir):
     vasprun = DataArchive.extract_obj(
         test_dir / "vasp/r2scan_relax.json.gz",
         "vasprun.xml.gz",
@@ -25,6 +26,26 @@ def test_elec_band_struct(test_dir):
     )
     pmg_bs = vasprun.get_band_structure()
     elec_bs = ElectronicBS.from_pmg(pmg_bs)
+
+    return (vasprun, pmg_bs, elec_bs)
+
+
+@pytest.fixture(scope="module")
+def dos_fixture(test_dir):
+    vasprun = DataArchive.extract_obj(
+        test_dir / "vasp/Si_uniform.json.gz",
+        "vasprun.xml.gz",
+        Vasprun,
+        parse_projected_eigen=True,
+    )
+    pmg_dos = vasprun.complete_dos
+    edos = ElectronicDos.from_pmg(pmg_dos)
+
+    return (vasprun, pmg_dos, edos)
+
+
+def test_elec_band_struct(bs_fixture):
+    vasprun, pmg_bs, elec_bs = bs_fixture
 
     assert len(elec_bs.qpoints) == 116
     assert np.all(
@@ -57,16 +78,6 @@ def test_elec_band_struct(test_dir):
 
     # round trip pymatgen
     assert pmg_bs.as_dict() == elec_bs.to_pmg().as_dict()
-
-    if pyarrow:
-        # round trip arrow
-        table = elec_bs.to_arrow()
-        assert isinstance(table, pyarrow.Table)
-        assert set(ElectronicBS.model_fields) == set(table.column_names)
-        md2 = ElectronicBS.from_arrow(table).model_dump()
-        for k, v in md2.items():
-            print(k, v == elec_bs.model_dump()[k])
-        assert ElectronicBS.from_arrow(table) == elec_bs
 
 
 def test_base_electronic_dos():
@@ -101,17 +112,9 @@ def test_base_electronic_dos():
             )
 
 
-def test_electronic_dos(test_dir):
+def test_electronic_dos(dos_fixture):
+    vasprun, pmg_dos, edos = dos_fixture
 
-    vasprun = DataArchive.extract_obj(
-        test_dir / "vasp/Si_uniform.json.gz",
-        "vasprun.xml.gz",
-        Vasprun,
-        parse_projected_eigen=True,
-    )
-    pmg_dos = vasprun.complete_dos
-
-    edos = ElectronicDos.from_pmg(pmg_dos)
     assert edos.efermi == pytest.approx(6.26639781)
     assert edos.structure == vasprun.final_structure
     for spin, dos in pmg_dos.densities.items():
@@ -129,12 +132,29 @@ def test_electronic_dos(test_dir):
     assert new_pmg_dos.as_dict() == pmg_dos.as_dict()
     assert isinstance(new_pmg_dos, CompleteDos)
 
-    if pyarrow:
-        # test roundtrip parquet
-        assert ElectronicDos.from_arrow(edos.to_arrow()) == edos
-
     # test partial data return type
     edos_incomplete = ElectronicDos(
         **edos.model_dump(exclude=["structure", "projected_densities"])
     )
     assert isinstance(edos_incomplete.to_pmg(), Dos)
+
+
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
+def test_arrow(bs_fixture, dos_fixture):
+    _, _, elec_bs = bs_fixture
+    bs_arrow_struct = pa.scalar(
+        elec_bs.model_dump(context={"format": "arrow"}), type=arrowize(ElectronicBS)
+    )
+    test_arrow_bs_doc = ElectronicBS(**bs_arrow_struct.as_py(maps_as_pydicts="strict"))
+    assert test_arrow_bs_doc == elec_bs
+
+    _, _, edos = dos_fixture
+    dos_arrow_struct = pa.scalar(
+        edos.model_dump(context={"format": "arrow"}), type=arrowize(ElectronicDos)
+    )
+    test_arrow_dos_doc = ElectronicDos(
+        **dos_arrow_struct.as_py(maps_as_pydicts="strict")
+    )
+    assert test_arrow_dos_doc == edos

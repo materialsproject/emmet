@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from pymatgen.core.periodic_table import Element
-from pymatgen.core.structure import Molecule
+
+from emmet.core.types.pymatgen_types.structure_adapter import MoleculeType
 
 
 class MoleculesDoc(BaseModel):
@@ -49,7 +50,7 @@ class MoleculesDoc(BaseModel):
         description="Materials Project molecule ID. This takes the form mol-*****.",
     )
 
-    molecule: Molecule | None = Field(
+    molecule: MoleculeType | None = Field(
         None,
         description="Pymatgen molecule object.",
     )

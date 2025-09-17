@@ -12,6 +12,7 @@ from pymatgen.core.periodic_table import Specie
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.types.enums import ValueEnum
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 
 if TYPE_CHECKING:
     from emmet.core.types.typing import IdentifierType
@@ -29,6 +30,10 @@ class OxidationStateDoc(PropertyDoc):
 
     property_name: str = "oxidation"
 
+    structure: StructureType = Field(
+        ...,
+        description="The structure used in the generation of the oxidation state data.",
+    )
     possible_species: list[str] = Field(
         description="Possible charged species in this material."
     )
@@ -40,12 +45,6 @@ class OxidationStateDoc(PropertyDoc):
     )
     method: OxiStateAssigner | None = Field(
         None, description="Method used to compute oxidation states."
-    )
-
-    structure: Structure | None = Field(
-        None,
-        description="The structure used in the generation of the oxidation state data.",
-        exclude=False,
     )
 
     @classmethod

@@ -5,15 +5,14 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING
 
-
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
 from pydantic import BaseModel, Field, field_validator
 from pymatgen.core.structure import Structure
 
-from emmet.core.types.typing import DateTimeType
 from emmet.core.material_property import PropertyDoc
 from emmet.core.types.enums import ValueEnum
+from emmet.core.types.typing import DateTimeType
 
 if TYPE_CHECKING:
     from emmet.core.types.typing import IdentifierType
@@ -45,7 +44,7 @@ class History(BaseModel):
 
     name: str
     url: str
-    description: dict | None = Field(
+    description: dict[str, str] | None = Field(
         None, description="Dictionary of extra data for this history node."
     )
 
@@ -63,21 +62,23 @@ class SNLAbout(BaseModel):
         "", description="Bibtex reference strings for this material."
     )
 
-    authors: list[Author] = Field([], description="list of authors for this material.")
-
-    remarks: list[str] = Field(
-        [], description="List of remarks for the provenance of this material."
+    authors: list[Author] | None = Field(
+        None, description="list of authors for this material."
     )
 
-    tags: list[str] = Field([])
-
-    database_IDs: dict[Database, list[str]] = Field(
-        dict(), description="Database IDs corresponding to this material."
+    remarks: list[str] | None = Field(
+        None, description="list of remarks for the provenance of this material."
     )
 
-    history: list[History] = Field(
-        [],
-        description="List of history nodes specifying the transformations or orignation"
+    tags: list[str] | None = Field(None)
+
+    database_IDs: dict[Database, list[str]] | None = Field(
+        None, description="Database IDs corresponding to this material."
+    )
+
+    history: list[History] | None = Field(
+        None,
+        description="list of history nodes specifying the transformations or orignation"
         " of this material for the entry closest matching the material input.",
     )
 
@@ -104,28 +105,30 @@ class ProvenanceDoc(PropertyDoc):
     )
 
     references: list[str] = Field(
-        [], description="Bibtex reference strings for this material"
+        default_factory=list, description="Bibtex reference strings for this material"
     )
 
-    authors: list[Author] = Field([], description="list of authors for this material")
-
-    remarks: list[str] = Field(
-        [], description="List of remarks for the provenance of this material"
+    authors: list[Author] = Field(
+        default_factory=list, description="list of authors for this material"
     )
 
-    tags: list[str] = Field([])
+    remarks: list[str] | None = Field(
+        None, description="list of remarks for the provenance of this material"
+    )
+
+    tags: list[str] | None = Field(None)
 
     theoretical: bool = Field(
         True, description="If this material has any experimental provenance or not"
     )
 
-    database_IDs: dict[Database, list[str]] = Field(
-        dict(), description="Database IDs corresponding to this material"
+    database_IDs: dict[Database, list[str]] | None = Field(
+        None, description="Database IDs corresponding to this material"
     )
 
     history: list[History] = Field(
-        [],
-        description="List of history nodes specifying the transformations or orignation"
+        default_factory=list,
+        description="list of history nodes specifying the transformations or orignation"
         " of this material for the entry closest matching the material input",
     )
 
@@ -176,15 +179,15 @@ class ProvenanceDoc(PropertyDoc):
 
         # TODO: Maybe we should combine this robocrystallographer?
         # TODO: Refine these tags / remarks
-        remarks = list(set([remark for snl in snls for remark in snl.about.remarks]))
+        remarks = list(set([remark for snl in snls for remark in snl.about.remarks]))  # type: ignore[union-attr]
         tags = [r for r in remarks if len(r) < 140]
 
-        authors = [entry for snl in snls for entry in snl.about.authors]
+        authors = [entry for snl in snls for entry in snl.about.authors]  # type: ignore[union-attr]
 
         # Check if this entry is experimental
         exp_vals = []
         for snl in snls:
-            for entry in snl.about.history:
+            for entry in snl.about.history:  # type: ignore[union-attr]
                 if entry.description is not None:
                     exp_vals.append(entry.description.get("experimental", False))
 

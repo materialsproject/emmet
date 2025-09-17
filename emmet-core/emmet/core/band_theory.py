@@ -2,35 +2,26 @@
 
 from __future__ import annotations
 
-import json
-import types
-from typing import TYPE_CHECKING, Any, get_args
+import numbers
+from typing import TYPE_CHECKING
 
 import numpy as np
-from pydantic import BaseModel, Field, model_validator, model_serializer
-
-from pymatgen.core import Lattice, Structure
+from pydantic import BaseModel, Field, computed_field, field_validator
+from pymatgen.core import Lattice
 from pymatgen.electronic_structure.bandstructure import (
     BandStructure as PmgBandStructure,
-    Kpoint,
 )
+from pymatgen.electronic_structure.bandstructure import Kpoint
 from pymatgen.electronic_structure.core import Orbital, Spin
-from pymatgen.electronic_structure.dos import Dos, CompleteDos
+from pymatgen.electronic_structure.dos import CompleteDos, Dos
 
-from emmet.core.math import Vector3D, Matrix3D
-from emmet.core.utils import requires_arrow
-
-try:
-    import pyarrow as pa
-    from pyarrow import Table as ArrowTable
-except ImportError:
-    pa = None
-    ArrowTable = None
+from emmet.core.math import Matrix3D, Vector3D
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 
 if TYPE_CHECKING:
 
-    from typing_extensions import Self
     from pymatgen.core.sites import PeriodicSite
+    from typing_extensions import Self
 
 BAND_GAP_TOL = 1e-4
 
@@ -38,67 +29,14 @@ BAND_GAP_TOL = 1e-4
 class BandTheoryBase(BaseModel):
 
     identifier: str | None = Field(None, description="The identifier of this object.")
-    structure: Structure | None = Field(
+    structure: StructureType | None = Field(
         None, description="The structure associated with this calculation."
     )
 
-    @model_validator(mode="before")
-    def deserialize_pmg(cls, config: Any) -> Any:
-        """Deserialize dict and json.dumps-like pymatgen objects."""
 
-        if config.get("structure"):
-            if isinstance(config["structure"], str):
-                config["structure"] = Structure.from_str(
-                    config["structure"], fmt="json"
-                )
-            elif isinstance(config["structure"], dict):
-                config["structure"] = Structure.from_dict(config["structure"])
-        return config
-
-    @model_serializer
-    def serialize_pmg(self) -> dict[str, Any]:
-        """Serialize pymatgen objects to dicts."""
-        config = {k: getattr(self, k, None) for k in type(self).model_fields}
-        if config.get("structure"):
-            config["structure"] = config["structure"].as_dict()  # type: ignore[union-attr]
-        return config
-
-    @requires_arrow
-    def to_arrow(self, col_prefix: str | None = None) -> ArrowTable:
-        """Serialize to arrow."""
-        col_prefix = col_prefix or ""
-        config = self.model_dump()
-        if struct_dict := config.get("structure"):
-            config["structure"] = json.dumps(struct_dict)
-        # Sanitize empty python objects that arrow struggles with currently
-        arrow_config = {}
-        for k, v in config.items():
-            if isinstance(v, dict) and not v:
-                arrow_config[f"{col_prefix}{k}"] = [None]
-            else:
-                arrow_config[f"{col_prefix}{k}"] = [v]
-        return pa.Table.from_pydict(arrow_config)
-
-    @classmethod
-    @requires_arrow
-    def from_arrow(cls, table: ArrowTable, col_prefix: str | None = None) -> Self:
-        """Create an object from an arrow table."""
-        dct: dict[str, Any] = {}
-        col_prefix = col_prefix or ""
-        for k, anno in cls.model_fields.items():
-            dct[k] = table[f"{col_prefix}{k}"].to_pylist()[0]
-
-            # Unsanitize null from arrow
-            is_union_type = isinstance(anno.annotation, types.UnionType)
-            if dct[k] is None and (
-                (is_union_type and (type(None) not in get_args(anno.annotation)))
-                or not is_union_type
-            ):
-                dct[k] = anno.default
-        return cls(**dct)
-
-
-class BandStructure(BandTheoryBase):
+class BandStructure(
+    BandTheoryBase, populate_by_name=True, validate_by_alias=True, validate_by_name=True
+):
     """Define the schema of band structures.
 
     This class is generic enough to accommodate both
@@ -109,15 +47,20 @@ class BandStructure(BandTheoryBase):
         description="The wave vectors (q-points) at which the band structure was sampled, in direct coordinates.",
     )
 
-    reciprocal_lattice: Matrix3D = Field(description="The reciprocal lattice.")
+    reciprocal_lattice: Matrix3D = Field(
+        description="The reciprocal lattice.", validation_alias="lattice_rec"
+    )
 
     labels_dict: dict[str, Vector3D] = Field(
         {}, description="The high-symmetry labels of specific q-points."
     )
 
-    structure: Structure | None = Field(
-        None, description="The structure associated with the calculation."
-    )
+    @field_validator("reciprocal_lattice", mode="before")
+    def reciprocal_lattice_deserializer(cls, reciprocal_lattice):
+        if isinstance(reciprocal_lattice, dict):
+            return reciprocal_lattice.get("matrix")
+
+        return reciprocal_lattice
 
 
 class ElectronicBS(BandStructure):
@@ -143,10 +86,6 @@ class ElectronicBS(BandStructure):
         None, description="If the bandgap is non-zero, whether the band gap is direct."
     )
 
-    is_metal: bool | None = Field(
-        None, description="Whether the band gap is almost zero."
-    )
-
     spin_up_projections: list[list[list[list[float]]]] | None = Field(
         None,
         description=(
@@ -167,26 +106,14 @@ class ElectronicBS(BandStructure):
         ),
     )
 
-    @model_validator(mode="before")
-    def deserialize_pmg(cls, config: Any) -> Any:
-        """Ensure fields are correctly populated."""
-
-        if bg := config.get("band_gap"):
-            if not (config.get("is_metal")):
-                config["is_metal"] = bg < BAND_GAP_TOL
-
-        # remap legacy fields
-        for k, v in {
-            "lattice_rec": "reciprocal_lattice",
-            "bands": "frequencies",
-        }.items():
-            if config.get(k) is not None:
-                config[v] = config.pop(k)
-
-        if isinstance(config["reciprocal_lattice"], dict):
-            config["reciprocal_lattice"] = config["reciprocal_lattice"].get("matrix")
-
-        return super(ElectronicBS, cls).deserialize_pmg(config)  # type: ignore[operator]
+    @computed_field
+    def is_metal(self) -> bool:
+        """Whether the band gap is almost zero."""
+        return (
+            self.band_gap < BAND_GAP_TOL
+            if isinstance(self.band_gap, numbers.Number)
+            else False
+        )
 
     @classmethod
     def from_pmg(cls, ebs: PmgBandStructure) -> Self:

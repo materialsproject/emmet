@@ -2,40 +2,30 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
-from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.apps.battery.battery_abc import AbstractElectrode
-from pymatgen.apps.battery.conversion_battery import (
-    ConversionElectrode,
-    ConversionVoltagePair,
-)
-from pymatgen.apps.battery.insertion_battery import (
-    InsertionElectrode,
-    InsertionVoltagePair,
-)
-from pymatgen.core import Composition, Structure
+from pymatgen.apps.battery.conversion_battery import ConversionElectrode
+from pymatgen.apps.battery.insertion_battery import InsertionElectrode
+from pymatgen.core import Composition
 from pymatgen.core.periodic_table import DummySpecies, Element, Species
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
-from emmet.core.types.enums import ValueEnum
+from emmet.core.base import EmmetBaseModel
+from emmet.core.types.enums import BatteryType
+from emmet.core.types.pymatgen_types.balanced_reaction_adapter import (
+    BalancedReactionType,
+)
+from emmet.core.types.pymatgen_types.composition_adapter import CompositionType
+from emmet.core.types.pymatgen_types.electrode_adapter import (
+    ConversionElectrodeType,
+    InsertionElectrodeType,
+)
+from emmet.core.types.pymatgen_types.element_adapter import ElementType
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.typing import DateTimeType, IdentifierType
-from emmet.core.utils import utcnow
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-    from typing import Any
-    from typing_extensions import Self
-
-
-class BatteryType(str, ValueEnum):
-    """
-    Enum for battery type
-    """
-
-    insertion = "insertion"
-    conversion = "conversion"
+from emmet.core.utils import type_override, utcnow
 
 
 class VoltagePairDoc(BaseModel):
@@ -95,6 +85,7 @@ class VoltagePairDoc(BaseModel):
         return cls(**sub_electrode.get_summary_dict(), **kwargs)
 
 
+@type_override({"id_charge": IdentifierType, "id_discharge": IdentifierType})
 class InsertionVoltagePairDoc(VoltagePairDoc):
     """
     Features specific to insertion electrode
@@ -108,11 +99,11 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
         None, description="The energy above hull of the discharged material in eV/atom."
     )
 
-    id_charge: IdentifierType | int | None | None = Field(
+    id_charge: IdentifierType | int | None = Field(
         None, description="The Materials Project ID of the charged structure."
     )
 
-    id_discharge: IdentifierType | int | None | None = Field(
+    id_discharge: IdentifierType | int | None = Field(
         None, description="The Materials Project ID of the discharged structure."
     )
 
@@ -122,12 +113,13 @@ class ConversionVoltagePairDoc(VoltagePairDoc):
     Features specific to conversion electrode
     """
 
-    reaction: dict | None = Field(
+    reaction: BalancedReactionType | None = Field(
         None,
         description="The reaction that characterizes that particular voltage step.",
     )
 
 
+@type_override({"all_elements": list[ElementType]})
 class EntriesCompositionSummary(BaseModel):
     """
     Composition summary data for all material entries associated with this electrode.
@@ -149,12 +141,12 @@ class EntriesCompositionSummary(BaseModel):
         description="Anonymous formulas for material entries across all voltage pairs.",
     )
 
-    all_elements: list[Element | Species | DummySpecies] | None = Field(
+    all_elements: list[ElementType | Species | DummySpecies] | None = Field(
         None,
         description="Elements in material entries across all voltage pairs.",
     )
 
-    all_composition_reduced: dict | None = Field(
+    all_composition_reduced: dict[str, list[float]] | None = Field(
         None,
         description="Composition reduced data for entries across all voltage pairs.",
     )
@@ -185,7 +177,7 @@ class EntriesCompositionSummary(BaseModel):
         )
 
 
-class BaseElectrode(BaseModel):
+class BaseElectrode(EmmetBaseModel):
     battery_type: BatteryType | None = Field(
         None, description="The type of battery (insertion or conversion)."
     )
@@ -206,7 +198,7 @@ class BaseElectrode(BaseModel):
         description="Reduced formula with working ion range produced by combining the charge and discharge formulas.",
     )
 
-    working_ion: Element | None = Field(
+    working_ion: ElementType | None = Field(
         None, description="The working ion as an Element object."
     )
 
@@ -224,7 +216,7 @@ class BaseElectrode(BaseModel):
         description="Timestamp for the most recent calculation for this Material document.",
     )
 
-    framework: Composition | None = Field(
+    framework: CompositionType | None = Field(
         None, description="The chemical compositions of the host framework."
     )
 
@@ -232,7 +224,7 @@ class BaseElectrode(BaseModel):
         None, description="The id for this battery document."
     )
 
-    elements: list[Element] | None = Field(
+    elements: list[ElementType] | None = Field(
         None,
         description="The atomic species contained in this electrode (not including the working ion).",
     )
@@ -263,7 +255,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
     Insertion electrode
     """
 
-    host_structure: Structure | None = Field(
+    host_structure: StructureType | None = Field(
         None, description="Host structure (structure without the working ion)."
     )
 
@@ -282,17 +274,10 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
         description="Composition summary data for all material in entries across all voltage pairs.",
     )
 
-    electrode_object: InsertionElectrode | None = Field(
-        None, description="The Pymatgen electrode object."
+    electrode_object: InsertionElectrodeType | None = Field(
+        None,
+        description="The Pymatgen electrode object.",
     )
-
-    @model_validator(mode="before")
-    @classmethod
-    def deserialize(cls, config: Any) -> Self:
-        """Deserialize pymatgen dataclasses which lose monty info on model_dump()."""
-        return _deserialize_pymatgen_battery_dataclasses(
-            config, InsertionElectrode, InsertionVoltagePair
-        )
 
     @classmethod
     def from_entries(
@@ -301,7 +286,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
         working_ion_entry: ComputedEntry,
         battery_id: str,
         strip_structures: bool = False,
-    ) -> "InsertionElectrodeDoc" | None:
+    ) -> InsertionElectrodeDoc | None:
         try:
             ie = InsertionElectrode.from_entries(
                 entries=grouped_entries,
@@ -459,18 +444,9 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
         None, description="Returns all of the voltage steps material pairs."
     )
 
-    electrode_object: ConversionElectrode | None = Field(
+    electrode_object: ConversionElectrodeType | None = Field(
         None, description="The Pymatgen conversion electrode object."
     )
-
-    @model_validator(mode="before")
-    @classmethod
-    def deserialize(cls, config: Any) -> Self:
-        """Deserialize pymatgen dataclasses which lose monty info on model_dump()."""
-        config = _deserialize_pymatgen_battery_dataclasses(
-            config, ConversionElectrode, ConversionVoltagePair
-        )
-        return config
 
     @classmethod
     def from_composition_and_entries(
@@ -598,56 +574,3 @@ def get_battery_formula(
         + "-".join(working_ion_subscripts)
         + temp_reduced.reduced_formula
     )
-
-
-def _deserialize_pymatgen_battery_dataclasses(
-    config: dict[str, Any], electrode_cls: Callable, voltage_pair_cls: Callable
-):
-    """Deserialize MSONable dataclasses.
-
-    Because pydantic uses the __dict__ attribute of a dataclass on model_dump,
-    all monty decoder info (@class and @module) is removed from
-    pymatgen dataclasses when a pydantic model containing them is
-    model dumped.
-
-    This function restores the pymatgen class.
-
-    Parameters
-    -----------
-    config : dict[str,Any]
-        The pydantic model configuration dict
-    electrode_cls : Callable
-        The pymatgen electrode class, e.g., InsertionElectrode
-    voltage_pair_cls : Callable
-        The pymatgen voltage pair class, e.g., InsertionVoltagePair
-    """
-    if elec_obj := config.get("electrode_object", {}):
-        if isinstance(elec_obj, dict):
-            vps = elec_obj.get("voltage_pairs", tuple())
-        else:
-            vps = getattr(elec_obj, "voltage_pairs", tuple())
-
-        if any(isinstance(vp, dict) for vp in vps):
-            config["electrode_object"]["voltage_pairs"] = tuple(
-                [
-                    (
-                        voltage_pair_cls.from_dict(vp)  # type: ignore[attr-defined]
-                        if isinstance(vp, dict)
-                        else vp
-                    )
-                    for vp in vps
-                ]
-            )
-        if isinstance(elec_obj, dict):
-            config["electrode_object"] = electrode_cls.from_dict(elec_obj)  # type: ignore[attr-defined]
-
-    for idx, vp in enumerate(config.get("adj_pairs", [])):
-        if isinstance(vp, dict) and hasattr(vp.get("reaction"), "as_dict"):
-            config["adj_pairs"][idx] = vp["reaction"].as_dict()
-        elif hasattr(vp, "adj_pairs") and hasattr(vp.adj_pairs, "as_dict"):
-            config["adj_pairs"][idx] = vp.reaction.as_dict()
-
-    if hasattr(config.get("reaction"), "as_dict"):
-        config["reaction"] = config["reaction"].as_dict()
-
-    return config
