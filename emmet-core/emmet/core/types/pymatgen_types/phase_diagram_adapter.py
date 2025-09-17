@@ -96,10 +96,13 @@ def phase_diagram_serde(d: dict, mode: Mode, serde_fn: Callable):
 def phase_diagram_serializer(phase_diagram, nxt, info) -> dict[str, Any]:
     default_serialized_object = nxt(phase_diagram.as_dict(), info)
 
-    for key in ["all_entries", "qhull_entries"]:
+    for key in ["all_entries", "qhull_entries", "simplexes"]:
         default_serialized_object["computed_data"][key] = [
             entry.as_dict() for entry in default_serialized_object["computed_data"][key]
         ]
+
+    for simplex in default_serialized_object["computed_data"]["simplexes"]:
+        simplex["coords"] = simplex["coords"].tolist()
 
     format = info.context.get("format") if info.context else None
     if format == "arrow":
