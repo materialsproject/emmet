@@ -118,7 +118,7 @@ ComputedStructureEntryTypeVar = TypeVar(
 def entry_serializer(entry, nxt, info) -> dict[str, Any]:
     default_serialized_object = nxt(entry.as_dict(), info)
 
-    format = info.context.get("format") if info.context else "standard"
+    format = info.context.get("format") if info.context else None
     if format == "arrow":
         default_serialized_object["energy_adjustments"] = orjson.dumps(
             default_serialized_object["energy_adjustments"]

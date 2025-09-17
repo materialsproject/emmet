@@ -215,7 +215,7 @@ class CalculationInput(CalculationBaseModel):
     def incar_params_serializer(self, d, default_serializer, info):
         default_serialized_object = default_serializer(d, info)
 
-        format = info.context.get("format") if info.context else "standard"
+        format = info.context.get("format") if info.context else None
         if format == "arrow":
             return orjson.dumps(default_serialized_object)
 
@@ -906,7 +906,7 @@ class Calculation(CalculationBaseModel):
     def bader_ddec6__serializer(self, d, default_serializer, info):
         default_serialized_object = default_serializer(d, info)
 
-        format = info.context.get("format") if info.context else "standard"
+        format = info.context.get("format") if info.context else None
         if format == "arrow":
             return orjson.dumps(jsanitize(default_serialized_object, allow_bson=True))
 

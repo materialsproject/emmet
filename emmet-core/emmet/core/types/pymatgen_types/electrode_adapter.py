@@ -176,7 +176,7 @@ def electrode_object_deserializer(
 def electrode_object_serializer(electrode_object, nxt, info) -> dict[str, Any]:
     default_serialized_object = nxt(electrode_object.as_dict(), info)
 
-    format = info.context.get("format") if info.context else "standard"
+    format = info.context.get("format") if info.context else None
     if format == "arrow":
         battery_type = (
             BatteryType.insertion

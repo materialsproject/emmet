@@ -46,7 +46,7 @@ def kpoints_deserializer(kpoints: KpointsTypeVar):
 def kpoints_serializer(kpoints, nxt, info):
     default_serialized_object = kpoints.as_dict()
 
-    format = info.context.get("format") if info.context else "standard"
+    format = info.context.get("format") if info.context else None
     if format == "arrow" and default_serialized_object:
         if default_serialized_object["tet_connections"]:
             default_serialized_object["sym_weight"] = [

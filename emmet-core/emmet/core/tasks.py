@@ -178,7 +178,7 @@ class CustodianDoc(BaseModel):
     def model_serialization(self, default_serializer, info):
         default_serialized_model = default_serializer(self, info)
 
-        format = info.context.get("format") if info.context else "standard"
+        format = info.context.get("format") if info.context else None
         if format == "arrow":
             arrow_compat_model = jsanitize(default_serialized_model, allow_bson=True)
             for field, value in arrow_compat_model.items():
@@ -353,7 +353,7 @@ class CoreTaskDoc(StructureMetadata):
     def serialize_overrides(self, d, default_serializer, info):
         default_serialized_object = default_serializer(d, info)
 
-        format = info.context.get("format") if info.context else "standard"
+        format = info.context.get("format") if info.context else None
         if format == "arrow":
             return orjson.dumps(default_serialized_object)
 
@@ -545,7 +545,7 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
     def serialize_additional_json(self, d, default_serializer, info):
         default_serialized_object = default_serializer(d, info)
 
-        format = info.context.get("format") if info.context else "standard"
+        format = info.context.get("format") if info.context else None
         if format == "arrow":
             return orjson.dumps(default_serialized_object)
 

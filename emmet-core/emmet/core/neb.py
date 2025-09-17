@@ -331,7 +331,7 @@ class NebIntermediateImagesDoc(BaseModel):
     def objects_serializer(self, d, default_serializer, info):
         default_serialized_object = default_serializer(d, info)
 
-        format = info.context.get("format") if info.context else "standard"
+        format = info.context.get("format") if info.context else None
         if format == "arrow":
             return orjson.dumps(default_serialized_object)
 

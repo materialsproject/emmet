@@ -101,7 +101,7 @@ def phase_diagram_serializer(phase_diagram, nxt, info) -> dict[str, Any]:
             entry.as_dict() for entry in default_serialized_object["computed_data"][key]
         ]
 
-    format = info.context.get("format") if info.context else "standard"
+    format = info.context.get("format") if info.context else None
     if format == "arrow":
         phase_diagram_serde(
             default_serialized_object, mode=Mode.SHRED, serde_fn=orjson.dumps
