@@ -1,16 +1,20 @@
 """Core definition of a Thermo Document"""
 
+from __future__ import annotations
+
 from collections import defaultdict
 from datetime import datetime
+from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PlainSerializer, BeforeValidator
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.base import EmmetMeta
 from emmet.core.material import PropertyOrigin
 from emmet.core.material_property import PropertyDoc
-from emmet.core.types.enums import ValueEnum
+from emmet.core.mpid_ext import ThermoID
+from emmet.core.types.enums import ThermoType
 from emmet.core.types.typing import IdentifierType
 from emmet.core.utils import utcnow
 from emmet.core.vasp.calc_types.enums import RunType
@@ -35,13 +39,6 @@ class DecompositionProduct(BaseModel):
     )
 
 
-class ThermoType(ValueEnum):
-    GGA_GGA_U = "GGA_GGA+U"
-    GGA_GGA_U_R2SCAN = "GGA_GGA+U_R2SCAN"
-    R2SCAN = "R2SCAN"
-    UNKNOWN = "UNKNOWN"
-
-
 class ThermoDoc(PropertyDoc):
     """
     A thermo entry document
@@ -54,10 +51,14 @@ class ThermoDoc(PropertyDoc):
         description="Functional types of calculations involved in the energy mixing scheme.",
     )
 
-    thermo_id: str = Field(
-        ...,
-        description="Unique document ID which is composed of the Material ID and thermo data type.",
-    )
+    thermo_id: Annotated[
+        ThermoID,
+        Field(
+            description="Unique document ID which is composed of the Material ID and thermo data type.",
+        ),
+        PlainSerializer(str),
+        BeforeValidator(ThermoID._deserialize),
+    ]
 
     uncorrected_energy_per_atom: float = Field(
         ..., description="The total DFT energy of this material per atom in eV/atom."
@@ -126,13 +127,13 @@ class ThermoDoc(PropertyDoc):
         thermo_type: ThermoType | RunType,
         phase_diagram: PhaseDiagram | None = None,
         use_max_chemsys: bool = False,
-        **kwargs
+        **kwargs,
     ):
         """Produce a list of ThermoDocs from a list of Entry objects
 
         Args:
             entries (list[ComputedEntry| ComputedStructureEntry]): list of Entry objects
-            thermo_type (ThermoType| RunType): Thermo type
+            thermo_type (ThermoType | RunType): Thermo type
             phase_diagram (PhaseDiagram | None, optional): Already built phase diagram. Defaults to None.
             use_max_chemsys (bool, optional): Whether to only produce thermo docs for materials
                 that match the largest chemsys represented in the list. Defaults to False.

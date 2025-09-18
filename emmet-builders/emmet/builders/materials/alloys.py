@@ -12,7 +12,7 @@ from pymatgen.analysis.alloys.core import (
 from pymatgen.core.structure import Structure
 from tqdm import tqdm
 
-from emmet.core.thermo import ThermoType
+from emmet.core.types.enums import ThermoType
 
 # rough sort of ANON_FORMULAS by "complexity"
 ANON_FORMULAS = sorted(KNOWN_ANON_FORMULAS, key=lambda af: len(af))

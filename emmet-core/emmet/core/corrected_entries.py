@@ -6,7 +6,7 @@ from pydantic import Field
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.thermo import ThermoType
+from emmet.core.types.enums import ThermoType
 from emmet.core.utils import utcnow
 from emmet.core.vasp.calc_types.enums import RunType
 

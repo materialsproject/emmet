@@ -21,6 +21,7 @@ from emmet.core.mpid import MPID, AlphaID
 from emmet.core.utils import utcnow, convert_datetime
 
 if TYPE_CHECKING:
+    from typing import Any
     from typing_extensions import TypeAlias
 
 FSPathType: TypeAlias = Annotated[
@@ -32,14 +33,28 @@ FSPathType: TypeAlias = Annotated[
 DateTimeType: TypeAlias = Annotated[
     datetime,
     Field(default_factory=utcnow),
-    PlainSerializer(lambda x: x.isoformat(), return_type=str),
+    PlainSerializer(
+        lambda x: x.isoformat() if isinstance(x, datetime) else x, return_type=str
+    ),
     BeforeValidator(lambda x: convert_datetime(x)),
 ]
 """Datetime serde."""
 
+
+def _fault_tolerant_id_serde(val: Any, serialize: bool = False) -> Any:
+    """Needed for the API and safe de-/serialization behavior."""
+    try:
+        alpha_id = AlphaID(val)
+        if serialize:
+            return str(alpha_id)
+        return alpha_id.formatted
+    except Exception:
+        return val
+
+
 IdentifierType: TypeAlias = Annotated[
-    Union[MPID, AlphaID, str],
-    BeforeValidator(lambda x: AlphaID(x).formatted),
-    PlainSerializer(lambda x: str(AlphaID(x))),
+    Union[MPID, AlphaID],
+    BeforeValidator(_fault_tolerant_id_serde),
+    PlainSerializer(lambda x: _fault_tolerant_id_serde(x, serialize=True)),
 ]
 """MPID / AlphaID serde."""
