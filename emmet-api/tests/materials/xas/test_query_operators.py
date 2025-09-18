@@ -1,6 +1,6 @@
 from emmet.api.routes.materials.xas.query_operators import XASQuery, XASIDQuery
 
-from emmet.core.xas import Edge, Type
+from emmet.core.xas import XasEdge, XasType
 from pymatgen.core.periodic_table import Element
 
 
@@ -8,7 +8,7 @@ def test_xas_operator():
     op = XASQuery()
 
     assert op.query(
-        edge=Edge.K, spectrum_type=Type.XANES, absorbing_element=Element("Cu")
+        edge=XasEdge.K, spectrum_type=XasType.XANES, absorbing_element=Element("Cu")
     ) == {
         "criteria": {"edge": "K", "absorbing_element": "Cu", "spectrum_type": "XANES"}
     }
