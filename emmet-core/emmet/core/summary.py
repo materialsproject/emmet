@@ -8,10 +8,9 @@ from pymatgen.core.structure import Structure
 
 from emmet.core.electronic_structure import BandstructureData, DosData
 from emmet.core.material_property import PropertyDoc
-from emmet.core.types.enums import ValueEnum
+from emmet.core.types.enums import ValueEnum, XasEdge, XasType
 from emmet.core.types.typing import IdentifierType
 from emmet.core.thermo import DecompositionProduct
-from emmet.core.xas import Edge, Type
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -95,7 +94,7 @@ class XASSearchData(BaseModel):
     Fields in XAS sub docs in summary
     """
 
-    edge: Edge | None = Field(
+    edge: XasEdge | None = Field(
         None,
         title="Absorption Edge",
         description="The interaction edge for XAS",
@@ -105,7 +104,7 @@ class XASSearchData(BaseModel):
         description="Absorbing element.",
     )
 
-    spectrum_type: Type | None = Field(
+    spectrum_type: XasType | None = Field(
         None,
         description="Type of XAS spectrum.",
     )

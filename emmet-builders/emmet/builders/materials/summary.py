@@ -6,7 +6,7 @@ from maggma.utils import grouper
 from emmet.core.mpid import AlphaID
 from emmet.core.summary import SummaryDoc, HasProps
 from emmet.core.utils import jsanitize
-from emmet.core.thermo import ThermoType
+from emmet.core.types.enums import ThermoType
 
 
 class SummaryBuilder(Builder):

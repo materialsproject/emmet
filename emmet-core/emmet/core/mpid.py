@@ -93,6 +93,8 @@ class MPID(str):
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, MPID):
             return self.string == other.string
+        elif isinstance(other, AlphaID):
+            return other == self
         elif isinstance(other, (int, str)):
             return self.string == MPID(other).string
         return NotImplemented
