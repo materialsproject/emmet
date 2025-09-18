@@ -1,16 +1,21 @@
+from __future__ import annotations
+
 from fastapi import Query
+from typing import TYPE_CHECKING
+
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
 from pymatgen.core.periodic_table import Element
 
-from emmet.core.xas import Edge, Type
+if TYPE_CHECKING:
+    from emmet.core.xas import XasEdge, XasType
 
 
 class XASQuery(QueryOperator):
     def query(
         self,
-        edge: Edge = Query(None, title="XAS Edge"),
-        spectrum_type: Type = Query(None, title="Spectrum Type"),
+        edge: XasEdge = Query(None, title="XAS Edge"),
+        spectrum_type: XasType = Query(None, title="Spectrum Type"),
         absorbing_element: Element = Query(None, title="Absorbing Element"),
     ) -> STORE_PARAMS:
         """

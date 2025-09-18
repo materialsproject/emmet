@@ -338,7 +338,10 @@ class AlphaID(str):
         """
 
         if isinstance(identifier, str):
-            identifier = identifier.lower()
+            if any(char.isupper() for char in identifier):
+                raise ValueError(
+                    "To avoid amibiguities, AlphaID does not permit uppercase letters."
+                )
             non_alpha_char = set(identifier).difference(cls._alphabet + digits)
             valid_seps = non_alpha_char.intersection(VALID_ALPHA_SEPARATORS) > set()
             if len(non_alpha_char) == 1 and valid_seps:
