@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Annotated
 
 import numpy as np
 from pydantic import Field, field_validator, PlainSerializer, BeforeValidator
+
 from pymatgen.analysis.xas.spectrum import XAS, site_weighted_spectrum
 from pymatgen.core.periodic_table import Element
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
