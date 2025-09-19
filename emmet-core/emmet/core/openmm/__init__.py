@@ -3,5 +3,4 @@ from emmet.core.openmm.tasks import (
     CalculationInput,
     CalculationOutput,
     OpenMMTaskDocument,
-    OpenMMInterchange,
 )

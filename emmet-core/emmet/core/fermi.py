@@ -1,9 +1,6 @@
-from datetime import datetime
+from pydantic import BaseModel, Field
 
-from pydantic import BaseModel, Field, field_validator
-
-from emmet.core.common import convert_datetime
-from emmet.core.utils import utcnow
+from emmet.core.types.typing import DateTimeType
 
 
 class FermiDoc(BaseModel):
@@ -27,13 +24,6 @@ class FermiDoc(BaseModel):
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )
 
-    last_updated: datetime = Field(
-        default_factory=utcnow,
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation for this fermi surface document.",
     )
-
-    # Make sure that the datetime field is properly formatted
-    @field_validator("last_updated", mode="before")
-    @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)

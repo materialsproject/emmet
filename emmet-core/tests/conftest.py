@@ -4,6 +4,7 @@ from tempfile import mkdtemp
 from shutil import rmtree
 
 from emmet.core.testing_utils import TEST_FILES_DIR
+from emmet.core.types.enums import VaspObject
 
 
 @pytest.fixture(scope="session")
@@ -90,7 +91,6 @@ class SiOptimizeDouble(SchemaTestData):
 
 
 class SiNonSCFUniform(SchemaTestData):
-    from emmet.core.vasp.calculation import VaspObject
 
     folder = "Si_uniform"
     task_files = {
@@ -148,7 +148,6 @@ class SiNonSCFUniform(SchemaTestData):
 
 
 class SiStatic(SchemaTestData):
-    from emmet.core.vasp.calculation import VaspObject
 
     folder = "Si_static"
     task_files = {

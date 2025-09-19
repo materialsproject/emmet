@@ -1,17 +1,51 @@
 import logging
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 
 from fastapi import APIRouter, FastAPI, Request, Response
-from monty.json import MontyDecoder, MSONable
 from pydantic import BaseModel
 from starlette.responses import RedirectResponse
 
+from emmet.api.models import Response as ResponseModel
 from emmet.api.query_operator import QueryOperator
-from emmet.api.utils import STORE_PARAMS, api_sanitize
-from emmet.core.utils import dynamic_import
+from emmet.api.resource.utils import CollectionWithKey
+from emmet.api.utils import STORE_PARAMS
 
 
-class Resource(MSONable, metaclass=ABCMeta):
+class HintScheme(ABC):
+    """
+    Base class for generic hint schemes generation.
+    """
+
+    @abstractmethod
+    def generate_hints(self, query: STORE_PARAMS) -> STORE_PARAMS:
+        """
+        This method takes in a MongoDB query and returns hints.
+        """
+
+
+class HeaderProcessor(ABC):
+    """
+    Base class for generic header processing.
+    """
+
+    @abstractmethod
+    def process_header(self, response: Response, request: Request):
+        """
+        This method takes in a FastAPI Response object and processes a new header for it in-place.
+        It can use data in the upstream request to generate the header.
+        (https://fastapi.tiangolo.com/advanced/response-headers/#use-a-response-parameter).
+        """
+
+    @abstractmethod
+    def configure_query_on_request(
+        self, request: Request, query_operator: QueryOperator
+    ) -> STORE_PARAMS:
+        """
+        This method takes in a FastAPI Request object and returns a query to be used in the store.
+        """
+
+
+class Resource(ABC):
     """
     Base class for a REST Compatible Resource.
     """
@@ -19,15 +53,25 @@ class Resource(MSONable, metaclass=ABCMeta):
     def __init__(
         self,
         model: type[BaseModel],
+        query_operators: list[QueryOperator] | None = None,
     ):
         """
         Args:
             model: the pydantic model this Resource represents.
+            query_operators: Operators for the query language
         """
         if not issubclass(model, BaseModel):
             raise ValueError("The resource model has to be a PyDantic Model")
 
-        self.model = api_sanitize(model, allow_dict_msonable=True)
+        if not hasattr(self, "response_model"):
+            self.response_model = ResponseModel[model]  # type: ignore
+
+        if not hasattr(self, "query_operators"):
+            self.query_operators = (
+                query_operators if query_operators is not None else []
+            )
+
+        self.model = model
         self.logger = logging.getLogger(type(self).__name__)
         self.logger.addHandler(logging.NullHandler())
         self.router = APIRouter()
@@ -67,51 +111,47 @@ class Resource(MSONable, metaclass=ABCMeta):
         app.include_router(self.router, prefix="")
         uvicorn.run(app)
 
-    def as_dict(self) -> dict:
-        """
-        Special as_dict implemented to convert pydantic models into strings.
-        """
-        d = super().as_dict()  # Ensures sub-classes serialize correctly
-        d["model"] = f"{self.model.__module__}.{self.model.__name__}"
-        return d
 
-    @classmethod
-    def from_dict(cls, d: dict):
-        if isinstance(d["model"], str):
-            d["model"] = dynamic_import(d["model"])
-        d = {k: MontyDecoder().process_decoded(v) for k, v in d.items()}
-        return cls(**d)
-
-
-class HintScheme(MSONable, metaclass=ABCMeta):
+class CollectionResource(Resource):
     """
-    Base class for generic hint schemes generation.
+    Base class for a REST Compatible Resource that operates on a MongoDB collection.
     """
 
-    @abstractmethod
-    def generate_hints(self, query: STORE_PARAMS) -> STORE_PARAMS:
+    def __init__(
+        self,
+        store: CollectionWithKey,
+        *args,
+        header_processor: HeaderProcessor | None = None,
+        include_in_schema: bool = True,
+        key_fields: list[str] | None = None,
+        sub_path: str | None = "/",
+        tags: list[str] | None = None,
+        timeout: int | None = None,
+        **kwargs,
+    ):
         """
-        This method takes in a MongoDB query and returns hints.
-        """
+        Args:
+            store: The store to get data from
+            header_processor: The header processor to use for this resource
+            include_in_schema: Whether the endpoint should be shown in the documented schema.
+            key_fields: List of fields to always project. Default uses SparseFieldsQuery
+                to allow user to define these on-the-fly.
+            sub_path: sub-URL path for the resource.
+            tags: List of tags for the Endpoint
+            timeout: Time in seconds Pymongo should wait when querying MongoDB
+                before raising a timeout error
 
+        """
+        self.collection = store.collection
+        self.collection_key = store.key
 
-class HeaderProcessor(MSONable, metaclass=ABCMeta):
-    """
-    Base class for generic header processing.
-    """
+        self.header_processor = header_processor
+        self.include_in_schema = include_in_schema
+        self.key_fields = key_fields
+        self.sub_path = sub_path
+        self.tags = tags or []
+        self.timeout = (
+            timeout * 1000 if timeout is not None else None
+        )  # Convert to milliseconds for MongoDB
 
-    @abstractmethod
-    def process_header(self, response: Response, request: Request):
-        """
-        This method takes in a FastAPI Response object and processes a new header for it in-place.
-        It can use data in the upstream request to generate the header.
-        (https://fastapi.tiangolo.com/advanced/response-headers/#use-a-response-parameter).
-        """
-
-    @abstractmethod
-    def configure_query_on_request(
-        self, request: Request, query_operator: QueryOperator
-    ) -> STORE_PARAMS:
-        """
-        This method takes in a FastAPI Request object and returns a query to be used in the store.
-        """
+        super().__init__(*args, **kwargs)

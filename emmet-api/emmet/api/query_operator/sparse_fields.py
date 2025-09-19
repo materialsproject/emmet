@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import Query
 from pydantic import BaseModel
 
@@ -10,9 +8,7 @@ from emmet.core.utils import dynamic_import
 
 class SparseFieldsQuery(QueryOperator):
 
-    def __init__(
-        self, model: type[BaseModel], default_fields: Optional[list[str]] = None
-    ):
+    def __init__(self, model: type[BaseModel], default_fields: list[str] | None = None):
         """
         Args:
             model: PyDantic Model that represents the underlying data source

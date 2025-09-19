@@ -44,7 +44,7 @@ def test_magnetism_builder(tasks_store, magnetism_store, materials_store):
     }
 
     for mpid, ordering in test_mpids.items():
-        doc = magnetism_store.query_one({"material_id": AlphaID(mpid).string})
+        doc = magnetism_store.query_one({"material_id": str(AlphaID(mpid))})
         assert doc["ordering"] == ordering
 
 

@@ -7,18 +7,10 @@ import inspect
 from typing import (
     Any,
     Literal,
-    Optional,
-    get_args,  # pragma: no cover
     TYPE_CHECKING,
 )
 
 from bson.objectid import ObjectId
-from monty.json import MSONable
-from pydantic import BaseModel
-from pydantic._internal._utils import lenient_issubclass
-from pydantic.fields import FieldInfo
-
-from emmet.core.utils import get_flat_models_from_model
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -131,91 +123,6 @@ def attach_signature(function: Callable, defaults: dict, annotations: dict):
     ]
 
     function.__signature__ = inspect.Signature(required_params + optional_params)  # type: ignore[attr-defined]
-
-
-def api_sanitize(
-    pydantic_model: BaseModel,
-    fields_to_leave: str | None = None,
-    allow_dict_msonable=False,
-):
-    """Function to clean up pydantic models for the API by:
-        1.) Making fields optional
-        2.) Allowing dictionaries in-place of the objects for MSONable quantities.
-
-    WARNING: This works in place, so it mutates the model and all sub-models
-
-    Args:
-        pydantic_model (BaseModel): Pydantic model to alter
-        fields_to_leave (list[str] | None): list of strings for model fields as "model__name__.field".
-            Defaults to None.
-        allow_dict_msonable (bool): Whether to allow dictionaries in place of MSONable quantities.
-            Defaults to False
-    """
-    models: list[BaseModel] = [
-        model
-        for model in get_flat_models_from_model(pydantic_model)
-        if issubclass(model, BaseModel)  # type: ignore[arg-type]
-    ]
-
-    fields_to_leave = fields_to_leave or []  # type: ignore
-    fields_tuples = [f.split(".") for f in fields_to_leave]  # type: ignore
-    assert all(len(f) == 2 for f in fields_tuples)
-
-    for model in models:
-        model_fields_to_leave = {f[1] for f in fields_tuples if model.__name__ == f[0]}  # type: ignore
-        for name in model.model_fields:
-            field = model.model_fields[name]
-            field_type = field.annotation
-
-            if field_type is not None and allow_dict_msonable:
-                if lenient_issubclass(field_type, MSONable):
-                    field_type = allow_msonable_dict(field_type)
-                else:
-                    for sub_type in get_args(field_type):
-                        if lenient_issubclass(sub_type, MSONable):
-                            allow_msonable_dict(sub_type)
-
-            if name not in model_fields_to_leave:
-                new_field = FieldInfo.from_annotated_attribute(Optional[field_type], None)  # type: ignore
-                model.model_fields[name] = new_field
-
-        model.model_rebuild(force=True)
-
-    return pydantic_model
-
-
-def allow_msonable_dict(monty_cls: type[MSONable]):
-    """
-    Patch Monty to allow for dict values for MSONable.
-    """
-
-    def validate_monty(cls, v, _):
-        """
-        Stub validator for MSONable as a dictionary only.
-        """
-        if isinstance(v, cls):
-            return v
-        elif isinstance(v, dict):
-            # Just validate the simple Monty Dict Model
-            errors = []
-            if v.get("@module", "") != monty_cls.__module__:
-                errors.append("@module")
-
-            if v.get("@class", "") != monty_cls.__name__:
-                errors.append("@class")
-
-            if len(errors) > 0:
-                raise ValueError(
-                    "Missing Monty serialization fields in dictionary: {errors}"
-                )
-
-            return v
-        else:
-            raise ValueError(f"Must provide {cls.__name__} or MSONable dictionary")
-
-    monty_cls.validate_monty_v2 = classmethod(validate_monty)  # type: ignore
-
-    return monty_cls
 
 
 def serialization_helper(obj):

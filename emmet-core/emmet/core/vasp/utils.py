@@ -15,11 +15,11 @@ from emmet.core.utils import get_hash_blocked
 if TYPE_CHECKING:
     from typing import Any
 
-    from emmet.core.typing import PathLike
+    from emmet.core.types.typing import FSPathType
 
 logger = logging.getLogger(__name__)
 
-TASK_NAMES = {"precondition"}.union([f"relax{i+1}" for i in range(9)])
+TASK_NAMES = {"precondition"} | {f"relax{i+1}" for i in range(9)}
 
 
 class FileMetadata(BaseModel):
@@ -153,7 +153,7 @@ VASP_RAW_DATA_ORG = {
     "workflow": ["FW.json", "custodian.json", "transformations.json"],
 }
 
-REQUIRED_VASP_FILES = ["INCAR", "POSCAR", "POTCAR", "CONTCAR", "OUTCAR", "vasprun.xml"]
+REQUIRED_VASP_FILES = {"INCAR", "POSCAR", "POTCAR", "CONTCAR", "OUTCAR", "vasprun.xml"}
 
 _vasp_files = set()
 for v in VASP_RAW_DATA_ORG.values():
@@ -168,14 +168,14 @@ for f in VASP_INPUT_FILES:
 
 
 def discover_vasp_files(
-    target_dir: PathLike,
+    target_dir: FSPathType,
 ) -> dict[str, list[FileMetadata]]:
     """
     Scan a target directory and identify VASP files.
 
     Parameters
     -----------
-    target_dir : PathLike
+    target_dir : FSPathType
 
     Returns
     -----------
@@ -196,14 +196,14 @@ def discover_vasp_files(
 
 
 def discover_and_sort_vasp_files(
-    target_dir: PathLike,
+    target_dir: FSPathType,
 ) -> dict[str, dict[str, Path | list[Path]]]:
     """
     Find and sort VASP files from a directory for TaskDoc.
 
     Parameters
     -----------
-    target_dir : PathLike
+    target_dir : FSPathType
 
     Returns
     -----------
@@ -245,7 +245,7 @@ def discover_and_sort_vasp_files(
 
 
 def recursive_discover_vasp_files(
-    target_dir: PathLike,
+    target_dir: FSPathType,
     only_valid: bool = False,
     max_depth: int | None = None,
 ) -> dict[CalculationLocator, list[FileMetadata]]:
@@ -254,11 +254,11 @@ def recursive_discover_vasp_files(
 
     Parameters
     -----------
-    target_dir : PathLike
+    target_dir : FSPathType
     only_valid : bool = False (default)
         Whether to only include directories which have the required
         minimum number of input and output files for parsing.
-    max_depth : int or None (default)
+    max_depth : non-negative int or None (default)
         If an int, the maximum depth with which directories are scanned
         for VASP files. For example, if max_depth == 1, this would only
         search `target_dir` and any immediate sub-directories in `target_dir`.
@@ -270,7 +270,14 @@ def recursive_discover_vasp_files(
 
     head_dir = Path(target_dir).resolve()
 
-    def _path_depth_check(tpath: PathLike) -> bool:
+    if max_depth and (max_depth < 0 or not isinstance(max_depth, int)):
+        raise ValueError(
+            "The maximum path depth should be a non-negative integer, "
+            "with zero indicating that only the current directory should "
+            "be searched."
+        )
+
+    def _path_depth_check(tpath: FSPathType) -> bool:
         if max_depth and (tp := Path(tpath).resolve()) != head_dir:
             for depth, parent in enumerate(tp.parents):
                 if parent == head_dir:
@@ -279,7 +286,7 @@ def recursive_discover_vasp_files(
         return True
 
     def _recursive_discover_vasp_files(
-        tdir: PathLike, paths: dict[CalculationLocator, list[FileMetadata]]
+        tdir: FSPathType, paths: dict[CalculationLocator, list[FileMetadata]]
     ) -> None:
         if Path(tdir).is_dir() and _path_depth_check(tdir):
             with os.scandir(tdir) as scan_dir:
@@ -295,7 +302,7 @@ def recursive_discover_vasp_files(
                         for f in REQUIRED_VASP_FILES
                     ):
                         # Incomplete calculation input/output
-                        return
+                        continue
                     paths[
                         CalculationLocator(
                             path=Path(tdir).resolve(), modifier=calc_suffix

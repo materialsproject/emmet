@@ -4,9 +4,19 @@ from fastapi import Depends, Request, Response
 
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS, attach_signature
-from maggma.core.store import Store
+from pymongo.asynchronous.collection import AsyncCollection
 
 NON_STORED_SOURCES = ["calcs_reversed", "orig_inputs"]
+
+
+class CollectionWithKey:
+
+    collection: AsyncCollection
+    key: str
+
+    def __init__(self, collection: AsyncCollection, key: str = "material_id"):
+        self.collection = collection
+        self.key = key
 
 
 def attach_query_ops(
@@ -31,13 +41,12 @@ def attach_query_ops(
     return function
 
 
-def generate_query_pipeline(query: dict, store: Store):
+def generate_query_pipeline(query: dict):
     """
     Generate the generic aggregation pipeline used in GET endpoint queries.
 
     Args:
         query: Query parameters
-        store: Store containing endpoint data
     """
     pipeline = [
         {"$match": query["criteria"]},
@@ -48,14 +57,12 @@ def generate_query_pipeline(query: dict, store: Store):
     if sorting:
         sort_dict = {"$sort": {}}  # type: dict
         sort_dict["$sort"].update(query["sort"])
+        pipeline.append(sort_dict)
 
     projection_dict = {"_id": 0}  # Do not return _id by default
 
     if query.get("properties", False):
         projection_dict.update({p: 1 for p in query["properties"]})
-
-    if sorting:
-        pipeline.append(sort_dict)
 
     pipeline.append({"$project": projection_dict})
     pipeline.append({"$skip": query.get("skip", 0)})

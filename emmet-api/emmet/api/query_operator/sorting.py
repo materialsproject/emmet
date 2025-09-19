@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import Query
 from fastapi.exceptions import HTTPException
 
@@ -10,9 +8,7 @@ from emmet.api.utils import STORE_PARAMS
 class SortQuery(QueryOperator):
     """Method to generate the sorting portion of a query."""
 
-    def __init__(
-        self, fields: Optional[list[str]] = None, max_num: Optional[int] = None
-    ):
+    def __init__(self, fields: list[str] | None = None, max_num: int | None = None):
         """Sort query configuration.
 
         Args:
@@ -28,7 +24,7 @@ class SortQuery(QueryOperator):
 
     def query(
         self,
-        _sort_fields: Optional[str] = Query(
+        _sort_fields: str | None = Query(
             None,
             description="Comma delimited fields to sort with.\
  Prefixing '-' to a field will force a sort in descending order.",

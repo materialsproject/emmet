@@ -9,6 +9,8 @@ from monty.serialization import loadfn
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.bonds import MoleculeBondingDoc
 
+from tests.conftest_qchem import OPENBABEL_INSTALLED
+
 
 @pytest.fixture(scope="session")
 def test_tasks(test_dir):
@@ -29,6 +31,10 @@ def nbo_task(test_dir):
     return TaskDocument(**loadfn(test_dir / "open_shell_nbo_task.json.gz"))
 
 
+@pytest.mark.skipif(
+    not OPENBABEL_INSTALLED,
+    reason="openbabel must be installed to test bonding analysis.",
+)
 def test_bonding(test_tasks, nbo_task):
     # No Critic2 or NBO
     ob_mee = MoleculeBondingDoc.from_task(

@@ -5,9 +5,6 @@ from emmet.api.routes.materials.elasticity.query_operators import (
     ElasticityChemsysQuery,
 )
 
-from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
-
 
 def test_bulk_modulus_query():
     op = BulkModulusQuery()
@@ -24,19 +21,6 @@ def test_bulk_modulus_query():
     fields = ["bulk_modulus.voigt", "bulk_modulus.reuss", "bulk_modulus.vrh"]
 
     assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        q = new_op.query(
-            k_voigt_min=0,
-            k_voigt_max=5,
-            k_reuss_min=0,
-            k_reuss_max=5,
-            k_vrh_min=0,
-            k_vrh_max=5,
-        )
-        assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
 
 
 def test_shear_modulus_query():
@@ -55,19 +39,6 @@ def test_shear_modulus_query():
 
     assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        q = new_op.query(
-            g_voigt_min=0,
-            g_voigt_max=5,
-            g_reuss_min=0,
-            g_reuss_max=5,
-            g_vrh_min=0,
-            g_vrh_max=5,
-        )
-        assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
-
 
 def test_poisson_query():
     op = PoissonQuery()
@@ -83,17 +54,6 @@ def test_poisson_query():
 
     assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        q = new_op.query(
-            elastic_anisotropy_min=0,
-            elastic_anisotropy_max=5,
-            poisson_min=0,
-            poisson_max=5,
-        )
-        assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
-
 
 def test_chemsys_query():
     op = ElasticityChemsysQuery()
@@ -103,8 +63,3 @@ def test_chemsys_query():
     assert op.query(chemsys="Fe-Bi-O, Si-O") == {
         "criteria": {"chemsys": {"$in": ["Bi-Fe-O", "O-Si"]}}
     }
-
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        assert new_op.query(chemsys="Fe-Bi-O") == {"criteria": {"chemsys": "Bi-Fe-O"}}

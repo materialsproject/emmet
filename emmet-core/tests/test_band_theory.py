@@ -7,6 +7,7 @@ from pymatgen.electronic_structure.dos import Dos, CompleteDos
 from pymatgen.io.vasp import Vasprun
 
 from emmet.core.band_theory import BaseElectronicDos, ElectronicBS, ElectronicDos
+from emmet.core.testing_utils import DataArchive
 
 try:
     import pyarrow
@@ -16,10 +17,12 @@ except ImportError:
 
 def test_elec_band_struct(test_dir):
 
-    vasprun = Vasprun(
-        test_dir / "vasp/r2scan_relax/vasprun.xml.gz", parse_projected_eigen=True
+    vasprun = DataArchive.extract_obj(
+        test_dir / "vasp/r2scan_relax.json.gz",
+        "vasprun.xml.gz",
+        Vasprun,
+        parse_projected_eigen=True,
     )
-
     pmg_bs = vasprun.get_band_structure()
     elec_bs = ElectronicBS.from_pmg(pmg_bs)
 
@@ -100,8 +103,11 @@ def test_base_electronic_dos():
 
 def test_electronic_dos(test_dir):
 
-    vasprun = Vasprun(
-        test_dir / "vasp/Si_uniform/vasprun.xml.gz",
+    vasprun = DataArchive.extract_obj(
+        test_dir / "vasp/Si_uniform.json.gz",
+        "vasprun.xml.gz",
+        Vasprun,
+        parse_projected_eigen=True,
     )
     pmg_dos = vasprun.complete_dos
 

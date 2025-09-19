@@ -7,14 +7,16 @@ from pydantic import BaseModel, Field
 from starlette.testclient import TestClient
 
 from emmet.api.resource import PostOnlyResource
-from maggma.stores import MemoryStore
+from emmet.api.resource.utils import CollectionWithKey
 
 
 class Owner(BaseModel):
     name: str = Field(..., title="Owner's name")
-    age: int = Field(None, title="Owne'r Age")
+    age: int = Field(None, title="Owner's Age")
     weight: float = Field(None, title="Owner's weight")
-    last_updated: datetime = Field(None, title="Last updated date for this record")
+    last_updated: datetime | None = Field(
+        None, title="Last updated date for this record"
+    )
 
 
 owners = (
@@ -27,31 +29,39 @@ owners = (
 total_owners = len(owners)
 
 
-@pytest.fixture()
-def owner_store():
-    store = MemoryStore("owners", key="name")
-    store.connect()
-    store.update([d.dict() for d in owners])
-    return store
+@pytest.mark.asyncio
+async def test_init(mock_database):
+    collection = mock_database["owners"]
+    owner_docs = [owner.model_dump() for owner in owners]
+    await collection.insert_many(owner_docs)
+    owner_store = CollectionWithKey(collection=collection, key="name")
 
-
-def test_init(owner_store):
     resource = PostOnlyResource(store=owner_store, model=Owner)
     assert len(resource.router.routes) == 2
 
 
-def test_msonable(owner_store):
+@pytest.mark.asyncio
+async def test_msonable(mock_database):
+    collection = mock_database["owners"]
+    owner_docs = [owner.model_dump() for owner in owners]
+    await collection.insert_many(owner_docs)
+    owner_store = CollectionWithKey(collection=collection, key="name")
+
     owner_resource = PostOnlyResource(store=owner_store, model=Owner)
-    endpoint_dict = owner_resource.as_dict()
 
-    for k in ["@class", "@module", "store", "model"]:
-        assert k in endpoint_dict
-
-    assert isinstance(endpoint_dict["model"], str)
-    assert endpoint_dict["model"] == "test_post_resource.Owner"
+    # Test that the resource has the expected attributes
+    assert hasattr(owner_resource, "model")
+    assert hasattr(owner_resource, "collection")
+    assert owner_resource.model == Owner
 
 
-def test_post_to_search(owner_store):
+@pytest.mark.asyncio
+async def test_post_to_search(mock_database):
+    collection = mock_database["owners"]
+    owner_docs = [owner.model_dump() for owner in owners]
+    await collection.insert_many(owner_docs)
+    owner_store = CollectionWithKey(collection=collection, key="name")
+
     endpoint = PostOnlyResource(owner_store, Owner)
     app = FastAPI()
     app.include_router(endpoint.router)
@@ -62,7 +72,13 @@ def test_post_to_search(owner_store):
 
 
 @pytest.mark.xfail()
-def test_problem_query_params(owner_store):
+@pytest.mark.asyncio
+async def test_problem_query_params(mock_database):
+    collection = mock_database["owners"]
+    owner_docs = [owner.model_dump() for owner in owners]
+    await collection.insert_many(owner_docs)
+    owner_store = CollectionWithKey(collection=collection, key="name")
+
     endpoint = PostOnlyResource(owner_store, Owner)
     app = FastAPI()
     app.include_router(endpoint.router)

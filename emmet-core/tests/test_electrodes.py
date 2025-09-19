@@ -1,7 +1,10 @@
 import pytest
 from monty.serialization import loadfn
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
-from pymatgen.apps.battery.insertion_battery import InsertionElectrode
+from pymatgen.apps.battery.insertion_battery import (
+    InsertionElectrode,
+    InsertionVoltagePair,
+)
 from pymatgen.core import Composition, Element
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.entries.computed_entries import ComputedEntry
@@ -77,6 +80,11 @@ def test_InsertionDocs(insertion_elec):
             assert vp.average_voltage == sub_elec.get_average_voltage()
             assert "mp" in vp.id_charge
         # assert type(ie.model_dump()["host_structure"]) == dict # This might be a requirement in the future
+
+        assert all(
+            isinstance(vp, InsertionVoltagePair)
+            for vp in ie.electrode_object.voltage_pairs
+        )
 
 
 def test_ConversionDocs_from_entries(conversion_elec):

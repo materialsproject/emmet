@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -6,9 +5,10 @@ from pydantic import BaseModel, Field
 from emmet.core.synthesis.materials import ExtractedMaterial
 from emmet.core.synthesis.operations import Operation
 from emmet.core.synthesis.reaction import ReactionFormula
+from emmet.core.types.enums import ValueEnum
 
 
-class SynthesisTypeEnum(str, Enum):
+class SynthesisTypeEnum(str, ValueEnum):
     solid_state = "solid-state"
     sol_gel = "sol-gel"
 
