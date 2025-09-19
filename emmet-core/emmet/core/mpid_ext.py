@@ -33,7 +33,7 @@ class SuffixedID(BaseModel):
         parts = idx.split(sep, 1)
         return cls(
             identifier=parts[0],
-            suffix=sep.join(parts[1:]),
+            suffix=parts[1],  # type: ignore[arg-type]
         )
 
     def __str__(self) -> str:
@@ -103,18 +103,17 @@ def validate_identifier(
         If False, returns the object.
     """
 
-    parsed_idx = None
-    try:
-        parsed_idx = AlphaID(idx).formatted
-    except Exception:
-        for ext_id in SuffixedID.__subclasses__():
-            try:
-                parsed_idx = ext_id._deserialize(idx)
-                break
-            except Exception:
-                continue
-
-    if parsed_idx is None:
+    for id_cls in (AlphaID, *SuffixedID.__subclasses__()):
+        try:
+            parsed_idx = (
+                AlphaID(idx).formatted
+                if id_cls == AlphaID
+                else id_cls._deserialize(idx)
+            )
+            break
+        except Exception:
+            continue
+    else:
         raise ValueError(
             f"Invalid identifier {idx}, must be one of MPID, AlphaID, ThermoID, BatteryID, or XasSpectrumID."
         )
