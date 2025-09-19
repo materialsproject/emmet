@@ -84,6 +84,8 @@ class ProjectedBS(BaseModel):
             s, py, pz, px, dxy, dyz, dz2, dxz, dx2-y2,...
     """
 
+    identifier: str | None = Field(None, description="The identifier of this object.")
+
     spin_up: list[float] | None = Field(
         None, description="The flattened spin-up band projetions."
     )
@@ -95,7 +97,9 @@ class ProjectedBS(BaseModel):
     )
 
     @classmethod
-    def from_pmg_like(cls, projections: dict[Spin, np.ndarray]) -> Self:
+    def from_pmg_like(
+        cls, projections: dict[Spin, np.ndarray], identifier: str | None = None
+    ) -> Self:
 
         spins = list(projections)
         rank = projections[spins[0]].shape
@@ -110,6 +114,7 @@ class ProjectedBS(BaseModel):
         return cls(
             **config,  # type: ignore[arg-type]
             rank=rank,  # type: ignore[arg-type]
+            identifier=identifier,
         )
 
     def to_pmg_like(self) -> dict[Spin, np.ndarray]:
@@ -159,7 +164,7 @@ class ElectronicBS(BandStructure):
         )
 
     @classmethod
-    def from_pmg(cls, ebs: PmgBandStructure) -> Self:
+    def from_pmg(cls, ebs: PmgBandStructure, **kwargs) -> Self:
         """Construct from a pymatgen band structure object."""
         band_gap_meta = ebs.get_band_gap()
         config = {
@@ -177,8 +182,14 @@ class ElectronicBS(BandStructure):
 
         for spin in Spin:
             config[f"spin_{spin.name}_bands"] = ebs.bands.get(spin)
-        config["projections"] = ProjectedBS.from_pmg_like(ebs.projections) if ebs.projections else None  # type: ignore[arg-type]
-        return cls(**config)
+        config["projections"] = (
+            ProjectedBS.from_pmg_like(
+                ebs.projections, identifier=kwargs.get("identifier")  # type: ignore[arg-type]
+            )
+            if ebs.projections
+            else None
+        )
+        return cls(**config, **kwargs)
 
     def to_pmg(self, pmg_cls: Callable = PmgBandStructure) -> PmgBandStructure:
         """Construct the pymatgen object from the current instance.
@@ -232,6 +243,8 @@ class DosProjection(BaseModel):
 class ProjectedDos(BaseModel):
     """Atom and orbital projected DOS."""
 
+    identifier: str | None = Field(None, description="The identifier of this object.")
+
     densities: list[list[float] | None] | None = Field(
         None, description="The densities of state."
     )
@@ -269,6 +282,7 @@ class ProjectedDos(BaseModel):
         cls,
         pdos: dict[PeriodicSite, dict[Orbital, dict[Spin, np.ndarray]]],
         structure: StructureType,
+        identifier: str | None = None,
     ) -> Self:
         """Create a ProjectedDos from a pymatgen-like CompleteDos.pdos."""
         projs = [
@@ -288,7 +302,8 @@ class ProjectedDos(BaseModel):
             **{  # type: ignore[arg-type]
                 k: [proj[k] for proj in projs]
                 for k in ("densities", "spin", "orbital", "site_index")
-            }
+            },
+            identifier=identifier,
         )
 
     def to_pmg_like(
@@ -341,7 +356,7 @@ class ElectronicDos(BandTheoryBase):
         }
 
         pdos = (
-            ProjectedDos.from_pmg_like(dos.pdos, dos.structure)  # type: ignore[arg-type]
+            ProjectedDos.from_pmg_like(dos.pdos, dos.structure, identifier=kwargs.get("identifier"))  # type: ignore[arg-type]
             if isinstance(dos, CompleteDos)
             else None
         )

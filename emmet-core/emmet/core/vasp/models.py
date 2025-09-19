@@ -11,6 +11,7 @@ from pymatgen.core import Structure
 from pymatgen.io.common import VolumetricData as PmgVolumetricData
 
 from emmet.core.types.enums import ValueEnum
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -70,7 +71,7 @@ class ChgcarLike(BaseModel):
     data_aug: dict[VolumetricLabel, list[AugChargeData]] | None = Field(
         None, description="The augmentation charge volumetric data."
     )
-    structure: Structure | None = Field(
+    structure: StructureType | None = Field(
         None, description="The structure associated with the volumetric data."
     )
 
