@@ -30,11 +30,11 @@ if TYPE_CHECKING:
 
 
 def _vector_difference_matrix_row(
-    idxs: int,
+    idxs: tuple[int, int],
     v: np.ndarray,
     norms: np.ndarray,
-    dtype=np.float64,
-) -> tuple[int, np.ndarray]:
+    dtype: np.dtype = np.dtype("float64"),
+) -> tuple[tuple[int, int], np.ndarray]:
     """Compute the distance between a single vector and a list of other vectors.
 
     Parameters
@@ -63,7 +63,7 @@ def vector_difference_matrix(
     v: np.ndarray,
     noise_floor: float = 1e-14,
     spread_rows: int = 0,
-    dtype: np.dtype = np.float64,
+    dtype: np.dtype = np.dtype("float64"),
 ) -> np.ndarray:
     """Construct a symmetric matrix of vector differences.
 
