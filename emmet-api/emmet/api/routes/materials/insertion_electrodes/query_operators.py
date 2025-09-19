@@ -29,7 +29,6 @@ A comma delimited string list of anonymous formulas or regular formulas can also
         if formula:
             crit.update(electrodes_formula_to_criteria(formula))
 
-        print(f"criteria: {crit}")
         return {"criteria": crit}
 
     def ensure_indexes(self):  # pragma: no cover
