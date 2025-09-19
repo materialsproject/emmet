@@ -19,6 +19,7 @@ from pymatgen.io.qchem.outputs import QCOutput
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.qchem.calc_types.calc_types import BASIS_SETS, FUNCTIONALS
 from emmet.core.qchem.task import QChemStatus
+from emmet.core.utils import arrow_incompatible
 
 # from emmet.core.qchem.calc_types.em_utils import (
 #     level_of_theory,
@@ -49,6 +50,7 @@ logger = logging.getLogger(__name__)
 # as QChem data objects
 
 
+@arrow_incompatible
 class CalculationInput(BaseModel):
     """
     Document defining QChem calculation inputs.
@@ -150,6 +152,7 @@ class CalculationInput(BaseModel):
         )
 
 
+@arrow_incompatible
 class CalculationOutput(BaseModel):
     """Document defining QChem calculation outputs."""
 
@@ -290,6 +293,7 @@ class CalculationOutput(BaseModel):
     # TODO What can be done for the trajectories, also how will walltime and cputime be reconciled
 
 
+@arrow_incompatible
 class Calculation(BaseModel):
     """Full QChem calculation inputs and outputs."""
 

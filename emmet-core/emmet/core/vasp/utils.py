@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from collections import defaultdict
-import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -159,12 +159,7 @@ _vasp_files = set()
 for v in VASP_RAW_DATA_ORG.values():
     _vasp_files.update(v)
 
-for f in VASP_INPUT_FILES:
-    fspec = f.split(".")
-    new_f = fspec[0] + ".orig"
-    if len(fspec) > 1:
-        new_f += "." + ".".join(fspec[1:])
-    VASP_RAW_DATA_ORG["input"].append(new_f)
+VASP_RAW_DATA_ORG["input"].extend([f"{f}.orig" for f in VASP_INPUT_FILES])
 
 
 def discover_vasp_files(
@@ -216,13 +211,9 @@ def discover_and_sort_vasp_files(
             f = _f.name.lower()
             file_path = _f.path.resolve()
 
-            for k in (
-                "vasprun",
-                "contcar",
-                "outcar",
-            ):
+            for k in ("vasprun", "contcar", "outcar", "potcar.spec"):
                 if k in f:
-                    by_type[calc_suffix][f"{k}_file"] = file_path
+                    by_type[calc_suffix][f"{k.replace('.','_')}_file"] = file_path
                     break
             else:
                 # NB: the POT file needs the extra `"potcar" not in f` check to ensure that

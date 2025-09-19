@@ -5,25 +5,37 @@ from __future__ import annotations
 import logging
 import re
 import warnings
-from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
+import orjson
 from monty.json import MontyDecoder
 from monty.serialization import loadfn
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    field_serializer,
+    field_validator,
+    model_serializer,
+    model_validator,
+)
 from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.core.structure import Structure
 from pymatgen.core.trajectory import Trajectory
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.io.vasp import Incar, Kpoints, Poscar
 
-from emmet.core.types.enums import VaspObject, TaskState
-from emmet.core.types.typing import DateTimeType, IdentifierType
 from emmet.core.structure import StructureMetadata
 from emmet.core.trajectory import Trajectory as CoreTrajectory
-from emmet.core.utils import utcnow
+from emmet.core.types.enums import TaskState, VaspObject
+from emmet.core.types.pymatgen_types.computed_entries_adapter import (
+    ComputedEntryType,
+    ComputedStructureEntryType,
+)
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
+from emmet.core.types.pymatgen_types.trajectory_adapter import TrajectoryType
+from emmet.core.types.typing import DateTimeType, IdentifierType
+from emmet.core.utils import jsanitize, type_override, utcnow
 from emmet.core.vasp.calc_types import (
     CalcType,
     RunType,
@@ -45,6 +57,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from typing_extensions import Self
+
 
 monty_decoder = MontyDecoder()
 logger = logging.getLogger(__name__)
@@ -71,7 +84,7 @@ class InputDoc(OrigInputs):
 
 
 class OutputDoc(BaseModel):
-    structure: Structure | None = Field(
+    structure: StructureType | None = Field(
         None,
         title="Output Structure",
         description="Output Structure from the VASP calculation.",
@@ -148,6 +161,7 @@ class OutputDoc(BaseModel):
         )
 
 
+@type_override({"corrections": str, "job": str})
 class CustodianDoc(BaseModel):
     corrections: list[Any] | None = Field(
         None,
@@ -159,6 +173,25 @@ class CustodianDoc(BaseModel):
         title="Custodian Job Data",
         description="Job data logged by custodian.",
     )
+
+    @model_serializer(mode="wrap")
+    def model_serialization(self, default_serializer, info):
+        default_serialized_model = default_serializer(self, info)
+
+        format = info.context.get("format") if info.context else None
+        if format == "arrow":
+            arrow_compat_model = jsanitize(default_serialized_model, allow_bson=True)
+            for field, value in arrow_compat_model.items():
+                arrow_compat_model[field] = orjson.dumps(value)
+            return arrow_compat_model
+
+        return default_serialized_model
+
+    @field_validator("*", mode="before")
+    def field_deserializer(cls, field):
+        if isinstance(field, str):
+            field = orjson.loads(field)
+        return field
 
 
 class AnalysisDoc(BaseModel):
@@ -243,6 +276,7 @@ class AnalysisDoc(BaseModel):
         )
 
 
+@type_override({"transformations": str, "vasp_objects": str})
 class CoreTaskDoc(StructureMetadata):
     """Calculation-level details about VASP calculations that power the Materials Project."""
 
@@ -278,7 +312,7 @@ class CoreTaskDoc(StructureMetadata):
     run_type: RunType | None = Field(
         None, description="The functional used in the calculation."
     )
-    structure: Structure | None = Field(
+    structure: StructureType | None = Field(
         None, description="Final output structure from the task"
     )
     tags: list[str] | None = Field(
@@ -314,6 +348,20 @@ class CoreTaskDoc(StructureMetadata):
                     f"Invalid characters in batch_id: {' '.join(invalid_chars)}"
                 )
         return batch_id
+
+    @field_serializer("transformations", "vasp_objects", mode="wrap")
+    def serialize_overrides(self, d, default_serializer, info):
+        default_serialized_object = default_serializer(d, info)
+
+        format = info.context.get("format") if info.context else None
+        if format == "arrow":
+            return orjson.dumps(default_serialized_object)
+
+        return default_serialized_object
+
+    @field_validator("transformations", "vasp_objects", mode="before")
+    def deserialize_overrides(cls, d):
+        return orjson.loads(d) if isinstance(d, str) else d
 
     @classmethod
     def from_directory(
@@ -404,6 +452,7 @@ class CoreTaskDoc(StructureMetadata):
         return (task_doc, trajectory)
 
 
+@type_override({"additional_json": str})
 class TaskDoc(CoreTaskDoc, extra="allow"):
     """Flexible wrapper around CoreTaskDoc"""
 
@@ -428,7 +477,7 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
         title="Calcs reversed data",
         description="Detailed custodian data for each VASP calculation contributing to the task document.",
     )
-    entry: ComputedEntry | None = Field(
+    entry: ComputedEntryType | None = Field(
         None, description="The ComputedEntry from the task doc"
     )
     included_objects: list[VaspObject] | None = Field(
@@ -438,7 +487,7 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
         None,
         description="The exact set of output parameters used to generate the current task document.",
     )
-    run_stats: Mapping[str, RunStatistics] | None = Field(
+    run_stats: dict[str, RunStatistics] | None = Field(
         None,
         description="Summary of runtime statistics for each calculation in this task",
     )
@@ -489,6 +538,20 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
                 )
 
         return values
+
+    @field_serializer("additional_json", mode="wrap")
+    def serialize_additional_json(self, d, default_serializer, info):
+        default_serialized_object = default_serializer(d, info)
+
+        format = info.context.get("format") if info.context else None
+        if format == "arrow":
+            return orjson.dumps(default_serialized_object)
+
+        return default_serialized_object
+
+    @field_validator("additional_json", mode="before")
+    def deserialize_additional_json(cls, d):
+        return orjson.loads(d) if isinstance(d, str) else d
 
     @classmethod
     def from_directory(
@@ -803,7 +866,7 @@ class TrajectoryDoc(BaseModel):
         "This comes in the form: mp-******.",
     )
 
-    trajectories: list[Trajectory] | None = Field(
+    trajectories: list[TrajectoryType] | None = Field(
         None,
         description="Trajectory data for calculations associated with a task doc.",
     )
@@ -818,7 +881,7 @@ class EntryDoc(BaseModel):
         "This comes in the form: mp-******.",
     )
 
-    entry: ComputedStructureEntry | None = Field(
+    entry: ComputedStructureEntryType | None = Field(
         None,
         description="Computed structure entry for the calculation associated with the task doc.",
     )
@@ -954,9 +1017,12 @@ def _parse_orig_inputs(
     }
     suffix = suffix or ""
     for filename in dir_name.glob("*".join(f"{suffix}.".split("."))):
-        if "POTCAR.spec" in str(filename):
-            # Can't parse POTCAR.spec files
-            continue
+        if f"POTCAR.spec{suffix}" in str(filename):
+            try:
+                orig_inputs["potcar_spec"] = PotcarSpec.from_file(filename)
+            except Exception:
+                # Can't parse non emmet-core style POTCAR.spec files
+                continue
         for name, vasp_input in input_mapping.items():
             if f"{name}{suffix}" in str(filename):
                 file_suffix = "_spec" if name == "POTCAR" else ""
@@ -1087,6 +1153,7 @@ def _find_vasp_files(
                     "vasprun_file": vasprun_filename,
                     "outcar_file": outcar_filename,
                     "contcar_file": contcar_filename,
+                    "potcar_spec_file": potcar_spec_filename,
                     "volumetric_files": [CHGCAR, LOCPOT, etc]
                     "elph_poscars": [POSCAR.T=300, POSCAR.T=400, etc]
                 },

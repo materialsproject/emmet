@@ -11,8 +11,12 @@ from emmet.core.base import EmmetMeta
 from emmet.core.material import PropertyOrigin
 from emmet.core.material_property import PropertyDoc
 from emmet.core.types.enums import ValueEnum
+from emmet.core.types.pymatgen_types.computed_entries_adapter import (
+    ComputedStructureEntryType,
+)
+from emmet.core.types.pymatgen_types.phase_diagram_adapter import PhaseDiagramType
 from emmet.core.types.typing import IdentifierType
-from emmet.core.utils import utcnow
+from emmet.core.utils import type_override, utcnow
 from emmet.core.vasp.calc_types.enums import RunType
 
 
@@ -36,12 +40,14 @@ class DecompositionProduct(BaseModel):
 
 
 class ThermoType(ValueEnum):
+    GGA = "GGA"
     GGA_GGA_U = "GGA_GGA+U"
     GGA_GGA_U_R2SCAN = "GGA_GGA+U_R2SCAN"
     R2SCAN = "R2SCAN"
     UNKNOWN = "UNKNOWN"
 
 
+@type_override({"thermo_type": ThermoType})
 class ThermoDoc(PropertyDoc):
     """
     A thermo entry document
@@ -112,8 +118,7 @@ class ThermoDoc(PropertyDoc):
     entry_types: list[str] = Field(
         description="List of available energy types computed for this material."
     )
-
-    entries: dict[str, ComputedEntry | ComputedStructureEntry] = Field(
+    entries: dict[str, ComputedStructureEntryType] = Field(
         ...,
         description="List of all entries that are valid for this material."
         " The keys for this dictionary are names of various calculation types.",
@@ -126,7 +131,7 @@ class ThermoDoc(PropertyDoc):
         thermo_type: ThermoType | RunType,
         phase_diagram: PhaseDiagram | None = None,
         use_max_chemsys: bool = False,
-        **kwargs
+        **kwargs,
     ):
         """Produce a list of ThermoDocs from a list of Entry objects
 
@@ -295,6 +300,7 @@ class ThermoDoc(PropertyDoc):
         return new_pd
 
 
+@type_override({"thermo_type": ThermoType})
 class PhaseDiagramDoc(BaseModel):
     """
     A phase diagram document
@@ -317,7 +323,7 @@ class PhaseDiagramDoc(BaseModel):
         description="Functional types of calculations involved in the energy mixing scheme.",
     )
 
-    phase_diagram: PhaseDiagram = Field(
+    phase_diagram: PhaseDiagramType = Field(
         ...,
         description="Phase diagram for the chemical system.",
     )
