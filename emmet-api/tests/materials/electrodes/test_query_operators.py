@@ -1,8 +1,7 @@
 from emmet.api.routes.materials.insertion_electrodes.query_operators import (
     ElectrodeFormulaQuery,
     ElectrodesChemsysQuery,
-    ElectrodesElementsQuery,
-    InsertionVoltageStepQuery,
+    ElectrodeElementsQuery,
     WorkingIonQuery,
     MultiBatteryIDQuery,
 )
