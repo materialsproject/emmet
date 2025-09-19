@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 from pydantic import BaseModel, Field
 
+from emmet.core.material_property import PropertyDoc
+
 try:
     from matminer.featurizers.structure.sites import SiteStatsFingerprint
     from matminer.featurizers.site.fingerprint import CrystalNNFingerprint
@@ -321,7 +323,8 @@ class SimilarityScorer:
             feature_vectors, num_procs=num_procs, num_top=num_top, labels=identifiers
         )
         return [
-            SimilarityDoc(
+            SimilarityDoc.from_structure(
+                meta_structure=structures[idx],
                 material_id=idx,
                 feature_vector=feature_vectors[i],
                 sim=[
@@ -496,10 +499,12 @@ class SimilarityEntry(BaseModel):
     )
 
 
-class SimilarityDoc(BaseModel):
+class SimilarityDoc(PropertyDoc):
     """
     Model for a document containing structure similarity data
     """
+
+    property_name: str = "similarity"
 
     sim: list[SimilarityEntry] | None = Field(
         None,
