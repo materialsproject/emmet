@@ -15,18 +15,17 @@ one module, can and should remain in that module.
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 from enum import Enum
+from typing import TYPE_CHECKING
 
-from pydantic_core import core_schema, CoreSchema
+from pydantic_core import CoreSchema, core_schema
 
 if TYPE_CHECKING:
     from typing import Any
-    from typing_extensions import Self
 
-    from pydantic import GetJsonSchemaHandler
-    from pydantic.json_schema import JsonSchemaValue
+    from pydantic import GetCoreSchemaHandler, GetJsonSchemaHandler
+    from typing_extensions import Self
 
 
 class ValueEnum(Enum):
@@ -57,15 +56,28 @@ class ValueEnum(Enum):
 
     @classmethod
     def __get_pydantic_core_schema__(
-        cls, source: Any, handler: core_schema.CoreSchema
+        cls, _source_type: Any, _handler: GetCoreSchemaHandler
     ) -> core_schema.CoreSchema:
-        """Ensure pydantic serialization."""
-        return core_schema.with_info_plain_validator_function(cls.validate)
+        """Ensure pydantic (de)serialization."""
+
+        from_str_schema = core_schema.chain_schema(
+            [
+                core_schema.str_schema(),
+                core_schema.with_info_plain_validator_function(cls.validate),
+            ]
+        )
+        return core_schema.json_or_python_schema(
+            json_schema=from_str_schema,
+            python_schema=from_str_schema,
+            serialization=core_schema.plain_serializer_function_ser_schema(
+                lambda instance: instance.value
+            ),
+        )
 
     @classmethod
     def __get_pydantic_json_schema__(
         cls, _core_schema: CoreSchema, handler: GetJsonSchemaHandler
-    ) -> JsonSchemaValue:
+    ) -> dict[str, Any]:
         json_schema = handler(core_schema.str_schema())
         json_schema = handler.resolve_ref_schema(json_schema)
         return json_schema
@@ -149,3 +161,34 @@ class TaskState(ValueEnum):
     SUCCESS = "successful"
     FAILED = "failed"
     ERROR = "error"
+
+
+class DeprecationMessage(DocEnum):
+    MANUAL = "M", "Manual deprecation"
+    SYMMETRY = (
+        "S001",
+        "Could not determine crystalline space group, needed for input set check.",
+    )
+    KPTS = "C001", "Too few KPoints"
+    KSPACING = "C002", "KSpacing not high enough"
+    ENCUT = "C002", "ENCUT too low"
+    FORCES = "C003", "Forces too large"
+    MAG = "C004", "At least one site magnetization is too large"
+    POTCAR = (
+        "C005",
+        "At least one POTCAR used does not agree with the pymatgen input set",
+    )
+    CONVERGENCE = "E001", "Calculation did not converge"
+    MAX_SCF = "E002", "Max SCF gradient too large"
+    LDAU = "I001", "LDAU Parameters don't match the inputset"
+    SET = ("I002", "Cannot validate due to missing or problematic input set")
+    UNKNOWN = "U001", "Cannot validate due to unknown calc type"
+
+
+class BatteryType(str, ValueEnum):
+    """
+    Enum for battery type
+    """
+
+    insertion = "insertion"
+    conversion = "conversion"

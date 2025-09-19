@@ -2,103 +2,48 @@
 
 from __future__ import annotations
 
-import json
-import types
-from typing import TYPE_CHECKING, Any, get_args
+import numbers
+from typing import TYPE_CHECKING
 
 import numpy as np
-from pydantic import BaseModel, Field, model_validator, model_serializer
-
-from pymatgen.core import Lattice, Structure
+from pydantic import BaseModel, Field, computed_field, field_validator
+from pymatgen.core import Lattice
 from pymatgen.electronic_structure.bandstructure import (
     BandStructure as PmgBandStructure,
-    Kpoint,
 )
+from pymatgen.electronic_structure.bandstructure import Kpoint
 from pymatgen.electronic_structure.core import Orbital, Spin
-from pymatgen.electronic_structure.dos import Dos, CompleteDos
+from pymatgen.electronic_structure.dos import CompleteDos, Dos
 
-from emmet.core.math import Vector3D, Matrix3D
-from emmet.core.utils import requires_arrow
-
-try:
-    import pyarrow as pa
-    from pyarrow import Table as ArrowTable
-except ImportError:
-    pa = None
-    ArrowTable = None
+from emmet.core.math import Matrix3D, Vector3D
+from emmet.core.types.enums import ValueEnum
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from typing_extensions import Self
     from pymatgen.core.sites import PeriodicSite
+    from typing_extensions import Self
 
 BAND_GAP_TOL = 1e-4
+
+
+class SpinHalf(ValueEnum):
+
+    UP = "up"
+    DOWN = "down"
 
 
 class BandTheoryBase(BaseModel):
 
     identifier: str | None = Field(None, description="The identifier of this object.")
-    structure: Structure | None = Field(
+    structure: StructureType | None = Field(
         None, description="The structure associated with this calculation."
     )
 
-    @model_validator(mode="before")
-    def deserialize_pmg(cls, config: Any) -> Any:
-        """Deserialize dict and json.dumps-like pymatgen objects."""
 
-        if config.get("structure"):
-            if isinstance(config["structure"], str):
-                config["structure"] = Structure.from_str(
-                    config["structure"], fmt="json"
-                )
-            elif isinstance(config["structure"], dict):
-                config["structure"] = Structure.from_dict(config["structure"])
-        return config
-
-    @model_serializer
-    def serialize_pmg(self) -> dict[str, Any]:
-        """Serialize pymatgen objects to dicts."""
-        config = {k: getattr(self, k, None) for k in type(self).model_fields}
-        if config.get("structure"):
-            config["structure"] = config["structure"].as_dict()  # type: ignore[union-attr]
-        return config
-
-    @requires_arrow
-    def to_arrow(self, col_prefix: str | None = None) -> ArrowTable:
-        """Serialize to arrow."""
-        col_prefix = col_prefix or ""
-        config = self.model_dump()
-        if struct_dict := config.get("structure"):
-            config["structure"] = json.dumps(struct_dict)
-        # Sanitize empty python objects that arrow struggles with currently
-        arrow_config = {}
-        for k, v in config.items():
-            if isinstance(v, dict) and not v:
-                arrow_config[f"{col_prefix}{k}"] = [None]
-            else:
-                arrow_config[f"{col_prefix}{k}"] = [v]
-        return pa.Table.from_pydict(arrow_config)
-
-    @classmethod
-    @requires_arrow
-    def from_arrow(cls, table: ArrowTable, col_prefix: str | None = None) -> Self:
-        """Create an object from an arrow table."""
-        dct: dict[str, Any] = {}
-        col_prefix = col_prefix or ""
-        for k, anno in cls.model_fields.items():
-            dct[k] = table[f"{col_prefix}{k}"].to_pylist()[0]
-
-            # Unsanitize null from arrow
-            is_union_type = isinstance(anno.annotation, types.UnionType)
-            if dct[k] is None and (
-                (is_union_type and (type(None) not in get_args(anno.annotation)))
-                or not is_union_type
-            ):
-                dct[k] = anno.default
-        return cls(**dct)
-
-
-class BandStructure(BandTheoryBase):
+class BandStructure(
+    BandTheoryBase, populate_by_name=True, validate_by_alias=True, validate_by_name=True
+):
     """Define the schema of band structures.
 
     This class is generic enough to accommodate both
@@ -109,15 +54,72 @@ class BandStructure(BandTheoryBase):
         description="The wave vectors (q-points) at which the band structure was sampled, in direct coordinates.",
     )
 
-    reciprocal_lattice: Matrix3D = Field(description="The reciprocal lattice.")
+    reciprocal_lattice: Matrix3D = Field(
+        description="The reciprocal lattice.", validation_alias="lattice_rec"
+    )
 
     labels_dict: dict[str, Vector3D] = Field(
         {}, description="The high-symmetry labels of specific q-points."
     )
 
-    structure: Structure | None = Field(
-        None, description="The structure associated with the calculation."
+    @field_validator("reciprocal_lattice", mode="before")
+    def reciprocal_lattice_deserializer(cls, reciprocal_lattice):
+        if isinstance(reciprocal_lattice, dict):
+            return reciprocal_lattice.get("matrix")
+
+        return reciprocal_lattice
+
+
+class ProjectedBS(BaseModel):
+    """Light memory model for projected band structure data.
+
+    Only C order is used.
+
+    When the data is unraveled by numpy, you should get a 4-index
+    tensor where:
+        - Index 1: band index
+        - Index 2: k-point index
+        - Index 3: site index
+        - Index 4: index for the orbital character, ordered as
+            s, py, pz, px, dxy, dyz, dz2, dxz, dx2-y2,...
+    """
+
+    spin_up: list[float] | None = Field(
+        None, description="The flattened spin-up band projetions."
     )
+    spin_down: list[float] | None = Field(
+        None, description="The flattened spin-down band projetions."
+    )
+    rank: tuple[int, int, int, int] = Field(
+        description="The original shape of the band projections."
+    )
+
+    @classmethod
+    def from_pmg_like(cls, projections: dict[Spin, np.ndarray]) -> Self:
+
+        spins = list(projections)
+        rank = projections[spins[0]].shape
+        if not all(proj.shape == rank for proj in projections.values()):
+            raise ValueError(
+                "The band structure projections should have the same shape."
+            )
+        config = {
+            f"spin_{spin.name}": proj.flatten(order="C")
+            for spin, proj in projections.items()
+        }
+        return cls(
+            **config,  # type: ignore[arg-type]
+            rank=rank,  # type: ignore[arg-type]
+        )
+
+    def to_pmg_like(self) -> dict[Spin, np.ndarray]:
+        return {
+            spin: np.array(getattr(self, f"spin_{spin.name}")).reshape(
+                self.rank, order="C"
+            )
+            for spin in Spin
+            if getattr(self, f"spin_{spin.name}")
+        }
 
 
 class ElectronicBS(BandStructure):
@@ -143,50 +145,18 @@ class ElectronicBS(BandStructure):
         None, description="If the bandgap is non-zero, whether the band gap is direct."
     )
 
-    is_metal: bool | None = Field(
-        None, description="Whether the band gap is almost zero."
+    projections: ProjectedBS | None = Field(
+        None, description="The site- and spin-orbital-projected band structure."
     )
 
-    spin_up_projections: list[list[list[list[float]]]] | None = Field(
-        None,
-        description=(
-            "The atom-projected eigen-energies of the spin-up electrons. "
-            "The first index is the band index. The second index is the k-point index. "
-            "The third index is the site index. The final index is the orbital character, "
-            "ordered as s, py, pz, px, dxy, dyz, dz2, dxz, dx2-y2,..."
-        ),
-    )
-
-    spin_down_projections: list[list[list[list[float]]]] | None = Field(
-        None,
-        description=(
-            "The atom-projected eigen-energies of the spin-down electrons. "
-            "The first index is the band index. The second index is the k-point index. "
-            "The third index is the site index. The final index is the orbital character, "
-            "ordered as s, py, pz, px, dxy, dyz, dz2, dxz, dx2-y2,..."
-        ),
-    )
-
-    @model_validator(mode="before")
-    def deserialize_pmg(cls, config: Any) -> Any:
-        """Ensure fields are correctly populated."""
-
-        if bg := config.get("band_gap"):
-            if not (config.get("is_metal")):
-                config["is_metal"] = bg < BAND_GAP_TOL
-
-        # remap legacy fields
-        for k, v in {
-            "lattice_rec": "reciprocal_lattice",
-            "bands": "frequencies",
-        }.items():
-            if config.get(k) is not None:
-                config[v] = config.pop(k)
-
-        if isinstance(config["reciprocal_lattice"], dict):
-            config["reciprocal_lattice"] = config["reciprocal_lattice"].get("matrix")
-
-        return super(ElectronicBS, cls).deserialize_pmg(config)  # type: ignore[operator]
+    @computed_field
+    def is_metal(self) -> bool:
+        """Whether the band gap is almost zero."""
+        return (
+            self.band_gap < BAND_GAP_TOL
+            if isinstance(self.band_gap, numbers.Number)
+            else False
+        )
 
     @classmethod
     def from_pmg(cls, ebs: PmgBandStructure) -> Self:
@@ -207,8 +177,7 @@ class ElectronicBS(BandStructure):
 
         for spin in Spin:
             config[f"spin_{spin.name}_bands"] = ebs.bands.get(spin)
-            if ebs.projections is not None:
-                config[f"spin_{spin.name}_projections"] = ebs.projections.get(spin)
+        config["projections"] = ProjectedBS.from_pmg_like(ebs.projections) if ebs.projections else None  # type: ignore[arg-type]
         return cls(**config)
 
     def to_pmg(self, pmg_cls: Callable = PmgBandStructure) -> PmgBandStructure:
@@ -224,12 +193,9 @@ class ElectronicBS(BandStructure):
         rlatt = Lattice(self.reciprocal_lattice)
 
         bands = {}
-        projections = {}
         for spin in Spin:
             if v := getattr(self, f"spin_{spin.name}_bands", None):
                 bands[spin] = np.array(v)
-            if v := getattr(self, f"spin_{spin.name}_projections", None):
-                projections[spin] = np.array(v)
 
         return pmg_cls(
             [Kpoint(q, lattice=rlatt).frac_coords for q in self.qpoints],  # type: ignore[misc]
@@ -242,23 +208,112 @@ class ElectronicBS(BandStructure):
             },
             coords_are_cartesian=False,
             structure=self.structure,
-            projections=projections,
+            projections=self.projections.to_pmg_like() if self.projections else None,
         )
 
 
-class BaseElectronicDos(BandTheoryBase):
-    """Basic structure for spin-resolved density of states (DOS).
+class DosProjection(BaseModel):
+    """Single component of the projected electronic DOS."""
 
-    Note that this class is intended for storing:
-        1. Total DOS.
-        2. A single-orbital-resolved component of a site- and orbital-
-            projected DOS.
-    """
+    densities: list[float] | None = Field(None, description="The densities of state.")
 
-    spin_up_densities: list[float] | None = Field(None, description="The spin-up DOS.")
+    spin: SpinHalf | None = Field(None, description="The spin state if applicable.")
+
+    orbital: str | None = Field(
+        None, description="The orbital character of this DOS, if applicable."
+    )
+
+    site_index: int | None = Field(
+        None,
+        description="The index of the atom in the structure onto which this DOS is projected.",
+    )
+
+
+class ProjectedDos(BaseModel):
+    """Atom and orbital projected DOS."""
+
+    densities: list[list[float] | None] | None = Field(
+        None, description="The densities of state."
+    )
+
+    spin: list[SpinHalf | None] | None = Field(
+        None, description="The spin state if applicable."
+    )
+
+    orbital: list[str | None] | None = Field(
+        None, description="The orbital character of this DOS, if applicable."
+    )
+
+    site_index: list[int | None] | None = Field(
+        None,
+        description="The index of the atom in the structure onto which this DOS is projected.",
+    )
+
+    def _to_list_of_dict(self) -> list[dict[str, str | int | list[float]]]:
+        """Possible serialization procedure."""
+        return [
+            {
+                k: getattr(self, k)[i] if k != "spin" else getattr(self, k)[i].value
+                for k in self.__class__.model_fields
+            }
+            for i in range(len(self.densities or []))
+        ]
+
+    @classmethod
+    def _from_list_of_dict(cls, lod: list[dict[str, str | int | list[float]]]) -> Self:
+        """Possible deserialization route."""
+        return cls(**{k: [entry.get(k) for entry in lod] for k in cls.model_fields})  # type: ignore[arg-type]
+
+    @classmethod
+    def from_pmg_like(
+        cls,
+        pdos: dict[PeriodicSite, dict[Orbital, dict[Spin, np.ndarray]]],
+        structure: StructureType,
+    ) -> Self:
+        """Create a ProjectedDos from a pymatgen-like CompleteDos.pdos."""
+        projs = [
+            {
+                "densities": sr_dos,
+                "spin": spin.name,
+                "orbital": orbital.name,
+                "site_index": [
+                    idx for idx, ref_site in enumerate(structure) if ref_site == site
+                ][0],
+            }
+            for site, orb_spin_dos in pdos.items()
+            for orbital, spin_dos in orb_spin_dos.items()
+            for spin, sr_dos in spin_dos.items()
+        ]
+        return cls(
+            **{  # type: ignore[arg-type]
+                k: [proj[k] for proj in projs]
+                for k in ("densities", "spin", "orbital", "site_index")
+            }
+        )
+
+    def to_pmg_like(
+        self, structure: StructureType
+    ) -> dict[PeriodicSite, dict[Orbital, dict[Spin, np.ndarray]]]:
+        """Construct a pymatgen-like representation of the projected DOS."""
+        pdos: dict[PeriodicSite, dict[Orbital, dict[Spin, np.ndarray]]] = {}
+        for i, dens in enumerate(self.densities or []):
+            if (site := structure[self.site_index[i]]) not in pdos:  # type: ignore[index]
+                pdos[site] = {}
+            if (orb := Orbital[self.orbital[i]]) not in pdos[site]:  # type: ignore[index,misc]
+                pdos[site][orb] = {}
+            pdos[site][orb][Spin[self.spin[i]]] = np.array(dens)  # type: ignore[index,misc]
+        return pdos
+
+
+class ElectronicDos(BandTheoryBase):
+    """Electronic density of states (DOS) with possible projections."""
+
+    spin_up_densities: list[float] | None = Field(
+        None, description="The spin-up densities of state."
+    )
 
     spin_down_densities: list[float] | None = Field(
-        None, description="The spin-down DOS."
+        None, description="The spin-down densities of state."
     )
 
     energies: list[float] | None = Field(
@@ -267,66 +322,29 @@ class BaseElectronicDos(BandTheoryBase):
 
     efermi: float | None = Field(None, description="The Fermi energy.")
 
-    orbital: str | None = Field(
-        None, description="The orbital character of this DOS, if applicable."
-    )
-
-    def to_pmg(self) -> Dos:
-        """Convert to a pymatgen DOS object."""
-        densities = {}
-        for spin in Spin:
-            if sr_density := getattr(self, f"spin_{spin.name}_densities", None):
-                densities[spin] = sr_density
-        return Dos(self.efermi, self.energies, densities)  # type: ignore[arg-type]
-
-
-class ElectronicDos(BaseElectronicDos):
-    """Electronic density of states (DOS) with possible projections."""
-
-    projected_densities: list[list[BaseElectronicDos] | None] | None = Field(
+    projected_densities: ProjectedDos | None = Field(
         None, description="The orbital- and site-projected DOS."
     )
 
     @property
     def _available_spins(self) -> list[Spin]:
         """Retrive spin indices of non-null spin data."""
-        return [
-            spin
-            for spin in Spin
-            if getattr(self, f"spin_{spin.name}_densities", None) is not None
-        ]
+        return [spin for spin in Spin if getattr(self, f"spin_{spin.name}_densities")]
 
     @classmethod
     def from_pmg(cls, dos: Dos | CompleteDos, **kwargs) -> Self:
         """Create an electronic DOS from a pymatgen object."""
 
         densities: dict[str, list[float]] = {
-            f"spin_{spin.name}_densities": list(sr_dos)
+            f"spin_{spin.name}_densities": sr_dos.tolist()
             for spin, sr_dos in dos.densities.items()
         }
 
-        if isinstance(dos, CompleteDos):
-
-            pdos: list[list[BaseElectronicDos] | None] | None = None
-            if (vrun_pdos := dos.pdos) and dos.structure:
-                pdos_dct: dict[int, list[BaseElectronicDos] | None] = {}
-                for site, orb_spin_dos in vrun_pdos.items():
-                    site_idx: int = [
-                        idx
-                        for idx, ref_site in enumerate(dos.structure)
-                        if ref_site == site
-                    ][0]
-                    pdos_dct[site_idx] = [
-                        BaseElectronicDos(
-                            **{  # type: ignore[arg-type]
-                                f"spin_{spin.name}_densities": sr_dos
-                                for spin, sr_dos in spin_dos.items()
-                            },
-                            orbital=orbital.name,
-                        )
-                        for orbital, spin_dos in orb_spin_dos.items()
-                    ]
-                pdos = [pdos_dct[idx] for idx in sorted(pdos_dct)]
+        pdos = (
+            ProjectedDos.from_pmg_like(dos.pdos, dos.structure)  # type: ignore[arg-type]
+            if isinstance(dos, CompleteDos)
+            else None
+        )
 
         return cls(
             **densities,  # type: ignore[arg-type]
@@ -344,36 +362,16 @@ class ElectronicDos(BaseElectronicDos):
                 "Fermi level unspecified, cannot create a pymatgen (Complete)Dos object."
             )
 
-        densities: dict[Spin, np.ndarray] = {}
-        for spin in self._available_spins:
-            if (
-                _dens := getattr(self, f"spin_{spin.name}_densities", None)
-            ) is not None:
-                densities[spin] = np.array(_dens)
+        densities: dict[Spin, np.ndarray] = {
+            spin: np.array(getattr(self, f"spin_{spin.name}_densities"))
+            for spin in self._available_spins
+        }
 
         dos = Dos(self.efermi, np.array(self.energies), densities)
         if self.structure and self.projected_densities:
-
-            pdos: dict[PeriodicSite, dict[Orbital, dict[Spin, np.ndarray]]] = {}
-            for isite, site in enumerate(self.structure):
-                pdos[site] = {}
-                if not self.projected_densities[isite]:
-                    continue
-                for site_dos in self.projected_densities[
-                    isite
-                ]:  # type:ignore[union-attr]
-                    if not site_dos.orbital:
-                        continue
-                    orbital = Orbital[site_dos.orbital]
-                    pdos[site][orbital] = {}
-                    for spin in self._available_spins:
-                        if (
-                            _pdos := getattr(
-                                site_dos, f"spin_{spin.name}_densities", None
-                            )
-                        ) is not None:
-                            pdos[site][orbital][spin] = np.array(_pdos)
-
-            return CompleteDos(self.structure, dos, pdos)
-
+            return CompleteDos(
+                self.structure,
+                dos,
+                self.projected_densities.to_pmg_like(self.structure),
+            )
         return dos

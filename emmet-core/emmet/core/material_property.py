@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from pydantic import Field
 from pydantic.json_schema import SkipJsonSchema
-from pymatgen.core import Structure
 
 from emmet.core.material import BasePropertyMetadata
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 
 
 class PropertyDoc(BasePropertyMetadata):
@@ -20,6 +20,6 @@ class PropertyDoc(BasePropertyMetadata):
 
     property_name: str
 
-    structure: SkipJsonSchema[Structure | None] = Field(
+    structure: SkipJsonSchema[StructureType | None] = Field(
         None, description="The structure associated with this property.", exclude=True
     )

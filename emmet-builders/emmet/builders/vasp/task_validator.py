@@ -4,8 +4,8 @@ from maggma.core import Store
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.builders.utils import get_potcar_stats
 from emmet.core.tasks import TaskDoc
+from emmet.core.types.enums import DeprecationMessage
 from emmet.core.vasp.calc_types.enums import CalcType
-from emmet.core.vasp.validation import DeprecationMessage
 from emmet.core.vasp.validation_legacy import ValidationDoc
 
 
@@ -75,12 +75,15 @@ class TaskValidator(MapBuilder):
             potcar_stats=self.potcar_stats,
         )
 
-        bad_tags = list(
-            set(task_doc.tags or []).intersection(self.settings.DEPRECATED_TAGS)
-        )
-        if len(bad_tags) > 0:
-            validation_doc.warnings.append(f"Manual Deprecation by tags: {bad_tags}")
-            validation_doc.valid = False
-            validation_doc.reasons.append(DeprecationMessage.MANUAL)
+        if task_doc.tags:
+            bad_tags = list(
+                set(task_doc.tags).intersection(self.settings.DEPRECATED_TAGS)
+            )
+            if len(bad_tags) > 0:
+                validation_doc.warnings.append(
+                    f"Manual Deprecation by tags: {bad_tags}"
+                )
+                validation_doc.valid = False
+                validation_doc.reasons.append(DeprecationMessage.MANUAL)
 
         return validation_doc
