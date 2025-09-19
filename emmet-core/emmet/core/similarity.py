@@ -164,7 +164,7 @@ class SimilarityScorer:
         -----------
         np.ndarray
         """
-        return 100 * np.tanh(distances)
+        return 100 * (1.0 - np.tanh(distances))
 
     def featurize_structures(
         self,
