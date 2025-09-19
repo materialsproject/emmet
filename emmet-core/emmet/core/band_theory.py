@@ -16,7 +16,6 @@ from pymatgen.electronic_structure.core import Orbital, Spin
 from pymatgen.electronic_structure.dos import CompleteDos, Dos
 
 from emmet.core.math import Matrix3D, Vector3D
-from emmet.core.types.enums import ValueEnum
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 
 if TYPE_CHECKING:
@@ -25,12 +24,6 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
 BAND_GAP_TOL = 1e-4
-
-
-class SpinHalf(ValueEnum):
-
-    UP = "up"
-    DOWN = "down"
 
 
 class BandTheoryBase(BaseModel):
@@ -84,8 +77,6 @@ class ProjectedBS(BaseModel):
             s, py, pz, px, dxy, dyz, dz2, dxz, dx2-y2,...
     """
 
-    identifier: str | None = Field(None, description="The identifier of this object.")
-
     spin_up: list[float] | None = Field(
         None, description="The flattened spin-up band projetions."
     )
@@ -97,9 +88,7 @@ class ProjectedBS(BaseModel):
     )
 
     @classmethod
-    def from_pmg_like(
-        cls, projections: dict[Spin, np.ndarray], identifier: str | None = None
-    ) -> Self:
+    def from_pmg_like(cls, projections: dict[Spin, np.ndarray]) -> Self:
 
         spins = list(projections)
         rank = projections[spins[0]].shape
@@ -114,7 +103,6 @@ class ProjectedBS(BaseModel):
         return cls(
             **config,  # type: ignore[arg-type]
             rank=rank,  # type: ignore[arg-type]
-            identifier=identifier,
         )
 
     def to_pmg_like(self) -> dict[Spin, np.ndarray]:
@@ -183,9 +171,7 @@ class ElectronicBS(BandStructure):
         for spin in Spin:
             config[f"spin_{spin.name}_bands"] = ebs.bands.get(spin)
         config["projections"] = (
-            ProjectedBS.from_pmg_like(
-                ebs.projections, identifier=kwargs.get("identifier")  # type: ignore[arg-type]
-            )
+            ProjectedBS.from_pmg_like(ebs.projections)  # type: ignore[arg-type]
             if ebs.projections
             else None
         )
@@ -223,34 +209,15 @@ class ElectronicBS(BandStructure):
         )
 
 
-class DosProjection(BaseModel):
-    """Single component of the projected electronic DOS."""
-
-    densities: list[float] | None = Field(None, description="The densities of state.")
-
-    spin: SpinHalf | None = Field(None, description="The spin state if applicable.")
-
-    orbital: str | None = Field(
-        None, description="The orbital character of this DOS, if applicable."
-    )
-
-    site_index: int | None = Field(
-        None,
-        description="The index of the atom in the structure onto which this DOS is projected.",
-    )
-
-
 class ProjectedDos(BaseModel):
     """Atom and orbital projected DOS."""
 
-    identifier: str | None = Field(None, description="The identifier of this object.")
-
-    densities: list[list[float] | None] | None = Field(
-        None, description="The densities of state."
+    spin_up_densities: list[list[float] | None] | None = Field(
+        None, description="The spin-up projected densities of state."
     )
 
-    spin: list[SpinHalf | None] | None = Field(
-        None, description="The spin state if applicable."
+    spin_down_densities: list[list[float] | None] | None = Field(
+        None, description="The spin-down projected densities of state."
     )
 
     orbital: list[str | None] | None = Field(
@@ -265,11 +232,8 @@ class ProjectedDos(BaseModel):
     def _to_list_of_dict(self) -> list[dict[str, str | int | list[float]]]:
         """Possible serialization procedure."""
         return [
-            {
-                k: getattr(self, k)[i] if k != "spin" else getattr(self, k)[i].value
-                for k in self.__class__.model_fields
-            }
-            for i in range(len(self.densities or []))
+            {k: getattr(self, k)[i] for k in self.__class__.model_fields}
+            for i in range(len(self.spin_up_densities or []))
         ]
 
     @classmethod
@@ -282,13 +246,14 @@ class ProjectedDos(BaseModel):
         cls,
         pdos: dict[PeriodicSite, dict[Orbital, dict[Spin, np.ndarray]]],
         structure: StructureType,
-        identifier: str | None = None,
     ) -> Self:
         """Create a ProjectedDos from a pymatgen-like CompleteDos.pdos."""
         projs = [
             {
-                "densities": sr_dos,
-                "spin": spin.name,
+                **{
+                    f"spin_{spin.name}_densities": sr_dos
+                    for spin, sr_dos in spin_dos.items()
+                },
                 "orbital": orbital.name,
                 "site_index": [
                     idx for idx, ref_site in enumerate(structure) if ref_site == site
@@ -296,14 +261,18 @@ class ProjectedDos(BaseModel):
             }
             for site, orb_spin_dos in pdos.items()
             for orbital, spin_dos in orb_spin_dos.items()
-            for spin, sr_dos in spin_dos.items()
         ]
+
         return cls(
             **{  # type: ignore[arg-type]
-                k: [proj[k] for proj in projs]
-                for k in ("densities", "spin", "orbital", "site_index")
+                k: [proj.get(k) for proj in projs]
+                for k in (
+                    "spin_up_densities",
+                    "spin_down_densities",
+                    "orbital",
+                    "site_index",
+                )
             },
-            identifier=identifier,
         )
 
     def to_pmg_like(
@@ -311,12 +280,16 @@ class ProjectedDos(BaseModel):
     ) -> dict[PeriodicSite, dict[Orbital, dict[Spin, np.ndarray]]]:
         """Construct a pymatgen-like representation of the projected DOS."""
         pdos: dict[PeriodicSite, dict[Orbital, dict[Spin, np.ndarray]]] = {}
-        for i, dens in enumerate(self.densities or []):
+        for i, dens in enumerate(self.spin_up_densities or []):
             if (site := structure[self.site_index[i]]) not in pdos:  # type: ignore[index]
                 pdos[site] = {}
             if (orb := Orbital[self.orbital[i]]) not in pdos[site]:  # type: ignore[index,misc]
                 pdos[site][orb] = {}
-            pdos[site][orb][Spin[self.spin[i]]] = np.array(dens)  # type: ignore[index,misc]
+            pdos[site][orb][Spin.up] = np.array(dens)  # type: ignore[index,misc]
+            if self.spin_down_densities and all(
+                sdd for sdd in self.spin_down_densities
+            ):
+                pdos[site][orb][Spin.down] = np.array(self.spin_down_densities[i])
         return pdos
 
 
@@ -356,7 +329,7 @@ class ElectronicDos(BandTheoryBase):
         }
 
         pdos = (
-            ProjectedDos.from_pmg_like(dos.pdos, dos.structure, identifier=kwargs.get("identifier"))  # type: ignore[arg-type]
+            ProjectedDos.from_pmg_like(dos.pdos, dos.structure)  # type: ignore[arg-type]
             if isinstance(dos, CompleteDos)
             else None
         )
