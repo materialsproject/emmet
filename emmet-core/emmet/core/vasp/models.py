@@ -47,9 +47,9 @@ class VolumetricLabel(ValueEnum):
     DIFF = "diff"
 
     # NB: we only need these if we have noncolinear calculations
-    DIFF_X = "diff_x"
-    DIFF_Y = "diff_y"
-    DIFF_Z = "diff_z"
+    # DIFF_X = "diff_x"
+    # DIFF_Y = "diff_y"
+    # DIFF_Z = "diff_z"
 
 
 class AugChargeData(BaseModel):
@@ -63,12 +63,21 @@ class ChgcarLike(BaseModel):
     """Model for VASP CHGCAR-like data.
 
     Includes CHGCAR, CHG, LOCPOT, ELFCAR, AECCAR0, AECCAR1, AECCAR2, POT.
+    All volumetric data is flattened upon storage in the model from a
+    rank-3 tensor.
+    C-order is used throughout.
     """
 
-    data: dict[VolumetricLabel, list[list[list[float]]] | None] = Field(
+    labels: list[VolumetricLabel] | None = Field(
+        None, description="The spin resolution of the volumetric data."
+    )
+    data: list[list[float] | None] | None = Field(
         description="The primary volumetric data."
     )
-    data_aug: dict[VolumetricLabel, list[AugChargeData]] | None = Field(
+    data_rank: list[tuple[int, int, int]] | None = Field(
+        None, description="The original shape of the"
+    )
+    data_aug: list[list[AugChargeData] | None] | None = Field(
         None, description="The augmentation charge volumetric data."
     )
     structure: StructureType | None = Field(
@@ -116,9 +125,16 @@ class ChgcarLike(BaseModel):
     @classmethod
     def from_pmg(cls, vd: PmgVolumetricData) -> Self:
         """Convert generic pymatgen volumetric data to an archive format."""
+        labels = [VolumetricLabel(k) for k in vd.data]
+        data_aug = None
+        if aug_data := cls.parse_augmentation_charge_data(vd.data_aug):  # type: ignore[arg-type]
+            data_aug = [aug_data.get(vlab) for vlab in labels]
+
         return cls(
-            data={VolumetricLabel(k): v.tolist() for k, v in vd.data.items()},
-            data_aug=cls.parse_augmentation_charge_data(vd.data_aug) or None,  # type: ignore[arg-type]
+            labels=labels,
+            data=[vd.data[vlab].flatten(order="C") for vlab in labels],  # type: ignore[misc]
+            data_rank=[vd.data[vlab].shape for vlab in labels],  # type: ignore[misc]
+            data_aug=data_aug,
             structure=(
                 vd.structure
                 if isinstance(vd.structure, Structure)
@@ -131,11 +147,17 @@ class ChgcarLike(BaseModel):
         data_aug: dict[str, np.ndarray] | None = None
         if self.data_aug:
             data_aug = {
-                vol_label.value: np.array(vals)
-                for vol_label, vals in self.data_aug.items()
+                vol_label.value: np.array(self.data_aug[i])
+                for i, vol_label in enumerate(self.labels or [])
+                if self.data_aug[i]
             }
         return pmg_cls(
             self.structure,
-            {vol_label.value: np.array(vals) for vol_label, vals in self.data.items()},
+            {
+                vol_label.value: np.array(self.data[i]).reshape(  # type: ignore[index]
+                    self.data_rank[i], order="C"  # type: ignore[index]
+                )
+                for i, vol_label in enumerate(self.labels or [])
+            },
             data_aug=data_aug,
         )
