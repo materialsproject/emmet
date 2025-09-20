@@ -1309,9 +1309,7 @@ def _parse_bandstructure(
         bs_vrun = BSVasprun(vasprun_file, parse_projected_eigen=True)
         bs = bs_vrun.get_band_structure(line_mode=parse_mode == "line", efermi="smart")
 
-    if bs:
-        return ElectronicBS.from_pmg(bs)
-    return None
+    return ElectronicBS.from_pmg(bs) if bs else None
 
 
 def _get_band_props(
