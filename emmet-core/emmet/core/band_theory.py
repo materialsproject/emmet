@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 import numbers
 from typing import TYPE_CHECKING
 
@@ -78,10 +79,10 @@ class ProjectedBS(BaseModel):
     """
 
     spin_up: list[float] | None = Field(
-        None, description="The flattened spin-up band projetions."
+        None, description="The flattened spin-up band projections."
     )
     spin_down: list[float] | None = Field(
-        None, description="The flattened spin-down band projetions."
+        None, description="The flattened spin-down band projections."
     )
     rank: tuple[int, int, int, int] = Field(
         description="The original shape of the band projections."
@@ -275,22 +276,40 @@ class ProjectedDos(BaseModel):
             },
         )
 
+    # def to_pmg_like(
+    #     self, structure: StructureType
+    # ) -> dict[PeriodicSite, dict[Orbital, dict[Spin, np.ndarray]]]:
+    #     """Construct a pymatgen-like representation of the projected DOS."""
+    #     pdos: dict[PeriodicSite, dict[Orbital, dict[Spin, np.ndarray]]] = {}
+    #     for i, dens in enumerate(self.spin_up_densities or []):
+    #         if (site := structure[self.site_index[i]]) not in pdos:  # type: ignore[index]
+    #             pdos[site] = {}
+    #         if (orb := Orbital[self.orbital[i]]) not in pdos[site]:  # type: ignore[index,misc]
+    #             pdos[site][orb] = {}
+    #         pdos[site][orb][Spin.up] = np.array(dens)  # type: ignore[index,misc]
+    #         if self.spin_down_densities and all(
+    #             sdd for sdd in self.spin_down_densities
+    #         ):
+    #             pdos[site][orb][Spin.down] = np.array(self.spin_down_densities[i])
+    #     return pdos
+
     def to_pmg_like(
         self, structure: StructureType
     ) -> dict[PeriodicSite, dict[Orbital, dict[Spin, np.ndarray]]]:
         """Construct a pymatgen-like representation of the projected DOS."""
-        pdos: dict[PeriodicSite, dict[Orbital, dict[Spin, np.ndarray]]] = {}
+        pdos: defaultdict[
+            PeriodicSite, defaultdict[Orbital, dict[Spin, np.ndarray]]
+        ] = defaultdict(lambda: defaultdict(dict))
         for i, dens in enumerate(self.spin_up_densities or []):
-            if (site := structure[self.site_index[i]]) not in pdos:  # type: ignore[index]
-                pdos[site] = {}
-            if (orb := Orbital[self.orbital[i]]) not in pdos[site]:  # type: ignore[index,misc]
-                pdos[site][orb] = {}
-            pdos[site][orb][Spin.up] = np.array(dens)  # type: ignore[index,misc]
+            pdos[site := structure[self.site_index[i]]][  # type: ignore[index]
+                orb := Orbital[self.orbital[i]]  # type: ignore[index,misc]
+            ][Spin.up] = np.array(dens)
             if self.spin_down_densities and all(
                 sdd for sdd in self.spin_down_densities
             ):
                 pdos[site][orb][Spin.down] = np.array(self.spin_down_densities[i])
-        return pdos
+
+        return dict(pdos)
 
 
 class ElectronicDos(BandTheoryBase):

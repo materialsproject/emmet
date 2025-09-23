@@ -1,4 +1,4 @@
-"""Common models and types needed in VASP."""
+"""Common models and types needed for VASP data."""
 
 from __future__ import annotations
 

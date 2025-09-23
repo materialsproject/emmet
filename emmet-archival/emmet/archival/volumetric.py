@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Type
 
+import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 from pydantic import BaseModel, Field
@@ -18,7 +19,6 @@ from emmet.archival.atoms import CrystalArchive
 
 if TYPE_CHECKING:
     from pathlib import Path
-    from typing import Any
 
 
 class VolumetricLabel(ValueEnum):
@@ -50,21 +50,14 @@ class VolumetricArchive(Archiver, ChgcarLike):
     """
 
     def to_arrow(self) -> pa.Table:
-        config = {}
-        for k in VolumetricLabel:  # type: ignore[attr-defined]
-            config[f"data_{k.value}"] = pa.array([[self.data.get(k)]])  # type: ignore [call-overload]
-
-        if self.data_aug:
-            for k in VolumetricLabel:  # type: ignore[attr-defined]
-                if vals := self.data_aug.get(k):  # type: ignore[call-overload]
-                    config[f"data_aug_{k.value}"] = pa.array(
-                        [[x.model_dump() for x in vals]]
-                    )
-                else:
-                    config[f"data_aug_{k.value}"] = pa.array([[None]])
-        else:
-            for k in VolumetricLabel:  # type: ignore[attr-defined]
-                config[f"data_aug_{k.value}"] = pa.array([[None]])
+        config = {
+            k: (
+                pa.array([v])
+                if k != "labels"
+                else pa.array([[v.value for v in self.labels]])
+            )
+            for k, v in self.model_dump().items()
+        }
 
         crystal_archive = CrystalArchive.from_pmg(self.structure)
         config.update(crystal_archive._to_arrow_arrays(prefix="structure_"))
@@ -72,17 +65,26 @@ class VolumetricArchive(Archiver, ChgcarLike):
         return pa.table(config)
 
     @classmethod
-    def from_arrow(cls, table: pa.Table) -> PmgVolumetricData:
-        cls_config: dict[str, Any] = {}
-        for data_key in ("data", "data_aug"):
-            cls_config[data_key] = {}
-            for vlab in VolumetricLabel:  # type: ignore[attr-defined]
-                comp_key = f"{data_key}_{vlab.value}"
-                if comp_key in table.column_names:
-                    cls_config[data_key][vlab.value] = table[comp_key].to_pylist()[0]
+    def from_arrow(
+        cls, table: pa.Table, pmg_cls: Type[PmgVolumetricData] = PmgVolumetricData
+    ) -> PmgVolumetricData:
+        cls_config: dict[str, dict[str, np.ndarray]] = {
+            k: {} for k in ("data", "data_aug")
+        }
+        data = table["data"].to_numpy()[0]
+        aug_data = (
+            table["data_aug"].to_pylist()[0]
+            if "data_aug" in table.column_names
+            else None
+        )
+        ranks = table["data_rank"].to_pylist()[0]
+        for i, vol_label in enumerate(table["labels"].to_pylist()[0]):
+            cls_config["data"][vol_label] = data[i].reshape(ranks[i])
+            if aug_data and aug_data[i]:
+                cls_config["data_aug"][vol_label] = np.array(aug_data[i])
 
-        return PmgVolumetricData(
-            structure=CrystalArchive.from_arrow(table, prefix="structure_"),
+        return pmg_cls(
+            CrystalArchive.from_arrow(table, prefix="structure_"),
             **cls_config,
         )
 
