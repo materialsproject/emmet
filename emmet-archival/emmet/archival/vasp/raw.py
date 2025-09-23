@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import json
+import orjson
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import TYPE_CHECKING
@@ -79,7 +79,7 @@ class RawArchive(Archiver):
 
         # Note that to accommodate both validation and TaskDoc, we need to
         # store the LEXCH kwarg here
-        return json.dumps(
+        return orjson.dumps(
             [
                 {**p.model_dump(), "lexch": pot_obj[i].LEXCH}
                 for i, p in enumerate(PotcarSpec.from_potcar(pot_obj))
@@ -252,7 +252,7 @@ class RawArchive(Archiver):
                     if (fname := Path(key).name.lower()) not in fname_to_type:
                         continue
 
-                    data = np.array(group[key])[0].decode()
+                    data = np.array(group[key])[0]
                     if io_typ == "input":
                         # These methods can directly parse from in-memory str
 
@@ -264,15 +264,15 @@ class RawArchive(Archiver):
                                     titel=ps["titel"],
                                     lexch=ps["lexch"],
                                 )
-                                for ps in json.loads(data)
+                                for ps in orjson.loads(data)
                             ]
                         elif fname == "poscar":
                             vasp_io["user_input"]["structure"] = Structure.from_str(
-                                data, fmt="poscar"
+                                data.decode(), fmt="poscar"
                             )
                         else:
                             vasp_io["user_input"][fname] = fname_to_type[fname].from_str(  # type: ignore[attr-defined]
-                                data,
+                                data.decode(),
                             )
                     else:
                         # These methods must write to a temp file to parse
