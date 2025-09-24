@@ -75,3 +75,6 @@ docs = [
     "sphinx-markdown-builder>=0.6.8",
     "sphinx-autodoc-typehints",
 ]
+bonding = [
+    "lobsterpy"
+]
