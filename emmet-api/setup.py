@@ -12,7 +12,7 @@ setup(
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
     install_requires=[
-        "emmet-core>=0.78.0rc1",
+        "emmet-core>=0.84.6rc0,<0.85",
         "fastapi",
         "gunicorn",
         "boto3",
@@ -35,7 +35,6 @@ setup(
             "pycodestyle",
             "pydocstyle",
             "flake8",
-            "mongomock",
             "mypy",
             "mypy-extensions",
             "types-setuptools",
