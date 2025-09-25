@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import gzip
 import logging
 import time
 import orjson
@@ -11,6 +10,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from monty.os.path import zpath
+from monty.io import zopen
 from monty.dev import requires
 from monty.json import MontyDecoder
 
@@ -32,7 +32,7 @@ from pymatgen.io.lobster import (
 from typing_extensions import Self
 
 from emmet.core.structure import StructureMetadata
-from emmet.core.utils import jsanitize
+from emmet.core.utils import jsanitize, arrow_incompatible
 from emmet.core.types.typing import DateTimeType
 
 try:
@@ -65,6 +65,7 @@ def aggregate_paths(
     return paths
 
 
+@arrow_incompatible
 class LobsteroutModel(BaseModel):
     """Definition of computational settings from the LOBSTER computation."""
 
@@ -131,6 +132,7 @@ class LobsteroutModel(BaseModel):
     )
 
 
+@arrow_incompatible
 class LobsterinModel(BaseModel):
     """Definition of input settings for the LOBSTER computation."""
 
@@ -220,6 +222,7 @@ class Sites(BaseModel):
     )
 
 
+@arrow_incompatible
 class CohpPlotData(BaseModel):
     """Model describing the cohp_plot_data field of CondensedBondingAnalysis."""
 
@@ -243,6 +246,7 @@ class DictIons(BaseModel):
 # TODO extricate this from individual dicts
 
 
+@arrow_incompatible  # union float | bool type
 class DictBonds(BaseModel):
     """Model describing final_dict_bonds field of CondensedBondingAnalysis."""
 
@@ -251,6 +255,7 @@ class DictBonds(BaseModel):
     )
 
 
+@arrow_incompatible
 class CondensedBondingAnalysis(BaseModel):
     """Definition of condensed bonding analysis data from LobsterPy ICOHP."""
 
@@ -522,6 +527,7 @@ class ChargeSpilling(BaseModel):
     )
 
 
+@arrow_incompatible
 class CalcQualitySummary(BaseModel):
     """Model describing the calculation quality of lobster run."""
 
@@ -597,6 +603,7 @@ class CalcQualitySummary(BaseModel):
         return cls(**cal_quality_dict)
 
 
+@arrow_incompatible
 class StrongestBonds(BaseModel):
     """Strongest bonds extracted from ICOHPLIST/ICOOPLIST/ICOBILIST from LOBSTER.
 
@@ -622,6 +629,7 @@ class StrongestBonds(BaseModel):
     )
 
 
+@arrow_incompatible
 class LobsterTaskDocument(StructureMetadata):
     """Definition of LOBSTER task document."""
 
@@ -726,8 +734,8 @@ class LobsterTaskDocument(StructureMetadata):
         plot_kwargs: dict | None = None,
         store_lso_dos: bool = False,
         save_cohp_plots: bool = True,
-        save_cba_jsons: bool = True,
-        save_computational_data_jsons: bool = False,
+        save_cba_jsons: str | None = "cba.jsonl.gz",
+        save_computational_data_jsons: str | None = "computational_data.jsonl.gz",
     ) -> Self:
         """Create a task document from a directory containing LOBSTER files.
 
@@ -753,13 +761,12 @@ class LobsterTaskDocument(StructureMetadata):
         save_cohp_plots : bool.
             Bool to indicate whether automatic cohp plots and jsons
             from lobsterpy will be generated.
-        save_cba_jsons : bool.
-            Bool to indicate whether condensed bonding analysis jsons
-            should be saved, consists of outputs from lobsterpy analysis,
+        save_cba_jsons : str | None = "cba.jsonl.gz"
+            If a str, the name of the JSON lines file to save condensed bonding analysis,
+            consisting of outputs from lobsterpy analysis,
             calculation quality summary, lobster dos, charges and madelung energies
-        save_computational_data_jsons : bool.
-            Bool to indicate whether computational data jsons
-            should be saved
+        save_computational_data_jsons : str | None = "computational_data.jsonl.gz"
+            Name of the JSON lines file to save computational data to.
 
         Returns
         -------
@@ -969,7 +976,7 @@ class LobsterTaskDocument(StructureMetadata):
                 ]
             )
 
-            with gzip.open(dir_name / "cba.jsonl.gz", "wb") as file:
+            with zopen(dir_name / save_cba_jsons, "wb") as file:
                 # Write the json in iterable format
                 # (Necessary to load large JSON files via ijson)
 
@@ -1005,8 +1012,8 @@ class LobsterTaskDocument(StructureMetadata):
                 if doc_data.get(k) is None and v is not None:
                     doc_data[k] = v
 
-            with gzip.open(
-                dir_name / "computational_data.jsonl.gz",
+            with zopen(
+                dir_name / save_computational_data_jsons,
                 "wb",
             ) as file:
 
@@ -1193,6 +1200,7 @@ def _get_strong_bonds(
     return bond_dict
 
 
+# Should probably live in atomate2 instead, not used here
 def read_saved_jsonl(
     filename: str, pymatgen_objs: bool = True, query: str = "structure"
 ) -> dict[str, Any]:
@@ -1202,19 +1210,19 @@ def read_saved_jsonl(
     Parameters
     ----------
     filename: str.
-        name of the json file to read
+        name of the JSON lines file to read
     pymatgen_objs: bool.
         if True will convert structure,coop, cobi, cohp and dos to pymatgen objects
     query: str or None.
-        field name to query from the json file. If None, all data will be returned.
+        field name to query from the JSON lines file. If None, all data will be returned.
 
     Returns
     -------
     dict
-        Returns a dictionary with lobster task json data corresponding to query.
+        Returns a dictionary with lobster task JSON data corresponding to query.
     """
     lobster_data: dict[str, Any] = {}
-    with gzip.open(filename, "rb") as file:
+    with zopen(filename, "rb") as file:
         for line in file:
             data = orjson.loads(line)
             if query is None:
@@ -1226,7 +1234,7 @@ def read_saved_jsonl(
         raise ValueError(
             "Please recheck the query argument. "
             f"No data associated to the requested 'query={query}' "
-            f"found in the JSON file"
+            f"found in the JSON lines file."
         )
     if pymatgen_objs:
         for query_key, value in lobster_data.items():
