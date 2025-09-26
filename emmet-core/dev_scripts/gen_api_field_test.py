@@ -8,7 +8,6 @@ from pathlib import Path
 test_file = Path(
     files("emmet.core") / ".." / ".." / "tests" / "test_model_fields.py"
 ).resolve()
-print(test_file)
 
 document_models = {rester.document_model for rester in MPRester()._all_resters}
 
