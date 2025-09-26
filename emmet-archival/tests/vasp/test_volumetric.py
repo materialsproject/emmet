@@ -50,12 +50,22 @@ def test_volumetric_archive():
         chg = Chgcar.from_file(f.name)
 
     chg_arch = VolumetricArchive.from_pmg(chg)
-    for k, v in chg_arch.data.items():
-        assert np.all(np.abs(v - chg.data[k.value]) < 1e-6)
+    for i, k in enumerate(chg_arch.labels):
+        assert np.all(
+            np.abs(
+                np.array(chg_arch.data[i]).reshape(chg_arch.data_rank[i], order="C")
+                - chg.data[k.value]
+            )
+            < 1e-6
+        )
 
     # Note that pymatgen doesn't parse augmentation charge data
     # cleanly - the data won't be equal here but the keys are.
-    assert all(k.value in chg.data_aug for k in chg_arch.data_aug)
+    assert all(
+        k.value in chg.data_aug
+        and (chg_arch.data_aug[i] is not None if chg.data_aug[k] else True)
+        for i, k in enumerate(chg_arch.labels)
+    )
 
     # ensure structure is same on round trip
     assert chg.structure == chg_arch.structure
