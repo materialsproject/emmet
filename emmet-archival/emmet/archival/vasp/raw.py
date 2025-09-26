@@ -84,7 +84,7 @@ class RawArchive(Archiver):
                 {**p.model_dump(), "lexch": pot_obj[i].LEXCH}
                 for i, p in enumerate(PotcarSpec.from_potcar(pot_obj))
             ]
-        )
+        ).decode()
 
     @classmethod
     def from_directory(cls, calc_dir: str | Path) -> Self:
