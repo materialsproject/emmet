@@ -63,8 +63,8 @@ jobs:
             "emmet-core",
             "emmet-builders",
             "emmet-api",
-            "emmet-cli",
             "emmet-archival",
+            "emmet-cli",
           ]
         python-version: ["3.11", "3.12"]
     name: ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }})
