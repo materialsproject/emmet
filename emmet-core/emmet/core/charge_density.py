@@ -1,7 +1,17 @@
+"""Define schemas for charge density data."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from warnings import warn
+
 from pydantic import BaseModel, Field
 
 from emmet.core.types.typing import DateTimeType, IdentifierType
 from emmet.core.vasp.models import ChgcarLike
+
+if TYPE_CHECKING:
+    from typing import Any
 
 
 class VolumetricDataDoc(BaseModel):
@@ -26,3 +36,17 @@ class VolumetricDataDoc(BaseModel):
     volumetric_data: ChgcarLike = Field(
         description="The volumetric data from the CHGCAR-like VASP file."
     )
+
+
+class ChgcarDataDoc(VolumetricDataDoc):
+    """Legacy alias for backward compat."""
+
+    def model_post_init(self, context: Any) -> None:
+        """Raise deprecation warning."""
+        warn(
+            "ChgcarDataDoc is deprecated and will be removed in a "
+            "future version of emmet-core. Please migrate to "
+            "VolumetricDataDoc.",
+            category=DeprecationWarning,
+            stacklevel=2,
+        )
