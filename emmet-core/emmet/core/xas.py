@@ -14,10 +14,16 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from emmet.core.feff.task import TaskDocument
 from emmet.core.mpid_ext import validate_identifier, XasSpectrumID
 from emmet.core.spectrum import SpectrumDoc
-from emmet.core.types.enums import XasType, XasEdge
+from emmet.core.types.enums import XasType, XasEdge, ValueEnum
 
 if TYPE_CHECKING:
     from emmet.core.types.typing import IdentifierType
+
+Type = ValueEnum("Type", [(e.name, e.value) for e in XasType])
+"""Type is deprecated and will be removed - migrate to XasType."""
+
+Edge = ValueEnum("Edge", [(e.name, e.value) for e in XasEdge])
+"""Edge is deprecated and will be removed - migrate to XasEdge."""
 
 
 class XASDoc(SpectrumDoc):
