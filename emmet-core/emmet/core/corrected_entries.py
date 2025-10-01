@@ -5,11 +5,12 @@ from datetime import datetime
 from pydantic import Field
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.thermo import RunType, ThermoType
+from emmet.core.types.enums import ThermoType
 from emmet.core.types.pymatgen_types.computed_entries_adapter import (
     ComputedStructureEntryType,
 )
 from emmet.core.utils import type_override, utcnow
+from emmet.core.vasp.calc_types.enums import RunType
 
 
 @type_override({"entries": dict[ThermoType, list[ComputedStructureEntryType]]})

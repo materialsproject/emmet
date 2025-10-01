@@ -192,3 +192,41 @@ class BatteryType(str, ValueEnum):
 
     insertion = "insertion"
     conversion = "conversion"
+
+
+class ThermoType(ValueEnum):
+    """Thermodynamic hull types used in the database."""
+
+    GGA_GGA_U = "GGA_GGA+U"
+    GGA_GGA_U_R2SCAN = "GGA_GGA+U_R2SCAN"
+    R2SCAN = "R2SCAN"
+    UNKNOWN = "UNKNOWN"
+
+
+class XasEdge(ValueEnum):
+    """
+    The interaction edge for XAS
+    There are 2n-1 sub-components to each edge where
+    K: n=1
+    L: n=2
+    M: n=3
+    N: n=4
+    """
+
+    K = "K"
+    L2 = "L2"
+    L3 = "L3"
+    L2_3 = "L2,3"
+
+
+class XasType(ValueEnum):
+    """
+    The type of XAS Spectrum
+    XANES - Just the near-edge region
+    EXAFS - Just the extended region
+    XAFS - Fully stitched XANES + EXAFS
+    """
+
+    XANES = "XANES"
+    EXAFS = "EXAFS"
+    XAFS = "XAFS"
