@@ -12,6 +12,7 @@ from emmet.core.mpid import MPID, AlphaID
 from emmet.core.types.enums import ThermoType
 from emmet.core.types.typing import IdentifierType
 from emmet.core.types.enums import XasType, XasEdge
+from emmet.core.utils import type_override
 from emmet.core.vasp.calc_types import RunType
 
 if TYPE_CHECKING:
@@ -65,6 +66,7 @@ class BatteryID(SuffixedID):
     suffix: Element
 
 
+@type_override({"suffix": str})
 class XasSpectrumID(SuffixedID):
     suffix: tuple[XasType, Element, XasEdge]  # type: ignore[assignment]
     separator: str = Field(default="-")

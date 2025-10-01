@@ -15,6 +15,7 @@ from emmet.core.spectrum import SpectrumDoc
 from emmet.core.types.enums import ValueEnum, XasEdge, XasType
 from emmet.core.types.pymatgen_types.element_adapter import ElementType
 from emmet.core.types.pymatgen_types.xas_adapter import XASType
+from emmet.core.utils import type_override
 
 if TYPE_CHECKING:
     from emmet.core.types.typing import IdentifierType
@@ -26,6 +27,7 @@ Edge = ValueEnum("Edge", [(e.name, e.value) for e in XasEdge])
 """Edge is deprecated and will be removed - migrate to XasEdge."""
 
 
+@type_override({"spectrum_id": str})
 class XASDoc(SpectrumDoc):
     """
     Document describing a XAS Spectrum.
