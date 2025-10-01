@@ -43,7 +43,7 @@ class DecompositionProduct(BaseModel):
     )
 
 
-@type_override({"thermo_type": ThermoType})
+@type_override({"thermo_type": ThermoType, "thermo_id": str})
 class ThermoDoc(PropertyDoc):
     """
     A thermo entry document
