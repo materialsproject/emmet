@@ -7,11 +7,10 @@ from pydantic import BaseModel, Field
 from emmet.core.electronic_structure import BandstructureData, DosData
 from emmet.core.material_property import PropertyDoc
 from emmet.core.thermo import DecompositionProduct
-from emmet.core.types.enums import ValueEnum
+from emmet.core.types.enums import ValueEnum, XasEdge, XasType
 from emmet.core.types.pymatgen_types.element_adapter import ElementType
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.typing import IdentifierType
-from emmet.core.xas import Edge, SpectrumType
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -95,7 +94,7 @@ class XASSearchData(BaseModel):
     Fields in XAS sub docs in summary
     """
 
-    edge: Edge | None = Field(
+    edge: XasEdge | None = Field(
         None,
         title="Absorption Edge",
         description="The interaction edge for XAS",
@@ -105,7 +104,7 @@ class XASSearchData(BaseModel):
         description="Absorbing element.",
     )
 
-    spectrum_type: SpectrumType | None = Field(
+    spectrum_type: XasType | None = Field(
         None,
         description="Type of XAS spectrum.",
     )
@@ -420,7 +419,7 @@ class SummaryDoc(PropertyDoc):
 
     # External Database IDs
 
-    database_Ids: dict[str, list[str]] = Field(
+    database_IDs: dict[str, list[str]] = Field(
         {}, description="External database IDs corresponding to this material."
     )
 
