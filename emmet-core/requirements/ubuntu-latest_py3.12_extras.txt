@@ -287,7 +287,7 @@ pymdown-extensions==10.16.1
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.15.1
+pymongo==4.15.2
     # via matminer
 pyparsing==3.2.5
     # via
@@ -394,7 +394,7 @@ typing-extensions==4.15.0
     #   spglib
     #   typeguard
     #   typing-inspection
-typing-inspection==0.4.1
+typing-inspection==0.4.2
     # via
     #   pydantic
     #   pydantic-settings

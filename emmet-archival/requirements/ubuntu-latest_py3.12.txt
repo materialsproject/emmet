@@ -8,6 +8,8 @@ annotated-types==0.7.0
     # via pydantic
 bibtexparser==1.4.3
     # via pymatgen
+blake3==1.0.7
+    # via emmet-core
 certifi==2025.8.3
     # via requests
 charset-normalizer==3.4.3
@@ -20,7 +22,7 @@ cycler==0.12.1
     # via matplotlib
 donfig==0.8.1.post1
     # via zarr
-emmet-core==0.84.10
+emmet-core==0.85.0
     # via emmet-archival (pyproject.toml)
 fonttools==4.60.1
     # via matplotlib
@@ -148,7 +150,7 @@ typing-extensions==4.15.0
     #   spglib
     #   typing-inspection
     #   zarr
-typing-inspection==0.4.1
+typing-inspection==0.4.2
     # via
     #   pydantic
     #   pydantic-settings
