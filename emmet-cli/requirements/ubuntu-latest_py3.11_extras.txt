@@ -9,7 +9,9 @@ annotated-types==0.7.0
 bibtexparser==1.4.3
     # via pymatgen
 blake3==1.0.7
-    # via emmet-cli (pyproject.toml)
+    # via
+    #   emmet-cli (pyproject.toml)
+    #   emmet-core
 bracex==2.6
     # via wcmatch
 certifi==2025.8.3
@@ -36,7 +38,7 @@ cycler==0.12.1
     # via matplotlib
 distlib==0.4.0
     # via virtualenv
-emmet-core==0.84.10
+emmet-core==0.85.0
     # via emmet-cli (pyproject.toml)
 execnet==2.1.1
     # via pytest-xdist
@@ -299,7 +301,7 @@ typing-extensions==4.15.0
     #   pydantic-core
     #   spglib
     #   typing-inspection
-typing-inspection==0.4.1
+typing-inspection==0.4.2
     # via
     #   pydantic
     #   pydantic-settings

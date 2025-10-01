@@ -8,6 +8,8 @@ annotated-types==0.7.0
     # via pydantic
 bibtexparser==1.4.3
     # via pymatgen
+blake3==1.0.7
+    # via emmet-core
 certifi==2025.8.3
     # via requests
 cfgv==3.4.0
@@ -26,7 +28,7 @@ distlib==0.4.0
     # via virtualenv
 donfig==0.8.1.post1
     # via zarr
-emmet-core==0.84.10
+emmet-core==0.85.0
     # via emmet-archival (pyproject.toml)
 execnet==2.1.1
     # via pytest-xdist
@@ -204,6 +206,7 @@ types-setuptools==80.9.0.20250822
     # via emmet-archival (pyproject.toml)
 typing-extensions==4.15.0
     # via
+    #   blake3
     #   emmet-core
     #   mypy
     #   numcodecs
@@ -212,7 +215,7 @@ typing-extensions==4.15.0
     #   spglib
     #   typing-inspection
     #   zarr
-typing-inspection==0.4.1
+typing-inspection==0.4.2
     # via
     #   pydantic
     #   pydantic-settings
