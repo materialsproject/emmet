@@ -5,9 +5,6 @@ from emmet.api.core.global_header import GlobalHeaderProcessor
 
 from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
 from emmet.api.routes.materials.insertion_electrodes.query_operators import (
-    ElectrodeFormulaQuery,
-    ElectrodeElementsQuery,
-    ElectrodesChemsysQuery,
     WorkingIonQuery,
     MultiBatteryIDQuery,
 )
@@ -21,10 +18,7 @@ def conversion_electrodes_resource(conversion_electrodes_store):
         ConversionElectrodeDoc,
         query_operators=[
             MultiBatteryIDQuery(),
-            ElectrodeFormulaQuery(),
-            ElectrodesChemsysQuery(),
             WorkingIonQuery(),
-            ElectrodeElementsQuery(),
             NumericQuery(model=ConversionElectrodeDoc),
             PaginationQuery(),
             SparseFieldsQuery(
