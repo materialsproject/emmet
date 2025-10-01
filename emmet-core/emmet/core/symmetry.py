@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, WrapSerializer
+from pydantic import BaseModel, Field
 from pymatgen.core import Structure
 from pymatgen.core.structure import Molecule
 from pymatgen.symmetry.analyzer import (
@@ -33,11 +33,6 @@ class CrystalSystem(ValueEnum):
     trig = "Trigonal"
     hex_ = "Hexagonal"
     cubic = "Cubic"
-
-
-CrystalSystemType = Annotated[
-    CrystalSystem, WrapSerializer(lambda x, nxt, info: x.value, return_type=str)
-]
 
 
 class PointGroupData(BaseModel):
@@ -131,7 +126,7 @@ class SymmetryData(BaseModel):
     Defines a symmetry data set for materials documents
     """
 
-    crystal_system: CrystalSystemType | None = Field(
+    crystal_system: CrystalSystem | None = Field(
         None, title="Crystal System", description="The crystal system for this lattice."
     )
 
