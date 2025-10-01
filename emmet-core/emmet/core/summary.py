@@ -415,7 +415,7 @@ class SummaryDoc(PropertyDoc):
 
     # External Database IDs
 
-    database_Ids: dict[str, list[str]] = Field(
+    database_IDs: dict[str, list[str]] = Field(
         {}, description="External database IDs corresponding to this material."
     )
 
