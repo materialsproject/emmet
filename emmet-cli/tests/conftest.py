@@ -6,6 +6,7 @@ from emmet.cli.submission import CalculationMetadata, Submission
 from emmet.cli.submit import _create_submission
 from emmet.cli.task_manager import TaskManager
 from emmet.core.vasp.validation import ValidationDoc
+from emmet.core.testing_utils import DataArchive
 
 import pytest
 
@@ -125,30 +126,31 @@ def sub_file(tmp_dir, cli_runner, tmp_path_factory, task_manager):
 
 
 @pytest.fixture(scope="session")
-def validation_test_dir():
+def validation_test_path():
     return (
         Path(__file__)
-        .parent.parent.parent.joinpath("test_files/vasp/Si_uniform")
+        .parent.parent.parent.joinpath("test_files/vasp/Si_uniform.json.gz")
         .resolve()
     )
 
 
 @pytest.fixture()
 def validation_sub_file(
-    validation_test_dir, cli_runner, tmp_path_factory, task_manager
+    validation_test_path, cli_runner, tmp_path_factory, task_manager
 ):
-    result = _create_submission(paths=[str(validation_test_dir)])
-    matches = result[1]
+    with DataArchive.extract(validation_test_path) as dir_name:
+        result = _create_submission(paths=[str(dir_name)])
+        matches = result[1]
 
-    sub = Submission.load(Path(matches))
+        sub = Submission.load(Path(matches))
 
-    # clean up side-effect of calling create
-    os.remove(matches)
+        # clean up side-effect of calling create
+        os.remove(matches)
 
-    output_file = tmp_path_factory.mktemp("sub_test_dir") / "validation_sub.json"
-    sub.save(output_file)
+        output_file = tmp_path_factory.mktemp("sub_test_dir") / "validation_sub.json"
+        sub.save(output_file)
 
-    return str(output_file)
+        yield str(output_file)
 
 
 # TODO: remove this when monkeypatch tests to use fake POTCARs rather than skipping them

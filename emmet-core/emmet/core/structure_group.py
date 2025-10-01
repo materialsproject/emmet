@@ -2,19 +2,17 @@ from __future__ import annotations
 
 import logging
 import operator
-from datetime import datetime
 from itertools import groupby
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 from pymatgen.core.composition import Composition
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
-from emmet.core.common import convert_datetime
-from emmet.core.mpid import AlphaID, MPID
-from emmet.core.utils import utcnow
+from emmet.core.mpid import AlphaID
+from emmet.core.types.typing import DateTimeType, IdentifierType
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -99,15 +97,9 @@ class StructureGroupDoc(BaseModel):
         "present the chemsys will also include the ignored species.",
     )
 
-    last_updated: datetime = Field(
-        default_factory=utcnow, description="Timestamp when this document was built."
+    last_updated: DateTimeType = Field(
+        description="Timestamp when this document was built."
     )
-
-    # Make sure that the datetime field is properly formatted
-    @field_validator("last_updated", mode="before")
-    @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)
 
     @classmethod
     def from_grouped_entries(
@@ -286,7 +278,7 @@ def group_entries_with_structure_matcher(
         yield [el for el in sub_g]
 
 
-def _get_id_lexi(task_id: str | MPID | AlphaID) -> tuple[str, int]:
+def _get_id_lexi(task_id: str | IdentifierType) -> tuple[str, int]:
     """Get a lexicographic representation for a task ID"""
     # matches "mp-1234" or "1234" followed by and optional "-(Alphanumeric)"
     try:

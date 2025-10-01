@@ -13,16 +13,16 @@ certifi==2025.8.3
 charset-normalizer==3.4.3
     # via requests
 click==8.3.0
-    # via emmet-cli (setup.py)
+    # via emmet-cli (pyproject.toml)
 colorama==0.4.6
-    # via emmet-cli (setup.py)
+    # via emmet-cli (pyproject.toml)
 contourpy==1.3.3
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-emmet-core==0.84.9
-    # via emmet-cli (setup.py)
-fonttools==4.60.0
+emmet-core==0.84.10
+    # via emmet-cli (pyproject.toml)
+fonttools==4.60.1
     # via matplotlib
 idna==3.10
     # via requests
@@ -40,7 +40,7 @@ monty==2025.3.3
     #   pymatgen
 mpmath==1.3.0
     # via sympy
-narwhals==2.5.0
+narwhals==2.6.0
     # via plotly
 networkx==3.5
     # via pymatgen
@@ -62,14 +62,14 @@ packaging==25.0
     #   plotly
 palettable==3.3.3
     # via pymatgen
-pandas==2.3.2
+pandas==2.3.3
     # via pymatgen
 pillow==11.3.0
     # via matplotlib
 plotly==6.3.0
     # via pymatgen
 psutil==7.1.0
-    # via emmet-cli (setup.py)
+    # via emmet-cli (pyproject.toml)
 pybtex==0.25.1
     # via emmet-core
 pydantic==2.11.9
@@ -88,7 +88,9 @@ pymatgen==2025.6.14
     #   emmet-core
     #   pymatgen-io-validation
 pymatgen-io-validation==0.1.2
-    # via emmet-cli (setup.py)
+    # via
+    #   emmet-cli (pyproject.toml)
+    #   emmet-core
 pyparsing==3.2.5
     # via
     #   bibtexparser
@@ -101,7 +103,7 @@ python-dotenv==1.1.1
     # via pydantic-settings
 pytz==2025.2
     # via pandas
-pyyaml==6.0.2
+pyyaml==6.0.3
     # via pybtex
 requests==2.32.5
     # via

@@ -112,7 +112,7 @@ class StructureMetadata(BaseModel):
             "chemsys": "-".join(elsyms),
         }
 
-        return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)
+        return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)  # type: ignore[arg-type]
 
     @classmethod
     def from_structure(
@@ -273,7 +273,7 @@ class MoleculeMetadata(BaseModel):
             "chemsys": "-".join(elsyms),
         }
 
-        return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)
+        return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)  # type: ignore[arg-type]
 
     @classmethod
     def from_molecule(

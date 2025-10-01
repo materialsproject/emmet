@@ -1,8 +1,8 @@
-from enum import Enum
-
 from pydantic import Field
 from pydantic.main import BaseModel
 from pymatgen.core.structure import Structure
+
+from emmet.core.types.enums import ValueEnum
 
 
 class MPCompleteDoc(BaseModel):
@@ -26,7 +26,7 @@ class MPCompleteDoc(BaseModel):
     )
 
 
-class MPCompleteDataStatus(Enum):
+class MPCompleteDataStatus(ValueEnum):
     """
     Submission status for MPComplete data
     """

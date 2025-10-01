@@ -1,5 +1,4 @@
 from collections import defaultdict
-from datetime import datetime
 from math import ceil
 
 from maggma.core import Builder, Store
@@ -9,7 +8,7 @@ from pymatgen.core.structure import Structure
 
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.provenance import ProvenanceDoc, SNLDict
-from emmet.core.utils import get_sg, jsanitize
+from emmet.core.utils import get_sg, jsanitize, utcnow
 
 from typing import TYPE_CHECKING
 
@@ -207,11 +206,11 @@ class ProvenanceBuilder(Builder):
                 deprecated=mat["deprecated"],
             )
         else:
-            doc = ProvenanceDoc(
+            doc = ProvenanceDoc(  # type: ignore[call-arg]
                 material_id=mat["material_id"],
                 structure=Structure.from_dict(mat["structure"]),
                 deprecated=mat["deprecated"],
-                created_at=datetime.utcnow(),
+                created_at=utcnow(),
             )
 
         doc.authors.append(self.settings.DEFAULT_AUTHOR)

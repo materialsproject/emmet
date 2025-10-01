@@ -7,8 +7,7 @@ from emmet.api.routes.molecules.tasks.query_operators import (
 )
 from emmet.api.core.settings import MAPISettings
 
-from monty.tempfile import ScratchDir
-from monty.serialization import loadfn, dumpfn
+from monty.serialization import loadfn
 
 
 def test_multiple_task_ids_query():
@@ -18,34 +17,19 @@ def test_multiple_task_ids_query():
         "criteria": {"task_id": {"$in": ["mpcule-149", "mpcule-13"]}}
     }
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-
-        assert new_op.query(task_ids=" mpcule-149, mpcule-13") == {
-            "criteria": {"task_id": {"$in": ["mpcule-149", "mpcule-13"]}}
-        }
-
 
 def test_deprecation_query():
     op = DeprecationQuery()
 
-    assert op.query(task_ids=" mpcule-149, mpcule-13") == {
-        "criteria": {"deprecated_tasks": {"$in": ["mpcule-149", "mpcule-13"]}}
-    }
+    q = {"criteria": {"deprecated_tasks": {"$in": ["mpcule-149", "mpcule-13"]}}}
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        query = {"criteria": {"deprecated_tasks": {"$in": ["mpcule-149", "mpcule-13"]}}}
-
-        assert new_op.query(task_ids=" mpcule-149, mpcule-13") == query
+    assert op.query(task_ids=" mpcule-149, mpcule-13") == q
 
     docs = [
         {"task_id": "mpcule-149", "deprecated_tasks": ["mpcule-149"]},
         {"task_id": "mpcule-13", "deprecated_tasks": ["mpcule-1234"]},
     ]
-    r = op.post_process(docs, query)
+    r = op.post_process(docs, q)
 
     assert r[0] == {
         "task_id": "mpcule-149",
@@ -63,23 +47,16 @@ def test_deprecation_query():
 def test_trajectory_query():
     op = TrajectoryQuery()
 
-    assert op.query(task_ids=" mpcule-149, mpcule-13") == {
-        "criteria": {"task_id": {"$in": ["mpcule-149", "mpcule-13"]}}
-    }
+    q = {"criteria": {"task_id": {"$in": ["mpcule-149", "mpcule-13"]}}}
 
-    with ScratchDir("."):
-        dumpfn(op, "temp.json")
-        new_op = loadfn("temp.json")
-        query = {"criteria": {"task_id": {"$in": ["mpcule-149", "mpcule-13"]}}}
+    assert op.query(task_ids=" mpcule-149, mpcule-13") == q
 
-        assert new_op.query(task_ids=" mpcule-149, mpcule-13") == query
-
-    query = {
+    q = {
         "criteria": {
             "task_id": {"$in": ["mpcule-451514", "mpcule-451525", "mpcule-451623"]}
         }
     }
     path = os.path.join(MAPISettings().TEST_FILES, "new_orbital_buildtasks.json.gz")
     tasks = loadfn(path)
-    docs = op.post_process(tasks[0:3], query)
+    docs = op.post_process(tasks[0:3], q)
     assert docs[0]["trajectories"][0]["@class"] == "Trajectory"

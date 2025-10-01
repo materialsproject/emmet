@@ -1,17 +1,15 @@
 from datetime import datetime
-from typing import Optional
 
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from monty.json import MSONable
 from starlette.responses import RedirectResponse
 
 from emmet.api.resource import Resource
 
 
-class API(MSONable):
+class API:
     """
     Basic API manager to tie together various resources.
     """
@@ -22,9 +20,9 @@ class API(MSONable):
         title: str = "Generic API",
         version: str = "v0.0.0",
         debug: bool = False,
-        heartbeat_meta: Optional[dict] = None,
-        description: Optional[str] = None,
-        tags_meta: Optional[list[dict]] = None,
+        heartbeat_meta: dict | None = None,
+        description: str | None = None,
+        tags_meta: list[dict] | None = None,
     ):
         """
         Args:

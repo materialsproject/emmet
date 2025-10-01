@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from enum import Enum
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
@@ -9,15 +8,15 @@ from pymatgen.core.structure import Structure
 
 from emmet.core.electronic_structure import BandstructureData, DosData
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import AlphaID, MPID
+from emmet.core.types.enums import ValueEnum, XasEdge, XasType
+from emmet.core.types.typing import IdentifierType
 from emmet.core.thermo import DecompositionProduct
-from emmet.core.xas import Edge, Type
 
 if TYPE_CHECKING:
     from typing_extensions import Self
 
 
-class HasProps(Enum):
+class HasProps(ValueEnum):
     """
     Enum of possible hasprops values.
     """
@@ -95,7 +94,7 @@ class XASSearchData(BaseModel):
     Fields in XAS sub docs in summary
     """
 
-    edge: Edge | None = Field(
+    edge: XasEdge | None = Field(
         None,
         title="Absorption Edge",
         description="The interaction edge for XAS",
@@ -105,7 +104,7 @@ class XASSearchData(BaseModel):
         description="Absorbing element.",
     )
 
-    spectrum_type: Type | None = Field(
+    spectrum_type: XasType | None = Field(
         None,
         description="Type of XAS spectrum.",
     )
@@ -147,7 +146,7 @@ class SummaryDoc(PropertyDoc):
 
     # Materials
 
-    task_ids: list[MPID | AlphaID] = Field(
+    task_ids: list[IdentifierType] = Field(
         [],
         title="Calculation IDs",
         description="List of Calculations IDs associated with this material.",
@@ -237,7 +236,7 @@ class SummaryDoc(PropertyDoc):
         description="Whether the material is a metal.",
     )
 
-    es_source_calc_id: MPID | AlphaID | None = Field(
+    es_source_calc_id: IdentifierType | None = Field(
         None,
         description="The source calculation ID for the electronic structure data.",
     )
@@ -428,7 +427,7 @@ class SummaryDoc(PropertyDoc):
 
     @classmethod
     def from_docs(
-        cls, material_id: MPID | AlphaID | None = None, **docs: dict[str, dict]
+        cls, material_id: IdentifierType | None = None, **docs: dict[str, dict]
     ) -> Self:
         """Converts a bunch of summary docs into a SummaryDoc"""
         doc = _copy_from_doc(docs)
@@ -457,88 +456,91 @@ class SummaryDoc(PropertyDoc):
 
 # Key mapping
 summary_fields: dict[str, list] = {
-    HasProps.materials.value: [
-        "nsites",
-        "elements",
-        "nelements",
-        "composition",
-        "composition_reduced",
-        "formula_pretty",
-        "formula_anonymous",
-        "chemsys",
-        "volume",
-        "density",
-        "density_atomic",
-        "symmetry",
-        "structure",
-        "deprecated",
-        "task_ids",
-        "builder_meta",
-    ],
-    HasProps.thermo.value: [
-        "uncorrected_energy_per_atom",
-        "energy_per_atom",
-        "formation_energy_per_atom",
-        "energy_above_hull",
-        "is_stable",
-        "equilibrium_reaction_energy_per_atom",
-        "decomposes_to",
-    ],
-    HasProps.xas.value: ["absorbing_element", "edge", "spectrum_type", "spectrum_id"],
-    HasProps.grain_boundaries.value: [
-        "gb_energy",
-        "sigma",
-        "type",
-        "rotation_angle",
-        "w_sep",
-    ],
-    HasProps.electronic_structure.value: [
-        "band_gap",
-        "efermi",
-        "cbm",
-        "vbm",
-        "is_gap_direct",
-        "is_metal",
-        "bandstructure",
-        "dos",
-        "task_id",
-    ],
-    HasProps.magnetism.value: [
-        "is_magnetic",
-        "ordering",
-        "total_magnetization",
-        "total_magnetization_normalized_vol",
-        "total_magnetization_normalized_formula_units",
-        "num_magnetic_sites",
-        "num_unique_magnetic_sites",
-        "types_of_magnetic_species",
-        "is_magnetic",
-    ],
-    HasProps.elasticity.value: [
-        "bulk_modulus",
-        "shear_modulus",
-        "universal_anisotropy",
-        "homogeneous_poisson",
-    ],
-    HasProps.dielectric.value: ["e_total", "e_ionic", "e_electronic", "n"],
-    HasProps.piezoelectric.value: ["e_ij_max"],
-    HasProps.surface_properties.value: [
-        "weighted_surface_energy",
-        "weighted_surface_energy_EV_PER_ANG2",
-        "shape_factor",
-        "surface_anisotropy",
-        "weighted_work_function",
-        "has_reconstructed",
-    ],
-    HasProps.oxi_states.value: ["possible_species"],
-    HasProps.provenance.value: ["theoretical", "database_IDs"],
-    HasProps.charge_density.value: [],
-    HasProps.eos.value: [],
-    HasProps.phonon.value: [],
-    HasProps.absorption.value: [],
-    HasProps.insertion_electrodes.value: [],
-    HasProps.substrates.value: [],
-    HasProps.chemenv.value: [],
+    HasProps(k).value: v
+    for k, v in {
+        "materials": [
+            "nsites",
+            "elements",
+            "nelements",
+            "composition",
+            "composition_reduced",
+            "formula_pretty",
+            "formula_anonymous",
+            "chemsys",
+            "volume",
+            "density",
+            "density_atomic",
+            "symmetry",
+            "structure",
+            "deprecated",
+            "task_ids",
+            "builder_meta",
+        ],
+        "thermo": [
+            "uncorrected_energy_per_atom",
+            "energy_per_atom",
+            "formation_energy_per_atom",
+            "energy_above_hull",
+            "is_stable",
+            "equilibrium_reaction_energy_per_atom",
+            "decomposes_to",
+        ],
+        "xas": ["absorbing_element", "edge", "spectrum_type", "spectrum_id"],
+        "grain_boundaries": [
+            "gb_energy",
+            "sigma",
+            "type",
+            "rotation_angle",
+            "w_sep",
+        ],
+        "electronic_structure": [
+            "band_gap",
+            "efermi",
+            "cbm",
+            "vbm",
+            "is_gap_direct",
+            "is_metal",
+            "bandstructure",
+            "dos",
+            "task_id",
+        ],
+        "magnetism": [
+            "is_magnetic",
+            "ordering",
+            "total_magnetization",
+            "total_magnetization_normalized_vol",
+            "total_magnetization_normalized_formula_units",
+            "num_magnetic_sites",
+            "num_unique_magnetic_sites",
+            "types_of_magnetic_species",
+            "is_magnetic",
+        ],
+        "elasticity": [
+            "bulk_modulus",
+            "shear_modulus",
+            "universal_anisotropy",
+            "homogeneous_poisson",
+        ],
+        "dielectric": ["e_total", "e_ionic", "e_electronic", "n"],
+        "piezoelectric": ["e_ij_max"],
+        "surface_properties": [
+            "weighted_surface_energy",
+            "weighted_surface_energy_EV_PER_ANG2",
+            "shape_factor",
+            "surface_anisotropy",
+            "weighted_work_function",
+            "has_reconstructed",
+        ],
+        "oxi_states": ["possible_species"],
+        "provenance": ["theoretical", "database_IDs"],
+        "charge_density": [],
+        "eos": [],
+        "phonon": [],
+        "absorption": [],
+        "insertion_electrodes": [],
+        "substrates": [],
+        "chemenv": [],
+    }.items()
 }
 
 

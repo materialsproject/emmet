@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from enum import Enum
 import logging
 from collections import defaultdict
 from typing import TYPE_CHECKING
@@ -12,12 +11,13 @@ from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Specie
 
 from emmet.core.material_property import PropertyDoc
+from emmet.core.types.enums import ValueEnum
 
 if TYPE_CHECKING:
-    from emmet.core.mpid import AlphaID, MPID
+    from emmet.core.types.typing import IdentifierType
 
 
-class OxiStateAssigner(Enum):
+class OxiStateAssigner(ValueEnum):
 
     MANUAL = "Manual"
     BVA = "Bond Valence Analysis"
@@ -50,7 +50,7 @@ class OxidationStateDoc(PropertyDoc):
 
     @classmethod
     def from_structure(
-        cls, structure: Structure, material_id: MPID | AlphaID | None = None, **kwargs
+        cls, structure: Structure, material_id: IdentifierType | None = None, **kwargs
     ):
 
         # Check if structure already has oxidation states,

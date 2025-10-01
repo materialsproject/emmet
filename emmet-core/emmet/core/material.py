@@ -2,23 +2,19 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from datetime import datetime
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field
 from pymatgen.core import Structure
 from pymatgen.core.structure import Molecule
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.common import convert_datetime
-from emmet.core.mpid import MPID, AlphaID, MPculeID
+from emmet.core.mpid import MPID, MPculeID
+from emmet.core.types.typing import DateTimeType, IdentifierType
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
-from emmet.core.utils import utcnow
 from emmet.core.vasp.validation import DeprecationMessage
 
 if TYPE_CHECKING:
-    from typing import Any
 
     from typing_extensions import Self
 
@@ -29,76 +25,41 @@ class PropertyOrigin(BaseModel):
     """
 
     name: str = Field(..., description="The property name")
-    task_id: MPID | AlphaID = Field(
+    task_id: IdentifierType = Field(
         ..., description="The calculation ID this property comes from."
     )
-    last_updated: datetime = Field(  # type: ignore
+    last_updated: DateTimeType = Field(  # type: ignore
         description="The timestamp when this calculation was last updated",
-        default_factory=utcnow,
     )
 
-    @model_validator(mode="before")
-    @classmethod
-    def handle_datetime_and_idx(cls, config: Any) -> Any:
-        if v := config.get("last_updated"):
-            config["last_updated"] = convert_datetime(cls, v)
 
-        if idx := config.get("task_id"):
-            config["task_id"] = AlphaID(idx).formatted
-        return config
-
-
-class MaterialsDoc(StructureMetadata, EmmetBaseModel):
+class BasePropertyMetadata(StructureMetadata, EmmetBaseModel):
     """
-    Definition for a core Materials Document
+    Base model definition for a single material property.
+
+    This may contain any amount of structure metadata for the
+    purpose of search. This is intended to be inherited and
+    extended, not used directly
     """
 
-    material_id: MPID | AlphaID | None = Field(
+    material_id: IdentifierType | None = Field(
         None,
         description="The Materials Project ID of the material, used as a universal reference across property documents."
         "This comes in the form: mp-******.",
     )
 
-    structure: Structure = Field(
-        ...,
-        description="The structure of the this material.",
-    )
-
     deprecated: bool = Field(
         True,
-        description="Whether this materials document is deprecated.",
+        description="Whether this property document is deprecated.",
     )
 
     deprecation_reasons: list[DeprecationMessage | str] | None = Field(
         None,
-        description="List of deprecation tags detailing why this materials document isn't valid.",
+        description="List of deprecation tags detailing why this document isn't valid.",
     )
 
-    initial_structures: list[Structure] = Field(
-        [],
-        description="Initial structures used in the DFT optimizations corresponding to this material.",
-    )
-
-    task_ids: list[MPID | AlphaID] = Field(
-        [],
-        description="List of Calculations IDs used to make this Materials Document.",
-    )
-
-    deprecated_tasks: list[str] = Field([], title="Deprecated Tasks")
-
-    calc_types: Mapping[str, str] | None = Field(
-        None,
-        description="Calculation types for all the calculations that make up this material.",
-    )
-
-    last_updated: datetime = Field(
-        description="Timestamp for when this document was last updated.",
-        default_factory=utcnow,
-    )
-
-    created_at: datetime = Field(
-        description="Timestamp for when this material document was first created.",
-        default_factory=utcnow,
+    last_updated: DateTimeType = Field(
+        description="Timestamp for the most recent calculation update for this property.",
     )
 
     origins: list[PropertyOrigin] | None = Field(
@@ -106,37 +67,61 @@ class MaterialsDoc(StructureMetadata, EmmetBaseModel):
     )
 
     warnings: list[str] = Field(
-        [], description="Any warnings related to this material."
+        [], description="Any warnings related to this property."
+    )
+
+    structure: Structure = Field(
+        ...,
+        description="The structure of this material.",
     )
 
     @classmethod
-    def from_structure(
-        cls, structure: Structure, material_id: MPID | AlphaID | None = None, **kwargs
-    ) -> Self:  # type: ignore[override]
+    def from_structure(  # type: ignore[override]
+        cls,
+        meta_structure: Structure,
+        material_id: IdentifierType | None = None,
+        **kwargs,
+    ) -> Self:
         """
-        Builds a materials document using the minimal amount of information
+        Builds a materials document using a minimal amount of information.
+
+        Note that structure is stored as a private attr, and will not
+        be included in `PropertyDoc().model_dump()`
         """
 
-        return super().from_structure(  # type: ignore
-            meta_structure=structure,
+        return super().from_structure(
+            meta_structure=meta_structure,
+            structure=meta_structure,
             material_id=material_id,
-            structure=structure,
             **kwargs,
-        )
+        )  # type: ignore
 
-    @model_validator(mode="before")
-    @classmethod
-    def handle_datetime_and_idx(cls, config: Any) -> Any:
-        for k in ("last_updated", "created_at"):
-            if v := config.get(k):
-                config[k] = convert_datetime(cls, v)
 
-        if idx := config.get("material_id"):
-            config["material_id"] = AlphaID(idx).formatted
-        if task_idxs := config.get("task_ids"):
-            config["task_ids"] = [AlphaID(idx).formatted for idx in task_idxs]
+class MaterialsDoc(BasePropertyMetadata):
+    """
+    Definition for a core Materials Document
+    """
 
-        return config
+    initial_structures: list[Structure] = Field(
+        [],
+        description="Initial structures used in the DFT optimizations corresponding to this material.",
+    )
+
+    task_ids: list[IdentifierType] = Field(
+        [],
+        description="List of Calculations IDs used to make this Materials Document.",
+    )
+
+    deprecated_tasks: list[str] = Field([], title="Deprecated Tasks")
+
+    calc_types: dict[str, str] | None = Field(
+        None,
+        description="Calculation types for all the calculations that make up this material.",
+    )
+
+    created_at: DateTimeType = Field(
+        description="Timestamp for when this material document was first created.",
+    )
 
 
 class CoreMoleculeDoc(MoleculeMetadata, EmmetBaseModel):
@@ -181,19 +166,17 @@ class CoreMoleculeDoc(MoleculeMetadata, EmmetBaseModel):
     # TODO: Should this be MPID?
     deprecated_tasks: list[str] = Field([], title="Deprecated Tasks")
 
-    calc_types: Mapping[str, str] | None = Field(
+    calc_types: dict[str, str] | None = Field(
         None,
         description="Calculation types for all the tasks that make up this molecule",
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="Timestamp for when this document was last updated",
-        default_factory=utcnow,
     )
 
-    created_at: datetime = Field(
+    created_at: DateTimeType = Field(
         description="Timestamp for when this document was first created",
-        default_factory=utcnow,
     )
 
     origins: list[PropertyOrigin] | None = Field(
@@ -213,8 +196,3 @@ class CoreMoleculeDoc(MoleculeMetadata, EmmetBaseModel):
         return super().from_molecule(  # type: ignore
             meta_molecule=molecule, molecule_id=molecule_id, molecule=molecule, **kwargs
         )
-
-    @field_validator("last_updated", "created_at", mode="before")
-    @classmethod
-    def handle_datetime(cls, v):
-        return convert_datetime(cls, v)

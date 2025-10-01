@@ -9,7 +9,6 @@ from emmet.api.routes.materials.insertion_electrodes.query_operators import (
     ElectrodeElementsQuery,
     ElectrodesChemsysQuery,
     WorkingIonQuery,
-    ElectrodeMultiMaterialIDQuery,
     MultiBatteryIDQuery,
 )
 
@@ -22,7 +21,6 @@ def insertion_electrodes_resource(insertion_electrodes_store):
         InsertionElectrodeDoc,
         query_operators=[
             MultiBatteryIDQuery(),
-            ElectrodeMultiMaterialIDQuery(),
             ElectrodeFormulaQuery(),
             ElectrodesChemsysQuery(),
             WorkingIonQuery(),
