@@ -35,9 +35,6 @@ FSPathType: TypeAlias = Annotated[
 DateTimeType: TypeAlias = Annotated[
     datetime,
     Field(default_factory=utcnow),
-    PlainSerializer(
-        lambda x: x.isoformat() if isinstance(x, datetime) else x, return_type=str
-    ),
     BeforeValidator(lambda x: convert_datetime(x)),
 ]
 """Datetime serde."""
