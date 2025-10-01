@@ -1,10 +1,11 @@
 name: testing
 
 on:
+  workflow_dispatch: # Allow running on-demand
   push:
-    branches: [main,develop]
+    branches: [main, develop]
   pull_request:
-    branches: [main,develop]
+    branches: [main, develop]
 
 jobs:
   check-enums:

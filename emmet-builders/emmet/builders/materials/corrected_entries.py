@@ -14,7 +14,7 @@ from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 from emmet.builders.utils import HiddenPrints, chemsys_permutations
 from emmet.core.corrected_entries import CorrectedEntriesDoc
-from emmet.core.thermo import ThermoType
+from emmet.core.types.enums import ThermoType
 from emmet.core.utils import jsanitize
 
 from typing import TYPE_CHECKING
