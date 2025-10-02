@@ -7,35 +7,16 @@ from typing import TYPE_CHECKING, Type
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
-from pydantic import BaseModel, Field
 
 from pymatgen.io.common import VolumetricData as PmgVolumetricData
 
 from emmet.core.vasp.models import ChgcarLike
-from emmet.core.types.enums import ValueEnum
 
 from emmet.archival.base import Archiver
 from emmet.archival.atoms import CrystalArchive
 
 if TYPE_CHECKING:
     from pathlib import Path
-
-
-class VolumetricLabel(ValueEnum):
-    TOTAL = "total"
-    DIFF = "diff"
-
-    # NB: we only need these if we have noncolinear calculations
-    DIFF_X = "diff_x"
-    DIFF_Y = "diff_y"
-    DIFF_Z = "diff_z"
-
-
-class AugChargeData(BaseModel):
-    label: str | None = Field(
-        None, description="The label written by VASP for the augmenation charge data."
-    )
-    data: list[float] | None = Field(None, description="The augmentation charges.")
 
 
 class VolumetricArchive(Archiver, ChgcarLike):
@@ -54,7 +35,7 @@ class VolumetricArchive(Archiver, ChgcarLike):
             k: (
                 pa.array([v])
                 if k != "labels"
-                else pa.array([[v.value for v in self.labels]])
+                else pa.array([[v.value for v in (self.labels or [])]])
             )
             for k, v in self.model_dump().items()
         }
