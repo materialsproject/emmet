@@ -167,7 +167,7 @@ pillow==11.3.0
     #   scikit-image
 plotly==6.3.1
     # via pymatgen
-protobuf==6.32.1
+protobuf==6.31.1
     # via ddtrace
 pybtex==0.25.1
     # via emmet-core
@@ -232,7 +232,7 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.5
+requests==2.32.4
     # via
     #   pymatgen
     #   pymatgen-io-validation
@@ -272,7 +272,7 @@ spglib==2.6.0
     # via pymatgen
 sshtunnel==0.4.0
     # via maggma
-starlette==0.48.0
+starlette==0.47.2
     # via fastapi
 sympy==1.14.0
     # via pymatgen
