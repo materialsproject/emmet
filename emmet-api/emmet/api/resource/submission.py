@@ -142,7 +142,7 @@ class SubmissionResource(CollectionResource):
 
             crit = {key_name: key}
             try:
-                item = [await self.collection.find_one(crit, maxTimeMS=self.timeout)]
+                item = [await self.collection.find_one(crit, max_time_ms=self.timeout)]
             except (NetworkTimeout, PyMongoError) as e:
                 if e.timeout:
                     raise HTTPException(
