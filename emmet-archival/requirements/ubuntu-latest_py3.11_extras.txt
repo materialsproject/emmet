@@ -10,7 +10,7 @@ bibtexparser==1.4.3
     # via pymatgen
 blake3==1.0.7
     # via emmet-core
-certifi==2025.8.3
+certifi==2025.10.5
     # via requests
 cfgv==3.4.0
     # via pre-commit
@@ -68,7 +68,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-archival (pyproject.toml)
     #   mypy
-narwhals==2.6.0
+narwhals==2.7.0
     # via plotly
 networkx==3.5
     # via pymatgen
@@ -125,12 +125,12 @@ pycodestyle==2.14.0
     # via
     #   emmet-archival (pyproject.toml)
     #   flake8
-pydantic==2.11.9
+pydantic==2.12.0
     # via
     #   emmet-core
     #   pydantic-settings
     #   pymatgen-io-validation
-pydantic-core==2.33.2
+pydantic-core==2.41.1
     # via pydantic
 pydantic-settings==2.11.0
     # via
@@ -142,7 +142,7 @@ pyflakes==3.4.0
     # via flake8
 pygments==2.19.2
     # via pytest
-pymatgen==2025.6.14
+pymatgen==2025.10.7
     # via
     #   emmet-core
     #   pymatgen-io-validation

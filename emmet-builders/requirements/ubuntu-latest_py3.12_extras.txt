@@ -10,7 +10,7 @@ annotated-types==0.7.0
     # via pydantic
 ase==3.26.0
     # via pymatgen-analysis-diffusion
-attrs==25.3.0
+attrs==25.4.0
     # via
     #   jsonlines
     #   jsonschema
@@ -21,15 +21,15 @@ bibtexparser==1.4.3
     # via pymatgen
 blake3==1.0.7
     # via emmet-core
-boto3==1.40.43
+boto3==1.40.46
     # via maggma
-botocore==1.40.43
+botocore==1.40.46
     # via
     #   boto3
     #   s3transfer
 bracex==2.6
     # via wcmatch
-certifi==2025.8.3
+certifi==2025.10.5
     # via requests
 cffi==2.0.0
     # via
@@ -204,7 +204,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-builders (pyproject.toml)
     #   mypy
-narwhals==2.6.0
+narwhals==2.7.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -296,13 +296,13 @@ pycodestyle==2.14.0
     #   flake8
 pycparser==2.23
     # via cffi
-pydantic==2.11.9
+pydantic==2.12.0
     # via
     #   emmet-core
     #   maggma
     #   pydantic-settings
     #   pymatgen-io-validation
-pydantic-core==2.33.2
+pydantic-core==2.41.1
     # via pydantic
 pydantic-settings==2.11.0
     # via
@@ -319,7 +319,7 @@ pygments==2.19.2
     # via
     #   mkdocs-material
     #   pytest
-pymatgen==2025.6.14
+pymatgen==2025.10.7
     # via
     #   emmet-core
     #   matminer
@@ -451,7 +451,7 @@ tabulate==0.9.0
     # via pymatgen
 threadpoolctl==3.6.0
     # via scikit-learn
-tifffile==2025.9.30
+tifffile==2025.10.4
     # via scikit-image
 tornado==6.5.2
     # via livereload
