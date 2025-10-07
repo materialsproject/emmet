@@ -31,7 +31,7 @@ class EmmetMeta(BaseModel):
         None, description="The database version for the built data."
     )
 
-    build_date: DateTimeType | None = Field(
+    build_date: DateTimeType = Field(
         description="The build date for this document.",
     )
 
