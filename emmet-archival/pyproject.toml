@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=80.0.0","setuptools-scm>=8"]
+requires = ["setuptools>=80.0.0", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
@@ -15,7 +15,7 @@ include = ["emmet.archival"]
 name = "emmet-archival"
 dynamic = ["version"]
 authors = [
-  { name = "The Materials Project", email = "feedback@materialsproject.org"},
+  { name = "The Materials Project", email = "feedback@materialsproject.org" },
 ]
 classifiers = [
   "Programming Language :: Python :: 3.11",
@@ -29,7 +29,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-  "emmet-core>=0.84.9",
+  "emmet-core>=0.85",
   "h5py",
   "pyarrow",
   "pandas",
@@ -37,7 +37,7 @@ dependencies = [
   "pymatgen-io-validation>=0.1.1", # required right now because this isn't getting picked up in auto-gen dependences
 ]
 description = "Emmet Archival library"
-keywords = ["data storage","dft","vasp"]
+keywords = ["data storage", "dft", "vasp"]
 license = { text = "Modified BSD" }
 requires-python = '>=3.11'
 
