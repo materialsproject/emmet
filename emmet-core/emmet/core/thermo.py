@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime
 from typing import Annotated
 
 from pydantic import BaseModel, Field, PlainSerializer, BeforeValidator
@@ -15,7 +14,7 @@ from emmet.core.material import PropertyOrigin
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid_ext import ThermoID
 from emmet.core.types.enums import ThermoType
-from emmet.core.types.typing import IdentifierType
+from emmet.core.types.typing import DateTimeType, IdentifierType
 from emmet.core.utils import utcnow
 from emmet.core.vasp.calc_types.enums import RunType
 
@@ -323,7 +322,6 @@ class PhaseDiagramDoc(BaseModel):
         description="Phase diagram for the chemical system.",
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=utcnow,
     )

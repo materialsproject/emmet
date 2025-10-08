@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from pymatgen.core import __version__ as pmg_version
 
 from emmet.core import __version__
-from emmet.core.types.typing import DateTimeType
+from emmet.core.types.typing import NullableDateTimeType
 
 
 class EmmetMeta(BaseModel):
@@ -31,7 +31,7 @@ class EmmetMeta(BaseModel):
         None, description="The database version for the built data."
     )
 
-    build_date: DateTimeType = Field(
+    build_date: NullableDateTimeType = Field(  # type: ignore
         description="The build date for this document.",
     )
 

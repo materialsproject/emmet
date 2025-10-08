@@ -1,8 +1,6 @@
-from datetime import datetime
-
 from pydantic import BaseModel, ConfigDict, Field
 
-from emmet.core.utils import utcnow
+from emmet.core.types.typing import DateTimeType
 
 
 class VolumetricDataDoc(BaseModel):
@@ -14,8 +12,7 @@ class VolumetricDataDoc(BaseModel):
         None, description="Unique object ID for the charge density data."
     )
 
-    last_updated: datetime = Field(
-        default_factory=utcnow,
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent update to the charge density data.",
     )
 

@@ -20,7 +20,7 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 from pymatgen.io.vasp import Incar, Kpoints, Poscar
 
 from emmet.core.types.enums import VaspObject, TaskState
-from emmet.core.types.typing import DateTimeType, IdentifierType
+from emmet.core.types.typing import DateTimeType, NullableDateTimeType, IdentifierType
 from emmet.core.structure import StructureMetadata
 from emmet.core.trajectory import Trajectory as CoreTrajectory
 from emmet.core.utils import utcnow
@@ -253,8 +253,8 @@ class CoreTaskDoc(StructureMetadata):
     calc_type: CalcType | None = Field(
         None, description="The functional and task type used in the calculation."
     )
-    completed_at: DateTimeType | None = Field(
-        None, description="Timestamp for when this task was completed"
+    completed_at: NullableDateTimeType = Field(
+        description="Timestamp for when this task was completed"
     )
     dir_name: str | None = Field(None, description="The directory for this VASP task")
     icsd_id: int | None = Field(
