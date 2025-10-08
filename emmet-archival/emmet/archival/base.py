@@ -40,7 +40,7 @@ def infer_archive_format(file_name: FSPathType) -> ArchivalFormat:
     ArchivalFormat
     """
     archive_path = Path(file_name)
-    for fmt in ArchivalFormat:
+    for fmt in ArchivalFormat:  # type: ignore[attr-defined]
         if f".{fmt.value}" in archive_path.suffixes:
             return fmt
 

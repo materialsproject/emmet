@@ -434,7 +434,7 @@ class PhononBSDOSTask(StructureMetadata):
         }.items():
             if (old_obj := config.get(k)) and not isinstance(old_obj, emmet_cls):
                 try:
-                    new_obj = emmet_cls.from_pmg(old_obj)
+                    new_obj = emmet_cls.from_pmg(old_obj)  # type: ignore[attr-defined]
                 except Exception:
                     # purposely no except here - want this to hard fail if we
                     # can't parse the input type
