@@ -32,7 +32,7 @@ emmet-core==0.85.0
     # via emmet-archival (pyproject.toml)
 execnet==2.1.1
     # via pytest-xdist
-filelock==3.19.1
+filelock==3.20.0
     # via virtualenv
 flake8==7.3.0
     # via emmet-archival (pyproject.toml)
@@ -107,7 +107,7 @@ pathspec==0.12.1
     # via mypy
 pillow==11.3.0
     # via matplotlib
-platformdirs==4.4.0
+platformdirs==4.5.0
     # via virtualenv
 plotly==6.3.1
     # via pymatgen

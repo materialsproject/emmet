@@ -18,9 +18,9 @@ bibtexparser==1.4.3
     # via pymatgen
 blake3==1.0.7
     # via emmet-core
-boto3==1.40.46
+boto3==1.40.48
     # via emmet-api (pyproject.toml)
-botocore==1.40.46
+botocore==1.40.48
     # via
     #   boto3
     #   s3transfer
@@ -63,9 +63,9 @@ envier==0.6.1
     # via ddtrace
 execnet==2.1.1
     # via pytest-xdist
-fastapi==0.118.0
+fastapi==0.118.2
     # via emmet-api (pyproject.toml)
-filelock==3.19.1
+filelock==3.20.0
     # via virtualenv
 flake8==7.3.0
     # via emmet-api (pyproject.toml)
@@ -247,7 +247,7 @@ pillow==11.3.0
     #   imageio
     #   matplotlib
     #   scikit-image
-platformdirs==4.4.0
+platformdirs==4.5.0
     # via
     #   mkdocs-get-deps
     #   virtualenv
