@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 import numpy as np
 from pathlib import Path
 from pydantic import BaseModel, Field, model_validator
@@ -22,9 +21,8 @@ from emmet.core.tasks import (
     CustodianDoc,
     OrigInputs,
 )
-from emmet.core.utils import utcnow
 from emmet.core.types.enums import ValueEnum, VaspObject
-from emmet.core.types.typing import DateTimeType
+from emmet.core.types.typing import DateTimeType, NullableDateTimeType
 from emmet.core.vasp.calculation import Calculation
 from emmet.core.vasp.task_valid import TaskState
 
@@ -309,8 +307,8 @@ class NebIntermediateImagesDoc(BaseModel):
         description="Detailed custodian data for each VASP calculation contributing to the task document.",
     )
 
-    completed_at: datetime | None = Field(
-        None, description="Timestamp for when this task was completed"
+    completed_at: NullableDateTimeType = Field(
+        description="Timestamp for when this task was completed"
     )
 
     task_label: str | None = Field(

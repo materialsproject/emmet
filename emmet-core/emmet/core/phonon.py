@@ -72,14 +72,27 @@ class PhononDOS(BandTheoryBase):
         None, description="The projected phonon density of states."
     )
 
-    @model_validator(mode="before")
     @classmethod
-    def deserialize_pmg(cls, config: Any) -> Any:
-        """Correctly parse pymatgen-like keys."""
-        if config.get("pdos"):
-            config["projected_densities"] = config.pop("pdos")
-
-        return super(PhononDOS, cls).deserialize_pmg(config)  # type: ignore[operator]
+    def from_pmg(cls, config: PhononDosObject | CompletePhononDos | dict) -> Any:
+        """Correctly parse pymatgen-like objects."""
+        remap = {
+            "structure": "structure",
+            "frequencies": "frequencies",
+            "densities": "densities",
+            "projected_densities": "pdos",
+        }
+        if isinstance(config, PhononDosObject | CompletePhononDos):
+            cls_config = {k: getattr(config, v, None) for k, v in remap.items()}
+            if isinstance(pdos_as_dict := cls_config.get("projected_densities"), dict):
+                if not cls_config["structure"]:
+                    raise ValueError(
+                        "Cannot parse atom-projected phonon density of states without a structure."
+                    )
+                cls_config["projected_densities"] = [
+                    list(pdos_as_dict.get(site, [])) for site in cls_config["structure"]
+                ]
+            return cls(**cls_config)
+        return cls(**{k: config.get(v) for k, v in remap.items()})
 
     @cached_property
     def to_pmg(self) -> PhononDosObject | CompletePhononDos:
@@ -144,9 +157,14 @@ class PhononBS(BandStructure):
 
     _primitive_structure: Structure | None = PrivateAttr(None)
 
-    @model_validator(mode="before")
-    def deserialize_pmg(cls, config: Any) -> Any:
+    @classmethod
+    def from_pmg(cls, config: PhononBandStructureSymmLine | dict) -> Any:
         """Ensure fields are correctly populated."""
+        config = (
+            config.as_dict()
+            if isinstance(config, PhononBandStructureSymmLine)
+            else config
+        )
         if isinstance(egd := config.get("eigendisplacements"), dict) and all(
             egd.get(k) is not None for k in ("real", "imag")
         ):
@@ -169,7 +187,7 @@ class PhononBS(BandStructure):
         if isinstance(config["reciprocal_lattice"], dict):
             config["reciprocal_lattice"] = config["reciprocal_lattice"].get("matrix")
 
-        return super(PhononBS, cls).deserialize_pmg(config)
+        return cls(**config)
 
     @property
     def primitive_structure(self) -> Structure | None:
@@ -394,9 +412,8 @@ class PhononBSDOSTask(StructureMetadata):
         description="Metadata for individual calculations used to build this document.",
     )
 
-    @model_validator(mode="before")
     @classmethod
-    def migrate_fields(cls, config: Any) -> Any:
+    def migrate_fields(cls, **config) -> Any:
         """Migrate legacy input fields."""
 
         # This block is for older DFPT data
@@ -410,13 +427,24 @@ class PhononBSDOSTask(StructureMetadata):
             if config.get(k):
                 config[v] = config.pop(k)
 
+        # migrate pymatgen objects
+        for k, emmet_cls in {
+            "phonon_dos": PhononDOS,
+            "phonon_bandstructure": PhononBS,
+        }.items():
+            if (old_obj := config.get(k)) and not isinstance(old_obj, emmet_cls):
+                try:
+                    new_obj = emmet_cls.from_pmg(old_obj)  # type: ignore[attr-defined]
+                except Exception:
+                    # purposely no except here - want this to hard fail if we
+                    # can't parse the input type
+                    new_obj = emmet_cls(**old_obj)
+                config[k] = new_obj
+
         if (ph_bs := config.get("phonon_bandstructure")) and not config.get(
             "structure"
         ):
-            if isinstance(ph_bs, PhononBandStructureSymmLine | PhononBS):
-                config["structure"] = ph_bs.structure
-            else:
-                config["structure"] = ph_bs.get("structure")
+            config["structure"] = ph_bs.structure
 
         # This block is for the migration from atomate2 --> emmet-core schemas
         if config.get("structure"):
@@ -425,7 +453,7 @@ class PhononBSDOSTask(StructureMetadata):
 
             old_formula_units = config.pop("formula_units", 1)
             if toten := config.pop("total_dft_energy", None):
-                config["total_energy"] = (
+                config["total_dft_energy"] = (
                     toten * old_formula_units / config["structure"].num_sites
                 )
 
@@ -470,7 +498,10 @@ class PhononBSDOSTask(StructureMetadata):
                 for job_name, meta in calc_meta.items()
             ]
 
-        return config
+        return cls.from_structure(
+            meta_structure=config.pop("meta_structure", config.get("structure")),
+            **config,
+        )
 
     @computed_field  # type: ignore[prop-decorator]
     @cached_property
@@ -559,7 +590,7 @@ class PhononBSDOSTask(StructureMetadata):
             norm_fac = 1.0 / self.structure.num_sites  # type: ignore[union-attr]
         elif normalization == "formula_units":
             norm_fac = 1.0 / self.formula_units  # type: ignore[operator]
-        else:
+        elif normalization:
             raise ValueError(f"Unknown {normalization=} convention.")
 
         return (

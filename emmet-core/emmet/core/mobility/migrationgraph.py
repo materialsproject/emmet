@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import datetime
 from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field
@@ -13,7 +12,7 @@ import logging
 from emmet.core.base import EmmetBaseModel
 from emmet.core.neb import NebPathwayResult
 from emmet.core.types.enums import ValueEnum
-from emmet.core.utils import utcnow
+from emmet.core.types.typing import DateTimeType
 
 from pymatgen.core import Element, Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher
@@ -80,8 +79,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         None, description="The battery id for this MigrationGraphDoc"
     )
 
-    last_updated: datetime = Field(
-        default_factory=utcnow,
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation for this MigrationGraph document.",
     )
 
