@@ -28,7 +28,7 @@ distlib==0.4.0
     # via virtualenv
 donfig==0.8.1.post1
     # via zarr
-emmet-core==0.85.0
+emmet-core==0.85.1rc0
     # via emmet-archival (pyproject.toml)
 execnet==2.1.1
     # via pytest-xdist
