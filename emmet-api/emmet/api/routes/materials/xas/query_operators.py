@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from fastapi import Query
-from typing import TYPE_CHECKING
 
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
