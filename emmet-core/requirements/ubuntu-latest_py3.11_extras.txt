@@ -40,7 +40,7 @@ dnspython==2.8.0
     # via pymongo
 execnet==2.1.1
     # via pytest-xdist
-filelock==3.19.1
+filelock==3.20.0
     # via virtualenv
 flake8==7.3.0
     # via emmet-core (pyproject.toml)
@@ -220,7 +220,7 @@ pillow==11.3.0
     #   imageio
     #   matplotlib
     #   scikit-image
-platformdirs==4.4.0
+platformdirs==4.5.0
     # via
     #   mkdocs-get-deps
     #   virtualenv
@@ -287,7 +287,7 @@ pymdown-extensions==10.16.1
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.15.2
+pymongo==4.15.3
     # via matminer
 pyparsing==3.2.5
     # via
