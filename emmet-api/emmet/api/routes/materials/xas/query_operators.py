@@ -6,9 +6,7 @@ from typing import TYPE_CHECKING
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
 from pymatgen.core.periodic_table import Element
-
-if TYPE_CHECKING:
-    from emmet.core.xas import XasEdge, XasType
+from emmet.core.xas import XasEdge, XasType
 
 
 class XASQuery(QueryOperator):
