@@ -21,9 +21,9 @@ bibtexparser==1.4.3
     # via pymatgen
 blake3==1.0.7
     # via emmet-core
-boto3==1.40.46
+boto3==1.40.48
     # via maggma
-botocore==1.40.46
+botocore==1.40.48
     # via
     #   boto3
     #   s3transfer
@@ -63,7 +63,7 @@ emmet-core[all]==0.85.0
     # via emmet-builders (pyproject.toml)
 execnet==2.1.1
     # via pytest-xdist
-filelock==3.19.1
+filelock==3.20.0
     # via virtualenv
 flake8==7.3.0
     # via emmet-builders (pyproject.toml)
@@ -196,7 +196,7 @@ mp-pyrho==0.4.5
     # via pymatgen-analysis-defects
 mpmath==1.3.0
     # via sympy
-msgpack==1.1.1
+msgpack==1.1.2
     # via maggma
 mypy==1.18.2
     # via emmet-builders (pyproject.toml)
@@ -270,7 +270,7 @@ pillow==11.3.0
     #   imageio
     #   matplotlib
     #   scikit-image
-platformdirs==4.4.0
+platformdirs==4.5.0
     # via
     #   mkdocs-get-deps
     #   virtualenv
