@@ -76,12 +76,22 @@ class PhononDOS(BandTheoryBase):
     def from_pmg(cls, config: PhononDosObject | CompletePhononDos | dict) -> Any:
         """Correctly parse pymatgen-like objects."""
         remap = {
+            "structure": "structure",
             "frequencies": "frequencies",
             "densities": "densities",
             "projected_densities": "pdos",
         }
         if isinstance(config, PhononDosObject | CompletePhononDos):
-            return cls(**{k: getattr(config, v, None) for k, v in remap.items()})
+            cls_config = {k: getattr(config, v, None) for k, v in remap.items()}
+            if isinstance(pdos_as_dict := cls_config.get("projected_densities"), dict):
+                if not cls_config["structure"]:
+                    raise ValueError(
+                        "Cannot parse atom-projected phonon density of states without a structure."
+                    )
+                cls_config["projected_densities"] = [
+                    list(pdos_as_dict.get(site, [])) for site in cls_config["structure"]
+                ]
+            return cls(**cls_config)
         return cls(**{k: config.get(v) for k, v in remap.items()})
 
     @cached_property

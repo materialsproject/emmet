@@ -52,7 +52,7 @@ def test_legacy_migration(legacy_ph_task):
         )
 
     # check that Phonon DOS converts to CompletePhononDOS object
-    assert isinstance(ph_doc.phonon_dos, CompletePhononDos)
+    assert isinstance(ph_doc.phonon_dos.to_pmg, CompletePhononDos)
     # when structure or projected DOS fields are missing, `to_pmg` returns a PhononDos object
     for k in (
         "structure",
