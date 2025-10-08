@@ -435,8 +435,7 @@ class NebTaskDoc(NebResult):
         None, description="The VASP calculations associated with each image."
     )
 
-    last_updated: DateTimeType | None = Field(
-        default_factory=utcnow,
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation for this task document",
     )
 
