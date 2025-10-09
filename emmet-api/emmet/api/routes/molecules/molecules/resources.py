@@ -72,7 +72,7 @@ def molecules_resource(molecules_store):
         sub_path="/core/",
         disable_validation=True,
         hint_scheme=MoleculesHintScheme(),
-        timeout=MAPISettings().TIMEOUT,
+        timeout=timeout,
     )
 
     return resource

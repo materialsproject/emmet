@@ -219,11 +219,7 @@ class SubmissionResource(CollectionResource):
                         detail="Server timed out trying to obtain data. Try again with a smaller request.",
                     )
                 else:
-                    raise HTTPException(
-                        status_code=500,
-                        detail="Server timed out trying to obtain data. Try again with a smaller request, "
-                        "or remove sorting fields and sort data locally.",
-                    )
+                    raise HTTPException(status_code=500)
 
             meta = Meta(total_doc=count)
 
