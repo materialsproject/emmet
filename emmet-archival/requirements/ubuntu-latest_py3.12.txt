@@ -22,7 +22,7 @@ cycler==0.12.1
     # via matplotlib
 donfig==0.8.1.post1
     # via zarr
-emmet-core==0.85.1rc0
+emmet-core==0.85.1
     # via emmet-archival (pyproject.toml)
 fonttools==4.60.1
     # via matplotlib
@@ -36,7 +36,7 @@ kiwisolver==1.4.9
     # via matplotlib
 latexcodec==3.0.1
     # via pybtex
-matplotlib==3.10.6
+matplotlib==3.10.7
     # via pymatgen
 monty==2025.3.3
     # via

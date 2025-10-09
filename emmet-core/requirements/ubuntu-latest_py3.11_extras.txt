@@ -98,7 +98,7 @@ markupsafe==3.0.3
     #   mkdocstrings
 matminer==0.9.3
     # via robocrys
-matplotlib==3.10.6
+matplotlib==3.10.7
     # via
     #   ase
     #   pymatgen
@@ -407,7 +407,7 @@ urllib3==2.5.0
     # via
     #   requests
     #   types-requests
-virtualenv==20.34.0
+virtualenv==20.35.0
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs

@@ -57,7 +57,7 @@ distlib==0.4.0
     # via virtualenv
 dnspython==2.8.0
     # via pymongo
-emmet-core==0.85.1rc0
+emmet-core==0.85.1
     # via emmet-api (pyproject.toml)
 envier==0.6.1
     # via ddtrace
@@ -138,7 +138,7 @@ markupsafe==3.0.3
     #   mkdocs
     #   mkdocs-autorefs
     #   mkdocstrings
-matplotlib==3.10.6
+matplotlib==3.10.7
     # via pymatgen
 mccabe==0.7.0
     # via flake8
@@ -430,7 +430,7 @@ urllib3==2.5.0
     #   types-requests
 uvicorn==0.37.0
     # via emmet-api (pyproject.toml)
-virtualenv==20.34.0
+virtualenv==20.35.0
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
