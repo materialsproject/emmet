@@ -92,7 +92,7 @@ def merge_atlas_queries(queries: list[STORE_PARAMS]) -> STORE_PARAMS:
     }
 
 
-def attach_signature(function: Callable, defaults: dict, annotations: dict):
+def attach_signature(function: Callable, defaults: dict, annotations: dict) -> None:
     """
     Attaches signature for defaults and annotations for parameters to function.
 

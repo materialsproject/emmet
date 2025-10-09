@@ -1,14 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from fastapi import Path, Query
 
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
-
-if TYPE_CHECKING:
-    from emmet.core.mpid import MPID, AlphaID
+from emmet.core.mpid import MPID, AlphaID
 
 
 class PhononImgQuery(QueryOperator):
