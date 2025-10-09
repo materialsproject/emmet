@@ -70,7 +70,7 @@ latexcodec==3.0.1
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
-matplotlib==3.10.6
+matplotlib==3.10.7
     # via pymatgen
 monty==2025.3.3
     # via

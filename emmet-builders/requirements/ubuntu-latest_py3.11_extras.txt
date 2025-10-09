@@ -59,7 +59,7 @@ dnspython==2.8.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.85.0
+emmet-core[all]==0.85.1
     # via emmet-builders (pyproject.toml)
 execnet==2.1.1
     # via pytest-xdist
@@ -137,7 +137,7 @@ matminer==0.9.3
     # via
     #   emmet-builders (pyproject.toml)
     #   robocrys
-matplotlib==3.10.6
+matplotlib==3.10.7
     # via
     #   ase
     #   pymatgen
@@ -491,7 +491,7 @@ urllib3==2.5.0
     #   botocore
     #   requests
     #   types-requests
-virtualenv==20.34.0
+virtualenv==20.35.0
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
