@@ -38,7 +38,7 @@ ddtrace==3.15.0
     # via emmet-api (emmet/emmet-api/pyproject.toml)
 dnspython==2.8.0
     # via pymongo
-emmet-core==0.85.1rc0
+emmet-core==0.85.1
     # via emmet-api (emmet/emmet-api/pyproject.toml)
 envier==0.6.1
     # via ddtrace
@@ -70,7 +70,7 @@ latexcodec==3.0.1
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
-matplotlib==3.10.6
+matplotlib==3.10.7
     # via
     #   -r python/requirements.txt
     #   pymatgen

@@ -28,7 +28,7 @@ kiwisolver==1.4.9
     # via matplotlib
 latexcodec==3.0.1
     # via pybtex
-matplotlib==3.10.6
+matplotlib==3.10.7
     # via
     #   -r python/requirements.txt
     #   pymatgen
