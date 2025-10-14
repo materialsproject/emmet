@@ -132,34 +132,33 @@ class LobsteroutModel(BaseModel):
     )
 
 
-@arrow_incompatible
 class LobsterinModel(BaseModel):
     """Definition of input settings for the LOBSTER computation."""
 
-    cohpstartenergy: float = Field(description="Start energy for COHP computation")
-    cohpendenergy: float = Field(description="End energy for COHP computation")
+    cohp_start_energy: float = Field(description="Start energy for COHP computation")
+    cohp_end_energy: float = Field(description="End energy for COHP computation")
 
-    gaussiansmearingwidth: float | None = Field(
+    gaussian_smearing_width: float | None = Field(
         None, description="Set the smearing width in eV,default is 0.2 (eV)"
     )
-    usedecimalplaces: int | None = Field(
+    use_decimal_places: int | None = Field(
         None,
         description="Set the decimal places to print in output files, default is 5",
     )
-    cohpsteps: float | None = Field(
+    cohp_steps: float | None = Field(
         None, description="Number steps in COHPCAR; similar to NEDOS of VASP"
     )
-    basisset: str = Field(description="basis set of computation")
-    cohpgenerator: str = Field(
+    basis_set: str = Field(description="basis set of computation")
+    cohp_generator: str = Field(
         description="Build the list of atom pairs to be analyzed using given distance"
     )
-    saveprojectiontofile: bool | None = Field(
+    save_projection_to_file: bool | None = Field(
         None, description="Save the results of projections"
     )
-    lsodos: bool | None = Field(
+    lso_dos: bool | None = Field(
         None, description="Writes DOS output from the orthonormalized LCAO basis"
     )
-    basisfunctions: list[str] = Field(
+    basis_functions: list[str] = Field(
         description="Specify the basis functions for element"
     )
 
@@ -176,14 +175,13 @@ class Bonding(BaseModel):
 class BondsInfo(BaseModel):
     """Model describing bonds field of SiteInfo."""
 
-    ICOHP_mean: str = Field(..., description="Mean of ICOHPs of relevant bonds")
-    ICOHP_sum: str = Field(..., description="Sum of ICOHPs of relevant bonds")
+    ICOHP_mean: str = Field(description="Mean of ICOHPs of relevant bonds")
+    ICOHP_sum: str = Field(description="Sum of ICOHPs of relevant bonds")
     has_antibdg_states_below_Efermi: bool = Field(  # noqa: N815
-        ...,
         description="Indicates if antibonding interactions below efermi are detected",
     )
     number_of_bonds: int = Field(
-        ..., description="Number of bonds considered in the analysis"
+        description="Number of bonds considered in the analysis"
     )
     bonding: Bonding = Field(description="Model describing bonding contributions")
     antibonding: Bonding = Field(
@@ -195,19 +193,16 @@ class SiteInfo(BaseModel):
     """Outer model describing sites field of Sites model."""
 
     env: str = Field(
-        ...,
         description="The coordination environment identified from "
         "the LobsterPy analysis",
     )
     bonds: dict[str, BondsInfo] = Field(
-        ...,
         description="A dictionary with keys as atomic-specie as key "
         "and BondsInfo model as values",
     )
-    ion: str = Field(..., description="Ion to which the atom is bonded")
-    charge: float = Field(..., description="Mulliken charge of the atom")
+    ion: str = Field(description="Ion to which the atom is bonded")
+    charge: float = Field(description="Mulliken charge of the atom")
     relevant_bonds: list[str] = Field(
-        ...,
         description="List of bond labels from the LOBSTER files i.e. for e.g. "
         " from ICOHPLIST.lobster/ COHPCAR.lobster",
     )
@@ -217,7 +212,6 @@ class Sites(BaseModel):
     """Model describing, sites field of CondensedBondingAnalysis."""
 
     sites: dict[int, SiteInfo] = Field(
-        ...,
         description="A dictionary with site index as keys and SiteInfo model as values",
     )
 
@@ -227,7 +221,6 @@ class CohpPlotData(BaseModel):
     """Model describing the cohp_plot_data field of CondensedBondingAnalysis."""
 
     data: dict[str, Cohp] = Field(
-        ...,
         description="A dictionary with plot labels from LobsterPy "
         "automatic analysis as keys and Cohp objects as values",
     )
@@ -237,21 +230,18 @@ class DictIons(BaseModel):
     """Model describing final_dict_ions field of CondensedBondingAnalysis."""
 
     data: dict[str, dict[str, int]] = Field(
-        ...,
         description="Dict consisting information on environments of cations "
         "and counts for them",
     )
 
 
 # TODO extricate this from individual dicts
-
-
 @arrow_incompatible  # union float | bool type
 class DictBonds(BaseModel):
     """Model describing final_dict_bonds field of CondensedBondingAnalysis."""
 
     data: dict[str, dict[str, float | bool]] = Field(
-        ..., description="Dict consisting information on ICOHPs per bond type"
+        description="Dict consisting information on ICOHPs per bond type"
     )
 
 
@@ -268,10 +258,9 @@ class CondensedBondingAnalysis(BaseModel):
         description="ICOHP range considered in co-ordination environment analysis"
     )
     number_of_considered_ions: int = Field(
-        ..., description="number of ions detected based on Mulliken/Löwdin Charges"
+        description="number of ions detected based on Mulliken/Löwdin Charges"
     )
     sites: Sites = Field(
-        ...,
         description="Bonding information at inequivalent sites in the structure",
     )
     type_charges: str = Field(
@@ -292,22 +281,19 @@ class CondensedBondingAnalysis(BaseModel):
         " if set to None, all energies up-to the Fermi is considered",
     )
     cohp_plot_data: CohpPlotData = Field(
-        ...,
         description="Plotting data for the relevant bonds from LobsterPy analysis",
     )
     which_bonds: str = Field(
         description="Specifies types of bond considered in LobsterPy analysis",
     )
     final_dict_bonds: DictBonds = Field(
-        ...,
         description="Dict consisting information on ICOHPs per bond type",
     )
     final_dict_ions: DictIons = Field(
-        ...,
         description="Model that describes final_dict_ions field",
     )
     run_time: float = Field(
-        ..., description="Time needed to run Lobsterpy condensed bonding analysis"
+        description="Time needed to run Lobsterpy condensed bonding analysis"
     )
 
     @classmethod
@@ -780,7 +766,15 @@ class LobsterTaskDocument(StructureMetadata):
         file_paths = aggregate_paths(dir_name)
         lobsterout_doc = Lobsterout(file_paths["lobsterout"]).get_doc()
         lobster_out = LobsteroutModel(**lobsterout_doc)
-        lobster_in = LobsterinModel(**Lobsterin.from_file(file_paths["lobsterin"]))
+
+        lobster_in_dict = Lobsterin.from_file(file_paths["lobsterin"])
+        # convert keys to snake case
+        lobster_in = LobsterinModel(
+            **{
+                k: lobster_in_dict.get(k.strip("_"))
+                for k in LobsterinModel.model_fields
+            }
+        )
 
         # Do automatic bonding analysis with LobsterPy
         struct = Structure.from_file(file_paths["POSCAR"])
@@ -1157,8 +1151,8 @@ def _get_strong_bonds(
         lengths.append(length)
 
     bond_labels_unique = list(set(bonds))
-    sep_icohp: list[list[float]] = [[] for _ in range(len(bond_labels_unique))]
-    sep_lengths: list[list[float]] = [[] for _ in range(len(bond_labels_unique))]
+    sep_icohp: list[list[float]] = [[]] * len(bond_labels_unique)
+    sep_lengths: list[list[float]] = [[]] * len(bond_labels_unique)
 
     for idx, val in enumerate(bond_labels_unique):
         for j, val2 in enumerate(bonds):
