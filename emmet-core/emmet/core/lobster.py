@@ -770,7 +770,7 @@ class LobsterTaskDocument(StructureMetadata):
         lobster_in_dict = Lobsterin.from_file(file_paths["lobsterin"])
         # convert keys to snake case
         lobster_in = LobsterinModel(
-            **{
+            **{  # type: ignore[arg-type]
                 k: lobster_in_dict.get(k.strip("_"))
                 for k in LobsterinModel.model_fields
             }
