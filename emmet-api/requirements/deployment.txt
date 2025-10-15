@@ -14,11 +14,11 @@ asgiref==3.10.0
     # via asgi-logger
 bibtexparser==1.4.3
     # via pymatgen
-blake3==1.0.7
+blake3==1.0.8
     # via emmet-core
-boto3==1.40.51
+boto3==1.40.53
     # via emmet-api (emmet/emmet-api/pyproject.toml)
-botocore==1.40.51
+botocore==1.40.53
     # via
     #   boto3
     #   s3transfer
@@ -26,7 +26,7 @@ bytecode==0.17.0
     # via ddtrace
 certifi==2025.10.5
     # via requests
-charset-normalizer==3.4.3
+charset-normalizer==3.4.4
     # via requests
 click==8.3.0
     # via uvicorn
@@ -121,24 +121,24 @@ pandas==2.3.3
     # via
     #   -r python/requirements.txt
     #   pymatgen
-pillow==11.3.0
+pillow==12.0.0
     # via
     #   imageio
     #   matplotlib
     #   scikit-image
 plotly==6.3.1
     # via pymatgen
-protobuf==6.32.1
+protobuf==6.33.0
     # via ddtrace
 pybtex==0.25.1
     # via emmet-core
-pydantic==2.12.1
+pydantic==2.12.2
     # via
     #   emmet-core
     #   fastapi
     #   pydantic-settings
     #   pymatgen-io-validation
-pydantic-core==2.41.3
+pydantic-core==2.41.4
     # via pydantic
 pydantic-settings==2.11.0
     # via
