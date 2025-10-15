@@ -19,11 +19,11 @@ bcrypt==5.0.0
     # via paramiko
 bibtexparser==1.4.3
     # via pymatgen
-blake3==1.0.7
+blake3==1.0.8
     # via emmet-core
-boto3==1.40.51
+boto3==1.40.53
     # via maggma
-botocore==1.40.51
+botocore==1.40.53
     # via
     #   boto3
     #   s3transfer
@@ -37,7 +37,7 @@ cffi==2.0.0
     #   pynacl
 cfgv==3.4.0
     # via pre-commit
-charset-normalizer==3.4.3
+charset-normalizer==3.4.4
     # via requests
 click==8.3.0
     # via mkdocs
@@ -45,7 +45,7 @@ colorama==0.4.6
     # via griffe
 contourpy==1.3.3
     # via matplotlib
-coverage[toml]==7.10.7
+coverage[toml]==7.11.0
     # via pytest-cov
 cryptography==46.0.2
     # via paramiko
@@ -265,7 +265,7 @@ pathspec==0.12.1
     # via
     #   mkdocs
     #   mypy
-pillow==11.3.0
+pillow==12.0.0
     # via
     #   imageio
     #   matplotlib
@@ -296,13 +296,13 @@ pycodestyle==2.14.0
     #   flake8
 pycparser==2.23
     # via cffi
-pydantic==2.12.0
+pydantic==2.12.2
     # via
     #   emmet-core
     #   maggma
     #   pydantic-settings
     #   pymatgen-io-validation
-pydantic-core==2.41.1
+pydantic-core==2.41.4
     # via pydantic
 pydantic-settings==2.11.0
     # via

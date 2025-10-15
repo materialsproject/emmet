@@ -8,11 +8,11 @@ annotated-types==0.7.0
     # via pydantic
 bibtexparser==1.4.3
     # via pymatgen
-blake3==1.0.7
+blake3==1.0.8
     # via emmet-core
 certifi==2025.10.5
     # via requests
-charset-normalizer==3.4.3
+charset-normalizer==3.4.4
     # via requests
 contourpy==1.3.3
     # via matplotlib
@@ -50,7 +50,7 @@ networkx==3.5
     # via pymatgen
 numcodecs[crc32c]==0.16.3
     # via zarr
-numpy==2.3.3
+numpy==2.3.4
     # via
     #   contourpy
     #   h5py
@@ -76,7 +76,7 @@ pandas==2.3.3
     # via
     #   emmet-archival (pyproject.toml)
     #   pymatgen
-pillow==11.3.0
+pillow==12.0.0
     # via matplotlib
 plotly==6.3.1
     # via pymatgen
@@ -84,12 +84,12 @@ pyarrow==21.0.0
     # via emmet-archival (pyproject.toml)
 pybtex==0.25.1
     # via emmet-core
-pydantic==2.12.0
+pydantic==2.12.2
     # via
     #   emmet-core
     #   pydantic-settings
     #   pymatgen-io-validation
-pydantic-core==2.41.1
+pydantic-core==2.41.4
     # via pydantic
 pydantic-settings==2.11.0
     # via
