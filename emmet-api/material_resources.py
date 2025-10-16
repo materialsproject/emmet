@@ -28,6 +28,9 @@ if db_uri:
     core_db = mongo_client["mp_core"]
     consumer_db = mongo_client["mp_consumers"]
 
+    tasks_mongo_client = AsyncMongoClient(db_uri_tasks)
+    tasks_db = tasks_mongo_client["mp_core"]
+
     materials_store = CollectionWithKey(suffix_db["materials"])
     absorption_store = CollectionWithKey(suffix_db["absorption"])
     bonds_store = CollectionWithKey(suffix_db["bonds"])
@@ -41,7 +44,7 @@ if db_uri:
     formula_autocomplete_store = CollectionWithKey(
         core_db["formula_autocomplete"], "_id"
     )
-    task_store = CollectionWithKey(core_db["tasks"], "task_id")
+    task_store = CollectionWithKey(tasks_db["tasks"], "task_id")
     eos_store = CollectionWithKey(core_db["eos"], "task_id")
     similarity_store = CollectionWithKey(core_db["similarity"])
     xas_store = CollectionWithKey(core_db["xas"], "spectrum_id")
