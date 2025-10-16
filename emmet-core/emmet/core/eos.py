@@ -74,12 +74,12 @@ class EOSDoc(BasePropertyMetadata):
 
     energies: list[float] | None = Field(
         None,
-        description="Common energies in eV/atom that the equations of state are plotted with.",
+        description="Energies in eV that the equations of state are plotted with.",
     )
 
     volumes: list[float] | None = Field(
         None,
-        description="Common volumes in A³/atom that the equations of state are plotted with.",
+        description="Volumes in A³ that the equations of state are plotted with.",
     )
 
     eos: list[EOSFit] | None = Field(
