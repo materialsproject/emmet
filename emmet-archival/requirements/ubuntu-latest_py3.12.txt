@@ -26,7 +26,7 @@ emmet-core==0.85.1
     # via emmet-archival (pyproject.toml)
 fonttools==4.60.1
     # via matplotlib
-h5py==3.15.0
+h5py==3.15.1
     # via emmet-archival (pyproject.toml)
 idna==3.11
     # via requests
