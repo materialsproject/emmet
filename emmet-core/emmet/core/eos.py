@@ -1,11 +1,19 @@
 """Define equation of state (EOS) schemas."""
 
+from __future__ import annotations
+
 from pydantic import BaseModel, Field
+from typing import TYPE_CHECKING
 
 from pymatgen.analysis.eos import EOS, EOSError
 
 from emmet.core.material import BasePropertyMetadata
 from emmet.core.types.enums import ValueEnum
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from pymatgen.core import Structure
 
 
 class EOSModel(ValueEnum):
@@ -18,37 +26,42 @@ class EOSModel(ValueEnum):
     UBER = "vinet"  # yes that's the actual name for it
 
 
-class EOSType(BaseModel):
+class EOSFit(BaseModel):
+    """Schematize fitted EOS data.
 
-    V0: float = Field(description="The equilibrium volume in Å³/atom.")
-    B0: float = Field(description="The equilibrium bulk modulus, in GPa.")
-    B1: float = Field(
-        description="The pressure derivative of the bulk modulus at V0, dimensionless."
+    The only required field is `model`.
+    If no other fields are instantiated, it is assumed
+    that the fit failed.
+    """
+
+    model: EOSModel = Field(description="The EOS model used to fit the data.")
+    V0: float | None = Field(None, description="The equilibrium volume in Å³.")
+    B0: float | None = Field(None, description="The equilibrium bulk modulus, in GPa.")
+    B1: float | None = Field(
+        None,
+        description="The pressure derivative of the bulk modulus at V0, dimensionless.",
     )
-    E0: float = Field(description="The equilibrium energy, in eV/atom.")
-    R2: float = Field(description="The fit R2, dimensionless.")
-    model: EOSModel | None = Field(
-        None, description="The EOS model used to fit the data."
+    E0: float | None = Field(None, description="The equilibrium energy, in eV.")
+    R2: float | None = Field(
+        None, description="The fit R2 (coefficient of determination), dimensionless."
     )
 
     @classmethod
     def from_ev_data(
         cls,
-        volumes: list[float],
-        energies: list[float],
+        volumes: Sequence[float],
+        energies: Sequence[float],
         model: str | EOSModel,
-        num_sites: int | None = None,
     ):
         cls_config = {"model": EOSModel(model)}
         try:
             eos = EOS(eos_name=cls_config["model"].value).fit(volumes, energies)
             cls_config.update({k.upper(): eos.results[k] for k in ("e0", "v0", "b1")})
-            cls_config["B0"] = (eos.b0_GPa,)
-            if num_sites:
-                for k in ("E0", "V0"):
-                    cls_config[k] /= num_sites
+            cls_config["B0"] = float(eos.b0_GPa)
 
-            # cls_config["R2"] = 1. -
+            sum_res_sq = ((eos.energies - eos.func(eos.volumes)) ** 2).sum()
+            sum_tot_sq = ((eos.energies - eos.energies.mean()) ** 2).sum()
+            cls_config["R2"] = 1.0 - sum_res_sq / sum_tot_sq
 
         except EOSError:
             pass
@@ -56,9 +69,7 @@ class EOSType(BaseModel):
 
 
 class EOSDoc(BasePropertyMetadata):
-    """
-    Fitted equations of state and energies and volumes used for fits.
-    """
+    """Fitted equations of state, and energy-volume fit data."""
 
     energies: list[float] | None = Field(
         None,
@@ -70,12 +81,25 @@ class EOSDoc(BasePropertyMetadata):
         description="Common volumes in A³/atom that the equations of state are plotted with.",
     )
 
-    eos: EOSType | None = Field(
+    eos: list[EOSFit] | None = Field(
         None,
         description="Data for each type of equation of state.",
     )
 
-    material_id: str | None = Field(
-        None,
-        description="The Materials Project ID of the material. This comes in the form: mp-******.",
-    )
+    @classmethod
+    def from_ev_data(
+        cls,
+        structure: Structure,
+        volumes: Sequence[float],
+        energies: Sequence[float],
+        models: list[str | EOSModel] | None = None,
+    ):
+        return cls.from_structure(
+            meta_structure=structure,
+            energies=energies,
+            volumes=volumes,
+            eos=[
+                EOSFit.from_ev_data(volumes, energies, model)
+                for model in (models or EOSModel)  # type: ignore[union-attr]
+            ],
+        )
