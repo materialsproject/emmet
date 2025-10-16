@@ -18,7 +18,7 @@ def mpcomplete_resource(mpcomplete_store):
         state_enum=MPCompleteDataStatus,
         default_state=MPCompleteDataStatus.submitted.value,
         calculate_submission_id=True,
-        include_in_schema=True,
+        include_in_schema=False,
         timeout=MAPISettings().TIMEOUT,
     )
 

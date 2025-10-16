@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+import numpy as np
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -31,8 +31,8 @@ from emmet.core.tasks import (
 )
 from emmet.core.types.enums import ValueEnum, VaspObject
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
-from emmet.core.types.typing import DateTimeType
-from emmet.core.utils import arrow_incompatible, type_override, utcnow
+from emmet.core.utils import arrow_incompatible, type_override
+from emmet.core.types.typing import DateTimeType, NullableDateTimeType
 from emmet.core.vasp.calculation import Calculation
 from emmet.core.vasp.task_valid import TaskState
 
@@ -319,8 +319,8 @@ class NebIntermediateImagesDoc(BaseModel):
         description="Detailed custodian data for each VASP calculation contributing to the task document.",
     )
 
-    completed_at: datetime | None = Field(
-        None, description="Timestamp for when this task was completed"
+    completed_at: NullableDateTimeType = Field(
+        description="Timestamp for when this task was completed"
     )
 
     task_label: str | None = Field(
@@ -459,8 +459,7 @@ class NebTaskDoc(NebResult):
         None, description="The VASP calculations associated with each image."
     )
 
-    last_updated: DateTimeType | None = Field(
-        default_factory=utcnow,
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation for this task document",
     )
 

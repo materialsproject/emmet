@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import copy
 import logging
-from datetime import datetime
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -16,7 +15,8 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 from emmet.core.base import EmmetBaseModel
 from emmet.core.neb import NebPathwayResult
 from emmet.core.types.enums import ValueEnum
-from emmet.core.utils import arrow_incompatible, utcnow
+from emmet.core.utils import arrow_incompatible
+from emmet.core.types.typing import DateTimeType
 
 try:
     from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
@@ -80,8 +80,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         None, description="The battery id for this MigrationGraphDoc"
     )
 
-    last_updated: datetime = Field(
-        default_factory=utcnow,
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation for this MigrationGraph document.",
     )
 

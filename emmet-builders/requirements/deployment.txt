@@ -87,7 +87,7 @@ fsspec[http]==2024.2.0
     # via
     #   pytorch-lightning
     #   torch
-future==0.18.3
+future==1.0.0
     # via
     #   matminer
     #   uncertainties

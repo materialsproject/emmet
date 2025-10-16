@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from fastapi import Query
 from pymatgen.core.periodic_table import Element
 
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
-
-if TYPE_CHECKING:
-    from emmet.core.xas import XasEdge, XasType
+from pymatgen.core.periodic_table import Element
+from emmet.core.xas import XasEdge, XasType
 
 
 class XASQuery(QueryOperator):

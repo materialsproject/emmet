@@ -79,8 +79,5 @@ class Response(BaseModel, Generic[DataT]):
         if v is None or hasattr(v, "model_dump"):
             v = Meta().model_dump()  # type: ignore[call-arg]
         if v.get("total_doc", None) is None:
-            if getattr(values, "data", None) is not None:
-                v["total_doc"] = len(values.data)
-            else:
-                v["total_doc"] = 0
+            v["total_doc"] = len(getattr(values, "data", []))
         return v

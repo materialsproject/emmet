@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=80.0.0","setuptools-scm>=8"]
+requires = ["setuptools>=80.0.0", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
@@ -16,32 +16,32 @@ include = ["emmet.api"]
 
 [tool.setuptools.package-data]
 "emmet.core.vasp.calc_types" = ["*.yaml"]
-"emmet.core.qchem.calc_types" =  ["*.yaml"]
+"emmet.core.qchem.calc_types" = ["*.yaml"]
 "emmet.core.subtrates" = ["*.json"]
 
 [project]
 name = "emmet-api"
 dynamic = ["version"]
 requires-python = ">=3.10"
-description="Emmet API Server"
+description = "Emmet API Server"
 authors = [
-    {name = "The Materials Project",email="feedback@materialsproject.org"},
+  { name = "The Materials Project", email = "feedback@materialsproject.org" },
 ]
-license = {text = "Modified BSD"}
+license = { text = "Modified BSD" }
 dependencies = [
-    "emmet-core>=0.84.6rc0,<0.85",
-    "fastapi",
-    "gunicorn",
-    "boto3",
-    "ddtrace",
-    "setproctitle",
-    "shapely",
-    "asgi-logger",
-    "pymatgen-analysis-alloys>=0.0.3",
-    "pymatgen-analysis-defects>=2024.10.22",
-    "pymatgen-io-validation>=0.1.1",
-    "uvicorn>=0.18.3",
-    "maggma",
+  "emmet-core>=0.85.1rc0",
+  "fastapi!=0.119.0",
+  "gunicorn",
+  "boto3",
+  "ddtrace",
+  "setproctitle",
+  "shapely",
+  "asgi-logger",
+  "pymatgen-analysis-alloys>=0.0.3",
+  "pymatgen-analysis-defects>=2024.10.22",
+  "pymatgen-io-validation>=0.1.1",
+  "uvicorn>=0.18.3",
+  "pymongo>=4.10.1",
 ]
 
 [project.urls]
@@ -50,30 +50,32 @@ Documentation = "https://materialsproject.github.io/emmet/"
 
 [project.optional-dependencies]
 test = [
-    "pre-commit",
-    "pytest",
-    "pytest-asyncio",
-    "pytest-cov",
-    "pytest-xdist",
-    "pycodestyle",
-    "pydocstyle",
-    "flake8",
-    "mypy",
-    "mypy-extensions",
-    "types-setuptools",
-    "types-requests",
-    "starlette[full]",
-    "wincertstore",
+  "pre-commit",
+  "pytest",
+  "pytest-asyncio",
+  "pytest-cov",
+  "pytest-xdist",
+  "pycodestyle",
+  "pydocstyle",
+  "flake8",
+  "mypy",
+  "mypy-extensions",
+  "types-setuptools",
+  "types-requests",
+  "starlette[full]",
+  "wincertstore",
+  "pymongo==4.10.1",
+  "mongomock",
 ]
 docs = [
-    "mkdocs",
-    "mkdocs-material<8.3",
-    "mkdocs-material-extensions",
-    "mkdocs-minify-plugin",
-    "mkdocstrings",
-    "mkdocs-awesome-pages-plugin",
-    "mkdocs-markdownextradata-plugin",
-    "mkdocstrings[python]",
-    "livereload",
-    "jinja2",
+  "mkdocs",
+  "mkdocs-material<8.3",
+  "mkdocs-material-extensions",
+  "mkdocs-minify-plugin",
+  "mkdocstrings",
+  "mkdocs-awesome-pages-plugin",
+  "mkdocs-markdownextradata-plugin",
+  "mkdocstrings[python]",
+  "livereload",
+  "jinja2",
 ]

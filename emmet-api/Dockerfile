@@ -1,4 +1,4 @@
-FROM materialsproject/devops:python-3.1112.7 AS base
+FROM materialsproject/devops:python-3.1113.0 AS base
 RUN apt-get update && apt-get install -y --no-install-recommends libopenblas-dev libjpeg62 curl && apt-get clean
 
 FROM base AS builder
@@ -11,7 +11,7 @@ RUN pip install $PIP_FLAGS --upgrade pip pip-tools setuptools-scm && \
   pip-sync requirements.txt --pip-args "$PIP_FLAGS"
 
 COPY emmet emmet
-COPY setup.py .
+COPY pyproject.toml .
 ARG API_VERSION
 RUN SETUPTOOLS_SCM_PRETEND_VERSION=${API_VERSION} pip install $PIP_FLAGS --no-deps .
 RUN wget -q https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && \

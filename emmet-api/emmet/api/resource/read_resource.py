@@ -103,10 +103,15 @@ class ReadOnlyResource(CollectionResource):
                 query.update(hints)
 
             try:
-                count = await self.collection.count_documents(
-                    query.get("criteria") or {},
-                    **self.get_search_kwargs(query, "count"),
-                )
+                crit = query.get("criteria")
+                if crit:
+                    count = await self.collection.count_documents(
+                        crit,
+                        **self.get_search_kwargs(query, "count"),
+                    )
+                else:
+                    count = await self.collection.estimated_document_count()
+
                 pipeline = generate_query_pipeline(query)
                 cursor = await self.collection.aggregate(
                     pipeline,

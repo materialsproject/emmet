@@ -48,10 +48,8 @@ def generate_query_pipeline(query: dict):
     Args:
         query: Query parameters
     """
-    pipeline = [
-        {"$match": query["criteria"]},
-    ]
-
+    crit = query["criteria"]
+    pipeline = [{"$match": crit}] if crit else []
     sorting = query.get("sort", False)
 
     if sorting:
