@@ -6,7 +6,6 @@ import numpy as np
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-import numpy as np
 import orjson
 from monty.os.path import zpath
 from pydantic import (

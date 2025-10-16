@@ -206,7 +206,6 @@ class PhononBS(BandStructure):
 
         if isinstance(config["reciprocal_lattice"], dict):
             config["reciprocal_lattice"] = config["reciprocal_lattice"].get("matrix")
-
         return cls(**config)
 
     @property

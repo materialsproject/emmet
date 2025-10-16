@@ -5,7 +5,6 @@ from pymatgen.core.periodic_table import Element
 
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
-from pymatgen.core.periodic_table import Element
 from emmet.core.xas import XasEdge, XasType
 
 

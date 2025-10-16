@@ -7,8 +7,7 @@ import numpy as np
 import pytest
 from monty.serialization import loadfn
 from pymatgen.core import Structure
-from pymatgen.phonon.dos import CompletePhononDos
-from pymatgen.phonon.dos import PhononDos as PmgPhononDos
+from pymatgen.phonon.dos import CompletePhononDos, PhononDos as PmgPhononDos
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.phonon import PhononBSDOSDoc, PhononDOS
@@ -29,7 +28,9 @@ def test_legacy_migration(legacy_ph_task):
     # ensure that legacy phonon data can be migrated to current schema
 
     assert all(legacy_ph_task.get(k) for k in ("ph_bs", "ph_dos"))
-    ph_doc = PhononBSDOSDoc.migrate_fields(**legacy_ph_task)
+
+    # deepcopy needed because migration changes input objects
+    ph_doc = PhononBSDOSDoc.migrate_fields(**deepcopy(legacy_ph_task))
     assert_schemas_equal(ph_doc, PhononBSDOSDoc.model_config)
 
     # check remap of phonon DOS
@@ -118,7 +119,7 @@ def test_legacy_migration(legacy_ph_task):
     not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
 )
 def test_arrow(tmp_dir, legacy_ph_task):
-    ph_doc = PhononBSDOSDoc(**legacy_ph_task)
+    ph_doc = PhononBSDOSDoc.migrate_fields(**legacy_ph_task)
     arrow_struct = pa.scalar(
         ph_doc.model_dump(context={"format": "arrow"}), type=arrowize(PhononBSDOSDoc)
     )
