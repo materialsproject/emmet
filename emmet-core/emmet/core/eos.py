@@ -53,19 +53,20 @@ class EOSFit(BaseModel):
         energies: Sequence[float],
         model: str | EOSModel,
     ):
-        cls_config = {"model": EOSModel(model)}
+        eos_pars: dict[str, float] = {}
+        eos_model = EOSModel(model)
         try:
-            eos = EOS(eos_name=cls_config["model"].value).fit(volumes, energies)
-            cls_config.update({k.upper(): eos.results[k] for k in ("e0", "v0", "b1")})
-            cls_config["B0"] = float(eos.b0_GPa)
+            eos = EOS(eos_name=eos_model.value).fit(volumes, energies)
+            eos_pars.update({k.upper(): eos.results[k] for k in ("e0", "v0", "b1")})
+            eos_pars["B0"] = float(eos.b0_GPa)
 
             sum_res_sq = ((eos.energies - eos.func(eos.volumes)) ** 2).sum()
             sum_tot_sq = ((eos.energies - eos.energies.mean()) ** 2).sum()
-            cls_config["R2"] = 1.0 - sum_res_sq / sum_tot_sq
+            eos_pars["R2"] = 1.0 - sum_res_sq / sum_tot_sq
 
         except EOSError:
             pass
-        return cls(**cls_config)
+        return cls(model=eos_model, **eos_pars)
 
 
 class EOSDoc(BasePropertyMetadata):
