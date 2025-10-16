@@ -310,7 +310,7 @@ class Calculation(BaseModel):
         None, description="Timestamp for when the calculation was completed"
     )
     task_name: str | None = Field(
-        description="Name of task given by custodian (e.g. opt1, opt2, freq1, freq2)",
+        None, description="Name of task given by custodian (e.g. opt1, opt2, freq1, freq2)",
     )
     output_file_paths: dict[str, str | Path | dict[str, Path]] | None = Field(
         None,

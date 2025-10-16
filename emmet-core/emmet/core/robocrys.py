@@ -17,7 +17,7 @@ class MineralData(BaseModel):
     """
 
     type: str | None = Field(
-        description="Mineral type.",
+        None, description="Mineral type.",
     )
 
     name: str | None = Field(None, description="The mineral name if found.")
