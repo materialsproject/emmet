@@ -101,7 +101,7 @@ numpy==2.3.4
     #   shapely
     #   spglib
     #   tifffile
-opentelemetry-api==1.37.0
+opentelemetry-api==1.38.0
     # via ddtrace
 orjson==3.11.3
     # via pymatgen
@@ -123,7 +123,7 @@ pillow==12.0.0
     #   scikit-image
 plotly==6.3.1
     # via pymatgen
-protobuf==6.32.1
+protobuf==6.33.0
     # via ddtrace
 pybtex==0.25.1
     # via emmet-core
