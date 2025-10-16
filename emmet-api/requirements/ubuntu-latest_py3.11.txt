@@ -16,9 +16,9 @@ bibtexparser==1.4.3
     # via pymatgen
 blake3==1.0.8
     # via emmet-core
-boto3==1.40.53
+boto3==1.40.54
     # via emmet-api (pyproject.toml)
-botocore==1.40.53
+botocore==1.40.54
     # via
     #   boto3
     #   s3transfer
@@ -42,7 +42,7 @@ emmet-core==0.85.1
     # via emmet-api (pyproject.toml)
 envier==0.6.1
     # via ddtrace
-fastapi==0.119.0
+fastapi==0.118.3
     # via emmet-api (pyproject.toml)
 fonttools==4.60.1
     # via matplotlib
