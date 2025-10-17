@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
@@ -44,7 +44,7 @@ class History(BaseModel):
 
     name: str
     url: str
-    description: dict[str, str] | None = Field(
+    description: dict[str, Any] | None = Field(
         None, description="Dictionary of extra data for this history node."
     )
 
