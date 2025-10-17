@@ -246,7 +246,7 @@ pycodestyle==2.14.0
     # via
     #   emmet-core (pyproject.toml)
     #   flake8
-pydantic==2.12.2
+pydantic==2.12.3
     # via
     #   emmet-core (pyproject.toml)
     #   pydantic-settings
