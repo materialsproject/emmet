@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
@@ -13,6 +13,7 @@ from pymatgen.core.structure import Structure
 from emmet.core.material_property import PropertyDoc
 from emmet.core.types.enums import ValueEnum
 from emmet.core.types.typing import DateTimeType
+from emmet.core.utils import arrow_incompatible
 
 if TYPE_CHECKING:
     from emmet.core.types.typing import IdentifierType
@@ -37,6 +38,7 @@ class Author(BaseModel):
     email: str | None = Field(None)
 
 
+@arrow_incompatible
 class History(BaseModel):
     """
     History of the material provenance
@@ -44,7 +46,7 @@ class History(BaseModel):
 
     name: str
     url: str
-    description: dict[str, str] | None = Field(
+    description: dict[str, Any] | None = Field(
         None, description="Dictionary of extra data for this history node."
     )
 
@@ -55,6 +57,7 @@ class History(BaseModel):
         return {"string": v} if isinstance(v, str) else v
 
 
+@arrow_incompatible
 class SNLAbout(BaseModel):
     """A data dictionary defining extra fields in a SNL"""
 
@@ -85,6 +88,7 @@ class SNLAbout(BaseModel):
     created_at: DateTimeType = Field(description="The creation date for this SNL.")
 
 
+@arrow_incompatible
 class SNLDict(BaseModel):
     """Pydantic validated dictionary for SNL"""
 
@@ -93,6 +97,7 @@ class SNLDict(BaseModel):
     snl_id: str = Field(..., description="The SNL ID for this entry")
 
 
+@arrow_incompatible
 class ProvenanceDoc(PropertyDoc):
     """
     A provenance property block
