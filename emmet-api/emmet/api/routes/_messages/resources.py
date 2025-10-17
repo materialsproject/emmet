@@ -5,6 +5,7 @@ from emmet.api.routes._messages.query_operator import (
 )
 from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery, SortQuery
 from emmet.core._messages import MessagesDoc
+from emmet.api.core.settings import MAPISettings
 
 
 def messages_resource(messages_store):
@@ -21,6 +22,7 @@ def messages_resource(messages_store):
             ),
         ],
         include_in_schema=False,
+        timeout=MAPISettings().TIMEOUT,
     )
 
     return resource

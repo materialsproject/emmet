@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime
 from typing import Annotated
 
 from pydantic import BaseModel, BeforeValidator, Field, PlainSerializer
@@ -19,7 +18,7 @@ from emmet.core.types.pymatgen_types.computed_entries_adapter import (
     ComputedStructureEntryType,
 )
 from emmet.core.types.pymatgen_types.phase_diagram_adapter import PhaseDiagramType
-from emmet.core.types.typing import IdentifierType
+from emmet.core.types.typing import DateTimeType, IdentifierType
 from emmet.core.utils import type_override, utcnow
 from emmet.core.vasp.calc_types.enums import RunType
 
@@ -328,7 +327,6 @@ class PhaseDiagramDoc(BaseModel):
         description="Phase diagram for the chemical system.",
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation update for this property",
-        default_factory=utcnow,
     )

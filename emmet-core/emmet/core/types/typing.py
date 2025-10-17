@@ -32,12 +32,24 @@ FSPathType: TypeAlias = Annotated[
 ]
 """Type of a generic path-like object"""
 
+
 DateTimeType: TypeAlias = Annotated[
     datetime,
     Field(default_factory=utcnow),
-    BeforeValidator(lambda x: convert_datetime(x)),
+    BeforeValidator(convert_datetime),
 ]
 """Datetime serde."""
+
+NullableDateTimeType: TypeAlias = Annotated[
+    datetime | None,
+    Field(default_factory=utcnow),
+    BeforeValidator(convert_datetime),
+]
+"""Nullable datetime serde.
+
+See: https://docs.pydantic.dev/latest/concepts/fields/#the-annotated-pattern
+for why this separate class is necesary instead of `DateTimeType | None`
+"""
 
 
 def _fault_tolerant_id_serde(val: Any, serialize: bool = False) -> Any:

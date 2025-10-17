@@ -1,7 +1,5 @@
 """Core definition of a CorrectedEntriesDoc Document"""
 
-from datetime import datetime
-
 from pydantic import Field
 
 from emmet.core.base import EmmetBaseModel
@@ -9,7 +7,8 @@ from emmet.core.types.enums import ThermoType
 from emmet.core.types.pymatgen_types.computed_entries_adapter import (
     ComputedStructureEntryType,
 )
-from emmet.core.utils import type_override, utcnow
+from emmet.core.utils import type_override
+from emmet.core.types.typing import DateTimeType
 from emmet.core.vasp.calc_types.enums import RunType
 
 
@@ -34,7 +33,6 @@ class CorrectedEntriesDoc(EmmetBaseModel):
         )
     )
 
-    last_updated: datetime = Field(
+    last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation update for this property.",
-        default_factory=utcnow,
     )

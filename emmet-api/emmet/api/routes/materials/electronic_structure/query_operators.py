@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from sys import version_info
-from typing import TYPE_CHECKING
+from typing import Literal
 
 from fastapi import HTTPException, Query
 from emmet.api.query_operator import QueryOperator
@@ -12,14 +11,7 @@ from pymatgen.core.periodic_table import Element
 from pymatgen.electronic_structure.core import OrbitalType, Spin
 
 from emmet.core.electronic_structure import BSPathType, DOSProjectionType
-
-if TYPE_CHECKING:
-    from emmet.core.mpid import MPID, AlphaID
-
-if version_info >= (3, 8):
-    from typing import Literal  # type: ignore
-else:
-    from typing_extensions import Literal  # type: ignore
+from emmet.core.mpid import MPID, AlphaID
 
 
 class ESSummaryDataQuery(QueryOperator):

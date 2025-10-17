@@ -31,7 +31,7 @@ from emmet.core.types.pymatgen_types.computed_entries_adapter import (
     ComputedStructureEntryType,
 )
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
-from emmet.core.types.typing import DateTimeType, IdentifierType
+from emmet.core.types.typing import DateTimeType, IdentifierType, NullableDateTimeType
 from emmet.core.utils import jsanitize, type_override, utcnow
 from emmet.core.vasp.calc_types import (
     CalcType,
@@ -288,8 +288,8 @@ class CoreTaskDoc(StructureMetadata):
     calc_type: CalcType | None = Field(
         None, description="The functional and task type used in the calculation."
     )
-    completed_at: DateTimeType | None = Field(
-        None, description="Timestamp for when this task was completed"
+    completed_at: NullableDateTimeType = Field(
+        description="Timestamp for when this task was completed"
     )
     dir_name: str | None = Field(None, description="The directory for this VASP task")
     icsd_id: int | None = Field(
