@@ -276,23 +276,6 @@ class ProjectedDos(BaseModel):
             },
         )
 
-    # def to_pmg_like(
-    #     self, structure: StructureType
-    # ) -> dict[PeriodicSite, dict[Orbital, dict[Spin, np.ndarray]]]:
-    #     """Construct a pymatgen-like representation of the projected DOS."""
-    #     pdos: dict[PeriodicSite, dict[Orbital, dict[Spin, np.ndarray]]] = {}
-    #     for i, dens in enumerate(self.spin_up_densities or []):
-    #         if (site := structure[self.site_index[i]]) not in pdos:  # type: ignore[index]
-    #             pdos[site] = {}
-    #         if (orb := Orbital[self.orbital[i]]) not in pdos[site]:  # type: ignore[index,misc]
-    #             pdos[site][orb] = {}
-    #         pdos[site][orb][Spin.up] = np.array(dens)  # type: ignore[index,misc]
-    #         if self.spin_down_densities and all(
-    #             sdd for sdd in self.spin_down_densities
-    #         ):
-    #             pdos[site][orb][Spin.down] = np.array(self.spin_down_densities[i])
-    #     return pdos
-
     def to_pmg_like(
         self, structure: StructureType
     ) -> dict[PeriodicSite, dict[Orbital, dict[Spin, np.ndarray]]]:
