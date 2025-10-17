@@ -38,11 +38,11 @@ ddtrace==3.16.0
     # via emmet-api (pyproject.toml)
 dnspython==2.8.0
     # via pymongo
-emmet-core==0.85.1
+emmet-core==0.86.0rc0
     # via emmet-api (pyproject.toml)
 envier==0.6.1
     # via ddtrace
-fastapi==0.118.3
+fastapi==0.119.0
     # via emmet-api (pyproject.toml)
 fonttools==4.60.1
     # via matplotlib
@@ -207,7 +207,7 @@ sympy==1.14.0
     # via pymatgen
 tabulate==0.9.0
     # via pymatgen
-tifffile==2025.10.4
+tifffile==2025.10.16
     # via scikit-image
 tqdm==4.67.1
     # via pymatgen
