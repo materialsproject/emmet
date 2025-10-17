@@ -37,6 +37,7 @@ class Author(BaseModel):
     name: str | None = Field(None)
     email: str | None = Field(None)
 
+
 @arrow_incompatible
 class History(BaseModel):
     """
@@ -54,6 +55,7 @@ class History(BaseModel):
     def str_to_dict(cls, v: dict | str | None) -> dict | None:
         """Ensure description is dict if populated."""
         return {"string": v} if isinstance(v, str) else v
+
 
 @arrow_incompatible
 class SNLAbout(BaseModel):
@@ -85,6 +87,7 @@ class SNLAbout(BaseModel):
 
     created_at: DateTimeType = Field(description="The creation date for this SNL.")
 
+
 @arrow_incompatible
 class SNLDict(BaseModel):
     """Pydantic validated dictionary for SNL"""
@@ -92,6 +95,7 @@ class SNLDict(BaseModel):
     about: SNLAbout
 
     snl_id: str = Field(..., description="The SNL ID for this entry")
+
 
 @arrow_incompatible
 class ProvenanceDoc(PropertyDoc):

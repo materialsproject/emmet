@@ -1,12 +1,12 @@
-
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
 
 from emmet.core.types.enums import ValueEnum
 
+
 class LegacyEOSModel(ValueEnum):
     """EOS models used to fit legacy data.
-    
+
     Is overly permissive in allowing for
     spelling mistakes present in legacy data.
     """
@@ -24,7 +24,7 @@ class LegacyEOSModel(ValueEnum):
     def _missing_(cls, value):
         if value == "pourier_tarantola":
             return cls.POIRIER_TARANTOLA
-            
+
 
 class EOSType(TypedDict):
     V0: float
@@ -49,7 +49,7 @@ class EOSDoc(BaseModel):
         description="Common volumes in A³/atom that the equations of state are plotted with.",
     )
 
-    eos: dict[LegacyEOSModel,EOSType] | None = Field(
+    eos: dict[LegacyEOSModel, EOSType] | None = Field(
         None,
         description="Data for each type of equation of state.",
     )
