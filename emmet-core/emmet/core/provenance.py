@@ -285,74 +285,23 @@ class ProvenanceDoc(PropertyDoc):
 
 
 def _migrate_legacy_data(cls, config: dict[str, Any]):
+    """Migrate legacy provenance and SNL data as a classmethod.
 
-    def flatten_nested(
-        descs: list, entry: dict | None, depth: int, remark: str | None = None
-    ):
+    Parameters
+    -----------
+    cls : class object
+    config : class kwargs
 
-        if not entry:
-            descs.append(None)
-            return
-
-        elif nested_hist := entry.pop("history", []):
-            for sub_entry in nested_hist:
-                flatten_nested(
-                    descs, sub_entry, depth + 1, remark=f"Nested history depth {depth}"
-                )
-
-        elif init_args := entry.get("init_args"):
-            flatten_nested(descs, init_args, depth, remark=f"init_args-depth-{depth}")
-
-        # always append current entry even if there were nested fields
-        orig_remark = entry.pop("remark", None)
-        if not remark:
-            remark = orig_remark
-
-        for k in ("class", "module"):
-            entry[f"monty_{k}"] = entry.pop(f"@{k}", None)
-
-        if "lattice" in entry:
-            entry["lattice"] = Lattice.from_dict(entry["lattice"])
-
-        for k in ("sites", "input_structure"):
-            if c := entry.get(k):
-                try:
-                    if all(c.get(x) for x in ("sites", "lattice")):
-                        entry[k] = Structure.from_sites(
-                            [
-                                PeriodicSite.from_dict(
-                                    site, lattice=Lattice.from_dict(c["lattice"])
-                                )
-                                for site in c["sites"]
-                            ]
-                        )
-                    else:
-                        entry[k] = Structure.from_sites(
-                            [
-                                PeriodicSite.from_dict(
-                                    site, lattice=entry.get("lattice")
-                                )
-                                for site in c
-                            ]
-                        )
-                except Exception:
-                    entry[k] = None
-
-        if isinstance(entry.get("species_map"), list):
-            # Some of these appear to be .items()
-            entry["species_map"] = {v[0]: v[1] for v in entry["species_map"]}
-
-        if isinstance(cif_data := entry.get("cif_data"), dict):
-            # CIF fields from pymatgen are too heterogeneous to schematize.
-            entry["cif_data"] = json.dumps(cif_data)
-
-        descs.append(ProvenanceDescription(**entry, remark=remark))
+    Returns
+    -----------
+    New instance of `cls`
+    """
 
     if top_level_history := config.get("history"):
         history: list[History] = []
         for inp_hist in top_level_history:
             descs: list = []
-            flatten_nested(descs, inp_hist.get("description"), 0)
+            _flatten_nested_descriptions(descs, inp_hist.get("description"), 0)
             history.extend(
                 [
                     History(
@@ -365,3 +314,87 @@ def _migrate_legacy_data(cls, config: dict[str, Any]):
         config["history"] = history
 
     return cls(**config)
+
+
+def _flatten_nested_descriptions(
+    descs: list[ProvenanceDescription | None],
+    entry: dict[str, Any] | None,
+    depth: int,
+    remark: str | None = None,
+) -> None:
+    """Flatten legacy provenance description data.
+
+    Parameters
+    -----------
+    descs : list[ProvenanceDescription | None]
+        Running list of provenance description data.
+    entry : dict[str,Any] or None
+        The current description
+    depth : int
+        Used to indicate how far recursively into the history
+        this field is nested.
+    remark : str or None (default)
+        Optional remark to supersede that in entry.
+
+    Returns
+    -----------
+    None : all data goes in to `descs`
+    """
+
+    if not entry:
+        descs.append(None)
+        return
+
+    elif nested_hist := entry.pop("history", []):
+        for sub_entry in nested_hist:
+            _flatten_nested_descriptions(
+                descs, sub_entry, depth + 1, remark=f"Nested history depth {depth}"
+            )
+
+    elif init_args := entry.get("init_args"):
+        _flatten_nested_descriptions(
+            descs, init_args, depth + 1, remark=f"init_args-depth-{depth}"
+        )
+
+    # always append current entry even if there were nested fields
+    orig_remark = entry.pop("remark", None)
+    if not remark:
+        remark = orig_remark
+
+    for k in ("class", "module"):
+        entry[f"monty_{k}"] = entry.pop(f"@{k}", None)
+
+    if "lattice" in entry:
+        entry["lattice"] = Lattice.from_dict(entry["lattice"])
+
+    for k in ("sites", "input_structure"):
+        if c := entry.get(k):
+            try:
+                if all(c.get(x) for x in ("sites", "lattice")):
+                    entry[k] = Structure.from_sites(
+                        [
+                            PeriodicSite.from_dict(
+                                site, lattice=Lattice.from_dict(c["lattice"])
+                            )
+                            for site in c["sites"]
+                        ]
+                    )
+                else:
+                    entry[k] = Structure.from_sites(
+                        [
+                            PeriodicSite.from_dict(site, lattice=entry.get("lattice"))
+                            for site in c
+                        ]
+                    )
+            except Exception:
+                entry[k] = None
+
+    if isinstance(entry.get("species_map"), list):
+        # Some of these appear to be .items()
+        entry["species_map"] = {v[0]: v[1] for v in entry["species_map"]}
+
+    if isinstance(cif_data := entry.get("cif_data"), dict):
+        # CIF fields from pymatgen are too heterogeneous to schematize.
+        entry["cif_data"] = json.dumps(cif_data)
+
+    descs.append(ProvenanceDescription(**entry, remark=remark))
