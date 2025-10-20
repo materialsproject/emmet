@@ -2,21 +2,26 @@
 
 from __future__ import annotations
 
+import json
 import warnings
 from typing import TYPE_CHECKING, Any
 
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
 from pydantic import BaseModel, Field, field_validator
-from pymatgen.core.structure import Structure
+from pymatgen.core import Lattice, Structure, PeriodicSite
 
 from emmet.core.material_property import PropertyDoc
+from emmet.core.math import Matrix3D
+from emmet.core.symmetry import SymmetryData
 from emmet.core.types.enums import ValueEnum
-from emmet.core.types.typing import DateTimeType
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
+from emmet.core.types.pymatgen_types.lattice_adapter import LatticeType
+from emmet.core.types.typing import DateTimeType, IdentifierType
 from emmet.core.utils import arrow_incompatible
 
 if TYPE_CHECKING:
-    from emmet.core.types.typing import IdentifierType
+    from typing_extensions import Self
 
 
 class Database(ValueEnum):
@@ -38,7 +43,53 @@ class Author(BaseModel):
     email: str | None = Field(None)
 
 
-@arrow_incompatible
+class TransformationMeta(BaseModel):
+    """Schema for transformation fields in history.description."""
+
+    transformation_name : str | None = None
+    formula : str | None = None
+    structureid : int | None = None
+
+class ProvenanceDescription(BaseModel):
+    """Schema for heterogeneous provenance description data."""
+
+    monty_class : str | None = None
+    monty_module : str | None = None
+    IZA_code : str | None = None
+    algo : int | None = None
+    cif_data : str | None = None
+    crystal_id : int | None = None
+    datetime : str | None = None
+    description : str | None = None
+    disordered_crystal_id : int | None = None
+    experimental : bool = False
+    fraction_to_remove : float | None = None
+    fw_id : int | None = None
+    icsd_id : int | None = None
+    id : str | None = None
+    input_structure : StructureType | None = None
+    lattice : LatticeType | None = None
+    materialsid : IdentifierType | None = None
+    name : str | None = None
+    original_file : str | None = None
+    oxidation_states : dict[str,int] | None = None
+    query : str | None = None
+    remark : str | None = None
+    scaling_matrix : Matrix3D | None = None
+    sites : StructureType | None = None
+    source : str | None = None
+    spacegroup : SymmetryData | None = None
+    specie_to_remove : str | None = None
+    species_map : dict[str,str] | None = None
+    species_to_remove : list[str] | None = None 
+    string : str | None = None
+    structureid : int | None = None
+    task_id : str | None = None
+    task_type : str | None = None
+    transformation_name : str | None = None
+    transformations : list[TransformationMeta] | None = None
+    version : str | None = None
+
 class History(BaseModel):
     """
     History of the material provenance
@@ -46,7 +97,7 @@ class History(BaseModel):
 
     name: str
     url: str
-    description: dict[str, Any] | None = Field(
+    description: ProvenanceDescription | None = Field(
         None, description="Dictionary of extra data for this history node."
     )
 
@@ -56,8 +107,6 @@ class History(BaseModel):
         """Ensure description is dict if populated."""
         return {"string": v} if isinstance(v, str) else v
 
-
-@arrow_incompatible
 class SNLAbout(BaseModel):
     """A data dictionary defining extra fields in a SNL"""
 
@@ -87,8 +136,12 @@ class SNLAbout(BaseModel):
 
     created_at: DateTimeType = Field(description="The creation date for this SNL.")
 
+    @classmethod
+    def migrate_legacy_data(cls, config : dict[str,Any]) -> Self:
+        """Migrate legacy SNL data with free-form JSON values to schematized."""
+        return _migrate_legacy_data(cls, config)
 
-@arrow_incompatible
+
 class SNLDict(BaseModel):
     """Pydantic validated dictionary for SNL"""
 
@@ -97,7 +150,6 @@ class SNLDict(BaseModel):
     snl_id: str = Field(..., description="The SNL ID for this entry")
 
 
-@arrow_incompatible
 class ProvenanceDoc(PropertyDoc):
     """
     A provenance property block
@@ -194,7 +246,7 @@ class ProvenanceDoc(PropertyDoc):
         for snl in snls:
             for entry in snl.about.history:  # type: ignore[union-attr]
                 if entry.description is not None:
-                    exp_vals.append(entry.description.get("experimental", False))
+                    exp_vals.append(entry.description.experimental)
 
         experimental = any(exp_vals)
 
@@ -223,3 +275,82 @@ class ProvenanceDoc(PropertyDoc):
         return super().from_structure(
             material_id=material_id, meta_structure=structure, **fields, **kwargs
         )
+    
+    @classmethod
+    def migrate_legacy_data(cls, config : dict[str,Any]) -> Self:
+        """Migrate legacy provenance data with free-form JSON values to schematized."""
+        return _migrate_legacy_data(cls, config)
+
+def _migrate_legacy_data(cls, config : dict[str,Any]):
+
+    def flatten_nested(descs : list, entry : dict | None, depth : int, remark : str | None = None):
+        
+        if not entry:
+            descs.append(None)
+            return
+
+        elif (nested_hist := entry.pop("history",[])):
+            for sub_entry in nested_hist:
+                flatten_nested(descs, sub_entry, depth+1, remark=f"Nested history depth {depth}")
+
+        elif (init_args := entry.get("init_args")):
+            flatten_nested(descs,init_args, depth, remark=f"init_args-depth-{depth}")
+        
+        # always append current entry even if there were nested fields
+        orig_remark = entry.pop("remark", None)
+        if not remark:
+            remark = orig_remark
+
+        for k in ("class","module"):
+            entry[f"monty_{k}"] = entry.pop(f"@{k}",None)
+
+        if "lattice" in entry:
+            entry["lattice"] = Lattice.from_dict(entry["lattice"])
+
+        for k in ("sites","input_structure"):
+            if (c := entry.get(k)):
+                try:
+                    if all(c.get(x) for x in ("sites","lattice")):
+                        entry[k] = Structure.from_sites([
+                            PeriodicSite.from_dict(site, lattice=Lattice.from_dict(c["lattice"]))
+                            for site in c["sites"]
+                        ])
+                    else:
+                        entry[k] = Structure.from_sites([
+                            PeriodicSite.from_dict(site, lattice=entry.get("lattice")) for site in c
+                        ])
+                except Exception:
+                    entry[k] = None
+        
+        if isinstance(entry.get("species_map"),list):
+            # Some of these appear to be .items()
+            entry["species_map"] = {v[0]: v[1] for v in entry["species_map"]}
+
+        if isinstance(cif_data := entry.get("cif_data"),dict):
+            # CIF fields from pymatgen are too heterogeneous to schematize.
+            entry["cif_data"] = json.dumps(cif_data)
+
+        descs.append(
+            ProvenanceDescription(
+                **entry,
+                remark = remark
+            )
+        )
+
+    if (top_level_history := config.get("history")):
+        history : list[dict[str,Any]] = []
+        for inp_hist in top_level_history:
+            descs : list = []
+            flatten_nested(descs, inp_hist.get("description"), 0)
+            history.extend(
+                [
+                    History(
+                        **{k: inp_hist.get(k) for k in ("name","url")},
+                        description = desc
+                    )
+                    for desc in descs
+                ]
+            )
+        config["history"] = history
+
+    return cls(**config)

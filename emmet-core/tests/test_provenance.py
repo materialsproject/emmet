@@ -53,14 +53,14 @@ def test_from_snls(snls, structure):
     }
 
     # Test experimental detection
-    snls[0].about.history[0].description["experimental"] = True
+    snls[0].about.history[0].description.experimental = True
     assert (
         ProvenanceDoc.from_SNLs(
             material_id="mp-3", snls=snls, structure=structure, deprecated=False
         ).theoretical
         is False
     )
-    assert doc.dict(exclude_none=True)["property_name"] == "provenance"
+    assert doc.model_dump()["property_name"] == "provenance"
 
 
 @pytest.mark.skipif(
