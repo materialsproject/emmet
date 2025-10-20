@@ -51,7 +51,7 @@ csscompressor==0.9.5
     # via mkdocs-minify-plugin
 cycler==0.12.1
     # via matplotlib
-ddtrace==3.16.0
+ddtrace==3.16.1
     # via emmet-api (pyproject.toml)
 distlib==0.4.0
     # via virtualenv
@@ -63,7 +63,7 @@ envier==0.6.1
     # via ddtrace
 execnet==2.1.1
     # via pytest-xdist
-fastapi==0.118.3
+fastapi==0.119.1
     # via emmet-api (pyproject.toml)
 filelock==3.20.0
     # via virtualenv
@@ -98,7 +98,7 @@ imageio==2.37.0
     # via scikit-image
 importlib-metadata==8.7.0
     # via opentelemetry-api
-iniconfig==2.1.0
+iniconfig==2.3.0
     # via pytest
 itsdangerous==2.2.0
     # via starlette
@@ -195,7 +195,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-api (pyproject.toml)
     #   mypy
-narwhals==2.8.0
+narwhals==2.9.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -429,7 +429,7 @@ urllib3==2.5.0
     #   botocore
     #   requests
     #   types-requests
-uvicorn==0.37.0
+uvicorn==0.38.0
     # via emmet-api (pyproject.toml)
 virtualenv==20.35.3
     # via pre-commit
@@ -439,7 +439,7 @@ wcmatch==10.1
     # via mkdocs-awesome-pages-plugin
 wincertstore==0.2.1
     # via emmet-api (pyproject.toml)
-wrapt==1.17.3
+wrapt==2.0.0
     # via ddtrace
 zipp==3.23.0
     # via importlib-metadata
