@@ -389,9 +389,8 @@ class AlphaID(str):
         return new_cls
 
     @property
-    def _padded(
-        self,
-    ) -> str:
+    def padded(self) -> str:
+        """Return the padded string identifier (without prefixing)."""
         padded = max(0, self._padlen - len(self._identifier)) * self._alphabet[0]
         return f"{padded}{self._identifier}"
 
