@@ -2,6 +2,7 @@ from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
 from emmet.api.resource import ReadOnlyResource
 
 from emmet.api.routes.materials.materials.query_operators import (
+    BatchIdQuery,
     ChemsysQuery,
     ElementsQuery,
     FormulaQuery,
@@ -26,6 +27,7 @@ def task_resource(task_store):
         task_store,
         TaskDoc,
         query_operators=[
+            BatchIdQuery(),
             FormulaQuery(),
             ChemsysQuery(),
             ElementsQuery(),
