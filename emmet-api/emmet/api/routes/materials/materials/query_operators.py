@@ -474,6 +474,9 @@ class LicenseQuery(QueryOperator):
 class BatchIdQuery(QueryOperator):
     """Method to generate a query on batch_id"""
 
+    def __init__(self, field="builder_meta.batch_id"):
+        self._field = field
+
     def query(
         self,
         batch_id: str | None = Query(
@@ -492,10 +495,6 @@ class BatchIdQuery(QueryOperator):
             None,
             description="Exclude a comma-separated list of batch identifiers",
         ),
-        batch_id_field: str = Query(
-            "builder_meta.batch_id",
-            description="Field name to query against for batch_id",
-        ),
     ) -> STORE_PARAMS:
         # NOTE: maggma's StringQueryOperator doesn't work for nested fields?
         all_kwargs = [batch_id, batch_id_not_eq, batch_id_eq_any, batch_id_neq_any]
@@ -506,7 +505,7 @@ class BatchIdQuery(QueryOperator):
             )
 
         crit = {}  # type: dict
-        k = batch_id_field
+        k = self._field
         if batch_id:
             crit[k] = batch_id
         elif batch_id_not_eq:
