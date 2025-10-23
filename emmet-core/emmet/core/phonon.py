@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import Enum
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
 import numpy as np
 import yaml  # type: ignore[import-untyped]
@@ -16,9 +16,8 @@ from pydantic import (
     Field,
     PrivateAttr,
     computed_field,
-    field_serializer,
-    field_validator,
-    model_validator,
+    PlainSerializer,
+    BeforeValidator,
 )
 from pymatgen.core import Lattice, Structure
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine, Kpoint
@@ -145,6 +144,25 @@ class ShreddedEigendisplacements(TypedDict):
     imag: list[list[list[tuple[float, float, float]]]]
 
 
+_EIGENMODE_CTYPE = list[list[list[tuple[complex, complex, complex]]]]
+_EIGENMODE_RTYPE = list[list[list[tuple[float, float, float]]]]
+
+
+def _ser_eigenmode(eigenmode: _EIGENMODE_CTYPE) -> dict[str, _EIGENMODE_RTYPE]:
+    eigv = np.array(eigenmode)
+    return {k: getattr(eigv, k).tolist() for k in ("real", "imag")}
+
+
+def _deser_eigenmode(
+    dct: _EIGENMODE_CTYPE | dict[str, _EIGENMODE_RTYPE],
+) -> _EIGENMODE_CTYPE:
+    if isinstance(dct, dict):
+        real = np.array(dct["real"])
+        imag = np.array(dct["imag"])
+        return real + 1.0j * imag
+    return dct
+
+
 @type_override({"eigendisplacements": ShreddedEigendisplacements})
 class PhononBS(BandStructure):
     """Define schema of pymatgen phonon band structure."""
@@ -159,29 +177,13 @@ class PhononBS(BandStructure):
         validation_alias="bands",
     )
 
-    eigendisplacements: list[list[list[tuple[complex, complex, complex]]]] | None = (
-        Field(None, description="Phonon eigendisplacements in Cartesian coordinates.")
-    )
+    eigendisplacements: Annotated[
+        _EIGENMODE_CTYPE | None,
+        BeforeValidator(_deser_eigenmode),
+        PlainSerializer(_ser_eigenmode),
+    ] = Field(None, description="Phonon eigendisplacements in Cartesian coordinates.")
 
     _primitive_structure: Structure | None = PrivateAttr(None)
-
-    @field_serializer("eigendisplacements", mode="wrap")
-    def eigendisplacements_serializer(self, eigen, default_serializer, info):
-        arr = np.array(default_serializer(eigen, info))
-        return {
-            "real": arr.real.tolist(),
-            "imag": arr.imag.tolist(),
-        }
-
-    @field_validator("eigendisplacements", mode="before")
-    def eigendisplacements_deserializer(cls, eigen):
-        if isinstance(eigen, dict) and all(
-            eigen.get(k) is not None for k in ("real", "imag")
-        ):
-            real = np.array(eigen["real"])
-            imag = np.array(eigen["imag"])
-            return real + 1.0j * imag
-        return eigen
 
     @classmethod
     def from_pmg(cls, config: PhononBandStructureSymmLine | dict) -> Any:
@@ -780,12 +782,6 @@ class PhononBSDOSDoc(PhononBSDOSTask):
     task_ids: list[str] | None = Field(
         None, description="A list of identifiers that were used to build this document."
     )
-
-    @model_validator(mode="after")
-    def match_id_fields(self) -> Self:
-        """Ensure that `material_id` aliases inherited `identifier` field."""
-        self.identifier = self.material_id
-        return self
 
 
 class PhononWarnings(DocEnum):

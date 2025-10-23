@@ -53,8 +53,8 @@ class TransformationMeta(BaseModel):
 class ProvenanceDescription(BaseModel):
     """Schema for heterogeneous provenance description data."""
 
-    monty_class: str | None = None
-    monty_module: str | None = None
+    monty_class: str | None = Field(None, validation_alias="@class")
+    monty_module: str | None = Field(None, validation_alias="@module")
     IZA_code: str | None = None
     algo: int | None = None
     cif_data: str | None = None
@@ -360,9 +360,6 @@ def _flatten_nested_descriptions(
     orig_remark = entry.pop("remark", None)
     if not remark:
         remark = orig_remark
-
-    for k in ("class", "module"):
-        entry[f"monty_{k}"] = entry.pop(f"@{k}", None)
 
     if "lattice" in entry:
         entry["lattice"] = Lattice.from_dict(entry["lattice"])
