@@ -7,7 +7,7 @@ import os
 from datetime import datetime
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Annotated
 
 import numpy as np
 import orjson
@@ -16,9 +16,8 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
-    field_serializer,
-    field_validator,
     model_validator,
+    BeforeValidator,
 )
 from pymatgen.command_line.bader_caller import bader_analysis_from_path
 from pymatgen.command_line.chargemol_caller import ChargemolAnalysis
@@ -34,11 +33,13 @@ from typing_extensions import NotRequired, TypedDict
 
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
 from emmet.core.types.enums import StoreTrajectoryOption, TaskState, VaspObject
+from emmet.core.types.pymatgen_types.bader import BaderAnalysis
 from emmet.core.types.pymatgen_types.kpoints_adapter import KpointsType
 from emmet.core.types.pymatgen_types.lattice_adapter import LatticeType
 from emmet.core.types.pymatgen_types.outcar_adapter import OutcarType
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
-from emmet.core.utils import jsanitize, type_override
+from emmet.core.types.typing import JsonDictType, _dict_items_zipper
+from emmet.core.utils import type_override
 from emmet.core.vasp.calc_types import (
     CalcType,
     RunType,
@@ -176,7 +177,7 @@ class CalculationInput(CalculationBaseModel):
         magnetic_moments (list of floats) : on-site magnetic moments
     """
 
-    incar: dict[str, Any] | None = Field(
+    incar: JsonDictType = Field(
         None, description="INCAR parameters for the calculation"
     )
     kpoints: KpointsType | None = Field(None, description="KPOINTS for the calculation")
@@ -190,7 +191,7 @@ class CalculationInput(CalculationBaseModel):
     potcar_type: list[str] | None = Field(
         None, description="List of POTCAR functional types."
     )
-    parameters: dict | None = Field(None, description="Parameters from vasprun")
+    parameters: JsonDictType = Field(None, description="Parameters from vasprun")
     lattice_rec: LatticeType | None = Field(
         None, description="Reciprocal lattice of the structure"
     )
@@ -200,36 +201,9 @@ class CalculationInput(CalculationBaseModel):
     is_hubbard: bool = Field(
         default=False, description="Is this a Hubbard +U calculation"
     )
-    hubbards: dict[str, float] | None = Field(
-        None, description="The hubbard parameters used"
-    )
-
-    @field_validator("hubbards", mode="before")
-    def hubbards_deserializer(cls, hubbards):
-        if isinstance(hubbards, list):
-            hubbards = {k: v for k, v in hubbards}
-
-        return hubbards
-
-    @field_serializer("incar", "parameters", mode="wrap")
-    def incar_params_serializer(self, d, default_serializer, info):
-        default_serialized_object = default_serializer(d, info)
-
-        format = info.context.get("format") if info.context else None
-        if format == "arrow":
-            return orjson.dumps(default_serialized_object)
-
-        return default_serialized_object
-
-    @field_validator("incar", "parameters", mode="before")
-    def incar_params_deserializer(cls, d):
-        if isinstance(d, str):
-            d = orjson.loads(d)
-
-        if d and d == "parameters":
-            d = {k.strip(): v for k, v in d.items()}
-
-        return d
+    hubbards: Annotated[
+        dict[str, float] | None, BeforeValidator(_dict_items_zipper)
+    ] = Field(None, description="The hubbard parameters used")
 
     @model_validator(mode="before")
     @classmethod
@@ -552,6 +526,32 @@ class IonicStep(BaseModel):  # type: ignore
         return self
 
 
+def _deser_dos_properties(
+    dos_properties: list[Any] | dict[str, Any] | None,
+) -> dict[str, dict[str, dict[str, float]]] | None:
+    if dos_properties:
+        if isinstance(dos_properties, list):
+            dos_properties = {
+                element: {
+                    orbital: {key: value for key, value in property}
+                    for orbital, property in properties
+                }
+                for element, properties in dos_properties
+            }
+        elif isinstance(dos_properties, dict) and isinstance(
+            next(iter(dos_properties.values())), list
+        ):
+            dos_properties = {
+                element: {
+                    orbital: {key: value for key, value in property}
+                    for orbital, property in properties
+                }
+                for element, properties in dos_properties.items()
+            }
+
+    return dos_properties  # type: ignore[return-value]
+
+
 class CoreCalculationOutput(BaseModel):
     """Document defining core VASP calculation outputs."""
 
@@ -568,7 +568,10 @@ class CoreCalculationOutput(BaseModel):
     direct_gap: float | None = Field(
         None, description="Direct band gap in eV (if system is not metallic)"
     )
-    dos_properties: dict[str, dict[str, dict[str, float]]] | None = Field(
+    dos_properties: Annotated[
+        dict[str, dict[str, dict[str, float]]] | None,
+        BeforeValidator(_deser_dos_properties),
+    ] = Field(
         None,
         description="Element- and orbital-projected band properties (in eV) for the "
         "DOS. All properties are with respect to the Fermi level.",
@@ -624,27 +627,6 @@ class CoreCalculationOutput(BaseModel):
     vbm: float | None = Field(
         None, description="The valence band maximum in eV (if system is not metallic)"
     )
-
-    @field_validator("dos_properties", mode="before")
-    def dos_properties_deserializer(cls, dos_properties):
-        if dos_properties and isinstance(dos_properties, list):
-            dos_properties = {
-                element: {
-                    orbital: {key: value for key, value in property}
-                    for orbital, property in properties
-                }
-                for element, properties in dos_properties
-            }
-        elif dos_properties and isinstance(next(iter(dos_properties.values())), list):
-            dos_properties = {
-                element: {
-                    orbital: {key: value for key, value in property}
-                    for orbital, property in properties
-                }
-                for element, properties in dos_properties.items()
-            }
-
-        return dos_properties
 
 
 class CalculationOutput(CoreCalculationOutput):
@@ -853,7 +835,7 @@ class CalculationOutput(CoreCalculationOutput):
         )
 
 
-@type_override({"bader": str, "ddec6": str})
+@type_override({"ddec6": str})
 class Calculation(CalculationBaseModel):
     """Full VASP calculation inputs and outputs."""
 
@@ -863,9 +845,10 @@ class Calculation(CalculationBaseModel):
     vasp_version: str | None = Field(
         None, description="VASP version used to perform the calculation"
     )
-    has_vasp_completed: TaskState | None = Field(
-        None, description="Whether VASP completed the calculation successfully"
-    )
+    has_vasp_completed: Annotated[
+        TaskState | None,
+        BeforeValidator(lambda v: TaskState(v) if v is not None else None),
+    ] = Field(None, description="Whether VASP completed the calculation successfully")
     input: CalculationInput | None = Field(
         None, description="VASP input settings for the calculation"
     )
@@ -878,13 +861,17 @@ class Calculation(CalculationBaseModel):
     task_name: str | None = Field(
         None, description="Name of task given by custodian (e.g., relax1, relax2)"
     )
-    output_file_paths: dict[str, str] | None = Field(
+    output_file_paths: Annotated[
+        dict[str, str] | None, BeforeValidator(_dict_items_zipper)
+    ] = Field(
         None,
         description="Paths (relative to dir_name) of the VASP output files "
         "associated with this calculation",
     )
-    bader: dict | None = Field(None, description="Output from bader charge analysis")
-    ddec6: dict | None = Field(None, description="Output from DDEC6 charge analysis")
+    bader: BaderAnalysis | None = Field(
+        None, description="Output from bader charge analysis"
+    )
+    ddec6: JsonDictType = Field(None, description="Output from DDEC6 charge analysis")
     run_type: RunType | None = Field(
         None, description="Calculation run type (e.g., HF, HSE06, PBE)"
     )
@@ -894,34 +881,6 @@ class Calculation(CalculationBaseModel):
     calc_type: CalcType | None = Field(
         None, description="Return calculation type (run type + task_type)."
     )
-
-    @field_validator("has_vasp_completed", mode="before")
-    @classmethod
-    def ensure_enum(cls, v: Any) -> TaskState:
-        if isinstance(v, bool):
-            v = TaskState.SUCCESS if v else TaskState.FAILED
-        return v
-
-    @field_serializer("bader", "ddec6", mode="wrap")
-    def bader_ddec6__serializer(self, d, default_serializer, info):
-        default_serialized_object = default_serializer(d, info)
-
-        format = info.context.get("format") if info.context else None
-        if format == "arrow":
-            return orjson.dumps(jsanitize(default_serialized_object, allow_bson=True))
-
-        return default_serialized_object
-
-    @field_validator("bader", "ddec6", mode="before")
-    def bader_ddec6_deserializer(cls, d):
-        return orjson.loads(d) if isinstance(d, str) else d
-
-    @field_validator("output_file_paths", mode="before")
-    def output_fps_deserializer(cls, output_fps):
-        if isinstance(output_fps, list):
-            output_fps = {k: v for k, v in output_fps}
-
-        return output_fps
 
     @classmethod
     def from_vasp_files(

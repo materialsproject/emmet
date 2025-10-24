@@ -162,6 +162,12 @@ class TaskState(ValueEnum):
     FAILED = "failed"
     ERROR = "error"
 
+    @classmethod
+    def _missing_(cls, value):
+        if isinstance(value, bool):
+            return cls.SUCCESS if value else cls.FAILED
+        super()._missing_(value)
+
 
 class DeprecationMessage(DocEnum):
     MANUAL = "M", "Manual deprecation"
