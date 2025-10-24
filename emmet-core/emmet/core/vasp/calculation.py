@@ -529,24 +529,25 @@ class IonicStep(BaseModel):  # type: ignore
 def _deser_dos_properties(
     dos_properties: list[Any] | dict[str, Any] | None,
 ) -> dict[str, dict[str, dict[str, float]]] | None:
-    if dos_properties and isinstance(dos_properties, list):
-        dos_properties = {
-            element: {
-                orbital: {key: value for key, value in property}
-                for orbital, property in properties
+    if dos_properties:
+        if isinstance(dos_properties, list):
+            dos_properties = {
+                element: {
+                    orbital: {key: value for key, value in property}
+                    for orbital, property in properties
+                }
+                for element, properties in dos_properties
             }
-            for element, properties in dos_properties
-        }
-    elif isinstance(dos_properties, dict) and isinstance(
-        next(iter(dos_properties.values())), list
-    ):
-        dos_properties = {
-            element: {
-                orbital: {key: value for key, value in property}
-                for orbital, property in properties
+        elif isinstance(dos_properties, dict) and isinstance(
+            next(iter(dos_properties.values())), list
+        ):
+            dos_properties = {
+                element: {
+                    orbital: {key: value for key, value in property}
+                    for orbital, property in properties
+                }
+                for element, properties in dos_properties.items()
             }
-            for element, properties in dos_properties.items()
-        }
 
     return dos_properties  # type: ignore[return-value]
 
