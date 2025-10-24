@@ -214,7 +214,7 @@ class ProvenanceBuilder(Builder):
             )
 
         doc.authors.append(self.settings.DEFAULT_AUTHOR)
-        doc.history.append(self.settings.DEFAULT_HISTORY)
+        doc.history.append(self.settings.DEFAULT_HISTORY)  # type: ignore[union-attr]
         doc.references.append(self.settings.DEFAULT_REFERENCE)
 
         snl_doc = jsanitize(doc.dict(exclude_none=False), allow_bson=True)
