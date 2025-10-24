@@ -22,7 +22,7 @@ cycler==0.12.1
     # via matplotlib
 donfig==0.8.1.post1
     # via zarr
-emmet-core==0.86.0rc0
+emmet-core==0.86.0rc1
     # via emmet-archival (pyproject.toml)
 fonttools==4.60.1
     # via matplotlib
@@ -63,7 +63,7 @@ numpy==2.3.4
     #   scipy
     #   spglib
     #   zarr
-orjson==3.11.3
+orjson==3.11.4
     # via pymatgen
 packaging==25.0
     # via
@@ -80,7 +80,7 @@ pillow==12.0.0
     # via matplotlib
 plotly==6.3.1
     # via pymatgen
-pyarrow==21.0.0
+pyarrow==22.0.0
     # via emmet-archival (pyproject.toml)
 pybtex==0.25.1
     # via emmet-core
@@ -123,7 +123,7 @@ requests==2.32.5
     # via
     #   pymatgen
     #   pymatgen-io-validation
-ruamel-yaml==0.18.15
+ruamel-yaml==0.18.16
     # via
     #   monty
     #   pymatgen
