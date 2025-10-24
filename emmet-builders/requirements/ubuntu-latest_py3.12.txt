@@ -21,9 +21,9 @@ bibtexparser==1.4.3
     # via pymatgen
 blake3==1.0.8
     # via emmet-core
-boto3==1.40.55
+boto3==1.40.59
     # via maggma
-botocore==1.40.55
+botocore==1.40.59
     # via
     #   boto3
     #   s3transfer
@@ -136,7 +136,7 @@ numpy==1.26.4
     #   shapely
     #   spglib
     #   tifffile
-orjson==3.11.3
+orjson==3.11.4
     # via
     #   maggma
     #   pymatgen
@@ -166,7 +166,7 @@ plotly==6.3.1
     # via pymatgen
 pubchempy==1.0.5
     # via robocrys
-pyarrow==21.0.0
+pyarrow==22.0.0
     # via emmet-core
 pybtex==0.25.1
     # via
@@ -246,11 +246,11 @@ requests==2.32.5
     #   pymatgen-io-validation
 robocrys==0.2.11
     # via emmet-core
-rpds-py==0.27.1
+rpds-py==0.28.0
     # via
     #   jsonschema
     #   referencing
-ruamel-yaml==0.18.15
+ruamel-yaml==0.18.16
     # via
     #   maggma
     #   monty

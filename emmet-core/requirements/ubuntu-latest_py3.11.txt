@@ -50,7 +50,7 @@ numpy==2.3.4
     #   pymatgen-io-validation
     #   scipy
     #   spglib
-orjson==3.11.3
+orjson==3.11.4
     # via pymatgen
 packaging==25.0
     # via
@@ -101,7 +101,7 @@ requests==2.32.5
     # via
     #   pymatgen
     #   pymatgen-io-validation
-ruamel-yaml==0.18.15
+ruamel-yaml==0.18.16
     # via
     #   monty
     #   pymatgen
