@@ -537,7 +537,9 @@ def _deser_dos_properties(
             }
             for element, properties in dos_properties
         }
-    elif dos_properties and isinstance(next(iter(dos_properties.values())), list):
+    elif isinstance(dos_properties, dict) and isinstance(
+        next(iter(dos_properties.values())), list
+    ):
         dos_properties = {
             element: {
                 orbital: {key: value for key, value in property}
@@ -546,7 +548,7 @@ def _deser_dos_properties(
             for element, properties in dos_properties.items()
         }
 
-    return dos_properties
+    return dos_properties  # type: ignore[return-value]
 
 
 class CoreCalculationOutput(BaseModel):

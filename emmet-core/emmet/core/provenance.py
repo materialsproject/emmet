@@ -73,7 +73,7 @@ def _migrate_legacy_history_data(
         history.extend(
             [
                 History(
-                    **{k: inp_hist.get(k) for k in ("name", "url")},
+                    **{k: inp_hist.get(k) for k in ("name", "url")},  # type: ignore[arg-type]
                     description=desc,
                 )
                 for desc in descs
@@ -224,7 +224,7 @@ class ProvenanceDescription(BaseModel):
         ProvenanceDescription
         """
         if isinstance(x, str):
-            return cls(string=x)
+            return cls(string=x)  # type: ignore[arg-type,call-arg]
         elif isinstance(x, dict):
             return cls(**x)
         return x
