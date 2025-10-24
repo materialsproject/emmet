@@ -5,7 +5,7 @@ from itertools import groupby
 from typing import TYPE_CHECKING, Annotated
 
 import numpy as np
-from pydantic import BeforeValidator, Field, PlainSerializer, field_validator
+from pydantic import BeforeValidator, Field, PlainSerializer
 from pymatgen.analysis.xas.spectrum import XAS, site_weighted_spectrum
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
@@ -55,13 +55,6 @@ class XASDoc(SpectrumDoc):
     edge: XasEdge = Field(
         ..., title="Absorption Edge", description="The interaction edge for XAS."
     )
-
-    @field_validator("spectrum", mode="before")
-    @classmethod
-    def check_spectrum_non_positive_values(cls, v, eps=1.0e-12) -> dict:
-        if isinstance(v, dict):
-            v["y"] = [y if y > 0.0 else abs(eps) for y in v["y"]]
-        return v
 
     @classmethod
     def from_spectrum(

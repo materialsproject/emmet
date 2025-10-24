@@ -10,7 +10,6 @@ from pydantic import (
     Field,
     field_validator,
     model_serializer,
-    model_validator,
 )
 from pymatgen.analysis.elasticity import ElasticTensor
 from pymatgen.core import Element, Structure
@@ -200,16 +199,9 @@ class MLTrainDoc(StructureMetadata):
     @model_serializer
     def deseralize(self):
         """Ensure output is JSON compliant."""
-        return jsanitize({k: getattr(self, k, None) for k in self.model_fields})
-
-    @model_validator(mode="after")
-    def set_abs_forces(
-        self,
-    ) -> Self:
-        """Ensure the abs_forces are set if the vector-valued forces are."""
-        if self.forces is not None and self.abs_forces is None:
-            self.abs_forces = [np.linalg.norm(f) for f in self.forces]  # type: ignore[misc]
-        return self
+        return jsanitize(
+            {k: getattr(self, k, None) for k in self.__class__.model_fields}
+        )
 
     @classmethod
     def from_structure(
@@ -232,6 +224,11 @@ class MLTrainDoc(StructureMetadata):
         **kwargs
             Any other fields / constructor kwargs
         """
+        if (forces := kwargs.get("forces")) is not None and kwargs.get(
+            "abs_forces"
+        ) is None:
+            kwargs["abs_forces"] = [np.linalg.norm(f) for f in forces]
+
         return super().from_structure(
             meta_structure=meta_structure,
             fields=fields,

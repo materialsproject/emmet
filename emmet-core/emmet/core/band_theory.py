@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from collections import defaultdict
 import numbers
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
 import numpy as np
-from pydantic import BaseModel, Field, computed_field, field_validator
+from pydantic import BaseModel, Field, computed_field, BeforeValidator
 from pymatgen.core import Lattice
 from pymatgen.electronic_structure.bandstructure import (
     BandStructure as PmgBandStructure,
@@ -35,6 +35,15 @@ class BandTheoryBase(BaseModel):
     )
 
 
+def _deser_lattice(lattice: Lattice | dict | Matrix3D) -> Matrix3D:
+    """Ensure the lattice matrix is stored only."""
+    if isinstance(lattice, Lattice):
+        return lattice.matrix
+    elif isinstance(lattice, dict):
+        return lattice.get("lattice")
+    return lattice
+
+
 class BandStructure(
     BandTheoryBase, populate_by_name=True, validate_by_alias=True, validate_by_name=True
 ):
@@ -48,20 +57,13 @@ class BandStructure(
         description="The wave vectors (q-points) at which the band structure was sampled, in direct coordinates.",
     )
 
-    reciprocal_lattice: Matrix3D = Field(
+    reciprocal_lattice: Annotated[Matrix3D, BeforeValidator(_deser_lattice)] = Field(
         description="The reciprocal lattice.", validation_alias="lattice_rec"
     )
 
     labels_dict: dict[str, Vector3D] = Field(
         {}, description="The high-symmetry labels of specific q-points."
     )
-
-    @field_validator("reciprocal_lattice", mode="before")
-    def reciprocal_lattice_deserializer(cls, reciprocal_lattice):
-        if isinstance(reciprocal_lattice, dict):
-            return reciprocal_lattice.get("matrix")
-
-        return reciprocal_lattice
 
 
 class ProjectedBS(BaseModel):

@@ -474,6 +474,9 @@ class LicenseQuery(QueryOperator):
 class BatchIdQuery(QueryOperator):
     """Method to generate a query on batch_id"""
 
+    def __init__(self, field="builder_meta.batch_id"):
+        self._field = field
+
     def query(
         self,
         batch_id: str | None = Query(
@@ -502,7 +505,7 @@ class BatchIdQuery(QueryOperator):
             )
 
         crit = {}  # type: dict
-        k = "builder_meta.batch_id"
+        k = self._field
         if batch_id:
             crit[k] = batch_id
         elif batch_id_not_eq:

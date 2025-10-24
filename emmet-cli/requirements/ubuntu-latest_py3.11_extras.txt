@@ -38,7 +38,7 @@ cycler==0.12.1
     # via matplotlib
 distlib==0.4.0
     # via virtualenv
-emmet-core==0.85.1
+emmet-core==0.86.0rc0
     # via emmet-cli (pyproject.toml)
 execnet==2.1.1
     # via pytest-xdist
@@ -58,7 +58,7 @@ identify==2.6.15
     # via pre-commit
 idna==3.11
     # via requests
-iniconfig==2.1.0
+iniconfig==2.3.0
     # via pytest
 jinja2==3.1.6
     # via
@@ -142,7 +142,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-cli (pyproject.toml)
     #   mypy
-narwhals==2.8.0
+narwhals==2.9.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -190,7 +190,7 @@ pluggy==1.6.0
     #   pytest-cov
 pre-commit==4.3.0
     # via emmet-cli (pyproject.toml)
-psutil==7.1.0
+psutil==7.1.1
     # via emmet-cli (pyproject.toml)
 pybtex==0.25.1
     # via emmet-core
@@ -198,7 +198,7 @@ pycodestyle==2.14.0
     # via
     #   emmet-cli (pyproject.toml)
     #   flake8
-pydantic==2.12.2
+pydantic==2.12.3
     # via
     #   emmet-core
     #   pydantic-settings

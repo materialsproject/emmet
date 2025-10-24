@@ -217,7 +217,11 @@ def test_task_doc(test_dir, object_name, tmpdir):
             },
         }
     )
-    assert test_doc.transformations == ts
+    assert all(
+        test_doc.transformations[k] == v
+        for k, v in ts.as_dict().items()
+        if k != "last_modified"
+    )
 
 
 def test_lda_and_pseudo_format(test_dir, tmpdir):

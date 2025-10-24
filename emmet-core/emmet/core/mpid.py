@@ -388,6 +388,12 @@ class AlphaID(str):
         new_cls._separator = separator
         return new_cls
 
+    @property
+    def padded(self) -> str:
+        """Return the padded string identifier (without prefixing)."""
+        padded = max(0, self._padlen - len(self._identifier)) * self._alphabet[0]
+        return f"{padded}{self._identifier}"
+
     @classmethod
     def _string_to_base_10_value(cls, string_value: str) -> int:
         """Obtain the integer value of an alphabetical string."""
