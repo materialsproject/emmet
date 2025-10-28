@@ -18,9 +18,9 @@ bibtexparser==1.4.3
     # via pymatgen
 blake3==1.0.8
     # via emmet-core
-boto3==1.40.59
+boto3==1.40.61
     # via emmet-api (pyproject.toml)
-botocore==1.40.59
+botocore==1.40.61
     # via
     #   boto3
     #   s3transfer
@@ -36,7 +36,7 @@ contourpy==1.3.3
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-ddtrace==3.17.0
+ddtrace==3.17.1
     # via emmet-api (pyproject.toml)
 dnspython==2.8.0
     # via pymongo
@@ -44,7 +44,7 @@ emmet-core==0.86.0rc1
     # via emmet-api (pyproject.toml)
 envier==0.6.1
     # via ddtrace
-fastapi==0.120.0
+fastapi==0.120.1
     # via emmet-api (pyproject.toml)
 fonttools==4.60.1
     # via matplotlib
@@ -82,7 +82,7 @@ mp-pyrho==0.5.1
     # via pymatgen-analysis-defects
 mpmath==1.3.0
     # via sympy
-narwhals==2.9.0
+narwhals==2.10.0
     # via plotly
 networkx==3.5
     # via
@@ -167,7 +167,7 @@ python-dateutil==2.9.0.post0
     #   botocore
     #   matplotlib
     #   pandas
-python-dotenv==1.1.1
+python-dotenv==1.2.1
     # via pydantic-settings
 pytz==2025.2
     # via pandas
@@ -187,7 +187,7 @@ s3transfer==0.14.0
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
-scipy==1.16.2
+scipy==1.16.3
     # via
     #   pymatgen
     #   scikit-image
@@ -203,7 +203,7 @@ sniffio==1.3.1
     # via anyio
 spglib==2.6.0
     # via pymatgen
-starlette==0.48.0
+starlette==0.49.1
     # via fastapi
 sympy==1.14.0
     # via pymatgen

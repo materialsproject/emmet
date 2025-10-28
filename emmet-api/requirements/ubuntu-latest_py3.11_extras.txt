@@ -20,9 +20,9 @@ bibtexparser==1.4.3
     # via pymatgen
 blake3==1.0.8
     # via emmet-core
-boto3==1.40.59
+boto3==1.40.61
     # via emmet-api (pyproject.toml)
-botocore==1.40.59
+botocore==1.40.61
     # via
     #   boto3
     #   s3transfer
@@ -53,7 +53,7 @@ csscompressor==0.9.5
     # via mkdocs-minify-plugin
 cycler==0.12.1
     # via matplotlib
-ddtrace==3.17.0
+ddtrace==3.17.1
     # via emmet-api (pyproject.toml)
 distlib==0.4.0
     # via virtualenv
@@ -65,7 +65,7 @@ envier==0.6.1
     # via ddtrace
 execnet==2.1.1
     # via pytest-xdist
-fastapi==0.120.0
+fastapi==0.120.1
     # via emmet-api (pyproject.toml)
 filelock==3.20.0
     # via virtualenv
@@ -197,7 +197,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-api (pyproject.toml)
     #   mypy
-narwhals==2.9.0
+narwhals==2.10.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -332,7 +332,7 @@ python-dateutil==2.9.0.post0
     #   ghp-import
     #   matplotlib
     #   pandas
-python-dotenv==1.1.1
+python-dotenv==1.2.1
     # via pydantic-settings
 python-multipart==0.0.20
     # via starlette
@@ -366,7 +366,7 @@ s3transfer==0.14.0
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
-scipy==1.16.2
+scipy==1.16.3
     # via
     #   pymatgen
     #   scikit-image
@@ -386,7 +386,7 @@ snowballstemmer==3.0.1
     # via pydocstyle
 spglib==2.6.0
     # via pymatgen
-starlette[full]==0.48.0
+starlette[full]==0.49.1
     # via
     #   emmet-api (pyproject.toml)
     #   fastapi

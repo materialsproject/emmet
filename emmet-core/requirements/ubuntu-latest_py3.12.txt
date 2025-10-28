@@ -36,7 +36,7 @@ monty==2025.3.3
     #   pymatgen
 mpmath==1.3.0
     # via sympy
-narwhals==2.9.0
+narwhals==2.10.0
     # via plotly
 networkx==3.5
     # via pymatgen
@@ -91,7 +91,7 @@ python-dateutil==2.9.0.post0
     # via
     #   matplotlib
     #   pandas
-python-dotenv==1.1.1
+python-dotenv==1.2.1
     # via pydantic-settings
 pytz==2025.2
     # via pandas
@@ -107,7 +107,7 @@ ruamel-yaml==0.18.16
     #   pymatgen
 ruamel-yaml-clib==0.2.14
     # via ruamel-yaml
-scipy==1.16.2
+scipy==1.16.3
     # via pymatgen
 six==1.17.0
     # via python-dateutil

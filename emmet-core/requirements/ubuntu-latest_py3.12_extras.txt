@@ -161,7 +161,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-core (pyproject.toml)
     #   mypy
-narwhals==2.9.0
+narwhals==2.10.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -232,7 +232,7 @@ pluggy==1.6.0
     #   pytest-cov
 pre-commit==4.3.0
     # via emmet-core (pyproject.toml)
-psutil==7.1.1
+psutil==7.1.2
     # via custodian
 pubchempy==1.0.5
     # via robocrys
@@ -307,7 +307,7 @@ python-dateutil==2.9.0.post0
     #   ghp-import
     #   matplotlib
     #   pandas
-python-dotenv==1.1.1
+python-dotenv==1.2.1
     # via pydantic-settings
 pytz==2025.2
     # via pandas
@@ -341,7 +341,7 @@ scikit-image==0.25.2
     # via pymatgen-analysis-defects
 scikit-learn==1.7.2
     # via matminer
-scipy==1.16.2
+scipy==1.16.3
     # via
     #   ase
     #   pymatgen

@@ -21,9 +21,9 @@ bibtexparser==1.4.3
     # via pymatgen
 blake3==1.0.8
     # via emmet-core
-boto3==1.40.59
+boto3==1.40.61
     # via maggma
-botocore==1.40.59
+botocore==1.40.61
     # via
     #   boto3
     #   s3transfer
@@ -106,7 +106,7 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.1.2
     # via maggma
-narwhals==2.9.0
+narwhals==2.10.0
     # via plotly
 networkx==3.5
     # via
@@ -225,7 +225,7 @@ python-dateutil==2.9.0.post0
     #   maggma
     #   matplotlib
     #   pandas
-python-dotenv==1.1.1
+python-dotenv==1.2.1
     # via pydantic-settings
 pytz==2025.2
     # via
@@ -264,7 +264,7 @@ scikit-image==0.25.2
     # via pymatgen-analysis-defects
 scikit-learn==1.7.2
     # via matminer
-scipy==1.16.2
+scipy==1.16.3
     # via
     #   ase
     #   pymatgen
