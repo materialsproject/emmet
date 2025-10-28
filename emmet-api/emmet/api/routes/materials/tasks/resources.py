@@ -1,5 +1,5 @@
 from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
-from emmet.api.resource import ReadOnlyResource
+from emmet.api.resource import ReadOnlyResource, SearchResource
 
 from emmet.api.routes.materials.materials.query_operators import (
     BatchIdQuery,
@@ -23,7 +23,7 @@ timeout = MAPISettings().TIMEOUT
 
 
 def task_resource(task_store):
-    resource = ReadOnlyResource(
+    resource = SearchResource(
         task_store,
         TaskDoc,
         query_operators=[
@@ -40,7 +40,6 @@ def task_resource(task_store):
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
-        hint_scheme=TasksHintScheme(),
         tags=["Materials Tasks"],
         sub_path="/tasks/",
         timeout=timeout,
