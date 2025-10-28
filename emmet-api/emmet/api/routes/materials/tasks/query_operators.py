@@ -49,8 +49,9 @@ class MultipleTaskIDsQuery(QueryOperator):
         if task_ids:
             crit.update(
                 {
-                    "task_id": {
-                        "$in": [task_id.strip() for task_id in task_ids.split(",")]
+                    "in": {
+                        "path": "task_id",
+                        "value": [task_id.strip() for task_id in task_ids.split(",")],
                     }
                 }
             )

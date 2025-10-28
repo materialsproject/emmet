@@ -12,6 +12,7 @@ from emmet.api.resource.aggregation import AggregationResource
 from emmet.api.resource.post_resource import PostOnlyResource
 from emmet.api.resource.read_resource import ReadOnlyResource, attach_query_ops
 from emmet.api.resource.submission import SubmissionResource
+from emmet.api.resource.search_resource import SearchResource
 
 __all__ = [
     "Resource",
@@ -23,4 +24,5 @@ __all__ = [
     "ReadOnlyResource",
     "attach_query_ops",
     "SubmissionResource",
+    "SearchResource",
 ]
