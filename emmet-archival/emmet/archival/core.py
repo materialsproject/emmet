@@ -114,14 +114,16 @@ class FileArchiveBase(Archiver):
         dset.attrs["len"] = orig_len
 
     @classmethod
-    def _readout(cls, group: h5py.Group | zarr.Group, file_key: str) -> bytes:
+    def _readout(
+        cls, group: h5py.Group | zarr.Group, file_key: str, decompress: bool = True
+    ) -> bytes:
         if (
             len(data := np.array(group[file_key]).tolist())
             < group[file_key].attrs["len"]
         ):
             # h5py strips out null bytes
             data += b"\x00" * (group[file_key].attrs["len"] - len(data))
-        if file_key.endswith(".gz"):
+        if file_key.endswith(".gz") or not decompress:
             return data
         return cls._decompress(data)
 
@@ -169,8 +171,6 @@ class FileArchive(FileArchiveBase):
         """Extract all files in a hierarchical archive."""
 
         output_dir = Path(output_dir or "calc_archive")
-        if not output_dir.exists():
-            output_dir.mkdir(exist_ok=True, parents=True)
 
         extracted_files = []
         if keys is None:
@@ -179,6 +179,9 @@ class FileArchive(FileArchiveBase):
 
         for k in [_k for _k in keys if _k in group]:
             p = output_dir / (k.split("/", 1)[1] if k.startswith("/") else k)
+            if not p.parent.exists():
+                p.parent.mkdir(exist_ok=True, parents=True)
+
             p.write_bytes(cls._readout(group, k))
             extracted_files.append(p)
 
@@ -192,5 +195,5 @@ class FileArchive(FileArchiveBase):
     ) -> Self:
 
         paths: list[Path] = []
-        _scan_dir(Path(dir_name), paths, depth + 1)
+        _scan_dir(Path(dir_name), paths, depth + 1 if depth is not None else None)
         return cls(files=paths)
