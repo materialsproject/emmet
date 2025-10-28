@@ -17,7 +17,7 @@ from pymatgen.io.validation.common import PotcarSummaryStats, VaspFiles
 from pymatgen.io.validation.validation import VaspValidator
 from pymatgen.io.vasp import Incar, Kpoints, Outcar, Potcar, Vasprun
 
-from emmet.archival.base import Archiver
+from emmet.archival.core import walk_hierarchical_data, FileArchiveBase
 from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calculation import PotcarSpec
 from emmet.core.vasp.utils import VASP_RAW_DATA_ORG, FileMetadata, discover_vasp_files
@@ -64,7 +64,7 @@ def raw_archive_hierarchy_from_files(
     return file_paths
 
 
-class RawArchive(Archiver):
+class RawArchive(FileArchiveBase):
     """Archive a raw VASP calculation directory and remove copyright-protected info."""
 
     file_paths: dict[str, FileMetadata] = Field(
@@ -72,7 +72,7 @@ class RawArchive(Archiver):
     )
 
     @staticmethod
-    def convert_potcar_to_spec(potcar: str | Potcar) -> str:
+    def convert_potcar_to_spec(potcar: str | Potcar) -> bytes:
         """Convert a VASP POTCAR to JSON-dumped string."""
 
         pot_obj = Potcar.from_str(potcar) if isinstance(potcar, str) else potcar
@@ -84,7 +84,7 @@ class RawArchive(Archiver):
                 {**p.model_dump(), "lexch": pot_obj[i].LEXCH}
                 for i, p in enumerate(PotcarSpec.from_potcar(pot_obj))
             ]
-        ).decode()
+        )
 
     @classmethod
     def from_directory(cls, calc_dir: str | Path) -> Self:
@@ -109,11 +109,6 @@ class RawArchive(Archiver):
     def _to_hdf5_like(self, group: h5py.Group | zarr.Group, **kwargs) -> None:
         """Add VASP files to an existing archival group."""
 
-        if isinstance(group, h5py.Group):
-            dataset_constructor = "create_dataset"
-        else:
-            dataset_constructor = "create_array"
-
         for file_arch, file_meta in self.file_paths.items():
             if ".h5" in file_arch:
                 file_key = file_arch
@@ -136,16 +131,21 @@ class RawArchive(Archiver):
                         old_spec = group[file_arch]["input/potcar/spec"]  # type: ignore[index]
                         old_spec[...] = pspec  # type: ignore[index]
                     else:
-                        getattr(group[file_arch]["input/potcar"], dataset_constructor)(  # type: ignore[union-attr,index]
+                        self._writeout(
+                            group[file_arch]["input/potcar"],
                             "spec",
-                            data=pspec,
+                            pspec,
+                            compress=False,
                         )
                     del group[ppath]
 
             else:
                 # insert plaintext / binary files into HDF5 datasets
-                with zopen(file_meta.path, "rt") as _f:
-                    data: str = _f.read()  # type: ignore[assignment]
+                with zopen(file_meta.path, "rb") as _f:
+                    data = _f.read()
+
+                if len(data) == 0:
+                    continue
 
                 file_key = file_arch
                 if "POTCAR" in file_arch and "spec" not in file_arch:
@@ -153,9 +153,10 @@ class RawArchive(Archiver):
                         file_key = f"{_split_arch[0]}.spec.{_split_arch[1]}"
                     else:
                         file_key = f"{file_arch}.spec"
-                    data = self.convert_potcar_to_spec(data)
 
-                getattr(group, dataset_constructor)(file_key, data=[data], **kwargs)
+                    data: bytes = self.convert_potcar_to_spec(data.decode())
+
+                self._writeout(group, file_key, data)
 
             group[file_key].attrs["file_path"] = str(file_meta.path)
             group[file_key].attrs["md5"] = str(
@@ -176,24 +177,25 @@ class RawArchive(Archiver):
         extracted_files = []
         if keys is None:
             keys = []
-            group.visit(  # type: ignore[union-attr]
-                lambda x: (
-                    keys.append(x)
-                    if getattr(group[x], "attrs", {}).get("md5")
-                    else None
-                )
-            )
+            walk_hierarchical_data(group, keys)
 
-        for k in [_k for _k in keys if _k in group]:
+        non_hdf5_datasets = [_k for _k in keys if _k in group and ".h5" not in _k]
+        hdf5_groups = set()
+        for k in set(keys).difference(non_hdf5_datasets):
+            if ".h5" not in k:
+                continue
+            group_str = k.split(".h5", 1)[0] + ".h5"
+            if isinstance(group.get(group_str), h5py.Group | zarr.Group):
+                hdf5_groups.add(group_str)
+
+        for k in non_hdf5_datasets + list(hdf5_groups):
             p = Path(k)
-
             if ".h5" in (file_name := p.name):
                 with h5py.File(output_dir / file_name, "w") as f:
                     for _key in group[k]:  # type: ignore[union-attr]
                         f.copy(group[k][_key], f, name=_key)  # type: ignore[index]
             else:
-                with open(output_dir / file_name, "wt") as f:
-                    f.write(np.array(group[k])[0].decode())
+                (output_dir / file_name).write_bytes(cls._readout(group, k))
 
             extracted_files.append(
                 FileMetadata(name=file_name, path=output_dir / file_name)
@@ -252,7 +254,7 @@ class RawArchive(Archiver):
                     if (fname := Path(key).name.lower()) not in fname_to_type:
                         continue
 
-                    data = np.array(group[key])[0]
+                    data = cls._readout(group, key)
                     if io_typ == "input":
                         # These methods can directly parse from in-memory str
 
@@ -277,7 +279,7 @@ class RawArchive(Archiver):
                     else:
                         # These methods must write to a temp file to parse
                         with NamedTemporaryFile() as temp_file:
-                            temp_file.write(np.array(group[key])[0])
+                            temp_file.write(data)
                             temp_file.seek(0)
                             vasp_io[fname.split(".")[0]] = fname_to_type[fname](
                                 temp_file.name
