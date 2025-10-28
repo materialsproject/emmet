@@ -88,6 +88,7 @@ class SearchResource(CollectionResource):
                         ),
                     )
             query: dict[Any, Any] = merge_atlas_queries(list(queries.values()))  # type: ignore
+            print(query)
 
             try:
                 ## need to replace with search pagination
@@ -95,11 +96,9 @@ class SearchResource(CollectionResource):
                 #     query.get("criteria") or {},
                 #     **self.get_search_kwargs(query, "count"),
                 # )
-                pipeline = generate_atlas_search_pipeline(query) # don't think this method is right
-                cursor = await self.collection.aggregate(
-                    pipeline,
-                    **self.get_search_kwargs(query, "agg"),
-                )
+                pipeline = generate_atlas_search_pipeline(query)
+                print(pipeline)
+                cursor = await self.collection.aggregate(pipeline)
                 data = await cursor.to_list()
             except (NetworkTimeout, PyMongoError) as e:
                 raise HTTPException(
@@ -113,9 +112,17 @@ class SearchResource(CollectionResource):
                 data = operator.post_process(data, query)
                 operator_meta.update(operator.meta())
 
-            meta = Meta(total_doc=count)
+            if data and "meta" in data[0] and data[0]["meta"]:
+                meta = Meta(
+                    total_doc=data[0]["meta"].get("count", {}).get("lowerBound", 1),
+                    facet=data[0]["meta"].get("facet", {}),
+                )
+            else:
+                meta = Meta(total_doc=0)
 
-            response = {"data": data, "meta": {**meta.dict(), **operator_meta}}  # type: ignore
+            print(meta)
+
+            response = {"data": data if data else [], "meta": {**meta.dict(), **operator_meta}}  # type: ignore
 
             if self.disable_validation:
                 response = Response(orjson.dumps(response, default=serialization_helper))  # type: ignore
