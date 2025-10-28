@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
 
-def _scan_dir(fsspec: Path, paths: list[Path], depth: int | None) -> None:
+def _scan_dir(fsspec: PathLike, paths: list[Path], depth: int | None) -> None:
 
     if depth is not None and depth <= 0:
         return
@@ -50,9 +50,8 @@ def _get_path_relative_to_parent(path: Path, parent: Path) -> Path:
 
 def walk_hierarchical_data(
     hd: h5py.Group | zarr.Group,
-    datasets: list[str],
     key: str = "/",
-) -> None:
+) -> list[str]:
     """Walk a hierarchical dataset to find datasets.
 
     Parameters
@@ -68,13 +67,17 @@ def walk_hierarchical_data(
     -----------
     None. All dataset keys are stored in `dataset_keys`
     """
-    if isinstance(hd[key], h5py.Dataset | zarr.Array):
-        datasets.append(key)
-    elif isinstance(hd[key], h5py.Group | zarr.Group):
-        _ = [
-            walk_hierarchical_data(hd, datasets, key=os.path.join(key, q))
-            for q in hd[key]
-        ]
+
+    datasets = []
+
+    def _walk_hierarchical_data(g, k):
+        if isinstance(g[k], h5py.Dataset | zarr.Array):
+            datasets.append(k)
+        elif isinstance(g[k], h5py.Group | zarr.Group):
+            _ = [_walk_hierarchical_data(g, os.path.join(k, q)) for q in g[k]]
+
+    _walk_hierarchical_data(hd, key)
+    return datasets
 
 
 class FileArchiveBase(Archiver):
@@ -108,7 +111,7 @@ class FileArchiveBase(Archiver):
         orig_len = len(compressed)
         dset = dset_cnstr(
             file_key,
-            data=compressed,
+            data=compressed,  # type: ignore[arg-type]
             dtype=h5py.string_dtype(length=orig_len),
         )
         dset.attrs["len"] = orig_len
@@ -118,11 +121,11 @@ class FileArchiveBase(Archiver):
         cls, group: h5py.Group | zarr.Group, file_key: str, decompress: bool = True
     ) -> bytes:
         if (
-            len(data := np.array(group[file_key]).tolist())
+            len(data := np.array(group[file_key]).tolist())  # type: ignore[operator]
             < group[file_key].attrs["len"]
         ):
             # h5py strips out null bytes
-            data += b"\x00" * (group[file_key].attrs["len"] - len(data))
+            data += b"\x00" * (group[file_key].attrs["len"] - len(data))  # type: ignore[operator]
         if file_key.endswith(".gz") or not decompress:
             return data
         return cls._decompress(data)
@@ -155,11 +158,11 @@ class FileArchive(FileArchiveBase):
             group.create_group(branch)
 
         for f in self.files:
-            if (branch := _get_path_relative_to_parent(f.parent, root)) == Path("."):
-                branch = "/"
+            if (_stem := _get_path_relative_to_parent(f.parent, root)) == Path("."):
+                stem = "/"
             else:
-                branch = str(branch)
-            self._writeout(group[branch], f.name, f.read_bytes())
+                stem = str(_stem)
+            self._writeout(group[stem], f.name, f.read_bytes())
 
     @classmethod
     def _extract_from_hdf5_like(
@@ -173,9 +176,7 @@ class FileArchive(FileArchiveBase):
         output_dir = Path(output_dir or "calc_archive")
 
         extracted_files = []
-        if keys is None:
-            keys = []
-            walk_hierarchical_data(group, keys)
+        keys = walk_hierarchical_data(group) if keys is None else keys
 
         for k in [_k for _k in keys if _k in group]:
             p = output_dir / (k.split("/", 1)[1] if k.startswith("/") else k)

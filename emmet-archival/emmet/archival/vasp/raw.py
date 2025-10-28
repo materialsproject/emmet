@@ -132,7 +132,7 @@ class RawArchive(FileArchiveBase):
                         old_spec[...] = pspec  # type: ignore[index]
                     else:
                         self._writeout(
-                            group[file_arch]["input/potcar"],
+                            group[file_arch]["input/potcar"],  # type: ignore[index]
                             "spec",
                             pspec,
                             compress=False,
@@ -142,7 +142,7 @@ class RawArchive(FileArchiveBase):
             else:
                 # insert plaintext / binary files into HDF5 datasets
                 with zopen(file_meta.path, "rb") as _f:
-                    data = _f.read()
+                    data: bytes = _f.read()
 
                 if len(data) == 0:
                     continue
@@ -154,7 +154,7 @@ class RawArchive(FileArchiveBase):
                     else:
                         file_key = f"{file_arch}.spec"
 
-                    data: bytes = self.convert_potcar_to_spec(data.decode())
+                    data = self.convert_potcar_to_spec(data.decode())
 
                 self._writeout(group, file_key, data)
 
@@ -175,9 +175,7 @@ class RawArchive(FileArchiveBase):
             output_dir.mkdir(exist_ok=True, parents=True)
 
         extracted_files = []
-        if keys is None:
-            keys = []
-            walk_hierarchical_data(group, keys)
+        keys = walk_hierarchical_data(group) if keys is None else keys
 
         non_hdf5_datasets = [_k for _k in keys if _k in group and ".h5" not in _k]
         hdf5_groups = set()
