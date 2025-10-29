@@ -5,10 +5,11 @@ from emmet.api.routes.materials.materials.query_operators import (
     BatchIdQuery,
     ChemsysQuery,
     ElementsQuery,
-    FormulaQuery,
 )
 from emmet.api.routes.materials.tasks.hint_scheme import TasksHintScheme
 from emmet.api.routes.materials.tasks.query_operators import (
+    AtlasElementsQuery,
+    AtlasFormulaQuery,
     DeprecationQuery,
     MultipleTaskIDsQuery,
     TrajectoryQuery,
@@ -27,10 +28,10 @@ def task_resource(task_store):
         task_store,
         TaskDoc,
         query_operators=[
-            BatchIdQuery(field="batch_id"),
-            FormulaQuery(),
-            ChemsysQuery(),
-            ElementsQuery(),
+            # BatchIdQuery(field="batch_id"),
+            AtlasFormulaQuery(),
+            # ChemsysQuery(),
+            AtlasElementsQuery(),
             MultipleTaskIDsQuery(),
             LastUpdatedQuery(),
             PaginationQuery(),
