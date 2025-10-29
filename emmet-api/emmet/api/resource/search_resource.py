@@ -87,6 +87,7 @@ class SearchResource(CollectionResource):
                             ", ".join(overlap)
                         ),
                     )
+            print(queries)
             query: dict[Any, Any] = merge_atlas_queries(list(queries.values()))  # type: ignore
             print(query)
 
@@ -114,7 +115,7 @@ class SearchResource(CollectionResource):
 
             if data and "meta" in data[0] and data[0]["meta"]:
                 meta = Meta(
-                    total_doc=data[0]["meta"].get("count", {}).get("lowerBound", 1),
+                    total_doc=data[0]["meta"].get("count", {}).get("total", 1),
                     facet=data[0]["meta"].get("facet", {}),
                 )
             else:

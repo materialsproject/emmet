@@ -82,15 +82,19 @@ def generate_atlas_search_pipeline(query: dict):
     if query.get("criteria", False) is False or len(query["criteria"]) == 0:
         operator = {"exists": {"path": "_id"}}
     else:  # generate the operator, if more than one
-        operator = {
-            "compound": {
-                "must": [q for q in query["criteria"] if not q.get("mustNot", False)]
-            }
-        }
-        # append the mustNot criteria to the compound operator
-        operator["compound"]["mustNot"] = [
-            q["mustNot"] for q in query["criteria"] if q.get("mustNot", False)
-        ]
+        operator = {"compound": {"must": [], "mustNot": []}}
+
+        # Build the must clauses
+        for q in query["criteria"]:
+            if not q.get("mustNot", False):
+                if "must" in q:
+                    # If q has a "must" key, expand its contents instead of using q directly
+                    operator["compound"]["must"].extend(q["must"])
+                else:
+                    # Use the query as-is
+                    operator["compound"]["must"].append(q)
+            else:
+                operator["compound"]["mustNot"].extend(q["mustNot"])
 
     search_base = {
         "$search": {
