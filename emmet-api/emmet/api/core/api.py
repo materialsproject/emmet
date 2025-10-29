@@ -22,6 +22,7 @@ class MAPI(API):
             "pymatgen": pmg_version,
             "db_version": MAPISettings().DB_VERSION,
             "suffix": MAPISettings().DB_NAME_SUFFIX,
+            "access_controlled_batch_ids": MAPISettings().ACCESS_CONTROLLED_BATCH_IDS,
         },
         description=None,
         tags_meta=None,
