@@ -1,15 +1,93 @@
 from collections import defaultdict
 from datetime import datetime
 
-from fastapi import Query
+from fastapi import HTTPException, Query
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
 from monty.json import jsanitize
-
+from pymatgen.core.periodic_table import Element
+from emmet.api.routes.materials.materials.utils import (
+    formula_to_atlas_criteria,
+)
 from emmet.api.routes.materials.tasks.utils import (
     calcs_reversed_to_trajectory,
     task_to_entry,
 )
+
+
+class AtlasFormulaQuery(QueryOperator):
+    """
+    Factory method to generate a dependency for querying by
+        formula or chemical system with wild cards.
+    """
+
+    def query(
+        self,
+        formula: str | None = Query(
+            None,
+            description="Query by formula including anonymized formula or by including wild cards. \
+A comma delimited string list of anonymous formulas or regular formulas can also be provided.",
+        ),
+    ) -> STORE_PARAMS:
+        crit = {}
+        print(f"formula: {formula}")
+        if formula:
+            crit.update(formula_to_atlas_criteria(formula))
+        print(f"criteria: {crit}")
+        return {"criteria": crit}
+
+
+class AtlasElementsQuery(QueryOperator):
+    """
+    Factory method to generate a dependency for querying by element data
+    """
+
+    def query(
+        self,
+        elements: str | None = Query(
+            None,
+            description="Query by elements in the material composition as a comma-separated list",
+            max_length=60,
+        ),
+        exclude_elements: str | None = Query(
+            None,
+            description="Query by excluded elements in the material composition as a comma-separated list",
+            max_length=60,
+        ),
+    ) -> STORE_PARAMS:
+        crit = {}  # type: dict
+
+        if elements:
+            must_elem = []  # type: list[dict]
+            try:
+                element_list = [Element(e) for e in elements.strip().split(",")]
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Please provide a comma-seperated list of elements",
+                )
+
+            for el in element_list:
+                must_elem.append({"exists": {"path": f"composition_reduced.{el}"}})
+
+            crit.update({"must": must_elem})
+
+        if exclude_elements:
+            must_not_elem = []  # type: list[dict]
+            try:
+                element_list = [Element(e) for e in exclude_elements.strip().split(",")]
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Please provide a comma-seperated list of elements",
+                )
+
+            for el in element_list:
+                must_not_elem.append({"exists": {"path": f"composition_reduced.{el}"}})
+
+            crit.update({"mustNot": must_not_elem})
+
+        return {"criteria": crit} if len(crit) > 0 else {"criteria": {}}
 
 
 class LastUpdatedQuery(QueryOperator):
@@ -22,13 +100,25 @@ class LastUpdatedQuery(QueryOperator):
             None, description="Maximum last updated UTC datetime"
         ),
     ) -> STORE_PARAMS:
-        crit: dict = defaultdict(dict)
+        crit = {}  # type: list[dict]
 
-        if last_updated_min:
-            crit["last_updated"]["$gte"] = last_updated_min
-
-        if last_updated_max:
-            crit["last_updated"]["$lte"] = last_updated_max
+        if last_updated_min and last_updated_max:
+            # Both min and max specified - use single range query
+            crit.update(
+                {
+                    "range": {
+                        "path": "last_updated",
+                        "gte": last_updated_min,
+                        "lte": last_updated_max,
+                    }
+                }
+            )
+        elif last_updated_min:
+            # Only minimum specified
+            crit.update({"range": {"path": "last_updated", "gte": last_updated_min}})
+        elif last_updated_max:
+            # Only maximum specified
+            crit.update({"range": {"path": "last_updated", "lte": last_updated_max}})
 
         return {"criteria": crit}
 
