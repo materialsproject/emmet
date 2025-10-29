@@ -101,6 +101,126 @@ def formula_to_criteria(formulas: str) -> dict:
                 }
 
 
+def formula_to_atlas_criteria(formulas: str) -> dict:
+    """
+    Converts formula into Atlas Search query criteria for composition-based searches
+
+    Arguments:
+        formula: formula with wildcards in it for unknown elements
+
+    Returns:
+        Atlas Search style query criteria for this formula
+    """
+    dummies = "AEGJLMQRXZ"
+    formula_list = [formula.strip() for formula in formulas.split(",")]
+
+    if "*" in formulas:
+        if len(formula_list) > 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Wild cards only supported for single formula queries.",
+            )
+        else:
+            # Wild card in formula
+            nstars = formulas.count("*")
+            formula_dummies = formulas.replace("*", "{}").format(*dummies[:nstars])
+
+            try:
+                integer_formula = Composition(
+                    formula_dummies
+                ).get_integer_formula_and_factor()[0]
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Problem processing formula with wild cards.",
+                )
+
+            comp = Composition(integer_formula).reduced_composition
+            real_elts = [
+                str(e)
+                for e in comp.elements
+                if e.as_dict().get("element", "A") not in dummies
+            ]
+
+            # Build Atlas Search compound query
+            must_clauses = [
+                {
+                    "text": {
+                        "query": comp.anonymized_formula,
+                        "path": "formula_anonymous",
+                    }
+                }
+            ]
+
+            # Add element-specific clauses
+            for el, n in comp.to_reduced_dict.items():
+                if el in real_elts:
+                    must_clauses.append(
+                        {"equals": {"path": f"composition_reduced.{el}", "value": n}}
+                    )
+
+            return {"must": must_clauses}
+
+    else:
+        try:
+            composition_list = [Composition(formula) for formula in formula_list]
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Problem processing one or more provided formulas.",
+            )
+
+        if any(
+            isinstance(el, DummySpecies) for comp in composition_list for el in comp
+        ):
+            # Assume fully anonymized formula
+            anonymized_formulas = [comp.anonymized_formula for comp in composition_list]
+
+            if len(formula_list) == 1:
+                return {
+                    "text": {
+                        "query": anonymized_formulas[0],
+                        "path": "formula_anonymous",
+                    }
+                }
+            else:
+                return {
+                    "in": {
+                        "path": "formula_anonymous",
+                        "value": anonymized_formulas,
+                    }
+                }
+
+        else:
+            if len(formula_list) == 1:
+                comp = composition_list[0]
+
+                # Build compound query for exact composition match
+                must_clauses = [{"equals": {"path": "nelements", "value": len(comp)}}]
+
+                try:
+                    for el, n in comp.to_reduced_dict.items():
+                        must_clauses.append(
+                            {
+                                "equals": {
+                                    "path": f"composition_reduced.{el}",
+                                    "value": n,
+                                }
+                            }
+                        )
+                except IndexError:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Problem processing one or more provided formulas.",
+                    )
+
+                return {"must": must_clauses}
+            else:
+                # Multiple formulas - use pretty formula matching
+                pretty_formulas = [comp.reduced_formula for comp in composition_list]
+                return {"in": {"path": "formula_pretty", "value": pretty_formulas}}
+
+
 def chemsys_to_criteria(chemsys: str) -> dict:
     """
     Santizes chemsys into a dictionary to search with wild cards
