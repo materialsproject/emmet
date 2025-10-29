@@ -1,4 +1,4 @@
-FROM materialsproject/devops:python-3.1113.0 AS base
+FROM materialsproject/devops:python-3.1113.1 AS base
 RUN apt-get update && apt-get install -y --no-install-recommends libopenblas-dev libjpeg62 curl && apt-get clean
 
 FROM base AS builder
@@ -7,7 +7,7 @@ ENV PATH /root/.local/bin:$PATH
 WORKDIR /emmet-api
 ENV PIP_FLAGS "--user --no-cache-dir --compile"
 COPY requirements/deployment.txt ./requirements.txt
-RUN pip install $PIP_FLAGS --upgrade pip pip-tools setuptools-scm && \
+RUN pip install $PIP_FLAGS --upgrade "pip<25.3" pip-tools setuptools-scm && \
   pip-sync requirements.txt --pip-args "$PIP_FLAGS"
 
 COPY emmet emmet
