@@ -491,7 +491,7 @@ urllib3==2.5.0
     #   botocore
     #   requests
     #   types-requests
-virtualenv==20.35.3
+virtualenv==20.35.4
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
