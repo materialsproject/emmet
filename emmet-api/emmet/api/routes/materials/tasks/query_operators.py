@@ -1,4 +1,3 @@
-from collections import defaultdict
 from datetime import datetime
 
 from fastapi import HTTPException, Query
@@ -30,10 +29,8 @@ A comma delimited string list of anonymous formulas or regular formulas can also
         ),
     ) -> STORE_PARAMS:
         crit = {}
-        print(f"formula: {formula}")
         if formula:
             crit.update(formula_to_atlas_criteria(formula))
-        print(f"criteria: {crit}")
         return {"criteria": crit}
 
 
