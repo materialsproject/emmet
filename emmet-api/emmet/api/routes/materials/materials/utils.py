@@ -1,3 +1,4 @@
+from typing import Any
 from fastapi import HTTPException
 from pymatgen.core import Composition
 from pymatgen.core.periodic_table import DummySpecies
@@ -113,6 +114,7 @@ def formula_to_atlas_criteria(formulas: str) -> dict:
     """
     dummies = "AEGJLMQRXZ"
     formula_list = [formula.strip() for formula in formulas.split(",")]
+    must_clauses: list[dict[str, Any]] = []
 
     if "*" in formulas:
         if len(formula_list) > 1:
