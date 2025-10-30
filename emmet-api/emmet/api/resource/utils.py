@@ -111,7 +111,7 @@ def generate_atlas_search_pipeline(query: dict):
 
     sort_dict = {"sort": {"_id": 1}}
     if query.get("sort", False):
-        sort_dict["sort"] = {**query["sort"], "_id": sort_dict["sort"].get("_id", 1)}
+        sort_dict["sort"] = {**sort_dict["sort"], **query["sort"]}
     # add sort to $search stage
     search_base["$search"].update(sort_dict)
 
