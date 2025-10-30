@@ -1,12 +1,10 @@
-from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
+from emmet.api.query_operator import (
+    AtlasPaginationQuery,
+    PaginationQuery,
+    SparseFieldsQuery,
+)
 from emmet.api.resource import ReadOnlyResource, SearchResource
 
-from emmet.api.routes.materials.materials.query_operators import (
-    BatchIdQuery,
-    ChemsysQuery,
-    ElementsQuery,
-)
-from emmet.api.routes.materials.tasks.hint_scheme import TasksHintScheme
 from emmet.api.routes.materials.tasks.query_operators import (
     AtlasElementsQuery,
     AtlasFormulaQuery,
@@ -34,7 +32,7 @@ def task_resource(task_store):
             AtlasElementsQuery(),
             MultipleTaskIDsQuery(),
             LastUpdatedQuery(),
-            PaginationQuery(),
+            AtlasPaginationQuery(),
             SparseFieldsQuery(
                 TaskDoc,
                 default_fields=["task_id", "formula_pretty", "last_updated"],
