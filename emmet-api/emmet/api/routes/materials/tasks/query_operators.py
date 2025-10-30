@@ -97,7 +97,7 @@ class LastUpdatedQuery(QueryOperator):
             None, description="Maximum last updated UTC datetime"
         ),
     ) -> STORE_PARAMS:
-        crit = {}  # type: list[dict]
+        crit = {}  # type: dict
 
         if last_updated_min and last_updated_max:
             # Both min and max specified - use single range query

@@ -72,16 +72,13 @@ def generate_query_pipeline(query: dict):
 def generate_atlas_search_pipeline(query: dict):
     """
     Generate the aggregation pipeline for Atlas Search queries.
-
-    Args:
-        query: Query parameters
-        store: Store containing endpoint data
     """
     pipeline = []
+    operator: dict = {}
 
     if query.get("criteria", False) is False or len(query["criteria"]) == 0:
         operator = {"exists": {"path": "_id"}}
-    else:  # generate the operator, if more than one
+    else:
         operator = {"compound": {"must": [], "mustNot": []}}
 
         # Build the must clauses
