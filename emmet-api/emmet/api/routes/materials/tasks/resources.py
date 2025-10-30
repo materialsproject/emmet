@@ -26,9 +26,7 @@ def task_resource(task_store):
         task_store,
         TaskDoc,
         query_operators=[
-            # BatchIdQuery(field="batch_id"),
             AtlasFormulaQuery(),
-            # ChemsysQuery(),
             AtlasElementsQuery(),
             MultipleTaskIDsQuery(),
             LastUpdatedQuery(),
