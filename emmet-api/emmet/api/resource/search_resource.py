@@ -7,7 +7,7 @@ from pymongo.errors import NetworkTimeout, PyMongoError
 
 from emmet.api.models import Meta
 from emmet.api.query_operator import QueryOperator
-from emmet.api.resource import HintScheme, CollectionResource
+from emmet.api.resource import CollectionResource
 from emmet.api.resource.utils import (
     attach_query_ops,
     generate_atlas_search_pipeline,
@@ -87,13 +87,10 @@ class SearchResource(CollectionResource):
                             ", ".join(overlap)
                         ),
                     )
-            print(queries)
             query: dict[Any, Any] = merge_atlas_queries(list(queries.values()))  # type: ignore
-            print(query)
 
             try:
                 pipeline = generate_atlas_search_pipeline(query)
-                print(pipeline)
                 cursor = await self.collection.aggregate(pipeline)
                 data = await cursor.to_list()
             except (NetworkTimeout, PyMongoError) as e:
@@ -123,8 +120,6 @@ class SearchResource(CollectionResource):
                 )
             else:
                 meta = Meta(total_doc=0)
-
-            print(meta)
 
             response = {"data": data if data else [], "meta": {**meta.dict(), **operator_meta}}  # type: ignore
 
