@@ -110,13 +110,6 @@ def generate_atlas_search_pipeline(query: dict):
         else:
             search_base["$search"]["searchBefore"] = p_token
 
-    # commenting out facet code for now as there are no known use cases to test it
-    # if query.get("facets", False):
-    #     search_base["$search"]["facet"] = {
-    #         "operator": operator,
-    #         "facets": query["facets"],
-    #     }
-    # else:
     search_base["$search"].update(operator)
 
     sort_dict = {"sort": {"_id": 1}}
@@ -140,9 +133,5 @@ def generate_atlas_search_pipeline(query: dict):
 
     if query.get("limit", False):
         pipeline.append({"$limit": query["limit"]})
-
-    # commenting out facet code for now as there are no known use cases to test it
-    # if query.get("facets", False):
-    #     pipeline.append({"$facet": {"docs": [], "meta": [{"$replaceWith": "$$SEARCH_META"}, {"$limit": 1}]}})  # type: ignore
 
     return pipeline
