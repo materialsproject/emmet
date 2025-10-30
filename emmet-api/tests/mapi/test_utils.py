@@ -116,7 +116,6 @@ def test_merge_atlas_queries():
     assert merge_atlas_queries([]) == {
         "criteria": [],
         "properties": None,
-        "facets": None,
     }
 
     # Test merging single operator queries
@@ -127,7 +126,6 @@ def test_merge_atlas_queries():
     query2 = {
         "criteria": {"equals": {"path": "field2", "value": "value2"}},
         "properties": ["prop2"],
-        "facets": {"calc_typeFacet": {"type": "string", "path": "calc_type"}},
     }
 
     merged = merge_atlas_queries([query1, query2])
@@ -135,9 +133,6 @@ def test_merge_atlas_queries():
     assert {"equals": {"path": "field1", "value": "value1"}} in merged["criteria"]
     assert {"equals": {"path": "field2", "value": "value2"}} in merged["criteria"]
     assert set(merged["properties"]) == {"prop1", "prop2"}
-    assert merged["facets"] == {
-        "calc_typeFacet": {"type": "string", "path": "calc_type"}
-    }
 
     # Test merging list criteria
     query3 = {
@@ -150,9 +145,9 @@ def test_merge_atlas_queries():
         "skip": 10,
     }
     merged = merge_atlas_queries([query3])
-    assert len(merged["criteria"]) == 2
-    assert {"in": {"path": "field3", "value": "val1"}} in merged["criteria"]
-    assert {"in": {"path": "field4", "value": "val2"}} in merged["criteria"]
+    assert len(merged["criteria"]) == 1
+    assert {"path": "field3", "value": "val1"} in merged["criteria"][0]["in"]
+    assert {"path": "field4", "value": "val2"} in merged["criteria"][0]["in"]
     assert merged["skip"] == 10
 
 
@@ -174,33 +169,25 @@ def test_generate_atlas_search_pipeline():
         {"equals": {"path": "field2", "value": "value2"}},
     ]
     assert pipeline[0]["$search"]["returnStoredSource"] is True
-    assert pipeline[1]["$project"] == {"_id": 0, "prop1": 1, "prop2": 1}
+    assert pipeline[1]["$project"] == {
+        "_id": 0,
+        "meta": "$$SEARCH_META",
+        "meta_pagination_token": {"$meta": "searchSequenceToken"},
+        "prop1": 1,
+        "prop2": 1,
+    }
     assert pipeline[2]["$skip"] == 5
     assert pipeline[3]["$limit"] == 10
 
-    # Test query with facets
     faceted_query = {
         "criteria": [
             {"equals": {"path": "field1", "value": "value1"}},
             {"mustNot": {"equals": {"path": "field2", "value": "value2"}}},
         ],
         "properties": ["prop1"],
-        "facets": {
-            "field1_facet": {"type": "string", "path": "field1"},
-            "field2_facet": {"type": "number", "path": "field2"},
-        },
     }
     pipeline = generate_atlas_search_pipeline(faceted_query)
-    assert len(pipeline) == 4  # $search with facet, $project, $skip, $facet stages
-    assert pipeline[0]["$search"]["facet"]["operator"]["compound"]["must"] == [
-        {"equals": {"path": "field1", "value": "value1"}}
-    ]
-    assert pipeline[0]["$search"]["facet"]["operator"]["compound"]["mustNot"] == [
-        {"equals": {"path": "field2", "value": "value2"}}
-    ]
-    assert pipeline[0]["$search"]["facet"]["facets"] == faceted_query["facets"]
-    assert pipeline[-1]["$facet"]["docs"] == []
-    assert pipeline[-1]["$facet"]["meta"][0]["$replaceWith"] == "$$SEARCH_META"
+    assert len(pipeline) == 3  # $search, $project, $skip stages
 
     # Test query with sorting
     sorted_query = {
@@ -209,7 +196,16 @@ def test_generate_atlas_search_pipeline():
         "sort": {"field1": 1},
     }
     pipeline = generate_atlas_search_pipeline(sorted_query)
-    assert pipeline[0]["$search"]["sort"] == {"field1": 1}
+    assert pipeline[0]["$search"]["sort"] == {"field1": 1, "_id": 1}
+
+    # Test query with sorting and id override
+    sorted_query = {
+        "criteria": [{"equals": {"path": "field1", "value": "value1"}}],
+        "properties": ["prop1"],
+        "sort": {"field1": 1, "_id": -1},
+    }
+    pipeline = generate_atlas_search_pipeline(sorted_query)
+    assert pipeline[0]["$search"]["sort"] == {"field1": 1, "_id": -1}
 
     # Test query with non-stored sources
     non_stored_query = {
@@ -222,5 +218,4 @@ def test_generate_atlas_search_pipeline():
     # Test empty query
     empty_query = {"criteria": []}
     pipeline = generate_atlas_search_pipeline(empty_query)
-    assert pipeline[0]["$search"]["compound"]["must"] == []
-    assert pipeline[0]["$search"]["compound"]["mustNot"] == []
+    assert pipeline[0]["$search"]["exists"] == {"path": "_id"}
