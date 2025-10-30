@@ -92,11 +92,6 @@ class SearchResource(CollectionResource):
             print(query)
 
             try:
-                ## need to replace with search pagination
-                # count = await self.collection.count_documents(
-                #     query.get("criteria") or {},
-                #     **self.get_search_kwargs(query, "count"),
-                # )
                 pipeline = generate_atlas_search_pipeline(query)
                 print(pipeline)
                 cursor = await self.collection.aggregate(pipeline)
@@ -106,6 +101,13 @@ class SearchResource(CollectionResource):
                     status_code=504 if e.timeout else 500,
                     detail=f"Server error: {e}",
                 )
+
+            # results are returned reversed when paginating backwards so we need to fix that
+            reverse = any(
+                "$search" in p and "searchBefore" in p["$search"] for p in pipeline
+            )
+            if reverse:
+                data = list(reversed(data))
 
             operator_meta = {}
 
@@ -117,6 +119,7 @@ class SearchResource(CollectionResource):
                 meta = Meta(
                     total_doc=data[0]["meta"].get("count", {}).get("total", 1),
                     facet=data[0]["meta"].get("facet", {}),
+                    pagination_token=data[-1].get("meta_pagination_token", ""),
                 )
             else:
                 meta = Meta(total_doc=0)

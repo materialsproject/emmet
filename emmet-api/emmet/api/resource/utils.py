@@ -104,27 +104,33 @@ def generate_atlas_search_pipeline(query: dict):
         }
     }
 
-    if query.get("facets", False):
-        search_base["$search"]["facet"] = {
-            "operator": operator,
-            "facets": query["facets"],
-        }
-    else:
-        search_base["$search"].update(operator)
+    if p_token := query.get("pagination_token", None):
+        if query.get("forward", True):
+            search_base["$search"]["searchAfter"] = p_token
+        else:
+            search_base["$search"]["searchBefore"] = p_token
 
-    sorting = query.get("sort", False)
-    if sorting:
-        # no $ sign for atlas search
-        sort_dict = {"sort": {}}  # type: ignore
-        sort_dict["sort"].update(query["sort"])
-        # add sort to $search stage
-        search_base["$search"].update(sort_dict)
+    # commenting out facet code for now as there are no known use cases to test it
+    # if query.get("facets", False):
+    #     search_base["$search"]["facet"] = {
+    #         "operator": operator,
+    #         "facets": query["facets"],
+    #     }
+    # else:
+    search_base["$search"].update(operator)
+
+    sort_dict = {"sort": {"_id": 1}}
+    if query.get("sort", False):
+        sort_dict["sort"] = {**query["sort"], "_id": sort_dict["sort"].get("_id", 1)}
+    # add sort to $search stage
+    search_base["$search"].update(sort_dict)
 
     pipeline.append(search_base)
 
     projection_dict = {
         "_id": 0,
         "meta": "$$SEARCH_META",
+        "meta_pagination_token": {"$meta": "searchSequenceToken"},
     }
     if query.get("properties", False):
         projection_dict.update({p: 1 for p in query["properties"]})
@@ -135,7 +141,8 @@ def generate_atlas_search_pipeline(query: dict):
     if query.get("limit", False):
         pipeline.append({"$limit": query["limit"]})
 
-    if query.get("facets", False):
-        pipeline.append({"$facet": {"docs": [], "meta": [{"$replaceWith": "$$SEARCH_META"}, {"$limit": 1}]}})  # type: ignore
+    # commenting out facet code for now as there are no known use cases to test it
+    # if query.get("facets", False):
+    #     pipeline.append({"$facet": {"docs": [], "meta": [{"$replaceWith": "$$SEARCH_META"}, {"$limit": 1}]}})  # type: ignore
 
     return pipeline
