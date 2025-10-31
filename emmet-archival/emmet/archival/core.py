@@ -47,10 +47,12 @@ def _scan_dir(fsspec: PathLike, depth: int | None) -> list[Path]:
         if (ap := Path(fsobj).absolute()).is_file():
             paths.append(ap)
         elif ap.is_dir():
-            for x in os.scandir(ap):
-                _scan_dir_with_paths(
+            _ = [
+                _scan_dir_with_paths(  # type: ignore[func-returns-value]
                     x, rem_depth - 1 if rem_depth is not None else None
                 )
+                for x in os.scandir(ap)
+            ]
 
     _scan_dir_with_paths(fsspec, depth + 1 if depth is not None else None)
     return paths
@@ -78,10 +80,8 @@ def _get_path_relative_to_parent(path: Path, parent: Path) -> Path:
 
     if path == parent:
         return Path("")
+    p = next(x for x in path.parents if x == parent)
 
-    for p in path.parents:
-        if p == parent:
-            break
     leaf = str(path).split(str(p), 1)[1]
     if leaf.startswith("/"):
         leaf = "." + leaf
@@ -108,7 +108,7 @@ def walk_hierarchical_data(
     None. All dataset keys are stored in `dataset_keys`
     """
 
-    datasets = []
+    datasets: list[str] = []
 
     def _walk_hierarchical_data(g, k):
         if isinstance(g[k], h5py.Dataset | zarr.Array):
@@ -133,9 +133,7 @@ class FileArchiveBase(Archiver):
     @staticmethod
     def _decompress(data: bytes) -> bytes:
         """Decompress byte data using gzip if needed."""
-        if not data.startswith(b"\x1f\x8b"):
-            return data
-        return gzip.decompress(data)
+        return gzip.decompress(data) if data.startswith(b"\x1f\x8b") else data
 
     def _writeout(
         self,
