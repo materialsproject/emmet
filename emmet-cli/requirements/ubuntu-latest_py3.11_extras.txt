@@ -176,7 +176,7 @@ pathspec==0.12.1
     # via
     #   mkdocs
     #   mypy
-pillow==12.0.0
+pillow==11.3.0
     # via matplotlib
 platformdirs==4.5.0
     # via
@@ -262,7 +262,7 @@ pyyaml==6.0.3
     #   pyyaml-env-tag
 pyyaml-env-tag==1.1
     # via mkdocs
-requests==2.32.5
+requests==2.32.4
     # via
     #   pymatgen
     #   pymatgen-io-validation
