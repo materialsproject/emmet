@@ -7,7 +7,12 @@ from pymatgen.electronic_structure.dos import CompleteDos, Dos
 from pymatgen.io.vasp import Vasprun
 
 from emmet.core import ARROW_COMPATIBLE
-from emmet.core.band_theory import BaseElectronicDos, ElectronicBS, ElectronicDos
+from emmet.core.band_theory import (
+    ElectronicBS,
+    ProjectedBS,
+    ElectronicDos,
+    ProjectedDos,
+)
 from emmet.core.testing_utils import DataArchive
 
 if ARROW_COMPATIBLE:
@@ -64,8 +69,10 @@ def test_elec_band_struct(bs_fixture):
         getattr(elec_bs, f"spin_{s}_bands", None) is not None for s in ("up", "down")
     )
 
+    assert isinstance(elec_bs.projections, ProjectedBS)
+
     assert all(
-        getattr(elec_bs, f"spin_{s}_projections", None) is not None
+        isinstance(getattr(elec_bs.projections, f"spin_{s}", None), list)
         for s in ("up", "down")
     )
 
@@ -88,7 +95,7 @@ def test_base_electronic_dos():
     heg_dos = (2 * energies) ** (0.5) / np.pi**2
 
     for spin_pol in (1, 0.5):
-        edos = BaseElectronicDos(
+        edos = ElectronicDos(
             spin_up_densities=spin_pol * heg_dos,
             spin_down_densities=spin_pol * heg_dos if spin_pol < 1 else None,
             energies=energies,
@@ -121,7 +128,12 @@ def test_electronic_dos(dos_fixture):
         assert np.all(
             np.abs(np.array(getattr(edos, f"spin_{spin.name}_densities")) - dos) < 1e-6
         )
-    assert len(edos.projected_densities) == len(edos.structure)
+    assert len(set(edos.projected_densities.site_index)) == len(edos.structure)
+    assert isinstance(edos.projected_densities, ProjectedDos)
+    assert (
+        ProjectedDos._from_list_of_dict(edos.projected_densities._to_list_of_dict())
+        == edos.projected_densities
+    )
 
     # test roundtrip json
     dumped = edos.model_dump_json()
