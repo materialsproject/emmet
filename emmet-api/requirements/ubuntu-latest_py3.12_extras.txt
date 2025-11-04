@@ -4,8 +4,6 @@
 #
 #    pip-compile --all-extras --output-file=requirements/ubuntu-latest_py3.12_extras.txt
 #
-annotated-doc==0.0.3
-    # via fastapi
 annotated-types==0.7.0
     # via pydantic
 anyio==4.11.0
@@ -20,9 +18,9 @@ bibtexparser==1.4.3
     # via pymatgen
 blake3==1.0.8
     # via emmet-core
-boto3==1.40.61
+boto3==1.40.66
     # via emmet-api (pyproject.toml)
-botocore==1.40.61
+botocore==1.40.66
     # via
     #   boto3
     #   s3transfer
@@ -65,7 +63,7 @@ envier==0.6.1
     # via ddtrace
 execnet==2.1.1
     # via pytest-xdist
-fastapi==0.120.2
+fastapi==0.118.3
     # via emmet-api (pyproject.toml)
 filelock==3.20.0
     # via virtualenv
@@ -96,7 +94,7 @@ idna==3.11
     #   anyio
     #   httpx
     #   requests
-imageio==2.37.0
+imageio==2.37.2
     # via scikit-image
 importlib-metadata==8.7.0
     # via opentelemetry-api
@@ -127,7 +125,7 @@ lazy-loader==0.4
     # via scikit-image
 livereload==2.7.1
     # via emmet-api (pyproject.toml)
-markdown==3.9
+markdown==3.10
     # via
     #   mkdocs
     #   mkdocs-autorefs
@@ -197,7 +195,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-api (pyproject.toml)
     #   mypy
-narwhals==2.10.0
+narwhals==2.10.2
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -253,7 +251,7 @@ platformdirs==4.5.0
     # via
     #   mkdocs-get-deps
     #   virtualenv
-plotly==6.3.1
+plotly==6.4.0
     # via pymatgen
 pluggy==1.6.0
     # via
@@ -386,7 +384,7 @@ snowballstemmer==3.0.1
     # via pydocstyle
 spglib==2.6.0
     # via pymatgen
-starlette[full]==0.49.1
+starlette[full]==0.48.0
     # via
     #   emmet-api (pyproject.toml)
     #   fastapi
