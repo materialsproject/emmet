@@ -1,6 +1,5 @@
 import h5py
-import json
-import numpy as np
+import orjson
 
 from monty.io import zopen
 
@@ -25,7 +24,7 @@ def test_from_directory(tmp_dir, test_dir):
                     )
 
                 if "POTCAR" in fname:
-                    potcar_data = json.loads(np.array(f[calc_type][fname])[0].decode())
+                    potcar_data = orjson.loads(RawArchive._readout(f[calc_type], fname))
                     assert isinstance(potcar_data, list)
                     assert all(
                         isinstance(potcar_spec, dict)

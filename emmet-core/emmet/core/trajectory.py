@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import logging
-from collections import defaultdict
-from copy import deepcopy
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -15,10 +13,10 @@ from pydantic import BaseModel, Field, model_validator
 from pymatgen.core import Element, Molecule, Structure
 from pymatgen.core.trajectory import Trajectory as PmgTrajectory
 
-from emmet.core.math import Matrix3D, Vector3D
-from emmet.core.vasp.calc_types import RunType, TaskType, calc_type, run_type, task_type
-from emmet.core.vasp.calculation import ElectronicStep
+from emmet.core.math import Vector3D, Matrix3D
 from emmet.core.types.enums import ValueEnum
+from emmet.core.vasp.models import ElectronicStep
+from emmet.core.vasp.calc_types import RunType, TaskType
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +36,7 @@ if TYPE_CHECKING:
 
     from typing_extensions import Self
 
-    from emmet.core.vasp.calc_types import CalcType
-    from emmet.core.vasp.calculation import Calculation
+    from pymatgen.io.vasp import Vasprun
 
 
 class TrajFormat(ValueEnum):
@@ -65,8 +62,12 @@ class _MDMixin(BaseModel):
         None, description="The velocities of each atom."
     )
 
+    time_step: float | None = Field(
+        None, description="The time step used in the calculation."
+    )
+
     ionic_step_properties: set[str] = Field(
-        {"magmoms", "temperature", "velocities"},
+        {"magmoms", "temperature", "velocities", "time_step"},
         exclude=True,
         description="The properties included at each ionic step.",
     )
@@ -633,121 +634,47 @@ class RelaxTrajectory(AtomRelaxTrajectory):
         return conv_data
 
     @classmethod
-    def _calculation_to_props_dict(
-        cls,
-        calc: Calculation,
-    ) -> tuple[dict[str, list[Any]], RunType, TaskType, CalcType]:
-        """Convert a single VASP calculation to Trajectory._from_dict compatible dict.
+    def from_vasprun(
+        cls, vasprun: Vasprun, store_electronic_steps: bool = True, **kwargs
+    ) -> Self:
+        """Create a Trajectory from a VASP vasprun.xml.
 
         Parameters
         -----------
-        calc (emmet.core.vasp.calculation.Calculation)
-
-        Returns
-        -----------
-        dict, RunType, TaskType, CalcType
+        vasprun : pymatgen Vasprun object
+        store_electronic_steps : bool = True (default)
+            Whether to store the electronic step information
+        **kwargs : kwargs to pass to _from_dict / the document model
         """
 
-        ct: CalcType | None = None
-        rt: RunType | None = None
-        tt: TaskType | None = None
+        ionic_step_data = {
+            "structure",
+            "e_fr_energy",
+            "e_wo_entrp",
+            "e_0_energy",
+            "forces",
+            "stress",
+        }
+        remap = {"e_0_energy": "energy"}
+        if store_electronic_steps:
+            ionic_step_data.add("electronic_steps")
 
-        ionic_step_props = set(
-            cls.model_fields["ionic_step_properties"].default
-        ).difference(
+        if (
+            vasprun.parameters.get("IBRION", -1) == 0
+            and "time_step" in cls.model_fields
+            and not kwargs.get("time_step")
+        ):
+            kwargs["time_step"] = vasprun.parameters.get("POTIM")
+
+        return cls._from_dict(
             {
-                "energy",
-                "magmoms",
-            }
+                remap.get(k, k): [
+                    ionic_step.get(k) for ionic_step in vasprun.ionic_steps
+                ]
+                for k in ionic_step_data
+            },
+            **kwargs,
         )
-        # refresh calc, run, and task type if possible
-        if calc.input:
-            vis = calc.input.model_dump()
-            padded_params = {
-                **(calc.input.parameters or {}),
-                **(calc.input.incar or {}),
-            }
-            ct = calc_type(vis, padded_params)
-            rt = run_type(padded_params)
-            tt = task_type(vis)
-
-        props = defaultdict(list)
-
-        for ionic_step in calc.output.ionic_steps:
-            props["structure"].append(ionic_step.structure)
-
-            props["energy"].append(ionic_step.e_0_energy)
-            for k in ionic_step_props:
-                props[k].append(getattr(ionic_step, k))
-
-        return dict(props), rt, tt, ct
-
-    @classmethod
-    def from_task_doc(cls, task_doc, **kwargs) -> list["Trajectory"]:
-        """
-        Create trajectories from a TaskDoc.
-
-        This class creates a separate trajectory for all non-continuous
-        calculations in `TaskDoc.calcs_reversed`.
-        This is to ensure that each trajectory represents only a single
-        calculation type.
-        In cases where sequential calculations in the reversed `calcs_reversed`
-        have the same calc type, their trajectories are joined.
-
-        Note that if no input is provided in the calculation, the calculation
-        is split off into its own trajectory.
-
-        Parameters
-        -----------
-        task_doc : emmet.core.TaskDoc
-        kwargs
-            Other kwargs to pass to Trajectory
-
-        Returns
-        -----------
-        list of Trajectory
-        """
-
-        trajs: list[Trajectory] = []
-        kwargs.update(
-            identifier=str(task_doc.task_id) if task_doc.task_id else None,
-        )
-
-        props: dict[str, list[Any]] = {}
-        old_meta = {f"{k}_type": None for k in ("run", "task", "calc")}
-        new_meta = deepcopy(old_meta)
-        # un-reverse the calcs_reversed
-        for icr, cr in enumerate(task_doc.calcs_reversed[::-1]):
-            (
-                new_props,
-                new_meta["run_type"],
-                new_meta["task_type"],
-                new_meta["calc_type"],
-            ) = cls._calculation_to_props_dict(cr)
-
-            if (
-                old_meta["calc_type"] != new_meta["calc_type"]
-                or new_meta["calc_type"] is None
-                or icr == 0
-            ):
-                # Either CalcType changed or no calculation input was provided
-                # or this is the first calculation in `calcs_reversed`
-                # Append existing trajectory to list of trajectories, and restart
-                if icr > 0:
-                    trajs.append(cls._from_dict(props, **old_meta, **kwargs))  # type: ignore[arg-type]
-
-                props = deepcopy(new_props)
-            else:
-                for k, new_vals in new_props.items():
-                    props[k].extend(new_vals)
-
-            for k, v in new_meta.items():
-                old_meta[k] = v
-
-        # create final trajectory
-        trajs.append(cls._from_dict(props, **old_meta, **kwargs))  # type: ignore[arg-type]
-
-        return trajs
 
     @requires(
         pa is not None, message="pyarrow must be installed to de-/serialize to parquet"
