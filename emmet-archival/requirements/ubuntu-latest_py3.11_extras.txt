@@ -68,7 +68,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-archival (pyproject.toml)
     #   mypy
-narwhals==2.10.0
+narwhals==2.10.2
     # via plotly
 networkx==3.5
     # via pymatgen
@@ -109,7 +109,7 @@ pillow==12.0.0
     # via matplotlib
 platformdirs==4.5.0
     # via virtualenv
-plotly==6.3.1
+plotly==6.4.0
     # via pymatgen
 pluggy==1.6.0
     # via

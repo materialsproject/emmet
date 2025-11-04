@@ -42,7 +42,7 @@ monty==2025.3.3
     #   pymatgen
 mpmath==1.3.0
     # via sympy
-narwhals==2.10.0
+narwhals==2.10.2
     # via plotly
 networkx==3.5
     # via pymatgen
@@ -68,9 +68,9 @@ pandas==2.3.3
     # via pymatgen
 pillow==12.0.0
     # via matplotlib
-plotly==6.3.1
+plotly==6.4.0
     # via pymatgen
-psutil==7.1.2
+psutil==7.1.3
     # via emmet-cli (pyproject.toml)
 pybtex==0.25.1
     # via emmet-core
