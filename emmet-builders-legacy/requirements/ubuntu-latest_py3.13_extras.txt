@@ -6,7 +6,7 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.11.18
+aiohttp==3.12.14
     # via fsspec
 aioitertools==0.12.0
     # via maggma
@@ -388,7 +388,7 @@ patsy==1.0.1
     # via statsmodels
 phonopy==2.38.2
     # via matcalc
-pillow==11.2.1
+pillow==12.0.0
     # via
     #   imageio
     #   matplotlib
@@ -515,7 +515,7 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.3
+requests==2.32.4
     # via
     #   matminer
     #   pymatgen
@@ -598,7 +598,7 @@ tidynamics==1.1.2
     # via transport-analysis
 tifffile==2025.5.10
     # via scikit-image
-torch==2.7.0
+torch==2.8.0
     # via
     #   chgnet
     #   matgl
@@ -646,7 +646,7 @@ tzdata==2025.2
     # via pandas
 uncertainties==3.2.3
     # via pymatgen
-urllib3==2.4.0
+urllib3==2.5.0
     # via
     #   botocore
     #   requests
