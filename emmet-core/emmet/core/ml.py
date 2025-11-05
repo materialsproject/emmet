@@ -9,7 +9,6 @@ from pydantic import (
     BaseModel,
     Field,
     field_validator,
-    model_serializer,
 )
 from pymatgen.analysis.elasticity import ElasticTensor
 from pymatgen.core import Element, Structure
@@ -24,13 +23,12 @@ from emmet.core.math import Matrix3D, Vector3D, Vector6D, matrix_3x3_to_voigt
 from emmet.core.structure import StructureMetadata
 from emmet.core.tasks import TaskDoc
 from emmet.core.types.pymatgen_types.composition_adapter import CompositionType
+from emmet.core.types.pymatgen_types.element_adapter import ElementType
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.typing import IdentifierType
-from emmet.core.utils import jsanitize
 from emmet.core.vasp.calc_types import RunType as VaspRunType
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
 
     from typing_extensions import Self
 
@@ -140,8 +138,23 @@ class MLDoc(ElasticityDoc):
 class MLTrainDoc(StructureMetadata):
     """Generic schema for ML training data."""
 
-    structure: StructureType | None = Field(
-        None, description="Structure for this entry."
+    cell: Matrix3D | None = Field(
+        None,
+        description="The 3x3 matrix of cell/lattice vectors, such that a is the first row, b the second, and c the third.",
+    )
+
+    atomic_numbers: list[int] | None = Field(
+        None,
+        description="The list of proton numbers at each site. Should be the same length as `cart_coords`",
+    )
+
+    cart_coords: list[Vector3D] | None = Field(
+        None,
+        description="The list of Cartesian coordinates of each atom. Should be the same length as `atomic_numbers`.",
+    )
+
+    magmoms: list[float] | None = Field(
+        None, description="The list of on-site magnetic moments."
     )
 
     energy: float | None = Field(
@@ -169,7 +182,7 @@ class MLTrainDoc(StructureMetadata):
 
     bandgap: float | None = Field(None, description="The final DFT bandgap.")
 
-    elements: list[Element] | None = Field(
+    elements: list[ElementType] | None = Field(
         None,
         description="List of unique elements in the material sorted alphabetically.",
     )
@@ -196,11 +209,16 @@ class MLTrainDoc(StructureMetadata):
         description="Bader on-site magnetic moments for each site of the structure.",
     )
 
-    @model_serializer
-    def deseralize(self):
-        """Ensure output is JSON compliant."""
-        return jsanitize(
-            {k: getattr(self, k, None) for k in self.__class__.model_fields}
+    @property
+    def structure(self) -> Structure:
+        """Get the structure associated with this entry."""
+        site_props = {"magmom": self.magmoms} if self.magmoms else None
+        return Structure(
+            np.array(self.cell),
+            [Element.from_Z(z) for z in self.atomic_numbers],
+            self.cart_coords,
+            coords_are_cartesian=True,
+            site_properties=site_props,
         )
 
     @classmethod
@@ -211,7 +229,7 @@ class MLTrainDoc(StructureMetadata):
         **kwargs,
     ) -> Self:
         """
-        Create an ML training document from a structure and fields.
+        Create an ML training document from an ordered structure and fields.
 
         This method mostly exists to ensure that the structure field is
         set because `meta_structure` does not populate it automatically.
@@ -219,11 +237,17 @@ class MLTrainDoc(StructureMetadata):
         Parameters
         -----------
         meta_structure : Structure
+            An ordered structure
         fields : list of str or None
             Additional fields in the document to populate
         **kwargs
             Any other fields / constructor kwargs
         """
+        if not meta_structure.is_ordered:
+            raise ValueError(
+                f"{cls.__name__} only supports ordered structures at this time."
+            )
+
         if (forces := kwargs.get("forces")) is not None and kwargs.get(
             "abs_forces"
         ) is None:
@@ -232,7 +256,10 @@ class MLTrainDoc(StructureMetadata):
         return super().from_structure(
             meta_structure=meta_structure,
             fields=fields,
-            structure=meta_structure,
+            cell=meta_structure.lattice.matrix,
+            atomic_numbers=[site.specie.Z for site in meta_structure],
+            cart_coords=meta_structure.cart_coords,
+            magmoms=meta_structure.site_properties.get("magmom") or None,
             **kwargs,
         )
 
@@ -353,11 +380,3 @@ class MatPESTrainDoc(MLTrainDoc):
     def pressure(self) -> float | None:
         """Return the pressure from the DFT stress tensor."""
         return sum(self.stress[:3]) / 3.0 if self.stress else None
-
-    @property
-    def magmoms(self) -> Sequence[float] | None:
-        """Retrieve on-site magnetic moments from the structure if they exist."""
-        magmom = (
-            self.structure.site_properties.get("magmom") if self.structure else None
-        )
-        return magmom
