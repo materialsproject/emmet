@@ -136,7 +136,7 @@ class MLDoc(ElasticityDoc):
         return ShearModulus(vrh=val)
 
 
-class MLTrainDoc(StructureMetadata):
+class MLTrainDoc(StructureMetadata, extra="allow"):  # type: ignore[call-arg]
     """Generic schema for ML training data."""
 
     cell: Matrix3D | None = Field(
@@ -254,13 +254,15 @@ class MLTrainDoc(StructureMetadata):
         ) is None:
             kwargs["abs_forces"] = [np.linalg.norm(f) for f in forces]
 
+        if magmoms := meta_structure.site_properties.get("magmom"):
+            kwargs["magmoms"] = magmoms
+
         return super().from_structure(
             meta_structure=meta_structure,
             fields=fields,
             cell=meta_structure.lattice.matrix,
             atomic_numbers=[site.specie.Z for site in meta_structure],
             cart_coords=meta_structure.cart_coords,
-            magmoms=meta_structure.site_properties.get("magmom") or None,
             **kwargs,
         )
 
@@ -414,3 +416,44 @@ class MatPESTrainDoc(MLTrainDoc):
     def pressure(self) -> float | None:
         """Return the pressure from the DFT stress tensor."""
         return sum(self.stress[:3]) / 3.0 if self.stress else None
+
+
+class MPtrjProvenance(BaseModel):
+    """Metadata for MPtrj entries."""
+
+    material_id: IdentifierType | None = Field(
+        None, description="The Materials Project (summary) ID for this material."
+    )
+    task_id: IdentifierType | None = Field(
+        None, description="The Materials Project (summary) ID for this material."
+    )
+    calcs_reversed_index: int | None = Field(
+        None, description="The index of the reversed calculations, if applicable."
+    )
+    ionic_step_index: int | None = Field(
+        None, description="The index of the ionic step, if applicable."
+    )
+
+
+class MPtrjTrainDoc(MLTrainDoc):
+    """Schematize MPtrj data."""
+
+    energy: float | None = Field(
+        None, description="The total uncorrected energy associated with this structure."
+    )
+
+    cohesive_energy_per_atom: float | None = Field(
+        None, description="The uncorrected cohesive energy per atom of this material."
+    )
+
+    corrected_cohesive_energy_per_atom: float | None = Field(
+        None,
+        description=(
+            "The corrected cohesive energy per atom of this material, "
+            "using the Materials Project GGA / GGA+U mixing scheme."
+        ),
+    )
+
+    provenance: MPtrjProvenance | None = Field(
+        None, description="Metadata for this frame."
+    )
