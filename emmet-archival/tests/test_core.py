@@ -73,7 +73,6 @@ def test_file_archiver(tmp_dir):
         for k, v in extracted.items():
             orig_text = next(t for i, t in enumerate(lorem) if str(fs[i]).endswith(k))
             assert FileArchive._readout(f, k) == v
-            print(k, FileArchive._compress(v))
             assert FileArchive._readout(
                 f, k, decompress=False
             ) == FileArchive._compress(v)

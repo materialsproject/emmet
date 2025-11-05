@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -209,14 +210,14 @@ class MLTrainDoc(StructureMetadata):
         description="Bader on-site magnetic moments for each site of the structure.",
     )
 
-    @property
+    @cached_property
     def structure(self) -> Structure:
         """Get the structure associated with this entry."""
         site_props = {"magmom": self.magmoms} if self.magmoms else None
         return Structure(
             np.array(self.cell),
-            [Element.from_Z(z) for z in self.atomic_numbers],
-            self.cart_coords,
+            [Element.from_Z(z) for z in self.atomic_numbers],  # type: ignore[union-attr]
+            self.cart_coords,  # type: ignore[arg-type]
             coords_are_cartesian=True,
             site_properties=site_props,
         )
@@ -318,6 +319,39 @@ class MLTrainDoc(StructureMetadata):
                     )
                 )
         return entries
+
+    @cached_property
+    def to_ase_atoms(self):
+        """Vestigial functionality to convert to ASE atoms.
+
+        NB: pymatgen depends on ASE optionally so this
+        may...be...OK to include here?
+
+        Can cut this as needed.
+        """
+
+        try:
+            from ase.calculators.singlepoint import SinglePointCalculator
+            from ase import Atoms
+        except ImportError:
+            raise ImportError(
+                "You must `pip install ase` to use the atoms functionality here!"
+            )
+
+        atoms = Atoms(
+            positions=self.cart_coords,
+            numbers=self.atomic_numbers,
+            cell=self.cell,
+        )
+        calc = SinglePointCalculator(
+            atoms,
+            **{
+                k: getattr(self, k, None)
+                for k in {"energy", "forces", "stress", "magmoms"}
+            },
+        )
+        atoms.calc = calc
+        return atoms
 
 
 class MatPESProvenanceDoc(BaseModel):
