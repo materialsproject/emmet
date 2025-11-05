@@ -79,5 +79,3 @@ def test_file_archiver(tmp_dir):
             assert FileArchive._readout(
                 f, k, decompress=False
             ) == FileArchive._compress(orig_text)
-
-    assert False
