@@ -1,8 +1,8 @@
 from pydantic import Field
 from pydantic.main import BaseModel
-from pymatgen.core.structure import Structure
 
 from emmet.core.types.enums import ValueEnum
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 
 
 class MPCompleteDoc(BaseModel):
@@ -10,7 +10,7 @@ class MPCompleteDoc(BaseModel):
     Defines data for MPComplete structure submissions
     """
 
-    structure: Structure | None = Field(
+    structure: StructureType | None = Field(
         None,
         description="Structure submitted by the user.",
     )

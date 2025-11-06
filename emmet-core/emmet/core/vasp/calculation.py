@@ -2,29 +2,46 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
+from functools import cached_property
 import logging
 import os
 from datetime import datetime
-from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Annotated, Type
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+import orjson
+from monty.io import zopen
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    model_validator,
+    BeforeValidator,
+)
 from pymatgen.command_line.bader_caller import bader_analysis_from_path
 from pymatgen.command_line.chargemol_caller import ChargemolAnalysis
-from pymatgen.core.lattice import Lattice
 from pymatgen.core.structure import Structure
-from pymatgen.core.trajectory import Trajectory
-from pymatgen.electronic_structure.bandstructure import BandStructure
 from pymatgen.electronic_structure.core import OrbitalType
-from pymatgen.electronic_structure.dos import CompleteDos, Dos
+from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.io.vasp import BSVasprun, Kpoints, Locpot, Oszicar, Outcar, Poscar
 from pymatgen.io.vasp import Potcar as VaspPotcar
 from pymatgen.io.vasp import PotcarSingle, Vasprun, VolumetricData
+from typing_extensions import NotRequired, TypedDict
 
+from emmet.core.band_theory import ElectronicBS, ElectronicDos
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
-from emmet.core.types.enums import VaspObject, StoreTrajectoryOption, TaskState
+from emmet.core.trajectory import RelaxTrajectory, Trajectory
+from emmet.core.vasp.models import ElectronicStep, ChgcarLike
+from emmet.core.types.enums import StoreTrajectoryOption, TaskState, VaspObject
+from emmet.core.types.pymatgen_types.bader import BaderAnalysis
+from emmet.core.types.pymatgen_types.kpoints_adapter import KpointsType
+from emmet.core.types.pymatgen_types.lattice_adapter import LatticeType
+from emmet.core.types.pymatgen_types.outcar_adapter import OutcarType
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
+from emmet.core.types.typing import JsonDictType, _dict_items_zipper
+from emmet.core.utils import type_override
 from emmet.core.vasp.calc_types import (
     CalcType,
     RunType,
@@ -36,6 +53,8 @@ from emmet.core.vasp.calc_types import (
 
 if TYPE_CHECKING:
     from typing_extensions import Self
+    from pymatgen.electronic_structure.dos import CompleteDos
+
 
 logger = logging.getLogger(__name__)
 
@@ -57,13 +76,37 @@ class CalculationBaseModel(BaseModel):
         return getattr(self, key, default_value)
 
 
+class TypedStatisticsDict(TypedDict):
+    MEAN: float
+    ABSMEAN: float
+    VAR: float
+    MIN: float
+    MAX: float
+
+
+class TypedPotcarKeywordsDict(TypedDict):
+    header: list[str]
+    data: list[str]
+
+
+class TypedPotcarStatsDict(TypedDict):
+    header: TypedStatisticsDict
+    data: TypedStatisticsDict
+
+
+class TypedPotcarSummaryStatsDict(TypedDict):
+    keywords: NotRequired[TypedPotcarKeywordsDict | None]
+    stats: NotRequired[TypedPotcarStatsDict | None]
+
+
 class PotcarSpec(BaseModel):
     """Document defining a VASP POTCAR specification."""
 
     titel: str | None = Field(None, description="TITEL field from POTCAR header")
     hash: str | None = Field(None, description="md5 hash of POTCAR file")
-    summary_stats: dict | None = Field(
-        None, description="summary statistics used to ID POTCARs without hashing"
+    summary_stats: TypedPotcarSummaryStatsDict | None = Field(
+        None,
+        description="summary statistics used to ID POTCARs without hashing",
     )
 
     @classmethod
@@ -84,7 +127,7 @@ class PotcarSpec(BaseModel):
         return cls(
             titel=potcar_single.TITEL,
             hash=potcar_single.md5_header_hash,
-            summary_stats=potcar_single._summary_stats,
+            summary_stats=potcar_single._summary_stats,  # type: ignore[arg-type]
         )
 
     @classmethod
@@ -118,9 +161,13 @@ class PotcarSpec(BaseModel):
         list[PotcarSpec]
             A list of potcar specs.
         """
+        if ".spec" in str(file_path):
+            with zopen(file_path, "rt") as psf:
+                return [cls(**ps) for ps in orjson.loads(psf.read())]
         return cls.from_potcar(VaspPotcar.from_file(str(file_path)))
 
 
+@type_override({"incar": str, "parameters": str})
 class CalculationInput(CalculationBaseModel):
     """Document defining VASP calculation inputs.
 
@@ -133,10 +180,10 @@ class CalculationInput(CalculationBaseModel):
         magnetic_moments (list of floats) : on-site magnetic moments
     """
 
-    incar: dict[str, Any] | None = Field(
+    incar: JsonDictType = Field(
         None, description="INCAR parameters for the calculation"
     )
-    kpoints: Kpoints | None = Field(None, description="KPOINTS for the calculation")
+    kpoints: KpointsType | None = Field(None, description="KPOINTS for the calculation")
     nkpoints: int | None = Field(None, description="Total number of k-points")
     potcar_spec: list[PotcarSpec] | None = Field(
         None, description="Title and hash of POTCAR files used in the calculation"
@@ -147,17 +194,19 @@ class CalculationInput(CalculationBaseModel):
     potcar_type: list[str] | None = Field(
         None, description="List of POTCAR functional types."
     )
-    parameters: dict | None = Field(None, description="Parameters from vasprun")
-    lattice_rec: Lattice | None = Field(
+    parameters: JsonDictType = Field(None, description="Parameters from vasprun")
+    lattice_rec: LatticeType | None = Field(
         None, description="Reciprocal lattice of the structure"
     )
-    structure: Structure | None = Field(
+    structure: StructureType | None = Field(
         None, description="Input structure for the calculation"
     )
     is_hubbard: bool = Field(
         default=False, description="Is this a Hubbard +U calculation"
     )
-    hubbards: dict | None = Field(None, description="The hubbard parameters used")
+    hubbards: Annotated[
+        dict[str, float] | None, BeforeValidator(_dict_items_zipper)
+    ] = Field(None, description="The hubbard parameters used")
 
     @model_validator(mode="before")
     @classmethod
@@ -171,9 +220,6 @@ class CalculationInput(CalculationBaseModel):
         VASP 6.4.3. This will lead to an incorrect return value from RunType.
         This validator will ensure that any already-parsed documents are fixed.
         """
-        config["parameters"] = {
-            k.strip(): v for k, v in (config.get("parameters", {}) or {}).items()
-        }
         if (kpts := config.get("kpoints")) and isinstance(kpts, dict):
             config["kpoints"] = Kpoints.from_dict(kpts)
 
@@ -281,7 +327,9 @@ class CalculationInput(CalculationBaseModel):
         return (self.parameters or {}).get("MAGMOM", None)
 
     @classmethod
-    def from_vasprun(cls, vasprun: Vasprun) -> Self:
+    def from_vasprun(
+        cls, vasprun: Vasprun, potcar_spec: list[PotcarSpec] | None = None
+    ) -> Self:
         """
         Create a VASP input document from a Vasprun object.
 
@@ -289,6 +337,8 @@ class CalculationInput(CalculationBaseModel):
         ----------
         vasprun
             A vasprun object.
+        potcar_spec : list of dict
+            If specified, the POTCAR spec to override that of vasprun.xml
 
         Returns
         -------
@@ -313,7 +363,7 @@ class CalculationInput(CalculationBaseModel):
             incar=incar,
             kpoints=Kpoints.from_dict(kpoints_dict),
             nkpoints=len(kpoints_dict["actual_kpoints"]),
-            potcar_spec=[PotcarSpec(**ps) for ps in vasprun.potcar_spec],
+            potcar_spec=potcar_spec or [PotcarSpec(**ps) for ps in vasprun.potcar_spec],
             potcar_type=[s.split()[0] for s in vasprun.potcar_symbols],
             parameters=parameters,
             lattice_rec=vasprun.initial_structure.lattice.reciprocal_lattice,
@@ -421,35 +471,9 @@ class ElectronPhononDisplacedStructures(BaseModel):
         description="The temperatures at which the electron phonon displacements "
         "were generated.",
     )
-    structures: list[Structure] | None = Field(
+    structures: list[StructureType] | None = Field(
         None, description="The displaced structures corresponding to each temperature."
     )
-
-
-class ElectronicStep(BaseModel):  # type: ignore
-    """Document defining the information at each electronic step.
-
-    Note, not all the information will be available at every step.
-    """
-
-    alphaZ: float | None = Field(None, description="The alpha Z term.")
-    ewald: float | None = Field(None, description="The ewald energy.")
-    hartreedc: float | None = Field(None, description="Negative Hartree energy.")
-    XCdc: float | None = Field(None, description="Negative exchange energy.")
-    pawpsdc: float | None = Field(
-        None, description="Negative potential energy with exchange-correlation energy."
-    )
-    pawaedc: float | None = Field(None, description="The PAW double counting term.")
-    eentropy: float | None = Field(None, description="The entropy (T * S).")
-    bandstr: float | None = Field(
-        None, description="The band energy (from eigenvalues)."
-    )
-    atom: float | None = Field(None, description="The atomic energy.")
-    e_fr_energy: float | None = Field(None, description="The free energy.")
-    e_wo_entrp: float | None = Field(None, description="The energy without entropy.")
-    e_0_energy: float | None = Field(None, description="The internal energy.")
-
-    model_config = ConfigDict(extra="allow")
 
 
 class IonicStep(BaseModel):  # type: ignore
@@ -466,7 +490,9 @@ class IonicStep(BaseModel):  # type: ignore
     num_electronic_steps: int | None = Field(
         None, description="The number of electronic steps needed to reach convergence."
     )
-    structure: Structure | None = Field(None, description="The structure at this step.")
+    structure: StructureType | None = Field(
+        None, description="The structure at this step."
+    )
 
     model_config = ConfigDict(extra="allow")
 
@@ -475,6 +501,32 @@ class IonicStep(BaseModel):  # type: ignore
         if self.electronic_steps is not None:
             self.num_electronic_steps = len(self.electronic_steps)
         return self
+
+
+def _deser_dos_properties(
+    dos_properties: list[Any] | dict[str, Any] | None,
+) -> dict[str, dict[str, dict[str, float]]] | None:
+    if dos_properties:
+        if isinstance(dos_properties, list):
+            dos_properties = {
+                element: {
+                    orbital: {key: value for key, value in property}
+                    for orbital, property in properties
+                }
+                for element, properties in dos_properties
+            }
+        elif isinstance(dos_properties, dict) and isinstance(
+            next(iter(dos_properties.values())), list
+        ):
+            dos_properties = {
+                element: {
+                    orbital: {key: value for key, value in property}
+                    for orbital, property in properties
+                }
+                for element, properties in dos_properties.items()
+            }
+
+    return dos_properties  # type: ignore[return-value]
 
 
 class CoreCalculationOutput(BaseModel):
@@ -493,7 +545,10 @@ class CoreCalculationOutput(BaseModel):
     direct_gap: float | None = Field(
         None, description="Direct band gap in eV (if system is not metallic)"
     )
-    dos_properties: dict[str, dict[str, dict[str, float]]] | None = Field(
+    dos_properties: Annotated[
+        dict[str, dict[str, dict[str, float]]] | None,
+        BeforeValidator(_deser_dos_properties),
+    ] = Field(
         None,
         description="Element- and orbital-projected band properties (in eV) for the "
         "DOS. All properties are with respect to the Fermi level.",
@@ -526,7 +581,7 @@ class CoreCalculationOutput(BaseModel):
         None, description="Whether the band gap is direct"
     )
     is_metal: bool | None = Field(None, description="Whether the system is metallic")
-    locpot: dict[int, list[float]] | None = Field(
+    locpot: dict[str, list[float]] | None = Field(
         None, description="Average of the local potential along the crystal axes"
     )
     mag_density: float | None = Field(
@@ -534,13 +589,13 @@ class CoreCalculationOutput(BaseModel):
         description="The magnetization density, defined as total_mag/volume "
         "(units of A^-3)",
     )
-    optical_absorption_coeff: list | None = Field(
+    optical_absorption_coeff: list[float] | None = Field(
         None, description="Optical absorption coefficient in cm^-1"
     )
-    outcar: dict[str, Any] | None = Field(
+    outcar: OutcarType | None = Field(
         None, description="Information extracted from the OUTCAR file"
     )
-    structure: Structure | None = Field(
+    structure: StructureType | None = Field(
         None, description="The final structure from the calculation"
     )
     transition: str | None = Field(
@@ -592,7 +647,6 @@ class CalculationOutput(CoreCalculationOutput):
         locpot: Locpot | None = None,
         elph_poscars: list[Path] | None = None,
         store_trajectory: StoreTrajectoryOption | str = StoreTrajectoryOption.NO,
-        store_onsite_density_matrices: bool = False,
     ) -> Self:
         """
         Create a VASP output document from VASP outputs.
@@ -615,8 +669,6 @@ class CalculationOutput(CoreCalculationOutput):
             Different value tune the amount of data from the ionic_steps
             stored in the Trajectory.
             If not NO, the `ionic_steps` field is left as None.
-        store_onsite_density_matrices
-            Whether to store the onsite density matrices from the OUTCAR.
         Returns
         -------
             The VASP calculation output document.
@@ -649,7 +701,7 @@ class CalculationOutput(CoreCalculationOutput):
         locpot_avg = None
         if locpot:
             locpot_avg = {
-                i: locpot.get_average_along_axis(i).tolist() for i in range(3)
+                str(i): locpot.get_average_along_axis(i).tolist() for i in range(3)
             }
 
         # parse force constants
@@ -673,9 +725,7 @@ class CalculationOutput(CoreCalculationOutput):
 
         if outcar and contcar:
             outcar_dict = outcar.as_dict()
-            outcar_dict.pop("run_stats")
-            if not store_onsite_density_matrices and outcar.has_onsite_density_matrices:
-                outcar_dict.pop("onsite_density_matrices")
+
             # use structure from CONTCAR as it is written to
             # greater precision than in the vasprun
             # but still need to copy the charge over
@@ -762,6 +812,7 @@ class CalculationOutput(CoreCalculationOutput):
         )
 
 
+@type_override({"ddec6": str})
 class Calculation(CalculationBaseModel):
     """Full VASP calculation inputs and outputs."""
 
@@ -771,9 +822,10 @@ class Calculation(CalculationBaseModel):
     vasp_version: str | None = Field(
         None, description="VASP version used to perform the calculation"
     )
-    has_vasp_completed: TaskState | bool | None = Field(
-        None, description="Whether VASP completed the calculation successfully"
-    )
+    has_vasp_completed: Annotated[
+        TaskState | None,
+        BeforeValidator(lambda v: TaskState(v) if v is not None else None),
+    ] = Field(None, description="Whether VASP completed the calculation successfully")
     input: CalculationInput | None = Field(
         None, description="VASP input settings for the calculation"
     )
@@ -786,13 +838,17 @@ class Calculation(CalculationBaseModel):
     task_name: str | None = Field(
         None, description="Name of task given by custodian (e.g., relax1, relax2)"
     )
-    output_file_paths: dict[str, str] | None = Field(
+    output_file_paths: Annotated[
+        dict[str, str] | None, BeforeValidator(_dict_items_zipper)
+    ] = Field(
         None,
         description="Paths (relative to dir_name) of the VASP output files "
         "associated with this calculation",
     )
-    bader: dict | None = Field(None, description="Output from bader charge analysis")
-    ddec6: dict | None = Field(None, description="Output from DDEC6 charge analysis")
+    bader: BaderAnalysis | None = Field(
+        None, description="Output from bader charge analysis"
+    )
+    ddec6: JsonDictType = Field(None, description="Output from DDEC6 charge analysis")
     run_type: RunType | None = Field(
         None, description="Calculation run type (e.g., HF, HSE06, PBE)"
     )
@@ -802,13 +858,6 @@ class Calculation(CalculationBaseModel):
     calc_type: CalcType | None = Field(
         None, description="Return calculation type (run type + task_type)."
     )
-
-    @field_validator("has_vasp_completed", mode="before")
-    @classmethod
-    def ensure_enum(cls, v: Any) -> TaskState:
-        if isinstance(v, bool):
-            v = TaskState.SUCCESS if v else TaskState.FAILED
-        return v
 
     @classmethod
     def from_vasp_files(
@@ -821,6 +870,7 @@ class Calculation(CalculationBaseModel):
         volumetric_files: list[str] | None = None,
         elph_poscars: list[Path] | None = None,
         oszicar_file: Path | str | None = None,
+        potcar_spec_file: Path | str | None = None,
         parse_dos: str | bool = False,
         parse_bandstructure: str | bool = False,
         average_locpot: bool = True,
@@ -830,7 +880,6 @@ class Calculation(CalculationBaseModel):
         strip_dos_projections: bool = False,
         store_volumetric_data: tuple[str] | None = None,
         store_trajectory: StoreTrajectoryOption | str = StoreTrajectoryOption.NO,
-        store_onsite_density_matrices: bool = False,
         vasprun_kwargs: dict | None = None,
     ) -> tuple["Calculation", dict[VaspObject, dict]]:
         """
@@ -855,6 +904,10 @@ class Calculation(CalculationBaseModel):
             ``PHON_LMC = True``, given relative to dir_name.
         oszicar_file
             Path to the OSZICAR file, relative to dir_name
+        potcar_spec_file : Path | str | None = None
+            Path to a POTCAR.spec file, relative to dir_name.
+            Used in rehydration of a calculation from archived
+            data, where the original POTCAR is not available.
         parse_dos
             Whether to parse the DOS. Can be:
 
@@ -905,8 +958,6 @@ class Calculation(CalculationBaseModel):
             - NO: Trajectory is not Stored.
             If not NO, :obj:'.CalculationOutput.ionic_steps' is set to None
             to reduce duplicating information.
-        store_onsite_density_matrices
-            Whether to store the onsite density matrices from the OUTCAR.
         vasprun_kwargs
             Additional keyword arguments that will be passed to the Vasprun init.
 
@@ -940,13 +991,14 @@ class Calculation(CalculationBaseModel):
 
         if (dos := _parse_dos(parse_dos, vasprun)) is not None:
             if strip_dos_projections:
-                dos = Dos(dos.efermi, dos.energies, dos.densities)  # type: ignore[arg-type]
+                dos.projected_densities = None
             vasp_objects[VaspObject.DOS] = dos  # type: ignore
 
         bandstructure = _parse_bandstructure(parse_bandstructure, vasprun)
         if bandstructure is not None:
             if strip_bandstructure_projections:
-                bandstructure.projections = {}
+                for spin in ("up", "down"):
+                    setattr(bandstructure, f"spin_{spin}_projections", None)
             vasp_objects[VaspObject.BANDSTRUCTURE] = bandstructure  # type: ignore
 
         bader = None
@@ -969,7 +1021,11 @@ class Calculation(CalculationBaseModel):
                 locpot_file = output_file_paths[VaspObject.LOCPOT]  # type: ignore
                 locpot = Locpot.from_file(dir_name / locpot_file)
 
-        input_doc = CalculationInput.from_vasprun(vasprun)
+        potcar_spec: list[PotcarSpec] | None = None
+        if potcar_spec_file:
+            potcar_spec = PotcarSpec.from_file(potcar_spec_file)
+        input_doc = CalculationInput.from_vasprun(vasprun, potcar_spec=potcar_spec)
+        this_task_type = task_type(input_doc.model_dump())
 
         store_trajectory = StoreTrajectoryOption(store_trajectory)
         output_doc = CalculationOutput.from_vasp_outputs(
@@ -979,34 +1035,32 @@ class Calculation(CalculationBaseModel):
             locpot=locpot,
             elph_poscars=elph_poscars,
             store_trajectory=store_trajectory,
-            store_onsite_density_matrices=store_onsite_density_matrices,
         )
+
         if store_trajectory != StoreTrajectoryOption.NO:
-            exclude_from_trajectory = set(["structure"])
-            if store_trajectory == StoreTrajectoryOption.PARTIAL:
-                exclude_from_trajectory.add("electronic_steps")
-            frame_properties = [
-                IonicStep(**x).model_dump(exclude=exclude_from_trajectory)
-                for x in vasprun.ionic_steps
-            ]
+            temperatures: list[float] | None = None
             if oszicar_file:
                 try:
                     oszicar = Oszicar(dir_name / oszicar_file)
-                    if "T" in oszicar.ionic_steps[0]:
-                        for frame_property, oszicar_is in zip(
-                            frame_properties, oszicar.ionic_steps
-                        ):
-                            frame_property["temperature"] = oszicar_is.get("T")
+                    _temperatures: list[float | None] = [
+                        osz_is.get("T") for osz_is in oszicar.ionic_steps
+                    ]
+                    if all(t is not None for t in _temperatures):
+                        temperatures = _temperatures  # type: ignore[assignment]
                 except ValueError:
                     # there can be errors in parsing the floats from OSZICAR
                     pass
 
-            traj = Trajectory.from_structures(
-                [d["structure"] for d in vasprun.ionic_steps],
-                frame_properties=frame_properties,
-                constant_lattice=False,
+            traj_class = (
+                Trajectory
+                if this_task_type == TaskType.Molecular_Dynamics
+                else RelaxTrajectory
             )
-            vasp_objects[VaspObject.TRAJECTORY] = traj  # type: ignore
+            vasp_objects[VaspObject.TRAJECTORY] = traj_class.from_vasprun(  # type: ignore[index]
+                vasprun,
+                store_electronic_steps=(store_trajectory == StoreTrajectoryOption.FULL),
+                temperature=temperatures,
+            )
 
         # MD run
         if vasprun.parameters.get("IBRION", -1) == 0:
@@ -1035,7 +1089,7 @@ class Calculation(CalculationBaseModel):
                 bader=bader,
                 ddec6=ddec6,
                 run_type=run_type(input_doc.parameters),
-                task_type=task_type(input_doc.model_dump()),
+                task_type=this_task_type,
                 calc_type=calc_type(input_doc.model_dump(), input_doc.parameters),
             ),
             vasp_objects,
@@ -1132,7 +1186,7 @@ def _get_volumetric_data(
     dir_name: Path,
     output_file_paths: dict[VaspObject, str],
     store_volumetric_data: tuple[str] | None,
-) -> dict[VaspObject, VolumetricData]:
+) -> dict[VaspObject, ChgcarLike]:
     """
     Load volumetric data files from a directory.
 
@@ -1150,7 +1204,7 @@ def _get_volumetric_data(
 
     Returns
     -------
-    dict[VaspObject, VolumetricData]
+    dict[VaspObject, ChgcarLike]
         A dictionary mapping the VASP object data type (`VaspObject.LOCPOT`,
         `VaspObject.CHGCAR`, etc) to the volumetric data object.
     """
@@ -1169,28 +1223,32 @@ def _get_volumetric_data(
 
         try:
             # assume volumetric data is all in CHGCAR format
-            volumetric_data[file_type] = Chgcar.from_file(str(dir_name / file))
+            volumetric_data[file_type] = ChgcarLike.from_pmg(
+                Chgcar.from_file(str(dir_name / file))
+            )
         except Exception:
             raise ValueError(f"Failed to parse {file_type} at {file}.")
     return volumetric_data
 
 
-def _parse_dos(parse_mode: str | bool, vasprun: Vasprun) -> Dos | None:
+def _parse_dos(parse_mode: str | bool, vasprun: Vasprun) -> ElectronicDos | None:
     """Parse DOS. See Calculation.from_vasp_files for supported arguments."""
     nsw = vasprun.incar.get("NSW", 0)
     dos = None
     if parse_mode is True or (parse_mode == "auto" and nsw < 1):
-        dos = vasprun.complete_dos
+        dos = ElectronicDos.from_pmg(vasprun.complete_dos)
     return dos
 
 
 def _parse_bandstructure(
     parse_mode: str | bool, vasprun: Vasprun
-) -> BandStructure | None:
+) -> ElectronicBS | None:
     """Parse band structure. See Calculation.from_vasp_files for supported arguments."""
     vasprun_file = vasprun.filename
 
-    if parse_mode == "auto":
+    bs: ElectronicBS | None = None
+    # only save the bandstructure if not moving ions
+    if parse_mode == "auto" and vasprun.incar.get("NSW", 0) <= 1:
         if vasprun.incar.get("ICHARG", 0) > 10:
             # NSCF calculation
             bs_vrun = BSVasprun(vasprun_file, parse_projected_eigen=True)
@@ -1205,17 +1263,12 @@ def _parse_bandstructure(
             bs_vrun = BSVasprun(vasprun_file, parse_projected_eigen=False)
             bs = bs_vrun.get_band_structure(efermi="smart")
 
-        # only save the bandstructure if not moving ions
-        if vasprun.incar.get("NSW", 0) <= 1:
-            return bs
-
     elif parse_mode:
         # legacy line/True behavior for bandstructure_mode
         bs_vrun = BSVasprun(vasprun_file, parse_projected_eigen=True)
         bs = bs_vrun.get_band_structure(line_mode=parse_mode == "line", efermi="smart")
-        return bs
 
-    return None
+    return ElectronicBS.from_pmg(bs) if bs else None
 
 
 def _get_band_props(
@@ -1274,3 +1327,141 @@ def _get_band_props(
                 continue
 
     return dosprop_dict
+
+
+def _calculation_to_trajectory_dict(
+    calc: Calculation,
+    traj_class: RelaxTrajectory | Trajectory = RelaxTrajectory,
+) -> tuple[dict[str, list[Any]], RunType, TaskType, CalcType, float | None]:
+    """Convert a single VASP calculation to Trajectory._from_dict compatible dict.
+
+    Parameters
+    -----------
+    calc (emmet.core.vasp.calculation.Calculation)
+    traj_class : RelaxTrajectory
+        The trajectory class used in parsing ionic step properties to save.
+
+    Returns
+    -----------
+    dict, RunType, TaskType, CalcType, float | None
+    """
+
+    ct: CalcType | None = None
+    rt: RunType | None = None
+    tt: TaskType | None = None
+    time_step: float | None = None
+
+    ionic_step_props = (
+        set(traj_class.model_fields["ionic_step_properties"].default)
+        .difference(
+            {
+                "energy",
+                "magmoms",
+            }
+        )
+        .intersection(set(IonicStep.model_fields))
+    )
+
+    # refresh calc, run, and task type if possible
+    if calc.input:
+        vis = calc.input.model_dump()
+        padded_params = {
+            **(calc.input.parameters or {}),
+            **(calc.input.incar or {}),
+        }
+        ct = calc_type(vis, padded_params)
+        rt = run_type(padded_params)
+        tt = task_type(vis)
+        time_step = (
+            padded_params.get("POTIM") if padded_params.get("IBRION", -1) == 0 else None
+        )
+
+    props: dict[str, list] = {}
+
+    if calc.output:
+        remap = {"energy": "e_0_energy"}
+        ionic_steps = calc.output.ionic_steps or []
+        props.update(
+            {
+                k: [getattr(ionic_step, remap.get(k, k)) for ionic_step in ionic_steps]
+                for k in {"structure", "energy", *ionic_step_props}
+            }
+        )
+
+    return props, rt, tt, ct, time_step
+
+
+def get_trajectories_from_calculations(
+    calculations: list[Calculation],
+    separate: bool = True,
+    traj_class: Type[RelaxTrajectory] = RelaxTrajectory,
+    **kwargs,
+) -> list[RelaxTrajectory]:
+    """
+    Create trajectories from a list of Calculation Objects.
+
+    Includes an option to join trajectories with the same `calc_type`.
+    Note that if no input is provided in the calculation, the calculation
+    is split off into its own trajectory.
+
+    By default, splits every calculation into a separate `Trajectory`.
+
+    Parameters
+    -----------
+    task_doc : emmet.core.TaskDoc
+    separate : bool = True by default
+        Whether to split all calculations into separate Trajectory
+        objects, or to join them if their calc types are identical.
+    traj_class : RelaxTrajectory
+        Class to use in deserializing the trajectory data.
+        Defaults to RelaxTrajectory, which contains just enough fields
+        for a relaxation trajectory.
+        Could be used to return a full Trajectory if MD data is desired.
+    kwargs
+        Other kwargs to pass to Trajectory
+
+    Returns
+    -----------
+    list of Trajectory
+    """
+
+    trajs: list[RelaxTrajectory] = []
+
+    props: dict[str, list[Any]] = {}
+    old_meta: dict[str, Any] = {
+        k: None for k in ("run_type", "task_type", "calc_type", "time_step")
+    }
+    new_meta = deepcopy(old_meta)
+    for icr, cr in enumerate(calculations):
+        (
+            new_props,
+            new_meta["run_type"],
+            new_meta["task_type"],
+            new_meta["calc_type"],
+            new_meta["time_step"],
+        ) = _calculation_to_trajectory_dict(cr, traj_class=traj_class)
+
+        if (
+            separate
+            or old_meta["calc_type"] != new_meta["calc_type"]
+            or new_meta["calc_type"] is None
+            or icr == 0
+        ):
+            # Either CalcType changed or no calculation input was provided
+            # or this is the first calculation in `calcs_reversed`
+            # Append existing trajectory to list of trajectories, and restart
+            if icr > 0:
+                trajs.append(traj_class._from_dict(props, **old_meta, **kwargs))  # type: ignore[arg-type]
+
+            props = deepcopy(new_props)
+        else:
+            for k, new_vals in new_props.items():
+                props[k].extend(new_vals)
+
+        for k, v in new_meta.items():
+            old_meta[k] = v
+
+    # create final trajectory
+    trajs.append(traj_class._from_dict(props, **old_meta, **kwargs))  # type: ignore[arg-type]
+
+    return trajs

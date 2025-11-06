@@ -5,25 +5,41 @@ from __future__ import annotations
 import logging
 import re
 import warnings
-from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Annotated
 
 import numpy as np
 from monty.json import MontyDecoder
 from monty.serialization import loadfn
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    field_validator,
+    BeforeValidator,
+    WrapSerializer,
+    model_validator,
+)
 from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.core.structure import Structure
-from pymatgen.core.trajectory import Trajectory
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.io.vasp import Incar, Kpoints, Poscar
 
-from emmet.core.types.enums import VaspObject, TaskState
-from emmet.core.types.typing import DateTimeType, NullableDateTimeType, IdentifierType
 from emmet.core.structure import StructureMetadata
-from emmet.core.trajectory import Trajectory as CoreTrajectory
-from emmet.core.utils import utcnow
+from emmet.core.types.enums import TaskState, VaspObject
+from emmet.core.types.pymatgen_types.computed_entries_adapter import (
+    ComputedEntryType,
+    ComputedStructureEntryType,
+)
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
+from emmet.core.types.typing import (
+    DateTimeType,
+    IdentifierType,
+    NullableDateTimeType,
+    JsonListType,
+    JsonDictType,
+    _ser_json_like,
+    _deser_json_like,
+)
+from emmet.core.utils import type_override, utcnow
 from emmet.core.vasp.calc_types import (
     CalcType,
     RunType,
@@ -38,13 +54,16 @@ from emmet.core.vasp.calculation import (
     CoreCalculationOutput,
     PotcarSpec,
     RunStatistics,
+    get_trajectories_from_calculations,
 )
+from emmet.core.trajectory import RelaxTrajectory, Trajectory
 from emmet.core.vasp.utils import TASK_NAMES, discover_and_sort_vasp_files
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from typing_extensions import Self
+
 
 monty_decoder = MontyDecoder()
 logger = logging.getLogger(__name__)
@@ -71,7 +90,7 @@ class InputDoc(OrigInputs):
 
 
 class OutputDoc(BaseModel):
-    structure: Structure | None = Field(
+    structure: StructureType | None = Field(
         None,
         title="Output Structure",
         description="Output Structure from the VASP calculation.",
@@ -107,7 +126,7 @@ class OutputDoc(BaseModel):
 
     @classmethod
     def from_vasp_calc_doc(
-        cls, calc_doc: Calculation, trajectory: Trajectory | None = None
+        cls, calc_doc: Calculation, trajectory: RelaxTrajectory | None = None
     ) -> "OutputDoc":
         """
         Create a summary of VASP calculation outputs from a VASP calculation document.
@@ -121,7 +140,7 @@ class OutputDoc(BaseModel):
         calc_doc
             A VASP calculation document.
         trajectory
-            A pymatgen Trajectory.
+            An emmet-core Trajectory.
 
         Returns
         -------
@@ -131,9 +150,11 @@ class OutputDoc(BaseModel):
         if calc_doc.output.ionic_steps:
             forces = calc_doc.output.ionic_steps[-1].forces
             stress = calc_doc.output.ionic_steps[-1].stress
-        elif trajectory and (ionic_steps := trajectory.frame_properties) is not None:
-            forces = ionic_steps[-1].get("forces")
-            stress = ionic_steps[-1].get("stress")
+        elif trajectory and all(
+            getattr(trajectory, k, None) is not None for k in ("forces", "stress")
+        ):
+            forces = trajectory.forces[-1]
+            stress = trajectory.stress[-1]
         else:
             raise RuntimeError("Unable to find ionic steps.")
 
@@ -148,13 +169,14 @@ class OutputDoc(BaseModel):
         )
 
 
+@type_override({"corrections": str, "job": str})
 class CustodianDoc(BaseModel):
-    corrections: list[Any] | None = Field(
+    corrections: JsonListType = Field(
         None,
         title="Custodian Corrections",
         description="List of custodian correction data for calculation.",
     )
-    job: Any | None = Field(
+    job: JsonDictType = Field(
         None,
         title="Custodian Job Data",
         description="Job data logged by custodian.",
@@ -243,6 +265,7 @@ class AnalysisDoc(BaseModel):
         )
 
 
+@type_override({"transformations": str, "vasp_objects": str})
 class CoreTaskDoc(StructureMetadata):
     """Calculation-level details about VASP calculations that power the Materials Project."""
 
@@ -278,7 +301,7 @@ class CoreTaskDoc(StructureMetadata):
     run_type: RunType | None = Field(
         None, description="The functional used in the calculation."
     )
-    structure: Structure | None = Field(
+    structure: StructureType | None = Field(
         None, description="Final output structure from the task"
     )
     tags: list[str] | None = Field(
@@ -292,14 +315,16 @@ class CoreTaskDoc(StructureMetadata):
     task_type: TaskType | CalcType | None = Field(
         None, description="The type of calculation."
     )
-    transformations: Any | None = Field(
+    transformations: JsonDictType = Field(
         None,
         description="Information on the structural transformations, parsed from a "
         "transformations.json file",
     )
-    vasp_objects: dict[VaspObject, Any] | None = Field(
-        None, description="Vasp objects associated with this task"
-    )
+    vasp_objects: Annotated[
+        dict[VaspObject, Any] | None,
+        BeforeValidator(_deser_json_like),
+        WrapSerializer(_ser_json_like),
+    ] = Field(None, description="Vasp objects associated with this task")
 
     @field_validator("batch_id", mode="before")
     def validate_batch_id(cls, batch_id: str):
@@ -321,7 +346,7 @@ class CoreTaskDoc(StructureMetadata):
         dir_name: Path | str,
         volumetric_files: tuple[str, ...] = _VOLUMETRIC_FILES,
         **vasp_calculation_kwargs,
-    ) -> tuple[Self, CoreTrajectory]:
+    ) -> tuple[Self, RelaxTrajectory]:
         """
         Create a CoreTaskDoc and corresponding CoreTrajectory from a
         directory containing VASP files.
@@ -343,7 +368,7 @@ class CoreTaskDoc(StructureMetadata):
         -------
         CoreTaskDoc
             A slim task document for the calculation.
-        CoreTrajectory
+        RelaxTrajectory
             A low memory document for the calculation's trajectory.
         """
         dir_name = Path(dir_name)
@@ -374,40 +399,16 @@ class CoreTaskDoc(StructureMetadata):
             vasp_objects=vasp_objects,
         )
 
-        props: dict[str, Any] = {
-            "structure": [],
-            "cart_coords": [],
-            "electronic_steps": [],
-            "energy": [],
-            "e_wo_entrp": [],
-            "e_fr_energy": [],
-            "forces": [],
-            "stress": [],
-        }
-
-        for ionic_step in calc_doc.output.ionic_steps:
-            props["structure"].append(ionic_step.structure)
-            props["energy"].append(ionic_step.e_0_energy)
-            for k in (
-                "e_fr_energy",
-                "e_wo_entrp",
-                "forces",
-                "stress",
-                "electronic_steps",
-            ):
-                props[k].append(getattr(ionic_step, k))
-
-        trajectory = CoreTrajectory._from_dict(
-            props, task_type=calc_doc.task_type, run_type=calc_doc.run_type
-        )
+        trajectory = get_trajectories_from_calculations(calc_doc)[0]
 
         return (task_doc, trajectory)
 
 
+@type_override({"additional_json": str})
 class TaskDoc(CoreTaskDoc, extra="allow"):
     """Flexible wrapper around CoreTaskDoc"""
 
-    additional_json: dict[str, Any] | None = Field(
+    additional_json: JsonDictType = Field(
         None, description="Additional json loaded from the calculation directory"
     )
     analysis: AnalysisDoc | None = Field(
@@ -428,7 +429,7 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
         title="Calcs reversed data",
         description="Detailed custodian data for each VASP calculation contributing to the task document.",
     )
-    entry: ComputedEntry | None = Field(
+    entry: ComputedEntryType | None = Field(
         None, description="The ComputedEntry from the task doc"
     )
     included_objects: list[VaspObject] | None = Field(
@@ -438,7 +439,7 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
         None,
         description="The exact set of output parameters used to generate the current task document.",
     )
-    run_stats: Mapping[str, RunStatistics] | None = Field(
+    run_stats: dict[str, RunStatistics] | None = Field(
         None,
         description="Summary of runtime statistics for each calculation in this task",
     )
@@ -793,6 +794,24 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
             entry_id=self.entry.entry_id,
         )
 
+    @property
+    def trajectories(self) -> list[Trajectory] | None:
+        """Get Trajectory objects representing calcs_reversed.
+
+        Note that the Trajectory objects represent the proper
+        calculation order, not the reversed.
+
+        Thus the first Trajectory represents the first calculation
+        that was performed (`self.calcs_reversed[-1]`).
+        """
+        if self.calcs_reversed:
+            return get_trajectories_from_calculations(
+                self.calcs_reversed[::-1],
+                separate=False,
+                identifier=str(self.task_id) if self.task_id else None,
+            )
+        return None
+
 
 class TrajectoryDoc(BaseModel):
     """Model for task trajectory data."""
@@ -803,7 +822,7 @@ class TrajectoryDoc(BaseModel):
         "This comes in the form: mp-******.",
     )
 
-    trajectories: list[Trajectory] | None = Field(
+    trajectories: list[RelaxTrajectory] | None = Field(
         None,
         description="Trajectory data for calculations associated with a task doc.",
     )
@@ -818,7 +837,7 @@ class EntryDoc(BaseModel):
         "This comes in the form: mp-******.",
     )
 
-    entry: ComputedStructureEntry | None = Field(
+    entry: ComputedStructureEntryType | None = Field(
         None,
         description="Computed structure entry for the calculation associated with the task doc.",
     )
@@ -954,9 +973,12 @@ def _parse_orig_inputs(
     }
     suffix = suffix or ""
     for filename in dir_name.glob("*".join(f"{suffix}.".split("."))):
-        if "POTCAR.spec" in str(filename):
-            # Can't parse POTCAR.spec files
-            continue
+        if f"POTCAR.spec{suffix}" in str(filename):
+            try:
+                orig_inputs["potcar_spec"] = PotcarSpec.from_file(filename)
+            except Exception:
+                # Can't parse non emmet-core style POTCAR.spec files
+                continue
         for name, vasp_input in input_mapping.items():
             if f"{name}{suffix}" in str(filename):
                 file_suffix = "_spec" if name == "POTCAR" else ""
@@ -1087,6 +1109,7 @@ def _find_vasp_files(
                     "vasprun_file": vasprun_filename,
                     "outcar_file": outcar_filename,
                     "contcar_file": contcar_filename,
+                    "potcar_spec_file": potcar_spec_filename,
                     "volumetric_files": [CHGCAR, LOCPOT, etc]
                     "elph_poscars": [POSCAR.T=300, POSCAR.T=400, etc]
                 },

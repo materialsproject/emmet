@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import math
 from contextlib import contextmanager
 from importlib.resources import files as import_resource
-import math
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import TYPE_CHECKING
@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas as pd
 from pydantic import BaseModel
+
+from emmet.core.utils import arrow_incompatible
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator
@@ -84,6 +86,7 @@ def assert_schemas_equal(
         assert test_schema == valid_schema
 
 
+@arrow_incompatible
 class DataArchive(BaseModel):
     """Tool to compress test data into a lower disk / innode use file."""
 

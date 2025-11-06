@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import gzip
-import json
+import orjson
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -189,12 +189,12 @@ class EmmetSettings(BaseSettings):
         if config_file_path.startswith("http"):
             response = requests.get(config_file_path)
             if response.content.startswith(b"\x1f\x8b"):
-                new_values = json.loads(gzip.decompress(response.content))
+                new_values = orjson.loads(gzip.decompress(response.content))
             else:
-                new_values = json.loads(response.content.decode())
+                new_values = orjson.loads(response.content)
         elif Path(config_file_path).exists():
-            with zopen(config_file_path, "rt") as f:
-                new_values = json.load(f)
+            with zopen(config_file_path, "rb") as f:
+                new_values = orjson.loads(f.read())
 
         new_values.update(values)
 

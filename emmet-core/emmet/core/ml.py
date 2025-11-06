@@ -5,16 +5,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-
 from pydantic import (
-    Field,
     BaseModel,
+    Field,
     field_validator,
-    model_validator,
     model_serializer,
 )
 from pymatgen.analysis.elasticity import ElasticTensor
-from pymatgen.core import Composition, Element, Structure
+from pymatgen.core import Element, Structure
 
 from emmet.core.elasticity import (
     BulkModulus,
@@ -22,15 +20,18 @@ from emmet.core.elasticity import (
     ElasticTensorDoc,
     ShearModulus,
 )
-from emmet.core.math import Vector3D, Matrix3D, Vector6D, matrix_3x3_to_voigt
-from emmet.core.types.typing import IdentifierType
+from emmet.core.math import Matrix3D, Vector3D, Vector6D, matrix_3x3_to_voigt
 from emmet.core.structure import StructureMetadata
-from emmet.core.vasp.calc_types import RunType as VaspRunType
 from emmet.core.tasks import TaskDoc
+from emmet.core.types.pymatgen_types.composition_adapter import CompositionType
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
+from emmet.core.types.typing import IdentifierType
 from emmet.core.utils import jsanitize
+from emmet.core.vasp.calc_types import RunType as VaspRunType
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
     from typing_extensions import Self
 
 
@@ -67,14 +68,14 @@ class MLDoc(ElasticityDoc):
     property_name: str = "ml"
 
     # metadata
-    structure: Structure = Field(description="Original structure")
+    structure: StructureType = Field(description="Original structure")
     model: str | None = Field(None, description="Name of model used as ML potential.")
     version: str | None = Field(
         None, description="Version of model used as ML potential"
     )
 
     # relaxation attributes
-    final_structure: Structure | None = Field(
+    final_structure: StructureType | None = Field(
         None, description="ML-potential-relaxed structure"
     )
     energy: float | None = Field(None, description="Final energy in eV")
@@ -139,7 +140,9 @@ class MLDoc(ElasticityDoc):
 class MLTrainDoc(StructureMetadata):
     """Generic schema for ML training data."""
 
-    structure: Structure | None = Field(None, description="Structure for this entry.")
+    structure: StructureType | None = Field(
+        None, description="Structure for this entry."
+    )
 
     energy: float | None = Field(
         None, description="The total energy associated with this structure."
@@ -171,11 +174,11 @@ class MLTrainDoc(StructureMetadata):
         description="List of unique elements in the material sorted alphabetically.",
     )
 
-    composition: Composition | None = Field(
+    composition: CompositionType | None = Field(
         None, description="Full composition for the material."
     )
 
-    composition_reduced: Composition | None = Field(
+    composition_reduced: CompositionType | None = Field(
         None,
         title="Reduced Composition",
         description="Simplified representation of the composition.",
@@ -196,16 +199,9 @@ class MLTrainDoc(StructureMetadata):
     @model_serializer
     def deseralize(self):
         """Ensure output is JSON compliant."""
-        return jsanitize({k: getattr(self, k, None) for k in self.model_fields})
-
-    @model_validator(mode="after")
-    def set_abs_forces(
-        self,
-    ) -> Self:
-        """Ensure the abs_forces are set if the vector-valued forces are."""
-        if self.forces is not None and self.abs_forces is None:
-            self.abs_forces = [np.linalg.norm(f) for f in self.forces]  # type: ignore[misc]
-        return self
+        return jsanitize(
+            {k: getattr(self, k, None) for k in self.__class__.model_fields}
+        )
 
     @classmethod
     def from_structure(
@@ -228,6 +224,11 @@ class MLTrainDoc(StructureMetadata):
         **kwargs
             Any other fields / constructor kwargs
         """
+        if (forces := kwargs.get("forces")) is not None and kwargs.get(
+            "abs_forces"
+        ) is None:
+            kwargs["abs_forces"] = [np.linalg.norm(f) for f in forces]
+
         return super().from_structure(
             meta_structure=meta_structure,
             fields=fields,

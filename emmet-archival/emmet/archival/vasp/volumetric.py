@@ -7,23 +7,23 @@ import pyarrow as pa
 import pyarrow.compute as pa_co
 from pydantic import Field
 
-from emmet.core.band_theory import ElectronicBS, ElectronicDos
-from emmet.core.vasp.utils import VASP_VOLUMETRIC_FILES
-
 from emmet.archival.base import Archiver
-from emmet.archival.volumetric import VolumetricArchive
 from emmet.archival.utils import zpath
 from emmet.archival.vasp import PMG_OBJ
+from emmet.archival.volumetric import VolumetricArchive
+from emmet.core.arrow import arrowize
+from emmet.core.band_theory import ElectronicBS, ElectronicDos
+from emmet.core.vasp.utils import VASP_VOLUMETRIC_FILES
 
 if TYPE_CHECKING:
 
     from collections.abc import Sequence
-    from typing_extensions import Self
 
     from pymatgen.electronic_structure.bandstructure import BandStructure
     from pymatgen.electronic_structure.dos import CompleteDos, Dos
     from pymatgen.io.common import VolumetricData as PmgVolumetricData
     from pymatgen.io.vasp import Vasprun
+    from typing_extensions import Self
 
 
 class DosArchive(Archiver):
@@ -35,12 +35,15 @@ class DosArchive(Archiver):
 
     def to_arrow(self) -> pa.Table:
         """Convert DOS archive to arrow table."""
-        return self.dos.to_arrow()
+        return pa.Table.from_pylist(
+            [self.dos.model_dump(context={"format": "arrow"})],
+            schema=pa.schema(arrowize(ElectronicDos)),
+        )
 
     @classmethod
     def from_arrow(cls, table: pa.Table) -> Dos | CompleteDos:
         """Extract a pymatgen DOS from an arrow table."""
-        return ElectronicDos.from_arrow(table).to_pmg()
+        return ElectronicDos(**table.to_pylist(maps_as_pydicts="strict")[0]).to_pmg()
 
     @classmethod
     def from_vasprun(cls, vasprun: Vasprun) -> Self:
@@ -54,11 +57,14 @@ class BandStructureArchive(Archiver):
     band_structure: ElectronicBS = Field(description="The electronic band structure.")
 
     def to_arrow(self) -> pa.Table:
-        return self.band_structure.to_arrow()
+        return pa.Table.from_pylist(
+            [self.band_structure.model_dump(context={"format": "arrow"})],
+            schema=pa.schema(arrowize(ElectronicBS)),
+        )
 
     @classmethod
     def from_arrow(cls, table: pa.Table) -> BandStructure:
-        return ElectronicBS.from_arrow(table).to_pmg()
+        return ElectronicBS(**table.to_pylist(maps_as_pydicts="strict")[0]).to_pmg()
 
     @classmethod
     def from_vasprun(cls, vasprun: Vasprun) -> Self:

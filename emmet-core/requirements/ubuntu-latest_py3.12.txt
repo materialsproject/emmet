@@ -66,12 +66,12 @@ plotly==6.4.0
     # via pymatgen
 pybtex==0.25.1
     # via emmet-core (pyproject.toml)
-pydantic==2.12.3
+pydantic==2.12.4
     # via
     #   emmet-core (pyproject.toml)
     #   pydantic-settings
     #   pymatgen-io-validation
-pydantic-core==2.41.4
+pydantic-core==2.41.5
     # via pydantic
 pydantic-settings==2.11.0
     # via

@@ -42,7 +42,7 @@ emmet-core==0.86.0rc1
     # via emmet-api (emmet/emmet-api/pyproject.toml)
 envier==0.6.1
     # via ddtrace
-fastapi==0.118.3
+fastapi==0.119.1
     # via emmet-api (emmet/emmet-api/pyproject.toml)
 fonttools==4.60.1
     # via matplotlib
@@ -243,7 +243,7 @@ urllib3==2.5.0
     #   requests
 uvicorn==0.38.0
     # via emmet-api (emmet/emmet-api/pyproject.toml)
-wrapt==1.17.3
+wrapt==2.0.0
     # via ddtrace
 zipp==3.23.0
     # via importlib-metadata

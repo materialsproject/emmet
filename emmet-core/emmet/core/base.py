@@ -1,6 +1,7 @@
 """Base emmet model to add default metadata."""
 
 from typing import Literal
+
 from pydantic import BaseModel, Field
 from pymatgen.core import __version__ as pmg_version
 

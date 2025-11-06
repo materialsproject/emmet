@@ -1,5 +1,8 @@
 import os
 from monty.io import zopen
+
+from emmet.core.trajectory import Trajectory
+
 from emmet.api.routes.materials.tasks.query_operators import (
     MultipleTaskIDsQuery,
     TrajectoryQuery,
@@ -8,7 +11,7 @@ from emmet.api.routes.materials.tasks.query_operators import (
 )
 from emmet.api.core.settings import MAPISettings
 
-from json import load
+import json
 
 
 def test_multiple_task_ids_query():
@@ -29,7 +32,7 @@ def test_entries_query():
     with zopen(
         os.path.join(MAPISettings().TEST_FILES, "tasks_Li_Fe_V.json.gz")
     ) as file:
-        tasks = load(file)
+        tasks = json.load(file)
     docs = op.post_process(tasks, q)
     assert docs[0]["entry"]["@class"] == "ComputedStructureEntry"
 
@@ -44,9 +47,22 @@ def test_trajectory_query():
     with zopen(
         os.path.join(MAPISettings().TEST_FILES, "tasks_Li_Fe_V.json.gz")
     ) as file:
-        tasks = load(file)
+        tasks = json.load(file)
     docs = op.post_process(tasks, q)
-    assert docs[0]["trajectories"][0]["@class"] == "Trajectory"
+
+    # assert return type is a trajectory by duck typing
+    traj_model_dump_fields = {
+        field
+        for field, field_meta in Trajectory.model_fields.items()
+        if not field_meta.exclude
+    }
+    assert (
+        set(docs[0]["trajectories"][0]).intersection(traj_model_dump_fields)
+        == traj_model_dump_fields
+    )
+
+    # assert that returned traj is JSONable
+    assert isinstance(json.dumps(docs[0]["trajectories"]), str)
 
 
 def test_deprecation_query():

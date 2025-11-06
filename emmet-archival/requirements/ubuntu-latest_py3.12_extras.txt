@@ -125,12 +125,12 @@ pycodestyle==2.14.0
     # via
     #   emmet-archival (pyproject.toml)
     #   flake8
-pydantic==2.12.3
+pydantic==2.12.4
     # via
     #   emmet-core
     #   pydantic-settings
     #   pymatgen-io-validation
-pydantic-core==2.41.4
+pydantic-core==2.41.5
     # via pydantic
 pydantic-settings==2.11.0
     # via
