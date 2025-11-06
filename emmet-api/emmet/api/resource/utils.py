@@ -76,7 +76,7 @@ def generate_atlas_search_pipeline(query: dict):
     pipeline = []
     operator: dict = {}
 
-    if query.get("criteria", False) is False or len(query["criteria"]) == 0:
+    if not query.get("criteria"):
         operator = {"exists": {"path": "_id"}}
     else:
         operator = {"compound": {"must": [], "mustNot": []}}
@@ -102,10 +102,8 @@ def generate_atlas_search_pipeline(query: dict):
     }
 
     if p_token := query.get("pagination_token", None):
-        if query.get("forward", True):
-            search_base["$search"]["searchAfter"] = p_token
-        else:
-            search_base["$search"]["searchBefore"] = p_token
+        key = "searchAfter" if query.get("forward", True) else "searchBefore"
+        search_base["$search"][key] = p_token
 
     search_base["$search"].update(operator)
 
