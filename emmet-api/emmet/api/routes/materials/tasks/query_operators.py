@@ -14,6 +14,93 @@ from emmet.api.routes.materials.tasks.utils import (
 )
 
 
+class AtlasBatchIdQuery(QueryOperator):
+    """Method to generate a query on batch_id"""
+
+    def __init__(self, field="builder_meta.batch_id"):
+        self._field = field
+
+    def query(
+        self,
+        batch_id: str | None = Query(
+            None,
+            description="Query by batch identifier",
+        ),
+        batch_id_not_eq: str | None = Query(
+            None,
+            description="Exclude batch identifier",
+        ),
+        batch_id_eq_any: str | None = Query(
+            None,
+            description="Query by a comma-separated list of batch identifiers",
+        ),
+        batch_id_neq_any: str | None = Query(
+            None,
+            description="Exclude a comma-separated list of batch identifiers",
+        ),
+    ) -> STORE_PARAMS:
+        all_kwargs = [batch_id, batch_id_not_eq, batch_id_eq_any, batch_id_neq_any]
+        if sum(bool(kwarg) for kwarg in all_kwargs) > 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Please only choose one of `batch_id` parameters to filter.",
+            )
+
+        crit = {}  # type: dict
+        if batch_id:
+            crit.update(
+                {
+                    "in": {
+                        "path": "batch_id",
+                        "value": batch_id,
+                    }
+                }
+            )
+        elif batch_id_eq_any:
+            crit.update(
+                {
+                    "in": {
+                        "path": "batch_id",
+                        "value": [
+                            batch_id.strip() for batch_id in batch_id_eq_any.split(",")
+                        ],
+                    }
+                }
+            )
+        elif batch_id_not_eq:
+            crit.update(
+                {
+                    "mustNot": [
+                        {
+                            "in": {
+                                "path": "batch_id",
+                                "value": batch_id_not_eq,
+                            }
+                        }
+                    ]
+                }
+            )
+        elif batch_id_neq_any:
+            crit.update(
+                {
+                    "mustNot": [
+                        {
+                            "in": {
+                                "path": "batch_id",
+                                "value": [
+                                    batch_id.strip()
+                                    for batch_id in batch_id_neq_any.split(",")
+                                ],
+                            }
+                        }
+                    ]
+                }
+            )
+
+        print(crit)
+        return {"criteria": crit}
+
+
 class AtlasFormulaQuery(QueryOperator):
     """
     Factory method to generate a dependency for querying by
