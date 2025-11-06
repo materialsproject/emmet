@@ -18,9 +18,9 @@ bibtexparser==1.4.3
     # via pymatgen
 blake3==1.0.8
     # via emmet-core
-boto3==1.40.55
+boto3==1.40.67
     # via emmet-api (pyproject.toml)
-botocore==1.40.55
+botocore==1.40.67
     # via
     #   boto3
     #   s3transfer
@@ -51,19 +51,19 @@ csscompressor==0.9.5
     # via mkdocs-minify-plugin
 cycler==0.12.1
     # via matplotlib
-ddtrace==3.16.1
+ddtrace==3.18.0
     # via emmet-api (pyproject.toml)
 distlib==0.4.0
     # via virtualenv
 dnspython==2.8.0
     # via pymongo
-emmet-core==0.86.0rc0
+emmet-core==0.86.0rc1
     # via emmet-api (pyproject.toml)
 envier==0.6.1
     # via ddtrace
 execnet==2.1.1
     # via pytest-xdist
-fastapi==0.119.1
+fastapi==0.118.3
     # via emmet-api (pyproject.toml)
 filelock==3.20.0
     # via virtualenv
@@ -94,7 +94,7 @@ idna==3.11
     #   anyio
     #   httpx
     #   requests
-imageio==2.37.0
+imageio==2.37.2
     # via scikit-image
 importlib-metadata==8.7.0
     # via opentelemetry-api
@@ -125,7 +125,7 @@ lazy-loader==0.4
     # via scikit-image
 livereload==2.7.1
     # via emmet-api (pyproject.toml)
-markdown==3.9
+markdown==3.10
     # via
     #   mkdocs
     #   mkdocs-autorefs
@@ -195,7 +195,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-api (pyproject.toml)
     #   mypy
-narwhals==2.9.0
+narwhals==2.10.2
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -222,7 +222,7 @@ numpy==2.3.4
     #   tifffile
 opentelemetry-api==1.38.0
     # via ddtrace
-orjson==3.11.3
+orjson==3.11.4
     # via pymatgen
 packaging==25.0
     # via
@@ -251,7 +251,7 @@ platformdirs==4.5.0
     # via
     #   mkdocs-get-deps
     #   virtualenv
-plotly==6.3.1
+plotly==6.4.0
     # via pymatgen
 pluggy==1.6.0
     # via
@@ -267,13 +267,13 @@ pycodestyle==2.14.0
     # via
     #   emmet-api (pyproject.toml)
     #   flake8
-pydantic==2.12.3
+pydantic==2.12.4
     # via
     #   emmet-core
     #   fastapi
     #   pydantic-settings
     #   pymatgen-io-validation
-pydantic-core==2.41.4
+pydantic-core==2.41.5
     # via pydantic
 pydantic-settings==2.11.0
     # via
@@ -330,7 +330,7 @@ python-dateutil==2.9.0.post0
     #   ghp-import
     #   matplotlib
     #   pandas
-python-dotenv==1.1.1
+python-dotenv==1.2.1
     # via pydantic-settings
 python-multipart==0.0.20
     # via starlette
@@ -354,7 +354,7 @@ requests==2.32.5
     # via
     #   pymatgen
     #   pymatgen-io-validation
-ruamel-yaml==0.18.15
+ruamel-yaml==0.18.16
     # via
     #   monty
     #   pymatgen
@@ -364,7 +364,7 @@ s3transfer==0.14.0
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
-scipy==1.16.2
+scipy==1.16.3
     # via
     #   pymatgen
     #   scikit-image
@@ -430,7 +430,7 @@ urllib3==2.5.0
     #   types-requests
 uvicorn==0.38.0
     # via emmet-api (pyproject.toml)
-virtualenv==20.35.3
+virtualenv==20.35.4
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
