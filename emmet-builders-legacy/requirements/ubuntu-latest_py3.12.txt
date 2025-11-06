@@ -192,7 +192,7 @@ paramiko==4.0.0
     # via sshtunnel
 patsy==1.0.1
     # via statsmodels
-pillow==11.3.0
+pillow==12.0.0
     # via
     #   imageio
     #   matplotlib
@@ -283,7 +283,7 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.5
+requests==2.32.4
     # via
     #   matminer
     #   pymatgen
