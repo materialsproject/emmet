@@ -6,6 +6,9 @@ from pymatgen.core import __version__ as pmg_version  # type: ignore
 from emmet.api import __version__ as api_version
 from emmet.api.core.settings import MAPISettings
 
+SETTINGS = MAPISettings()
+BATCH_IDS = (SETTINGS.ACCESS_CONTROLLED_BATCH_IDS or "").split(",")
+
 
 class MAPI(API):
     """
@@ -20,8 +23,9 @@ class MAPI(API):
         debug=False,
         heartbeat_meta={
             "pymatgen": pmg_version,
-            "db_version": MAPISettings().DB_VERSION,
-            "suffix": MAPISettings().DB_NAME_SUFFIX,
+            "db_version": SETTINGS.DB_VERSION,
+            "suffix": SETTINGS.DB_NAME_SUFFIX,
+            "access_controlled_batch_ids": BATCH_IDS,
         },
         description=None,
         tags_meta=None,

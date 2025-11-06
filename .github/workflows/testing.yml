@@ -75,7 +75,7 @@ jobs:
         with:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
-          channels: anaconda, conda-forge
+          channels: conda-forge
 
       - name: Install Python dependencies
         shell: bash -l {0}
