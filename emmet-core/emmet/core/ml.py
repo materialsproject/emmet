@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -9,7 +10,6 @@ from pydantic import (
     BaseModel,
     Field,
     field_validator,
-    model_serializer,
 )
 from pymatgen.analysis.elasticity import ElasticTensor
 from pymatgen.core import Element, Structure
@@ -24,13 +24,12 @@ from emmet.core.math import Matrix3D, Vector3D, Vector6D, matrix_3x3_to_voigt
 from emmet.core.structure import StructureMetadata
 from emmet.core.tasks import TaskDoc
 from emmet.core.types.pymatgen_types.composition_adapter import CompositionType
+from emmet.core.types.pymatgen_types.element_adapter import ElementType
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.typing import IdentifierType
-from emmet.core.utils import jsanitize
 from emmet.core.vasp.calc_types import RunType as VaspRunType
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
 
     from typing_extensions import Self
 
@@ -137,11 +136,26 @@ class MLDoc(ElasticityDoc):
         return ShearModulus(vrh=val)
 
 
-class MLTrainDoc(StructureMetadata):
+class MLTrainDoc(StructureMetadata, extra="allow"):  # type: ignore[call-arg]
     """Generic schema for ML training data."""
 
-    structure: StructureType | None = Field(
-        None, description="Structure for this entry."
+    cell: Matrix3D | None = Field(
+        None,
+        description="The 3x3 matrix of cell/lattice vectors, such that a is the first row, b the second, and c the third.",
+    )
+
+    atomic_numbers: list[int] | None = Field(
+        None,
+        description="The list of proton numbers at each site. Should be the same length as `cart_coords`",
+    )
+
+    cart_coords: list[Vector3D] | None = Field(
+        None,
+        description="The list of Cartesian coordinates of each atom. Should be the same length as `atomic_numbers`.",
+    )
+
+    magmoms: list[float] | None = Field(
+        None, description="The list of on-site magnetic moments."
     )
 
     energy: float | None = Field(
@@ -169,7 +183,7 @@ class MLTrainDoc(StructureMetadata):
 
     bandgap: float | None = Field(None, description="The final DFT bandgap.")
 
-    elements: list[Element] | None = Field(
+    elements: list[ElementType] | None = Field(
         None,
         description="List of unique elements in the material sorted alphabetically.",
     )
@@ -196,11 +210,16 @@ class MLTrainDoc(StructureMetadata):
         description="Bader on-site magnetic moments for each site of the structure.",
     )
 
-    @model_serializer
-    def deseralize(self):
-        """Ensure output is JSON compliant."""
-        return jsanitize(
-            {k: getattr(self, k, None) for k in self.__class__.model_fields}
+    @cached_property
+    def structure(self) -> Structure:
+        """Get the structure associated with this entry."""
+        site_props = {"magmom": self.magmoms} if self.magmoms else None
+        return Structure(
+            np.array(self.cell),
+            [Element.from_Z(z) for z in self.atomic_numbers],  # type: ignore[union-attr]
+            self.cart_coords,  # type: ignore[arg-type]
+            coords_are_cartesian=True,
+            site_properties=site_props,
         )
 
     @classmethod
@@ -211,7 +230,7 @@ class MLTrainDoc(StructureMetadata):
         **kwargs,
     ) -> Self:
         """
-        Create an ML training document from a structure and fields.
+        Create an ML training document from an ordered structure and fields.
 
         This method mostly exists to ensure that the structure field is
         set because `meta_structure` does not populate it automatically.
@@ -219,20 +238,31 @@ class MLTrainDoc(StructureMetadata):
         Parameters
         -----------
         meta_structure : Structure
+            An ordered structure
         fields : list of str or None
             Additional fields in the document to populate
         **kwargs
             Any other fields / constructor kwargs
         """
+        if not meta_structure.is_ordered:
+            raise ValueError(
+                f"{cls.__name__} only supports ordered structures at this time."
+            )
+
         if (forces := kwargs.get("forces")) is not None and kwargs.get(
             "abs_forces"
         ) is None:
             kwargs["abs_forces"] = [np.linalg.norm(f) for f in forces]
 
+        if magmoms := meta_structure.site_properties.get("magmom"):
+            kwargs["magmoms"] = magmoms
+
         return super().from_structure(
             meta_structure=meta_structure,
             fields=fields,
-            structure=meta_structure,
+            cell=meta_structure.lattice.matrix,
+            atomic_numbers=[site.specie.Z for site in meta_structure],
+            cart_coords=meta_structure.cart_coords,
             **kwargs,
         )
 
@@ -291,6 +321,39 @@ class MLTrainDoc(StructureMetadata):
                     )
                 )
         return entries
+
+    @cached_property
+    def to_ase_atoms(self):
+        """Vestigial functionality to convert to ASE atoms.
+
+        NB: pymatgen depends on ASE optionally so this
+        may...be...OK to include here?
+
+        Can cut this as needed.
+        """
+
+        try:
+            from ase.calculators.singlepoint import SinglePointCalculator
+            from ase import Atoms
+        except ImportError:
+            raise ImportError(
+                "You must `pip install ase` to use the atoms functionality here!"
+            )
+
+        atoms = Atoms(
+            positions=self.cart_coords,
+            numbers=self.atomic_numbers,
+            cell=self.cell,
+        )
+        calc = SinglePointCalculator(
+            atoms,
+            **{
+                k: getattr(self, k, None)
+                for k in {"energy", "forces", "stress", "magmoms"}
+            },
+        )
+        atoms.calc = calc
+        return atoms
 
 
 class MatPESProvenanceDoc(BaseModel):
@@ -354,10 +417,64 @@ class MatPESTrainDoc(MLTrainDoc):
         """Return the pressure from the DFT stress tensor."""
         return sum(self.stress[:3]) / 3.0 if self.stress else None
 
-    @property
-    def magmoms(self) -> Sequence[float] | None:
-        """Retrieve on-site magnetic moments from the structure if they exist."""
-        magmom = (
-            self.structure.site_properties.get("magmom") if self.structure else None
-        )
-        return magmom
+
+class MPtrjProvenance(BaseModel):
+    """Metadata for MPtrj entries."""
+
+    material_id: IdentifierType | None = Field(
+        None, description="The Materials Project (summary) ID for this material."
+    )
+    task_id: IdentifierType | None = Field(
+        None, description="The Materials Project (summary) ID for this material."
+    )
+    calcs_reversed_index: int | None = Field(
+        None, description="The index of the reversed calculations, if applicable."
+    )
+    ionic_step_index: int | None = Field(
+        None, description="The index of the ionic step, if applicable."
+    )
+
+
+class MPtrjTrainDoc(MLTrainDoc):
+    """Schematize MPtrj data."""
+
+    energy: float | None = Field(
+        None, description="The total uncorrected energy associated with this structure."
+    )
+
+    cohesive_energy_per_atom: float | None = Field(
+        None, description="The uncorrected cohesive energy per atom of this material."
+    )
+
+    corrected_cohesive_energy_per_atom: float | None = Field(
+        None,
+        description=(
+            "The corrected cohesive energy per atom of this material, "
+            "using the Materials Project GGA / GGA+U mixing scheme."
+        ),
+    )
+
+    provenance: MPtrjProvenance | None = Field(
+        None, description="Metadata for this frame."
+    )
+
+
+class MPAloeTrainDoc(MatPESTrainDoc):
+    """Schematize MP-ALOE data."""
+
+    mp_aloe_id: str | None = Field(
+        None, description="The identifier of this entry in MP-ALOE."
+    )
+    ionic_step_number: int | None = Field(
+        None, description="The ionic step index of this frame."
+    )
+    prototype_number: int | None = Field(
+        None, description="The index of the prototype structure used in generation."
+    )
+    is_charge_balanced: bool | None = Field(
+        None, description="Whether the structure is likely charge balanced."
+    )
+    has_overlapping_pseudo_cores: bool | None = Field(
+        None,
+        description="Whether the pseudopotential cores overlap for at least one set of nearest neighbors.",
+    )
