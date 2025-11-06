@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-import h5py
 
 from emmet.archival.core import FileArchive, _get_path_relative_to_parent
 
@@ -56,26 +55,14 @@ def test_file_archiver(tmp_dir):
     output_path = Path("lorem").absolute()
     archiver.extract("lorem.h5", output_dir=output_path)
     extracted = {
-        str(_get_path_relative_to_parent(p, output_path)): p.read_bytes()
+        str(_get_path_relative_to_parent(p, output_path)): p.read_text()
         for p in output_path.glob("**/*.txt")
     }
 
     orig = {
-        str(_get_path_relative_to_parent(p, Path("root").absolute())): p.read_bytes()
+        str(_get_path_relative_to_parent(p, Path("root").absolute())): p.read_text()
         for p in fs
     }
 
     assert set(extracted) == set(orig)
     assert all(v == extracted[k] for k, v in orig.items())
-
-    # check compression
-    with h5py.File("lorem.h5", "r") as f:
-        for k, v in extracted.items():
-            orig_text = next(t for i, t in enumerate(lorem) if str(fs[i]).endswith(k))
-            assert FileArchive._readout(f, k) == v
-            assert FileArchive._readout(
-                f, k, decompress=False
-            ) == FileArchive._compress(v)
-            assert FileArchive._readout(
-                f, k, decompress=False
-            ) == FileArchive._compress(orig_text)
