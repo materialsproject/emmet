@@ -21,9 +21,9 @@ bibtexparser==1.4.3
     # via pymatgen
 blake3==1.0.8
     # via emmet-core
-boto3==1.40.55
+boto3==1.40.66
     # via maggma
-botocore==1.40.55
+botocore==1.40.66
     # via
     #   boto3
     #   s3transfer
@@ -79,7 +79,7 @@ identify==2.6.15
     # via pre-commit
 idna==3.11
     # via requests
-imageio==2.37.0
+imageio==2.37.2
     # via scikit-image
 inflect==7.5.0
     # via robocrys
@@ -120,7 +120,7 @@ livereload==2.7.1
     # via emmet-builders (pyproject.toml)
 maggma==0.72.0
     # via emmet-builders (pyproject.toml)
-markdown==3.9
+markdown==3.10
     # via
     #   mkdocs
     #   mkdocs-autorefs
@@ -204,7 +204,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-builders (pyproject.toml)
     #   mypy
-narwhals==2.9.0
+narwhals==2.10.2
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -238,7 +238,7 @@ numpy==1.26.4
     #   shapely
     #   spglib
     #   tifffile
-orjson==3.11.3
+orjson==3.11.4
     # via
     #   maggma
     #   pymatgen
@@ -274,7 +274,7 @@ platformdirs==4.5.0
     # via
     #   mkdocs-get-deps
     #   virtualenv
-plotly==6.3.1
+plotly==6.4.0
     # via pymatgen
 pluggy==1.6.0
     # via
@@ -284,7 +284,7 @@ pre-commit==4.3.0
     # via emmet-builders (pyproject.toml)
 pubchempy==1.0.5
     # via robocrys
-pyarrow==21.0.0
+pyarrow==22.0.0
     # via emmet-core
 pybtex==0.25.1
     # via
@@ -369,7 +369,7 @@ python-dateutil==2.9.0.post0
     #   maggma
     #   matplotlib
     #   pandas
-python-dotenv==1.1.1
+python-dotenv==1.2.1
     # via pydantic-settings
 pytz==2025.2
     # via
@@ -399,11 +399,11 @@ requests==2.32.5
     #   pymatgen-io-validation
 robocrys==0.2.11
     # via emmet-core
-rpds-py==0.27.1
+rpds-py==0.28.0
     # via
     #   jsonschema
     #   referencing
-ruamel-yaml==0.18.15
+ruamel-yaml==0.18.16
     # via
     #   maggma
     #   monty
@@ -417,7 +417,7 @@ scikit-image==0.25.2
     # via pymatgen-analysis-defects
 scikit-learn==1.7.2
     # via matminer
-scipy==1.16.2
+scipy==1.16.3
     # via
     #   ase
     #   pymatgen
@@ -490,7 +490,7 @@ urllib3==2.5.0
     #   botocore
     #   requests
     #   types-requests
-virtualenv==20.35.3
+virtualenv==20.35.4
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs

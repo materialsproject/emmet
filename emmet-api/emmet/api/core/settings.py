@@ -26,6 +26,10 @@ class MAPISettings(BaseSettings):
         None, description="Database name suffix. Either blue or green."
     )
 
+    ACCESS_CONTROLLED_BATCH_IDS: str | None = Field(
+        None, description="List of batch_ids with access control restrictions"
+    )
+
     SORT_FIELDS: list[str] = Field(
         [
             "nsites",
