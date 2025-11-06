@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=emmet/emmet-builders/requirements/deployment.txt emmet/emmet-builders/setup.py python/requirements.txt
 #
-aiohttp==3.12.14
+aiohttp==3.13.2
     # via fsspec
 aioitertools==0.11.0
     # via maggma
@@ -251,7 +251,7 @@ paramiko==3.4.0
     # via sshtunnel
 phonopy==2.21.0
     # via matcalc
-pillow==10.3.0
+pillow==12.0.0
     # via matplotlib
 plotly==5.18.0
     # via pymatgen
@@ -327,7 +327,7 @@ referencing==0.33.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.4
+requests==2.32.5
     # via
     #   dgl
     #   matminer
@@ -379,7 +379,7 @@ spglib==2.3.0
     #   seekpath
 sshtunnel==0.4.0
     # via maggma
-starlette==0.47.2
+starlette==0.49.1
     # via fastapi
 sympy==1.12
     # via
@@ -392,7 +392,7 @@ tenacity==8.2.3
     # via plotly
 threadpoolctl==3.2.0
     # via scikit-learn
-torch==2.7.1
+torch==2.8.0
     # via
     #   chgnet
     #   matgl
