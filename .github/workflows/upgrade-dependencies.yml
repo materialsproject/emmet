@@ -19,7 +19,7 @@ jobs:
             "emmet-archival",
             "emmet-cli",
           ]
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v5
         with:

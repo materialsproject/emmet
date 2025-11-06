@@ -108,6 +108,7 @@ def test_model_flatten():
     sub_models = get_flat_models_from_model(TaskDoc)
     assert {model.__name__ for model in sub_models} == {
         "AnalysisDoc",
+        "BaderAnalysis",
         "Calculation",
         "CalculationInput",
         "CalculationOutput",

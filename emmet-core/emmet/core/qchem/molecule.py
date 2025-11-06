@@ -13,7 +13,7 @@ from emmet.core.mpid import MPculeID
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.settings import EmmetSettings
-from emmet.core.utils import get_molecule_id
+from emmet.core.utils import arrow_incompatible, get_molecule_id
 
 try:
     import openbabel
@@ -140,6 +140,7 @@ def evaluate_task_entry(
     )
 
 
+@arrow_incompatible
 class MoleculeDoc(CoreMoleculeDoc):
     species: list[str] | None = Field(
         None, description="Ordered list of elements/species in this Molecule."

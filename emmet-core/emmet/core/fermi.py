@@ -1,8 +1,10 @@
 from pydantic import BaseModel, Field
 
 from emmet.core.types.typing import DateTimeType
+from emmet.core.utils import arrow_incompatible
 
 
+@arrow_incompatible
 class FermiDoc(BaseModel):
     """
     Fermi surfaces.

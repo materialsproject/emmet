@@ -1,7 +1,13 @@
 import pytest
-from monty.serialization import MontyDecoder
-from monty.serialization import loadfn
+from monty.serialization import MontyDecoder, loadfn
+
+from emmet.core import ARROW_COMPATIBLE
 from emmet.core.thermo import ThermoDoc
+
+if ARROW_COMPATIBLE:
+    import pyarrow as pa
+
+    from emmet.core.arrow import arrowize
 
 
 @pytest.fixture(scope="session")
@@ -138,3 +144,17 @@ def test_from_entries(entries):
     unstable_doc = next(d for d in docs if d.material_id == "mp-5")
     assert unstable_doc.is_stable is False
     assert all([d.is_stable for d in docs if d != unstable_doc])
+
+
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
+def test_arrow(entries):
+    doc = ThermoDoc.from_entries(entries, thermo_type="UNKNOWN", deprecated=False)[0]
+
+    arrow_struct = pa.scalar(
+        doc.model_dump(context={"format": "arrow"}), type=arrowize(ThermoDoc)
+    )
+    test_arrow_doc = ThermoDoc(**arrow_struct.as_py(maps_as_pydicts="strict"))
+
+    assert doc.model_dump() == test_arrow_doc.model_dump()

@@ -13,7 +13,7 @@ from pymatgen.symmetry.analyzer import (
 )
 
 from emmet.core.settings import EmmetSettings
-from emmet.core.types.enums import ValueEnum
+from emmet.core.types.enums import IgnoreCaseEnum
 
 if TYPE_CHECKING:
     from typing import Any
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 SETTINGS = EmmetSettings()
 
 
-class CrystalSystem(ValueEnum):
+class CrystalSystem(IgnoreCaseEnum):
     """
     The crystal system of the lattice
     """

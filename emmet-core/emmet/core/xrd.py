@@ -4,11 +4,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from pydantic import Field, model_validator
-from pymatgen.analysis.diffraction.xrd import (
-    WAVELENGTHS,
-    DiffractionPattern,
-    XRDCalculator,
-)
+from pymatgen.analysis.diffraction.xrd import WAVELENGTHS, XRDCalculator
 from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
 
@@ -17,6 +13,11 @@ from emmet.core.types.enums import ValueEnum
 
 if TYPE_CHECKING:
     from emmet.core.types.typing import IdentifierType
+
+from emmet.core.types.pymatgen_types.diffraction_pattern_adapter import (
+    DiffractionPatternType,
+)
+from emmet.core.types.pymatgen_types.element_adapter import ElementType
 
 
 class Edge(ValueEnum):
@@ -35,11 +36,11 @@ class XRDDoc(SpectrumDoc):
 
     spectrum_name: str = "XRD"
 
-    spectrum: DiffractionPattern
+    spectrum: DiffractionPatternType  # type: ignore[valid-type]
     min_two_theta: float
     max_two_theta: float
     wavelength: float = Field(..., description="Wavelength for the diffraction source.")
-    target: Element | None = Field(
+    target: ElementType | None = Field(
         None, description="Target element for the diffraction source."
     )
     edge: Edge | None = Field(

@@ -7,7 +7,7 @@ from pymatgen.core.trajectory import Trajectory as PmgTraj
 
 from emmet.core.tasks import TaskDoc
 from emmet.core.testing_utils import DataArchive
-from emmet.core.trajectory import Trajectory
+from emmet.core.trajectory import Trajectory, RelaxTrajectory
 
 
 @fixture(scope="module")
@@ -16,6 +16,11 @@ def si_task(test_dir):
         test_dir / "vasp" / "Si_old_double_relax.json.gz"
     ) as dir_name:
         return TaskDoc.from_directory(dir_name)
+
+
+@fixture(scope="module")
+def si_traj(si_task):
+    return si_task.trajectories
 
 
 def test_reorder_sites():
@@ -60,8 +65,8 @@ def test_reorder_sites():
         )
 
 
-def test_task_doc(si_task):
-    traj = Trajectory.from_task_doc(si_task)[0]
+def test_task_doc(si_task, si_traj):
+    traj = si_traj[0]
     assert traj.num_ionic_steps == sum(
         len(cr.output.ionic_steps) for cr in si_task.calcs_reversed
     )
@@ -72,18 +77,18 @@ def test_task_doc(si_task):
             istep -= 1
 
 
-def test_parquet(si_task, tmp_dir):
+def test_parquet(si_traj, tmp_dir):
     parqet_file = "test.parquet"
 
-    traj = Trajectory.from_task_doc(si_task)[0]
+    traj = si_traj[0]
     traj.to(parqet_file, compression="GZIP")
 
-    new_traj = Trajectory.from_parquet(parqet_file)
+    new_traj = RelaxTrajectory.from_parquet(parqet_file)
     assert hash(new_traj) == hash(traj)
 
 
-def test_pmg(si_task):
-    traj = Trajectory.from_task_doc(si_task)[0]
+def test_pmg(si_traj):
+    traj = si_traj[0]
     pmg_traj = traj.to(fmt="PMG")
     assert isinstance(pmg_traj, PmgTraj)
     assert len(pmg_traj) == traj.num_ionic_steps
@@ -120,7 +125,7 @@ def test_mixed_calc_type(test_dir):
     # sequential calculation of different CalcType
 
     three_cr_task_dict = loadfn(test_dir / "mp-1120260_cr.json.gz")
-    trajs = Trajectory.from_task_doc(TaskDoc(**three_cr_task_dict))
+    trajs = TaskDoc(**three_cr_task_dict).trajectories
     assert len(trajs) == 2  # GGA static followed by two SCAN relaxes
     assert trajs[0].task_type.value == "Static"
     assert trajs[0].run_type.value == "GGA"
@@ -132,7 +137,7 @@ def test_mixed_calc_type(test_dir):
     three_cr_task_dict["calcs_reversed"] = [
         three_cr_task_dict["calcs_reversed"][idx] for idx in (0, 2, 1)
     ]
-    trajs = Trajectory.from_task_doc(TaskDoc(**three_cr_task_dict))
+    trajs = TaskDoc(**three_cr_task_dict).trajectories
     assert len(trajs) == 3  # SCAN relax -> GGA static -> SCAN relax
     assert trajs[1].task_type.value == "Static"
     assert trajs[1].run_type.value == "GGA"

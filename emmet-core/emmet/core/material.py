@@ -10,9 +10,13 @@ from pymatgen.core.structure import Molecule
 
 from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID, MPculeID
-from emmet.core.types.typing import DateTimeType, IdentifierType
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
-from emmet.core.vasp.validation import DeprecationMessage
+from emmet.core.types.enums import DeprecationMessage
+from emmet.core.types.pymatgen_types.structure_adapter import (
+    MoleculeType,
+    StructureType,
+)
+from emmet.core.types.typing import DateTimeType, IdentifierType
 
 if TYPE_CHECKING:
 
@@ -70,9 +74,9 @@ class BasePropertyMetadata(StructureMetadata, EmmetBaseModel):
         [], description="Any warnings related to this property."
     )
 
-    structure: Structure = Field(
+    structure: StructureType | None = Field(
         ...,
-        description="The structure of this material.",
+        description="The structure of the this material.",
     )
 
     @classmethod
@@ -102,7 +106,7 @@ class MaterialsDoc(BasePropertyMetadata):
     Definition for a core Materials Document
     """
 
-    initial_structures: list[Structure] = Field(
+    initial_structures: list[StructureType] = Field(
         [],
         description="Initial structures used in the DFT optimizations corresponding to this material.",
     )
@@ -136,7 +140,7 @@ class CoreMoleculeDoc(MoleculeMetadata, EmmetBaseModel):
         "This comes in the form of an MPID (or int) or MPculeID (or str)",
     )
 
-    molecule: Molecule = Field(
+    molecule: MoleculeType = Field(
         ...,
         description="The best (typically meaning lowest in energy) structure for this molecule",
     )
@@ -152,7 +156,7 @@ class CoreMoleculeDoc(MoleculeMetadata, EmmetBaseModel):
         description="List of deprecation tags detailing why this molecules document isn't valid",
     )
 
-    initial_molecules: list[Molecule] = Field(
+    initial_molecules: list[MoleculeType] = Field(
         [],
         description="Initial molecules used in the DFT geometry optimizations corresponding to this molecule",
     )

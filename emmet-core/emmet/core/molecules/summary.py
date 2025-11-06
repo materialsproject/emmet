@@ -4,16 +4,18 @@ from hashlib import blake2b
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
-from pymatgen.core.structure import Molecule
 
 from emmet.core.molecules.metal_binding import MetalBindingData
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPID, MPculeID
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.types.enums import ValueEnum
+from emmet.core.types.pymatgen_types.structure_adapter import MoleculeType
+from emmet.core.utils import arrow_incompatible
 
 if TYPE_CHECKING:
     from typing import Any
+
     from typing_extensions import Self
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
@@ -267,6 +269,7 @@ class RedoxComposite(BaseModel):
     )
 
 
+@arrow_incompatible
 class MetalBindingComposite(BaseModel):
     """
     Summary information obtained from MetalBindingDocs
@@ -347,6 +350,7 @@ class MetalBindingComposite(BaseModel):
     )
 
 
+@arrow_incompatible
 class MoleculeSummaryDoc(PropertyDoc):
     """
     Summary information about molecules and their properties, useful for searching.
@@ -355,7 +359,7 @@ class MoleculeSummaryDoc(PropertyDoc):
     property_name: str = "summary"
 
     # molecules
-    molecules: dict[str, Molecule] = Field(
+    molecules: dict[str, MoleculeType] = Field(
         ...,
         description="The lowest energy optimized structures for this molecule for each solvent.",
     )

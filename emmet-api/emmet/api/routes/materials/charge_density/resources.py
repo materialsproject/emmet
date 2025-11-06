@@ -1,6 +1,6 @@
 from emmet.api.resource import ReadOnlyResource
 from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
-from emmet.core.charge_density import ChgcarDataDoc
+from emmet.core.charge_density import VolumetricDataDoc
 from emmet.api.routes.materials.charge_density.query_operators import ChgcarTaskIDQuery
 from emmet.api.core.global_header import GlobalHeaderProcessor
 
@@ -8,12 +8,12 @@ from emmet.api.core.global_header import GlobalHeaderProcessor
 def charge_density_resource(s3_store):
     resource = ReadOnlyResource(
         s3_store,
-        ChgcarDataDoc,
+        VolumetricDataDoc,
         query_operators=[
             ChgcarTaskIDQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
-                ChgcarDataDoc, default_fields=["task_id", "last_updated", "fs_id"]
+                VolumetricDataDoc, default_fields=["task_id", "last_updated", "fs_id"]
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
@@ -30,7 +30,7 @@ def charge_density_resource(s3_store):
 def charge_density_url_resource(s3_store):
     resource = ReadOnlyResource(
         s3_store,
-        ChgcarDataDoc,
+        VolumetricDataDoc,
         key_fields=[
             "task_id",
             "fs_id",
@@ -42,7 +42,7 @@ def charge_density_url_resource(s3_store):
         query_operators=[
             PaginationQuery(),
             SparseFieldsQuery(
-                ChgcarDataDoc, default_fields=["task_id", "last_updated", "fs_id"]
+                VolumetricDataDoc, default_fields=["task_id", "last_updated", "fs_id"]
             ),
         ],
         tags=["Materials Charge Density"],

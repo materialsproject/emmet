@@ -231,7 +231,7 @@ tags_meta = [
             methodology discussed by [Shen *et al.*](https://arxiv.org/abs/2107.03540). Please email \
             <heavy.api.use@materialsproject.org> if you would like to retrieve a large amount of this data. \
             Note that charge densities may not be calculated for all materials in the Materials \
-            Project database. See the `ChgcarDataDoc` schema for a full list of fields returned by this route.",
+            Project database. See the `VolumetricDataDoc` schema for a full list of fields returned by this route.",
     },
     {
         "name": "Materials Alloys",
