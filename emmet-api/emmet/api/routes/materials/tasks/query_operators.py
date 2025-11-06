@@ -17,9 +17,6 @@ from emmet.api.routes.materials.tasks.utils import (
 class AtlasBatchIdQuery(QueryOperator):
     """Method to generate a query on batch_id"""
 
-    def __init__(self, field="builder_meta.batch_id"):
-        self._field = field
-
     def query(
         self,
         batch_id: str | None = Query(
@@ -131,12 +128,10 @@ class AtlasElementsQuery(QueryOperator):
         elements: str | None = Query(
             None,
             description="Query by elements in the material composition as a comma-separated list",
-            max_length=60,
         ),
         exclude_elements: str | None = Query(
             None,
             description="Query by excluded elements in the material composition as a comma-separated list",
-            max_length=60,
         ),
     ) -> STORE_PARAMS:
         crit = {}  # type: dict
@@ -144,7 +139,7 @@ class AtlasElementsQuery(QueryOperator):
         if elements:
             must_elem = []  # type: list[dict]
             try:
-                element_list = [Element(e) for e in elements.strip().split(",")]
+                element_list = [Element(e.strip()) for e in elements.strip().split(",")]
             except ValueError:
                 raise HTTPException(
                     status_code=400,
@@ -159,7 +154,9 @@ class AtlasElementsQuery(QueryOperator):
         if exclude_elements:
             must_not_elem = []  # type: list[dict]
             try:
-                element_list = [Element(e) for e in exclude_elements.strip().split(",")]
+                element_list = [
+                    Element(e.strip()) for e in exclude_elements.strip().split(",")
+                ]
             except ValueError:
                 raise HTTPException(
                     status_code=400,
@@ -171,7 +168,7 @@ class AtlasElementsQuery(QueryOperator):
 
             crit.update({"mustNot": must_not_elem})
 
-        return {"criteria": crit} if len(crit) > 0 else {"criteria": {}}
+        return {"criteria": crit} if crit else {"criteria": {}}
 
 
 class LastUpdatedQuery(QueryOperator):
