@@ -6,6 +6,7 @@ from emmet.api.query_operator import (
 from emmet.api.resource import ReadOnlyResource, SearchResource
 
 from emmet.api.routes.materials.tasks.query_operators import (
+    AtlasBatchIdQuery,
     AtlasElementsQuery,
     AtlasFormulaQuery,
     DeprecationQuery,
@@ -26,6 +27,7 @@ def task_resource(task_store):
         task_store,
         TaskDoc,
         query_operators=[
+            AtlasBatchIdQuery(),
             AtlasFormulaQuery(),
             AtlasElementsQuery(),
             MultipleTaskIDsQuery(),
