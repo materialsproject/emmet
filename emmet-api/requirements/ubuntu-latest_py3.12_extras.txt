@@ -18,9 +18,9 @@ bibtexparser==1.4.3
     # via pymatgen
 blake3==1.0.8
     # via emmet-core
-boto3==1.40.66
+boto3==1.40.67
     # via emmet-api (pyproject.toml)
-botocore==1.40.66
+botocore==1.40.67
     # via
     #   boto3
     #   s3transfer
@@ -51,7 +51,7 @@ csscompressor==0.9.5
     # via mkdocs-minify-plugin
 cycler==0.12.1
     # via matplotlib
-ddtrace==3.17.2
+ddtrace==3.18.0
     # via emmet-api (pyproject.toml)
 distlib==0.4.0
     # via virtualenv
@@ -63,7 +63,7 @@ envier==0.6.1
     # via ddtrace
 execnet==2.1.1
     # via pytest-xdist
-fastapi==0.119.1
+fastapi==0.118.3
     # via emmet-api (pyproject.toml)
 filelock==3.20.0
     # via virtualenv
@@ -267,13 +267,13 @@ pycodestyle==2.14.0
     # via
     #   emmet-api (pyproject.toml)
     #   flake8
-pydantic==2.12.3
+pydantic==2.12.4
     # via
     #   emmet-core
     #   fastapi
     #   pydantic-settings
     #   pymatgen-io-validation
-pydantic-core==2.41.4
+pydantic-core==2.41.5
     # via pydantic
 pydantic-settings==2.11.0
     # via
