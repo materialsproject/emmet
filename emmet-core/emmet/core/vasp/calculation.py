@@ -163,7 +163,12 @@ class PotcarSpec(BaseModel):
         """
         if ".spec" in str(file_path):
             with zopen(file_path, "rt") as psf:
-                return [cls(**ps) for ps in orjson.loads(psf.read())]
+                try:
+                    # POTCAR spec is a model-dumped list of PotcarSpec
+                    return [cls(**ps) for ps in orjson.loads(psf.read())]
+                except orjson.JSONDecodeError:
+                    # POTCAR spec is a pymatgen-style list of symbols
+                    return [cls(titel=symb) for symb in psf.read().splitlines()]
         return cls.from_potcar(VaspPotcar.from_file(str(file_path)))
 
 
