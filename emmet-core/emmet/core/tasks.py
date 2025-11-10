@@ -1132,4 +1132,20 @@ def _find_vasp_files(
             for task_name, calcs in discover_and_sort_vasp_files(subdir).items():
                 task_files[task_name].update(calcs)
 
+    # For old double-relax style jobs, there will only be one POTCAR/.spec/.orig file
+    # even though there will be an INCAR.relax1, INCAR.relax2, etc.
+    # Undo that mapping here
+    if (
+        any(k.startswith("relax") for k in task_files)
+        and task_files.get("standard",{}).get("potcar_spec_file")
+    ):
+        psf = task_files["standard"].pop("potcar_spec_file")
+        for task_name in {k for k in task_files if k.startswith("relax")}:
+            task_files[task_name]["potcar_spec_file"] = psf
+        
+        if not all(
+            task_files.get("standard",{}).get(k) for k in ("vasprun_file","outcar_file","contcar_file",)
+        ):
+            _ = task_files.pop("standard")
+
     return task_files

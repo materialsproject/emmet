@@ -90,7 +90,7 @@ class ChgcarLike(BaseModel):
     ) -> dict[VolumetricLabel, list[AugChargeData]]:
         aug_data_arr: dict[VolumetricLabel, list[AugChargeData]] = {}
         for k, unfmt_data in aug_data.items():
-            if not any(line.strip() for line in unfmt_data):
+            if not isinstance(unfmt_data,str) or not any(line.strip() for line in unfmt_data):
                 continue
             parse_meta = True
             num_vals = -1
