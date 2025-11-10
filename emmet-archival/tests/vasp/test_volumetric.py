@@ -61,6 +61,7 @@ def test_volumetric_archive():
 
     # Note that pymatgen doesn't parse augmentation charge data
     # cleanly - the data won't be equal here but the keys are.
+    print(chg.data_aug)
     assert all(
         k.value in chg.data_aug
         and (chg_arch.data_aug[i] is not None if chg.data_aug[k] else True)
