@@ -972,9 +972,6 @@ class Calculation(CalculationBaseModel):
             A VASP calculation document.
         """
         dir_name = Path(dir_name)
-        vasprun_file = vasprun_file
-        outcar_file = outcar_file
-        contcar_file = contcar_file
 
         vasprun_kwargs = vasprun_kwargs if vasprun_kwargs else {}
         volumetric_files = [] if volumetric_files is None else volumetric_files
@@ -987,7 +984,7 @@ class Calculation(CalculationBaseModel):
             contcar = Poscar(vasprun.final_structure)
         else:
             contcar = Poscar.from_file(contcar_file)
-        completed_at = str(datetime.fromtimestamp(vasprun_file.stat().st_mtime))
+        completed_at = str(datetime.fromtimestamp(Path(vasprun_file).stat().st_mtime))
 
         output_file_paths = _get_output_file_paths(volumetric_files)
         vasp_objects: dict[VaspObject, Any] = _get_volumetric_data(
@@ -1179,11 +1176,12 @@ def _get_output_file_paths(volumetric_files: list[Path]) -> dict[VaspObject, str
         A mapping between the VASP object type and the file path.
     """
     return {
-        vasp_object : str(volumetric_file)
+        vasp_object: str(volumetric_file)
         for vasp_object in VaspObject
         for volumetric_file in volumetric_files
         if vasp_object.name in str(volumetric_file)
     }
+
 
 def _get_volumetric_data(
     output_file_paths: dict[VaspObject, str],

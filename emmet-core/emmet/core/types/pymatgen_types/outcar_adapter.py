@@ -28,8 +28,8 @@ TypedOutcarDict = TypedDict(
         "sampling_radii": NotRequired[list[float] | None],
         "electrostatic_potential": NotRequired[list[float] | None],
         # `zval_dict` and `p_elec` are only required for ferroelectric stuff in atomate2
-        "zval_dict": NotRequired[dict[str,float] | None],
-        "p_elec": NotRequired[tuple[float,float,float] | None],
+        "zval_dict": NotRequired[dict[str, float] | None],
+        "p_elec": NotRequired[tuple[float, float, float] | None],
         # `born` is needed for phonon workflows
         "born": NotRequired[list[Matrix3D] | None],
     },
