@@ -167,8 +167,8 @@ class PotcarSpec(BaseModel):
                     # POTCAR spec is a model-dumped list of PotcarSpec
                     return [cls(**ps) for ps in orjson.loads(psf.read())]
                 except orjson.JSONDecodeError:
-                    # POTCAR spec is a pymatgen-style list of symbols
-                    return [cls(titel=symb) for symb in psf.read().splitlines()]
+                    # POTCAR spec is a pymatgen-style newline-delimited list of symbols
+                    return [cls(titel=symb) for symb in psf.read().splitlines()]  # type: ignore[arg-type,call-arg]
         return cls.from_potcar(VaspPotcar.from_file(str(file_path)))
 
 
