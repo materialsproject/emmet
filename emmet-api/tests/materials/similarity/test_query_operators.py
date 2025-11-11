@@ -11,6 +11,7 @@ def test_similarity_structure_search(test_dir):
 
     op = SimilarityFeatureVectorQuery()
     structure = Structure.from_file(test_dir / "Si_mp_149.cif")
+    fv = CrystalNNSimilarity()._featurize_structure(structure).tolist()
 
     limit = 10
     q = {
@@ -19,9 +20,7 @@ def test_similarity_structure_search(test_dir):
                 "$vectorSearch": {
                     "index": "similarity_feature_vector",
                     "path": "feature_vector",
-                    "queryVector": CrystalNNSimilarity()
-                    ._featurize_structure(structure)
-                    .tolist(),
+                    "queryVector": fv,
                     "numCandidates": limit,
                     "limit": limit,
                 }
@@ -37,7 +36,8 @@ def test_similarity_structure_search(test_dir):
         ]
     }
 
-    assert op.query(structure=structure, _limit=limit) == q
+    manual_q = op.query(feature_vector=fv, _limit=limit)
+    assert manual_q == q
 
     doc = [{"meta": {"count": {"total": limit}}}]
     assert op.post_process(doc, q) == doc

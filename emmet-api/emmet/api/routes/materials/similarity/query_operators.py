@@ -3,19 +3,25 @@
 from fastapi import HTTPException, Query
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
-from emmet.core.similarity import CrystalNNSimilarity
-
-from pymatgen.core import Structure
 
 
 class SimilarityFeatureVectorQuery(QueryOperator):
-    """Generate a feature-vector-based query."""
+    """Generate a feature-vector-based query.
+
+    TODO: Add an `embedding` kwarg to select between
+    multiple embedding methods used to gauge
+    similarity (e.g., ML-based metrics.)
+    """
 
     def query(
         self,
-        structure: Structure = Query(
-            ..., description="A target structure for similarity searches."
+        feature_vector: list[float] = Query(
+            ..., description="A row vector of floats representing a structure."
         ),
+        # embedding : Literal["CrystalNN"] = Query(
+        #     "CrystalNN",
+        #     description="The method used to embed a structure as a feature vector."
+        # ),
         _limit: int = Query(
             10,
             description="Max number of entries to return in a single query. Limited to 10 by default",
@@ -23,9 +29,14 @@ class SimilarityFeatureVectorQuery(QueryOperator):
     ) -> STORE_PARAMS:
         """Identify similar materials."""
 
-        if not isinstance(structure, Structure):
+        if (
+            not isinstance(feature_vector, list | tuple)
+            and not all(isinstance(x, float) for x in feature_vector)
+            and not len(feature_vector) == 122
+        ):
             raise HTTPException(
-                status_code=400, detail="Must provide a target structure."
+                status_code=400,
+                detail="Invalid feature vector: should be a list of 122 floats.",
             )
 
         pipeline = [
@@ -33,9 +44,7 @@ class SimilarityFeatureVectorQuery(QueryOperator):
                 "$vectorSearch": {
                     "index": "similarity_feature_vector",
                     "path": "feature_vector",
-                    "queryVector": CrystalNNSimilarity()
-                    ._featurize_structure(structure)
-                    .tolist(),
+                    "queryVector": feature_vector,
                     "numCandidates": _limit,
                     "limit": _limit,
                 }
