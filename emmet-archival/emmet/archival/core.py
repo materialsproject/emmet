@@ -328,7 +328,6 @@ class FileArchive(FileArchiveBase):
         list of Path
             The names of the extracted files.
         """
-
         output_dir = Path(output_dir or DEFAULT_RAW_ARCHIVE_NAME)
 
         extracted_files = []
@@ -349,7 +348,7 @@ class FileArchive(FileArchiveBase):
         cls,
         dir_name: PathLike,
         depth: int | None = 1,
-        compression: CompressionType | None = CompressionType.ZSTD,
+        compression: CompressionType | str | None = CompressionType.ZSTD,
     ) -> Self:
         """Ingest raw bytes data to prepare for hierarchical archiving.
 
@@ -386,5 +385,7 @@ class FileArchive(FileArchiveBase):
         """
         return cls(
             files=_scan_dir(Path(dir_name), depth),
-            compression=compression.name if compression else None,
+            compression=(
+                getattr(compression, "name", compression) if compression else None
+            ),
         )
