@@ -973,8 +973,12 @@ class Calculation(CalculationBaseModel):
         """
         dir_name = Path(dir_name)
 
+        vasprun_file = dir_name / vasprun_file
+        outcar_file = dir_name / outcar_file
+        contcar_file = dir_name / contcar_file
+
         vasprun_kwargs = vasprun_kwargs if vasprun_kwargs else {}
-        volumetric_files = [] if volumetric_files is None else volumetric_files
+        volumetric_files = [dir_name / v for v in (volumetric_files or [])]
         vasprun = Vasprun(vasprun_file, **vasprun_kwargs)
         outcar = Outcar(outcar_file)
         if (
@@ -1024,7 +1028,7 @@ class Calculation(CalculationBaseModel):
 
         potcar_spec: list[PotcarSpec] | None = None
         if potcar_spec_file:
-            potcar_spec = PotcarSpec.from_file(potcar_spec_file)
+            potcar_spec = PotcarSpec.from_file(dir_name / potcar_spec_file)
         input_doc = CalculationInput.from_vasprun(vasprun, potcar_spec=potcar_spec)
         this_task_type = task_type(input_doc.model_dump())
 
@@ -1042,7 +1046,7 @@ class Calculation(CalculationBaseModel):
             temperatures: list[float] | None = None
             if oszicar_file:
                 try:
-                    oszicar = Oszicar(oszicar_file)
+                    oszicar = Oszicar(dir_name / oszicar_file)
                     _temperatures: list[float | None] = [
                         osz_is.get("T") for osz_is in oszicar.ionic_steps
                     ]
