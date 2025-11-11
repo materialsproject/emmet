@@ -6,6 +6,16 @@ from pathlib import Path
 
 from monty.os.path import zpath as _monty_zpath
 
+from emmet.core.types.enums import ValueEnum
+
+
+class CompressionType(ValueEnum):
+    """Magic bytes for commonly-used compression methods."""
+
+    GZIP = b"\x1f\x8b"
+    ZSTD = b"\x28\xb5\x2f\xfd"
+    AUTO_DETECT = "auto_detect"
+
 
 def zpath(target_path: str | Path) -> Path:
     """

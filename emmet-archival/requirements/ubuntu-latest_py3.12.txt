@@ -6,6 +6,8 @@
 #
 annotated-types==0.7.0
     # via pydantic
+backports.zstd==1.0.0
+    # via emmet-archival (pyproject.toml)
 bibtexparser==1.4.3
     # via pymatgen
 blake3==1.0.8

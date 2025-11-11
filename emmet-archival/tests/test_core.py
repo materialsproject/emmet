@@ -1,12 +1,14 @@
 """Test core archival features."""
 
 from pathlib import Path
-
+import pytest
 
 from emmet.archival.core import FileArchive, _get_path_relative_to_parent
+from emmet.archival.utils import CompressionType
 
 
-def test_file_archiver(tmp_dir):
+@pytest.mark.parametrize("compressor", ["ZSTD", "GZIP"])
+def test_file_archiver(tmp_dir, compressor):
 
     lorem = [
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
@@ -48,21 +50,22 @@ def test_file_archiver(tmp_dir):
     )
 
     # Now archive this
-    archiver = FileArchive.from_directory("root", depth=None)
+    archiver = FileArchive.from_directory("root", depth=None, compression=compressor)
     archiver.to_archive("lorem.h5")
 
     # extract and compare extracted file structure + data to original
-    output_path = Path("lorem").absolute()
-    archiver.extract("lorem.h5", output_dir=output_path)
-    extracted = {
-        str(_get_path_relative_to_parent(p, output_path)): p.read_text()
-        for p in output_path.glob("**/*.txt")
-    }
-
     orig = {
         str(_get_path_relative_to_parent(p, Path("root").absolute())): p.read_text()
         for p in fs
     }
 
-    assert set(extracted) == set(orig)
-    assert all(v == extracted[k] for k, v in orig.items())
+    output_path = Path("lorem").absolute()
+    for compression in (CompressionType.AUTO_DETECT, compressor):
+        archiver.extract("lorem.h5", output_dir=output_path, compression=compression)
+        extracted = {
+            str(_get_path_relative_to_parent(p, output_path)): p.read_text()
+            for p in output_path.glob("**/*.txt")
+        }
+
+        assert set(extracted) == set(orig)
+        assert all(v == extracted[k] for k, v in orig.items())
