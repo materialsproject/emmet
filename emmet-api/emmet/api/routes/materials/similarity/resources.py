@@ -4,11 +4,14 @@ from emmet.api.resource.aggregation import AggregationResource
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery
-from emmet.api.routes.materials.similarity.query_operators import SimilarityFeatureVectorQuery
+from emmet.api.routes.materials.similarity.query_operators import (
+    SimilarityFeatureVectorQuery,
+)
 
 from emmet.core.similarity import SimilarityDoc
 
 timeout = MAPISettings().TIMEOUT
+
 
 def similarity_resource(similarity_store):
     resource = ReadOnlyResource(
@@ -28,6 +31,7 @@ def similarity_resource(similarity_store):
 
     return resource
 
+
 def similarity_feature_vector_resource(similarity_store):
     """Vector search on crystalline similarity feature vectors."""
     return AggregationResource(
@@ -36,6 +40,6 @@ def similarity_feature_vector_resource(similarity_store):
         pipeline_query_operator=SimilarityFeatureVectorQuery(),
         sub_path="/similarity/match/",
         header_processor=GlobalHeaderProcessor(),
-        tags = ["Materials Similarity"],
-        timeout=timeout
+        tags=["Materials Similarity"],
+        timeout=timeout,
     )
