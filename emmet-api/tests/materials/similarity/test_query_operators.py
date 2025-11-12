@@ -3,16 +3,13 @@
 from emmet.api.routes.materials.similarity.query_operators import (
     SimilarityFeatureVectorQuery,
 )
-from emmet.core.similarity import CrystalNNSimilarity
-from pymatgen.core import Structure
+import numpy as np
 
 
 def test_similarity_structure_search(test_dir):
 
     op = SimilarityFeatureVectorQuery()
-    structure = Structure.from_file(test_dir / "Si_mp_149.cif")
-    fv = CrystalNNSimilarity()._featurize_structure(structure).tolist()
-
+    fv = np.random.rand(122).tolist()
     limit = 10
     q = {
         "pipeline": [
