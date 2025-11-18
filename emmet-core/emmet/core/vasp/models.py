@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 
 from pymatgen.core import Structure
 from pymatgen.io.common import VolumetricData as PmgVolumetricData
+from pymatgen.io.vasp import Poscar
 
 from emmet.core.types.enums import ValueEnum
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
@@ -154,7 +155,7 @@ class ChgcarLike(BaseModel):
                 if self.data_aug[i]
             }
         return pmg_cls(
-            self.structure,
+            Poscar(self.structure),  # type: ignore[arg-type]
             {
                 vol_label.value: np.array(self.data[i]).reshape(  # type: ignore[index]
                     self.data_rank[i], order="C"  # type: ignore[index]
