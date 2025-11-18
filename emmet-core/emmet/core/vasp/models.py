@@ -69,6 +69,10 @@ class ChgcarLike(BaseModel):
     C-order is used throughout.
     """
 
+    identifier: str | None = Field(
+        None, description="The identifier of this calculation."
+    )
+
     labels: list[VolumetricLabel] | None = Field(
         None, description="The spin resolution of the volumetric data."
     )
