@@ -211,7 +211,7 @@ def discover_and_sort_vasp_files(
             f = _f.name.lower()
             file_path = _f.path.resolve()
 
-            for k in ("vasprun", "contcar", "outcar", "potcar.spec"):
+            for k in ("vasprun", "contcar", "outcar", "potcar.spec", "oszicar"):
                 if k in f:
                     by_type[calc_suffix][f"{k.replace('.','_')}_file"] = file_path
                     break
