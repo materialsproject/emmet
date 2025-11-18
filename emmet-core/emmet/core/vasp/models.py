@@ -130,14 +130,14 @@ class ChgcarLike(BaseModel):
         return aug_data_arr
 
     @classmethod
-    def from_pmg(cls, vd: PmgVolumetricData) -> Self:
+    def from_pmg(cls, vd: PmgVolumetricData, **kwargs) -> Self:
         """Convert generic pymatgen volumetric data to an archive format."""
         labels = [VolumetricLabel(k) for k in vd.data]
         data_aug = None
         if aug_data := cls.parse_augmentation_charge_data(vd.data_aug):  # type: ignore[arg-type]
             data_aug = [aug_data.get(vlab) for vlab in labels]
 
-        return cls(
+        return cls(  # type: ignore[call-arg]
             labels=labels,
             data=[vd.data[vlab].flatten(order="C") for vlab in labels],  # type: ignore[misc]
             data_rank=[vd.data[vlab].shape for vlab in labels],  # type: ignore[misc]
@@ -147,6 +147,7 @@ class ChgcarLike(BaseModel):
                 if isinstance(vd.structure, Structure)
                 else Structure.from_dict(vd.structure.as_dict())
             ),
+            **kwargs,
         )
 
     def to_pmg(self, pmg_cls: Callable = PmgVolumetricData) -> PmgVolumetricData:
