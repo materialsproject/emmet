@@ -47,7 +47,7 @@ def test_reorder_sites():
         np.random.shuffle(new_z)
 
         structure = Structure(lattice, [Element.from_Z(z) for z in new_z], coords)
-        reordered_struct, reordered_idx = Trajectory.reorder_sites(structure, ref_z)
+        reordered_struct, reordered_idx, _ = Trajectory.reorder_sites(structure, ref_z)
         assert all(site.specie.Z == ref_z[i] for i, site in enumerate(reordered_struct))
         assert all(
             np.abs(np.linalg.norm(reordered_struct[i].coords - structure[old_i].coords))
@@ -55,9 +55,9 @@ def test_reorder_sites():
             for i, old_i in enumerate(reordered_idx)
         )
 
-        # ensur that these also work for Molecules
+        # ensure that these also work for Molecules
         mol = Molecule.from_sites(structure)
-        reordered_mol, reordered_idx = Trajectory.reorder_sites(structure, ref_z)
+        reordered_mol, reordered_idx, _ = Trajectory.reorder_sites(structure, ref_z)
         assert all(site.specie.Z == ref_z[i] for i, site in enumerate(reordered_mol))
         assert all(
             np.abs(np.linalg.norm(reordered_mol[i].coords - mol[old_i].coords)) < 1e-6

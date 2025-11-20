@@ -80,6 +80,40 @@ class _MDMixin(BaseModel):
         return self
 
 
+def _order_z_list(new_z: list[int], ref_z: list[int]) -> tuple[list[int], bool]:
+    """Order a list of proton numbers (Z) according to a reference list.
+
+    Parameters
+    -----------
+    new_z : list of int
+        List of new proton numbers to order
+    ref_z : list of in
+        List of reference proton numbers
+
+    Returns
+    -----------
+    list of int
+        New site indices with matching order
+    bool
+        Whether the order changed
+    """
+    running_sites = list(range(len(new_z)))
+    if new_z == ref_z:
+        return running_sites, False
+
+    reordered_index = []
+    for z in ref_z:
+        for idx in running_sites:
+            if new_z[idx] == z:
+                reordered_index.append(idx)
+                running_sites.remove(idx)
+                break
+
+    if len(running_sites) > 0:
+        raise ValueError("Cannot order atoms according to reference Z list.")
+    return reordered_index, True
+
+
 class AtomRelaxTrajectory(BaseModel):
     """Atomistic only, low-memory schema for relaxation trajectories that can interface with parquet, pymatgen, and ASE."""
 
@@ -163,7 +197,7 @@ class AtomRelaxTrajectory(BaseModel):
     @staticmethod
     def reorder_sites(
         structure: Structure | Molecule, ref_z: list[int]
-    ) -> tuple[Structure | Molecule, list[int]]:
+    ) -> tuple[Structure | Molecule, list[int], bool]:
         """
         Ensure that the sites in a structure match the order in a set of reference Z values.
 
@@ -180,32 +214,22 @@ class AtomRelaxTrajectory(BaseModel):
         -----------
         pymatgen .Structure or .Molecule : structure matching the reference order of sites
         list of int : indices in the original structure which are reordered
+        bool : Whether the order changed
         """
 
-        is_structure = isinstance(structure, Structure)
+        reordered_index, order_changed = _order_z_list(
+            [site.species.elements[0].Z for site in structure], ref_z
+        )
 
-        if [site.species.elements[0].Z for site in structure] == ref_z:
-            return structure, list(range(structure.num_sites))
+        if not order_changed:
+            return structure, reordered_index, order_changed
 
-        running_sites = list(range(len(structure)))
-        ordered_sites = []
-        reordered_index = []
-        for z in ref_z:
-            for idx in running_sites:
-                if structure[idx].species.elements[0].Z == z:
-                    ordered_sites.append(structure[idx])
-                    reordered_index.append(idx)
-                    running_sites.remove(idx)
-                    break
-
-        if len(running_sites) > 0:
-            raise ValueError(
-                f"Cannot order {'structure' if is_structure else 'molecule'} according to reference list."
-            )
-
-        return (Structure if is_structure else Molecule).from_sites(
-            ordered_sites
-        ), reordered_index
+        pmg_cls = Structure if isinstance(structure, Structure) else Molecule
+        return (
+            pmg_cls.from_sites([structure.sites[idx] for idx in reordered_index]),
+            reordered_index,
+            order_changed,
+        )
 
     @classmethod
     def _from_dict(
@@ -266,10 +290,32 @@ class AtomRelaxTrajectory(BaseModel):
         elif is_structure:
             props["lattice"] = [structure.lattice.matrix for structure in structures]
 
-        props["cart_coords"] = [
-            cls.reorder_sites(structure, props["elements"])[0].cart_coords
-            for structure in structures
-        ]
+        reordered_structs = [None] * len(structures)
+        reordered_site_idxs = [None] * len(structures)
+        order_changed = [None] * len(structures)
+        for ion_step_idx, structure in enumerate(structures):
+            (
+                reordered_structs[ion_step_idx],
+                reordered_site_idxs[ion_step_idx],
+                order_changed[ion_step_idx],
+            ) = cls.reorder_sites(structure, props["elements"])
+
+        # Ensure that coordinates and properties associated with sites have consistent ordering
+        props["cart_coords"] = [struct.cart_coords for struct in reordered_structs]
+
+        if any(order_changed):
+            for site_prop_key in {"magmoms", "forces"}:
+                if (site_prop_val := props.pop(site_prop_key, None)) or (
+                    site_prop_val := kwargs.pop(site_prop_key, None)
+                ):
+                    props[site_prop_key] = [
+                        (
+                            [site_prop_val[ion_step_idx][idx] for idx in ordered_idxs]
+                            if order_changed[ion_step_idx]
+                            else site_prop_key[ion_step_idx]
+                        )
+                        for ion_step_idx, ordered_idxs in enumerate(reordered_site_idxs)
+                    ]
 
         if len(esteps := props.get("electronic_steps", [])) > 0:
             props["num_electronic_steps"] = [len(estep) for estep in esteps]
