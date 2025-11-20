@@ -290,31 +290,25 @@ class AtomRelaxTrajectory(BaseModel):
         elif is_structure:
             props["lattice"] = [structure.lattice.matrix for structure in structures]
 
-        reordered_structs = [None] * len(structures)
-        reordered_site_idxs = [None] * len(structures)
-        order_changed = [None] * len(structures)
-        for ion_step_idx, structure in enumerate(structures):
-            (
-                reordered_structs[ion_step_idx],
-                reordered_site_idxs[ion_step_idx],
-                order_changed[ion_step_idx],
-            ) = cls.reorder_sites(structure, props["elements"])
+        reordered: list[tuple[Structure | Molecule, list[int], bool]] = [
+            cls.reorder_sites(structure, props["elements"]) for structure in structures
+        ]
 
         # Ensure that coordinates and properties associated with sites have consistent ordering
-        props["cart_coords"] = [struct.cart_coords for struct in reordered_structs]
+        props["cart_coords"] = [entry[0].cart_coords for entry in reordered]
 
-        if any(order_changed):
+        if any(entry[2] for entry in reordered):
             for site_prop_key in {"magmoms", "forces"}:
                 if (site_prop_val := props.pop(site_prop_key, None)) or (
                     site_prop_val := kwargs.pop(site_prop_key, None)
                 ):
                     props[site_prop_key] = [
                         (
-                            [site_prop_val[ion_step_idx][idx] for idx in ordered_idxs]
-                            if order_changed[ion_step_idx]
+                            [site_prop_val[ion_step_idx][idx] for idx in entry[1]]
+                            if entry[2]
                             else site_prop_key[ion_step_idx]
                         )
-                        for ion_step_idx, ordered_idxs in enumerate(reordered_site_idxs)
+                        for ion_step_idx, entry in enumerate(reordered)
                     ]
 
         if len(esteps := props.get("electronic_steps", [])) > 0:
