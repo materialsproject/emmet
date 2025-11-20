@@ -16,14 +16,11 @@ from pymatgen.electronic_structure.core import Spin
 from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.io.vasp.sets import MPStaticSet
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from pymatgen.symmetry.bandstructure import HighSymmKpath
 
 from emmet.builders.utils import query_open_data
+from emmet.core.band_theory import obtain_path_type
 from emmet.core.electronic_structure import ElectronicStructureDoc
-from emmet.core.settings import EmmetSettings
 from emmet.core.utils import jsanitize
-
-SETTINGS = EmmetSettings()  # type: ignore[call-arg]
 
 
 class ElectronicStructureBuilder(Builder):
@@ -423,7 +420,7 @@ class ElectronicStructureBuilder(Builder):
                     }
 
                     try:
-                        bs_type = self._obtain_path_type(labels_dict, structure)
+                        bs_type = obtain_path_type(labels_dict, structure)
                     except Exception:
                         bs_type = None
 
@@ -454,9 +451,7 @@ class ElectronicStructureBuilder(Builder):
                             }
 
                             try:
-                                bs_type = self._obtain_path_type(
-                                    labels_dict, bs.structure
-                                )
+                                bs_type = obtain_path_type(labels_dict, bs.structure)
                             except Exception:
                                 bs_type = None
 
@@ -748,49 +743,3 @@ class ElectronicStructureBuilder(Builder):
                     materials_doc["other"][prop] = task_output_data[prop]
 
         return materials_doc
-
-    @staticmethod
-    def _obtain_path_type(
-        labels_dict,
-        structure,
-        symprec=SETTINGS.SYMPREC,
-        angle_tolerance=SETTINGS.ANGLE_TOL,
-        atol=1e-5,
-    ):
-        bs_type = None
-
-        if any([label.islower() for label in labels_dict]):
-            bs_type = "latimer_munro"
-        else:
-            for ptype in ["setyawan_curtarolo", "hinuma"]:
-                hskp = HighSymmKpath(
-                    structure,
-                    has_magmoms=False,
-                    magmom_axis=None,
-                    path_type=ptype,
-                    symprec=symprec,
-                    angle_tolerance=angle_tolerance,
-                    atol=atol,
-                )
-                hs_labels_full = hskp.kpath["kpoints"]
-                hs_path_uniq = set(
-                    [label for segment in hskp.kpath["path"] for label in segment]
-                )
-
-                hs_labels = {
-                    k: hs_labels_full[k] for k in hs_path_uniq if k in hs_path_uniq
-                }
-
-                shared_items = {
-                    k: labels_dict[k]
-                    for k in labels_dict
-                    if k in hs_labels
-                    and np.allclose(labels_dict[k], hs_labels[k], atol=1e-3)
-                }
-
-                if len(shared_items) == len(labels_dict) and len(shared_items) == len(
-                    hs_labels
-                ):
-                    bs_type = ptype
-
-        return bs_type
