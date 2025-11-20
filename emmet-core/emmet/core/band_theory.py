@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numbers
 from collections import defaultdict
+from itertools import product
 from typing import TYPE_CHECKING, Annotated
 
 import numpy as np
@@ -17,14 +18,17 @@ from pymatgen.electronic_structure.core import Orbital, Spin
 from pymatgen.electronic_structure.dos import CompleteDos, Dos
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 
+from emmet.core.electronic_structure import BSPathType
 from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.settings import EmmetSettings
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Generator, Sequence
 
     from pymatgen.core.sites import PeriodicSite
+    from pymatgen.core.structure import Structure
+    from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
     from typing_extensions import Self
 
 BAND_GAP_TOL = 1e-4
@@ -171,7 +175,11 @@ class ElectronicBS(BandStructure):
         }
 
         try:
-            bs_type = obtain_path_type(labels_dict, ebs.structure)
+            bs_type = next(
+                obtain_path_type(
+                    labels_dict, ebs.structure, get_path_from_bandstructure(ebs)  # type: ignore[arg-type]
+                )
+            )
         except Exception:
             bs_type = None
 
@@ -388,46 +396,80 @@ class ElectronicDos(BandTheoryBase):
 
 
 def obtain_path_type(
-    labels_dict,
-    structure,
-    symprec=SETTINGS.SYMPREC,
-    angle_tolerance=SETTINGS.ANGLE_TOL,
-    atol=1e-5,
-):
-    bs_type = None
+    labels_dict: dict[str, Sequence[float]],
+    structure: Structure,
+    kpoint_path: list[str],
+    symprecs: list[float] = [SETTINGS.SYMPREC, 0.01],
+    angtols: list[float] = [SETTINGS.ANGLE_TOL],
+    atol: float = 1e-5,
+    kpoint_tol: float = 1e-5,
+) -> Generator:
+    """Try to match a band structure path order to known path orders.
 
-    if any([label.islower() for label in labels_dict]):
-        bs_type = "latimer_munro"
-    else:
-        for ptype in ["setyawan_curtarolo", "hinuma"]:
+    Iterates over a list of `symprec` and `angle_tolerance` values to
+    match paths to one of the path orders in `BSPathType` by checking:
+        1. Special high-symmetry k-point labels match
+        2. High-symmetry k-points along the path have the same labels
+        3. High-symmetry k-points along the path have the same coordinates
+
+    Parameters
+    -----------
+    labels_dict : dict of str to Sequence[float]
+        Dict of high-symmetry points to their corresponding
+        fractional coordinates in k-space
+    structure : pymatgen .Structure
+        Structure associated with the bandstructure
+    kpoint_path : list of str
+        A list of high symmetry k-points visited by the bandstructure.
+    symprecs : list[float] = [SETTINGS.SYMPREC,0.01]
+        List of `symprec` values to pass to `HighSymmKpath`
+    angtols : list[float] = [SETTINGS.ANGLE_TOL]
+        List `angle_tolerance` values to pass to `HighSymmKpath`
+    atol : float = 1e-5
+        Absolute tolerance used by `HighSymmKpath`
+    kpoint_tol : float = 1e-5
+        Absolute tolerance for matching fractional k-point coordiantes
+
+    Yields
+    -----------
+    BSPathType
+    """
+    for symprec, angtol in product(symprecs, angtols):
+
+        for path_type in BSPathType:
             hskp = HighSymmKpath(
                 structure,
                 has_magmoms=False,
                 magmom_axis=None,
-                path_type=ptype,
+                path_type=path_type.value,
                 symprec=symprec,
-                angle_tolerance=angle_tolerance,
+                angle_tolerance=angtol,
                 atol=atol,
             )
-            hs_labels_full = hskp.kpath["kpoints"]
-            hs_path_uniq = set(
-                [label for segment in hskp.kpath["path"] for label in segment]
-            )
 
-            hs_labels = {
-                k: hs_labels_full[k] for k in hs_path_uniq if k in hs_path_uniq
-            }
-
-            shared_items = {
-                k: labels_dict[k]
-                for k in labels_dict
-                if k in hs_labels
-                and np.allclose(labels_dict[k], hs_labels[k], atol=1e-3)
-            }
-
-            if len(shared_items) == len(labels_dict) and len(shared_items) == len(
-                hs_labels
+            ordered_kpts = list(hskp.kpath["kpoints"])
+            if (
+                # check that the labels are the same
+                set(hskp.kpath["kpoints"]) == set(labels_dict)
+                # check that the path orders are the same
+                and [label for label in hskp.get_kpoints()[1] if label] == kpoint_path
+                # check that the kpoints corresponding to each label are the same
+                and np.all(
+                    np.linalg.norm(
+                        np.array([hskp.kpath["kpoints"][k] for k in ordered_kpts])
+                        - np.array([labels_dict[k] for k in ordered_kpts]),
+                        axis=1,
+                    )
+                    < kpoint_tol
+                )
             ):
-                bs_type = ptype
+                yield path_type
 
-    return bs_type
+
+def get_path_from_bandstructure(band_structure: BandStructureSymmLine) -> list[str]:
+    """Get the list of high-symmetry points in a band structure."""
+    return [
+        label
+        for branch in band_structure.branches
+        for label in branch["name"].split("-")
+    ]
