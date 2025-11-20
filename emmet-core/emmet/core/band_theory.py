@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
 import numbers
+from collections import defaultdict
 from typing import TYPE_CHECKING, Annotated
 
 import numpy as np
-from pydantic import BaseModel, Field, computed_field, BeforeValidator
+from pydantic import BaseModel, BeforeValidator, Field, computed_field
 from pymatgen.core import Lattice
 from pymatgen.electronic_structure.bandstructure import (
     BandStructure as PmgBandStructure,
@@ -15,16 +15,20 @@ from pymatgen.electronic_structure.bandstructure import (
 from pymatgen.electronic_structure.bandstructure import Kpoint
 from pymatgen.electronic_structure.core import Orbital, Spin
 from pymatgen.electronic_structure.dos import CompleteDos, Dos
+from pymatgen.symmetry.bandstructure import HighSymmKpath
 
 from emmet.core.math import Matrix3D, Vector3D
+from emmet.core.settings import EmmetSettings
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
     from pymatgen.core.sites import PeriodicSite
     from typing_extensions import Self
 
 BAND_GAP_TOL = 1e-4
+SETTINGS = EmmetSettings()  # type: ignore[call-arg]
 
 
 class BandTheoryBase(BaseModel):
@@ -121,6 +125,10 @@ class ProjectedBS(BaseModel):
 class ElectronicBS(BandStructure):
     """Define an electronic band structure schema."""
 
+    path_convention: str | None = Field(
+        None, description="High symmetry path convention of the band structure"
+    )
+
     efermi: float = Field(
         description="The Fermi level (highest occupied energy level.)"
     )
@@ -158,6 +166,15 @@ class ElectronicBS(BandStructure):
     def from_pmg(cls, ebs: PmgBandStructure, **kwargs) -> Self:
         """Construct from a pymatgen band structure object."""
         band_gap_meta = ebs.get_band_gap()
+        labels_dict = {
+            label: kpoint.frac_coords for label, kpoint in ebs.labels_dict.items()
+        }
+
+        try:
+            bs_type = obtain_path_type(labels_dict, ebs.structure)
+        except Exception:
+            bs_type = None
+
         config = {
             "qpoints": [qpt.frac_coords for qpt in ebs.kpoints],
             "lattice_rec": ebs.lattice_rec.matrix,
@@ -169,6 +186,7 @@ class ElectronicBS(BandStructure):
             "is_metal": ebs.is_metal(),
             "is_direct": band_gap_meta["direct"],
             "band_gap": band_gap_meta["energy"],
+            "path_convention": bs_type,
         }
 
         for spin in Spin:
@@ -367,3 +385,49 @@ class ElectronicDos(BandTheoryBase):
                 self.projected_densities.to_pmg_like(self.structure),
             )
         return dos
+
+
+def obtain_path_type(
+    labels_dict,
+    structure,
+    symprec=SETTINGS.SYMPREC,
+    angle_tolerance=SETTINGS.ANGLE_TOL,
+    atol=1e-5,
+):
+    bs_type = None
+
+    if any([label.islower() for label in labels_dict]):
+        bs_type = "latimer_munro"
+    else:
+        for ptype in ["setyawan_curtarolo", "hinuma"]:
+            hskp = HighSymmKpath(
+                structure,
+                has_magmoms=False,
+                magmom_axis=None,
+                path_type=ptype,
+                symprec=symprec,
+                angle_tolerance=angle_tolerance,
+                atol=atol,
+            )
+            hs_labels_full = hskp.kpath["kpoints"]
+            hs_path_uniq = set(
+                [label for segment in hskp.kpath["path"] for label in segment]
+            )
+
+            hs_labels = {
+                k: hs_labels_full[k] for k in hs_path_uniq if k in hs_path_uniq
+            }
+
+            shared_items = {
+                k: labels_dict[k]
+                for k in labels_dict
+                if k in hs_labels
+                and np.allclose(labels_dict[k], hs_labels[k], atol=1e-3)
+            }
+
+            if len(shared_items) == len(labels_dict) and len(shared_items) == len(
+                hs_labels
+            ):
+                bs_type = ptype
+
+    return bs_type
