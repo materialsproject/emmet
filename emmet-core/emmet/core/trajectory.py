@@ -715,10 +715,7 @@ class AtomTrajectory(AtomRelaxTrajectory, _MDMixin):
             ],
             num_ionic_steps=len(meta["atoms"]["element"]),
             lattice=[
-                [
-                    [box[i][1] - box[j][0] if i == j else 0.0 for j in range(3)]
-                    for i in range(3)
-                ]
+                np.diag([box[i][1] - box[i][0] for i in range(3)])
                 for box in meta["box_bounds"]
             ],
             time_step=(
