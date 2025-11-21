@@ -175,7 +175,7 @@ class AtomRelaxTrajectory(BaseModel):
         # Because `self.lattice == 1` can indicate a frozen lattice if `self.num_ionic_steps > 1`
         # and a static calculation otherwise, check here that the lattice is a property
         # that varies with frames
-        if len(self.lattice) == self.num_ionic_steps:
+        if isinstance(self.lattice, list) and len(self.lattice) == self.num_ionic_steps:
             used_fields.add("lattice")
         return used_fields
 
