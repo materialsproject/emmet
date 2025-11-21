@@ -44,7 +44,7 @@ class PointGroupData(BaseModel):
         None, title="Point Group Symbol", description="The point group for the lattice"
     )
 
-    rotation_number: float | None = Field(
+    rotation_number: int | None = Field(
         None,
         title="Rotational Symmetry Number",
         description="Rotational symmetry number for the molecule",
