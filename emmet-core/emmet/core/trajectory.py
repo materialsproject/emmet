@@ -165,6 +165,28 @@ class AtomRelaxTrajectory(BaseModel):
         ]
         return config
 
+    @property
+    def ionic_step_properties_used(self) -> set[str]:
+        """Return list of populated fields."""
+        used_fields = {
+            k for k in self.ionic_step_properties if getattr(self, k, None) is not None
+        }
+
+        # Because `self.lattice == 1` can indicate a frozen lattice if `self.num_ionic_steps > 1`
+        # and a static calculation otherwise, check here that the lattice is a property
+        # that varies with frames
+        if len(self.lattice) == self.num_ionic_steps:
+            used_fields.add("lattice")
+        return used_fields
+
+    def __repr__(self) -> str:
+        """Print summary data."""
+        return (
+            f"{self.__class__.__module__}.{self.__class__.__name__} "
+            f"({self.num_ionic_steps} ionic steps) with data: "
+            f"{', '.join(sorted(self.ionic_step_properties_used))}."
+        )
+
     def __hash__(self) -> int:
         """Used to verify roundtrip conversion of Trajectory."""
         return hash(self.model_dump_json())
