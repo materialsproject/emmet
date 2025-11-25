@@ -174,9 +174,9 @@ class EmmetSettings(BaseSettings):
     )
 
     USE_EMMET_MODELS: bool = Field(
-        True,
+        False,
         description=(
-            "Whether to use emmet (True) or pymatgen (False) models "
+            "Whether to use emmet (True) or pymatgen (False, default) models "
             "for materials simulation outputs in certain document models "
             "which are used only in workflows and not in build pipelines."
         ),
