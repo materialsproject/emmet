@@ -74,7 +74,7 @@ class PointGroupData(BaseModel):
     )
 
     @field_validator("rotation_number", mode="before")
-    def remove_inf(cls, v : Any) -> int | None:
+    def remove_inf(cls, v: Any) -> int | None:
         if v is not None:
             v = None if isinf(float(v)) else int(v)
         return v
@@ -113,18 +113,17 @@ class PointGroupData(BaseModel):
         }
 
         try:
-            r = next(
-                rot_num 
+            symmetry["rotation_number"] = next(
+                rot_num
                 for rot_num, point_groups in rotational_symmetry_numbers.items()
                 if symmetry["point_group"] in point_groups
             )
+            if isinf(symmetry["rotation_number"]):
+                symmetry["rotation_number"] = None
         except Exception:
-            r = None
-            
-        linear = (symmetry["point_group"] in ["C*v", "D*h"])
+            symmetry["rotation_number"] = None
 
-        symmetry["rotation_number"] = r if not isinf(r) else None
-        symmetry["linear"] = linear
+        symmetry["linear"] = symmetry["point_group"] in ["C*v", "D*h"]
 
         return PointGroupData(**symmetry)
 
