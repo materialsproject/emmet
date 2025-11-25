@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from math import isinf
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from pymatgen.core import Structure
 from pymatgen.core.structure import Molecule
 from pymatgen.symmetry.analyzer import (
@@ -72,6 +73,12 @@ class PointGroupData(BaseModel):
         description="Tolerance used to generate the full set of symmetry operations of the point group.",
     )
 
+    @field_validator("rotation_number", mode="before")
+    def remove_inf(cls, v : Any) -> int | None:
+        if v is not None:
+            v = None if isinf(float(v)) else int(v)
+        return v
+
     @classmethod
     def from_molecule(cls, molecule: Molecule) -> "PointGroupData":
         tol = SETTINGS.PGATOL
@@ -91,31 +98,32 @@ class PointGroupData(BaseModel):
         }
 
         rotational_symmetry_numbers = {
-            1.0: ["C1", "Cs", "Ci", "C*v", "S2"],
-            2.0: ["C2", "C2h", "C2v", "S4", "D*h"],
-            3.0: ["C3", "C3h", "C3v", "S6"],
-            4.0: ["C4v", "D4h", "D4d", "D2", "D2h", "D2d"],
-            5.0: ["C5v", "Ih"],
-            6.0: ["D3", "D3h", "D3d"],
-            10.0: ["D5h", "D5d"],
-            12.0: ["T", "Td", "Th", "D6h"],
-            14.0: ["D7h"],
-            16.0: ["D8h"],
-            24.0: ["Oh"],
+            1: ["C1", "Cs", "Ci", "C*v", "S2"],
+            2: ["C2", "C2h", "C2v", "S4", "D*h"],
+            3: ["C3", "C3h", "C3v", "S6"],
+            4: ["C4v", "D4h", "D4d", "D2", "D2h", "D2d"],
+            5: ["C5v", "Ih"],
+            6: ["D3", "D3h", "D3d"],
+            10: ["D5h", "D5d"],
+            12: ["T", "Td", "Th", "D6h"],
+            14: ["D7h"],
+            16: ["D8h"],
+            24: ["Oh"],
             float("inf"): ["Kh"],
         }
 
-        r = 1.0
-        for rot_num, point_groups in rotational_symmetry_numbers.items():
-            if symmetry["point_group"] in point_groups:
-                r = rot_num
-                break
-        if symmetry["point_group"] in ["C*v", "D*h"]:
-            linear = True
-        else:
-            linear = False
+        try:
+            r = next(
+                rot_num 
+                for rot_num, point_groups in rotational_symmetry_numbers.items()
+                if symmetry["point_group"] in point_groups
+            )
+        except Exception:
+            r = None
+            
+        linear = (symmetry["point_group"] in ["C*v", "D*h"])
 
-        symmetry["rotation_number"] = float(r)
+        symmetry["rotation_number"] = r if not isinf(r) else None
         symmetry["linear"] = linear
 
         return PointGroupData(**symmetry)
