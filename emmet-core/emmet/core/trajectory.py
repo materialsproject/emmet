@@ -80,6 +80,40 @@ class _MDMixin(BaseModel):
         return self
 
 
+def _order_z_list(new_z: list[int], ref_z: list[int]) -> tuple[list[int], bool]:
+    """Order a list of proton numbers (Z) according to a reference list.
+
+    Parameters
+    -----------
+    new_z : list of int
+        List of new proton numbers to order
+    ref_z : list of in
+        List of reference proton numbers
+
+    Returns
+    -----------
+    list of int
+        New site indices with matching order
+    bool
+        Whether the order changed
+    """
+    running_sites = list(range(len(new_z)))
+    if new_z == ref_z:
+        return running_sites, False
+
+    reordered_index = []
+    for z in ref_z:
+        for idx in running_sites:
+            if new_z[idx] == z:
+                reordered_index.append(idx)
+                running_sites.remove(idx)
+                break
+
+    if len(running_sites) > 0:
+        raise ValueError("Cannot order atoms according to reference Z list.")
+    return reordered_index, True
+
+
 class AtomRelaxTrajectory(BaseModel):
     """Atomistic only, low-memory schema for relaxation trajectories that can interface with parquet, pymatgen, and ASE."""
 
@@ -131,6 +165,28 @@ class AtomRelaxTrajectory(BaseModel):
         ]
         return config
 
+    @property
+    def ionic_step_properties_used(self) -> set[str]:
+        """Return list of populated fields."""
+        used_fields = {
+            k for k in self.ionic_step_properties if getattr(self, k, None) is not None
+        }
+
+        # Because `self.lattice == 1` can indicate a frozen lattice if `self.num_ionic_steps > 1`
+        # and a static calculation otherwise, check here that the lattice is a property
+        # that varies with frames
+        if isinstance(self.lattice, list) and len(self.lattice) == self.num_ionic_steps:
+            used_fields.add("lattice")
+        return used_fields
+
+    def __repr__(self) -> str:
+        """Print summary data."""
+        return (
+            f"{self.__class__.__module__}.{self.__class__.__name__} "
+            f"({self.num_ionic_steps} ionic steps) with data: "
+            f"{', '.join(sorted(self.ionic_step_properties_used))}."
+        )
+
     def __hash__(self) -> int:
         """Used to verify roundtrip conversion of Trajectory."""
         return hash(self.model_dump_json())
@@ -163,7 +219,7 @@ class AtomRelaxTrajectory(BaseModel):
     @staticmethod
     def reorder_sites(
         structure: Structure | Molecule, ref_z: list[int]
-    ) -> tuple[Structure | Molecule, list[int]]:
+    ) -> tuple[Structure | Molecule, list[int], bool]:
         """
         Ensure that the sites in a structure match the order in a set of reference Z values.
 
@@ -180,32 +236,22 @@ class AtomRelaxTrajectory(BaseModel):
         -----------
         pymatgen .Structure or .Molecule : structure matching the reference order of sites
         list of int : indices in the original structure which are reordered
+        bool : Whether the order changed
         """
 
-        is_structure = isinstance(structure, Structure)
+        reordered_index, order_changed = _order_z_list(
+            [site.species.elements[0].Z for site in structure], ref_z
+        )
 
-        if [site.species.elements[0].Z for site in structure] == ref_z:
-            return structure, list(range(structure.num_sites))
+        if not order_changed:
+            return structure, reordered_index, order_changed
 
-        running_sites = list(range(len(structure)))
-        ordered_sites = []
-        reordered_index = []
-        for z in ref_z:
-            for idx in running_sites:
-                if structure[idx].species.elements[0].Z == z:
-                    ordered_sites.append(structure[idx])
-                    reordered_index.append(idx)
-                    running_sites.remove(idx)
-                    break
-
-        if len(running_sites) > 0:
-            raise ValueError(
-                f"Cannot order {'structure' if is_structure else 'molecule'} according to reference list."
-            )
-
-        return (Structure if is_structure else Molecule).from_sites(
-            ordered_sites
-        ), reordered_index
+        pmg_cls = Structure if isinstance(structure, Structure) else Molecule
+        return (
+            pmg_cls.from_sites([structure.sites[idx] for idx in reordered_index]),
+            reordered_index,
+            order_changed,
+        )
 
     @classmethod
     def _from_dict(
@@ -266,10 +312,26 @@ class AtomRelaxTrajectory(BaseModel):
         elif is_structure:
             props["lattice"] = [structure.lattice.matrix for structure in structures]
 
-        props["cart_coords"] = [
-            cls.reorder_sites(structure, props["elements"])[0].cart_coords
-            for structure in structures
+        reordered: list[tuple[Structure | Molecule, list[int], bool]] = [
+            cls.reorder_sites(structure, props["elements"]) for structure in structures
         ]
+
+        # Ensure that coordinates and properties associated with sites have consistent ordering
+        props["cart_coords"] = [entry[0].cart_coords for entry in reordered]
+
+        if any(entry[2] for entry in reordered):
+            for site_prop_key in {"magmoms", "forces"}:
+                if (site_prop_val := props.pop(site_prop_key, None)) or (
+                    site_prop_val := kwargs.pop(site_prop_key, None)
+                ):
+                    props[site_prop_key] = [
+                        (
+                            [site_prop_val[ion_step_idx][idx] for idx in entry[1]]
+                            if entry[2]
+                            else site_prop_key[ion_step_idx]
+                        )
+                        for ion_step_idx, entry in enumerate(reordered)
+                    ]
 
         if len(esteps := props.get("electronic_steps", [])) > 0:
             props["num_electronic_steps"] = [len(estep) for estep in esteps]

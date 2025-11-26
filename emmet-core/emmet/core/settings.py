@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from typing import Any
     from typing_extensions import Self
 
-DEFAULT_CONFIG_FILE_PATH = str(Path.home().joinpath(".emmet.json"))
+DEFAULT_CONFIG_FILE_PATH = str(Path("~/.emmet.json").expanduser())
 
 
 class EmmetSettings(BaseSettings):
@@ -172,6 +172,16 @@ class EmmetSettings(BaseSettings):
         True,
         description="Use static calculations for structure and energy along with structure optimizations",
     )
+
+    USE_EMMET_MODELS: bool = Field(
+        False,
+        description=(
+            "Whether to use emmet (True) or pymatgen (False, default) models "
+            "for materials simulation outputs in certain document models "
+            "which are used only in workflows and not in build pipelines."
+        ),
+    )
+
     model_config = SettingsConfigDict(env_prefix="emmet_", extra="ignore")
 
     @model_validator(mode="before")
