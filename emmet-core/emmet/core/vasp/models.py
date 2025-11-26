@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 
 from pymatgen.core import Structure
 from pymatgen.io.common import VolumetricData as PmgVolumetricData
+from pymatgen.io.vasp import Poscar
 
 from emmet.core.types.enums import ValueEnum
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
@@ -68,6 +69,10 @@ class ChgcarLike(BaseModel):
     C-order is used throughout.
     """
 
+    identifier: str | None = Field(
+        None, description="The identifier of this calculation."
+    )
+
     labels: list[VolumetricLabel] | None = Field(
         None, description="The spin resolution of the volumetric data."
     )
@@ -90,7 +95,9 @@ class ChgcarLike(BaseModel):
     ) -> dict[VolumetricLabel, list[AugChargeData]]:
         aug_data_arr: dict[VolumetricLabel, list[AugChargeData]] = {}
         for k, unfmt_data in aug_data.items():
-            if not any(line.strip() for line in unfmt_data):
+            if not isinstance(unfmt_data, list) or not any(
+                line.strip() for line in unfmt_data
+            ):
                 continue
             parse_meta = True
             num_vals = -1
@@ -123,14 +130,14 @@ class ChgcarLike(BaseModel):
         return aug_data_arr
 
     @classmethod
-    def from_pmg(cls, vd: PmgVolumetricData) -> Self:
+    def from_pmg(cls, vd: PmgVolumetricData, **kwargs) -> Self:
         """Convert generic pymatgen volumetric data to an archive format."""
         labels = [VolumetricLabel(k) for k in vd.data]
         data_aug = None
         if aug_data := cls.parse_augmentation_charge_data(vd.data_aug):  # type: ignore[arg-type]
             data_aug = [aug_data.get(vlab) for vlab in labels]
 
-        return cls(
+        return cls(  # type: ignore[call-arg]
             labels=labels,
             data=[vd.data[vlab].flatten(order="C") for vlab in labels],  # type: ignore[misc]
             data_rank=[vd.data[vlab].shape for vlab in labels],  # type: ignore[misc]
@@ -140,6 +147,7 @@ class ChgcarLike(BaseModel):
                 if isinstance(vd.structure, Structure)
                 else Structure.from_dict(vd.structure.as_dict())
             ),
+            **kwargs,
         )
 
     def to_pmg(self, pmg_cls: Callable = PmgVolumetricData) -> PmgVolumetricData:
@@ -152,7 +160,7 @@ class ChgcarLike(BaseModel):
                 if self.data_aug[i]
             }
         return pmg_cls(
-            self.structure,
+            Poscar(self.structure),  # type: ignore[arg-type]
             {
                 vol_label.value: np.array(self.data[i]).reshape(  # type: ignore[index]
                     self.data_rank[i], order="C"  # type: ignore[index]

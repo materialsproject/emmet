@@ -51,8 +51,13 @@ from emmet.core.vasp.calc_types import (
     task_type,
 )
 
+from emmet.core.settings import EmmetSettings
+
+SETTINGS = EmmetSettings()
+
 if TYPE_CHECKING:
     from typing_extensions import Self
+    from pymatgen.electronic_structure.bandstructure import BandStructure
     from pymatgen.electronic_structure.dos import CompleteDos
 
 
@@ -163,7 +168,12 @@ class PotcarSpec(BaseModel):
         """
         if ".spec" in str(file_path):
             with zopen(file_path, "rt") as psf:
-                return [cls(**ps) for ps in orjson.loads(psf.read())]
+                try:
+                    # POTCAR spec is a model-dumped list of PotcarSpec
+                    return [cls(**ps) for ps in orjson.loads(psf.read())]
+                except orjson.JSONDecodeError:
+                    # POTCAR spec is a pymatgen-style newline-delimited list of symbols
+                    return [cls(titel=symb) for symb in psf.read().splitlines()]  # type: ignore[arg-type,call-arg]
         return cls.from_potcar(VaspPotcar.from_file(str(file_path)))
 
 
@@ -842,7 +852,7 @@ class Calculation(CalculationBaseModel):
         dict[str, str] | None, BeforeValidator(_dict_items_zipper)
     ] = Field(
         None,
-        description="Paths (relative to dir_name) of the VASP output files "
+        description="Paths of the VASP output files "
         "associated with this calculation",
     )
     bader: BaderAnalysis | None = Field(
@@ -867,7 +877,7 @@ class Calculation(CalculationBaseModel):
         vasprun_file: Path | str,
         outcar_file: Path | str,
         contcar_file: Path | str,
-        volumetric_files: list[str] | None = None,
+        volumetric_files: list[Path] | None = None,
         elph_poscars: list[Path] | None = None,
         oszicar_file: Path | str | None = None,
         potcar_spec_file: Path | str | None = None,
@@ -881,7 +891,10 @@ class Calculation(CalculationBaseModel):
         store_volumetric_data: tuple[str] | None = None,
         store_trajectory: StoreTrajectoryOption | str = StoreTrajectoryOption.NO,
         vasprun_kwargs: dict | None = None,
-    ) -> tuple["Calculation", dict[VaspObject, dict]]:
+        use_emmet_models: bool = SETTINGS.USE_EMMET_MODELS,
+    ) -> tuple[
+        "Calculation", dict[VaspObject, ChgcarLike] | dict[VaspObject, VolumetricData]
+    ]:
         """
         Create a VASP calculation document from a directory and file paths.
 
@@ -892,20 +905,20 @@ class Calculation(CalculationBaseModel):
         task_name
             The task name.
         vasprun_file
-            Path to the vasprun.xml file, relative to dir_name.
+            Path to the vasprun.xml file.
         outcar_file
-            Path to the OUTCAR file, relative to dir_name.
+            Path to the OUTCAR file.
         contcar_file
-            Path to the CONTCAR file, relative to dir_name
+            Path to the CONTCAR file
         volumetric_files
-            Path to volumetric files, relative to dir_name.
+            Path to volumetric files.
         elph_poscars
             Path to displaced electron-phonon coupling POSCAR files generated using
-            ``PHON_LMC = True``, given relative to dir_name.
+            ``PHON_LMC = True``
         oszicar_file
-            Path to the OSZICAR file, relative to dir_name
+            Path to the OSZICAR file
         potcar_spec_file : Path | str | None = None
-            Path to a POTCAR.spec file, relative to dir_name.
+            Path to a POTCAR.spec file.
             Used in rehydration of a calculation from archived
             data, where the original POTCAR is not available.
         parse_dos
@@ -961,18 +974,23 @@ class Calculation(CalculationBaseModel):
         vasprun_kwargs
             Additional keyword arguments that will be passed to the Vasprun init.
 
+        use_emmet_models : bool = True
+            Whether to store VASP objects as emmet-core models (True, default)
+            or as pymatgen models (False)
+
         Returns
         -------
         Calculation
             A VASP calculation document.
         """
         dir_name = Path(dir_name)
+
         vasprun_file = dir_name / vasprun_file
         outcar_file = dir_name / outcar_file
         contcar_file = dir_name / contcar_file
 
         vasprun_kwargs = vasprun_kwargs if vasprun_kwargs else {}
-        volumetric_files = [] if volumetric_files is None else volumetric_files
+        volumetric_files = [dir_name / v for v in (volumetric_files or [])]
         vasprun = Vasprun(vasprun_file, **vasprun_kwargs)
         outcar = Outcar(outcar_file)
         if (
@@ -982,23 +1000,26 @@ class Calculation(CalculationBaseModel):
             contcar = Poscar(vasprun.final_structure)
         else:
             contcar = Poscar.from_file(contcar_file)
-        completed_at = str(datetime.fromtimestamp(vasprun_file.stat().st_mtime))
+        completed_at = str(datetime.fromtimestamp(Path(vasprun_file).stat().st_mtime))
 
         output_file_paths = _get_output_file_paths(volumetric_files)
-        vasp_objects: dict[VaspObject, Any] = _get_volumetric_data(
-            dir_name, output_file_paths, store_volumetric_data
+        vasp_objects = _get_volumetric_data(
+            output_file_paths, store_volumetric_data, use_emmet_models
         )
 
-        if (dos := _parse_dos(parse_dos, vasprun)) is not None:
+        if (dos := _parse_dos(parse_dos, vasprun, use_emmet_models)) is not None:
             if strip_dos_projections:
-                dos.projected_densities = None
+                setattr(
+                    dos, "projected_densities" if use_emmet_models else "pdos", None
+                )
             vasp_objects[VaspObject.DOS] = dos  # type: ignore
 
-        bandstructure = _parse_bandstructure(parse_bandstructure, vasprun)
+        bandstructure = _parse_bandstructure(
+            parse_bandstructure, vasprun, use_emmet_models
+        )
         if bandstructure is not None:
             if strip_bandstructure_projections:
-                for spin in ("up", "down"):
-                    setattr(bandstructure, f"spin_{spin}_projections", None)
+                bandstructure.projections = None
             vasp_objects[VaspObject.BANDSTRUCTURE] = bandstructure  # type: ignore
 
         bader = None
@@ -1013,17 +1034,20 @@ class Calculation(CalculationBaseModel):
                 path=dir_name, atomic_densities_path=densities_path
             ).summary
 
-        locpot = None
+        locpot: Locpot | None = None
         if average_locpot:
             if VaspObject.LOCPOT in vasp_objects:
-                locpot = vasp_objects[VaspObject.LOCPOT]  # type: ignore
+                if use_emmet_models:
+                    locpot = vasp_objects[VaspObject.LOCPOT].to_pmg(pmg_cls=Locpot)  # type: ignore
+                else:
+                    locpot = vasp_objects[VaspObject.LOCPOT]  # type: ignore
             elif VaspObject.LOCPOT in output_file_paths:
                 locpot_file = output_file_paths[VaspObject.LOCPOT]  # type: ignore
-                locpot = Locpot.from_file(dir_name / locpot_file)
+                locpot = Locpot.from_file(locpot_file)
 
         potcar_spec: list[PotcarSpec] | None = None
         if potcar_spec_file:
-            potcar_spec = PotcarSpec.from_file(potcar_spec_file)
+            potcar_spec = PotcarSpec.from_file(dir_name / potcar_spec_file)
         input_doc = CalculationInput.from_vasprun(vasprun, potcar_spec=potcar_spec)
         this_task_type = task_type(input_doc.model_dump())
 
@@ -1061,6 +1085,10 @@ class Calculation(CalculationBaseModel):
                 store_electronic_steps=(store_trajectory == StoreTrajectoryOption.FULL),
                 temperature=temperatures,
             )
+            if not use_emmet_models:
+                vasp_objects[VaspObject.TRAJECTORY] = vasp_objects[  # type: ignore[union-attr]
+                    VaspObject.TRAJECTORY
+                ].to_pmg()
 
         # MD run
         if vasprun.parameters.get("IBRION", -1) == 0:
@@ -1160,7 +1188,7 @@ class Calculation(CalculationBaseModel):
         )
 
 
-def _get_output_file_paths(volumetric_files: list[str]) -> dict[VaspObject, str]:
+def _get_output_file_paths(volumetric_files: list[Path]) -> dict[VaspObject, str]:
     """
     Get the output file paths for VASP output files from the list of volumetric files.
 
@@ -1174,37 +1202,37 @@ def _get_output_file_paths(volumetric_files: list[str]) -> dict[VaspObject, str]
     dict[VaspObject, str]
         A mapping between the VASP object type and the file path.
     """
-    output_file_paths = {}
-    for vasp_object in VaspObject:  # type: ignore
-        for volumetric_file in volumetric_files:
-            if vasp_object.name in str(volumetric_file):
-                output_file_paths[vasp_object] = str(volumetric_file)
-    return output_file_paths
+    return {
+        vasp_object: str(volumetric_file)
+        for vasp_object in VaspObject
+        for volumetric_file in volumetric_files
+        if vasp_object.name in str(volumetric_file)
+    }
 
 
 def _get_volumetric_data(
-    dir_name: Path,
     output_file_paths: dict[VaspObject, str],
     store_volumetric_data: tuple[str] | None,
-) -> dict[VaspObject, ChgcarLike]:
+    use_emmet_models: bool,
+) -> dict[VaspObject, ChgcarLike] | dict[VaspObject, VolumetricData]:
     """
     Load volumetric data files from a directory.
 
     Parameters
     ----------
-    dir_name
-        The directory containing the files.
     output_file_paths
-        A dictionary mapping the data type to file path relative to dir_name.
+        A dictionary mapping the data type to absolute file paths.
     store_volumetric_data
         The volumetric data files to load. E.g., `("chgcar", "locpot")`.
         Provided as a list of strings note you can use either the keys or the
         values available in the `VaspObject` enum (e.g., "locpot" or "LOCPOT")
         are both valid.
+    Whether to store VASP objects as emmet-core models (True, default)
+        or as pymatgen models (False)
 
     Returns
     -------
-    dict[VaspObject, ChgcarLike]
+    dict[VaspObject, ChgcarLike] or dict[VaspObject, VolumetricData]
         A dictionary mapping the VASP object data type (`VaspObject.LOCPOT`,
         `VaspObject.CHGCAR`, etc) to the volumetric data object.
     """
@@ -1213,7 +1241,9 @@ def _get_volumetric_data(
     if store_volumetric_data is None or len(store_volumetric_data) == 0:
         return {}
 
-    volumetric_data: dict[VaspObject, VolumetricData] = {}
+    volumetric_data: dict[VaspObject, ChgcarLike] | dict[VaspObject, VolumetricData] = (
+        {}
+    )
     for file_type, file in output_file_paths.items():
         if (
             file_type.name not in store_volumetric_data
@@ -1223,30 +1253,39 @@ def _get_volumetric_data(
 
         try:
             # assume volumetric data is all in CHGCAR format
-            volumetric_data[file_type] = ChgcarLike.from_pmg(
-                Chgcar.from_file(str(dir_name / file))
+            pmg_cls = Locpot if file_type == VaspObject.LOCPOT else Chgcar
+            vobj = pmg_cls.from_file(str(file))
+            volumetric_data[file_type] = (
+                ChgcarLike.from_pmg(vobj) if use_emmet_models else vobj
             )
-        except Exception:
-            raise ValueError(f"Failed to parse {file_type} at {file}.")
+        except Exception as exc:
+            raise ValueError(f"Failed to parse {file_type} at {file}:\n{exc}.")
     return volumetric_data
 
 
-def _parse_dos(parse_mode: str | bool, vasprun: Vasprun) -> ElectronicDos | None:
+def _parse_dos(
+    parse_mode: str | bool,
+    vasprun: Vasprun,
+    use_emmet_models: bool,
+) -> ElectronicDos | CompleteDos | None:
     """Parse DOS. See Calculation.from_vasp_files for supported arguments."""
     nsw = vasprun.incar.get("NSW", 0)
-    dos = None
     if parse_mode is True or (parse_mode == "auto" and nsw < 1):
-        dos = ElectronicDos.from_pmg(vasprun.complete_dos)
-    return dos
+        if use_emmet_models:
+            return ElectronicDos.from_pmg(vasprun.complete_dos)
+        return vasprun.complete_dos
+    return None
 
 
 def _parse_bandstructure(
-    parse_mode: str | bool, vasprun: Vasprun
-) -> ElectronicBS | None:
+    parse_mode: str | bool,
+    vasprun: Vasprun,
+    use_emmet_models: bool,
+) -> ElectronicBS | BandStructure | None:
     """Parse band structure. See Calculation.from_vasp_files for supported arguments."""
     vasprun_file = vasprun.filename
 
-    bs: ElectronicBS | None = None
+    bs: ElectronicBS | BandStructure | None = None
     # only save the bandstructure if not moving ions
     if parse_mode == "auto" and vasprun.incar.get("NSW", 0) <= 1:
         if vasprun.incar.get("ICHARG", 0) > 10:
@@ -1268,7 +1307,9 @@ def _parse_bandstructure(
         bs_vrun = BSVasprun(vasprun_file, parse_projected_eigen=True)
         bs = bs_vrun.get_band_structure(line_mode=parse_mode == "line", efermi="smart")
 
-    return ElectronicBS.from_pmg(bs) if bs else None
+    if bs and use_emmet_models:
+        return ElectronicBS.from_pmg(bs)
+    return bs
 
 
 def _get_band_props(

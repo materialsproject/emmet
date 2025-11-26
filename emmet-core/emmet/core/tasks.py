@@ -20,10 +20,12 @@ from pydantic import (
     model_validator,
 )
 from pymatgen.analysis.structure_analyzer import oxide_type
+from pymatgen.core.trajectory import Trajectory as PmgTrajectory
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.io.vasp import Incar, Kpoints, Poscar
 
 from emmet.core.structure import StructureMetadata
+from emmet.core.trajectory import RelaxTrajectory, Trajectory
 from emmet.core.types.enums import TaskState, VaspObject
 from emmet.core.types.pymatgen_types.computed_entries_adapter import (
     ComputedEntryType,
@@ -56,7 +58,6 @@ from emmet.core.vasp.calculation import (
     RunStatistics,
     get_trajectories_from_calculations,
 )
-from emmet.core.trajectory import RelaxTrajectory, Trajectory
 from emmet.core.vasp.utils import TASK_NAMES, discover_and_sort_vasp_files
 
 if TYPE_CHECKING:
@@ -126,7 +127,9 @@ class OutputDoc(BaseModel):
 
     @classmethod
     def from_vasp_calc_doc(
-        cls, calc_doc: Calculation, trajectory: RelaxTrajectory | None = None
+        cls,
+        calc_doc: Calculation,
+        trajectory: RelaxTrajectory | PmgTrajectory | None = None,
     ) -> "OutputDoc":
         """
         Create a summary of VASP calculation outputs from a VASP calculation document.
@@ -147,14 +150,18 @@ class OutputDoc(BaseModel):
         OutputDoc
             The calculation output summary.
         """
+        forces = None
+        stress = None
         if calc_doc.output.ionic_steps:
             forces = calc_doc.output.ionic_steps[-1].forces
             stress = calc_doc.output.ionic_steps[-1].stress
-        elif trajectory and all(
-            getattr(trajectory, k, None) is not None for k in ("forces", "stress")
-        ):
-            forces = trajectory.forces[-1]
-            stress = trajectory.stress[-1]
+        elif trajectory:
+            if isinstance(trajectory, PmgTrajectory):
+                forces = trajectory.frame_properties[-1]["forces"]  # type: ignore[index]
+                stress = trajectory.frame_properties[-1]["stress"]  # type: ignore[index]
+            else:
+                forces = trajectory.forces[-1]
+                stress = trajectory.stress[-1]
         else:
             raise RuntimeError("Unable to find ionic steps.")
 
@@ -435,6 +442,7 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
     included_objects: list[VaspObject] | None = Field(
         None, description="List of VASP objects included with this task document"
     )
+
     output: OutputDoc | None = Field(
         None,
         description="The exact set of output parameters used to generate the current task document.",
@@ -1131,5 +1139,25 @@ def _find_vasp_files(
         if (subdir := base_path / task_name).exists():
             for task_name, calcs in discover_and_sort_vasp_files(subdir).items():
                 task_files[task_name].update(calcs)
+
+    # For old double-relax style jobs, there will only be one POTCAR/.spec/.orig file
+    # even though there will be an INCAR.relax1, INCAR.relax2, etc.
+    # Undo that mapping here
+    if any(k.startswith("relax") for k in task_files) and task_files.get(
+        "standard", {}
+    ).get("potcar_spec_file"):
+        psf = task_files["standard"].pop("potcar_spec_file")
+        for task_name in {k for k in task_files if k.startswith("relax")}:
+            task_files[task_name]["potcar_spec_file"] = psf
+
+        if not all(
+            task_files.get("standard", {}).get(k)
+            for k in (
+                "vasprun_file",
+                "outcar_file",
+                "contcar_file",
+            )
+        ):
+            _ = task_files.pop("standard")
 
     return task_files

@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
 import numbers
+from collections import defaultdict
+from itertools import product
 from typing import TYPE_CHECKING, Annotated
 
 import numpy as np
-from pydantic import BaseModel, Field, computed_field, BeforeValidator
+from pydantic import BaseModel, BeforeValidator, Field, computed_field
 from pymatgen.core import Lattice
 from pymatgen.electronic_structure.bandstructure import (
     BandStructure as PmgBandStructure,
@@ -15,16 +16,23 @@ from pymatgen.electronic_structure.bandstructure import (
 from pymatgen.electronic_structure.bandstructure import Kpoint
 from pymatgen.electronic_structure.core import Orbital, Spin
 from pymatgen.electronic_structure.dos import CompleteDos, Dos
+from pymatgen.symmetry.bandstructure import HighSymmKpath
 
+from emmet.core.electronic_structure import BSPathType
 from emmet.core.math import Matrix3D, Vector3D
+from emmet.core.settings import EmmetSettings
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Generator, Sequence
+
     from pymatgen.core.sites import PeriodicSite
+    from pymatgen.core.structure import Structure
+    from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
     from typing_extensions import Self
 
 BAND_GAP_TOL = 1e-4
+SETTINGS = EmmetSettings()  # type: ignore[call-arg]
 
 
 class BandTheoryBase(BaseModel):
@@ -121,6 +129,10 @@ class ProjectedBS(BaseModel):
 class ElectronicBS(BandStructure):
     """Define an electronic band structure schema."""
 
+    path_convention: str | None = Field(
+        None, description="High symmetry path convention of the band structure"
+    )
+
     efermi: float = Field(
         description="The Fermi level (highest occupied energy level.)"
     )
@@ -158,6 +170,19 @@ class ElectronicBS(BandStructure):
     def from_pmg(cls, ebs: PmgBandStructure, **kwargs) -> Self:
         """Construct from a pymatgen band structure object."""
         band_gap_meta = ebs.get_band_gap()
+        labels_dict = {
+            label: kpoint.frac_coords for label, kpoint in ebs.labels_dict.items()
+        }
+
+        try:
+            bs_type = next(
+                obtain_path_type(
+                    labels_dict, ebs.structure, get_path_from_bandstructure(ebs)  # type: ignore[arg-type]
+                )
+            )
+        except Exception:
+            bs_type = None
+
         config = {
             "qpoints": [qpt.frac_coords for qpt in ebs.kpoints],
             "lattice_rec": ebs.lattice_rec.matrix,
@@ -169,6 +194,7 @@ class ElectronicBS(BandStructure):
             "is_metal": ebs.is_metal(),
             "is_direct": band_gap_meta["direct"],
             "band_gap": band_gap_meta["energy"],
+            "path_convention": bs_type,
         }
 
         for spin in Spin:
@@ -367,3 +393,83 @@ class ElectronicDos(BandTheoryBase):
                 self.projected_densities.to_pmg_like(self.structure),
             )
         return dos
+
+
+def obtain_path_type(
+    labels_dict: dict[str, Sequence[float]],
+    structure: Structure,
+    kpoint_path: list[str],
+    symprecs: list[float] = [SETTINGS.SYMPREC, 0.01],
+    angtols: list[float] = [SETTINGS.ANGLE_TOL],
+    atol: float = 1e-5,
+    kpoint_tol: float = 1e-5,
+) -> Generator:
+    """Try to match a band structure path order to known path orders.
+
+    Iterates over a list of `symprec` and `angle_tolerance` values to
+    match paths to one of the path orders in `BSPathType` by checking:
+        1. Special high-symmetry k-point labels match
+        2. High-symmetry k-points along the path have the same labels
+        3. High-symmetry k-points along the path have the same coordinates
+
+    Parameters
+    -----------
+    labels_dict : dict of str to Sequence[float]
+        Dict of high-symmetry points to their corresponding
+        fractional coordinates in k-space
+    structure : pymatgen .Structure
+        Structure associated with the bandstructure
+    kpoint_path : list of str
+        A list of high symmetry k-points visited by the bandstructure.
+    symprecs : list[float] = [SETTINGS.SYMPREC,0.01]
+        List of `symprec` values to pass to `HighSymmKpath`
+    angtols : list[float] = [SETTINGS.ANGLE_TOL]
+        List `angle_tolerance` values to pass to `HighSymmKpath`
+    atol : float = 1e-5
+        Absolute tolerance used by `HighSymmKpath`
+    kpoint_tol : float = 1e-5
+        Absolute tolerance for matching fractional k-point coordiantes
+
+    Yields
+    -----------
+    BSPathType
+    """
+    for symprec, angtol in product(symprecs, angtols):
+
+        for path_type in BSPathType:
+            hskp = HighSymmKpath(
+                structure,
+                has_magmoms=False,
+                magmom_axis=None,
+                path_type=path_type.value,
+                symprec=symprec,
+                angle_tolerance=angtol,
+                atol=atol,
+            )
+
+            ordered_kpts = list(hskp.kpath["kpoints"])
+            if (
+                # check that the labels are the same
+                set(hskp.kpath["kpoints"]) == set(labels_dict)
+                # check that the path orders are the same
+                and [label for label in hskp.get_kpoints()[1] if label] == kpoint_path
+                # check that the kpoints corresponding to each label are the same
+                and np.all(
+                    np.linalg.norm(
+                        np.array([hskp.kpath["kpoints"][k] for k in ordered_kpts])
+                        - np.array([labels_dict[k] for k in ordered_kpts]),
+                        axis=1,
+                    )
+                    < kpoint_tol
+                )
+            ):
+                yield path_type
+
+
+def get_path_from_bandstructure(band_structure: BandStructureSymmLine) -> list[str]:
+    """Get the list of high-symmetry points in a band structure."""
+    return [
+        label
+        for branch in band_structure.branches
+        for label in branch["name"].split("-")
+    ]
