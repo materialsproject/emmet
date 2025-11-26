@@ -29,7 +29,7 @@ authors = [
 ]
 license = { text = "Modified BSD" }
 dependencies = [
-  "emmet-core>=0.86.0",
+  "emmet-core>=0.86.1",
   "fastapi<0.119",
   "gunicorn",
   "boto3",
