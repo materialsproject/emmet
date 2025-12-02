@@ -125,12 +125,10 @@ class AtlasElementsQuery(QueryOperator):
         elements: str | None = Query(
             None,
             description="Query by elements in the material composition as a comma-separated list",
-            max_length=60,
         ),
         exclude_elements: str | None = Query(
             None,
             description="Query by excluded elements in the material composition as a comma-separated list",
-            max_length=60,
         ),
     ) -> STORE_PARAMS:
         crit: dict[str, Any] = {}
