@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from fastapi import HTTPException, Query
 from emmet.api.query_operator import QueryOperator
@@ -124,31 +125,36 @@ class AtlasElementsQuery(QueryOperator):
         elements: str | None = Query(
             None,
             description="Query by elements in the material composition as a comma-separated list",
-            max_length = 60,
+            max_length=60,
         ),
         exclude_elements: str | None = Query(
             None,
             description="Query by excluded elements in the material composition as a comma-separated list",
-            max_length = 60,
+            max_length=60,
         ),
     ) -> STORE_PARAMS:
-        crit : list[dict[str,str]] = {}
+        crit: dict[str, Any] = {}
 
         for must_k, element_str in {
             "must": elements,
             "mustNot": exclude_elements,
         }.items():
             if element_str:
-                elem_q : list[dict[str,str]] = []
+                elem_q: list[dict[str, Any]] = []
                 try:
-                    element_list = [Element(e.strip()) for e in element_str.strip().split(",")]
+                    element_list = [
+                        Element(e.strip()) for e in element_str.strip().split(",")
+                    ]
                 except ValueError:
                     raise HTTPException(
                         status_code=400,
                         detail="Please provide a comma-seperated list of elements",
                     )
 
-                elem_q += [{"exists": {"path": f"composition_reduced.{el}"}} for el in element_list]
+                elem_q += [
+                    {"exists": {"path": f"composition_reduced.{el}"}}
+                    for el in element_list
+                ]
 
                 crit[must_k] = elem_q
 
@@ -201,21 +207,23 @@ class MultipleTaskIDsQuery(QueryOperator):
         ),
     ) -> STORE_PARAMS:
         return {
-            "criteria": {
-                "in": {
-                    "path": "task_id",
-                    "value": [task_id.strip() for task_id in task_ids.split(",")],
+            "criteria": (
+                {
+                    "in": {
+                        "path": "task_id",
+                        "value": [task_id.strip() for task_id in task_ids.split(",")],
+                    }
                 }
-            }
-            if task_ids
-            else {}
+                if task_ids
+                else {}
+            )
         }
 
     def post_process(self, docs, query):
         """
         Post processing to remove unwanted fields from all task queries
         """
-        _ = [doc.pop(k,None) for doc in docs for k in ("tags","sbxn","dir_name")]
+        _ = [doc.pop(k, None) for doc in docs for k in ("tags", "sbxn", "dir_name")]
         return docs
 
 
@@ -232,13 +240,15 @@ class TrajectoryQuery(QueryOperator):
         ),
     ) -> STORE_PARAMS:
         return {
-            "criteria": {
-                "task_id": {
-                    "$in": [task_id.strip() for task_id in task_ids.split(",")]
+            "criteria": (
+                {
+                    "task_id": {
+                        "$in": [task_id.strip() for task_id in task_ids.split(",")]
+                    }
                 }
-            }
-            if task_ids
-            else {}
+                if task_ids
+                else {}
+            )
         }
 
     def post_process(self, docs, query):
@@ -270,13 +280,15 @@ class EntryQuery(QueryOperator):
         ),
     ) -> STORE_PARAMS:
         return {
-            "criteria": {
-                "task_id": {
-                    "$in": [task_id.strip() for task_id in task_ids.split(",")]
+            "criteria": (
+                {
+                    "task_id": {
+                        "$in": [task_id.strip() for task_id in task_ids.split(",")]
+                    }
                 }
-            }
-            if task_ids
-            else {}
+                if task_ids
+                else {}
+            )
         }
 
     def post_process(self, docs, query):
@@ -302,7 +314,9 @@ class DeprecationQuery(QueryOperator):
         ),
     ) -> STORE_PARAMS:
         self.task_ids = [task_id.strip() for task_id in task_ids.split(",")]
-        return {"criteria": {"deprecated_tasks": {"$in": self.task_ids}} if task_ids else {}}
+        return {
+            "criteria": {"deprecated_tasks": {"$in": self.task_ids}} if task_ids else {}
+        }
 
     def post_process(self, docs, query):
         """
