@@ -21,9 +21,9 @@ bibtexparser==1.4.3
     # via pymatgen
 blake3==1.0.8
     # via emmet-core
-boto3==1.41.4
+boto3==1.42.1
     # via maggma
-botocore==1.41.4
+botocore==1.42.1
     # via
     #   boto3
     #   s3transfer
@@ -59,7 +59,7 @@ dnspython==2.8.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.86.0
+emmet-core[all]==0.86.1
     # via emmet-builders (pyproject.toml)
 execnet==2.1.2
     # via pytest-xdist
@@ -67,7 +67,7 @@ filelock==3.20.0
     # via virtualenv
 flake8==7.3.0
     # via emmet-builders (pyproject.toml)
-fonttools==4.60.1
+fonttools==4.61.0
     # via matplotlib
 ghp-import==2.1.0
     # via mkdocs
@@ -116,6 +116,8 @@ latexcodec==3.0.1
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
+librt==0.6.3
+    # via mypy
 livereload==2.7.1
     # via emmet-builders (pyproject.toml)
 maggma==0.72.0
@@ -175,11 +177,11 @@ mkdocs-material-extensions==1.3.1
     #   mkdocs-material
 mkdocs-minify-plugin==0.8.0
     # via emmet-builders (pyproject.toml)
-mkdocstrings[python]==0.30.1
+mkdocstrings[python]==1.0.0
     # via
     #   emmet-builders (pyproject.toml)
     #   mkdocstrings-python
-mkdocstrings-python==1.19.0
+mkdocstrings-python==2.0.0
     # via mkdocstrings
 mongomock==4.3.0
     # via maggma
@@ -198,13 +200,13 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.1.2
     # via maggma
-mypy==1.18.2
+mypy==1.19.0
     # via emmet-builders (pyproject.toml)
 mypy-extensions==1.1.0
     # via
     #   emmet-builders (pyproject.toml)
     #   mypy
-narwhals==2.12.0
+narwhals==2.13.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -399,7 +401,7 @@ requests==2.32.5
     #   pymatgen-io-validation
 robocrys==0.2.12
     # via emmet-core
-rpds-py==0.29.0
+rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
@@ -410,7 +412,7 @@ ruamel-yaml==0.18.16
     #   pymatgen
 ruamel-yaml-clib==0.2.15
     # via ruamel-yaml
-s3transfer==0.15.0
+s3transfer==0.16.0
     # via boto3
 scikit-image==0.25.2
     # via pymatgen-analysis-defects
