@@ -291,7 +291,7 @@ class EntryQuery(QueryOperator):
 
     def post_process(self, docs, query):
         """
-        Post processing to generatore entry data
+        Post processing to generate entry data
         """
         return [
             {"task_id": doc["task_id"], "entry": jsanitize(task_to_entry(doc))}
