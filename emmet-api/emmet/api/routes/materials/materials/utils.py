@@ -41,18 +41,17 @@ def formula_to_criteria(formulas: str) -> dict:
                 )
 
             comp = Composition(integer_formula).reduced_composition
-            crit = dict()
-            crit["formula_anonymous"] = comp.anonymized_formula
-            real_elts = [
-                str(e)
-                for e in comp.elements
-                if e.as_dict().get("element", "A") not in dummies
-            ]
-
-            for el, n in comp.to_reduced_dict.items():
-                if el in real_elts:
-                    crit[f"composition_reduced.{el}"] = n  # type: ignore
-
+            crit = {
+                "formula_anonymous" : comp.anonymized_formula
+            }
+            real_elts = [e.name for e in comp.elements if not isinstance(e,DummySpecies)]
+            crit.update(
+                {
+                    f"composition_reduced.{el}" : n
+                    for el, n in comp.to_reduced_dict.items()
+                    if el in real_elts
+                }
+            )
             return crit
 
     else:
@@ -81,12 +80,15 @@ def formula_to_criteria(formulas: str) -> dict:
             if len(formula_list) == 1:
                 comp = composition_list[0]
                 # Paranoia below about floating-point "equality"
-                crit = {}
-                crit["nelements"] = len(comp)  # type: ignore
-
+                crit = {"nelements" : len(comp)}
+                    
                 try:
-                    for el, n in comp.to_reduced_dict.items():
-                        crit[f"composition_reduced.{el}"] = n  # type: ignore
+                    crit.update(
+                        {
+                            f"composition_reduced.{el}" : n
+                            for el, n in comp.to_reduced_dict.items()
+                        }
+                    )
                 except IndexError:
                     raise HTTPException(
                         status_code=400,
@@ -138,11 +140,7 @@ def formula_to_atlas_criteria(formulas: str) -> dict:
                 )
 
             comp = Composition(integer_formula).reduced_composition
-            real_elts = [
-                str(e)
-                for e in comp.elements
-                if e.as_dict().get("element", "A") not in dummies
-            ]
+            real_elts = [e.name for e in comp.elements if not isinstance(e,DummySpecies)]
 
             # Build Atlas Search compound query
             must_clauses = [
@@ -155,11 +153,11 @@ def formula_to_atlas_criteria(formulas: str) -> dict:
             ]
 
             # Add element-specific clauses
-            for el, n in comp.to_reduced_dict.items():
-                if el in real_elts:
-                    must_clauses.append(
-                        {"equals": {"path": f"composition_reduced.{el}", "value": n}}
-                    )
+            must_clauses += [
+                {"equals": {"path": f"composition_reduced.{el}", "value": n}}
+                for el, n in comp.to_reduced_dict.items()
+                if el in real_elts
+            ]
 
             return {"must": must_clauses}
 
@@ -201,15 +199,15 @@ def formula_to_atlas_criteria(formulas: str) -> dict:
                 must_clauses = [{"equals": {"path": "nelements", "value": len(comp)}}]
 
                 try:
-                    for el, n in comp.to_reduced_dict.items():
-                        must_clauses.append(
-                            {
-                                "equals": {
-                                    "path": f"composition_reduced.{el}",
-                                    "value": n,
-                                }
+                    must_clauses += [
+                        {
+                            "equals": {
+                                "path": f"composition_reduced.{el}",
+                                "value": n,
                             }
-                        )
+                        }
+                        for el, n in comp.to_reduced_dict.items()
+                    ]
                 except IndexError:
                     raise HTTPException(
                         status_code=400,
@@ -249,18 +247,20 @@ def chemsys_to_criteria(chemsys: str) -> dict:
             eles = chemsys_list[0].split("-")
 
             crit["nelements"] = len(eles)
-
-            for el in eles:
-                if el != "*":
-                    crit[f"composition_reduced.{el}"] = {"$exists": True}
+            crit.update(
+                {
+                    f"composition_reduced.{el}" : {"$exists": True}
+                    for el in eles
+                    if el != "*"
+                }
+            )
 
             return crit
     else:
-        query_vals = []
-        for chemsys_val in chemsys_list:
-            eles = chemsys_val.split("-")
-            sorted_chemsys = "-".join(sorted(eles))
-            query_vals.append(sorted_chemsys)
+        query_vals = [
+            "-".join(sorted(chemsys_val.split("-")))
+            for chemsys_val in chemsys_list
+        ]
 
         if len(query_vals) == 1:
             crit["chemsys"] = query_vals[0]
