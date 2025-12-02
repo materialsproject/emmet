@@ -41,13 +41,13 @@ def formula_to_criteria(formulas: str) -> dict:
                 )
 
             comp = Composition(integer_formula).reduced_composition
-            crit = {
-                "formula_anonymous" : comp.anonymized_formula
-            }
-            real_elts = [e.name for e in comp.elements if not isinstance(e,DummySpecies)]
+            crit: dict[str, Any] = {"formula_anonymous": comp.anonymized_formula}
+            real_elts = [
+                e.name for e in comp.elements if not isinstance(e, DummySpecies)
+            ]
             crit.update(
                 {
-                    f"composition_reduced.{el}" : n
+                    f"composition_reduced.{el}": n
                     for el, n in comp.to_reduced_dict.items()
                     if el in real_elts
                 }
@@ -80,12 +80,12 @@ def formula_to_criteria(formulas: str) -> dict:
             if len(formula_list) == 1:
                 comp = composition_list[0]
                 # Paranoia below about floating-point "equality"
-                crit = {"nelements" : len(comp)}
-                    
+                crit = {"nelements": len(comp)}
+
                 try:
                     crit.update(
                         {
-                            f"composition_reduced.{el}" : n
+                            f"composition_reduced.{el}": n
                             for el, n in comp.to_reduced_dict.items()
                         }
                     )
@@ -140,7 +140,9 @@ def formula_to_atlas_criteria(formulas: str) -> dict:
                 )
 
             comp = Composition(integer_formula).reduced_composition
-            real_elts = [e.name for e in comp.elements if not isinstance(e,DummySpecies)]
+            real_elts = [
+                e.name for e in comp.elements if not isinstance(e, DummySpecies)
+            ]
 
             # Build Atlas Search compound query
             must_clauses = [
@@ -249,7 +251,7 @@ def chemsys_to_criteria(chemsys: str) -> dict:
             crit["nelements"] = len(eles)
             crit.update(
                 {
-                    f"composition_reduced.{el}" : {"$exists": True}
+                    f"composition_reduced.{el}": {"$exists": True}
                     for el in eles
                     if el != "*"
                 }
@@ -258,8 +260,7 @@ def chemsys_to_criteria(chemsys: str) -> dict:
             return crit
     else:
         query_vals = [
-            "-".join(sorted(chemsys_val.split("-")))
-            for chemsys_val in chemsys_list
+            "-".join(sorted(chemsys_val.split("-"))) for chemsys_val in chemsys_list
         ]
 
         if len(query_vals) == 1:
