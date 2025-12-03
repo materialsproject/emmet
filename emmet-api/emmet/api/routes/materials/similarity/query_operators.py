@@ -51,9 +51,9 @@ class SimilarityFeatureVectorQuery(QueryOperator):
                 )
         elif isinstance(method, str):
             method = (
-                SimilarityMethod(method)
-                if method in SimilarityMethod
-                else SimilarityMethod[method]
+                SimilarityMethod[method]
+                if method in SimilarityMethod.__members__
+                else SimilarityMethod(method)
             )
 
         ref_fv_len = SIM_METHOD_TO_FEAT_VEC_LENGTH[method]
