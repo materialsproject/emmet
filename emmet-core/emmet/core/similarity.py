@@ -11,6 +11,7 @@ import numpy as np
 from pydantic import BaseModel, Field
 
 from emmet.core.material_property import PropertyDoc
+from emmet.core.types.enums import ValueEnum
 
 try:
     from matminer.featurizers.structure.sites import SiteStatsFingerprint
@@ -29,6 +30,13 @@ if TYPE_CHECKING:
 
     from matminer.featurizers.base import BaseFeaturizer
     from pymatgen.core import Structure
+
+
+class SimilarityMethod(ValueEnum):
+    """Indicate which method was used to score similarity."""
+
+    CRYSTALNN = "CrystalNN"
+    M3GNET = "M3GNet"
 
 
 def _vector_difference_matrix_row(
@@ -518,4 +526,8 @@ class SimilarityDoc(PropertyDoc):
 
     feature_vector: list[float] | None = Field(
         None, description="The feature / embedding vector of the structure."
+    )
+
+    method: SimilarityMethod | None = Field(
+        None, description="The method used to score similarity."
     )
