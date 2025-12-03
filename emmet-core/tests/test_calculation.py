@@ -174,21 +174,62 @@ def test_calculation(test_dir, object_name, task_name):
     MontyDecoder().process_decoded(d)
 
 
-def test_calculation_run_type_metagga(test_dir):
+@pytest.mark.parametrize("use_emmet_models", [True, False])
+def test_calculation_run_type_metagga(test_dir, use_emmet_models):
     # Test to ensure that meta-GGA calculations are correctly identified
     # The VASP files were kindly provided by @Andrew-S-Rosen in issue #960
+    import numpy as np
+
     from emmet.core.vasp.calculation import Calculation
+    from emmet.core.tasks import OutputDoc
 
     with DataArchive.extract(test_dir / "vasp" / "r2scan_relax.json.gz") as dir_name:
-        calc_input, _ = Calculation.from_vasp_files(
+        calc, vasp_objects = Calculation.from_vasp_files(
             dir_name=dir_name,
             task_name="relax",
             vasprun_file="vasprun.xml.gz",
             outcar_file="OUTCAR.gz",
             contcar_file="CONTCAR.gz",
+            parse_bandstructure=True,
+            parse_dos=True,
+            store_trajectory="full",
+            use_emmet_models=use_emmet_models,
         )
-    assert "r2SCAN" in repr(calc_input.run_type)
-    assert "r2SCAN" in repr(calc_input.calc_type)
+    assert "r2SCAN" in repr(calc.run_type)
+    assert "r2SCAN" in repr(calc.calc_type)
+
+    if use_emmet_models:
+        from emmet.core.trajectory import RelaxTrajectory
+        from emmet.core.band_theory import ElectronicBS, ElectronicDos
+
+        assert isinstance(vasp_objects["trajectory"], RelaxTrajectory)
+        assert isinstance(vasp_objects["bandstructure"], ElectronicBS)
+        assert isinstance(vasp_objects["dos"], ElectronicDos)
+
+    else:
+        from pymatgen.core.trajectory import Trajectory
+        from pymatgen.electronic_structure.bandstructure import BandStructure
+        from pymatgen.electronic_structure.dos import CompleteDos
+
+        assert isinstance(vasp_objects["trajectory"], Trajectory)
+        assert isinstance(vasp_objects["bandstructure"], BandStructure)
+        assert isinstance(vasp_objects["dos"], CompleteDos)
+
+    # ensure parsing of forces and stress from trajectory rather than
+    # ionic steps works correctly regardless of models used
+    calc.output.ionic_steps = None
+    output_calc = OutputDoc.from_vasp_calc_doc(
+        calc, trajectory=vasp_objects["trajectory"]
+    )
+    for k in ("forces", "stress"):
+        assert np.allclose(
+            getattr(output_calc, k),
+            (
+                getattr(vasp_objects["trajectory"], k)[-1]
+                if use_emmet_models
+                else vasp_objects["trajectory"].frame_properties[-1].get(k)
+            ),
+        )
 
 
 def test_PotcarSpec(test_dir):

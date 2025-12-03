@@ -11,7 +11,7 @@ jobs:
   check-enums:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{github.event.pull_request.head.repo.full_name}}
@@ -64,7 +64,7 @@ jobs:
     name: ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{github.event.pull_request.head.repo.full_name}}
@@ -103,6 +103,8 @@ jobs:
       - name: Test with pytest
         if: always() # run tests even if linting failed
         shell: bash -l {0}
+        env:
+          EMMET_USE_EMMET_MODELS: true
         run: python${{ matrix.python-version }} -m pytest -n auto --cov=emmet --cov-report=xml ${{ matrix.package }}/tests
 
       - uses: codecov/codecov-action@v5.5.1

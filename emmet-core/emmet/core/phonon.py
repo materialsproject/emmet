@@ -159,7 +159,7 @@ def _deser_eigenmode(
     if isinstance(dct, dict):
         real = np.array(dct["real"])
         imag = np.array(dct["imag"])
-        return real + 1.0j * imag
+        return real + 1.0j * imag  # type: ignore[return-value]
     return dct
 
 

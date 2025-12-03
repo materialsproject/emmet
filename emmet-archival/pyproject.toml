@@ -35,6 +35,7 @@ dependencies = [
   "pandas",
   "zarr>=3.0.0",
   "pymatgen-io-validation>=0.1.1", # required right now because this isn't getting picked up in auto-gen dependences
+  "backports.zstd ; python_version<'3.14'",
 ]
 description = "Emmet Archival library"
 keywords = ["data storage", "dft", "vasp"]

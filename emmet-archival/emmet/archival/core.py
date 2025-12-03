@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import gzip
 import os
+import sys
 from typing import TYPE_CHECKING
 
 import h5py
@@ -13,13 +13,31 @@ from pathlib import Path
 import zarr
 
 from emmet.archival.base import Archiver
+from emmet.archival.utils import CompressionType
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from os import PathLike
     from typing_extensions import Self
+    from types import ModuleType
 
 DEFAULT_RAW_ARCHIVE_NAME = Path("calc_archive")
+
+
+def _get_compress_lib(compression: CompressionType) -> ModuleType:
+    """Get standard compression library."""
+    if compression == CompressionType.GZIP:
+        import gzip
+
+        return gzip
+    elif compression == CompressionType.ZSTD:
+        if sys.version_info >= (3, 14):
+            from compression import zstd
+        else:
+            from backports import zstd
+        return zstd
+    else:
+        raise ValueError(f"Unknown compression scheme: {compression}")
 
 
 def _scan_dir(fsspec: PathLike, depth: int | None) -> list[Path]:
@@ -123,17 +141,41 @@ def walk_hierarchical_data(
 class FileArchiveBase(Archiver):
     """Mix-in for HDF5 archival of raw text/bytes data."""
 
-    @staticmethod
-    def _compress(data: str | bytes) -> bytes:
-        """Compress string or byte data using gzip if needed."""
-        if isinstance(data, bytes) and data.startswith(b"\x1f\x8b"):
+    compression: CompressionType | None = Field(
+        CompressionType.ZSTD, description="Which compression method to use, if any."
+    )
+
+    def _compress(self, data: str | bytes) -> bytes:
+        """Compress string or byte data if needed."""
+        if isinstance(data, bytes) and (
+            (not self.compression) or data.startswith(self.compression.value)
+        ):
             return data
-        return gzip.compress(data.encode() if isinstance(data, str) else data)
+        return _get_compress_lib(self.compression).compress(
+            data.encode() if isinstance(data, str) else data
+        )
 
     @staticmethod
-    def _decompress(data: bytes) -> bytes:
-        """Decompress byte data using gzip if needed."""
-        return gzip.decompress(data) if data.startswith(b"\x1f\x8b") else data
+    def _decompress(
+        data: bytes, compression: CompressionType | None = CompressionType.AUTO_DETECT
+    ) -> bytes:
+        """Decompress byte data if needed."""
+
+        try_compress = []
+        if compression == CompressionType.AUTO_DETECT:
+            try_compress.extend(
+                [v for v in CompressionType if v != CompressionType.AUTO_DETECT]
+            )
+        elif compression in CompressionType:
+            try_compress.append(compression)
+
+        for compress_method in [v for v in try_compress if data.startswith(v.value)]:
+            try:
+                return _get_compress_lib(compress_method).decompress(data)
+            except Exception:
+                pass
+
+        return data
 
     def _writeout(
         self,
@@ -153,9 +195,9 @@ class FileArchiveBase(Archiver):
         data : str or bytes
             The contents of the data to write out.
         compress : bool = True
-            Whether to compress data with gzip.
-            With `compress` True, data which is already gzipped
-            will not be re-gzipped.
+            Whether to compress data with zstd.
+            With `compress` True, data which is already compressed
+            will not be re-compressed.
 
         Returns
         -----------
@@ -177,7 +219,10 @@ class FileArchiveBase(Archiver):
 
     @classmethod
     def _readout(
-        cls, group: h5py.Group | zarr.Group, file_key: str, decompress: bool = True
+        cls,
+        group: h5py.Group | zarr.Group,
+        file_key: str,
+        decompress: CompressionType | None = CompressionType.AUTO_DETECT,
     ) -> bytes:
         """Read and decompress string from a hierarchical dataset.
 
@@ -187,10 +232,13 @@ class FileArchiveBase(Archiver):
             The hierarchical data structure to read data from.
         file_key : str
             The name of the h5py.dataset or zarr.Array to extract.
-        compress : bool = True
-            Whether to compress data with gzip.
-            With `compress` True, data which is not gzipped
-            will not be re-gunzipped.
+        compress : CompressionType | None = CompressionType.AUTO_DETECT
+            Whether to decompress data.
+            With `decompress` set to a CompressionType, will attempt to
+            decompress data using that standard.
+            If set to CompressionType.AUTO_DETECT, will attempt to infer
+            the compression type.
+            If set to None, will not attempt to decompress data.
 
         Returns
         -----------
@@ -202,9 +250,8 @@ class FileArchiveBase(Archiver):
         ):
             # h5py strips out null bytes
             data += b"\x00" * (group[file_key].attrs["len"] - len(data))  # type: ignore[operator]
-        if file_key.endswith(".gz") or not decompress:
-            return data
-        return cls._decompress(data)
+
+        return cls._decompress(data) if decompress else data
 
 
 class FileArchive(FileArchiveBase):
@@ -260,6 +307,7 @@ class FileArchive(FileArchiveBase):
         group: h5py.Group | zarr.Group,
         keys: Sequence[str] | None = None,
         output_dir: PathLike | None = None,
+        compression: CompressionType | None = CompressionType.AUTO_DETECT,
     ) -> list[Path]:
         """Extract all files in a hierarchical archive.
 
@@ -272,13 +320,14 @@ class FileArchive(FileArchiveBase):
             If None, retrieves all files.
         output_dir : Pathlike or None (default)
             Where to extract data to, defaults to `calc_archive`.
+        compression : CompressionType | None= CompressionType.AUTO_DETECT
+            Decompression method to use, see `_readout` for an explanation.
 
         Returns
         -----------
         list of Path
             The names of the extracted files.
         """
-
         output_dir = Path(output_dir or DEFAULT_RAW_ARCHIVE_NAME)
 
         extracted_files = []
@@ -289,7 +338,7 @@ class FileArchive(FileArchiveBase):
             if not p.parent.exists():
                 p.parent.mkdir(exist_ok=True, parents=True)
 
-            p.write_bytes(cls._readout(group, k))
+            p.write_bytes(cls._readout(group, k, decompress=compression))
             extracted_files.append(p)
 
         return extracted_files
@@ -299,6 +348,7 @@ class FileArchive(FileArchiveBase):
         cls,
         dir_name: PathLike,
         depth: int | None = 1,
+        compression: CompressionType | str | None = CompressionType.ZSTD,
     ) -> Self:
         """Ingest raw bytes data to prepare for hierarchical archiving.
 
@@ -326,9 +376,16 @@ class FileArchive(FileArchiveBase):
                 1 would only save files in `sub_dir`
                 2 save files in `sub_dir` and `sub_dir/nested_sub_dir`
                 None save all files in `dir_name`, searching recursively
+        compression : CompressionType or None
+            Whether to compression data, defaults to zstd.
 
         Returns
         -----------
         FileArchive
         """
-        return cls(files=_scan_dir(Path(dir_name), depth))
+        return cls(
+            files=_scan_dir(Path(dir_name), depth),
+            compression=(
+                getattr(compression, "name", compression) if compression else None
+            ),
+        )
