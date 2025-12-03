@@ -4,6 +4,70 @@ from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
 
 
+class AtlasPaginationQuery(QueryOperator):
+    """Query operators to provides pagination for Atlas Search queries."""
+
+    def __init__(self, default_limit: int = 100, max_limit: int = 1000):
+        """
+        Args:
+            default_limit: the default number of documents to return
+            max_limit: max number of documents to return.
+        """
+        self.default_limit = default_limit
+        self.max_limit = max_limit
+
+        def query(
+            _forward: bool = Query(
+                True,
+                description="Whether to page forward (True) or backward (False) in the search results.",
+            ),
+            _pagination_token: str = Query(
+                None, description="Pagination token for the next set of results."
+            ),
+            _skip: int = Query(
+                0,
+                description="Number of entries to skip in the search.",
+            ),
+            _limit: int = Query(
+                default_limit,
+                description=f"Max number of entries to return in a single query. Limited to {max_limit}.",
+            ),
+        ) -> STORE_PARAMS:
+            """
+            Pagination parameters for the API Endpoint.
+            """
+            if _limit > max_limit:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Requested more data per query than allowed by this endpoint."
+                    f" The max limit is {max_limit} entries",
+                )
+
+            if _skip < 0 or _limit < 0:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Cannot request negative _skip or _limit values",
+                )
+
+            return {
+                "forward": _forward,
+                "pagination_token": _pagination_token,
+                "skip": _skip,
+                "limit": _limit,
+            }
+
+        self.query = query  # type: ignore
+
+    def query(self):
+        """Stub query function for abstract class."""
+
+    def meta(self) -> dict:
+        """
+        Metadata for the pagination params.
+        """
+        return {"max_limit": self.max_limit}
+
+
 class PaginationQuery(QueryOperator):
     """Query operators to provides Pagination."""
 
