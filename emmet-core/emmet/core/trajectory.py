@@ -478,9 +478,13 @@ class AtomRelaxTrajectory(BaseModel):
         -----------
         pymatgen.core.trajectory.Trajectory
         """
-        frame_prop_keys: set[str] = set(
-            frame_props if frame_props is not None else self.ionic_step_properties
-        ).intersection(self.ionic_step_properties)
+
+        if frame_props is not None:
+            frame_prop_keys: set[str] = set(frame_props).intersection(
+                self.ionic_step_properties
+            )
+        else:
+            frame_prop_keys = self.ionic_step_properties
 
         if "magmoms" in frame_prop_keys:
             frame_prop_keys.discard("magmoms")
