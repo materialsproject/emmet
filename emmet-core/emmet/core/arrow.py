@@ -184,7 +184,7 @@ def arrowize(obj) -> pa.DataType:
                         else value.annotation
                     ),
                 )
-                for field_name, value in obj.model_fields.items()
+                for field_name, value in obj.model_fields.items()  # type: ignore[attr-defined]
                 if not value.exclude
             ]
         )
@@ -192,7 +192,7 @@ def arrowize(obj) -> pa.DataType:
     if any(obj is str_like for str_like in (ImportString, Path)):
         return PY_PRIMITIVES_TO_ARROW[str]
 
-    if isinstance(obj, typing._TypedDictMeta | typing_extensions._TypedDictMeta):
+    if isinstance(obj, typing._TypedDictMeta | typing_extensions._TypedDictMeta):  # type: ignore[attr-defined]
         return pa.struct(
             [
                 pa.field(field_name, arrowize(value))
@@ -207,14 +207,14 @@ def arrowize(obj) -> pa.DataType:
             # before 3.12.4 still has the old signature).
             # See: https://github.com/python/cpython/pull/118104.
             return arrowize(
-                obj._evaluate(globals(), locals(), {}, recursive_guard=frozenset())
+                obj._evaluate(globals(), locals(), {}, recursive_guard=frozenset())  # type: ignore[misc, arg-type]
             )
         return arrowize(obj._evaluate(globals(), locals(), frozenset()))
 
     if isinstance(obj, typing.TypeVar):
         return arrowize(obj.__constraints__[1])
 
-    if isinstance(obj, typing._AnnotatedAlias):
+    if isinstance(obj, typing._AnnotatedAlias):  # type: ignore[attr-defined]
         return arrowize(obj.__args__[0])
 
     if isinstance(obj, type) and issubclass(obj, MSONable):
