@@ -905,6 +905,7 @@ ref_model_fields = {
         "density_atomic",
         "symmetry",
         "material_id",
+        "method",
         "deprecated",
         "deprecation_reasons",
         "last_updated",

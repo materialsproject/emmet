@@ -46,7 +46,7 @@ if db_uri:
     )
     task_store = CollectionWithKey(tasks_db["tasks"], "task_id")
     eos_store = CollectionWithKey(core_db["eos"], "task_id")
-    similarity_store = CollectionWithKey(core_db["similarity_new"])
+    similarity_store = CollectionWithKey(core_db["similarity_crystalnn_2025_11_05"])
     xas_store = CollectionWithKey(core_db["xas"], "spectrum_id")
     gb_store = CollectionWithKey(core_db["grain_boundaries"], "task_id")
     fermi_store = CollectionWithKey(core_db["fermi_surface"], "task_id")
