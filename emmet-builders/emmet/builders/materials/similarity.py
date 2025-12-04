@@ -1,5 +1,6 @@
-import numpy as np
+import warnings
 
+import numpy as np
 from maggma.builders import Builder
 
 __author__ = "Nils E. R. Zimmermann <nerz@lbl.gov>"
@@ -7,6 +8,14 @@ __author__ = "Nils E. R. Zimmermann <nerz@lbl.gov>"
 
 # TODO:
 # 1) ADD DOCUMENT MODEL
+
+warnings.warn(
+    f"The current version of {__name__}.StructureSimilarityBuilder will be deprecated in version 0.87.0. "
+    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
+    "release for emmet-legacy-builders is not planned.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class StructureSimilarityBuilder(Builder):

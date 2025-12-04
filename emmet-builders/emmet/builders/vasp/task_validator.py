@@ -1,3 +1,5 @@
+import warnings
+
 from maggma.builders import MapBuilder
 from maggma.core import Store
 
@@ -7,6 +9,14 @@ from emmet.core.tasks import TaskDoc
 from emmet.core.types.enums import DeprecationMessage
 from emmet.core.vasp.calc_types.enums import CalcType
 from emmet.core.vasp.validation_legacy import ValidationDoc
+
+warnings.warn(
+    f"The current version of {__name__}.TaskValidator will be deprecated in version 0.87.0. "
+    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
+    "release for emmet-legacy-builders is not planned.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class TaskValidator(MapBuilder):

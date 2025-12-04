@@ -1,3 +1,4 @@
+import warnings
 from itertools import chain, combinations
 
 from maggma.builders import Builder
@@ -23,6 +24,14 @@ LOOSE_SPACEGROUP_SYMPREC = 0.5
 
 # A source of effective masses, should be replaced with MP-provided effective masses.
 BOLTZTRAP_DF = load_dataset("boltztrap_mp")
+
+warnings.warn(
+    f"The current versions AlloyPairBuilder, AlloyPairMemberBuilder, and AlloySystemBuilder in {__name__} "
+    "will be deprecated in version 0.87.0. To continue using legacy builders please install "
+    "emmet-builders-legacy from git. A PyPI release for emmet-legacy-builders is not planned.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class AlloyPairBuilder(Builder):

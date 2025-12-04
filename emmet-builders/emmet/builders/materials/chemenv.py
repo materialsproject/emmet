@@ -1,9 +1,19 @@
+import warnings
+
 from maggma.builders.map_builder import MapBuilder
 from maggma.core import Store
 from pymatgen.core.structure import Structure
 
 from emmet.core.chemenv import ChemEnvDoc
 from emmet.core.utils import jsanitize
+
+warnings.warn(
+    f"The current version of {__name__}.ChemEnvBuilder will be deprecated in version 0.87.0. "
+    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
+    "release for emmet-legacy-builders is not planned.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class ChemEnvBuilder(MapBuilder):
@@ -12,7 +22,7 @@ class ChemEnvBuilder(MapBuilder):
         oxidation_states: Store,
         chemenv: Store,
         query: dict | None = None,
-        **kwargs
+        **kwargs,
     ):
         self.oxidation_states = oxidation_states
         self.chemenv = chemenv
@@ -26,7 +36,7 @@ class ChemEnvBuilder(MapBuilder):
             target=chemenv,
             query=query,
             projection=["material_id", "structure", "deprecated"],
-            **kwargs
+            **kwargs,
         )
 
     def unary_function(self, item):

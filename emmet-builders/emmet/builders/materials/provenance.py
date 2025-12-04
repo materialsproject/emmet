@@ -1,5 +1,7 @@
+import warnings
 from collections import defaultdict
 from math import ceil
+from typing import TYPE_CHECKING
 
 from maggma.core import Builder, Store
 from maggma.utils import grouper
@@ -10,10 +12,16 @@ from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.provenance import ProvenanceDoc, SNLDict
 from emmet.core.utils import get_sg, jsanitize, utcnow
 
-from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
     from collections.abc import Iterable
+
+warnings.warn(
+    f"The current version of {__name__}.ProvenanceBuilder will be deprecated in version 0.87.0. "
+    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
+    "release for emmet-legacy-builders is not planned.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class ProvenanceBuilder(Builder):

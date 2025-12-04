@@ -1,3 +1,4 @@
+import warnings
 from math import ceil
 
 import numpy as np
@@ -6,9 +7,17 @@ from maggma.core import Store
 from maggma.utils import grouper
 from pymatgen.core.structure import Structure
 
-from emmet.core.polar import PiezoelectricDoc
 from emmet.core.mpid import AlphaID
+from emmet.core.polar import PiezoelectricDoc
 from emmet.core.utils import jsanitize
+
+warnings.warn(
+    f"The current version of {__name__}.PiezoelectricBuilder will be deprecated in version 0.87.0. "
+    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
+    "release for emmet-legacy-builders is not planned.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class PiezoelectricBuilder(Builder):

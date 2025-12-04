@@ -6,6 +6,7 @@ from collections import defaultdict
 from datetime import datetime
 from itertools import chain
 from math import ceil
+from typing import TYPE_CHECKING
 
 from maggma.core import Builder, Store
 from maggma.utils import grouper
@@ -17,10 +18,16 @@ from emmet.core.corrected_entries import CorrectedEntriesDoc
 from emmet.core.types.enums import ThermoType
 from emmet.core.utils import jsanitize
 
-from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
+
+warnings.warn(
+    f"The current version of {__name__}.CorrectedEntriesBuilder will be deprecated in version 0.87.0. "
+    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
+    "release for emmet-legacy-builders is not planned.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class CorrectedEntriesBuilder(Builder):
