@@ -1,9 +1,11 @@
 import operator
+import warnings
 from collections import defaultdict
 from datetime import datetime
 from functools import lru_cache
 from itertools import chain
 from math import ceil
+from typing import TYPE_CHECKING
 
 from maggma.builders import Builder
 from maggma.stores import MongoStore
@@ -17,11 +19,18 @@ from emmet.core.electrode import ConversionElectrodeDoc, InsertionElectrodeDoc
 from emmet.core.structure_group import StructureGroupDoc, _get_id_lexi
 from emmet.core.utils import jsanitize
 
-from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
-    from typing import Any
     from collections.abc import Iterator
+    from typing import Any
+
+warnings.warn(
+    "The current versions of StructureGroupBuilder, InsertionElectrodeBuilder, and "
+    f"ConversionElectrodeBuilder in {__name__} will be deprecated in version 0.87.0. "
+    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
+    "release for emmet-legacy-builders is not planned.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 def s_hash(el):

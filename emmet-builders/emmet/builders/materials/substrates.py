@@ -1,3 +1,4 @@
+import warnings
 from typing import Iterable
 
 from maggma.core.builder import Builder
@@ -10,6 +11,14 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from emmet.core.mpid import AlphaID
 from emmet.core.substrates import SubstratesDoc
 from emmet.core.utils import jsanitize
+
+warnings.warn(
+    f"The current version of {__name__}.SubstratesBuilder will be deprecated in version 0.87.0. "
+    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
+    "release for emmet-legacy-builders is not planned.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class SubstratesBuilder(Builder):

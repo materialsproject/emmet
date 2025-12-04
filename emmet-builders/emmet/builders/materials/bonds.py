@@ -1,3 +1,5 @@
+import warnings
+
 from maggma.builders.map_builder import MapBuilder
 from maggma.core import Store
 from pymatgen.core import Structure
@@ -5,6 +7,14 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.core.bonds import BondingDoc
 from emmet.core.utils import jsanitize
+
+warnings.warn(
+    f"The current version of {__name__}.BondingBuilder will be deprecated in version 0.87.0. "
+    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
+    "release for emmet-legacy-builders is not planned.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class BondingBuilder(MapBuilder):

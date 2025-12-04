@@ -1,5 +1,6 @@
 import itertools
 import re
+import warnings
 from collections import defaultdict
 from math import ceil
 
@@ -18,9 +19,17 @@ from pymatgen.io.vasp.sets import MPStaticSet
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.builders.utils import query_open_data
-from emmet.core.band_theory import obtain_path_type, get_path_from_bandstructure
+from emmet.core.band_theory import get_path_from_bandstructure, obtain_path_type
 from emmet.core.electronic_structure import ElectronicStructureDoc
 from emmet.core.utils import jsanitize
+
+warnings.warn(
+    f"The current version of {__name__}.ElectronicStructureBuilder will be deprecated in version 0.87.0. "
+    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
+    "release for emmet-legacy-builders is not planned.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class ElectronicStructureBuilder(Builder):

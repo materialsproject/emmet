@@ -1,4 +1,5 @@
 import traceback
+import warnings
 from datetime import datetime
 from itertools import chain
 
@@ -9,6 +10,14 @@ from emmet.core.feff.task import TaskDocument as FEFFTaskDocument
 from emmet.core.utils import jsanitize
 from emmet.core.xas import XASDoc
 
+warnings.warn(
+    f"The current version of {__name__}.XASBuilder will be deprecated in version 0.87.0. "
+    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
+    "release for emmet-legacy-builders is not planned.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 
 class XASBuilder(GroupBuilder):
     """
@@ -18,6 +27,7 @@ class XASBuilder(GroupBuilder):
     """
 
     def __init__(self, tasks: Store, xas: Store, num_samples: int = 200, **kwargs):
+
         self.tasks = tasks
         self.xas = xas
         self.num_samples = num_samples

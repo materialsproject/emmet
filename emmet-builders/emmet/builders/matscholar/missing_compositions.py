@@ -1,16 +1,24 @@
 import itertools
+import warnings
 from itertools import combinations
 from math import ceil
+from typing import TYPE_CHECKING
 
 from maggma.core import Builder
 from maggma.stores import MongoStore, MongoURIStore, S3Store
 from maggma.utils import grouper
 from pymatgen.core import Composition, Element
 
-from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
     from collections.abc import Iterator
+
+warnings.warn(
+    f"The current version of {__name__}.MissingCompositionsBuilder will be deprecated in version 0.87.0. "
+    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
+    "release for emmet-legacy-builders is not planned.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class MissingCompositionsBuilder(Builder):

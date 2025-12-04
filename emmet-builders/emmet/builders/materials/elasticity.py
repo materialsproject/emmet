@@ -19,7 +19,9 @@ The build proceeds in the below steps:
 
 from __future__ import annotations
 
+import warnings
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import numpy as np
 from maggma.core import Builder, Store
@@ -34,13 +36,19 @@ from emmet.core.mpid import AlphaID
 from emmet.core.utils import jsanitize
 from emmet.core.vasp.calc_types import CalcType
 
-from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
     from collections.abc import Generator
     from typing import Any
 
     from emmet.core.types.typing import IdentifierType
+
+warnings.warn(
+    f"The current version of {__name__}.ElasticityBuilder will be deprecated in version 0.87.0. "
+    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
+    "release for emmet-legacy-builders is not planned.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class ElasticityBuilder(Builder):

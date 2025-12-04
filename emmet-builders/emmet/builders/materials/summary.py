@@ -1,12 +1,21 @@
+import warnings
 from math import ceil
 
 from maggma.builders import Builder
 from maggma.utils import grouper
 
 from emmet.core.mpid import AlphaID
-from emmet.core.summary import SummaryDoc, HasProps
-from emmet.core.utils import jsanitize
+from emmet.core.summary import HasProps, SummaryDoc
 from emmet.core.types.enums import ThermoType
+from emmet.core.utils import jsanitize
+
+warnings.warn(
+    f"The current version of {__name__}.SummaryBuilder will be deprecated in version 0.87.0. "
+    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
+    "release for emmet-legacy-builders is not planned.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class SummaryBuilder(Builder):
