@@ -1,7 +1,7 @@
-from datetime import datetime
-
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
+
+from emmet.core.types.typing import DateTimeType
 
 
 class TypedUserSettingsDict(TypedDict):
@@ -9,7 +9,7 @@ class TypedUserSettingsDict(TypedDict):
     sector: str
     job_role: str
     is_email_subscribed: bool
-    message_last_read: datetime
+    message_last_read: DateTimeType
     agreed_terms: bool
 
 
