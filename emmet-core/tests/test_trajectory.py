@@ -119,6 +119,46 @@ def test_pmg(si_traj):
             for i, new_val in enumerate(getattr(roundtrip, k))
         )
 
+    # Check that requesting a subset of a single index works
+    traj_subset_from_int = traj.to(fmt="PMG", indices=1)
+    traj_subset_from_list = traj.to(fmt="PMG", indices=[1])
+    assert all(len(x) == 1 for x in (traj_subset_from_int, traj_subset_from_list))
+
+    other = traj_subset_from_list.as_dict()
+    assert all(
+        np.all(v == other.get(k)) for k, v in traj_subset_from_int.as_dict().items()
+    )
+
+    # Check that the output frames are always in order
+    subset_props = (
+        "energy",
+        "stress",
+    )
+    traj_subset = traj.to(fmt="PMG", indices=[1, 2, 3], frame_props=subset_props)
+    unsrt_traj_subset = traj.to(
+        fmt="PMG", indices=[3, 1, 2], frame_props=subset_props
+    ).as_dict()
+    assert all(
+        np.all(v == unsrt_traj_subset.get(k)) for k, v in traj_subset.as_dict().items()
+    )
+
+    # check that only requested frame_properties are returned
+
+    assert all(
+        frame.get(k) is not None if k in subset_props else frame.get(k) is None
+        for k in traj.ionic_step_properties
+        for frame in traj_subset.frame_properties
+    )
+
+    # Test returning only structures
+    just_structs = traj.to(fmt="PMG", frame_props=tuple())
+    assert len(just_structs) == traj.num_ionic_steps
+    assert all(
+        frame.get(k) is None
+        for k in traj.ionic_step_properties
+        for frame in just_structs.frame_properties
+    )
+
 
 def test_mixed_calc_type(test_dir):
     # Test that Trajectory correctly creates new Trajectories for every
