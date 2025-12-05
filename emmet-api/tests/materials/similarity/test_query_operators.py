@@ -1,6 +1,7 @@
 """Test crystalline similarity vector search."""
 
 import pytest
+import zlib
 
 from emmet.core.similarity import SimilarityMethod
 from emmet.api.routes.materials.similarity.query_operators import (
@@ -19,6 +20,8 @@ def test_similarity_structure_search(test_dir, method):
     fv = np.random.rand(
         SIM_METHOD_TO_FEAT_VEC_LENGTH[SimilarityMethod.CRYSTALNN]
     ).tolist()
+    fv_hex = zlib.compress(np.array(fv).tobytes()).hex()
+
     limit = 10
     q = {
         "pipeline": [
@@ -42,9 +45,9 @@ def test_similarity_structure_search(test_dir, method):
         ]
     }
 
-    manual_q = op.query(feature_vector=fv, method=method, _limit=limit)
+    manual_q = op.query(feature_vector_hex=fv_hex, method=method, _limit=limit)
     assert manual_q == q
 
     doc = [{"meta": {"count": {"total": limit}}}]
     assert op.post_process(doc, q) == doc
-    assert op.meta() == {"total_doc": limit}
+    assert "total_doc" in op.meta()

@@ -3,6 +3,8 @@
 from fastapi import HTTPException, Query
 
 import numpy as np
+import zlib
+
 from emmet.core.similarity import SimilarityMethod
 
 from emmet.api.query_operator import QueryOperator
@@ -13,8 +15,6 @@ SIM_METHOD_TO_FEAT_VEC_LENGTH = {
     # SimilarityMethod.M3GNET: 128 # TODO: build out collection + test
 }
 
-import json
-import gzip
 
 class SimilarityFeatureVectorQuery(QueryOperator):
     """Generate a feature-vector-based query.
@@ -27,7 +27,8 @@ class SimilarityFeatureVectorQuery(QueryOperator):
     def query(
         self,
         feature_vector_hex: str = Query(
-            ..., description="A compressed, hex representation of a row vector of floats."
+            ...,
+            description="A compressed, hex representation of a row vector of floats.",
         ),
         method: str | SimilarityMethod | None = Query(
             None,
@@ -40,7 +41,9 @@ class SimilarityFeatureVectorQuery(QueryOperator):
     ) -> STORE_PARAMS:
         """Identify similar materials."""
 
-        feature_vector = np.frombuffer(gzip.decompress(bytes.fromhex(feature_vector))).tolist()            
+        feature_vector = np.frombuffer(
+            zlib.decompress(bytes.fromhex(feature_vector_hex))
+        ).tolist()
         if method is None:
             try:
                 method = next(
