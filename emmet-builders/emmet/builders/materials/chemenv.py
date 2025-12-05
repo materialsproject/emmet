@@ -1,53 +1,34 @@
-import warnings
-
-from maggma.builders.map_builder import MapBuilder
-from maggma.core import Store
-from pymatgen.core.structure import Structure
-
+from emmet.builders.base import BaseBuilderInput
 from emmet.core.chemenv import ChemEnvDoc
-from emmet.core.utils import jsanitize
-
-warnings.warn(
-    f"The current version of {__name__}.ChemEnvBuilder will be deprecated in version 0.87.0. "
-    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
-    "release for emmet-legacy-builders is not planned.",
-    DeprecationWarning,
-    stacklevel=2,
-)
 
 
-class ChemEnvBuilder(MapBuilder):
-    def __init__(
-        self,
-        oxidation_states: Store,
-        chemenv: Store,
-        query: dict | None = None,
-        **kwargs,
-    ):
-        self.oxidation_states = oxidation_states
-        self.chemenv = chemenv
-        self.kwargs = kwargs
+def build_chemenv_docs(
+    input_documents: list[BaseBuilderInput],
+) -> list[ChemEnvDoc]:
+    """
+    Generate chemical environment documents from input structures.
 
-        self.chemenv.key = "material_id"
-        self.oxidation_states.key = "material_id"
+    Transforms a list of BaseBuilderInput documents containing
+    Pymatgen structures into corresponding ChemEnvDoc instances by
+    analyzing the chemical environment of each structure.
 
-        super().__init__(
-            source=oxidation_states,
-            target=chemenv,
-            query=query,
-            projection=["material_id", "structure", "deprecated"],
-            **kwargs,
+    Caller is responsible for creating BaseBuilderInput instances
+    within their data pipeline context.
+
+    Args:
+        input_documents: List of BaseBuilderInput documents to process.
+
+    Returns:
+        list[ChemEnvDoc]
+    """
+    return list(
+        map(
+            lambda x: ChemEnvDoc.from_structure(
+                builder_meta=x.builder_meta,
+                deprecated=x.deprecated,
+                material_id=x.material_id,
+                structure=x.structure,
+            ),
+            input_documents,
         )
-
-    def unary_function(self, item):
-        structure = Structure.from_dict(item["structure"])
-        mpid = item["material_id"]
-        deprecated = item["deprecated"]
-
-        doc = ChemEnvDoc.from_structure(
-            structure=structure,
-            material_id=mpid,
-            deprecated=deprecated,
-        )
-
-        return jsanitize(doc.model_dump(), allow_bson=True)
+    )

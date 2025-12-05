@@ -1,65 +1,38 @@
-import warnings
-
-from maggma.builders.map_builder import MapBuilder
-from maggma.core import Store
-from pymatgen.core import Structure
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
+from emmet.builders.base import BaseBuilderInput
 from emmet.core.bonds import BondingDoc
-from emmet.core.utils import jsanitize
-
-warnings.warn(
-    f"The current version of {__name__}.BondingBuilder will be deprecated in version 0.87.0. "
-    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
-    "release for emmet-legacy-builders is not planned.",
-    DeprecationWarning,
-    stacklevel=2,
-)
 
 
-class BondingBuilder(MapBuilder):
-    def __init__(
-        self,
-        oxidation_states: Store,
-        bonding: Store,
-        **kwargs,
-    ):
-        """
-        Creates Bonding documents from structures, ideally with
-        oxidation states already annotated but will also work from any
-        collection with structure and mp-id.
+def build_bonding_docs(
+    input_documents: list[BaseBuilderInput],
+) -> list[BondingDoc]:
+    """
+    Generate bonding documents from input structures.
 
-        Args:
-            oxidation_states: Store of oxidation states
-            bonding: Store to update with bonding documents
-            query : query on materials to limit search
-        """
-        self.oxidation_states = oxidation_states
-        self.bonding = bonding
-        self.kwargs = kwargs
+    Transforms a list of BaseBuilderInput documents containing
+    Pymatgen structures into corresponding BondingDoc instances by
+    analyzing the bonding environment of each structure.
 
-        # Enforce that we key on material_id
-        self.oxidation_states.key = "material_id"
-        self.bonding.key = "material_id"
-        super().__init__(
-            source=oxidation_states,
-            target=bonding,
-            projection=["structure", "deprecated"],
-            **kwargs,
+    Caller is responsible for creating BaseBuilderInput instances
+    within their data pipeline context.
+
+    Args:
+        input_documents: List of BaseBuilderInput documents to process.
+
+    Returns:
+       list[BondingDoc]
+    """
+    return list(
+        map(
+            lambda x: BondingDoc.from_structure(
+                builder_meta=x.builder_meta,
+                deprecated=x.deprecated,
+                material_id=x.material_id,
+                structure=SpacegroupAnalyzer(
+                    x.structure
+                ).get_conventional_standard_structure(),
+            ),
+            input_documents,
         )
-
-    def unary_function(self, item):
-        structure = Structure.from_dict(item["structure"])
-        mpid = item["material_id"]
-        deprecated = item["deprecated"]
-
-        # temporarily convert to conventional structure inside this builder,
-        # in future do structure setting operations in a separate builder
-        structure = SpacegroupAnalyzer(structure).get_conventional_standard_structure()
-
-        bonding_doc = BondingDoc.from_structure(
-            structure=structure, material_id=mpid, deprecated=deprecated
-        )
-        doc = jsanitize(bonding_doc.model_dump(), allow_bson=True)
-
-        return doc
+    )
