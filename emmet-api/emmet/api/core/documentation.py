@@ -133,7 +133,7 @@ tags_meta = [
             methodology discussed by Zimmerman *et al.* in [10.3389/fmats.2017.00034](https://doi.org/10.3389/fmats.2017.00034) \
             and [10.1039/C9RA07755C](https://doi.org/10.1039/C9RA07755C). \
             Note that similarity data has not been calculated for all materials in the Materials \
-            Project database. See the `imilarityDoc` schema for a full list of fields returned by this route.",
+            Project database. See the `SimilarityDoc` schema for a full list of fields returned by this route.",
     },
     {
         "name": "Materials XAS",

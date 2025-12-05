@@ -40,7 +40,7 @@ ddtrace==4.0.0
     # via emmet-api (emmet/emmet-api/pyproject.toml)
 dnspython==2.8.0
     # via pymongo
-emmet-core==0.86.1
+emmet-core==0.86.2rc0
     # via emmet-api (emmet/emmet-api/pyproject.toml)
 envier==0.6.1
     # via ddtrace

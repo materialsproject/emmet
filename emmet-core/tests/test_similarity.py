@@ -14,6 +14,8 @@ from emmet.core.similarity import (
     SimilarityScorer,
     SimilarityDoc,
     SimilarityEntry,
+    _vector_from_hex_and_norm,
+    _vector_to_hex_and_norm,
 )
 
 
@@ -109,6 +111,12 @@ def test_crystalnn_featurize():
             for entry in doc.sim
         )
         for i, doc in enumerate(similarity_docs)
+    )
+
+    # Ensure roundtrip conversion to/from hex str does not modify vectors
+    assert all(
+        np.allclose(fv, _vector_from_hex_and_norm(*_vector_to_hex_and_norm(fv)))
+        for fv in feature_vectors
     )
 
 

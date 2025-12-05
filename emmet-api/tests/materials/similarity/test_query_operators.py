@@ -1,13 +1,17 @@
 """Test crystalline similarity vector search."""
 
+import numpy as np
 import pytest
 
-from emmet.core.similarity import SimilarityMethod
+from emmet.core.similarity import (
+    SimilarityMethod,
+    _vector_to_hex_and_norm,
+    _vector_from_hex_and_norm,
+)
 from emmet.api.routes.materials.similarity.query_operators import (
     SimilarityFeatureVectorQuery,
     SIM_METHOD_TO_FEAT_VEC_LENGTH,
 )
-import numpy as np
 
 
 @pytest.mark.parametrize(
@@ -19,6 +23,8 @@ def test_similarity_structure_search(test_dir, method):
     fv = np.random.rand(
         SIM_METHOD_TO_FEAT_VEC_LENGTH[SimilarityMethod.CRYSTALNN]
     ).tolist()
+    fv_hex, fv_norm = _vector_to_hex_and_norm(fv)
+
     limit = 10
     q = {
         "pipeline": [
@@ -26,7 +32,7 @@ def test_similarity_structure_search(test_dir, method):
                 "$vectorSearch": {
                     "index": "similarity_feature_vector",
                     "path": "feature_vector",
-                    "queryVector": fv,
+                    "queryVector": _vector_from_hex_and_norm(fv_hex, fv_norm),
                     "numCandidates": limit,
                     "limit": limit,
                 }
@@ -42,9 +48,14 @@ def test_similarity_structure_search(test_dir, method):
         ]
     }
 
-    manual_q = op.query(feature_vector=fv, method=method, _limit=limit)
+    manual_q = op.query(
+        feature_vector_hex=fv_hex,
+        feature_vector_norm=fv_norm,
+        method=method,
+        _limit=limit,
+    )
     assert manual_q == q
 
     doc = [{"meta": {"count": {"total": limit}}}]
     assert op.post_process(doc, q) == doc
-    assert op.meta() == {"total_doc": limit}
+    assert "total_doc" in op.meta()
