@@ -2,10 +2,7 @@
 
 from fastapi import HTTPException, Query
 
-import numpy as np
-import zlib
-
-from emmet.core.similarity import SimilarityMethod
+from emmet.core.similarity import SimilarityMethod, _vector_from_hex_and_norm
 
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
@@ -19,16 +16,27 @@ SIM_METHOD_TO_FEAT_VEC_LENGTH = {
 class SimilarityFeatureVectorQuery(QueryOperator):
     """Generate a feature-vector-based query.
 
-    TODO: Add an `embedding` kwarg to select between
-    multiple embedding methods used to gauge
-    similarity (e.g., ML-based metrics.)
+    The feature_vector_hex field is limited to 3_000 characters
+    to prevent malicious submission of overly-long string data.
+
+    In the worst case, a random unit vector of floats with
+    length 130 has roughly a hex string length of 2,100 characters.
+
+    Note that we pass unit vectors through only.
+    Passing vectors with non-unit norm would increase the lenght of
+    `feature_vector_hex` uncontrollably.
     """
 
     def query(
         self,
         feature_vector_hex: str = Query(
             ...,
-            description="A compressed, hex representation of a row vector of floats.",
+            description="A compressed, hex representation of a row unit vector of floats.",
+            max_length=3_000,
+        ),
+        feature_vector_norm: float = Query(
+            ...,
+            description="The norm of the feature vector",
         ),
         method: str | SimilarityMethod | None = Query(
             None,
@@ -41,9 +49,9 @@ class SimilarityFeatureVectorQuery(QueryOperator):
     ) -> STORE_PARAMS:
         """Identify similar materials."""
 
-        feature_vector = np.frombuffer(
-            zlib.decompress(bytes.fromhex(feature_vector_hex))
-        ).tolist()
+        feature_vector = _vector_from_hex_and_norm(
+            feature_vector_hex, feature_vector_norm
+        )
         if method is None:
             try:
                 method = next(
