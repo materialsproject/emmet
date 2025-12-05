@@ -38,7 +38,7 @@ cycler==0.12.1
     # via matplotlib
 distlib==0.4.0
     # via virtualenv
-emmet-core==0.87.0.dev1
+emmet-core==0.86.1
     # via emmet-cli (pyproject.toml)
 execnet==2.1.2
     # via pytest-xdist

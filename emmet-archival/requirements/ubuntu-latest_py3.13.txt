@@ -22,7 +22,7 @@ cycler==0.12.1
     # via matplotlib
 donfig==0.8.1.post1
     # via zarr
-emmet-core==0.87.0.dev1
+emmet-core==0.86.1
     # via emmet-archival (pyproject.toml)
 fonttools==4.61.0
     # via matplotlib
