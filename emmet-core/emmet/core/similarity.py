@@ -56,7 +56,7 @@ def _vector_to_hex_and_norm(vector: list[float]) -> tuple[str, float]:
     """
     v = np.array(vector)
     vnorm = np.linalg.norm(v)
-    return zlib.compress((v / vnorm).tobytes()).hex(), vnorm
+    return zlib.compress((v / vnorm).tobytes()).hex(), vnorm  # type: ignore[return-value]
 
 
 def _vector_from_hex_and_norm(hexstr: str, vnorm: float) -> list[float]:

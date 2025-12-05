@@ -80,8 +80,10 @@ class SimilarityFeatureVectorQuery(QueryOperator):
         ):
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid feature vector for method {method.value}: "
-                f"should be a list of {ref_fv_len} floats.",
+                detail=(
+                    f"Invalid feature vector for method {method.value}: "  # type: ignore[union-attr]
+                    f"should be a list of {ref_fv_len} floats.",
+                ),
             )
 
         index_name = "similarity_feature_vector"
@@ -89,7 +91,7 @@ class SimilarityFeatureVectorQuery(QueryOperator):
         # and I was not forward thinking in naming it.
         # TODO: homogenize once we have other data built out
         if method != SimilarityMethod.CRYSTALNN:
-            index_name += f"_{method.value.lower()}"
+            index_name += f"_{method.value.lower()}"  # type: ignore[union-attr]
 
         pipeline = [
             {
