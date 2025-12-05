@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import warnings
 from datetime import datetime
 from itertools import chain
 from math import ceil
+from typing import TYPE_CHECKING
 
 from maggma.builders import Builder
 from maggma.stores import Store
@@ -14,14 +16,20 @@ from emmet.core.utils import group_structures, jsanitize, undeform_structure
 from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
 
-from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 SETTINGS = EmmetBuildSettings()
+
+warnings.warn(
+    f"The current version of {__name__}.MaterialsBuilder will be deprecated in version 0.87.0. "
+    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
+    "release for emmet-legacy-builders is not planned.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class MaterialsBuilder(Builder):

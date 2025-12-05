@@ -46,7 +46,7 @@ if db_uri:
     )
     task_store = CollectionWithKey(tasks_db["tasks"], "task_id")
     eos_store = CollectionWithKey(core_db["eos"], "task_id")
-    similarity_store = CollectionWithKey(core_db["similarity"])
+    similarity_store = CollectionWithKey(core_db["similarity_crystalnn_2025_11_05"])
     xas_store = CollectionWithKey(core_db["xas"], "spectrum_id")
     gb_store = CollectionWithKey(core_db["grain_boundaries"], "task_id")
     fermi_store = CollectionWithKey(core_db["fermi_surface"], "task_id")
@@ -156,9 +156,17 @@ from emmet.api.routes.materials.eos.resources import eos_resource
 materials_resources.extend([eos_resource(eos_store)])
 
 # Similarity
-from emmet.api.routes.materials.similarity.resources import similarity_resource
+from emmet.api.routes.materials.similarity.resources import (
+    similarity_resource,
+    similarity_feature_vector_resource,
+)
 
-materials_resources.extend([similarity_resource(similarity_store)])
+materials_resources.extend(
+    [
+        similarity_resource(similarity_store),
+        similarity_feature_vector_resource(similarity_store),
+    ]
+)
 
 # XAS
 from emmet.api.routes.materials.xas.resources import xas_resource

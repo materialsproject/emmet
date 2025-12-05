@@ -464,12 +464,28 @@ class AtomRelaxTrajectory(BaseModel):
             If not None, a list of model fields to populate the frame properties
             of the pymatgen Trajectory with.
             If None, defaults to all available fields.
+            If an empty iterable, no frame properties will be returned.
+        indices : int, slice, iterable of int, or None
+            If None (default), returns all frames
+            If an int, the index of the frame to return
+            If a slice, returns that range of frames
+            If an iterable of int, returns those specific frames
+
+            Frames are always returned in sequential order,
+            even if the user-supplied indices are unsorted.
 
         Returns
         -----------
         pymatgen.core.trajectory.Trajectory
         """
-        frame_prop_keys: set[str] = set(frame_props or self.ionic_step_properties)
+
+        if frame_props is not None:
+            frame_prop_keys: set[str] = set(frame_props).intersection(
+                self.ionic_step_properties
+            )
+        else:
+            frame_prop_keys = self.ionic_step_properties
+
         if "magmoms" in frame_prop_keys:
             frame_prop_keys.discard("magmoms")
 
@@ -477,18 +493,15 @@ class AtomRelaxTrajectory(BaseModel):
             if isinstance(indices, slice):
                 indices = set(range(indices.start, indices.stop, indices.step or 1))
             elif isinstance(indices, int):
-                indices = {
-                    indices,
-                }
+                indices = {indices}
         else:
             indices = set(range(len(self)))
-        indices = {i for i in indices if self.cart_coords[i]}
 
         species = [Element.from_Z(z) for z in self.elements]
         structures = []
         frame_properties = []
 
-        for i in indices:
+        for i in sorted({i for i in indices if self.cart_coords[i]}):
             site_properties = {}
             if magmoms := getattr(self, "magmoms", None):
                 site_properties["magmoms"] = magmoms[i]
@@ -514,16 +527,15 @@ class AtomRelaxTrajectory(BaseModel):
             structures.append(structure)
 
             props = {}
-            if len(frame_prop_keys) > 0:
-                for k in frame_prop_keys:
-                    if _prop := getattr(self, k, []):
-                        prop = _prop[i]
-                        for cmth in ("model_dump", "tolist"):
-                            if hasattr(prop, cmth):
-                                prop = getattr(prop, cmth)()
-                        props[k] = prop
+            for k in frame_prop_keys:
+                if _prop := getattr(self, k, []):
+                    prop = _prop[i]
+                    for cmth in ("model_dump", "tolist"):
+                        if hasattr(prop, cmth):
+                            prop = getattr(prop, cmth)()
+                    props[k] = prop
 
-                frame_properties.append(props)
+            frame_properties.append(props)
 
         if self.lattice:
             return PmgTrajectory.from_structures(

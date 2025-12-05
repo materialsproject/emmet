@@ -1,18 +1,19 @@
-import numpy as np
+import warnings
 
-from pymatgen.core.structure import Structure
-from pymatgen.analysis import local_env
-from emmet.core.structure import StructureMetadata
-from matminer.featurizers.site import CrystalNNFingerprint, CoordinationNumber
+import numpy as np
+from maggma.builders import MapBuilder
 from matminer.featurizers.composition import ElementProperty
+from matminer.featurizers.site import CoordinationNumber, CrystalNNFingerprint
+from pymatgen.analysis import local_env
+from pymatgen.core.structure import Structure
+
+from emmet.core.structure import StructureMetadata
 
 # TODO:
 # 1) ADD DOCUMENT MODEL
 # 2) Add checking OPs present in current implementation of site fingerprints.
 # 3) Complete documentation!!!
 
-
-from maggma.builders import MapBuilder
 
 __author__ = "Nils E. R. Zimmermann <nerz@lbl.gov>"
 
@@ -28,6 +29,14 @@ nn_target_classes = [
     "BrunnerNN_real",
     "EconNN",
 ]
+
+warnings.warn(
+    f"The current version of {__name__}.BasicDescriptorsBuilder will be deprecated in version 0.87.0. "
+    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
+    "release for emmet-legacy-builders is not planned.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class BasicDescriptorsBuilder(MapBuilder):

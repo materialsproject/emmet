@@ -6,11 +6,13 @@ from functools import partial
 import multiprocessing
 from pathlib import Path
 from typing import TYPE_CHECKING
+import zlib
 
 import numpy as np
 from pydantic import BaseModel, Field
 
 from emmet.core.material_property import PropertyDoc
+from emmet.core.types.enums import ValueEnum
 
 try:
     from matminer.featurizers.structure.sites import SiteStatsFingerprint
@@ -29,6 +31,49 @@ if TYPE_CHECKING:
 
     from matminer.featurizers.base import BaseFeaturizer
     from pymatgen.core import Structure
+
+
+class SimilarityMethod(ValueEnum):
+    """Indicate which method was used to score similarity."""
+
+    CRYSTALNN = "CrystalNN"
+    M3GNET = "M3GNet"
+
+
+def _vector_to_hex_and_norm(vector: list[float]) -> tuple[str, float]:
+    """Convert a list of floats to a hex string.
+
+    Used internally to transfer/interpret vectors over a GET.
+
+    Parameters
+    -----------
+    vector : Sequence of float
+
+    Returns
+    -----------
+    str : the hex representation of the unit vector
+    float : the norm of the vector
+    """
+    v = np.array(vector)
+    vnorm = np.linalg.norm(v)
+    return zlib.compress((v / vnorm).tobytes()).hex(), vnorm  # type: ignore[return-value]
+
+
+def _vector_from_hex_and_norm(hexstr: str, vnorm: float) -> list[float]:
+    """Convert a hex string to a list of floats.
+
+    Used internally to transfer/interpret vectors over a GET.
+
+    Parameters
+    -----------
+    str : the hex representation of the unit vector
+    float : the norm of the vector
+
+    Returns
+    -----------
+    list of float : the reconstructed vector
+    """
+    return (vnorm * np.frombuffer(zlib.decompress(bytes.fromhex(hexstr)))).tolist()
 
 
 def _vector_difference_matrix_row(
@@ -518,4 +563,8 @@ class SimilarityDoc(PropertyDoc):
 
     feature_vector: list[float] | None = Field(
         None, description="The feature / embedding vector of the structure."
+    )
+
+    method: SimilarityMethod | None = Field(
+        None, description="The method used to score similarity."
     )

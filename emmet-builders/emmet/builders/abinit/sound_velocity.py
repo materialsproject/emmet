@@ -1,6 +1,8 @@
 import tempfile
 import traceback
+import warnings
 from math import ceil
+from typing import TYPE_CHECKING
 
 from abipy.dfpt.ddb import DdbFile
 from abipy.dfpt.vsound import SoundVelocity as AbiSoundVelocity
@@ -12,10 +14,17 @@ from maggma.utils import grouper
 from emmet.core.phonon import SoundVelocity
 from emmet.core.utils import jsanitize
 
-from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
     from collections.abc import Iterator
+
+
+warnings.warn(
+    f"The current version of {__name__}.SoundVelocityBuilder will be deprecated in version 0.87.0. "
+    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
+    "release for emmet-legacy-builders is not planned.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class SoundVelocityBuilder(Builder):
@@ -26,7 +35,7 @@ class SoundVelocityBuilder(Builder):
         sound_vel: Store,
         query: dict | None = None,
         manager: TaskManager | None = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Creates a collection with the data of the sound velocities extracted from

@@ -1,9 +1,19 @@
+import warnings
+
 from maggma.builders.map_builder import MapBuilder
 from maggma.core import Store
 from pymatgen.core import Structure
 
 from emmet.core.oxidation_states import OxidationStateDoc
 from emmet.core.utils import jsanitize
+
+warnings.warn(
+    f"The current version of {__name__}.OxidationStatesBuilder will be deprecated in version 0.87.0. "
+    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
+    "release for emmet-legacy-builders is not planned.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class OxidationStatesBuilder(MapBuilder):

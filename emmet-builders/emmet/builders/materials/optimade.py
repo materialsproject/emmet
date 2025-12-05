@@ -1,4 +1,6 @@
+import warnings
 from math import ceil
+from typing import TYPE_CHECKING
 
 from maggma.builders import Builder
 from maggma.core import Store
@@ -8,10 +10,16 @@ from pymatgen.core.structure import Structure
 from emmet.core.optimade import OptimadeMaterialsDoc
 from emmet.core.utils import jsanitize
 
-from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
     from collections.abc import Iterator
+
+warnings.warn(
+    f"The current version of {__name__}.OptimadeMaterialsBuilder will be deprecated in version 0.87.0. "
+    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
+    "release for emmet-legacy-builders is not planned.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class OptimadeMaterialsBuilder(Builder):
