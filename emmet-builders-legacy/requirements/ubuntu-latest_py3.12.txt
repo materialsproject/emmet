@@ -47,7 +47,7 @@ emmet-core[all]==0.84.9
     # via emmet-builders (pyproject.toml)
 filelock==3.19.1
     # via mdanalysis
-fonttools==4.59.2
+fonttools==4.61.0
     # via matplotlib
 griddataformats==1.0.2
     # via mdanalysis

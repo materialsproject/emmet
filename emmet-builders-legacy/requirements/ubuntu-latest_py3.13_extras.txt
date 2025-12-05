@@ -83,7 +83,7 @@ filelock==3.18.0
     #   virtualenv
 flake8==7.2.0
     # via emmet-builders (setup.py)
-fonttools==4.58.0
+fonttools==4.61.0
     # via matplotlib
 frozenlist==1.6.0
     # via
