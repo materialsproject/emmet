@@ -81,7 +81,7 @@ latexcodec==3.0.1
     # via pybtex
 lazy-loader==0.4
     # via scikit-image
-librt==0.6.3
+librt==0.7.0
     # via mypy
 livereload==2.7.1
     # via emmet-core (pyproject.toml)
@@ -99,7 +99,9 @@ markupsafe==3.0.3
     #   mkdocs-autorefs
     #   mkdocstrings
 matminer==0.9.3
-    # via robocrys
+    # via
+    #   emmet-core (pyproject.toml)
+    #   robocrys
 matplotlib==3.10.7
     # via
     #   ase
@@ -142,7 +144,7 @@ mkdocstrings[python]==1.0.0
     # via
     #   emmet-core (pyproject.toml)
     #   mkdocstrings-python
-mkdocstrings-python==2.0.0
+mkdocstrings-python==2.0.1
     # via mkdocstrings
 monty==2025.3.3
     # via
@@ -222,7 +224,7 @@ pillow==12.0.0
     #   imageio
     #   matplotlib
     #   scikit-image
-platformdirs==4.5.0
+platformdirs==4.5.1
     # via
     #   mkdocs-get-deps
     #   virtualenv
@@ -402,7 +404,7 @@ tzdata==2025.2
     # via pandas
 uncertainties==3.2.3
     # via pymatgen
-urllib3==2.5.0
+urllib3==2.6.0
     # via
     #   requests
     #   types-requests
