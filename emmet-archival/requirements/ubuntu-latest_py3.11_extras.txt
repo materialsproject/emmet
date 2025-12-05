@@ -28,7 +28,7 @@ distlib==0.4.0
     # via virtualenv
 donfig==0.8.1.post1
     # via zarr
-emmet-core==0.86.1
+emmet-core==0.87.0.dev1
     # via emmet-archival (pyproject.toml)
 execnet==2.1.2
     # via pytest-xdist
@@ -54,7 +54,7 @@ kiwisolver==1.4.9
     # via matplotlib
 latexcodec==3.0.1
     # via pybtex
-librt==0.6.3
+librt==0.7.0
     # via mypy
 matplotlib==3.10.7
     # via pymatgen
@@ -111,7 +111,7 @@ pathspec==0.12.1
     # via mypy
 pillow==12.0.0
     # via matplotlib
-platformdirs==4.5.0
+platformdirs==4.5.1
     # via virtualenv
 plotly==6.5.0
     # via pymatgen
@@ -227,7 +227,7 @@ tzdata==2025.2
     # via pandas
 uncertainties==3.2.3
     # via pymatgen
-urllib3==2.5.0
+urllib3==2.6.0
     # via
     #   requests
     #   types-requests
