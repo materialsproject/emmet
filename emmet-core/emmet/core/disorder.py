@@ -23,7 +23,7 @@ REQUIRED_METADATA_KEYS: tuple[str, ...] = (
 class TypedDisorderedTaskMetadata(TypedDict):
     ordered_task_id: IdentifierType
     reference_structure: dict[str, Any]
-    supercell_diag: tuple[int, int, int] | list[int]
+    supercell_diag: tuple[int, int, int]
     prototype: str
     prototype_params: dict[str, float]
     composition_map: dict[str, dict[str, int]]
@@ -50,6 +50,8 @@ def parse_json(dir_name: Path | str) -> TypedDisorderedTaskMetadata:
             f"Missing required keys in disordered_task_doc_metadata.json: {missing_str}"
         )
 
+    supercell_x, supercell_y, supercell_z = data["supercell_diag"]
+    data["supercell_diag"] = (supercell_x, supercell_y, supercell_z)
     return data
 
 
