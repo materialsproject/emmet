@@ -4,8 +4,11 @@ from pydantic import Field
 from pymatgen.core.structure import Structure
 from pathlib import Path
 import json
-from typing_extensions import Self
+from typing import TYPE_CHECKING
 from typing import Any
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 from emmet.core.trajectory import RelaxTrajectory
 
 def parse_json(dir_name: Path | str) -> dict:
