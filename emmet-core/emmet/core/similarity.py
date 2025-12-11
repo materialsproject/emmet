@@ -152,8 +152,8 @@ class SimilarityScorer:
         """
         raise NotImplementedError
 
+    @staticmethod
     def _post_process_distance(
-        self,
         distances: np.ndarray,
     ) -> np.ndarray:
         """Postprocess vector distances to yield consistent similarity scores.
@@ -205,8 +205,9 @@ class SimilarityScorer:
 
         return np.array(_feature_vectors)
 
+    @classmethod
     def _get_closest_vectors(
-        self, idx: int, v: np.ndarray, num: int
+        cls, idx: int, v: np.ndarray, num: int
     ) -> tuple[np.ndarray, np.ndarray]:
         """Return only a subset of vectors most similar to a specified vector.
 
@@ -223,7 +224,7 @@ class SimilarityScorer:
         subset_dist = dist[idxs]
         sorted_subset_idx = np.argsort(subset_dist)
 
-        return idxs[sorted_subset_idx], self._post_process_distance(
+        return idxs[sorted_subset_idx], cls._post_process_distance(
             subset_dist[sorted_subset_idx]
         )
 
@@ -435,7 +436,8 @@ class CrystalNNSimilarity(SimilarityScorer):
         except Exception:
             return np.nan * np.ones(self.num_feature)
 
-    def _post_process_distance(self, distances: np.ndarray) -> np.ndarray:
+    @staticmethod
+    def _post_process_distance(distances: np.ndarray) -> np.ndarray:
         """Use exponential weighting of feature vector distances.
 
         Parameters
