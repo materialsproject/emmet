@@ -283,7 +283,7 @@ class SNLAbout(BaseModel):
     def migrate_legacy_data(cls, config: dict[str, Any]) -> Self:
         """Migrate legacy SNL data with free-form JSON values to schematized."""
         config["history"] = _migrate_legacy_history_data(config.get("history", []))
-        if (projs := config.pop("projects",None)):
+        if projs := config.pop("projects", None):
             if "tags" not in config:
                 config["tags"] = []
             config["tags"].extend(projs)
@@ -425,43 +425,71 @@ class ProvenanceDoc(PropertyDoc):
         config["history"] = _migrate_legacy_history_data(config.get("history", []))
         return cls(**config)
 
+
 class DatabaseSNL(StructureMetadata):
     """Define schemas for database entries.
-    
-    This particular SNL schema is used for 
+
+    This particular SNL schema is used for
     experimental databases like ICSD and Pauling File.
     """
 
-    snl_id : str | None = Field(None,description="The SNL ID for this entry")
-    structure : StructureType | None = Field(None, description="The structure for this entry")
-    about : SNLAbout | None = Field(None, description = "Extended metadata for this entry.")
-    theoretical : bool = Field(True, description = "Whether this entry is a theoretical database entry.")
-    is_ordered : bool | None = Field(None, description = "Whether this represents a (configurationally) ordered structure.")
-    is_valid : bool = Field(False)
-    last_updated : DateTimeType = Field(description = "The last time this entry was updated.")
-    sourced_from_path : str | None = Field(None, description = "The path from which this entry was sourced.")
-    tags : list[str] | None = Field(None, description = "List of high-level metadata for this entry.")
+    snl_id: str | None = Field(None, description="The SNL ID for this entry")
+    structure: StructureType | None = Field(
+        None, description="The structure for this entry"
+    )
+    about: SNLAbout | None = Field(
+        None, description="Extended metadata for this entry."
+    )
+    theoretical: bool = Field(
+        True, description="Whether this entry is a theoretical database entry."
+    )
+    is_ordered: bool | None = Field(
+        None,
+        description="Whether this represents a (configurationally) ordered structure.",
+    )
+    is_valid: bool = Field(False)
+    last_updated: DateTimeType = Field(
+        description="The last time this entry was updated."
+    )
+    sourced_from_path: str | None = Field(
+        None, description="The path from which this entry was sourced."
+    )
+    tags: list[str] | None = Field(
+        None, description="List of high-level metadata for this entry."
+    )
 
     @classmethod
-    def migrate_legacy_config(cls, config : dict):
+    def migrate_legacy_config(cls, config: dict):
         """Migrate legacy, JSONL-format SNLs to the current schema.
 
         Legacy database SNLs appear to extend the properties of the
         pymatgen Structure object.
         """
-        if all(config.get(k) for k in ("sites","lattice",)):
+        if all(
+            config.get(k)
+            for k in (
+                "sites",
+                "lattice",
+            )
+        ):
             config["structure"] = Structure.from_dict(
-                {k : config.pop(k,None) for k in ("sites","lattice",)}
+                {
+                    k: config.pop(k, None)
+                    for k in (
+                        "sites",
+                        "lattice",
+                    )
+                }
             )
         if "structure" in config and "is_ordered" not in config:
             config["is_ordered"] = config["structure"].is_ordered
 
-        if (expt := config.pop("experimental",None)) is not None:
+        if (expt := config.pop("experimental", None)) is not None:
             config["theoretical"] = not expt
 
         if "structure" in config:
             return cls.from_structure(
-                meta_structure = config["structure"],
+                meta_structure=config["structure"],
                 **config,
             )
         return cls(**config)
