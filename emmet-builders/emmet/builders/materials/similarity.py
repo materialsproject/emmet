@@ -1,8 +1,13 @@
-
 import numpy as np
 
 from emmet.builders.base import BaseBuilderInput
-from emmet.core.similarity import CrystalNNSimilarity, M3GNetSimilarity, SimilarityDoc, SimilarityEntry, SimilarityMethod
+from emmet.core.similarity import (
+    CrystalNNSimilarity,
+    M3GNetSimilarity,
+    SimilarityDoc,
+    SimilarityEntry,
+    SimilarityMethod,
+)
 
 SIM_METHOD_TO_SCORER = {
     SimilarityMethod(k): v
@@ -12,16 +17,18 @@ SIM_METHOD_TO_SCORER = {
     }.items()
 }
 
+
 class SimilarityBuilderInput(BaseBuilderInput):
     """Augment base builder input with extra fields."""
 
-    similarity_method : SimilarityMethod
-    feature_vector : list[float]
+    similarity_method: SimilarityMethod
+    feature_vector: list[float]
+
 
 # this could probably be parallelized over `similarity_method`
 def build_feature_vectors(
-    input_documents : list[BaseBuilderInput],
-    similarity_method : SimilarityMethod | str = SimilarityMethod.CRYSTALNN,
+    input_documents: list[BaseBuilderInput],
+    similarity_method: SimilarityMethod | str = SimilarityMethod.CRYSTALNN,
 ) -> list[SimilarityBuilderInput]:
     """Generate similarity feature vectors.
 
@@ -32,34 +39,34 @@ def build_feature_vectors(
     Returns:
         list of SimilarityBuilderInput
     """
-    scorers = {}
-    if isinstance(similarity_method,str):
+    if isinstance(similarity_method, str):
         similarity_method = (
             SimilarityMethod[similarity_method]
             if similarity_method in SimilarityMethod.__members__
             else SimilarityMethod(similarity_method)
         )
 
-    if (scorer_cls := SIM_METHOD_TO_SCORER.get(similarity_method)):
-        scorers[similarity_method] = scorer_cls()
+    if scorer_cls := SIM_METHOD_TO_SCORER.get(similarity_method):
+        scorer = scorer_cls()
     else:
         raise ValueError(f"Unsupported {similarity_method=}")
 
     return list(
         map(
-            SimilarityBuilderInput(
-                material_id = x.material_id,
-                structure = x.structure,
-                similarity_method = similarity_method,
-                feature_vector = scorer._featurize_structure(x.structure)
+            lambda x: SimilarityBuilderInput(
+                material_id=x.material_id,
+                structure=x.structure,
+                similarity_method=similarity_method,
+                feature_vector=scorer._featurize_structure(x.structure),
             ),
             input_documents,
         )
     )
 
+
 def build_similarity_docs(
-    input_documents : list[SimilarityBuilderInput],
-    num_closest : int = 100,
+    input_documents: list[SimilarityBuilderInput],
+    num_closest: int = 100,
 ) -> list[SimilarityDoc]:
     """Generate similarity feature vectors.
 
@@ -75,16 +82,15 @@ def build_similarity_docs(
         list of SimilarityDoc
     """
 
-    if len(
-        distinct_sim_methods := {doc.similarity_method for doc in input_documents}
-    ) > 1:
+    if (
+        len(distinct_sim_methods := {doc.similarity_method for doc in input_documents})
+        > 1
+    ):
         raise ValueError(
             f"Multiple similarity methods found: {', '.join(distinct_sim_methods)}"
         )
-    
-    scorer_cls = SIM_METHOD_TO_SCORER[
-        method := input_documents[0].similarity_method
-    ]
+
+    scorer_cls = SIM_METHOD_TO_SCORER[method := input_documents[0].similarity_method]
     material_ids, vectors, structures = np.array(
         [doc.material_id, doc.feature_vector, doc.structure] for doc in input_documents
     ).T
@@ -92,19 +98,19 @@ def build_similarity_docs(
     similarity_docs = []
     for i, material_id in enumerate(material_ids):
         closest_idxs, closest_dist = scorer_cls._get_closest_vectors(
-            idx, vectors, num_closest
+            i, vectors, num_closest
         )
         similarity_docs.append(
             SimilarityDoc.from_structure(
                 meta_structure=structures[i],
                 material_id=material_id,
                 feature_vector=vectors[i],
-                method = method,
+                method=method,
                 sim=[
                     SimilarityEntry(
                         task_id=material_ids[jdx],
                         nelements=len(structures[jdx].composition.elements),
-                        dissimilarity=100.0 - closest_dists[j],
+                        dissimilarity=100.0 - closest_dist[j],
                         formula=structures[jdx].formula,
                     )
                     for j, jdx in enumerate(closest_idxs)
