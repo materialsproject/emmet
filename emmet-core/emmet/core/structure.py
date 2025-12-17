@@ -57,22 +57,22 @@ class StructureMetadata(BaseModel):
     chemsys: str | None = Field(
         None,
         title="Chemical System",
-        description="dash-delimited string of elements in the material.",
+        description="Dash-separated string of elements in the material.",
     )
     volume: float | None = Field(
         None,
         title="Volume",
-        description="Total volume for this structure in Angstroms^3.",
+        description="Total volume for this structure in Å³.",
     )
 
     density: float | None = Field(
-        None, title="Density", description="Density in grams per cm^3."
+        None, title="Density", description="Density in g/cm³."
     )
 
     density_atomic: float | None = Field(
         None,
         title="Packing Density",
-        description="The atomic packing density in atoms per cm^3.",
+        description="The atomic packing density in Å³/atom.",
     )
 
     symmetry: SymmetryData | None = Field(
