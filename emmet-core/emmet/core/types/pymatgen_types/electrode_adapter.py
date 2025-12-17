@@ -98,24 +98,27 @@ ConversionElectrodeTypeVar = TypeVar(
 def walk_voltage_pairs(voltage_pairs: list[dict[str, Any]], battery_type: BatteryType):
     pair: dict[str, Any]
     voltage_pair_cls: type[InsertionVoltagePair | ConversionVoltagePair]
-
     match battery_type:
-        case BatteryType.insertion:
+        case BatteryType.insertion.value:
             voltage_pair_cls = InsertionVoltagePair
-            for pair in voltage_pairs:
-                for key in ["entry_charge", "entry_discharge", "working_ion_entry"]:
-                    pair[key] = pop_cse_empty_keys(pair[key])
+            update_cse_keys = ["entry_charge", "entry_discharge", "working_ion_entry"]
 
-        case BatteryType.conversion:
+        case BatteryType.conversion.value:
             voltage_pair_cls = ConversionVoltagePair
-            for pair in voltage_pairs:
-                for key in ["entries_charge", "entries_discharge"]:
-                    pair[key] = [pop_cse_empty_keys(cse) for cse in pair[key]]
+            update_cse_keys = [
+                "entries_charge",
+                "entries_discharge",
+                "working_ion_entry",
+            ]
 
-                pair["working_ion_entry"] = pop_cse_empty_keys(
-                    pair["working_ion_entry"]
-                )
-
+    for pair in voltage_pairs:
+        pair.update(
+            {
+                key: pop_cse_empty_keys(pair[key])
+                for key in update_cse_keys
+                if isinstance(pair[key], dict)
+            }
+        )
     return [voltage_pair_cls.from_dict(vp) for vp in voltage_pairs]
 
 
@@ -146,25 +149,36 @@ def electrode_object_energy_adjustments_serde(
 
 def electrode_object_deserializer(
     eo: dict[str, Any] | InsertionElectrode | ConversionElectrode,
+    battery_type: str | BatteryType | None = None,
 ) -> InsertionElectrode | ConversionElectrode:
+
     if isinstance(eo, dict):
         target_class: type[InsertionElectrode | ConversionElectrode]
+        if not battery_type and eo.get("@class"):
+            match eo["@class"]:
+                case "InsertionElectrode":
+                    battery_type = BatteryType.insertion
+                case "ConversionElectrode":
+                    battery_type = BatteryType.conversion
 
-        match eo["@class"]:
-            case "InsertionElectrode":
-                target_class = InsertionElectrode
-                battery_type = BatteryType.insertion
-                eo["working_ion_entry"] = pop_cse_empty_keys(eo["working_ion_entry"])
-                for key in ["stable_entries", "unstable_entries"]:
-                    eo[key] = [pop_cse_empty_keys(cse) for cse in eo[key]]
+        if BatteryType(battery_type) == BatteryType.insertion:
+            target_class = InsertionElectrode
+            for key in ["stable_entries", "unstable_entries"]:
+                eo[key] = [
+                    pop_cse_empty_keys(cse) if isinstance(cse, dict) else cse
+                    for cse in eo[key]
+                ]
 
-            case "ConversionElectrode":
-                target_class = ConversionElectrode
-                battery_type = BatteryType.conversion
-                eo["working_ion_entry"] = pop_cse_empty_keys(eo["working_ion_entry"])
+        elif BatteryType(battery_type) == BatteryType.conversion:
+            target_class = ConversionElectrode
 
-        if isinstance(eo["working_ion_entry"].get("energy_adjustments"), str):
-            electrode_object_energy_adjustments_serde(eo, battery_type, orjson.loads)
+        if isinstance(eo["working_ion_entry"], dict):
+            eo["working_ion_entry"] = pop_cse_empty_keys(eo["working_ion_entry"])
+
+            if isinstance(eo["working_ion_entry"].get("energy_adjustments"), str):
+                electrode_object_energy_adjustments_serde(
+                    eo, battery_type, orjson.loads
+                )
 
         eo["voltage_pairs"] = walk_voltage_pairs(eo["voltage_pairs"], battery_type)
 
@@ -193,12 +207,16 @@ def electrode_object_serializer(electrode_object, nxt, info) -> dict[str, Any]:
 
 InsertionElectrodeType = Annotated[
     InsertionElectrodeTypeVar,
-    BeforeValidator(electrode_object_deserializer),
+    BeforeValidator(
+        lambda eo: electrode_object_deserializer(eo, battery_type="insertion")
+    ),
     WrapSerializer(electrode_object_serializer, return_type=dict[str, Any]),
 ]
 
 ConversionElectrodeType = Annotated[
     ConversionElectrodeTypeVar,
-    BeforeValidator(electrode_object_deserializer),
+    BeforeValidator(
+        lambda eo: electrode_object_deserializer(eo, battery_type="conversion")
+    ),
     WrapSerializer(electrode_object_serializer, return_type=dict[str, Any]),
 ]
