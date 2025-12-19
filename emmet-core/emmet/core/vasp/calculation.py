@@ -286,6 +286,29 @@ class CalculationInput(CalculationBaseModel):
                     symb = symbs[0]
                 config["potcar"].append(symb)
 
+        # populate legacy hubbards data
+        if (
+            (
+                config.get("is_hubbard")
+                or config.get("incar", {}).get("LDAU")
+                or config.get("parameters", {}).get("LDAU")
+            )
+            and not config.get("hubbards")
+            and config.get("potcar")
+        ):
+            # Basically the same functionality as in pymatgen Vasprun
+            symbols = [symb.split("_", 1)[0] for symb in config["potcar"]]
+
+            input_params = {**config.get("incar", {}), **config.get("parameters", {})}
+            u = input_params.get("LDAUU", [])
+            j = input_params.get("LDAUJ", [])
+            if len(j) != len(u):
+                j = [0] * len(u)
+            if len(u) == len(symbols):
+                config["hubbards"] = {
+                    symbols[idx]: u[idx] - j[idx] for idx in range(len(symbols))
+                }
+
         return config
 
     @cached_property
