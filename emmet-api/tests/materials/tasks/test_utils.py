@@ -11,7 +11,8 @@ from emmet.api.routes.materials.tasks.utils import (
 
 def test_calcs_reversed_to_trajectory():
     with zopen(
-        os.path.join(MAPISettings().TEST_FILES, "calcs_reversed_mp_1031016.json.gz")
+        os.path.join(MAPISettings().TEST_FILES, "calcs_reversed_mp_1031016.json.gz"),
+        "rt",
     ) as file:
         calcs_reversed = load(file)
         trajectories = calcs_reversed_to_trajectory(calcs_reversed)
@@ -27,7 +28,9 @@ def test_calcs_reversed_to_trajectory():
 
 
 def test_task_to_entry():
-    with zopen(os.path.join(MAPISettings().TEST_FILES, "test_task.json.gz")) as file:
+    with zopen(
+        os.path.join(MAPISettings().TEST_FILES, "test_task.json.gz"), "rt"
+    ) as file:
         doc = load(file)
 
     entry_dict = task_to_entry(doc)

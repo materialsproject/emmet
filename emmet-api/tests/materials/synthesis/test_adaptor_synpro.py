@@ -112,7 +112,8 @@ def test_get_material_formula():
 
 def test_convert_one():
     with zopen(
-        os.path.join(MAPISettings().TEST_FILES, "synth_doc_adaptor_synpro.json.gz")
+        os.path.join(MAPISettings().TEST_FILES, "synth_doc_adaptor_synpro.json.gz"),
+        "rt",
     ) as file:
         synth_doc = load(file)
 

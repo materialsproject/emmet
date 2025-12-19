@@ -286,30 +286,38 @@ class CalculationInput(CalculationBaseModel):
                     symb = symbs[0]
                 config["potcar"].append(symb)
 
+        return config
+
+    def model_post_init(self, context: Any, /) -> None:
         # populate legacy hubbards data
         if (
             (
-                config.get("is_hubbard")
-                or config.get("incar", {}).get("LDAU")
-                or config.get("parameters", {}).get("LDAU")
+                self.is_hubbard
+                or (self.incar or {}).get("LDAU")
+                or (self.parameters or {}).get("LDAU")
             )
-            and not config.get("hubbards")
-            and config.get("potcar")
+            and not self.hubbards
+            and self.potcar
         ):
             # Basically the same functionality as in pymatgen Vasprun
-            symbols = [symb.split("_", 1)[0] for symb in config["potcar"]]
+            symbols = [symb.split("_", 1)[0] for symb in self.potcar]
 
-            input_params = {**config.get("incar", {}), **config.get("parameters", {})}
+            input_params = {
+                k: v
+                for inc_k in (
+                    "incar",
+                    "parameters",
+                )
+                for k, v in (getattr(self, inc_k) or {}).items()
+            }
             u = input_params.get("LDAUU", [])
             j = input_params.get("LDAUJ", [])
             if len(j) != len(u):
                 j = [0] * len(u)
             if len(u) == len(symbols):
-                config["hubbards"] = {
+                self.hubbards = {
                     symbols[idx]: u[idx] - j[idx] for idx in range(len(symbols))
                 }
-
-        return config
 
     @cached_property
     def poscar(self) -> Poscar | None:
