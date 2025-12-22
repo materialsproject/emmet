@@ -39,7 +39,9 @@ TypedMoleculeDict = TypedDict(
 MoleculeTypeVar = TypeVar("MoleculeTypeVar", Molecule, TypedMoleculeDict)
 
 
-def pop_empty_structure_keys(inp: StructureTypeVar | MoleculeTypeVar, serialize : bool = True):
+def pop_empty_structure_keys(
+    inp: StructureTypeVar | MoleculeTypeVar, serialize: bool = True
+):
     if isinstance(inp, dict):
         target_cls = None
         if serialize:
