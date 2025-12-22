@@ -68,10 +68,10 @@ def pop_empty_graph_keys(graph: StructureGraphTypeVar | MoleculeGraphTypeVar):
         match graph["@class"]:
             case "StructureGraph":
                 target_cls = StructureGraph
-                graph["structure"] = pop_empty_structure_keys(graph["structure"])  # type: ignore[typeddict-unknown-key, typeddict-item]
+                graph["structure"] = pop_empty_structure_keys(graph["structure"], serialize = False)  # type: ignore[typeddict-unknown-key, typeddict-item]
             case "MoleculeGraph":
                 target_cls = MoleculeGraph
-                graph["molecule"] = pop_empty_structure_keys(graph["molecule"])  # type: ignore[typeddict-unknown-key, typeddict-item]
+                graph["molecule"] = pop_empty_structure_keys(graph["molecule"], serialize = False)  # type: ignore[typeddict-unknown-key, typeddict-item]
 
         return target_cls.from_dict(graph)  # type: ignore[arg-type]
 
