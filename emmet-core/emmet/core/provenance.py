@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import warnings
-from typing import TYPE_CHECKING, Any, Annotated
+from typing import TYPE_CHECKING, Any, Annotated, Literal
 
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
@@ -456,6 +456,18 @@ class DatabaseSNL(StructureMetadata):
     )
     tags: list[str] | None = Field(
         None, description="List of high-level metadata for this entry."
+    )
+
+    source: Literal["icsd", "pauling", "mp-complete", "user"] | None = Field(
+        None, description="The source of this SNL."
+    )
+
+    submission_id: int | None = Field(
+        None, description="If applicable, the identifier of the submitted structure."
+    )
+    submitter_email: str | None = Field(
+        None,
+        description="If applicable, the email of the user who submitted the structure.",
     )
 
     @classmethod
