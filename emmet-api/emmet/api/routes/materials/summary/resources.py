@@ -84,6 +84,7 @@ def summary_resource(summary_store):
 
 
 def summary_stats_resource(summary_store):
+    """NOTE: Currently unused, API endpoint no longer available."""
     resource = AggregationResource(
         summary_store,
         SummaryStats,
