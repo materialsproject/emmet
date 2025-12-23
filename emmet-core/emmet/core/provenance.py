@@ -471,7 +471,7 @@ class DatabaseSNL(StructureMetadata):
     )
 
     @classmethod
-    def migrate_legacy_config(cls, config: dict):
+    def migrate_legacy_config(cls, config: dict) -> Self:
         """Migrate legacy, JSONL-format SNLs to the current schema.
 
         Legacy database SNLs appear to extend the properties of the
