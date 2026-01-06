@@ -83,14 +83,15 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install graphviz
-        run: |
-          # Required to generate entity-relationship diagrams for pydantic with erdantic
-          # mac users should `brew install graphviz`, then
-          # `CC=gcc CPPFLAGS="-I$(brew --prefix graphviz)/include" LDFLAGS="-L$(brew --prefix graphviz)/lib" pip install pygraphviz`
-          # See: https://github.com/pygraphviz/pygraphviz/issues/572
-          sudo apt install graphviz
-          sudo apt install graphviz-dev
+      # To install graphiz and therefore use erdantic to draw pydantic models:
+      # - name: Install graphviz
+      #   run: |
+      #     # Required to generate entity-relationship diagrams for pydantic with erdantic
+      #     # mac users should `brew install graphviz`, then
+      #     # `CC=gcc CPPFLAGS="-I$(brew --prefix graphviz)/include" LDFLAGS="-L$(brew --prefix graphviz)/lib" pip install pygraphviz`
+      #     # See: https://github.com/pygraphviz/pygraphviz/issues/572
+      #     sudo apt install graphviz
+      #     sudo apt install graphviz-dev
 
       - name: Build
         run: sphinx-build docs docs/_build

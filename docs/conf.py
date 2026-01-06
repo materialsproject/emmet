@@ -5,7 +5,6 @@
 import os
 import sys
 
-
 sys.path.insert(0, os.path.abspath("../../"))
 project = "emmet"
 copyright = "2025, The Materials Project"
@@ -14,8 +13,7 @@ extensions = [
     "myst_parser",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
-    "sphinx.ext.graphviz",
-    "sphinxcontrib.autodoc_pydantic",
+    "sphinx_autodoc_typehints",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -39,8 +37,10 @@ autodoc_member_order = "bysource"
 autosummary_generate = True
 autosummary_generate_overwrite = True
 
-# autodoc pydantic extensions
+# Should erdantic work in the future with our pydantic models, uncomment these:
+# autodoc_pydantic_model_show_json = False
 # autodoc_pydantic_model_erdantic_figure = True
+# graphviz_output_format = "svg"
 
 # HTML styling
 html_theme = "sphinx_rtd_theme"

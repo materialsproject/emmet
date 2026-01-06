@@ -8,8 +8,8 @@ This section gives an overview of the API for the emmet namespace packages.
 .. currentmodule:: emmet
 
 .. autosummary::
+    :toctree: _reference
     :recursive:
-    :toctree:
     :nosignatures:
 
     core

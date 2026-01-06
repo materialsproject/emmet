@@ -10,7 +10,7 @@ CHANGELOG
 ```{toctree}
 :caption: Reference
 :hidden:
-reference/index
+reference_index
 ```
 
 # Emmet
