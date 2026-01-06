@@ -6,11 +6,15 @@
 
 This is the core package for the `emmet` ecosystem. `emmet.core` is where data models are defined. These data models are the most important part of `emmet` since they dictate what all the other packages have to use, serve, or compute.
 
-## emmet-cli-legacy
+## emmet-cli
 
-Many of the operations in `emmet` are complex. These range from backing up calculations, to parsing, to setting of build chains, to starting workflows. Since these processes are pretty standard, the `emmet` ecosystem provides a CLI implemented in `emmet.cli.legacy`. This makes managing MAPI much easier.
+Many of the operations in `emmet` are complex. These range from backing up calculations, to parsing, to setting of build chains, to starting workflows. Since these processes are pretty standard, the `emmet` ecosystem provides a CLI implemented in `emmet.cli`. This makes managing MAPI much easier.
 
 
 ## emmet-builders
 
 The data served via MAPI has to computed via data pipelines. `emmet.builders` defines these operations using the [`maggma`](https://materialsproject.github.io/maggma/) framework to enable well constructed data access, multi- and distributed processing, reporting, and automatic incremental computation.
+
+## emmet-archival
+
+This module defines tools for archiving raw electronic structure data in cloud-native formats, such as zarr and parquet.

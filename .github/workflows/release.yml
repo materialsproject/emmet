@@ -83,11 +83,29 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build
-        run: mkdocs build
+      - name: Install graphviz
+        run: |
+          # Required to generate entity-relationship diagrams for pydantic with erdantic
+          # mac users should `brew install graphviz`, then
+          # `CC=gcc CPPFLAGS="-I$(brew --prefix graphviz)/include" LDFLAGS="-L$(brew --prefix graphviz)/lib" pip install pygraphviz`
+          sudo apt install graphviz
+          sudo apt install graphviz-dev
 
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4.0.0
+      - name: Build
+        run: sphinx-build docs docs/_build
+
+      - name: Upload build artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./site
+          path: ./docs/_build
+
+  deploy-docs:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
