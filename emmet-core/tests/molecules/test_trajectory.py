@@ -16,7 +16,7 @@ from emmet.core.molecules.trajectory import ForcesDoc, TrajectoryDoc
 
 @pytest.fixture(scope="session")
 def force_calc(test_dir):
-    with zopen(test_dir / "force_trajectory" / "force_calc.json.gz") as f:
+    with zopen(test_dir / "force_trajectory" / "force_calc.json.gz", "rt") as f:
         data = json.load(f)
 
     data["last_updated"] = datetime.datetime.now()
@@ -27,7 +27,7 @@ def force_calc(test_dir):
 
 @pytest.fixture(scope="session")
 def ffopt_task(test_dir):
-    with zopen(test_dir / "force_trajectory" / "ffopt_calc.json.gz") as f:
+    with zopen(test_dir / "force_trajectory" / "ffopt_calc.json.gz", "rt") as f:
         data = json.load(f)
 
     data["last_updated"] = datetime.datetime.now()

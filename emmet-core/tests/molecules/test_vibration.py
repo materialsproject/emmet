@@ -11,7 +11,7 @@ from emmet.core.molecules.vibration import VibrationDoc
 
 @pytest.fixture(scope="session")
 def test_tasks(test_dir):
-    with zopen(test_dir / "liec_tasks.json.gz") as f:
+    with zopen(test_dir / "liec_tasks.json.gz", "rt") as f:
         data = json.load(f)
 
     for d in data:
@@ -25,7 +25,7 @@ def test_tasks(test_dir):
 
 @pytest.fixture(scope="session")
 def raman_task(test_dir):
-    with zopen(test_dir / "raman_task.json.gz") as f:
+    with zopen(test_dir / "raman_task.json.gz", "rt") as f:
         data = json.load(f)
 
     data["last_updated"] = datetime.datetime.strptime(

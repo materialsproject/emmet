@@ -14,7 +14,7 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 @pytest.fixture(scope="session")
 def test_tasks(test_dir):
-    with zopen(test_dir / "multipole_docs.json.gz") as f:
+    with zopen(test_dir / "multipole_docs.json.gz", "rt") as f:
         data = json.load(f)
 
     for d in data:

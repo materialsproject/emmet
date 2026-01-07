@@ -8,7 +8,8 @@ from emmet.api.routes.molecules.tasks.utils import calcs_reversed_to_trajectory
 
 def test_calcs_reversed_to_trajectory():
     with zopen(
-        os.path.join(MAPISettings().TEST_FILES, "calcs_reversed_mpcule_36097.json.gz")
+        os.path.join(MAPISettings().TEST_FILES, "calcs_reversed_mpcule_36097.json.gz"),
+        "rt",
     ) as file:
         calcs_reversed = load(file)
         trajectories = calcs_reversed_to_trajectory(calcs_reversed)
