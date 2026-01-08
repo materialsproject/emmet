@@ -15,6 +15,9 @@ from emmet.api.routes.materials.materials.utils import (
 )
 from emmet.core.symmetry import CrystalSystem
 from emmet.core.vasp.calc_types import RunType
+from emmet.core.vasp.material import BlessedCalcs
+
+BLESSED_CALC_RUN_TYPES = Literal[*list(BlessedCalcs.model_fields)]
 
 
 class FormulaQuery(QueryOperator):
@@ -212,7 +215,7 @@ class BlessedCalcsQuery(QueryOperator):
 
     def query(
         self,
-        run_type: RunType = Query(
+        run_type: BLESSED_CALC_RUN_TYPES | RunType = Query(
             ..., description="Calculation run type of blessed task data"
         ),
         energy_min: float | None = Query(
@@ -222,6 +225,21 @@ class BlessedCalcsQuery(QueryOperator):
             None, description="Maximum total uncorrected DFT energy in eV/atom"
         ),
     ) -> STORE_PARAMS:
+
+        if isinstance(run_type, RunType):
+            aliases = {
+                run_type.PBE: "GGA",
+                run_type.PBE_U: "GGA_U",
+                run_type.R2SCAN: "R2SCAN",
+                run_type.HSE06: "HSE",
+            }
+            if run_type not in aliases:
+                raise ValueError(
+                    f"Unsupported {run_type=}, please choose one of "
+                    f"{', '.join(BLESSED_CALC_RUN_TYPES + [x.value for x in aliases])}"
+                )
+            run_type = aliases[run_type]
+
         crit = {f"entries.{run_type}.energy": {}}  # type: dict
 
         if energy_min:
@@ -231,7 +249,7 @@ class BlessedCalcsQuery(QueryOperator):
             crit[f"entries.{run_type}.energy"].update({"$lte": energy_max})
 
         if not crit[f"entries.{run_type}.energy"]:
-            return {"criteria": {f"entries.{run_type}": {"$exists": True}}}
+            return {"criteria": {f"entries.{run_type}": {"$neq": None}}}
 
         return {"criteria": crit}
 

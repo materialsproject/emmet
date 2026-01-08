@@ -28,7 +28,7 @@ class BlessedCalcs(BaseModel, populate_by_name=True):
     PBESol: ComputedStructureEntryType | None = Field(None, alias="PBEsol")
     SCAN: ComputedStructureEntryType | None = Field(None)
     R2SCAN: ComputedStructureEntryType | None = Field(None, alias="r2SCAN")
-    HSE: ComputedStructureEntryType | None = Field(None)
+    HSE: ComputedStructureEntryType | None = Field(None, alias="HSE06")
 
 
 class MaterialsDoc(CoreMaterialsDoc):
