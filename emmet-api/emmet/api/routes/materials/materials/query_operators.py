@@ -215,7 +215,7 @@ class BlessedCalcsQuery(QueryOperator):
 
     def query(
         self,
-        run_type: Literal[*BLESSED_CALC_RUN_TYPES] | RunType = Query(
+        run_type: Literal[*BLESSED_CALC_RUN_TYPES] | RunType = Query(  # type: ignore[valid-type]
             ..., description="Calculation run type of blessed task data"
         ),
         energy_min: float | None = Query(
