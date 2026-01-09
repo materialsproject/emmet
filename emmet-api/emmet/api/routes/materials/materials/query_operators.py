@@ -1,5 +1,5 @@
 from itertools import permutations
-from typing import Literal
+from typing import Literal, Any
 
 from fastapi import Body, HTTPException, Query
 from emmet.api.query_operator import QueryOperator
@@ -15,6 +15,9 @@ from emmet.api.routes.materials.materials.utils import (
 )
 from emmet.core.symmetry import CrystalSystem
 from emmet.core.vasp.calc_types import RunType
+from emmet.core.vasp.material import BlessedCalcs
+
+BLESSED_CALC_RUN_TYPES = sorted(BlessedCalcs.model_fields)
 
 
 class FormulaQuery(QueryOperator):
@@ -212,7 +215,7 @@ class BlessedCalcsQuery(QueryOperator):
 
     def query(
         self,
-        run_type: RunType = Query(
+        run_type: Literal[*BLESSED_CALC_RUN_TYPES] | RunType = Query(  # type: ignore[valid-type]
             ..., description="Calculation run type of blessed task data"
         ),
         energy_min: float | None = Query(
@@ -222,26 +225,50 @@ class BlessedCalcsQuery(QueryOperator):
             None, description="Maximum total uncorrected DFT energy in eV/atom"
         ),
     ) -> STORE_PARAMS:
-        crit = {f"entries.{run_type}.energy": {}}  # type: dict
 
-        if energy_min:
-            crit[f"entries.{run_type}.energy"].update({"$gte": energy_min})
+        parsed_run_type: str | None = None
+        if isinstance(run_type, RunType):
+            aliases = {
+                RunType.PBE: "GGA",
+                RunType.PBE_U: "GGA_U",
+                RunType.GGA: "GGA",
+                RunType.GGA_U: "GGA_U",
+                RunType.SCAN: "SCAN",
+                RunType.r2SCAN: "R2SCAN",
+                RunType.HSE06: "HSE",
+            }
+            parsed_run_type = aliases.get(run_type)
 
-        if energy_max:
-            crit[f"entries.{run_type}.energy"].update({"$lte": energy_max})
+        elif run_type in BLESSED_CALC_RUN_TYPES:
+            parsed_run_type = run_type
 
-        if not crit[f"entries.{run_type}.energy"]:
-            return {"criteria": {f"entries.{run_type}": {"$exists": True}}}
+        if parsed_run_type is None:
+            raise ValueError(
+                f"Unsupported {run_type=}, please choose one of "
+                f"{', '.join(BLESSED_CALC_RUN_TYPES)}"
+            )
+
+        crit: dict[str, Any] = {f"entries.{parsed_run_type}.energy": {}}
+
+        if energy_min is not None:
+            crit[f"entries.{parsed_run_type}.energy"].update({"$gte": energy_min})
+
+        if energy_max is not None:
+            crit[f"entries.{parsed_run_type}.energy"].update({"$lte": energy_max})
+
+        if not crit[f"entries.{parsed_run_type}.energy"]:
+            return {"criteria": {f"entries.{parsed_run_type}": {"$ne": None}}}
 
         return {"criteria": crit}
 
     def post_process(self, docs, query):
+        """Return only the blessed entry."""
         run_type = list(query["criteria"].keys())[0].split(".")[1]
 
         return_data = [
             {
                 "material_id": doc["material_id"],
-                "blessed_entry": doc["entries"][run_type],
+                "entries": {run_type: doc["entries"][run_type]},
             }
             for doc in docs
         ]

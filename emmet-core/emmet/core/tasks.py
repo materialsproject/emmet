@@ -390,12 +390,12 @@ class CoreTaskDoc(StructureMetadata):
             completed_at=calc_doc.completed_at,
             dir_name=get_uri(dir_name),
             icsd_id=icsd_id,
-            input=InputDoc.from_vasp_calc_doc(calc_doc),
+            input=calc_doc.input,
             meta_structure=calc_doc.output.structure,
             orig_inputs=_parse_orig_inputs(dir_name),
             output=CoreCalculationOutput(
                 **calc_doc.output.model_dump(
-                    include=set(CoreCalculationOutput.model_fields())
+                    include=set(CoreCalculationOutput.model_fields)
                 )
             ),
             run_type=calc_doc.run_type,
@@ -406,7 +406,7 @@ class CoreTaskDoc(StructureMetadata):
             vasp_objects=vasp_objects,
         )
 
-        trajectory = get_trajectories_from_calculations(calc_doc)[0]
+        trajectory = get_trajectories_from_calculations([calc_doc])[0]
 
         return (task_doc, trajectory)
 

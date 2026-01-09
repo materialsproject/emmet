@@ -4,6 +4,7 @@ from pymatgen.core.structure import Structure
 
 from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.materials.query_operators import (
+    BlessedCalcsQuery,
     ChemsysQuery,
     DeprecationQuery,
     ElementsQuery,
@@ -15,6 +16,55 @@ from emmet.api.routes.materials.materials.query_operators import (
     SymmetryQuery,
 )
 from emmet.core.symmetry import CrystalSystem
+from emmet.core.vasp.calc_types import RunType
+
+
+def test_blessed_calcs_query():
+
+    op = BlessedCalcsQuery()
+    for mapped, possible_user_input in {
+        "GGA": ["GGA", RunType.GGA, RunType.PBE],
+        "GGA_U": ["GGA_U", RunType.PBE_U],
+        "R2SCAN": ["R2SCAN", RunType.r2SCAN],
+        "SCAN": ["SCAN", RunType.SCAN],
+        "HSE": ["HSE", RunType.HSE06],
+    }.items():
+
+        assert all(
+            op.query(run_type=user_inp, energy_min=None, energy_max=None)
+            == {"criteria": {f"entries.{mapped}": {"$ne": None}}}
+            for user_inp in possible_user_input
+        )
+
+        assert all(
+            op.query(
+                run_type=user_inp,
+                energy_min=0.0,
+                energy_max=None,
+            )
+            == {"criteria": {f"entries.{mapped}.energy": {"$gte": 0.0}}}
+            for user_inp in possible_user_input
+        )
+
+        assert all(
+            op.query(
+                run_type=user_inp,
+                energy_min=None,
+                energy_max=5.0,
+            )
+            == {"criteria": {f"entries.{mapped}.energy": {"$lte": 5.0}}}
+            for user_inp in possible_user_input
+        )
+
+        assert all(
+            op.query(
+                run_type=user_inp,
+                energy_min=0.0,
+                energy_max=5.0,
+            )
+            == {"criteria": {f"entries.{mapped}.energy": {"$gte": 0.0, "$lte": 5.0}}}
+            for user_inp in possible_user_input
+        )
 
 
 def test_formula_query():

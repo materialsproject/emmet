@@ -12,7 +12,7 @@ from emmet.core.molecules.thermo import MoleculeThermoDoc, get_free_energy
 
 @pytest.fixture(scope="session")
 def test_tasks(test_dir):
-    with zopen(test_dir / "liec_tasks.json.gz") as f:
+    with zopen(test_dir / "liec_tasks.json.gz", "rt") as f:
         data = json.load(f)
 
     for d in data:

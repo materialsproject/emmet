@@ -1,6 +1,7 @@
 import sys
 import types
 import typing
+from typing_extensions import NotRequired
 from collections.abc import Iterable, Mapping
 from datetime import datetime
 from enum import Enum
@@ -140,7 +141,7 @@ def arrowize(obj) -> pa.DataType:
 
         return PY_PRIMITIVES_TO_ARROW[first_type]
 
-    if typing.get_origin(obj) is typing.NotRequired:
+    if typing.get_origin(obj) is NotRequired:
         return arrowize(obj.__args__[0])
 
     if isinstance(obj, type) and issubclass(obj, Enum):

@@ -19,7 +19,7 @@ def test_string2comp():
 
 def test_convert_recipe():
     with zopen(
-        os.path.join(MAPISettings().TEST_FILES, "synth_doc_adaptor.json.gz")
+        os.path.join(MAPISettings().TEST_FILES, "synth_doc_adaptor.json.gz"), "rt"
     ) as file:
         synth_doc = load(file)
 

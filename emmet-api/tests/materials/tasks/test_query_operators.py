@@ -30,7 +30,7 @@ def test_entries_query():
     assert op.query(task_ids=" mp-149, mp-13") == q
 
     with zopen(
-        os.path.join(MAPISettings().TEST_FILES, "tasks_Li_Fe_V.json.gz")
+        os.path.join(MAPISettings().TEST_FILES, "tasks_Li_Fe_V.json.gz"), "rt"
     ) as file:
         tasks = json.load(file)
     docs = op.post_process(tasks, q)
@@ -45,7 +45,7 @@ def test_trajectory_query():
     assert op.query(task_ids=" mp-149, mp-13") == q
 
     with zopen(
-        os.path.join(MAPISettings().TEST_FILES, "tasks_Li_Fe_V.json.gz")
+        os.path.join(MAPISettings().TEST_FILES, "tasks_Li_Fe_V.json.gz"), "rt"
     ) as file:
         tasks = json.load(file)
     docs = op.post_process(tasks, q)

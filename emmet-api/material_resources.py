@@ -156,9 +156,17 @@ from emmet.api.routes.materials.eos.resources import eos_resource
 materials_resources.extend([eos_resource(eos_store)])
 
 # Similarity
-from emmet.api.routes.materials.similarity.resources import similarity_resource
+from emmet.api.routes.materials.similarity.resources import (
+    similarity_resource,
+    similarity_feature_vector_resource,
+)
 
-materials_resources.extend([similarity_resource(similarity_store)])
+materials_resources.extend(
+    [
+        similarity_resource(similarity_store),
+        similarity_feature_vector_resource(similarity_store),
+    ]
+)
 
 # XAS
 from emmet.api.routes.materials.xas.resources import xas_resource
@@ -242,12 +250,9 @@ materials_resources.extend([provenance_resource(provenance_store)])
 # Summary
 from emmet.api.routes.materials.summary.resources import (
     summary_resource,
-    summary_stats_resource,
 )
 
-materials_resources.extend(
-    [summary_stats_resource(summary_store), summary_resource(summary_store)]
-)
+materials_resources.extend([summary_resource(summary_store)])
 
 # Electronic Structure
 from emmet.api.routes.materials.electronic_structure.resources import (

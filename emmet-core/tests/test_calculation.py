@@ -55,6 +55,19 @@ def test_calculation_input(test_dir, object_name, task_name):
     # and decoded
     MontyDecoder().process_decoded(d)
 
+    # Test hubbard U re-parsing
+    test_doc_dct = test_doc.model_dump()
+    hubbards = list(range(1, 1 + len(test_doc.structure.composition.elements)))
+    test_doc_dct["incar"]["LDAU"] = True
+    test_doc_dct["incar"]["LDAUU"] = hubbards
+    test_doc_dct["is_hubbard"] = True
+    test_doc_dct.pop("hubbards", None)
+    hubbard_doc = CalculationInput(**test_doc_dct)
+    assert hubbard_doc.is_hubbard
+    assert hubbard_doc.hubbards == {
+        ele: hubbards[i] for i, ele in enumerate(hubbard_doc.potcar)
+    }
+
 
 @pytest.mark.parametrize(
     "object_name,task_name",
