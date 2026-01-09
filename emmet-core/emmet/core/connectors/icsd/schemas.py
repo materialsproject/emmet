@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, model_validator, ConfigDict
-from pymatgen.core import Structure
 from uncertainties import ufloat_fromstr
 
 from emmet.core.connectors.analysis import parse_cif
@@ -126,16 +125,16 @@ class IcsdPropertyDoc(BaseModel):
 
     pdf: str | None = None
 
-    structures : list[StructureType] | None = Field(
+    structures: list[StructureType] | None = Field(
         None, description="A list of validated `Structure`s parsed from the CIF."
     )
-    cif_parsing_errors : list[str] | None = Field(
-        None, description = "A list of any errors encountered while parsing the CIF."
+    cif_parsing_errors: list[str] | None = Field(
+        None, description="A list of any errors encountered while parsing the CIF."
     )
 
     @model_validator(mode="before")
     @classmethod
-    def deserialize(cls, config : Any) -> Any:
+    def deserialize(cls, config: Any) -> Any:
         """Parse ICSD data into a structured format."""
         if isinstance(config.get("authors"), str):
             config["authors"] = config["authors"].split(";")
@@ -145,7 +144,9 @@ class IcsdPropertyDoc(BaseModel):
                 config[k] = None
 
         if config.get("cif") and config.get("structures") is None:
-            config["structures"], config["cif_parsing_errors"] = parse_cif(config["cif"])
+            config["structures"], config["cif_parsing_errors"] = parse_cif(
+                config["cif"]
+            )
 
         if not config.get("cif_parsing_errors"):
             config.pop("cif_parsing_errors")
