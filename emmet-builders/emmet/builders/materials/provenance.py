@@ -2,17 +2,10 @@
 
 from functools import partial
 
-try:
-    from xtalxd.analysis.schemas import IcsdStructureDoc
-    from xtalxd.icsd.client import IcsdClient
-    from xtalxd.icsd.enums import IcsdSubset
-except ImportError:
-    IcsdClient = None
-    IcsdSubset = None
-    IcsdStructureDoc = None
-
 from emmet.builders.base import BaseBuilderInput
 from emmet.builders.settings import EmmetBuildSettings
+from emmet.core.connectors.icsd.schemas import IcsdPropertyDoc
+from emmet.core.connectors.icsd.client import IcsdClient
 from emmet.core.provenance import DatabaseSNL, ProvenanceDoc
 
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
@@ -31,11 +24,17 @@ structure_matcher = StructureMatcher(
 
 
 def _get_snl_from_cif(cif_str: str, **kwargs) -> DatabaseSNL | None:
-    """Build a database SNL from a CIF plus its metadata."""
+    """Build a database SNL from a CIF plus its metadata.
+    
+    NB: Only takes the first structure from a CIF.
+    While a CIF can technically contain many structures,
+    the ICSD usually only distributes CIFs with one structure
+    per file.
+    """
     try:
-        icsd_doc = IcsdStructureDoc.from_cif_str(cif_str)
+        icsd_doc = IcsdStructureDoc(cif = cif_str)
         snl = DatabaseSNL.from_structure(
-            meta_structure=icsd_doc.structure, structure=icsd_doc.structure, **kwargs
+            meta_structure=icsd_doc.structures[0], structure=icsd_doc.structure, **kwargs
         )
     except Exception:
         return None
@@ -47,8 +46,6 @@ def _get_snl_from_cif(cif_str: str, **kwargs) -> DatabaseSNL | None:
 
 def update_experimental_icsd_structures():
     """Update the collection of ICSD SNLs."""
-    if IcsdClient is None:
-        raise ImportError("Please `pip install xtalxd-icsd` to use this functionality.")
     data = []
     with IcsdClient(use_document_model=False) as client:
         for icsd_subset in (
