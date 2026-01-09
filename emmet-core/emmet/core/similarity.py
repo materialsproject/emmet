@@ -470,7 +470,7 @@ class M3GNetSimilarity(SimilarityScorer):
         self._model = None
 
     @staticmethod
-    def _load_model(model_path : str | Path):
+    def _load_model(model_path: str | Path):
         return matgl.load_model(Path(model_path)).model
 
     @property
@@ -482,14 +482,17 @@ class M3GNetSimilarity(SimilarityScorer):
 
     @staticmethod
     def _model_readout_from_structure(
-        structure: Structure, model,
+        structure: Structure,
+        model,
     ) -> np.ndarray:
         """Featurize a structure using a given matgl model."""
         try:
-            return model.predict_structure(
-                structure,
-                return_features=True
-            )["readout"].detach().cpu().numpy()[0]
+            return (
+                model.predict_structure(structure, return_features=True)["readout"]
+                .detach()
+                .cpu()
+                .numpy()[0]
+            )
         except Exception:
             return np.nan * np.ones(128)
 
@@ -506,10 +509,15 @@ class M3GNetSimilarity(SimilarityScorer):
         """
         return self._model_readout_from_structure(structure, self.model)
 
-    def _featurize_structures(self, structures : dict[int, Structure], model_path : Path, fvd : dict[int, np.ndarray]):
+    def _featurize_structures(
+        self,
+        structures: dict[int, Structure],
+        model_path: Path,
+        fvd: dict[int, np.ndarray],
+    ):
         model = self._load_model(model_path)
         new_fvs = {
-            idx : self._model_readout_from_structure(structure,model)
+            idx: self._model_readout_from_structure(structure, model)
             for idx, structure in structures.items()
         }
         fvd.update(new_fvs)
@@ -537,16 +545,16 @@ class M3GNetSimilarity(SimilarityScorer):
             manager = multiprocessing.Manager()
             fvd = manager.dict()
             procs = []
-            num_batches = int(np.ceil(len(structures)/num_procs))
+            num_batches = int(np.ceil(len(structures) / num_procs))
             for i in range(num_procs):
-                idxs = (i*num_batches, min((i+1)*num_batches,len(structures)))
+                idxs = (i * num_batches, min((i + 1) * num_batches, len(structures)))
                 proc = multiprocessing.Process(
-                    target = self._featurize_structures,
-                    args = (
-                        {idx : structures[idx] for idx in range(*idxs)},
+                    target=self._featurize_structures,
+                    args=(
+                        {idx: structures[idx] for idx in range(*idxs)},
                         self._model_path,
-                        fvd                            
-                    )
+                        fvd,
+                    ),
                 )
                 proc.start()
                 procs.append(proc)
@@ -554,9 +562,7 @@ class M3GNetSimilarity(SimilarityScorer):
             for proc in procs:
                 proc.join()
 
-            _feature_vectors = [
-                fvd[idx] for idx in range(len(structures))
-            ]
+            _feature_vectors = [fvd[idx] for idx in range(len(structures))]
         else:
             _feature_vectors = [
                 self._featurize_structure(structure) for structure in structures

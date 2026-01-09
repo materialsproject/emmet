@@ -4,8 +4,9 @@ from functools import partial
 
 from emmet.builders.base import BaseBuilderInput
 from emmet.builders.settings import EmmetBuildSettings
-from emmet.core.connectors.icsd.schemas import IcsdPropertyDoc
+from emmet.core.connectors.analysis import parse_cif
 from emmet.core.connectors.icsd.client import IcsdClient
+from emmet.core.connectors.icsd.enums import IcsdSubset
 from emmet.core.provenance import DatabaseSNL, ProvenanceDoc
 
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
@@ -25,16 +26,25 @@ structure_matcher = StructureMatcher(
 
 def _get_snl_from_cif(cif_str: str, **kwargs) -> DatabaseSNL | None:
     """Build a database SNL from a CIF plus its metadata.
-    
+
     NB: Only takes the first structure from a CIF.
     While a CIF can technically contain many structures,
     the ICSD usually only distributes CIFs with one structure
     per file.
+
+    Parameters
+    -----------
+    cif_str : the CIF to parse
+    **kwargs to pass to `DatabaseSNL`
     """
     try:
-        icsd_doc = IcsdStructureDoc(cif = cif_str)
+        structures, cif_parsing_remarks = parse_cif(cif_str)
+        remarks = kwargs.pop("remarks", None) or cif_parsing_remarks or None
         snl = DatabaseSNL.from_structure(
-            meta_structure=icsd_doc.structures[0], structure=icsd_doc.structure, **kwargs
+            meta_structure=structures[0],
+            structure=structures[0],
+            remarks=remarks,
+            **kwargs,
         )
     except Exception:
         return None
