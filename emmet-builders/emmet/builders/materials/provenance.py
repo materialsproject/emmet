@@ -54,10 +54,19 @@ def _get_snl_from_cif(cif_str: str, **kwargs) -> DatabaseSNL | None:
     return None
 
 
-def update_experimental_icsd_structures():
-    """Update the collection of ICSD SNLs."""
+def update_experimental_icsd_structures(**client_kwargs) -> list[DatabaseSNL]:
+    """Update the collection of ICSD SNLs.
+
+    Parameters
+    -----------
+    **client_kwargs to pass to `IcsdClient`
+
+    Returns
+    -----------
+    List of DatabaseSNL
+    """
     data = []
-    with IcsdClient(use_document_model=False) as client:
+    with IcsdClient(use_document_model=False, **client_kwargs) as client:
         for icsd_subset in (
             IcsdSubset.EXPERIMENTAL_METALORGANIC,
             IcsdSubset.EXPERIMENTAL_INORGANIC,
@@ -93,7 +102,7 @@ def match_against_snls(
     database_ids = {}
     authors = [SETTINGS.DEFAULT_AUTHOR]
     history = [SETTINGS.DEFAULT_HISTORY]
-    references = SETTINGS.DEFAULT_REFERENCE
+    references = [SETTINGS.DEFAULT_REFERENCE]
     theoretical = True
 
     for snl in [
@@ -113,6 +122,10 @@ def match_against_snls(
             if snl.about:
                 authors.extend(snl.about.authors or [])
                 history.extend(snl.about.history or [])
+                # `SNLAbout` uses string for `references`,
+                # `ProvenanceDoc` uses list of str
+                if snl.about.references:
+                    references.append(snl.about.references)
 
     return ProvenanceDoc.from_structure(
         meta_structure=input_doc.structure,
