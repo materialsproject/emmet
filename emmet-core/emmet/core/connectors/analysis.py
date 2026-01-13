@@ -1,8 +1,11 @@
 """Tools for processing database CIFs."""
 
-from contextlib import redirect_stderr, redirect_stdout, nullcontext
+from __future__ import annotations
+
+from contextlib import redirect_stderr, redirect_stdout, nullcontext, contextmanager
 from io import StringIO
 from tempfile import NamedTemporaryFile
+from typing import TYPE_CHECKING
 
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.core import Structure
@@ -15,11 +18,27 @@ try:
 except ImportError:
     cod_tools_parse_cif = None
 
+if TYPE_CHECKING:
+    from contextlib import AbstractContextManager
+
 EMMET_SETTINGS = EmmetSettings()
 
 
+@contextmanager
+def _get_context_manager(verbose: bool) -> AbstractContextManager:
+    if verbose:
+        yield nullcontext()
+    else:
+        with redirect_stderr(StringIO()) as stderr, redirect_stdout(
+            StringIO()
+        ) as stdout:
+            yield stderr, stdout
+
+
 def parse_cif_cod_tools(
-    cif_str: str, cif_parser: CifParser | None = None
+    cif_str: str,
+    verbose: bool = False,
+    cif_parser: CifParser | None = None,
 ) -> tuple[list[Structure], list[str]]:
     """Parse a CIF with the COD tools parser.
 
@@ -27,6 +46,9 @@ def parse_cif_cod_tools(
     -----------
     cif_str : str
         The CIF string to parse
+    verbose : bool = False
+        Whether to pass error messages from pymatgen and CIF parsing tools.
+        Defaults to suppressing these messages.
     cif_parser : pymatgen.io.cif.CifParser or None (default)
         Existing instance of a CifParser to use
 
@@ -44,7 +66,7 @@ def parse_cif_cod_tools(
     with open(temp_file.name, "w", encoding="utf-8") as f:
         # remove non-ASCII characters
         f.write(cif_str.encode("ascii", "ignore").decode("ascii"))
-        f.seek
+        f.seek(0)
     try:
         cif_data, _, _ = cod_tools_parse_cif(temp_file.name)
     except Exception as exc:
@@ -56,15 +78,16 @@ def parse_cif_cod_tools(
 
         try:
             cif_parser = cif_parser or CifParser.from_str(cif_str)
-            structures += [
-                cif_parser._get_structure(
-                    CifBlock(block["values"], block["loops"], block["name"]),
-                    primitive=True,
-                    symmetrized=False,
-                    check_occu=True,
-                )
-                for block in cif_data
-            ]
+            with _get_context_manager(verbose):
+                structures += [
+                    cif_parser._get_structure(
+                        CifBlock(block["values"], block["loops"], block["name"]),
+                        primitive=True,
+                        symmetrized=False,
+                        check_occu=True,
+                    )
+                    for block in cif_data
+                ]
         except Exception as exc:
             remarks += [f"pycodcif/pymatgen: {exc}"]
 
@@ -194,11 +217,7 @@ def parse_cif(cif_str: str, verbose: bool = False) -> tuple[list[Structure], lis
     # Step 1: Try to parse with pymatgen without any changes to the CIF
     try:
 
-        with (
-            nullcontext()
-            if verbose
-            else (redirect_stderr(StringIO()), redirect_stdout(StringIO()))
-        ):
+        with _get_context_manager(verbose):
             structures = cif_parser.parse_structures(primitive=True)
 
     except Exception as exc:
@@ -207,7 +226,9 @@ def parse_cif(cif_str: str, verbose: bool = False) -> tuple[list[Structure], lis
     # Step 2 (Optional): Use the Crystallography Open Database CIF parser
     # to correct errors in the CIF if the structures could not be parsed.
     if not structures and cod_tools_parse_cif:
-        structures, new_remarks = parse_cif_cod_tools(cif_str, cif_parser=cif_parser)
+        structures, new_remarks = parse_cif_cod_tools(
+            cif_str, verbose=verbose, cif_parser=cif_parser
+        )
         remarks.extend(new_remarks)
 
     # Step 3: Remove structures with fictive elements
