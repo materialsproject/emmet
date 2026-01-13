@@ -690,7 +690,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         for hop_key, data in npr.hops.items():
             energy_struct_info[hop_key] = {
                 "hop_key": hop_key,
-                "max_barrier": npr.max_barriers[hop_key],
+                "max_barrier": npr.max_barriers.get(hop_key),
                 "energy_range": data.barrier_energy_range,
                 "energies": data.energies,
                 "state": data.state,

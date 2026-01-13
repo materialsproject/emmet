@@ -652,19 +652,17 @@ class NebPathwayResult(BaseModel):  # type: ignore[call-arg]
     def max_barriers(self) -> dict[str, float | None] | None:
         """Retrieve the maximum barrier along each hop."""
 
-        barriers: dict[str, list[float]] = {}
-        for b in [self.forward_barriers, self.reverse_barriers]:
-            if b:
-                for idx, barrier in b.items():
-                    if barrier:
-                        if idx not in barriers:
-                            barriers[idx] = []
-                        barriers[idx].append(barrier)
+        barriers: dict[str, float] = {hop_key: float("-inf") for hop_key in self.hops}
+        for idx, barrier in (
+            getattr(self, f"{k}_barrier") or {} for k in ("forward", "reverse")
+        ).items():
+            if barrier:
+                barriers[idx] = max(barriers[idx], barrier)
 
-        if len(barriers) == 0:
-            return None
+        for idx in (i for i, v in barriers.items() if np.isinf(v)):
+            barriers.pop(idx)
 
-        return {idx: max(v) for idx, v in barriers.items()}
+        return barriers or None
 
     @property
     def barrier_ranges(self) -> dict[str, float | None]:
