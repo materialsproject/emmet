@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
+from copy import deepcopy
 from typing import TYPE_CHECKING
 
 import numpy as np
 from pydantic import Field
 from pymatgen.analysis.bond_valence import BVAnalyzer
-from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Specie
 
 from emmet.core.material_property import PropertyDoc
@@ -49,9 +49,11 @@ class OxidationStateDoc(PropertyDoc):
 
     @classmethod
     def from_structure(
-        cls, structure: Structure, material_id: IdentifierType | None = None, **kwargs
+        cls,
+        structure: StructureType,
+        material_id: IdentifierType | None = None,
+        **kwargs,
     ):
-
         # Check if structure already has oxidation states,
         # if so pass this along unchanged with "method" == "manualx"
         struct_valences: list[float | None] = []
@@ -101,6 +103,15 @@ class OxidationStateDoc(PropertyDoc):
         }
 
         if d["method"] == OxiStateAssigner.BVA:
+            # BVAnalyzer (through SpaceGroupAnalyzer) is sensitive to magnetic configuration
+            # -> magmoms can be removed for improved reliablity during oxi state analysis,
+            #    but original structure should be passed as meta_structure to preserve data
+            if "magmom" in structure.site_properties:
+                meta_structure = deepcopy(structure)
+                structure.remove_site_property("magmom")
+            else:
+                meta_structure = structure
+
             try:
                 bva = BVAnalyzer()
                 valences = bva.get_valences(structure)
@@ -166,7 +177,7 @@ class OxidationStateDoc(PropertyDoc):
                 d["method"] = None
 
         return super().from_structure(
-            meta_structure=structure,
+            meta_structure=meta_structure,
             **d,
             **kwargs,
         )
