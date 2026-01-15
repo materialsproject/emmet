@@ -105,7 +105,7 @@ class OxidationStateDoc(PropertyDoc):
                 bva = BVAnalyzer()
                 valences = bva.get_valences(structure)
                 possible_species = {
-                    str(Specie(structure[idx].specie, oxidation_state=valence))
+                    str(Specie(str(structure[idx].specie), oxidation_state=valence))
                     for idx, valence in enumerate(valences)
                 }
 
