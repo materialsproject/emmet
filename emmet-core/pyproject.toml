@@ -52,6 +52,7 @@ all = [
     "pymatgen-analysis-diffusion>=2024.7.15",
     "pymatgen-analysis-alloys>=0.0.6",
     "pyarrow",
+    "pycodcif",
 ]
 test = [
     "pre-commit",
