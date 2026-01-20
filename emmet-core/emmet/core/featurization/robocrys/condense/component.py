@@ -15,7 +15,9 @@ from pymatgen.core.structure import PeriodicSite, Structure
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.util.string import formula_double_format
 
-from emmet.core.featurization.robocrys.condense.fingerprint import get_structure_fingerprint
+from emmet.core.featurization.robocrys.condense.fingerprint import (
+    get_structure_fingerprint,
+)
 from emmet.core.featurization.robocrys.util import common_formulas
 
 if TYPE_CHECKING:

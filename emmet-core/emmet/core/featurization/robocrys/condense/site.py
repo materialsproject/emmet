@@ -18,7 +18,11 @@ from pymatgen.util.coord import get_angle
 from pymatgen.util.string import formula_double_format
 
 from emmet.core.featurization.robocrys.condense.fingerprint import get_site_fingerprints
-from emmet.core.featurization.robocrys.util import connected_geometries, defaultdict_to_dict, get_el
+from emmet.core.featurization.robocrys.util import (
+    connected_geometries,
+    defaultdict_to_dict,
+    get_el,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

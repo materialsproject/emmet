@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from importlib.resources import files as import_resource_file
 from itertools import islice
 from pathlib import Path
 from typing import TYPE_CHECKING

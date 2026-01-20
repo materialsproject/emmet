@@ -14,15 +14,13 @@ Attributes:
 
 from __future__ import annotations
 
-import enum
 import gzip
 import orjson
 from pathlib import Path
 import re
 from collections import defaultdict
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
-from monty.json import MontyDecoder
 from pymatgen.core.periodic_table import Element, Species, get_el_sp
 from pymatgen.util.string import latexify_spacegroup
 
@@ -32,12 +30,12 @@ if TYPE_CHECKING:
 
 def _get_common_formulas() -> dict[str, str]:
     """Retrieve common formula information from stored data."""
-    with gzip.open((Path(__file__).parent / "condense" / "formula_aliases.json.gz").resolve(),"rb") as f:
+    with gzip.open(
+        (Path(__file__).parent / "condense" / "formula_aliases.json.gz").resolve(), "rb"
+    ) as f:
         all_aliases = orjson.loads(f.read())
     return {
-        k : all_aliases["alias"][i]
-        if all_aliases["alias"][i] is not None 
-        else k 
+        k: all_aliases["alias"][i] if all_aliases["alias"][i] is not None else k
         for i, k in enumerate(all_aliases["name"])
     }
 
@@ -248,11 +246,13 @@ def unicodeify_spacegroup(spacegroup_symbol: str) -> str:
         symbol = symbol.replace("$_{" + str(number) + "}$", unicode_number)
 
     overline = "\u0305"  # u"\u0304" (macron) is also an option
-
-    symbol = symbol.replace("$\\overline{", overline)
-    symbol = symbol.replace("$", "")
-    symbol = symbol.replace("{", "")
-    symbol = symbol.replace("}", "")
+    for char, rep in {
+        "$\\overline{": overline,
+        "$": "",
+        "{": "",
+        "}": "",
+    }.items():
+        symbol = symbol.replace(char, rep)
 
     return symbol
 
@@ -286,27 +286,3 @@ def defaultdict_to_dict(dictionary: defaultdict) -> dict:
     if isinstance(dictionary, defaultdict):
         return {k: defaultdict_to_dict(v) for k, v in dictionary.items()}
     return dictionary
-
-
-def load_condensed_structure_json(filename: str | Path) -> dict[str, Any]:
-    """Load condensed structure data from a file.
-
-    Args:
-        filename: The filename.
-
-    Returns:
-        The condensed structure data.
-    """
-
-    # JSON does not support using integers a dictionary keys, therefore
-    # manually convert dictionary keys from str to int if possible.
-    def json_keys_to_int(x: Any) -> Any:
-        if isinstance(x, dict):
-            return {
-                int(k) if k.isdigit() else k: json_keys_to_int(v) for k, v in x.items()
-            }
-        return x
-
-    # For some reason, specifying `object_hook = json_keys_to_int` in `loadfn`
-    # doesn't seem to work. This does reliably:
-    return json_keys_to_int(loadfn(filename, cls=MontyDecoder))

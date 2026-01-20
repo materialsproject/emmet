@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from emmet.core.featurization.robocrys.condense.condenser import StructureCondenser

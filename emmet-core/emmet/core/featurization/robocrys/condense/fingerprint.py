@@ -5,7 +5,11 @@ from collections.abc import Iterable
 import numpy as np
 from pymatgen.core.structure import IStructure
 
-from emmet.core.featurization.featurizers import CrystalNNFingerprint, SiteStatsFingerprint
+from emmet.core.featurization.featurizers import (
+    CrystalNNFingerprint,
+    SiteStatsFingerprint,
+)
+
 
 def get_site_fingerprints(
     structure: IStructure,
@@ -35,21 +39,18 @@ def get_site_fingerprints(
             [site_index][op_index]
     """
     ssf = SiteStatsFingerprint(
-        site_featurizer = CrystalNNFingerprint.from_preset(
+        site_featurizer=CrystalNNFingerprint.from_preset(
             "ops",
             cation_anion=False,
         ),
-        stats=None
+        stats=None,
     )
 
     # transpose fingerprint from [op_type][site] to [site][op_type]
     site_fingerprints = np.array(ssf.featurize(structure)).T
 
     if as_dict:
-        return [
-            dict(zip(ssf.feature_labels, x))
-            for x in site_fingerprints
-        ]
+        return [dict(zip(ssf.feature_labels, x)) for x in site_fingerprints]
 
     return site_fingerprints
 
