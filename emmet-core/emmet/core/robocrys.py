@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 from pymatgen.core.structure import Structure
 
+from emmet.core import __version__
 from emmet.core.material_property import PropertyDoc
 from emmet.core.utils import generate_robocrys_condensed_struct_and_description
 
@@ -73,7 +74,7 @@ class RobocrystallogapherDoc(PropertyDoc):
     )
 
     robocrys_version: str = Field(
-        ...,
+        __version__,
         description="The version of Robocrystallographer used to generate this document.",
     )
 
@@ -81,7 +82,6 @@ class RobocrystallogapherDoc(PropertyDoc):
     def from_structure(
         cls,
         structure: Structure,
-        robocrys_version: str,
         material_id: IdentifierType | None = None,
         mineral_matcher=None,
         **kwargs,
@@ -98,6 +98,5 @@ class RobocrystallogapherDoc(PropertyDoc):
             material_id=material_id,
             condensed_structure=condensed_structure,
             description=description,
-            robocrys_version=robocrys_version,
             **kwargs,
         )

@@ -1,6 +1,5 @@
 import pytest
 from pymatgen.core import Structure
-from robocrys import __version__ as __robocrys_version__
 
 from . import test_structures
 from emmet.core import ARROW_COMPATIBLE
@@ -20,7 +19,6 @@ def test_robocrys(structure: Structure):
         structure=structure,
         material_id=33,
         deprecated=False,
-        robocrys_version=__robocrys_version__,
     )
     assert doc is not None
 
@@ -34,7 +32,6 @@ def test_arrow():
         structure=structure,
         material_id=33,
         deprecated=False,
-        robocrys_version=__robocrys_version__,
     )
     arrow_struct = pa.scalar(
         doc.model_dump(context={"format": "arrow"}),
