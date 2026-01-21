@@ -269,7 +269,7 @@ class SiteStatsFingerprint(Featurizer):
     stats: list[str] = field(default_factory=lambda: ["mean", "maximum"])
 
     @staticmethod
-    def get_stat(op: Literal[*VALID_STAT_NAMES], vals: list[float]) -> float:
+    def get_stat(op: Literal[*VALID_STAT_NAMES], vals: list[float]) -> float:  # type: ignore[valid-type]
         """Compute statistics of a 1-D array.
 
         Args:
