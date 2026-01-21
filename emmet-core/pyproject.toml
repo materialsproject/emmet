@@ -37,6 +37,8 @@ dependencies = [
     "pybtex~=0.24",
     "typing-extensions>=3.7",
     "blake3",
+    "inflect",
+    "pubchempy",
 ]
 
 [project.urls]
@@ -50,9 +52,6 @@ all = [
     "pymatgen-analysis-diffusion>=2024.7.15",
     "pymatgen-analysis-alloys>=0.0.6",
     "pyarrow",
-    "inflect",
-    "pubchempy",
-    "pybtex",
 ]
 test = [
     "pre-commit",
