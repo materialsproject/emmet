@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from monty.json import MontyDecoder
 from pydantic import BaseModel, Field
 
 from emmet.core.tasks import _VOLUMETRIC_FILES, TaskDoc
@@ -11,9 +10,6 @@ from emmet.core.types.pymatgen_types.defect_adapter import DefectType
 if TYPE_CHECKING:
     from pathlib import Path
     from typing import Any
-
-
-mdecoder = MontyDecoder().process_decoded
 
 
 class DefectInfo(BaseModel):
