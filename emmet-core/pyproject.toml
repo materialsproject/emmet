@@ -44,18 +44,15 @@ Homepage = "https://github.com/materialsproject/emmet"
 Documentation = "https://materialsproject.github.io/emmet/"
 
 [project.optional-dependencies]
-featurization = [
-    "inflect",
-    "pubchempy",
-    "pybtex",
-]
 all = [
     "seekpath>=2.0.1",
     "pymatgen-analysis-defects>=2024.7.18",
     "pymatgen-analysis-diffusion>=2024.7.15",
     "pymatgen-analysis-alloys>=0.0.6",
     "pyarrow",
-    "emmet-core[featurization]",
+    "inflect",
+    "pubchempy",
+    "pybtex",
 ]
 test = [
     "pre-commit",
