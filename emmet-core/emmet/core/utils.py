@@ -34,7 +34,6 @@ from pymatgen.util.graph_hashing import weisfeiler_lehman_graph_hash
 from typing_extensions import TypedDict
 
 from emmet.core import ARROW_COMPATIBLE
-from emmet.core.featurization.robocrys import StructureCondenser, StructureDescriber
 from emmet.core.mpid import MPculeID
 from emmet.core.settings import EmmetSettings
 
@@ -225,6 +224,7 @@ def generate_robocrys_condensed_struct_and_description(
     -------
     A robocrys condensed structure and description.
     """
+    from emmet.core.featurization.robocrys import StructureCondenser, StructureDescriber
 
     for isymprec, symprec in enumerate(symprecs):
         # occasionally, symmetry detection fails - give a few chances to modify symprec
