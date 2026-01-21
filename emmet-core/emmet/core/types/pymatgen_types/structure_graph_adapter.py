@@ -1,6 +1,6 @@
-from typing import Annotated, TypeVar
+from typing import Annotated, TypeVar, NotRequired
 
-from pydantic import BeforeValidator, WrapSerializer
+from pydantic import BeforeValidator, WrapSerializer, PlainSerializer
 from pymatgen.analysis.graphs import MoleculeGraph, StructureGraph
 from typing_extensions import TypedDict
 
@@ -10,7 +10,22 @@ from emmet.core.types.pymatgen_types.structure_adapter import (
     pop_empty_structure_keys,
 )
 
-GraphDescriptors = list[str, str]  # type: ignore[type-arg]
+
+class GraphDescriptorDict(TypedDict):
+    name: str
+    edge_weight_name: NotRequired[str]
+    edge_weight_units: NotRequired[str]
+
+
+GraphDescriptors = Annotated[
+    GraphDescriptorDict,
+    BeforeValidator(
+        lambda x: GraphDescriptorDict(
+            **({row[0]: row[1] for row in x} if isinstance(x, list) else x)
+        )
+    ),
+    PlainSerializer(lambda x: list(x.items()) if isinstance(x, dict) else x),
+]
 
 
 class TypedNodeDict(TypedDict):
@@ -18,7 +33,7 @@ class TypedNodeDict(TypedDict):
 
 
 class TypedAdjacencyDict(TypedDict):
-    to_jimage: list[int, int, int]  # type: ignore[type-arg]
+    to_jimage: tuple[int, int, int]
     weight: float
     id: int
     key: int
@@ -27,7 +42,7 @@ class TypedAdjacencyDict(TypedDict):
 class TypedGraphDict(TypedDict):
     directed: bool
     multigraph: bool
-    graph: list[GraphDescriptors, GraphDescriptors, GraphDescriptors]  # type: ignore[type-arg]
+    graph: GraphDescriptors
     nodes: list[TypedNodeDict]
     adjacency: list[list[TypedAdjacencyDict]]
 
