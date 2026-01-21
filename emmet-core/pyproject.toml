@@ -69,14 +69,8 @@ test = [
     "custodian",
 ]
 docs = [
-    "mkdocs",
-    "mkdocs-material<8.3",
-    "mkdocs-material-extensions",
-    "mkdocs-minify-plugin",
-    "mkdocstrings",
-    "mkdocs-awesome-pages-plugin",
-    "mkdocs-markdownextradata-plugin",
-    "mkdocstrings[python]",
-    "livereload",
-    "jinja2",
+    "sphinx<9.0.0",
+    "sphinx-rtd-theme>=3.0.2",
+    "sphinx-markdown-builder>=0.6.8",
+    "sphinx-autodoc-typehints",
 ]
