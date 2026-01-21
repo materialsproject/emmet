@@ -18,6 +18,7 @@ include = ["emmet.core"]
 "emmet.core.vasp.calc_types" = ["*.yaml"]
 "emmet.core.qchem.calc_types" =  ["*.yaml"]
 "emmet.core.subtrates" = ["*.json"]
+"emmet.core.featurization.robocrys.condense" = ["*.json.gz"]
 
 [project]
 name = "emmet-core"
