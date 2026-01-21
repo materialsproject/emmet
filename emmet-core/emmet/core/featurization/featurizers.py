@@ -17,6 +17,8 @@ if TYPE_CHECKING:
     from typing import Any, Literal
     from typing_extensions import Self
 
+VALID_STAT_NAMES = {"mean", "maximum", "minimum", "std_dev"}
+
 CN_TARGET_MOTIF_OP: dict[int, list[str]] = {
     1: ["sgl_bd"],
     2: ["L-shaped", "water-like", "bent 120 degrees", "bent 150 degrees", "linear"],
@@ -248,16 +250,13 @@ class CrystalNNFingerprint(Featurizer):
 class SiteStatsFingerprint(Featurizer):
     """Computes statistics of properties across all sites in a structure.
 
-    Adapted from `matminer.featurizers.structure.sites`
+    Adapted and simplified significantly from `matminer.featurizers.structure.sites`.
 
-    This featurizer first uses a site featurizer class (see site.py for
-    options) to compute features of each site in a structure, and then computes
-    features of the entire structure by measuring statistics of each attribute.
-    Can optionally compute the statistics of only sites with certain ranges
-    of oxidation states (e.g., only anions).
-
-    Features:
-        - Returns each statistic of each site feature
+    Args:
+        site_featurizer : `Featurizer`
+            Featurization to use on each site of a structure.
+        stats : list of str
+            Should be a list of stats in `VALID_STAT_NAMES`
     """
 
     site_featurizer: Featurizer = field(
@@ -268,14 +267,9 @@ class SiteStatsFingerprint(Featurizer):
         )
     )
     stats: list[str] = field(default_factory=lambda: ["mean", "maximum"])
-    min_oxi: float | None = None
-    max_oxi: float | None = None
-    covariance: bool = False
 
     @staticmethod
-    def get_stat(
-        op: Literal["mean", "maximum", "minimum", "std_dev"], vals: list[float]
-    ) -> float:
+    def get_stat(op: Literal[*VALID_STAT_NAMES], vals: list[float]) -> float:
         """Compute statistics of a 1-D array.
 
         Args:
@@ -287,45 +281,32 @@ class SiteStatsFingerprint(Featurizer):
             float, the statistic
         """
         v = np.array(vals)
-
-        if op == "mean":
-            return v.mean()
-        elif op == "maximum":
-            return v.max()
-        elif op == "minimum":
-            return v.min()
-        elif op == "std_dev":
-            vm = v.mean()
-            return max(0.0, np.sum((v - vm) ** 2) / len(v)) ** (0.5)
-        raise ValueError(f"Unknown operation {op}")
+        match op:
+            case "mean":
+                return v.mean()
+            case "maximum":
+                return v.max()
+            case "minimum":
+                return v.min()
+            case "std_dev":
+                return v.std()
+            case _:
+                raise ValueError(f"Unknown operation {op}")
 
     def featurize(self, s: Structure) -> list[float]:
         # Get each feature for each site
         vals: list[list[float]] = [[] for t in self.site_featurizer.feature_labels]
         for i, site in enumerate(s.sites):
-            if (self.min_oxi is None or site.specie.oxi_state >= self.min_oxi) and (  # type: ignore[operator]
-                self.max_oxi is None or site.specie.oxi_state >= self.max_oxi  # type: ignore[operator]
-            ):
-                opvalstmp = self.site_featurizer.featurize(s, i)
-                for j, opval in enumerate(opvalstmp):
-                    vals[j].append(0.0 if opval is None else opval)
+            opvalstmp = self.site_featurizer.featurize(s, i)
+            for j, opval in enumerate(opvalstmp):
+                vals[j].append(0.0 if opval is None else opval)
 
         # If the user does not request statistics, return the site features now
         if self.stats is None:
             return vals
 
         # Compute the requested statistics
-        stats = [self.get_stat(stat, v) for v in vals for stat in self.stats]  # type: ignore[arg-type]
-        # If desired, compute covariances
-        if self.covariance:
-            if len(s) == 1:
-                stats.extend([0] * int(len(vals) * (len(vals) - 1) / 2))
-            else:
-                covar = np.cov(vals)
-                tri_ind = np.triu_indices(len(vals), 1)
-                stats.extend(covar[tri_ind].tolist())
-
-        return stats
+        return [self.get_stat(stat, v) for v in vals for stat in self.stats]  # type: ignore[arg-type]
 
     @property
     def feature_labels(self) -> list[str]:
@@ -336,12 +317,5 @@ class SiteStatsFingerprint(Featurizer):
             for attr in orig_feature_labels:
                 for stat in self.stats:
                     labels.append(f"{stat} {attr}")
-
-            # Make labels associated with the site labels
-            if self.covariance:
-                sl = orig_feature_labels
-                for i, sa in enumerate(sl):
-                    for sb in sl[(i + 1) :]:
-                        labels.append(f"covariance {sa}-{sb}")
             return labels
         return orig_feature_labels
