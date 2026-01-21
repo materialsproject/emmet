@@ -36,6 +36,8 @@ cycler==0.12.1
     # via matplotlib
 distlib==0.4.0
     # via virtualenv
+dnspython==2.8.0
+    # via pymongo
 execnet==2.1.2
     # via pytest-xdist
 filelock==3.20.3
@@ -273,6 +275,8 @@ pymdown-extensions==10.20
     # via
     #   mkdocs-material
     #   mkdocstrings
+pymongo==4.16.0
+    # via emmet-core (pyproject.toml)
 pyparsing==3.3.1
     # via
     #   bibtexparser
