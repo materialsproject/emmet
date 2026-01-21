@@ -1,9 +1,27 @@
-# ![Emmet](images/logo_w_text.svg)
 
-[![Pytest Status](https://github.com/materialsproject/emmet/workflows/testing/badge.svg)](https://github.com/materialsproject/emmet/actions?query=workflow%3Atesting)
+```{toctree}
+:caption: Emmet Documentation
+:hidden:
+packages
+settings
+```
+
+```{toctree}
+:caption: Reference
+:hidden:
+reference_index
+```
+
+# Emmet
+
+<h1 align="center">
+  <img alt="emmet logo" src="https://raw.githubusercontent.com/materialsproject/emmet/main/docs/images/logo_w_text.svg" width="300px">
+</h1>
+
+[![Pytest Status](https://github.com/materialsproject/emmet/actions/workflows/testing.yml/badge.svg?branch=main)](https://github.com/materialsproject/emmet/actions?query=workflow%3Atesting+branch%3Amain)
 [![Code Coverage](https://codecov.io/gh/materialsproject/emmet/branch/main/graph/badge.svg)](https://codecov.io/gh/materialsproject/emmet)
 
-## What is Emmet
+## What is Emmet?
 
 Emmet is a toolkit of packages designed to build the Materials API. The Materials API is the specification of the Materials Project (MP) for defining and dissemenating "materials documents". The core document definitions live in `emmet-core`. The data pipelines that build these documents live in `emmet-builders`. A specialized multi-functional CLI to manage the orchestration of calculation ingestion, backup, and parsing is in `emmet-cli-legacy`. Emmet has been developed by the Materials Project team at Lawrence Berkeley Labs.
 
