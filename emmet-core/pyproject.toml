@@ -47,8 +47,7 @@ Documentation = "https://materialsproject.github.io/emmet/"
 all = [
     "seekpath>=2.0.1",
     "robocrys>=0.2.11",
-    "matminer>=0.9.3",
-    "scipy<1.17.0", # TODO: pending matminer fixes/deprecation
+    "matminer>=0.10.0",
     "pymatgen-analysis-defects>=2024.7.18",
     "pymatgen-analysis-diffusion>=2024.7.15",
     "pymatgen-analysis-alloys>=0.0.6",

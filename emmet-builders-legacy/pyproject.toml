@@ -29,7 +29,7 @@ license = {text = "Modified BSD"}
 dependencies = [
     "emmet-core[all]",
     "maggma>=0.57.6",
-    "matminer>=0.9.1",
+    "matminer>=0.10.0",
     "pymatgen-io-validation>=0.1.1",
 ]
 
