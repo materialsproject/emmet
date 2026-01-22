@@ -6,13 +6,13 @@
 #
 annotated-types==0.7.0
     # via pydantic
-backports-zstd==1.1.0 ; python_version < "3.14"
+backports-zstd==1.3.0 ; python_version < "3.14"
     # via emmet-archival (pyproject.toml)
 bibtexparser==1.4.3
     # via pymatgen
 blake3==1.0.8
     # via emmet-core
-certifi==2025.11.12
+certifi==2026.1.4
     # via requests
 charset-normalizer==3.4.4
     # via requests
@@ -22,23 +22,23 @@ cycler==0.12.1
     # via matplotlib
 donfig==0.8.1.post1
     # via zarr
-emmet-core==0.86.1
+emmet-core==0.86.2
     # via emmet-archival (pyproject.toml)
-fonttools==4.61.0
+fonttools==4.61.1
     # via matplotlib
-google-crc32c==1.7.1
+google-crc32c==1.8.0
     # via zarr
 h5py==3.15.1
     # via emmet-archival (pyproject.toml)
 idna==3.11
     # via requests
-joblib==1.5.2
+joblib==1.5.3
     # via pymatgen
 kiwisolver==1.4.9
     # via matplotlib
 latexcodec==3.0.1
     # via pybtex
-matplotlib==3.10.7
+matplotlib==3.10.8
     # via pymatgen
 monty==2025.3.3
     # via
@@ -46,13 +46,13 @@ monty==2025.3.3
     #   pymatgen
 mpmath==1.3.0
     # via sympy
-narwhals==2.13.0
+narwhals==2.15.0
     # via plotly
-networkx==3.6
+networkx==3.6.1
     # via pymatgen
 numcodecs==0.16.5
     # via zarr
-numpy==2.3.5
+numpy==2.4.1
     # via
     #   contourpy
     #   h5py
@@ -65,24 +65,24 @@ numpy==2.3.5
     #   scipy
     #   spglib
     #   zarr
-orjson==3.11.4
+orjson==3.11.5
     # via pymatgen
-packaging==25.0
+packaging==26.0
     # via
     #   matplotlib
     #   plotly
     #   zarr
 palettable==3.3.3
     # via pymatgen
-pandas==2.3.3
+pandas==3.0.0
     # via
     #   emmet-archival (pyproject.toml)
     #   pymatgen
-pillow==12.0.0
+pillow==12.1.0
     # via matplotlib
-plotly==6.5.0
+plotly==6.5.2
     # via pymatgen
-pyarrow==22.0.0
+pyarrow==23.0.0
     # via emmet-archival (pyproject.toml)
 pybtex==0.25.1
     # via emmet-core
@@ -105,7 +105,7 @@ pymatgen-io-validation==0.1.2
     # via
     #   emmet-archival (pyproject.toml)
     #   emmet-core
-pyparsing==3.2.5
+pyparsing==3.3.2
     # via
     #   bibtexparser
     #   matplotlib
@@ -115,8 +115,6 @@ python-dateutil==2.9.0.post0
     #   pandas
 python-dotenv==1.2.1
     # via pydantic-settings
-pytz==2025.2
-    # via pandas
 pyyaml==6.0.3
     # via
     #   donfig
@@ -125,17 +123,15 @@ requests==2.32.5
     # via
     #   pymatgen
     #   pymatgen-io-validation
-ruamel-yaml==0.18.16
+ruamel-yaml==0.19.1
     # via
     #   monty
     #   pymatgen
-ruamel-yaml-clib==0.2.15
-    # via ruamel-yaml
-scipy==1.16.3
+scipy==1.17.0
     # via pymatgen
 six==1.17.0
     # via python-dateutil
-spglib==2.6.0
+spglib==2.7.0
     # via pymatgen
 sympy==1.14.0
     # via pymatgen
@@ -157,11 +153,9 @@ typing-inspection==0.4.2
     # via
     #   pydantic
     #   pydantic-settings
-tzdata==2025.2
-    # via pandas
 uncertainties==3.2.3
     # via pymatgen
-urllib3==2.6.0
+urllib3==2.6.3
     # via requests
 zarr==3.1.5
     # via emmet-archival (pyproject.toml)
