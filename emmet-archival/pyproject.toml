@@ -29,7 +29,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-  "emmet-core>=0.85.1rc0",
+  "emmet-core>=0.85.1",
   "h5py",
   "pyarrow",
   "pandas",

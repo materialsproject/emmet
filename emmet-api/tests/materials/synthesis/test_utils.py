@@ -20,7 +20,9 @@ def test_make_ellipsis():
 
 
 def test_mask_paragraphs():
-    with zopen(os.path.join(MAPISettings().TEST_FILES, "synth_doc.json.gz")) as file:
+    with zopen(
+        os.path.join(MAPISettings().TEST_FILES, "synth_doc.json.gz"), "rt"
+    ) as file:
         synth_doc = load(file)
 
     doc = SynthesisSearchResultModel(**synth_doc)
@@ -30,7 +32,9 @@ def test_mask_paragraphs():
 
 
 def test_mask_highlights():
-    with zopen(os.path.join(MAPISettings().TEST_FILES, "synth_doc.json.gz")) as file:
+    with zopen(
+        os.path.join(MAPISettings().TEST_FILES, "synth_doc.json.gz"), "rt"
+    ) as file:
         synth_doc = load(file)
 
     doc = SynthesisSearchResultModel(**synth_doc)

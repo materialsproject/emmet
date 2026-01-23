@@ -50,7 +50,7 @@ def test_run_type():
 
 @pytest.fixture(scope="session")
 def tasks(test_dir):
-    with zopen(test_dir / "test_si_tasks.json.gz") as f:
+    with zopen(test_dir / "test_si_tasks.json.gz", "rt") as f:
         data = json.load(f)
 
     return [TaskDoc(**d) for d in data]
@@ -70,7 +70,7 @@ def test_legacy_validator_magmom(test_dir):
         # Model validation for TaskDoc serializes some fields.
         # Need to refresh reference unserialized dict to have
         # serialization for TaskDocument also work.
-        with zopen(test_dir / "task_doc_mp-2766060.json.gz") as f:
+        with zopen(test_dir / "task_doc_mp-2766060.json.gz", "rt") as f:
             _cr_task_dict = json.load(f)
         return _cr_task_dict
 
@@ -101,7 +101,7 @@ def test_legacy_validator_magmom(test_dir):
 
 
 def test_validator_failed_symmetry(test_dir):
-    with zopen(test_dir / "failed_elastic_task.json.gz", "r") as f:
+    with zopen(test_dir / "failed_elastic_task.json.gz", "rt") as f:
         failed_task = json.load(f)
     taskdoc = TaskDoc(**failed_task)
     validation = LegacyValidationDoc.from_task_doc(taskdoc)
@@ -121,7 +121,7 @@ def test_computed_entry(tasks):
 
 @pytest.fixture(scope="session")
 def task_ldau(test_dir):
-    with zopen(test_dir / "test_task.json.gz") as f:
+    with zopen(test_dir / "test_task.json.gz", "rt") as f:
         data = json.load(f)
 
     return TaskDoc(**data)
@@ -134,7 +134,7 @@ def test_ldau(task_ldau):
 
 
 def test_ldau_validation(test_dir):
-    with zopen(test_dir / "old_aflow_ggau_task.json.gz") as f:
+    with zopen(test_dir / "old_aflow_ggau_task.json.gz", "rt") as f:
         data = json.load(f)
 
     task = TaskDoc(**data)

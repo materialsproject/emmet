@@ -39,9 +39,13 @@ TypedMoleculeDict = TypedDict(
 MoleculeTypeVar = TypeVar("MoleculeTypeVar", Molecule, TypedMoleculeDict)
 
 
-def pop_empty_structure_keys(inp: StructureTypeVar | MoleculeTypeVar):
+def pop_empty_structure_keys(
+    inp: StructureTypeVar | MoleculeTypeVar, serialize: bool = True
+):
     if isinstance(inp, dict):
-        target_cls = Structure if inp["@class"] == "Structure" else Molecule
+        target_cls = None
+        if serialize:
+            target_cls = Structure if inp["@class"] == "Structure" else Molecule
 
         if inp.get("properties"):
             for prop, val in list(inp["properties"].items()):  # type: ignore[union-attr]
@@ -63,7 +67,8 @@ def pop_empty_structure_keys(inp: StructureTypeVar | MoleculeTypeVar):
                     if val is None:
                         del species[prop]
 
-        return target_cls.from_dict(inp)  # type: ignore[arg-type]
+        if target_cls:
+            return target_cls.from_dict(inp)  # type: ignore[arg-type]
 
     return inp
 

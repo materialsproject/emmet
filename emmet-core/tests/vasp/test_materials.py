@@ -16,7 +16,7 @@ if ARROW_COMPATIBLE:
 
 @pytest.fixture
 def test_tasks(test_dir):
-    with zopen(test_dir / "test_si_tasks.json.gz") as f:
+    with zopen(test_dir / "test_si_tasks.json.gz", "rt") as f:
         tasks = json.load(f)
 
     for task in tasks:

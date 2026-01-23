@@ -26,7 +26,7 @@ authors = [
 dependencies = [
   "click",
   "colorama",
-  "emmet-core>=0.85.1rc0",
+  "emmet-core>=0.85.1",
   "pymatgen-io-validation>=0.1.1",
   "psutil>=5.9.0",
 ]

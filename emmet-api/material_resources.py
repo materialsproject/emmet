@@ -250,12 +250,9 @@ materials_resources.extend([provenance_resource(provenance_store)])
 # Summary
 from emmet.api.routes.materials.summary.resources import (
     summary_resource,
-    summary_stats_resource,
 )
 
-materials_resources.extend(
-    [summary_stats_resource(summary_store), summary_resource(summary_store)]
-)
+materials_resources.extend([summary_resource(summary_store)])
 
 # Electronic Structure
 from emmet.api.routes.materials.electronic_structure.resources import (
