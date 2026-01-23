@@ -48,7 +48,7 @@ fastapi==0.128.0
     # via emmet-api (emmet/emmet-api/pyproject.toml)
 fonttools==4.61.1
     # via matplotlib
-gunicorn==24.1.0
+gunicorn==24.0.0
     # via emmet-api (emmet/emmet-api/pyproject.toml)
 h11==0.16.0
     # via uvicorn
