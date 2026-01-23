@@ -67,7 +67,7 @@ filelock==3.20.3
     # via virtualenv
 flake8==7.3.0
     # via emmet-builders (pyproject.toml)
-fonttools==4.61.1
+fonttools==4.60.2
     # via matplotlib
 ghp-import==2.1.0
     # via mkdocs

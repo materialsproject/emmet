@@ -47,7 +47,7 @@ dnspython==2.8.0
     #   pymongo
 emmet-core[all]==0.86.2
     # via emmet-builders (pyproject.toml)
-fonttools==4.61.1
+fonttools==4.60.2
     # via matplotlib
 idna==3.11
     # via requests
