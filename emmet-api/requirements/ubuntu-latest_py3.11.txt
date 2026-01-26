@@ -18,9 +18,9 @@ bibtexparser==1.4.3
     # via pymatgen
 blake3==1.0.8
     # via emmet-core
-boto3==1.42.33
+boto3==1.42.34
     # via emmet-api (pyproject.toml)
-botocore==1.42.33
+botocore==1.42.34
     # via
     #   boto3
     #   s3transfer
@@ -40,7 +40,7 @@ ddtrace==4.2.2
     # via emmet-api (pyproject.toml)
 dnspython==2.8.0
     # via pymongo
-emmet-core==0.86.2
+emmet-core==0.86.3rc1
     # via emmet-api (pyproject.toml)
 envier==0.6.1
     # via ddtrace
@@ -48,7 +48,7 @@ fastapi==0.128.0
     # via emmet-api (pyproject.toml)
 fonttools==4.61.1
     # via matplotlib
-gunicorn==23.0.0
+gunicorn==24.1.1
     # via emmet-api (pyproject.toml)
 h11==0.16.0
     # via uvicorn

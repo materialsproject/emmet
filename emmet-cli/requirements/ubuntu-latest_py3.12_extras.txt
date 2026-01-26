@@ -30,7 +30,7 @@ colorama==0.4.6
     #   griffe
 contourpy==1.3.3
     # via matplotlib
-coverage[toml]==7.13.1
+coverage[toml]==7.13.2
     # via pytest-cov
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -126,7 +126,7 @@ mkdocs-material-extensions==1.3.1
     #   mkdocs-material
 mkdocs-minify-plugin==0.8.0
     # via emmet-cli (pyproject.toml)
-mkdocstrings[python]==1.0.1
+mkdocstrings[python]==1.0.2
     # via
     #   emmet-cli (pyproject.toml)
     #   mkdocstrings-python
@@ -227,7 +227,7 @@ pymatgen-io-validation==0.1.2
     # via
     #   emmet-cli (pyproject.toml)
     #   emmet-core
-pymdown-extensions==10.20
+pymdown-extensions==10.20.1
     # via
     #   mkdocs-material
     #   mkdocstrings
@@ -288,7 +288,7 @@ tqdm==4.67.1
     # via pymatgen
 types-requests==2.32.4.20260107
     # via emmet-cli (pyproject.toml)
-types-setuptools==80.9.0.20251223
+types-setuptools==80.10.0.20260124
     # via emmet-cli (pyproject.toml)
 typing-extensions==4.15.0
     # via
