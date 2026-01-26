@@ -18,7 +18,7 @@ def test_multiple_task_ids_query():
     op = MultipleTaskIDsQuery()
 
     assert op.query(task_ids=" mp-149, mp-13") == {
-        "criteria": {"task_id": {"$in": ["mp-149", "mp-13"]}}
+        "criteria": {"in": {"path": "task_id", "value": ["mp-149", "mp-13"]}}
     }
 
 

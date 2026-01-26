@@ -6,8 +6,6 @@ from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS, attach_signature
 from pymongo.asynchronous.collection import AsyncCollection
 
-NON_STORED_SOURCES = ["calcs_reversed", "orig_inputs"]
-
 
 class CollectionWithKey:
 
@@ -74,62 +72,62 @@ def generate_query_pipeline(query: dict):
 def generate_atlas_search_pipeline(query: dict):
     """
     Generate the aggregation pipeline for Atlas Search queries.
-
-    Args:
-        query: Query parameters
-        store: Store containing endpoint data
     """
     pipeline = []
+    operator: dict = {}
 
-    # generate the operator, if more than one
-    operator = {
-        "compound": {
-            "must": [q for q in query["criteria"] if not q.get("mustNot", False)]
+    if not query.get("criteria"):
+        operator = {"exists": {"path": "_id"}}
+    else:
+        operator = {"compound": {"must": [], "mustNot": []}}
+
+        # Build the must clauses
+        for q in query["criteria"]:
+            if not q.get("mustNot", False):
+                if "must" in q:
+                    # If q has a "must" key, expand its contents instead of using q directly
+                    operator["compound"]["must"].extend(q["must"])
+                else:
+                    # Use the query as-is
+                    operator["compound"]["must"].append(q)
+            else:
+                operator["compound"]["mustNot"].extend(q["mustNot"])
+
+    search_base = {
+        "$search": {
+            "index": "default",
+            "returnStoredSource": True,
+            "count": {"type": "total"},
         }
     }
-    # append the mustNot criteria to the compound operator
-    operator["compound"]["mustNot"] = [
-        q["mustNot"] for q in query["criteria"] if q.get("mustNot", False)
-    ]
 
-    if query.get("facets", False):
-        pipeline.append(
-            {
-                "$search": {
-                    "index": "default",
-                    "facet": {"operator": operator, "facets": query["facets"]},
-                }
-            }
-        )
-    else:
-        pipeline.append({"$search": {"index": "default", **operator}})
-    # add returnedStoredSource: True if non-stored source are not present in "properties"
-    # for quicker document retrieval, otherwise, do a full lookup
-    return_stored_source = not any(
-        prop in NON_STORED_SOURCES for prop in query.get("properties", [])
-    )
-    if return_stored_source:
-        pipeline[0]["$search"]["returnStoredSource"] = True  # type: ignore
+    if p_token := query.get("pagination_token", None):
+        search_base["$search"][
+            f"search{'After' if query.get('forward', True) else 'Before'}"
+        ] = p_token
 
-    sorting = query.get("sort", False)
-    if sorting:
-        # no $ sign for atlas search
-        sort_dict = {"sort": {}}  # type: ignore
-        sort_dict["sort"].update(query["sort"])
-        # add sort to $search stage
-        pipeline[0]["$search"].update(sort_dict)
+    search_base["$search"].update(operator)
 
-    projection_dict = {"_id": 0}
+    sort_dict = {"sort": {"_id": 1}}
+    if query.get("sort", False):
+        sort_dict["sort"] = {**sort_dict["sort"], **query["sort"]}
+    # add sort to $search stage
+    search_base["$search"].update(sort_dict)
+
+    pipeline.append(search_base)
+
+    projection_dict = {
+        "_id": 0,
+        "meta": "$$SEARCH_META",
+        "meta_pagination_token": {"$meta": "searchSequenceToken"},
+    }
     if query.get("properties", False):
         projection_dict.update({p: 1 for p in query["properties"]})
-    pipeline.insert(1, {"$project": projection_dict})  # type: ignore
+    pipeline.append({"$project": projection_dict})  # type: ignore
 
     pipeline.append({"$skip": query.get("skip", 0)})
 
     if query.get("limit", False):
         pipeline.append({"$limit": query["limit"]})
-
-    if query.get("facets", False):
-        pipeline.append({"$facet": {"docs": [], "meta": [{"$replaceWith": "$$SEARCH_META"}, {"$limit": 1}]}})  # type: ignore
 
     return pipeline
