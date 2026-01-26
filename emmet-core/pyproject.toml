@@ -18,6 +18,7 @@ include = ["emmet.core"]
 "emmet.core.vasp.calc_types" = ["*.yaml"]
 "emmet.core.qchem.calc_types" =  ["*.yaml"]
 "emmet.core.subtrates" = ["*.json"]
+"emmet.core.featurization.robocrys.condense" = ["*.json.gz"]
 
 [project]
 name = "emmet-core"
@@ -37,6 +38,8 @@ dependencies = [
     "pybtex~=0.24",
     "typing-extensions>=3.7",
     "blake3",
+    "inflect",
+    "pubchempy",
 ]
 
 [project.urls]
@@ -46,13 +49,11 @@ Documentation = "https://materialsproject.github.io/emmet/"
 [project.optional-dependencies]
 all = [
     "seekpath>=2.0.1",
-    "robocrys>=0.2.11",
-    "matminer>=0.9.3",
-    "scipy<1.17.0", # TODO: pending matminer fixes/deprecation
     "pymatgen-analysis-defects>=2024.7.18",
     "pymatgen-analysis-diffusion>=2024.7.15",
     "pymatgen-analysis-alloys>=0.0.6",
     "pyarrow",
+    "pymongo",
 ]
 test = [
     "pre-commit",

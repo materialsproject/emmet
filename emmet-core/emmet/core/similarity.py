@@ -11,15 +11,9 @@ import zlib
 import numpy as np
 from pydantic import BaseModel, Field
 
+from emmet.core.featurization import Featurizer, SiteStatsFingerprint
 from emmet.core.material_property import PropertyDoc
 from emmet.core.types.enums import ValueEnum
-
-try:
-    from matminer.featurizers.structure.sites import SiteStatsFingerprint
-    from matminer.featurizers.site.fingerprint import CrystalNNFingerprint
-except ImportError:
-    SiteStatsFingerprint = None
-    CrystalNNFingerprint = None
 
 try:
     import matgl
@@ -29,7 +23,6 @@ except ImportError:
 
 if TYPE_CHECKING:
 
-    from matminer.featurizers.base import BaseFeaturizer
     from pymatgen.core import Structure
 
 
@@ -171,7 +164,7 @@ class SimilarityScorer:
 
     Parameters
     -----------
-    fingerprinter: BaseFeaturizer or None (default)
+    fingerprinter: Featurizer or None (default)
         A structural featurizer. If None, defaults to the
         featurizer used in the above reference.
     """
@@ -430,30 +423,15 @@ class CrystalNNSimilarity(SimilarityScorer):
 
     Parameters
     -----------
-    fingerprinter: BaseFeaturizer or None (default)
+    fingerprinter: Featurizer or None (default)
         A structural featurizer. If None, defaults to the
         featurizer used in the above reference.
     """
 
-    def __init__(self, fingerprinter: BaseFeaturizer | None = None) -> None:
+    def __init__(self, fingerprinter: Featurizer | None = None) -> None:
 
-        if fingerprinter is None and SiteStatsFingerprint is None:
-            raise ImportError(
-                "Please `pip install matminer` to use featurizer functionality."
-            )
-
-        self.fingerprinter = fingerprinter or SiteStatsFingerprint(
-            CrystalNNFingerprint.from_preset(
-                "ops",
-                distance_cutoffs=None,
-                x_diff_weight=None,
-            ),
-            stats=(
-                "mean",
-                "maximum",
-            ),
-        )
-        self.num_feature = len(self.fingerprinter.feature_labels())
+        self.fingerprinter = fingerprinter or SiteStatsFingerprint()
+        self.num_feature = len(self.fingerprinter.feature_labels)
 
     def _featurize_structure(self, structure: Structure) -> np.ndarray:
         """Featurize a single structure using CrystalNN.

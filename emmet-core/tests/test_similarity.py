@@ -8,7 +8,6 @@ import numpy as np
 from emmet.core.similarity import (
     CrystalNNSimilarity,
     M3GNetSimilarity,
-    CrystalNNFingerprint,
     matgl,
     vector_difference_matrix,
     SimilarityScorer,
@@ -48,7 +47,6 @@ structures = {
 }
 
 
-@pytest.mark.skipif(CrystalNNFingerprint is None, reason="matminer is not installed.")
 def test_crystalnn_featurize():
 
     scorer = CrystalNNSimilarity()
