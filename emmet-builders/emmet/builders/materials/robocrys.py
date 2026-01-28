@@ -1,54 +1,40 @@
-import warnings
+from robocrys import __version__ as __robocrys_version__
+from robocrys.condense.mineral import MineralMatcher
 
-from maggma.builders.map_builder import MapBuilder
-from maggma.core import Store
-from pymatgen.core.structure import Structure
-
+from emmet.builders.base import BaseBuilderInput
 from emmet.core.robocrys import RobocrystallogapherDoc
-from emmet.core.utils import jsanitize
-
-warnings.warn(
-    f"The current version of {__name__}.RobocrystallographerBuilder will be deprecated in version 0.87.0. "
-    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
-    "release for emmet-legacy-builders is not planned.",
-    DeprecationWarning,
-    stacklevel=2,
-)
 
 
-class RobocrystallographerBuilder(MapBuilder):
-    def __init__(
-        self,
-        oxidation_states: Store,
-        robocrys: Store,
-        query: dict | None = None,
-        **kwargs,
-    ):
-        self.oxidation_states = oxidation_states
-        self.robocrys = robocrys
-        self.kwargs = kwargs
+def build_robocrys_docs(
+    input_documents: list[BaseBuilderInput],
+) -> list[RobocrystallogapherDoc]:
+    """
+    Generate robocrystallographer descriptions from input structures.
 
-        self.robocrys.key = "material_id"
-        self.oxidation_states.key = "material_id"
+    Transforms a list of BaseBuilderInput documents containing
+    Pymatgen structures into corresponding RobocrystallogapherDoc instances by
+    using robocrys' StructureCondenser and StructureDescriber classes.
 
-        super().__init__(
-            source=oxidation_states,
-            target=robocrys,
-            query=query,
-            projection=["material_id", "structure", "deprecated"],
-            **kwargs,
+    Caller is responsible for creating BaseBuilderInput instances
+    within their data pipeline context.
+
+    Args:
+        input_documents: List of BaseBuilderInput documents to process.
+
+    Returns:
+        list[RobocrystallogapherDoc]
+    """
+    mineral_matcher = MineralMatcher()
+    return list(
+        map(
+            lambda x: RobocrystallogapherDoc.from_structure(
+                builder_meta=x.builder_meta,
+                deprecated=x.deprecated,
+                material_id=x.material_id,
+                mineral_matcher=mineral_matcher,
+                robocrys_version=__robocrys_version__,
+                structure=x.structure,
+            ),
+            input_documents,
         )
-
-    def unary_function(self, item):
-        structure = Structure.from_dict(item["structure"])
-        mpid = item["material_id"]
-        deprecated = item["deprecated"]
-
-        doc = RobocrystallogapherDoc.from_structure(
-            structure=structure,
-            material_id=mpid,
-            deprecated=deprecated,
-            fields=[],
-        )
-
-        return jsanitize(doc.model_dump(), allow_bson=True)
+    )

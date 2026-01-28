@@ -1,65 +1,34 @@
-import warnings
-
-from maggma.builders.map_builder import MapBuilder
-from maggma.core import Store
-from pymatgen.core import Structure
-
+from emmet.builders.base import BaseBuilderInput
 from emmet.core.oxidation_states import OxidationStateDoc
-from emmet.core.utils import jsanitize
-
-warnings.warn(
-    f"The current version of {__name__}.OxidationStatesBuilder will be deprecated in version 0.87.0. "
-    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
-    "release for emmet-legacy-builders is not planned.",
-    DeprecationWarning,
-    stacklevel=2,
-)
 
 
-class OxidationStatesBuilder(MapBuilder):
-    def __init__(
-        self,
-        materials: Store,
-        oxidation_states: Store,
-        query=None,
-        **kwargs,
-    ):
-        """
-        Creates Oxidation State documents from materials
+def build_oxidation_states_docs(
+    input_documents: list[BaseBuilderInput],
+) -> list[OxidationStateDoc]:
+    """
+    Generate oxidation state documents from input structures.
 
-        Args:
-            materials: Store of materials docs
-            oxidation_states: Store to update with oxidation state document
-            query : query on materials to limit search
-        """
-        self.materials = materials
-        self.oxidation_states = oxidation_states
-        self.kwargs = kwargs
-        self.query = query or {}
+    Transforms a list of BaseBuilderInput documents containing
+    Pymatgen structures into corresponding OxidationStateDoc instances by
+    analyzing the oxidation states of each structure.
 
-        # Enforce that we key on material_id
-        self.materials.key = "material_id"
-        self.oxidation_states.key = "material_id"
-        super().__init__(
-            source=materials,
-            target=oxidation_states,
-            projection=["structure", "deprecated", "builder_meta"],
-            query=query,
-            **kwargs,
+    Caller is responsible for creating BaseBuilderInput instances
+    within their data pipeline context.
+
+    Args:
+        input_documents: List of BaseBuilderInput documents to process.
+
+    Returns:
+        list[OxidationStateDoc]
+    """
+    return list(
+        map(
+            lambda x: OxidationStateDoc.from_structure(
+                builder_meta=x.builder_meta,
+                deprecated=x.deprecated,
+                material_id=x.material_id,
+                structure=x.structure,
+            ),
+            input_documents,
         )
-
-    def unary_function(self, item):
-        structure = Structure.from_dict(item["structure"])
-        mpid = item["material_id"]
-        deprecated = item["deprecated"]
-        builder_meta = item["builder_meta"]
-
-        oxi_doc = OxidationStateDoc.from_structure(
-            structure=structure,
-            material_id=mpid,
-            deprecated=deprecated,
-            builder_meta=builder_meta,
-        )
-        doc = jsanitize(oxi_doc.model_dump(), allow_bson=True)
-
-        return doc
+    )
