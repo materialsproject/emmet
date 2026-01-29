@@ -151,8 +151,8 @@ def sbatch(func):
                 "time": "48:00:00",
                 "licenses": "SCRATCH",
                 "mem": "12GB",
-                "mail-user": "tsm@lbl.gov"
-                "mail-type": "ALL"
+                "mail-user": "tsm@lbl.gov",
+                "mail-type": "ALL",
             }
             command = ""
 
