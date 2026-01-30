@@ -98,7 +98,7 @@ def make_comment(ctx, txt):
 )
 @click.option("--tar", is_flag=True, help="tar blocks after backup and clean")
 @click.pass_context
-def backups(ctx, clean, tar):
+def backups(ctx, clean, exhaustive, tar):
     """Scan root directory and submit separate backup jobs for subdirectories containing blocks"""
     ctx.parent.params["nmax"] = sys.maxsize  # disable maximum launchers for backup
     subdir_block_launchers = defaultdict(lambda: defaultdict(list))
