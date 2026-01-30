@@ -27,15 +27,14 @@ jobs:
           python-version: 3.11
 
       - name: Install Python dependencies
-        shell: bash -l {0}
         run: |
           python${{ matrix.python-version }} -m pip install --upgrade pip pip-tools
-          python${{ matrix.python-version }} -m pip install --user `grep numpy emmet-core/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt`
-          python${{ matrix.python-version }} -m piptools sync --user emmet-core/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
-          python${{ matrix.python-version }} -m pip install --user `grep numpy emmet-builders/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt`
-          python${{ matrix.python-version }} -m piptools sync --user emmet-builders/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
-          python${{ matrix.python-version }} -m pip install --user `grep numpy emmet-api/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt`
-          python${{ matrix.python-version }} -m piptools sync --user emmet-api/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
+          python${{ matrix.python-version }} -m pip install `grep numpy emmet-core/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt`
+          python${{ matrix.python-version }} -m piptools sync emmet-core/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
+          python${{ matrix.python-version }} -m pip install `grep numpy emmet-builders/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt`
+          python${{ matrix.python-version }} -m piptools sync emmet-builders/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
+          python${{ matrix.python-version }} -m pip install `grep numpy emmet-api/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt`
+          python${{ matrix.python-version }} -m piptools sync emmet-api/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
 
       # TODO: To install graphiz and therefore use erdantic to draw pydantic models:
       # - name: Install graphviz
@@ -48,7 +47,7 @@ jobs:
       #     sudo apt install graphviz-dev
 
       - name: Build
-        run: sphinx-build docs docs/_build
+        run: python${{ matrix.python-version }} -m sphinx docs docs/_build
 
       - name: Upload build artifact
         uses: actions/upload-pages-artifact@v4
