@@ -73,4 +73,5 @@ docs = [
     "sphinx-rtd-theme>=3.0.2",
     "sphinx-markdown-builder>=0.6.8",
     "sphinx-autodoc-typehints",
+    "myst-parser",
 ]

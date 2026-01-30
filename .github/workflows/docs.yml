@@ -28,13 +28,11 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          python${{ matrix.python-version }} -m pip install --upgrade pip pip-tools
-          python${{ matrix.python-version }} -m pip install `grep numpy emmet-core/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt`
-          python${{ matrix.python-version }} -m piptools sync emmet-core/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
-          python${{ matrix.python-version }} -m pip install `grep numpy emmet-builders/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt`
-          python${{ matrix.python-version }} -m piptools sync emmet-builders/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
-          python${{ matrix.python-version }} -m pip install `grep numpy emmet-api/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt`
-          python${{ matrix.python-version }} -m piptools sync emmet-api/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
+          python${{ matrix.python-version }} -m pip install --upgrade pip
+          python${{ matrix.python-version }} -m pip install -e "./emmet-core[docs]"
+          python${{ matrix.python-version }} -m pip install -e "./emmet-builders"
+          python${{ matrix.python-version }} -m pip install -e "./emmet-cli"
+          python${{ matrix.python-version }} -m pip install -e "./emmet-archival"
 
       # TODO: To install graphiz and therefore use erdantic to draw pydantic models:
       # - name: Install graphviz
@@ -47,7 +45,7 @@ jobs:
       #     sudo apt install graphviz-dev
 
       - name: Build
-        run: python${{ matrix.python-version }} -m sphinx docs docs/_build
+        run: sphinx-build docs docs/_build
 
       - name: Upload build artifact
         uses: actions/upload-pages-artifact@v4
