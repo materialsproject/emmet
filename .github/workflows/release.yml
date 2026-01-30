@@ -37,7 +37,7 @@ jobs:
           packages-dir: ./${{ matrix.package }}/dist/
 
   docs:
-    if: github.repository_owner == 'materialsproject' && github.ref == 'refs/heads/main'
+    if: github.repository_owner == 'materialsproject' && github.event.release.prerelease == false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
