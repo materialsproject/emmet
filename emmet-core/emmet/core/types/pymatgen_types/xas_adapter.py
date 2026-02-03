@@ -1,5 +1,6 @@
-from typing import Annotated, TypeVar
+from typing import Any, Annotated, TypeVar
 
+import numpy as np
 from pydantic import BeforeValidator, WrapSerializer
 from pymatgen.analysis.xas.spectrum import XAS
 from typing_extensions import TypedDict
@@ -45,8 +46,18 @@ def pop_xas_empty_structure_fields(xas: XASTypeVar, eps: float = 1e-12):
     return xas
 
 
+def _serialize_xas(xas: XAS) -> dict[str, Any]:
+    xas_dct = xas.as_dict()
+    for k in ("x", "y"):
+        if isinstance(xas_dct[k], np.ndarray):
+            xas_dct[k] = xas_dct[k].tolist()
+    return xas_dct
+
+
 XASType = Annotated[
     XASTypeVar,
     BeforeValidator(pop_xas_empty_structure_fields),
-    WrapSerializer(lambda x, nxt, info: x.as_dict(), return_type=TypedXASSpectrumDict),
+    WrapSerializer(
+        lambda x, nxt, info: _serialize_xas(x), return_type=TypedXASSpectrumDict
+    ),
 ]

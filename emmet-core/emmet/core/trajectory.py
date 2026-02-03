@@ -740,10 +740,11 @@ class RelaxTrajectory(AtomRelaxTrajectory):
         ):
             kwargs["time_step"] = vasprun.parameters.get("POTIM")
 
+        istep_attr = "md_data" if vasprun.incar.get("ML_LMLFF") else "ionic_steps"
         return cls._from_dict(
             {
                 remap.get(k, k): [
-                    ionic_step.get(k) for ionic_step in vasprun.ionic_steps
+                    ionic_step.get(k) for ionic_step in getattr(vasprun, istep_attr, [])
                 ]
                 for k in ionic_step_data
             },

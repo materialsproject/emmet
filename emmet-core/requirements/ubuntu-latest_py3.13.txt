@@ -56,13 +56,13 @@ numpy==2.4.1
     #   spglib
 orjson==3.11.5
     # via pymatgen
-packaging==25.0
+packaging==26.0
     # via
     #   matplotlib
     #   plotly
 palettable==3.3.3
     # via pymatgen
-pandas==2.3.3
+pandas==3.0.0
     # via pymatgen
 pillow==12.1.0
     # via matplotlib
@@ -99,8 +99,6 @@ python-dateutil==2.9.0.post0
     #   pandas
 python-dotenv==1.2.1
     # via pydantic-settings
-pytz==2025.2
-    # via pandas
 pyyaml==6.0.3
     # via pybtex
 requests==2.32.5

@@ -18,7 +18,8 @@ RUN wget -q https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-
   chmod +x wait-for-it.sh && mv wait-for-it.sh /root/.local/bin/
 
 FROM base
-ARG BUILDARCH=x86_64
+ARG BUILDARCH
+ENV BUILDARCH=x86_64
 COPY --from=builder /root/.local/lib/python3.11/site-packages /root/.local/lib/python3.11/site-packages
 COPY --from=builder /root/.local/bin /root/.local/bin
 COPY --from=builder /usr/lib/$BUILDARCH-linux-gnu/libsnappy* /usr/lib/$BUILDARCH-linux-gnu/

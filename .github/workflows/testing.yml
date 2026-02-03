@@ -108,7 +108,7 @@ jobs:
           EMMET_USE_EMMET_MODELS: true
         run: python${{ matrix.python-version }} -m pytest -n auto --cov=emmet --cov-report=xml ${{ matrix.package }}/tests
 
-      - uses: codecov/codecov-action@v5.5.1
+      - uses: codecov/codecov-action@v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
