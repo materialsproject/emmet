@@ -17,13 +17,13 @@ attrs==25.4.0
     #   referencing
 bcrypt==5.0.0
     # via paramiko
-bibtexparser==1.4.3
+bibtexparser==1.4.4
     # via pymatgen
 blake3==1.0.8
     # via emmet-core
-boto3==1.42.34
+boto3==1.42.40
     # via maggma
-botocore==1.42.34
+botocore==1.42.40
     # via
     #   boto3
     #   s3transfer
@@ -37,7 +37,7 @@ charset-normalizer==3.4.4
     # via requests
 contourpy==1.3.3
     # via matplotlib
-cryptography==46.0.3
+cryptography==46.0.4
     # via paramiko
 cycler==0.12.1
     # via matplotlib
@@ -45,7 +45,7 @@ dnspython==2.8.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.86.2
+emmet-core[all]==0.86.3
     # via emmet-builders (pyproject.toml)
 fonttools==4.61.1
     # via matplotlib
@@ -107,14 +107,14 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.1.2
     # via maggma
-narwhals==2.15.0
+narwhals==2.16.0
     # via plotly
 networkx==3.6.1
     # via
     #   pymatgen
     #   robocrys
     #   scikit-image
-numpy==2.4.1
+numpy==2.4.2
     # via
     #   ase
     #   contourpy
@@ -137,7 +137,7 @@ numpy==2.4.1
     #   shapely
     #   spglib
     #   tifffile
-orjson==3.11.5
+orjson==3.11.7
     # via
     #   maggma
     #   pymatgen
@@ -272,7 +272,7 @@ scipy==1.17.0
     #   scikit-learn
 seaborn==0.13.2
     # via pymatgen-analysis-diffusion
-seekpath==2.2.0
+seekpath==2.2.1
     # via emmet-core
 sentinels==1.1.1
     # via mongomock
@@ -295,9 +295,9 @@ tabulate==0.9.0
     # via pymatgen
 threadpoolctl==3.6.0
     # via scikit-learn
-tifffile==2026.1.14
+tifffile==2026.1.28
     # via scikit-image
-tqdm==4.67.1
+tqdm==4.67.3
     # via
     #   maggma
     #   matminer
