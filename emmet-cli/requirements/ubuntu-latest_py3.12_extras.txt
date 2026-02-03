@@ -30,7 +30,7 @@ colorama==0.4.6
     #   griffe
 contourpy==1.3.3
     # via matplotlib
-coverage[toml]==7.13.1
+coverage[toml]==7.13.2
     # via pytest-cov
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -38,7 +38,7 @@ cycler==0.12.1
     # via matplotlib
 distlib==0.4.0
     # via virtualenv
-emmet-core==0.87.0.dev4
+emmet-core==0.86.2
     # via emmet-cli (pyproject.toml)
 execnet==2.1.2
     # via pytest-xdist
@@ -78,7 +78,7 @@ librt==0.7.8
     # via mypy
 livereload==2.7.1
     # via emmet-cli (pyproject.toml)
-markdown==3.10
+markdown==3.10.1
     # via
     #   mkdocs
     #   mkdocs-autorefs
@@ -126,7 +126,7 @@ mkdocs-material-extensions==1.3.1
     #   mkdocs-material
 mkdocs-minify-plugin==0.8.0
     # via emmet-cli (pyproject.toml)
-mkdocstrings[python]==1.0.1
+mkdocstrings[python]==1.0.2
     # via
     #   emmet-cli (pyproject.toml)
     #   mkdocstrings-python
@@ -164,7 +164,7 @@ numpy==2.4.1
     #   spglib
 orjson==3.11.5
     # via pymatgen
-packaging==25.0
+packaging==26.0
     # via
     #   matplotlib
     #   mkdocs
@@ -172,7 +172,7 @@ packaging==25.0
     #   pytest
 palettable==3.3.3
     # via pymatgen
-pandas==2.3.3
+pandas==3.0.0
     # via pymatgen
 pathspec==1.0.3
     # via
@@ -227,11 +227,11 @@ pymatgen-io-validation==0.1.2
     # via
     #   emmet-cli (pyproject.toml)
     #   emmet-core
-pymdown-extensions==10.20
+pymdown-extensions==10.20.1
     # via
     #   mkdocs-material
     #   mkdocstrings
-pyparsing==3.3.1
+pyparsing==3.3.2
     # via
     #   bibtexparser
     #   matplotlib
@@ -251,8 +251,6 @@ python-dateutil==2.9.0.post0
     #   pandas
 python-dotenv==1.2.1
     # via pydantic-settings
-pytz==2025.2
-    # via pandas
 pyyaml==6.0.3
     # via
     #   mkdocs
@@ -290,7 +288,7 @@ tqdm==4.67.1
     # via pymatgen
 types-requests==2.32.4.20260107
     # via emmet-cli (pyproject.toml)
-types-setuptools==80.9.0.20251223
+types-setuptools==80.10.0.20260124
     # via emmet-cli (pyproject.toml)
 typing-extensions==4.15.0
     # via
@@ -304,9 +302,7 @@ typing-inspection==0.4.2
     # via
     #   pydantic
     #   pydantic-settings
-tzdata==2025.3
-    # via pandas
-uncertainties==3.2.4
+uncertainties==3.2.3
     # via pymatgen
 urllib3==2.6.3
     # via

@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=emmet/emmet-builders/requirements/deployment.txt emmet/emmet-builders/setup.py python/requirements.txt
 #
-aiohttp==3.13.2
+aiohttp==3.13.3
     # via fsspec
 aioitertools==0.11.0
     # via maggma
@@ -71,13 +71,13 @@ exceptiongroup==1.2.0
     # via anyio
 fastapi==0.109.2
     # via maggma
-filelock==3.13.1
+filelock==3.20.3
     # via
     #   torch
     #   triton
 flask==3.0.2
     # via mongogrant
-fonttools==4.47.2
+fonttools==4.60.2
     # via matplotlib
 frozenlist==1.4.1
     # via
@@ -230,7 +230,7 @@ nvidia-nvjitlink-cu12==12.3.101
     #   nvidia-cusparse-cu12
 nvidia-nvtx-cu12==12.1.105
     # via torch
-orjson==3.9.15
+orjson==3.11.5
     # via maggma
 packaging==23.2
     # via
@@ -424,13 +424,13 @@ typing-extensions==4.9.0
     #   uvicorn
 uncertainties==3.1.7
     # via pymatgen
-urllib3==2.5.0
+urllib3==2.6.3
     # via
     #   botocore
     #   requests
 uvicorn==0.27.0.post1
     # via maggma
-werkzeug==3.0.6
+werkzeug==3.1.5
     # via flask
 yarl==1.9.4
     # via aiohttp
