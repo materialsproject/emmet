@@ -125,6 +125,8 @@ pillow==12.1.0
     #   scikit-image
 plotly==6.5.2
     # via pymatgen
+pubchempy==1.0.5
+    # via emmet-core
 pybtex==0.25.1
     # via emmet-core
 pydantic==2.12.5

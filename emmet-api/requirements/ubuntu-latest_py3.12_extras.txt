@@ -263,6 +263,8 @@ pluggy==1.6.0
     #   pytest-cov
 pre-commit==4.5.1
     # via emmet-api (pyproject.toml)
+pubchempy==1.0.5
+    # via emmet-core
 pybtex==0.25.1
     # via emmet-core
 pycodestyle==2.14.0
