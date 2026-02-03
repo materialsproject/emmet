@@ -60,6 +60,8 @@ imageio==2.37.2
     # via scikit-image
 importlib-metadata==8.7.1
     # via opentelemetry-api
+inflect==7.5.0
+    # via emmet-core
 jmespath==1.1.0
     # via
     #   boto3
@@ -212,7 +214,7 @@ typing-extensions==4.15.0
     #   emmet-core
     #   fastapi
     #   opentelemetry-api
-    #   pydantic
+    #   pyitic
     #   pydantic-core
     #   typing-inspection
 typing-inspection==0.4.2

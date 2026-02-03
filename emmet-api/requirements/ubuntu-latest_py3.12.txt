@@ -60,6 +60,8 @@ imageio==2.37.2
     # via scikit-image
 importlib-metadata==8.7.1
     # via opentelemetry-api
+inflect==7.5.0
+    # via emmet-core
 jmespath==1.1.0
     # via
     #   boto3

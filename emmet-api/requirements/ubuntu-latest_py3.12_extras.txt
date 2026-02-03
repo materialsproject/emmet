@@ -102,6 +102,8 @@ importlib-metadata==8.7.1
     # via opentelemetry-api
 iniconfig==2.3.0
     # via pytest
+inflect==7.5.0
+    # via emmet-core
 itsdangerous==2.2.0
     # via starlette
 jinja2==3.1.6
