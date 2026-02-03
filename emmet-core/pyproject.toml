@@ -25,7 +25,7 @@ name = "emmet-core"
 dynamic = ["version"]
 requires-python = ">=3.11"
 description="Core Emmet Library"
-license = {text = "Modified BSD"}
+license = "BSD-3-Clause-LBNL"
 authors = [
     {name = "The Materials Project", email="feedback@materialsproject.org"},
 ]

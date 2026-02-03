@@ -25,7 +25,7 @@ description="Builders for the Emmet Library"
 authors = [
     {name = "The Materials Project",email="feedback@materialsproject.org"},
 ]
-license = {text = "Modified BSD"}
+license = "BSD-3-Clause-LBNL"
 dependencies = [
     "emmet-core[all]",
     "maggma>=0.57.6",
