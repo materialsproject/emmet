@@ -56,7 +56,7 @@ def aggregate_paths(
         paths[p.name.split(".lobster")[0]] = p
     for file_name in (
         "POTCAR",
-        "POSCAR",
+        "CONTCAR",
         "vasprun.xml",
         "lobsterin",
         "lobsterout",
@@ -336,14 +336,14 @@ class CondensedBondingAnalysis(BaseModel):
             "orbital_resolved": False,
             "start": None,
             "summed_spins": False,  # we will always use spin polarization here
-            "type_charge": None,
+            "type_charge": "Mulliken",
             **lobsterpy_kwargs,
         }
 
         try:
             start = time.time()
             analyse = Analysis(
-                path_to_poscar=file_paths["POSCAR"],
+                path_to_poscar=file_paths["CONTCAR"],
                 path_to_icohplist=file_paths["ICOHPLIST"],
                 path_to_cohpcar=file_paths["COHPCAR"],
                 path_to_charge=file_paths["CHARGE"],
@@ -576,7 +576,7 @@ class CalcQualitySummary(BaseModel):
             **calc_quality_kwargs,
         }
         cal_quality_dict = Analysis.get_lobster_calc_quality_summary(
-            path_to_poscar=file_paths["POSCAR"],
+            path_to_poscar=file_paths["CONTCAR"],
             path_to_vasprun=file_paths["vasprun.xml"],
             path_to_charge=file_paths["CHARGE"],
             path_to_potcar=file_paths.get("POTCAR"),
@@ -764,20 +764,20 @@ class LobsterTaskDocument(StructureMetadata):
 
         # Read in lobsterout and lobsterin
         file_paths = aggregate_paths(dir_name)
-        lobsterout_doc = Lobsterout(file_paths["lobsterout"]).get_doc()
+        lobsterout_doc = Lobsterout(file_paths["lobsterout"].as_posix()).get_doc()
         lobster_out = LobsteroutModel(**lobsterout_doc)
 
-        lobster_in_dict = Lobsterin.from_file(file_paths["lobsterin"])
+        lobster_in_dict = Lobsterin.from_file(file_paths["lobsterin"].as_posix())
         # convert keys to snake case
         lobster_in = LobsterinModel(
             **{  # type: ignore[arg-type]
-                k: lobster_in_dict.get(k.strip("_"))
+                k: lobster_in_dict.get(k.replace("_", ""))
                 for k in LobsterinModel.model_fields
             }
         )
 
         # Do automatic bonding analysis with LobsterPy
-        struct = Structure.from_file(file_paths["POSCAR"])
+        struct = Structure.from_file(file_paths["CONTCAR"].as_posix())
 
         # will perform two condensed bonding analysis computations
         condensed_bonding_analysis = None
@@ -828,8 +828,8 @@ class LobsterTaskDocument(StructureMetadata):
             "cohp_data": (
                 CompleteCohp.from_file(
                     fmt="LOBSTER",
-                    structure_file=file_paths["POSCAR"],
-                    filename=file_paths["COHPCAR"],
+                    structure_file=file_paths["CONTCAR"].as_posix(),
+                    filename=file_paths["COHPCAR"].as_posix(),
                     are_coops=False,
                     are_cobis=False,
                 )
@@ -839,8 +839,8 @@ class LobsterTaskDocument(StructureMetadata):
             "coop_data": (
                 CompleteCohp.from_file(
                     fmt="LOBSTER",
-                    structure_file=file_paths["POSCAR"],
-                    filename=file_paths["COOPCAR"],
+                    structure_file=file_paths["CONTCAR"].as_posix(),
+                    filename=file_paths["COOPCAR"].as_posix(),
                     are_coops=True,
                     are_cobis=False,
                 )
@@ -850,8 +850,8 @@ class LobsterTaskDocument(StructureMetadata):
             "cobi_data": (
                 CompleteCohp.from_file(
                     fmt="LOBSTER",
-                    structure_file=file_paths["POSCAR"],
-                    filename=file_paths["COBICAR"],
+                    structure_file=file_paths["CONTCAR"].as_posix(),
+                    filename=file_paths["COBICAR"].as_posix(),
                     are_coops=False,
                     are_cobis=True,
                 )
@@ -881,40 +881,40 @@ class LobsterTaskDocument(StructureMetadata):
             ),
             dos=(
                 Doscar(
-                    doscar=file_paths["DOSCAR"], structure_file=file_paths["POSCAR"]
+                    doscar=file_paths["DOSCAR"].as_posix(), structure_file=file_paths["CONTCAR"].as_posix()
                 ).completedos
                 if file_paths.get("DOSCAR")
                 else None
             ),
             lso_dos=(
                 Doscar(
-                    doscar=file_paths["DOSCAR.LSO"], structure_file=file_paths["POSCAR"]
+                    doscar=file_paths["DOSCAR.LSO"].as_posix(), structure_file=file_paths["CONTCAR"].as_posix()
                 ).completedos
                 if (store_lso_dos and file_paths.get("DOSCAR.LSO"))
                 else None
             ),
             charges=(
-                Charge(filename=file_paths["CHARGE"])
+                Charge(filename=file_paths["CHARGE"].as_posix())
                 if file_paths.get("CHARGE")
                 else None
             ),
             madelung_energies=(
-                MadelungEnergies(filename=file_paths["MadelungEnergies"])
+                MadelungEnergies(filename=file_paths["MadelungEnergies"].as_posix())
                 if file_paths.get("MadelungEnergies")
                 else None
             ),
             site_potentials=(
-                SitePotential(filename=file_paths["SitePotentials"])
+                SitePotential(filename=file_paths["SitePotentials"].as_posix())
                 if file_paths.get("SitePotentials")
                 else None
             ),
             gross_populations=(
-                Grosspop(filename=file_paths["GROSSPOP"])
+                Grosspop(filename=file_paths["GROSSPOP"].as_posix())
                 if file_paths.get("GROSSPOP")
                 else None
             ),
             band_overlaps=(
-                Bandoverlaps(filename=file_paths["bandOverlaps"])
+                Bandoverlaps(filename=file_paths["bandOverlaps"].as_posix())
                 if file_paths.get("bandOverlaps")
                 else None
             ),
@@ -922,7 +922,7 @@ class LobsterTaskDocument(StructureMetadata):
             **(cohp_data if add_coxxcar_to_task_document else {}),
             **{
                 k: Icohplist(
-                    filename=file_paths[v],
+                    filename=file_paths[v].as_posix(),
                     are_coops=(v == "ICOOPLIST"),
                     are_cobis=(v == "ICOBILIST"),
                 )
