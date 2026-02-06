@@ -881,14 +881,16 @@ class LobsterTaskDocument(StructureMetadata):
             ),
             dos=(
                 Doscar(
-                    doscar=file_paths["DOSCAR"].as_posix(), structure_file=file_paths["CONTCAR"].as_posix()
+                    doscar=file_paths["DOSCAR"].as_posix(),
+                    structure_file=file_paths["CONTCAR"].as_posix(),
                 ).completedos
                 if file_paths.get("DOSCAR")
                 else None
             ),
             lso_dos=(
                 Doscar(
-                    doscar=file_paths["DOSCAR.LSO"].as_posix(), structure_file=file_paths["CONTCAR"].as_posix()
+                    doscar=file_paths["DOSCAR.LSO"].as_posix(),
+                    structure_file=file_paths["CONTCAR"].as_posix(),
                 ).completedos
                 if (store_lso_dos and file_paths.get("DOSCAR.LSO"))
                 else None
