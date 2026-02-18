@@ -61,11 +61,11 @@ packaging==26.0
     #   plotly
 palettable==3.3.3
     # via pymatgen
-pandas==3.0.0
+pandas==3.0.1
     # via
     #   -r python/requirements.txt
     #   pymatgen
-pillow==12.1.0
+pillow==12.1.1
     # via matplotlib
 plotly==6.5.2
     # via pymatgen
@@ -78,7 +78,7 @@ pydantic==2.12.5
     #   pymatgen-io-validation
 pydantic-core==2.41.5
     # via pydantic
-pydantic-settings==2.12.0
+pydantic-settings==2.13.0
     # via
     #   emmet-core (emmet/emmet-core/pyproject.toml)
     #   pymatgen-io-validation
