@@ -178,7 +178,7 @@ pathspec==1.0.3
     # via
     #   mkdocs
     #   mypy
-pillow==12.1.0
+pillow==12.1.1
     # via matplotlib
 platformdirs==4.5.1
     # via
