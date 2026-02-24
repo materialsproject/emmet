@@ -1,7 +1,7 @@
-from pkg_resources import DistributionNotFound, get_distribution
+from importlib.metadata import PackageNotFoundError, version
 
 try:
-    __version__ = get_distribution("emmet-builders").version
-except DistributionNotFound:  # pragma: no cover
+    __version__ = version("emmet-builders-legacy")
+except PackageNotFoundError:  # pragma: no cover
     # package is not installed
     pass

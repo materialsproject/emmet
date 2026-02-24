@@ -31,9 +31,9 @@ license = "BSD-3-Clause-LBNL"
 dependencies = [
   "emmet-core>=0.86.3rc1,<0.87.0",
   "fastapi>=0.123.1",
-  "gunicorn>=24.1.1",
+  "gunicorn==24.1.1",
   "boto3",
-  "ddtrace",
+  "ddtrace==4.3.0",
   "setproctitle",
   "shapely",
   "asgi-logger",
