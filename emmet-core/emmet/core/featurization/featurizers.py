@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -17,7 +18,13 @@ if TYPE_CHECKING:
     from typing import Any, Literal
     from typing_extensions import Self
 
-VALID_STAT_NAMES = {"mean", "maximum", "minimum", "std_dev"}
+
+class FeatureStats(StrEnum):
+    mean = "mean"
+    maximum = "maximum"
+    minimum = "minimum"
+    std_dev = "std_dev"
+
 
 CN_TARGET_MOTIF_OP: dict[int, list[str]] = {
     1: ["sgl_bd"],
@@ -57,8 +64,7 @@ class Featurizer(ABC):
         Returns:
             (list) one or more features.
         """
-
-        raise NotImplementedError("`featurize` is not defined!")
+        return []
 
     @property
     @abstractmethod
@@ -69,8 +75,7 @@ class Featurizer(ABC):
         Returns:
             list of str, the labels of the features
         """
-
-        raise NotImplementedError("`feature_labels` is not defined!")
+        return []
 
 
 @dataclass
@@ -85,20 +90,14 @@ class CrystalNNFingerprint(Featurizer):
     certain coordination number. The remaining order parameters are computed
     by multiplying the "wt" for that coordination number with the OP value.
 
-    The chem_info parameter can be used to also get chemical descriptors that
-    describe differences in some chemical parameter (e.g., electronegativity)
-    between the central site and the site neighbors.
-
     Args:
         op_types (dict): a dict of coordination number (int) to a list of str
             representing the order parameter types
-        chem_info (dict): a dict of chemical properties (e.g., atomic mass)
-            to dictionaries that map an element to a value
-            (e.g., chem_info["Pauling scale"]["O"] = 3.44)
+        crystalnn (CrystalNN) : an instance of CrystalNN to use in identifying
+            local coordination environments.
     """
 
     op_types: dict[int, list[str]] = field(default_factory=dict)
-    chem_info: dict[str, dict[str, Any]] | None = None
     crystalnn: CrystalNN = field(default_factory=CrystalNN)
     _ops: dict[int, list[str | LocalStructOrderParams]] | None = None
 
@@ -106,31 +105,28 @@ class CrystalNNFingerprint(Featurizer):
     def from_preset(cls, preset: Literal["cn", "ops"], **kwargs) -> Self:
         """
         Use preset parameters to get the fingerprint
+
         Args:
             preset ('cn' | 'ops'): Initializes the featurizer to use coordination number ('cn') or structural
                 order parameters like octahedral, tetrahedral ('ops').
             **kwargs: other settings to be passed into CrystalNN class
         """
         cnn = CrystalNN(**kwargs)
-        if preset == "cn":
-            return cls(op_types={k + 1: ["wt"] for k in range(24)}, crystalnn=cnn)
+        match preset:
+            case "cn":
+                return cls(op_types={k + 1: ["wt"] for k in range(24)}, crystalnn=cnn)
 
-        elif preset == "ops":
-            return cls(
-                op_types={
-                    k: ["wt"] + CN_TARGET_MOTIF_OP.get(k, []) for k in range(1, 25)
-                },
-                chem_info=None,
-                crystalnn=cnn,
-            )
-
-        raise ValueError(
-            f"preset `{preset}` is not supported in `CrystalNNFingerprint`"
-        )
-
-    @property
-    def chem_props(self) -> list[str]:
-        return list((self.chem_info or {}).keys())
+            case "ops":
+                return cls(
+                    op_types={
+                        k: ["wt"] + CN_TARGET_MOTIF_OP.get(k, []) for k in range(1, 25)
+                    },
+                    crystalnn=cnn,
+                )
+            case _:
+                raise ValueError(
+                    f"preset `{preset}` is not supported in `CrystalNNFingerprint`"
+                )
 
     @property
     def ops(self) -> dict[int, list[str | LocalStructOrderParams]]:
@@ -170,14 +166,6 @@ class CrystalNNFingerprint(Featurizer):
 
         cn_fingerprint = []
 
-        if self.chem_info is not None:
-            prop_delta = {}  # dictionary of chemical property to final value
-            for prop in self.chem_props:
-                prop_delta[prop] = 0
-            sum_wt = 0
-            elem_central = struct.sites[idx].specie.symbol
-            specie_central = str(struct.sites[idx].specie)
-
         for k in range(max_cn):
             cn = k + 1
             wt = nndata.cn_weights.get(cn, 0)
@@ -185,31 +173,6 @@ class CrystalNNFingerprint(Featurizer):
                 for op in self.ops[cn]:
                     if op == "wt":
                         cn_fingerprint.append(wt)
-
-                        if self.chem_info is not None and wt != 0:
-                            # Compute additional chemistry-related features
-                            sum_wt += wt
-                            neigh_sites = [d["site"] for d in nndata.cn_nninfo[cn]]
-
-                            for prop in self.chem_props:
-                                # get the value for specie, if not fall back to
-                                # value defined for element
-                                prop_central = self.chem_info[prop].get(
-                                    specie_central,
-                                    self.chem_info[prop].get(elem_central),
-                                )
-
-                                for neigh in neigh_sites:
-                                    elem_neigh = neigh.specie.symbol
-                                    specie_neigh = str(neigh.specie)
-                                    prop_neigh = self.chem_info[prop].get(
-                                        specie_neigh,
-                                        self.chem_info[prop].get(elem_neigh),
-                                    )
-
-                                    prop_delta[prop] += (
-                                        wt * (prop_neigh - prop_central) / cn  # type: ignore[operator]
-                                    )
 
                     elif wt == 0:
                         cn_fingerprint.append(wt)
@@ -223,13 +186,7 @@ class CrystalNNFingerprint(Featurizer):
                         opval = opval or 0  # handles None
                         cn_fingerprint.append(wt * opval)
 
-        chem_fingerprint: list[float] = []
-
-        if self.chem_info is not None:
-            for val in prop_delta.values():
-                chem_fingerprint.append(val / sum_wt)
-
-        return cn_fingerprint + chem_fingerprint
+        return cn_fingerprint
 
     @property
     def feature_labels(self):
@@ -240,9 +197,6 @@ class CrystalNNFingerprint(Featurizer):
             if cn in list(self.ops.keys()):
                 for op in self.op_types[cn]:
                     labels.append(f"{op} CN_{cn}")
-        if self.chem_info is not None:
-            for prop in self.chem_props:
-                labels.append(f"{prop} local diff")
         return labels
 
 
@@ -256,7 +210,7 @@ class SiteStatsFingerprint(Featurizer):
         site_featurizer : `Featurizer`
             Featurization to use on each site of a structure.
         stats : list of str
-            Should be a list of stats in `VALID_STAT_NAMES`
+            Should be a list of statistics in `FeatureStats`
     """
 
     site_featurizer: Featurizer = field(
@@ -269,11 +223,11 @@ class SiteStatsFingerprint(Featurizer):
     stats: list[str] = field(default_factory=lambda: ["mean", "maximum"])
 
     @staticmethod
-    def get_stat(op: Literal[*VALID_STAT_NAMES], vals: list[float]) -> float:  # type: ignore[valid-type]
+    def get_stat(op: str | FeatureStats, vals: list[float]) -> float:  # type: ignore[valid-type]
         """Compute statistics of a 1-D array.
 
         Args:
-            op : "mean", "maximum", "minimum", or "std_dev"
+            op : str or FeatureStats
                 A statistic name to compute
             vals : list[float]
                 An ordered list of floats
@@ -293,7 +247,7 @@ class SiteStatsFingerprint(Featurizer):
             case _:
                 raise ValueError(f"Unknown operation {op}")
 
-    def featurize(self, s: Structure) -> list[float]:
+    def featurize(self, s: Structure) -> list[float] | list[list[float]]:
         # Get each feature for each site
         vals: list[list[float]] = [[] for t in self.site_featurizer.feature_labels]
         for i, site in enumerate(s.sites):
@@ -302,7 +256,7 @@ class SiteStatsFingerprint(Featurizer):
                 vals[j].append(0.0 if opval is None else opval)
 
         # If the user does not request statistics, return the site features now
-        if self.stats is None:
+        if not self.stats:
             return vals
 
         # Compute the requested statistics

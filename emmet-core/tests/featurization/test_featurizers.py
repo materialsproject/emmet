@@ -6,7 +6,9 @@ from pymatgen.core import Structure
 import pytest
 
 from emmet.core.featurization.featurizers import (
+    FeatureStats,
     Featurizer,
+    CN_TARGET_MOTIF_OP,
     CrystalNNFingerprint,
     SiteStatsFingerprint,
 )
@@ -47,14 +49,38 @@ def test_stats():
 
     fingerprinter = SiteStatsFingerprint()
 
-    test_arr = np.linspace(min_v := 1, max_v := 42.1, 23)
-    assert fingerprinter.get_stat("mean", test_arr) == pytest.approx(21.55)
-    assert fingerprinter.get_stat("minimum", test_arr) == pytest.approx(min_v)
-    assert fingerprinter.get_stat("maximum", test_arr) == pytest.approx(max_v)
-    assert fingerprinter.get_stat("std_dev", test_arr) == pytest.approx(12.392116, 1e-6)
+    min_v = 1
+    max_v = 42.1
+
+    test_arr = np.linspace(min_v, max_v, 23)
+
+    stats = {
+        "mean": 21.55,
+        "minimum": min_v,
+        "maximum": max_v,
+        "std_dev": 12.392116,
+    }
+    assert all(
+        fingerprinter.get_stat(stat, test_arr) == pytest.approx(val, 1e-6)
+        for stat, val in stats.items()
+    )
+    assert all(
+        fingerprinter.get_stat(FeatureStats(stat), test_arr) == pytest.approx(val, 1e-6)
+        for stat, val in stats.items()
+    )
+
+    assert all(FeatureStats(stat) == stat for stat in stats)
+
+    with pytest.raises(ValueError, match="Unknown operation"):
+        fingerprinter.get_stat("lorem", test_arr)
 
 
 def test_fingerprinters(fingerprint_test_data, test_structure):
+
+    assert all(
+        isinstance(k, int) and all(isinstance(s, str) for s in v)
+        for k, v in CN_TARGET_MOTIF_OP.items()
+    )
 
     for preset in ("cn", "ops"):
         cnnf = CrystalNNFingerprint.from_preset(preset)

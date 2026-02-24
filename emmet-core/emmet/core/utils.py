@@ -94,7 +94,7 @@ def set_msonable_type_adapter(cls):
     )
 
     class ClsTypeAdapter(RootModel):
-        root: TypedClsDict
+        root: TypedClsDict  # type: ignore[annotation-unchecked]
 
     setattr(cls, "__type_adapter__", ClsTypeAdapter)
 
