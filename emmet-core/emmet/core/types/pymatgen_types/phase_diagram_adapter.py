@@ -101,8 +101,14 @@ def phase_diagram_serializer(phase_diagram, nxt, info) -> dict[str, Any]:
             entry.as_dict() for entry in default_serialized_object["computed_data"][key]
         ]
 
+    # ndarray -> list[list[int]]
     for simplex in default_serialized_object["computed_data"]["simplexes"]:
         simplex["coords"] = simplex["coords"].tolist()
+
+    # ndarray -> list[list[float]]
+    default_serialized_object["computed_data"]["qhull_data"] = (
+        default_serialized_object["computed_data"]["qhull_data"].tolist()
+    )
 
     format = info.context.get("format") if info.context else None
     if format == "arrow":
