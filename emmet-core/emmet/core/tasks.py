@@ -316,8 +316,7 @@ class CoreTaskDoc(StructureMetadata):
     )
     task_id: IdentifierType | None = Field(
         None,
-        description="The (task) ID of this calculation, used as a universal reference across property documents."
-        "This comes in the form: mp-******.",
+        description="The (task) ID of this calculation, used as a universal reference across property documents.",
     )
     task_type: TaskType | CalcType | None = Field(
         None, description="The type of calculation."
