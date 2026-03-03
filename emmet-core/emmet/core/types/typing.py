@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
+from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any, Union
 
@@ -52,22 +53,41 @@ for why this separate class is necesary instead of `DateTimeType | None`
 """
 
 
-def _fault_tolerant_id_serde(val: Any, serialize: bool = False, padlen: int = 8) -> Any:
+def _fault_tolerant_id_serde(
+    val: Any,
+    legacy: bool = False,
+    serialize: bool = False,
+    **kwargs,
+) -> Any:
     """Needed for the API and safe de-/serialization behavior."""
     try:
-        alpha_id = AlphaID(val, padlen=padlen)
+        alpha_id = AlphaID(val, **kwargs)
         if serialize:
             return str(alpha_id)
-        return alpha_id.formatted
+        return alpha_id.formatted if legacy else alpha_id
     except Exception:
         return val
 
 
-IdentifierType: TypeAlias = Annotated[
-    Union[MPID, AlphaID],
-    BeforeValidator(_fault_tolerant_id_serde),
-    PlainSerializer(lambda x: _fault_tolerant_id_serde(x, serialize=True)),
-]
+_id_base_metadata = (BeforeValidator(_fault_tolerant_id_serde),)
+
+
+def _make_id_type(render_order, **kwargs) -> Annotated:
+    match render_order:
+        case 0:
+            _order = Union[AlphaID, MPID]
+        case 1:
+            _order = Union[MPID, AlphaID]
+
+    return Annotated[
+        _order,
+        BeforeValidator(partial(_fault_tolerant_id_serde, **kwargs)),
+        PlainSerializer(partial(_fault_tolerant_id_serde, serialize=True, **kwargs)),
+    ]
+
+
+IdentifierType: TypeAlias = _make_id_type(0, padlen=8)
+MaterialIdentifierType: TypeAlias = _make_id_type(1, legacy=True, prefix="mp", padlen=8)
 """MPID / AlphaID serde."""
 
 
