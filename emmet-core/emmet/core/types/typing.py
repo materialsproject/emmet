@@ -12,7 +12,7 @@ from __future__ import annotations
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Union, Any
+from typing import TYPE_CHECKING, Annotated, Any, Union
 
 import orjson
 from pydantic import BeforeValidator, Field, PlainSerializer, WrapSerializer
@@ -52,10 +52,10 @@ for why this separate class is necesary instead of `DateTimeType | None`
 """
 
 
-def _fault_tolerant_id_serde(val: Any, serialize: bool = False) -> Any:
+def _fault_tolerant_id_serde(val: Any, serialize: bool = False, padlen: int = 8) -> Any:
     """Needed for the API and safe de-/serialization behavior."""
     try:
-        alpha_id = AlphaID(val)
+        alpha_id = AlphaID(val, padlen=padlen)
         if serialize:
             return str(alpha_id)
         return alpha_id.formatted
