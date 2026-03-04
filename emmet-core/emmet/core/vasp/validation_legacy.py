@@ -55,14 +55,6 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
         description="Dictioary of data used to perform validation."
         " Useful for post-mortem analysis",
     )
-    nelements: int | None = Field(None, description="Number of elements.")
-    symmetry_number: int | None = Field(
-        None,
-        title="Space Group Number",
-        description="The spacegroup number for the lattice.",
-    )
-    chemsys: str | None = Field(None)
-    formula_pretty: str | None = Field(None)
 
     @classmethod
     def from_task_doc(
@@ -91,15 +83,11 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
             potcar_stats: Dictionary of potcar stat data. Mapping is calculation type -> potcar symbol -> hash value.
         """
 
-        nelements = task_doc.nelements or None
-        symmetry_number = task_doc.symmetry.number if task_doc.symmetry else None
-
         bandgap = task_doc.output.bandgap
         calc_type = task_doc.calc_type
         task_type = task_doc.task_type
         run_type = task_doc.run_type
         chemsys = task_doc.chemsys
-        formula_pretty = task_doc.formula_pretty
 
         if isinstance(task_doc, (TaskDoc, TaskDocument)):
             inputs = task_doc.orig_inputs
@@ -229,16 +217,10 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
 
         doc = ValidationDoc(
             task_id=task_doc.task_id,
-            calc_type=calc_type,
-            run_type=task_doc.run_type,
             valid=len(reasons) == 0,
             reasons=reasons,
             data=data,
             warnings=warnings,
-            nelements=nelements,
-            symmetry_number=symmetry_number,
-            chemsys=chemsys,
-            formula_pretty=formula_pretty,
         )
 
         return doc
@@ -247,7 +229,9 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
 def _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandgap):
     # Ensure inputsets get proper additional input values
     if "SCAN" in run_type.value:
-        valid_input_set: VaspInputSet = input_sets[str(calc_type)](structure, bandgap=bandgap)  # type: ignore
+        valid_input_set: VaspInputSet = input_sets[str(calc_type)](
+            structure, bandgap=bandgap
+        )  # type: ignore
     elif task_type == TaskType.NSCF_Uniform or task_type == TaskType.NSCF_Line:
         # Constructing the k-path for line-mode calculations is too costly, so
         # the uniform input set is used instead and k-points are not checked.
