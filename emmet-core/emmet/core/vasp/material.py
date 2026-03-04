@@ -5,11 +5,12 @@ from typing import Mapping
 from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer, oxide_type
 from pymatgen.analysis.structure_matcher import StructureMatcher
-from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 from emmet.core.base import EmmetMeta
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin
+from emmet.core.mpid import AlphaID
+from emmet.core.mpid_ext import ThermoID
 from emmet.core.settings import EmmetSettings
 from emmet.core.tasks import TaskDoc
 from emmet.core.types.pymatgen_types.computed_entries_adapter import (
@@ -105,7 +106,7 @@ class MaterialsDoc(CoreMaterialsDoc):
         if use_statics:
             possible_mat_ids += [task.task_id for task in statics]
 
-        material_id = min(possible_mat_ids)
+        material_id = AlphaID(min(possible_mat_ids), prefix="mp")
 
         # Always prefer a static over a structure opt
         structure_task_quality_scores = {"Structure Optimization": 1, "Static": 2}
@@ -207,10 +208,12 @@ class MaterialsDoc(CoreMaterialsDoc):
 
             if relevant_calcs:
                 best_task_doc = relevant_calcs[0]
-                entry = ComputedStructureEntry(
-                    composition=best_task_doc.output.structure.composition,
-                    correction=0.0,
-                    data={
+                entry = {
+                    "@class": "ComputedStructureEntry",
+                    "@module": "pymatgen.entries.computed_entries",
+                    "composition": best_task_doc.output.structure.composition,
+                    "correction": 0.0,
+                    "data": {
                         "aspherical": best_task_doc.input.parameters.get(
                             "LASPH", False
                         ),
@@ -219,9 +222,9 @@ class MaterialsDoc(CoreMaterialsDoc):
                         "material_id": material_id,
                         "task_id": best_task_doc.task_id,
                     },
-                    energy=best_task_doc.output.energy,
-                    entry_id="{}-{}".format(material_id, rt.value),
-                    parameters={
+                    "energy": best_task_doc.output.energy,
+                    "entry_id": ThermoID(identifier=material_id, suffix=rt),
+                    "parameters": {
                         "hubbards": best_task_doc.input.hubbards,
                         "is_hubbard": best_task_doc.input.is_hubbard,
                         "potcar_spec": (
@@ -231,8 +234,8 @@ class MaterialsDoc(CoreMaterialsDoc):
                         ),
                         "run_type": str(best_task_doc.run_type),
                     },
-                    structure=best_task_doc.output.structure,
-                )
+                    "structure": best_task_doc.output.structure,
+                }
                 entries[rt] = entry
 
         if not any(
