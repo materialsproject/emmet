@@ -2,6 +2,7 @@ from robocrys import __version__ as __robocrys_version__
 from robocrys.condense.mineral import MineralMatcher
 
 from emmet.builders.base import BaseBuilderInput
+from emmet.builders.utils import try_call
 from emmet.core.robocrys import RobocrystallogapherDoc
 
 
@@ -26,15 +27,19 @@ def build_robocrys_docs(
     """
     mineral_matcher = MineralMatcher()
     return list(
-        map(
-            lambda x: RobocrystallogapherDoc.from_structure(
-                builder_meta=x.builder_meta,
-                deprecated=x.deprecated,
-                material_id=x.material_id,
-                mineral_matcher=mineral_matcher,
-                robocrys_version=__robocrys_version__,
-                structure=x.structure,
+        filter(
+            lambda y: y is not None,
+            map(
+                lambda x: try_call(
+                    RobocrystallogapherDoc.from_structure,
+                    builder_meta=x.builder_meta,
+                    deprecated=x.deprecated,
+                    material_id=x.material_id,
+                    mineral_matcher=mineral_matcher,
+                    robocrys_version=__robocrys_version__,
+                    structure=x.structure,
+                ),
+                input_documents,
             ),
-            input_documents,
         )
     )

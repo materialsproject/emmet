@@ -6,6 +6,7 @@ import sys
 from gzip import GzipFile
 from io import BytesIO
 from itertools import chain, combinations
+from typing import TYPE_CHECKING, Callable, ParamSpec, TypeVar
 
 import orjson
 from botocore.exceptions import ClientError
@@ -14,11 +15,8 @@ from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
 from pymatgen.core import Structure
 from pymatgen.io.vasp.inputs import PotcarSingle
 
-from emmet.core.types.typing import FSPathType
-
 from emmet.builders.settings import EmmetBuildSettings
-
-from typing import TYPE_CHECKING
+from emmet.core.types.typing import FSPathType
 
 if TYPE_CHECKING:
     from typing import Any, Literal
@@ -300,3 +298,28 @@ def get_potcar_stats(
             stats[calc_type].update({potcar_symbol: summary_stats})
 
     return stats
+
+
+T = TypeVar("T")
+S = TypeVar("S")
+P = ParamSpec("P")
+
+
+def try_call(
+    fn: Callable[P, T], /, *args: P.args, default: S = None, **kwargs: P.kwargs
+) -> T | S | None:
+    """Attempt to call a function, returning a default value if an exception is raised.
+
+    Args:
+        fn: The function to call.
+        *args: Positional arguments to forward to ``fn``.
+        default: The value to return if ``fn`` raises an exception. Defaults to ``None``.
+        **kwargs: Keyword arguments to forward to ``fn``.
+
+    Returns:
+        The return value of ``fn(*args, **kwargs)`` if successful, otherwise ``default``.
+    """
+    try:
+        return fn(*args, **kwargs)
+    except Exception:
+        return default
