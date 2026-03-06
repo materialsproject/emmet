@@ -1,6 +1,7 @@
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.builders.base import BaseBuilderInput
+from emmet.builders.utils import try_call
 from emmet.core.bonds import BondingDoc
 
 
@@ -24,15 +25,19 @@ def build_bonding_docs(
        list[BondingDoc]
     """
     return list(
-        map(
-            lambda x: BondingDoc.from_structure(
-                builder_meta=x.builder_meta,
-                deprecated=x.deprecated,
-                material_id=x.material_id,
-                structure=SpacegroupAnalyzer(
-                    x.structure
-                ).get_conventional_standard_structure(),
+        filter(
+            lambda y: y is not None,
+            map(
+                lambda x: try_call(
+                    BondingDoc.from_structure,
+                    builder_meta=x.builder_meta,
+                    deprecated=x.deprecated,
+                    material_id=x.material_id,
+                    structure=SpacegroupAnalyzer(
+                        x.structure
+                    ).get_conventional_standard_structure(),
+                ),
+                input_documents,
             ),
-            input_documents,
         )
     )
