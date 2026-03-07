@@ -24,7 +24,6 @@ def build_oxidation_states_docs(
     return list(
         map(
             lambda x: OxidationStateDoc.from_structure(
-                builder_meta=x.builder_meta,
                 deprecated=x.deprecated,
                 material_id=x.material_id,
                 structure=x.structure,

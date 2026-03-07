@@ -28,7 +28,6 @@ def build_chemenv_docs(
             map(
                 lambda x: try_call(
                     ChemEnvDoc.from_structure,
-                    builder_meta=x.builder_meta,
                     deprecated=x.deprecated,
                     material_id=x.material_id,
                     structure=x.structure,
