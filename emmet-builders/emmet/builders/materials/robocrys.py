@@ -32,7 +32,6 @@ def build_robocrys_docs(
             map(
                 lambda x: try_call(
                     RobocrystallogapherDoc.from_structure,
-                    builder_meta=x.builder_meta,
                     deprecated=x.deprecated,
                     material_id=x.material_id,
                     mineral_matcher=mineral_matcher,

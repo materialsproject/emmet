@@ -30,7 +30,6 @@ def build_bonding_docs(
             map(
                 lambda x: try_call(
                     BondingDoc.from_structure,
-                    builder_meta=x.builder_meta,
                     deprecated=x.deprecated,
                     material_id=x.material_id,
                     structure=SpacegroupAnalyzer(
