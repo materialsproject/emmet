@@ -32,9 +32,12 @@ def build_bonding_docs(
                     BondingDoc.from_structure,
                     deprecated=x.deprecated,
                     material_id=x.material_id,
-                    structure=SpacegroupAnalyzer(
-                        x.structure
-                    ).get_conventional_standard_structure(),
+                    structure=try_call(
+                        lambda s: SpacegroupAnalyzer(
+                            s
+                        ).get_conventional_standard_structure(),
+                        x.structure,
+                    ),
                 ),
                 input_documents,
             ),
