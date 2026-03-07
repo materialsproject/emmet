@@ -31,6 +31,7 @@ def build_chemenv_docs(
                     deprecated=x.deprecated,
                     material_id=x.material_id,
                     structure=x.structure,
+                    builder_meta=x.builder_meta,
                 ),
                 input_documents,
             ),
