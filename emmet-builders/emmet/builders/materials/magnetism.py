@@ -6,7 +6,7 @@ from emmet.core.material import PropertyOrigin
 
 class MagnetismBuilderInput(BaseBuilderInput):
     total_magnetization: float
-    origins: PropertyOrigin
+    origins: list[PropertyOrigin]
 
 
 def build_magnetism_docs(
