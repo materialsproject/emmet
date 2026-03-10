@@ -3,19 +3,19 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from functools import cached_property
 from math import isnan
 from typing import TYPE_CHECKING, Annotated, Literal, TypeVar
 
 import numpy as np
-from pydantic import BaseModel, BeforeValidator, Field, WrapSerializer
+from pydantic import BaseModel, BeforeValidator, Field, WrapSerializer, computed_field
 from pymatgen.analysis.magnetism.analyzer import (
     CollinearMagneticStructureAnalyzer,
     Ordering,
 )
-from pymatgen.core import Structure
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
 from pymatgen.electronic_structure.core import OrbitalType, Spin
-from pymatgen.electronic_structure.dos import CompleteDos
+from pymatgen.io.vasp.sets import MPStaticSet
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 
@@ -23,7 +23,6 @@ from pymatgen.symmetry.bandstructure import HighSymmKpath
 from emmet.core.band_theory import BSPathType  # noqa: F401
 
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import AlphaID
 from emmet.core.settings import EmmetSettings
 from emmet.core.types.enums import ValueEnum
 from emmet.core.types.pymatgen_types.bandstructure_symm_line_adapter import (
@@ -35,7 +34,12 @@ from emmet.core.types.typing import DateTimeType, IdentifierType, TypedBandDict
 
 if TYPE_CHECKING:
     from typing import Any
+
+    from pymatgen.core import Structure
     from typing_extensions import Self
+
+    from emmet.core.material import PropertyOrigin
+    from emmet.core.types.electronic_structure import BSShim, DosShim
 
 SETTINGS = EmmetSettings()
 
@@ -93,12 +97,6 @@ class DOSObjectDoc(BaseModel):
 
 
 class ElectronicStructureBaseData(BaseModel):
-    task_id: IdentifierType = Field(
-        ...,
-        description="The source calculation (task) ID for the electronic structure data. "
-        "This has the same form as a Materials Project ID.",
-    )
-
     band_gap: float = Field(..., description="Band gap energy in eV.")
     cbm: float | None = Field(None, description="Conduction band minimum data.")
     vbm: float | None = Field(None, description="Valence band maximum data.")
@@ -152,6 +150,10 @@ class BandStructureSummaryData(ElectronicStructureSummary):
     vbm: Annotated[TypedBandDict | None, BeforeValidator(_deser_cbm_vbm)] | None = (
         Field(None, description="Valence band maximum data.")
     )
+
+    @computed_field
+    @cached_property
+    def _equivalent_labels(self) -> dict[str, dict[str, dict[str, str]]]: ...
 
 
 class DosSummaryData(ElectronicStructureBaseData):
@@ -266,84 +268,326 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
     )
 
     @classmethod
-    def from_bsdos(  # type: ignore[override]
+    def from_bs(
         cls,
-        dos: dict[IdentifierType, CompleteDos],
-        is_gap_direct: bool,
-        is_metal: bool,
-        material_id: IdentifierType | None = None,
-        origins: list[dict] = [],
-        structures: dict[IdentifierType, Structure] | None = None,
-        setyawan_curtarolo: dict[IdentifierType, BandStructureSymmLine] | None = None,
-        hinuma: dict[IdentifierType, BandStructureSymmLine] | None = None,
-        latimer_munro: dict[IdentifierType, BandStructureSymmLine] | None = None,
+        bandstructures: BSShim,
+        origins: list[PropertyOrigin],
+        structures: dict[IdentifierType, Structure],
         **kwargs,
     ) -> Self:
         """
-        Builds a electronic structure document using band structure and density of states data.
+        Builds an electronic structure document using band structure data.
 
         Args:
+            bandstructures (BSShim): Struct of bandstructures with identifiers.
+            origins (list[PropertyOrigin]): Optional origins information for final doc.
+            structures (dict[AlphaID or MPID, Structure]) = Dictionary mapping a calculation (task) ID to the
+                structures used as inputs. This is to ensures correct magnetic moment information is included.
             material_id (AlphaID or MPID): A material ID.
-            dos (dict[AlphaID or MPID, CompleteDos]): Dictionary mapping a calculation (task) ID to a CompleteDos object.
-            is_gap_direct (bool): Direct gap indicator included at root level of document.
-            is_metal (bool): Metallic indicator included at root level of document.
-            structures (dict[AlphaID or MPID, Structure]) = Dictionary mapping a calculation (task) ID to the structures used
-                as inputs. This is to ensures correct magnetic moment information is included.
-            setyawan_curtarolo (dict[AlphaID or MPID, BandStructureSymmLine]): Dictionary mapping a calculation (task) ID to a
-                BandStructureSymmLine object from a calculation run using the Setyawan-Curtarolo k-path convention.
-            hinuma (dict[AlphaID or MPID, BandStructureSymmLine]): Dictionary mapping a calculation (task) ID to a
-                BandStructureSymmLine object from a calculation run using the Hinuma et al. k-path convention.
-            latimer_munro (dict[AlphaID or MPID, BandStructureSymmLine]): Dictionary mapping a calculation (task) ID to a
-                BandStructureSymmLine object from a calculation run using the Latimer-Munro k-path convention.
-            origins (list[dict]): Optional origins information for final doc
 
         """
+        bs_data = _generate_bs_data(bandstructures, origins, structures)
+        origins.append(bs_data["es_origins_from_bs"])
 
-        # -- Process density of states data
+        return bs_checks(
+            cls.from_structure(
+                band_gap=bs_data["band_gap"],
+                cbm=bs_data["cbm"],
+                vbm=bs_data["vbm"],
+                efermi=bs_data["efermi"],
+                is_gap_direct=bs_data["is_gap_direct"],
+                is_metal=bs_data["is_metal"],
+                magnetic_ordering=bs_data["bs_magnetic_ordering"],
+                bandstructure=bs_data["bs_entry"],
+                origins=origins,
+                **kwargs,
+            ),
+            structures,
+        )
 
-        dos_task, dos_obj = list(dos.items())[0]
+    @classmethod
+    def from_dos(
+        cls,
+        dos: DosShim,
+        is_gap_direct: bool,
+        origins: list[PropertyOrigin],
+        structures: dict[IdentifierType, Structure],
+        **kwargs,
+    ) -> Self:
+        """
+        Builds an electronic structure document using density of states data.
 
-        orbitals = [OrbitalType.s, OrbitalType.p, OrbitalType.d]
-        spins = list(dos_obj.densities.keys())
+        Args:
+            dos (DosShim): Struct with a CompleteDos and identifier.
+            is_gap_direct (bool): Direct gap indicator included at root level of document, result of VASP outputs.
+            origins (list[PropertyOrigin]): Origins information for final doc.
+            structures (dict[AlphaID or MPID, Structure]) = Dictionary mapping a calculation (task) ID to the
+                structures used as inputs. This is to ensures correct magnetic moment information is included.
+            material_id (AlphaID or MPID): A material ID.
 
-        ele_dos = dos_obj.get_element_dos()
-        tot_orb_dos = dos_obj.get_spd_dos()
+        """
+        dos_data = _generate_dos_data(dos, origins, structures)
+        origins.append(dos_data["es_origins_from_dos"])
 
-        elements = ele_dos.keys()
+        return dos_checks(
+            cls.from_structure(
+                band_gap=dos_data["band_gap"],
+                cbm=dos_data["cbm"],
+                vbm=dos_data["vbm"],
+                efermi=dos_data["efermi"],
+                is_gap_direct=is_gap_direct,
+                is_metal=dos_data["is_metal"],
+                magnetic_ordering=dos_data["magnetic_ordering"],
+                origins=origins,
+                **kwargs,
+            ),
+            structures,
+        )
 
-        dos_efermi = dos_obj.efermi
+    @classmethod
+    def from_bsdos(
+        cls,
+        bandstructures: BSShim,
+        dos: DosShim,
+        origins: list[PropertyOrigin],
+        structures: dict[IdentifierType, Structure],
+        **kwargs,
+    ) -> Self:
+        """
+        Builds an electronic structure document using band structure and density of states data.
 
-        is_gap_direct = is_gap_direct
-        is_metal = is_metal
+        Args:
+            bandstructures (BSShim): Struct of bandstructures with identifiers.
+            dos (DosShim): Struct with a CompleteDos and identifier.
+            origins (list[PropertyOrigin]): Origins information for final doc.
+            structures (dict[AlphaID or MPID, Structure]) = Dictionary mapping a calculation (task) ID to the
+                structures used as inputs. This is to ensures correct magnetic moment information is included.
+            material_id (AlphaID or MPID): A material ID.
 
-        structure = dos_obj.structure
+        """
+        bs_data = _generate_bs_data(bandstructures, origins, structures)
+        dos_data = _generate_dos_data(dos, origins, structures)
 
-        if structures is not None and structures[dos_task]:
-            structure = structures[dos_task]
+        # TODO: add ability to add blessed structure from material into ranking
+        #       for es origins, i.e., r2SCAN static/relax > GGA NSCF line > ...
+        origins.append(bs_data["es_origins_from_bs"])
+        magnetic_ordering = bs_data["bs_magnetic_ordering"]
 
-        dos_mag_ordering = CollinearMagneticStructureAnalyzer(structure).ordering
+        return bsdos_checks(
+            cls.from_structure(
+                band_gap=bs_data["band_gap"],
+                cbm=bs_data["cbm"],
+                vbm=bs_data["vbm"],
+                efermi=bs_data["efermi"],
+                is_gap_direct=bs_data["is_gap_direct"],
+                is_metal=bs_data["is_metal"],
+                magnetic_ordering=magnetic_ordering,
+                bandstructure=bs_data["bs_entry"],
+                dos=dos_data["dos_entry"],
+                **kwargs,
+            ),
+            structures,
+        )
 
-        dos_data = {
-            "total": defaultdict(dict),
-            "elemental": {element: defaultdict(dict) for element in elements},
-            "orbital": defaultdict(dict),
-            "magnetic_ordering": dos_mag_ordering,
-        }
 
-        for spin in spins:
-            # - Process total DOS data
-            band_gap = dos_obj.get_gap(spin=spin)
-            (cbm, vbm) = dos_obj.get_cbm_vbm(spin=spin)
+def _generate_bs_data(
+    bandstructures: BSShim,
+    origins: list[PropertyOrigin],
+    structures: dict[IdentifierType, Structure],
+) -> dict:
+    bs_data = {  # type: ignore
+        "setyawan_curtarolo": bandstructures.setyawan_curtarolo,
+        "hinuma": bandstructures.hinuma,
+        "latimer_munro": bandstructures.latimer_munro,
+    }
 
-            try:
-                spin_polarization = dos_obj.spin_polarization
-                if spin_polarization is None or isnan(spin_polarization):
-                    spin_polarization = None
-            except KeyError:
+    bs_type: str
+    bs_input: tuple[IdentifierType, BandStructureSymmLine, int]
+    bs_task_id: IdentifierType
+    bs: BandStructureSymmLine
+
+    for bs_type, bs_input in bs_data.items():
+        if bs_input is not None:
+            bs_task_id, bs, _ = bs_input
+            bs_mag_ordering = CollinearMagneticStructureAnalyzer(
+                structures[bs_task_id]
+            ).ordering
+
+            gap_dict = bs.get_band_gap()
+            is_metal = bs.is_metal()
+            direct_gap = bs.get_direct_band_gap()
+
+            if is_metal:
+                band_gap = 0.0
+                cbm = None  # type: ignore[assignment]
+                vbm = None  # type: ignore[assignment]
+                is_gap_direct = False
+            else:
+                band_gap = gap_dict["energy"]
+                cbm = bs.get_cbm()  # type: ignore[assignment]
+                vbm = bs.get_vbm()  # type: ignore[assignment]
+                is_gap_direct = gap_dict["direct"]
+
+                # coerce type here, mixture of str and int types in bs objects
+                cbm["kpoint_index"] = [int(x) for x in cbm["kpoint_index"]]  # type: ignore[index]
+                vbm["kpoint_index"] = [int(x) for x in vbm["kpoint_index"]]  # type: ignore[index]
+
+            bs_efermi = bs.efermi
+            nbands = bs.nb_bands
+
+            # - Get equivalent labels between different conventions
+            hskp = HighSymmKpath(
+                bs.structure,
+                path_type="all",
+                symprec=0.1,
+                angle_tolerance=5,
+                atol=1e-5,
+            )
+            equivalent_labels = hskp.equiv_labels
+
+            if bs_type == "latimer_munro":
+                gen_labels = set(
+                    [
+                        label
+                        for label in equivalent_labels["latimer_munro"][
+                            "setyawan_curtarolo"
+                        ]
+                    ]
+                )
+                kpath_labels = set(
+                    [kpoint.label for kpoint in bs.kpoints if kpoint.label is not None]
+                )
+
+                if not gen_labels.issubset(kpath_labels):
+                    new_structure = SpacegroupAnalyzer(
+                        bs.structure  # type: ignore[arg-type]
+                    ).get_primitive_standard_structure(international_monoclinic=False)
+
+                    hskp = HighSymmKpath(
+                        new_structure,
+                        path_type="all",
+                        symprec=SETTINGS.SYMPREC,
+                        angle_tolerance=SETTINGS.ANGLE_TOL,
+                        atol=1e-5,
+                    )
+                    equivalent_labels = hskp.equiv_labels
+
+            bs_data[bs_type] = BandStructureSummaryData(  # type: ignore
+                band_gap=band_gap,
+                direct_gap=direct_gap,
+                cbm=cbm,
+                vbm=vbm,
+                is_gap_direct=is_gap_direct,
+                is_metal=is_metal,
+                efermi=bs_efermi,
+                nbands=nbands,
+                equivalent_labels=equivalent_labels,
+                magnetic_ordering=bs_mag_ordering,
+            )
+
+    def _bs_eval(
+        bs_data: dict[str, BandStructureSymmLine | None],
+        bs_rank: list[str] = ["latimer_munro", "hinuma", "setyawan_curtarolo"],
+    ) -> str:
+        for bs_type in bs_rank:
+            if bs_data[bs_type] is not None:
+                yield bs_type
+
+    blessed_bs_key = next(_bs_eval(bs_data))
+
+    bs_entry = BandstructureData(**bs_data)  # type: ignore
+    band_gap = getattr(bs_entry, blessed_bs_key).band_gap
+    cbm = (getattr(bs_entry, bs_data).cbm or {}).get("energy", None)  # type: ignore
+    vbm = (getattr(bs_entry, bs_data).vbm or {}).get("energy", None)  # type: ignore
+    efermi = getattr(bs_entry, blessed_bs_key).efermi  # type: ignore
+    is_gap_direct = getattr(bs_entry, blessed_bs_key).is_gap_direct  # type: ignore
+    is_metal = getattr(bs_entry, blessed_bs_key).is_metal  # type: ignore
+
+    es_origins_from_bs = None
+    for origin in origins:
+        if origin["name"] == blessed_bs_key:
+            es_origins_from_bs = {
+                "name": "electronic_structure",
+                "last_updated": origin["last_updated"],
+                "task_id": origin["task_id"],
+            }
+
+    bs_magnetic_ordering = CollinearMagneticStructureAnalyzer(
+        structures[es_origins_from_bs["task_id"]],
+        round_magmoms=True,
+        threshold_nonmag=0.2,
+        threshold=0,
+    ).ordering
+
+    return {
+        "band_gap": band_gap,
+        "cbm": cbm,
+        "vbm": vbm,
+        "efermi": efermi,
+        "is_gap_direct": is_gap_direct,
+        "is_metal": is_metal,
+        "bs_magnetic_ordering": bs_magnetic_ordering,
+        "bandstructure": bs_entry,
+        "es_origins_from_bs": es_origins_from_bs,
+    }
+
+
+def _generate_dos_data(
+    dos: DosShim,
+    origins: list[PropertyOrigin],
+    structures: dict[IdentifierType, Structure],
+) -> dict:
+    dos_task, dos_obj, _ = dos.dos
+
+    orbitals = [OrbitalType.s, OrbitalType.p, OrbitalType.d]
+    spins = list(dos_obj.densities.keys())
+
+    ele_dos = dos_obj.get_element_dos()
+    tot_orb_dos = dos_obj.get_spd_dos()
+
+    elements = ele_dos.keys()
+
+    dos_efermi = dos_obj.efermi
+    structure = structures[dos_task]
+
+    dos_magnetic_ordering = CollinearMagneticStructureAnalyzer(structure).ordering
+
+    dos_data = {
+        "total": defaultdict(dict),
+        "elemental": {element: defaultdict(dict) for element in elements},
+        "orbital": defaultdict(dict),
+        "magnetic_ordering": dos_magnetic_ordering,
+    }
+
+    for spin in spins:
+        # - Process total DOS data
+        band_gap = dos_obj.get_gap(spin=spin)
+        (cbm, vbm) = dos_obj.get_cbm_vbm(spin=spin)
+
+        try:
+            spin_polarization = dos_obj.spin_polarization
+            if spin_polarization is None or isnan(spin_polarization):
                 spin_polarization = None
+        except KeyError:
+            spin_polarization = None
 
-            dos_data["total"][spin] = DosSummaryData(  # type: ignore[index]
-                task_id=dos_task,
+        dos_data["total"][spin] = DosSummaryData(  # type: ignore[index]
+            band_gap=band_gap,
+            cbm=cbm,
+            vbm=vbm,
+            efermi=dos_efermi,
+            spin_polarization=spin_polarization,
+        )
+
+        # - Process total orbital projection data
+        for orbital in orbitals:
+            band_gap = tot_orb_dos[orbital].get_gap(spin=spin)
+
+            (cbm, vbm) = tot_orb_dos[orbital].get_cbm_vbm(spin=spin)
+
+            spin_polarization = None
+
+            dos_data["orbital"][str(orbital)][spin] = DosSummaryData(  # type: ignore[index]
                 band_gap=band_gap,
                 cbm=cbm,
                 vbm=vbm,
@@ -351,16 +595,25 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                 spin_polarization=spin_polarization,
             )
 
-            # - Process total orbital projection data
-            for orbital in orbitals:
-                band_gap = tot_orb_dos[orbital].get_gap(spin=spin)
+    # - Process element and element orbital projection data
+    for ele in ele_dos:
+        orb_dos = dos_obj.get_element_spd_dos(ele)
 
-                (cbm, vbm) = tot_orb_dos[orbital].get_cbm_vbm(spin=spin)
+        for orbital in ["total"] + list(orb_dos.keys()):  # type: ignore[assignment]
+            if orbital == "total":
+                proj_dos = ele_dos
+                label = ele
+            else:
+                proj_dos = orb_dos
+                label = orbital
+
+            for spin in spins:
+                band_gap = proj_dos[label].get_gap(spin=spin)
+                (cbm, vbm) = proj_dos[label].get_cbm_vbm(spin=spin)
 
                 spin_polarization = None
 
-                dos_data["orbital"][str(orbital)][spin] = DosSummaryData(  # type: ignore[index]
-                    task_id=dos_task,
+                dos_data["elemental"][ele][str(orbital)][spin] = DosSummaryData(  # type: ignore[index]
                     band_gap=band_gap,
                     cbm=cbm,
                     vbm=vbm,
@@ -368,207 +621,162 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                     spin_polarization=spin_polarization,
                 )
 
-        # - Process element and element orbital projection data
-        for ele in ele_dos:
-            orb_dos = dos_obj.get_element_spd_dos(ele)
+    dos_entry = DosData(**dos_data)  # type: ignore[arg-type]
 
-            for orbital in ["total"] + list(orb_dos.keys()):  # type: ignore[assignment]
-                if orbital == "total":
-                    proj_dos = ele_dos
-                    label = ele
-                else:
-                    proj_dos = orb_dos
-                    label = orbital
+    dos_cbm, dos_vbm = dos_obj.get_cbm_vbm()
+    dos_gap = max(dos_cbm - dos_vbm, 0.0)
 
-                for spin in spins:
-                    band_gap = proj_dos[label].get_gap(spin=spin)
-                    (cbm, vbm) = proj_dos[label].get_cbm_vbm(spin=spin)
+    is_metal = True if np.isclose(dos_gap, 0.0, atol=0.01, rtol=0) else False
 
-                    spin_polarization = None
+    es_origins_from_dos = None
+    for origin in origins:
+        if origin["task_id"] == dos_task:
+            es_origins_from_dos = {
+                "name": "electronic_structure",
+                "last_updated": origin["last_updated"],
+                "task_id": dos_task,
+            }
 
-                    dos_data["elemental"][ele][str(orbital)][spin] = DosSummaryData(  # type: ignore[index]
-                        task_id=dos_task,
-                        band_gap=band_gap,
-                        cbm=cbm,
-                        vbm=vbm,
-                        efermi=dos_efermi,
-                        spin_polarization=spin_polarization,
-                    )
+    return {
+        "band_gap": dos_gap,
+        "cbm": dos_cbm,
+        "vbm": dos_vbm,
+        "efermi": dos_efermi,
+        "is_metal": is_metal,
+        "dos_magnetic_ordering": dos_magnetic_ordering,
+        "es_origins_from_dos": es_origins_from_dos,
+        "dos_entry": dos_entry,
+    }
 
-        #  -- Process band structure data
-        bs_data = {  # type: ignore
-            "setyawan_curtarolo": setyawan_curtarolo,
-            "hinuma": hinuma,
-            "latimer_munro": latimer_munro,
-        }
 
-        for bs_type, bs_input in bs_data.items():
-            if bs_input is not None:
-                bs_task, bs = list(bs_input.items())[0]
+def bs_checks(
+    doc: ElectronicStructureDoc,
+    structures: dict[str, Structure],
+    bandstructures: BSShim,
+    skip_primitive_check: bool = False,
+) -> ElectronicStructureDoc:
+    for _, bs_summary in doc.bandstructure:
+        if bs_summary is not None:
+            _bandgap_diff_check(doc, bs_summary.band_gap, bs_summary.task_id)
 
-                if structures is not None and structures[bs_task]:
-                    bs_mag_ordering = CollinearMagneticStructureAnalyzer(
-                        structures[bs_task]
-                    ).ordering
-                else:
-                    bs_mag_ordering = CollinearMagneticStructureAnalyzer(
-                        bs.structure  # type: ignore[arg-type]
-                    ).ordering
+    mag_orderings: list[tuple[str, Ordering]] = [
+        (bs_summary.task_id, bs_summary.magnetic_ordering)
+        for _, bs_summary in doc.bandstructure
+        if bs_summary is not None
+    ]
 
-                gap_dict = bs.get_band_gap()
-                is_metal = bs.is_metal()
-                direct_gap = bs.get_direct_band_gap()
+    _magnetic_ordering_check(doc, mag_orderings)
 
-                if is_metal:
-                    band_gap = 0.0
-                    cbm = None  # type: ignore[assignment]
-                    vbm = None  # type: ignore[assignment]
-                    is_gap_direct = False
-                else:
-                    band_gap = gap_dict["energy"]
-                    cbm = bs.get_cbm()  # type: ignore[assignment]
-                    vbm = bs.get_vbm()  # type: ignore[assignment]
-                    is_gap_direct = gap_dict["direct"]
+    if not skip_primitive_check:
+        _structure_primitive_checks(doc, structures)
 
-                    # coerce type here, mixture of str and int types in bs objects
-                    cbm["kpoint_index"] = [int(x) for x in cbm["kpoint_index"]]  # type: ignore[index]
-                    vbm["kpoint_index"] = [int(x) for x in vbm["kpoint_index"]]  # type: ignore[index]
+    for _, bandstructure in bandstructures:
+        if bandstructure is not None:
+            task_id, bs_obj, lmaxmix = bandstructure
+            _lmaxmix_check(doc, structures[task_id], lmaxmix)
 
-                bs_efermi = bs.efermi
-                nbands = bs.nb_bands
+    return doc
 
-                # - Get equivalent labels between different conventions
-                hskp = HighSymmKpath(
-                    bs.structure,
-                    path_type="all",
-                    symprec=0.1,
-                    angle_tolerance=5,
-                    atol=1e-5,
-                )
-                equivalent_labels = hskp.equiv_labels
 
-                if bs_type == "latimer_munro":
-                    gen_labels = set(
-                        [
-                            label
-                            for label in equivalent_labels["latimer_munro"][
-                                "setyawan_curtarolo"
-                            ]
-                        ]
-                    )
-                    kpath_labels = set(
-                        [
-                            kpoint.label
-                            for kpoint in bs.kpoints
-                            if kpoint.label is not None
-                        ]
-                    )
+def dos_checks(
+    doc: ElectronicStructureDoc,
+    structures: dict[str, Structure],
+    dos: DosShim,
+    skip_primitive_check: bool = False,
+) -> ElectronicStructureDoc:
+    _bandgap_diff_check(doc, doc.dos.band_gap, doc.dos.task_id)
 
-                    if not gen_labels.issubset(kpath_labels):
-                        new_structure = SpacegroupAnalyzer(
-                            bs.structure  # type: ignore[arg-type]
-                        ).get_primitive_standard_structure(
-                            international_monoclinic=False
-                        )
-
-                        hskp = HighSymmKpath(
-                            new_structure,
-                            path_type="all",
-                            symprec=SETTINGS.SYMPREC,
-                            angle_tolerance=SETTINGS.ANGLE_TOL,
-                            atol=1e-5,
-                        )
-                        equivalent_labels = hskp.equiv_labels
-
-                bs_data[bs_type] = BandStructureSummaryData(  # type: ignore
-                    task_id=bs_task,
-                    band_gap=band_gap,
-                    direct_gap=direct_gap,
-                    cbm=cbm,
-                    vbm=vbm,
-                    is_gap_direct=is_gap_direct,
-                    is_metal=is_metal,
-                    efermi=bs_efermi,
-                    nbands=nbands,
-                    equivalent_labels=equivalent_labels,
-                    magnetic_ordering=bs_mag_ordering,
-                )
-
-        bs_entry = BandstructureData(**bs_data)  # type: ignore
-        dos_entry = DosData(**dos_data)  # type: ignore[arg-type]
-
-        # Obtain summary data
-
-        bs_gap = (
-            bs_entry.setyawan_curtarolo.band_gap
-            if bs_entry.setyawan_curtarolo is not None
-            else None
+    mag_orderings: list[tuple[str, Ordering]] = [
+        (
+            getattr(doc.dos.total, Spin.up).task_id,
+            doc.doc.magnetic_ordering,
         )
-        dos_cbm, dos_vbm = dos_obj.get_cbm_vbm()
-        dos_gap = max(dos_cbm - dos_vbm, 0.0)
+    ]
 
-        new_origin_last_updated = None
-        new_origin_task_id = None
+    _magnetic_ordering_check(doc, mag_orderings)
 
-        if bs_gap is not None and bs_gap <= dos_gap + 0.2:
-            summary_task = bs_entry.setyawan_curtarolo.task_id  # type: ignore
-            summary_band_gap = bs_gap
-            summary_cbm = (
-                bs_entry.setyawan_curtarolo.cbm.get("energy", None)  # type: ignore
-                if bs_entry.setyawan_curtarolo.cbm is not None  # type: ignore
-                else None
+    if not skip_primitive_check:
+        _structure_primitive_checks(doc, structures)
+
+    task_id, dos_obj, lmaxmix = dos.dos
+    _lmaxmix_check(doc, structures[task_id], lmaxmix)
+
+    return doc
+
+
+def bsdos_checks(
+    doc: ElectronicStructureDoc,
+    structures: dict[str, Structure],
+    bandstructures: BSShim,
+    dos: DosShim,
+) -> ElectronicStructureDoc:
+    _structure_primitive_checks(doc, structures)
+    return dos_checks(
+        bs_checks(
+            doc,
+            structures,
+            bandstructures,
+            skip_primitive_check=True,
+        ),
+        structures,
+        dos,
+        skip_primitive_check=True,
+    )
+
+
+def _bandgap_diff_check(
+    doc: ElectronicStructureDoc, band_gap: float, task_id: IdentifierType
+) -> None:
+    if abs(doc.band_gap - band_gap) > 0.25:
+        doc.warnings.append(
+            "Absolute difference between blessed band gap and the band gap for",
+            f"task {str(task_id)} is larger than 0.25 eV.",
+        )
+
+
+def _magnetic_ordering_check(
+    doc: ElectronicStructureDoc, mag_orderings: list[tuple[IdentifierType, Ordering]]
+) -> None:
+    for task_id, ordering in mag_orderings:
+        if doc.magnetic_ordering != ordering:
+            doc.warnings.append(
+                f"Summary data magnetic ordering does not agree with the ordering from {str(task_id)}"
             )
-            summary_vbm = (
-                bs_entry.setyawan_curtarolo.vbm.get("energy", None)  # type: ignore
-                if bs_entry.setyawan_curtarolo.cbm is not None  # type: ignore
-                else None
-            )  # type: ignore
-            summary_efermi = bs_entry.setyawan_curtarolo.efermi  # type: ignore
-            is_gap_direct = bs_entry.setyawan_curtarolo.is_gap_direct  # type: ignore
-            is_metal = bs_entry.setyawan_curtarolo.is_metal  # type: ignore
 
-            for origin in origins:
-                if origin["name"] == "setyawan_curtarolo":
-                    new_origin_last_updated = origin["last_updated"]
-                    new_origin_task_id = origin["task_id"]
 
-        else:
-            summary_task = dos_entry.model_dump()["total"][str(Spin.up)]["task_id"]
-            summary_band_gap = dos_gap
-            summary_cbm = dos_cbm
-            summary_vbm = dos_vbm
-            summary_efermi = dos_efermi
-            is_metal = True if np.isclose(dos_gap, 0.0, atol=0.01, rtol=0) else False
-
-            for origin in origins:
-                if origin["name"] == "dos":
-                    new_origin_last_updated = origin["last_updated"]
-                    new_origin_task_id = origin["task_id"]
-
-        if new_origin_task_id is not None:
-            for origin in origins:
-                if origin["name"] == "electronic_structure":
-                    origin["last_updated"] = new_origin_last_updated
-                    origin["task_id"] = new_origin_task_id
-
-        summary_magnetic_ordering = CollinearMagneticStructureAnalyzer(
-            kwargs["meta_structure"],
-            round_magmoms=True,
-            threshold_nonmag=0.2,
-            threshold=0,
-        ).ordering
-
-        return cls.from_structure(
-            material_id=AlphaID(material_id),
-            task_id=summary_task,
-            band_gap=summary_band_gap,
-            cbm=summary_cbm,
-            vbm=summary_vbm,
-            efermi=summary_efermi,
-            is_gap_direct=is_gap_direct,
-            is_metal=is_metal,
-            magnetic_ordering=summary_magnetic_ordering,
-            bandstructure=bs_entry,
-            dos=dos_entry,
-            **kwargs,
+def _lmaxmix_check(
+    doc: ElectronicStructureDoc,
+    structure: Structure,
+    lmaxmix: int,
+    task_id: IdentifierType,
+) -> None:
+    # VASP default LMAXMIX is 2
+    expected_lmaxmix = MPStaticSet(structure).incar.get("LMAXMIX", 2)
+    if lmaxmix != expected_lmaxmix:
+        doc.warnings.append(
+            "An incorrect calculation parameter may lead to errors in the band gap of "
+            f"0.1-0.2 eV (LMAXIX is {lmaxmix} and should be {expected_lmaxmix} for "
+            f"{str(task_id)})."
         )
+
+
+def _structure_primitive_checks(
+    doc: ElectronicStructureDoc, structures: dict[IdentifierType, Structure]
+) -> None:
+    for task_id, struct in structures.items():
+        struct_prim = SpacegroupAnalyzer(struct).get_primitive_standard_structure(
+            international_monoclinic=False
+        )
+
+        if not np.allclose(
+            struct.lattice.matrix, struct_prim.lattice.matrix, atol=1e-3
+        ):
+            if np.isclose(struct_prim.volume, struct.volume, atol=5, rtol=0):
+                doc.warnings.append(
+                    f"The input structure for {str(task_id)} is primitive but may not exactly match the "
+                    f"standard primitive setting."
+                )
+            else:
+                doc.warnings.append(
+                    f"The input structure for {str(task_id)} does not match the expected standard primitive"
+                )
