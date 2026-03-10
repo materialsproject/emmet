@@ -38,7 +38,7 @@ class DecompositionProduct(BaseModel):
     )
     amount: float | None = Field(
         None,
-        description="The amount of the decomposed material by formula units this this material decomposes to.",
+        description="The amount of the decomposed material by formula units this material decomposes to.",
     )
 
 

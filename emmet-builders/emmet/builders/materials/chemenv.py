@@ -1,4 +1,5 @@
 from emmet.builders.base import BaseBuilderInput
+from emmet.builders.utils import try_call
 from emmet.core.chemenv import ChemEnvDoc
 
 
@@ -22,13 +23,17 @@ def build_chemenv_docs(
         list[ChemEnvDoc]
     """
     return list(
-        map(
-            lambda x: ChemEnvDoc.from_structure(
-                builder_meta=x.builder_meta,
-                deprecated=x.deprecated,
-                material_id=x.material_id,
-                structure=x.structure,
+        filter(
+            lambda y: y is not None,
+            map(
+                lambda x: try_call(
+                    ChemEnvDoc.from_structure,
+                    deprecated=x.deprecated,
+                    material_id=x.material_id,
+                    structure=x.structure,
+                    builder_meta=x.builder_meta,
+                ),
+                input_documents,
             ),
-            input_documents,
         )
     )

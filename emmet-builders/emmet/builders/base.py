@@ -1,7 +1,7 @@
 from pydantic import Field
-from pymatgen.core import Structure
 
 from emmet.core.base import EmmetBaseModel
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.typing import IdentifierType
 
 
@@ -17,4 +17,4 @@ class BaseBuilderInput(EmmetBaseModel):
 
     deprecated: bool = Field(False)
     material_id: IdentifierType | None = Field(None)
-    structure: Structure
+    structure: StructureType
