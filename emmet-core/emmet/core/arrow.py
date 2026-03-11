@@ -23,7 +23,7 @@ PY_PRIMITIVES_TO_ARROW = {
     float: pa.float64(),
     str: pa.string(),
     bool: pa.bool_(),
-    datetime: pa.timestamp("us"),
+    datetime: pa.timestamp("us", tz="UTC"),
 }
 
 
