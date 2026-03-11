@@ -1,7 +1,6 @@
 import sys
 import types
 import typing
-from typing_extensions import NotRequired
 from collections.abc import Iterable, Mapping
 from datetime import datetime
 from enum import Enum
@@ -13,6 +12,7 @@ import typing_extensions
 from monty.json import MSONable
 from pydantic._internal._model_construction import ModelMetaclass
 from pydantic.types import ImportString
+from typing_extensions import NotRequired
 
 RED = "\033[31m"
 BLUE = "\033[34m"
@@ -23,7 +23,7 @@ PY_PRIMITIVES_TO_ARROW = {
     float: pa.float64(),
     str: pa.string(),
     bool: pa.bool_(),
-    datetime: pa.timestamp("us"),
+    datetime: pa.timestamp("us", tz="UTC"),
 }
 
 
