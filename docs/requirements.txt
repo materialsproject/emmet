@@ -91,7 +91,7 @@ six==1.16.0
     # via
     #   livereload
     #   python-dateutil
-tornado==6.5
+tornado==6.5.5
     # via livereload
 watchdog==2.1.9
     # via mkdocs
