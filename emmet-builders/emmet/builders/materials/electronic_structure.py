@@ -42,7 +42,8 @@ class StructuresShim(InputMeta):
 class BSInputs(StructuresShim, BSShim): ...
 
 
-class DosInputs(StructuresShim, DosShim): ...
+class DosInputs(StructuresShim, DosShim):
+    is_gap_direct: bool
 
 
 class BSDosInputs(DosInputs, BSInputs): ...
@@ -238,7 +239,6 @@ class BaseCalcInfo(BaseModel):
     lmaxmix: int
     nkpoints: int
     last_updated: datetime
-    output_structure: StructureType
 
 
 class DosCalc(BaseCalcInfo):
