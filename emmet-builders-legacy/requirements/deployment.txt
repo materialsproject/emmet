@@ -75,7 +75,7 @@ filelock==3.20.3
     # via
     #   torch
     #   triton
-flask==3.0.2
+flask==3.1.3
     # via mongogrant
 fonttools==4.60.2
     # via matplotlib
@@ -230,7 +230,7 @@ nvidia-nvjitlink-cu12==12.3.101
     #   nvidia-cusparse-cu12
 nvidia-nvtx-cu12==12.1.105
     # via torch
-orjson==3.11.5
+orjson==3.11.6
     # via maggma
 packaging==23.2
     # via
@@ -251,7 +251,7 @@ paramiko==3.4.0
     # via sshtunnel
 phonopy==2.21.0
     # via matcalc
-pillow==12.0.0
+pillow==12.1.1
     # via matplotlib
 plotly==5.18.0
     # via pymatgen

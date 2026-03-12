@@ -164,7 +164,7 @@ numpy==1.26.4
     #   statsmodels
     #   tidynamics
     #   tifffile
-orjson==3.11.5
+orjson==3.11.6
     # via
     #   maggma
     #   pymatgen
@@ -192,7 +192,7 @@ paramiko==4.0.0
     # via sshtunnel
 patsy==1.0.1
     # via statsmodels
-pillow==12.0.0
+pillow==12.1.1
     # via
     #   imageio
     #   matplotlib
