@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from functools import cached_property
 from math import isnan
 from typing import TYPE_CHECKING, Annotated, Literal, TypeVar
 
 import numpy as np
-from pydantic import BaseModel, BeforeValidator, Field, WrapSerializer, computed_field
+from pydantic import BaseModel, BeforeValidator, Field, WrapSerializer
 from pymatgen.analysis.magnetism.analyzer import (
     CollinearMagneticStructureAnalyzer,
     Ordering,
@@ -17,7 +16,6 @@ from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
 from pymatgen.electronic_structure.core import OrbitalType, Spin
 from pymatgen.io.vasp.sets import MPStaticSet
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from pymatgen.symmetry.bandstructure import HighSymmKpath
 
 # keeping this import here to avoid breaking changes, this enum was moved to `band_theory`
 from emmet.core.band_theory import BSPathType  # noqa: F401
@@ -122,25 +120,8 @@ def _deser_cbm_vbm(band: Any) -> TypedBandDict:
     return band
 
 
-def _deser_equiv_labels(equivalent_labels: Any):
-    """Validate band structure equivalent labels."""
-    if isinstance(next(iter(equivalent_labels.values())), list):
-        equivalent_labels = {
-            convention: {
-                other_convention: {k: v for k, v in label_tuples}
-                for other_convention, label_tuples in other_mapping
-            }
-            for convention, other_mapping in equivalent_labels.items()
-        }
-    return equivalent_labels
-
-
 class BandStructureSummaryData(ElectronicStructureSummary):
     """Schematize high-level band structure data for the API."""
-
-    equivalent_labels: Annotated[
-        dict[str, dict[str, dict[str, str]]], BeforeValidator(_deser_equiv_labels)
-    ] = Field(..., description="Equivalent k-point labels in other k-path conventions.")
 
     nbands: float = Field(..., description="Number of bands.")
     direct_gap: float = Field(..., description="Direct gap energy in eV.")
@@ -150,10 +131,6 @@ class BandStructureSummaryData(ElectronicStructureSummary):
     vbm: Annotated[TypedBandDict | None, BeforeValidator(_deser_cbm_vbm)] | None = (
         Field(None, description="Valence band maximum data.")
     )
-
-    @computed_field
-    @cached_property
-    def _equivalent_labels(self) -> dict[str, dict[str, dict[str, str]]]: ...
 
 
 class DosSummaryData(ElectronicStructureBaseData):
@@ -435,43 +412,6 @@ def _generate_bs_data(
             bs_efermi = bs.efermi
             nbands = bs.nb_bands
 
-            # - Get equivalent labels between different conventions
-            hskp = HighSymmKpath(
-                bs.structure,
-                path_type="all",
-                symprec=0.1,
-                angle_tolerance=5,
-                atol=1e-5,
-            )
-            equivalent_labels = hskp.equiv_labels
-
-            if bs_type == "latimer_munro":
-                gen_labels = set(
-                    [
-                        label
-                        for label in equivalent_labels["latimer_munro"][
-                            "setyawan_curtarolo"
-                        ]
-                    ]
-                )
-                kpath_labels = set(
-                    [kpoint.label for kpoint in bs.kpoints if kpoint.label is not None]
-                )
-
-                if not gen_labels.issubset(kpath_labels):
-                    new_structure = SpacegroupAnalyzer(
-                        bs.structure  # type: ignore[arg-type]
-                    ).get_primitive_standard_structure(international_monoclinic=False)
-
-                    hskp = HighSymmKpath(
-                        new_structure,
-                        path_type="all",
-                        symprec=SETTINGS.SYMPREC,
-                        angle_tolerance=SETTINGS.ANGLE_TOL,
-                        atol=1e-5,
-                    )
-                    equivalent_labels = hskp.equiv_labels
-
             bs_data[bs_type] = BandStructureSummaryData(  # type: ignore
                 band_gap=band_gap,
                 direct_gap=direct_gap,
@@ -481,7 +421,6 @@ def _generate_bs_data(
                 is_metal=is_metal,
                 efermi=bs_efermi,
                 nbands=nbands,
-                equivalent_labels=equivalent_labels,
                 magnetic_ordering=bs_mag_ordering,
             )
 
