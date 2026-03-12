@@ -445,11 +445,11 @@ def _generate_bs_data(
     es_origins_from_bs = None
     for origin in origins:
         if origin["name"] == blessed_bs_key:
-            es_origins_from_bs = {
-                "name": "electronic_structure",
-                "last_updated": origin["last_updated"],
-                "task_id": origin["task_id"],
-            }
+            es_origins_from_bs = PropertyOrigin(
+                name="electronic_structure",
+                last_updated=origin["last_updated"],
+                task_id=origin["task_id"],
+            )
 
     bs_magnetic_ordering = CollinearMagneticStructureAnalyzer(
         structures[es_origins_from_bs["task_id"]],
@@ -570,11 +570,11 @@ def _generate_dos_data(
     es_origins_from_dos = None
     for origin in origins:
         if origin["task_id"] == dos_task:
-            es_origins_from_dos = {
-                "name": "electronic_structure",
-                "last_updated": origin["last_updated"],
-                "task_id": dos_task,
-            }
+            es_origins_from_dos = PropertyOrigin(
+                name="electronic_structure",
+                last_updated=origin["last_updated"],
+                task_id=dos_task,
+            )
 
     return {
         "band_gap": dos_gap,
