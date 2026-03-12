@@ -10,20 +10,20 @@ class MagnetismBuilderInput(BaseBuilderInput):
 
 
 def build_magnetism_docs(
-    input_documents: list[BaseBuilderInput],
+    input_documents: list[MagnetismBuilderInput],
 ) -> list[MagnetismDoc]:
     """
     Generate magnetism documents from input structures.
 
-    Transforms a list of BaseBuilderInput documents containing
+    Transforms a list of MagnetismBuilderInput documents containing
     Pymatgen structures into corresponding MagnetismDoc instances by
     analyzing the magnetic configuration of each structure.
 
-    Caller is responsible for creating BaseBuilderInput instances
+    Caller is responsible for creating MagnetismBuilderInput instances
     within their data pipeline context.
 
     Args:
-        input_documents: List of BaseBuilderInput documents to process.
+        input_documents: List of MagnetismBuilderInput documents to process.
 
     Returns:
         list[MagnetismDoc]
