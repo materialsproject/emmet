@@ -129,7 +129,7 @@ class ProjectedBS(BaseModel):
 class ElectronicBS(BandStructure):
     """Define an electronic band structure schema."""
 
-    path_convention: str | None = Field(
+    path_convention: BSPathType | None = Field(
         None, description="High symmetry path convention of the band structure"
     )
 
@@ -181,7 +181,7 @@ class ElectronicBS(BandStructure):
                 )
             )
         except Exception:
-            bs_type = None
+            bs_type = BSPathType.unknown
 
         config = {
             "qpoints": [qpt.frac_coords for qpt in ebs.kpoints],

@@ -49,6 +49,7 @@ class BSPathType(ValueEnum):
     setyawan_curtarolo = "setyawan_curtarolo"
     hinuma = "hinuma"
     latimer_munro = "latimer_munro"
+    unknown = "unknown"
 
 
 class DOSProjectionType(ValueEnum):
