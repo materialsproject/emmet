@@ -157,3 +157,14 @@ def test_top_level_assignment(test_dir):
     assert fictive_doc.host_formula == structure.formula
     assert fictive_doc.host_formula_reduced == structure.reduced_formula
     assert fictive_doc.host_chemsys == structure.chemical_system
+
+    energies = {
+        "0+1": [0.0, 0.5, 0.1],
+        "0+2": [-0.5, 1.25, 0.75],
+    }
+    fictive_doc = NebPathwayResult(
+        hops={k: NebResult(energies=ens) for k, ens in energies.items()}
+    )
+    assert fictive_doc.barrier_ranges == {
+        k: max(ens) - min(ens) for k, ens in energies.items()
+    }
