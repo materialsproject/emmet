@@ -20,8 +20,9 @@ from pymatgen.symmetry.bandstructure import HighSymmKpath
 
 from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.settings import EmmetSettings
-from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.enums import ValueEnum
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
+from emmet.core.vasp.calc_types import RunType
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Sequence
@@ -49,6 +50,9 @@ class BandTheoryBase(BaseModel):
     identifier: str | None = Field(None, description="The identifier of this object.")
     structure: StructureType | None = Field(
         None, description="The structure associated with this calculation."
+    )
+    run_type: RunType | None = Field(
+        None, description="The functional used in the calculation."
     )
 
     def __str__(self) -> str:
