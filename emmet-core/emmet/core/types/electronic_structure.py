@@ -30,16 +30,16 @@ class BSShim(BaseModel):
     ) = Field(
         None,
         description="""
-        Tuple of a calculation (task) ID, a BandStructureSymmLine object 
-        from a calculation run using the Setyawan-Curtarolo k-path 
+        Tuple of a calculation (task) ID, a BandStructureSymmLine object
+        from a calculation run using the Setyawan-Curtarolo k-path
         convention, and lmaxmix from the calculation.
         """,
     )
     hinuma: tuple[IdentifierType, BandStructureSymmLineType, lmaxmix] | None = Field(
         None,
         description="""
-        Tuple of a calculation (task) ID, a BandStructureSymmLine object 
-        from a calculation run using the Hinuma et al. k-path 
+        Tuple of a calculation (task) ID, a BandStructureSymmLine object
+        from a calculation run using the Hinuma et al. k-path
         convention, and lmaxmix from the calculation.
         """,
     )
@@ -47,8 +47,8 @@ class BSShim(BaseModel):
         Field(
             None,
             description="""
-            Tuple of a calculation (task) ID, a BandStructureSymmLine object 
-            from a calculation run using the Latimer-Munro et al. k-path 
+            Tuple of a calculation (task) ID, a BandStructureSymmLine object
+            from a calculation run using the Latimer-Munro et al. k-path
             convention, and lmaxmix from the calculation.
             """,
         )
