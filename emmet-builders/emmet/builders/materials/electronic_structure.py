@@ -237,14 +237,14 @@ class BaseCalcInfo(BaseModel):
     """Basic struct of metadata for use in sorting a list of candidate blessed calculations."""
 
     task_id: str
-    is_hubbard: int
-    lmaxmix: int
-    nkpoints: int
+    is_hubbard: bool | None
+    lmaxmix: int | None
+    nkpoints: int | None
     last_updated: datetime
 
 
 class DosCalc(BaseCalcInfo):
-    nedos: int
+    nedos: int | None
 
 
 class BSCalc(BaseCalcInfo): ...
@@ -271,7 +271,7 @@ def obtain_blessed_dos(dos_calcs: list[DosCalc]) -> DosCalc:
 
 def obtain_blessed_bs(bs_calcs: dict[str, list[BSCalc]]) -> dict[str, BSCalc]:
     """
-    Yields map of best bs calc per path convention frommap of lists of
+    Yields map of best bs calc per path convention from map of lists of
     bs calcs for each path convention.
 
     Helpful for preparing ``ESBuilderInput`` for ``build_electronic_structure_docs``
