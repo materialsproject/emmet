@@ -196,8 +196,8 @@ def _(inputs: ESBuilderInput):
                     structures=x.structures,
                     # from_structure(...) kwargs
                     deprecated=x.deprecated,
-                    meta_structure=x.meta_structure,
                     material_id=x.material_id,
+                    meta_structure=x.meta_structure,
                 ),
                 inputs.data,
             ),
@@ -279,17 +279,22 @@ def obtain_blessed_bs(bs_calcs: dict[str, list[BSCalc]]) -> dict[str, BSCalc]:
     blessed_entries = {}
     bs_types = ["setyawan_curtarolo", "hinuma", "latimer_munro"]
     for bs_type in bs_types:
-        if bs_calcs[bs_type]:
+        if bs_calcs.get(bs_type):
             sorted_bs_data = sorted(
-                bs_calcs[bs_type],
+                [entry for entry in bs_calcs[bs_type] if entry is not None],
                 key=lambda entry: (
-                    entry.is_hubbard,
-                    entry.nkpoints,
-                    entry.last_updated,
+                    # Entries with any None sort last (False < True, reversed)
+                    entry.is_hubbard is not None
+                    and entry.nkpoints is not None
+                    and entry.last_updated is not None,
+                    entry.is_hubbard or False,
+                    entry.nkpoints or 0,
+                    entry.last_updated or datetime.min,
                 ),
                 reverse=True,
             )
 
-            blessed_entries[bs_type] = sorted_bs_data[0]
+            if sorted_bs_data:
+                blessed_entries[bs_type] = sorted_bs_data[0]
 
     return blessed_entries
