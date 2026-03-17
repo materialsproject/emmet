@@ -39,10 +39,12 @@ class StructuresShim(InputMeta):
     structures: dict[IdentifierType, StructureType]
 
 
-class BSInputs(StructuresShim, BSShim): ...
+class BSInputs(StructuresShim):
+    bandstructures: BSShim
 
 
-class DosInputs(StructuresShim, DosShim):
+class DosInputs(StructuresShim):
+    dos: DosShim
     is_gap_direct: bool
 
 
