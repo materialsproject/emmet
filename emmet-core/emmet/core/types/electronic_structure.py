@@ -12,7 +12,7 @@ lmaxmix = int
 class DosShim(BaseModel):
     """Light wrapper around DOS data - useful for static analysis and runtime safety"""
 
-    dos: tuple[str, CompleteDosType, lmaxmix] = Field(
+    dos: tuple[IdentifierType, CompleteDosType, lmaxmix] = Field(
         ...,
         description="Tuple of a calculation (task) ID, a CompleteDos object, and lmaxmix from the calculation.",
     )
