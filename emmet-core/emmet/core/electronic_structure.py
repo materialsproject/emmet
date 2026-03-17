@@ -19,7 +19,7 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 # keeping this import here to avoid breaking changes, this enum was moved to `band_theory`
 from emmet.core.band_theory import BSPathType  # noqa: F401
-
+from emmet.core.material import PropertyOrigin
 from emmet.core.material_property import PropertyDoc
 from emmet.core.settings import EmmetSettings
 from emmet.core.types.enums import ValueEnum
@@ -36,7 +36,6 @@ if TYPE_CHECKING:
     from pymatgen.core import Structure
     from typing_extensions import Self
 
-    from emmet.core.material import PropertyOrigin
     from emmet.core.types.electronic_structure import BSShim, DosShim
 
 SETTINGS = EmmetSettings()
@@ -123,6 +122,10 @@ def _deser_cbm_vbm(band: Any) -> TypedBandDict:
 class BandStructureSummaryData(ElectronicStructureSummary):
     """Schematize high-level band structure data for the API."""
 
+    task_id: IdentifierType | None = Field(
+        None,
+        description="The source calculation (task) ID that this band structure comes from.",
+    )
     nbands: float = Field(..., description="Number of bands.")
     direct_gap: float = Field(..., description="Direct gap energy in eV.")
     cbm: Annotated[TypedBandDict | None, BeforeValidator(_deser_cbm_vbm)] | None = (
@@ -199,6 +202,10 @@ def _deser_orbital(orbital):
 
 
 class DosData(BaseModel):
+    task_id: IdentifierType | None = Field(
+        None,
+        description="The source calculation (task) ID that this density of states comes from.",
+    )
     total: dict[SpinType, DosSummaryData] | None = Field(
         None, description="Total DOS summary data."
     )
@@ -264,7 +271,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
         """
         bs_data = _generate_bs_data(bandstructures, origins, structures)
-        origins.append(bs_data["es_origins_from_bs"])
+        origins = [origin for origin in origins] + [bs_data["es_origins_from_bs"]]
 
         return bs_checks(
             cls.from_structure(
@@ -275,11 +282,12 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                 is_gap_direct=bs_data["is_gap_direct"],
                 is_metal=bs_data["is_metal"],
                 magnetic_ordering=bs_data["bs_magnetic_ordering"],
-                bandstructure=bs_data["bs_entry"],
+                bandstructure=bs_data["bandstructure"],
                 origins=origins,
                 **kwargs,
             ),
             structures,
+            bandstructures,
         )
 
     @classmethod
@@ -304,7 +312,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
         """
         dos_data = _generate_dos_data(dos, origins, structures)
-        origins.append(dos_data["es_origins_from_dos"])
+        origins = [origin for origin in origins] + [dos_data["es_origins_from_dos"]]
 
         return dos_checks(
             cls.from_structure(
@@ -314,11 +322,13 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                 efermi=dos_data["efermi"],
                 is_gap_direct=is_gap_direct,
                 is_metal=dos_data["is_metal"],
-                magnetic_ordering=dos_data["magnetic_ordering"],
+                magnetic_ordering=dos_data["dos_magnetic_ordering"],
+                dos=dos_data["dos_entry"],
                 origins=origins,
                 **kwargs,
             ),
             structures,
+            dos,
         )
 
     @classmethod
@@ -347,7 +357,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
         # TODO: add ability to add blessed structure from material into ranking
         #       for es origins, i.e., r2SCAN static/relax > GGA NSCF line > ...
-        origins.append(bs_data["es_origins_from_bs"])
+        origins = [origin for origin in origins] + [bs_data["es_origins_from_bs"]]
         magnetic_ordering = bs_data["bs_magnetic_ordering"]
 
         return bsdos_checks(
@@ -359,11 +369,14 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                 is_gap_direct=bs_data["is_gap_direct"],
                 is_metal=bs_data["is_metal"],
                 magnetic_ordering=magnetic_ordering,
-                bandstructure=bs_data["bs_entry"],
+                bandstructure=bs_data["bandstructure"],
                 dos=dos_data["dos_entry"],
+                origins=origins,
                 **kwargs,
             ),
             structures,
+            bandstructures,
+            dos,
         )
 
 
@@ -413,6 +426,7 @@ def _generate_bs_data(
             nbands = bs.nb_bands
 
             bs_data[bs_type] = BandStructureSummaryData(  # type: ignore
+                task_id=bs_task_id,
                 band_gap=band_gap,
                 direct_gap=direct_gap,
                 cbm=cbm,
@@ -436,23 +450,23 @@ def _generate_bs_data(
 
     bs_entry = BandstructureData(**bs_data)  # type: ignore
     band_gap = getattr(bs_entry, blessed_bs_key).band_gap
-    cbm = (getattr(bs_entry, bs_data).cbm or {}).get("energy", None)  # type: ignore
-    vbm = (getattr(bs_entry, bs_data).vbm or {}).get("energy", None)  # type: ignore
+    cbm = (getattr(bs_entry, blessed_bs_key).cbm or {}).get("energy", None)  # type: ignore
+    vbm = (getattr(bs_entry, blessed_bs_key).vbm or {}).get("energy", None)  # type: ignore
     efermi = getattr(bs_entry, blessed_bs_key).efermi  # type: ignore
     is_gap_direct = getattr(bs_entry, blessed_bs_key).is_gap_direct  # type: ignore
     is_metal = getattr(bs_entry, blessed_bs_key).is_metal  # type: ignore
 
     es_origins_from_bs = None
     for origin in origins:
-        if origin["name"] == blessed_bs_key:
+        if origin.name == blessed_bs_key:
             es_origins_from_bs = PropertyOrigin(
                 name="electronic_structure",
-                last_updated=origin["last_updated"],
-                task_id=origin["task_id"],
+                last_updated=origin.last_updated,
+                task_id=origin.task_id,
             )
 
     bs_magnetic_ordering = CollinearMagneticStructureAnalyzer(
-        structures[es_origins_from_bs["task_id"]],
+        structures[es_origins_from_bs.task_id],
         round_magmoms=True,
         threshold_nonmag=0.2,
         threshold=0,
@@ -492,6 +506,7 @@ def _generate_dos_data(
     dos_magnetic_ordering = CollinearMagneticStructureAnalyzer(structure).ordering
 
     dos_data = {
+        "task_id": dos_task,
         "total": defaultdict(dict),
         "elemental": {element: defaultdict(dict) for element in elements},
         "orbital": defaultdict(dict),
@@ -569,10 +584,10 @@ def _generate_dos_data(
 
     es_origins_from_dos = None
     for origin in origins:
-        if origin["task_id"] == dos_task:
+        if origin.task_id == dos_task:
             es_origins_from_dos = PropertyOrigin(
                 name="electronic_structure",
-                last_updated=origin["last_updated"],
+                last_updated=origin.last_updated,
                 task_id=dos_task,
             )
 
@@ -611,8 +626,8 @@ def bs_checks(
 
     for _, bandstructure in bandstructures:
         if bandstructure is not None:
-            task_id, bs_obj, lmaxmix = bandstructure
-            _lmaxmix_check(doc, structures[task_id], lmaxmix)
+            task_id, _, lmaxmix = bandstructure
+            _lmaxmix_check(doc, structures[task_id], lmaxmix, task_id)
 
     return doc
 
@@ -623,12 +638,16 @@ def dos_checks(
     dos: DosShim,
     skip_primitive_check: bool = False,
 ) -> ElectronicStructureDoc:
-    _bandgap_diff_check(doc, doc.dos.band_gap, doc.dos.task_id)
+    _bandgap_diff_check(
+        doc,
+        doc.dos.total[Spin.up].band_gap,
+        doc.dos.task_id,
+    )
 
     mag_orderings: list[tuple[str, Ordering]] = [
         (
-            getattr(doc.dos.total, Spin.up).task_id,
-            doc.doc.magnetic_ordering,
+            doc.dos.task_id,
+            doc.dos.magnetic_ordering,
         )
     ]
 
@@ -638,7 +657,7 @@ def dos_checks(
         _structure_primitive_checks(doc, structures)
 
     task_id, dos_obj, lmaxmix = dos.dos
-    _lmaxmix_check(doc, structures[task_id], lmaxmix)
+    _lmaxmix_check(doc, structures[task_id], lmaxmix, doc.dos.task_id)
 
     return doc
 
@@ -668,7 +687,7 @@ def _bandgap_diff_check(
 ) -> None:
     if abs(doc.band_gap - band_gap) > 0.25:
         doc.warnings.append(
-            "Absolute difference between blessed band gap and the band gap for",
+            "Absolute difference between blessed band gap and the band gap for"
             f"task {str(task_id)} is larger than 0.25 eV.",
         )
 
