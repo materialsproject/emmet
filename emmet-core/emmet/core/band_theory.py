@@ -25,6 +25,7 @@ from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Sequence
+    from typing import Any
 
     from pymatgen.core.sites import PeriodicSite
     from pymatgen.core.structure import Structure
@@ -41,6 +42,15 @@ class BandTheoryBase(BaseModel):
     structure: StructureType | None = Field(
         None, description="The structure associated with this calculation."
     )
+
+    def __str__(self) -> str:
+        return (
+            f"{self.__class__.__name__}({self.identifier or ''}"
+            f"{': ' + self.structure.formula if self.structure else ''}"
+        )
+
+    def __repr__(self) -> str:
+        return self.__str__()
 
 
 def _deser_lattice(lattice: Lattice | dict | Matrix3D) -> Matrix3D:
@@ -72,6 +82,57 @@ class BandStructure(
     labels_dict: dict[str, Vector3D] = Field(
         {}, description="The high-symmetry labels of specific q-points."
     )
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.structure and not self.labels_dict:
+
+            self.labels_dict = _align_kpoints_keys(
+                {
+                    k: tuple(v.tolist())
+                    for path_type in BSPathType
+                    for k, v in HighSymmKpath(
+                        self.structure,
+                        has_magmoms=False,
+                        magmom_axis=None,
+                        path_type=path_type.value,
+                        symprec=SETTINGS.SYMPREC,
+                        angle_tolerance=SETTINGS.ANGLE_TOL,
+                    )
+                    .kpath["kpoints"]
+                    .items()
+                }
+            )
+
+    @property
+    def kpath(self) -> list[str]:
+        """Identify the path in k-space described by this bandstructure.
+
+        Returns
+        --------
+        list of str : the high-symmetry k-points
+        """
+        if self.labels_dict and self.qpoints:
+            return _get_kpath(self.labels_dict, self.qpoints)
+        return []
+
+    @computed_field
+    def path_types(self) -> list[BSPathType]:
+        """Identify possible path conventions for this band structure.
+
+        Returns
+        --------
+        list of BSPathType : the set of possibly matching
+            path conventions.
+        """
+
+        if self.labels_dict and self.structure and self.qpoints:
+            try:
+                return list(
+                    obtain_path_type(self.labels_dict, self.structure, self.kpath)
+                )
+            except StopIteration:
+                pass
+        return []
 
 
 class ProjectedBS(BaseModel):
@@ -412,6 +473,14 @@ def obtain_path_type(
         2. High-symmetry k-points along the path have the same labels
         3. High-symmetry k-points along the path have the same coordinates
 
+    Important notes:
+        - pymatgen uses both "GAMMA" and "\\Gamma" to represent the
+            Gamma point. We coerce both values to "\\Gamma"
+        - Sometimes legacy electronic structure data includes both
+            the path set by a particular algorithm, plus a few extra
+            points. We only check that the path matches up to the
+            default high-symmetry path.
+
     Parameters
     -----------
     labels_dict : dict of str to Sequence[float]
@@ -434,9 +503,14 @@ def obtain_path_type(
     -----------
     BSPathType
     """
-    for symprec, angtol in product(symprecs, angtols):
+    cons_labels = _align_kpoints_keys(labels_dict)
+    cons_kpoint_path = _align_kpoints_keys(kpoint_path)
+    for path_type in BSPathType:
+        found_path_type = False
+        for symprec, angtol in product(symprecs, angtols):
+            if found_path_type:
+                break
 
-        for path_type in BSPathType:
             hskp = HighSymmKpath(
                 structure,
                 has_magmoms=False,
@@ -447,22 +521,24 @@ def obtain_path_type(
                 atol=atol,
             )
 
-            ordered_kpts = list(hskp.kpath["kpoints"])
+            kpoints = _align_kpoints_keys(hskp.kpath["kpoints"])
+            path = _align_kpoints_keys(
+                [kpt for kpt_group in hskp.kpath["path"] for kpt in kpt_group]
+            )
             if (
-                # check that the labels are the same
-                set(hskp.kpath["kpoints"]) == set(labels_dict)
                 # check that the path orders are the same
-                and [label for label in hskp.get_kpoints()[1] if label] == kpoint_path
+                path == cons_kpoint_path
                 # check that the kpoints corresponding to each label are the same
                 and np.all(
                     np.linalg.norm(
-                        np.array([hskp.kpath["kpoints"][k] for k in ordered_kpts])
-                        - np.array([labels_dict[k] for k in ordered_kpts]),
+                        np.array([kpoints[k] for k in set(path)])
+                        - np.array([cons_labels[k] for k in set(path)]),
                         axis=1,
                     )
                     < kpoint_tol
                 )
             ):
+                found_path_type = True
                 yield path_type
 
 
@@ -473,3 +549,43 @@ def get_path_from_bandstructure(band_structure: BandStructureSymmLine) -> list[s
         for branch in band_structure.branches
         for label in branch["name"].split("-")
     ]
+
+
+def _align_kpoints_keys(obj: list | dict) -> list | dict:
+    """Ensure lists and dicts have consistent naming.
+
+    Pymatgen uses inconsistent naming schemes for k-points.
+
+    Parameters
+    -----------
+    obj : list or dict
+        Input list where entries are str high-symmetry k-points,
+        or dict where keys are str high-symmetry k-points
+
+    Returns
+    -----------
+    copy of the list or dict with standardized k-point labels,
+        or the object itself if the object type didn't conform.
+    """
+    if all(isinstance(x, str) for x in obj):
+        if isinstance(obj, list):
+            return [x.replace("GAMMA", "\\Gamma") for x in obj]
+        elif isinstance(obj, dict):
+            return {k.replace("GAMMA", "\\Gamma"): v for k, v in obj.items()}
+    return obj
+
+
+def _get_kpath(
+    kpoints_labels: dict[str, Vector3D], kpoints: list[Vector3D]
+) -> list[str]:
+    labels = sorted(kpoints_labels)
+    ref_kpoints = np.array([kpoints_labels[k] for k in labels])
+    kpts = np.array(kpoints)
+    norms = np.array([np.linalg.norm(kpt - ref_kpoints, axis=1) for kpt in kpts])
+    ordered_labels = [labels[np.argmin(norm)] for norm in norms if norm.min() < 1e-5]
+    processed_labels = []
+    for i, lbl in enumerate(ordered_labels):
+        if i > 0 and lbl == processed_labels[-1]:
+            continue
+        processed_labels.append(lbl)
+    return _align_kpoints_keys(processed_labels)
