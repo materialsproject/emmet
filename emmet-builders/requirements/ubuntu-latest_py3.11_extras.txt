@@ -17,13 +17,13 @@ attrs==25.4.0
     #   referencing
 bcrypt==5.0.0
     # via paramiko
-bibtexparser==1.4.3
+bibtexparser==1.4.4
     # via pymatgen
 blake3==1.0.8
     # via emmet-core
-boto3==1.42.34
+boto3==1.42.40
     # via maggma
-botocore==1.42.34
+botocore==1.42.40
     # via
     #   boto3
     #   s3transfer
@@ -45,9 +45,9 @@ colorama==0.4.6
     # via griffe
 contourpy==1.3.3
     # via matplotlib
-coverage[toml]==7.13.2
+coverage[toml]==7.13.3
     # via pytest-cov
-cryptography==46.0.3
+cryptography==46.0.4
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -59,7 +59,7 @@ dnspython==2.8.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.86.2
+emmet-core[all]==0.86.3
     # via emmet-builders (pyproject.toml)
 execnet==2.1.2
     # via pytest-xdist
@@ -207,7 +207,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-builders (pyproject.toml)
     #   mypy
-narwhals==2.15.0
+narwhals==2.16.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -218,7 +218,7 @@ networkx==3.6.1
     #   scikit-image
 nodeenv==1.10.0
     # via pre-commit
-numpy==2.4.1
+numpy==2.4.2
     # via
     #   ase
     #   contourpy
@@ -241,7 +241,7 @@ numpy==2.4.1
     #   shapely
     #   spglib
     #   tifffile
-orjson==3.11.5
+orjson==3.11.7
     # via
     #   maggma
     #   pymatgen
@@ -264,7 +264,7 @@ pandas==2.3.3
     #   seaborn
 paramiko==4.0.0
     # via sshtunnel
-pathspec==1.0.3
+pathspec==1.0.4
     # via
     #   mkdocs
     #   mypy
@@ -427,7 +427,7 @@ scipy==1.17.0
     #   scikit-learn
 seaborn==0.13.2
     # via pymatgen-analysis-diffusion
-seekpath==2.2.0
+seekpath==2.2.1
     # via emmet-core
 sentinels==1.1.1
     # via mongomock
@@ -452,11 +452,11 @@ tabulate==0.9.0
     # via pymatgen
 threadpoolctl==3.6.0
     # via scikit-learn
-tifffile==2026.1.14
+tifffile==2026.1.28
     # via scikit-image
 tornado==6.5.4
     # via livereload
-tqdm==4.67.1
+tqdm==4.67.3
     # via
     #   maggma
     #   matminer
