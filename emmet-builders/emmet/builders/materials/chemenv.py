@@ -1,10 +1,10 @@
 from emmet.builders.base import BaseBuilderInput
-from emmet.builders.utils import try_call
+from emmet.builders.utils import filter_map
 from emmet.core.chemenv import ChemEnvDoc
 
 
 def build_chemenv_docs(
-    input_documents: list[BaseBuilderInput],
+    input_documents: list[BaseBuilderInput], **kwargs
 ) -> list[ChemEnvDoc]:
     """
     Generate chemical environment documents from input structures.
@@ -22,18 +22,12 @@ def build_chemenv_docs(
     Returns:
         list[ChemEnvDoc]
     """
+
     return list(
-        filter(
-            lambda y: y is not None,
-            map(
-                lambda x: try_call(
-                    ChemEnvDoc.from_structure,
-                    deprecated=x.deprecated,
-                    material_id=x.material_id,
-                    structure=x.structure,
-                    builder_meta=x.builder_meta,
-                ),
-                input_documents,
-            ),
+        filter_map(
+            ChemEnvDoc.from_structure,
+            input_documents,
+            work_keys=["deprecated", "material_id", "structure", "builder_meta"],
+            **kwargs
         )
     )

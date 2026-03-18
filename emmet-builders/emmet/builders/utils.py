@@ -6,7 +6,15 @@ import sys
 from gzip import GzipFile
 from io import BytesIO
 from itertools import chain, combinations
-from typing import TYPE_CHECKING, Callable, ParamSpec, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Iterable,
+    Iterator,
+    Mapping,
+    ParamSpec,
+    TypeVar,
+)
 
 import orjson
 from botocore.exceptions import ClientError
@@ -300,26 +308,102 @@ def get_potcar_stats(
     return stats
 
 
+# -----------------------------------------------------------------------------
+# Generics
+# -----------------------------------------------------------------------------
+
 T = TypeVar("T")
 S = TypeVar("S")
 P = ParamSpec("P")
+V = TypeVar("V")
 
 
 def try_call(
-    fn: Callable[P, T], /, *args: P.args, default: S = None, **kwargs: P.kwargs
+    fn: Callable[P, T],
+    /,
+    *args: P.args,
+    default: S = None,
+    safe: bool = True,
+    **kwargs: P.kwargs,
 ) -> T | S | None:
     """Attempt to call a function, returning a default value if an exception is raised.
 
     Args:
         fn: The function to call.
         *args: Positional arguments to forward to ``fn``.
-        default: The value to return if ``fn`` raises an exception. Defaults to ``None``.
+        default: The value to return if ``fn`` raises an exception.
+            Defaults to ``None``.
+        safe: Override behavior of ``try_call`` — propagate exceptions when
+            ``fn`` raises. Useful for debugging.
         **kwargs: Keyword arguments to forward to ``fn``.
 
     Returns:
-        The return value of ``fn(*args, **kwargs)`` if successful, otherwise ``default``.
+        The return value of ``fn(*args, **kwargs)`` if successful,
+        otherwise ``default``.
     """
+    if not safe:
+        return fn(*args, **kwargs)
     try:
         return fn(*args, **kwargs)
     except Exception:
         return default
+
+
+def filter_map(
+    fn: Callable[..., T],
+    work: Iterable[V],
+    /,
+    *args: Any,
+    work_keys: list[str] | None = None,
+    **kwargs: Any,
+) -> Iterator[T]:
+    """Apply a function to each item in an iterable, yielding non-None results.
+
+    Lazily maps ``fn`` over ``work``, passing each item as the first argument
+    along with any additional positional and keyword arguments. Results that
+    are ``None`` are excluded.
+
+    When ``work_keys`` is provided, each item in ``work`` is not passed as a
+    positional argument. Instead, the specified keys are extracted from each
+    item (via attribute access or dict lookup) and forwarded to ``fn`` as
+    keyword arguments, merged with any extra ``**kwargs``.
+
+    Args:
+        fn: The function to apply to each item in ``work``.
+        work: The iterable of items to process.
+        *args: Additional positional arguments to forward to ``fn``.
+        work_keys: If provided, a list of keys/attributes to extract from
+            each item in ``work`` and pass as keyword arguments to ``fn``.
+        **kwargs: Additional keyword arguments to forward to ``fn``.
+
+    Yields:
+        Non-``None`` results from applying ``fn`` to each item in ``work``.
+    """
+
+    def _extract_kwargs(item: Any, keys: list[str]) -> dict[str, Any]:
+        return {
+            key: item[key] if isinstance(item, Mapping) else getattr(item, key)
+            for key in keys
+        }
+
+    if work_keys is not None:
+        yield from filter(
+            lambda y: y is not None,
+            map(
+                lambda x: try_call(
+                    fn,
+                    *args,
+                    **_extract_kwargs(x, work_keys),
+                    **kwargs,
+                ),
+                work,
+            ),
+        )
+    else:
+        yield from filter(
+            lambda y: y is not None,
+            map(
+                lambda x: try_call(fn, x, *args, **kwargs),
+                work,
+            ),
+        )

@@ -1,6 +1,6 @@
 """Core definition of a Materials Document"""
 
-from typing import Mapping
+from typing import Mapping, Self
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer, oxide_type
@@ -63,7 +63,7 @@ class MaterialsDoc(CoreMaterialsDoc):
         ] = SETTINGS.VASP_STRUCTURE_QUALITY_SCORES,
         use_statics: bool = SETTINGS.VASP_USE_STATICS,
         commercial_license: bool = True,
-    ) -> "MaterialsDoc":
+    ) -> Self:
         """
         Converts a group of tasks into one material
 

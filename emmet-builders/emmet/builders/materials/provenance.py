@@ -1,15 +1,14 @@
 """Build provenance collection."""
 
-from functools import partial
+from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 
 from emmet.builders.base import BaseBuilderInput
 from emmet.builders.settings import EmmetBuildSettings
+from emmet.builders.utils import filter_map
 from emmet.core.connectors.analysis import parse_cif
 from emmet.core.connectors.icsd.client import IcsdClient
 from emmet.core.connectors.icsd.enums import IcsdSubset
 from emmet.core.provenance import DatabaseSNL, ProvenanceDoc
-
-from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 
 SETTINGS = EmmetBuildSettings()
 structure_matcher = StructureMatcher(
@@ -139,11 +138,8 @@ def match_against_snls(
 
 
 def build_provenance_docs(
-    input_documents: list[BaseBuilderInput],
-    snls: list[DatabaseSNL],
+    input_documents: list[BaseBuilderInput], snls: list[DatabaseSNL], **kwargs
 ) -> list[ProvenanceDoc]:
     """Build the provenance collection."""
 
-    wrapped = partial(match_against_snls, snls=snls)
-
-    return map(wrapped, input_documents)
+    return list(filter_map(match_against_snls, input_documents, snls=snls, **kwargs))

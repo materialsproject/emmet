@@ -1,12 +1,12 @@
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.builders.base import BaseBuilderInput
-from emmet.builders.utils import try_call
+from emmet.builders.utils import filter_map, try_call
 from emmet.core.bonds import BondingDoc
 
 
 def build_bonding_docs(
-    input_documents: list[BaseBuilderInput],
+    input_documents: list[BaseBuilderInput], **kwargs
 ) -> list[BondingDoc]:
     """
     Generate bonding documents from input structures.
@@ -24,22 +24,23 @@ def build_bonding_docs(
     Returns:
        list[BondingDoc]
     """
-    return list(
-        filter(
-            lambda y: y is not None,
-            map(
-                lambda x: try_call(
-                    BondingDoc.from_structure,
-                    deprecated=x.deprecated,
-                    material_id=x.material_id,
-                    structure=try_call(
-                        lambda s: SpacegroupAnalyzer(
-                            s
-                        ).get_conventional_standard_structure(),
-                        x.structure,
-                    ),
-                ),
-                input_documents,
+
+    def _build(deprecated: bool, material_id: str, structure, **kwargs) -> BondingDoc:
+        return BondingDoc.from_structure(
+            deprecated=deprecated,
+            material_id=material_id,
+            structure=try_call(
+                lambda s: SpacegroupAnalyzer(s).get_conventional_standard_structure(),
+                structure,
             ),
+            **kwargs
+        )
+
+    return list(
+        filter_map(
+            _build,
+            input_documents,
+            work_keys=["deprecated", "material_id", "structure"],
+            **kwargs
         )
     )
