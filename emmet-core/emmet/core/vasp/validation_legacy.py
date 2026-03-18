@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 import numpy as np
 from pydantic import BaseModel, Field, ImportString
@@ -60,14 +60,15 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
     def from_task_doc(
         cls,
         task_doc: CoreTaskDoc | TaskDoc | TaskDocument,
-        kpts_tolerance: float = SETTINGS.VASP_KPTS_TOLERANCE,
+        kpts_tolerance: float | None = None,
         kspacing_tolerance: float = SETTINGS.VASP_KSPACING_TOLERANCE,
         input_sets: dict[str, ImportString] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
         LDAU_fields: list[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
         max_allowed_scf_gradient: float = SETTINGS.VASP_MAX_SCF_GRADIENT,
         max_magmoms: dict[str, float] = SETTINGS.VASP_MAX_MAGMOM,
         potcar_stats: dict[CalcType, dict[str, str]] | None = None,
-    ) -> "ValidationDoc":
+        bad_tags: list[str] | None = None,
+    ) -> Self:
         """
         Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
 
@@ -81,7 +82,10 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
             max_allowed_scf_gradient: maximum uphill gradient allowed for SCF steps after the
                 initial equillibriation period
             potcar_stats: Dictionary of potcar stat data. Mapping is calculation type -> potcar symbol -> hash value.
+            bad_tags: List of tags for calculations to deprecate
         """
+        if not kpts_tolerance:
+            kpts_tolerance = 0.4 if "mp_production_old" in task_doc.tags else 0.9
 
         bandgap = task_doc.output.bandgap
         calc_type = task_doc.calc_type
@@ -214,6 +218,10 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
                     reasons.append(DeprecationMessage.UNKNOWN)
                 else:
                     reasons.append(DeprecationMessage.SET)
+
+        if len(list(set(task_doc.tags).intersection(bad_tags))) > 0:
+            warnings.append(f"Manual Deprecation by tags: {bad_tags}")
+            reasons.append(DeprecationMessage.MANUAL)
 
         doc = ValidationDoc(
             task_id=task_doc.task_id,

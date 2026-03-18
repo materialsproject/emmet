@@ -1,9 +1,10 @@
 from emmet.builders.base import BaseBuilderInput
+from emmet.builders.utils import filter_map
 from emmet.core.oxidation_states import OxidationStateDoc
 
 
 def build_oxidation_states_docs(
-    input_documents: list[BaseBuilderInput],
+    input_documents: list[BaseBuilderInput], **kwargs
 ) -> list[OxidationStateDoc]:
     """
     Generate oxidation state documents from input structures.
@@ -22,13 +23,15 @@ def build_oxidation_states_docs(
         list[OxidationStateDoc]
     """
     return list(
-        map(
-            lambda x: OxidationStateDoc.from_structure(
-                deprecated=x.deprecated,
-                material_id=x.material_id,
-                structure=x.structure,
-                builder_meta=x.builder_meta,
-            ),
+        filter_map(
+            OxidationStateDoc.from_structure,
             input_documents,
+            work_keys=[
+                "deprecated",
+                "material_id",
+                "structure",
+                "builder_meta",
+            ],
+            **kwargs
         )
     )
