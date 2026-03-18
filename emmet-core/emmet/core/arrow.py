@@ -210,7 +210,7 @@ def arrowize(obj) -> pa.DataType:
             return arrowize(
                 obj._evaluate(globals(), locals(), {}, recursive_guard=frozenset())  # type: ignore[misc, arg-type]
             )
-        return arrowize(obj._evaluate(globals(), locals(), frozenset()))
+        return arrowize(obj._evaluate(globals(), locals(), recursive_guard=frozenset()))
 
     if isinstance(obj, typing.TypeVar):
         return arrowize(obj.__constraints__[1])

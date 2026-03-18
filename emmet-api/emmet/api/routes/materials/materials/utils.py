@@ -1,3 +1,4 @@
+from typing import Any
 from fastapi import HTTPException
 from pymatgen.core import Composition
 from pymatgen.core.periodic_table import DummySpecies
@@ -40,18 +41,17 @@ def formula_to_criteria(formulas: str) -> dict:
                 )
 
             comp = Composition(integer_formula).reduced_composition
-            crit = dict()
-            crit["formula_anonymous"] = comp.anonymized_formula
+            crit: dict[str, Any] = {"formula_anonymous": comp.anonymized_formula}
             real_elts = [
-                str(e)
-                for e in comp.elements
-                if e.as_dict().get("element", "A") not in dummies
+                e.name for e in comp.elements if not isinstance(e, DummySpecies)
             ]
-
-            for el, n in comp.to_reduced_dict.items():
-                if el in real_elts:
-                    crit[f"composition_reduced.{el}"] = n  # type: ignore
-
+            crit.update(
+                {
+                    f"composition_reduced.{el}": n
+                    for el, n in comp.to_reduced_dict.items()
+                    if el in real_elts
+                }
+            )
             return crit
 
     else:
@@ -80,12 +80,15 @@ def formula_to_criteria(formulas: str) -> dict:
             if len(formula_list) == 1:
                 comp = composition_list[0]
                 # Paranoia below about floating-point "equality"
-                crit = {}
-                crit["nelements"] = len(comp)  # type: ignore
+                crit = {"nelements": len(comp)}
 
                 try:
-                    for el, n in comp.to_reduced_dict.items():
-                        crit[f"composition_reduced.{el}"] = n  # type: ignore
+                    crit.update(
+                        {
+                            f"composition_reduced.{el}": n
+                            for el, n in comp.to_reduced_dict.items()
+                        }
+                    )
                 except IndexError:
                     raise HTTPException(
                         status_code=400,
@@ -99,6 +102,125 @@ def formula_to_criteria(formulas: str) -> dict:
                         "$in": [comp.reduced_formula for comp in composition_list]
                     }
                 }
+
+
+def formula_to_atlas_criteria(formulas: str) -> dict:
+    """
+    Converts formula into Atlas Search query criteria for composition-based searches
+
+    Arguments:
+        formula: formula with wildcards in it for unknown elements
+
+    Returns:
+        Atlas Search style query criteria for this formula
+    """
+    dummies = "AEGJLMQRXZ"
+    formula_list = [formula.strip() for formula in formulas.split(",")]
+    must_clauses: list[dict[str, Any]] = []
+
+    if "*" in formulas:
+        if len(formula_list) > 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Wild cards only supported for single formula queries.",
+            )
+        else:
+            # Wild card in formula
+            nstars = formulas.count("*")
+            formula_dummies = formulas.replace("*", "{}").format(*dummies[:nstars])
+
+            try:
+                integer_formula = Composition(
+                    formula_dummies
+                ).get_integer_formula_and_factor()[0]
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Problem processing formula with wild cards.",
+                )
+
+            comp = Composition(integer_formula).reduced_composition
+            real_elts = [
+                e.name for e in comp.elements if not isinstance(e, DummySpecies)
+            ]
+
+            # Build Atlas Search compound query
+            must_clauses = [
+                {
+                    "text": {
+                        "query": comp.anonymized_formula,
+                        "path": "formula_anonymous",
+                    }
+                }
+            ]
+
+            # Add element-specific clauses
+            must_clauses += [
+                {"equals": {"path": f"composition_reduced.{el}", "value": n}}
+                for el, n in comp.to_reduced_dict.items()
+                if el in real_elts
+            ]
+
+            return {"must": must_clauses}
+
+    else:
+        try:
+            composition_list = [Composition(formula) for formula in formula_list]
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Problem processing one or more provided formulas.",
+            )
+
+        if any(
+            isinstance(el, DummySpecies) for comp in composition_list for el in comp
+        ):
+            # Assume fully anonymized formula
+            anonymized_formulas = [comp.anonymized_formula for comp in composition_list]
+
+            if len(formula_list) == 1:
+                return {
+                    "text": {
+                        "query": anonymized_formulas[0],
+                        "path": "formula_anonymous",
+                    }
+                }
+            else:
+                return {
+                    "in": {
+                        "path": "formula_anonymous",
+                        "value": anonymized_formulas,
+                    }
+                }
+
+        else:
+            if len(formula_list) == 1:
+                comp = composition_list[0]
+
+                # Build compound query for exact composition match
+                must_clauses = [{"equals": {"path": "nelements", "value": len(comp)}}]
+
+                try:
+                    must_clauses += [
+                        {
+                            "equals": {
+                                "path": f"composition_reduced.{el}",
+                                "value": n,
+                            }
+                        }
+                        for el, n in comp.to_reduced_dict.items()
+                    ]
+                except IndexError:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Problem processing one or more provided formulas.",
+                    )
+
+                return {"must": must_clauses}
+            else:
+                # Multiple formulas - use pretty formula matching
+                pretty_formulas = [comp.reduced_formula for comp in composition_list]
+                return {"in": {"path": "formula_pretty", "value": pretty_formulas}}
 
 
 def chemsys_to_criteria(chemsys: str) -> dict:
@@ -127,18 +249,19 @@ def chemsys_to_criteria(chemsys: str) -> dict:
             eles = chemsys_list[0].split("-")
 
             crit["nelements"] = len(eles)
-
-            for el in eles:
-                if el != "*":
-                    crit[f"composition_reduced.{el}"] = {"$exists": True}
+            crit.update(
+                {
+                    f"composition_reduced.{el}": {"$exists": True}
+                    for el in eles
+                    if el != "*"
+                }
+            )
 
             return crit
     else:
-        query_vals = []
-        for chemsys_val in chemsys_list:
-            eles = chemsys_val.split("-")
-            sorted_chemsys = "-".join(sorted(eles))
-            query_vals.append(sorted_chemsys)
+        query_vals = [
+            "-".join(sorted(chemsys_val.split("-"))) for chemsys_val in chemsys_list
+        ]
 
         if len(query_vals) == 1:
             crit["chemsys"] = query_vals[0]

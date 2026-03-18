@@ -9,8 +9,10 @@ from monty.serialization import loadfn
 from pymatgen.core import Structure
 
 from emmet.core.neb import (
+    NebResult,
     NebTaskDoc,
     NebMethod,
+    NebPathwayResult,
     BarrierAnalysis,
     NebIntermediateImagesDoc,
 )
@@ -120,3 +122,49 @@ def test_from_directories(neb_test_dir):
         == getattr(neb_doc.barrier_analysis, f"{direction}_barrier", None)
         for direction in ("forward", "reverse")
     )
+
+
+def test_top_level_assignment(test_dir):
+
+    structure = Structure.from_file(test_dir / "Si_mp_149.cif")
+    fictive_doc = NebPathwayResult(
+        hops={
+            k: NebResult(forward_barrier=barriers[0], reverse_barrier=barriers[1])
+            for k, barriers in {
+                "a": (1.0, None),
+                "b": (5.0, 10.0),
+                "c": (None, 0.1),
+            }.items()
+        },
+        host_structure=structure,
+    )
+    assert fictive_doc.forward_barriers == {
+        "a": 1.0,
+        "b": 5.0,
+        "c": None,
+    }
+    assert fictive_doc.reverse_barriers == {
+        "a": None,
+        "b": 10.0,
+        "c": 0.1,
+    }
+    assert fictive_doc.max_barriers == {
+        "a": 1.0,
+        "b": 10.0,
+        "c": 0.1,
+    }
+
+    assert fictive_doc.host_formula == structure.formula
+    assert fictive_doc.host_formula_reduced == structure.reduced_formula
+    assert fictive_doc.host_chemsys == structure.chemical_system
+
+    energies = {
+        "0+1": [0.0, 0.5, 0.1],
+        "0+2": [-0.5, 1.25, 0.75],
+    }
+    fictive_doc = NebPathwayResult(
+        hops={k: NebResult(energies=ens) for k, ens in energies.items()}
+    )
+    assert fictive_doc.barrier_ranges == {
+        k: max(ens) - min(ens) for k, ens in energies.items()
+    }

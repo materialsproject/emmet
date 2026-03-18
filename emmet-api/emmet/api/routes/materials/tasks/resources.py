@@ -1,14 +1,14 @@
-from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
-from emmet.api.resource import ReadOnlyResource
-
-from emmet.api.routes.materials.materials.query_operators import (
-    BatchIdQuery,
-    ChemsysQuery,
-    ElementsQuery,
-    FormulaQuery,
+from emmet.api.query_operator import (
+    AtlasPaginationQuery,
+    PaginationQuery,
+    SparseFieldsQuery,
 )
-from emmet.api.routes.materials.tasks.hint_scheme import TasksHintScheme
+from emmet.api.resource import ReadOnlyResource, SearchResource
+
 from emmet.api.routes.materials.tasks.query_operators import (
+    AtlasBatchIdQuery,
+    AtlasElementsQuery,
+    AtlasFormulaQuery,
     DeprecationQuery,
     MultipleTaskIDsQuery,
     TrajectoryQuery,
@@ -23,24 +23,22 @@ timeout = MAPISettings().TIMEOUT
 
 
 def task_resource(task_store):
-    resource = ReadOnlyResource(
+    resource = SearchResource(
         task_store,
         TaskDoc,
         query_operators=[
-            BatchIdQuery(field="batch_id"),
-            FormulaQuery(),
-            ChemsysQuery(),
-            ElementsQuery(),
+            AtlasBatchIdQuery(),
+            AtlasFormulaQuery(),
+            AtlasElementsQuery(),
             MultipleTaskIDsQuery(),
             LastUpdatedQuery(),
-            PaginationQuery(),
+            AtlasPaginationQuery(),
             SparseFieldsQuery(
                 TaskDoc,
                 default_fields=["task_id", "formula_pretty", "last_updated"],
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
-        hint_scheme=TasksHintScheme(),
         tags=["Materials Tasks"],
         sub_path="/tasks/",
         timeout=timeout,
