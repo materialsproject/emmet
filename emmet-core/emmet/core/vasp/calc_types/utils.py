@@ -115,7 +115,9 @@ def task_type(inputs: dict[str, Any]) -> TaskType:
         else:
             calc_type.append("Static")
 
-    elif incar.get("LOPTICS", False) is True or incar.get("ALGO", None).upper() == "CHI":
+    elif (
+        incar.get("LOPTICS", False) is True or incar.get("ALGO", None).upper() == "CHI"
+    ):
         calc_type.append("Optic")
 
     elif incar.get("ISIF", 2) == 3 and incar.get("IBRION", 0) > 0:
