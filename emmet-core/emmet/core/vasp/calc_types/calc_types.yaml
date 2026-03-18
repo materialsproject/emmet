@@ -132,6 +132,7 @@ RUN_TYPES:
       ALGO: Gw0
 TASK_TYPES:
   - NSCF Line
+  - SCF Line
   - NSCF Uniform
   - Dielectric
   - DFPT
