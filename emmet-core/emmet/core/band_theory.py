@@ -24,12 +24,11 @@ from emmet.core.settings import EmmetSettings
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Sequence
+    from collections.abc import Callable, Generator
     from typing import Any
 
     from pymatgen.core.sites import PeriodicSite
     from pymatgen.core.structure import Structure
-    from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
     from typing_extensions import Self
 
 BAND_GAP_TOL = 1e-4
@@ -71,6 +70,16 @@ class BandStructure(
     electronic and phonon band structures.
     """
 
+    path_convention: BSPathType | None = Field(
+        None, description="High symmetry path convention of the band structure"
+    )
+
+    kpath: list[str] | None = None
+
+    labels_dict: dict[str, Vector3D] = Field(
+        {}, description="The high-symmetry labels of specific q-points."
+    )
+
     qpoints: list[Vector3D] = Field(
         description="The wave vectors (q-points) at which the band structure was sampled, in direct coordinates.",
     )
@@ -79,60 +88,14 @@ class BandStructure(
         description="The reciprocal lattice.", validation_alias="lattice_rec"
     )
 
-    labels_dict: dict[str, Vector3D] = Field(
-        {}, description="The high-symmetry labels of specific q-points."
-    )
-
     def model_post_init(self, __context: Any) -> None:
-        if self.structure and not self.labels_dict:
-
-            self.labels_dict = _align_kpoints_keys(
-                {
-                    k: tuple(v.tolist())
-                    for path_type in BSPathType
-                    for k, v in HighSymmKpath(
-                        self.structure,
-                        has_magmoms=False,
-                        magmom_axis=None,
-                        path_type=path_type.value,
-                        symprec=SETTINGS.SYMPREC,
-                        angle_tolerance=SETTINGS.ANGLE_TOL,
-                    )
-                    .kpath["kpoints"]
-                    .items()
-                }
-            )
-
-    @property
-    def kpath(self) -> list[str]:
-        """Identify the path in k-space described by this bandstructure.
-
-        Returns
-        --------
-        list of str : the high-symmetry k-points
-        """
-        if self.labels_dict and self.qpoints:
-            return _get_kpath(self.labels_dict, self.qpoints)
-        return []
-
-    @computed_field
-    def path_types(self) -> list[BSPathType]:
-        """Identify possible path conventions for this band structure.
-
-        Returns
-        --------
-        list of BSPathType : the set of possibly matching
-            path conventions.
-        """
-
-        if self.labels_dict and self.structure and self.qpoints:
+        if self.structure and not self.path_convention:
             try:
-                return list(
-                    obtain_path_type(self.labels_dict, self.structure, self.kpath)
+                self.path_convention, self.kpath, self.labels_dict = next(
+                    obtain_path_type(self.structure, self.qpoints)
                 )
             except StopIteration:
                 pass
-        return []
 
 
 class ProjectedBS(BaseModel):
@@ -190,10 +153,6 @@ class ProjectedBS(BaseModel):
 class ElectronicBS(BandStructure):
     """Define an electronic band structure schema."""
 
-    path_convention: str | None = Field(
-        None, description="High symmetry path convention of the band structure"
-    )
-
     efermi: float = Field(
         description="The Fermi level (highest occupied energy level.)"
     )
@@ -231,31 +190,18 @@ class ElectronicBS(BandStructure):
     def from_pmg(cls, ebs: PmgBandStructure, **kwargs) -> Self:
         """Construct from a pymatgen band structure object."""
         band_gap_meta = ebs.get_band_gap()
-        labels_dict = {
-            label: kpoint.frac_coords for label, kpoint in ebs.labels_dict.items()
-        }
-
-        try:
-            bs_type = next(
-                obtain_path_type(
-                    labels_dict, ebs.structure, get_path_from_bandstructure(ebs)  # type: ignore[arg-type]
-                )
-            )
-        except Exception:
-            bs_type = None
 
         config = {
             "qpoints": [qpt.frac_coords for qpt in ebs.kpoints],
             "lattice_rec": ebs.lattice_rec.matrix,
             "efermi": ebs.efermi,
             "labels_dict": {
-                label: qpt.frac_coords for label, qpt in ebs.labels_dict.items()
+                label: qpt.frac_coords for label, qpt in (ebs.labels_dict or {}).items()
             },
             "structure": ebs.structure,
             "is_metal": ebs.is_metal(),
             "is_direct": band_gap_meta["direct"],
             "band_gap": band_gap_meta["energy"],
-            "path_convention": bs_type,
         }
 
         for spin in Spin:
@@ -457,13 +403,12 @@ class ElectronicDos(BandTheoryBase):
 
 
 def obtain_path_type(
-    labels_dict: dict[str, Sequence[float]],
     structure: Structure,
-    kpoint_path: list[str],
+    kpoints: list[Vector3D],
     symprecs: list[float] = [SETTINGS.SYMPREC, 0.01],
     angtols: list[float] = [SETTINGS.ANGLE_TOL],
-    atol: float = 1e-5,
-    kpoint_tol: float = 1e-5,
+    atol: float = 1e-3,
+    kpoint_tol: float = 1e-3,
 ) -> Generator:
     """Try to match a band structure path order to known path orders.
 
@@ -483,96 +428,73 @@ def obtain_path_type(
 
     Parameters
     -----------
-    labels_dict : dict of str to Sequence[float]
-        Dict of high-symmetry points to their corresponding
-        fractional coordinates in k-space
     structure : pymatgen .Structure
         Structure associated with the bandstructure
-    kpoint_path : list of str
-        A list of high symmetry k-points visited by the bandstructure.
+    kpoints : list of tuple[float,float,float]
+        A list of (all) k-points included in the bandstructure.
     symprecs : list[float] = [SETTINGS.SYMPREC,0.01]
         List of `symprec` values to pass to `HighSymmKpath`
     angtols : list[float] = [SETTINGS.ANGLE_TOL]
         List `angle_tolerance` values to pass to `HighSymmKpath`
     atol : float = 1e-5
         Absolute tolerance used by `HighSymmKpath`
-    kpoint_tol : float = 1e-5
+    kpoint_tol : float = 1e-3
         Absolute tolerance for matching fractional k-point coordiantes
 
     Yields
     -----------
     BSPathType
     """
-    cons_labels = _align_kpoints_keys(labels_dict)
-    cons_kpoint_path = _align_kpoints_keys(kpoint_path)
     for path_type in BSPathType:
         found_path_type = False
         for symprec, angtol in product(symprecs, angtols):
             if found_path_type:
                 break
 
-            hskp = HighSymmKpath(
-                structure,
-                has_magmoms=False,
-                magmom_axis=None,
-                path_type=path_type.value,
-                symprec=symprec,
-                angle_tolerance=angtol,
-                atol=atol,
-            )
+            try:
+                hskp = HighSymmKpath(
+                    structure,
+                    has_magmoms=False,
+                    magmom_axis=None,
+                    path_type=path_type.value,
+                    symprec=symprec,
+                    angle_tolerance=angtol,
+                    atol=atol,
+                )
 
-            kpoints = _align_kpoints_keys(hskp.kpath["kpoints"])
-            path = _align_kpoints_keys(
-                [kpt for kpt_group in hskp.kpath["path"] for kpt in kpt_group]
-            )
+                kpoint_labels = hskp.kpath["kpoints"]
+                ref_path = [
+                    kpt for kpt_group in hskp.kpath["path"] for kpt in kpt_group
+                ]
+                inferred_kpath = _get_kpath(
+                    kpoint_labels,
+                    kpoints,
+                )
+                num_extra = len(inferred_kpath) - len(ref_path)
+            except Exception:
+                continue
+
             if (
                 # check that the path orders are the same
-                path == cons_kpoint_path
-                # check that the kpoints corresponding to each label are the same
-                and np.all(
-                    np.linalg.norm(
-                        np.array([kpoints[k] for k in set(path)])
-                        - np.array([cons_labels[k] for k in set(path)]),
-                        axis=1,
-                    )
-                    < kpoint_tol
-                )
+                ref_path == inferred_kpath
+                # or that the inferred path contains the reference one as a subset
+                or (num_extra > 0 and _coarse_list_superset(inferred_kpath, ref_path))
             ):
                 found_path_type = True
-                yield path_type
+                yield path_type, inferred_kpath, kpoint_labels
+
+    if not found_path_type:
+        yield None, None, {}
 
 
-def get_path_from_bandstructure(band_structure: BandStructureSymmLine) -> list[str]:
-    """Get the list of high-symmetry points in a band structure."""
-    return [
-        label
-        for branch in band_structure.branches
-        for label in branch["name"].split("-")
-    ]
-
-
-def _align_kpoints_keys(obj: list | dict) -> list | dict:
-    """Ensure lists and dicts have consistent naming.
-
-    Pymatgen uses inconsistent naming schemes for k-points.
-
-    Parameters
-    -----------
-    obj : list or dict
-        Input list where entries are str high-symmetry k-points,
-        or dict where keys are str high-symmetry k-points
-
-    Returns
-    -----------
-    copy of the list or dict with standardized k-point labels,
-        or the object itself if the object type didn't conform.
-    """
-    if all(isinstance(x, str) for x in obj):
-        if isinstance(obj, list):
-            return [x.replace("GAMMA", "\\Gamma") for x in obj]
-        elif isinstance(obj, dict):
-            return {k.replace("GAMMA", "\\Gamma"): v for k, v in obj.items()}
-    return obj
+def _coarse_list_superset(test: list, ref: list) -> bool:
+    diff_len = len(test) - len(ref)
+    if test[:diff_len] == ref or test[diff_len:] == ref:
+        return True
+    for i in range(1, diff_len):
+        if test[i : len(ref) + i] == ref:
+            return True
+    return False
 
 
 def _get_kpath(
@@ -588,4 +510,4 @@ def _get_kpath(
         if i > 0 and lbl == processed_labels[-1]:
             continue
         processed_labels.append(lbl)
-    return _align_kpoints_keys(processed_labels)
+    return processed_labels
