@@ -1,8 +1,8 @@
 """Ensure that document models used in API do not change fields."""
 
-import pytest
 from importlib import import_module
 
+import pytest
 
 ref_model_fields = {
     "emmet.core._general_store.GeneralStoreDoc": [
@@ -964,7 +964,6 @@ ref_model_fields = {
         "efermi",
         "is_gap_direct",
         "is_metal",
-        "es_source_calc_id",
         "bandstructure",
         "dos",
         "dos_energy_up",
