@@ -322,31 +322,31 @@ def try_call(
     fn: Callable[P, T],
     /,
     *args: P.args,
-    default: S = None,
-    safe: bool = True,
+    _default: S = None,
+    _safe: bool = True,
     **kwargs: P.kwargs,
 ) -> T | S | None:
-    """Attempt to call a function, returning a default value if an exception is raised.
+    """Attempt to call a function, returning a _default value if an exception is raised.
 
     Args:
         fn: The function to call.
         *args: Positional arguments to forward to ``fn``.
-        default: The value to return if ``fn`` raises an exception.
+        _default: The value to return if ``fn`` raises an exception.
             Defaults to ``None``.
-        safe: Override behavior of ``try_call`` — propagate exceptions when
+        _safe: Override behavior of ``try_call`` — propagate exceptions when
             ``fn`` raises. Useful for debugging.
         **kwargs: Keyword arguments to forward to ``fn``.
 
     Returns:
         The return value of ``fn(*args, **kwargs)`` if successful,
-        otherwise ``default``.
+        otherwise ``_default``.
     """
-    if not safe:
+    if not _safe:
         return fn(*args, **kwargs)
     try:
         return fn(*args, **kwargs)
     except Exception:
-        return default
+        return _default
 
 
 def filter_map(
@@ -393,7 +393,7 @@ def filter_map(
                 lambda x: try_call(
                     fn,
                     *args,
-                    **_extract_kwargs(x, work_keys),
+                    try_call(_extract_kwargs, x, work_keys, **kwargs),
                     **kwargs,
                 ),
                 work,

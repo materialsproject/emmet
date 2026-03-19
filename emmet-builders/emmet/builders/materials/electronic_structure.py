@@ -101,9 +101,11 @@ def variant_dispatch(func):
 
         return decorator
 
-    def wrapper(inputs):
+    def wrapper(inputs, **kwargs):
         variant = inputs.variant
-        return registry[variant](inputs)
+        if variant not in registry:
+            raise NotImplementedError(f"No handler registered for {variant!r}")
+        return registry[variant](inputs, **kwargs)
 
     wrapper.register = register
     update_wrapper(wrapper, func)
@@ -132,7 +134,6 @@ def build_electronic_structure_docs(
     Returns:
         list[ElectronicStructureDoc]
     """
-    ...
 
 
 @build_electronic_structure_docs.register(Variant.STRUCTURE)
