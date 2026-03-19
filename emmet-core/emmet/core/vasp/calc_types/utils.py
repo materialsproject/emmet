@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from monty.serialization import loadfn
-
+import numpy as np
 from pymatgen.io.vasp import Kpoints
 
 from emmet.core.vasp.calc_types.enums import CalcType, RunType, TaskType
@@ -112,6 +112,12 @@ def task_type(inputs: dict[str, Any]) -> TaskType:
             calc_type.append("Optic")
         elif incar.get("ALGO", "").upper() == "CHI":
             calc_type.append("Optic")
+        elif np.any(np.abs(kpts.get("kpts_weights") or [1e20]) < 1e-6) and (
+            incar.get("METAGGA") is not None or incar.get("LHFCALC", False)
+        ):
+            # Static meta-GGA or hybrid calculation with zero-weighted k-points
+            # Highly-likely to be a self-consistent line-mode calculation
+            calc_type.append("SCF Line")
         else:
             calc_type.append("Static")
 

@@ -15,7 +15,6 @@ from emmet.core.band_theory import (
     ElectronicDos,
     ProjectedDos,
     obtain_path_type,
-    get_path_from_bandstructure,
 )
 from emmet.core.electronic_structure import BSPathType
 from emmet.core.testing_utils import DataArchive
@@ -180,32 +179,22 @@ def test_arrow(bs_fixture, dos_fixture):
 def test_obtain_path_type(test_dir):
 
     line_band_struct = loadfn(test_dir / "electronic_structure" / "Fe_bs.json.gz")
-    path_order = get_path_from_bandstructure(line_band_struct)
-    assert path_order == [
+
+    path_type, kpath, _ = next(
+        obtain_path_type(
+            line_band_struct.structure,
+            [x.frac_coords for x in line_band_struct.kpoints],
+        )
+    )
+    assert isinstance(path_type, BSPathType)
+    assert path_type == BSPathType.setyawan_curtarolo
+    assert kpath == [
         "\\Gamma",
         "H",
-        "H",
-        "N",
         "N",
         "\\Gamma",
-        "\\Gamma",
-        "P",
         "P",
         "H",
         "P",
         "N",
     ]
-    assert all(k in line_band_struct.labels_dict for k in path_order)
-
-    path_type = next(
-        obtain_path_type(
-            {
-                label: kpt.frac_coords
-                for label, kpt in line_band_struct.labels_dict.items()
-            },
-            line_band_struct.structure,
-            path_order,
-        )
-    )
-    assert isinstance(path_type, BSPathType)
-    assert path_type == BSPathType.setyawan_curtarolo
