@@ -18,13 +18,13 @@ from pymatgen.electronic_structure.core import Orbital, Spin
 from pymatgen.electronic_structure.dos import CompleteDos, Dos
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 
-from emmet.core.electronic_structure import BSPathType
 from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.settings import EmmetSettings
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
+from emmet.core.types.enums import ValueEnum
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator
+    from collections.abc import Callable, Generator, Sequence
     from typing import Any
 
     from pymatgen.core.sites import PeriodicSite
@@ -33,6 +33,15 @@ if TYPE_CHECKING:
 
 BAND_GAP_TOL = 1e-4
 SETTINGS = EmmetSettings()  # type: ignore[call-arg]
+
+
+class BSPathType(ValueEnum):
+    """Define path conventions used in pymatgen."""
+
+    setyawan_curtarolo = "setyawan_curtarolo"
+    hinuma = "hinuma"
+    latimer_munro = "latimer_munro"
+    unknown = "unknown"
 
 
 class BandTheoryBase(BaseModel):
@@ -70,8 +79,9 @@ class BandStructure(
     electronic and phonon band structures.
     """
 
-    path_convention: BSPathType | None = Field(
-        None, description="High symmetry path convention of the band structure"
+    path_convention: BSPathType = Field(  # type: ignore[assignment]
+        BSPathType.unknown,
+        description="High symmetry path convention of the band structure",
     )
 
     kpath: list[str] | None = None
@@ -89,7 +99,7 @@ class BandStructure(
     )
 
     def model_post_init(self, __context: Any) -> None:
-        if self.structure and not self.path_convention:
+        if self.structure and self.path_convention == BSPathType.unknown:
 
             # Try the user-input labels if provided, as well as regenerating
             # them on the fly if path determination fails
@@ -103,11 +113,15 @@ class BandStructure(
                             user_kpoint_labels=label_set,
                         )
                     )
-                    self.labels_dict = new_labels.copy()
-                    if self.path_convention:
+                    if self.path_convention != BSPathType.unknown:
+                        self.labels_dict = new_labels.copy()
                         break
                 except StopIteration:
                     pass
+
+            # Fallback, use antipatterns to intuit path type
+            if self.path_convention == BSPathType.unknown and self.labels_dict:
+                self.path_convention = _loose_path_match(list(self.labels_dict))
 
 
 class ProjectedBS(BaseModel):
@@ -418,7 +432,7 @@ def obtain_path_type(
     structure: Structure,
     kpoints: list[Vector3D],
     user_kpoint_labels: dict[str, Vector3D] | None = None,
-    symprecs: list[float] = [SETTINGS.SYMPREC, 0.01],
+    symprecs: list[float] = [SETTINGS.SYMPREC],  # , 0.01],
     angtols: list[float] = [SETTINGS.ANGLE_TOL],
     atol: float = 1e-3,
     kpoint_tol: float = 1e-3,
@@ -471,7 +485,7 @@ def obtain_path_type(
     -----------
     BSPathType
     """
-    for path_type in BSPathType:
+    for path_type in (bspt for bspt in BSPathType if bspt.value != "unknown"):  # type: ignore[attr-defined]
         found_path_type = False
         for symprec, angtol in product(symprecs, angtols):
             if found_path_type:
@@ -480,12 +494,12 @@ def obtain_path_type(
             try:
                 hskp = HighSymmKpath(
                     structure,
-                    has_magmoms=False,
+                    # has_magmoms=False,
                     magmom_axis=None,
                     path_type=path_type.value,
-                    symprec=symprec,
-                    angle_tolerance=angtol,
-                    atol=atol,
+                    # symprec=symprec,
+                    # angle_tolerance=angtol,
+                    # atol=atol,
                 )
 
                 kpoint_labels = user_kpoint_labels or {
@@ -509,7 +523,7 @@ def obtain_path_type(
                 yield path_type, inferred_kpath, kpoint_labels
 
     if not found_path_type:
-        yield None, None, {}
+        yield BSPathType.unknown, None, {}
 
 
 def _coarse_list_superset(test: list, ref: list) -> bool:
@@ -536,3 +550,43 @@ def _get_kpath(
             continue
         processed_labels.append(lbl)
     return processed_labels
+
+
+def _loose_path_match(labels: Sequence[str]) -> BSPathType:
+    """ANTIPATTERN: Use poor labelling to determine path convention.
+
+    In pymatgen, the following are true:
+
+    | BSPathType | Gamma-point symbol | Other characters |
+    | ---- | ---- | ---- |
+    | setyawan_curtarolo | "\\Gamma" | Uppercase letters + Q_1 |
+    | hinuma | "GAMMA" | Uppercase letters + Q_1 |
+    | latimer_munro | "Γ" | Lowercase letters + q_{1} |
+
+    We abuse these (already anti-)patterns to coarsely determine the path type,
+    knowing a priori these were generated with pymatgen
+    """
+    unique_labels = set(labels)
+    if (
+        "\\Gamma" in unique_labels
+        and unique_labels.intersection({"GAMMA", "Γ", r"{", r"}"}) == set()
+        and {symb.upper() for symb in unique_labels if symb != "\\Gamma"}.issubset(
+            unique_labels
+        )
+    ):
+        return BSPathType.setyawan_curtarolo  # type: ignore[return-value]
+    elif (
+        "GAMMA" in unique_labels
+        and unique_labels.intersection({"\\Gamma", "Γ", r"{", r"}"}) == set()
+        and {symb.upper() for symb in unique_labels} == unique_labels
+    ):
+        return BSPathType.hinuma  # type: ignore[return-value]
+    elif (
+        "Γ" in unique_labels
+        and unique_labels.intersection({"\\Gamma", "GAMMA"}) == set()
+        and {symb.lower() for symb in unique_labels if symb != "Γ"}.issubset(
+            unique_labels
+        )
+    ):
+        return BSPathType.latimer_munro  # type: ignore[return-value]
+    return BSPathType.unknown  # type: ignore[return-value]

@@ -43,12 +43,6 @@ OrderingType = Annotated[
 ]
 
 
-class BSPathType(ValueEnum):
-    setyawan_curtarolo = "setyawan_curtarolo"
-    hinuma = "hinuma"
-    latimer_munro = "latimer_munro"
-
-
 class DOSProjectionType(ValueEnum):
     total = "total"
     elemental = "elemental"
