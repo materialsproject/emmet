@@ -4,20 +4,20 @@ from __future__ import annotations
 
 import json
 import warnings
-from typing import TYPE_CHECKING, Any, Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
-from pydantic import BaseModel, Field, BeforeValidator
-from pymatgen.core import Lattice, Structure, PeriodicSite
+from pydantic import BaseModel, BeforeValidator, Field
+from pymatgen.core import Lattice, PeriodicSite, Structure
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.math import Matrix3D
 from emmet.core.structure import StructureMetadata
 from emmet.core.symmetry import SymmetryData
 from emmet.core.types.enums import ValueEnum
-from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.pymatgen_types.lattice_adapter import LatticeType
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.typing import DateTimeType, IdentifierType
 
 if TYPE_CHECKING:
@@ -447,21 +447,15 @@ class DatabaseSNL(StructureMetadata):
         None,
         description="Whether this represents a (configurationally) ordered structure.",
     )
-    is_valid: bool = Field(False)
     last_updated: DateTimeType = Field(
         description="The last time this entry was updated."
-    )
-    sourced_from_path: str | None = Field(
-        None, description="The path from which this entry was sourced."
     )
     tags: list[str] | None = Field(
         None, description="List of high-level metadata for this entry."
     )
-
     source: Literal["icsd", "pauling", "mp-complete", "user"] | None = Field(
         None, description="The source of this SNL."
     )
-
     submission_id: int | None = Field(
         None, description="If applicable, the identifier of the submitted structure."
     )

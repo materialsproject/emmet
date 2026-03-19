@@ -81,7 +81,7 @@ def update_experimental_icsd_structures(**client_kwargs) -> list[DatabaseSNL]:
         _get_snl_from_cif(
             doc["cif"],
             snl_id=f"icsd-{doc['collection_code']}",
-            tags=doc["subset"].value,
+            tags=[doc["subset"].value],
             source="icsd",
         )
         for doc in data
