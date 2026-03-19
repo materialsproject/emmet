@@ -25,10 +25,11 @@ from emmet.core.settings import EmmetSettings
 from emmet.core.types.enums import ValueEnum
 from emmet.core.types.pymatgen_types.bandstructure_symm_line_adapter import (
     BandStructureSymmLineType,
+    TypedBandDict,
 )
 from emmet.core.types.pymatgen_types.dos_adapter import CompleteDosType
 from emmet.core.types.pymatgen_types.element_adapter import ElementType
-from emmet.core.types.typing import DateTimeType, IdentifierType, TypedBandDict
+from emmet.core.types.typing import DateTimeType, IdentifierType
 
 if TYPE_CHECKING:
     from typing import Any

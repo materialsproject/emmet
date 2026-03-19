@@ -17,10 +17,8 @@ from typing import TYPE_CHECKING, Annotated, Any, Union
 
 import orjson
 from pydantic import BeforeValidator, Field, PlainSerializer, WrapSerializer
-from typing_extensions import TypedDict
 
 from emmet.core.mpid import MPID, AlphaID
-from emmet.core.types.pymatgen_types.kpoint_adapter import KpointType
 from emmet.core.utils import convert_datetime, utcnow
 
 if TYPE_CHECKING:
@@ -89,16 +87,6 @@ def _make_id_type(render_order, **kwargs) -> Annotated:
 IdentifierType: TypeAlias = _make_id_type(0, padlen=8)
 MaterialIdentifierType: TypeAlias = _make_id_type(1, legacy=True, prefix="mp", padlen=8)
 """MPID / AlphaID serde."""
-
-
-class TypedBandDict(TypedDict):
-    """Type def for data stored for cbms or vbms"""
-
-    band_index: dict[str, list[int]]
-    kpoint_index: list[int]
-    kpoint: KpointType
-    energy: float
-    projections: dict[str, list[list[float]]]
 
 
 def _ser_json_like(d, default_serializer, info):

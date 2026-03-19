@@ -6,7 +6,7 @@ from functools import update_wrapper
 from pydantic import BaseModel
 from pymatgen.analysis.magnetism.analyzer import Ordering
 
-from emmet.builders.utils import filter_map, try_call
+from emmet.builders.utils import filter_map
 from emmet.core.electronic_structure import ElectronicStructureDoc
 from emmet.core.material import PropertyOrigin
 from emmet.core.types.electronic_structure import BSShim, DosShim
@@ -170,7 +170,7 @@ def _(inputs: ESBuilderInput, **kwargs) -> list[ElectronicStructureDoc]:
                 "bandstructures",
                 "origins",
                 "structures",
-                # from_structure(...) kwargs
+                # PropertyDoc.from_structure(...) kwargs
                 "deprecated",
                 "material_id",
                 "meta_structure",
@@ -191,7 +191,7 @@ def _(inputs: ESBuilderInput, **kwargs) -> list[ElectronicStructureDoc]:
                 "is_gap_direct",
                 "origins",
                 "structures",
-                # from_structure(...) kwargs
+                # PropertyDoc.from_structure(...) kwargs
                 "deprecated",
                 "material_id",
                 "meta_structure",
@@ -212,7 +212,7 @@ def _(inputs: ESBuilderInput, **kwargs) -> list[ElectronicStructureDoc]:
                 "dos",
                 "origins",
                 "structures",
-                # from_structure(...) kwargs
+                # PropertyDoc.from_structure(...) kwargs
                 "deprecated",
                 "material_id",
                 "meta_structure",
