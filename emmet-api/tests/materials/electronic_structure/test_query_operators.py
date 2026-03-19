@@ -6,10 +6,9 @@ from emmet.api.routes.materials.electronic_structure.query_operators import (
     DOSDataQuery,
     ObjectQuery,
 )
-from emmet.core.electronic_structure import (
-    BSPathType,
-    DOSProjectionType,
-)
+
+from emmet.core.band_theory import BSPathType
+from emmet.core.electronic_structure import DOSProjectionType
 
 from pymatgen.analysis.magnetism.analyzer import Ordering
 from pymatgen.core.periodic_table import Element
