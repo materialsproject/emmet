@@ -19,6 +19,9 @@ from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 
+# keeping this import here to avoid breaking changes, this enum was moved to `band_theory`
+from emmet.core.band_theory import BSPathType  # noqa: F401
+
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import AlphaID
 from emmet.core.settings import EmmetSettings
