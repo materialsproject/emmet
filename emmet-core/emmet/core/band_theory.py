@@ -90,16 +90,24 @@ class BandStructure(
 
     def model_post_init(self, __context: Any) -> None:
         if self.structure and not self.path_convention:
-            try:
-                self.path_convention, self.kpath, self.labels_dict = next(
-                    obtain_path_type(
-                        self.structure,
-                        self.qpoints,
-                        user_kpoint_labels=self.labels_dict,
+
+            # Try the user-input labels if provided, as well as regenerating
+            # them on the fly if path determination fails
+            labels = [self.labels_dict, None] if self.labels_dict else [None]
+            for label_set in labels:
+                try:
+                    self.path_convention, self.kpath, new_labels = next(
+                        obtain_path_type(
+                            self.structure,
+                            self.qpoints,
+                            user_kpoint_labels=label_set,
+                        )
                     )
-                )
-            except StopIteration:
-                pass
+                    self.labels_dict = new_labels.copy()
+                    if self.path_convention:
+                        break
+                except StopIteration:
+                    pass
 
 
 class ProjectedBS(BaseModel):
