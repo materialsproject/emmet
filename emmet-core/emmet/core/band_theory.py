@@ -54,7 +54,7 @@ class BandTheoryBase(BaseModel):
     def __str__(self) -> str:
         return (
             f"{self.__class__.__name__}({self.identifier or ''}"
-            f"{': ' + self.structure.formula if self.structure else ''}"
+            f"{': ' + self.structure.formula if self.structure else ''})"
         )
 
     def __repr__(self) -> str:
@@ -528,7 +528,7 @@ def obtain_path_type(
 
 def _coarse_list_superset(test: list, ref: list) -> bool:
     diff_len = len(test) - len(ref)
-    if test[:diff_len] == ref or test[diff_len:] == ref:
+    if test[: len(ref)] == ref or test[diff_len:] == ref:
         return True
     for i in range(1, diff_len):
         if test[i : len(ref) + i] == ref:
@@ -569,7 +569,8 @@ def _loose_path_match(labels: Sequence[str]) -> BSPathType:
     unique_labels = set(labels)
     if (
         "\\Gamma" in unique_labels
-        and unique_labels.intersection({"GAMMA", "Γ", r"{", r"}"}) == set()
+        and unique_labels.intersection({"GAMMA", "Γ"}) == set()
+        and set("".join(unique_labels)).intersection({r"{", r"}"}) == set()
         and {symb.upper() for symb in unique_labels if symb != "\\Gamma"}.issubset(
             unique_labels
         )
@@ -577,7 +578,8 @@ def _loose_path_match(labels: Sequence[str]) -> BSPathType:
         return BSPathType.setyawan_curtarolo  # type: ignore[return-value]
     elif (
         "GAMMA" in unique_labels
-        and unique_labels.intersection({"\\Gamma", "Γ", r"{", r"}"}) == set()
+        and unique_labels.intersection({"\\Gamma", "Γ"}) == set()
+        and set("".join(unique_labels)).intersection({r"{", r"}"}) == set()
         and {symb.upper() for symb in unique_labels} == unique_labels
     ):
         return BSPathType.hinuma  # type: ignore[return-value]
