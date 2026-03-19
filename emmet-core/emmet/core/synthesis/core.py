@@ -1,5 +1,3 @@
-from typing import Any
-
 from pydantic import BaseModel, Field
 
 from emmet.core.synthesis.materials import ExtractedMaterial
@@ -60,6 +58,21 @@ class SynthesisRecipe(BaseModel):
     )
 
 
+class AtlasSearchText(BaseModel):
+    """Schematize MongoDB Atlas search text match."""
+
+    value: str | None = None
+    type: str | None = None
+
+
+class AtlasSearchHighlight(BaseModel):
+    """Schematize MongoDB Atlas search highlight match."""
+
+    score: float | None = None
+    path: str | None = None
+    texts: list[AtlasSearchText] | None = None
+
+
 @arrow_incompatible
 class SynthesisSearchResultModel(SynthesisRecipe):
     """
@@ -71,7 +84,7 @@ class SynthesisSearchResultModel(SynthesisRecipe):
         None,
         description="Search score.",
     )
-    highlights: list[Any] | None = Field(
+    highlights: list[AtlasSearchHighlight] | None = Field(
         None,
         description="Search highlights.",
     )
