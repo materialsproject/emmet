@@ -92,7 +92,11 @@ class BandStructure(
         if self.structure and not self.path_convention:
             try:
                 self.path_convention, self.kpath, self.labels_dict = next(
-                    obtain_path_type(self.structure, self.qpoints)
+                    obtain_path_type(
+                        self.structure,
+                        self.qpoints,
+                        user_kpoint_labels=self.labels_dict,
+                    )
                 )
             except StopIteration:
                 pass
@@ -405,6 +409,7 @@ class ElectronicDos(BandTheoryBase):
 def obtain_path_type(
     structure: Structure,
     kpoints: list[Vector3D],
+    user_kpoint_labels: dict[str, Vector3D] | None = None,
     symprecs: list[float] = [SETTINGS.SYMPREC, 0.01],
     angtols: list[float] = [SETTINGS.ANGLE_TOL],
     atol: float = 1e-3,
@@ -413,18 +418,31 @@ def obtain_path_type(
     """Try to match a band structure path order to known path orders.
 
     Iterates over a list of `symprec` and `angle_tolerance` values to
-    match paths to one of the path orders in `BSPathType` by checking:
-        1. Special high-symmetry k-point labels match
-        2. High-symmetry k-points along the path have the same labels
-        3. High-symmetry k-points along the path have the same coordinates
+    match paths to one of the path orders in `BSPathType` by checking
+    that the kpoints list contains a reference k-point path dictated
+    by the symmetry of the structure.
+
+    Note that the k-points can be a superset of the high-symmetry path,
+    the full path must be a sequential sublist of the input k-points.
+
+    Ex: If the reference k-path is ["X","M","K","U"], a valid superset
+    would be ["GAMMA", "X", "M", "K", "U", "X"], but an invalid superset
+    would be ["X", "M", "GAMMA", "K", "U"] (as this breaks the reference order).
+
+    The original k-point labels can be input by the user in `user_kpoint_labels`.
+    This is often useful for older calculations because the high-symmetry
+    k-points are not unique, and the path generated thereof will differ
+    if the fractional coordinates of a given high-symmetry point represent
+    a periodic image.
 
     Important notes:
-        - pymatgen uses both "GAMMA" and "\\Gamma" to represent the
-            Gamma point. We coerce both values to "\\Gamma"
-        - Sometimes legacy electronic structure data includes both
-            the path set by a particular algorithm, plus a few extra
-            points. We only check that the path matches up to the
-            default high-symmetry path.
+    - pymatgen uses "\\Gamma" (BSPathType.setyawan_curtarolo),
+        "GAMMA" (BSPathType.hinuma), and "Γ" (BSPathType.latimer_munro)
+        to represent the Gamma point.
+    - Sometimes legacy electronic structure data includes both
+        the path set by a particular algorithm, plus a few extra
+        points. We only check that the path matches up to the
+        default high-symmetry path.
 
     Parameters
     -----------
@@ -462,14 +480,13 @@ def obtain_path_type(
                     atol=atol,
                 )
 
-                kpoint_labels = hskp.kpath["kpoints"]
+                kpoint_labels = user_kpoint_labels or {
+                    k: tuple(v.tolist()) for k, v in hskp.kpath["kpoints"].items()
+                }
                 ref_path = [
                     kpt for kpt_group in hskp.kpath["path"] for kpt in kpt_group
                 ]
-                inferred_kpath = _get_kpath(
-                    kpoint_labels,
-                    kpoints,
-                )
+                inferred_kpath = _get_kpath(kpoint_labels, kpoints)
                 num_extra = len(inferred_kpath) - len(ref_path)
             except Exception:
                 continue
@@ -505,7 +522,7 @@ def _get_kpath(
     kpts = np.array(kpoints)
     norms = np.array([np.linalg.norm(kpt - ref_kpoints, axis=1) for kpt in kpts])
     ordered_labels = [labels[np.argmin(norm)] for norm in norms if norm.min() < 1e-5]
-    processed_labels = []
+    processed_labels: list[str] = []
     for i, lbl in enumerate(ordered_labels):
         if i > 0 and lbl == processed_labels[-1]:
             continue
