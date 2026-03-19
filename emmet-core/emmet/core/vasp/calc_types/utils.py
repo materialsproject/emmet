@@ -110,13 +110,13 @@ def task_type(inputs: dict[str, Any]) -> TaskType:
     elif incar.get("NSW", 1) == 0:
         if incar.get("LOPTICS", False) is True and incar.get("ALGO", None) == "Exact":
             calc_type.append("Optic")
-        elif incar.get("ALGO", None).upper() == "CHI":
+        elif incar.get("ALGO", "").upper() == "CHI":
             calc_type.append("Optic")
         else:
             calc_type.append("Static")
 
     elif (
-        incar.get("LOPTICS", False) is True or incar.get("ALGO", None).upper() == "CHI"
+        incar.get("LOPTICS", False) is True or incar.get("ALGO", "").upper() == "CHI"
     ):
         calc_type.append("Optic")
 
