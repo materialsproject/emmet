@@ -259,7 +259,7 @@ ref_model_fields = {
         "final_structure",
         "pretty_formula",
         "w_sep",
-        "cif",
+        "structure",
         "chemsys",
         "last_updated",
     ],
