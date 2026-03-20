@@ -1,8 +1,17 @@
+from __future__ import annotations
+
 from pydantic import BaseModel, Field
+from pymatgen.core import Structure
+from typing import TYPE_CHECKING
 
 from emmet.core.types.enums import ValueEnum
 from emmet.core.types.pymatgen_types.grain_boundary_adapter import GrainBoundaryType
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.typing import DateTimeType
+
+if TYPE_CHECKING:
+    from typing import Any
+    from typing_extensions import Self
 
 
 class GBTypeEnum(ValueEnum):
@@ -68,7 +77,7 @@ class GrainBoundaryDoc(BaseModel):
 
     w_sep: float | None = Field(None, description="Work of separation in J/m^2.")
 
-    cif: str | None = Field(None, description="CIF file of the structure.")
+    structure: StructureType | None = Field(None, description="Structure.")
 
     chemsys: str | None = Field(
         None, description="Dash-delimited string of elements in the material."
@@ -77,3 +86,19 @@ class GrainBoundaryDoc(BaseModel):
     last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation for this Material document.",
     )
+
+    @classmethod
+    def _migrate_schema(cls, config: dict[str, Any]) -> Self:
+        """Pipe legacy CIF data into a pymatgen structure."""
+        if isinstance(cif_str := config.pop("cif", None), str) and not config.get(
+            "structure"
+        ):
+            config["structure"] = Structure.from_str(cif_str, fmt="cif")
+        return cls(**config)
+
+    @property
+    def cif(self) -> str | None:
+        """Support accessing legacy CIF from structure field."""
+        if self.structure:
+            return self.structure.to(fmt="cif")
+        return None
