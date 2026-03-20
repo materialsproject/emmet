@@ -4,7 +4,6 @@ from emmet.core.synthesis.materials import ExtractedMaterial
 from emmet.core.synthesis.operations import Operation
 from emmet.core.synthesis.reaction import ReactionFormula
 from emmet.core.types.enums import ValueEnum
-from emmet.core.utils import arrow_incompatible
 
 
 class SynthesisTypeEnum(str, ValueEnum):
@@ -73,7 +72,6 @@ class AtlasSearchHighlight(BaseModel):
     texts: list[AtlasSearchText] | None = None
 
 
-@arrow_incompatible
 class SynthesisSearchResultModel(SynthesisRecipe):
     """
     Model for a document containing synthesis recipes
