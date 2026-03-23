@@ -1,7 +1,12 @@
 from typing_extensions import TypedDict
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.types.pymatgen_types.alloy_adapter import AlloyPairType, AlloySystemType
+from emmet.core.types.pymatgen_types.alloy_adapter import (
+    AlloyPairType,
+    AlloySystemType,
+    PairID,
+)
+from emmet.core.types.typing import MaterialIdentifierType
 
 
 class TypedBoolDict(TypedDict):
@@ -20,9 +25,9 @@ class TypedSearchDict(TypedDict):
     energy_above_hull: TypedRangeDict
     formation_energy_per_atom: TypedRangeDict
     formula: list[str]
-    id: list[str]
+    id: list[MaterialIdentifierType]
     is_gap_direct: TypedBoolDict
-    member_ids: list[str]
+    member_ids: list[MaterialIdentifierType]
     spacegroup_intl_number: TypedRangeDict
     theoretical: TypedBoolDict
     volume_cube_root: TypedRangeDict
@@ -31,7 +36,7 @@ class TypedSearchDict(TypedDict):
 class AlloyPairDoc(EmmetBaseModel):
     alloy_pair: AlloyPairType
 
-    pair_id: str
+    pair_id: PairID
 
     # fields useful for building search indices
     _search: TypedSearchDict

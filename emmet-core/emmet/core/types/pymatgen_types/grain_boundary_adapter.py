@@ -51,8 +51,9 @@ def pop_empty_gb_keys(gb: GrainBoundaryTypeVar) -> GrainBoundary:
                         del site[key][prop]
 
             for idx, species_dct in enumerate(site["species"]):
-                for prop in (prop for pop, val in species_dct.items() if val is None):
-                    del site["species"][idx][prop]
+                keys_to_delete = [k for k, v in species_dct.items() if v is None]
+                for key in keys_to_delete:
+                    del site["species"][idx][key]
 
         return GrainBoundary.from_dict(gb)  # type: ignore[arg-type]
 

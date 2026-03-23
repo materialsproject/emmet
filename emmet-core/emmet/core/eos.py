@@ -2,19 +2,17 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field, BeforeValidator
 from typing import TYPE_CHECKING, Annotated
 
+from pydantic import BaseModel, BeforeValidator, Field
 from pymatgen.analysis.eos import EOS, EOSError
 
-from emmet.core.material import BasePropertyMetadata
 from emmet.core.types.enums import ValueEnum
+from emmet.core.types.typing import IdentifierType
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from typing import Any
-
-    from pymatgen.core import Structure
 
 
 class LegacyEOSModel(ValueEnum):
@@ -110,9 +108,12 @@ def _migrate_legacy_data(
     return config  # type: ignore[return-value]
 
 
-class EOSDoc(BasePropertyMetadata):
+class EOSDoc(BaseModel):
     """Fitted equations of state, and energy-volume fit data."""
 
+    task_id: IdentifierType | None = Field(
+        None, description="task_id corresponding to this EOS document"
+    )
     energies: list[float] | None = Field(
         None,
         description="Energies in eV that the equations of state are plotted with.",
@@ -131,13 +132,13 @@ class EOSDoc(BasePropertyMetadata):
     @classmethod
     def from_ev_data(
         cls,
-        structure: Structure,
         volumes: Sequence[float],
         energies: Sequence[float],
+        task_id: IdentifierType | None = None,
         models: list[str | LegacyEOSModel] | None = None,
     ):
-        return cls.from_structure(
-            meta_structure=structure,
+        return cls(
+            task_id=task_id,
             energies=energies,
             volumes=volumes,
             eos=[

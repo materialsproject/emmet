@@ -85,7 +85,7 @@ def _migrate_legacy_history_data(
 
 def _flatten_nested_descriptions(
     descs: list[ProvenanceDescription | None],
-    entry: dict[str, Any] | None,
+    entry: dict[str, Any] | str | None,
     depth: int,
     remark: str | None = None,
 ) -> None:
@@ -110,6 +110,11 @@ def _flatten_nested_descriptions(
 
     if not entry:
         descs.append(None)
+        return
+
+    # Handle plain string descriptions (e.g. from user-submitted SNLs)
+    if isinstance(entry, str):
+        descs.append(ProvenanceDescription(string=entry, remark=remark))
         return
 
     elif nested_hist := entry.pop("history", []):

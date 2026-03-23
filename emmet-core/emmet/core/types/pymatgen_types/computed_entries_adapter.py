@@ -118,7 +118,7 @@ ComputedStructureEntryTypeVar = TypeVar(
 
 
 def entry_serializer(entry, nxt, info) -> dict[str, Any]:
-    # need to beat pmg serialization to get correct id serialization
+    # need to beat pmg serialization to get correct (material/task/entry)_id serialization
     entry.data = TypeAdapter(TypedCEDataDict).dump_python(entry.data)
 
     default_serialized_object = nxt(entry.as_dict(), info)
@@ -153,12 +153,11 @@ def entry_deserializer(entry: dict[str, Any] | ComputedEntry | ComputedStructure
                 entry_type = TypedComputedStructureEntryDict
                 entry = pop_cse_empty_keys(entry)
 
-        # must be before 'energy_adjustments' deserialization
-        entry = TypeAdapter(entry_type).validate_python(entry)
-
-        if "energy_adjustments" in entry and isinstance(
-            entry["energy_adjustments"], str
+        if "energy_adjustments" in entry and any(
+            [isinstance(entry["energy_adjustments"], _type) for _type in (str, bytes)]
         ):
+            # must be before 'energy_adjustments' deserialization
+            entry = TypeAdapter(entry_type).validate_python(entry)
             entry["energy_adjustments"] = orjson.loads(entry["energy_adjustments"])
 
         return entry_cls.from_dict(entry)  # type: ignore[arg-type]
