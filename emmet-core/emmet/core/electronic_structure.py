@@ -17,8 +17,6 @@ from pymatgen.electronic_structure.core import OrbitalType, Spin
 from pymatgen.io.vasp.sets import MPStaticSet
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
-# keeping this import here to avoid breaking changes, this enum was moved to `band_theory`
-from emmet.core.band_theory import BSPathType  # noqa: F401
 from emmet.core.material import PropertyOrigin
 from emmet.core.material_property import PropertyDoc
 from emmet.core.settings import EmmetSettings
