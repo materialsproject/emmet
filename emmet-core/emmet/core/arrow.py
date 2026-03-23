@@ -1,7 +1,6 @@
 import sys
 import types
 import typing
-from typing_extensions import NotRequired
 from collections.abc import Iterable, Mapping
 from datetime import datetime
 from enum import Enum
@@ -13,6 +12,7 @@ import typing_extensions
 from monty.json import MSONable
 from pydantic._internal._model_construction import ModelMetaclass
 from pydantic.types import ImportString
+from typing_extensions import NotRequired
 
 RED = "\033[31m"
 BLUE = "\033[34m"
@@ -210,7 +210,9 @@ def arrowize(obj) -> pa.DataType:
             return arrowize(
                 obj._evaluate(globals(), locals(), {}, recursive_guard=frozenset())  # type: ignore[misc, arg-type]
             )
-        return arrowize(obj._evaluate(globals(), locals(), recursive_guard=frozenset()))
+        # DO NOT CHANGE ARGS - IGNORE MYPY
+        # recursive_guard kwarg does not exist in python <3.12
+        return arrowize(obj._evaluate(globals(), locals(), frozenset()))
 
     if isinstance(obj, typing.TypeVar):
         return arrowize(obj.__constraints__[1])
