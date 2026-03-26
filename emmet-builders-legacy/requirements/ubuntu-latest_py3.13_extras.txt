@@ -354,7 +354,7 @@ nvidia-nvjitlink-cu12==12.6.85
     #   torch
 nvidia-nvtx-cu12==12.6.77
     # via torch
-orjson==3.11.5
+orjson==3.11.6
     # via maggma
 packaging==25.0
     # via
@@ -515,7 +515,7 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.4
+requests==2.33.0
     # via
     #   matminer
     #   pymatgen
@@ -606,7 +606,7 @@ torch==2.8.0
     #   torchmetrics
 torchmetrics==1.7.1
     # via pytorch-lightning
-tornado==6.5
+tornado==6.5.5
     # via livereload
 tqdm==4.67.1
     # via

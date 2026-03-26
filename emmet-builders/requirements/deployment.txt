@@ -230,7 +230,7 @@ nvidia-nvjitlink-cu12==12.3.101
     #   nvidia-cusparse-cu12
 nvidia-nvtx-cu12==12.1.105
     # via torch
-orjson==3.11.5
+orjson==3.11.6
     # via maggma
 packaging==23.2
     # via
@@ -327,7 +327,7 @@ referencing==0.33.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.5
+requests==2.33.0
     # via
     #   dgl
     #   matminer
