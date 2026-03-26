@@ -105,7 +105,7 @@ numpy==2.4.1
     #   tifffile
 opentelemetry-api==1.39.1
     # via ddtrace
-orjson==3.11.5
+orjson==3.11.6
     # via pymatgen
 packaging==26.0
     # via
@@ -118,7 +118,7 @@ palettable==3.3.3
     # via pymatgen
 pandas==3.0.0
     # via pymatgen
-pillow==12.1.0
+pillow==12.1.1
     # via
     #   imageio
     #   matplotlib
@@ -169,7 +169,7 @@ python-dotenv==1.2.1
     # via pydantic-settings
 pyyaml==6.0.3
     # via pybtex
-requests==2.32.5
+requests==2.33.0
     # via
     #   pymatgen
     #   pymatgen-io-validation

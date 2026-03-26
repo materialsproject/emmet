@@ -137,7 +137,7 @@ numpy==2.4.1
     #   shapely
     #   spglib
     #   tifffile
-orjson==3.11.5
+orjson==3.11.6
     # via
     #   maggma
     #   pymatgen
@@ -158,7 +158,7 @@ pandas==2.3.3
     #   seaborn
 paramiko==4.0.0
     # via sshtunnel
-pillow==12.1.0
+pillow==12.1.1
     # via
     #   imageio
     #   matplotlib
@@ -240,7 +240,7 @@ referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.5
+requests==2.33.0
     # via
     #   matminer
     #   pymatgen

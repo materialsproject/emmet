@@ -259,7 +259,7 @@ numpy==1.26.4
     #   statsmodels
     #   tidynamics
     #   tifffile
-orjson==3.11.5
+orjson==3.11.6
     # via
     #   maggma
     #   pymatgen
@@ -292,7 +292,7 @@ pathspec==0.12.1
     #   mypy
 patsy==1.0.1
     # via statsmodels
-pillow==12.0.0
+pillow==12.1.1
     # via
     #   imageio
     #   matplotlib
@@ -423,7 +423,7 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.4
+requests==2.33.0
     # via
     #   matminer
     #   pymatgen
@@ -494,7 +494,7 @@ tidynamics==1.1.2
     # via transport-analysis
 tifffile==2025.8.28
     # via scikit-image
-tornado==6.5.2
+tornado==6.5.5
     # via livereload
 tqdm==4.67.1
     # via
