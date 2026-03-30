@@ -4,12 +4,13 @@ from pymatgen.io.validation.check_kpoints_kspacing import (
     get_kpoint_divisions_from_kspacing,
 )
 
+from emmet.builders.base import BaseBuilderInput
 from emmet.builders.utils import filter_map
+from emmet.core.material import PropertyOrigin
 from emmet.core.materials import MaterialsDoc
 from emmet.core.math import Matrix3D, Vector6D
 from emmet.core.polar import DielectricDoc, PiezoelectricDoc
 from emmet.core.tasks import CoreTaskDoc
-from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.typing import IdentifierType, NullableDateTimeType
 from emmet.core.vasp.calc_types.enums import TaskType
 
@@ -36,10 +37,7 @@ class MaterialsTasksMap(BaseModel):
     task_ids: list[IdentifierType] = Field(default_factory=list)
 
 
-class LinearResponseBuilderInput(BaseModel):
-
-    structure: StructureType
-    material_id: IdentifierType
+class LinearResponseBuilderInput(BaseBuilderInput):
     task_id: IdentifierType
     nkpoints: int
     epsilon_static: Matrix3D | None
@@ -49,6 +47,7 @@ class LinearResponseBuilderInput(BaseModel):
     is_hubbard: int
     last_updated: NullableDateTimeType
     task_last_updated: NullableDateTimeType
+    origins: list[PropertyOrigin]
 
 
 # This needs to retrieve + process materials + dielectric tasks
@@ -133,61 +132,59 @@ def build_linear_response_input(
 
 
 def build_dielectric_docs(
-    linear_resp_input: list[LinearResponseBuilderInput],
+    linear_resp_input: list[LinearResponseBuilderInput], **kwargs
 ) -> list[DielectricDoc]:
     return list(
-        filter(
-            lambda y: y is not None,
-            map(
-                lambda doc: DielectricDoc.from_ionic_and_electronic(
-                    structure=doc.structure,
-                    material_id=doc.material_id,
-                    origins=[
-                        {
-                            "name": "piezoelectric",
-                            "task_id": doc.task_id,
-                            "last_updated": doc.task_last_updated,
-                        }
-                    ],
-                    deprecated=False,
-                    ionic=doc.epsilon_ionic,
-                    electronic=doc.epsilon_static,
-                    last_updated=doc.last_updated,
-                ),
-                linear_resp_input,
-            ),
+        filter_map(
+            DielectricDoc.from_ionic_and_electronic,
+            linear_resp_input,
+            work_keys=[
+                "deprecated",
+                "material_id",
+                "structure",
+                "origins",
+                "ionic",
+                "electronic",
+                "last_updated",
+            ],
+            **kwargs,
         )
     )
 
 
 def build_piezo_docs(
     linear_resp_input: list[LinearResponseBuilderInput],
+    **kwargs,
 ) -> list[PiezoelectricDoc]:
     return list(
+        filter_map(
+            PiezoelectricDoc.from_ionic_and_electronic,
+            linear_resp_input,
+            work_keys=[
+                "deprecated",
+                "material_id",
+                "structure",
+                "origins",
+                "ionic",
+                "electronic",
+                "last_updated",
+            ],
+            **kwargs,
+        )
+    )
+
+
+def filter_piezo_tasks(
+    tasks: list[LinearResponseBuilderInput],
+) -> list[LinearResponseBuilderInput]:
+    """
+    Yields list of LinearResponseBuilderInputs with spacegroups appropriate for
+    ``build_piezo_docs``
+    """
+    return list(
         filter(
-            lambda y: y is not None,
-            map(
-                lambda doc: (
-                    PiezoelectricDoc.from_ionic_and_electronic(
-                        structure=doc.structure,
-                        material_id=doc.material_id,
-                        origins=[
-                            {
-                                "name": "piezoelectric",
-                                "task_id": doc.task_id,
-                                "last_updated": doc.task_last_updated,
-                            }
-                        ],
-                        deprecated=False,
-                        ionic=doc.piezo_ionic,
-                        electronic=doc.piezo_static,
-                        last_updated=doc.last_updated,
-                    )
-                    if doc.structure.get_space_group_info()[0]
-                    not in CENTROSYMMETRIC_SPACE_GROUPS
-                    else None
-                ),
-                linear_resp_input,
-            ),
+            lambda x: x.structure.get_space_group_info()[0]
+            in CENTROSYMMETRIC_SPACE_GROUPS,
+            tasks,
         )
     )
