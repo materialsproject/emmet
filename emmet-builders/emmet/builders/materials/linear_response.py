@@ -4,14 +4,14 @@ from pymatgen.io.validation.check_kpoints_kspacing import (
     get_kpoint_divisions_from_kspacing,
 )
 
+from emmet.builders.utils import filter_map
+from emmet.core.materials import MaterialsDoc
 from emmet.core.math import Matrix3D, Vector6D
 from emmet.core.polar import DielectricDoc, PiezoelectricDoc
-from emmet.core.materials import MaterialsDoc
 from emmet.core.tasks import CoreTaskDoc
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
-from emmet.core.types.typing import NullableDateTimeType, IdentifierType
+from emmet.core.types.typing import IdentifierType, NullableDateTimeType
 from emmet.core.vasp.calc_types.enums import TaskType
-
 
 CENTROSYMMETRIC_SPACE_GROUPS = [
     "-1",
