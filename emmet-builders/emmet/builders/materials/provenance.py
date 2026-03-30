@@ -42,15 +42,15 @@ def _get_snl_from_cif(cif_str: str, **kwargs) -> DatabaseSNL | None:
         snl = DatabaseSNL.from_structure(
             meta_structure=structures[0],
             structure=structures[0],
-            remarks=remarks,
             **kwargs,
         )
-    except Exception:
-        return None
 
-    if snl and snl.remarks is None:
-        return snl
-    return None
+        snl.about.remarks = remarks
+
+    except Exception:
+        snl = None
+
+    return snl
 
 
 def update_experimental_icsd_structures(**client_kwargs) -> list[DatabaseSNL]:
