@@ -1,5 +1,7 @@
+from datetime import datetime
+from typing import Literal, TypeVar
+
 import numpy as np
-from pydantic import BaseModel, Field
 from pymatgen.io.validation.check_kpoints_kspacing import (
     get_kpoint_divisions_from_kspacing,
 )
@@ -7,12 +9,75 @@ from pymatgen.io.validation.check_kpoints_kspacing import (
 from emmet.builders.base import BaseBuilderInput
 from emmet.builders.utils import filter_map
 from emmet.core.material import PropertyOrigin
-from emmet.core.materials import MaterialsDoc
 from emmet.core.math import Matrix3D, Vector6D
 from emmet.core.polar import DielectricDoc, PiezoelectricDoc
 from emmet.core.tasks import CoreTaskDoc
-from emmet.core.types.typing import IdentifierType, NullableDateTimeType
-from emmet.core.vasp.calc_types.enums import TaskType
+from emmet.core.types.typing import MaterialIdentifierType, NullableDateTimeType
+
+PIEZO_TENSOR_TYPE = tuple[Vector6D, Vector6D, Vector6D]
+
+
+class BaseLinearResponseInput(BaseBuilderInput):
+    last_updated: NullableDateTimeType
+    origins: list[PropertyOrigin]
+
+
+class DielectricBuilderInput(BaseLinearResponseInput):
+    epsilon_static: Matrix3D
+    epsilon_ionic: Matrix3D
+
+
+class PiezoelectricBuilderInput(BaseLinearResponseInput):
+    piezo_static: PIEZO_TENSOR_TYPE
+    piezo_ionic: PIEZO_TENSOR_TYPE
+
+
+def build_dielectric_docs(
+    linear_resp_input: list[DielectricBuilderInput], **kwargs
+) -> list[DielectricDoc]:
+    return list(
+        filter_map(
+            DielectricDoc.from_ionic_and_electronic,
+            linear_resp_input,
+            work_keys=[
+                "deprecated",
+                "material_id",
+                "structure",
+                "origins",
+                "epsilon_static",
+                "epsilon_ionic",
+                "last_updated",
+            ],
+            **kwargs,
+        )
+    )
+
+
+def build_piezo_docs(
+    linear_resp_input: list[PiezoelectricBuilderInput],
+    **kwargs,
+) -> list[PiezoelectricDoc]:
+    return list(
+        filter_map(
+            PiezoelectricDoc.from_ionic_and_electronic,
+            linear_resp_input,
+            work_keys=[
+                "deprecated",
+                "material_id",
+                "structure",
+                "origins",
+                "piezo_static",
+                "piezo_ionic",
+                "last_updated",
+            ],
+            **kwargs,
+        )
+    )
+
+
+# -----------------------------------------------------------------------------
+# Helper funcs + types
+# -----------------------------------------------------------------------------
 
 CENTROSYMMETRIC_SPACE_GROUPS = [
     "-1",
@@ -29,47 +94,104 @@ CENTROSYMMETRIC_SPACE_GROUPS = [
 ]
 
 
-PIEZO_TENSOR_TYPE = tuple[Vector6D, Vector6D, Vector6D]
+def filter_piezo_tasks(
+    tasks: list[CoreTaskDoc],
+) -> list[CoreTaskDoc | None]:
+    """
+    Yields list of CoreTaskDocs with spacegroups appropriate for
+    ``build_piezo_docs``
 
-
-class MaterialsTasksMap(BaseModel):
-    material_id: IdentifierType
-    task_ids: list[IdentifierType] = Field(default_factory=list)
-
-
-class LinearResponseBuilderInput(BaseBuilderInput):
-    task_id: IdentifierType
-    nkpoints: int
-    epsilon_static: Matrix3D | None
-    epsilon_ionic: Matrix3D | None
-    piezo_static: PIEZO_TENSOR_TYPE | None
-    piezo_ionic: PIEZO_TENSOR_TYPE | None
-    is_hubbard: int
-    last_updated: NullableDateTimeType
-    task_last_updated: NullableDateTimeType
-    origins: list[PropertyOrigin]
-
-
-# This needs to retrieve + process materials + dielectric tasks
-def identify_relevant_tasks(
-    materials_docs: list[MaterialsDoc],
-) -> list[MaterialsTasksMap]:
+    Can be used to filter input ``tasks`` for ``obtain_blessed_linear_builder_input``
+    """
     return list(
         filter(
-            lambda y: len(y.task_ids) > 0,
-            map(
-                lambda doc: MaterialsTasksMap(
-                    material_id=doc.material_id,
-                    task_ids=[
-                        task_id
-                        for task_id, task_type in doc.task_types.items()
-                        if task_type == TaskType.DFPT_Dielectric
-                    ],
-                ),
-                materials_docs,
-            ),
+            lambda x: x.input.structure.get_space_group_info()[0]
+            in CENTROSYMMETRIC_SPACE_GROUPS,
+            tasks,
         )
     )
+
+
+T = TypeVar("T", DielectricBuilderInput, PiezoelectricBuilderInput)
+
+
+def obtain_blessed_linear_builder_input(
+    tasks: list[CoreTaskDoc],
+    property_name: Literal["dielectric", "piezoelectric"],
+    target: T,
+    material_id: MaterialIdentifierType | None = None,
+    material_last_updated: datetime | None = None,
+) -> T:
+    """
+    Yield a target document [``DielectricBuilderInput | PiezoelectricBuilderInput``]
+    from a list of CoreTaskDocs using the 'best' document in the list.
+
+    [Optional] Relevant material properties needed if running in context of
+    building properties for 'material's:
+       - material_id -> anchor identifier for all ``tasks``
+       - material_last_updated -> when anchor material document was last updated
+
+    Relevant CoreTaskDoc fields needed:
+        - task_id
+        - last_updated
+        - input.is_hubbard
+        - input.kpoints
+        - input.structure
+        - orig_inputs.kpoints
+        - output.outcar
+        - output.bandgap
+
+    CoreTaskDocs need to have non-null bandgap
+    """
+    relevant_tasks = [
+        {
+            "structure": task.input.structure,
+            "task_id": task.task_id,
+            "nkpoints": _parse_kpoints(task),
+            **{
+                k: task.output.outcar.get(k)
+                for k in (
+                    "epsilon_static",
+                    "epsilon_ionic",
+                    "piezo_static",
+                    "piezo_ionic",
+                )
+            },
+            "is_hubbard": int(task.input.is_hubbard),
+            "task_last_updated": task.last_updated,
+        }
+        for task in tasks
+        if task.output.bandgap > 0.0
+    ]
+
+    best_task = sorted(
+        relevant_tasks,
+        key=lambda doc: (
+            # Entries with any None sort last (False < True, reversed)
+            doc["is_hubbard"] is not None
+            and doc["nkpoints"] is not None
+            and doc["task_last_updated"] is not None,
+            doc["is_hubbard"],
+            doc["nkpoints"],
+            doc["task_last_updated"],
+        ),
+        reverse=True,
+    )[0]
+
+    doc = {
+        "material_id": material_id,
+        "last_updated": material_last_updated,
+        "origins": [
+            PropertyOrigin(
+                name=property_name,
+                task_id=best_task["task_id"],
+                last_updated=best_task["task_last_updated"],
+            )
+        ],
+        **best_task,
+    }
+
+    return target(**doc)
 
 
 def _parse_kpoints(task: CoreTaskDoc) -> int:
@@ -88,103 +210,3 @@ def _parse_kpoints(task: CoreTaskDoc) -> int:
     if kpts.style.name in ("Monkhorst", "Gamma"):
         return np.prod(kpts.kpts[0])
     return task.orig_inputs.kpoints.num_kpts
-
-
-def build_linear_response_input(
-    material_doc: MaterialsDoc, tasks: list[CoreTaskDoc]
-) -> LinearResponseBuilderInput | None:
-
-    relevant_tasks = [
-        LinearResponseBuilderInput(
-            structure=task.input.structure,
-            material_id=material_doc.material_id,
-            task_id=task.task_id,
-            nkpoints=_parse_kpoints(task),
-            **{
-                k: task.output.outcar.get(k)
-                for k in (
-                    "epsilon_static",
-                    "epsilon_ionic",
-                    "piezo_static",
-                    "piezo_ionic",
-                )
-            },
-            is_hubbard=int(task.input.is_hubbard),
-            last_updated=material_doc.last_updated,
-            task_last_updated=task.last_updated,
-        )
-        for task in tasks
-        if task.output.bandgap > 0.0
-    ]
-
-    if len(relevant_tasks) == 0:
-        return None
-
-    return sorted(
-        relevant_tasks,
-        key=lambda doc: (
-            doc.is_hubbard,
-            doc.nkpoints,
-            doc.updated_on,
-        ),
-        reverse=True,
-    )[0]
-
-
-def build_dielectric_docs(
-    linear_resp_input: list[LinearResponseBuilderInput], **kwargs
-) -> list[DielectricDoc]:
-    return list(
-        filter_map(
-            DielectricDoc.from_ionic_and_electronic,
-            linear_resp_input,
-            work_keys=[
-                "deprecated",
-                "material_id",
-                "structure",
-                "origins",
-                "ionic",
-                "electronic",
-                "last_updated",
-            ],
-            **kwargs,
-        )
-    )
-
-
-def build_piezo_docs(
-    linear_resp_input: list[LinearResponseBuilderInput],
-    **kwargs,
-) -> list[PiezoelectricDoc]:
-    return list(
-        filter_map(
-            PiezoelectricDoc.from_ionic_and_electronic,
-            linear_resp_input,
-            work_keys=[
-                "deprecated",
-                "material_id",
-                "structure",
-                "origins",
-                "ionic",
-                "electronic",
-                "last_updated",
-            ],
-            **kwargs,
-        )
-    )
-
-
-def filter_piezo_tasks(
-    tasks: list[LinearResponseBuilderInput],
-) -> list[LinearResponseBuilderInput]:
-    """
-    Yields list of LinearResponseBuilderInputs with spacegroups appropriate for
-    ``build_piezo_docs``
-    """
-    return list(
-        filter(
-            lambda x: x.structure.get_space_group_info()[0]
-            in CENTROSYMMETRIC_SPACE_GROUPS,
-            tasks,
-        )
-    )
