@@ -6,27 +6,26 @@ This module is based on
 
 from __future__ import annotations
 
+import logging
+import multiprocessing
 import os
 import re
-import requests
-from requests.adapters import HTTPAdapter
 from time import time
 from typing import TYPE_CHECKING
+
+import numpy as np
+import requests
+from pydantic import BaseModel, Field, PrivateAttr
+from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-import logging
-
-import multiprocessing
-import numpy as np
-from pydantic import BaseModel, Field, PrivateAttr
-
-from emmet.core.connectors.icsd.settings import IcsdClientSettings
 from emmet.core.connectors.icsd.enums import (
     IcsdAdvancedSearchKeys,
-    IcsdSubset,
     IcsdDataFields,
+    IcsdSubset,
 )
 from emmet.core.connectors.icsd.schemas import IcsdPropertyDoc
+from emmet.core.connectors.icsd.settings import IcsdClientSettings
 
 if TYPE_CHECKING:
     from typing import Any
@@ -36,7 +35,7 @@ SETTINGS = IcsdClientSettings()
 # ICSD tokens expire in one hour
 _ICSD_TOKEN_TIMEOUT = 3600
 
-logger = logging.getLogger("emmet-core")
+logger = logging.getLogger(__name__)
 
 
 class IcsdClient(BaseModel):

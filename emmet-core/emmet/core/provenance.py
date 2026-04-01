@@ -442,8 +442,8 @@ class DatabaseSNL(StructureMetadata):
     structure: StructureType | None = Field(
         None, description="The structure for this entry"
     )
-    about: SNLAbout | None = Field(
-        None, description="Extended metadata for this entry."
+    about: SNLAbout = Field(
+        default_factory=SNLAbout, description="Extended metadata for this entry."
     )
     theoretical: bool = Field(
         True, description="Whether this entry is a theoretical database entry."

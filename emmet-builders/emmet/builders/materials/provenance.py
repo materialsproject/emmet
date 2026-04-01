@@ -1,5 +1,7 @@
 """Build provenance collection."""
 
+import logging
+
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 
 from emmet.builders.base import BaseBuilderInput
@@ -21,6 +23,9 @@ structure_matcher = StructureMatcher(
     attempt_supercell=False,
     allow_subset=False,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 def _get_snl_from_cif(cif_str: str, **kwargs) -> DatabaseSNL | None:
@@ -47,7 +52,8 @@ def _get_snl_from_cif(cif_str: str, **kwargs) -> DatabaseSNL | None:
 
         snl.about.remarks = remarks
 
-    except Exception:
+    except Exception as e:
+        logger.warning(e)
         snl = None
 
     return snl
