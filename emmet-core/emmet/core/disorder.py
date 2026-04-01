@@ -2,7 +2,7 @@ from emmet.core.tasks import _VOLUMETRIC_FILES, CoreTaskDoc
 from emmet.core.types.typing import IdentifierType
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.trajectory import RelaxTrajectory
-from pydantic import Field
+from pydantic import BaseModel, Field
 from pymatgen.core.structure import Structure
 from pathlib import Path
 import json
@@ -116,3 +116,91 @@ class DisorderedTaskDoc(CoreTaskDoc):
         )
 
         return (cls.model_validate(data), trajectory)
+
+
+class DisorderDoc(BaseModel):
+    """Aggregated disorder document produced by training a cluster expansion
+    on a set of :class:`DisorderedTaskDoc` instances from one ordered material
+    and running Wang-Landau sampling to derive the density of states.
+
+    Stores the raw CE and WL results; derived thermodynamics (free energy,
+    heat capacity, transition temperature) are computed downstream.
+    """
+
+    # ---- identity ----
+    ordered_task_id: IdentifierType = Field(
+        ...,
+        description="The task ID of the parent ordered structure.",
+    )
+    material_id: IdentifierType | None = Field(
+        None,
+        description="Optional Materials Project material-id for the ordered phase.",
+    )
+
+    # ---- system description ----
+    prototype: str = Field(
+        ...,
+        description="Prototype name, e.g. 'spinel_Q0O'.",
+    )
+    prototype_params: dict[str, float] = Field(
+        ...,
+        description="Geometry parameters used to build the prototype cell.",
+    )
+    supercell_diag: tuple[int, int, int] = Field(
+        ...,
+        description="Supercell diagonal used for CE training / WL sampling.",
+    )
+    sublattices: dict[str, tuple[str, ...]] = Field(
+        ...,
+        description="Mapping of sublattice placeholder to allowed species, "
+        "e.g. {'Es': ('Al', 'Mg'), 'Fm': ('Al', 'Mg')}.",
+    )
+    composition_maps: list[dict[str, dict[str, int]]] = Field(
+        ...,
+        description="Per-task composition maps (sublattice -> element -> count).",
+    )
+
+    # ---- cluster expansion results ----
+    ce_payload: dict[str, Any] = Field(
+        ...,
+        description="Serialised smol ClusterExpansion (via .as_dict()).",
+    )
+    training_stats: dict[str, Any] = Field(
+        ...,
+        description="CE fit statistics: in_sample, five_fold_cv, and "
+        "by_composition, each containing n/mae_per_site/rmse_per_site/max_abs_per_site.",
+    )
+    design_metrics: dict[str, Any] = Field(
+        ...,
+        description="Design-matrix diagnostics (rank, condition number, leverage, etc.).",
+    )
+
+    # ---- Wang-Landau results ----
+    wl_state: dict[str, Any] = Field(
+        ...,
+        description="Final converged WL kernel state (bin_indices, entropy, "
+        "histogram, mod_factor, etc.).",
+    )
+    wl_occupancy: list[int] = Field(
+        ...,
+        description="Encoded site occupancy of the last accepted WL snapshot.",
+    )
+    wl_spec_params: dict[str, Any] = Field(
+        ...,
+        description="WL sampling specification parameters (bin_width, step_type, "
+        "check_period, seed, etc.).",
+    )
+
+    # ---- provenance ----
+    disordered_task_ids: list[IdentifierType] = Field(
+        ...,
+        description="Task IDs of the DisorderedTaskDocs used as CE training data.",
+    )
+    versions: dict[str, str] = Field(
+        ...,
+        description="Software versions used during the calculation.",
+    )
+    builder_meta: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Optional metadata from the builder run.",
+    )
