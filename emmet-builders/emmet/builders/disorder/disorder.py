@@ -5,8 +5,6 @@ Follows the functional builder pattern used in emmet-builders (see vasp/material
 
 from __future__ import annotations
 
-import sys
-import time
 from typing import Any
 
 import numpy as np
@@ -77,9 +75,6 @@ def build_disorder_doc(
     Returns:
         A fully populated DisorderDoc.
     """
-    _t0 = time.time()
-    print(f"[build_disorder_doc] Starting with {len(disordered_documents)} documents", flush=True)
-
     if not disordered_documents:
         raise ValueError("disordered_documents must be non-empty.")
 
@@ -103,8 +98,6 @@ def build_disorder_doc(
             raise ValueError("Prototype parameters do not match across documents.")
         if doc.versions != first.versions:
             raise ValueError("Versions do not match across documents.")
-
-    print(f"[build_disorder_doc] Validation passed ({time.time() - _t0:.1f}s)", flush=True)
 
     # --- extract training data ---
     structures_pm = [doc.reference_structure for doc in disordered_documents]
@@ -137,13 +130,7 @@ def build_disorder_doc(
     ]
     sublattices = sublattices_from_composition_maps(composition_maps)
 
-    print(f"[build_disorder_doc] Sublattice remapping: {label_to_elem}", flush=True)
-    print(f"[build_disorder_doc] Sublattices: {sublattices}", flush=True)
-    print(f"[build_disorder_doc] n_prims={n_prims}, n_structures={len(structures_pm)}, y_cell range=[{min(y_cell):.6f}, {max(y_cell):.6f}]", flush=True)
-
     # --- train cluster expansion ---
-    _t1 = time.time()
-    print(f"[build_disorder_doc] Training cluster expansion ...", flush=True)
     ce_train_output = run_train_ce(
         structures_pm=structures_pm,
         y_cell=y_cell,
@@ -156,20 +143,13 @@ def build_disorder_doc(
         cv_seed=cv_seed,
     )
 
-    print(f"[build_disorder_doc] CE training done ({time.time() - _t1:.1f}s)", flush=True)
-    print(f"[build_disorder_doc] CE stats: {ce_train_output.stats}", flush=True)
-    print(f"[build_disorder_doc] Design metrics: {ce_train_output.design_metrics}", flush=True)
-
     # --- build ensemble from trained CE ---
     ce = ClusterExpansion.from_dict(ce_train_output.payload)
     ensemble = Ensemble.from_cluster_expansion(
         ce, supercell_matrix=np.diag(first.supercell_diag)
     )
 
-    print(f"[build_disorder_doc] Ensemble built: {ensemble.num_sites} sites", flush=True)
-
     # --- auto-tune bin width ---
-    print(f"[build_disorder_doc] Auto-tuning bin width (start={initial_bin_width}) ...", flush=True)
     bin_width = initial_bin_width
     wl_spec = WLSamplerSpec(
         ce_key="",
@@ -194,7 +174,6 @@ def build_disorder_doc(
     )
 
     num_bins = len(wl_block["state"].bin_indices)
-    print(f"[build_disorder_doc] Initial bin_width={bin_width}, num_bins={num_bins}", flush=True)
     while num_bins < min_bins or num_bins > max_bins:
         if num_bins < min_bins:
             bin_width /= 2.0
@@ -222,14 +201,8 @@ def build_disorder_doc(
             supercell_diag=first.supercell_diag,
         )
         num_bins = len(wl_block["state"].bin_indices)
-        print(f"[build_disorder_doc] Adjusted bin_width={bin_width}, num_bins={num_bins}", flush=True)
-
-    print(f"[build_disorder_doc] Selected bin_width={bin_width}, num_bins={num_bins}", flush=True)
 
     # --- WL convergence loop ---
-    _t2 = time.time()
-    _wl_iter = 0
-    print(f"[build_disorder_doc] WL convergence loop (threshold={wl_convergence_threshold}) ...", flush=True)
     while wl_block["state"].mod_factor > wl_convergence_threshold:
         wl_block = run_wl_block(
             spec=wl_spec,
@@ -238,11 +211,6 @@ def build_disorder_doc(
             prototype_spec=prototype_spec,
             supercell_diag=first.supercell_diag,
         )
-        _wl_iter += 1
-        print(f"[build_disorder_doc] WL iter {_wl_iter}: mod_factor={wl_block['state'].mod_factor}", flush=True)
-
-    print(f"[build_disorder_doc] WL converged after {_wl_iter} iterations ({time.time() - _t2:.1f}s)", flush=True)
-    print(f"[build_disorder_doc] Total time: {time.time() - _t0:.1f}s", flush=True)
 
     # --- assemble DisorderDoc ---
     wl_final = wl_block["state"]
