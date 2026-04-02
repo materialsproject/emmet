@@ -138,7 +138,6 @@ class WLDensityOfStates(BaseModel):
 class WLSpecParams(BaseModel):
     """Parameters that fully specify a Wang-Landau sampling run."""
 
-    ce_key: str = Field(..., description="Identity key of the cluster expansion used.")
     bin_width: float = Field(..., description="Energy bin width (eV / prim).")
     steps: int = Field(..., description="MC steps per WL block.")
     initial_comp_map: dict[str, dict[str, int]] = Field(
@@ -154,6 +153,22 @@ class WLSpecParams(BaseModel):
     reject_cross_sublattice_swaps: bool = Field(
         ..., description="Whether cross-sublattice swaps were rejected."
     )
+
+
+class CationBinCount(BaseModel):
+    """One entry in the per-bin cation-count histogram from production WL sampling.
+
+    Each row records how many times a particular (bin, sublattice, element, n_sites)
+    combination was observed during the production-mode WL run.  Together the full
+    list of entries encodes the information needed to compute composition-vs-energy
+    x(E), canonical composition x(T), and sublattice purity(T).
+    """
+
+    bin: int = Field(..., description="Energy-bin index.")
+    sublattice: str = Field(..., description="Sublattice placeholder label (e.g. 'Es').")
+    element: str = Field(..., description="Element symbol (e.g. 'Al').")
+    n_sites: int = Field(..., description="Number of sublattice sites occupied by this element in the sampled microstate.")
+    count: int = Field(..., description="Number of times this (bin, sublattice, element, n_sites) was observed.")
 
 
 class DisorderedTaskDoc(CoreTaskDoc):
@@ -289,6 +304,11 @@ class DisorderDoc(PropertyDoc):
     wl_spec_params: WLSpecParams = Field(
         ...,
         description="WL sampling specification parameters.",
+    )
+    cation_counts: list[CationBinCount] = Field(
+        ...,
+        description="Per-bin cation-count histogram from production-mode WL sampling, "
+        "used to compute x(E), x(T), and purity(T).",
     )
 
     # ---- provenance ----

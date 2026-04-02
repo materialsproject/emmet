@@ -11,26 +11,14 @@ from smol.moca import Sampler
 from smol.moca.ensemble import Ensemble
 
 from emmet.builders.disorder.infinite_wang_landau import InfiniteWangLandau, WLKernelState  # noqa: F401 — ensures registered
-from emmet.builders.disorder.keys import compute_wl_block_key
 from emmet.builders.disorder.prototype_spec import PrototypeSpec
 from emmet.builders.disorder.random_configs import make_one_snapshot
 from emmet.builders.disorder.wl_sampler_spec import WLSamplerSpec
 
 
 class WLBlockDoc(TypedDict, total=False):
-    kind: str
-    algo_version: str
-    wl_key: str
-    wl_block_key: str
-    parent_wl_block_key: str
-    samples_per_bin: int
-    block_steps: int
     step_end: int
-    mod_updates: list[dict[str, Any]]
-    bin_samples: list[dict[str, Any]]
     cation_counts: list[dict[str, Any]]
-    production_mode: bool
-    collect_cation_stats: bool
     state: WLKernelState
     occupancy: list[int]
 
@@ -160,7 +148,6 @@ def run_wl_block(
     )
 
     if tip is None:
-        parent_wl_block_key = "GENESIS"
         step_start = 0
         occ = _occ_from_initial_comp_map(
             prototype_spec=prototype_spec,
@@ -170,7 +157,6 @@ def run_wl_block(
             rng=rng,
         )
     else:
-        parent_wl_block_key = str(tip["wl_block_key"])
         step_start = int(tip["step_end"])
         occ = np.asarray(tip["occupancy"], dtype=np.int32)
         sampler.mckernels[0].load_state(tip["state"])
@@ -184,7 +170,9 @@ def run_wl_block(
         sampler.samples.get_occupancies(flat=False)[-1][0].astype(np.int32)
     )
 
-    bin_samples: dict[int, list[list[int]]] = k.pop_bin_samples()
+    # Clear internal buffers to prevent unbounded memory growth across blocks.
+    k.pop_mod_updates()
+    k.pop_bin_samples()
     bin_cation_counts = k.pop_bin_cation_counts()
 
     cation_counts_flat: list[dict[str, Any]] = [
@@ -201,32 +189,9 @@ def run_wl_block(
         for n_sites, count in hist.items()
     ]
 
-    wl_block_key = compute_wl_block_key(
-        wl_key=spec.wl_key,
-        parent_wl_block_key=parent_wl_block_key,
-        state=end_state.model_dump(),
-        occupancy=occ_last,
-    )
     return {
-        "kind": "WLBlockDoc",
-        "algo_version": spec.algo_version,
-        "wl_key": spec.wl_key,
-        "wl_block_key": wl_block_key,
-        "parent_wl_block_key": parent_wl_block_key,
-        "samples_per_bin": spec.samples_per_bin,
-        "block_steps": spec.steps,
         "step_end": step_start + spec.steps,
-        "mod_updates": [
-            {"step": int(st), "m": float(m)} for (st, m) in k.pop_mod_updates()
-        ],
-        "bin_samples": [
-            {"bin": int(b), "occ": occ_item}
-            for b, occs in bin_samples.items()
-            for occ_item in occs
-        ],
         "cation_counts": cation_counts_flat,
-        "production_mode": spec.production_mode,
-        "collect_cation_stats": spec.collect_cation_stats,
         "state": end_state,
         "occupancy": occ_last.tolist(),
     }
