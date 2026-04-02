@@ -8,7 +8,6 @@ from typing import Any, ClassVar, Mapping
 
 from monty.json import MSONable
 
-from emmet.builders.disorder.keys import compute_wl_key
 from emmet.builders.disorder.mixture import canonical_comp_map
 from emmet.core.disorder import WLSpecParams
 
@@ -24,7 +23,6 @@ class WLSamplerSpec(MSONable):
 
     __version__: ClassVar[str] = "3"
 
-    ce_key: str
     bin_width: float
     steps: int
 
@@ -62,7 +60,6 @@ class WLSamplerSpec(MSONable):
         cls = self.__class__.__name__
         return (
             f"{cls}("
-            f"ce_key={self.ce_key!r}, "
             f"bin_width={self.bin_width}, steps={self.steps}, "
             f"initial_comp_map={self.initial_comp_map!r}, "
             f"reject_cross_sublattice_swaps={self.reject_cross_sublattice_swaps}, "
@@ -79,7 +76,6 @@ class WLSamplerSpec(MSONable):
             "@module": self.__class__.__module__,
             "@class": self.__class__.__name__,
             "@version": self.__version__,
-            "ce_key": self.ce_key,
             "bin_width": self.bin_width,
             "steps": self.steps,
             "initial_comp_map": self.initial_comp_map,
@@ -96,7 +92,6 @@ class WLSamplerSpec(MSONable):
     def to_spec_params(self) -> WLSpecParams:
         """Convert to a typed Pydantic WLSpecParams for storage in DisorderDoc."""
         return WLSpecParams(
-            ce_key=self.ce_key,
             bin_width=self.bin_width,
             steps=self.steps,
             initial_comp_map=self.initial_comp_map,
@@ -114,7 +109,6 @@ class WLSamplerSpec(MSONable):
     def from_dict(cls, d: Mapping[str, Any]) -> "WLSamplerSpec":
         payload = {k: v for k, v in d.items() if not k.startswith("@")}
         return cls(
-            ce_key=str(payload["ce_key"]),
             bin_width=float(payload["bin_width"]),
             steps=int(payload["steps"]),
             initial_comp_map=canonical_comp_map(payload["initial_comp_map"]),
@@ -134,8 +128,7 @@ class WLSamplerSpec(MSONable):
         if not isinstance(other, WLSamplerSpec):
             return NotImplemented
         return (
-            self.ce_key == other.ce_key
-            and self.bin_width == other.bin_width
+            self.bin_width == other.bin_width
             and self.steps == other.steps
             and dict(self.initial_comp_map) == dict(other.initial_comp_map)
             and self.reject_cross_sublattice_swaps
@@ -152,10 +145,12 @@ class WLSamplerSpec(MSONable):
     def __hash__(self) -> int:
         return hash(
             (
-                self.ce_key,
                 self.bin_width,
                 self.steps,
-                tuple(self.initial_comp_map.items()),
+                tuple(
+                    (k, tuple(sorted(v.items())))
+                    for k, v in sorted(self.initial_comp_map.items())
+                ),
                 self.reject_cross_sublattice_swaps,
                 self.step_type,
                 self.check_period,
@@ -167,21 +162,4 @@ class WLSamplerSpec(MSONable):
             )
         )
 
-    @property
-    def algo_version(self) -> str:
-        return "wl-v1"
 
-    @property
-    def wl_key(self) -> str:
-        """The identity key for this WL sampling setup."""
-        return compute_wl_key(
-            ce_key=self.ce_key,
-            bin_width=self.bin_width,
-            step_type=self.step_type,
-            initial_comp_map=self.initial_comp_map,
-            reject_cross_sublattice_swaps=self.reject_cross_sublattice_swaps,
-            check_period=self.check_period,
-            update_period=self.update_period,
-            seed=self.seed,
-            algo_version=self.algo_version,
-        )

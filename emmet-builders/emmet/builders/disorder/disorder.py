@@ -11,7 +11,7 @@ import numpy as np
 from smol.cofe import ClusterExpansion
 from smol.moca.ensemble import Ensemble
 
-from emmet.core.disorder import DisorderDoc, DisorderedTaskDoc, WLDensityOfStates
+from emmet.core.disorder import CationBinCount, DisorderDoc, DisorderedTaskDoc, WLDensityOfStates
 from emmet.core.tasks import CoreTaskDoc
 
 from .mixture import sublattices_from_composition_maps
@@ -156,7 +156,6 @@ def build_disorder_doc(
     # --- auto-tune bin width ---
     bin_width = initial_bin_width
     wl_spec = WLSamplerSpec(
-        ce_key="",
         bin_width=bin_width,
         steps=wl_steps,
         initial_comp_map=composition_maps[0],
@@ -184,7 +183,6 @@ def build_disorder_doc(
         else:
             bin_width *= 2.0
         wl_spec = WLSamplerSpec(
-            ce_key="",
             bin_width=bin_width,
             steps=wl_steps,
             initial_comp_map=composition_maps[0],
@@ -216,8 +214,30 @@ def build_disorder_doc(
             supercell_diag=first.supercell_diag,
         )
 
+    # --- Production-mode block to collect cation stats ---
+    prod_spec = WLSamplerSpec(
+        bin_width=bin_width,
+        steps=wl_steps,
+        initial_comp_map=composition_maps[0],
+        step_type="swap",
+        check_period=wl_check_period,
+        update_period=wl_update_period,
+        seed=wl_seed,
+        samples_per_bin=0,
+        collect_cation_stats=True,
+        production_mode=True,
+        reject_cross_sublattice_swaps=False,
+    )
+    prod_block = run_wl_block(
+        spec=prod_spec,
+        ensemble=ensemble,
+        tip=wl_block,
+        prototype_spec=prototype_spec,
+        supercell_diag=first.supercell_diag,
+    )
+
     # --- assemble DisorderDoc ---
-    wl_final = wl_block["state"]
+    wl_final = prod_block["state"]
     return DisorderDoc.from_structure(
         meta_structure=ordered_task_doc.structure,
         ordered_task_id=first.ordered_task_id,
@@ -235,8 +255,11 @@ def build_disorder_doc(
             mod_factor=wl_final.mod_factor,
             steps_counter=wl_final.steps_counter,
         ),
-        wl_occupancy=list(wl_block["occupancy"]),
+        wl_occupancy=list(prod_block["occupancy"]),
         wl_spec_params=wl_spec.to_spec_params(),
+        cation_counts=[
+            CationBinCount(**row) for row in prod_block["cation_counts"]
+        ],
         disordered_task_ids=[doc.task_id for doc in disordered_documents],
         versions=first.versions,
     )

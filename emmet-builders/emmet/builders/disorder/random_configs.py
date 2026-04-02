@@ -10,8 +10,6 @@ from ase.atoms import Atoms
 from pymatgen.core import Structure
 from pymatgen.io.ase import AseAtomsAdaptor
 
-from emmet.builders.disorder.prototype_spec import PrototypeSpec
-
 
 def validate_counts_for_sublattices(
     *,
@@ -79,30 +77,3 @@ def make_one_snapshot(
     sc.set_chemical_symbols(symbols.tolist())
     structure = AseAtomsAdaptor.get_structure(sc)
     return structure
-
-
-def build_sublattice_positions_for_struct(
-    *, prototype_spec: PrototypeSpec, supercell_diag: tuple[int, int, int]
-) -> dict[str, list[tuple[float, float, float]]]:
-    """Build label -> site-position map from the structure."""
-    multiplier = int(np.prod(supercell_diag))
-    sl_comp_map = {
-        k: {k: v * multiplier} for k, v in prototype_spec.active_sublattice_counts.items()
-    }
-
-    rng = np.random.default_rng(12345)
-    struct = make_one_snapshot(
-        primitive_cell=prototype_spec.primitive_cell,
-        supercell_diag=supercell_diag,
-        composition_map=sl_comp_map,
-        rng=rng,
-    )
-
-    sl_map: dict[str, list[tuple[float, float, float]]] = {}
-    for sublattice_label in prototype_spec.active_sublattices:
-        positions = []
-        for site in struct.sites:
-            if site.specie.symbol == sublattice_label:
-                positions.append(tuple(site.frac_coords))
-        sl_map[sublattice_label] = positions
-    return sl_map

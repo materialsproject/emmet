@@ -39,8 +39,6 @@ class WLKernelState(BaseModel):
     rng_state: dict[str, Any] = Field(...)
     bin_size: float = Field(...)
 
-ANCHOR: float = 0.0
-
 
 def _divide(x: float, m: float) -> float:
     """Use to allow Wang-Landau to be pickled."""
