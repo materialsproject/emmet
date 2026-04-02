@@ -147,11 +147,11 @@ def sbatch(func):
             }
         else:
             slurm_kwargs = {
-                "qos": "regular",
+                "qos": "xfer",
                 "time": "48:00:00",
-                "constraint": "cpu",
+                "constraint": "cron",
                 "nodes": 1,
-                "mem": "64GB",
+                "mem": "12GB",
                 "account": "matgen",
                 "mail-user": "tsm@lbl.gov",
                 "mail-type": "ALL",
