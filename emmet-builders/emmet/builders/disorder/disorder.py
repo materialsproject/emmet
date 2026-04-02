@@ -11,8 +11,8 @@ import numpy as np
 from smol.cofe import ClusterExpansion
 from smol.moca.ensemble import Ensemble
 
-from emmet.core.base import EmmetMeta
 from emmet.core.disorder import DisorderDoc, DisorderedTaskDoc, WLDensityOfStates
+from emmet.core.tasks import CoreTaskDoc
 
 from .mixture import sublattices_from_composition_maps
 from .prototype_spec import PrototypeSpec
@@ -39,6 +39,7 @@ _DEFAULT_MAX_BINS: int = 200
 
 def build_disorder_doc(
     disordered_documents: list[DisorderedTaskDoc],
+    ordered_task_doc: CoreTaskDoc,
     *,
     basis_spec: dict[str, Any] | None = None,
     regularization: dict[str, Any] | None = None,
@@ -59,6 +60,9 @@ def build_disorder_doc(
     Args:
         disordered_documents: All DisorderedTaskDoc instances sharing the same
             ordered_task_id, prototype, supercell_diag, and versions.
+        ordered_task_doc: The CoreTaskDoc for the parent ordered material.
+            Its structure is used to populate search metadata (chemsys,
+            elements, composition, symmetry, etc.).
         basis_spec: CE basis specification (cutoffs, basis type).
         regularization: Regularization settings for the CE fit.
         weighting: Optional weighting scheme for the CE fit.
@@ -214,9 +218,9 @@ def build_disorder_doc(
 
     # --- assemble DisorderDoc ---
     wl_final = wl_block["state"]
-    return DisorderDoc(
+    return DisorderDoc.from_structure(
+        meta_structure=ordered_task_doc.structure,
         ordered_task_id=first.ordered_task_id,
-        material_id=None,
         prototype=first.prototype,
         prototype_params=first.prototype_params,
         supercell_diag=first.supercell_diag,
@@ -235,5 +239,4 @@ def build_disorder_doc(
         wl_spec_params=wl_spec.to_spec_params(),
         disordered_task_ids=[doc.task_id for doc in disordered_documents],
         versions=first.versions,
-        builder_meta=EmmetMeta(),
     )
