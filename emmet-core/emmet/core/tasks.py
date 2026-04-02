@@ -6,17 +6,17 @@ import logging
 import re
 import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Annotated
+from typing import TYPE_CHECKING, Annotated, Any
 
 import numpy as np
 from monty.json import MontyDecoder
 from monty.serialization import loadfn
 from pydantic import (
     BaseModel,
-    Field,
-    field_validator,
     BeforeValidator,
+    Field,
     WrapSerializer,
+    field_validator,
     model_validator,
 )
 from pymatgen.analysis.structure_analyzer import oxide_type
@@ -35,11 +35,11 @@ from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.typing import (
     DateTimeType,
     IdentifierType,
-    NullableDateTimeType,
-    JsonListType,
     JsonDictType,
-    _ser_json_like,
+    JsonListType,
+    NullableDateTimeType,
     _deser_json_like,
+    _ser_json_like,
 )
 from emmet.core.utils import type_override, utcnow
 from emmet.core.vasp.calc_types import (
@@ -351,6 +351,8 @@ class CoreTaskDoc(StructureMetadata):
         cls,
         dir_name: Path | str,
         volumetric_files: tuple[str, ...] = _VOLUMETRIC_FILES,
+        batch_id: str = None,
+        tags: list[str | None] = [],
         **vasp_calculation_kwargs,
     ) -> tuple[Self, RelaxTrajectory]:
         """
@@ -366,6 +368,11 @@ class CoreTaskDoc(StructureMetadata):
             The path to the folder containing the calculation outputs.
         volumetric_files
             Volumetric files to search for.
+        batch_id
+            Calculation identifier
+        tags
+            Additional metadata tags. Will be concatenated with tags
+            parsed from transformations file (if present in ``dir_name``)
         **vasp_calculation_kwargs
             Additional parsing options that will be passed to the
             :obj:`.Calculation.from_vasp_files` function.
@@ -383,8 +390,11 @@ class CoreTaskDoc(StructureMetadata):
         calc_doc, vasp_objects = Calculation.from_vasp_files(
             dir_name, "standard", **task_files["standard"], **vasp_calculation_kwargs
         )
-        transformations, icsd_id, tags, author = _parse_transformations(dir_name)
+        transformations, icsd_id, transformation_tags, author = _parse_transformations(
+            dir_name
+        )
         task_doc = cls.from_structure(
+            batch_id=batch_id,
             calc_type=calc_doc.calc_type,
             completed_at=calc_doc.completed_at,
             dir_name=get_uri(dir_name),
@@ -399,7 +409,7 @@ class CoreTaskDoc(StructureMetadata):
             ),
             run_type=calc_doc.run_type,
             structure=calc_doc.output.structure,
-            tags=tags,
+            tags=tags + transformation_tags,
             task_type=calc_doc.task_type,
             transformations=transformations,
             vasp_objects=vasp_objects,
@@ -899,7 +909,7 @@ def get_uri(dir_name: str | Path) -> str:
 
 def _parse_transformations(
     dir_name: Path,
-) -> tuple[dict, int | None, list[str] | None, str | None]:
+) -> tuple[dict, int | None, list[str | None], str | None]:
     """Parse transformations.json file."""
     transformations = {}
     filenames = tuple(dir_name.glob("transformations.json*"))
@@ -917,7 +927,7 @@ def _parse_transformations(
     # transformations file because they'd be copied into
     # every structure generated after this one.
     other_parameters = transformations.get("other_parameters", {})
-    new_tags = other_parameters.pop("tags", None)
+    new_tags = other_parameters.pop("tags", [])
     new_author = other_parameters.pop("author", None)
 
     if "other_parameters" in transformations and not other_parameters:
