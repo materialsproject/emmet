@@ -169,7 +169,7 @@ python-dotenv==1.2.1
     # via pydantic-settings
 pyyaml==6.0.3
     # via pybtex
-requests==2.32.5
+requests==2.33.0
     # via
     #   pymatgen
     #   pymatgen-io-validation
