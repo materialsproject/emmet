@@ -7,7 +7,9 @@ from pymatgen.core.structure import Structure
 from pathlib import Path
 import json
 from typing_extensions import TypedDict, Self
-from typing import Any
+from typing import Literal
+from ulid import ULID
+from emmet.core.base import EmmetMeta
 
 REQUIRED_METADATA_KEYS: tuple[str, ...] = (
     "ordered_task_id",
@@ -22,7 +24,7 @@ REQUIRED_METADATA_KEYS: tuple[str, ...] = (
 
 class TypedDisorderedTaskMetadata(TypedDict):
     ordered_task_id: IdentifierType
-    reference_structure: dict[str, Any]
+    reference_structure: Structure
     supercell_diag: tuple[int, int, int]
     prototype: str
     prototype_params: dict[str, float]
@@ -52,13 +54,113 @@ def parse_json(dir_name: Path | str) -> TypedDisorderedTaskMetadata:
 
     supercell_x, supercell_y, supercell_z = data["supercell_diag"]
     data["supercell_diag"] = (supercell_x, supercell_y, supercell_z)
+    data["reference_structure"] = Structure.from_dict(data["reference_structure"])
     return data
+
+
+# ---------------------------------------------------------------------------
+# CE training sub-models
+# ---------------------------------------------------------------------------
+
+
+class CEFitMetrics(BaseModel):
+    """Per-site error metrics for a single CE evaluation (in-sample or CV)."""
+
+    n: int = Field(..., description="Number of structures in this group.")
+    mae_per_site: float = Field(..., description="Mean absolute error per site.")
+    rmse_per_site: float = Field(..., description="Root-mean-square error per site.")
+    max_abs_per_site: float = Field(..., description="Maximum absolute error per site.")
+
+
+class CECompositionStats(BaseModel):
+    """In-sample and CV metrics for a single composition group."""
+
+    in_sample: CEFitMetrics = Field(...)
+    five_fold_cv: CEFitMetrics = Field(...)
+
+
+class CETrainingStats(BaseModel):
+    """Full CE training statistics: aggregate + per-composition breakdown."""
+
+    in_sample: CEFitMetrics = Field(..., description="In-sample fit metrics (all compositions).")
+    five_fold_cv: CEFitMetrics = Field(..., description="5-fold CV metrics (all compositions).")
+    by_composition: dict[str, CECompositionStats] = Field(
+        ..., description="Per-composition metrics keyed by composition signature."
+    )
+
+
+class CEDesignMetrics(BaseModel):
+    """Design-matrix diagnostics for CE training."""
+
+    n_samples: int = Field(..., description="Number of training structures.")
+    n_features: int = Field(..., description="Number of CE features (correlation functions).")
+    rank: int = Field(..., description="Numerical rank of the design matrix.")
+    sigma_max: float = Field(..., description="Largest singular value.")
+    sigma_min: float = Field(..., description="Smallest nonzero singular value.")
+    condition_number: float = Field(..., description="Condition number (sigma_max / sigma_min).")
+    logdet_xtx: float = Field(..., description="Log-determinant of X^T X (D-optimality).")
+    leverage_mean: float = Field(..., description="Mean leverage (hat-matrix diagonal).")
+    leverage_max: float = Field(..., description="Maximum leverage.")
+    leverage_p95: float = Field(..., description="95th percentile leverage.")
+    weighting_applied: bool = Field(..., description="Whether sample weighting was used.")
+    standardization: Literal["none", "column_zscore"] = Field(
+        ..., description="Column standardization mode applied before SVD."
+    )
+    zero_variance_feature_count: int = Field(
+        ..., description="Number of features with zero variance."
+    )
+
+
+# ---------------------------------------------------------------------------
+# Wang-Landau sub-models
+# ---------------------------------------------------------------------------
+
+
+class WLDensityOfStates(BaseModel):
+    """Converged Wang-Landau density of states.
+
+    Stores only the fields needed to compute thermodynamics (partition function,
+    free energy, heat capacity, transition temperature) plus convergence quality
+    indicators.  Energy for bin *i* is ``bin_indices[i] * bin_size``.
+    """
+
+    bin_indices: list[int] = Field(..., description="Sorted energy-bin indices visited during sampling.")
+    entropy: list[float] = Field(..., description="Log-DOS estimate per visited bin (parallel to bin_indices).")
+    bin_size: float = Field(..., description="Energy bin width for converting indices to energies.")
+    mod_factor: float = Field(..., description="Final Wang-Landau modification factor (convergence indicator).")
+    steps_counter: int = Field(..., description="Total MC steps elapsed during sampling.")
+
+
+class WLSpecParams(BaseModel):
+    """Parameters that fully specify a Wang-Landau sampling run."""
+
+    ce_key: str = Field(..., description="Identity key of the cluster expansion used.")
+    bin_width: float = Field(..., description="Energy bin width (eV / prim).")
+    steps: int = Field(..., description="MC steps per WL block.")
+    initial_comp_map: dict[str, dict[str, int]] = Field(
+        ..., description="Initial composition map for occupancy initialisation."
+    )
+    step_type: str = Field(..., description="MC step type, e.g. 'swap'.")
+    check_period: int = Field(..., description="Steps between flatness checks.")
+    update_period: int = Field(..., description="Steps between modification-factor updates.")
+    seed: int = Field(..., description="Random seed for MC sampling.")
+    samples_per_bin: int = Field(..., description="Unique occupancy samples to capture per bin.")
+    collect_cation_stats: bool = Field(..., description="Whether per-bin cation counts were collected.")
+    production_mode: bool = Field(..., description="Whether WL updates were frozen (production mode).")
+    reject_cross_sublattice_swaps: bool = Field(
+        ..., description="Whether cross-sublattice swaps were rejected."
+    )
 
 
 class DisorderedTaskDoc(CoreTaskDoc):
     """Document for a disordered structure task, extending the CoreTaskDoc with additional metadata to
     capture disorder-specific information and its relationship to the ordered structure.
     """
+
+    task_id: str = Field(
+        default_factory=lambda: str(ULID()),
+        description="Auto-generated ULID for this disordered task.",
+    )
 
     ordered_task_id: IdentifierType = Field(
         ...,
@@ -105,9 +207,12 @@ class DisorderedTaskDoc(CoreTaskDoc):
         metadata = parse_json(dir_name)
 
         data = base_doc.model_dump()
+        # Remove None task_id so the ULID default_factory can populate it
+        if data.get("task_id") is None:
+            data.pop("task_id", None)
         data.update(
             ordered_task_id=metadata["ordered_task_id"],
-            reference_structure=Structure.from_dict(metadata["reference_structure"]),
+            reference_structure=metadata["reference_structure"],
             supercell_diag=tuple(metadata["supercell_diag"]),
             prototype=metadata["prototype"],
             prototype_params=metadata["prototype_params"],
@@ -161,34 +266,27 @@ class DisorderDoc(BaseModel):
     )
 
     # ---- cluster expansion results ----
-    ce_payload: dict[str, Any] = Field(
+    training_stats: CETrainingStats = Field(
         ...,
-        description="Serialised smol ClusterExpansion (via .as_dict()).",
+        description="CE fit statistics: in-sample, 5-fold CV, and per-composition.",
     )
-    training_stats: dict[str, Any] = Field(
-        ...,
-        description="CE fit statistics: in_sample, five_fold_cv, and "
-        "by_composition, each containing n/mae_per_site/rmse_per_site/max_abs_per_site.",
-    )
-    design_metrics: dict[str, Any] = Field(
+    design_metrics: CEDesignMetrics = Field(
         ...,
         description="Design-matrix diagnostics (rank, condition number, leverage, etc.).",
     )
 
     # ---- Wang-Landau results ----
-    wl_state: dict[str, Any] = Field(
+    wl_dos: WLDensityOfStates = Field(
         ...,
-        description="Final converged WL kernel state (bin_indices, entropy, "
-        "histogram, mod_factor, etc.).",
+        description="Converged Wang-Landau density of states.",
     )
     wl_occupancy: list[int] = Field(
         ...,
         description="Encoded site occupancy of the last accepted WL snapshot.",
     )
-    wl_spec_params: dict[str, Any] = Field(
+    wl_spec_params: WLSpecParams = Field(
         ...,
-        description="WL sampling specification parameters (bin_width, step_type, "
-        "check_period, seed, etc.).",
+        description="WL sampling specification parameters.",
     )
 
     # ---- provenance ----
@@ -200,7 +298,7 @@ class DisorderDoc(BaseModel):
         ...,
         description="Software versions used during the calculation.",
     )
-    builder_meta: dict[str, Any] = Field(
-        default_factory=dict,
-        description="Optional metadata from the builder run.",
+    builder_meta: EmmetMeta = Field(
+        default_factory=EmmetMeta,
+        description="Builder metadata.",
     )

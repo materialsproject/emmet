@@ -19,7 +19,25 @@ from math import log
 from typing import Any, Callable, Mapping
 
 import numpy as np
+from pydantic import BaseModel, Field
 from smol.moca.kernel.base import ALL_MCUSHERS, MCKernel
+
+
+class WLKernelState(BaseModel):
+    """Builder-internal WL kernel state for checkpointing and resuming sampling."""
+
+    version: int = Field(...)
+    bin_indices: list[int] = Field(...)
+    entropy: list[float] = Field(...)
+    histogram: list[int] = Field(...)
+    occurrences: list[int] = Field(...)
+    mean_features: list[list[float]] = Field(...)
+    mod_factor: float = Field(...)
+    steps_counter: int = Field(...)
+    current_enthalpy: float = Field(...)
+    current_features: list[float] = Field(...)
+    rng_state: dict[str, Any] = Field(...)
+    bin_size: float = Field(...)
 
 ANCHOR: float = 0.0
 
@@ -375,7 +393,7 @@ class InfiniteWangLandau(MCKernel):
 
     # -------------------- checkpointing API --------------------
 
-    def state(self) -> dict:
+    def state(self) -> WLKernelState:
         bins = self.bin_indices
         occurrences = np.asarray(
             [self._occurrences_d.get(int(b), 0) for b in bins], dtype=int
@@ -387,24 +405,26 @@ class InfiniteWangLandau(MCKernel):
             if bins.size
             else np.empty((0, self._nfeat), dtype=float)
         )
-        return {
-            "version": 1,
-            "bin_indices": bins.tolist(),
-            "entropy": self.entropy.tolist(),
-            "histogram": self.histogram.tolist(),
-            "occurrences": occurrences.tolist(),
-            "mean_features": mean_feats.tolist(),
-            "mod_factor": float(self._m),
-            "steps_counter": int(self._steps_counter),
-            "current_enthalpy": float(self._current_enthalpy),
-            "current_features": np.asarray(
+        return WLKernelState(
+            version=1,
+            bin_indices=bins.tolist(),
+            entropy=self.entropy.tolist(),
+            histogram=self.histogram.tolist(),
+            occurrences=occurrences.tolist(),
+            mean_features=mean_feats.tolist(),
+            mod_factor=float(self._m),
+            steps_counter=int(self._steps_counter),
+            current_enthalpy=float(self._current_enthalpy),
+            current_features=np.asarray(
                 self._current_features, dtype=float
             ).tolist(),
-            "rng_state": self._encode_rng_state(self._rng.bit_generator.state),
-            "bin_size": float(self._bin_size),
-        }
+            rng_state=self._encode_rng_state(self._rng.bit_generator.state),
+            bin_size=float(self._bin_size),
+        )
 
-    def load_state(self, s: dict) -> None:
+    def load_state(self, s: WLKernelState | dict) -> None:
+        if isinstance(s, WLKernelState):
+            s = s.model_dump()
         self._entropy_d.clear()
         self._histogram_d.clear()
         self._occurrences_d.clear()

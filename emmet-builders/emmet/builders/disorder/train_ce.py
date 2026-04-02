@@ -4,7 +4,7 @@ Vendored from phaseedge.sampling.train_ce_driver with imports adjusted.
 """
 
 from dataclasses import dataclass
-from typing import Any, Mapping, Sequence, TypedDict, cast
+from typing import Any, Mapping, Sequence, cast
 
 import numpy as np
 from ase.atoms import Atoms
@@ -18,32 +18,25 @@ from sklearn.model_selection import KFold
 from smol.cofe import ClusterExpansion, ClusterSubspace, StructureWrangler
 
 from emmet.builders.disorder.design_metrics import (
-    DesignMetrics,
     MetricOptions,
     compute_design_metrics,
 )
 from emmet.builders.disorder.prototype_spec import PrototypeSpec
+from emmet.core.disorder import (
+    CECompositionStats,
+    CEDesignMetrics,
+    CEFitMetrics,
+    CETrainingStats,
+)
 
 
-class CEStats(TypedDict):
-    """Per-site fit statistics for CE training."""
+@dataclass(slots=True)
+class TrainOutput:
+    """Output of run_train_ce: typed CE training results."""
 
-    n: int
-    mae_per_site: float
-    rmse_per_site: float
-    max_abs_per_site: float
-
-
-class TrainStats(TypedDict):
-    in_sample: CEStats
-    five_fold_cv: CEStats
-    by_composition: dict[str, Mapping[str, CEStats]]
-
-
-class TrainOutput(TypedDict):
-    payload: Mapping[str, Any]
-    stats: TrainStats
-    design_metrics: DesignMetrics
+    payload: dict[str, Any]
+    stats: CETrainingStats
+    design_metrics: CEDesignMetrics
 
 
 @dataclass(slots=True)
@@ -161,7 +154,7 @@ def predict_from_features(
     return cast(NDArray[np.float64], (X @ coefs).astype(np.float64, copy=False))
 
 
-def compute_stats(y_true: Sequence[float], y_pred: Sequence[float]) -> CEStats:
+def compute_stats(y_true: Sequence[float], y_pred: Sequence[float]) -> CEFitMetrics:
     if len(y_true) != len(y_pred) or len(y_true) == 0:
         raise ValueError("Stats require non-empty equal-length arrays.")
     n = len(y_true)
@@ -169,7 +162,7 @@ def compute_stats(y_true: Sequence[float], y_pred: Sequence[float]) -> CEStats:
     mae = float(sum(abs_err) / n)
     rmse = float(mean_squared_error(y_true, y_pred) ** 0.5)
     mex = float(max(abs_err))
-    return {"n": n, "mae_per_site": mae, "rmse_per_site": rmse, "max_abs_per_site": mex}
+    return CEFitMetrics(n=n, mae_per_site=mae, rmse_per_site=rmse, max_abs_per_site=mex)
 
 
 def _n_replace_sites_from_prototype(
@@ -202,16 +195,15 @@ def _stats_for_group(
     y_pred_per_prim: Sequence[float],
     *,
     sites_per_prim: int,
-) -> CEStats:
+) -> CEFitMetrics:
     if not idxs:
-        return cast(
-            CEStats,
-            {"n": 0, "mae_per_site": 0.0, "rmse_per_site": 0.0, "max_abs_per_site": 0.0},
+        return CEFitMetrics(
+            n=0, mae_per_site=0.0, rmse_per_site=0.0, max_abs_per_site=0.0,
         )
     scale = 1.0 / float(sites_per_prim)
     yt = [y_true_per_prim[i] * scale for i in idxs]
     yp = [y_pred_per_prim[i] * scale for i in idxs]
-    return cast(CEStats, compute_stats(yt, yp))
+    return compute_stats(yt, yp)
 
 
 def _build_sample_weights(
@@ -321,7 +313,7 @@ def run_train_ce(
     stats_in = compute_stats(y_true_site_vec, y_pred_site_vec)
 
     # Per-composition in-sample
-    by_comp_in: dict[str, CEStats] = {}
+    by_comp_in: dict[str, CEFitMetrics] = {}
     for sig, idxs in comp_to_indices.items():
         by_comp_in[sig] = _stats_for_group(
             idxs, y_cell, y_pred_in, sites_per_prim=sites_per_prim
@@ -355,7 +347,7 @@ def run_train_ce(
             [float(v) * scale for v in y_pred_oof],
         )
 
-        by_comp_cv: dict[str, CEStats] = {}
+        by_comp_cv: dict[str, CEFitMetrics] = {}
         y_oof_list = y_pred_oof.tolist()
         for sig, idxs in comp_to_indices.items():
             by_comp_cv[sig] = _stats_for_group(
@@ -367,18 +359,18 @@ def run_train_ce(
 
     # Assemble CE and payload
     ce = ClusterExpansion(subspace, coefs)
-    return {
-        "payload": ce.as_dict(),
-        "stats": {
-            "in_sample": cast(CEStats, stats_in),
-            "five_fold_cv": cast(CEStats, stats_cv),
-            "by_composition": {
-                sig: {
-                    "in_sample": cast(CEStats, by_comp_in[sig]),
-                    "five_fold_cv": cast(CEStats, by_comp_cv[sig]),
-                }
+    return TrainOutput(
+        payload=dict(ce.as_dict()),
+        stats=CETrainingStats(
+            in_sample=stats_in,
+            five_fold_cv=stats_cv,
+            by_composition={
+                sig: CECompositionStats(
+                    in_sample=by_comp_in[sig],
+                    five_fold_cv=by_comp_cv[sig],
+                )
                 for sig in sorted(comp_to_indices)
             },
-        },
-        "design_metrics": design,
-    }
+        ),
+        design_metrics=design,
+    )

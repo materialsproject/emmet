@@ -10,6 +10,7 @@ from monty.json import MSONable
 
 from emmet.builders.disorder.keys import compute_wl_key
 from emmet.builders.disorder.mixture import canonical_comp_map
+from emmet.core.disorder import WLSpecParams
 
 
 @dataclass(frozen=True, slots=True)
@@ -91,6 +92,23 @@ class WLSamplerSpec(MSONable):
             "collect_cation_stats": bool(self.collect_cation_stats),
             "production_mode": bool(self.production_mode),
         }
+
+    def to_spec_params(self) -> WLSpecParams:
+        """Convert to a typed Pydantic WLSpecParams for storage in DisorderDoc."""
+        return WLSpecParams(
+            ce_key=self.ce_key,
+            bin_width=self.bin_width,
+            steps=self.steps,
+            initial_comp_map=self.initial_comp_map,
+            step_type=self.step_type,
+            check_period=self.check_period,
+            update_period=self.update_period,
+            seed=self.seed,
+            samples_per_bin=self.samples_per_bin,
+            collect_cation_stats=bool(self.collect_cation_stats),
+            production_mode=bool(self.production_mode),
+            reject_cross_sublattice_swaps=self.reject_cross_sublattice_swaps,
+        )
 
     @classmethod
     def from_dict(cls, d: Mapping[str, Any]) -> "WLSamplerSpec":

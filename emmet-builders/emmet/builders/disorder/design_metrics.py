@@ -4,33 +4,12 @@ Vendored from phaseedge.science.design_metrics with imports adjusted.
 """
 
 from dataclasses import dataclass
-from typing import Any, Literal, TypedDict, cast
+from typing import Any, cast
 
 import numpy as np
 from numpy.typing import NDArray
 
-
-class DesignMetrics(TypedDict, total=False):
-    # Shapes
-    n_samples: int
-    n_features: int
-    rank: int
-
-    # SVD/conditioning
-    sigma_max: float
-    sigma_min: float
-    condition_number: float
-    logdet_xtx: float
-
-    # Leverage diagnostics
-    leverage_mean: float
-    leverage_max: float
-    leverage_p95: float
-
-    # Options recorded for reproducibility
-    weighting_applied: bool
-    standardization: Literal["none", "column_zscore"]
-    zero_variance_feature_count: int
+from emmet.core.disorder import CEDesignMetrics
 
 
 @dataclass(slots=True)
@@ -63,7 +42,7 @@ def compute_design_metrics(
     X: NDArray[np.float64],
     w: NDArray[np.float64] | None = None,
     options: MetricOptions | None = None,
-) -> DesignMetrics:
+) -> CEDesignMetrics:
     """Compute design-matrix diagnostics for CE training."""
     if X.ndim != 2:
         raise ValueError(f"X must be 2D, got shape {X.shape!r}")
@@ -121,7 +100,7 @@ def compute_design_metrics(
     else:
         leverage_mean = leverage_max = leverage_p95 = float("nan")
 
-    return DesignMetrics(
+    return CEDesignMetrics(
         n_samples=n,
         n_features=p,
         rank=rank,
