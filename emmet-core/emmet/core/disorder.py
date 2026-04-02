@@ -1,15 +1,19 @@
-from emmet.core.tasks import _VOLUMETRIC_FILES, CoreTaskDoc
-from emmet.core.types.typing import IdentifierType
-from emmet.core.types.pymatgen_types.structure_adapter import StructureType
-from emmet.core.trajectory import RelaxTrajectory
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Literal
+
 from pydantic import BaseModel, Field
 from pymatgen.core.structure import Structure
-from pathlib import Path
-import json
-from typing_extensions import TypedDict, Self
-from typing import Literal
+from typing_extensions import Self, TypedDict
 from ulid import ULID
-from emmet.core.base import EmmetMeta
+
+from emmet.core.material_property import PropertyDoc
+from emmet.core.tasks import _VOLUMETRIC_FILES, CoreTaskDoc
+from emmet.core.trajectory import RelaxTrajectory
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
+from emmet.core.types.typing import IdentifierType
 
 REQUIRED_METADATA_KEYS: tuple[str, ...] = (
     "ordered_task_id",
@@ -223,7 +227,7 @@ class DisorderedTaskDoc(CoreTaskDoc):
         return (cls.model_validate(data), trajectory)
 
 
-class DisorderDoc(BaseModel):
+class DisorderDoc(PropertyDoc):
     """Aggregated disorder document produced by training a cluster expansion
     on a set of :class:`DisorderedTaskDoc` instances from one ordered material
     and running Wang-Landau sampling to derive the density of states.
@@ -232,14 +236,12 @@ class DisorderDoc(BaseModel):
     heat capacity, transition temperature) are computed downstream.
     """
 
+    property_name: str = "disorder"
+
     # ---- identity ----
     ordered_task_id: IdentifierType = Field(
         ...,
         description="The task ID of the parent ordered structure.",
-    )
-    material_id: IdentifierType | None = Field(
-        None,
-        description="Optional Materials Project material-id for the ordered phase.",
     )
 
     # ---- system description ----
@@ -297,8 +299,4 @@ class DisorderDoc(BaseModel):
     versions: dict[str, str] = Field(
         ...,
         description="Software versions used during the calculation.",
-    )
-    builder_meta: EmmetMeta = Field(
-        default_factory=EmmetMeta,
-        description="Builder metadata.",
     )
