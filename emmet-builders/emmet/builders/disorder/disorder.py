@@ -5,13 +5,16 @@ Follows the functional builder pattern used in emmet-builders (see vasp/material
 
 from __future__ import annotations
 
+import sys
+import time
 from typing import Any
 
 import numpy as np
 from smol.cofe import ClusterExpansion
 from smol.moca.ensemble import Ensemble
 
-from emmet.core.disorder import DisorderDoc, DisorderedTaskDoc
+from emmet.core.base import EmmetMeta
+from emmet.core.disorder import DisorderDoc, DisorderedTaskDoc, WLDensityOfStates
 
 from .mixture import sublattices_from_composition_maps
 from .prototype_spec import PrototypeSpec
@@ -74,6 +77,9 @@ def build_disorder_doc(
     Returns:
         A fully populated DisorderDoc.
     """
+    _t0 = time.time()
+    print(f"[build_disorder_doc] Starting with {len(disordered_documents)} documents", flush=True)
+
     if not disordered_documents:
         raise ValueError("disordered_documents must be non-empty.")
 
@@ -98,6 +104,8 @@ def build_disorder_doc(
         if doc.versions != first.versions:
             raise ValueError("Versions do not match across documents.")
 
+    print(f"[build_disorder_doc] Validation passed ({time.time() - _t0:.1f}s)", flush=True)
+
     # --- extract training data ---
     structures_pm = [doc.reference_structure for doc in disordered_documents]
     n_prims = int(np.prod(first.supercell_diag))
@@ -106,10 +114,36 @@ def build_disorder_doc(
     prototype_spec = PrototypeSpec(
         prototype=first.prototype, params=first.prototype_params
     )
-    composition_maps = [doc.composition_map for doc in disordered_documents]
+
+    # The primitive cell uses placeholder element symbols (e.g. "Es", "Fm")
+    # for active sublattices, while DisorderedTaskDoc.composition_map uses
+    # sublattice labels (e.g. "A", "B").  Build the mapping to translate.
+    prim = prototype_spec.primitive_cell
+    sublattice_labels = prim.get_array("sublattice")
+    chem_symbols = prim.get_chemical_symbols()
+    active_subs = prototype_spec.active_sublattices
+    # element_symbol -> sublattice_label  (e.g. "Es" -> "A")
+    elem_to_label: dict[str, str] = {}
+    for sym, lab in zip(chem_symbols, sublattice_labels):
+        if sym in active_subs and sym not in elem_to_label:
+            elem_to_label[sym] = str(lab)
+    # sublattice_label -> element_symbol  (e.g. "A" -> "Es")
+    label_to_elem = {v: k for k, v in elem_to_label.items()}
+
+    # Remap composition maps from sublattice labels to element symbols
+    composition_maps = [
+        {label_to_elem.get(site, site): comp for site, comp in doc.composition_map.items()}
+        for doc in disordered_documents
+    ]
     sublattices = sublattices_from_composition_maps(composition_maps)
 
+    print(f"[build_disorder_doc] Sublattice remapping: {label_to_elem}", flush=True)
+    print(f"[build_disorder_doc] Sublattices: {sublattices}", flush=True)
+    print(f"[build_disorder_doc] n_prims={n_prims}, n_structures={len(structures_pm)}, y_cell range=[{min(y_cell):.6f}, {max(y_cell):.6f}]", flush=True)
+
     # --- train cluster expansion ---
+    _t1 = time.time()
+    print(f"[build_disorder_doc] Training cluster expansion ...", flush=True)
     ce_train_output = run_train_ce(
         structures_pm=structures_pm,
         y_cell=y_cell,
@@ -122,13 +156,20 @@ def build_disorder_doc(
         cv_seed=cv_seed,
     )
 
+    print(f"[build_disorder_doc] CE training done ({time.time() - _t1:.1f}s)", flush=True)
+    print(f"[build_disorder_doc] CE stats: {ce_train_output.stats}", flush=True)
+    print(f"[build_disorder_doc] Design metrics: {ce_train_output.design_metrics}", flush=True)
+
     # --- build ensemble from trained CE ---
-    ce = ClusterExpansion.from_dict(ce_train_output["payload"])
+    ce = ClusterExpansion.from_dict(ce_train_output.payload)
     ensemble = Ensemble.from_cluster_expansion(
         ce, supercell_matrix=np.diag(first.supercell_diag)
     )
 
+    print(f"[build_disorder_doc] Ensemble built: {ensemble.num_sites} sites", flush=True)
+
     # --- auto-tune bin width ---
+    print(f"[build_disorder_doc] Auto-tuning bin width (start={initial_bin_width}) ...", flush=True)
     bin_width = initial_bin_width
     wl_spec = WLSamplerSpec(
         ce_key="",
@@ -152,7 +193,8 @@ def build_disorder_doc(
         supercell_diag=first.supercell_diag,
     )
 
-    num_bins = len(wl_block["state"]["bin_indices"])
+    num_bins = len(wl_block["state"].bin_indices)
+    print(f"[build_disorder_doc] Initial bin_width={bin_width}, num_bins={num_bins}", flush=True)
     while num_bins < min_bins or num_bins > max_bins:
         if num_bins < min_bins:
             bin_width /= 2.0
@@ -179,10 +221,16 @@ def build_disorder_doc(
             prototype_spec=prototype_spec,
             supercell_diag=first.supercell_diag,
         )
-        num_bins = len(wl_block["state"]["bin_indices"])
+        num_bins = len(wl_block["state"].bin_indices)
+        print(f"[build_disorder_doc] Adjusted bin_width={bin_width}, num_bins={num_bins}", flush=True)
+
+    print(f"[build_disorder_doc] Selected bin_width={bin_width}, num_bins={num_bins}", flush=True)
 
     # --- WL convergence loop ---
-    while wl_block["state"]["mod_factor"] > wl_convergence_threshold:
+    _t2 = time.time()
+    _wl_iter = 0
+    print(f"[build_disorder_doc] WL convergence loop (threshold={wl_convergence_threshold}) ...", flush=True)
+    while wl_block["state"].mod_factor > wl_convergence_threshold:
         wl_block = run_wl_block(
             spec=wl_spec,
             ensemble=ensemble,
@@ -190,8 +238,14 @@ def build_disorder_doc(
             prototype_spec=prototype_spec,
             supercell_diag=first.supercell_diag,
         )
+        _wl_iter += 1
+        print(f"[build_disorder_doc] WL iter {_wl_iter}: mod_factor={wl_block['state'].mod_factor}", flush=True)
+
+    print(f"[build_disorder_doc] WL converged after {_wl_iter} iterations ({time.time() - _t2:.1f}s)", flush=True)
+    print(f"[build_disorder_doc] Total time: {time.time() - _t0:.1f}s", flush=True)
 
     # --- assemble DisorderDoc ---
+    wl_final = wl_block["state"]
     return DisorderDoc(
         ordered_task_id=first.ordered_task_id,
         material_id=None,
@@ -200,12 +254,18 @@ def build_disorder_doc(
         supercell_diag=first.supercell_diag,
         sublattices=sublattices,
         composition_maps=composition_maps,
-        ce_payload=dict(ce_train_output["payload"]),
-        training_stats=dict(ce_train_output["stats"]),
-        design_metrics=dict(ce_train_output["design_metrics"]),
-        wl_state=dict(wl_block["state"]),
+        training_stats=ce_train_output.stats,
+        design_metrics=ce_train_output.design_metrics,
+        wl_dos=WLDensityOfStates(
+            bin_indices=wl_final.bin_indices,
+            entropy=wl_final.entropy,
+            bin_size=wl_final.bin_size,
+            mod_factor=wl_final.mod_factor,
+            steps_counter=wl_final.steps_counter,
+        ),
         wl_occupancy=list(wl_block["occupancy"]),
-        wl_spec_params=wl_spec.as_dict(),
+        wl_spec_params=wl_spec.to_spec_params(),
         disordered_task_ids=[doc.task_id for doc in disordered_documents],
         versions=first.versions,
+        builder_meta=EmmetMeta(),
     )

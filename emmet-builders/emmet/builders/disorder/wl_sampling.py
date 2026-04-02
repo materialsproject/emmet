@@ -10,7 +10,7 @@ from pymatgen.core import Structure
 from smol.moca import Sampler
 from smol.moca.ensemble import Ensemble
 
-from emmet.builders.disorder.infinite_wang_landau import InfiniteWangLandau  # noqa: F401 — ensures registered
+from emmet.builders.disorder.infinite_wang_landau import InfiniteWangLandau, WLKernelState  # noqa: F401 — ensures registered
 from emmet.builders.disorder.keys import compute_wl_block_key
 from emmet.builders.disorder.prototype_spec import PrototypeSpec
 from emmet.builders.disorder.random_configs import make_one_snapshot
@@ -31,7 +31,7 @@ class WLBlockDoc(TypedDict, total=False):
     cation_counts: list[dict[str, Any]]
     production_mode: bool
     collect_cation_stats: bool
-    state: dict[str, Any]
+    state: WLKernelState
     occupancy: list[int]
 
 
@@ -204,7 +204,7 @@ def run_wl_block(
     wl_block_key = compute_wl_block_key(
         wl_key=spec.wl_key,
         parent_wl_block_key=parent_wl_block_key,
-        state=end_state,
+        state=end_state.model_dump(),
         occupancy=occ_last,
     )
     return {
