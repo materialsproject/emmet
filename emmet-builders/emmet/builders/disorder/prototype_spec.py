@@ -7,12 +7,11 @@ import dataclasses
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable
 
 import numpy as np
 from ase.atoms import Atoms
 from ase.spacegroup import crystal
-from monty.json import MSONable
 
 
 class PrototypeStructure(str, Enum):
@@ -350,8 +349,8 @@ def _build_primitive_cell(
 
 
 @dataclass(frozen=True, slots=True)
-class PrototypeSpec(MSONable):
-    """Immutable, serializable description of a prototype structure.
+class PrototypeSpec:
+    """Immutable description of a prototype structure.
 
     Fields:
         prototype: e.g. "spinel_Q0O" or "doubleperovskite_J0Sr_Q0O"
@@ -366,21 +365,6 @@ class PrototypeSpec(MSONable):
         # Validation is delegated to _build_primitive_cell.
         structure, spec = parse_prototype(self.prototype)
         _build_primitive_cell(structure, spec, self.params)
-
-    def as_dict(self) -> dict[str, Any]:
-        return {
-            "@module": type(self).__module__,
-            "@class": type(self).__name__,
-            "prototype": self.prototype,
-            "params": dict(self.params),
-        }
-
-    @classmethod
-    def from_dict(cls, d: Mapping[str, Any]) -> "PrototypeSpec":
-        return cls(
-            prototype=str(d["prototype"]),
-            params=dict(d["params"]),
-        )
 
     @property
     def primitive_cell(self) -> Atoms:
