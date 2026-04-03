@@ -11,13 +11,12 @@ import numpy as np
 from smol.cofe import ClusterExpansion
 from smol.moca.ensemble import Ensemble
 
-from emmet.core.disorder import CationBinCount, DisorderDoc, DisorderedTaskDoc, WLDensityOfStates
+from emmet.core.disorder import CationBinCount, DisorderDoc, DisorderedTaskDoc, WLDensityOfStates, WLSpecParams
 from emmet.core.tasks import CoreTaskDoc
 
 from .mixture import sublattices_from_composition_maps
 from .prototype_spec import PrototypeSpec
 from .train_ce import run_train_ce
-from .wl_sampler_spec import WLSamplerSpec
 from .wl_sampling import run_wl_block
 
 # Default CE training hyper-parameters
@@ -155,7 +154,7 @@ def build_disorder_doc(
 
     # --- auto-tune bin width ---
     bin_width = initial_bin_width
-    wl_spec = WLSamplerSpec(
+    wl_spec = WLSpecParams(
         bin_width=bin_width,
         steps=wl_steps,
         initial_comp_map=composition_maps[0],
@@ -182,7 +181,7 @@ def build_disorder_doc(
             bin_width /= 2.0
         else:
             bin_width *= 2.0
-        wl_spec = WLSamplerSpec(
+        wl_spec = WLSpecParams(
             bin_width=bin_width,
             steps=wl_steps,
             initial_comp_map=composition_maps[0],
@@ -215,7 +214,7 @@ def build_disorder_doc(
         )
 
     # --- Production-mode block to collect cation stats ---
-    prod_spec = WLSamplerSpec(
+    prod_spec = WLSpecParams(
         bin_width=bin_width,
         steps=wl_steps,
         initial_comp_map=composition_maps[0],
@@ -256,7 +255,7 @@ def build_disorder_doc(
             steps_counter=wl_final.steps_counter,
         ),
         wl_occupancy=list(prod_block["occupancy"]),
-        wl_spec_params=wl_spec.to_spec_params(),
+        wl_spec_params=wl_spec,
         cation_counts=[
             CationBinCount(**row) for row in prod_block["cation_counts"]
         ],

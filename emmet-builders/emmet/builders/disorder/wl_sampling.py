@@ -13,7 +13,7 @@ from smol.moca.ensemble import Ensemble
 from emmet.builders.disorder.infinite_wang_landau import InfiniteWangLandau, WLKernelState  # noqa: F401 — ensures registered
 from emmet.builders.disorder.prototype_spec import PrototypeSpec
 from emmet.builders.disorder.random_configs import make_one_snapshot
-from emmet.builders.disorder.wl_sampler_spec import WLSamplerSpec
+from emmet.core.disorder import WLSpecParams
 
 
 class WLBlockDoc(TypedDict, total=False):
@@ -116,7 +116,7 @@ def _build_sublattice_indices(
 
 
 def run_wl_block(
-    spec: WLSamplerSpec,
+    spec: WLSpecParams,
     ensemble: Ensemble,
     tip: WLBlockDoc | None,
     prototype_spec: PrototypeSpec,
