@@ -3,11 +3,14 @@ from fastapi import HTTPException, Query
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
 
+DEFAULT_LIMIT: int = 100
+MAX_LIMIT: int = 1000
+
 
 class AtlasPaginationQuery(QueryOperator):
     """Query operators to provides pagination for Atlas Search queries."""
 
-    def __init__(self, default_limit: int = 100, max_limit: int = 1000):
+    def __init__(self, default_limit: int = DEFAULT_LIMIT, max_limit: int = MAX_LIMIT):
         """
         Args:
             default_limit: the default number of documents to return
@@ -71,7 +74,7 @@ class AtlasPaginationQuery(QueryOperator):
 class PaginationQuery(QueryOperator):
     """Query operators to provides Pagination."""
 
-    def __init__(self, default_limit: int = 100, max_limit: int = 1000):
+    def __init__(self, default_limit: int = DEFAULT_LIMIT, max_limit: int = MAX_LIMIT):
         """
         Args:
             default_limit: the default number of documents to return
