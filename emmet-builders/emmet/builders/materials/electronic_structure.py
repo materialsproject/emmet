@@ -25,13 +25,13 @@ class InputMeta(BaseModel):
 
 class StructureInputs(InputMeta):
     # summary electronic structure data from VASP outputs for task doc
-    band_gap: float
+    band_gap: float | None = None
     cbm: float | None = None
     vbm: float | None = None
     efermi: float | None = None
-    is_gap_direct: bool
-    is_metal: bool
-    magnetic_ordering: Ordering
+    is_gap_direct: bool | None = None
+    is_metal: bool | None = None
+    magnetic_ordering: Ordering | None = None
 
 
 class StructuresShim(InputMeta):
@@ -45,7 +45,7 @@ class BSInputs(StructuresShim):
 
 class DosInputs(StructuresShim):
     dos: DosShim
-    is_gap_direct: bool
+    is_gap_direct: bool | None = None
 
 
 class BSDosInputs(DosInputs, BSInputs): ...
