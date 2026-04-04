@@ -241,7 +241,7 @@ class MagnetismSummary(PropModel):
         None, description="The number of unique magnetic sites."
     )
     types_of_magnetic_species: list[ElementType] | None = Field(
-        None, description="Magnetic specie elements."
+        None, description="Magnetic species elements."
     )
 
 
