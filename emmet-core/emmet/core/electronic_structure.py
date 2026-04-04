@@ -100,10 +100,12 @@ class ElectronicStructureBaseData(BaseModel):
 
 
 class ElectronicStructureSummary(ElectronicStructureBaseData):
-    is_gap_direct: bool = Field(..., description="Whether the band gap is direct.")
-    is_metal: bool = Field(..., description="Whether the material is a metal.")
-    magnetic_ordering: OrderingType = Field(
-        ..., description="Magnetic ordering of the calculation."
+    is_gap_direct: bool | None = Field(
+        None, description="Whether the band gap is direct."
+    )
+    is_metal: bool | None = Field(None, description="Whether the material is a metal.")
+    magnetic_ordering: OrderingType | None = Field(
+        None, description="Magnetic ordering of the calculation."
     )
 
 
