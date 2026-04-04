@@ -393,8 +393,7 @@ def filter_map(
                 lambda x: try_call(
                     fn,
                     *args,
-                    try_call(_extract_kwargs, x, work_keys, **kwargs),
-                    **kwargs,
+                    **{**try_call(_extract_kwargs, x, work_keys), **kwargs},
                 ),
                 work,
             ),
