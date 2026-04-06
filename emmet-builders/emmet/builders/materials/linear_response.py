@@ -140,7 +140,8 @@ def obtain_blessed_linear_builder_input(
         - orig_inputs.kpoints
         - output.outcar
         - output.bandgap
-
+        - output.epsilon_ionic
+        - output.epsilon_static
     CoreTaskDocs need to have non-null bandgap
     """
     relevant_tasks = [
@@ -149,10 +150,15 @@ def obtain_blessed_linear_builder_input(
             "task_id": task.task_id,
             "nkpoints": _parse_kpoints(task),
             **{
-                k: task.output.outcar.get(k)
+                k: getattr(task.output, k)
                 for k in (
                     "epsilon_static",
                     "epsilon_ionic",
+                )
+            },
+            **{
+                k: task.output.outcar.get(k)
+                for k in (
                     "piezo_static",
                     "piezo_ionic",
                 )
