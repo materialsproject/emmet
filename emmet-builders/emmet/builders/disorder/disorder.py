@@ -108,7 +108,14 @@ def build_disorder_doc(
     # --- extract training data ---
     structures_pm = [doc.reference_structure for doc in disordered_documents]
     n_prims = int(np.prod(first.supercell_diag))
-    y_cell = [doc.output.energy / float(n_prims) for doc in disordered_documents]
+    y_cell = []
+    for doc in disordered_documents:
+        task_id = getattr(doc, "task_id", "<unknown>")
+        if doc.output is None or doc.output.energy is None:
+            raise ValueError(
+                f"Missing output energy for disordered document with task_id={task_id}."
+            )
+        y_cell.append(doc.output.energy / float(n_prims))
 
     prototype_spec = PrototypeSpec(
         prototype=first.prototype, params=first.prototype_params
