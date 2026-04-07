@@ -24,8 +24,11 @@ def validate_counts_for_sublattices(
         target_idx = np.where(symbols == replace_element)[0]
         n_sites = int(target_idx.size)
 
-        if any(int(v) < 0 for v in counts.values()):
-            raise ValueError(f"Negative count in counts for {replace_element}: {counts}")
+        if any(int(v) <= 0 for v in counts.values()):
+            raise ValueError(
+                f"Zero or negative count in counts for {replace_element}: {counts}. "
+                "Remove species with no atoms from the composition map."
+            )
 
         total = sum(int(v) for v in counts.values())
         if total != n_sites:
@@ -60,9 +63,6 @@ def make_one_snapshot(
         start = 0
         for elem, n in sorted(counts.items()):
             n_int = int(n)
-            if n_int <= 0:
-                raise ValueError(f"Zero or negative count for {elem}: {n_int}")
-
             idx_slice = target_idx[perm[start : start + n_int]]
             symbols[idx_slice] = elem
             start += n_int
