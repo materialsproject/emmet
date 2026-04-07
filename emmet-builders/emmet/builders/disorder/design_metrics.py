@@ -4,7 +4,7 @@ Vendored from phaseedge.science.design_metrics with imports adjusted.
 """
 
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -38,7 +38,6 @@ def _standardize_columns(
 
 
 def compute_design_metrics(
-    *,
     X: NDArray[np.float64],
     w: NDArray[np.float64] | None = None,
     options: MetricOptions | None = None,
@@ -65,11 +64,9 @@ def compute_design_metrics(
 
     if opts.standardize:
         Xm, zero_var_count = _standardize_columns(Xw, eps)
-        std_mode = "column_zscore"
     else:
         Xm = Xw
         zero_var_count = 0
-        std_mode = "none"
 
     # SVD-based metrics (economy SVD)
     U, s, _ = np.linalg.svd(Xm, full_matrices=False)
@@ -112,6 +109,6 @@ def compute_design_metrics(
         leverage_max=leverage_max,
         leverage_p95=leverage_p95,
         weighting_applied=weighting_applied,
-        standardization=cast(Any, std_mode),
+        standardization=opts.standardize,
         zero_variance_feature_count=zero_var_count,
     )

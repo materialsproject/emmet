@@ -29,9 +29,6 @@ license = "BSD-3-Clause-LBNL"
 dependencies = [
   "emmet-core[all]>=0.86.1",
   "pymatgen-io-validation>=0.1.1",
-  "smol",
-  "ase",
-  "scikit-learn",
 ]
 
 [project.urls]
@@ -39,6 +36,11 @@ Homepage = "https://github.com/materialsproject/emmet/tree/main/emmet-builders/"
 Documentation = "https://materialsproject.github.io/emmet/"
 
 [project.optional-dependencies]
+disorder = [
+  "smol",
+  "ase",
+  "scikit-learn",
+]
 test = [
   "pre-commit",
   "pytest",

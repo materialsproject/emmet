@@ -12,7 +12,6 @@ from pymatgen.io.ase import AseAtomsAdaptor
 
 
 def validate_counts_for_sublattices(
-    *,
     primitive_cell: Atoms,
     supercell_diag: tuple[int, int, int],
     composition_map: Mapping[str, Mapping[str, int]],
@@ -37,7 +36,6 @@ def validate_counts_for_sublattices(
 
 
 def make_one_snapshot(
-    *,
     primitive_cell: Atoms,
     supercell_diag: tuple[int, int, int],
     composition_map: Mapping[str, Mapping[str, int]],

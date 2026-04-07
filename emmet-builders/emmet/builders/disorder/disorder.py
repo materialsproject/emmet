@@ -34,12 +34,13 @@ _DEFAULT_WL_CONVERGENCE_THRESHOLD: float = 1e-7
 _DEFAULT_BIN_WIDTH: float = 0.1
 _DEFAULT_MIN_BINS: int = 50
 _DEFAULT_MAX_BINS: int = 200
+_DEFAULT_MAX_BIN_REFINEMENTS: int = 20
+_DEFAULT_MAX_WL_BLOCKS: int = 200
 
 
 def build_disorder_doc(
     disordered_documents: list[DisorderedTaskDoc],
     ordered_task_doc: CoreTaskDoc,
-    *,
     basis_spec: dict[str, Any] | None = None,
     regularization: dict[str, Any] | None = None,
     weighting: dict[str, Any] | None = None,
@@ -52,6 +53,8 @@ def build_disorder_doc(
     initial_bin_width: float = _DEFAULT_BIN_WIDTH,
     min_bins: int = _DEFAULT_MIN_BINS,
     max_bins: int = _DEFAULT_MAX_BINS,
+    max_bin_refinements: int = _DEFAULT_MAX_BIN_REFINEMENTS,
+    max_wl_blocks: int = _DEFAULT_MAX_WL_BLOCKS,
 ) -> DisorderDoc:
     """Train a Cluster Expansion on disordered task documents from one ordered
     material and run Wang-Landau sampling to convergence.
@@ -74,6 +77,8 @@ def build_disorder_doc(
         initial_bin_width: Starting energy bin width for WL sampling.
         min_bins: Minimum acceptable number of WL bins (halve bin_width if fewer).
         max_bins: Maximum acceptable number of WL bins (double bin_width if more).
+        max_bin_refinements: Maximum bin-width adjustment iterations.
+        max_wl_blocks: Maximum convergence blocks before stopping.
 
     Returns:
         A fully populated DisorderDoc.
@@ -90,17 +95,15 @@ def build_disorder_doc(
 
     # --- validate consistency across documents ---
     first = disordered_documents[0]
-    for doc in disordered_documents[1:]:
-        if doc.ordered_task_id != first.ordered_task_id:
-            raise ValueError("Ordered task IDs do not match across documents.")
-        if doc.supercell_diag != first.supercell_diag:
-            raise ValueError("Supercell diagonals do not match across documents.")
-        if doc.prototype != first.prototype:
-            raise ValueError("Prototypes do not match across documents.")
-        if doc.prototype_params != first.prototype_params:
-            raise ValueError("Prototype parameters do not match across documents.")
-        if doc.versions != first.versions:
-            raise ValueError("Versions do not match across documents.")
+    for attr, msg in {
+        "ordered_task_id": "Ordered task IDs do not match across documents.",
+        "supercell_diag": "Supercell diagonals do not match across documents.",
+        "prototype": "Prototypes do not match across documents.",
+        "prototype_params": "Prototype parameters do not match across documents.",
+        "versions": "Versions do not match across documents.",
+    }.items():
+        if any(getattr(doc, attr) != getattr(first, attr) for doc in disordered_documents[1:]):
+            raise ValueError(msg)
 
     # --- extract training data ---
     structures_pm = [doc.reference_structure for doc in disordered_documents]
@@ -176,7 +179,9 @@ def build_disorder_doc(
     )
 
     num_bins = len(wl_block["state"].bin_indices)
-    while num_bins < min_bins or num_bins > max_bins:
+    for _ in range(max_bin_refinements):
+        if min_bins <= num_bins <= max_bins:
+            break
         if num_bins < min_bins:
             bin_width /= 2.0
         else:
@@ -202,15 +207,28 @@ def build_disorder_doc(
             supercell_diag=first.supercell_diag,
         )
         num_bins = len(wl_block["state"].bin_indices)
+    else:
+        raise RuntimeError(
+            f"Bin-width tuning did not converge after {max_bin_refinements} "
+            f"refinements (num_bins={num_bins}, target=[{min_bins}, {max_bins}])."
+        )
 
     # --- WL convergence loop ---
-    while wl_block["state"].mod_factor > wl_convergence_threshold:
+    for _ in range(max_wl_blocks):
+        if wl_block["state"].mod_factor <= wl_convergence_threshold:
+            break
         wl_block = run_wl_block(
             spec=wl_spec,
             ensemble=ensemble,
             tip=wl_block,
             prototype_spec=prototype_spec,
             supercell_diag=first.supercell_diag,
+        )
+    else:
+        raise RuntimeError(
+            f"WL convergence not reached after {max_wl_blocks} blocks "
+            f"(mod_factor={wl_block['state'].mod_factor}, "
+            f"threshold={wl_convergence_threshold})."
         )
 
     # --- Production-mode block to collect cation stats ---

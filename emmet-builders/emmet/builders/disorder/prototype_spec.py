@@ -6,7 +6,7 @@ Vendored from phaseedge.science.prototype_spec with imports adjusted.
 import dataclasses
 import re
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Iterable
 
 import numpy as np
@@ -14,7 +14,7 @@ from ase.atoms import Atoms
 from ase.spacegroup import crystal
 
 
-class PrototypeStructure(str, Enum):
+class PrototypeStructure(StrEnum):
     ROCKSALT = "rocksalt"
     GARNET = "garnet"
     SPINEL = "spinel"
@@ -49,7 +49,6 @@ def _annotate_atoms_with_metadata(
 
 def parse_prototype(
     prototype: str,
-    *,
     allowed_prefixes: Iterable[str] = ("J", "Q"),
 ) -> tuple[PrototypeStructure, dict[str, str]]:
     """Parse prototypes like 'doubleperovskite_J0Sr_Q0O' into

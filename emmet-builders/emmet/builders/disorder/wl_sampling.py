@@ -27,7 +27,6 @@ class WLBlockDoc(TypedDict, total=False):
 
 
 def _occ_from_initial_comp_map(
-    *,
     prototype_spec: PrototypeSpec,
     supercell_diag: tuple[int, int, int],
     ensemble: Ensemble,
@@ -54,7 +53,6 @@ def _occ_from_initial_comp_map(
 
 
 def _build_sublattices(
-    *,
     prototype_spec: PrototypeSpec,
     supercell_diag: tuple[int, int, int],
 ) -> tuple[dict[str, dict[str, int]], Structure]:
@@ -75,7 +73,6 @@ def _build_sublattices(
 
 
 def _build_sublattice_indices(
-    *,
     ensemble: Ensemble,
     sl_struct: Structure,
     sl_comp_map: dict[str, dict[str, int]],
