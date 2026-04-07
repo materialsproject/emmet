@@ -85,6 +85,11 @@ def build_disorder_doc(
     """
     if not disordered_documents:
         raise ValueError("disordered_documents must be non-empty.")
+    if ordered_task_doc.structure is None:
+        raise ValueError(
+            "ordered_task_doc.structure is None; a resolved structure is "
+            "required to populate search metadata on the DisorderDoc."
+        )
 
     if basis_spec is None:
         basis_spec = dict(_DEFAULT_BASIS_SPEC)

@@ -71,6 +71,8 @@ def build_disordered_primitive(
     replace_elements = tuple(sublattices.keys())
     disordered_map: dict[Any, dict[Any, float]] = {}
     for replace_element, allowed_species in sublattices.items():
+        # The replace elements must appear in the species list so that
+        # downstream cation-composition statistics are correctly computed.
         species_and_labels = tuple(allowed_species) + replace_elements
         frac = 1.0 / len(species_and_labels)
         replace_key = (
