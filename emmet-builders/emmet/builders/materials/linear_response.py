@@ -1,13 +1,8 @@
 from datetime import datetime
 from typing import Literal, TypeVar
 
-import numpy as np
-from pymatgen.io.validation.check_kpoints_kspacing import (
-    get_kpoint_divisions_from_kspacing,
-)
-
 from emmet.builders.base import BaseBuilderInput
-from emmet.builders.utils import filter_map
+from emmet.builders.utils import _parse_kpoints, filter_map
 from emmet.core.material import PropertyOrigin
 from emmet.core.math import Matrix3D, Vector6D
 from emmet.core.polar import DielectricDoc, PiezoelectricDoc
@@ -198,21 +193,3 @@ def obtain_blessed_linear_builder_input(
     }
 
     return target(**doc)
-
-
-def _parse_kpoints(task: CoreTaskDoc) -> int:
-
-    for inp_field in ("input", "orig_inputs"):
-        if (
-            kpts := getattr(getattr(task, inp_field, None), "kpoints", None)
-        ) is not None:
-            break
-
-    if kpts is None:
-        if isinstance(dk := (task.input.incar or {}).get("KSPACING"), float):
-            return np.prod(get_kpoint_divisions_from_kspacing(task.structure, dk))
-        return 0
-
-    if kpts.style.name in ("Monkhorst", "Gamma"):
-        return np.prod(kpts.kpts[0])
-    return task.orig_inputs.kpoints.num_kpts

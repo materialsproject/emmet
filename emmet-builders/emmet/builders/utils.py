@@ -16,14 +16,19 @@ from typing import (
     TypeVar,
 )
 
+import numpy as np
 import orjson
 from botocore.exceptions import ClientError
 from monty.serialization import MontyDecoder
 from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
 from pymatgen.core import Structure
+from pymatgen.io.validation.check_kpoints_kspacing import (
+    get_kpoint_divisions_from_kspacing,
+)
 from pymatgen.io.vasp.inputs import PotcarSingle
 
 from emmet.builders.settings import EmmetBuildSettings
+from emmet.core.tasks import CoreTaskDoc
 from emmet.core.types.typing import FSPathType
 
 if TYPE_CHECKING:
@@ -306,6 +311,24 @@ def get_potcar_stats(
             stats[calc_type].update({potcar_symbol: summary_stats})
 
     return stats
+
+
+def _parse_kpoints(task: CoreTaskDoc) -> int:
+
+    for inp_field in ("input", "orig_inputs"):
+        if (
+            kpts := getattr(getattr(task, inp_field, None), "kpoints", None)
+        ) is not None:
+            break
+
+    if kpts is None:
+        if isinstance(dk := (task.input.incar or {}).get("KSPACING"), float):
+            return np.prod(get_kpoint_divisions_from_kspacing(task.structure, dk))
+        return 0
+
+    if kpts.style.name in ("Monkhorst", "Gamma"):
+        return np.prod(kpts.kpts[0])
+    return task.orig_inputs.kpoints.num_kpts
 
 
 # -----------------------------------------------------------------------------
