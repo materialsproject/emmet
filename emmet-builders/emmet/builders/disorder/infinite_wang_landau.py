@@ -19,25 +19,25 @@ from math import log
 from typing import Any, Callable, Mapping
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from smol.moca.kernel.base import ALL_MCUSHERS, MCKernel
 
 
 class WLKernelState(BaseModel):
     """Builder-internal WL kernel state for checkpointing and resuming sampling."""
 
-    version: int = Field(...)
-    bin_indices: list[int] = Field(...)
-    entropy: list[float] = Field(...)
-    histogram: list[int] = Field(...)
-    occurrences: list[int] = Field(...)
-    mean_features: list[list[float]] = Field(...)
-    mod_factor: float = Field(...)
-    steps_counter: int = Field(...)
-    current_enthalpy: float = Field(...)
-    current_features: list[float] = Field(...)
-    rng_state: dict[str, Any] = Field(...)
-    bin_size: float = Field(...)
+    version: int
+    bin_indices: list[int]
+    entropy: list[float]
+    histogram: list[int]
+    occurrences: list[int]
+    mean_features: list[list[float]]
+    mod_factor: float
+    steps_counter: int
+    current_enthalpy: float
+    current_features: list[float]
+    rng_state: dict[str, Any]
+    bin_size: float
 
 
 def _divide(x: float, m: float) -> float:
@@ -263,7 +263,8 @@ class InfiniteWangLandau(MCKernel):
         )
         new_entropy = float(self._entropy_d.get(int(new_bin_id), 0.0))
 
-        assert self.mcusher is not None, "MCUsher is not initialized"
+        if self.mcusher is None:
+            raise ValueError("MCUsher is not initialized")
         log_factor = self.mcusher.compute_log_priori_factor(occupancy, step)
         exponent = entropy - new_entropy + log_factor
         self.trace.accepted = np.array(
@@ -386,7 +387,8 @@ class InfiniteWangLandau(MCKernel):
         enthalpy = float(np.dot(features, self.natural_params))
         self._current_features = features
         self._current_enthalpy = enthalpy
-        assert self.mcusher is not None, "MCUsher is not initialized"
+        if self.mcusher is None:
+            raise ValueError("MCUsher is not initialized")
         self.mcusher.set_aux_state(occupancy)
 
     # -------------------- checkpointing API --------------------

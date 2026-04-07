@@ -60,7 +60,6 @@ class Regularization:
 
 
 def build_disordered_primitive(
-    *,
     primitive_cell: Atoms,
     sublattices: dict[str, tuple[str, ...]],
 ) -> Structure:
@@ -89,7 +88,6 @@ def build_disordered_primitive(
 
 
 def featurize_structures(
-    *,
     subspace: ClusterSubspace,
     structures: Sequence[Structure],
     supercell_diag: tuple[int, int, int],
@@ -166,7 +164,6 @@ def compute_stats(y_true: Sequence[float], y_pred: Sequence[float]) -> CEFitMetr
 
 
 def _n_replace_sites_from_prototype(
-    *,
     prototype_spec: PrototypeSpec,
     supercell_diag: tuple[int, int, int],
 ) -> int:
@@ -193,7 +190,6 @@ def _stats_for_group(
     idxs: Sequence[int],
     y_true_per_prim: Sequence[float],
     y_pred_per_prim: Sequence[float],
-    *,
     sites_per_prim: int,
 ) -> CEFitMetrics:
     if not idxs:
@@ -234,7 +230,6 @@ def _build_sample_weights(
 
 
 def run_train_ce(
-    *,
     structures_pm: Sequence[Structure],
     y_cell: Sequence[float],
     prototype_spec: PrototypeSpec,
