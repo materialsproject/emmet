@@ -1,7 +1,7 @@
 import logging
 import warnings
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
@@ -41,10 +41,12 @@ class ThermoBuilderOutput(BaseModel):
     thermo_docs: dict[RunType | ThermoType, list[ThermoDoc] | None]
     phase_diagram_docs: dict[RunType | ThermoType, PhaseDiagramDoc | None]
 
+    model_config = ConfigDict(revalidate_instances="never")
+
 
 ThermoPDPair = tuple[list[ThermoDoc] | None, PhaseDiagramDoc | None]
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 def build_thermo_docs_and_phase_diagram_docs(
