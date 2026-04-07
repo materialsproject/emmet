@@ -280,7 +280,7 @@ def build_disorder_doc(
             steps_counter=wl_final.steps_counter,
         ),
         wl_occupancy=list(prod_block["occupancy"]),
-        wl_spec_params=wl_spec,
+        wl_spec_params=prod_spec,
         cation_counts=[
             CationBinCount(**row) for row in prod_block["cation_counts"]
         ],
