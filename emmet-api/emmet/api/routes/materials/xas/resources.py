@@ -1,7 +1,7 @@
 from emmet.api.resource import ReadOnlyResource
 from emmet.core.xas import XASDoc
 
-from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
+from emmet.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery
 from emmet.api.routes.materials.materials.query_operators import (
     ElementsQuery,
@@ -11,6 +11,14 @@ from emmet.api.routes.materials.materials.query_operators import (
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.routes.materials.xas.query_operators import XASQuery, XASIDQuery
 from emmet.api.core.settings import MAPISettings
+
+XAS_SORT_FIELDS = [
+    "material_id",
+    "absorbing_element",
+    "edge",
+    "spectrum_type",
+    "spectrum_id",
+]
 
 
 def xas_resource(xas_store):
@@ -37,6 +45,7 @@ def xas_resource(xas_store):
                     "last_updated",
                 ],
             ),
+            SortQuery(fields=XAS_SORT_FIELDS, max_num=1),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials XAS"],

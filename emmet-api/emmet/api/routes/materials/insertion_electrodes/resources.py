@@ -19,6 +19,7 @@ from emmet.api.routes.materials.insertion_electrodes.query_operators import (
 from emmet.api.core.settings import MAPISettings
 
 sort_fields = [
+    "battery_id",
     "max_delta_volume",
     "average_voltage",
     "capacity_grav",
