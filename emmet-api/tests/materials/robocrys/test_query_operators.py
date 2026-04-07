@@ -13,7 +13,7 @@ def test_robocrys_search_query():
                     "path": "description",
                     "allowAnalyzedField": True,
                 },
-                "sort": {"score": {"$meta": "searchScore"}, "description": 1},
+                "sort": {"score": {"$meta": "searchScore"}, "material_id": 1},
                 "count": {"type": "total"},
             }
         },
