@@ -1,13 +1,15 @@
 from collections.abc import Callable
 from enum import Enum, auto
+from itertools import chain
 from typing import Annotated, Any, TypeVar, ValuesView
 
 import orjson
-from pydantic import BeforeValidator, WrapSerializer
+from pydantic import BeforeValidator, TypeAdapter, WrapSerializer
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from typing_extensions import TypedDict
 
 from emmet.core.types.pymatgen_types.computed_entries_adapter import (
+    TypedCEDataDict,
     TypedComputedStructureEntryDict,
 )
 
@@ -29,14 +31,12 @@ TypedSimplexDict = TypedDict(
 TypedComputedDataDict = TypedDict(
     "TypedComputedDataDict",
     {
-        "dim": int,
-        # "el_refs": list[[str, ComputedStructureEntry]],
+        # "el_refs": list[[str, int]],
         "el_refs_elements": list[str],
-        "el_refs_entries": list[TypedComputedStructureEntryDict],
+        "el_refs_entries": list[int],
         "facets": list[list[int]],
         "qhull_data": list[list[float]],
-        "qhull_entries": list[TypedComputedStructureEntryDict],
-        "simplexes": list[TypedSimplexDict],
+        "qhull_entries": list[int],
         "all_entries": list[TypedComputedStructureEntryDict],
     },
 )
@@ -46,8 +46,7 @@ TypedPhaseDiagramDict = TypedDict(
     {
         "@module": str,
         "@class": str,
-        "all_entries": list[TypedComputedStructureEntryDict],
-        "elements": list[TypedMSONableElementDict],
+        "elements": list[str],
         "computed_data": TypedComputedDataDict,
     },
 )
@@ -63,9 +62,7 @@ def entries_list_serde(entries_list: ValuesView | list[dict], serde_fn: Callable
 
 
 def phase_diagram_serde(d: dict, mode: Mode, serde_fn: Callable):
-    entries_list_serde(d["all_entries"], serde_fn)
-    for key in ["all_entries", "qhull_entries"]:
-        entries_list_serde(d["computed_data"][key], serde_fn)
+    entries_list_serde(d["computed_data"]["all_entries"], serde_fn)
 
     match mode:
         case Mode.SHRED:
@@ -73,11 +70,9 @@ def phase_diagram_serde(d: dict, mode: Mode, serde_fn: Callable):
 
             elements = []
             el_refs_entries = []
-            for element, entry in el_ref_pairs:
+            for element, entry_idx in el_ref_pairs:
                 elements.append(str(element))
-                el_refs_entries.append(entry.as_dict())
-
-            entries_list_serde(el_refs_entries, serde_fn)
+                el_refs_entries.append(entry_idx)
 
             d["computed_data"]["el_refs_elements"] = elements
             d["computed_data"]["el_refs_entries"] = el_refs_entries
@@ -86,29 +81,19 @@ def phase_diagram_serde(d: dict, mode: Mode, serde_fn: Callable):
             elements = d["computed_data"].pop("el_refs_elements")
             el_refs_entries = d["computed_data"].pop("el_refs_entries")
 
-            entries_list_serde(el_refs_entries, serde_fn)
-
             d["computed_data"]["el_refs"] = [
                 (i, j) for i, j in zip(elements, el_refs_entries)
             ]
 
 
 def phase_diagram_serializer(phase_diagram, nxt, info) -> dict[str, Any]:
+    for entry in chain(
+        phase_diagram.computed_data["qhull_entries"],
+        phase_diagram.computed_data["all_entries"],
+    ):
+        entry.data = TypeAdapter(TypedCEDataDict).dump_python(entry.data)
+
     default_serialized_object = nxt(phase_diagram.as_dict(), info)
-
-    for key in ["all_entries", "qhull_entries", "simplexes"]:
-        default_serialized_object["computed_data"][key] = [
-            entry.as_dict() for entry in default_serialized_object["computed_data"][key]
-        ]
-
-    # ndarray -> list[list[int]]
-    for simplex in default_serialized_object["computed_data"]["simplexes"]:
-        simplex["coords"] = simplex["coords"].tolist()
-
-    # ndarray -> list[list[float]]
-    default_serialized_object["computed_data"]["qhull_data"] = (
-        default_serialized_object["computed_data"]["qhull_data"].tolist()
-    )
 
     format = info.context.get("format") if info.context else None
     if format == "arrow":
