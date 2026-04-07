@@ -71,8 +71,14 @@ def build_disordered_primitive(
     replace_elements = tuple(sublattices.keys())
     disordered_map: dict[Any, dict[Any, float]] = {}
     for replace_element, allowed_species in sublattices.items():
-        # The replace elements must appear in the species list so that
-        # downstream cation-composition statistics are correctly computed.
+        # ALL replace elements (not just the current one) must be included so
+        # that every active site shares the same site space.  smol groups sites
+        # into sublattices by identical species sets: if Es gets {Al,Mg,Es} and
+        # Fm gets {Al,Mg,Fm}, smol treats them as two independent sublattices
+        # and MC swap moves cannot cross between them — preventing the sampler
+        # from exploring the full configurational space.  Using the full set
+        # {Al,Mg,Es,Fm} on both sites unifies them into one sublattice, which
+        # is required for correct WL sampling and cation statistics.
         species_and_labels = tuple(allowed_species) + replace_elements
         frac = 1.0 / len(species_and_labels)
         replace_key = (
