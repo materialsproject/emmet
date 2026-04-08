@@ -1064,6 +1064,7 @@ ref_model_fields = {
         "run_stats",
         "state",
         "task_label",
+        "vasp_version",
     ],
     "emmet.core.thermo.ThermoDoc": [
         "builder_meta",
