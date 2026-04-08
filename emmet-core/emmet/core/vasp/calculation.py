@@ -31,7 +31,7 @@ from pymatgen.io.vasp import PotcarSingle, Vasprun, VolumetricData
 from typing_extensions import NotRequired, TypedDict
 
 from emmet.core.band_theory import ElectronicBS, ElectronicDos
-from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
+from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D, Vector6D
 from emmet.core.trajectory import RelaxTrajectory, Trajectory
 from emmet.core.vasp.models import ElectronicStep, ChgcarLike
 from emmet.core.types.enums import StoreTrajectoryOption, TaskState, VaspObject
@@ -570,6 +570,67 @@ def _deser_dos_properties(
     return dos_properties  # type: ignore[return-value]
 
 
+class DielectricProperties(BaseModel):
+    """Store electronic response properties.
+
+    Note the units and tensor ranks:
+    - Dielectric tensors are dimensionless (no units apply), and are 3x3
+    - Piezoelectric tensors are in C(oulomb)/m^2, and are 3x6
+    - Strain tensors, for each atom, are in eV/Å, and are 3x6
+    - Born charges, for each atom, are in units of the elementary charge, and are 3x3
+
+    For both Born charges and strain, the tensors are listed for each site in the
+    structure. Thus one expects a list of 3x3 and 3x6 tensors, respectively.
+    """
+
+    born_charges: list[Matrix3D] | None = Field(
+        None,
+        description=(
+            "Born effective charges for each site in the structure "
+            "(units of elementary charge e)."
+        ),
+    )
+    dielectric_ionic_tensor: Matrix3D | None = Field(
+        None, description="Ionic contribution to the dielectric tensor (dimensionless)."
+    )
+    dielectric_tensor: Matrix3D | None = Field(
+        None, description="Overall dielectric tensor (dimensionless)."
+    )
+    internal_strain_tensor: list[tuple[Vector6D, Vector6D, Vector6D]] | None = Field(
+        None, description="The internal strain tensor (eV/Å)."
+    )
+    piezo_ionic_tensor: tuple[Vector6D, Vector6D, Vector6D] | None = Field(
+        None, description="Ionic contribution to the piezoelectric tensor (C/m^2)."
+    )
+    piezo_tensor: tuple[Vector6D, Vector6D, Vector6D] | None = Field(
+        None, description="Overall piezoelectric tensor (C/m^2)."
+    )
+
+    @classmethod
+    def from_outcar(cls, outcar: Outcar | dict[str, Any]) -> Self:
+        """Parse data from the OUTCAR.
+
+        Parameters
+        -----------
+        outcar : Outcar or its as_dict representation
+        """
+        aliases = {"born_charges": "born"}
+        config = {
+            k: (
+                getattr(outcar, aliases.get(k, k), None)
+                if isinstance(outcar, Outcar)
+                else outcar.get(aliases.get(k, k), None)
+            )
+            for k in cls.model_fields
+        }
+        return cls(
+            **{
+                k: v.tolist() if isinstance(v, np.ndarray) else v
+                for k, v in config.items()
+            }
+        )
+
+
 class CoreCalculationOutput(BaseModel):
     """Document defining core VASP calculation outputs."""
 
@@ -582,6 +643,10 @@ class CoreCalculationOutput(BaseModel):
     )
     density: float | None = Field(
         None, description="Density of final structure in units of g/cc."
+    )
+    dielectric_properties: DielectricProperties | None = Field(
+        None,
+        description="Dielectric, piezoelectric, and other electromechanical properties.",
     )
     direct_gap: float | None = Field(
         None, description="Direct band gap in eV (if system is not metallic)"
@@ -847,6 +912,9 @@ class CalculationOutput(CoreCalculationOutput):
             locpot=locpot_avg,
             outcar=outcar_dict,
             run_stats=RunStatistics.from_outcar(outcar) if outcar else None,
+            dielectric_properties=(
+                DielectricProperties.from_outcar(outcar) if outcar else None
+            ),
             **epsilons,  # type: ignore[arg-type]
             **electronic_output,
             **phonon_output,
