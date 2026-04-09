@@ -13,7 +13,11 @@ from emmet.api.routes.materials.materials.utils import (
     chemsys_to_criteria,
     formula_to_criteria,
 )
-from emmet.core.symmetry import CrystalSystem
+from emmet.core.symmetry import (
+    CrystalSystem,
+    _get_space_group_symbol_to_number_mapping,
+    get_crystal_system_from_international_number,
+)
 from emmet.core.vasp.calc_types import RunType
 from emmet.core.vasp.material import BlessedCalcs
 
@@ -144,34 +148,90 @@ class DeprecationQuery(QueryOperator):
 
 class SymmetryQuery(QueryOperator):
     """
-    Method to generate a query on symmetry information
+    Method to generate a query on symmetry information.
     """
 
     def query(
         self,
-        crystal_system: CrystalSystem | None = Query(
+        crystal_system: str | None = Query(
             None,
-            description="Crystal system of the material",
+            description=(
+                "Crystal system of the material. If a comma-separated string, "
+                "will query by multiple crystal systems."
+            ),
         ),
-        spacegroup_number: int | None = Query(
+        spacegroup_number: int | str | None = Query(
             None,
-            description="Space group number of the material",
+            description=(
+                "Space group number of the material. If a comma-separated string, "
+                "will query by multiple space group numbers."
+            ),
         ),
         spacegroup_symbol: str | None = Query(
             None,
-            description="Space group symbol of the material",
+            description=(
+                "Space group symbol of the material. If a comma-separated string, "
+                "will query by multiple space group numbers."
+            ),
         ),
     ) -> STORE_PARAMS:
         crit = {}  # type: dict
 
+        crystal_systems: list[CrystalSystem] = []
         if crystal_system:
-            crit.update({"symmetry.crystal_system": str(crystal_system.value)})
+            crystal_systems += [
+                CrystalSystem(cs.strip()).value for cs in str(crystal_system).split(",")
+            ]
+            crit["symmetry.crystal_system"] = (
+                crystal_systems[0]
+                if len(crystal_systems) == 1
+                else {"$in": crystal_systems}
+            )
 
+        spacegroup_numbers: list[int] = []
         if spacegroup_number:
-            crit.update({"symmetry.number": spacegroup_number})
+            spacegroup_numbers += (
+                [int(sgn) for sgn in spacegroup_number.split(",")]
+                if isinstance(spacegroup_number, str)
+                else [spacegroup_number]
+            )
 
         if spacegroup_symbol:
-            crit.update({"symmetry.symbol": spacegroup_symbol})
+            SPACE_GROUP_SYMBOL_TO_NUMBER = _get_space_group_symbol_to_number_mapping()
+            new_sgn: list[int] = [
+                SPACE_GROUP_SYMBOL_TO_NUMBER(sgs.strip())
+                for sgs in spacegroup_symbol.split(",")
+            ]
+            # Try to prevent user error
+            if (
+                len(spacegroup_numbers) == 1
+                and len(new_sgn) == 1
+                and spacegroup_numbers[0] != new_sgn[0]
+            ):
+                raise ValueError(
+                    "You have specified exact match of inequivalent space "
+                    f"group number ({spacegroup_numbers[0]}) and symbol ({new_sgn[0]})."
+                )
+            spacegroup_numbers += new_sgn
+
+        if len(spacegroup_numbers) > 0:
+            crit["symmetry.number"] = (
+                spacegroup_numbers[0]
+                if len(spacegroup_numbers) == 1
+                else {"$in": spacegroup_number}
+            )
+
+            if (
+                len(spacegroup_numbers) == 1
+                and len(crystal_systems) == 1
+                and get_crystal_system_from_international_number(spacegroup_numbers[0])
+                != crystal_systems[0]
+            ):
+                raise ValueError(
+                    "You have specified exact match of inequivalent space "
+                    f"group number ({spacegroup_numbers[0]}) and "
+                    f"crystal system ({crystal_systems[0]})."
+                )
 
         return {"criteria": crit}
 
