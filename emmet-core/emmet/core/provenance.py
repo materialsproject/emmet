@@ -30,7 +30,7 @@ class Database(ValueEnum):
     """
 
     ICSD = "icsd"
-    Pauling_Files = "pf"
+    Pauling_Files = "pauling"
     COD = "cod"
 
 
@@ -51,8 +51,8 @@ def _remove_dupe_authors(authors: list[dict[str, Any] | Author]):
 
 
 def _migrate_legacy_history_data(
-    config: list[dict[str, Any]] | list[History],
-) -> list[History]:
+    config: list[dict[str, Any]] | list[History] | None,
+) -> list[History | None]:
     """Migrate legacy provenance and SNL `history` data as a classmethod.
 
     Parameters
@@ -63,6 +63,8 @@ def _migrate_legacy_history_data(
     -----------
     list of History objects.
     """
+    if not config:
+        return []
 
     top_level_history = [
         h.model_dump() if isinstance(h, History) else h for h in config
@@ -250,7 +252,7 @@ class History(BaseModel):
 
 
 HistoryType = Annotated[
-    list[History] | None,
+    list[History | None],
     BeforeValidator(_migrate_legacy_history_data),
 ]
 

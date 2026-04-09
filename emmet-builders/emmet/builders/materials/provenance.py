@@ -1,6 +1,9 @@
 """Build provenance collection."""
 
 import logging
+from collections import defaultdict
+from itertools import chain, groupby
+from typing import Iterator
 
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 
@@ -100,53 +103,86 @@ def update_experimental_icsd_structures(**client_kwargs) -> list[DatabaseSNL]:
     )
 
 
-def match_against_snls(
-    input_doc: BaseBuilderInput,
-    snls: list[DatabaseSNL],
-):
-    """Match a single document against the SNL collection."""
-    database_ids = {}
-    authors = [SETTINGS.DEFAULT_AUTHOR]
-    history = [SETTINGS.DEFAULT_HISTORY]
-    references = [SETTINGS.DEFAULT_REFERENCE]
-    theoretical = True
+class ProvenanceBuilderInput(BaseBuilderInput):
+    formula_pretty: str
 
-    for snl in [
-        doc
-        for doc in snls
-        if doc.chemsys
-        == (
-            "-".join(sorted(input_doc.structure.composition.chemical_system.split("-")))
+
+def _match_against_snls(
+    inputs: tuple[list[ProvenanceBuilderInput], list[DatabaseSNL]],
+) -> list[ProvenanceDoc]:
+    """
+    Structure match a set of ProvenanceBuilderInputs against a group of DatabaseSNLs
+
+    Should be used in conjunction with ``build_provenance_docs`` to ensure inputs
+    are correctly grouped by 'formula_pretty'.
+    """
+    input_documents, snls = inputs
+
+    results = []
+    for input_doc in input_documents:
+        authors = [[SETTINGS.DEFAULT_AUTHOR]]
+        database_ids = defaultdict(list)
+        history = [[SETTINGS.DEFAULT_HISTORY]]
+        references = [SETTINGS.DEFAULT_REFERENCE]
+        theoretical = True
+
+        if snls:
+            for snl in snls:
+                if structure_matcher.fit(input_doc.structure, snl.structure):
+                    if snl.source and snl.source in {"icsd", "pauling"}:
+                        theoretical = False
+                        database_ids[snl.source].append(snl.snl_id)
+
+                    if snl.about:
+                        authors.append(snl.about.authors or [])
+                        history.append(snl.about.history or [])
+                        # `SNLAbout` uses string for `references`,
+                        # `ProvenanceDoc` uses list of str
+                        if snl.about.references:
+                            references.append(snl.about.references)
+
+        results.append(
+            ProvenanceDoc.from_structure(
+                meta_structure=input_doc.structure,
+                material_id=input_doc.material_id,
+                database_IDs=database_ids,
+                theoretical=theoretical,
+                authors=list(chain.from_iterable(authors)),
+                history=list(chain.from_iterable(history)),
+                references=references,
+            )
         )
-    ]:
-        if structure_matcher.fit(input_doc.structure, snl.structure):
 
-            if snl.source and snl.source in {"icsd", "pauling"}:
-                theoretical = False
-                database_ids[snl.source].append(snl.snl_id)
-
-            if snl.about:
-                authors.extend(snl.about.authors or [])
-                history.extend(snl.about.history or [])
-                # `SNLAbout` uses string for `references`,
-                # `ProvenanceDoc` uses list of str
-                if snl.about.references:
-                    references.append(snl.about.references)
-
-    return ProvenanceDoc.from_structure(
-        meta_structure=input_doc.structure,
-        material_id=input_doc.material_id,
-        database_IDs=database_ids,
-        theoretical=theoretical,
-        authors=authors,
-        history=history,
-        references=references,
-    )
+    return results
 
 
 def build_provenance_docs(
-    input_documents: list[BaseBuilderInput], snls: list[DatabaseSNL], **kwargs
-) -> list[ProvenanceDoc]:
-    """Build the provenance collection."""
+    input_documents: list[ProvenanceBuilderInput], snls: list[DatabaseSNL], **kwargs
+) -> Iterator[ProvenanceDoc]:
+    """
+    Groups input documents and SNLs by formula_pretty, performs structure matching
+    on each formula group, and constructs ProvenanceDocs for each group of
+    ProvenanceBuilderInputs with matching structures within each formula group.
 
-    return list(filter_map(match_against_snls, input_documents, snls=snls, **kwargs))
+    Args:
+        input_documents: List of ProvenanceBuilderInput objects to process.
+        snls: List of DatabaseSNL objects for structure matching against.
+
+    Returns:
+        Iterator[ProvenanceDoc]
+    """
+
+    input_documents.sort(key=lambda x: x.formula_pretty)
+    snls.sort(key=lambda y: y.formula_pretty)
+
+    input_docs = dict()
+    for form, input_group in groupby(input_documents, key=lambda x: x.formula_pretty):
+        input_docs[form] = list(input_group)
+
+    snl_docs = dict()
+    for form, snl_group in groupby(snls, key=lambda y: y.formula_pretty):
+        snl_docs[form] = list(snl_group)
+
+    inputs = [(inp, snl_docs.get(form, [])) for form, inp in input_docs.items()]
+
+    return chain.from_iterable(filter_map(_match_against_snls, inputs, **kwargs))
