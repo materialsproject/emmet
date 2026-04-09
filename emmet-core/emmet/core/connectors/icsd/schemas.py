@@ -148,7 +148,4 @@ class IcsdPropertyDoc(BaseModel):
                 config["cif"]
             )
 
-        if not config.get("cif_parsing_errors"):
-            config.pop("cif_parsing_errors")
-
         return config

@@ -89,12 +89,12 @@ class IcsdClient(BaseModel):
         if response.status_code == 200:
             self._auth_token = response.headers["ICSD-Auth-Token"]
             if self._auth_token is None:
-                logger.warning(
+                raise ValueError(
                     f"{self.__module__}.{self.__class__.__name__} "
                     f"failed to fetch auth token: {response.content}"
                 )
         else:
-            logger.warning(
+            raise ValueError(
                 f"{self.__module__}.{self.__class__.__name__} "
                 "failed to fetch auth token with status code "
                 f"{response.status_code}: {response.content}"
@@ -248,6 +248,10 @@ class IcsdClient(BaseModel):
                     for row in csv_data[1:]
                 ]
             else:
+                if "Authentication not successful" in response.content:
+                    raise ValueError(
+                        "Failed to authenticate ICSD client. Please check your credentials"
+                    )
                 logger.warning(
                     f"{self.__module__}.{self.__class__.__name__} "
                     "csv search failed with status code "

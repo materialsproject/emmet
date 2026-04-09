@@ -77,11 +77,12 @@ def update_experimental_icsd_structures(**client_kwargs) -> list[DatabaseSNL]:
             IcsdSubset.EXPERIMENTAL_INORGANIC,
         ):
             data += client.search(
-                subset=IcsdSubset.EXPERIMENTAL_INORGANIC,
+                subset=icsd_subset,
                 space_group_number=(1, 230),
-                include_cif=True,
+                include_cif=False,
                 include_metadata=False,
             )
+    return data
 
     parsed = [
         _get_snl_from_cif(
