@@ -178,7 +178,7 @@ class SymmetryQuery(QueryOperator):
         crit = {}  # type: dict
 
         crystal_systems: list[CrystalSystem] = []
-        if crystal_system:
+        if isinstance(crystal_system, str | CrystalSystem):
             crystal_systems += [
                 CrystalSystem(cs.strip()).value for cs in str(crystal_system).split(",")
             ]
@@ -189,18 +189,18 @@ class SymmetryQuery(QueryOperator):
             )
 
         spacegroup_numbers: list[int] = []
-        if spacegroup_number:
+        if isinstance(spacegroup_number, str | int):
             spacegroup_numbers += (
-                [int(sgn) for sgn in spacegroup_number.split(",")]
+                [int(sgn) for sgn in str(spacegroup_number).split(",")]
                 if isinstance(spacegroup_number, str)
                 else [spacegroup_number]
             )
 
-        if spacegroup_symbol:
+        if isinstance(spacegroup_symbol, str):
             SPACE_GROUP_SYMBOL_TO_NUMBER = _get_space_group_symbol_to_number_mapping()
             new_sgn: list[int] = [
-                SPACE_GROUP_SYMBOL_TO_NUMBER(sgs.strip())
-                for sgs in spacegroup_symbol.split(",")
+                SPACE_GROUP_SYMBOL_TO_NUMBER[sgs.strip()]
+                for sgs in str(spacegroup_symbol).split(",")
             ]
             # Try to prevent user error
             if (
@@ -215,22 +215,29 @@ class SymmetryQuery(QueryOperator):
             spacegroup_numbers += new_sgn
 
         if len(spacegroup_numbers) > 0:
+            spacegroup_numbers = sorted(set(spacegroup_numbers))
             crit["symmetry.number"] = (
                 spacegroup_numbers[0]
                 if len(spacegroup_numbers) == 1
-                else {"$in": spacegroup_number}
+                else {"$in": spacegroup_numbers}
             )
 
             if (
                 len(spacegroup_numbers) == 1
-                and len(crystal_systems) == 1
                 and get_crystal_system_from_international_number(spacegroup_numbers[0])
-                != crystal_systems[0]
+                not in crystal_systems
+            ) or (
+                len(crystal_systems) == 1
+                and any(
+                    get_crystal_system_from_international_number(sgn)
+                    != crystal_systems[0]
+                    for sgn in spacegroup_numbers
+                )
             ):
                 raise ValueError(
                     "You have specified exact match of inequivalent space "
-                    f"group number ({spacegroup_numbers[0]}) and "
-                    f"crystal system ({crystal_systems[0]})."
+                    f"group number ({', '.join([str(sgn) for sgn in spacegroup_numbers])}) and "
+                    f"crystal system ({', '.join(crystal_systems)})."
                 )
 
         return {"criteria": crit}
