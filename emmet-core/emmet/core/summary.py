@@ -182,7 +182,7 @@ class GBSearchData(BaseModel):
     rotation_angle: float | None = Field(None, description="Rotation angle in degrees.")
 
 
-class GBSummary(BaseModel):
+class GBSummary(PropModel):
     _prop: str = PrivateAttr("grain_boundaries")
     grain_boundaries: list[GBSearchData] | None = Field(
         None, description="List of grain boundary documents."
