@@ -1,3 +1,5 @@
+from typing import Iterator
+
 from pydantic import BaseModel
 
 from emmet.builders.utils import filter_map
@@ -66,7 +68,7 @@ class SummaryBuilderInputs(BaseModel):
 
 def build_summary_docs(
     input_documents: list[SummaryBuilderInputs], **kwargs
-) -> list[SummaryDoc]:
+) -> Iterator[SummaryDoc]:
     """
     Generate summary documents from input property documents.
 
@@ -83,7 +85,7 @@ def build_summary_docs(
         input_documents: List of SummaryBuilderInputs documents to process.
 
     Returns:
-        list[SummaryDoc]
+        Iterator[SummaryDoc]
     """
     return filter_map(
         SummaryDoc.from_docs,
