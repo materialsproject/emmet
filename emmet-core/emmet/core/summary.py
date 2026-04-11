@@ -94,7 +94,7 @@ class SummaryStats(BaseModel):
 class PropModel(BaseModel):
     """Check for model initialization outside of defaults."""
 
-    _prop: str = PrivateAttr("material")
+    _prop: str = PrivateAttr("materials")
 
     @property
     def _has_props(self) -> bool:
