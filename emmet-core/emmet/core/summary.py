@@ -283,7 +283,7 @@ class PiezoelectricSummary(PropModel):
 
 
 class SurfacesSummary(PropModel):
-    _prop: str = PrivateAttr("surfaces")
+    _prop: str = PrivateAttr("surface_properties")
     weighted_surface_energy_EV_PER_ANG2: float | None = Field(
         None, description="Weighted surface energy in eV/Å²."
     )
