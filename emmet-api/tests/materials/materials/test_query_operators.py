@@ -128,12 +128,16 @@ def test_symmetry_query():
         ValueError, match=r"inequivalent space group number.*and symbol"
     ):
         op.query(spacegroup_number=221, spacegroup_symbol="Im-3m")
-    assert op.query(spacegroup_number="229,221", spacegroup_symbol="Im-3m") == {
+
+    with pytest.raises(ValueError, match="inequivalent space group number.*and symbol"):
+        op.query(spacegroup_number="229,221", spacegroup_symbol="Im-3m")
+
+    assert op.query(spacegroup_number="229,221") == {
         "criteria": {"symmetry.number": {"$in": [221, 229]}}
     }
 
-    with pytest.raises(ValueError, match=r"Unknown space group symbol(s)"):
-        op.query(spacegroup_symbol=["apple", "pear"])
+    with pytest.raises(ValueError, match="Unknown space group symbol.*apple, pear"):
+        op.query(spacegroup_symbol="pear,apple,Pnma")
 
     with pytest.raises(
         ValueError, match="inequivalent space group number.*and crystal system"

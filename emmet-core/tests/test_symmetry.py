@@ -1,5 +1,6 @@
 """Test symmetry-related utilities."""
 
+from pymatgen.symmetry.groups import SYMM_DATA
 import pytest
 
 from emmet.core.symmetry import (
@@ -22,6 +23,9 @@ def test_spacegroup_symbol_number_mapping():
             "Ia-3d": 230,
         }.items()
     )
+
+    assert all(k in sgsn for k in SYMM_DATA["abbreviated_spacegroup_symbols"])
+    assert sorted(set(sgsn.values())) == list(range(1, 231))
 
 
 def test_get_crystal_system():
