@@ -198,15 +198,27 @@ class SymmetryQuery(QueryOperator):
 
         if isinstance(spacegroup_symbol, str):
             SPACE_GROUP_SYMBOL_TO_NUMBER = _get_space_group_symbol_to_number_mapping()
+            space_group_symbols = [sgs.strip() for sgs in SPACE_GROUP_SYMBOL_TO_NUMBER]
+            if (
+                len(
+                    invalid_sgs := {
+                        sgs
+                        for sgs in space_group_symbols
+                        if sgs not in SPACE_GROUP_SYMBOL_TO_NUMBER
+                    }
+                )
+                > 0
+            ):
+                raise ValueError(
+                    f"Unknown space group symbol(s): {', '.join(invalid_sgs)}"
+                )
+
             new_sgn: list[int] = [
-                SPACE_GROUP_SYMBOL_TO_NUMBER[sgs.strip()]
-                for sgs in str(spacegroup_symbol).split(",")
+                SPACE_GROUP_SYMBOL_TO_NUMBER[sgs] for sgs in space_group_symbols
             ]
             # Try to prevent user error
-            if (
-                len(spacegroup_numbers) == 1
-                and len(new_sgn) == 1
-                and spacegroup_numbers[0] != new_sgn[0]
+            if len(new_sgn) == 1 and any(
+                sgn != new_sgn[0] for sgn in spacegroup_numbers[0]
             ):
                 raise ValueError(
                     "You have specified exact match of inequivalent space "

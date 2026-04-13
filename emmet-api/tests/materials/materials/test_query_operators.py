@@ -132,6 +132,9 @@ def test_symmetry_query():
         "criteria": {"symmetry.number": {"$in": [221, 229]}}
     }
 
+    with pytest.raises(ValueError, match=r"Unknown space group symbol(s)"):
+        op.query(spacegroup_symbol=["apple", "pear"])
+
     with pytest.raises(
         ValueError, match="inequivalent space group number.*and crystal system"
     ):

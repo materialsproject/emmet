@@ -68,10 +68,16 @@ def get_crystal_system_from_international_number(sgn: int) -> CrystalSystem:
 
 def _get_space_group_symbol_to_number_mapping() -> dict[str, int]:
     """Return a dict mapping space group symbol to its international number."""
-    return {
+    sg_map = {
         sgs: entry["int_number"]
         for sgs, entry in SYMM_DATA["space_group_encoding"].items()
     }
+
+    # Add in duplicate abbreviated space group symbols
+    # These abbreviated symbols are used by spglib
+    for abbr, full in SYMM_DATA["abbreviated_spacegroup_symbols"].items():
+        sg_map[abbr] = sg_map[full]
+    return sg_map
 
 
 class PointGroupData(BaseModel):
