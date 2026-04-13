@@ -177,7 +177,7 @@ class SymmetryQuery(QueryOperator):
     ) -> STORE_PARAMS:
         crit = {}  # type: dict
 
-        crystal_systems: list[CrystalSystem] = []
+        crystal_systems: list[str] = []
         if isinstance(crystal_system, str | CrystalSystem):
             crystal_systems += [
                 CrystalSystem(cs.strip()).value for cs in str(crystal_system).split(",")
