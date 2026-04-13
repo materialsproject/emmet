@@ -1,6 +1,7 @@
 import os
 
 from pymatgen.core.structure import Structure
+import pytest
 
 from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.materials.query_operators import (
@@ -109,16 +110,54 @@ def test_deprecation_query():
 
 def test_symmetry_query():
     op = SymmetryQuery()
-    assert op.query(
-        crystal_system=CrystalSystem.cubic,
-        spacegroup_number=221,
-        spacegroup_symbol="Pm3m",
-    ) == {
-        "criteria": {
-            "symmetry.crystal_system": "Cubic",
-            "symmetry.number": 221,
-            "symmetry.symbol": "Pm3m",
+
+    for aux_query in [
+        {"spacegroup_number": 221},
+        {"spacegroup_symbol": "Pm-3m"},
+        {"spacegroup_number": 221, "spacegroup_symbol": "Pm-3m"},
+    ]:
+        # Assert correct reduction of space group symbol to number
+        assert op.query(crystal_system=CrystalSystem.cubic, **aux_query) == {
+            "criteria": {
+                "symmetry.crystal_system": "Cubic",
+                "symmetry.number": 221,
+            }
         }
+
+    with pytest.raises(
+        ValueError, match=r"inequivalent space group number.*and symbol"
+    ):
+        op.query(spacegroup_number=221, spacegroup_symbol="Im-3m")
+
+    with pytest.raises(ValueError, match="inequivalent space group number.*and symbol"):
+        op.query(spacegroup_number="229,221", spacegroup_symbol="Im-3m")
+
+    assert op.query(spacegroup_number="229,221") == {
+        "criteria": {"symmetry.number": {"$in": [221, 229]}}
+    }
+
+    with pytest.raises(ValueError, match="Unknown space group symbol.*apple, pear"):
+        op.query(spacegroup_symbol="pear,apple,Pnma")
+
+    with pytest.raises(
+        ValueError, match="inequivalent space group number.*and crystal system"
+    ):
+        op.query(spacegroup_number=221, crystal_system="Trigonal")
+
+    with pytest.raises(
+        ValueError, match="inequivalent space group number.*and crystal system"
+    ):
+        assert op.query(spacegroup_number="229,221", crystal_system="Trigonal")
+
+    with pytest.raises(
+        ValueError, match="inequivalent space group number.*and crystal system"
+    ):
+        assert op.query(crystal_system="Trigonal", spacegroup_symbol="Im-3m")
+
+    crystal_systems = ["ortho", "mono"]
+    cs = [CrystalSystem[x].value for x in crystal_systems]
+    assert op.query(crystal_system=",".join(cs)) == {
+        "criteria": {"symmetry.crystal_system": {"$in": cs}}
     }
 
 
