@@ -218,7 +218,7 @@ class SymmetryQuery(QueryOperator):
             ]
             # Try to prevent user error
             if len(new_sgn) == 1 and any(
-                sgn != new_sgn[0] for sgn in spacegroup_numbers[0]
+                sgn != new_sgn[0] for sgn in spacegroup_numbers
             ):
                 raise ValueError(
                     "You have specified exact match of inequivalent space "
