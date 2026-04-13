@@ -50,7 +50,7 @@ def get_crystal_system_from_international_number(sgn: int) -> CrystalSystem:
     """
     try:
         return next(
-            CrystalSystem[family]
+            CrystalSystem[family]  # type: ignore[misc]
             for family, sgn_range in {
                 "tri": (1, 3),
                 "mono": (3, 16),
