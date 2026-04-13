@@ -37,7 +37,7 @@ charset-normalizer==3.4.4
     # via requests
 contourpy==1.3.3
     # via matplotlib
-cryptography==46.0.3
+cryptography==46.0.7
     # via paramiko
 cycler==0.12.1
     # via matplotlib
@@ -158,7 +158,7 @@ pandas==2.3.3
     #   seaborn
 paramiko==4.0.0
     # via sshtunnel
-pillow==12.1.0
+pillow==12.2.0
     # via
     #   imageio
     #   matplotlib
