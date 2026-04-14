@@ -246,8 +246,8 @@ class BaseElectrode(EmmetBaseModel):
         description="Anonymized representation of the formula (not including the working ion).",
     )
 
-    warnings: list[str] = Field(
-        [], description="Any warnings related to this electrode data."
+    warnings: list[str] | None = Field(
+        None, description="Any warnings related to this electrode data."
     )
 
 
