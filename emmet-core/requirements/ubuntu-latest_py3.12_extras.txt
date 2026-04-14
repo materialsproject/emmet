@@ -156,7 +156,7 @@ pandas==2.3.3
     #   seaborn
 pathspec==1.0.3
     # via mypy
-pillow==12.1.0
+pillow==12.2.0
     # via
     #   imageio
     #   matplotlib
@@ -228,7 +228,7 @@ pyparsing==3.3.2
     # via
     #   bibtexparser
     #   matplotlib
-pytest==9.0.2
+pytest==9.0.3
     # via
     #   emmet-core (pyproject.toml)
     #   pytest-cov
