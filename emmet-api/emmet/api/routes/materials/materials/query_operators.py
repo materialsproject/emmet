@@ -151,6 +151,9 @@ class SymmetryQuery(QueryOperator):
     Method to generate a query on symmetry information.
     """
 
+    MAX_SPACE_GROUPS: int = 115
+    MAX_CRYSTAL_SYSTEMS: int = 3
+
     def query(
         self,
         crystal_system: str | None = Query(
@@ -186,6 +189,13 @@ class SymmetryQuery(QueryOperator):
                 crystal_systems[0]
                 if len(crystal_systems) == 1
                 else {"$in": crystal_systems}
+            )
+
+        crystal_systems = sorted(set(crystal_systems))
+        if len(crystal_systems) > self.MAX_CRYSTAL_SYSTEMS:
+            raise ValueError(
+                f"You have queried for {len(crystal_systems)} crystal systems, "
+                f"however {self.MAX_CRYSTAL_SYSTEMS} can be queried at most."
             )
 
         spacegroup_numbers: list[int] = []
@@ -227,8 +237,14 @@ class SymmetryQuery(QueryOperator):
                 )
             spacegroup_numbers += new_sgn
 
+        spacegroup_numbers = sorted(set(spacegroup_numbers))
+        if len(spacegroup_numbers) > self.MAX_SPACE_GROUPS:
+            raise ValueError(
+                f"You have queried for {len(spacegroup_numbers)} space groups, "
+                f"however {self.MAX_SPACE_GROUPS} can be queried at most."
+            )
+
         if len(spacegroup_numbers) > 0:
-            spacegroup_numbers = sorted(set(spacegroup_numbers))
             crit["symmetry.number"] = (
                 spacegroup_numbers[0]
                 if len(spacegroup_numbers) == 1
