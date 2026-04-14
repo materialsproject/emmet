@@ -106,6 +106,8 @@ class PropModel(BaseModel):
 
 
 class MaterialsSummary(PropertyDoc, PropModel):
+    property_name: str = "summary"
+
     task_ids: list[IdentifierType] = Field(
         [],
         title="Calculation IDs",
