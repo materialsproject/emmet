@@ -145,6 +145,7 @@ def _match_against_snls(
             ProvenanceDoc.from_structure(
                 meta_structure=input_doc.structure,
                 material_id=input_doc.material_id,
+                deprecated=input_doc.deprecated,
                 database_IDs=database_ids,
                 theoretical=theoretical,
                 authors=list(chain.from_iterable(authors)),
