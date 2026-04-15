@@ -246,7 +246,7 @@ pathspec==1.0.3
     # via
     #   mkdocs
     #   mypy
-pillow==12.1.0
+pillow==12.2.0
     # via
     #   imageio
     #   matplotlib
@@ -314,7 +314,7 @@ pyparsing==3.3.2
     # via
     #   bibtexparser
     #   matplotlib
-pytest==9.0.2
+pytest==9.0.3
     # via
     #   emmet-api (pyproject.toml)
     #   pytest-asyncio
@@ -334,7 +334,7 @@ python-dateutil==2.9.0.post0
     #   pandas
 python-dotenv==1.2.1
     # via pydantic-settings
-python-multipart==0.0.22
+python-multipart==0.0.26
     # via starlette
 pytz==2025.2
     # via mongomock
@@ -390,7 +390,7 @@ tabulate==0.9.0
     # via pymatgen
 tifffile==2026.1.14
     # via scikit-image
-tornado==6.5.4
+tornado==6.5.5
     # via livereload
 tqdm==4.67.1
     # via pymatgen
