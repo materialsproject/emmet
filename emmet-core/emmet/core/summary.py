@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field, PrivateAttr
 
 from emmet.core.electronic_structure import BandstructureData, DosData
+from emmet.core.material import PropertyOrigin
 from emmet.core.material_property import PropertyDoc
 from emmet.core.thermo import DecompositionProduct
 from emmet.core.types.enums import ValueEnum, XasEdge, XasType
@@ -95,10 +96,18 @@ class PropModel(BaseModel):
     """Check for model initialization outside of defaults."""
 
     _prop: str = PrivateAttr("materials")
+    prop_origins: list[PropertyOrigin | None] = Field(
+        [],
+        description="Optionally include property origins to fold into summary doc origins",
+        exclude=True,
+    )
 
     @property
     def _has_props(self) -> bool:
-        return not not self.model_fields_set
+        _defaults = {field: anno.default for field, anno in self.model_fields.items()}
+        return any(
+            [getattr(self, field) != default for field, default in _defaults.items()]
+        )
 
     @property
     def name(self) -> HasProps:
@@ -426,8 +435,22 @@ class SummaryDoc(
         for prop in chain(property_summary_docs, property_summary_docs):
             has_props[prop.name] = prop._has_props
 
+        # fold property origins
+        prop_origins = chain.from_iterable(
+            (
+                doc.prop_origins
+                for doc in chain(property_summary_docs, property_shim_docs)
+            )
+        )
+
+        aggregate_struct = {
+            **ChainMap(*[doc.model_dump() for doc in property_summary_docs])
+        }
+        aggregate_struct["origins"] = list(
+            chain(aggregate_struct["origins"], prop_origins)
+        )
+
         return SummaryDoc(
             has_props=has_props,
-            **ChainMap(*[doc.model_dump() for doc in property_summary_docs]),
-            **kwargs,
+            **{**aggregate_struct, **kwargs},
         )
