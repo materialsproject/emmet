@@ -1,3 +1,4 @@
+import os
 import pytest
 from pymatgen.core import Structure
 
@@ -14,8 +15,10 @@ if ARROW_COMPATIBLE:
 @pytest.mark.parametrize("structure", test_structures.values())
 def test_chemenv(structure: Structure):
     """Very simple test to make sure this actually works"""
+
+    # NB: test seems to be flakey if `material_id` fields are the same
     doc = ChemEnvDoc.from_structure(
-        structure=structure, material_id=33, deprecated=False
+        structure=structure, material_id=f"mp-{os.getpid()}", deprecated=False
     )
     valences = [getattr(site.specie, "oxi_state", None) for site in structure]
     valences = [v for v in valences if v is not None]
