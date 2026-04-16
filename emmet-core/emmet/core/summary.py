@@ -5,6 +5,7 @@ from itertools import chain
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, PrivateAttr
+from pydantic.json_schema import SkipJsonSchema
 
 from emmet.core.electronic_structure import BandstructureData, DosData
 from emmet.core.material import PropertyOrigin
@@ -96,7 +97,7 @@ class PropModel(BaseModel):
     """Check for model initialization outside of defaults."""
 
     _prop: str = PrivateAttr("materials")
-    prop_origins: list[PropertyOrigin | None] = Field(
+    prop_origins: SkipJsonSchema[list[PropertyOrigin | None]] = Field(
         [],
         description="Optionally include property origins to fold into summary doc origins",
         exclude=True,
@@ -432,7 +433,7 @@ class SummaryDoc(
         """
         # initialize all has_props variants to False, overwrite according to what caller provides
         has_props = {prop.value: False for prop in HasProps}
-        for prop in chain(property_summary_docs, property_summary_docs):
+        for prop in chain(property_summary_docs, property_shim_docs):
             has_props[prop.name] = prop._has_props
 
         # fold property origins
