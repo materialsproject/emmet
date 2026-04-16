@@ -44,7 +44,7 @@ emmet-core==0.86.4rc0
     # via emmet-api (pyproject.toml)
 envier==0.6.1
     # via ddtrace
-fastapi==0.135.3
+fastapi==0.136.0
     # via emmet-api (pyproject.toml)
 fonttools==4.62.1
     # via matplotlib
@@ -74,6 +74,8 @@ latexcodec==3.0.1
     # via pybtex
 lazy-loader==0.5
     # via scikit-image
+lxml==6.0.4
+    # via pymatgen-core
 matplotlib==3.10.8
     # via pymatgen-core
 monty==2026.2.18
@@ -156,7 +158,7 @@ pymatgen-analysis-alloys==0.0.8
     # via emmet-api (pyproject.toml)
 pymatgen-analysis-defects==2026.3.20
     # via emmet-api (pyproject.toml)
-pymatgen-core==2026.4.7
+pymatgen-core==2026.4.16
     # via pymatgen
 pymatgen-io-validation==0.1.2
     # via
