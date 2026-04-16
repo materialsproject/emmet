@@ -241,7 +241,7 @@ numpy==2.4.4
     #   shapely
     #   spglib
     #   tifffile
-orjson==3.11.8
+orjson==3.11.6
     # via
     #   maggma
     #   pymatgen-core
@@ -402,7 +402,7 @@ referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.33.1
+requests==2.33.0
     # via
     #   matminer
     #   pymatgen-core

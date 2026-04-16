@@ -255,7 +255,7 @@ pyyaml==6.0.3
     #   myst-parser
     #   pre-commit
     #   pybtex
-requests==2.33.1
+requests==2.33.0
     # via
     #   pymatgen-core
     #   pymatgen-io-validation
