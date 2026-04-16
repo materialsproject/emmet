@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from math import log, floor
 import re
+from math import floor, log
 from pathlib import Path
 from string import ascii_lowercase, digits
 from typing import TYPE_CHECKING
@@ -19,10 +19,10 @@ else:
 if TYPE_CHECKING:
     from collections.abc import Callable
     from typing import Any
-    from typing_extensions import Self
 
     from pydantic import GetJsonSchemaHandler
     from pydantic.json_schema import JsonSchemaValue
+    from typing_extensions import Self
 
 # matches "mp-1234" or "1234" followed by and optional "-(Alphanumeric)"
 MPID_REGEX_PATTERN = r"^([A-Za-z]+-)?(\d+)(-[A-Za-z0-9]+)*$"
@@ -457,6 +457,9 @@ class AlphaID(str):
         If other is an AlphaID, returns True only if the prefix, separator,
         and value of the two are equal.
         """
+        if other is None:
+            return False
+
         if isinstance(other, MPID) or (
             isinstance(other, str) and other.startswith("mp-")
         ):
