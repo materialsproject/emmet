@@ -1,3 +1,5 @@
+from typing import Iterator
+
 from emmet.builders.base import BaseBuilderInput
 from emmet.builders.utils import filter_map
 from emmet.core.chemenv import ChemEnvDoc
@@ -5,7 +7,7 @@ from emmet.core.chemenv import ChemEnvDoc
 
 def build_chemenv_docs(
     input_documents: list[BaseBuilderInput], **kwargs
-) -> list[ChemEnvDoc]:
+) -> Iterator[ChemEnvDoc]:
     """
     Generate chemical environment documents from input structures.
 
@@ -20,14 +22,12 @@ def build_chemenv_docs(
         input_documents: List of BaseBuilderInput documents to process.
 
     Returns:
-        list[ChemEnvDoc]
+        Iterator[ChemEnvDoc]
     """
 
-    return list(
-        filter_map(
-            ChemEnvDoc.from_structure,
-            input_documents,
-            work_keys=["deprecated", "material_id", "structure", "builder_meta"],
-            **kwargs
-        )
+    return filter_map(
+        ChemEnvDoc.from_structure,
+        input_documents,
+        work_keys=["deprecated", "material_id", "structure", "builder_meta"],
+        **kwargs
     )

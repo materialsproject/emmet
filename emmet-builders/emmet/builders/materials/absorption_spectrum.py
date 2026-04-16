@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Iterator
 
 from emmet.builders.base import BaseBuilderInput
 from emmet.builders.utils import _parse_kpoints, filter_map
@@ -22,7 +23,7 @@ class AbsorptionBuilderInput(BaseBuilderInput):
 
 def build_absorption_docs(
     input_documents: list[AbsorptionBuilderInput], **kwargs
-) -> list[AbsorptionDoc]:
+) -> Iterator[AbsorptionDoc]:
     """
     Generate absorption documents from input structures.
 
@@ -38,28 +39,26 @@ def build_absorption_docs(
         input_documents: List of AbsorptionBuilderInput documents to process.
 
     Returns:
-       list[AbsorbtionDoc]
+       Iterator[AbsorbtionDoc]
     """
-    return list(
-        filter_map(
-            AbsorptionDoc.from_structure,
-            input_documents,
-            work_keys=[
-                "energies",
-                "real_d",
-                "imag_d",
-                "absorption_co",
-                "bandgap",
-                "nkpoints",
-                "last_updated",
-                "origins",
-                # PropertyDoc.from_structure(...) kwargs
-                "deprecated",
-                "material_id",
-                "structure",
-            ],
-            **kwargs
-        )
+    return filter_map(
+        AbsorptionDoc.from_structure,
+        input_documents,
+        work_keys=[
+            "energies",
+            "real_d",
+            "imag_d",
+            "absorption_co",
+            "bandgap",
+            "nkpoints",
+            "last_updated",
+            "origins",
+            # PropertyDoc.from_structure(...) kwargs
+            "deprecated",
+            "material_id",
+            "structure",
+        ],
+        **kwargs
     )
 
 

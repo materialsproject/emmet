@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, auto
 from functools import update_wrapper
+from typing import Iterator
 
 from pydantic import BaseModel
 from pymatgen.analysis.magnetism.analyzer import Ordering
@@ -115,7 +116,7 @@ def variant_dispatch(func):
 @variant_dispatch
 def build_electronic_structure_docs(
     inputs: ESBuilderInput, **kwargs
-) -> list[ElectronicStructureDoc]:
+) -> Iterator[ElectronicStructureDoc]:
     """
     Generate electronic structure documents from tagged input data.
 
@@ -132,94 +133,86 @@ def build_electronic_structure_docs(
             corresponding list of input documents to process.
 
     Returns:
-        list[ElectronicStructureDoc]
+        Iterator[ElectronicStructureDoc]
     """
 
 
 @build_electronic_structure_docs.register(Variant.STRUCTURE)
-def _(inputs: ESBuilderInput, **kwargs) -> list[ElectronicStructureDoc]:
-    return list(
-        filter_map(
-            ElectronicStructureDoc.from_structure,
-            inputs.data,
-            work_keys=[
-                "deprecated",
-                "material_id",
-                "meta_structure",
-                "origins",
-                "warnings",
-                "band_gap",
-                "cbm",
-                "vbm",
-                "efermi",
-                "is_gap_direct",
-                "is_metal",
-                "magnetic_ordering",
-            ],
-            **kwargs,
-        )
+def _(inputs: ESBuilderInput, **kwargs) -> Iterator[ElectronicStructureDoc]:
+    return filter_map(
+        ElectronicStructureDoc.from_structure,
+        inputs.data,
+        work_keys=[
+            "deprecated",
+            "material_id",
+            "meta_structure",
+            "origins",
+            "warnings",
+            "band_gap",
+            "cbm",
+            "vbm",
+            "efermi",
+            "is_gap_direct",
+            "is_metal",
+            "magnetic_ordering",
+        ],
+        **kwargs,
     )
 
 
 @build_electronic_structure_docs.register(Variant.BS)
-def _(inputs: ESBuilderInput, **kwargs) -> list[ElectronicStructureDoc]:
-    return list(
-        filter_map(
-            ElectronicStructureDoc.from_bs,
-            inputs.data,
-            work_keys=[
-                "bandstructures",
-                "origins",
-                "structures",
-                # PropertyDoc.from_structure(...) kwargs
-                "deprecated",
-                "material_id",
-                "meta_structure",
-            ],
-            **kwargs,
-        )
+def _(inputs: ESBuilderInput, **kwargs) -> Iterator[ElectronicStructureDoc]:
+    return filter_map(
+        ElectronicStructureDoc.from_bs,
+        inputs.data,
+        work_keys=[
+            "bandstructures",
+            "origins",
+            "structures",
+            # PropertyDoc.from_structure(...) kwargs
+            "deprecated",
+            "material_id",
+            "meta_structure",
+        ],
+        **kwargs,
     )
 
 
 @build_electronic_structure_docs.register(Variant.DOS)
-def _(inputs: ESBuilderInput, **kwargs) -> list[ElectronicStructureDoc]:
-    return list(
-        filter_map(
-            ElectronicStructureDoc.from_dos,
-            inputs.data,
-            work_keys=[
-                "dos",
-                "is_gap_direct",
-                "origins",
-                "structures",
-                # PropertyDoc.from_structure(...) kwargs
-                "deprecated",
-                "material_id",
-                "meta_structure",
-            ],
-            **kwargs,
-        )
+def _(inputs: ESBuilderInput, **kwargs) -> Iterator[ElectronicStructureDoc]:
+    return filter_map(
+        ElectronicStructureDoc.from_dos,
+        inputs.data,
+        work_keys=[
+            "dos",
+            "is_gap_direct",
+            "origins",
+            "structures",
+            # PropertyDoc.from_structure(...) kwargs
+            "deprecated",
+            "material_id",
+            "meta_structure",
+        ],
+        **kwargs,
     )
 
 
 @build_electronic_structure_docs.register(Variant.BS_DOS)
-def _(inputs: ESBuilderInput, **kwargs) -> list[ElectronicStructureDoc]:
-    return list(
-        filter_map(
-            ElectronicStructureDoc.from_bsdos,
-            inputs.data,
-            work_keys=[
-                "bandstructures",
-                "dos",
-                "origins",
-                "structures",
-                # PropertyDoc.from_structure(...) kwargs
-                "deprecated",
-                "material_id",
-                "meta_structure",
-            ],
-            **kwargs,
-        )
+def _(inputs: ESBuilderInput, **kwargs) -> Iterator[ElectronicStructureDoc]:
+    return filter_map(
+        ElectronicStructureDoc.from_bsdos,
+        inputs.data,
+        work_keys=[
+            "bandstructures",
+            "dos",
+            "origins",
+            "structures",
+            # PropertyDoc.from_structure(...) kwargs
+            "deprecated",
+            "material_id",
+            "meta_structure",
+        ],
+        **kwargs,
     )
 
 

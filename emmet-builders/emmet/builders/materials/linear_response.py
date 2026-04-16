@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal, TypeVar
+from typing import Iterator, Literal, TypeVar
 
 from emmet.builders.base import BaseBuilderInput
 from emmet.builders.utils import _parse_kpoints, filter_map
@@ -29,44 +29,40 @@ class PiezoelectricBuilderInput(BaseLinearResponseInput):
 
 def build_dielectric_docs(
     linear_resp_input: list[DielectricBuilderInput], **kwargs
-) -> list[DielectricDoc]:
-    return list(
-        filter_map(
-            DielectricDoc.from_ionic_and_electronic,
-            linear_resp_input,
-            work_keys=[
-                "deprecated",
-                "material_id",
-                "structure",
-                "origins",
-                "epsilon_static",
-                "epsilon_ionic",
-                "last_updated",
-            ],
-            **kwargs,
-        )
+) -> Iterator[DielectricDoc]:
+    return filter_map(
+        DielectricDoc.from_ionic_and_electronic,
+        linear_resp_input,
+        work_keys=[
+            "deprecated",
+            "material_id",
+            "structure",
+            "origins",
+            "epsilon_static",
+            "epsilon_ionic",
+            "last_updated",
+        ],
+        **kwargs,
     )
 
 
 def build_piezo_docs(
     linear_resp_input: list[PiezoelectricBuilderInput],
     **kwargs,
-) -> list[PiezoelectricDoc]:
-    return list(
-        filter_map(
-            PiezoelectricDoc.from_ionic_and_electronic,
-            linear_resp_input,
-            work_keys=[
-                "deprecated",
-                "material_id",
-                "structure",
-                "origins",
-                "piezo_static",
-                "piezo_ionic",
-                "last_updated",
-            ],
-            **kwargs,
-        )
+) -> Iterator[PiezoelectricDoc]:
+    return filter_map(
+        PiezoelectricDoc.from_ionic_and_electronic,
+        linear_resp_input,
+        work_keys=[
+            "deprecated",
+            "material_id",
+            "structure",
+            "origins",
+            "piezo_static",
+            "piezo_ionic",
+            "last_updated",
+        ],
+        **kwargs,
     )
 
 

@@ -1,3 +1,5 @@
+from typing import Iterator
+
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.builders.base import BaseBuilderInput
@@ -7,7 +9,7 @@ from emmet.core.bonds import BondingDoc
 
 def build_bonding_docs(
     input_documents: list[BaseBuilderInput], **kwargs
-) -> list[BondingDoc]:
+) -> Iterator[BondingDoc]:
     """
     Generate bonding documents from input structures.
 
@@ -22,7 +24,7 @@ def build_bonding_docs(
         input_documents: List of BaseBuilderInput documents to process.
 
     Returns:
-       list[BondingDoc]
+       Iterator[BondingDoc]
     """
 
     def _build(deprecated: bool, material_id: str, structure, **kwargs) -> BondingDoc:
@@ -36,11 +38,9 @@ def build_bonding_docs(
             **kwargs
         )
 
-    return list(
-        filter_map(
-            _build,
-            input_documents,
-            work_keys=["deprecated", "material_id", "structure"],
-            **kwargs
-        )
+    return filter_map(
+        _build,
+        input_documents,
+        work_keys=["deprecated", "material_id", "structure"],
+        **kwargs
     )

@@ -1,3 +1,5 @@
+from typing import Iterator
+
 from emmet.builders.base import BaseBuilderInput
 from emmet.builders.utils import filter_map
 from emmet.core.magnetism import MagnetismDoc
@@ -11,7 +13,7 @@ class MagnetismBuilderInput(BaseBuilderInput):
 
 def build_magnetism_docs(
     input_documents: list[MagnetismBuilderInput], **kwargs
-) -> list[MagnetismDoc]:
+) -> Iterator[MagnetismDoc]:
     """
     Generate magnetism documents from input structures.
 
@@ -26,20 +28,18 @@ def build_magnetism_docs(
         input_documents: List of MagnetismBuilderInput documents to process.
 
     Returns:
-        list[MagnetismDoc]
+        Iterator[MagnetismDoc]
     """
 
-    return list(
-        filter_map(
-            MagnetismDoc.from_structure,
-            input_documents,
-            work_keys=[
-                "deprecated",
-                "material_id",
-                "structure",
-                "origins",
-                "total_magnetization",
-            ],
-            **kwargs
-        )
+    return filter_map(
+        MagnetismDoc.from_structure,
+        input_documents,
+        work_keys=[
+            "deprecated",
+            "material_id",
+            "structure",
+            "origins",
+            "total_magnetization",
+        ],
+        **kwargs
     )

@@ -1,3 +1,5 @@
+from typing import Iterator
+
 from emmet.builders.base import BaseBuilderInput
 from emmet.builders.utils import filter_map
 from emmet.core.oxidation_states import OxidationStateDoc
@@ -5,7 +7,7 @@ from emmet.core.oxidation_states import OxidationStateDoc
 
 def build_oxidation_states_docs(
     input_documents: list[BaseBuilderInput], **kwargs
-) -> list[OxidationStateDoc]:
+) -> Iterator[OxidationStateDoc]:
     """
     Generate oxidation state documents from input structures.
 
@@ -20,18 +22,16 @@ def build_oxidation_states_docs(
         input_documents: List of BaseBuilderInput documents to process.
 
     Returns:
-        list[OxidationStateDoc]
+        Iterator[OxidationStateDoc]
     """
-    return list(
-        filter_map(
-            OxidationStateDoc.from_structure,
-            input_documents,
-            work_keys=[
-                "deprecated",
-                "material_id",
-                "structure",
-                "builder_meta",
-            ],
-            **kwargs
-        )
+    return filter_map(
+        OxidationStateDoc.from_structure,
+        input_documents,
+        work_keys=[
+            "deprecated",
+            "material_id",
+            "structure",
+            "builder_meta",
+        ],
+        **kwargs
     )
