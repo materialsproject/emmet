@@ -603,128 +603,6 @@ class AtomRelaxTrajectory(BaseModel):
 class AtomTrajectory(AtomRelaxTrajectory, _MDMixin):
     """Atomistic trajectory with extra keys for molecular dynamics runs."""
 
-    @classmethod
-    def from_lammps_dump(
-        cls, file_name: str | Path, limit: int | None = None, **kwargs
-    ) -> Self:
-        """[WIP] Construct a trajectory from a LAMMPS dump file.
-
-        Parameters
-        -----------
-        file_name : str or Path
-            name of the LAMMPS dump file
-        limit : int or None
-            If an int, a limit to the number of frames parsed in.
-            If None, all frames are parsed (default).
-        **kwargs
-            kwargs to pass to the class constructor (e.g., extra metadata)
-        """
-
-        lammps_types = {
-            "x": float,
-            "y": float,
-            "z": float,
-            "element": lambda x: Element(x).Z,
-            "id": int,
-            "mass": float,
-            "timestep": float,
-            "number_of_atoms": int,
-            "box_bounds": float,
-        }
-
-        num_frames = 0
-        meta = {
-            "timestep": None,
-            "number_of_atoms": None,
-            "box_bounds": None,
-            "atoms": None,
-        }
-        meta_key = None
-        atom_props = []
-        new_meta_k = False
-        num_atoms_per_frame = -1
-
-        with open(file_name, "r") as f:
-            for line in f:
-
-                if line.startswith("ITEM"):
-                    meta_key = None
-                    new_meta_k = True
-                    for k in meta:
-                        if " ".join(k.split("_")).upper() in line:
-                            meta_key = k
-                            break
-
-                    if not meta_key:
-                        raise ValueError(f"Unknown metadata key for line: {line}")
-
-                    if meta_key == "atoms":
-                        num_atoms_per_frame = 0
-                        atom_props = line.split("ATOMS", 1)[1].split()
-
-                elif meta_key != "atoms":
-
-                    if not meta[meta_key]:
-                        meta[meta_key] = []
-
-                    if len(splitted := line.split()) > 1:
-                        if new_meta_k:
-                            meta[meta_key].append([])
-                            new_meta_k = False
-                        meta[meta_key][num_frames].append(
-                            [lammps_types.get(meta_key, str)(v) for v in splitted]
-                        )
-                    else:
-                        meta[meta_key].append(
-                            lammps_types.get(meta_key, str)(splitted[0])
-                        )
-
-                elif meta_key == "atoms":
-
-                    if num_frames == 0 and num_atoms_per_frame == 0:
-                        meta["atoms"] = {k: [] for k in atom_props}
-
-                    if num_atoms_per_frame == 0:
-                        for k in atom_props:
-                            meta["atoms"][k].append([])
-
-                    for i, v in enumerate(line.strip().split()):
-                        meta["atoms"][atom_props[i]][num_frames].append(
-                            lammps_types.get(atom_props[i], str)(v)
-                        )
-                    num_atoms_per_frame += 1
-
-                if (
-                    meta["number_of_atoms"]
-                    and num_atoms_per_frame == meta["number_of_atoms"][0]
-                ):
-                    num_frames += 1
-                    num_atoms_per_frame = 0
-
-                    if limit and num_frames == limit:
-                        break
-
-        return AtomTrajectory(
-            elements=meta["atoms"]["element"][0],
-            cart_coords=[
-                [
-                    [meta["atoms"][k][i][j] for k in ("x", "y", "z")]
-                    for j in range(meta["number_of_atoms"][0])
-                ]
-                for i in range(len(meta["atoms"]["element"]))
-            ],
-            num_ionic_steps=len(meta["atoms"]["element"]),
-            lattice=[
-                np.diag([box[i][1] - box[i][0] for i in range(3)])
-                for box in meta["box_bounds"]
-            ],
-            time_step=(
-                meta["timestep"][1] - meta["timestep"][0]
-                if len(meta["timestep"]) >= 2
-                else None
-            ),
-        )
-
 
 class RelaxTrajectory(AtomRelaxTrajectory):
     """Low memory schema for relaxation trajectories that can interface with parquet, pymatgen, and ASE.
@@ -930,3 +808,152 @@ class RelaxTrajectory(AtomRelaxTrajectory):
 
 class Trajectory(RelaxTrajectory, _MDMixin):
     """Trajectory with flexibility for electronic structure molecular dynamics."""
+
+
+def parse_atom_trajectory_from_lammps_dump(
+    file_name: str | Path,
+    limit: int | None = None,
+    skip: int | None = None,
+    **kwargs,
+) -> AtomTrajectory:
+    """Construct an AtomTrajectory from a LAMMPS dump file.
+
+    [WIP] This is a barebones LAMMPS trajectory parser.
+    This parser cannot accommodate the full flexibility of the
+    LAMMPS dump file at present.
+
+    Parameters
+    -----------
+    file_name : str or Path
+        name of the LAMMPS dump file
+    limit : int or None
+        If an int, a limit to the number of frames parsed in.
+        If None, all frames are parsed (default).
+    skip : int or None
+        If an int, will only take every skip-th frame
+        If None, all frames are taken.
+    **kwargs
+        kwargs to pass to AtomTrajectory (e.g., extra metadata)
+    """
+
+    lammps_types = {
+        "x": float,
+        "y": float,
+        "z": float,
+        "xs": float,
+        "ys": float,
+        "zs": float,
+        "element": lambda x: Element(x).Z,
+        "id": int,
+        "mass": float,
+        "timestep": float,
+        "number_of_atoms": int,
+        "box_bounds": float,
+    }
+
+    num_frames = 0
+    meta = {
+        "timestep": None,
+        "number_of_atoms": None,
+        "box_bounds": None,
+        "atoms": None,
+    }
+    meta_key = None
+    atom_props = []
+    new_meta_k = False
+    num_atoms_per_frame = -1
+
+    skip_idx: int = skip if isinstance(skip, int) and skip > 0 else 1
+
+    with open(file_name, "r") as f:
+        for idx, line in enumerate(f):
+
+            if idx % skip_idx != 0:
+                continue
+
+            if line.startswith("ITEM"):
+                meta_key = None
+                new_meta_k = True
+                for k in meta:
+                    if " ".join(k.split("_")).upper() in line:
+                        meta_key = k
+                        break
+
+                if not meta_key:
+                    raise ValueError(f"Unknown metadata key for line: {line}")
+
+                if meta_key == "atoms":
+                    num_atoms_per_frame = 0
+                    atom_props = line.split("ATOMS", 1)[1].split()
+
+            elif meta_key != "atoms":
+
+                if not meta[meta_key]:
+                    meta[meta_key] = []
+
+                if len(splitted := line.split()) > 1:
+                    if new_meta_k:
+                        meta[meta_key].append([])
+                        new_meta_k = False
+                    meta[meta_key][num_frames].append(
+                        [lammps_types.get(meta_key, str)(v) for v in splitted]
+                    )
+                else:
+                    meta[meta_key].append(lammps_types.get(meta_key, str)(splitted[0]))
+
+            elif meta_key == "atoms":
+
+                if num_frames == 0 and num_atoms_per_frame == 0:
+                    meta["atoms"] = {k: [] for k in atom_props}
+
+                if num_atoms_per_frame == 0:
+                    for k in atom_props:
+                        meta["atoms"][k].append([])
+
+                for i, v in enumerate(line.strip().split()):
+                    meta["atoms"][atom_props[i]][num_frames].append(
+                        lammps_types.get(atom_props[i], str)(v)
+                    )
+                num_atoms_per_frame += 1
+
+            if (
+                meta["number_of_atoms"]
+                and num_atoms_per_frame == meta["number_of_atoms"][0]
+            ):
+                num_frames += 1
+                num_atoms_per_frame = 0
+
+                if limit and num_frames == limit:
+                    break
+
+    lattices = [
+        np.diag([box[i][1] - box[i][0] for i in range(3)]) for box in meta["box_bounds"]
+    ]
+
+    cart_keys = ("x", "y", "z")
+    frac_keys = ("xs", "ys", "zs")
+    is_cart = all(meta["atoms"].get(cart_key) for cart_key in cart_keys) and all(
+        not meta["atoms"].get(frac_key) for frac_key in frac_keys
+    )
+
+    coords = [
+        [
+            [meta["atoms"][k][i][j] for k in (cart_keys if is_cart else frac_keys)]
+            for j in range(meta["number_of_atoms"][0])
+        ]
+        for i in range(len(meta["atoms"]["element"]))
+    ]
+    if not is_cart:
+        coords = np.einsum("mij,mki->mkj", lattices, coords)
+
+    return AtomTrajectory(
+        elements=meta["atoms"]["element"][0],
+        cart_coords=coords,
+        num_ionic_steps=len(meta["atoms"]["element"]),
+        lattice=lattices,
+        time_step=(
+            meta["timestep"][1] - meta["timestep"][0]
+            if len(meta["timestep"]) >= 2
+            else None
+        ),
+    )
