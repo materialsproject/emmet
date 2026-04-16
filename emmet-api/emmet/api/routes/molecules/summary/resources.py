@@ -25,8 +25,6 @@ timeout = MAPISettings().TIMEOUT
 
 MOLECULES_SUMMARY_SORT_FIELDS = [
     "molecule_id",
-    "redox.NONE.electron_affinity",
-    "redox.NONE.ionization_energy",
     "charge",
     "spin_multiplicity",
 ]
