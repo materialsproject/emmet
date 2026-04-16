@@ -16,7 +16,7 @@ from emmet.api.routes.materials.materials.query_operators import (
     MultiTaskIDQuery,
     SymmetryQuery,
 )
-from emmet.core.symmetry import CrystalSystem
+from emmet.core.symmetry import CrystalSystem, _get_space_group_symbol_to_number_mapping
 from emmet.core.vasp.calc_types import RunType
 
 
@@ -159,6 +159,19 @@ def test_symmetry_query():
     assert op.query(crystal_system=",".join(cs)) == {
         "criteria": {"symmetry.crystal_system": {"$in": cs}}
     }
+
+    with pytest.raises(ValueError, match="You have queried for 7 crystal systems"):
+        op.query(crystal_system=",".join(cs.value for cs in CrystalSystem))
+
+    with pytest.raises(ValueError, match="You have queried for 230 space groups"):
+        op.query(spacegroup_number=",".join(str(1 + x) for x in range(230)))
+
+    sgn_to_sgs = {v: k for k, v in _get_space_group_symbol_to_number_mapping().items()}
+    with pytest.raises(ValueError, match="You have queried for 230 space groups"):
+        op.query(
+            spacegroup_number=",".join(str(1 + x) for x in range(115)),
+            spacegroup_symbol=",".join(sgn_to_sgs[1 + x] for x in range(115, 230)),
+        )
 
 
 def test_multi_task_id_query():
