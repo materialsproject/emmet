@@ -10,14 +10,15 @@ from pymatgen.io.vasp import Vasprun
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.band_theory import (
+    BSPathType,
     ElectronicBS,
     ProjectedBS,
     ElectronicDos,
     ProjectedDos,
     obtain_path_type,
-    get_path_from_bandstructure,
+    _coarse_list_superset,
+    _loose_path_match,
 )
-from emmet.core.electronic_structure import BSPathType
 from emmet.core.testing_utils import DataArchive
 
 if ARROW_COMPATIBLE:
@@ -35,7 +36,7 @@ def bs_fixture(test_dir):
         parse_projected_eigen=True,
     )
     pmg_bs = vasprun.get_band_structure()
-    elec_bs = ElectronicBS.from_pmg(pmg_bs)
+    elec_bs = ElectronicBS.from_pmg(pmg_bs, identifier="mp-0")
 
     return (vasprun, pmg_bs, elec_bs)
 
@@ -49,7 +50,7 @@ def dos_fixture(test_dir):
         parse_projected_eigen=True,
     )
     pmg_dos = vasprun.complete_dos
-    edos = ElectronicDos.from_pmg(pmg_dos)
+    edos = ElectronicDos.from_pmg(pmg_dos, identifier="mp-0")
 
     return (vasprun, pmg_dos, edos)
 
@@ -90,6 +91,12 @@ def test_elec_band_struct(bs_fixture):
 
     # round trip pymatgen
     assert pmg_bs.as_dict() == elec_bs.to_pmg().as_dict()
+
+    assert (
+        str(elec_bs)
+        == f"ElectronicBS({elec_bs.identifier}: {elec_bs.structure.formula})"
+    )
+    assert elec_bs.__repr__() == str(elec_bs)
 
 
 def test_base_electronic_dos():
@@ -155,6 +162,9 @@ def test_electronic_dos(dos_fixture):
     )
     assert isinstance(edos_incomplete.to_pmg(), Dos)
 
+    assert str(edos) == f"ElectronicDos({edos.identifier}: {edos.structure.formula})"
+    assert edos.__repr__() == str(edos)
+
 
 @pytest.mark.skipif(
     not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
@@ -180,32 +190,48 @@ def test_arrow(bs_fixture, dos_fixture):
 def test_obtain_path_type(test_dir):
 
     line_band_struct = loadfn(test_dir / "electronic_structure" / "Fe_bs.json.gz")
-    path_order = get_path_from_bandstructure(line_band_struct)
-    assert path_order == [
+
+    path_type, kpath, _ = next(
+        obtain_path_type(
+            line_band_struct.structure,
+            [x.frac_coords for x in line_band_struct.kpoints],
+        )
+    )
+    assert isinstance(path_type, BSPathType)
+    assert path_type == BSPathType.setyawan_curtarolo
+    assert kpath == [
         "\\Gamma",
         "H",
-        "H",
-        "N",
         "N",
         "\\Gamma",
-        "\\Gamma",
-        "P",
         "P",
         "H",
         "P",
         "N",
     ]
-    assert all(k in line_band_struct.labels_dict for k in path_order)
 
-    path_type = next(
-        obtain_path_type(
-            {
-                label: kpt.frac_coords
-                for label, kpt in line_band_struct.labels_dict.items()
-            },
-            line_band_struct.structure,
-            path_order,
-        )
+
+def test_utilities():
+
+    assert _coarse_list_superset([1, 2, 3, 4, 5, 6, 7], [3, 4, 5])
+    assert _coarse_list_superset([1, 2, 3, 4, 5, 6, 7], [3, 4, 5, 6, 7])
+    assert _coarse_list_superset([1, 2, 3, 4, 5, 6, 7], [1, 2])
+    assert not _coarse_list_superset(["a", "b", "c", "d", "e"], ["b", "d", "f"])
+
+    assert (
+        _loose_path_match(["\\Gamma", "A", "B", "P_1"]) == BSPathType.setyawan_curtarolo
     )
-    assert isinstance(path_type, BSPathType)
-    assert path_type == BSPathType.setyawan_curtarolo
+    assert _loose_path_match(["\\Gamma", "GAMMA", "B"]) == BSPathType.unknown
+    assert _loose_path_match(["\\Gamma", "Γ", "B"]) == BSPathType.unknown
+    assert _loose_path_match(["\\Gamma", "A", "B", r"P_{1}"]) == BSPathType.unknown
+
+    assert _loose_path_match(["GAMMA", "A", "B", "P_1"]) == BSPathType.hinuma
+    assert _loose_path_match(["\\Gamma", "GAMMA", "B"]) == BSPathType.unknown
+    assert _loose_path_match(["GAMMA", "Γ", "B"]) == BSPathType.unknown
+    assert _loose_path_match(["GAMMA", "a", "B"]) == BSPathType.unknown
+    assert _loose_path_match(["GAMMA", "A", "B", r"P_{1}"]) == BSPathType.unknown
+
+    assert _loose_path_match(["Γ", "a", "b", r"p_{1}"]) == BSPathType.latimer_munro
+    assert _loose_path_match(["Γ", "\\Gamma", "b"]) == BSPathType.unknown
+    assert _loose_path_match(["GAMMA", "Γ", "b"]) == BSPathType.unknown
+    assert _loose_path_match(["Γ", "a", "b", "P_1"]) == BSPathType.unknown

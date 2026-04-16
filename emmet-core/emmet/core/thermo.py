@@ -294,7 +294,7 @@ class ThermoDoc(PropertyDoc):
         pd_computed_data = pd.computed_data
         pd_computed_data["all_entries"] = entries
         new_pd = PhaseDiagram(
-            entries, elements=pd.elements, computed_data=pd_computed_data
+            entries, elements=pd.elements, computed_data=pd_computed_data  # type: ignore[arg-type]
         )
         return new_pd
 

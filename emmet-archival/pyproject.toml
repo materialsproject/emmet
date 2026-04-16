@@ -39,7 +39,7 @@ dependencies = [
 ]
 description = "Emmet Archival library"
 keywords = ["data storage", "dft", "vasp"]
-license = { text = "Modified BSD" }
+license = "BSD-3-Clause-LBNL"
 requires-python = '>=3.11'
 
 [project.optional-dependencies]

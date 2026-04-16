@@ -19,7 +19,7 @@ from pymatgen.io.vasp.sets import MPStaticSet
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.builders.utils import query_open_data
-from emmet.core.band_theory import get_path_from_bandstructure, obtain_path_type
+from emmet.core.band_theory import obtain_path_type
 from emmet.core.electronic_structure import ElectronicStructureDoc
 from emmet.core.utils import jsanitize
 
@@ -466,11 +466,11 @@ class ElectronicStructureBuilder(Builder):
                             }
 
                             try:
-                                bs_type = next(
+                                bs_type, _, _ = next(
                                     obtain_path_type(
-                                        labels_dict,
                                         bs.structure,
-                                        get_path_from_bandstructure(bs),
+                                        [kpt.frac_coords for kpt in bs.kpoints],
+                                        user_kpoint_labels=labels_dict,
                                     )
                                 )
                             except Exception:

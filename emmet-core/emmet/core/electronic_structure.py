@@ -19,6 +19,9 @@ from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 
+# keeping this import here to avoid breaking changes, this enum was moved to `band_theory`
+from emmet.core.band_theory import BSPathType  # noqa: F401
+
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import AlphaID
 from emmet.core.settings import EmmetSettings
@@ -41,12 +44,6 @@ OrderingType = Annotated[
     BeforeValidator(lambda x: Ordering(x) if isinstance(x, str) else x),
     WrapSerializer(lambda x, nxt, info: x.value, return_type=str),
 ]
-
-
-class BSPathType(ValueEnum):
-    setyawan_curtarolo = "setyawan_curtarolo"
-    hinuma = "hinuma"
-    latimer_munro = "latimer_munro"
 
 
 class DOSProjectionType(ValueEnum):

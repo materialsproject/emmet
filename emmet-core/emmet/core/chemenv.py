@@ -485,7 +485,10 @@ class ChemEnvDoc(PropertyDoc):
 
         for index, wyckoff in zip(inequivalent_indices, wyckoffs_unique):
             # ONLY CATIONS
-            if index in inequivalent_indices_cations:
+            if (
+                index in inequivalent_indices_cations
+                and len(lse.neighbors_sets[index] or []) > 0
+            ):
                 # Coordinaton environment will be saved as a molecule!
                 mol = Molecule.from_sites(
                     [structure[index]] + lse.neighbors_sets[index][0].neighb_sites

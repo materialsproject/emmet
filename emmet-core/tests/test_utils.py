@@ -113,6 +113,7 @@ def test_model_flatten():
         "CalculationInput",
         "CalculationOutput",
         "CustodianDoc",
+        "DielectricProperties",
         "ElectronPhononDisplacedStructures",
         "ElectronicStep",
         "FrequencyDependentDielectric",

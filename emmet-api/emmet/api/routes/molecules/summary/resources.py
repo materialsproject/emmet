@@ -2,8 +2,9 @@ from emmet.core.molecules.summary import MoleculeSummaryDoc
 
 from emmet.api.query_operator import (
     PaginationQuery,
-    SparseFieldsQuery,
     NumericQuery,
+    SortQuery,
+    SparseFieldsQuery,
 )
 from emmet.api.resource import ReadOnlyResource
 from emmet.api.routes.molecules.molecules.query_operators import (
@@ -21,6 +22,12 @@ from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 
 timeout = MAPISettings().TIMEOUT
+
+MOLECULES_SUMMARY_SORT_FIELDS = [
+    "molecule_id",
+    "charge",
+    "spin_multiplicity",
+]
 
 
 def summary_resource(summary_store):
@@ -43,6 +50,7 @@ def summary_resource(summary_store):
                     "nelements",
                 ],
             ),
+            SortQuery(fields=MOLECULES_SUMMARY_SORT_FIELDS, max_num=1),
             SparseFieldsQuery(MoleculeSummaryDoc, default_fields=["molecule_id"]),
         ],
         hint_scheme=SummaryHintScheme(),

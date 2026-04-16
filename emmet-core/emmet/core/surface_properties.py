@@ -1,6 +1,16 @@
-from pydantic import BaseModel, Field
+"""Define schemas for surfaces and heterostructures."""
+
+from __future__ import annotations
+
+from pydantic import BaseModel, Field, field_validator
+from typing import TYPE_CHECKING
+
+from pymatgen.core import Structure
 
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
+
+if TYPE_CHECKING:
+    from typing import Any
 
 
 class SurfaceEntry(BaseModel):
@@ -28,9 +38,9 @@ class SurfaceEntry(BaseModel):
         description="Whether it is a reconstructed surface.",
     )
 
-    structure: str | None = Field(
+    structure: StructureType | None = Field(
         None,
-        description="CIF of slab structure.",
+        description="Slab structure.",
     )
 
     work_function: float | None = Field(
@@ -52,6 +62,13 @@ class SurfaceEntry(BaseModel):
         None,
         description="Whether the surface has wulff entry.",
     )
+
+    @field_validator("structure", mode="before")
+    def get_structure_from_cif(cls, v: Any) -> Structure | None:
+        """Transform legacy CIF data to pymatgen Structure."""
+        if isinstance(v, str):
+            return Structure.from_str(v, fmt="cif")
+        return v
 
 
 class SurfacePropDoc(BaseModel):

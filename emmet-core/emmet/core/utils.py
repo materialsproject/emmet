@@ -94,7 +94,7 @@ def set_msonable_type_adapter(cls):
     )
 
     class ClsTypeAdapter(RootModel):
-        root: TypedClsDict
+        root: TypedClsDict  # type: ignore[annotation-unchecked]
 
     setattr(cls, "__type_adapter__", ClsTypeAdapter)
 
@@ -224,12 +224,7 @@ def generate_robocrys_condensed_struct_and_description(
     -------
     A robocrys condensed structure and description.
     """
-    try:
-        from robocrys import StructureCondenser, StructureDescriber
-    except ImportError:
-        raise ImportError(
-            "robocrys needs to be installed to generate Robocrystallographer descriptions"
-        )
+    from emmet.core.featurization import StructureCondenser, StructureDescriber
 
     for isymprec, symprec in enumerate(symprecs):
         # occasionally, symmetry detection fails - give a few chances to modify symprec

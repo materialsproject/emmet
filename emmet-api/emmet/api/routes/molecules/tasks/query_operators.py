@@ -118,7 +118,7 @@ class TrajectoryQuery(QueryOperator):
 
     def post_process(self, docs, query):
         """
-        Post processing to generatore trajectory data
+        Post processing to generate trajectory data
         """
 
         d = [

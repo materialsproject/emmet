@@ -12,6 +12,7 @@ from pymatgen.symmetry.analyzer import (
     SymmetryUndeterminedError,
     spglib,
 )
+from pymatgen.symmetry.groups import SYMM_DATA
 
 from emmet.core.settings import EmmetSettings
 from emmet.core.types.enums import IgnoreCaseEnum
@@ -34,6 +35,49 @@ class CrystalSystem(IgnoreCaseEnum):
     trig = "Trigonal"
     hex_ = "Hexagonal"
     cubic = "Cubic"
+
+
+def get_crystal_system_from_international_number(sgn: int) -> CrystalSystem:
+    """Identify the crystal system from the international space group number.
+
+    Parameters
+    -----------
+    sgn (int) : The international space group number
+
+    Returns
+    -----------
+    CrystalSystem
+    """
+    try:
+        return next(
+            CrystalSystem[family]  # type: ignore[misc]
+            for family, sgn_range in {
+                "tri": (1, 3),
+                "mono": (3, 16),
+                "ortho": (16, 75),
+                "tet": (75, 143),
+                "trig": (143, 168),
+                "hex_": (168, 195),
+                "cubic": (195, 231),
+            }.items()
+            if sgn_range[0] <= sgn < sgn_range[1]
+        )
+    except StopIteration:
+        raise ValueError(f"Invalid space group number {sgn}.")
+
+
+def _get_space_group_symbol_to_number_mapping() -> dict[str, int]:
+    """Return a dict mapping space group symbol to its international number."""
+    sg_map = {
+        sgs: entry["int_number"]
+        for sgs, entry in SYMM_DATA["space_group_encoding"].items()
+    }
+
+    # Add in duplicate abbreviated space group symbols
+    # These abbreviated symbols are used by spglib
+    for abbr, full in SYMM_DATA["abbreviated_spacegroup_symbols"].items():
+        sg_map[abbr] = sg_map[full]
+    return sg_map
 
 
 class PointGroupData(BaseModel):

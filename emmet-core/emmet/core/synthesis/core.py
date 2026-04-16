@@ -1,12 +1,9 @@
-from typing import Any
-
 from pydantic import BaseModel, Field
 
 from emmet.core.synthesis.materials import ExtractedMaterial
 from emmet.core.synthesis.operations import Operation
 from emmet.core.synthesis.reaction import ReactionFormula
 from emmet.core.types.enums import ValueEnum
-from emmet.core.utils import arrow_incompatible
 
 
 class SynthesisTypeEnum(str, ValueEnum):
@@ -60,7 +57,21 @@ class SynthesisRecipe(BaseModel):
     )
 
 
-@arrow_incompatible
+class AtlasSearchText(BaseModel):
+    """Schematize MongoDB Atlas search text match."""
+
+    value: str | None = None
+    type: str | None = None
+
+
+class AtlasSearchHighlight(BaseModel):
+    """Schematize MongoDB Atlas search highlight match."""
+
+    score: float | None = None
+    path: str | None = None
+    texts: list[AtlasSearchText] | None = None
+
+
 class SynthesisSearchResultModel(SynthesisRecipe):
     """
     Model for a document containing synthesis recipes
@@ -71,7 +82,7 @@ class SynthesisSearchResultModel(SynthesisRecipe):
         None,
         description="Search score.",
     )
-    highlights: list[Any] | None = Field(
+    highlights: list[AtlasSearchHighlight] | None = Field(
         None,
         description="Search highlights.",
     )

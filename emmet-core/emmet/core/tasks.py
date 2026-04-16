@@ -333,6 +333,10 @@ class CoreTaskDoc(StructureMetadata):
         WrapSerializer(_ser_json_like),
     ] = Field(None, description="Vasp objects associated with this task")
 
+    vasp_version: str | None = Field(
+        None, description="The version of VASP used for this task."
+    )
+
     @field_validator("batch_id", mode="before")
     def validate_batch_id(cls, batch_id: str):
         if batch_id:
@@ -404,6 +408,7 @@ class CoreTaskDoc(StructureMetadata):
             task_type=calc_doc.task_type,
             transformations=transformations,
             vasp_objects=vasp_objects,
+            vasp_version=calc_doc.vasp_version,
         )
 
         trajectory = get_trajectories_from_calculations([calc_doc])[0]
@@ -608,6 +613,7 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
             vasp_objects=vasp_objects,
             included_objects=included_objects,
             task_type=calcs_reversed[0].task_type,
+            vasp_version=calcs_reversed[0].vasp_version,
         )
         return doc.model_copy(update=additional_fields)
 

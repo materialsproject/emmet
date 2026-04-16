@@ -8,28 +8,28 @@ aioitertools==0.13.0
     # via maggma
 annotated-types==0.7.0
     # via pydantic
-ase==3.27.0
+ase==3.28.0
     # via pymatgen-analysis-diffusion
-attrs==25.4.0
+attrs==26.1.0
     # via
     #   jsonlines
     #   jsonschema
     #   referencing
 bcrypt==5.0.0
     # via paramiko
-bibtexparser==1.4.3
-    # via pymatgen
+bibtexparser==1.4.4
+    # via pymatgen-core
 blake3==1.0.8
     # via emmet-core
-boto3==1.42.34
+boto3==1.42.89
     # via maggma
-botocore==1.42.34
+botocore==1.42.89
     # via
     #   boto3
     #   s3transfer
 bracex==2.6
     # via wcmatch
-certifi==2026.1.4
+certifi==2026.2.25
     # via requests
 cffi==2.0.0
     # via
@@ -37,17 +37,15 @@ cffi==2.0.0
     #   pynacl
 cfgv==3.5.0
     # via pre-commit
-charset-normalizer==3.4.4
+charset-normalizer==3.4.7
     # via requests
-click==8.3.1
+click==8.3.2
     # via mkdocs
-colorama==0.4.6
-    # via griffe
 contourpy==1.3.3
     # via matplotlib
-coverage[toml]==7.13.2
+coverage[toml]==7.13.5
     # via pytest-cov
-cryptography==46.0.3
+cryptography==46.0.7
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -59,34 +57,34 @@ dnspython==2.8.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.86.2
+emmet-core[all]==0.86.3
     # via emmet-builders (pyproject.toml)
 execnet==2.1.2
     # via pytest-xdist
-filelock==3.20.3
-    # via virtualenv
+filelock==3.28.0
+    # via
+    #   python-discovery
+    #   virtualenv
 flake8==7.3.0
     # via emmet-builders (pyproject.toml)
-fonttools==4.61.1
+fonttools==4.62.1
     # via matplotlib
 ghp-import==2.1.0
     # via mkdocs
-griffe==1.15.0
+griffelib==2.0.2
     # via mkdocstrings-python
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
-identify==2.6.16
+identify==2.6.18
     # via pre-commit
 idna==3.11
     # via requests
-imageio==2.37.2
+imageio==2.37.3
     # via scikit-image
 inflect==7.5.0
     # via robocrys
 iniconfig==2.3.0
     # via pytest
-invoke==2.2.1
-    # via paramiko
 jinja2==3.1.6
     # via
     #   emmet-builders (pyproject.toml)
@@ -99,8 +97,8 @@ jmespath==1.1.0
     #   botocore
 joblib==1.5.3
     # via
-    #   pymatgen
     #   pymatgen-analysis-diffusion
+    #   pymatgen-core
     #   scikit-learn
 jsmin==3.0.1
     # via mkdocs-minify-plugin
@@ -110,19 +108,21 @@ jsonschema==4.26.0
     # via maggma
 jsonschema-specifications==2025.9.1
     # via jsonschema
-kiwisolver==1.4.9
+kiwisolver==1.5.0
     # via matplotlib
 latexcodec==3.0.1
     # via pybtex
-lazy-loader==0.4
+lazy-loader==0.5
     # via scikit-image
-librt==0.7.8
+librt==0.9.0
     # via mypy
 livereload==2.7.1
     # via emmet-builders (pyproject.toml)
-maggma==0.72.0
+lxml==6.0.4
+    # via pymatgen-core
+maggma==0.72.1
     # via emmet-builders (pyproject.toml)
-markdown==3.10.1
+markdown==3.10.2
     # via
     #   mkdocs
     #   mkdocs-autorefs
@@ -135,7 +135,7 @@ markupsafe==3.0.3
     #   mkdocs
     #   mkdocs-autorefs
     #   mkdocstrings
-matminer==0.10.0
+matminer==0.10.1
     # via
     #   emmet-builders (pyproject.toml)
     #   emmet-core
@@ -143,7 +143,7 @@ matminer==0.10.0
 matplotlib==3.10.8
     # via
     #   ase
-    #   pymatgen
+    #   pymatgen-core
     #   seaborn
 mccabe==0.7.0
     # via flake8
@@ -160,13 +160,13 @@ mkdocs==1.6.1
     #   mkdocs-material
     #   mkdocs-minify-plugin
     #   mkdocstrings
-mkdocs-autorefs==1.4.3
+mkdocs-autorefs==1.4.4
     # via
     #   mkdocstrings
     #   mkdocstrings-python
 mkdocs-awesome-pages-plugin==2.10.1
     # via emmet-builders (pyproject.toml)
-mkdocs-get-deps==0.2.0
+mkdocs-get-deps==0.2.2
     # via mkdocs
 mkdocs-markdownextradata-plugin==0.2.6
     # via emmet-builders (pyproject.toml)
@@ -178,22 +178,22 @@ mkdocs-material-extensions==1.3.1
     #   mkdocs-material
 mkdocs-minify-plugin==0.8.0
     # via emmet-builders (pyproject.toml)
-mkdocstrings[python]==1.0.2
+mkdocstrings[python]==1.0.4
     # via
     #   emmet-builders (pyproject.toml)
     #   mkdocstrings-python
-mkdocstrings-python==2.0.1
+mkdocstrings-python==2.0.3
     # via mkdocstrings
 mongomock==4.3.0
     # via maggma
-monty==2025.3.3
+monty==2026.2.18
     # via
     #   emmet-core
     #   maggma
     #   matminer
-    #   pymatgen
+    #   pymatgen-core
     #   robocrys
-more-itertools==10.8.0
+more-itertools==11.0.2
     # via inflect
 mp-pyrho==0.5.1
     # via pymatgen-analysis-defects
@@ -201,24 +201,24 @@ mpmath==1.3.0
     # via sympy
 msgpack==1.1.2
     # via maggma
-mypy==1.19.1
+mypy==1.20.1
     # via emmet-builders (pyproject.toml)
 mypy-extensions==1.1.0
     # via
     #   emmet-builders (pyproject.toml)
     #   mypy
-narwhals==2.15.0
+narwhals==2.19.0
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
 networkx==3.6.1
     # via
-    #   pymatgen
+    #   pymatgen-core
     #   robocrys
     #   scikit-image
 nodeenv==1.10.0
     # via pre-commit
-numpy==2.4.1
+numpy==2.4.4
     # via
     #   ase
     #   contourpy
@@ -228,9 +228,9 @@ numpy==2.4.1
     #   matplotlib
     #   monty
     #   pandas
-    #   pymatgen
     #   pymatgen-analysis-defects
     #   pymatgen-analysis-diffusion
+    #   pymatgen-core
     #   pymatgen-io-validation
     #   robocrys
     #   scikit-image
@@ -241,11 +241,11 @@ numpy==2.4.1
     #   shapely
     #   spglib
     #   tifffile
-orjson==3.11.5
+orjson==3.11.8
     # via
     #   maggma
-    #   pymatgen
-packaging==26.0
+    #   pymatgen-core
+packaging==26.1
     # via
     #   lazy-loader
     #   matplotlib
@@ -255,30 +255,33 @@ packaging==26.0
     #   pytest
     #   scikit-image
 palettable==3.3.3
-    # via pymatgen
+    # via pymatgen-core
 pandas==2.3.3
     # via
     #   maggma
     #   matminer
-    #   pymatgen
+    #   pymatgen-core
     #   seaborn
-paramiko==4.0.0
-    # via sshtunnel
-pathspec==1.0.3
+paramiko==3.5.1
+    # via
+    #   maggma
+    #   sshtunnel
+pathspec==1.0.4
     # via
     #   mkdocs
     #   mypy
-pillow==12.1.0
+pillow==12.2.0
     # via
     #   imageio
     #   matplotlib
     #   scikit-image
-platformdirs==4.5.1
+platformdirs==4.9.6
     # via
     #   mkdocs-get-deps
+    #   python-discovery
     #   virtualenv
-plotly==6.5.2
-    # via pymatgen
+plotly==6.7.0
+    # via pymatgen-core
 pluggy==1.6.0
     # via
     #   pytest
@@ -287,9 +290,9 @@ pre-commit==4.5.1
     # via emmet-builders (pyproject.toml)
 pubchempy==1.0.5
     # via robocrys
-pyarrow==23.0.0
+pyarrow==23.0.1
     # via emmet-core
-pybtex==0.25.1
+pybtex==0.26.1
     # via
     #   emmet-core
     #   robocrys
@@ -299,15 +302,15 @@ pycodestyle==2.14.0
     #   flake8
 pycparser==3.0
     # via cffi
-pydantic==2.12.5
+pydantic==2.13.1
     # via
     #   emmet-core
     #   maggma
     #   pydantic-settings
     #   pymatgen-io-validation
-pydantic-core==2.41.5
+pydantic-core==2.46.1
     # via pydantic
-pydantic-settings==2.12.0
+pydantic-settings==2.13.1
     # via
     #   emmet-core
     #   maggma
@@ -318,11 +321,11 @@ pydocstyle==6.3.0
     # via emmet-builders (pyproject.toml)
 pyflakes==3.4.0
     # via flake8
-pygments==2.19.2
+pygments==2.20.0
     # via
     #   mkdocs-material
     #   pytest
-pymatgen==2025.10.7
+pymatgen==2026.3.23
     # via
     #   emmet-core
     #   matminer
@@ -334,15 +337,17 @@ pymatgen==2025.10.7
     #   robocrys
 pymatgen-analysis-alloys==0.0.8
     # via emmet-core
-pymatgen-analysis-defects==2025.9.26
+pymatgen-analysis-defects==2026.3.20
     # via emmet-core
 pymatgen-analysis-diffusion==2025.11.15
     # via emmet-core
+pymatgen-core==2026.4.16
+    # via pymatgen
 pymatgen-io-validation==0.1.2
     # via
     #   emmet-builders (pyproject.toml)
     #   emmet-core
-pymdown-extensions==10.20.1
+pymdown-extensions==10.21.2
     # via
     #   mkdocs-material
     #   mkdocstrings
@@ -356,12 +361,12 @@ pyparsing==3.3.2
     # via
     #   bibtexparser
     #   matplotlib
-pytest==9.0.2
+pytest==9.0.3
     # via
     #   emmet-builders (pyproject.toml)
     #   pytest-cov
     #   pytest-xdist
-pytest-cov==7.0.0
+pytest-cov==7.1.0
     # via emmet-builders (pyproject.toml)
 pytest-xdist==3.8.0
     # via emmet-builders (pyproject.toml)
@@ -372,9 +377,11 @@ python-dateutil==2.9.0.post0
     #   maggma
     #   matplotlib
     #   pandas
-python-dotenv==1.2.1
+python-discovery==1.2.2
+    # via virtualenv
+python-dotenv==1.2.2
     # via pydantic-settings
-pytz==2025.2
+pytz==2026.1.post1
     # via
     #   mongomock
     #   pandas
@@ -395,10 +402,10 @@ referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.5
+requests==2.33.1
     # via
     #   matminer
-    #   pymatgen
+    #   pymatgen-core
     #   pymatgen-io-validation
 robocrys==0.2.13
     # via emmet-core
@@ -410,24 +417,23 @@ ruamel-yaml==0.19.1
     # via
     #   maggma
     #   monty
-    #   pymatgen
 s3transfer==0.16.0
     # via boto3
 scikit-image==0.26.0
     # via pymatgen-analysis-defects
 scikit-learn==1.8.0
     # via matminer
-scipy==1.17.0
+scipy==1.17.1
     # via
     #   ase
     #   matminer
-    #   pymatgen
+    #   pymatgen-core
     #   robocrys
     #   scikit-image
     #   scikit-learn
 seaborn==0.13.2
     # via pymatgen-analysis-diffusion
-seekpath==2.2.0
+seekpath==2.2.1
     # via emmet-core
 sentinels==1.1.1
     # via mongomock
@@ -439,7 +445,7 @@ snowballstemmer==3.0.1
     # via pydocstyle
 spglib==2.7.0
     # via
-    #   pymatgen
+    #   pymatgen-core
     #   robocrys
     #   seekpath
 sshtunnel==0.4.0
@@ -447,25 +453,25 @@ sshtunnel==0.4.0
 sympy==1.14.0
     # via
     #   matminer
-    #   pymatgen
-tabulate==0.9.0
-    # via pymatgen
+    #   pymatgen-core
+tabulate==0.10.0
+    # via pymatgen-core
 threadpoolctl==3.6.0
     # via scikit-learn
-tifffile==2026.1.14
+tifffile==2026.4.11
     # via scikit-image
-tornado==6.5.4
+tornado==6.5.5
     # via livereload
-tqdm==4.67.1
+tqdm==4.67.3
     # via
     #   maggma
     #   matminer
-    #   pymatgen
-typeguard==4.4.4
+    #   pymatgen-core
+typeguard==4.5.1
     # via inflect
-types-requests==2.32.4.20260107
+types-requests==2.33.0.20260408
     # via emmet-builders (pyproject.toml)
-types-setuptools==80.10.0.20260124
+types-setuptools==82.0.0.20260408
     # via emmet-builders (pyproject.toml)
 typing-extensions==4.15.0
     # via
@@ -480,16 +486,16 @@ typing-inspection==0.4.2
     # via
     #   pydantic
     #   pydantic-settings
-tzdata==2025.3
+tzdata==2026.1
     # via pandas
 uncertainties==3.2.3
-    # via pymatgen
+    # via pymatgen-core
 urllib3==2.6.3
     # via
     #   botocore
     #   requests
     #   types-requests
-virtualenv==20.36.1
+virtualenv==21.2.4
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
@@ -497,6 +503,3 @@ wcmatch==10.1
     # via mkdocs-awesome-pages-plugin
 wincertstore==0.2.1
     # via emmet-builders (pyproject.toml)
-
-# The following packages are considered to be unsafe in a requirements file:
-# setuptools

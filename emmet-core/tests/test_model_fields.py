@@ -259,7 +259,7 @@ ref_model_fields = {
         "final_structure",
         "pretty_formula",
         "w_sep",
-        "cif",
+        "structure",
         "chemsys",
         "last_updated",
     ],
@@ -1064,6 +1064,7 @@ ref_model_fields = {
         "run_stats",
         "state",
         "task_label",
+        "vasp_version",
     ],
     "emmet.core.thermo.ThermoDoc": [
         "builder_meta",
