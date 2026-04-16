@@ -31,7 +31,7 @@ class SuffixedID(BaseModel):
     def from_str(cls, idx: str) -> Self:
         """Ensure the class can be instantiated from a string or dict."""
         sep = cls.model_fields["separator"].default
-        parts = idx.split(sep, 1)
+        parts = idx.rsplit(sep, 1)
         return cls(
             identifier=parts[0],
             suffix=parts[1],  # type: ignore[arg-type]
