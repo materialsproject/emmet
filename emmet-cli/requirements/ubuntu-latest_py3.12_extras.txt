@@ -78,6 +78,8 @@ librt==0.9.0
     # via mypy
 livereload==2.7.1
     # via emmet-cli (pyproject.toml)
+lxml==6.0.4
+    # via pymatgen-core
 markdown==3.10.2
     # via
     #   mkdocs
@@ -224,7 +226,7 @@ pymatgen==2026.3.23
     # via
     #   emmet-core
     #   pymatgen-io-validation
-pymatgen-core==2026.4.7
+pymatgen-core==2026.4.16
     # via pymatgen
 pymatgen-io-validation==0.1.2
     # via

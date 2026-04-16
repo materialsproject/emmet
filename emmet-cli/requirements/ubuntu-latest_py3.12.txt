@@ -34,6 +34,8 @@ kiwisolver==1.5.0
     # via matplotlib
 latexcodec==3.0.1
     # via pybtex
+lxml==6.0.4
+    # via pymatgen-core
 matplotlib==3.10.8
     # via pymatgen-core
 monty==2026.2.18
@@ -89,7 +91,7 @@ pymatgen==2026.3.23
     # via
     #   emmet-core
     #   pymatgen-io-validation
-pymatgen-core==2026.4.7
+pymatgen-core==2026.4.16
     # via pymatgen
 pymatgen-io-validation==0.1.2
     # via
