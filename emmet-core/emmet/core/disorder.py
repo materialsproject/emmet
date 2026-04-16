@@ -20,7 +20,6 @@ REQUIRED_METADATA_KEYS: tuple[str, ...] = (
     "supercell_diag",
     "prototype",
     "prototype_params",
-    "composition_map",
     "versions",
 )
 
@@ -31,7 +30,6 @@ class TypedDisorderedTaskMetadata(TypedDict):
     supercell_diag: tuple[int, int, int]
     prototype: str
     prototype_params: dict[str, float]
-    composition_map: dict[str, dict[str, int]]
     versions: dict[str, str]
 
 
@@ -55,10 +53,108 @@ def parse_json(dir_name: Path | str) -> TypedDisorderedTaskMetadata:
             f"Missing required keys in disordered_task_doc_metadata.json: {missing_str}"
         )
 
-    supercell_x, supercell_y, supercell_z = data["supercell_diag"]
-    data["supercell_diag"] = (supercell_x, supercell_y, supercell_z)
-    data["reference_structure"] = Structure.from_dict(data["reference_structure"])
+    # --- type and value validation ---
+
+    # ordered_task_id
+    if not isinstance(data["ordered_task_id"], str) or not data["ordered_task_id"]:
+        raise ValueError(
+            f"ordered_task_id must be a non-empty string. "
+            f"Got: {data['ordered_task_id']!r}. Directory: {dir_name}"
+        )
+
+    # supercell_diag
+    sd = data["supercell_diag"]
+    if not (isinstance(sd, (list, tuple)) and len(sd) == 3):
+        raise ValueError(
+            f"supercell_diag must be a length-3 list of integers. "
+            f"Got: {sd!r}. Directory: {dir_name}"
+        )
+    data["supercell_diag"] = (int(sd[0]), int(sd[1]), int(sd[2]))
+    if any(x < 1 for x in data["supercell_diag"]):
+        raise ValueError(
+            f"supercell_diag values must be positive. "
+            f"Got: {data['supercell_diag']}. Directory: {dir_name}"
+        )
+
+    # prototype
+    if not isinstance(data["prototype"], str) or not data["prototype"]:
+        raise ValueError(
+            f"prototype must be a non-empty string. "
+            f"Got: {data['prototype']!r}. Directory: {dir_name}"
+        )
+
+    # prototype_params
+    if not isinstance(data["prototype_params"], dict):
+        raise ValueError(
+            f"prototype_params must be a dict. "
+            f"Got: {type(data['prototype_params']).__name__}. Directory: {dir_name}"
+        )
+    for k, v in data["prototype_params"].items():
+        if not isinstance(v, (int, float)):
+            raise ValueError(
+                f"prototype_params[{k!r}] must be numeric. "
+                f"Got: {v!r}. Directory: {dir_name}"
+            )
+
+    # reference_structure
+    try:
+        data["reference_structure"] = Structure.from_dict(data["reference_structure"])
+    except Exception as e:
+        raise ValueError(
+            f"Failed to parse reference_structure: {e}. Directory: {dir_name}"
+        ) from e
+
+    ref = data["reference_structure"]
+    for required_prop in ("sublattice", "role"):
+        if required_prop not in ref.site_properties:
+            raise ValueError(
+                f"reference_structure is missing required site property "
+                f"'{required_prop}'. Cannot derive composition_map. "
+                f"Directory: {dir_name}"
+            )
+
+    n_active = sum(1 for r in ref.site_properties["role"] if r == "active_cation")
+    if n_active == 0:
+        raise ValueError(
+            f"reference_structure has no sites with role='active_cation'. "
+            f"Directory: {dir_name}"
+        )
+
     return data
+
+
+def composition_map_from_structure(structure: Structure) -> dict[str, dict[str, int]]:
+    """Derive a composition map from a structure's site properties.
+
+    Counts species per sublattice for sites with ``role == "active_cation"``.
+    Requires ``sublattice`` and ``role`` site properties.
+
+    Returns
+    -------
+    dict
+        ``{sublattice_label: {element: count, ...}, ...}``
+    """
+    props = structure.site_properties
+    if "role" not in props or "sublattice" not in props:
+        raise ValueError(
+            "Structure must have 'role' and 'sublattice' site properties "
+            "to derive composition_map."
+        )
+
+    roles = props["role"]
+    sublattices = props["sublattice"]
+
+    comp_map: dict[str, dict[str, int]] = {}
+    for i, site in enumerate(structure):
+        if roles[i] != "active_cation":
+            continue
+        sl = str(sublattices[i])
+        elem = site.specie.symbol
+        if sl not in comp_map:
+            comp_map[sl] = {}
+        comp_map[sl][elem] = comp_map[sl].get(elem, 0) + 1
+
+    return {sl: dict(sorted(counts.items())) for sl, counts in sorted(comp_map.items())}
 
 
 # ---------------------------------------------------------------------------
@@ -195,12 +291,14 @@ class DisorderedTaskDoc(CoreTaskDoc):
     prototype_params: dict[str, float] = Field(
         description="The parameters used to generate the prototype structure.",
     )
-    composition_map: dict[str, dict[str, int]] = Field(
-        description="A mapping of which elements are in each sublattice for the disordered structure.",
-    )
     versions: dict[str, str] = Field(
         description="A dictionary capturing the versions of relevant software packages used during the calculation.",
     )
+
+    @property
+    def composition_map(self) -> dict[str, dict[str, int]]:
+        """Derived from reference_structure: per-sublattice species counts."""
+        return composition_map_from_structure(self.reference_structure)
 
     @classmethod
     def from_directory(
@@ -227,7 +325,6 @@ class DisorderedTaskDoc(CoreTaskDoc):
             supercell_diag=tuple(metadata["supercell_diag"]),
             prototype=metadata["prototype"],
             prototype_params=metadata["prototype_params"],
-            composition_map=metadata["composition_map"],
             versions=metadata["versions"],
         )
 
