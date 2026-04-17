@@ -70,12 +70,17 @@ def _fault_tolerant_id_serde(
 _id_base_metadata = (BeforeValidator(_fault_tolerant_id_serde),)
 
 
-def _make_id_type(render_order, **kwargs) -> Annotated:
+def _make_id_type(render_order, **kwargs) -> Any:
+    _order: Any
     match render_order:
         case 0:
             _order = Union[AlphaID, MPID]
         case 1:
             _order = Union[MPID, AlphaID]
+        case _:
+            raise NotImplementedError(
+                f"No implementation for render_order: {render_order}"
+            )
 
     return Annotated[
         _order,
@@ -84,8 +89,8 @@ def _make_id_type(render_order, **kwargs) -> Annotated:
     ]
 
 
-IdentifierType: TypeAlias = _make_id_type(0, padlen=8)
-MaterialIdentifierType: TypeAlias = _make_id_type(1, legacy=True, prefix="mp", padlen=8)
+IdentifierType = _make_id_type(0, padlen=8)
+MaterialIdentifierType = _make_id_type(1, legacy=True, prefix="mp", padlen=8)
 """MPID / AlphaID serde."""
 
 

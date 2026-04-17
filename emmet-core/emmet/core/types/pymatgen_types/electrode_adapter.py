@@ -119,7 +119,7 @@ def walk_voltage_pairs(voltage_pairs: list[dict[str, Any]], battery_type: Batter
 
 
 def electrode_object_energy_adjustments_serde(
-    electrode_object: dict,
+    electrode_object: dict[str, Any],
     battery_type: BatteryType,
     serde_fn: Callable,
     ea="energy_adjustments",
@@ -203,7 +203,9 @@ def electrode_object_serializer(electrode_object, nxt, info) -> dict[str, Any]:
     return default_serialized_object
 
 
-def _deserialize_electrode_object_entries(electrode_object, battery_type):
+def _deserialize_electrode_object_entries(
+    electrode_object, battery_type
+) -> dict[str, Any]:
     match battery_type:
         case BatteryType.insertion:
             electrode_object["working_ion_entry"] = TypeAdapter(

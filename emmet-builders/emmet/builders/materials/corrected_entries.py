@@ -60,7 +60,7 @@ def build_corrected_entries_doc(
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 with HiddenPrints():
-                    if compatibility.name == "MP DFT mixing scheme":
+                    if getattr(compatibility, "name", None) == "MP DFT mixing scheme":
                         thermo_type = ThermoType.GGA_GGA_U_R2SCAN
 
                         if "R2SCAN" in all_entry_types:
@@ -77,10 +77,10 @@ def build_corrected_entries_doc(
                             )
 
                         else:
-                            corrected_entries["R2SCAN"] = None
-                            pd_entries = None
+                            corrected_entries["R2SCAN"] = []
+                            pd_entries = []
 
-                    elif compatibility.name == "MP2020":
+                    elif getattr(compatibility, "name", None) == "MP2020":
                         thermo_type = ThermoType.GGA_GGA_U
                         pd_entries = compatibility.process_entries(
                             copy.deepcopy(input.entries), verbose=False

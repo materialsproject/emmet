@@ -112,7 +112,7 @@ class PropModel(BaseModel):
 
     @property
     def name(self) -> HasProps:
-        return HasProps[self._prop]
+        return HasProps(self._prop)
 
 
 class MaterialsSummary(PropertyDoc, PropModel):
@@ -432,9 +432,9 @@ class SummaryDoc(
                 used to populate has_props.
         """
         # initialize all has_props variants to False, overwrite according to what caller provides
-        has_props = {prop.value: False for prop in HasProps}
-        for prop in chain(property_summary_docs, property_shim_docs):
-            has_props[prop.name] = prop._has_props
+        has_props = {prop: False for prop in HasProps.__members__.values()}
+        for property_doc in chain(property_summary_docs, property_shim_docs):
+            has_props[property_doc.name] = property_doc._has_props
 
         # fold property origins
         prop_origins = chain.from_iterable(

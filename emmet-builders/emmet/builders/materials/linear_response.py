@@ -87,7 +87,7 @@ CENTROSYMMETRIC_SPACE_GROUPS = [
 
 def filter_piezo_tasks(
     tasks: list[CoreTaskDoc],
-) -> list[CoreTaskDoc | None]:
+) -> list[CoreTaskDoc]:
     """
     Yields list of CoreTaskDocs with spacegroups appropriate for
     ``build_piezo_docs``

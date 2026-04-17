@@ -67,7 +67,7 @@ class BatteryID(SuffixedID):
     suffix: ElementType
 
 
-@type_override({"suffix": list[str, str, str]})
+@type_override({"suffix": list[str]})
 class XasSpectrumID(SuffixedID):
     identifier: MaterialIdentifierType
     suffix: tuple[XasType, ElementType, XasEdge]  # type: ignore[assignment]

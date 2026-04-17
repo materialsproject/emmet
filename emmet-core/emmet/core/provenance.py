@@ -52,7 +52,7 @@ def _remove_dupe_authors(authors: list[dict[str, Any] | Author]):
 
 def _migrate_legacy_history_data(
     config: list[dict[str, Any]] | list[History] | None,
-) -> list[History | None]:
+) -> list[History]:
     """Migrate legacy provenance and SNL `history` data as a classmethod.
 
     Parameters
@@ -279,7 +279,7 @@ class SNLAbout(BaseModel):
     )
 
     history: HistoryType = Field(
-        None,
+        [],
         description="list of history nodes specifying the transformations or orignation"
         " of this material for the entry closest matching the material input.",
     )
@@ -395,7 +395,7 @@ class ProvenanceDoc(PropertyDoc):
         exp_vals = []
         for snl in snls:
             for entry in snl.about.history:  # type: ignore[union-attr]
-                if entry.description is not None:
+                if entry is not None and entry.description is not None:
                     exp_vals.append(entry.description.experimental)
 
         experimental = any(exp_vals)
@@ -445,7 +445,8 @@ class DatabaseSNL(StructureMetadata):
         None, description="The structure for this entry"
     )
     about: SNLAbout = Field(
-        default_factory=SNLAbout, description="Extended metadata for this entry."
+        default_factory=SNLAbout,  # type: ignore[arg-type]
+        description="Extended metadata for this entry.",
     )
     theoretical: bool = Field(
         True, description="Whether this entry is a theoretical database entry."

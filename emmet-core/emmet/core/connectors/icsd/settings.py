@@ -9,15 +9,15 @@ class IcsdClientSettings(BaseSettings):
     USERNAME: str | None = Field(None, description="ICSD username.")
     PASSWORD: str | None = Field(None, description="ICSD password.")
 
-    MAX_RETRIES: int | None = Field(
+    MAX_RETRIES: int = Field(
         10, description="The maximum number of retries when querying the ICSD API."
     )
 
-    TIMEOUT: float | None = Field(
+    TIMEOUT: float = Field(
         15.0, description="The time in seconds to wait for a query to complete."
     )
 
-    MAX_BATCH_SIZE: int | None = Field(
+    MAX_BATCH_SIZE: int = Field(
         500,
         description=(
             "The maximum number of structures to retrieve "

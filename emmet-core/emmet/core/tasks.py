@@ -351,7 +351,7 @@ class CoreTaskDoc(StructureMetadata):
         cls,
         dir_name: Path | str,
         volumetric_files: tuple[str, ...] = _VOLUMETRIC_FILES,
-        batch_id: str = None,
+        batch_id: str | None = None,
         tags: list[str | None] = [],
         **vasp_calculation_kwargs,
     ) -> tuple[Self, RelaxTrajectory]:
@@ -418,6 +418,15 @@ class CoreTaskDoc(StructureMetadata):
         trajectory = get_trajectories_from_calculations([calc_doc])[0]
 
         return (task_doc, trajectory)
+
+
+class ValidationTaskDoc(CoreTaskDoc):
+    """
+    Wrapper for TaskDoc to ensure compatiblity with validation checks
+    in MaterialsDoc.from_tasks(...) if validation builder is skipped
+    """
+
+    is_valid: bool = Field(True)
 
 
 @type_override({"additional_json": str})
@@ -513,6 +522,8 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
         cls,
         dir_name: Path | str,
         volumetric_files: tuple[str, ...] = _VOLUMETRIC_FILES,
+        batch_id: str | None = None,
+        tags: list[str | None] = [],
         store_additional_json: bool = True,
         additional_fields: dict[str, Any] | None = None,
         volume_change_warning_tol: float = 0.2,
@@ -576,7 +587,9 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
         analysis = AnalysisDoc.from_vasp_calc_docs(
             calcs_reversed, volume_change_warning_tol=volume_change_warning_tol
         )
-        transformations, icsd_id, tags, author = _parse_transformations(dir_name)
+        transformations, icsd_id, transformation_tags, author = _parse_transformations(
+            dir_name
+        )
         custodian = _parse_custodian(dir_name)
         orig_inputs = _parse_orig_inputs(dir_name)
 
@@ -594,6 +607,7 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
             included_objects = list(vasp_objects.keys())
 
         doc = cls.from_structure(
+            batch_id=batch_id,
             structure=calcs_reversed[0].output.structure,
             meta_structure=calcs_reversed[0].output.structure,
             dir_name=dir_name,
@@ -604,7 +618,7 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
             orig_inputs=orig_inputs,
             additional_json=additional_json,
             icsd_id=icsd_id,
-            tags=tags,
+            tags=tags + transformation_tags,
             author=author,
             completed_at=calcs_reversed[0].completed_at,
             input=calcs_reversed[-1].input,

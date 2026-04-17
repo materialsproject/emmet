@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from math import isnan
-from typing import TYPE_CHECKING, Annotated, Literal, TypeVar
+from typing import TYPE_CHECKING, Annotated, Generator, Literal, TypeVar
 
 import numpy as np
 from pydantic import BaseModel, BeforeValidator, Field, WrapSerializer
@@ -442,7 +442,7 @@ def _generate_bs_data(
     def _bs_eval(
         bs_data: dict[str, BandStructureSymmLine | None],
         bs_rank: list[str] = ["latimer_munro", "hinuma", "setyawan_curtarolo"],
-    ) -> str:
+    ) -> Generator[str, None, None]:
         for bs_type in bs_rank:
             if bs_data[bs_type] is not None:
                 yield bs_type
@@ -457,7 +457,6 @@ def _generate_bs_data(
     is_gap_direct = getattr(bs_entry, blessed_bs_key).is_gap_direct  # type: ignore
     is_metal = getattr(bs_entry, blessed_bs_key).is_metal  # type: ignore
 
-    es_origins_from_bs = None
     for origin in origins:
         if origin.name == blessed_bs_key:
             es_origins_from_bs = PropertyOrigin(
@@ -610,6 +609,7 @@ def bs_checks(
     bandstructures: BSShim,
     skip_primitive_check: bool = False,
 ) -> ElectronicStructureDoc:
+    assert doc.bandstructure is not None
     for _, bs_summary in doc.bandstructure:
         if bs_summary is not None:
             _bandgap_diff_check(doc, bs_summary.band_gap, bs_summary.task_id)
@@ -639,6 +639,9 @@ def dos_checks(
     dos: DosShim,
     skip_primitive_check: bool = False,
 ) -> ElectronicStructureDoc:
+    assert doc.dos is not None
+    assert doc.dos.total is not None
+
     _bandgap_diff_check(
         doc,
         doc.dos.total[Spin.up].band_gap,
@@ -646,7 +649,7 @@ def dos_checks(
     )
 
     mag_orderings: list[tuple[str, Ordering]] = [
-        (
+        (  # type: ignore[list-item]
             doc.dos.task_id,
             doc.dos.magnetic_ordering,
         )

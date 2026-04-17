@@ -135,6 +135,7 @@ def build_electronic_structure_docs(
     Returns:
         Iterator[ElectronicStructureDoc]
     """
+    raise NotImplementedError("This function is dispatched by variant_dispatch")
 
 
 @build_electronic_structure_docs.register(Variant.STRUCTURE)

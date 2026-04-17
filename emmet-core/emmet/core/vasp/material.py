@@ -12,7 +12,7 @@ from emmet.core.material import PropertyOrigin
 from emmet.core.mpid import AlphaID
 from emmet.core.mpid_ext import ThermoID
 from emmet.core.settings import EmmetSettings
-from emmet.core.tasks import TaskDoc
+from emmet.core.tasks import ValidationTaskDoc
 from emmet.core.types.pymatgen_types.computed_entries_adapter import (
     ComputedStructureEntryType,
 )
@@ -57,7 +57,7 @@ class MaterialsDoc(CoreMaterialsDoc):
     @classmethod
     def from_tasks(
         cls,
-        task_group: list[TaskDoc],
+        task_group: list[ValidationTaskDoc],
         structure_quality_scores: dict[
             str, int
         ] = SETTINGS.VASP_STRUCTURE_QUALITY_SCORES,
@@ -111,7 +111,7 @@ class MaterialsDoc(CoreMaterialsDoc):
         # Always prefer a static over a structure opt
         structure_task_quality_scores = {"Structure Optimization": 1, "Static": 2}
 
-        def _structure_eval(task: TaskDoc):
+        def _structure_eval(task: ValidationTaskDoc):
             """
             Helper function to order structures optimization and statics calcs by
             - Functional Type
@@ -170,7 +170,7 @@ class MaterialsDoc(CoreMaterialsDoc):
         # Always prefer a static over a structure opt
         entry_task_quality_scores = {"Structure Optimization": 1, "Static": 2}
 
-        def _entry_eval(task: TaskDoc):
+        def _entry_eval(task: ValidationTaskDoc):
             """
             Helper function to order entries and statics calcs by
             - Spin polarization
@@ -247,7 +247,7 @@ class MaterialsDoc(CoreMaterialsDoc):
             )
 
         # Builder meta and license
-        builder_meta = EmmetMeta(license="BY-C" if commercial_license else "BY-NC")
+        builder_meta = EmmetMeta(license="BY-C" if commercial_license else "BY-NC")  # type: ignore[call-arg]
 
         return cls.from_structure(
             meta_structure=structure,
@@ -269,7 +269,7 @@ class MaterialsDoc(CoreMaterialsDoc):
     @classmethod
     def construct_deprecated_material(
         cls,
-        task_group: list[TaskDoc],
+        task_group: list[ValidationTaskDoc],
         commercial_license: bool = True,
     ) -> "MaterialsDoc":
         """
@@ -312,7 +312,7 @@ class MaterialsDoc(CoreMaterialsDoc):
         deprecated = True
 
         # Builder meta and license
-        builder_meta = EmmetMeta(license="BY-C" if commercial_license else "BY-NC")
+        builder_meta = EmmetMeta(license="BY-C" if commercial_license else "BY-NC")  # type: ignore[call-arg]
 
         return cls.from_structure(
             meta_structure=structure,

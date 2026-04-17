@@ -96,7 +96,7 @@ class PartialChargesDoc(PropertyDoc):
             lot_solvent=task.lot_solvent,
             partial_charges=charges,
             method=method,
-            origins=[MolPropertyOrigin(name="partial_charges", task_id=task.task_id)],
+            origins=[MolPropertyOrigin(name="partial_charges", task_id=task.task_id)],  # type: ignore[call-arg]
             deprecated=deprecated,
             **kwargs,
         )
@@ -175,7 +175,7 @@ class PartialSpinsDoc(PropertyDoc):
             lot_solvent=task.lot_solvent,
             partial_spins=spins,
             method=method,
-            origins=[MolPropertyOrigin(name="partial_spins", task_id=task.task_id)],
+            origins=[MolPropertyOrigin(name="partial_spins", task_id=task.task_id)],  # type: ignore[call-arg]
             deprecated=deprecated,
             **kwargs,
         )

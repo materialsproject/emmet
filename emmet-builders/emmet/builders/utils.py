@@ -323,7 +323,7 @@ def _parse_kpoints(task: CoreTaskDoc) -> int:
 
     if kpts is None:
         if isinstance(dk := (task.input.incar or {}).get("KSPACING"), float):
-            return np.prod(get_kpoint_divisions_from_kspacing(task.structure, dk))
+            return int(np.prod(get_kpoint_divisions_from_kspacing(task.structure, dk)))
         return 0
 
     if kpts.style.name in ("Monkhorst", "Gamma"):
@@ -337,17 +337,16 @@ def _parse_kpoints(task: CoreTaskDoc) -> int:
 
 T = TypeVar("T")
 S = TypeVar("S")
-P = ParamSpec("P")
 V = TypeVar("V")
 
 
 def try_call(
-    fn: Callable[P, T],
+    fn: Callable[..., T],
     /,
-    *args: P.args,
-    _default: S = None,
+    *args: Any,
+    _default: S | None = None,
     _safe: bool = True,
-    **kwargs: P.kwargs,
+    **kwargs: Any,
 ) -> T | S | None:
     """Attempt to call a function, returning a _default value if an exception is raised.
 
@@ -411,12 +410,15 @@ def filter_map(
 
     if work_keys is not None:
         yield from filter(
-            lambda y: y is not None,
+            lambda y: y is not None,  # type: ignore[arg-type]
             map(
                 lambda x: try_call(
                     fn,
                     *args,
-                    **{**try_call(_extract_kwargs, x, work_keys), **kwargs},
+                    **{
+                        **try_call(_extract_kwargs, x, work_keys, _default={}),  # type: ignore[dict-item]
+                        **kwargs,
+                    },
                 ),
                 work,
             ),

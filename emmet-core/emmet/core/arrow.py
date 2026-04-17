@@ -212,7 +212,7 @@ def arrowize(obj) -> pa.DataType:
             )
         # DO NOT CHANGE ARGS - IGNORE MYPY
         # recursive_guard kwarg does not exist in python <3.12
-        return arrowize(obj._evaluate(globals(), locals(), frozenset()))
+        return arrowize(obj._evaluate(globals(), locals(), frozenset()))  # type: ignore[call-arg, arg-type]
 
     if isinstance(obj, typing.TypeVar):
         return arrowize(obj.__constraints__[1])

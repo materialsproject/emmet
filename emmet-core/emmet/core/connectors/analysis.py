@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from contextlib import redirect_stderr, redirect_stdout, nullcontext, contextmanager
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from io import StringIO
 from tempfile import NamedTemporaryFile
-from typing import TYPE_CHECKING
+from typing import Generator
 
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.core import Structure
-from pymatgen.io.cif import CifParser, CifBlock
+from pymatgen.io.cif import CifBlock, CifParser
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.core.settings import EmmetSettings
 
@@ -18,28 +18,24 @@ try:
 except ImportError:
     cod_tools_parse_cif = None
 
-if TYPE_CHECKING:
-    from contextlib import AbstractContextManager
 
 EMMET_SETTINGS = EmmetSettings()
 
 
 @contextmanager
-def _get_context_manager(verbose: bool) -> AbstractContextManager:
+def _get_context_manager(verbose: bool) -> Generator[None, None, None]:
     if verbose:
-        yield nullcontext()
+        yield
     else:
-        with redirect_stderr(StringIO()) as stderr, redirect_stdout(
-            StringIO()
-        ) as stdout:
-            yield stderr, stdout
+        with redirect_stderr(StringIO()), redirect_stdout(StringIO()):
+            yield
 
 
 def parse_cif_cod_tools(
     cif_str: str,
     verbose: bool = False,
     cif_parser: CifParser | None = None,
-) -> tuple[list[Structure], list[str]]:
+) -> tuple[list[Structure | None], list[str]]:
     """Parse a CIF with the COD tools parser.
 
     Parameters
@@ -58,7 +54,7 @@ def parse_cif_cod_tools(
     List of str documenting any parsing issues
     """
 
-    structures: list[Structure] = []
+    structures: list[Structure | None] = []
     remarks: list[str] = []
 
     temp_file = NamedTemporaryFile(suffix=".cif")
@@ -114,7 +110,7 @@ def remove_artificial_disorder(
     -----------
     list of Structure
     """
-    output_structs = structures if in_place else [None] * len(structures)
+    output_structs = structures if in_place else structures[:]
     for idx, structure in enumerate(structures):
         if (
             not structure.is_ordered
@@ -226,7 +222,10 @@ def parse_cif(cif_str: str, verbose: bool = False) -> tuple[list[Structure], lis
     # Step 2 (Optional): Use the Crystallography Open Database CIF parser
     # to correct errors in the CIF if the structures could not be parsed.
     if not structures and cod_tools_parse_cif:
-        structures, new_remarks = parse_cif_cod_tools(
+        # TODO: structures could be list[Structure | None] here -> should narrow
+        # and update rest of annotations + code in this module to
+        # handle heterogeneous type
+        structures, new_remarks = parse_cif_cod_tools(  # type: ignore[assignment]
             cif_str, verbose=verbose, cif_parser=cif_parser
         )
         remarks.extend(new_remarks)

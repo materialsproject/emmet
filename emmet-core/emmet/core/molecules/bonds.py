@@ -471,7 +471,7 @@ class MoleculeBondingDoc(PropertyDoc):
             bond_types=bond_types,
             bonds=bonds,
             bonds_nometal=bonds_nometal,
-            origins=[MolPropertyOrigin(name="bonding", task_id=task.task_id)],
+            origins=[MolPropertyOrigin(name="bonding", task_id=task.task_id)],  # type: ignore[call-arg]
             deprecated=deprecated,
             **kwargs,
         )

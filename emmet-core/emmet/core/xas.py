@@ -20,10 +20,11 @@ from emmet.core.types.typing import IdentifierType
 if TYPE_CHECKING:
     from emmet.core.types.typing import IdentifierType
 
-Type = ValueEnum("Type", [(e.name, e.value) for e in XasType])
+
+Type = ValueEnum("Type", [(e.name, e.value) for e in XasType])  # type: ignore[call-arg]
 """Type is deprecated and will be removed - migrate to XasType."""
 
-Edge = ValueEnum("Edge", [(e.name, e.value) for e in XasEdge])
+Edge = ValueEnum("Edge", [(e.name, e.value) for e in XasEdge])  # type: ignore[call-arg]
 """Edge is deprecated and will be removed - migrate to XasEdge."""
 
 

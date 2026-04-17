@@ -120,7 +120,7 @@ class ForcesDoc(PropertyDoc):
             average_force_magnitude=average_force_magnitude,
             max_force_magnitude=max_force_magnitude,
             min_force_magnitude=min_force_magnitude,
-            origins=[MolPropertyOrigin(name="forces", task_id=task.task_id)],
+            origins=[MolPropertyOrigin(name="forces", task_id=task.task_id)],  # type: ignore[call-arg]
             deprecated=deprecated,
             **kwargs,
         )
@@ -503,7 +503,7 @@ class TrajectoryDoc(PropertyDoc):
             resp_partial_charges=resp_partial_charges,
             dipole_moments=dipole_moments,
             resp_dipole_moments=resp_dipole_moments,
-            origins=[MolPropertyOrigin(name="trajectory", task_id=task.task_id)],
+            origins=[MolPropertyOrigin(name="trajectory", task_id=task.task_id)],  # type: ignore[call-arg]
             deprecated=deprecated,
             **kwargs,
         )

@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from copy import deepcopy
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from pydantic import Field
@@ -15,7 +15,7 @@ from emmet.core.types.enums import ValueEnum
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 
 if TYPE_CHECKING:
-    from emmet.core.types.typing import IdentifierType
+    from emmet.core.types.typing import MaterialIdentifierType
 
 
 class OxiStateAssigner(ValueEnum):
@@ -51,11 +51,12 @@ class OxidationStateDoc(PropertyDoc):
     def from_structure(
         cls,
         structure: StructureType,
-        material_id: IdentifierType | None = None,
+        material_id: MaterialIdentifierType | None = None,
         **kwargs,
     ):
         # Check if structure already has oxidation states,
         # if so pass this along unchanged with "method" == "manualx"
+        d: dict[str, Any]
         struct_valences: list[float | None] = []
         species = []
 

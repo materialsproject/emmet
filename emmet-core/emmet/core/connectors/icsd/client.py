@@ -44,9 +44,9 @@ class IcsdClient(BaseModel):
     username: str = Field(SETTINGS.USERNAME)
     password: str = Field(SETTINGS.PASSWORD)
 
-    max_retries: float | None = Field(SETTINGS.MAX_RETRIES)
-    timeout: float | None = Field(SETTINGS.TIMEOUT)
-    max_batch_size: float | None = Field(SETTINGS.MAX_BATCH_SIZE)
+    max_retries: int = Field(SETTINGS.MAX_RETRIES)
+    timeout: float = Field(SETTINGS.TIMEOUT)
+    max_batch_size: int = Field(SETTINGS.MAX_BATCH_SIZE)
 
     use_document_model: bool = Field(True)
     num_parallel_requests: int | None = Field(None)
@@ -97,7 +97,7 @@ class IcsdClient(BaseModel):
             raise ValueError(
                 f"{self.__module__}.{self.__class__.__name__} "
                 "failed to fetch auth token with status code "
-                f"{response.status_code}: {response.content}"
+                f"{response.status_code}: {response.content!r}"
             )
 
         self._session = requests.Session()
@@ -133,7 +133,6 @@ class IcsdClient(BaseModel):
 
     def __enter__(self) -> None:
         self.login()
-        return self
 
     def __exit__(self, *args) -> None:
         self.logout()
@@ -143,6 +142,8 @@ class IcsdClient(BaseModel):
 
     def _get(self, *args, **kwargs) -> requests.Response:
         self.refresh_session()
+        assert self._session is not None
+
         params = tuple(
             list(kwargs.pop("params", [])) + [("windowsclient", self._is_windows)]
         )
@@ -151,36 +152,36 @@ class IcsdClient(BaseModel):
             logger.warning(
                 f"{self.__module__}.{self.__class__.__name__} "
                 "failed to fetch content with status code "
-                f"{resp.status_code}: {resp.content}"
+                f"{resp.status_code}: {resp.content!r}"
             )
         return resp
 
-    def _get_cifs(self, collection_codes: int | list[int]) -> dict[int, str]:
-        if isinstance(collection_codes, int) or len(collection_codes) == 1:
-            cif_str = self._get(
-                f"https://icsd.fiz-karlsruhe.de/ws/cif/{collection_codes[0]}",
-                headers={
-                    "accept": "application/cif",
-                },
-            ).content.decode()
+    def _get_cifs(self, collection_codes: str | list[str]) -> dict[int, str]:
+        if isinstance(collection_codes, str):
+            collection_codes = [collection_codes]
+
+        if len(collection_codes) == 1:
+            url = f"https://icsd.fiz-karlsruhe.de/ws/cif/{collection_codes[0]}"
+            params = []
         else:
-            cif_str = self._get(
-                "https://icsd.fiz-karlsruhe.de/ws/cif/multiple",
-                headers={
-                    "accept": "application/cif",
-                },
-                params=[("idnum", collection_codes)],
-            ).content.decode()
+            url = "https://icsd.fiz-karlsruhe.de/ws/cif/multiple"
+            params = [("idnum", collection_codes)]
+
+        cif_str = self._get(
+            url,
+            headers={"accept": "application/cif"},
+            params=params,
+        ).content.decode()
 
         return {
-            int(re.search(r"_database_code_ICSD ([0-9]+)", cif_body).group(1)): "#(C)"
-            + cif_body
+            int(match.group(1)): "#(C)" + cif_body
             for cif_body in cif_str.split("\n#(C)")[1:]
+            if (match := re.search(r"_database_code_ICSD ([0-9]+)", cif_body))
         }
 
     def _search(
         self,
-        indices: list[int],
+        indices: list[str],
         properties: list[str | IcsdDataFields] | None = None,
         include_cif: bool = False,
         include_metadata: bool = False,
@@ -255,7 +256,7 @@ class IcsdClient(BaseModel):
                 logger.warning(
                     f"{self.__module__}.{self.__class__.__name__} "
                     "csv search failed with status code "
-                    f"{response.status_code}: {response.content}"
+                    f"{response.status_code}: {response.content!r}"
                 )
 
         if include_cif:

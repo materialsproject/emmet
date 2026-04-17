@@ -2,20 +2,10 @@ from itertools import groupby
 from typing import Iterator
 
 from emmet.builders.settings import EmmetBuildSettings
-from emmet.core.tasks import CoreTaskDoc
+from emmet.core.tasks import ValidationTaskDoc
 from emmet.core.utils import group_structures, undeform_structure
 from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
-from pydantic import Field
-
-
-class ValidationTaskDoc(CoreTaskDoc):
-    """
-    Wrapper for TaskDoc to ensure compatiblity with validation checks
-    in MaterialsDoc.from_tasks(...) if validation builder is skipped
-    """
-
-    is_valid: bool = Field(True)
 
 
 def build_material_docs(
@@ -46,22 +36,22 @@ def build_material_docs(
 
     input_documents.sort(key=lambda x: x.formula_pretty)
     materials = []
-    for _, group in groupby(input_documents, key=lambda x: x.formula_pretty):
+    for _, _group in groupby(input_documents, key=lambda x: x.formula_pretty):
         # TODO: logging - task_ids = [task.task_id for task in group]
-        group = list(group)
+        group = list(_group)
         task_transformations = [task.transformations for task in group]
         grouped_tasks = filter_and_group_tasks(group, task_transformations, settings)
-        for group in grouped_tasks:
+        for task_group in grouped_tasks:
             try:
                 doc = MaterialsDoc.from_tasks(
-                    group,
+                    task_group,
                     structure_quality_scores=settings.VASP_STRUCTURE_QUALITY_SCORES,
                     use_statics=settings.VASP_USE_STATICS,
                 )
                 materials.append(doc)
             except Exception as e:
-                # TODO: logging - failed_ids = list({t_.task_id for t_ in group})
-                doc = MaterialsDoc.construct_deprecated_material(group)
+                # TODO: logging - failed_ids = list({t_.task_id for t_ in task_group})
+                doc = MaterialsDoc.construct_deprecated_material(task_group)
                 doc.warnings.append(str(e))
                 materials.append(doc)
 

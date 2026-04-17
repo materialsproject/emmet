@@ -85,7 +85,9 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
             bad_tags: List of tags for calculations to deprecate
         """
         if not kpts_tolerance:
-            kpts_tolerance = 0.4 if "mp_production_old" in task_doc.tags else 0.9
+            kpts_tolerance = (
+                0.4 if task_doc.tags and "mp_production_old" in task_doc.tags else 0.9
+            )
 
         bandgap = task_doc.output.bandgap
         calc_type = task_doc.calc_type
@@ -127,6 +129,8 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
                 valid_input_set = None
 
             try:
+                assert valid_input_set is not None
+                assert valid_input_set.structure is not None
                 # Sometimes spglib can't determine space group with the default
                 # `symprec` and `angle_tolerance`. In these cases,
                 # `Structure.get_space_group_info()` fails
@@ -202,7 +206,7 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
 
                 # Check for Am and Po elements. These currently do not have proper elemental entries
                 # and will not get treated properly by the thermo builder.
-                if ("Am" in chemsys) or ("Po" in chemsys):
+                if chemsys and ("Am" in chemsys or "Po" in chemsys):
                     reasons.append(DeprecationMessage.MANUAL)
 
                 # Check for magmom anomalies for specific elements
@@ -219,11 +223,11 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
                 else:
                     reasons.append(DeprecationMessage.SET)
 
-        if len(list(set(task_doc.tags).intersection(bad_tags))) > 0:
+        if len(list(set(task_doc.tags or []).intersection(bad_tags or []))) > 0:
             warnings.append(f"Manual Deprecation by tags: {bad_tags}")
             reasons.append(DeprecationMessage.MANUAL)
 
-        doc = ValidationDoc(
+        doc = ValidationDoc(  # type: ignore[call-arg]
             task_id=task_doc.task_id,
             valid=len(reasons) == 0,
             reasons=reasons,
@@ -234,10 +238,12 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
         return doc
 
 
-def _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandgap):
+def _get_input_set(
+    run_type, task_type, calc_type, structure, input_sets, bandgap
+) -> VaspInputSet:
     # Ensure inputsets get proper additional input values
     if "SCAN" in run_type.value:
-        valid_input_set: VaspInputSet = input_sets[str(calc_type)](
+        valid_input_set = input_sets[str(calc_type)](
             structure, bandgap=bandgap
         )  # type: ignore
     elif task_type == TaskType.NSCF_Uniform or task_type == TaskType.NSCF_Line:

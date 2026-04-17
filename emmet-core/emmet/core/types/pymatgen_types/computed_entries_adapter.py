@@ -143,24 +143,31 @@ def pop_cse_empty_keys(cse: dict) -> dict[str, Any]:
 
 def entry_deserializer(entry: dict[str, Any] | ComputedEntry | ComputedStructureEntry):
     if isinstance(entry, dict):
+        entry_dict: dict[str, Any] = entry
         entry_cls: type[ComputedEntry | ComputedStructureEntry]
-        match entry["@class"]:
+        entry_type: type[TypedComputedEntryDict | TypedComputedStructureEntryDict]
+
+        match entry_dict["@class"]:
             case "ComputedEntry":
                 entry_cls = ComputedEntry
                 entry_type = TypedComputedEntryDict
             case "ComputedStructureEntry":
                 entry_cls = ComputedStructureEntry
                 entry_type = TypedComputedStructureEntryDict
-                entry = pop_cse_empty_keys(entry)
+                entry_dict = pop_cse_empty_keys(entry_dict)
 
-        if "energy_adjustments" in entry and any(
-            [isinstance(entry["energy_adjustments"], _type) for _type in (str, bytes)]
+        if "energy_adjustments" in entry_dict and any(
+            [
+                isinstance(entry_dict["energy_adjustments"], _type)
+                for _type in (str, bytes)
+            ]
         ):
-            # must be before 'energy_adjustments' deserialization
-            entry = TypeAdapter(entry_type).validate_python(entry)
-            entry["energy_adjustments"] = orjson.loads(entry["energy_adjustments"])
+            entry_dict = TypeAdapter(entry_type).validate_python(entry_dict)
+            entry_dict["energy_adjustments"] = orjson.loads(
+                entry_dict["energy_adjustments"]
+            )
 
-        return entry_cls.from_dict(entry)  # type: ignore[arg-type]
+        return entry_cls.from_dict(entry_dict)
 
     return entry
 

@@ -182,7 +182,7 @@ class ThermoDoc(PropertyDoc):
 
             (decomp, ehull) = pd.get_decomp_and_e_above_hull(blessed_entry)  # type: ignore[arg-type]
 
-            builder_meta = EmmetMeta(license=blessed_entry.data.get("license"))
+            builder_meta = EmmetMeta(license=blessed_entry.data.get("license"))  # type: ignore[call-arg]
 
             d = {
                 "thermo_id": ThermoID(identifier=material_id, suffix=thermo_type),
@@ -292,7 +292,7 @@ class ThermoDoc(PropertyDoc):
         pd_computed_data = pd.computed_data
         pd_computed_data["all_entries"] = entries
         new_pd = PhaseDiagram(
-            entries, elements=pd.elements, computed_data=pd_computed_data
+            entries, elements=pd.elements, computed_data=pd_computed_data  # type: ignore[arg-type]
         )
         return new_pd
 

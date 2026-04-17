@@ -194,7 +194,11 @@ class RedoxDoc(PropertyDoc):
                 red_doc.electronic_energy - base_thermo_doc.electronic_energy
             )
 
-            if base_has_g and red_doc.free_energy is not None:
+            if (
+                base_has_g
+                and red_doc.free_energy is not None
+                and base_thermo_doc.free_energy is not None
+            ):
                 reduction_free_energy = (
                     red_doc.free_energy - base_thermo_doc.free_energy
                 )
@@ -215,7 +219,11 @@ class RedoxDoc(PropertyDoc):
                 ox_doc.electronic_energy - base_thermo_doc.electronic_energy
             )
 
-            if base_has_g and ox_doc.free_energy is not None:
+            if (
+                base_has_g
+                and ox_doc.free_energy is not None
+                and base_thermo_doc.free_energy is not None
+            ):
                 oxidation_free_energy = ox_doc.free_energy - base_thermo_doc.free_energy
             else:
                 oxidation_free_energy = None
@@ -228,10 +236,15 @@ class RedoxDoc(PropertyDoc):
             ea_task_id = ea_doc.task_id
             id_string += f"-{ea_task_id}"
             origins.append(
-                MolPropertyOrigin(name="electron_affinity", task_id=ea_task_id)
+                MolPropertyOrigin(name="electron_affinity", task_id=ea_task_id)  # type: ignore[call-arg]
             )
             electron_affinity = (
-                ea_doc.output.final_energy * 27.2114 - base_thermo_doc.electronic_energy
+                (
+                    ea_doc.output.final_energy * 27.2114
+                    - base_thermo_doc.electronic_energy
+                )
+                if ea_doc.output.final_energy
+                else None
             )
 
         # Ionization energy
@@ -239,10 +252,15 @@ class RedoxDoc(PropertyDoc):
             ie_task_id = ie_doc.task_id
             id_string += f"-{ie_task_id}"
             origins.append(
-                MolPropertyOrigin(name="ionization_energy", task_id=ie_task_id)
+                MolPropertyOrigin(name="ionization_energy", task_id=ie_task_id)  # type: ignore[call-arg]
             )
             ionization_energy = (
-                ie_doc.output.final_energy * 27.2114 - base_thermo_doc.electronic_energy
+                (
+                    ie_doc.output.final_energy * 27.2114
+                    - base_thermo_doc.electronic_energy
+                )
+                if ie_doc.output.final_energy
+                else None
             )
 
         h = blake2b()
