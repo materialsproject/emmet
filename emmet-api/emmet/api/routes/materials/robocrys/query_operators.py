@@ -5,7 +5,7 @@ from emmet.api.utils import STORE_PARAMS
 
 class RoboTextSearchQuery(QueryOperator):
     """
-    Method to generate a robocrystallographer text search query
+    Method to generate a robocrystallographer text search query.
     """
 
     def query(
@@ -32,7 +32,7 @@ class RoboTextSearchQuery(QueryOperator):
                         "path": "description",
                         "allowAnalyzedField": True,
                     },
-                    "sort": {"score": {"$meta": "searchScore"}, "description": 1},
+                    "sort": {"score": {"$meta": "searchScore"}, "material_id": 1},
                     "count": {"type": "total"},
                 }
             },
