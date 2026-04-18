@@ -25,7 +25,7 @@ from pymatgen.io.vasp import PotcarSingle, Vasprun, VolumetricData
 from typing_extensions import NotRequired, TypedDict
 
 from emmet.core.band_theory import ElectronicBS, ElectronicDos
-from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D
+from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D, Vector6D
 from emmet.core.settings import EmmetSettings
 from emmet.core.trajectory import RelaxTrajectory, Trajectory
 from emmet.core.types.enums import StoreTrajectoryOption, TaskState, VaspObject
