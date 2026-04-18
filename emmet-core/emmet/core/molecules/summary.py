@@ -1,4 +1,3 @@
-# type: ignore
 from __future__ import annotations
 
 from hashlib import blake2b
@@ -674,19 +673,19 @@ def _copy_from_docs(
 
                 else:
                     for solvent, entry in sub_docs.items():
-                        composite_docs[solvent] = dict()
+                        composite_docs[solvent] = dict()  # type: ignore[assignment]
                         for copy_key in summary_fields[doc_key]:
-                            composite_docs[solvent][copy_key] = entry.get(copy_key)
+                            composite_docs[solvent][copy_key] = entry.get(copy_key)  # type: ignore[index]
 
-                        composite_docs[solvent]["property_id"] = entry.get(
+                        composite_docs[solvent]["property_id"] = entry.get(  # type: ignore[index]
                             "property_id"
                         )
-                        composite_docs[solvent]["level_of_theory"] = entry.get(
+                        composite_docs[solvent]["level_of_theory"] = entry.get(  # type: ignore[index]
                             "level_of_theory"
                         )
 
                         # Convert to appropriate BaseModel
-                        composite_docs[solvent] = target_type(**composite_docs[solvent])
+                        composite_docs[solvent] = target_type(**composite_docs[solvent])  # type: ignore[arg-type]
 
             d[doc_key] = composite_docs
 
