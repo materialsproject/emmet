@@ -7,15 +7,16 @@ from math import gcd
 from typing import Any, TYPE_CHECKING
 
 import numpy as np
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
-from emmet.core.atoms.elements import Element, ELEMENT_DATA
+from emmet.core.atoms.elements import Element, ELEMENT_DATA, parse_species_str
 from emmet.core.math import Matrix3D, Vector3D
 
 if TYPE_CHECKING:
     from typing import Any
     from typing_extensions import Self
 
+    from pymatgen.core.composition import Composition
     from pymatgen.core.sites import Site, PeriodicSite
     from pymatgen.core.structure import Molecule as PmgMolecule
 
@@ -103,29 +104,117 @@ class Site(BaseModel):
         )
 
 
+class Compound(BaseModel):
+
+    species: list[str]
+    coefficients: list[int]
+
+    @model_validator(mode="before")
+    @classmethod
+    def _reduce(cls, config) -> Self:
+
+        if not all(config.get(k) for k in cls.model_fields) or len(
+            config["species"]
+        ) != len(config["coefficients"]):
+            raise ValueError(f"Invalid input specified to {cls.__name__}.")
+
+        base_config: dict[str, int] = {}
+        for idx, spec in enumerate(config["species"]):
+            if spec not in base_config:
+                base_config[spec] = 0
+            base_config[spec] += config["coefficients"][idx]
+        sorted_species = sorted(base_config.keys())
+        return {
+            "species": sorted_species,
+            "coefficients": [base_config[spec] for spec in sorted_species],
+        }
+
+    def __str__(self) -> str:
+        return (
+            f"{self.__class__.__name__}("
+            + ", ".join(
+                f"{spec}: {self.coefficients[idx]}"
+                for idx, spec in enumerate(self.species)
+            )
+            + ")"
+        )
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
+    @cached_property
+    def elements(self) -> list[Element]:
+        return [parse_species_str(spec)[0] for spec in self.species]
+
+    @classmethod
+    def from_dict(cls, dct: dict[str, int]):
+        ordered_species = sorted(dct.keys())
+        return cls(
+            species=ordered_species,
+            coefficients=[dct[k] for k in ordered_species],
+        )
+
+    def to_dict(self) -> dict[str, int]:
+        return dict(
+            [(spec, self.coefficients[idx]) for idx, spec in enumerate(self.species)]
+        )
+
+    def to_pmg(self) -> Composition:
+        from pymatgen.core.composition import Composition
+
+        return Composition(self.to_dict())
+
+    @property
+    def reduced(self) -> Compound:
+        factor = gcd(*self.coefficients)
+        return Compound(
+            species=self.species, coefficients=[v // factor for v in self.coefficients]
+        )
+
+    @cached_property
+    def mass(self) -> float:
+        """Mass in atomic mass units."""
+        return sum(ELEMENT_DATA[ele].atomic_mass for ele in self.elements)
+
+    def __getitem__(self, species: str) -> Any:
+        """Return coefficient of species if present, otherwise raise an exception."""
+        if species in self.species:
+            return next(
+                self.coefficients[idx]
+                for idx, spec in enumerate(self.species)
+                if spec == species
+            )
+        raise KeyError(species)
+
+    def get(self, item: str, default: Any = None) -> Any:
+        """Return a model field `item`, or `default` if it doesn't exist."""
+        try:
+            return self.__getitem__(item)
+        except KeyError:
+            return default
+
+
 class Molecule(BaseModel):
     """Schematize a molecular structure."""
 
     sites: list[Site]
 
-    def composition(self, include_charges: bool = True) -> dict[str, int]:
-        comp = {
-            str(site) if include_charges else site.element.name: 0
-            for site in self.sites
-        }
-        for site in self.sites:
-            comp[str(site)] += 1
-        return comp
+    def __len__(self) -> int:
+        return len(self.sites)
 
-    def reduced_composition(self, include_charges: bool = True) -> dict[str, int]:
-        base_comp = self.composition(include_charges=include_charges)
-        factor = gcd(*base_comp.values())
-        return {k: v // factor for k, v in base_comp.items()}
+    @property
+    def num_sites(self) -> int:
+        return len(self)
 
-    @cached_property
-    def mass(self) -> float:
-        """Mass in atomic mass units."""
-        return sum(ELEMENT_DATA[site.element].atomic_mass for site in self.sites)
+    @property
+    def composition(self) -> Compound:
+        return Compound(
+            species=[str(site) for site in self.sites], coefficients=[1] * len(self)
+        )
+
+    @property
+    def reduced_composition(self) -> Compound:
+        return self.composition.reduced
 
     def _aggregate_site_properties(self, prop: str, default: Any = None) -> np.ndarray:
         return np.array([getattr(site, prop, None) or default for site in self.sites])

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
+import re
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
@@ -171,3 +172,24 @@ class ElementDatabase(dict):
 
 
 ELEMENT_DATA = ElementDatabase()
+
+
+def parse_species_str(rep: str) -> tuple[Element, float]:
+    """Parse an Atom from a string, including possible oxieation state."""
+    _parsed = re.match(r"([A-Z][a-z]?)([0-9.0-9]+)?([+-])?", rep)
+    if not _parsed:
+        raise ValueError(f"Unknown element symbol {rep}")
+    parsed = _parsed.groups()
+    charge_str = parsed[1]
+
+    charge_sign = "+"
+    if parsed[2] is not None:
+        charge_sign = parsed[2]
+        if charge_str is None:
+            charge_str = "1"
+
+    charge = 0.0
+    if charge_str is not None:
+        charge = float(charge_sign + charge_str)
+
+    return Element[parsed[0]], charge
