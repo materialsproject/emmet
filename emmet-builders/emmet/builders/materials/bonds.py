@@ -27,7 +27,9 @@ def build_bonding_docs(
        Iterator[BondingDoc]
     """
 
-    def _build(deprecated: bool, material_id: str, structure, **kwargs) -> BondingDoc:
+    def _build(
+        deprecated: bool, material_id: str, structure, **kwargs
+    ) -> BondingDoc | None:
         return BondingDoc.from_structure(
             deprecated=deprecated,
             material_id=material_id,

@@ -6,6 +6,7 @@ from itertools import chain, groupby
 from typing import Iterator
 
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
+from pymatgen.core import Structure
 
 from emmet.builders.base import BaseBuilderInput
 from emmet.builders.settings import EmmetBuildSettings
@@ -128,6 +129,7 @@ def _match_against_snls(
 
         if snls:
             for snl in snls:
+                assert isinstance(snl.structure, Structure)
                 if structure_matcher.fit(input_doc.structure, snl.structure):
                     if snl.source and snl.source in {"icsd", "pauling"}:
                         theoretical = False
@@ -174,7 +176,7 @@ def build_provenance_docs(
     """
 
     input_documents.sort(key=lambda x: x.formula_pretty)
-    snls.sort(key=lambda y: y.formula_pretty)
+    snls.sort(key=lambda y: y.formula_pretty or "")
 
     input_docs = dict()
     for form, input_group in groupby(input_documents, key=lambda x: x.formula_pretty):

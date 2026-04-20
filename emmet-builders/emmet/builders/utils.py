@@ -6,14 +6,7 @@ import sys
 from gzip import GzipFile
 from io import BytesIO
 from itertools import chain, combinations
-from typing import (
-    TYPE_CHECKING,
-    Callable,
-    Iterable,
-    Iterator,
-    Mapping,
-    TypeVar,
-)
+from typing import TYPE_CHECKING, Callable, Iterable, Iterator, Mapping, TypeVar
 
 import numpy as np
 import orjson
@@ -321,12 +314,15 @@ def _parse_kpoints(task: CoreTaskDoc) -> int:
             break
 
     if kpts is None:
+        assert task.input is not None and isinstance(task.structure, Structure)
         if isinstance(dk := (task.input.incar or {}).get("KSPACING"), float):
             return int(np.prod(get_kpoint_divisions_from_kspacing(task.structure, dk)))
         return 0
 
     if kpts.style.name in ("Monkhorst", "Gamma"):
         return np.prod(kpts.kpts[0])
+
+    assert task.orig_inputs is not None and task.orig_inputs.kpoints is not None
     return task.orig_inputs.kpoints.num_kpts
 
 

@@ -1,6 +1,8 @@
 from itertools import groupby
 from typing import Iterator
 
+from pymatgen.core import Structure
+
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.tasks import ValidationTaskDoc
 from emmet.core.utils import group_structures, undeform_structure
@@ -34,7 +36,7 @@ def build_material_docs(
         list[MaterialsDoc]
     """
 
-    input_documents.sort(key=lambda x: x.formula_pretty)
+    input_documents.sort(key=lambda x: x.formula_pretty or "")
     materials = []
     for _, _group in groupby(input_documents, key=lambda x: x.formula_pretty):
         # TODO: logging - task_ids = [task.task_id for task in group]
@@ -58,6 +60,22 @@ def build_material_docs(
     return materials
 
 
+def _get_structure(
+    task: ValidationTaskDoc,
+    transformations: dict | None,
+) -> Structure | None:
+    if task.task_type == TaskType.Deformation:
+        if transformations is None:
+            return None
+        if task.input is None or task.input.structure is None:
+            return None
+        return undeform_structure(task.input.structure, transformations)
+    else:
+        if task.output is None or task.output.structure is None:
+            return None
+        return task.output.structure
+
+
 def filter_and_group_tasks(
     tasks: list[ValidationTaskDoc],
     task_transformations: list[dict | None],
@@ -74,21 +92,14 @@ def filter_and_group_tasks(
         ):
             filtered_tasks.append(task)
             filtered_transformations.append(transformations)
+
     structures = []
     for idx, (task, transformations) in enumerate(
         zip(filtered_tasks, filtered_transformations)
     ):
-        if task.task_type == TaskType.Deformation:
-            if transformations is None:
-                # Do not include deformed tasks without transformation information
-                continue
-            else:
-                s = undeform_structure(task.input.structure, transformations)
-        else:
-            s = task.output.structure
-
-        s.index = idx
-        structures.append(s)
+        if (s := _get_structure(task, transformations)) is not None:
+            s.index = idx  # type: ignore[assignment, method-assign]
+            structures.append(s)
 
     grouped_structures = group_structures(
         structures,
@@ -98,5 +109,5 @@ def filter_and_group_tasks(
         symprec=settings.SYMPREC,
     )
     for group in grouped_structures:
-        grouped_tasks = [filtered_tasks[struct.index] for struct in group]
+        grouped_tasks = [filtered_tasks[struct.index] for struct in group]  # type: ignore[call-overload]
         yield grouped_tasks

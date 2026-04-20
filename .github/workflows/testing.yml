@@ -109,13 +109,6 @@ jobs:
         shell: bash -l {0}
         run: python${{ matrix.python-version }} -m pip install --user --no-deps -e ./${{ matrix.package }}
 
-      - name: Debug dependency versions
-        shell: bash -l {0}
-        if: matrix.python-version == '3.11'
-        run: |
-          python3.11 -m pip list | grep -iE "pymatgen|mypy|emmet|numpy"
-          python3.11 -m mypy --version
-
       - name: Lint with mypy
         shell: bash -l {0}
         if: matrix.python-version == 3.11

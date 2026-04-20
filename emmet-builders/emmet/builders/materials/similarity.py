@@ -87,7 +87,7 @@ def build_similarity_docs(
         > 1
     ):
         raise ValueError(
-            f"Multiple similarity methods found: {', '.join(distinct_sim_methods)}"
+            f"Multiple similarity methods found: {', '.join(str(method) for method in distinct_sim_methods)}"
         )
 
     scorer_cls = SIM_METHOD_TO_SCORER[method := input_documents[0].similarity_method]

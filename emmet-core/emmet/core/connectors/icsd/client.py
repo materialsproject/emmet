@@ -11,7 +11,7 @@ import multiprocessing
 import os
 import re
 from time import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 import numpy as np
 import requests
@@ -131,8 +131,9 @@ class IcsdClient(BaseModel):
         self._session.close()
         self._session = None
 
-    def __enter__(self) -> None:
+    def __enter__(self) -> Self:
         self.login()
+        return self
 
     def __exit__(self, *args) -> None:
         self.logout()

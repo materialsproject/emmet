@@ -102,7 +102,11 @@ def obtain_blessed_absorption_builder_input(
             "task_last_updated": task.last_updated,
         }
         for task in tasks
-        if task.output.optical_absorption_coeff is not None
+        if task.input is not None
+        and task.input.structure is not None
+        and task.output is not None
+        and task.output.optical_absorption_coeff is not None
+        and task.output.frequency_dependent_dielectric is not None
         and task.output.frequency_dependent_dielectric.energy is not None
         and task.output.frequency_dependent_dielectric.real is not None
         and task.output.frequency_dependent_dielectric.imaginary is not None

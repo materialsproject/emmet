@@ -99,7 +99,7 @@ def _produce_pair(
                 sorted(set([el.symbol for el in phase_diagram.elements]))
             )
             phase_diagram_id = f"{chemsys}_{thermo_type.value}"
-            phase_diagram_doc = PhaseDiagramDoc(
+            phase_diagram_doc = PhaseDiagramDoc(  # type: ignore[call-arg]
                 phase_diagram_id=phase_diagram_id,
                 chemsys=chemsys,
                 phase_diagram=phase_diagram,

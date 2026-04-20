@@ -94,13 +94,14 @@ def filter_piezo_tasks(
 
     Can be used to filter input ``tasks`` for ``obtain_blessed_linear_builder_input``
     """
-    return list(
-        filter(
-            lambda x: x.input.structure.get_space_group_info()[0]
-            in CENTROSYMMETRIC_SPACE_GROUPS,
-            tasks,
-        )
-    )
+    return [
+        task
+        for task in tasks
+        if task.input is not None
+        and task.input.structure is not None
+        and task.input.structure.get_space_group_info()[0]
+        in CENTROSYMMETRIC_SPACE_GROUPS
+    ]
 
 
 T = TypeVar("T", DielectricBuilderInput, PiezoelectricBuilderInput)
@@ -158,7 +159,11 @@ def obtain_blessed_linear_builder_input(
             "task_last_updated": task.last_updated,
         }
         for task in tasks
-        if task.output.bandgap > 0.0
+        if task.input is not None
+        and task.output is not None
+        and task.output.bandgap is not None
+        and task.output.outcar is not None
+        and task.output.bandgap > 0.0
     ]
 
     best_task = sorted(

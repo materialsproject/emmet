@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Annotated
+from typing import Annotated, Sequence
 
 from pydantic import BaseModel, BeforeValidator, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
@@ -124,7 +124,7 @@ class ThermoDoc(PropertyDoc):
     @classmethod
     def from_entries(
         cls,
-        entries: list[ComputedEntry | ComputedStructureEntry],
+        entries: Sequence[ComputedEntry | ComputedStructureEntry],
         thermo_type: ThermoType | RunType,
         phase_diagram: PhaseDiagram | None = None,
         use_max_chemsys: bool = False,
