@@ -6,7 +6,7 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.13.3
+aiohttp==3.13.4
     # via fsspec
 aioitertools==0.12.0
     # via maggma
@@ -56,7 +56,7 @@ contourpy==1.3.2
     # via matplotlib
 coverage[toml]==7.8.0
     # via pytest-cov
-cryptography==44.0.3
+cryptography==46.0.7
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -354,7 +354,7 @@ nvidia-nvjitlink-cu12==12.6.85
     #   torch
 nvidia-nvtx-cu12==12.6.77
     # via torch
-orjson==3.11.5
+orjson==3.11.6
     # via maggma
 packaging==25.0
     # via
@@ -388,7 +388,7 @@ patsy==1.0.1
     # via statsmodels
 phonopy==2.38.2
     # via matcalc
-pillow==12.0.0
+pillow==12.2.0
     # via
     #   imageio
     #   matplotlib
@@ -472,7 +472,7 @@ pynacl==1.5.0
     # via paramiko
 pyparsing==3.2.3
     # via matplotlib
-pytest==8.3.5
+pytest==9.0.3
     # via
     #   emmet-builders (setup.py)
     #   pytest-cov
@@ -515,7 +515,7 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.4
+requests==2.33.0
     # via
     #   matminer
     #   pymatgen
@@ -606,7 +606,7 @@ torch==2.8.0
     #   torchmetrics
 torchmetrics==1.7.1
     # via pytorch-lightning
-tornado==6.5
+tornado==6.5.5
     # via livereload
 tqdm==4.67.1
     # via
