@@ -140,16 +140,7 @@ class Material(Molecule):
 
     def density_g_cm3(self) -> float:
         """Get density of material in g/cm^3."""
-        return self.mass * atomic_mass * 1e27 / self.cell.volume
-
-    def __len__(
-        self,
-    ) -> int:
-        return len(self.sites)
-
-    @property
-    def num_sites(self) -> int:
-        return len(self)
+        return self.composition.mass * atomic_mass * 1e27 / self.cell.volume
 
     @classmethod
     def from_pmg(cls, structure: Structure) -> Self:
