@@ -1,6 +1,9 @@
 from fastapi import Query
 from emmet.api.query_operator import QueryOperator
+from emmet.api.query_operator.identifier import SuffixedIDQuery
 from emmet.api.utils import STORE_PARAMS
+
+from emmet.core.thermo import ThermoID
 
 
 class IsStableQuery(QueryOperator):
@@ -26,28 +29,13 @@ class IsStableQuery(QueryOperator):
         return [(key, False) for key in keys]
 
 
-class MultiThermoIDQuery(QueryOperator):
+class MultiThermoIDQuery(SuffixedIDQuery):
     """
     Method to generate a query for different root-level thermo_id values
     """
 
-    def query(
-        self,
-        thermo_ids: str | None = Query(
-            None, description="Comma-separated list of thermo_id values to query on"
-        ),
-    ) -> STORE_PARAMS:
-        crit = {}  # type: dict
-
-        if thermo_ids:
-            thermo_id_list = [thermo_id.strip() for thermo_id in thermo_ids.split(",")]
-
-            if len(thermo_id_list) == 1:
-                crit.update({"thermo_id": thermo_id_list[0]})
-            else:
-                crit.update({"thermo_id": {"$in": thermo_id_list}})
-
-        return {"criteria": crit}
+    suffix_id_class = ThermoID
+    field_name = "thermo_id"
 
 
 class MultiThermoTypeQuery(QueryOperator):

@@ -61,7 +61,7 @@ if db_uri:
     conversion_electrodes_store = CollectionWithKey(
         suffix_db["conversion_electrodes"], "battery_id"
     )
-    oxi_states_store = CollectionWithKey(suffix_db["oxi_states"])
+    oxi_states_store = CollectionWithKey(suffix_db["oxidation_states"])
     provenance_store = CollectionWithKey(suffix_db["provenance"])
     alloy_pairs_store = CollectionWithKey(suffix_db["alloys"], "pair_id")
     summary_store = CollectionWithKey(suffix_db["summary"])

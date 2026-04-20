@@ -17,9 +17,11 @@ one module, can and should remain in that module.
 from __future__ import annotations
 
 from enum import Enum
+from itertools import product
 from typing import TYPE_CHECKING
 
 from pydantic_core import CoreSchema, core_schema
+from pymatgen.core import Element
 
 if TYPE_CHECKING:
     from typing import Any
@@ -236,3 +238,13 @@ class XasType(ValueEnum):
     XANES = "XANES"
     EXAFS = "EXAFS"
     XAFS = "XAFS"
+
+
+XasLabel = ValueEnum(
+    "XasLabel",
+    {
+        "_".join(x.value for x in v): "-".join(x.value for x in v)
+        for v in product(XasType, Element, XasEdge)
+    },
+)
+"""High combinatorial label for XAS data."""

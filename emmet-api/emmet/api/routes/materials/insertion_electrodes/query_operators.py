@@ -2,6 +2,7 @@ from collections import defaultdict
 
 from fastapi import HTTPException, Query
 from emmet.api.query_operator import QueryOperator
+from emmet.api.query_operator.identifier import SuffixedIDQuery
 from emmet.api.utils import STORE_PARAMS
 from pymatgen.core.periodic_table import Element
 
@@ -9,6 +10,7 @@ from emmet.api.routes.materials.insertion_electrodes.utils import (
     electrodes_chemsys_to_criteria,
     electrodes_formula_to_criteria,
 )
+from emmet.core.mpid_ext import BatteryID
 
 
 class ElectrodeFormulaQuery(QueryOperator):
@@ -143,27 +145,10 @@ class WorkingIonQuery(QueryOperator):
         return [("working_ion", False)]
 
 
-class MultiBatteryIDQuery(QueryOperator):
+class MultiBatteryIDQuery(SuffixedIDQuery):
     """
     Method to generate a query for different root-level battery_id values
     """
 
-    def query(
-        self,
-        battery_ids: str | None = Query(
-            None, description="Comma-separated list of battery_id values to query on"
-        ),
-    ) -> STORE_PARAMS:
-        crit = {}  # type: dict
-
-        if battery_ids:
-            battery_id_list = [
-                material_id.strip() for material_id in battery_ids.split(",")
-            ]
-
-            if len(battery_id_list) == 1:
-                crit.update({"battery_id": battery_id_list[0]})
-            else:
-                crit.update({"battery_id": {"$in": battery_id_list}})
-
-        return {"criteria": crit}
+    suffix_id_class = BatteryID
+    field_name = "battery_id"
