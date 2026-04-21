@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import Enum
 from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
@@ -12,11 +13,11 @@ from monty.io import zopen
 from monty.os.path import zpath
 from pydantic import (
     BaseModel,
-    BeforeValidator,
     Field,
-    PlainSerializer,
     PrivateAttr,
     computed_field,
+    PlainSerializer,
+    BeforeValidator,
 )
 from pymatgen.core import Lattice, Structure
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine, Kpoint
@@ -31,14 +32,9 @@ from emmet.core.base import CalcMeta
 from emmet.core.math import Matrix3D, Tensor4R, Vector3D
 from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
 from emmet.core.structure import StructureMetadata
-from emmet.core.types.enums import DocEnum, ValueEnum
+from emmet.core.types.enums import DocEnum
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
-from emmet.core.types.typing import (
-    DateTimeType,
-    FSPathType,
-    IdentifierType,
-    MaterialIdentifierType,
-)
+from emmet.core.types.typing import DateTimeType, FSPathType, IdentifierType
 from emmet.core.utils import get_num_formula_units, type_override
 
 if TYPE_CHECKING:
@@ -59,7 +55,7 @@ DEFAULT_PHONON_FILES = {
 }
 
 
-class PhononMethod(ValueEnum):
+class PhononMethod(Enum):
     """Define common methods for computed phonon properties."""
 
     DFPT = "dfpt"
@@ -323,12 +319,22 @@ class ThermalDisplacementData(BaseModel):
 class PhononBSDOSTask(StructureMetadata):
     """Phonon band structures and density of states data."""
 
-    identifier: IdentifierType | None = Field(
+    identifier: str | None = Field(
         None, description="The identifier of this phonon analysis task."
     )
 
     phonon_method: PhononMethod | None = Field(
         None, description="The method used to calculate phonon properties."
+    )
+
+    phonon_bandstructure: PhononBS | None = Field(
+        None,
+        description="Phonon band structure object.",
+    )
+
+    phonon_dos: PhononDOS | None = Field(
+        None,
+        description="Phonon density of states object.",
     )
 
     epsilon_static: Matrix3D | None = Field(
@@ -343,6 +349,11 @@ class PhononBSDOSTask(StructureMetadata):
     born: list[Matrix3D] | None = Field(
         None,
         description="Born charges, only for symmetrically inequivalent atoms",
+    )
+
+    # needed, e.g. to compute Grueneisen parameter etc
+    force_constants: list[list[Matrix3D]] | None = Field(
+        None, description="Force constants between every pair of atoms in the structure"
     )
 
     last_updated: DateTimeType = Field(
@@ -485,22 +496,22 @@ class PhononBSDOSTask(StructureMetadata):
             **config,
         )
 
-    # @computed_field  # type: ignore[prop-decorator]
-    # @cached_property
-    # def has_imaginary_modes(self) -> bool | None:
-    #     tol: float = 1e-5
-    #     if self.phonon_bandstructure:
-    #         return self.phonon_bandstructure.to_pmg.has_imaginary_freq(tol=tol)
-    #     elif self.phonon_dos:
-    #         return bool(
-    #             np.any(
-    #                 np.array(self.phonon_dos.densities)[
-    #                     np.array(self.phonon_dos.frequencies) < tol
-    #                 ]
-    #                 > tol
-    #             )
-    #         )
-    #     return None
+    @computed_field  # type: ignore[prop-decorator]
+    @cached_property
+    def has_imaginary_modes(self) -> bool | None:
+        tol: float = 1e-5
+        if self.phonon_bandstructure:
+            return self.phonon_bandstructure.to_pmg.has_imaginary_freq(tol=tol)
+        elif self.phonon_dos:
+            return bool(
+                np.any(
+                    np.array(self.phonon_dos.densities)[
+                        np.array(self.phonon_dos.frequencies) < tol
+                    ]
+                    > tol
+                )
+            )
+        return None
 
     @computed_field  # type: ignore[prop-decorator]
     @cached_property
@@ -511,16 +522,16 @@ class PhononBSDOSTask(StructureMetadata):
             return tuple(tuple(row) for row in np.sum(bec, axis=0).tolist())
         return None
 
-    # @computed_field  # type: ignore[prop-decorator]
-    # @cached_property
-    # def acoustic_sum_rule(self) -> Matrix3D | None:
-    #     """Sum of q=0 atomic force constants should be zero."""
-    #     if self.force_constants:
-    #         return tuple(
-    #             tuple(row)
-    #             for row in np.einsum("iijk->jk", np.array(self.force_constants))
-    #         )
-    #     return None
+    @computed_field  # type: ignore[prop-decorator]
+    @cached_property
+    def acoustic_sum_rule(self) -> Matrix3D | None:
+        """Sum of q=0 atomic force constants should be zero."""
+        if self.force_constants:
+            return tuple(
+                tuple(row)
+                for row in np.einsum("iijk->jk", np.array(self.force_constants))
+            )
+        return None
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -764,7 +775,7 @@ class PhononBSDOSTask(StructureMetadata):
 class PhononBSDOSDoc(PhononBSDOSTask):
     """Built data version of PhononBSDOSTask."""
 
-    material_id: MaterialIdentifierType | None = Field(
+    material_id: IdentifierType | None = Field(
         None,
         description="The Materials Project ID of the material, of the form mp-******.",
     )
