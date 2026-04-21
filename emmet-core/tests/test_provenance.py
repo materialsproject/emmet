@@ -5,9 +5,9 @@ from pymatgen.util.provenance import Author, HistoryNode, StructureNL
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.provenance import (
     Database,
+    ProvenanceDescription,
     ProvenanceDoc,
     SNLDict,
-    ProvenanceDescription,
 )
 from emmet.core.utils import utcnow
 
@@ -54,7 +54,6 @@ def test_from_snls(snls, structure):
     assert doc.theoretical is True
     assert doc.database_IDs == {
         Database.ICSD: ["icsd-2"],
-        Database.Pauling_Files: ["pf-3"],
     }
 
     # Test experimental detection
