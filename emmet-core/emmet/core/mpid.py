@@ -443,7 +443,8 @@ class AlphaID(str):
 
     def __repr__(self) -> str:
         """Set AlphaID display name to distinguish from base string class."""
-        return "AlphaID(" + self + ")"
+        fmt_cls = self.formatted.__class__.__name__
+        return f"{fmt_cls}({self.formatted})"
 
     def __eq__(self, other: Any) -> bool:
         """Define equality of AlphaID.
