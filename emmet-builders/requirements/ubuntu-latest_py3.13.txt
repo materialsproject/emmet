@@ -76,7 +76,7 @@ latexcodec==3.0.1
     # via pybtex
 lazy-loader==0.5
     # via scikit-image
-lxml==6.0.4
+lxml==6.1.0
     # via pymatgen-core
 maggma==0.72.1
     # via emmet-builders (pyproject.toml)

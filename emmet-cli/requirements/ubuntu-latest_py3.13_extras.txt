@@ -78,7 +78,7 @@ librt==0.9.0
     # via mypy
 livereload==2.7.1
     # via emmet-cli (pyproject.toml)
-lxml==6.0.4
+lxml==6.1.0
     # via pymatgen-core
 markdown==3.10.2
     # via
