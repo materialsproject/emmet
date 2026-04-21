@@ -15,7 +15,6 @@ from emmet.core.electrode import (
     ConversionElectrodeDoc,
     ConversionVoltagePairDoc,
     InsertionElectrodeDoc,
-    InsertionVoltagePairDoc,
     get_battery_formula,
 )
 from emmet.core.mpid_ext import BatteryID, ThermoID
