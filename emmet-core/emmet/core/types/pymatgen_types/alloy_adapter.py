@@ -25,7 +25,11 @@ class PairID(BaseModel):
 
     def __str__(self) -> str:
         """Format as a string."""
-        return self.separator.join([self.id_a.string, self.id_b.value])
+        return self.separator.join([self.id_a.string, self.id_b.string])
+
+    def __repr__(self) -> str:
+        """Format display name."""
+        return f"{self.__class__.__name__}({self})"
 
 
 class TypedSupportedPropertiesDict(TypedDict):

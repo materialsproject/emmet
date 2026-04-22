@@ -40,6 +40,10 @@ class SuffixedID(BaseModel):
         """Format as a string."""
         return self.separator.join([self.identifier.string, self.suffix.value])
 
+    def __repr__(self) -> str:
+        """Format display name."""
+        return f"{self.__class__.__name__}({self})"
+
     @classmethod
     def _deserialize(cls, v: Any) -> Self:
         """Utility to parse values into a suffixed ID from various formats."""
