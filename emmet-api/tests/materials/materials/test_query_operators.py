@@ -4,6 +4,7 @@ from pymatgen.core.structure import Structure
 import pytest
 
 from emmet.api.core.settings import MAPISettings
+from emmet.api.query_operator import MultiTaskIDQuery
 from emmet.api.routes.materials.materials.query_operators import (
     BlessedCalcsQuery,
     ChemsysQuery,
@@ -13,7 +14,6 @@ from emmet.api.routes.materials.materials.query_operators import (
     FormulaAutoCompleteQuery,
     FormulaQuery,
     MultiMaterialIDQuery,
-    MultiTaskIDQuery,
     SymmetryQuery,
 )
 from emmet.core.symmetry import CrystalSystem, _get_space_group_symbol_to_number_mapping
