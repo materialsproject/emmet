@@ -1,6 +1,7 @@
 """Define common task query functionality."""
 
 from fastapi import Query
+from typing import Any
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
 
@@ -23,17 +24,21 @@ class MultiTaskIDQuery(QueryOperator):
             None, description="Comma-separated list of task_ids to query on"
         ),
     ) -> STORE_PARAMS:
-        crit = {}
+        crit: dict[str, Any] = {}
 
         if task_ids:
             task_key = "task_id" + ("s" if self.use_plural else "")
             if (
-                len(task_ids := [task_id.strip() for task_id in task_ids.split(",")])
+                len(
+                    parsed_task_ids := [
+                        task_id.strip() for task_id in task_ids.split(",")
+                    ]
+                )
                 == 1
             ):
-                crit[task_key] = task_ids[0]
+                crit[task_key] = parsed_task_ids[0]
             else:
-                crit[task_key] = {"$in": task_ids}
+                crit[task_key] = {"$in": parsed_task_ids}
 
         return {"criteria": crit}
 
