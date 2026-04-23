@@ -1,4 +1,8 @@
-from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
+from emmet.api.query_operator import (
+    PaginationQuery,
+    SparseFieldsQuery,
+    MultiTaskIDQuery,
+)
 from emmet.api.resource import ReadOnlyResource
 
 from emmet.api.routes.materials.materials.query_operators import (
@@ -8,7 +12,6 @@ from emmet.api.routes.materials.materials.query_operators import (
 )
 from emmet.api.routes.materials.tasks.hint_scheme import TasksHintScheme
 from emmet.api.routes.materials.tasks.query_operators import (
-    MultipleTaskIDsQuery,
     LastUpdatedQuery,
 )
 from emmet.api.core.global_header import GlobalHeaderProcessor
@@ -26,7 +29,7 @@ def task_resource(task_store):
             FormulaQuery(),
             ChemsysQuery(),
             ElementsQuery(),
-            MultipleTaskIDsQuery(),
+            MultiTaskIDQuery(),
             LastUpdatedQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
