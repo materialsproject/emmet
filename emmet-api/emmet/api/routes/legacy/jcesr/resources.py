@@ -1,13 +1,17 @@
 from emmet.api.resource import ReadOnlyResource
 from emmet.core.molecules_jcesr import MoleculesDoc
 
-from emmet.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from emmet.api.query_operator import (
+    PaginationQuery,
+    SortQuery,
+    SparseFieldsQuery,
+    MultiTaskIDQuery,
+)
 from emmet.api.routes.legacy.jcesr.query_operators import (
     MoleculeBaseQuery,
     MoleculeElementsQuery,
     MoleculeFormulaQuery,
 )
-from emmet.api.routes.materials.tasks.query_operators import MultipleTaskIDsQuery
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 
@@ -27,7 +31,7 @@ def jcesr_resource(molecules_store):
             MoleculeBaseQuery(),
             MoleculeElementsQuery(),
             MoleculeFormulaQuery(),
-            MultipleTaskIDsQuery(),
+            MultiTaskIDQuery(),
             PaginationQuery(),
             SortQuery(fields=JCESR_SORT_FIELDS, max_num=1),
             SparseFieldsQuery(MoleculesDoc, default_fields=["task_id"]),
