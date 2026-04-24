@@ -202,7 +202,14 @@ def arrowize(obj) -> pa.DataType:
         )
 
     if isinstance(obj, typing.ForwardRef):
-        if sys.version_info >= (3, 12, 4):
+        if sys.version_info >= (3, 14):
+            # Behavior of _evaluate has yet again changed - needs globals / locals for module of ForwardRef
+            # https://github.com/pydantic/pydantic/pull/12427
+            module = sys.modules[obj.__forward_module__]  # type: ignore[index]
+            return arrowize(
+                obj._evaluate(module.__dict__, module.__dict__, {}, recursive_guard=frozenset())  # type: ignore[misc, arg-type]
+            )
+        elif sys.version_info >= (3, 12, 4):
             # ``type_params`` were added in 3.13 and the signature of _evaluate()
             # is not backward-compatible (it was backported to 3.12.4, so anything
             # before 3.12.4 still has the old signature).
