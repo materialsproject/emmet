@@ -4,6 +4,7 @@ from emmet.api.query_operator.pagination import AtlasPaginationQuery, Pagination
 from emmet.api.query_operator.sorting import SortQuery
 from emmet.api.query_operator.sparse_fields import SparseFieldsQuery
 from emmet.api.query_operator.submission import SubmissionQuery
+from emmet.api.query_operator.tasks import MultiTaskIDQuery
 
 __all__ = [
     "QueryOperator",
@@ -14,4 +15,5 @@ __all__ = [
     "SortQuery",
     "SparseFieldsQuery",
     "SubmissionQuery",
+    "MultiTaskIDQuery",
 ]

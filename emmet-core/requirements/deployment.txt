@@ -32,7 +32,7 @@ latexcodec==3.0.1
     # via pybtex
 lxml==6.1.0
     # via pymatgen-core
-matplotlib==3.10.8
+matplotlib==3.10.9
     # via
     #   -r python/requirements.txt
     #   pymatgen-core
