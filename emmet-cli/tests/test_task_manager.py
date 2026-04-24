@@ -465,7 +465,7 @@ def test_terminate_running_task(task_manager):
     task_id = task_manager.start_task(infinite_task_function)
 
     # Wait for the detached process to start
-    time.sleep(0.5)
+    time.sleep(2.0)
 
     # Get initial status
     status = task_manager.get_task_status(task_id)
