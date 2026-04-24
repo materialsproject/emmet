@@ -178,7 +178,7 @@ class TaskManager:
             additional_data={"started_at": self._get_current_timestamp()},
         )
 
-        process = mp.Process(
+        process = mp.get_context("fork").Process(
             target=self._task_wrapper,
             args=(task_id, func) + args,
             kwargs=kwargs,
