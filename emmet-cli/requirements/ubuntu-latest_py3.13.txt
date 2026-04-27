@@ -10,11 +10,11 @@ bibtexparser==1.4.4
     # via pymatgen-core
 blake3==1.0.8
     # via emmet-core
-certifi==2026.2.25
+certifi==2026.4.22
     # via requests
 charset-normalizer==3.4.7
     # via requests
-click==8.3.2
+click==8.3.3
     # via emmet-cli (pyproject.toml)
 colorama==0.4.6
     # via emmet-cli (pyproject.toml)
@@ -26,7 +26,7 @@ emmet-core==0.86.3
     # via emmet-cli (pyproject.toml)
 fonttools==4.62.1
     # via matplotlib
-idna==3.11
+idna==3.13
     # via requests
 joblib==1.5.3
     # via pymatgen-core
@@ -34,9 +34,9 @@ kiwisolver==1.5.0
     # via matplotlib
 latexcodec==3.0.1
     # via pybtex
-lxml==6.0.4
+lxml==6.1.0
     # via pymatgen-core
-matplotlib==3.10.8
+matplotlib==3.10.9
     # via pymatgen-core
 monty==2026.2.18
     # via
@@ -44,7 +44,7 @@ monty==2026.2.18
     #   pymatgen-core
 mpmath==1.3.0
     # via sympy
-narwhals==2.19.0
+narwhals==2.20.0
     # via plotly
 networkx==3.6.1
     # via pymatgen-core
@@ -60,7 +60,7 @@ numpy==2.4.4
     #   spglib
 orjson==3.11.8
     # via pymatgen-core
-packaging==26.1
+packaging==26.2
     # via
     #   matplotlib
     #   plotly
@@ -76,14 +76,14 @@ psutil==7.2.2
     # via emmet-cli (pyproject.toml)
 pybtex==0.26.1
     # via emmet-core
-pydantic==2.13.1
+pydantic==2.13.3
     # via
     #   emmet-core
     #   pydantic-settings
     #   pymatgen-io-validation
-pydantic-core==2.46.1
+pydantic-core==2.46.3
     # via pydantic
-pydantic-settings==2.13.1
+pydantic-settings==2.14.0
     # via
     #   emmet-core
     #   pymatgen-io-validation
