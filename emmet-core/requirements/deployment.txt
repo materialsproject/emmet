@@ -61,7 +61,7 @@ numpy==1.26.4
     #   spglib
 orjson==3.11.8
     # via pymatgen-core
-packaging==26.1
+packaging==26.2
     # via
     #   matplotlib
     #   plotly
