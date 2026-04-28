@@ -60,7 +60,7 @@ class Site(BaseModel):
             charge = species.oxi_state
 
         return cls(
-            element=species.element.name,
+            element=getattr(species, "element", species).name,
             cart_coords=site.coords,
             charge=charge,
             spin=site.properties.get("magmom"),
@@ -158,6 +158,10 @@ class Compound(BaseModel):
         return dict(
             [(spec, self.coefficients[idx]) for idx, spec in enumerate(self.species)]
         )
+
+    @classmethod
+    def from_pmg(cls, comp: Composition) -> Self:
+        return cls.from_dict(comp.as_dict())
 
     def to_pmg(self) -> Composition:
         from pymatgen.core.composition import Composition

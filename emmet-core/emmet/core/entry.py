@@ -1,18 +1,24 @@
 """Define schemas for pymatgen entry-like objects."""
 
+from __future__ import annotations
+
+from importlib import import_module
 from pydantic import BaseModel, Field, field_validator, field_serializer
 
-# from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
-from typing import Literal
+from typing import Literal, TYPE_CHECKING
 
+from emmet.core.atoms.base import Compound
+from emmet.core.atoms.periodic import Material
 from emmet.core.mpid_ext import ThermoID
 from emmet.core.types.enums import IgnoreCaseEnum
 from emmet.core.types.mson import MSONType
-from emmet.core.types.pymatgen_types.composition_adapter import CompositionType
-from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.typing import DateTimeType, IdentifierType, JsonDictType
 from emmet.core.vasp.calc_types.enums import RunType
 from emmet.core.vasp.calculation import PotcarSpec
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
+    from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 CORRECTION_NAME = {
     "MP GGA(+U)/r2SCAN mixing adjustment",
@@ -76,9 +82,9 @@ class EntryData(BaseModel):
     oxide_type: OxideType = OxideType.NONE
     aspherical: bool = False
     last_updated: DateTimeType
-    task_id: IdentifierType
-    material_id: IdentifierType
-    oxidation_states: JsonDictType
+    task_id: IdentifierType = None
+    material_id: IdentifierType = None
+    oxidation_states: JsonDictType = None
     license: Literal["BY-C", "BY-NC"] = "BY-C"
     run_type: RunType | None = None
 
@@ -107,7 +113,7 @@ class EnergyAdjustment(BaseModel):
 class Entry(BaseModel):
     """Schematize pymatgen ComputedEntry."""
 
-    composition: CompositionType
+    composition: Compound
 
     energy: float | None = None
     correction: float | None = None
@@ -125,8 +131,26 @@ class Entry(BaseModel):
     def _ser_thermo_id(self, v: ThermoID) -> str:
         return str(v)
 
+    def to_pmg(self) -> ComputedEntry | ComputedStructureEntry:
+        data = self.model_dump()
+        pmg_cls = "ComputedEntry"
+        if data.get("structure"):
+            data["structure"] = Material(data["structure"]).to_pmg()
+            pmg_cls = "ComputedStructureEntry"
+
+        pmg_entries = import_module("pymatgen.entries.computed_entries")
+        return getattr(pmg_entries, pmg_cls).from_dict(data)
+
+    @classmethod
+    def from_pmg(cls, entry: ComputedEntry | ComputedStructureEntry) -> Self:
+        config = entry.as_dict()
+        config["composition"] = Compound.from_dict(config["composition"])
+        if config.get("structure"):
+            config["structure"] = Material.from_pmg(entry.structure)
+        return cls(**config)
+
 
 class StructureEntry(Entry):
     """Schematize pymatgen ComputedStructureEntry."""
 
-    structure: StructureType
+    structure: Material
