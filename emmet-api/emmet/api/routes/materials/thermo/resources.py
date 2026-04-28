@@ -40,6 +40,7 @@ def thermo_resource(thermo_store):
             LicenseQuery(),
         ],
         header_processor=GlobalHeaderProcessor(),
+        query_to_configure_on_request=LicenseQuery(),
         tags=["Materials Thermo"],
         sub_path="/thermo/",
         disable_validation=True,

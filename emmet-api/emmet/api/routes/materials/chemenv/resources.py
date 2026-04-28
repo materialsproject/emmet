@@ -10,6 +10,7 @@ from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.materials.query_operators import (
     MultiMaterialIDQuery,
     ElementsQuery,
+    LicenseQuery,
 )
 from emmet.api.routes.materials.chemenv.query_operators import ChemEnvQuery
 from emmet.core.chemenv import ChemEnvDoc
@@ -31,6 +32,7 @@ def chemenv_resource(chemenv_store):
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
+        query_to_configure_on_request=LicenseQuery(),
         tags=["Materials Chemical Environment"],
         sub_path="/chemenv/",
         disable_validation=True,
