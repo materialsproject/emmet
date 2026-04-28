@@ -16,10 +16,7 @@ if TYPE_CHECKING:
     from typing import Any
     from typing_extensions import Self
 
-    from pymatgen.core.composition import Composition
-    from pymatgen.core.sites import Site, PeriodicSite
-    from pymatgen.core.structure import Molecule as PmgMolecule
-
+    from emmet.core.io.pymatgen import Composition, PeriodicSite, PmgMolecule, PmgSite
 
 class Site(BaseModel):
     """Schematize a site in a molecule or material."""
@@ -48,9 +45,9 @@ class Site(BaseModel):
         return ELEMENT_DATA[self.element].Z
 
     @classmethod
-    def from_pmg(cls, site: Site | PeriodicSite) -> Self:
+    def from_pmg(cls, site: PmgSite | PeriodicSite) -> Self:
 
-        from pymatgen.core.periodic_table import Species
+        from emmet.core.io.pymatgen import Species
 
         if len(site.species.elements) > 1:
             raise ValueError("`Site` currently cannot represent a disordered site!")
@@ -68,12 +65,12 @@ class Site(BaseModel):
             velocity=site.properties.get("velocities"),
         )
 
-    def to_pmg(self, cell: Matrix3D | None = None) -> Site | PeriodicSite:
+    def to_pmg(self, cell: Matrix3D | None = None) -> PmgSite | PeriodicSite:
 
-        from pymatgen.core.sites import Site, PeriodicSite
+        from emmet.core.io.pymatgen import PmgSite, PeriodicSite
 
         if cell is not None:
-            from pymatgen.core.lattice import Lattice
+            from emmet.core.io.pymatgen import Lattice
 
         species = {str(self): 1.0}
         properties = {
@@ -89,7 +86,7 @@ class Site(BaseModel):
                 properties.pop(k)
 
         if cell is None:
-            return Site(
+            return PmgSite(
                 species,
                 self.cart_coords,
                 properties=properties,
@@ -259,4 +256,13 @@ class Molecule(BaseModel):
 
         return PmgMolecule.from_sites(
             [site.to_pmg(cell=self.cell) for site in self.sites]
+        )
+
+    @classmethod
+    def from_sites(cls, sites : list[PmgSite | Site]) -> Self:
+        from py
+        return cls(
+            sites = [
+                Site.from_pmg(site) if
+            ]
         )

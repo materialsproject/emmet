@@ -3,11 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
-from pymatgen.core import Structure
 
+from emmet.core.atoms.periodic import Material
 from emmet.core.types.enums import ValueEnum
 from emmet.core.types.pymatgen_types.grain_boundary_adapter import GrainBoundaryType
-from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.typing import DateTimeType, MaterialIdentifierType
 
 if TYPE_CHECKING:
@@ -79,7 +78,7 @@ class GrainBoundaryDoc(BaseModel):
 
     w_sep: float | None = Field(None, description="Work of separation in J/m^2.")
 
-    structure: StructureType | None = Field(None, description="Structure.")
+    structure: Material | None = Field(None, description="Structure.")
 
     chemsys: str | None = Field(
         None, description="Dash-delimited string of elements in the material."
@@ -95,12 +94,14 @@ class GrainBoundaryDoc(BaseModel):
         if isinstance(cif_str := config.pop("cif", None), str) and not config.get(
             "structure"
         ):
-            config["structure"] = Structure.from_str(cif_str, fmt="cif")
+            from emmet.core.io.pymatgen import cif_to_material
+
+            config["structure"] = cif_to_material(cif_str)
         return cls(**config)
 
     @property
     def cif(self) -> str | None:
         """Support accessing legacy CIF from structure field."""
         if self.structure:
-            return self.structure.to(fmt="cif")
+            return self.structure.to_pmg().to(fmt="cif")
         return None

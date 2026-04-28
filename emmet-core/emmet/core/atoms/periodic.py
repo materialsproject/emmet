@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from typing import Literal
     from typing_extensions import Self
 
-    from pymatgen.core.structure import Structure
+    from emmet.core.io.pymatgen import Structure
 
 SETTINGS = EmmetSettings()
 
@@ -150,7 +150,7 @@ class Material(Molecule):
         )
 
     def to_pmg(self) -> Structure:
-        from pymatgen.core.structure import Structure
+        from emmet.core.io.pymatgen import Structure
 
         return Structure.from_sites(
             [site.to_pmg(cell=self.cell) for site in self.sites]
@@ -214,3 +214,9 @@ class Material(Molecule):
             self._to_spglib, symprec=symprec, angle_tolerance=angle_tol
         )
         return tuple(re.match(r"(.*) \((.*)\)", sg_info).groups())
+
+    @classmethod
+    def from_cif(cls, cif_str: str) -> Self:
+        from emmet.core.io.pymatgen import Structure
+
+        return Material.from_pmg(Structure.from_str(cif_str, fmt="str"))
