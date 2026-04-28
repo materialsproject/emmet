@@ -111,6 +111,14 @@ def test_deprecation_query():
 def test_symmetry_query():
     op = SymmetryQuery()
 
+    assert op.query(crystal_system="Trigonal") == {
+        "criteria": {"symmetry.crystal_system": "Trigonal"}
+    }
+    assert op.query(spacegroup_symbol="P6_3/mmc") == {
+        "criteria": {"symmetry.number": 194}
+    }
+    assert op.query(spacegroup_number=194) == {"criteria": {"symmetry.number": 194}}
+
     for aux_query in [
         {"spacegroup_number": 221},
         {"spacegroup_symbol": "Pm-3m"},
