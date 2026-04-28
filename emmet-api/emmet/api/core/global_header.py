@@ -6,7 +6,7 @@ from emmet.api.utils import STORE_PARAMS
 from emmet.api.routes.materials.materials.query_operators import LicenseQuery
 
 
-def _get_header_key(headers: Request.headers, key: str, default: Any = None) -> Any:
+def _get_header_key(headers, key: str, default: Any = None) -> Any:
     """Get a case-insensitive key from a set of request headers."""
     try:
         return next(v for k, v in headers.items() if k.lower() == key.lower())
