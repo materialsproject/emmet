@@ -16,15 +16,15 @@ from pymatgen.analysis.chemenv.coordination_environments.structure_environments 
     LightStructureEnvironments,
 )
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
-from pymatgen.core.structure import Molecule, Structure
+from pymatgen.core.structure import Structure
 
+from emmet.core.atoms.base import Molecule
 from emmet.core.material_property import PropertyDoc
 
 if TYPE_CHECKING:
     from emmet.core.types.typing import IdentifierType
 
 from emmet.core.types.pymatgen_types.structure_adapter import (
-    MoleculeType,
     StructureType,
 )
 
@@ -367,7 +367,7 @@ class ChemEnvDoc(PropertyDoc):
         description="Method used to compute chemical environments"
     )
 
-    mol_from_site_environments: list[MoleculeType | None] = Field(
+    mol_from_site_environments: list[Molecule | None] = Field(
         description="List of Molecule Objects describing the detected environment."
     )
 
