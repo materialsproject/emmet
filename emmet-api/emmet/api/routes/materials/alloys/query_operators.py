@@ -1,8 +1,7 @@
 from fastapi import Query
 
 from emmet.api.query_operator import QueryOperator
-from emmet.api.utils import STORE_PARAMS
-from emmet.core.mpid import AlphaID
+from emmet.api.utils import STORE_PARAMS, process_identifiers
 
 
 class MaterialIDsSearchQuery(QueryOperator):
@@ -19,10 +18,7 @@ class MaterialIDsSearchQuery(QueryOperator):
         crit = {}
 
         if material_ids:
-            ids = [
-                AlphaID(material_id.strip()).formatted
-                for material_id in material_ids.split(",")
-            ]
+            ids = process_identifiers(material_ids)
 
             crit.update(
                 {

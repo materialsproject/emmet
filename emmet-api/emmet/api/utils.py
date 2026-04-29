@@ -12,6 +12,9 @@ from typing import (
 
 from bson.objectid import ObjectId
 
+from emmet.core.mpid import AlphaID
+from emmet.core.types.typing import ID_PADLEN, ID_PREFIX
+
 if TYPE_CHECKING:
     from collections.abc import Callable
 
@@ -121,3 +124,37 @@ def serialization_helper(obj):
     elif isinstance(obj, bytes):
         return base64.b64encode(obj).decode("utf-8")
     raise TypeError
+
+
+def process_identifiers(ids: str, use_prefix: bool = True) -> list[str]:
+    """Process a comma-separated string of identifiers.
+
+    This function ensures backwards compatibility of the API
+    before and after the transition to AlphaIDs.
+
+    Args:
+        ids (str) : A comma-separated list of IDs, accepting
+            either legacy MPID format, or new AlphaID format
+        use_prefix (bool): Whether to use the prefix in the
+            returned IDs. Only `tasks` do not currently use a
+            prefix.
+
+    Returns:
+        list of str
+
+    Example:
+        ```py
+        process_identifiers('mp-149, mp-aft,994')
+        >>> ['mp-aaaaaaft', 'mp-aaaaaaft', 'mp-aaaaabmg']
+        ```
+    """
+    return [
+        str(
+            AlphaID(
+                idx.split("-", 1)[-1].strip(),
+                prefix=ID_PREFIX if use_prefix else None,
+                padlen=ID_PADLEN,
+            )
+        )
+        for idx in ids.split(",")
+    ]
