@@ -1,11 +1,13 @@
 from fastapi import Query
+
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
+from emmet.core.mpid import AlphaID
 
 
 class MaterialIDsSearchQuery(QueryOperator):
     """
-    Method to generate a query on search docs using multiple material_id values
+    Query on alloy_pair documents using multiple material_id values
     """
 
     def query(
@@ -17,23 +19,19 @@ class MaterialIDsSearchQuery(QueryOperator):
         crit = {}
 
         if material_ids:
-            terminal_search = {
-                "_search.id": {
-                    "$in": [
-                        material_id.strip() for material_id in material_ids.split(",")
+            ids = [
+                AlphaID(material_id.strip()).formatted
+                for material_id in material_ids.split(",")
+            ]
+
+            crit.update(
+                {
+                    "$or": [
+                        {"alloy_pair.id_a": {"$in": ids}},
+                        {"alloy_pair.id_b": {"$in": ids}},
                     ]
                 }
-            }
-
-            member_search = {
-                "_search.member_ids": {
-                    "$in": [
-                        material_id.strip() for material_id in material_ids.split(",")
-                    ]
-                }
-            }
-
-            crit.update({"$or": [terminal_search, member_search]})
+            )
 
         return {"criteria": crit}
 
@@ -48,12 +46,15 @@ class FormulaSearchQuery(QueryOperator):
         crit = {}
 
         if formulae:
-            formula_search = {
-                "_search.formula": {
-                    "$in": [formula.strip() for formula in formulae.split(",")]
-                }
-            }
+            formulas = [formula.strip() for formula in formulae.split(",")]
 
-            crit.update(formula_search)
+            crit.update(
+                {
+                    "$or": [
+                        {"alloy_pair.formula_a": {"$in": formulas}},
+                        {"alloy_pair.formula_b": {"$in": formulas}},
+                    ]
+                }
+            )
 
         return {"criteria": crit}
