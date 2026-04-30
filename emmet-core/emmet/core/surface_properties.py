@@ -5,9 +5,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, field_validator
-from pymatgen.core import Structure
 
-from emmet.core.types.pymatgen_types.structure_adapter import StructureType
+from emmet.core.atoms.periodic import Material
 from emmet.core.types.typing import MaterialIdentifierType
 
 if TYPE_CHECKING:
@@ -39,7 +38,7 @@ class SurfaceEntry(BaseModel):
         description="Whether it is a reconstructed surface.",
     )
 
-    structure: StructureType | None = Field(
+    structure: Material | None = Field(
         None,
         description="Slab structure.",
     )
@@ -65,10 +64,12 @@ class SurfaceEntry(BaseModel):
     )
 
     @field_validator("structure", mode="before")
-    def get_structure_from_cif(cls, v: Any) -> Structure | None:
-        """Transform legacy CIF data to pymatgen Structure."""
+    def get_structure_from_cif(cls, v: Any) -> Material | None:
+        """Transform legacy CIF data to emmet.core Material."""
         if isinstance(v, str):
-            return Structure.from_str(v, fmt="cif")
+            from emmet.core.io.pymatgen import cif_to_material
+
+            return cif_to_material(v)
         return v
 
 
@@ -122,7 +123,7 @@ class SurfacePropDoc(BaseModel):
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )
 
-    structure: StructureType | None = Field(
+    structure: Material | None = Field(
         None,
         description="The conventional crystal structure of the material.",
     )
