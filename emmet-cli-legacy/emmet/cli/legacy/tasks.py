@@ -8,11 +8,10 @@ import shutil
 import subprocess
 import sys
 import time
-
 from collections import defaultdict, deque
+from datetime import datetime
 from fnmatch import fnmatch
 from pathlib import Path
-from datetime import datetime
 
 import click
 from hpsspy import HpssOSError
@@ -26,9 +25,10 @@ from emmet.cli.legacy.utils import (
     VaspDirsGenerator,
     chunks,
     ensure_indexes,
+    get_symlinked_path,
     iterator_slice,
     parse_vasp_dirs,
-    get_symlinked_path,
+    reorganize_blocks,
 )
 
 logger = logging.getLogger("emmet")
@@ -232,11 +232,18 @@ def extract_filename(line):
 )
 @click.option("--force-new", is_flag=True, help="Generate new backup.")
 @click.option("--tar", is_flag=True, help="tar blocks after backup and clean")
+@click.option(
+    "--max-launchers",
+    type=int,
+    default=50,
+    show_default=True,
+    help="Max launchers per block when using --reorg.",
+)
 @click.pass_context
-def backup(ctx, reorg, clean, check, exhaustive, force_new, tar):  # noqa: C901
+def backup(ctx, reorg, clean, check, exhaustive, force_new, tar, max_launchers):
     """Backup directory to HPSS"""
     run = ctx.parent.parent.params["run"]
-    ctx.params["nmax"] = sys.maxsize  # disable maximum launchers for backup
+    ctx.params["nmax"] = sys.maxsize
     logger.warning("--nmax ignored for HPSS backup!")
     directory = ctx.parent.params["directory"]
     if not check and clean:
@@ -244,7 +251,7 @@ def backup(ctx, reorg, clean, check, exhaustive, force_new, tar):  # noqa: C901
         return ReturnCodes.ERROR
 
     if not clean and tar:
-        logger.error("Not running --tar wihout --clean enabled.")
+        logger.error("Not running --tar without --clean enabled.")
         return ReturnCodes.ERROR
 
     if not reorg:
@@ -252,6 +259,15 @@ def backup(ctx, reorg, clean, check, exhaustive, force_new, tar):  # noqa: C901
 
     logger.info("Discover launch directories ...")
     block_launchers = load_block_launchers()
+
+    if reorg:
+        block_launchers = reorganize_blocks(
+            block_launchers, directory, max_per_block=max_launchers
+        )
+        logger.info(
+            f"After reorganization: {len(block_launchers)} block(s) "
+            f"with max {max_launchers} launchers each."
+        )
 
     counter, nremove_total = 0, 0
     os.chdir(directory)

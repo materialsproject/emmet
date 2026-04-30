@@ -918,7 +918,7 @@ class OrbitalDoc(PropertyDoc):
                 nbo_hyperbonds=hyperbond,
                 nbo_interactions=interaction_sets[0],
                 origins=[
-                    MolPropertyOrigin(
+                    MolPropertyOrigin(  # type: ignore[call-arg]
                         name="natural_bonding_orbitals", task_id=task.task_id
                     )
                 ],
@@ -964,7 +964,7 @@ class OrbitalDoc(PropertyDoc):
                 alpha_interactions=interaction_sets[0],
                 beta_interactions=interaction_sets[1],
                 origins=[
-                    MolPropertyOrigin(
+                    MolPropertyOrigin(  # type: ignore[call-arg]
                         name="natural bonding orbitals", task_id=task.task_id
                     )
                 ],

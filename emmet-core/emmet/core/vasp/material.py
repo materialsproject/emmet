@@ -1,17 +1,18 @@
 """Core definition of a Materials Document"""
 
-from typing import Mapping
+from typing import Mapping, Self
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer, oxide_type
 from pymatgen.analysis.structure_matcher import StructureMatcher
-from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 from emmet.core.base import EmmetMeta
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin
+from emmet.core.mpid import AlphaID
+from emmet.core.mpid_ext import ThermoID
 from emmet.core.settings import EmmetSettings
-from emmet.core.tasks import TaskDoc
+from emmet.core.tasks import ValidationTaskDoc
 from emmet.core.types.pymatgen_types.computed_entries_adapter import (
     ComputedStructureEntryType,
 )
@@ -56,13 +57,13 @@ class MaterialsDoc(CoreMaterialsDoc):
     @classmethod
     def from_tasks(
         cls,
-        task_group: list[TaskDoc],
+        task_group: list[ValidationTaskDoc],
         structure_quality_scores: dict[
             str, int
         ] = SETTINGS.VASP_STRUCTURE_QUALITY_SCORES,
         use_statics: bool = SETTINGS.VASP_USE_STATICS,
         commercial_license: bool = True,
-    ) -> "MaterialsDoc":
+    ) -> Self:
         """
         Converts a group of tasks into one material
 
@@ -105,12 +106,12 @@ class MaterialsDoc(CoreMaterialsDoc):
         if use_statics:
             possible_mat_ids += [task.task_id for task in statics]
 
-        material_id = min(possible_mat_ids)
+        material_id = AlphaID(min(possible_mat_ids), prefix="mp")
 
         # Always prefer a static over a structure opt
         structure_task_quality_scores = {"Structure Optimization": 1, "Static": 2}
 
-        def _structure_eval(task: TaskDoc):
+        def _structure_eval(task: ValidationTaskDoc):
             """
             Helper function to order structures optimization and statics calcs by
             - Functional Type
@@ -169,7 +170,7 @@ class MaterialsDoc(CoreMaterialsDoc):
         # Always prefer a static over a structure opt
         entry_task_quality_scores = {"Structure Optimization": 1, "Static": 2}
 
-        def _entry_eval(task: TaskDoc):
+        def _entry_eval(task: ValidationTaskDoc):
             """
             Helper function to order entries and statics calcs by
             - Spin polarization
@@ -207,10 +208,12 @@ class MaterialsDoc(CoreMaterialsDoc):
 
             if relevant_calcs:
                 best_task_doc = relevant_calcs[0]
-                entry = ComputedStructureEntry(
-                    composition=best_task_doc.output.structure.composition,
-                    correction=0.0,
-                    data={
+                entry = {
+                    "@class": "ComputedStructureEntry",
+                    "@module": "pymatgen.entries.computed_entries",
+                    "composition": best_task_doc.output.structure.composition,
+                    "correction": 0.0,
+                    "data": {
                         "aspherical": best_task_doc.input.parameters.get(
                             "LASPH", False
                         ),
@@ -219,9 +222,9 @@ class MaterialsDoc(CoreMaterialsDoc):
                         "material_id": material_id,
                         "task_id": best_task_doc.task_id,
                     },
-                    energy=best_task_doc.output.energy,
-                    entry_id="{}-{}".format(material_id, rt.value),
-                    parameters={
+                    "energy": best_task_doc.output.energy,
+                    "entry_id": ThermoID(identifier=material_id, suffix=rt),
+                    "parameters": {
                         "hubbards": best_task_doc.input.hubbards,
                         "is_hubbard": best_task_doc.input.is_hubbard,
                         "potcar_spec": (
@@ -231,8 +234,8 @@ class MaterialsDoc(CoreMaterialsDoc):
                         ),
                         "run_type": str(best_task_doc.run_type),
                     },
-                    structure=best_task_doc.output.structure,
-                )
+                    "structure": best_task_doc.output.structure,
+                }
                 entries[rt] = entry
 
         if not any(
@@ -244,7 +247,7 @@ class MaterialsDoc(CoreMaterialsDoc):
             )
 
         # Builder meta and license
-        builder_meta = EmmetMeta(license="BY-C" if commercial_license else "BY-NC")
+        builder_meta = EmmetMeta(license="BY-C" if commercial_license else "BY-NC")  # type: ignore[call-arg]
 
         return cls.from_structure(
             meta_structure=structure,
@@ -266,7 +269,7 @@ class MaterialsDoc(CoreMaterialsDoc):
     @classmethod
     def construct_deprecated_material(
         cls,
-        task_group: list[TaskDoc],
+        task_group: list[ValidationTaskDoc],
         commercial_license: bool = True,
     ) -> "MaterialsDoc":
         """
@@ -309,7 +312,7 @@ class MaterialsDoc(CoreMaterialsDoc):
         deprecated = True
 
         # Builder meta and license
-        builder_meta = EmmetMeta(license="BY-C" if commercial_license else "BY-NC")
+        builder_meta = EmmetMeta(license="BY-C" if commercial_license else "BY-NC")  # type: ignore[call-arg]
 
         return cls.from_structure(
             meta_structure=structure,

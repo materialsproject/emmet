@@ -11,15 +11,14 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
+from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Union, Any
+from typing import TYPE_CHECKING, Annotated, Any, Union
 
 import orjson
 from pydantic import BeforeValidator, Field, PlainSerializer, WrapSerializer
-from typing_extensions import TypedDict
 
 from emmet.core.mpid import MPID, AlphaID
-from emmet.core.types.pymatgen_types.kpoint_adapter import KpointType
 from emmet.core.utils import convert_datetime, utcnow
 
 if TYPE_CHECKING:
@@ -52,33 +51,47 @@ for why this separate class is necesary instead of `DateTimeType | None`
 """
 
 
-def _fault_tolerant_id_serde(val: Any, serialize: bool = False) -> Any:
+def _fault_tolerant_id_serde(
+    val: Any,
+    legacy: bool = False,
+    serialize: bool = False,
+    **kwargs,
+) -> Any:
     """Needed for the API and safe de-/serialization behavior."""
     try:
-        alpha_id = AlphaID(val)
+        alpha_id = AlphaID(val, **kwargs)
         if serialize:
             return str(alpha_id)
-        return alpha_id.formatted
+        return alpha_id.formatted if legacy else alpha_id
     except Exception:
         return val
 
 
-IdentifierType: TypeAlias = Annotated[
-    Union[MPID, AlphaID],
-    BeforeValidator(_fault_tolerant_id_serde),
-    PlainSerializer(lambda x: _fault_tolerant_id_serde(x, serialize=True)),
-]
+_id_base_metadata = (BeforeValidator(_fault_tolerant_id_serde),)
+
+
+def _make_id_type(render_order, **kwargs) -> Any:
+    _order: Any
+    match render_order:
+        case 0:
+            _order = Union[AlphaID, MPID]
+        case 1:
+            _order = Union[MPID, AlphaID]
+        case _:
+            raise NotImplementedError(
+                f"No implementation for render_order: {render_order}"
+            )
+
+    return Annotated[
+        _order,
+        BeforeValidator(partial(_fault_tolerant_id_serde, **kwargs)),
+        PlainSerializer(partial(_fault_tolerant_id_serde, serialize=True, **kwargs)),
+    ]
+
+
+IdentifierType = _make_id_type(0, padlen=8)
+MaterialIdentifierType = _make_id_type(1, legacy=True, prefix="mp", padlen=8)
 """MPID / AlphaID serde."""
-
-
-class TypedBandDict(TypedDict):
-    """Type def for data stored for cbms or vbms"""
-
-    band_index: dict[str, list[int]]
-    kpoint_index: list[int]
-    kpoint: KpointType
-    energy: float
-    projections: dict[str, list[list[float]]]
 
 
 def _ser_json_like(d, default_serializer, info):

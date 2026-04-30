@@ -6,17 +6,17 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
-from pymatgen.core import Element
 
 from emmet.core.mpid import MPID, AlphaID
-from emmet.core.types.enums import ThermoType
-from emmet.core.types.typing import IdentifierType
-from emmet.core.types.enums import XasType, XasEdge
+from emmet.core.types.enums import ThermoType, XasEdge, XasType
+from emmet.core.types.pymatgen_types.element_adapter import ElementType
+from emmet.core.types.typing import IdentifierType, MaterialIdentifierType
 from emmet.core.utils import type_override
 from emmet.core.vasp.calc_types import RunType
 
 if TYPE_CHECKING:
     from typing import Any
+
     from typing_extensions import Self
 
 
@@ -58,22 +58,37 @@ class ThermoID(SuffixedID):
     """Thermodynamic data identifier."""
 
     suffix: ThermoType | RunType
-
-
-class BatteryID(SuffixedID):
-    """Identify battery / electrode data."""
-
-    suffix: Element
-
-
-@type_override({"suffix": str})
-class XasSpectrumID(SuffixedID):
-    suffix: tuple[XasType, Element, XasEdge]  # type: ignore[assignment]
     separator: str = Field(default="-")
 
     @classmethod
     def from_str(cls, idx: str) -> Self:
         """Ensure the class can be instantiated from a string or dict."""
+        sep = cls.model_fields["separator"].default
+        parts = idx.split(sep)
+        return cls(
+            identifier=sep.join(parts[:-1]),
+            suffix=parts[-1],  # type: ignore[arg-type]
+        )
+
+
+class BatteryID(SuffixedID):
+    """Identify battery / electrode data."""
+
+    suffix: ElementType
+
+
+@type_override({"suffix": list[str]})
+class XasSpectrumID(SuffixedID):
+    identifier: MaterialIdentifierType
+    suffix: tuple[XasType, ElementType, XasEdge]  # type: ignore[assignment]
+    separator: str = Field(default="-")
+
+    @classmethod
+    def from_str(cls, idx: str) -> Self:
+        """Ensure the class can be instantiated from a string or dict."""
+        if idx.endswith("-L23"):
+            idx = idx[:-3] + "L2,3"
+
         sep = cls.model_fields["separator"].default
         for i in range(2):
             if len(parts := idx.rsplit(sep, idx.count(sep) - i)) == 4:
@@ -107,11 +122,7 @@ def validate_identifier(
 
     for id_cls in (AlphaID, *SuffixedID.__subclasses__()):
         try:
-            parsed_idx = (
-                AlphaID(idx).formatted
-                if id_cls == AlphaID
-                else id_cls._deserialize(idx)
-            )
+            parsed_idx = AlphaID(idx) if id_cls == AlphaID else id_cls._deserialize(idx)
             break
         except Exception:
             continue

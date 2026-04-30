@@ -2,24 +2,18 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
-from functools import cached_property
 import logging
 import os
+from copy import deepcopy
 from datetime import datetime
+from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Annotated, Type
+from typing import TYPE_CHECKING, Annotated, Any, Type
 
 import numpy as np
 import orjson
 from monty.io import zopen
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    Field,
-    model_validator,
-    BeforeValidator,
-)
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
 from pymatgen.command_line.bader_caller import bader_analysis_from_path
 from pymatgen.command_line.chargemol_caller import ChargemolAnalysis
 from pymatgen.core.structure import Structure
@@ -32,8 +26,8 @@ from typing_extensions import NotRequired, TypedDict
 
 from emmet.core.band_theory import ElectronicBS, ElectronicDos
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D, Vector6D
+from emmet.core.settings import EmmetSettings
 from emmet.core.trajectory import RelaxTrajectory, Trajectory
-from emmet.core.vasp.models import ElectronicStep, ChgcarLike
 from emmet.core.types.enums import StoreTrajectoryOption, TaskState, VaspObject
 from emmet.core.types.pymatgen_types.bader import BaderAnalysis
 from emmet.core.types.pymatgen_types.kpoints_adapter import KpointsType
@@ -50,15 +44,14 @@ from emmet.core.vasp.calc_types import (
     run_type,
     task_type,
 )
-
-from emmet.core.settings import EmmetSettings
+from emmet.core.vasp.models import ChgcarLike, ElectronicStep
 
 SETTINGS = EmmetSettings()
 
 if TYPE_CHECKING:
-    from typing_extensions import Self
     from pymatgen.electronic_structure.bandstructure import BandStructure
     from pymatgen.electronic_structure.dos import CompleteDos
+    from typing_extensions import Self
 
 
 logger = logging.getLogger(__name__)
@@ -484,6 +477,13 @@ class FrequencyDependentDielectric(BaseModel):
         description="Energies at which the real and imaginary parts of the dielectric"
         "constant are given",
     )
+
+    @model_validator(mode="before")
+    def migrate_legacy_fields(cls, data: Any) -> Any:
+        if "imag" in data:
+            data["imaginary"] = data["imag"]
+
+        return data
 
     @classmethod
     def from_vasprun(cls, vasprun: Vasprun) -> Self:

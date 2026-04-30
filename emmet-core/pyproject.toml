@@ -54,6 +54,7 @@ all = [
     "pymatgen-analysis-alloys>=0.0.6",
     "pyarrow",
     "pymongo",
+    "pycodcif",
 ]
 test = [
     "pre-commit",

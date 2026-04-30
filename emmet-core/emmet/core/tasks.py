@@ -6,17 +6,17 @@ import logging
 import re
 import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Annotated
+from typing import TYPE_CHECKING, Annotated, Any
 
 import numpy as np
 from monty.json import MontyDecoder
 from monty.serialization import loadfn
 from pydantic import (
     BaseModel,
-    Field,
-    field_validator,
     BeforeValidator,
+    Field,
     WrapSerializer,
+    field_validator,
     model_validator,
 )
 from pymatgen.analysis.structure_analyzer import oxide_type
@@ -35,11 +35,11 @@ from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.typing import (
     DateTimeType,
     IdentifierType,
-    NullableDateTimeType,
-    JsonListType,
     JsonDictType,
-    _ser_json_like,
+    JsonListType,
+    NullableDateTimeType,
     _deser_json_like,
+    _ser_json_like,
 )
 from emmet.core.utils import type_override, utcnow
 from emmet.core.vasp.calc_types import (
@@ -316,8 +316,7 @@ class CoreTaskDoc(StructureMetadata):
     )
     task_id: IdentifierType | None = Field(
         None,
-        description="The (task) ID of this calculation, used as a universal reference across property documents."
-        "This comes in the form: mp-******.",
+        description="The (task) ID of this calculation, used as a universal reference across property documents.",
     )
     task_type: TaskType | CalcType | None = Field(
         None, description="The type of calculation."
@@ -356,6 +355,8 @@ class CoreTaskDoc(StructureMetadata):
         cls,
         dir_name: Path | str,
         volumetric_files: tuple[str, ...] = _VOLUMETRIC_FILES,
+        batch_id: str | None = None,
+        tags: list[str | None] = [],
         **vasp_calculation_kwargs,
     ) -> tuple[Self, RelaxTrajectory]:
         """
@@ -371,6 +372,11 @@ class CoreTaskDoc(StructureMetadata):
             The path to the folder containing the calculation outputs.
         volumetric_files
             Volumetric files to search for.
+        batch_id
+            Calculation identifier
+        tags
+            Additional metadata tags. Will be concatenated with tags
+            parsed from transformations file (if present in ``dir_name``)
         **vasp_calculation_kwargs
             Additional parsing options that will be passed to the
             :obj:`.Calculation.from_vasp_files` function.
@@ -388,8 +394,11 @@ class CoreTaskDoc(StructureMetadata):
         calc_doc, vasp_objects = Calculation.from_vasp_files(
             dir_name, "standard", **task_files["standard"], **vasp_calculation_kwargs
         )
-        transformations, icsd_id, tags, author = _parse_transformations(dir_name)
+        transformations, icsd_id, transformation_tags, author = _parse_transformations(
+            dir_name
+        )
         task_doc = cls.from_structure(
+            batch_id=batch_id,
             calc_type=calc_doc.calc_type,
             completed_at=calc_doc.completed_at,
             dir_name=get_uri(dir_name),
@@ -404,7 +413,7 @@ class CoreTaskDoc(StructureMetadata):
             ),
             run_type=calc_doc.run_type,
             structure=calc_doc.output.structure,
-            tags=tags,
+            tags=tags + transformation_tags,
             task_type=calc_doc.task_type,
             transformations=transformations,
             vasp_objects=vasp_objects,
@@ -414,6 +423,15 @@ class CoreTaskDoc(StructureMetadata):
         trajectory = get_trajectories_from_calculations([calc_doc])[0]
 
         return (task_doc, trajectory)
+
+
+class ValidationTaskDoc(CoreTaskDoc):
+    """
+    Wrapper for TaskDoc to ensure compatiblity with validation checks
+    in MaterialsDoc.from_tasks(...) if validation builder is skipped
+    """
+
+    is_valid: bool = Field(True)
 
 
 @type_override({"additional_json": str})
@@ -509,6 +527,8 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
         cls,
         dir_name: Path | str,
         volumetric_files: tuple[str, ...] = _VOLUMETRIC_FILES,
+        batch_id: str | None = None,
+        tags: list[str | None] = [],
         store_additional_json: bool = True,
         additional_fields: dict[str, Any] | None = None,
         volume_change_warning_tol: float = 0.2,
@@ -572,7 +592,9 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
         analysis = AnalysisDoc.from_vasp_calc_docs(
             calcs_reversed, volume_change_warning_tol=volume_change_warning_tol
         )
-        transformations, icsd_id, tags, author = _parse_transformations(dir_name)
+        transformations, icsd_id, transformation_tags, author = _parse_transformations(
+            dir_name
+        )
         custodian = _parse_custodian(dir_name)
         orig_inputs = _parse_orig_inputs(dir_name)
 
@@ -590,6 +612,7 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
             included_objects = list(vasp_objects.keys())
 
         doc = cls.from_structure(
+            batch_id=batch_id,
             structure=calcs_reversed[0].output.structure,
             meta_structure=calcs_reversed[0].output.structure,
             dir_name=dir_name,
@@ -600,7 +623,7 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
             orig_inputs=orig_inputs,
             additional_json=additional_json,
             icsd_id=icsd_id,
-            tags=tags,
+            tags=tags + transformation_tags,
             author=author,
             completed_at=calcs_reversed[0].completed_at,
             input=calcs_reversed[-1].input,
@@ -906,7 +929,7 @@ def get_uri(dir_name: str | Path) -> str:
 
 def _parse_transformations(
     dir_name: Path,
-) -> tuple[dict, int | None, list[str] | None, str | None]:
+) -> tuple[dict, int | None, list[str | None], str | None]:
     """Parse transformations.json file."""
     transformations = {}
     filenames = tuple(dir_name.glob("transformations.json*"))
@@ -924,7 +947,7 @@ def _parse_transformations(
     # transformations file because they'd be copied into
     # every structure generated after this one.
     other_parameters = transformations.get("other_parameters", {})
-    new_tags = other_parameters.pop("tags", None)
+    new_tags = other_parameters.pop("tags", [])
     new_author = other_parameters.pop("author", None)
 
     if "other_parameters" in transformations and not other_parameters:

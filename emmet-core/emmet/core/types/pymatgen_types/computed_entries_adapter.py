@@ -1,15 +1,17 @@
 from typing import Annotated, Any, TypeVar
 
 import orjson
-from pydantic import BeforeValidator, WrapSerializer
+from pydantic import BeforeValidator, TypeAdapter, WrapSerializer
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from typing_extensions import NotRequired, TypedDict
 
+from emmet.core.mpid_ext import ThermoID
 from emmet.core.types.pymatgen_types.element_adapter import ElementType
 from emmet.core.types.pymatgen_types.structure_adapter import (
-    TypedStructureDict,
+    StructureType,
     pop_empty_structure_keys,
 )
+from emmet.core.types.typing import IdentifierType, MaterialIdentifierType
 from emmet.core.vasp.calculation import PotcarSpec
 
 # TypedEnergyAdjustmentDict = TypedDict(
@@ -59,20 +61,20 @@ from emmet.core.vasp.calculation import PotcarSpec
 
 
 class TypedCEDataDict(TypedDict):
-    oxide_type: str
-    aspherical: bool
-    last_updated: str
-    task_id: str
-    material_id: str
-    oxidation_states: dict[ElementType, float]
-    license: str
-    run_type: str
+    oxide_type: NotRequired[str | None]
+    aspherical: NotRequired[bool | None]
+    last_updated: NotRequired[str | None]
+    task_id: NotRequired[IdentifierType | None]
+    material_id: NotRequired[MaterialIdentifierType | None]
+    oxidation_states: NotRequired[dict[ElementType, float] | None]
+    license: NotRequired[str | None]
+    run_type: NotRequired[str | None]
 
 
 class TypedCEParameterDict(TypedDict):
-    potcar_spec: list[PotcarSpec]
-    run_type: str
-    is_hubbard: bool
+    potcar_spec: NotRequired[list[PotcarSpec] | None]
+    run_type: NotRequired[str | None]
+    is_hubbard: NotRequired[bool | None]
     hubbards: NotRequired[dict[str, float] | None]  # type: ignore[type-arg]
 
 
@@ -83,14 +85,14 @@ TypedComputedEntryDict = TypedDict(
         "@class": str,
         "energy": float,
         "composition": dict[ElementType, float],
-        "entry_id": str,
+        "entry_id": ThermoID,
         "correction": float,
         # "energy_adjustments": list[
         #     TypedCompositionEnergyAdjustmentDict
         #     | TypedEnergyAdjustmentDict
         #     | TypedTemperatureEnergyAdjustmentDict
         # ],
-        "energy_adjustments": str,
+        "energy_adjustments": NotRequired[str | None],
         "parameters": TypedCEParameterDict,
         "data": TypedCEDataDict,
     },
@@ -98,7 +100,7 @@ TypedComputedEntryDict = TypedDict(
 
 
 class TypedComputedStructureEntryDict(TypedComputedEntryDict):
-    structure: TypedStructureDict
+    structure: StructureType
 
 
 ComputedEntryTypeVar = TypeVar(
@@ -116,6 +118,9 @@ ComputedStructureEntryTypeVar = TypeVar(
 
 
 def entry_serializer(entry, nxt, info) -> dict[str, Any]:
+    # need to beat pmg serialization to get correct (material/task/entry)_id serialization
+    entry.data = TypeAdapter(TypedCEDataDict).dump_python(entry.data)
+
     default_serialized_object = nxt(entry.as_dict(), info)
 
     format = info.context.get("format") if info.context else None
@@ -138,18 +143,31 @@ def pop_cse_empty_keys(cse: dict) -> dict[str, Any]:
 
 def entry_deserializer(entry: dict[str, Any] | ComputedEntry | ComputedStructureEntry):
     if isinstance(entry, dict):
+        entry_dict: dict[str, Any] = entry
         entry_cls: type[ComputedEntry | ComputedStructureEntry]
-        match entry["@class"]:
+        entry_type: type[TypedComputedEntryDict | TypedComputedStructureEntryDict]
+
+        match entry_dict["@class"]:
             case "ComputedEntry":
                 entry_cls = ComputedEntry
+                entry_type = TypedComputedEntryDict
             case "ComputedStructureEntry":
                 entry_cls = ComputedStructureEntry
-                entry = pop_cse_empty_keys(entry)
+                entry_type = TypedComputedStructureEntryDict
+                entry_dict = pop_cse_empty_keys(entry_dict)
 
-        if isinstance(entry["energy_adjustments"], str):
-            entry["energy_adjustments"] = orjson.loads(entry["energy_adjustments"])
+        if "energy_adjustments" in entry_dict and any(
+            [
+                isinstance(entry_dict["energy_adjustments"], _type)
+                for _type in (str, bytes)
+            ]
+        ):
+            entry_dict = TypeAdapter(entry_type).validate_python(entry_dict)
+            entry_dict["energy_adjustments"] = orjson.loads(
+                entry_dict["energy_adjustments"]
+            )
 
-        return entry_cls.from_dict(entry)  # type: ignore[arg-type]
+        return entry_cls.from_dict(entry_dict)
 
     return entry
 

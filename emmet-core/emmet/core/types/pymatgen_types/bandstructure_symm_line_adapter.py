@@ -4,12 +4,12 @@ from pydantic import BeforeValidator, WrapSerializer
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
 from typing_extensions import TypedDict
 
+from emmet.core.types.pymatgen_types.kpoint_adapter import KpointType
 from emmet.core.types.pymatgen_types.lattice_adapter import MSONableTypedLatticeDict
 from emmet.core.types.pymatgen_types.structure_adapter import (
     TypedStructureDict,
     pop_empty_structure_keys,
 )
-from emmet.core.types.typing import TypedBandDict
 
 
 class TypedBandGapDict(TypedDict):
@@ -22,6 +22,16 @@ class TypedBranchDict(TypedDict):
     start_index: int
     end_index: int
     name: str
+
+
+class TypedBandDict(TypedDict):
+    """Type def for data stored for cbms or vbms"""
+
+    band_index: dict[str, list[int]]
+    kpoint_index: list[int]
+    kpoint: KpointType
+    energy: float
+    projections: dict[str, list[list[float]]]
 
 
 TypedBandDictureSymmLineDict = TypedDict(

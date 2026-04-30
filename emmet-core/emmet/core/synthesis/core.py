@@ -17,43 +17,39 @@ class SynthesisRecipe(BaseModel):
     """
 
     # Basic facts about this recipe:
-    doi: str = Field(
-        ...,
-        description="DOI of the journal article.",
-    )
-    paragraph_string: str = Field(
+    doi: str | None = Field(None, description="DOI of the journal article.")
+    paragraph_string: str | None = Field(
         "", description="The paragraph from which this recipe is extracted."
     )
-    synthesis_type: SynthesisTypeEnum = Field(
-        ..., description="Type of the synthesis recipe."
+    synthesis_type: SynthesisTypeEnum | None = Field(
+        None, description="Type of the synthesis recipe."
     )
-
     # Reaction related information:
-    reaction_string: str = Field(
-        ..., description="String representation of this recipe."
+    reaction_string: str | None = Field(
+        None, description="String representation of this recipe."
     )
-    reaction: ReactionFormula = Field(..., description="The balanced reaction formula.")
-
-    target: ExtractedMaterial = Field(..., description="The target material.")
-    targets_formula: list[str] = Field(
-        ..., description="List of synthesized target material compositions."
+    reaction: ReactionFormula | None = Field(
+        None, description="The balanced reaction formula."
     )
-    precursors_formula: list[str] = Field(
-        ..., description="List of precursor material compositions."
+    target: ExtractedMaterial | None = Field(None, description="The target material.")
+    targets_formula: list[str] | None = Field(
+        None, description="List of synthesized target material compositions."
     )
-    targets_formula_s: list[str] = Field(
-        ..., description="List of synthesized target material compositions, as strings."
+    precursors_formula: list[str] | None = Field(
+        None, description="List of precursor material compositions."
     )
-    precursors_formula_s: list[str] = Field(
-        ..., description="List of precursor material compositions, as strings."
+    targets_formula_s: list[str] | None = Field(
+        None,
+        description="List of synthesized target material compositions, as strings.",
     )
-
-    precursors: list[ExtractedMaterial] = Field(
-        ..., description="List of precursor materials."
+    precursors_formula_s: list[str] | None = Field(
+        None, description="List of precursor material compositions, as strings."
     )
-
-    operations: list[Operation] = Field(
-        ..., description="List of operations used to synthesize this recipe."
+    precursors: list[ExtractedMaterial] | None = Field(
+        None, description="List of precursor materials."
+    )
+    operations: list[Operation] | None = Field(
+        None, description="List of operations used to synthesize this recipe."
     )
 
 

@@ -1,16 +1,18 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, Field
 from pymatgen.core import Structure
-from typing import TYPE_CHECKING
 
 from emmet.core.types.enums import ValueEnum
 from emmet.core.types.pymatgen_types.grain_boundary_adapter import GrainBoundaryType
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
-from emmet.core.types.typing import DateTimeType
+from emmet.core.types.typing import DateTimeType, MaterialIdentifierType
 
 if TYPE_CHECKING:
     from typing import Any
+
     from typing_extensions import Self
 
 
@@ -28,7 +30,7 @@ class GrainBoundaryDoc(BaseModel):
     Grain boundary energies, work of separation...
     """
 
-    material_id: str | None = Field(
+    material_id: MaterialIdentifierType | None = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )

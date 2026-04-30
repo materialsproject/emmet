@@ -1,6 +1,6 @@
-from typing import Annotated, TypeVar, NotRequired
+from typing import Annotated, NotRequired, TypeVar
 
-from pydantic import BeforeValidator, WrapSerializer, PlainSerializer
+from pydantic import BeforeValidator, WrapSerializer
 from pymatgen.analysis.graphs import MoleculeGraph, StructureGraph
 from typing_extensions import TypedDict
 
@@ -17,15 +17,7 @@ class GraphDescriptorDict(TypedDict):
     edge_weight_units: NotRequired[str]
 
 
-GraphDescriptors = Annotated[
-    GraphDescriptorDict,
-    BeforeValidator(
-        lambda x: GraphDescriptorDict(
-            **({row[0]: row[1] for row in x} if isinstance(x, list) else x)
-        )
-    ),
-    PlainSerializer(lambda x: list(x.items()) if isinstance(x, dict) else x),
-]
+GraphDescriptors = tuple[str, str]
 
 
 class TypedNodeDict(TypedDict):
@@ -42,7 +34,7 @@ class TypedAdjacencyDict(TypedDict):
 class TypedGraphDict(TypedDict):
     directed: bool
     multigraph: bool
-    graph: GraphDescriptors
+    graph: list[GraphDescriptors]
     nodes: list[TypedNodeDict]
     adjacency: list[list[TypedAdjacencyDict]]
 

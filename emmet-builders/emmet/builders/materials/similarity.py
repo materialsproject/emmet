@@ -1,160 +1,120 @@
-import warnings
-
 import numpy as np
-from maggma.builders import Builder
 
-__author__ = "Nils E. R. Zimmermann <nerz@lbl.gov>"
-
-
-# TODO:
-# 1) ADD DOCUMENT MODEL
-
-warnings.warn(
-    f"The current version of {__name__}.StructureSimilarityBuilder will be deprecated in version 0.87.0. "
-    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
-    "release for emmet-legacy-builders is not planned.",
-    DeprecationWarning,
-    stacklevel=2,
+from emmet.builders.base import BaseBuilderInput
+from emmet.core.similarity import (
+    CrystalNNSimilarity,
+    M3GNetSimilarity,
+    SimilarityDoc,
+    SimilarityEntry,
+    SimilarityMethod,
 )
 
+SIM_METHOD_TO_SCORER = {
+    SimilarityMethod(k): v
+    for k, v in {
+        "CrystalNN": CrystalNNSimilarity,
+        "M3GNet": M3GNetSimilarity,
+    }.items()
+}
 
-class StructureSimilarityBuilder(Builder):
-    def __init__(self, site_descriptors, structure_similarity, fp_type="csf", **kwargs):
-        """
-        Calculates similarity metrics between structures on the basis
-        of site descriptors.
 
-        Args:
-            site_descriptors (Store): storage of site-descriptors data
-                                      such as tetrahedral order parameter
-                                      or percentage of 8-fold coordination.
-            structure_similarity (Store): storage of structure similarity
-                                          metrics.
-            fp_type (str): target site fingerprint type to be
-                           used for similarity computation
-                           ("csf" (based on matminer's
-                           CrystalSiteFingerprint class)
-                           or "opsf" (based on matminer's
-                           OPSiteFingerprint class)).
-        """
+class SimilarityBuilderInput(BaseBuilderInput):
+    """Augment base builder input with extra fields."""
 
-        self.site_descriptors = site_descriptors
-        self.structure_similarity = structure_similarity
-        self.fp_type = fp_type
+    similarity_method: SimilarityMethod
+    feature_vector: list[float]
 
-        super().__init__(
-            sources=[site_descriptors], targets=[structure_similarity], **kwargs
+
+# this could probably be parallelized over `similarity_method`
+def build_feature_vectors(
+    input_documents: list[BaseBuilderInput],
+    similarity_method: SimilarityMethod | str = SimilarityMethod.CRYSTALNN,
+) -> list[SimilarityBuilderInput]:
+    """Generate similarity feature vectors.
+
+    Args:
+        input_documents : list of BaseBuilderInput to process
+        similarity_method : SimilarityMethod = SimilarityMethod.CRYSTALNN
+            The method to use in building similarity docs.
+    Returns:
+        list of SimilarityBuilderInput
+    """
+    if isinstance(similarity_method, str):
+        similarity_method = (
+            SimilarityMethod[similarity_method]
+            if similarity_method in SimilarityMethod.__members__
+            else SimilarityMethod(similarity_method)
         )
 
-    def get_items(self):
-        """
-        Gets all materials that need new site descriptors.
+    if scorer_cls := SIM_METHOD_TO_SCORER.get(similarity_method):
+        scorer = scorer_cls()
+    else:
+        raise ValueError(f"Unsupported {similarity_method=}")
 
-        Returns:
-            generator of materials to calculate site descriptors.
-        """
+    return list(
+        map(
+            lambda x: SimilarityBuilderInput(
+                material_id=x.material_id,
+                structure=x.structure,
+                similarity_method=similarity_method,
+                feature_vector=scorer._featurize_structure(x.structure),
+            ),
+            input_documents,
+        )
+    )
 
-        self.logger.info("Structure Similarity Builder Started")
 
-        self.logger.info("Setting indexes")
+def build_similarity_docs(
+    input_documents: list[SimilarityBuilderInput],
+    num_closest: int = 100,
+) -> list[SimilarityDoc]:
+    """Generate similarity feature vectors.
 
-        # TODO: re-introduce last-updated filtering.
-        task_ids = list(self.site_descriptors.distinct(self.site_descriptors.key))
-        n_task_ids = len(task_ids)
-        for i in range(n_task_ids - 1):
-            d1 = self.site_descriptors.query_one(
-                properties=[self.site_descriptors.key, "statistics"],
-                criteria={self.site_descriptors.key: task_ids[i]},
-            )
-            for j in range(i + 1, n_task_ids):
-                d2 = self.site_descriptors.query_one(
-                    properties=[self.site_descriptors.key, "statistics"],
-                    criteria={self.site_descriptors.key: task_ids[j]},
-                )
-                yield list([d1, d2])
+    All input docs should use the same similarity method.
+    A check is performed at the start to ensure this.
 
-    def process_item(self, item):
-        """
-        Calculates site descriptors for the structures
+    Args:
+        input_documents : list of SimilarityBuilderInput to process
+        num_closest : int = 100
+            The number of most similar materials to identify
+            for each material
+    Returns:
+        list of SimilarityDoc
+    """
 
-        Args:
-            item (list): a list (length 2) with each one document that
-                         carries a task ID in "task_id" and a statistics
-                         vector from OP site-fingerprints in
-                         "statistics".
-
-        Returns:
-            dict: similarity measures.
-        """
-        self.logger.debug(
-            "Similarities for {} and {}".format(
-                item[0][self.site_descriptors.key], item[1][self.site_descriptors.key]
-            )
+    if (
+        len(distinct_sim_methods := {doc.similarity_method for doc in input_documents})
+        > 1
+    ):
+        raise ValueError(
+            f"Multiple similarity methods found: {', '.join(str(method) for method in distinct_sim_methods)}"
         )
 
-        sim_doc = {}
-        sim_doc = self.get_similarities(item[0], item[1])
-        sim_doc[self.structure_similarity.key] = tuple(
-            sorted(
-                [item[0][self.site_descriptors.key], item[1][self.site_descriptors.key]]
-            )
+    scorer_cls = SIM_METHOD_TO_SCORER[method := input_documents[0].similarity_method]
+    material_ids, vectors, structures = np.array(
+        [doc.material_id, doc.feature_vector, doc.structure] for doc in input_documents
+    ).T
+
+    similarity_docs = []
+    for i, material_id in enumerate(material_ids):
+        closest_idxs, closest_dist = scorer_cls._get_closest_vectors(
+            i, vectors, num_closest
         )
-
-        return sim_doc
-
-    def update_targets(self, items):
-        """
-        Inserts the new task_types into the task_types collection.
-
-        Args:
-            items ([[dict]]): a list of list of site-descriptors dictionaries to update.
-        """
-        if len(items) > 0:
-            self.logger.info("Updating {} structure-similarity docs".format(len(items)))
-            self.structure_similarity.update(docs=items)
-        else:
-            self.logger.info("No items to update")
-
-    def get_similarities(self, d1, d2):
-        doc = {}
-
-        # Compute similarty metrics.
-        try:
-            dout = {}
-            l = {}
-            v = {}
-            for i, li in enumerate(
-                [d1["statistics"][self.fp_type], d2["statistics"][self.fp_type]]
-            ):
-                v[i] = []
-                l[i] = []
-                # for optype, stats in d.items():
-                for opdict in li:
-                    for stattype, val in opdict.items():
-                        if stattype != "name":
-                            v[i].append(val)
-                            l[i].append("{} {}".format(opdict["name"], stattype))
-            if len(l[0]) != len(l[1]):
-                raise RuntimeError(
-                    "Site-fingerprint statistics dictionaries"
-                    " have different sizes ({}, {})".format(len(l[0]), len(l[1]))
-                )
-            for k in l[0]:
-                if k not in l[1]:
-                    raise RuntimeError(
-                        'Label "{}" not found in second site-'
-                        "fingerprint statistics "
-                        "dictionary".format(k)
+        similarity_docs.append(
+            SimilarityDoc.from_structure(
+                meta_structure=structures[i],
+                material_id=material_id,
+                feature_vector=vectors[i],
+                method=method,
+                sim=[
+                    SimilarityEntry(
+                        task_id=material_ids[jdx],
+                        nelements=len(structures[jdx].composition.elements),
+                        dissimilarity=100.0 - closest_dist[j],
+                        formula=structures[jdx].formula,
                     )
-            v1 = np.array([v[0][k] for k in range(len(l[0]))])
-            v2 = np.array([v[1][l[1].index(k)] for k in l[0]])
-            dout["cos"] = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
-            dout["dist"] = np.linalg.norm(v1 - v2)
-            doc = dout
-
-        except Exception as e:
-            self.logger.error(
-                "Failed calculating structure similarity" "metrics: {}".format(e)
+                    for j, jdx in enumerate(closest_idxs)
+                ],
             )
-
-        return doc
+        )
+    return similarity_docs

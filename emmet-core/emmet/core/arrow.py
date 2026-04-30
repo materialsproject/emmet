@@ -23,7 +23,7 @@ PY_PRIMITIVES_TO_ARROW = {
     float: pa.float64(),
     str: pa.string(),
     bool: pa.bool_(),
-    datetime: pa.timestamp("us"),
+    datetime: pa.timestamp("us", tz="UTC"),
 }
 
 
@@ -219,7 +219,7 @@ def arrowize(obj) -> pa.DataType:
             )
         # DO NOT CHANGE ARGS - IGNORE MYPY
         # recursive_guard kwarg does not exist in python <3.12
-        return arrowize(obj._evaluate(globals(), locals(), frozenset()))  # type: ignore[call-arg,arg-type, call-overload]
+        return arrowize(obj._evaluate(globals(), locals(), frozenset()))  # type: ignore[call-arg, arg-type, call-overload]
 
     if isinstance(obj, typing.TypeVar):
         return arrowize(obj.__constraints__[1])

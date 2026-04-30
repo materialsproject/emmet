@@ -35,8 +35,8 @@ def get_free_energy(energy, enthalpy, entropy, temperature=298.15, convert_energ
 class MoleculeThermoDoc(PropertyDoc):
     property_name: str = "thermo"
 
-    electronic_energy: float = Field(
-        ..., description="Electronic energy of the molecule (units: eV)"
+    electronic_energy: float | None = Field(
+        None, description="Electronic energy of the molecule (units: eV)"
     )
 
     correction: bool = Field(
@@ -175,11 +175,11 @@ class MoleculeThermoDoc(PropertyDoc):
         total_enthalpy = task.output.enthalpy
         total_entropy = task.output.entropy
 
-        origins = [MolPropertyOrigin(name="thermo", task_id=task.task_id)]
+        origins = [MolPropertyOrigin(name="thermo", task_id=task.task_id)]  # type: ignore[call-arg]
         id_string = f"thermo-{molecule_id}-{task.task_id}-{task.lot_solvent}"
         if correction and correction_task is not None:
             origins.append(
-                MolPropertyOrigin(
+                MolPropertyOrigin(  # type: ignore[call-arg]
                     name="thermo_energy_correction", task_id=correction_task.task_id
                 )
             )
@@ -224,7 +224,7 @@ class MoleculeThermoDoc(PropertyDoc):
                         correction_solvent=correction_solvent,
                         correction_lot_solvent=correction_lot_solvent,
                         combined_lot_solvent=combined_lot_solvent,
-                        electronic_energy=energy * 27.2114,
+                        electronic_energy=energy * 27.2114 if energy else None,
                         zero_point_energy=calc["ZPE"] * 0.043363,
                         rt=calc["gas_constant"] * 0.043363,
                         total_enthalpy=total_enthalpy * 0.043363,
@@ -254,7 +254,7 @@ class MoleculeThermoDoc(PropertyDoc):
             correction_solvent=correction_solvent,
             correction_lot_solvent=correction_lot_solvent,
             combined_lot_solvent=combined_lot_solvent,
-            electronic_energy=energy * 27.2114,
+            electronic_energy=energy * 27.2114 if energy else None,
             deprecated=deprecated,
             origins=origins,
             **kwargs,

@@ -5,7 +5,7 @@ from itertools import groupby
 from typing import TYPE_CHECKING, Annotated
 
 import numpy as np
-from pydantic import BeforeValidator, Field, PlainSerializer
+from pydantic import BeforeValidator, Field
 from pymatgen.analysis.xas.spectrum import XAS, site_weighted_spectrum
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
@@ -15,41 +15,37 @@ from emmet.core.spectrum import SpectrumDoc
 from emmet.core.types.enums import ValueEnum, XasEdge, XasType
 from emmet.core.types.pymatgen_types.element_adapter import ElementType
 from emmet.core.types.pymatgen_types.xas_adapter import XASType
-from emmet.core.utils import type_override
+from emmet.core.types.typing import IdentifierType
 
 if TYPE_CHECKING:
     from emmet.core.types.typing import IdentifierType
 
-Type = ValueEnum("Type", [(e.name, e.value) for e in XasType])
+
+Type = ValueEnum("Type", [(e.name, e.value) for e in XasType])  # type: ignore[call-arg]
 """Type is deprecated and will be removed - migrate to XasType."""
 
-Edge = ValueEnum("Edge", [(e.name, e.value) for e in XasEdge])
+Edge = ValueEnum("Edge", [(e.name, e.value) for e in XasEdge])  # type: ignore[call-arg]
 """Edge is deprecated and will be removed - migrate to XasEdge."""
 
 
-@type_override({"spectrum_id": str})
 class XASDoc(SpectrumDoc):
     """
     Document describing a XAS Spectrum.
     """
 
     spectrum_name: str = "XAS"
-
     spectrum_id: Annotated[
         XasSpectrumID,
-        PlainSerializer(lambda x: validate_identifier(x, serialize=True)),
         BeforeValidator(validate_identifier),
     ]
     spectrum: XASType | None = Field(
         None, description="The XAS spectrum for this calculation."
     )
-
-    task_ids: list[str] | None = Field(
+    task_ids: list[IdentifierType] | None = Field(
         None,
         title="Calculation IDs",
         description="List of Calculations IDs used to make this XAS spectrum.",
     )
-
     absorbing_element: ElementType = Field(..., description="Absoring element.")
     spectrum_type: XasType = Field(..., description="XAS spectrum type.")
     edge: XasEdge = Field(

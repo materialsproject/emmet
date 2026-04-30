@@ -39,8 +39,8 @@ def test_dielectric(dielectric_structure, epsilon_static, epsilon_ionic):
     doc = DielectricDoc.from_ionic_and_electronic(
         material_id="mp-149",
         structure=dielectric_structure,
-        electronic=epsilon_static,
-        ionic=epsilon_ionic,
+        epsilon_static=epsilon_static,
+        epsilon_ionic=epsilon_ionic,
         deprecated=False,
     )
 
@@ -59,8 +59,8 @@ def test_arrow_dielectric(dielectric_structure, epsilon_static, epsilon_ionic):
     doc = DielectricDoc.from_ionic_and_electronic(
         material_id="mp-149",
         structure=dielectric_structure,
-        electronic=epsilon_static,
-        ionic=epsilon_ionic,
+        epsilon_static=epsilon_static,
+        epsilon_ionic=epsilon_ionic,
         deprecated=False,
     )
     arrow_struct = pa.scalar(
@@ -288,8 +288,8 @@ def test_piezoelectric(piezoelectric_structure, piezo_static, piezo_ionic):
     doc = PiezoelectricDoc.from_ionic_and_electronic(
         material_id="mp-149",
         structure=piezoelectric_structure,
-        electronic=piezo_static,
-        ionic=piezo_ionic,
+        piezo_static=piezo_static,
+        piezo_ionic=piezo_ionic,
         deprecated=False,
     )
 
@@ -325,8 +325,8 @@ def test_arrow_piezo(piezoelectric_structure, piezo_static, piezo_ionic):
     doc = PiezoelectricDoc.from_ionic_and_electronic(
         material_id="mp-149",
         structure=piezoelectric_structure,
-        electronic=piezo_static,
-        ionic=piezo_ionic,
+        piezo_static=piezo_static,
+        piezo_ionic=piezo_ionic,
         deprecated=False,
     )
     arrow_struct = pa.scalar(

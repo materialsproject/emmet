@@ -1,224 +1,139 @@
-from __future__ import annotations
+from datetime import datetime
+from typing import Iterator
 
-import warnings
-from math import ceil
-from typing import TYPE_CHECKING
-
-import numpy as np
-from maggma.builders import Builder
-from maggma.core import Store
-from maggma.utils import grouper
-from pymatgen.core.structure import Structure
-
+from emmet.builders.base import BaseBuilderInput
+from emmet.builders.utils import _parse_kpoints, filter_map
 from emmet.core.absorption import AbsorptionDoc
-from emmet.core.utils import jsanitize
-
-if TYPE_CHECKING:
-    from collections.abc import Iterator
-
-
-warnings.warn(
-    f"The current version of {__name__}.AbsorptionBuilder will be deprecated in version 0.87.0. "
-    "To continue using legacy builders please install emmet-builders-legacy from git. A PyPI "
-    "release for emmet-legacy-builders is not planned.",
-    DeprecationWarning,
-    stacklevel=2,
-)
+from emmet.core.material import PropertyOrigin
+from emmet.core.mpid_ext import MaterialIdentifierType
+from emmet.core.tasks import CoreTaskDoc
+from emmet.core.types.typing import DateTimeType
 
 
-class AbsorptionBuilder(Builder):
-    def __init__(
-        self,
-        materials: Store,
-        tasks: Store,
-        absorption: Store,
-        query: dict | None = None,
-        **kwargs,
-    ):
-        self.materials = materials
-        self.tasks = tasks
-        self.absorption = absorption
-        self.query = query or {}
-        self.kwargs = kwargs
+class AbsorptionBuilderInput(BaseBuilderInput):
+    energies: list[float]
+    real_d: list[list[float]]
+    imag_d: list[list[float]]
+    absorption_co: list[float]
+    bandgap: float | None
+    nkpoints: int | None
+    last_updated: DateTimeType
+    origins: list[PropertyOrigin]
 
-        self.materials.key = "material_id"
-        self.tasks.key = "task_id"
-        self.absorption.key = "material_id"
 
-        super().__init__(sources=[materials, tasks], targets=[absorption], **kwargs)
+def build_absorption_docs(
+    input_documents: list[AbsorptionBuilderInput], **kwargs
+) -> Iterator[AbsorptionDoc]:
+    """
+    Generate absorption documents from input structures.
 
-    def prechunk(self, number_splits: int) -> Iterator[dict]:  # pragma: no cover
-        """
-        Prechunk method to perform chunking by the key field
-        """
-        q = dict(self.query)
+    Transforms a list of AbsorptionBuilderInput documents containing
+    Pymatgen structures into corresponding AbsorbtionDoc instances by
+    generating an absorption spectrum based on frequency dependent
+    dielectric function outputs.
 
-        keys = self.absorption.newer_in(self.materials, criteria=q, exhaustive=True)
+    Caller is responsible for creating AbsorptionBuilderInput instances
+    within their data pipeline context.
 
-        N = ceil(len(keys) / number_splits)
-        for split in grouper(keys, N):
-            yield {"query": {self.materials.key: {"$in": list(split)}}}
+    Args:
+        input_documents: List of AbsorptionBuilderInput documents to process.
 
-    def get_items(self) -> Iterator[list[dict]]:
-        """
-        Gets all items to process
+    Returns:
+       Iterator[AbsorbtionDoc]
+    """
+    return filter_map(
+        AbsorptionDoc.from_structure,
+        input_documents,
+        work_keys=[
+            "energies",
+            "real_d",
+            "imag_d",
+            "absorption_co",
+            "bandgap",
+            "nkpoints",
+            "last_updated",
+            "origins",
+            # PropertyDoc.from_structure(...) kwargs
+            "deprecated",
+            "material_id",
+            "structure",
+        ],
+        **kwargs
+    )
 
-        Returns:
-            generator or list relevant tasks and materials to process
-        """
 
-        self.logger.info("Absorption Builder Started")
+def obtain_blessed_absorption_builder_input(
+    tasks: list[CoreTaskDoc],
+    material_id: MaterialIdentifierType | None = None,
+    material_last_updated: datetime | None = None,
+) -> AbsorptionBuilderInput:
+    """
+    Yield an AbsorptionBuilderInput
+    from a list of CoreTaskDocs using the 'best' document in the list.
 
-        q = dict(self.query)
+    [Optional] Relevant material properties needed if running in context of
+    building properties for 'material's:
+       - material_id -> anchor identifier for all ``tasks``
+       - material_last_updated -> when anchor material document was last updated
 
-        mat_ids = self.materials.distinct(self.materials.key, criteria=q)
-        ab_ids = self.absorption.distinct(self.absorption.key)
+    Relevant CoreTaskDoc fields needed:
+       - task_id
+       - last_updated
+       - input.kpoints
+       - input.structure
+       - orig_inputs.kpoints
+       - output.frequency_dependent_dielectric
+       - output.optical_absorption_coeff
+       - output.bandgap
 
-        mats_set = set(
-            self.absorption.newer_in(target=self.materials, criteria=q, exhaustive=True)
-        ) | (set(mat_ids) - set(ab_ids))
+    CoreTaskDocs need to have non-null optical_absorption_coeff
+    and frequency_dependent_dielectric
+    """
+    relevant_tasks = [
+        {
+            "structure": task.input.structure,
+            "task_id": task.task_id,
+            "nkpoints": _parse_kpoints(task),
+            "energies": task.output.frequency_dependent_dielectric.energy,
+            "real_d": task.output.frequency_dependent_dielectric.real,
+            "imag_d": task.output.frequency_dependent_dielectric.imaginary,
+            "absorption_co": task.output.optical_absorption_coeff,
+            "bandgap": task.output.bandgap,
+            "task_last_updated": task.last_updated,
+        }
+        for task in tasks
+        if task.input is not None
+        and task.input.structure is not None
+        and task.output is not None
+        and task.output.optical_absorption_coeff is not None
+        and task.output.frequency_dependent_dielectric is not None
+        and task.output.frequency_dependent_dielectric.energy is not None
+        and task.output.frequency_dependent_dielectric.real is not None
+        and task.output.frequency_dependent_dielectric.imaginary is not None
+    ]
 
-        mats = [mat for mat in mats_set]
+    best_task = sorted(
+        relevant_tasks,
+        key=lambda doc: (
+            # Entries with any None sort last (False < True, reversed)
+            doc["nkpoints"] is not None and doc["task_last_updated"] is not None,
+            doc["nkpoints"],
+            doc["task_last_updated"],
+        ),
+        reverse=True,
+    )[0]
 
-        self.logger.info(
-            "Processing {} materials for absorption data".format(len(mats))
-        )
-
-        self.total = len(mats)
-
-        for mat in mats:
-            doc = self._get_processed_doc(mat)
-
-            if doc is not None:
-                yield doc
-            else:
-                pass
-
-    def process_item(self, item):
-        structure = Structure.from_dict(item["structure"])
-        mpid = item[self.materials.key]
-        origin_entry = {"name": "absorption", "task_id": item["task_id"]}
-
-        doc = AbsorptionDoc.from_structure(
-            structure=structure,
-            material_id=mpid,
-            task_id=item["task_id"],
-            deprecated=False,
-            energies=item["energies"],
-            real_d=item["real_dielectric"],
-            imag_d=item["imag_dielectric"],
-            absorption_co=item["optical_absorption_coeff"],
-            bandgap=item["bandgap"],
-            nkpoints=item["nkpoints"],
-            last_updated=item["updated_on"],
-            origins=[origin_entry],
-        )
-
-        return jsanitize(doc.model_dump(), allow_bson=True)
-
-    def update_targets(self, items):
-        """
-        Inserts the new absorption docs into the absorption collection
-        """
-        docs = list(filter(None, items))
-
-        if len(docs) > 0:
-            self.logger.info(f"Found {len(docs)} absorption docs to update")
-            self.absorption.update(docs)
-        else:
-            self.logger.info("No items to update")
-
-    def _get_processed_doc(self, mat):
-        mat_doc = self.materials.query_one(
-            {self.materials.key: mat},
-            [
-                self.materials.key,
-                "structure",
-                "task_types",
-                "run_types",
-                "last_updated",
-            ],
-        )
-
-        task_types = mat_doc["task_types"].items()
-
-        potential_task_ids = []
-
-        for task_id, task_type in task_types:
-            if task_type == "Optic":
-                potential_task_ids.append(task_id)
-
-        final_docs = []
-
-        for task_id in potential_task_ids:
-            task_query = self.tasks.query_one(
-                properties=[
-                    "orig_inputs.kpoints",
-                    "orig_inputs.structure",
-                    "input.parameters",
-                    "input.structure",
-                    "output.dielectric.energy",
-                    "output.dielectric.real",
-                    "output.dielectric.imag",
-                    "calcs_reversed",
-                    "output.bandgap",
-                ],
-                criteria={self.tasks.key: task_id},
+    doc = {
+        "material_id": material_id,
+        "last_updated": material_last_updated,
+        "origins": [
+            PropertyOrigin(
+                name="absorption",
+                task_id=best_task["task_id"],
+                last_updated=best_task["task_last_updated"],
             )
+        ],
+        **best_task,
+    }
 
-            if (cr := task_query.get("calcs_reversed", [])) and (
-                oac := cr[0]["output"]["optical_absorption_coeff"]
-            ):
-                try:
-                    structure = task_query["input"]["structure"]
-                except KeyError:
-                    structure = task_query["orig_inputs"]["structure"]
-
-                if (
-                    task_query["orig_inputs"]["kpoints"]["generation_style"]
-                    == "Monkhorst"
-                    or task_query["orig_inputs"]["kpoints"]["generation_style"]
-                    == "Gamma"
-                ):
-                    nkpoints = np.prod(
-                        task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0
-                    )
-
-                else:
-                    nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
-
-                lu_dt = mat_doc["last_updated"]
-
-                final_docs.append(
-                    {
-                        "task_id": task_id,
-                        "nkpoints": int(nkpoints),
-                        "energies": cr[0]["output"]["frequency_dependent_dielectric"][
-                            "energy"
-                        ],
-                        "real_dielectric": cr[0]["output"][
-                            "frequency_dependent_dielectric"
-                        ]["real"],
-                        "imag_dielectric": cr[0]["output"][
-                            "frequency_dependent_dielectric"
-                        ]["imaginary"],
-                        "optical_absorption_coeff": oac,
-                        "bandgap": task_query["output"]["bandgap"],
-                        "structure": structure,
-                        "updated_on": lu_dt,
-                        self.materials.key: mat_doc[self.materials.key],
-                    }
-                )
-
-        if len(final_docs) > 0:
-            sorted_final_docs = sorted(
-                final_docs,
-                key=lambda entry: (
-                    entry["nkpoints"],
-                    entry["updated_on"],
-                ),
-                reverse=True,
-            )
-            return sorted_final_docs[0]
-        else:
-            return None
+    return AbsorptionBuilderInput(**doc)

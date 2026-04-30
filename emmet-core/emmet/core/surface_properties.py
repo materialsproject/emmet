@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field, field_validator
 from typing import TYPE_CHECKING
 
+from pydantic import BaseModel, Field, field_validator
 from pymatgen.core import Structure
 
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
+from emmet.core.types.typing import MaterialIdentifierType
 
 if TYPE_CHECKING:
     from typing import Any
@@ -116,7 +117,7 @@ class SurfacePropDoc(BaseModel):
         description="Whether the entry has any reconstructed surfaces.",
     )
 
-    material_id: str | None = Field(
+    material_id: MaterialIdentifierType | None = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )

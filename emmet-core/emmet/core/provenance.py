@@ -4,19 +4,20 @@ from __future__ import annotations
 
 import json
 import warnings
-from typing import TYPE_CHECKING, Any, Annotated
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
-from pydantic import BaseModel, Field, BeforeValidator
-from pymatgen.core import Lattice, Structure, PeriodicSite
+from pydantic import BaseModel, BeforeValidator, Field
+from pymatgen.core import Lattice, PeriodicSite, Structure
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.math import Matrix3D
+from emmet.core.structure import StructureMetadata
 from emmet.core.symmetry import SymmetryData
 from emmet.core.types.enums import ValueEnum
-from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.pymatgen_types.lattice_adapter import LatticeType
+from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.typing import DateTimeType, IdentifierType
 
 if TYPE_CHECKING:
@@ -29,7 +30,7 @@ class Database(ValueEnum):
     """
 
     ICSD = "icsd"
-    Pauling_Files = "pf"
+    Pauling_Files = "pauling"
     COD = "cod"
 
 
@@ -50,7 +51,7 @@ def _remove_dupe_authors(authors: list[dict[str, Any] | Author]):
 
 
 def _migrate_legacy_history_data(
-    config: list[dict[str, Any]] | list[History],
+    config: list[dict[str, Any]] | list[History] | None,
 ) -> list[History]:
     """Migrate legacy provenance and SNL `history` data as a classmethod.
 
@@ -62,6 +63,8 @@ def _migrate_legacy_history_data(
     -----------
     list of History objects.
     """
+    if not config:
+        return []
 
     top_level_history = [
         h.model_dump() if isinstance(h, History) else h for h in config
@@ -84,7 +87,7 @@ def _migrate_legacy_history_data(
 
 def _flatten_nested_descriptions(
     descs: list[ProvenanceDescription | None],
-    entry: dict[str, Any] | None,
+    entry: dict[str, Any] | str | None,
     depth: int,
     remark: str | None = None,
 ) -> None:
@@ -109,6 +112,11 @@ def _flatten_nested_descriptions(
 
     if not entry:
         descs.append(None)
+        return
+
+    # Handle plain string descriptions (e.g. from user-submitted SNLs)
+    if isinstance(entry, str):
+        descs.append(ProvenanceDescription(string=entry, remark=remark))
         return
 
     elif nested_hist := entry.pop("history", []):
@@ -244,7 +252,7 @@ class History(BaseModel):
 
 
 HistoryType = Annotated[
-    list[History] | None,
+    list[History | None],
     BeforeValidator(_migrate_legacy_history_data),
 ]
 
@@ -271,7 +279,7 @@ class SNLAbout(BaseModel):
     )
 
     history: HistoryType = Field(
-        None,
+        [],
         description="list of history nodes specifying the transformations or orignation"
         " of this material for the entry closest matching the material input.",
     )
@@ -282,6 +290,10 @@ class SNLAbout(BaseModel):
     def migrate_legacy_data(cls, config: dict[str, Any]) -> Self:
         """Migrate legacy SNL data with free-form JSON values to schematized."""
         config["history"] = _migrate_legacy_history_data(config.get("history", []))
+        if projs := config.pop("projects", None):
+            if "tags" not in config:
+                config["tags"] = []
+            config["tags"].extend(projs)
         return cls(**config)
 
 
@@ -383,7 +395,7 @@ class ProvenanceDoc(PropertyDoc):
         exp_vals = []
         for snl in snls:
             for entry in snl.about.history:  # type: ignore[union-attr]
-                if entry.description is not None:
+                if entry is not None and entry.description is not None:
                     exp_vals.append(entry.description.experimental)
 
         experimental = any(exp_vals)
@@ -418,4 +430,80 @@ class ProvenanceDoc(PropertyDoc):
     def migrate_legacy_data(cls, config: dict[str, Any]) -> Self:
         """Migrate legacy provenance data with free-form JSON values to schematized."""
         config["history"] = _migrate_legacy_history_data(config.get("history", []))
+        return cls(**config)
+
+
+class DatabaseSNL(StructureMetadata):
+    """Define schemas for database entries.
+
+    This particular SNL schema is used for
+    experimental databases like ICSD and Pauling File.
+    """
+
+    snl_id: str | None = Field(None, description="The SNL ID for this entry")
+    structure: StructureType | None = Field(
+        None, description="The structure for this entry"
+    )
+    about: SNLAbout = Field(
+        default_factory=SNLAbout,  # type: ignore[arg-type]
+        description="Extended metadata for this entry.",
+    )
+    theoretical: bool = Field(
+        True, description="Whether this entry is a theoretical database entry."
+    )
+    is_ordered: bool | None = Field(
+        None,
+        description="Whether this represents a (configurationally) ordered structure.",
+    )
+    last_updated: DateTimeType = Field(
+        description="The last time this entry was updated."
+    )
+    tags: list[str] | None = Field(
+        None, description="List of high-level metadata for this entry."
+    )
+    source: Literal["icsd", "pauling", "mp-complete", "user"] | None = Field(
+        None, description="The source of this SNL."
+    )
+    submission_id: int | None = Field(
+        None, description="If applicable, the identifier of the submitted structure."
+    )
+    submitter_email: str | None = Field(
+        None,
+        description="If applicable, the email of the user who submitted the structure.",
+    )
+
+    @classmethod
+    def migrate_legacy_config(cls, config: dict) -> Self:
+        """Migrate legacy, JSONL-format SNLs to the current schema.
+
+        Legacy database SNLs appear to extend the properties of the
+        pymatgen Structure object.
+        """
+        if all(
+            config.get(k)
+            for k in (
+                "sites",
+                "lattice",
+            )
+        ):
+            config["structure"] = Structure.from_dict(
+                {
+                    k: config.pop(k, None)
+                    for k in (
+                        "sites",
+                        "lattice",
+                    )
+                }
+            )
+        if "structure" in config and "is_ordered" not in config:
+            config["is_ordered"] = config["structure"].is_ordered
+
+        if (expt := config.pop("experimental", None)) is not None:
+            config["theoretical"] = not expt
+
+        if "structure" in config:
+            return cls.from_structure(
+                meta_structure=config["structure"],
+                **config,
+            )
         return cls(**config)

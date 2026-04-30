@@ -131,7 +131,7 @@ class VibrationDoc(PropertyDoc):
             raman_intensities=raman_intensities,
             raman_activities=raman_active,
             warnings=warnings,
-            origins=[MolPropertyOrigin(name="vibrations", task_id=task.task_id)],
+            origins=[MolPropertyOrigin(name="vibrations", task_id=task.task_id)],  # type: ignore[call-arg]
             deprecated=deprecated,
             **kwargs,
         )

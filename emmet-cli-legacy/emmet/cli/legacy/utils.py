@@ -13,21 +13,21 @@ from pathlib import Path
 
 import click
 import mgzip
-from botocore.exceptions import EndpointConnectionError
 from atomate.vasp.database import VaspCalcDb
 from atomate.vasp.drones import VaspDrone
+from botocore.exceptions import EndpointConnectionError
 from dotty_dict import dotty
 from fireworks.fw_config import FW_BLOCK_FORMAT
 from mongogrant.client import Client
 from pymatgen.core import Structure
+from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 from pymatgen.util.provenance import StructureNL
 from pymongo.errors import DocumentTooLarge
-from emmet.core.vasp.task_valid import TaskDocument
-from emmet.core.vasp.validation import ValidationDoc
-from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 
 from emmet.cli.legacy import SETTINGS
 from emmet.core.utils import group_structures
+from emmet.core.vasp.task_valid import TaskDocument
+from emmet.core.vasp.validation import ValidationDoc
 
 logger = logging.getLogger("emmet")
 perms = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP
@@ -326,7 +326,7 @@ def get_vasp_dirs():
                 create_orig_inputs(vasp_dir)
 
             dirs[:] = []  # don't descend further (i.e. ignore relax1/2)
-            logger.log(logging.INFO if gzipped else logging.DEBUG, vasp_dir)
+            # logger.log(logging.INFO if gzipped else logging.DEBUG, vasp_dir)
             yield vasp_dir
             counter += 1
 
@@ -559,3 +559,123 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
             count += 1
 
     return count
+
+
+def find_leaf_launchers(block_path):
+    """
+    Walk a block directory and find all leaf launcher directories — those
+    that actually contain VASP (or other calc) files rather than just
+    more nested launchers.
+
+    Returns a list of (leaf_abs_path, leaf_dirname) tuples.
+    """
+    leaves = []
+    for root, dirs, files in os.walk(block_path):
+        dir_type = get_dir_type(files)
+        if dir_type:
+            leaves.append(root)
+            dirs[:] = []  # don't descend into relax1/relax2 etc.
+    return leaves
+
+
+def unique_launcher_name(dest_dir, name):
+    """
+    Given a destination directory and a desired launcher name, return a name
+    that doesn't collide with anything already in dest_dir. Appends _1, _2, etc.
+    if needed.
+    """
+    candidate = name
+    counter = 1
+    while os.path.exists(os.path.join(dest_dir, candidate)):
+        candidate = f"{name}_{counter}"
+        counter += 1
+    return candidate
+
+
+def reorganize_blocks(block_launchers, base_path, max_per_block=50):
+    """
+    Reorganize blocks so that:
+      1. Arbitrary launcher nesting is flattened to block_/launcher_/
+      2. No block has more than max_per_block launchers.
+
+    Each leaf launcher (the directory actually containing VASP files) is
+    moved directly under a block directory. The nested hierarchy is not
+    preserved.
+
+    Args:
+        block_launchers: dict mapping block name -> list of launcher paths
+        base_path: the root directory containing the blocks
+        max_per_block: maximum number of launchers per block
+
+    Returns:
+        A new block_launchers dict reflecting the reorganized layout.
+    """
+    import time
+
+    ctx = click.get_current_context()
+    run = ctx.parent.parent.params["run"]
+
+    # First pass: discover all leaf launchers across all blocks
+    all_leaves = []  # list of (current_abs_path, leaf_name, original_block)
+    for block in block_launchers:
+        block_path = os.path.join(base_path, block)
+        for leaf_path in find_leaf_launchers(block_path):
+            leaf_name = os.path.basename(leaf_path)
+            all_leaves.append((leaf_path, leaf_name, block))
+
+    logger.info(
+        f"Found {len(all_leaves)} leaf launchers across "
+        f"{len(block_launchers)} block(s). Flattening and redistributing "
+        f"into blocks of {max_per_block}..."
+    )
+
+    # Chunk all leaves into groups of max_per_block
+    leaf_chunks = chunks(all_leaves, max_per_block)
+    new_block_launchers = {}
+
+    for chunk in leaf_chunks:
+        new_block = get_timestamp_dir(prefix="block")
+        new_block_dir = os.path.join(base_path, new_block)
+        chunk_launcher_names = []
+
+        if run:
+            os.makedirs(new_block_dir, exist_ok=True)
+
+        for leaf_path, leaf_name, orig_block in chunk:
+            dest_name = unique_launcher_name(new_block_dir, leaf_name)
+            dst = os.path.join(new_block_dir, dest_name)
+
+            if run:
+                os.rename(leaf_path, dst)
+                logger.debug(
+                    f"  {orig_block}/.../{leaf_name} -> {new_block}/{dest_name}"
+                )
+            else:
+                logger.debug(
+                    f"  Would move {orig_block}/.../{leaf_name} -> "
+                    f"{new_block}/{dest_name}"
+                )
+
+            chunk_launcher_names.append(dest_name)
+
+        new_block_launchers[new_block] = chunk_launcher_names
+        logger.info(
+            f"  {'Created' if run else 'Would create'} {new_block} "
+            f"with {len(chunk)} launchers"
+        )
+        time.sleep(0.1)  # ensure unique timestamp-based block names
+
+    # Clean up empty old block directories
+    for block in block_launchers:
+        block_path = os.path.join(base_path, block)
+        if run:
+            # remove the now-empty tree (only empty dirs should remain)
+            try:
+                shutil.rmtree(block_path)
+                logger.debug(f"  Removed empty original block {block}")
+            except OSError as e:
+                logger.warning(f"  Could not remove {block}: {e}")
+        else:
+            logger.debug(f"  Would remove empty original block {block}")
+
+    return new_block_launchers

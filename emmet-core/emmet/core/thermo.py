@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Annotated
+from typing import Annotated, Sequence
 
-from pydantic import BaseModel, BeforeValidator, Field, PlainSerializer
+from pydantic import BaseModel, BeforeValidator, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
@@ -38,11 +38,10 @@ class DecompositionProduct(BaseModel):
     )
     amount: float | None = Field(
         None,
-        description="The amount of the decomposed material by formula units this this material decomposes to.",
+        description="The amount of the decomposed material by formula units this material decomposes to.",
     )
 
 
-@type_override({"thermo_type": ThermoType, "thermo_id": str})
 class ThermoDoc(PropertyDoc):
     """
     A thermo entry document
@@ -60,7 +59,6 @@ class ThermoDoc(PropertyDoc):
         Field(
             description="Unique document ID which is composed of the Material ID and thermo data type.",
         ),
-        PlainSerializer(str),
         BeforeValidator(ThermoID._deserialize),
     ]
 
@@ -126,7 +124,7 @@ class ThermoDoc(PropertyDoc):
     @classmethod
     def from_entries(
         cls,
-        entries: list[ComputedEntry | ComputedStructureEntry],
+        entries: Sequence[ComputedEntry | ComputedStructureEntry],
         thermo_type: ThermoType | RunType,
         phase_diagram: PhaseDiagram | None = None,
         use_max_chemsys: bool = False,
@@ -184,10 +182,10 @@ class ThermoDoc(PropertyDoc):
 
             (decomp, ehull) = pd.get_decomp_and_e_above_hull(blessed_entry)  # type: ignore[arg-type]
 
-            builder_meta = EmmetMeta(license=blessed_entry.data.get("license"))
+            builder_meta = EmmetMeta(license=blessed_entry.data.get("license"))  # type: ignore[call-arg]
 
             d = {
-                "thermo_id": "{}_{}".format(material_id, str(thermo_type)),
+                "thermo_id": ThermoID(identifier=material_id, suffix=thermo_type),
                 "material_id": material_id,
                 "thermo_type": thermo_type,
                 "uncorrected_energy_per_atom": blessed_entry.uncorrected_energy

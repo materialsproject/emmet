@@ -6,19 +6,22 @@ import sys
 from gzip import GzipFile
 from io import BytesIO
 from itertools import chain, combinations
+from typing import TYPE_CHECKING, Callable, Iterable, Iterator, Mapping, TypeVar
 
+import numpy as np
 import orjson
 from botocore.exceptions import ClientError
 from monty.serialization import MontyDecoder
 from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
 from pymatgen.core import Structure
+from pymatgen.io.validation.check_kpoints_kspacing import (
+    get_kpoint_divisions_from_kspacing,
+)
 from pymatgen.io.vasp.inputs import PotcarSingle
 
-from emmet.core.types.typing import FSPathType
-
 from emmet.builders.settings import EmmetBuildSettings
-
-from typing import TYPE_CHECKING
+from emmet.core.tasks import CoreTaskDoc
+from emmet.core.types.typing import FSPathType
 
 if TYPE_CHECKING:
     from typing import Any, Literal
@@ -300,3 +303,126 @@ def get_potcar_stats(
             stats[calc_type].update({potcar_symbol: summary_stats})
 
     return stats
+
+
+def _parse_kpoints(task: CoreTaskDoc) -> int:
+
+    for inp_field in ("input", "orig_inputs"):
+        if (
+            kpts := getattr(getattr(task, inp_field, None), "kpoints", None)
+        ) is not None:
+            break
+
+    if kpts is None:
+        assert task.input is not None and isinstance(task.structure, Structure)
+        if isinstance(dk := (task.input.incar or {}).get("KSPACING"), float):
+            return int(np.prod(get_kpoint_divisions_from_kspacing(task.structure, dk)))
+        return 0
+
+    if kpts.style.name in ("Monkhorst", "Gamma"):
+        return np.prod(kpts.kpts[0])
+
+    assert task.orig_inputs is not None and task.orig_inputs.kpoints is not None
+    return task.orig_inputs.kpoints.num_kpts
+
+
+# -----------------------------------------------------------------------------
+# Generics
+# -----------------------------------------------------------------------------
+
+T = TypeVar("T")
+S = TypeVar("S")
+V = TypeVar("V")
+
+
+def try_call(
+    fn: Callable[..., T],
+    /,
+    *args: Any,
+    _default: S | None = None,
+    _safe: bool = True,
+    **kwargs: Any,
+) -> T | S | None:
+    """Attempt to call a function, returning a _default value if an exception is raised.
+
+    Args:
+        fn: The function to call.
+        *args: Positional arguments to forward to ``fn``.
+        _default: The value to return if ``fn`` raises an exception.
+            Defaults to ``None``.
+        _safe: Override behavior of ``try_call`` — propagate exceptions when
+            ``fn`` raises. Useful for debugging.
+        **kwargs: Keyword arguments to forward to ``fn``.
+
+    Returns:
+        The return value of ``fn(*args, **kwargs)`` if successful,
+        otherwise ``_default``.
+    """
+    if not _safe:
+        return fn(*args, **kwargs)
+    try:
+        return fn(*args, **kwargs)
+    except Exception:
+        return _default
+
+
+def filter_map(
+    fn: Callable[..., T],
+    work: Iterable[V],
+    /,
+    *args: Any,
+    work_keys: list[str] | None = None,
+    **kwargs: Any,
+) -> Iterator[T]:
+    """Apply a function to each item in an iterable, yielding non-None results.
+
+    Lazily maps ``fn`` over ``work``, passing each item as the first argument
+    along with any additional positional and keyword arguments. Results that
+    are ``None`` are excluded.
+
+    When ``work_keys`` is provided, each item in ``work`` is not passed as a
+    positional argument. Instead, the specified keys are extracted from each
+    item (via attribute access or dict lookup) and forwarded to ``fn`` as
+    keyword arguments, merged with any extra ``**kwargs``.
+
+    Args:
+        fn: The function to apply to each item in ``work``.
+        work: The iterable of items to process.
+        *args: Additional positional arguments to forward to ``fn``.
+        work_keys: If provided, a list of keys/attributes to extract from
+            each item in ``work`` and pass as keyword arguments to ``fn``.
+        **kwargs: Additional keyword arguments to forward to ``fn``.
+
+    Yields:
+        Non-``None`` results from applying ``fn`` to each item in ``work``.
+    """
+
+    def _extract_kwargs(item: Any, keys: list[str]) -> dict[str, Any]:
+        return {
+            key: item[key] if isinstance(item, Mapping) else getattr(item, key)
+            for key in keys
+        }
+
+    if work_keys is not None:
+        yield from filter(
+            lambda y: y is not None,  # type: ignore[arg-type]
+            map(
+                lambda x: try_call(
+                    fn,
+                    *args,
+                    **{
+                        **try_call(_extract_kwargs, x, work_keys, _default={}),  # type: ignore[dict-item]
+                        **kwargs,
+                    },
+                ),
+                work,
+            ),
+        )
+    else:
+        yield from filter(
+            lambda y: y is not None,
+            map(
+                lambda x: try_call(fn, x, *args, **kwargs),
+                work,
+            ),
+        )

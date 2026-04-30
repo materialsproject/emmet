@@ -7,8 +7,8 @@ from emmet.core.types.enums import ThermoType
 from emmet.core.types.pymatgen_types.computed_entries_adapter import (
     ComputedStructureEntryType,
 )
-from emmet.core.utils import type_override
 from emmet.core.types.typing import DateTimeType
+from emmet.core.utils import type_override
 from emmet.core.vasp.calc_types.enums import RunType
 
 
@@ -26,11 +26,9 @@ class CorrectedEntriesDoc(EmmetBaseModel):
         description="Dash-delimited string of elements in the material.",
     )
 
-    entries: dict[RunType | ThermoType, list[ComputedStructureEntryType] | None] = (
-        Field(
-            ...,
-            description="List of all corrected entries that are valid for the specified thermo type.",
-        )
+    entries: dict[RunType | ThermoType, list[ComputedStructureEntryType]] = Field(
+        ...,
+        description="List of all corrected entries that are valid for the specified thermo type.",
     )
 
     last_updated: DateTimeType = Field(
