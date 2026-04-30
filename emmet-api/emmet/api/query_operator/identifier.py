@@ -15,7 +15,7 @@ class SuffixedIDQuery(QueryOperator):
     for a concrete implementation.
     """
 
-    suffix_id_class: SuffixedID = SuffixedID
+    suffix_id_class: type[SuffixedID] = SuffixedID
     field_name: str = "identifier"
 
     def query(
