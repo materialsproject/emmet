@@ -4,6 +4,7 @@ from pymatgen.core.structure import Structure
 import pytest
 
 from emmet.api.core.settings import MAPISettings
+from emmet.api.query_operator import MultiTaskIDQuery
 from emmet.api.routes.materials.materials.query_operators import (
     BlessedCalcsQuery,
     ChemsysQuery,
@@ -13,7 +14,6 @@ from emmet.api.routes.materials.materials.query_operators import (
     FormulaAutoCompleteQuery,
     FormulaQuery,
     MultiMaterialIDQuery,
-    MultiTaskIDQuery,
     SymmetryQuery,
 )
 from emmet.core.symmetry import CrystalSystem, _get_space_group_symbol_to_number_mapping
@@ -110,6 +110,14 @@ def test_deprecation_query():
 
 def test_symmetry_query():
     op = SymmetryQuery()
+
+    assert op.query(crystal_system="Trigonal") == {
+        "criteria": {"symmetry.crystal_system": "Trigonal"}
+    }
+    assert op.query(spacegroup_symbol="P6_3/mmc") == {
+        "criteria": {"symmetry.number": 194}
+    }
+    assert op.query(spacegroup_number=194) == {"criteria": {"symmetry.number": 194}}
 
     for aux_query in [
         {"spacegroup_number": 221},

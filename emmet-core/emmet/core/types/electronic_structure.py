@@ -5,10 +5,12 @@ from emmet.core.types.pymatgen_types.bandstructure_symm_line_adapter import (
 )
 from emmet.core.types.pymatgen_types.dos_adapter import CompleteDosType
 from emmet.core.types.typing import IdentifierType
+from emmet.core.utils import arrow_incompatible
 
 lmaxmix = int
 
 
+@arrow_incompatible
 class DosShim(BaseModel):
     """Light wrapper around DOS data - useful for static analysis and runtime safety"""
 
@@ -18,6 +20,7 @@ class DosShim(BaseModel):
     )
 
 
+@arrow_incompatible
 class BSShim(BaseModel):
     """
     Light wrapper around bandstructure data - useful for static analysis and runtime safety

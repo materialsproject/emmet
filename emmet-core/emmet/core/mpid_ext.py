@@ -63,6 +63,16 @@ class ThermoID(SuffixedID):
     suffix: ThermoType | RunType
     separator: str = Field(default="-")
 
+    @classmethod
+    def from_str(cls, idx: str) -> Self:
+        """Ensure the class can be instantiated from a string or dict."""
+        sep = cls.model_fields["separator"].default
+        parts = idx.split(sep)
+        return cls(
+            identifier=sep.join(parts[:-1]),
+            suffix=parts[-1],  # type: ignore[arg-type]
+        )
+
 
 class BatteryID(SuffixedID):
     """Identify battery / electrode data."""

@@ -11,6 +11,7 @@ from emmet.api.query_operator import (
     PaginationQuery,
     SparseFieldsQuery,
     NumericQuery,
+    MultiTaskIDQuery,
 )
 
 from emmet.api.routes.materials.materials.query_operators import (
@@ -19,7 +20,6 @@ from emmet.api.routes.materials.materials.query_operators import (
     ChemsysQuery,
     DeprecationQuery,
     SymmetryQuery,
-    MultiTaskIDQuery,
     FindStructureQuery,
     FormulaAutoCompleteQuery,
     MultiMaterialIDQuery,

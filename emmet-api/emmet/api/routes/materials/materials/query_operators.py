@@ -253,6 +253,7 @@ class SymmetryQuery(QueryOperator):
 
             if (
                 len(spacegroup_numbers) == 1
+                and crystal_systems
                 and get_crystal_system_from_international_number(spacegroup_numbers[0])
                 not in crystal_systems
             ) or (

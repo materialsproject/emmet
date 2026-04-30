@@ -2,13 +2,13 @@ import os
 import pytest
 
 from emmet.api.core.settings import MAPISettings
+from emmet.api.query_operator import MultiTaskIDQuery
 from emmet.api.routes.molecules.molecules.query_operators import (
     FormulaQuery,
     ChemsysQuery,
     CompositionElementsQuery,
     ChargeSpinQuery,
     DeprecationQuery,
-    MultiTaskIDQuery,
     MultiMPculeIDQuery,
     FindMoleculeQuery,
     CalcMethodQuery,

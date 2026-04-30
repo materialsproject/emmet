@@ -1,6 +1,7 @@
 """Test extended MPID / AlphaID formats."""
 
 from itertools import product
+
 import numpy as np
 from pymatgen.core import Element
 
@@ -46,7 +47,9 @@ def test_single_suffix_ids():
 
         for idx, enum_val in product(RAND_IDS, enum_cls.__members__):
             iden = id_cls(identifier=idx, suffix=enum_val)
-            assert iden == id_cls.from_str(f"{idx}_{enum_val}")
+            assert iden == id_cls.from_str(
+                f"{idx}{id_cls.model_fields['separator'].default}{enum_val}"
+            )
             if last_iden:
                 assert iden != last_iden
             last_iden = iden

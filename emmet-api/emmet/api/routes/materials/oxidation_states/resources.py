@@ -35,6 +35,7 @@ def oxi_states_resource(oxi_states_store):
             LicenseQuery(),
         ],
         header_processor=GlobalHeaderProcessor(),
+        query_to_configure_on_request=LicenseQuery(),
         tags=["Materials Oxidation States"],
         sub_path="/oxidation_states/",
         disable_validation=True,

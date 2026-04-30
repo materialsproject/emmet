@@ -1,10 +1,9 @@
 from typing import Iterator
 
-from robocrys import __version__ as __robocrys_version__
-from robocrys.condense.mineral import MineralMatcher
-
 from emmet.builders.base import BaseBuilderInput
 from emmet.builders.utils import filter_map
+from emmet.core import __version__
+from emmet.core.featurization.robocrys.condense.mineral import MineralMatcher
 from emmet.core.robocrys import RobocrystallogapherDoc
 
 
@@ -33,6 +32,6 @@ def build_robocrys_docs(
         input_documents,
         work_keys=["deprecated", "material_id", "structure", "origins"],
         mineral_matcher=mineral_matcher,
-        robocrys_version=__robocrys_version__,
+        robocrys_version=__version__,
         **kwargs
     )

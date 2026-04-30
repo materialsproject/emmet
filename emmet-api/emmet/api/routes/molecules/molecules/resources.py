@@ -8,6 +8,7 @@ from emmet.api.query_operator import (
     PaginationQuery,
     SparseFieldsQuery,
     NumericQuery,
+    MultiTaskIDQuery,
 )
 
 from emmet.api.routes.molecules.molecules.hint_scheme import MoleculesHintScheme
@@ -17,7 +18,6 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     CompositionElementsQuery,
     ChargeSpinQuery,
     DeprecationQuery,
-    MultiTaskIDQuery,
     MultiMPculeIDQuery,
     FindMoleculeQuery,
     CalcMethodQuery,

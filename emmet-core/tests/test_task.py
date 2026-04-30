@@ -302,6 +302,7 @@ def test_arrow(test_dir, object_name, tmpdir):
     ) as dir_name:
 
         doc = TaskDoc.from_directory(dir_name)
+        doc.entry.entry_id = {"identifier": "ft", "separator": "-", "suffix": "UNKNOWN"}
         arrow_struct = pa.scalar(
             doc.model_dump(context={"format": "arrow"}), type=arrowize(TaskDoc)
         )

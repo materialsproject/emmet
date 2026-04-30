@@ -3,6 +3,9 @@ from monty.serialization import loadfn
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.electronic_structure import ElectronicStructureDoc
+from emmet.core.material import PropertyOrigin
+from emmet.core.mpid import AlphaID
+from emmet.core.types.electronic_structure import BSShim, DosShim
 from emmet.core.utils import jsanitize
 
 if ARROW_COMPATIBLE:
@@ -39,14 +42,20 @@ def dos(test_dir):
 
 
 def test_from_bsdos_1(bandstructure, dos, structure):
+    origins = [
+        PropertyOrigin(name="setyawan_curtarolo", task_id="mp-1056141"),
+        PropertyOrigin(name="dos", task_id="mp-1671247"),
+    ]
     es_doc = ElectronicStructureDoc.from_bsdos(
+        bandstructures=BSShim(setyawan_curtarolo=("mp-1056141", bandstructure, 2)),
+        dos=DosShim(dos=("mp-1671247", dos, 2)),
+        origins=origins,
+        structures={
+            AlphaID("mp-1671247", padlen=8): structure,
+            AlphaID("mp-1056141", padlen=8): structure,
+        },
         material_id="mp-13",
-        dos={"mp-1671247": dos},
-        is_gap_direct=False,
-        is_metal=True,
         deprecated=False,
-        setyawan_curtarolo={"mp-1056141": bandstructure},
-        structures={"mp-1671247": structure, "mp-1056141": structure},
         meta_structure=structure,
     )
 
@@ -81,23 +90,33 @@ def test_from_bsdos_2(bandstructure_fs, dos_fs):
     dos = dos_fs[0]["data"]
     bs = bandstructure_fs[0]["data"]
 
+    structures = {
+        AlphaID("mp-823888", padlen=8): dos.structure,
+        AlphaID("mp-1612487", padlen=8): bs.structure,
+    }
+
+    origins = [
+        PropertyOrigin(name="setyawan_curtarolo", task_id="mp-1612487"),
+        PropertyOrigin(name="dos", task_id="mp-823888"),
+    ]
+
     es_doc = ElectronicStructureDoc.from_bsdos(
+        bandstructures=BSShim(setyawan_curtarolo=(("mp-1612487", bs, 2))),
+        dos=DosShim(dos=("mp-823888", dos, 2)),
+        origins=origins,
+        structures=structures,
         material_id="mp-25375",
-        dos={"mp-823888": dos},
-        is_gap_direct=False,
-        is_metal=True,
         deprecated=False,
-        setyawan_curtarolo={"mp-1612487": bs},
         meta_structure=dos.structure,
     )
 
     assert es_doc.material_id == "mp-25375"
-    assert es_doc.band_gap == pytest.approx(0.0)
-    assert es_doc.cbm == pytest.approx(2.75448867)
-    assert es_doc.vbm == pytest.approx(2.75448867)
-    assert es_doc.efermi == pytest.approx(2.75448867)
+    assert es_doc.band_gap == pytest.approx(1.9916)
+    assert es_doc.vbm == pytest.approx(2.4169)
+    assert es_doc.cbm == pytest.approx(4.4085)
+    assert es_doc.efermi == pytest.approx(2.49084067)
     assert es_doc.is_gap_direct is False
-    assert es_doc.is_metal is True
+    assert es_doc.is_metal is False
     assert str(es_doc.magnetic_ordering) == "Ordering.NM"
 
     assert es_doc.bandstructure.setyawan_curtarolo.task_id == "mp-1612487"
@@ -113,16 +132,25 @@ def test_arrow(bandstructure_fs, dos_fs):
     dos = dos_fs[0]["data"]
     bs = bandstructure_fs[0]["data"]
 
+    structures = {
+        AlphaID("mp-823888", padlen=8): dos.structure,
+        AlphaID("mp-1612487", padlen=8): bs.structure,
+    }
+
+    origins = [
+        PropertyOrigin(name="setyawan_curtarolo", task_id="mp-1612487"),
+        PropertyOrigin(name="dos", task_id="mp-823888"),
+    ]
+
     doc = ElectronicStructureDoc.from_bsdos(
+        bandstructures=BSShim(setyawan_curtarolo=(("mp-1612487", bs, 2))),
+        dos=DosShim(dos=("mp-823888", dos, 2)),
+        origins=origins,
+        structures=structures,
         material_id="mp-25375",
-        dos={"mp-823888": dos},
-        is_gap_direct=False,
-        is_metal=True,
         deprecated=False,
-        setyawan_curtarolo={"mp-1612487": bs},
         meta_structure=dos.structure,
     )
-
     arrow_struct = pa.scalar(
         doc.model_dump(context={"format": "arrow"}),
         type=arrowize(ElectronicStructureDoc),
