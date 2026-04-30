@@ -78,3 +78,6 @@ docs = [
     "sphinx-autodoc-typehints",
     "myst-parser",
 ]
+bonding = [
+    "lobsterpy"
+]

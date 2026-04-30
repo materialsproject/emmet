@@ -79,7 +79,8 @@ def task_type(inputs: dict[str, Any]) -> TaskType:
     if incar.get("ICHARG", 0) > 10:
         try:
             kpt_labels = kpts.get("labels") or []
-            num_kpt_labels = len(list(filter(None.__ne__, kpt_labels)))
+            # Don't change below: `None.__ne__` is `NotImplemented`
+            num_kpt_labels = len([lbl for lbl in kpt_labels if lbl is not None])
         except Exception as e:
             raise Exception("Couldn't identify total number of kpt labels") from e
 

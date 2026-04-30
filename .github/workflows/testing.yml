@@ -20,7 +20,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           cache: pip
 
       - name: Get version from git
@@ -69,7 +69,7 @@ jobs:
             "emmet-archival",
             "emmet-cli",
           ]
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.12", "3.13", "3.14"]
 
     name: ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
@@ -81,7 +81,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Miniconda
-        uses: conda-incubator/setup-miniconda@v3
+        uses: conda-incubator/setup-miniconda@v4
         with:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
@@ -111,7 +111,6 @@ jobs:
 
       - name: Lint with mypy
         shell: bash -l {0}
-        if: matrix.python-version == 3.11
         run: python${{ matrix.python-version }} -m mypy --config-file .mypy.ini ${{ matrix.package }}/emmet
 
       - name: Test with pytest
