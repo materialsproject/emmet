@@ -1,5 +1,5 @@
 from emmet.api.query_operator import QueryOperator
-from emmet.api.utils import STORE_PARAMS
+from emmet.api.utils import STORE_PARAMS, process_identifiers
 from emmet.core.mpid_ext import SuffixedID
 
 
@@ -23,9 +23,15 @@ class SuffixedIDQuery(QueryOperator):
         **kwargs,
     ) -> STORE_PARAMS:
 
-        identifiers = [v.strip() for v in kwargs.get(f"{self.field_name}s") or ""]
+        identifiers = [
+            v.strip() for v in (kwargs.get(f"{self.field_name}s") or "").split(",")
+        ]
         sfx_ids = [self.suffix_id_class.from_str(v).model_dump() for v in identifiers]
-
+        for i, idx in enumerate(sfx_ids):
+            sfx_ids[i]["identifier"] = process_identifiers(idx["identifier"])[0]
+        sfx_as_str = [
+            idx["separator"].join((idx["identifier"], idx["suffix"])) for idx in sfx_ids
+        ]
         if len(sfx_ids) == 0:
             # Originally it was supported to query by a null value, quick return if so
             return {}
@@ -35,7 +41,6 @@ class SuffixedIDQuery(QueryOperator):
                 "criteria": {
                     f"{self.field_name}.identifier": sfx_ids[0]["identifier"],
                     f"{self.field_name}.suffix": sfx_ids[0]["suffix"],
-                    f"{self.field_name}.separator": sfx_ids[0].separator,
                 }
             }
 
@@ -44,10 +49,10 @@ class SuffixedIDQuery(QueryOperator):
         pre_filter_q = {}
 
         for field in ("identifier", "suffix"):
-            if len(unique := list({idx for idx in sfx_ids})) == 1:
+            if len(unique := list({idx[field] for idx in sfx_ids})) == 1:
                 pre_filter_q[f"{self.field_name}.{field}"] = unique[0]
             else:
-                pre_filter_q[f"{self.field_name}.{field}"] = {"$in": unique}
+                pre_filter_q[f"{self.field_name}.{field}"] = {"$in": sorted(unique)}
 
         pipeline = [
             {
@@ -60,7 +65,7 @@ class SuffixedIDQuery(QueryOperator):
                     "_idcat": {
                         "$concat": [
                             f"${self.field_name}.identifier",
-                            f"${self.field_name}.separator",
+                            self.suffix_id_class.model_fields["separator"].default,
                             f"${self.field_name}.suffix",
                         ]
                     }
@@ -68,7 +73,7 @@ class SuffixedIDQuery(QueryOperator):
             },
             {
                 # match concatenated suffix ID
-                "$match": {"_idcat": {"$in": identifiers}}
+                "$match": {"_idcat": {"$in": sfx_as_str}}
             },
             {
                 # remove from output

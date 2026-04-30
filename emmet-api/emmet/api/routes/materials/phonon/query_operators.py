@@ -10,6 +10,8 @@ from emmet.core.mpid import MPID, AlphaID
 class PhononImgQuery(QueryOperator):
     """
     Method to generate a query on phonon image data.
+
+    TODO: Deprecated? Not used anywhere in the API.
     """
 
     def query(

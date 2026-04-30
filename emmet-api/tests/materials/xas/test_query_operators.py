@@ -18,7 +18,31 @@ def test_xas_task_id_operator():
     op = XASIDQuery()
 
     assert op.query(spectrum_ids="mp-149-XANES-Pd-K, mp-8951-XANES-Pd-K") == {
-        "criteria": {
-            "spectrum_id": {"$in": ["mp-149-XANES-Pd-K", "mp-8951-XANES-Pd-K"]}
-        }
+        "pipeline": [
+            {
+                "$match": {
+                    "spectrum_id.identifier": {"$in": ["mp-aaaaaaft", "mp-aaaaangh"]},
+                    "spectrum_id.suffix": "XANES-Pd-K",
+                }
+            },
+            {
+                "$addFields": {
+                    "_idcat": {
+                        "$concat": [
+                            "$spectrum_id.identifier",
+                            "-",
+                            "$spectrum_id.suffix",
+                        ]
+                    }
+                }
+            },
+            {
+                "$match": {
+                    "_idcat": {
+                        "$in": ["mp-aaaaaaft-XANES-Pd-K", "mp-aaaaangh-XANES-Pd-K"]
+                    }
+                }
+            },
+            {"$unset": "_idcat"},
+        ]
     }

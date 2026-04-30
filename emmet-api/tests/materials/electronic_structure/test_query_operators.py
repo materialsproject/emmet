@@ -106,4 +106,4 @@ def test_dos_data_query():
 def test_object_query():
     op = ObjectQuery()
 
-    assert op.query(task_id="mp-149") == {"criteria": {"task_id": "mp-149"}}
+    assert op.query(task_id="mp-149") == {"criteria": {"task_id": "aaaaaaft"}}

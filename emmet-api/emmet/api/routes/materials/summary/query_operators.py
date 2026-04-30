@@ -5,7 +5,7 @@ from typing import get_args
 import numpy as np
 from fastapi import Query
 from emmet.api.query_operator import QueryOperator
-from emmet.api.utils import STORE_PARAMS
+from emmet.api.utils import STORE_PARAMS, process_identifiers
 from pymatgen.analysis.magnetism import Ordering
 from scipy.stats import gaussian_kde
 
@@ -52,16 +52,7 @@ class MaterialIDsSearchQuery(QueryOperator):
         crit = {}
 
         if material_ids:
-            crit.update(
-                {
-                    "material_id": {
-                        "$in": [
-                            material_id.strip()
-                            for material_id in material_ids.split(",")
-                        ]
-                    }
-                }
-            )
+            crit.update({"material_id": {"$in": process_identifiers(material_ids)}})
 
         return {"criteria": crit}
 

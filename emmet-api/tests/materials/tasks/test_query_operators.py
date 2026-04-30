@@ -18,14 +18,14 @@ def test_multiple_task_ids_query():
     op = MultipleTaskIDsQuery()
 
     assert op.query(task_ids=" mp-149, mp-13") == {
-        "criteria": {"in": {"path": "task_id", "value": ["mp-149", "mp-13"]}}
+        "criteria": {"in": {"path": "task_id", "value": ["mp-aaaaaaft", "mp-aaaaaaan"]}}
     }
 
 
 def test_entries_query():
     op = EntryQuery()
 
-    q = {"criteria": {"task_id": {"$in": ["mp-149", "mp-13"]}}}
+    q = {"criteria": {"task_id": {"$in": ["mp-aaaaaaft", "mp-aaaaaaan"]}}}
 
     assert op.query(task_ids=" mp-149, mp-13") == q
 
@@ -40,7 +40,7 @@ def test_entries_query():
 def test_trajectory_query():
     op = TrajectoryQuery()
 
-    q = {"criteria": {"task_id": {"$in": ["mp-149", "mp-13"]}}}
+    q = {"criteria": {"task_id": {"$in": ["mp-aaaaaaft", "mp-aaaaaaan"]}}}
 
     assert op.query(task_ids=" mp-149, mp-13") == q
 
@@ -68,24 +68,24 @@ def test_trajectory_query():
 def test_deprecation_query():
     op = DeprecationQuery()
 
-    q = {"criteria": {"deprecated_tasks": {"$in": ["mp-149", "mp-13"]}}}
+    q = {"criteria": {"deprecated_tasks": {"$in": ["mp-aaaaaaft", "mp-aaaaaaan"]}}}
 
     assert op.query(task_ids=" mp-149, mp-13") == q
 
     docs = [
-        {"task_id": "mp-149", "deprecated_tasks": ["mp-149"]},
-        {"task_id": "mp-13", "deprecated_tasks": ["mp-1234"]},
+        {"task_id": "mp-aaaaaaft", "deprecated_tasks": ["mp-aaaaaaft"]},
+        {"task_id": "mp-aaaaaaan", "deprecated_tasks": ["mp-aaaaabvm"]},
     ]
     r = op.post_process(docs, q)
 
     assert r[0] == {
-        "task_id": "mp-149",
+        "task_id": "mp-aaaaaaft",
         "deprecated": True,
         "deprecation_reason": None,
     }
 
     assert r[1] == {
-        "task_id": "mp-13",
+        "task_id": "mp-aaaaaaan",
         "deprecated": False,
         "deprecation_reason": None,
     }

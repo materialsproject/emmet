@@ -148,13 +148,17 @@ def process_identifiers(ids: str, use_prefix: bool = True) -> list[str]:
         >>> ['mp-aaaaaaft', 'mp-aaaaaaft', 'mp-aaaaabmg']
         ```
     """
-    return [
-        str(
-            AlphaID(
-                idx.split("-", 1)[-1].strip(),
-                prefix=ID_PREFIX if use_prefix else None,
-                padlen=ID_PADLEN,
+    return (
+        [
+            str(
+                AlphaID(
+                    idx.split("-", 1)[-1].strip(),
+                    prefix=ID_PREFIX if use_prefix else None,
+                    padlen=ID_PADLEN,
+                )
             )
-        )
-        for idx in ids.split(",")
-    ]
+            for idx in ids.split(",")
+        ]
+        if ids
+        else []
+    )

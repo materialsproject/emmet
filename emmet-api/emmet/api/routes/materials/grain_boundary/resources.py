@@ -3,7 +3,6 @@ from emmet.core.grain_boundary import GrainBoundaryDoc
 
 from emmet.api.routes.materials.grain_boundary.query_operators import (
     GBStructureQuery,
-    GBTaskIDQuery,
 )
 from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery
 from emmet.api.query_operator import (
@@ -20,8 +19,7 @@ def gb_resource(gb_store):
         gb_store,
         GrainBoundaryDoc,
         query_operators=[
-            MultiMaterialIDQuery(),
-            GBTaskIDQuery(),
+            MultiMaterialIDQuery(use_prefix=False),
             NumericQuery(
                 model=GrainBoundaryDoc, excluded_fields=["rotation_axis", "gb_plane"]
             ),

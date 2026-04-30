@@ -25,11 +25,11 @@ def test_has_props_query():
 def test_material_ids_query():
     op = MaterialIDsSearchQuery()
 
-    query = {"criteria": {"material_id": {"$in": ["mp-149", "mp-13"]}}}
+    query = {"criteria": {"material_id": {"$in": ["mp-aaaaaaft", "mp-aaaaaaan"]}}}
 
     assert op.query(material_ids="mp-149, mp-13") == query
 
-    docs = [{"material_id": "mp-13"}, {"material_id": "mp-149"}]
+    docs = [{"material_id": "mp-aaaaaaan"}, {"material_id": "mp-aaaaaaft"}]
 
     assert op.post_process(docs, {**query, "properties": ["material_id"]})[0] == docs[1]
 

@@ -177,17 +177,19 @@ def test_symmetry_query():
 def test_multi_task_id_query():
     op = MultiTaskIDQuery()
     assert op.query(task_ids="mp-149, mp-13") == {
-        "criteria": {"task_ids": {"$in": ["mp-149", "mp-13"]}}
+        "criteria": {"task_ids": {"$in": ["aaaaaaft", "aaaaaaan"]}}
     }
 
 
 def test_multi_material_id_query():
     op = MultiMaterialIDQuery()
     assert op.query(material_ids="mp-149, mp-13") == {
-        "criteria": {"material_id": {"$in": ["mp-149", "mp-13"]}}
+        "criteria": {"material_id": {"$in": ["mp-aaaaaaft", "mp-aaaaaaan"]}}
     }
 
-    assert op.query(material_ids="mp-149") == {"criteria": {"material_id": "mp-149"}}
+    assert op.query(material_ids="mp-149") == {
+        "criteria": {"material_id": "mp-aaaaaaft"}
+    }
 
 
 def test_find_structure_query():

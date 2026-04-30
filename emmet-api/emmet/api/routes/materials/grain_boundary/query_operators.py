@@ -67,29 +67,3 @@ class GBStructureQuery(QueryOperator):
         keys = [key for key in self._keys_from_query() if "_min" not in key]
         keys.append("rotation_angle")
         return [(key, False) for key in keys]
-
-
-class GBTaskIDQuery(QueryOperator):
-    """
-    Method to generate a query for different task_ids
-    """
-
-    def query(
-        self,
-        task_ids: str | None = Query(
-            None,
-            description="Comma-separated list of Materials Project IDs to query on.",
-        ),
-    ) -> STORE_PARAMS:
-        crit = {}
-
-        if task_ids:
-            crit.update(
-                {
-                    "task_id": {
-                        "$in": [task_id.strip() for task_id in task_ids.split(",")]
-                    }
-                }
-            )
-
-        return {"criteria": crit}
