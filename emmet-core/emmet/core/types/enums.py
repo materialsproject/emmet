@@ -240,7 +240,7 @@ class XasType(ValueEnum):
     XAFS = "XAFS"
 
 
-XasLabel = ValueEnum(
+XasLabel = ValueEnum(  # type: ignore[call-arg]
     "XasLabel",
     {
         "_".join(x.value for x in v): "-".join(x.value for x in v)
