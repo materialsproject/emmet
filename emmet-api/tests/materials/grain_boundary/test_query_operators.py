@@ -1,6 +1,5 @@
 from emmet.api.routes.materials.grain_boundary.query_operators import (
     GBStructureQuery,
-    GBTaskIDQuery,
 )
 from emmet.core.grain_boundary import GBTypeEnum
 
@@ -24,12 +23,4 @@ def test_grain_boundary_structure_query():
             "gb_plane": [1, 1, 1],
             "rotation_axis": [1, 0, 1],
         }
-    }
-
-
-def test_grain_boundary_task_id_query():
-    op = GBTaskIDQuery()
-
-    assert op.query(task_ids="mp-149, mp-13") == {
-        "criteria": {"task_id": {"$in": ["mp-149", "mp-13"]}}
     }

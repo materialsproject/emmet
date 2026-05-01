@@ -3,7 +3,7 @@ from typing import Literal, Any
 
 from fastapi import Body, HTTPException, Query
 from emmet.api.query_operator import QueryOperator
-from emmet.api.utils import STORE_PARAMS
+from emmet.api.utils import STORE_PARAMS, process_identifiers
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 from pymatgen.core.composition import Composition, CompositionError
 from pymatgen.core.periodic_table import Element
@@ -277,6 +277,30 @@ class SymmetryQuery(QueryOperator):
         return [(key, False) for key in keys]
 
 
+class MultiTaskIDQuery(QueryOperator):
+    """
+    Method to generate a query for different task_ids
+    """
+
+    def query(
+        self,
+        task_ids: str | None = Query(
+            None, description="Comma-separated list of task_ids to query on"
+        ),
+    ) -> STORE_PARAMS:
+        crit = {}
+
+        if task_ids:
+            crit.update(
+                {"task_ids": {"$in": process_identifiers(task_ids, use_prefix=False)}}
+            )
+
+        return {"criteria": crit}
+
+    def ensure_indexes(self):  # pragma: no cover
+        return [("task_ids", False)]
+
+
 class BlessedCalcsQuery(QueryOperator):
     """
     Method to generate a query for nested blessed calculation data
@@ -350,6 +374,9 @@ class MultiMaterialIDQuery(QueryOperator):
     Method to generate a query for different root-level material_id values
     """
 
+    def __init__(self, use_prefix: bool = True) -> None:
+        self.use_prefix = use_prefix
+
     def query(
         self,
         material_ids: str | None = Query(
@@ -359,11 +386,14 @@ class MultiMaterialIDQuery(QueryOperator):
         crit = {}  # type: dict
 
         if material_ids:
-            mpids_list = [
-                material_id.strip() for material_id in material_ids.split(",")
-            ]
-
-            if len(mpids_list) == 1:
+            if (
+                len(
+                    mpids_list := process_identifiers(
+                        material_ids, use_prefix=self.use_prefix
+                    )
+                )
+                == 1
+            ):
                 crit.update({"material_id": mpids_list[0]})
             else:
                 crit.update({"material_id": {"$in": mpids_list}})

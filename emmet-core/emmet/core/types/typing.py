@@ -89,8 +89,12 @@ def _make_id_type(render_order, **kwargs) -> Any:
     ]
 
 
-IdentifierType = _make_id_type(0, padlen=8)
-MaterialIdentifierType = _make_id_type(1, legacy=True, prefix="mp", padlen=8)
+ID_PADLEN: int = 8
+ID_PREFIX: str = "mp"
+IdentifierType = _make_id_type(0, padlen=ID_PADLEN)
+MaterialIdentifierType = _make_id_type(
+    1, legacy=True, prefix=ID_PREFIX, padlen=ID_PADLEN
+)
 """MPID / AlphaID serde."""
 
 

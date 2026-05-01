@@ -4,7 +4,9 @@ from fastapi import Query
 from pymatgen.core.periodic_table import Element
 
 from emmet.api.query_operator import QueryOperator
+from emmet.api.query_operator.identifier import SuffixedIDQuery
 from emmet.api.utils import STORE_PARAMS
+from emmet.core.mpid_ext import XasSpectrumID
 from emmet.core.xas import XasEdge, XasType
 
 
@@ -32,29 +34,10 @@ class XASQuery(QueryOperator):
         return [(key, False) for key in keys]
 
 
-class XASIDQuery(QueryOperator):
+class XASIDQuery(SuffixedIDQuery):
     """
     Method to generate a query for XAS data given a list of spectrum_ids
     """
 
-    def query(
-        self,
-        spectrum_ids: str | None = Query(
-            None, description="Comma-separated list of spectrum_id to query on"
-        ),
-    ) -> STORE_PARAMS:
-        crit = {}
-
-        if spectrum_ids:
-            crit.update(
-                {
-                    "spectrum_id": {
-                        "$in": [
-                            spectrum_id.strip()
-                            for spectrum_id in spectrum_ids.split(",")
-                        ]
-                    }
-                }
-            )
-
-        return {"criteria": crit}
+    suffix_id_class = XasSpectrumID
+    field_name = "spectrum_id"

@@ -5,7 +5,7 @@ from typing import Literal
 
 from fastapi import HTTPException, Query
 from emmet.api.query_operator import QueryOperator
-from emmet.api.utils import STORE_PARAMS
+from emmet.api.utils import STORE_PARAMS, process_identifiers
 from pymatgen.analysis.magnetism.analyzer import Ordering
 from pymatgen.core.periodic_table import Element
 from pymatgen.electronic_structure.core import OrbitalType, Spin
@@ -235,9 +235,13 @@ class ObjectQuery(QueryOperator):
 
     def query(
         self,
-        task_id: MPID | AlphaID = Query(
+        task_id: str | MPID | AlphaID = Query(
             ...,
             description="The calculation (task) ID associated with the data object",
         ),
     ) -> STORE_PARAMS:
-        return {"criteria": {"task_id": str(task_id)}}
+        return {
+            "criteria": {
+                "task_id": process_identifiers(str(task_id), use_prefix=False)[0]
+            }
+        }

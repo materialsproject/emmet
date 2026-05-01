@@ -3,7 +3,7 @@ from typing import Any
 
 from fastapi import HTTPException, Query
 from emmet.api.query_operator import QueryOperator
-from emmet.api.utils import STORE_PARAMS
+from emmet.api.utils import STORE_PARAMS, process_identifiers
 from monty.json import jsanitize
 from pymatgen.core.periodic_table import Element
 from emmet.api.routes.materials.materials.utils import (
@@ -192,9 +192,28 @@ class LastUpdatedQuery(QueryOperator):
         return {"criteria": crit}
 
 
+class _BaseMultiTaskIDQuery(QueryOperator):
+    """Define common query for multiple task IDs to allow for different post processing."""
+
+    def query(
+        self,
+        task_ids: str | None = Query(
+            None,
+            description="Comma-separated list of task_ids to query on",
+        ),
+    ) -> STORE_PARAMS:
+        return {
+            "criteria": (
+                {"task_id": {"$in": process_identifiers(task_ids)}} if task_ids else {}
+            )
+        }
+
+
 class MultipleTaskIDsQuery(QueryOperator):
     """
-    Method to generate a query on search docs using multiple task_id values
+    Method to generate a query on search docs using multiple task_id values.
+
+    NOTE: This class uses Atlas search and cannot inherit from `_BaseMultiTaskIDQuery`.
     """
 
     def query(
@@ -209,7 +228,7 @@ class MultipleTaskIDsQuery(QueryOperator):
                 {
                     "in": {
                         "path": "task_id",
-                        "value": [task_id.strip() for task_id in task_ids.split(",")],
+                        "value": process_identifiers(task_ids),
                     }
                 }
                 if task_ids
@@ -225,29 +244,10 @@ class MultipleTaskIDsQuery(QueryOperator):
         return docs
 
 
-class TrajectoryQuery(QueryOperator):
+class TrajectoryQuery(_BaseMultiTaskIDQuery):
     """
     Method to generate a query on calculation trajectory data from task documents
     """
-
-    def query(
-        self,
-        task_ids: str | None = Query(
-            None,
-            description="Comma-separated list of task_ids to query on",
-        ),
-    ) -> STORE_PARAMS:
-        return {
-            "criteria": (
-                {
-                    "task_id": {
-                        "$in": [task_id.strip() for task_id in task_ids.split(",")]
-                    }
-                }
-                if task_ids
-                else {}
-            )
-        }
 
     def post_process(self, docs, query):
         """
@@ -265,29 +265,10 @@ class TrajectoryQuery(QueryOperator):
         ]
 
 
-class EntryQuery(QueryOperator):
+class EntryQuery(_BaseMultiTaskIDQuery):
     """
     Method to generate a query on calculation entry data from task documents
     """
-
-    def query(
-        self,
-        task_ids: str | None = Query(
-            None,
-            description="Comma-separated list of task_ids to query on",
-        ),
-    ) -> STORE_PARAMS:
-        return {
-            "criteria": (
-                {
-                    "task_id": {
-                        "$in": [task_id.strip() for task_id in task_ids.split(",")]
-                    }
-                }
-                if task_ids
-                else {}
-            )
-        }
 
     def post_process(self, docs, query):
         """
@@ -311,7 +292,7 @@ class DeprecationQuery(QueryOperator):
             description="Comma-separated list of task_ids to query on",
         ),
     ) -> STORE_PARAMS:
-        self.task_ids = [task_id.strip() for task_id in task_ids.split(",")]
+        self.task_ids = process_identifiers(task_ids)
         return {
             "criteria": {"deprecated_tasks": {"$in": self.task_ids}} if task_ids else {}
         }

@@ -8,10 +8,9 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from emmet.core.mpid import MPID, AlphaID
-from emmet.core.types.enums import ThermoType, XasEdge, XasType
+from emmet.core.types.enums import ThermoType, XasLabel
 from emmet.core.types.pymatgen_types.element_adapter import ElementType
 from emmet.core.types.typing import IdentifierType, MaterialIdentifierType
-from emmet.core.utils import type_override
 from emmet.core.vasp.calc_types import RunType
 
 if TYPE_CHECKING:
@@ -31,7 +30,7 @@ class SuffixedID(BaseModel):
     def from_str(cls, idx: str) -> Self:
         """Ensure the class can be instantiated from a string or dict."""
         sep = cls.model_fields["separator"].default
-        parts = idx.split(sep, 1)
+        parts = idx.rsplit(sep, 1)
         return cls(
             identifier=parts[0],
             suffix=parts[1],  # type: ignore[arg-type]
@@ -40,6 +39,10 @@ class SuffixedID(BaseModel):
     def __str__(self) -> str:
         """Format as a string."""
         return self.separator.join([self.identifier.string, self.suffix.value])
+
+    def __repr__(self) -> str:
+        """Format display name."""
+        return f"{self.__class__.__name__}({self})"
 
     @classmethod
     def _deserialize(cls, v: Any) -> Self:
@@ -77,31 +80,22 @@ class BatteryID(SuffixedID):
     suffix: ElementType
 
 
-@type_override({"suffix": list[str]})
 class XasSpectrumID(SuffixedID):
+    """Identify XAS spectra."""
+
     identifier: MaterialIdentifierType
-    suffix: tuple[XasType, ElementType, XasEdge]  # type: ignore[assignment]
+    suffix: XasLabel
     separator: str = Field(default="-")
 
     @classmethod
     def from_str(cls, idx: str) -> Self:
-        """Ensure the class can be instantiated from a string or dict."""
-        if idx.endswith("-L23"):
-            idx = idx[:-3] + "L2,3"
-
+        """XAS IDs use too many hyphens."""
         sep = cls.model_fields["separator"].default
-        for i in range(2):
-            if len(parts := idx.rsplit(sep, idx.count(sep) - i)) == 4:
-                break
+        # Account for the fact that XasLabel contains two hyphens
+        parts = idx.rsplit(sep, 3)
         return cls(
             identifier=parts[0],
-            suffix=parts[1:],  # type: ignore[arg-type]
-        )
-
-    def __str__(self) -> str:
-        """Format as a string."""
-        return self.separator.join(
-            [self.identifier.string, *(e.value for e in self.suffix)]
+            suffix=sep.join(parts[1:]),  # type: ignore[arg-type]
         )
 
 

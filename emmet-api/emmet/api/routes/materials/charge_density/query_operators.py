@@ -1,6 +1,6 @@
 from fastapi import Query
 from emmet.api.query_operator.core import QueryOperator
-from emmet.api.utils import STORE_PARAMS
+from emmet.api.utils import STORE_PARAMS, process_identifiers
 
 
 class ChgcarTaskIDQuery(QueryOperator):
@@ -19,11 +19,7 @@ class ChgcarTaskIDQuery(QueryOperator):
 
         if task_ids:
             crit.update(
-                {
-                    "task_id": {
-                        "$in": [task_id.strip() for task_id in task_ids.split(",")]
-                    }
-                }
+                {"task_id": {"$in": process_identifiers(task_ids, use_prefix=False)}}
             )
 
         return {"criteria": crit}

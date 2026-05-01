@@ -7,7 +7,7 @@ from pymatgen.core import Element
 
 from emmet.core.mpid import MPID, AlphaID
 from emmet.core.mpid_ext import BatteryID, ThermoID, XasSpectrumID, validate_identifier
-from emmet.core.types.enums import ThermoType, XasEdge, XasType
+from emmet.core.types.enums import ThermoType, XasLabel
 
 
 def random_identifiers(num_idx: int = 10) -> set[str | MPID | AlphaID]:
@@ -58,12 +58,10 @@ def test_single_suffix_ids():
 def test_many_suffix_id():
 
     last_iden = None
-    for prod in product(
-        RAND_IDS, XasType.__members__, Element.__members__, XasEdge.__members__
-    ):
-        idx, xas_type, ele, xas_edge = prod
-        iden = XasSpectrumID(identifier=idx, suffix=(xas_type, ele, xas_edge))
-        assert iden == XasSpectrumID.from_str("-".join(prod))
+    for prod in product(RAND_IDS, XasLabel.__members__.values()):
+        idx, xas_label = prod
+        iden = XasSpectrumID(identifier=idx, suffix=xas_label)
+        assert iden == XasSpectrumID.from_str(f"{idx}-{xas_label}")
         if last_iden:
             assert iden != last_iden
         last_iden = iden
