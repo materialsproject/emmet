@@ -86,6 +86,8 @@ jobs:
           python${{ matrix.python-version }} -m pip install --upgrade pip pip-tools
           python${{ matrix.python-version }} -m pip install --user `grep numpy ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt`
           python${{ matrix.python-version }} -m pip install --user -r ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
+          python${{ matrix.python-version }} -m pip install git+https://github.com/naik-aakash/LobsterPy.git@83ec26453e65899c5eb197236e41d8604620fbc3
+          python${{ matrix.python-version }} -m pip install git+https://github.com/naik-aakash/pymatgen.git@e8244925a6dceb8a408d8d7d19ac14c1d8bcb05c
 
       - name: Install editable emmet-core if needed
         shell: bash -l {0}
