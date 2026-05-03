@@ -14,7 +14,8 @@ from pymatgen.io.lobster import (
     SitePotential,
 )
 from emmet.core.lobster import (
-    LobsterTaskDocument, 
+    LobsterTaskDocument,
+    CalcQualitySummary, 
     CohpPlotData,
     CondensedBondingAnalysis,
     LobsterinModel,
@@ -52,6 +53,7 @@ def test_lobster_task_doc(lobster_test_dir,  save_cohp_plots, store_lso_dos, add
     assert lobster_doc.lobsterout.charge_spilling[0] == pytest.approx(0.00989999, abs=1e-7)
 
     assert isinstance(lobster_doc.lobsterin, LobsterinModel)
+    assert isinstance(lobster_doc.calc_quality_summary, CalcQualitySummary)
     assert lobster_doc.lobsterin.cohp_start_energy == -5
     assert isinstance(lobster_doc.strongest_bonds, StrongestBonds)
     assert lobster_doc.strongest_bonds.strongest_bonds_icohp["As-Ga"] == pytest.approx(
