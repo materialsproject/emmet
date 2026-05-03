@@ -595,18 +595,7 @@ class CalcQualitySummary(BaseModel):
             **calc_quality_kwargs_updated,
         )
 
-        cal_quality_dict = Analysis.get_lobster_calc_quality_summary(
-            path_to_poscar=file_paths["CONTCAR"],
-            path_to_vasprun=file_paths["vasprun.xml"],
-            path_to_charge=file_paths["CHARGE"],
-            path_to_potcar=file_paths.get("POTCAR"),
-            path_to_doscar=doscar_path,
-            path_to_lobsterin=file_paths["lobsterin"],
-            path_to_lobsterout=file_paths["lobsterout"],
-            path_to_bandoverlaps=file_paths.get("bandOverlaps"),
-            **calc_quality_kwargs_updated,
-        )
-        return cls(**cal_quality_dict)
+        return cls(**calc_quality_dict)
 
 
 @arrow_incompatible
