@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import time
+import json
 import orjson
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -12,7 +13,7 @@ import numpy as np
 from monty.os.path import zpath
 from monty.io import zopen
 from monty.dev import requires
-from monty.json import MontyDecoder
+from monty.json import MontyDecoder, jsanitize
 
 from pydantic import BaseModel, Field
 from pymatgen.core import Structure
@@ -32,15 +33,18 @@ from pymatgen.io.lobster import (
 from typing_extensions import Self
 
 from emmet.core.structure import StructureMetadata
-from emmet.core.utils import jsanitize, arrow_incompatible
+from emmet.core.utils import arrow_incompatible
 from emmet.core.types.typing import DateTimeType
 
 try:
-    from lobsterpy.cohp.analyze import Analysis
-    from lobsterpy.cohp.describe import Description
+    from lobsterpy.coxx.analyze import Analysis
+    from lobsterpy.coxx.describe import Description
+    from lobsterpy.quality.analyze import LobsterCalcQuality
 except ImportError:
     Analysis = None
     Description = None
+    LobsterCalcQuality = None
+
 
 if TYPE_CHECKING:
     from typing import Any, Literal
@@ -135,31 +139,30 @@ class LobsteroutModel(BaseModel):
 class LobsterinModel(BaseModel):
     """Definition of input settings for the LOBSTER computation."""
 
+    
     cohp_start_energy: float = Field(description="Start energy for COHP computation")
     cohp_end_energy: float = Field(description="End energy for COHP computation")
 
     gaussian_smearing_width: float | None = Field(
-        None, description="Set the smearing width in eV,default is 0.2 (eV)"
+        None, description="Set the smearing width in eV,default is 0.2 (eV)",
     )
     use_decimal_places: int | None = Field(
         None,
         description="Set the decimal places to print in output files, default is 5",
     )
     cohp_steps: float | None = Field(
-        None, description="Number steps in COHPCAR; similar to NEDOS of VASP"
+        None, description="Number steps in COHPCAR; similar to NEDOS of VASP",
     )
     basis_set: str = Field(description="basis set of computation")
     cohp_generator: str = Field(
-        description="Build the list of atom pairs to be analyzed using given distance"
+        description="Build the list of atom pairs to be analyzed using given distance",
     )
     save_projection_to_file: bool | None = Field(
-        None, description="Save the results of projections"
-    )
+        None, description="Save the results of projections")
     lso_dos: bool | None = Field(
-        None, description="Writes DOS output from the orthonormalized LCAO basis"
-    )
+        None, description="Writes DOS output from the orthonormalized LCAO basis")
     basis_functions: list[str] = Field(
-        description="Specify the basis functions for element"
+        description="Specify the basis functions for element",
     )
 
 
@@ -342,11 +345,11 @@ class CondensedBondingAnalysis(BaseModel):
 
         try:
             start = time.time()
-            analyse = Analysis(
-                path_to_poscar=file_paths["CONTCAR"],
-                path_to_icohplist=file_paths["ICOHPLIST"],
-                path_to_cohpcar=file_paths["COHPCAR"],
-                path_to_charge=file_paths["CHARGE"],
+            analyse = Analysis.from_files(
+                structure_path=file_paths["CONTCAR"],
+                icoxxlist_path=file_paths["ICOHPLIST"],
+                coxxcar_path=file_paths["COHPCAR"],
+                charge_path=file_paths["CHARGE"],
                 which_bonds=which_bonds,
                 **lobsterpy_kwargs_updated,
             )
@@ -398,8 +401,9 @@ class CondensedBondingAnalysis(BaseModel):
                 )
 
                 filename = dir_name / f"condensed_bonding_analysis_{which_bonds}"
-                with open(f"{filename}.json", "wb") as fp:
-                    fp.write(orjson.dumps(analyse.condensed_bonding_analysis))
+                with open(f"{filename}.json", "w") as fp:
+                    # fp.write(orjson.dumps(analyse.condensed_bonding_analysis))
+                    fp.write(json.dumps(analyse.condensed_bonding_analysis))
                 with open(f"{filename}.txt", "w") as fp:
                     fp.write("\n".join(describe.text))
 
@@ -567,6 +571,7 @@ class CalcQualitySummary(BaseModel):
         file_paths = aggregate_paths(dir_name)
         doscar_path = file_paths.get("DOSCAR.LSO") or file_paths.get("DOSCAR")
 
+
         # Update calc quality kwargs supplied by user
         calc_quality_kwargs_updated = {
             "e_range": [-20, 0],
@@ -575,6 +580,21 @@ class CalcQualitySummary(BaseModel):
             "bva_comp": True,
             **calc_quality_kwargs,
         }
+
+        lob_calc_qual =LobsterCalcQuality.from_files(
+            poscar=file_paths["CONTCAR"],
+            charge=file_paths["CHARGE"],
+            doscar=doscar_path,
+            bandoverlaps=file_paths.get("bandOverlaps"),
+            vasprun=file_paths["vasprun.xml"],
+            lobsterin=file_paths["lobsterin"],
+            lobsterout=file_paths["lobsterout"],
+        )
+
+        calc_quality_dict = lob_calc_qual.get_calculation_quality_summary(
+            **calc_quality_kwargs_updated,
+        )
+
         cal_quality_dict = Analysis.get_lobster_calc_quality_summary(
             path_to_poscar=file_paths["CONTCAR"],
             path_to_vasprun=file_paths["vasprun.xml"],
@@ -819,7 +839,7 @@ class LobsterTaskDocument(StructureMetadata):
                 calc_quality_kwargs=calc_quality_kwargs,
             )
 
-            calc_quality_text = Description.get_calc_quality_description(
+            calc_quality_text = LobsterCalcQuality.describe(
                 calc_quality_summary.model_dump()
             )
 
