@@ -1,18 +1,18 @@
 from itertools import permutations
-from typing import Literal, Any
+from typing import Any, Literal
 
 from fastapi import Body, HTTPException, Query
-from emmet.api.query_operator import QueryOperator
-from emmet.api.utils import STORE_PARAMS, process_identifiers
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 from pymatgen.core.composition import Composition, CompositionError
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Structure
 
+from emmet.api.query_operator import QueryOperator
 from emmet.api.routes.materials.materials.utils import (
     chemsys_to_criteria,
     formula_to_criteria,
 )
+from emmet.api.utils import STORE_PARAMS, process_identifiers
 from emmet.core.symmetry import (
     CrystalSystem,
     _get_space_group_symbol_to_number_mapping,

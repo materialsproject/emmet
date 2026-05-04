@@ -14,35 +14,29 @@ def test_xas_operator():
     }
 
 
-def test_xas_task_id_operator():
+def test_xas_single_id():
     op = XASIDQuery()
 
-    assert op.query(spectrum_ids="mp-149-XANES-Pd-K, mp-8951-XANES-Pd-K") == {
-        "pipeline": [
-            {
-                "$match": {
-                    "spectrum_id.identifier": {"$in": ["mp-aaaaaaft", "mp-aaaaangh"]},
-                    "spectrum_id.suffix": "XANES-Pd-K",
-                }
-            },
-            {
-                "$addFields": {
-                    "_idcat": {
-                        "$concat": [
-                            "$spectrum_id.identifier",
-                            "-",
-                            "$spectrum_id.suffix",
-                        ]
-                    }
-                }
-            },
-            {
-                "$match": {
-                    "_idcat": {
-                        "$in": ["mp-aaaaaaft-XANES-Pd-K", "mp-aaaaangh-XANES-Pd-K"]
-                    }
-                }
-            },
-            {"$unset": "_idcat"},
-        ]
+    assert op.query(spectrum_ids="mp-149-XANES-Pd-K") == {
+        "criteria": {
+            "material_id": {"$in": ["aaaaaaft"]},
+            "spectrum_type": {"$in": ["XANES"]},
+            "absorbing_element": {"$in": ["Pd"]},
+            "edge": {"$in": ["K"]},
+        }
+    }
+
+
+def test_xas_multi_id():
+    op = XASIDQuery()
+
+    assert op.query(
+        spectrum_ids="mp-149-XANES-Pd-K, mp-8951-XANES-Pd-K, mp-bmm-XANES-Pd-K"
+    ) == {
+        "criteria": {
+            "material_id": {"$in": ["aaaaaaft", "aaaaangh", "aaaaabmm"]},
+            "spectrum_type": {"$in": ["XANES"]},
+            "absorbing_element": {"$in": ["Pd"]},
+            "edge": {"$in": ["K"]},
+        }
     }
