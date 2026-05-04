@@ -13,7 +13,6 @@ from emmet.api.routes.materials.materials.query_operators import (
     FormulaAutoCompleteQuery,
     FormulaQuery,
     MultiMaterialIDQuery,
-    MultiTaskIDQuery,
     SymmetryQuery,
 )
 from emmet.core.symmetry import CrystalSystem, _get_space_group_symbol_to_number_mapping
@@ -180,13 +179,6 @@ def test_symmetry_query():
             spacegroup_number=",".join(str(1 + x) for x in range(115)),
             spacegroup_symbol=",".join(sgn_to_sgs[1 + x] for x in range(115, 230)),
         )
-
-
-def test_multi_task_id_query():
-    op = MultiTaskIDQuery()
-    assert op.query(task_ids="mp-149, mp-13") == {
-        "criteria": {"task_ids": {"$in": ["aaaaaaft", "aaaaaaan"]}}
-    }
 
 
 def test_multi_material_id_query():

@@ -17,3 +17,8 @@ def test_multi_task_id(use_plural: bool):
     assert MultiTaskIDQuery(use_plural=use_plural).query(task_ids="mp-abcdefg") == {
         "criteria": {key: "mp-abcdefg"}
     }
+
+    op = MultiTaskIDQuery(use_plural=use_plural, validate=True)
+    assert op.query(task_ids="mp-149, mp-13") == {
+        "criteria": {key: {"$in": ["aaaaaaft", "aaaaaaan"]}}
+    }
