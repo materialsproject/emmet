@@ -50,12 +50,12 @@ class XASIDQuery(QueryOperator):
             parsed = [_id.rsplit("-", 3) for _id in id_list]
             identifiers, spectrum_types, absorbing_elements, edges = zip(*parsed)
 
-            identifiers = [
+            processed_identifiers = [
                 process_identifiers(i, use_prefix=False)[0] for i in identifiers
             ]
 
             fields = {
-                "material_id": identifiers,
+                "material_id": processed_identifiers,
                 "spectrum_type": list(set(spectrum_types)),
                 "absorbing_element": list(set(absorbing_elements)),
                 "edge": list(set(edges)),
