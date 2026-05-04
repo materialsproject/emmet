@@ -1,24 +1,32 @@
 """Define common task query functionality."""
 
 from fastapi import Query
+from dataclasses import dataclass
 from typing import Any
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS, process_identifiers
 
 
+@dataclass
 class MultiTaskIDQuery(QueryOperator):
-    """Method to generate a query for different task_ids."""
+    """Generate a query for different task_ids.
 
-    def __init__(self, use_plural: bool = True, validate: bool = False) -> None:
-        """Set up a multi task ID query operator.
+    Args:
+    key (bool) : Key to query on, defaults to `task_id`
+    validate (bool) : Whether to ensure the identifiers are valid AlphaIDs
+    use_prefix (bool) : Whether to strip prefixes when validating IDs.
+        Only applies if validate is True
+    store_ids (bool) : Whether to store the identifiers for post-processing
+    """
 
-        Args:
-            use_plural (bool) : Whether to use the plural `task_ids` when
-                querying (True, default), or the singular `task_id` (False)
-            validate (bool) : Whether to ensure the identifiers are valid AlphaIDs
-        """
-        self.use_plural = use_plural
-        self.validate = validate
+    key: str = "task_id"
+    validate: bool = False
+    use_prefix: bool = False
+    store_ids: bool = False
+
+    def __post_init__(self) -> None:
+        """Allow for accessing IDs for post-processing."""
+        self.task_ids: list[str] | None = None
 
     def query(
         self,
@@ -29,13 +37,16 @@ class MultiTaskIDQuery(QueryOperator):
         crit: dict[str, Any] = {}
 
         if task_ids:
-            task_key = "task_id" + ("s" if self.use_plural else "")
             if self.validate:
-                parsed_task_ids = process_identifiers(task_ids, use_prefix=False)
+                parsed_task_ids = process_identifiers(
+                    task_ids, use_prefix=self.use_prefix
+                )
             else:
                 parsed_task_ids = [task_id.strip() for task_id in task_ids.split(",")]
 
-            crit[task_key] = (
+            self.task_ids = parsed_task_ids if self.store_ids else None
+
+            crit[self.key] = (
                 parsed_task_ids[0]
                 if len(parsed_task_ids) == 1
                 else {"$in": parsed_task_ids}
@@ -44,4 +55,4 @@ class MultiTaskIDQuery(QueryOperator):
         return {"criteria": crit}
 
     def ensure_indexes(self):  # pragma: no cover
-        return [("task_ids", False)]
+        return [(self.key, False)]

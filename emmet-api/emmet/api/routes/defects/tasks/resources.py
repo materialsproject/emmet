@@ -29,7 +29,7 @@ def task_resource(task_store):
             FormulaQuery(),
             ChemsysQuery(),
             ElementsQuery(),
-            MultiTaskIDQuery(use_plural=False),
+            MultiTaskIDQuery(),
             LastUpdatedQuery(),
             PaginationQuery(),
             SparseFieldsQuery(

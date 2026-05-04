@@ -55,7 +55,7 @@ def mol_assoc_resource(assoc_store):
             ChemsysQuery(),
             CompositionElementsQuery(),
             ChargeSpinQuery(),
-            MultiTaskIDQuery(),
+            MultiTaskIDQuery(key="task_ids"),
             CalcMethodQuery(),
             HashQuery(),
             StringRepQuery(),

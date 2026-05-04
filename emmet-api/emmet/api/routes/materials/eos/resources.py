@@ -15,7 +15,7 @@ def eos_resource(eos_store):
         eos_store,
         EOSDoc,
         query_operators=[
-            MultiTaskIDQuery(use_plural=True, validate=True),
+            MultiTaskIDQuery(validate=True),
             PaginationQuery(),
             SparseFieldsQuery(EOSDoc, default_fields=["task_id"]),
         ],

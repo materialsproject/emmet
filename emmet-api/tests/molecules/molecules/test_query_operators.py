@@ -65,7 +65,7 @@ def test_deprecation_query():
 
 
 def test_multi_task_id_query():
-    op = MultiTaskIDQuery()
+    op = MultiTaskIDQuery(key="task_ids")
     assert op.query(task_ids="mpcule-149, mpcule-13") == {
         "criteria": {"task_ids": {"$in": ["mpcule-149", "mpcule-13"]}}
     }

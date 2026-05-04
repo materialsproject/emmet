@@ -55,7 +55,7 @@ def molecules_resource(molecules_store):
             ChemsysQuery(),
             CompositionElementsQuery(),
             ChargeSpinQuery(),
-            MultiTaskIDQuery(),
+            MultiTaskIDQuery(key="task_ids"),
             CalcMethodQuery(),
             HashQuery(),
             StringRepQuery(),
