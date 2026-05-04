@@ -1,23 +1,22 @@
+from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import (
     AtlasPaginationQuery,
     PaginationQuery,
     SparseFieldsQuery,
 )
 from emmet.api.resource import ReadOnlyResource, SearchResource
-
 from emmet.api.routes.materials.tasks.query_operators import (
     AtlasBatchIdQuery,
     AtlasElementsQuery,
     AtlasFormulaQuery,
     DeprecationQuery,
-    MultipleTaskIDsQuery,
-    TrajectoryQuery,
     EntryQuery,
     LastUpdatedQuery,
+    MultipleTaskIDsQuery,
+    TrajectoryQuery,
 )
-from emmet.api.core.global_header import GlobalHeaderProcessor
-from emmet.api.core.settings import MAPISettings
-from emmet.core.tasks import DeprecationDoc, TaskDoc, TrajectoryDoc, EntryDoc
+from emmet.core.tasks import CoreTaskDoc, DeprecationDoc, EntryDoc, TrajectoryDoc
 
 timeout = MAPISettings().TIMEOUT
 
@@ -25,7 +24,7 @@ timeout = MAPISettings().TIMEOUT
 def task_resource(task_store):
     resource = SearchResource(
         task_store,
-        TaskDoc,
+        CoreTaskDoc,
         query_operators=[
             AtlasBatchIdQuery(),
             AtlasFormulaQuery(),
@@ -34,7 +33,7 @@ def task_resource(task_store):
             LastUpdatedQuery(),
             AtlasPaginationQuery(),
             SparseFieldsQuery(
-                TaskDoc,
+                CoreTaskDoc,
                 default_fields=["task_id", "formula_pretty", "last_updated"],
             ),
         ],
