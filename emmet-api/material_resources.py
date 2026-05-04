@@ -45,14 +45,16 @@ if db_uri:
         core_db["formula_autocomplete"], "_id"
     )
     task_store = CollectionWithKey(tasks_db["tasks"], "task_id")
-    eos_store = CollectionWithKey(core_db["eos"], "task_id")
+    eos_store = CollectionWithKey(core_db["eos_legacy"], "task_id")
     similarity_store = CollectionWithKey(core_db["similarity_crystalnn_2025_11_05"])
-    xas_store = CollectionWithKey(core_db["xas"], "spectrum_id")
-    gb_store = CollectionWithKey(core_db["grain_boundaries"], "task_id")
+    xas_store = CollectionWithKey(core_db["xas_legacy"], "spectrum_id")
+    gb_store = CollectionWithKey(core_db["grain_boundaries_legacy"], "task_id")
     fermi_store = CollectionWithKey(core_db["fermi_surface"], "task_id")
     doi_store = CollectionWithKey(core_db["dois"])
     substrates_store = CollectionWithKey(core_db["substrates"], "film_id")
-    surface_props_store = CollectionWithKey(core_db["surface_properties"], "task_id")
+    surface_props_store = CollectionWithKey(
+        core_db["surface_properties_legacy"], "task_id"
+    )
     robo_store = CollectionWithKey(suffix_db["robocrys"])
     synth_store = CollectionWithKey(core_db["synth_descriptions"], "_id")
     insertion_electrodes_store = CollectionWithKey(
