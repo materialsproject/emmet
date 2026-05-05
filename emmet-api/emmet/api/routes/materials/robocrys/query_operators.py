@@ -1,4 +1,5 @@
 from fastapi import HTTPException, Query
+
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
 
@@ -57,6 +58,3 @@ class RoboTextSearchQuery(QueryOperator):
 
     def meta(self):
         return {"total_doc": self.total_doc}
-
-    def ensure_indexes(self):  # pragma: no cover
-        return [("description", False)]

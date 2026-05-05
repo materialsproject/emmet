@@ -1,16 +1,18 @@
-from emmet.api.resource import ReadOnlyResource
-from emmet.core.elasticity import ElasticityDoc
 from emmet.api.core.global_header import GlobalHeaderProcessor
-from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
-from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery
-from emmet.api.routes.materials.elasticity.query_operators import (
-    ElasticityChemsysQuery,
-    BulkModulusQuery,
-    ShearModulusQuery,
-    PoissonQuery,
-)
-
 from emmet.api.core.settings import MAPISettings
+from emmet.api.query_operator import (
+    MultiMaterialIDQuery,
+    PaginationQuery,
+    SparseFieldsQuery,
+)
+from emmet.api.resource import ReadOnlyResource
+from emmet.api.routes.materials.elasticity.query_operators import (
+    BulkModulusQuery,
+    ElasticityChemsysQuery,
+    PoissonQuery,
+    ShearModulusQuery,
+)
+from emmet.core.elasticity import ElasticityDoc
 
 
 def elasticity_resource(elasticity_store):

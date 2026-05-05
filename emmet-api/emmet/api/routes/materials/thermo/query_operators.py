@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from fastapi import Query
+
 from emmet.api.query_operator import QueryOperator
+from emmet.api.query_operator.core import InQuery
 from emmet.api.query_operator.identifier import CompoundIDQuery
 from emmet.api.utils import STORE_PARAMS
 
@@ -23,10 +25,6 @@ class IsStableQuery(QueryOperator):
 
         return {"criteria": crit}
 
-    def ensure_indexes(self):  # pragma: no cover
-        keys = self._keys_from_query()
-        return [(key, False) for key in keys]
-
 
 @dataclass
 class MultiThermoIDQuery(CompoundIDQuery):
@@ -39,10 +37,13 @@ class MultiThermoIDQuery(CompoundIDQuery):
     separator: str = "_"
 
 
-class MultiThermoTypeQuery(QueryOperator):
+@dataclass
+class MultiThermoTypeQuery(InQuery):
     """
     Method to generate a query for different root-level thermo_type values
     """
+
+    field_name: str = "thermo_type"
 
     def query(
         self,
@@ -50,25 +51,16 @@ class MultiThermoTypeQuery(QueryOperator):
             None, description="Comma-separated list of thermo_type values to query on"
         ),
     ) -> STORE_PARAMS:
-        crit = {}  # type: dict
-
-        if thermo_types:
-            thermo_type_list = [
-                thermo_type.strip() for thermo_type in thermo_types.split(",")
-            ]
-
-            if len(thermo_type_list) == 1:
-                crit.update({"thermo_type": thermo_type_list[0]})
-            else:
-                crit.update({"thermo_type": {"$in": thermo_type_list}})
-
-        return {"criteria": crit}
+        return self._prepare_query(thermo_types)
 
 
-class MultiPhaseDiagramIDQuery(QueryOperator):
+@dataclass
+class MultiPhaseDiagramIDQuery(InQuery):
     """
     Method to generate a query for different root-level phase_diagram_id values
     """
+
+    field_name: str = "phase_diagram_id"
 
     def query(
         self,
@@ -77,17 +69,4 @@ class MultiPhaseDiagramIDQuery(QueryOperator):
             description="Comma-separated list of phase_diagram_id values to query on",
         ),
     ) -> STORE_PARAMS:
-        crit = {}  # type: dict
-
-        if phase_diagram_ids:
-            phase_diagram_id_list = [
-                phase_diagram_id.strip()
-                for phase_diagram_id in phase_diagram_ids.split(",")
-            ]
-
-            if len(phase_diagram_id_list) == 1:
-                crit.update({"phase_diagram_id": phase_diagram_id_list[0]})
-            else:
-                crit.update({"phase_diagram_id": {"$in": phase_diagram_id_list}})
-
-        return {"criteria": crit}
+        return self._prepare_query(phase_diagram_ids)

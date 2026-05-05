@@ -880,26 +880,6 @@ class EntryDoc(BaseModel):
     )
 
 
-class DeprecationDoc(BaseModel):
-    """Model for task deprecation data."""
-
-    task_id: str | None = Field(
-        None,
-        description="The (task) ID of this calculation, used as a universal reference across property documents."
-        "This comes in the form: mp-******.",
-    )
-
-    deprecated: bool | None = Field(
-        None,
-        description="Whether the ID corresponds to a deprecated calculation.",
-    )
-
-    deprecation_reason: str | None = Field(
-        None,
-        description="Reason for deprecation.",
-    )
-
-
 def get_uri(dir_name: str | Path) -> str:
     """
     Return the URI path for a directory.

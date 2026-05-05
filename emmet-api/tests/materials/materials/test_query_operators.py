@@ -4,15 +4,14 @@ import pytest
 from pymatgen.core.structure import Structure
 
 from emmet.api.core.settings import MAPISettings
+from emmet.api.query_operator import DeprecationQuery, MultiMaterialIDQuery
 from emmet.api.routes.materials.materials.query_operators import (
     BlessedCalcsQuery,
     ChemsysQuery,
-    DeprecationQuery,
     ElementsQuery,
     FindStructureQuery,
     FormulaAutoCompleteQuery,
     FormulaQuery,
-    MultiMaterialIDQuery,
     SymmetryQuery,
 )
 from emmet.core.symmetry import CrystalSystem, _get_space_group_symbol_to_number_mapping
@@ -188,7 +187,7 @@ def test_multi_material_id_query():
     }
 
     assert op.query(material_ids="mp-149") == {
-        "criteria": {"material_id": "mp-aaaaaaft"}
+        "criteria": {"material_id": {"$in": ["mp-aaaaaaft"]}}
     }
 
 

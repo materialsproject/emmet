@@ -1,7 +1,8 @@
 from collections import defaultdict
 
 from fastapi import Query
-from emmet.api.query_operator import QueryOperator
+
+from emmet.api.query_operator import QueryOperator, RangeQuery
 from emmet.api.utils import STORE_PARAMS
 
 
@@ -35,12 +36,8 @@ class SubstrateStructureQuery(QueryOperator):
 
         return {"criteria": crit}
 
-    def ensure_indexes(self):  # pragma: no cover
-        keys = ["film_id", "sub_id", "sub_form", "film_orient", "orient"]
-        return [(key, False) for key in keys]
 
-
-class EnergyAreaQuery(QueryOperator):
+class EnergyAreaQuery(RangeQuery):
     """
     Method to generate a query for ranges of substrate
     elastic energies and minimum coincident areas.
@@ -65,22 +62,9 @@ class EnergyAreaQuery(QueryOperator):
             description="Minimum value for the energy in meV.",
         ),
     ) -> STORE_PARAMS:
-        crit = defaultdict(dict)  # type: dict
-
-        d = {
-            "area": [area_min, area_max],
-            "energy": [energy_min, energy_max],
-        }
-
-        for entry in d:
-            if d[entry][0] is not None:
-                crit[entry]["$gte"] = d[entry][0]
-
-            if d[entry][1] is not None:
-                crit[entry]["$lte"] = d[entry][1]
-
-        return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        keys = ["area", "energy"]
-        return [(key, False) for key in keys]
+        return self._prepare_query(
+            value_dict={
+                "area": [area_min, area_max],
+                "energy": [energy_min, energy_max],
+            }
+        )

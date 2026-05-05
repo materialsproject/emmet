@@ -1,11 +1,10 @@
-from collections import defaultdict
-
 from fastapi import Query
-from emmet.api.query_operator import QueryOperator
+
+from emmet.api.query_operator import QueryOperator, RangeQuery
 from emmet.api.utils import STORE_PARAMS
 
 
-class BulkModulusQuery(QueryOperator):
+class BulkModulusQuery(RangeQuery):
     """
     Method to generate a query for ranges of bulk modulus values
     """
@@ -37,25 +36,16 @@ class BulkModulusQuery(QueryOperator):
             description="Minimum value for the Voigt-Reuss-Hill average of the bulk modulus in GPa.",
         ),
     ) -> STORE_PARAMS:
-        crit = defaultdict(dict)  # type: dict
-
-        d = {
-            "bulk_modulus.voigt": [k_voigt_min, k_voigt_max],
-            "bulk_modulus.reuss": [k_reuss_min, k_reuss_max],
-            "bulk_modulus.vrh": [k_vrh_min, k_vrh_max],
-        }
-
-        for entry in d:
-            if d[entry][0] is not None:
-                crit[entry]["$gte"] = d[entry][0]
-
-            if d[entry][1] is not None:
-                crit[entry]["$lte"] = d[entry][1]
-
-        return {"criteria": crit}
+        return self._prepare_query(
+            value_dict={
+                "bulk_modulus.voigt": [k_voigt_min, k_voigt_max],
+                "bulk_modulus.reuss": [k_reuss_min, k_reuss_max],
+                "bulk_modulus.vrh": [k_vrh_min, k_vrh_max],
+            }
+        )
 
 
-class ShearModulusQuery(QueryOperator):
+class ShearModulusQuery(RangeQuery):
     """
     Method to generate a query for ranges of shear modulus values
     """
@@ -87,25 +77,16 @@ class ShearModulusQuery(QueryOperator):
             description="Minimum value for the Voigt-Reuss-Hill average of the shear modulus in GPa.",
         ),
     ) -> STORE_PARAMS:
-        crit = defaultdict(dict)  # type: dict
-
-        d = {
-            "shear_modulus.voigt": [g_voigt_min, g_voigt_max],
-            "shear_modulus.reuss": [g_reuss_min, g_reuss_max],
-            "shear_modulus.vrh": [g_vrh_min, g_vrh_max],
-        }
-
-        for entry in d:
-            if d[entry][0] is not None:
-                crit[entry]["$gte"] = d[entry][0]
-
-            if d[entry][1] is not None:
-                crit[entry]["$lte"] = d[entry][1]
-
-        return {"criteria": crit}
+        return self._prepare_query(
+            value_dict={
+                "shear_modulus.voigt": [g_voigt_min, g_voigt_max],
+                "shear_modulus.reuss": [g_reuss_min, g_reuss_max],
+                "shear_modulus.vrh": [g_vrh_min, g_vrh_max],
+            }
+        )
 
 
-class PoissonQuery(QueryOperator):
+class PoissonQuery(RangeQuery):
     """
     Method to generate a query for ranges of
     elastic anisotropy and poisson ratio values
@@ -130,24 +111,15 @@ class PoissonQuery(QueryOperator):
             description="Minimum value for Poisson's ratio.",
         ),
     ) -> STORE_PARAMS:
-        crit = defaultdict(dict)  # type: dict
-
-        d = {
-            "universal_anisotropy": [
-                elastic_anisotropy_min,
-                elastic_anisotropy_max,
-            ],
-            "homogeneous_poisson": [poisson_min, poisson_max],
-        }
-
-        for entry in d:
-            if d[entry][0] is not None:
-                crit[entry]["$gte"] = d[entry][0]
-
-            if d[entry][1] is not None:
-                crit[entry]["$lte"] = d[entry][1]
-
-        return {"criteria": crit}
+        return self._prepare_query(
+            value_dict={
+                "universal_anisotropy": [
+                    elastic_anisotropy_min,
+                    elastic_anisotropy_max,
+                ],
+                "homogeneous_poisson": [poisson_min, poisson_max],
+            }
+        )
 
 
 class ElasticityChemsysQuery(QueryOperator):

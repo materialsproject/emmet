@@ -1,11 +1,10 @@
-from collections import defaultdict
-
 from fastapi import Query
-from emmet.api.query_operator import QueryOperator
+
+from emmet.api.query_operator import QueryOperator, RangeQuery
 from emmet.api.utils import STORE_PARAMS
 
 
-class BondLengthQuery(QueryOperator):
+class BondLengthQuery(RangeQuery):
     """
     Method to generate a query on bond length data.
     """
@@ -37,30 +36,13 @@ class BondLengthQuery(QueryOperator):
             description="Minimum value for the mean bond length in the structure.",
         ),
     ) -> STORE_PARAMS:
-        crit = defaultdict(dict)  # type: dict
-
-        d = {
-            "bond_length_stats.max": [max_bond_length_min, max_bond_length_max],
-            "bond_length_stats.min": [min_bond_length_min, min_bond_length_max],
-            "bond_length_stats.mean": [mean_bond_length_min, mean_bond_length_max],
-        }
-
-        for entry in d:
-            if d[entry][0] is not None:
-                crit[entry]["$gte"] = d[entry][0]
-
-            if d[entry][1] is not None:
-                crit[entry]["$lte"] = d[entry][1]
-
-        return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        keys = [
-            "bond_length_stats.max",
-            "bond_length_stats.min",
-            "bond_length_stats.mean",
-        ]
-        return [(key, False) for key in keys]
+        return self._prepare_query(
+            value_dict={
+                "bond_length_stats.max": [max_bond_length_min, max_bond_length_max],
+                "bond_length_stats.min": [min_bond_length_min, min_bond_length_max],
+                "bond_length_stats.mean": [mean_bond_length_min, mean_bond_length_max],
+            }
+        )
 
 
 class CoordinationEnvsQuery(QueryOperator):
@@ -94,6 +76,3 @@ class CoordinationEnvsQuery(QueryOperator):
             }
 
         return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        return [("coordination_envs", False), ("coordination_envs_anonymous", False)]

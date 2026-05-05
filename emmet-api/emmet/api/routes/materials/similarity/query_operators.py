@@ -2,10 +2,9 @@
 
 from fastapi import HTTPException, Query
 
-from emmet.core.similarity import SimilarityMethod, _vector_from_hex_and_norm
-
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
+from emmet.core.similarity import SimilarityMethod, _vector_from_hex_and_norm
 
 SIM_METHOD_TO_FEAT_VEC_LENGTH = {
     SimilarityMethod.CRYSTALNN: 122,
@@ -122,6 +121,3 @@ class SimilarityFeatureVectorQuery(QueryOperator):
 
     def meta(self):
         return {"total_doc": self.total_doc}
-
-    def ensure_indexes(self):  # pragma: no cover
-        return [("similarity_feature_vector", False)]

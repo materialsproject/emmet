@@ -1,9 +1,10 @@
 from collections import defaultdict
 
 from fastapi import Query
+from pymatgen.analysis.magnetism import Ordering
+
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
-from pymatgen.analysis.magnetism import Ordering
 
 
 class MagneticQuery(QueryOperator):
@@ -87,12 +88,3 @@ class MagneticQuery(QueryOperator):
             crit["ordering"] = ordering.value
 
         return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        keys = self._keys_from_query()
-        indexes = []
-        for key in keys:
-            if "_min" in key:
-                key = key.replace("_min", "")
-                indexes.append((key, False))
-        return indexes

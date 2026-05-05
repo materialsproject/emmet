@@ -1,27 +1,9 @@
 from __future__ import annotations
 
-from fastapi import Path, Query
+from fastapi import Query
 
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
-from emmet.core.mpid import MPID, AlphaID
-
-
-class PhononImgQuery(QueryOperator):
-    """
-    Method to generate a query on phonon image data.
-
-    TODO: Deprecated? Not used anywhere in the API.
-    """
-
-    def query(
-        self,
-        task_id: MPID | AlphaID = Path(
-            ...,
-            description="The calculation (task) ID associated with the data object",
-        ),
-    ) -> STORE_PARAMS:
-        return {"criteria": {"task_id": str(task_id)}}
 
 
 class PhononMethodQuery(QueryOperator):

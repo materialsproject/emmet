@@ -1,9 +1,9 @@
 from emmet.api.routes.materials.insertion_electrodes.query_operators import (
+    ElectrodeElementsQuery,
     ElectrodeFormulaQuery,
     ElectrodesChemsysQuery,
-    ElectrodeElementsQuery,
-    WorkingIonQuery,
     MultiBatteryIDQuery,
+    WorkingIonQuery,
 )
 
 
@@ -56,7 +56,7 @@ def test_insertion_electrode_query():
         working_ion="Li",
     )
 
-    assert q == {"criteria": {"working_ion": "Li"}}
+    assert q == {"criteria": {"working_ion": {"$in": ["Li"]}}}
 
 
 def test_multi_battery_id_query():

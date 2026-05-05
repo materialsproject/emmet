@@ -1,23 +1,20 @@
+from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import (
     AtlasPaginationQuery,
+    MultiTaskIDQuery,
     PaginationQuery,
     SparseFieldsQuery,
 )
 from emmet.api.resource import ReadOnlyResource, SearchResource
-
 from emmet.api.routes.materials.tasks.query_operators import (
     AtlasBatchIdQuery,
     AtlasElementsQuery,
     AtlasFormulaQuery,
-    DeprecationQuery,
-    MultipleTaskIDsQuery,
-    TrajectoryQuery,
     EntryQuery,
     LastUpdatedQuery,
 )
-from emmet.api.core.global_header import GlobalHeaderProcessor
-from emmet.api.core.settings import MAPISettings
-from emmet.core.tasks import DeprecationDoc, TaskDoc, TrajectoryDoc, EntryDoc
+from emmet.core.tasks import CoreTaskDoc, EntryDoc
 
 timeout = MAPISettings().TIMEOUT
 
@@ -25,16 +22,16 @@ timeout = MAPISettings().TIMEOUT
 def task_resource(task_store):
     resource = SearchResource(
         task_store,
-        TaskDoc,
+        CoreTaskDoc,
         query_operators=[
             AtlasBatchIdQuery(),
             AtlasFormulaQuery(),
             AtlasElementsQuery(),
-            MultipleTaskIDsQuery(),
+            MultiTaskIDQuery(atlas_search=True),
             LastUpdatedQuery(),
             AtlasPaginationQuery(),
             SparseFieldsQuery(
-                TaskDoc,
+                CoreTaskDoc,
                 default_fields=["task_id", "formula_pretty", "last_updated"],
             ),
         ],
@@ -48,42 +45,11 @@ def task_resource(task_store):
     return resource
 
 
-def task_deprecation_resource(materials_store):
-    resource = ReadOnlyResource(
-        materials_store,
-        DeprecationDoc,
-        query_operators=[DeprecationQuery(key="deprecated_tasks"), PaginationQuery()],
-        tags=["Materials Tasks"],
-        enable_default_search=True,
-        sub_path="/tasks/deprecation/",
-        header_processor=GlobalHeaderProcessor(),
-        timeout=timeout,
-    )
-
-    return resource
-
-
-def trajectory_resource(task_store):
-    resource = ReadOnlyResource(
-        task_store,
-        TrajectoryDoc,
-        query_operators=[TrajectoryQuery(validate=True), PaginationQuery()],
-        key_fields=["task_id", "calcs_reversed"],
-        tags=["Materials Tasks"],
-        sub_path="/tasks/trajectory/",
-        header_processor=GlobalHeaderProcessor(),
-        timeout=timeout,
-        disable_validation=True,
-    )
-
-    return resource
-
-
 def entries_resource(task_store):
     resource = ReadOnlyResource(
         task_store,
         EntryDoc,
-        query_operators=[EntryQuery(validate=True), PaginationQuery()],
+        query_operators=[EntryQuery(), PaginationQuery()],
         key_fields=[
             "task_id",
             "input",
