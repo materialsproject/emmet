@@ -23,7 +23,6 @@ from emmet.api.routes.materials.electronic_structure.resources import (
     es_resource,
 )
 from emmet.api.routes.materials.eos.resources import eos_resource
-from emmet.api.routes.materials.fermi.resources import fermi_resource
 from emmet.api.routes.materials.grain_boundary.resources import gb_resource
 from emmet.api.routes.materials.insertion_electrodes.resources import (
     insertion_electrodes_resource,
@@ -54,12 +53,7 @@ from emmet.api.routes.materials.surface_properties.resources import (
     surface_props_resource,
 )
 from emmet.api.routes.materials.synthesis.resources import synth_resource
-from emmet.api.routes.materials.tasks.resources import (
-    entries_resource,
-    task_deprecation_resource,
-    task_resource,
-    trajectory_resource,
-)
+from emmet.api.routes.materials.tasks.resources import entries_resource, task_resource
 from emmet.api.routes.materials.thermo.resources import thermo_resource
 from emmet.api.routes.materials.xas.resources import xas_resource
 
@@ -98,7 +92,6 @@ if db_uri:
     elasticity_store = CollectionWithKey(suffix_db["elasticity"])
     eos_store = CollectionWithKey(core_db["eos_legacy"], "task_id")
     es_store = CollectionWithKey(suffix_db["electronic_structure"])
-    fermi_store = CollectionWithKey(core_db["fermi_surface"], "task_id")
     formula_autocomplete_store = CollectionWithKey(
         core_db["formula_autocomplete"], "_id"
     )
@@ -143,7 +136,6 @@ materials_resources = [
     entries_resource(task_store),
     eos_resource(eos_store),
     es_resource(es_store),
-    fermi_resource(fermi_store),
     find_structure_resource(materials_store),
     formula_autocomplete_resource(formula_autocomplete_store),
     gb_resource(gb_store),
@@ -162,10 +154,8 @@ materials_resources = [
     summary_resource(summary_store),
     surface_props_resource(surface_props_store),
     synth_resource(synth_store),
-    task_deprecation_resource(materials_store),
     task_resource(task_store),
     thermo_resource(thermo_store),
-    trajectory_resource(task_store),
     xas_resource(xas_store),
 ]
 

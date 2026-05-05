@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from fastapi import Query
 
 from emmet.api.query_operator import QueryOperator
@@ -35,12 +37,13 @@ class MultiThermoIDQuery(SuffixedIDQuery):
     field_name = "thermo_id"
 
 
+@dataclass
 class MultiThermoTypeQuery(InQuery):
     """
     Method to generate a query for different root-level thermo_type values
     """
 
-    field = "thermo_type"
+    field_name: str = "thermo_type"
 
     def query(
         self,
@@ -51,12 +54,13 @@ class MultiThermoTypeQuery(InQuery):
         return self._prepare_query(thermo_types)
 
 
+@dataclass
 class MultiPhaseDiagramIDQuery(InQuery):
     """
     Method to generate a query for different root-level phase_diagram_id values
     """
 
-    field = "phase_diagram_id"
+    field_name: str = "phase_diagram_id"
 
     def query(
         self,

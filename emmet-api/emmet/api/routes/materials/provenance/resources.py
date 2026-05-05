@@ -2,11 +2,11 @@ from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import (
     DeprecationQuery,
+    MultiMaterialIDQuery,
     PaginationQuery,
     SparseFieldsQuery,
 )
 from emmet.api.resource import ReadOnlyResource
-from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery
 from emmet.core.provenance import ProvenanceDoc
 
 

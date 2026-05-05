@@ -2,6 +2,7 @@ from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import (
     DeprecationQuery,
+    MultiMaterialIDQuery,
     PaginationQuery,
     SparseFieldsQuery,
 )
@@ -16,7 +17,6 @@ from emmet.api.routes.materials.materials.query_operators import (
     ChemsysQuery,
     ElementsQuery,
     FormulaQuery,
-    MultiMaterialIDQuery,
 )
 from emmet.core.electronic_structure import ElectronicStructureDoc
 
