@@ -1,12 +1,15 @@
 from fastapi import Query
-from emmet.api.query_operator import QueryOperator
+
+from emmet.api.query_operator import InQuery
 from emmet.api.utils import STORE_PARAMS
 
 
-class MPculeIDsSearchQuery(QueryOperator):
+class MPculeIDsSearchQuery(InQuery):
     """
     Method to generate a query on summary docs using multiple molecule_id values
     """
+
+    field = "molecule_id"
 
     def query(
         self,
@@ -14,21 +17,7 @@ class MPculeIDsSearchQuery(QueryOperator):
             None, description="Comma-separated list of molecule_ids to query on"
         ),
     ) -> STORE_PARAMS:
-        crit = {}
-
-        if molecule_ids:
-            crit.update(
-                {
-                    "molecule_id": {
-                        "$in": [
-                            molecule_id.strip()
-                            for molecule_id in molecule_ids.split(",")
-                        ]
-                    }
-                }
-            )
-
-        return {"criteria": crit}
+        return self._prepare_query(molecule_ids)
 
     def post_process(self, docs, query):
         if not query.get("sort", None):

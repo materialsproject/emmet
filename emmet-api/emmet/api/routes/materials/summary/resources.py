@@ -1,43 +1,41 @@
-from emmet.core.summary import SummaryDoc
-
+from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import (
-    PaginationQuery,
-    SparseFieldsQuery,
-    NumericQuery,
-    SortQuery,
-)
-from emmet.api.resource import ReadOnlyResource, AggregationResource
-from emmet.api.routes.materials.materials.query_operators import (
     DeprecationQuery,
-    ElementsQuery,
-    FormulaQuery,
-    ChemsysQuery,
-    SymmetryQuery,
-    LicenseQuery,
-    BatchIdQuery,
+    NumericQuery,
+    PaginationQuery,
+    SortQuery,
+    SparseFieldsQuery,
 )
-from emmet.api.routes.materials.oxidation_states.query_operators import (
-    PossibleOxiStateQuery,
-)
-from emmet.core.summary import SummaryStats
-from emmet.api.routes.materials.summary.hint_scheme import SummaryHintScheme
-from emmet.api.routes.materials.summary.query_operators import (
-    HasPropsQuery,
-    MaterialIDsSearchQuery,
-    SearchIsStableQuery,
-    SearchIsTheoreticalQuery,
-    SearchMagneticQuery,
-    SearchHasReconstructedQuery,
-    SearchStatsQuery,
-    SearchESQuery,
-)
+from emmet.api.resource import ReadOnlyResource
 from emmet.api.routes.materials.elasticity.query_operators import (
     BulkModulusQuery,
     ShearModulusQuery,
 )
-
-from emmet.api.core.global_header import GlobalHeaderProcessor
-from emmet.api.core.settings import MAPISettings
+from emmet.api.routes.materials.materials.query_operators import (
+    BatchIdQuery,
+    ChemsysQuery,
+    ElementsQuery,
+    FormulaQuery,
+    LicenseQuery,
+    SymmetryQuery,
+)
+from emmet.api.routes.materials.oxidation_states.query_operators import (
+    PossibleOxiStateQuery,
+)
+from emmet.api.routes.materials.summary.hint_scheme import SummaryHintScheme
+from emmet.api.routes.materials.summary.query_operators import (
+    HasPropsQuery,
+    MaterialIDsSearchQuery,
+    SearchESQuery,
+    SearchIsStableQuery,
+    SearchIsTheoreticalQuery,
+    SearchMagneticQuery,
+)
+from emmet.api.routes.materials.surface_properties.query_operators import (
+    ReconstructedQuery,
+)
+from emmet.core.summary import SummaryDoc
 
 settings = MAPISettings()  # type: ignore
 timeout = settings.TIMEOUT
@@ -62,7 +60,7 @@ def summary_resource(summary_store):
             NumericQuery(model=SummaryDoc, excluded_fields=["composition"]),
             BulkModulusQuery(),
             ShearModulusQuery(),
-            SearchHasReconstructedQuery(),
+            ReconstructedQuery(),
             HasPropsQuery(),
             DeprecationQuery(),
             PaginationQuery(),
@@ -77,21 +75,6 @@ def summary_resource(summary_store):
         tags=["Materials Summary"],
         sub_path="/summary/",
         disable_validation=True,
-        timeout=timeout,
-    )
-
-    return resource
-
-
-def summary_stats_resource(summary_store):
-    """NOTE: Currently unused, API endpoint no longer available."""
-    resource = AggregationResource(
-        summary_store,
-        SummaryStats,
-        pipeline_query_operator=SearchStatsQuery(SummaryDoc),
-        tags=["Materials Summary"],
-        sub_path="/summary/stats/",
-        header_processor=GlobalHeaderProcessor(),
         timeout=timeout,
     )
 

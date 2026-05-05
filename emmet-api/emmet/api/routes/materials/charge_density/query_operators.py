@@ -1,9 +1,10 @@
 from fastapi import Query
-from emmet.api.query_operator.core import QueryOperator
-from emmet.api.utils import STORE_PARAMS, process_identifiers
+
+from emmet.api.query_operator.core import MultiTaskIDQuery
+from emmet.api.utils import STORE_PARAMS
 
 
-class ChgcarTaskIDQuery(QueryOperator):
+class ChgcarTaskIDQuery(MultiTaskIDQuery):
     """
     Method to generate a query on CHGCAR metadata with calculation (task) ID
     """
@@ -15,11 +16,4 @@ class ChgcarTaskIDQuery(QueryOperator):
             description="Comma-separated list of calculation (task) IDs to query on",
         ),
     ) -> STORE_PARAMS:
-        crit = {}
-
-        if task_ids:
-            crit.update(
-                {"task_id": {"$in": process_identifiers(task_ids, use_prefix=False)}}
-            )
-
-        return {"criteria": crit}
+        return self._prepare_query(task_ids)

@@ -1,21 +1,21 @@
 import os
+
 import pytest
+from pymatgen.core.structure import Molecule
 
 from emmet.api.core.settings import MAPISettings
-from emmet.api.query_operator import MultiTaskIDQuery
+from emmet.api.query_operator import DeprecationQuery, MultiTaskIDQuery
 from emmet.api.routes.molecules.molecules.query_operators import (
-    FormulaQuery,
+    CalcMethodQuery,
+    ChargeSpinQuery,
     ChemsysQuery,
     CompositionElementsQuery,
-    ChargeSpinQuery,
-    DeprecationQuery,
-    MultiMPculeIDQuery,
     FindMoleculeQuery,
-    CalcMethodQuery,
+    FormulaQuery,
     HashQuery,
+    MultiMPculeIDQuery,
     StringRepQuery,
 )
-from pymatgen.core.structure import Molecule
 
 try:
     from openbabel import openbabel

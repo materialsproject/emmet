@@ -23,9 +23,6 @@ class MethodQuery(QueryOperator):
 
         return {"criteria": crit}
 
-    def ensure_indexes(self):  # pragma: no cover
-        return [("method", False)]
-
 
 class MultiPropertyIDQuery(QueryOperator):
     """

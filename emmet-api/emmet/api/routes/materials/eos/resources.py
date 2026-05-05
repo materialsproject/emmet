@@ -1,13 +1,12 @@
-from emmet.api.resource import ReadOnlyResource
-from emmet.core.eos import EOSDoc
-
-from emmet.api.query_operator import (
-    PaginationQuery,
-    SparseFieldsQuery,
-    MultiTaskIDQuery,
-)
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
+from emmet.api.query_operator import (
+    MultiTaskIDQuery,
+    PaginationQuery,
+    SparseFieldsQuery,
+)
+from emmet.api.resource import ReadOnlyResource
+from emmet.core.eos import EOSDoc
 
 
 def eos_resource(eos_store):
@@ -15,7 +14,7 @@ def eos_resource(eos_store):
         eos_store,
         EOSDoc,
         query_operators=[
-            MultiTaskIDQuery(validate=True),
+            MultiTaskIDQuery(),
             PaginationQuery(),
             SparseFieldsQuery(EOSDoc, default_fields=["task_id"]),
         ],

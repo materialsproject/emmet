@@ -1,8 +1,9 @@
+from collections import defaultdict
+
 from fastapi import Query
+
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
-
-from collections import defaultdict
 
 
 class PossibleOxiStateQuery(QueryOperator):
@@ -26,7 +27,3 @@ class PossibleOxiStateQuery(QueryOperator):
             }
 
         return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        keys = ["possible_species"]
-        return [(key, False) for key in keys]

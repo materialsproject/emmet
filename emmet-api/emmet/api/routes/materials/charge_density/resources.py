@@ -1,8 +1,8 @@
-from emmet.api.resource import ReadOnlyResource
-from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
-from emmet.core.charge_density import VolumetricDataDoc
-from emmet.api.routes.materials.charge_density.query_operators import ChgcarTaskIDQuery
 from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
+from emmet.api.resource import ReadOnlyResource
+from emmet.api.routes.materials.charge_density.query_operators import ChgcarTaskIDQuery
+from emmet.core.charge_density import VolumetricDataDoc
 
 
 def charge_density_resource(s3_store):

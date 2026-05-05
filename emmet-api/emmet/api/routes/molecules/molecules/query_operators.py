@@ -1,13 +1,13 @@
 from typing import Any
 
 from fastapi import Body, HTTPException, Query
-from emmet.api.query_operator import QueryOperator
-from emmet.api.utils import STORE_PARAMS
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Molecule
 
+from emmet.api.query_operator import QueryOperator
 from emmet.api.routes.materials.materials.utils import chemsys_to_criteria
+from emmet.api.utils import STORE_PARAMS
 
 
 class FormulaQuery(QueryOperator):
@@ -42,9 +42,6 @@ A comma delimited string list of alphabetical formulas can also be provided.",
 
         return {"criteria": crit}
 
-    def ensure_indexes(self):  # pragma: no cover
-        return [("formula_alphabetical", False)]
-
 
 class ChemsysQuery(QueryOperator):
     """
@@ -66,10 +63,6 @@ Wildcards for unknown elements only supported for single chemsys queries",
             crit.update(chemsys_to_criteria(chemsys))
 
         return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        keys = ["chemsys", "elements", "nelements"]
-        return [(key, False) for key in keys]
 
 
 class CompositionElementsQuery(QueryOperator):
@@ -118,9 +111,6 @@ class CompositionElementsQuery(QueryOperator):
 
         return {"criteria": crit}
 
-    def ensure_indexes(self):  # pragma: no cover
-        return [("composition.$**", False)]
-
 
 class ChargeSpinQuery(QueryOperator):
     """
@@ -144,29 +134,6 @@ class ChargeSpinQuery(QueryOperator):
             crit.update({"charge": charge})
         if spin_multiplicity:
             crit.update({"spin_multiplicity": spin_multiplicity})
-
-        return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        return [("charge", False), ("spin_multiplicity", False)]
-
-
-class DeprecationQuery(QueryOperator):
-    """
-    Method to generate a deprecation state query
-    """
-
-    def query(
-        self,
-        deprecated: bool | None = Query(
-            False,
-            description="Whether the material is marked as deprecated",
-        ),
-    ) -> STORE_PARAMS:
-        crit = {}
-
-        if deprecated is not None:
-            crit.update({"deprecated": deprecated})
 
         return {"criteria": crit}
 
@@ -285,9 +252,6 @@ class FindMoleculeQuery(QueryOperator):
 
         return response
 
-    def ensure_indexes(self):  # pragma: no cover
-        return [("composition", False)]
-
 
 class CalcMethodQuery(QueryOperator):
     """
@@ -336,13 +300,6 @@ class CalcMethodQuery(QueryOperator):
             crit.update({"unique_lot_solvents": lot_solvent})
 
         return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        return [
-            ("unique_levels_of_theory", False),
-            ("unique_solvents", False),
-            ("unique_lot_solvents", False),
-        ]
 
     def post_process(self, docs, query):
         # TODO: should this be somehow sorted?
@@ -399,9 +356,6 @@ class ExactCalcMethodQuery(QueryOperator):
 
         return {"criteria": crit}
 
-    def ensure_indexes(self):  # pragma: no cover
-        return [("level_of_theory", False), ("solvent", False), ("lot_solvent", False)]
-
     def post_process(self, docs, query):
         # TODO: should this be somehow sorted?
         response = docs[: self._limit]
@@ -432,9 +386,6 @@ class HashQuery(QueryOperator):
 
         return {"criteria": crit}
 
-    def ensure_indexes(self):  # pragma: no cover
-        return [("species_hash", False), ("coord_hash", False)]
-
 
 class StringRepQuery(QueryOperator):
     """
@@ -463,6 +414,3 @@ class StringRepQuery(QueryOperator):
             crit.update({"inchi_key": self.inchi_key})
 
         return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        return [("inchi", False), ("inchi_key", False)]
