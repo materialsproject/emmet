@@ -1,9 +1,12 @@
+from dataclasses import dataclass
+
 from fastapi import Query
 
 from emmet.api.query_operator import RangeQuery
 from emmet.api.utils import STORE_PARAMS
 
 
+@dataclass
 class DielectricQuery(RangeQuery):
     """
     Method to generate a query for ranges of dielectric constant data

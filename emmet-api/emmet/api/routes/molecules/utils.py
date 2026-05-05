@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import numpy as np
 from fastapi import HTTPException, Query
 from pymatgen.core import Molecule
@@ -28,12 +30,13 @@ class MethodQuery(QueryOperator):
         return {"criteria": crit}
 
 
+@dataclass
 class MultiPropertyIDQuery(InQuery):
     """
     Method to generate a query for different property ID values
     """
 
-    field = "property_id"
+    field_name: str = "property_id"
 
     def query(
         self,

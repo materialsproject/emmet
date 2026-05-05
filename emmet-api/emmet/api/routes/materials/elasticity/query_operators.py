@@ -1,9 +1,12 @@
+from dataclasses import dataclass
+
 from fastapi import Query
 
 from emmet.api.query_operator import QueryOperator, RangeQuery
 from emmet.api.utils import STORE_PARAMS
 
 
+@dataclass
 class BulkModulusQuery(RangeQuery):
     """
     Method to generate a query for ranges of bulk modulus values
@@ -45,6 +48,7 @@ class BulkModulusQuery(RangeQuery):
         )
 
 
+@dataclass
 class ShearModulusQuery(RangeQuery):
     """
     Method to generate a query for ranges of shear modulus values
@@ -86,6 +90,7 @@ class ShearModulusQuery(RangeQuery):
         )
 
 
+@dataclass
 class PoissonQuery(RangeQuery):
     """
     Method to generate a query for ranges of
