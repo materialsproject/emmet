@@ -1,15 +1,18 @@
+from dataclasses import dataclass
+
 from fastapi import Query
 
 from emmet.api.query_operator import InQuery
 from emmet.api.utils import STORE_PARAMS
 
 
+@dataclass
 class MPculeIDsSearchQuery(InQuery):
     """
     Method to generate a query on summary docs using multiple molecule_id values
     """
 
-    field = "molecule_id"
+    field_name: str = "molecule_id"
 
     def query(
         self,

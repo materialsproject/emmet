@@ -16,6 +16,7 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     MultiMPculeIDQuery,
     StringRepQuery,
 )
+from emmet.api.utils import split_csv
 
 try:
     from openbabel import openbabel
@@ -65,7 +66,8 @@ def test_deprecation_query():
 
 
 def test_multi_task_id_query():
-    op = MultiTaskIDQuery(key="task_ids")
+    # no AlphaID coercion for molecule ids yet
+    op = MultiTaskIDQuery(field_name="task_ids", pre_processor=split_csv)
     assert op.query(task_ids="mpcule-149, mpcule-13") == {
         "criteria": {"task_ids": {"$in": ["mpcule-149", "mpcule-13"]}}
     }
@@ -90,7 +92,9 @@ def test_multi_mpculeid_query():
         molecule_ids="21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2"
     ) == {
         "criteria": {
-            "molecule_id": "21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2"
+            "molecule_id": {
+                "$in": ["21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2"]
+            }
         }
     }
 

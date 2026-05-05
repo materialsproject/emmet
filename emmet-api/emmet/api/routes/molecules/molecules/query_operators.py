@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Any
 
 from fastapi import Body, HTTPException, Query
@@ -5,7 +6,7 @@ from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Molecule
 
-from emmet.api.query_operator import QueryOperator
+from emmet.api.query_operator import InQuery, QueryOperator
 from emmet.api.routes.materials.materials.utils import chemsys_to_criteria
 from emmet.api.utils import STORE_PARAMS
 
@@ -138,10 +139,13 @@ class ChargeSpinQuery(QueryOperator):
         return {"criteria": crit}
 
 
-class MultiMPculeIDQuery(QueryOperator):
+@dataclass
+class MultiMPculeIDQuery(InQuery):
     """
     Method to generate a query for different root-level mpcule_id values
     """
+
+    field_name: str = "molecule_id"
 
     def query(
         self,
@@ -149,19 +153,7 @@ class MultiMPculeIDQuery(QueryOperator):
             None, description="Comma-separated list of MPculeIDs to query on"
         ),
     ) -> STORE_PARAMS:
-        crit = {}  # type: dict
-
-        if molecule_ids:
-            molecule_ids_list = [
-                mpcule_id.strip() for mpcule_id in molecule_ids.split(",")
-            ]
-
-            if len(molecule_ids_list) == 1:
-                crit.update({"molecule_id": molecule_ids_list[0]})
-            else:
-                crit.update({"molecule_id": {"$in": molecule_ids_list}})
-
-        return {"criteria": crit}
+        return self._prepare_query(molecule_ids)
 
 
 class FindMoleculeQuery(QueryOperator):
