@@ -41,6 +41,20 @@ class QueryOperator(ABC):
 
 @dataclass
 class BoolQuery(QueryOperator):
+    """
+    Generates an equality query for a boolean field.
+
+    When the supplied flag is ``None``, no criteria are emitted (the field is
+    not constrained); otherwise an exact-match predicate is built against the
+    given field.
+
+    Attributes:
+        field_name: The document field to match against.
+
+    Subclasses should override ``query`` to declare their FastAPI query
+    parameters and delegate to ``_prepare_query`` to build their predicate.
+    """
+
     field_name: str
 
     def _prepare_query(self, flag: bool | None) -> STORE_PARAMS:
@@ -84,6 +98,18 @@ class InQuery(QueryOperator):
 
 @dataclass
 class RangeQuery(QueryOperator):
+    """
+    Generates a range ($gte / $lte) query across one or more numeric fields.
+
+    Each entry in the input mapping is interpreted as
+    ``field_name -> [min_value, max_value]``. Either bound may be ``None`` to
+    indicate that side of the range is unbounded; if both bounds are ``None``
+    the field contributes no criteria.
+
+    Subclasses should override ``query`` to declare their FastAPI query
+    parameters (typically a min/max pair per field) and delegate to
+    ``_prepare_query`` to build their predicate.
+    """
 
     def _prepare_query(self, value_dict: dict[str, list[float]]) -> STORE_PARAMS:
         crit = defaultdict(dict)  # type: dict
