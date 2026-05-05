@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated
 import warnings
+from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, BeforeValidator, Field
 from pymatgen.analysis.eos import EOS, EOSError
@@ -159,4 +159,4 @@ class EOSDoc(BaseModel):
             category=DeprecationWarning,
             stacklevel=2,
         )
-        return self.task_id
+        return self.task_id  # type: ignore[return-value]

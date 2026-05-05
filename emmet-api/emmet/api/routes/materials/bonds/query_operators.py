@@ -1,9 +1,12 @@
+from dataclasses import dataclass
+
 from fastapi import Query
 
 from emmet.api.query_operator import QueryOperator, RangeQuery
 from emmet.api.utils import STORE_PARAMS
 
 
+@dataclass
 class BondLengthQuery(RangeQuery):
     """
     Method to generate a query on bond length data.

@@ -1,4 +1,5 @@
 from collections import defaultdict
+from dataclasses import dataclass
 
 from fastapi import Query
 
@@ -37,6 +38,7 @@ class SubstrateStructureQuery(QueryOperator):
         return {"criteria": crit}
 
 
+@dataclass
 class EnergyAreaQuery(RangeQuery):
     """
     Method to generate a query for ranges of substrate
