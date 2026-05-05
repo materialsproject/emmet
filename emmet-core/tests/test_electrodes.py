@@ -17,7 +17,6 @@ from emmet.core.electrode import (
     InsertionElectrodeDoc,
     get_battery_formula,
 )
-from emmet.core.mpid_ext import BatteryID, ThermoID
 from emmet.core.types.pymatgen_types.computed_entries_adapter import (
     ComputedStructureEntryType,
 )
@@ -33,13 +32,11 @@ def insertion_elec(test_dir):
     """
     Recycle the test cases from pymatgen
     """
-    entry_Li = ComputedEntry(
-        "Li", -1.90753119, entry_id=ThermoID.from_str("mp-1234-UNKNOWN")
-    )
+    entry_Li = ComputedEntry("Li", -1.90753119, entry_id="mp-1234-UNKNOWN")
     # more cases can be added later if problems are found
     entries_LTO = loadfn(test_dir / "LiTiO2_batt.json.gz", cls=None)
     for entry in entries_LTO:
-        entry["entry_id"] = ThermoID.from_str(f"{entry['entry_id']}-UNKNOWN")
+        entry["entry_id"] = f"{entry['entry_id']}-UNKNOWN"
 
     entries_LTO = TypeAdapter(list[ComputedStructureEntryType]).validate_python(
         entries_LTO
@@ -58,7 +55,7 @@ def conversion_elec(test_dir):
 
     entries_LCO = loadfn(test_dir / "LiCoO2_batt.json.gz", cls=None)
     for entry in entries_LCO:
-        entry["entry_id"] = ThermoID.from_str(f"{entry['entry_id']}-UNKNOWN")
+        entry["entry_id"] = f"{entry['entry_id']}-UNKNOWN"
 
     entries_LCO = TypeAdapter(list[ComputedStructureEntryType]).validate_python(
         entries_LCO
@@ -94,12 +91,12 @@ def test_InsertionDocs(insertion_elec):
         ie = InsertionElectrodeDoc.from_entries(
             grouped_entries=elec.stable_entries,
             working_ion_entry=wion_entry,
-            battery_id=BatteryID.from_str("mp-1234_Li"),
+            battery_id="mp-1234_Li",
         )
         assert ie.average_voltage == elec.get_average_voltage()
         assert len(ie.material_ids) > 2
 
-        # ThermoID breaks this, TODO for when builder is re-written
+        # Thermo ID breaks this, TODO for when builder is re-written
         # Make sure that each adjacent pair can be converted into a sub electrode
         # for sub_elec in elec.get_sub_electrodes(adjacent_only=True):
         #     vp = InsertionVoltagePairDoc.from_sub_electrode(sub_electrode=sub_elec)
@@ -120,7 +117,7 @@ def test_ConversionDocs_from_entries(conversion_elec):
             Composition(k),
             entries=elec["entries"],
             working_ion_symbol=elec["working_ion"],
-            battery_id=BatteryID.from_str("mp-1234_Li"),
+            battery_id="mp-1234_Li",
             thermo_type="GGA_GGA+U",
         )
         res_d = vp.model_dump()
@@ -136,7 +133,7 @@ def test_ConversionDocs_from_composition_and_pd(conversion_elec, test_dir):
             comp=Composition(k),
             pd=pd,
             working_ion_symbol=elec["working_ion"],
-            battery_id=BatteryID.from_str("mp-1234_Li"),
+            battery_id="mp-1234_Li",
             thermo_type="GGA_GGA+U",
         )
         res_d = vp.model_dump()
@@ -171,7 +168,7 @@ def test_arrow_insertion(insertion_elec):
     doc = InsertionElectrodeDoc.from_entries(
         grouped_entries=elec.stable_entries,
         working_ion_entry=wion_entry,
-        battery_id=BatteryID.from_str("mp-1234_Li"),
+        battery_id="mp-1234_Li",
     )
 
     arrow_struct = pa.scalar(
@@ -203,7 +200,7 @@ def test_arrow_conversion(conversion_elec):
         Composition(k),
         entries=elec["entries"],
         working_ion_symbol=elec["working_ion"],
-        battery_id=BatteryID.from_str("mp-1234_Li"),
+        battery_id="mp-1234_Li",
         thermo_type="GGA_GGA+U",
     )
 

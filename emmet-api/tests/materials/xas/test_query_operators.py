@@ -34,9 +34,57 @@ def test_xas_multi_id():
         spectrum_ids="mp-149-XANES-Pd-K, mp-8951-XANES-Pd-K, mp-bmm-XANES-Pd-K"
     ) == {
         "criteria": {
-            "material_id": {"$in": ["aaaaaaft", "aaaaangh", "aaaaabmm"]},
+            "material_id": {
+                "$in": [
+                    "aaaaaaft",
+                    "aaaaabmm",
+                    "aaaaangh",
+                ]
+            },
             "spectrum_type": {"$in": ["XANES"]},
             "absorbing_element": {"$in": ["Pd"]},
             "edge": {"$in": ["K"]},
         }
     }
+
+    docs = [
+        {
+            "material_id": "aaaaaaft",
+            "spectrum_type": "XANES",
+            "absorbing_element": "Pt",
+            "edge": "K",
+        },
+        {
+            "material_id": "aaaaaaft",
+            "spectrum_type": "XANES",
+            "absorbing_element": "Pd",
+            "edge": "K",
+        },
+        {
+            "material_id": "aaaaabmm",
+            "spectrum_type": "XANES",
+            "absorbing_element": "Pd",
+            "edge": "L",
+        },
+        {
+            "material_id": "aaaaabmm",
+            "spectrum_type": "XANES",
+            "absorbing_element": "Pd",
+            "edge": "K",
+        },
+    ]
+
+    assert op.post_process(docs, {}) == [
+        {
+            "material_id": "aaaaaaft",
+            "spectrum_type": "XANES",
+            "absorbing_element": "Pd",
+            "edge": "K",
+        },
+        {
+            "material_id": "aaaaabmm",
+            "spectrum_type": "XANES",
+            "absorbing_element": "Pd",
+            "edge": "K",
+        },
+    ]

@@ -1,10 +1,12 @@
+from dataclasses import dataclass
+
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS, process_identifiers
-from emmet.core.mpid_ext import SuffixedID
 
 
-class SuffixedIDQuery(QueryOperator):
-    """Query a suffixed identifier field.
+@dataclass
+class CompoundIDQuery(QueryOperator):
+    """Query an identifier field that is a composition of multiple document fields.
 
     Supports querying one or multiple suffixed IDs.
 
@@ -15,70 +17,60 @@ class SuffixedIDQuery(QueryOperator):
     for a concrete implementation.
     """
 
-    suffix_id_class: type[SuffixedID] = SuffixedID
     field_name: str = "identifier"
+    identifier_fields: tuple[str, ...] = ("material_id",)
+    separator: str = "-"
 
-    def query(
-        self,
-        **kwargs,
-    ) -> STORE_PARAMS:
+    @property
+    def num_suffixes(self) -> int:
+        return len(self.identifier_fields) - 1
 
-        identifiers = [
-            v.strip() for v in (kwargs.get(f"{self.field_name}s") or "").split(",")
+    @staticmethod
+    def process_base_identifier(identifier: str) -> str:
+        """Optionally validate identifier."""
+        return process_identifiers(identifier)[0]
+
+    def query(self, **kwargs) -> STORE_PARAMS:
+
+        identifiers = {
+            v.strip() for v in (kwargs.get(f"{self.field_name}s") or "").split(",") if v
+        }
+        if len(identifiers) == 0:
+            return {"criteria": {}}
+
+        identifiers_as_components = [
+            idx.rsplit(self.separator, self.num_suffixes) for idx in identifiers
         ]
-        sfx_ids = [self.suffix_id_class.from_str(v).model_dump() for v in identifiers]
-        for i, idx in enumerate(sfx_ids):
-            sfx_ids[i]["identifier"] = process_identifiers(idx["identifier"])[0]
-        sfx_as_str = [
-            idx["separator"].join((idx["identifier"], idx["suffix"])) for idx in sfx_ids
-        ]
-        if len(sfx_ids) == 0:
-            # Originally it was supported to query by a null value, quick return if so
-            return {}
-        elif len(sfx_ids) == 1:
-            # If only one ID specified, then just add a match to aggregation
-            return {
-                "criteria": {
-                    f"{self.field_name}.identifier": sfx_ids[0]["identifier"],
-                    f"{self.field_name}.suffix": sfx_ids[0]["suffix"],
-                }
-            }
-
-        # If multiple IDs specified, perform aggregation
-
-        pre_filter_q = {}
-
-        for field in ("identifier", "suffix"):
-            if len(unique := list({idx[field] for idx in sfx_ids})) == 1:
-                pre_filter_q[f"{self.field_name}.{field}"] = unique[0]
-            else:
-                pre_filter_q[f"{self.field_name}.{field}"] = {"$in": sorted(unique)}
-
-        pipeline = [
-            {
-                # pre-filter based on specified unique IDs / suffixes
-                "$match": pre_filter_q
-            },
-            {
-                # concatenate suffixed ID field
-                "$addFields": {
-                    "_idcat": {
-                        "$concat": [
-                            f"${self.field_name}.identifier",
-                            self.suffix_id_class.model_fields["separator"].default,
-                            f"${self.field_name}.suffix",
-                        ]
-                    }
-                }
-            },
-            {
-                # match concatenated suffix ID
-                "$match": {"_idcat": {"$in": sfx_as_str}}
-            },
-            {
-                # remove from output
-                "$unset": "_idcat"
-            },
+        for i, split_idx in enumerate(identifiers_as_components):
+            identifiers_as_components[i][0] = self.process_base_identifier(split_idx[0])
+        self.identifiers = [
+            self.separator.join(split_idx) for split_idx in identifiers_as_components
         ]
 
-        return {"pipeline": pipeline}
+        components = [
+            sorted(set(component_subset))
+            for component_subset in zip(*identifiers_as_components)
+        ]
+
+        # Always do an $in here because the insertion electrodes only have a `material_ids` field
+        # and we need to check if >= 1 material_id exists in that list
+        crit = {
+            f"{field}": {"$in": components[i]}
+            for i, field in enumerate(self.identifier_fields)
+        }
+
+        return {"criteria": crit}
+
+    def post_process(self, docs: list[dict], query: dict) -> list[dict]:
+        """Remove false positive matches.
+
+        Args:
+            docs: the document results to post-process
+            query: the store query dict to use in post-processing
+        """
+        return [
+            doc
+            for doc in docs
+            if self.separator.join(doc.get(k, "") for k in self.identifier_fields)
+            in self.identifiers
+        ]

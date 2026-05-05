@@ -5,7 +5,7 @@ from emmet.builders.base import BaseBuilderInput
 from emmet.builders.utils import _parse_kpoints, filter_map
 from emmet.core.absorption import AbsorptionDoc
 from emmet.core.material import PropertyOrigin
-from emmet.core.mpid_ext import MaterialIdentifierType
+from emmet.core.types.typing import MaterialIdentifierType
 from emmet.core.tasks import CoreTaskDoc
 from emmet.core.types.typing import DateTimeType
 

@@ -13,7 +13,6 @@ from pymatgen.core.periodic_table import DummySpecies, Element, Species
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.mpid_ext import BatteryID
 from emmet.core.types.enums import BatteryType
 from emmet.core.types.pymatgen_types.balanced_reaction_adapter import (
     BalancedReactionType,
@@ -183,7 +182,7 @@ class BaseElectrode(EmmetBaseModel):
         None, description="The type of battery (insertion or conversion)."
     )
 
-    battery_id: BatteryID | None = Field(
+    battery_id: str | None = Field(
         None,
         description="The id for this battery document is the numerically smallest material_id followed by "
         "the working ion.",
@@ -285,7 +284,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
         cls,
         grouped_entries: list[ComputedStructureEntry],
         working_ion_entry: ComputedEntry,
-        battery_id: BatteryID,
+        battery_id: str,
         strip_structures: bool = False,
     ) -> InsertionElectrodeDoc | None:
         try:
@@ -455,7 +454,7 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
         composition: Composition,
         entries: list[ComputedEntry],
         working_ion_symbol: str,
-        battery_id: BatteryID,
+        battery_id: str,
         thermo_type: str,
     ):
         ce = ConversionElectrode.from_composition_and_entries(
@@ -472,7 +471,7 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
         comp: Composition,
         pd: PhaseDiagram,
         working_ion_symbol: str,
-        battery_id: BatteryID,
+        battery_id: str,
         thermo_type: str,
     ):
         ce = ConversionElectrode.from_composition_and_pd(

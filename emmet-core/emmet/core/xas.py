@@ -2,15 +2,16 @@ from __future__ import annotations
 
 import warnings
 from itertools import groupby
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING
 
 import numpy as np
-from pydantic import BeforeValidator, Field
+from pydantic import Field
 from pymatgen.analysis.xas.spectrum import XAS, site_weighted_spectrum
+from pymatgen.core import Element
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.core.feff.task import TaskDocument
-from emmet.core.mpid_ext import XasSpectrumID, validate_identifier
+from emmet.core.mpid import validate_identifier
 from emmet.core.spectrum import SpectrumDoc
 from emmet.core.types.enums import ValueEnum, XasEdge, XasType
 from emmet.core.types.pymatgen_types.element_adapter import ElementType
@@ -34,10 +35,7 @@ class XASDoc(SpectrumDoc):
     """
 
     spectrum_name: str = "XAS"
-    spectrum_id: Annotated[
-        XasSpectrumID,
-        BeforeValidator(validate_identifier),
-    ]
+    spectrum_id: str | None = None
     spectrum: XASType | None = Field(
         None, description="The XAS spectrum for this calculation."
     )
@@ -59,10 +57,17 @@ class XASDoc(SpectrumDoc):
         material_id: IdentifierType | None = None,
         **kwargs,
     ):
-        spectrum_type = xas_spectrum.spectrum_type
-        el = xas_spectrum.absorbing_element
-        edge = xas_spectrum.edge
-        xas_id = f"{material_id}-{spectrum_type}-{el}-{edge}"
+        spectrum_type = XasType(xas_spectrum.spectrum_type)
+        el = Element(xas_spectrum.absorbing_element)
+        edge = XasEdge(xas_spectrum.edge)
+        xas_id = "-".join(
+            (
+                validate_identifier(material_id).string,
+                spectrum_type.value,
+                el.value,
+                edge.value,
+            )
+        )
 
         if xas_spectrum.absorbing_index is not None:
             xas_id += f"-{xas_spectrum.absorbing_index}"
