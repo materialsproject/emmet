@@ -1,9 +1,8 @@
+from dataclasses import dataclass
 from fastapi import Query
 from emmet.api.query_operator import QueryOperator
-from emmet.api.query_operator.identifier import SuffixedIDQuery
+from emmet.api.query_operator.identifier import CompoundIDQuery
 from emmet.api.utils import STORE_PARAMS
-
-from emmet.core.thermo import ThermoID
 
 
 class IsStableQuery(QueryOperator):
@@ -29,13 +28,15 @@ class IsStableQuery(QueryOperator):
         return [(key, False) for key in keys]
 
 
-class MultiThermoIDQuery(SuffixedIDQuery):
+@dataclass
+class MultiThermoIDQuery(CompoundIDQuery):
     """
     Method to generate a query for different root-level thermo_id values
     """
 
-    suffix_id_class = ThermoID
-    field_name = "thermo_id"
+    field_name: str = "thermo_id"
+    identifier_fields: tuple[str, ...] = ("material_id", "thermo_type")
+    separator: str = "_"
 
 
 class MultiThermoTypeQuery(QueryOperator):

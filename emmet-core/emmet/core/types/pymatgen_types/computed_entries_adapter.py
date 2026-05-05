@@ -5,7 +5,6 @@ from pydantic import BeforeValidator, TypeAdapter, WrapSerializer
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from typing_extensions import NotRequired, TypedDict
 
-from emmet.core.mpid_ext import ThermoID
 from emmet.core.types.pymatgen_types.element_adapter import ElementType
 from emmet.core.types.pymatgen_types.structure_adapter import (
     StructureType,
@@ -85,7 +84,7 @@ TypedComputedEntryDict = TypedDict(
         "@class": str,
         "energy": float,
         "composition": dict[ElementType, float],
-        "entry_id": ThermoID,
+        "entry_id": str,
         "correction": float,
         # "energy_adjustments": list[
         #     TypedCompositionEnergyAdjustmentDict

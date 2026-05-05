@@ -709,3 +709,32 @@ def _next_safe_alpha_id(
     while int(start_id) in FORBIDDEN_ALPHA_ID_VALUES:
         start_id += 1
     return start_id
+
+
+def validate_identifier(
+    idx: str | MPID | AlphaID, serialize: bool = False
+) -> str | MPID | AlphaID:
+    """Format an input string or identifier as a valid Materials Project format identifier.
+
+    Parameters
+    -----------
+    idx : str, MPID, AlphaID
+        The input identifier, can either be an already instantiated
+        identifier object, or a plain string
+    serialize : bool = False
+        If True, returns the string representation of the identifier object.
+        If False, returns the object.
+    """
+
+    try:
+        parsed_idx = AlphaID(idx)
+    except Exception as exc:
+        raise ValueError(f"Invalid identifier {idx}, must be MPID or AlphaID.") from exc
+
+    if serialize:
+        return (
+            str(AlphaID(parsed_idx))
+            if isinstance(parsed_idx, MPID | AlphaID)
+            else str(parsed_idx)
+        )
+    return parsed_idx
