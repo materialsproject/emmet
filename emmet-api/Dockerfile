@@ -46,7 +46,6 @@ ENV PATH=/root/.local/bin:$PATH \
 COPY app.py .
 COPY material_resources.py .
 COPY molecule_resources.py .
-COPY defect_resources.py .
 COPY start.sh .
 COPY healthcheck.sh .
 RUN chmod +x start.sh healthcheck.sh
