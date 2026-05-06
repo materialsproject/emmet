@@ -58,7 +58,7 @@ class XASDoc(SpectrumDoc):
         **kwargs,
     ):
         spectrum_type = XasType(xas_spectrum.spectrum_type)
-        el = Element(xas_spectrum.absorbing_element)
+        el = Element(xas_spectrum.absorbing_element)  # type: ignore[arg-type]
         edge = XasEdge(xas_spectrum.edge)
         xas_id = "-".join(
             (
