@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from collections import defaultdict
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.apps.battery.battery_abc import AbstractElectrode
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
@@ -24,7 +24,11 @@ from emmet.core.types.pymatgen_types.electrode_adapter import (
 )
 from emmet.core.types.pymatgen_types.element_adapter import ElementType
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
-from emmet.core.types.typing import DateTimeType, IdentifierType
+from emmet.core.types.typing import (
+    DateTimeType,
+    IdentifierType,
+    validate_compound_identifier,
+)
 from emmet.core.utils import type_override, utcnow
 
 
@@ -182,12 +186,6 @@ class BaseElectrode(EmmetBaseModel):
         None, description="The type of battery (insertion or conversion)."
     )
 
-    battery_id: str | None = Field(
-        None,
-        description="The id for this battery document is the numerically smallest material_id followed by "
-        "the working ion.",
-    )
-
     thermo_type: str | None = Field(
         None,
         description="The functional type used to compute the thermodynamics of this electrode document.",
@@ -279,12 +277,19 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
         description="The Pymatgen electrode object.",
     )
 
+    @computed_field
+    def battery_id(self) -> str:
+        """Retrieve battery ID from other fields."""
+        min_mpid = min(idx for idx in self.material_ids if idx._prefix != "mvc")
+        return validate_compound_identifier(
+            f"{min_mpid}_{self.working_ion}", suffixes=(Element,), use_prefix=True
+        )
+
     @classmethod
     def from_entries(
         cls,
         grouped_entries: list[ComputedStructureEntry],
         working_ion_entry: ComputedEntry,
-        battery_id: str,
         strip_structures: bool = False,
     ) -> InsertionElectrodeDoc | None:
         try:
@@ -341,7 +346,6 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
 
         return cls(
             battery_type="insertion",  # type: ignore
-            battery_id=battery_id,
             host_structure=stripped_host.as_dict(),
             framework=framework,
             battery_formula=battery_formula,
@@ -434,6 +438,13 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
     """
     Conversion electrode
     """
+
+    # TODO: Conversion electrode has no way to determine the MPID component of the ID.
+    battery_id: str | None = Field(
+        None,
+        description="The id for this battery document is the numerically smallest material_id followed by "
+        "the working ion.",
+    )
 
     initial_comp_formula: str | None = Field(
         None,

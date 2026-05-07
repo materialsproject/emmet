@@ -2,25 +2,19 @@ from __future__ import annotations
 
 import warnings
 from itertools import groupby
-from typing import TYPE_CHECKING
 
 import numpy as np
-from pydantic import Field
+from pydantic import Field, computed_field
 from pymatgen.analysis.xas.spectrum import XAS, site_weighted_spectrum
 from pymatgen.core import Element
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.core.feff.task import TaskDocument
-from emmet.core.mpid import validate_identifier
 from emmet.core.spectrum import SpectrumDoc
 from emmet.core.types.enums import ValueEnum, XasEdge, XasType
 from emmet.core.types.pymatgen_types.element_adapter import ElementType
 from emmet.core.types.pymatgen_types.xas_adapter import XASType
-from emmet.core.types.typing import IdentifierType
-
-if TYPE_CHECKING:
-    from emmet.core.types.typing import IdentifierType
-
+from emmet.core.types.typing import IdentifierType, validate_compound_identifier
 
 Type = ValueEnum("Type", [(e.name, e.value) for e in XasType])  # type: ignore[call-arg]
 """Type is deprecated and will be removed - migrate to XasType."""
@@ -35,7 +29,6 @@ class XASDoc(SpectrumDoc):
     """
 
     spectrum_name: str = "XAS"
-    spectrum_id: str | None = None
     spectrum: XASType | None = Field(
         None, description="The XAS spectrum for this calculation."
     )
@@ -50,6 +43,23 @@ class XASDoc(SpectrumDoc):
         ..., title="Absorption Edge", description="The interaction edge for XAS."
     )
 
+    @computed_field
+    def spectrum_id(self) -> str:
+        """Return legacy-style spectrum_id in AlphaID format."""
+        return validate_compound_identifier(
+            "-".join(
+                [
+                    self.material_id.string,
+                    self.spectrum_type.value,
+                    self.absorbing_element.value,
+                    self.edge.value,
+                ]
+            ),
+            suffixes=(XasType, Element, XasEdge),
+            separator="-",
+            use_prefix=True,
+        )
+
     @classmethod
     def from_spectrum(
         cls,
@@ -58,19 +68,7 @@ class XASDoc(SpectrumDoc):
         **kwargs,
     ):
         spectrum_type = XasType(xas_spectrum.spectrum_type)
-        el = Element(xas_spectrum.absorbing_element)  # type: ignore[arg-type]
         edge = XasEdge(xas_spectrum.edge)
-        xas_id = "-".join(
-            (
-                validate_identifier(material_id).string,
-                spectrum_type.value,
-                el.value,
-                edge.value,
-            )
-        )
-
-        if xas_spectrum.absorbing_index is not None:
-            xas_id += f"-{xas_spectrum.absorbing_index}"
 
         return super().from_structure(
             meta_structure=xas_spectrum.structure,
@@ -79,7 +77,6 @@ class XASDoc(SpectrumDoc):
             edge=edge,
             spectrum_type=spectrum_type,
             absorbing_element=xas_spectrum.absorbing_element,
-            spectrum_id=xas_id,
             **kwargs,
         )
 

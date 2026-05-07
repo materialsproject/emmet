@@ -153,15 +153,23 @@ def validate_compound_identifier(
         or return as a dict of validated components.
     """
 
-    id_components = idx.rsplit(separator, len(suffixes))
-    base_id = AlphaID(
-        int(AlphaID(id_components[0])),
-        prefix=ID_PREFIX if use_prefix else None,
-        padlen=ID_PADLEN,
-    )
-    validated_suffixes = [
-        suffix(id_components[1 + idx]) for idx, suffix in enumerate(suffixes)  # type: ignore[operator]
-    ]
+    for _split_method in ("split", "rsplit"):
+        try:
+            id_components = getattr(idx, _split_method)(separator, len(suffixes))
+            base_id = AlphaID(
+                int(AlphaID(id_components[0])),
+                prefix=ID_PREFIX if use_prefix else None,
+                padlen=ID_PADLEN,
+            )
+            validated_suffixes = [
+                suffix(id_components[1 + idx]) for idx, suffix in enumerate(suffixes)  # type: ignore[operator]
+            ]
+            break
+        except Exception:
+            continue
+    else:
+        raise ValueError("Could not identify components of compound ID.")
+
     if as_components:
         return CompoundID(
             identifier=base_id,

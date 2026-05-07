@@ -6,6 +6,8 @@ from pymatgen.analysis.xas.spectrum import XAS
 from pymatgen.core import Element
 
 from emmet.core import ARROW_COMPATIBLE
+from emmet.core.types.enums import XasEdge, XasType
+from emmet.core.types.typing import validate_compound_identifier
 from emmet.core.utils import jsanitize
 from emmet.core.xas import XASDoc
 
@@ -27,6 +29,16 @@ def test_xas_doc(xas_dict):
 
     # Now show that XASDoc removes non-positive intensities and correctly serializes
     xas = XASDoc(**xas_dict)
+    assert xas.spectrum_id == validate_compound_identifier(
+        f"{xas.material_id}-"
+        + "-".join(
+            getattr(xas, k).value
+            for k in ("spectrum_type", "absorbing_element", "edge")
+        ),
+        suffixes=(XasType, Element, XasEdge),
+        separator="-",
+        use_prefix=True,
+    )
     assert isinstance(xas.spectrum, XAS)
     assert len(xas.spectrum.y[xas.spectrum.y <= 0.0]) == 0
     assert all(

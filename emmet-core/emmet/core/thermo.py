@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Sequence
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
@@ -17,7 +17,11 @@ from emmet.core.types.pymatgen_types.computed_entries_adapter import (
     ComputedStructureEntryType,
 )
 from emmet.core.types.pymatgen_types.phase_diagram_adapter import PhaseDiagramType
-from emmet.core.types.typing import DateTimeType, IdentifierType
+from emmet.core.types.typing import (
+    DateTimeType,
+    IdentifierType,
+    validate_compound_identifier,
+)
 from emmet.core.utils import type_override, utcnow
 from emmet.core.vasp.calc_types.enums import RunType
 
@@ -51,10 +55,6 @@ class ThermoDoc(PropertyDoc):
     thermo_type: ThermoType | RunType = Field(
         ...,
         description="Functional types of calculations involved in the energy mixing scheme.",
-    )
-
-    thermo_id: str = Field(
-        description="Unique document ID which is composed of the Material ID and thermo data type.",
     )
 
     uncorrected_energy_per_atom: float = Field(
@@ -115,6 +115,19 @@ class ThermoDoc(PropertyDoc):
         description="List of all entries that are valid for this material."
         " The keys for this dictionary are names of various calculation types.",
     )
+
+    @computed_field
+    def thermo_id(self) -> str:
+        """Unique document ID which is composed of the Material ID and thermo data type."""
+        if not self.material_id or not self.thermo_type:
+            raise ValueError(
+                "Cannot determine thermo_id: missing either `material_id` or `thermo_type`."
+            )
+        return validate_compound_identifier(
+            f"{self.material_id}_{self.thermo_type}",
+            suffixes=(ThermoType,),
+            use_prefix=True,
+        )
 
     @classmethod
     def from_entries(

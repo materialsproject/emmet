@@ -21,12 +21,6 @@ class SpectrumDoc(StructureMetadata, EmmetBaseModel):
         "This comes in the form: mp-******.",
     )
 
-    spectrum_id: str = Field(
-        ...,
-        title="Spectrum Document ID",
-        description="The unique ID for this spectrum document.",
-    )
-
     last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation update for this property.",
     )

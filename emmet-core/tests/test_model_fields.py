@@ -154,7 +154,6 @@ ref_model_fields = {
     "emmet.core.electrode.InsertionElectrodeDoc": [
         "builder_meta",
         "battery_type",
-        "battery_id",
         "thermo_type",
         "battery_formula",
         "working_ion",
@@ -1068,7 +1067,6 @@ ref_model_fields = {
         "structure",
         "property_name",
         "thermo_type",
-        "thermo_id",
         "uncorrected_energy_per_atom",
         "energy_per_atom",
         "energy_uncertainy_per_atom",
@@ -1129,7 +1127,6 @@ ref_model_fields = {
         "symmetry",
         "spectrum_name",
         "material_id",
-        "spectrum_id",
         "last_updated",
         "warnings",
         "spectrum",
