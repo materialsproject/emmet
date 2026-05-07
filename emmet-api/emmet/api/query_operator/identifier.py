@@ -1,7 +1,9 @@
+from abc import abstractmethod
 from dataclasses import dataclass
 
 from emmet.api.query_operator import QueryOperator
-from emmet.api.utils import STORE_PARAMS, process_identifiers
+from emmet.api.utils import STORE_PARAMS
+from emmet.core.types.typing import CompoundID
 
 
 @dataclass
@@ -15,20 +17,26 @@ class CompoundIDQuery(QueryOperator):
 
     See emmet.api.routes.materials.thermo.query_operators.MultiThermoIDQuery
     for a concrete implementation.
+
+    Args:
+    field_name (str) : Name of the compound identifier field
+    identifier_fields (tuple of str) : Names of the fields which
+        compose the compound identifier. The first field is
+        assumed to be AlphaID-like. The second and any ensuing fields
+        are assumened to be Enum-like.
     """
 
     field_name: str = "identifier"
     identifier_fields: tuple[str, ...] = ("material_id",)
-    separator: str = "-"
+
+    @staticmethod
+    @abstractmethod
+    def validate_identifer(idx: str) -> CompoundID:
+        """Validate a compound ID consistent with a parent schema."""
 
     @property
     def num_suffixes(self) -> int:
         return len(self.identifier_fields) - 1
-
-    @staticmethod
-    def process_base_identifier(identifier: str) -> str:
-        """Optionally validate identifier."""
-        return process_identifiers(identifier)[0]
 
     def query(self, **kwargs) -> STORE_PARAMS:
 
@@ -39,38 +47,20 @@ class CompoundIDQuery(QueryOperator):
             return {"criteria": {}}
 
         identifiers_as_components = [
-            idx.rsplit(self.separator, self.num_suffixes) for idx in identifiers
-        ]
-        for i, split_idx in enumerate(identifiers_as_components):
-            identifiers_as_components[i][0] = self.process_base_identifier(split_idx[0])
-        self.identifiers = [
-            self.separator.join(split_idx) for split_idx in identifiers_as_components
+            self.validate_identifer(idx) for idx in identifiers
         ]
 
-        components = [
-            sorted(set(component_subset))
-            for component_subset in zip(*identifiers_as_components)
-        ]
-
-        # Always do an $in here because the insertion electrodes only have a `material_ids` field
-        # and we need to check if >= 1 material_id exists in that list
-        crit = {
-            f"{field}": {"$in": components[i]}
-            for i, field in enumerate(self.identifier_fields)
+        components = {
+            self.identifier_fields[0]: {
+                str(component["identifier"]) for component in identifiers_as_components
+            },
+            **{
+                suffix: {
+                    component["suffix"][i].value
+                    for component in identifiers_as_components
+                }
+                for i, suffix in enumerate(self.identifier_fields[1:])
+            },
         }
 
-        return {"criteria": crit}
-
-    def post_process(self, docs: list[dict], query: dict) -> list[dict]:
-        """Remove false positive matches.
-
-        Args:
-            docs: the document results to post-process
-            query: the store query dict to use in post-processing
-        """
-        return [
-            doc
-            for doc in docs
-            if self.separator.join(doc.get(k, "") for k in self.identifier_fields)
-            in self.identifiers
-        ]
+        return {"criteria": {k: {"$in": sorted(v)} for k, v in components.items()}}

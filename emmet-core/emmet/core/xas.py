@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from itertools import groupby
+from typing import overload, TYPE_CHECKING
 
 import numpy as np
 from pydantic import Field, computed_field
@@ -14,13 +15,43 @@ from emmet.core.spectrum import SpectrumDoc
 from emmet.core.types.enums import ValueEnum, XasEdge, XasType
 from emmet.core.types.pymatgen_types.element_adapter import ElementType
 from emmet.core.types.pymatgen_types.xas_adapter import XASType
-from emmet.core.types.typing import IdentifierType, validate_compound_identifier
+from emmet.core.types.typing import (
+    IdentifierType,
+    validate_compound_identifier,
+    CompoundID,
+)
+
+if TYPE_CHECKING:
+    from typing import Literal
 
 Type = ValueEnum("Type", [(e.name, e.value) for e in XasType])  # type: ignore[call-arg]
 """Type is deprecated and will be removed - migrate to XasType."""
 
 Edge = ValueEnum("Edge", [(e.name, e.value) for e in XasEdge])  # type: ignore[call-arg]
 """Edge is deprecated and will be removed - migrate to XasEdge."""
+
+
+@overload
+def validate_xas_spectrum_id(
+    idx: str, as_components: Literal[True] = True
+) -> CompoundID: ...
+
+
+@overload
+def validate_xas_spectrum_id(
+    idx: str, as_components: Literal[False] = False
+) -> str: ...
+
+
+def validate_xas_spectrum_id(idx: str, as_components: bool = False) -> str | CompoundID:
+    """Validate an XAS spectrum identifier."""
+    return validate_compound_identifier(
+        idx,
+        suffixes=(XasType, Element, XasEdge),
+        separator="-",
+        use_prefix=False,
+        as_components=as_components,
+    )
 
 
 class XASDoc(SpectrumDoc):
@@ -46,7 +77,7 @@ class XASDoc(SpectrumDoc):
     @computed_field
     def spectrum_id(self) -> str:
         """Return legacy-style spectrum_id in AlphaID format."""
-        return validate_compound_identifier(
+        return validate_xas_spectrum_id(
             "-".join(
                 [
                     self.material_id.string,
@@ -55,9 +86,7 @@ class XASDoc(SpectrumDoc):
                     self.edge.value,
                 ]
             ),
-            suffixes=(XasType, Element, XasEdge),
-            separator="-",
-            use_prefix=True,
+            as_components=False,
         )
 
     @classmethod

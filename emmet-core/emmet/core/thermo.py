@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Sequence
+from typing import Sequence, TYPE_CHECKING, overload
 
 from pydantic import BaseModel, Field, computed_field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
@@ -24,6 +24,29 @@ from emmet.core.types.typing import (
 )
 from emmet.core.utils import type_override, utcnow
 from emmet.core.vasp.calc_types.enums import RunType
+
+if TYPE_CHECKING:
+    from typing import Literal
+    from emmet.core.types.typing import CompoundID
+
+
+@overload
+def validate_thermo_id(idx: str, as_components: Literal[True] = True) -> CompoundID: ...
+
+
+@overload
+def validate_thermo_id(idx: str, as_components: Literal[False] = False) -> str: ...
+
+
+def validate_thermo_id(idx: str, as_components: bool = False) -> str | CompoundID:
+    """Validate a thermo identifier."""
+    return validate_compound_identifier(
+        idx,
+        suffixes=(ThermoType,),
+        separator="-",
+        use_prefix=True,
+        as_components=as_components,
+    )
 
 
 class DecompositionProduct(BaseModel):
@@ -123,10 +146,8 @@ class ThermoDoc(PropertyDoc):
             raise ValueError(
                 "Cannot determine thermo_id: missing either `material_id` or `thermo_type`."
             )
-        return validate_compound_identifier(
-            f"{self.material_id}_{self.thermo_type}",
-            suffixes=(ThermoType,),
-            use_prefix=True,
+        return validate_thermo_id(
+            f"{self.material_id}-{self.thermo_type}", as_components=False
         )
 
     @classmethod

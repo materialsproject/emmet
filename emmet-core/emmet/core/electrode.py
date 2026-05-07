@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
+from typing import TYPE_CHECKING, overload
 
 from pydantic import BaseModel, Field, computed_field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
@@ -30,6 +31,31 @@ from emmet.core.types.typing import (
     validate_compound_identifier,
 )
 from emmet.core.utils import type_override, utcnow
+
+if TYPE_CHECKING:
+    from typing import Literal
+    from emmet.core.types.typing import CompoundID
+
+
+@overload
+def validate_battery_id(
+    idx: str, as_components: Literal[True] = True
+) -> CompoundID: ...
+
+
+@overload
+def validate_battery_id(idx: str, as_components: Literal[False] = False) -> str: ...
+
+
+def validate_battery_id(idx: str, as_components: bool = False) -> str | CompoundID:
+    """Validate an insertion electode battery ID."""
+    return validate_compound_identifier(
+        idx,
+        suffixes=(Element,),
+        separator="_",
+        use_prefix=True,
+        as_components=as_components,
+    )
 
 
 class VoltagePairDoc(BaseModel):
@@ -283,9 +309,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
         if not self.material_ids or not self.working_ion:
             raise ValueError("No battery identifer could be determined.")
         min_mpid = min(idx for idx in self.material_ids if idx._prefix != "mvc")
-        return validate_compound_identifier(
-            f"{min_mpid}_{self.working_ion}", suffixes=(Element,), use_prefix=True
-        )
+        return validate_battery_id(f"{min_mpid}_{self.working_ion}")
 
     @classmethod
     def from_entries(

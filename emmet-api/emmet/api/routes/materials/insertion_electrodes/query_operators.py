@@ -1,15 +1,19 @@
 from dataclasses import dataclass
 from fastapi import HTTPException, Query
+from pymatgen.core.periodic_table import Element
+
 from emmet.api.query_operator import QueryOperator
 from emmet.api.query_operator.identifier import CompoundIDQuery
-from emmet.api.utils import STORE_PARAMS
-from pymatgen.core.periodic_table import Element
 
 from emmet.api.query_operator import InQuery
 from emmet.api.routes.materials.insertion_electrodes.utils import (
     electrodes_chemsys_to_criteria,
     electrodes_formula_to_criteria,
 )
+from emmet.api.utils import STORE_PARAMS
+
+from emmet.core.electrode import validate_battery_id
+from emmet.core.types.typing import CompoundID
 
 
 class ElectrodeFormulaQuery(QueryOperator):
@@ -124,33 +128,13 @@ class WorkingIonQuery(InQuery):
 @dataclass
 class MultiBatteryIDQuery(CompoundIDQuery):
     """
-    Method to generate a query for different root-level battery_id values
+    Generate a query for different root-level battery_id values
     """
 
     field_name: str = "battery_id"
     identifier_fields: tuple[str, ...] = ("material_ids", "working_ion")
-    separator: str = "_"
 
-    def post_process(self, docs: list[dict], query: dict) -> list[dict]:
-        """Remove false positive matches.
-
-        Needs custom features because insertion electrodes
-        have multiple MPIDs
-
-        Args:
-            docs: the document results to post-process
-            query: the store query dict to use in post-processing
-        """
-        if len(self.identifiers) == 1:
-            return docs
-        return [
-            doc
-            for doc in docs
-            if any(
-                self.separator.join(
-                    [mpid, *(doc.get(k) or "" for k in self.identifier_fields[1:])]
-                )
-                in self.identifiers
-                for mpid in doc.get("material_ids") or []
-            )
-        ]
+    @staticmethod
+    def validate_identifer(idx: str) -> CompoundID:
+        """Validate a battery ID string."""
+        return validate_battery_id(idx, as_components=True)

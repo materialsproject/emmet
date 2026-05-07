@@ -5,6 +5,8 @@ from emmet.api.query_operator import QueryOperator
 from emmet.api.query_operator.core import InQuery
 from emmet.api.query_operator.identifier import CompoundIDQuery
 from emmet.api.utils import STORE_PARAMS
+from emmet.core.thermo import validate_thermo_id
+from emmet.core.types.typing import CompoundID
 
 
 class IsStableQuery(QueryOperator):
@@ -34,7 +36,11 @@ class MultiThermoIDQuery(CompoundIDQuery):
 
     field_name: str = "thermo_id"
     identifier_fields: tuple[str, ...] = ("material_id", "thermo_type")
-    separator: str = "_"
+
+    @staticmethod
+    def validate_identifer(idx: str) -> CompoundID:
+        """Validate a thermo ID string."""
+        return validate_thermo_id(idx, as_components=True)
 
 
 @dataclass

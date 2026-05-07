@@ -68,15 +68,6 @@ def test_multi_battery_id_query():
         }
     }
 
-    docs = [
-        {"working_ion": "Ca", "material_ids": ["mp-aaaaaaan", "mp-aaaaaaza"]},
-        {"working_ion": "Li", "material_ids": ["mp-aaaaaaan", "mp-aaaaaaza"]},
-    ]
-
-    assert op.post_process(docs, {}) == [
-        {"working_ion": "Li", "material_ids": ["mp-aaaaaaan", "mp-aaaaaaza"]}
-    ]
-
     assert op.query(battery_ids="mp-149_Ca") == {
         "criteria": {
             "material_ids": {"$in": ["mp-aaaaaaft"]},

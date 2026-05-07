@@ -37,7 +37,7 @@ def test_xas_doc(xas_dict):
         ),
         suffixes=(XasType, Element, XasEdge),
         separator="-",
-        use_prefix=True,
+        use_prefix=False,
     )
     assert isinstance(xas.spectrum, XAS)
     assert len(xas.spectrum.y[xas.spectrum.y <= 0.0]) == 0
