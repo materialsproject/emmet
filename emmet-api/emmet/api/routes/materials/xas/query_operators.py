@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+
 from fastapi import Query
 from pymatgen.core.periodic_table import Element
 
 from emmet.api.query_operator import QueryOperator
 from emmet.api.query_operator.identifier import CompoundIDQuery
 from emmet.api.utils import STORE_PARAMS
-
 from emmet.core.types.typing import CompoundID
 from emmet.core.xas import XasEdge, XasType, validate_xas_spectrum_id
 
@@ -40,7 +40,7 @@ class XASIDQuery(CompoundIDQuery):
 
     field_name: str = "spectrum_id"
     identifier_fields: tuple[str, ...] = (
-        "material_id",
+        "task_id",
         "spectrum_type",
         "absorbing_element",
         "edge",

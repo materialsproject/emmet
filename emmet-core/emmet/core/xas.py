@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from itertools import groupby
-from typing import overload, TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 import numpy as np
 from pydantic import Field, computed_field
@@ -16,9 +16,9 @@ from emmet.core.types.enums import ValueEnum, XasEdge, XasType
 from emmet.core.types.pymatgen_types.element_adapter import ElementType
 from emmet.core.types.pymatgen_types.xas_adapter import XASType
 from emmet.core.types.typing import (
+    CompoundID,
     IdentifierType,
     validate_compound_identifier,
-    CompoundID,
 )
 
 if TYPE_CHECKING:
@@ -80,7 +80,7 @@ class XASDoc(SpectrumDoc):
         return validate_xas_spectrum_id(
             "-".join(
                 [
-                    self.material_id.string,
+                    self.task_id.string,
                     self.spectrum_type.value,
                     self.absorbing_element.value,
                     self.edge.value,
