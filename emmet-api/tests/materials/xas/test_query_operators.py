@@ -19,7 +19,7 @@ def test_xas_single_id():
 
     assert op.query(spectrum_ids="mp-149-XANES-Pd-K") == {
         "criteria": {
-            "material_id": {"$in": ["aaaaaaft"]},
+            "task_id": {"$in": ["aaaaaaft"]},
             "spectrum_type": {"$in": ["XANES"]},
             "absorbing_element": {"$in": ["Pd"]},
             "edge": {"$in": ["K"]},
@@ -34,7 +34,7 @@ def test_xas_multi_id():
         spectrum_ids="mp-149-XANES-Pd-K, mp-8951-XANES-Pd-K, mp-bmm-XANES-Pd-K"
     ) == {
         "criteria": {
-            "material_id": {
+            "task_id": {
                 "$in": [
                     "aaaaaaft",
                     "aaaaabmm",
