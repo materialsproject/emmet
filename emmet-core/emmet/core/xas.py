@@ -63,11 +63,6 @@ class XASDoc(SpectrumDoc):
     spectrum: XASType | None = Field(
         None, description="The XAS spectrum for this calculation."
     )
-    task_ids: list[IdentifierType] | None = Field(
-        None,
-        title="Calculation IDs",
-        description="List of Calculations IDs used to make this XAS spectrum.",
-    )
     absorbing_element: ElementType = Field(..., description="Absoring element.")
     spectrum_type: XasType = Field(..., description="XAS spectrum type.")
     edge: XasEdge = Field(
