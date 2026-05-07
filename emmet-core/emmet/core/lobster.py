@@ -139,28 +139,31 @@ class LobsteroutModel(BaseModel):
 class LobsterinModel(BaseModel):
     """Definition of input settings for the LOBSTER computation."""
 
-    
     cohp_start_energy: float = Field(description="Start energy for COHP computation")
     cohp_end_energy: float = Field(description="End energy for COHP computation")
 
     gaussian_smearing_width: float | None = Field(
-        None, description="Set the smearing width in eV,default is 0.2 (eV)",
+        None,
+        description="Set the smearing width in eV,default is 0.2 (eV)",
     )
     use_decimal_places: int | None = Field(
         None,
         description="Set the decimal places to print in output files, default is 5",
     )
     cohp_steps: float | None = Field(
-        None, description="Number steps in COHPCAR; similar to NEDOS of VASP",
+        None,
+        description="Number steps in COHPCAR; similar to NEDOS of VASP",
     )
     basis_set: str = Field(description="basis set of computation")
     cohp_generator: str = Field(
         description="Build the list of atom pairs to be analyzed using given distance",
     )
     save_projection_to_file: bool | None = Field(
-        None, description="Save the results of projections")
+        None, description="Save the results of projections"
+    )
     lso_dos: bool | None = Field(
-        None, description="Writes DOS output from the orthonormalized LCAO basis")
+        None, description="Writes DOS output from the orthonormalized LCAO basis"
+    )
     basis_functions: list[str] = Field(
         description="Specify the basis functions for element",
     )
@@ -571,7 +574,6 @@ class CalcQualitySummary(BaseModel):
         file_paths = aggregate_paths(dir_name)
         doscar_path = file_paths.get("DOSCAR.LSO") or file_paths.get("DOSCAR")
 
-
         # Update calc quality kwargs supplied by user
         calc_quality_kwargs_updated = {
             "e_range": [-20, 0],
@@ -581,7 +583,7 @@ class CalcQualitySummary(BaseModel):
             **calc_quality_kwargs,
         }
 
-        lob_calc_qual =LobsterCalcQuality.from_files(
+        lob_calc_qual = LobsterCalcQuality.from_files(
             poscar=file_paths["CONTCAR"],
             charge=file_paths["CHARGE"],
             doscar=doscar_path,
