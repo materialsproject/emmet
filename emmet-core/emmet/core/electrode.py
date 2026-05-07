@@ -280,6 +280,8 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
     @computed_field
     def battery_id(self) -> str:
         """Retrieve battery ID from other fields."""
+        if not self.material_ids or not self.working_ion:
+            raise ValueError("No battery identifer could be determined.")
         min_mpid = min(idx for idx in self.material_ids if idx._prefix != "mvc")
         return validate_compound_identifier(
             f"{min_mpid}_{self.working_ion}", suffixes=(Element,), use_prefix=True
