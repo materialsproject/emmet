@@ -395,7 +395,7 @@ class CondensedBondingAnalysis(BaseModel):
             if save_cohp_plots:
                 describe.plot_cohps(
                     save=True,
-                    filename=f"automatic_cohp_plots_{which_bonds}.pdf",
+                    filename=dir_name / f"automatic_cohp_plots_{which_bonds}.pdf",
                     hide=True,
                     **plot_kwargs,
                 )
