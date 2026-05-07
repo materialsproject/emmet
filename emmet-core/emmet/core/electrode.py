@@ -27,7 +27,7 @@ from emmet.core.types.pymatgen_types.element_adapter import ElementType
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.typing import (
     DateTimeType,
-    IdentifierType,
+    MaterialIdentifierType,
     validate_compound_identifier,
 )
 from emmet.core.utils import type_override, utcnow
@@ -115,7 +115,9 @@ class VoltagePairDoc(BaseModel):
         return cls(**sub_electrode.get_summary_dict(), **kwargs)
 
 
-@type_override({"id_charge": IdentifierType, "id_discharge": IdentifierType})
+@type_override(
+    {"id_charge": MaterialIdentifierType, "id_discharge": MaterialIdentifierType}
+)
 class InsertionVoltagePairDoc(VoltagePairDoc):
     """
     Features specific to insertion electrode
@@ -129,11 +131,11 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
         None, description="The energy above hull of the discharged material in eV/atom."
     )
 
-    id_charge: IdentifierType | int | None = Field(
+    id_charge: MaterialIdentifierType | int | None = Field(
         None, description="The Materials Project ID of the charged structure."
     )
 
-    id_discharge: IdentifierType | int | None = Field(
+    id_discharge: MaterialIdentifierType | int | None = Field(
         None, description="The Materials Project ID of the discharged structure."
     )
 
@@ -212,6 +214,12 @@ class BaseElectrode(EmmetBaseModel):
         None, description="The type of battery (insertion or conversion)."
     )
 
+    material_ids: list[MaterialIdentifierType] | None = Field(
+        None,
+        description="The ids of all structures that matched to the present host lattice, regardless of stability. "
+        "The stable entries can be found in the adjacent pairs.",
+    )
+
     thermo_type: str | None = Field(
         None,
         description="The functional type used to compute the thermodynamics of this electrode document.",
@@ -285,12 +293,6 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
 
     adj_pairs: list[InsertionVoltagePairDoc] | None = Field(
         None, description="Returns all of the voltage steps material pairs."
-    )
-
-    material_ids: list[IdentifierType] | None = Field(
-        None,
-        description="The ids of all structures that matched to the present host lattice, regardless of stability. "
-        "The stable entries can be found in the adjacent pairs.",
     )
 
     entries_composition_summary: EntriesCompositionSummary | None = Field(
