@@ -161,7 +161,7 @@ def test_phonopy_dos_integration(tmp_dir):
 def test_acoustic_sum_rule_per_atom_row_sum():
     """Regression test for the acoustic_sum_rule formula.
 
-    The per-atom row sum sum_j Phi_ij; 
+    The per-atom row sum sum_j Phi_ij;
     this property returns the row sum with the largest Frobenius norm.
     """
     rng = np.random.default_rng(seed=0)
