@@ -13,13 +13,17 @@ from pymatgen.io.lobster import (
     MadelungEnergies,
     SitePotential,
 )
-from emmet.core.lobster import (
-    CalcQualitySummary,
-    LobsterinModel,
-    LobsteroutModel,
-    LobsterTaskDocument,
-    StrongestBonds,
-)
+
+try:
+    from emmet.core.lobster import (
+        CalcQualitySummary,
+        LobsterinModel,
+        LobsteroutModel,
+        LobsterTaskDocument,
+        StrongestBonds,
+    )
+except ImportError:
+    pytest.skip(allow_module_level=True)
 
 
 @pytest.fixture(scope="module")

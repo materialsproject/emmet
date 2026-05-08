@@ -40,16 +40,10 @@ try:
     from lobsterpy.coxx.analyze import Analysis
     from lobsterpy.coxx.describe import Description
     from lobsterpy.quality.analyze import LobsterCalcQuality
-except ImportError:
-    Analysis = None
-    Description = None
-    LobsterCalcQuality = None
-
-if Analysis is None:
+except ImportError as exc:
     raise ImportError(
         "`pip install lobsterpy` to use the features in `emmet.core.lobster`"
-    )
-
+    ) from exc
 
 if TYPE_CHECKING:
     from typing import Any, Literal
