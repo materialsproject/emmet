@@ -310,7 +310,9 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
         """Retrieve battery ID from other fields."""
         if not self.material_ids or not self.working_ion:
             raise ValueError("No battery identifer could be determined.")
-        min_mpid = min(idx for idx in self.material_ids if idx._prefix != "mvc")
+        min_mpid = min(
+            idx for idx in self.material_ids if not idx.string.startswith("mvc")
+        )
         return validate_battery_id(f"{min_mpid}_{self.working_ion}")
 
     @classmethod
