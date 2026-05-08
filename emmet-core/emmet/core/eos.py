@@ -115,7 +115,6 @@ class EOSDoc(BaseModel):
     task_id: IdentifierType | None = Field(
         None,
         description="task_id corresponding to this EOS document",
-        alias="material_id",
     )
     energies: list[float] | None = Field(
         None,

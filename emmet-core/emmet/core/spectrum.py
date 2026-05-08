@@ -25,6 +25,6 @@ class SpectrumDoc(StructureMetadata, EmmetBaseModel):
         description="Timestamp for the most recent calculation update for this property.",
     )
 
-    warnings: list[str] = Field(
-        [], description="Any warnings related to this property."
+    warnings: list[str] | None = Field(
+        None, description="Any warnings related to this property."
     )
