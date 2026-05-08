@@ -72,6 +72,8 @@ class XASDoc(SpectrumDoc):
     @computed_field
     def spectrum_id(self) -> str:
         """Return legacy-style spectrum_id in AlphaID format."""
+        if not self.task_id:
+            raise ValueError("Cannot determine `spectrum_id` without a `task_id`.")
         return validate_xas_spectrum_id(
             "-".join(
                 [
