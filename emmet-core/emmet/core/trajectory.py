@@ -26,9 +26,9 @@ try:
     from pyarrow import Table as ArrowTable
 
 except ImportError:
-    pa = None
-    pa_pq = None
-    ArrowTable = None
+    pa = None  # type: ignore[assignment]
+    pa_pq = None  # type: ignore[assignment]
+    ArrowTable = None  # type: ignore[assignment]
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
