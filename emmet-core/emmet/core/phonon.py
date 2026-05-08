@@ -524,24 +524,16 @@ class PhononBSDOSTask(StructureMetadata):
 
     @computed_field  # type: ignore[prop-decorator]
     @cached_property
-    def acoustic_sum_rule(self) -> Matrix3D | None:
-        """Largest per-atom violation of the acoustic sum rule, as a 3x3 matrix.
+    def acoustic_sum_rule(self) -> float | None:
+        """Largest absolute violation of the acoustic sum rule.
 
-        For each atom i, sum the force constants over its neighbours j; this
-        sum should be zero for an ASR-corrected force-constant set. We pick
-        the atom whose row sum has the largest Frobenius norm and return that
-        row sum.
-
-        The previous version of this function used einsum("iijk->jk", fcs),
-        which sums only the on-site (i==j) blocks and is not related to the
-        acoustic sum rule.
+        Returns max_{i, alpha, beta} |sum_j Phi_ij,alpha,beta|, where Phi
+        is the force-constant tensor of shape (N_atoms, N_atoms, 3, 3).
+        For an ASR-corrected force-constant set, this is numerically zero.
         """
         if self.force_constants:
             fcs = np.asarray(self.force_constants)
-            row_sums = fcs.sum(axis=1)
-            norms = np.linalg.norm(row_sums, axis=(1, 2))
-            worst_atom = int(np.argmax(norms))
-            return tuple(tuple(row) for row in row_sums[worst_atom])
+            return float(np.abs(fcs.sum(axis=1)).max())
         return None
 
     @computed_field  # type: ignore[prop-decorator]

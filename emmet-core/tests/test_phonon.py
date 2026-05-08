@@ -159,11 +159,8 @@ def test_phonopy_dos_integration(tmp_dir):
 
 
 def test_acoustic_sum_rule_per_atom_row_sum():
-    """Regression test for the acoustic_sum_rule formula.
+    """Test for the acoustic_sum_rule formula."""
 
-    The per-atom row sum sum_j Phi_ij;
-    this property returns the row sum with the largest Frobenius norm.
-    """
     rng = np.random.default_rng(seed=0)
     n_atoms = 4
 
@@ -171,12 +168,9 @@ def test_acoustic_sum_rule_per_atom_row_sum():
     fcs = rng.standard_normal((n_atoms, n_atoms, 3, 3))
     fcs -= fcs.mean(axis=1, keepdims=True)
     doc = PhononBSDOSDoc(force_constants=fcs.tolist())
-    asr = np.array(doc.acoustic_sum_rule)
-    assert np.linalg.norm(asr) < 1e-12
+    assert doc.acoustic_sum_rule < 1e-12
 
-    # Obvious violation: all-ones FCs -> every row sum is the (3,3) matrix
-    # full of n_atoms, so the worst-Frobenius row sum is also that matrix.
+    # Violation: all-ones FCs --> every row sum is n_atoms.
     fcs_bad = np.ones((n_atoms, n_atoms, 3, 3))
     doc_bad = PhononBSDOSDoc(force_constants=fcs_bad.tolist())
-    asr_bad = np.array(doc_bad.acoustic_sum_rule)
-    assert np.allclose(asr_bad, float(n_atoms))
+    assert doc_bad.acoustic_sum_rule == float(n_atoms)
