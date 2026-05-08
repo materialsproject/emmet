@@ -15,7 +15,6 @@ from pydantic import (
     BaseModel,
     Field,
     PrivateAttr,
-    computed_field,
     PlainSerializer,
     BeforeValidator,
 )
@@ -542,7 +541,6 @@ class PhononBSDOSTask(StructureMetadata):
             **config,
         )
 
-    @computed_field  # type: ignore[prop-decorator]
     @cached_property
     def has_imaginary_modes(self) -> bool | None:
         tol: float = 1e-5
@@ -559,7 +557,6 @@ class PhononBSDOSTask(StructureMetadata):
             )
         return None
 
-    @computed_field  # type: ignore[prop-decorator]
     @cached_property
     def charge_neutral_sum_rule(self) -> Matrix3D | None:
         r"""Sum of Born effective charges over sites should be zero.
@@ -581,7 +578,6 @@ class PhononBSDOSTask(StructureMetadata):
             return tuple(tuple(row) for row in np.sum(bec, axis=0).tolist())
         return None
 
-    @computed_field  # type: ignore[prop-decorator]
     @cached_property
     def acoustic_sum_rule(self) -> list[Matrix3D] | None:
         r"""Determine violations of the acoustic sum rule.
@@ -605,7 +601,6 @@ class PhononBSDOSTask(StructureMetadata):
             return np.asarray(self.force_constants).sum(axis=1)
         return None
 
-    @computed_field  # type: ignore[prop-decorator]
     @property
     def check_sum_rule_deviations(self) -> SumRuleChecks:
         """Report deviations from sum rules."""
