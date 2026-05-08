@@ -34,20 +34,20 @@ from emmet.core.utils import type_override, utcnow
 
 if TYPE_CHECKING:
     from typing import Literal
-    from emmet.core.types.typing import CompoundID
+    from emmet.core.types.typing import CompoundIDType
 
 
 @overload
 def validate_battery_id(
     idx: str, as_components: Literal[True] = True
-) -> CompoundID: ...
+) -> CompoundIDType: ...
 
 
 @overload
 def validate_battery_id(idx: str, as_components: Literal[False] = False) -> str: ...
 
 
-def validate_battery_id(idx: str, as_components: bool = False) -> str | CompoundID:
+def validate_battery_id(idx: str, as_components: bool = False) -> str | CompoundIDType:
     """Validate an insertion electode battery ID."""
     return validate_compound_identifier(
         idx,

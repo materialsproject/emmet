@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
-from emmet.core.types.typing import CompoundID
+from emmet.core.types.typing import CompoundIDType
 
 
 @dataclass
@@ -31,7 +31,7 @@ class CompoundIDQuery(QueryOperator):
 
     @staticmethod
     @abstractmethod
-    def validate_identifer(idx: str) -> CompoundID:
+    def validate_identifer(idx: str) -> CompoundIDType:
         """Validate a compound ID consistent with a parent schema."""
 
     @property

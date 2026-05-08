@@ -8,7 +8,7 @@ from pymatgen.core.periodic_table import Element
 from emmet.api.query_operator import QueryOperator
 from emmet.api.query_operator.identifier import CompoundIDQuery
 from emmet.api.utils import STORE_PARAMS
-from emmet.core.types.typing import CompoundID
+from emmet.core.types.typing import CompoundIDType
 from emmet.core.xas import XasEdge, XasType, validate_xas_spectrum_id
 
 
@@ -47,6 +47,6 @@ class XASIDQuery(CompoundIDQuery):
     )
 
     @staticmethod
-    def validate_identifer(idx: str) -> CompoundID:
+    def validate_identifer(idx: str) -> CompoundIDType:
         """Validate an XAS spectrum ID string."""
         return validate_xas_spectrum_id(idx, as_components=True)

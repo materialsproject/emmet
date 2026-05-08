@@ -11,20 +11,20 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
+from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any, TypedDict, Union, overload
+from typing import TYPE_CHECKING, Annotated, Any, Union, overload, TypedDict
 
 import orjson
-from pydantic import BeforeValidator, Field, PlainSerializer, WrapSerializer
+from pydantic import BaseModel, BeforeValidator, Field, PlainSerializer, WrapSerializer
 
 from emmet.core.mpid import MPID, AlphaID
 from emmet.core.utils import convert_datetime, utcnow
 
 if TYPE_CHECKING:
-    from enum import Enum
     from typing import Literal
-    from typing_extensions import TypeAlias
+    from typing_extensions import TypeAlias, Self
 
 FSPathType: TypeAlias = Annotated[
     Union[str | Path | os.DirEntry[str] | os.PathLike[str]],
@@ -99,12 +99,45 @@ MaterialIdentifierType = _make_id_type(
 """MPID / AlphaID serde."""
 
 
-class CompoundID(TypedDict):
-    """Container for validated compound identifiers."""
+class CompoundIDType(TypedDict):
+    """Define layout of compound identifiers for static type analysis."""
 
     identifier: AlphaID
     suffix: tuple[Enum]
     separator: str
+
+
+class CompoundID(BaseModel):
+    """Model validated compound identifiers."""
+
+    identifier: AlphaID
+    suffix: tuple[Enum]
+    separator: str
+
+    @classmethod
+    def from_str(cls, idx: str, suffixes: tuple[Enum], **kwargs) -> Self:
+        """Construct from a string and a set of enum types.
+
+        Args:
+        idx (str) : The compound identifier
+        suffix (tuple of Enum) : Enums which represent the suffixes
+        **kwargs : Passed to `validate_compound_identifier`
+        """
+        return cls(
+            **validate_compound_identifier(
+                idx, suffixes=suffixes, **kwargs, as_components=True
+            )
+        )
+
+    def __repr__(self) -> str:
+        """Format for display."""
+        return self.separator.join(
+            [self.identifier.string, *[suffix.value for suffix in self.suffix]]
+        )
+
+    def __str__(self) -> str:
+        """Format for standard printing."""
+        return f"CompoundID({self.__repr__()})"
 
 
 @overload
@@ -124,7 +157,7 @@ def validate_compound_identifier(
     separator: str = "_",
     use_prefix: bool = False,
     as_components: Literal[True] = True,
-) -> CompoundID: ...
+) -> CompoundIDType: ...
 
 
 def validate_compound_identifier(
@@ -133,7 +166,7 @@ def validate_compound_identifier(
     separator: str = "_",
     use_prefix: bool = False,
     as_components: bool = False,
-) -> str | CompoundID:
+) -> str | CompoundIDType:
     """Serde for compound identifier types.
 
     Examples:
@@ -171,7 +204,7 @@ def validate_compound_identifier(
         raise ValueError("Could not identify components of compound ID.")
 
     if as_components:
-        return CompoundID(
+        return CompoundIDType(
             identifier=base_id,
             suffix=tuple(validated_suffixes),
             separator=separator,

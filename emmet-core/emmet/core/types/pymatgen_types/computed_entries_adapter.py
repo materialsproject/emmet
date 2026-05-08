@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Annotated, Any, TypeVar
 
 import orjson
@@ -5,12 +6,14 @@ from pydantic import BeforeValidator, TypeAdapter, WrapSerializer
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from typing_extensions import NotRequired, TypedDict
 
+from emmet.core.types.enums import ThermoType
 from emmet.core.types.pymatgen_types.element_adapter import ElementType
 from emmet.core.types.pymatgen_types.structure_adapter import (
     StructureType,
     pop_empty_structure_keys,
 )
-from emmet.core.types.typing import IdentifierType, MaterialIdentifierType
+from emmet.core.types.typing import CompoundID, IdentifierType, MaterialIdentifierType
+from emmet.core.vasp.calc_types.enums import RunType
 from emmet.core.vasp.calculation import PotcarSpec
 
 # TypedEnergyAdjustmentDict = TypedDict(
@@ -164,6 +167,29 @@ def entry_deserializer(entry: dict[str, Any] | ComputedEntry | ComputedStructure
             entry_dict = TypeAdapter(entry_type).validate_python(entry_dict)
             entry_dict["energy_adjustments"] = orjson.loads(
                 entry_dict["energy_adjustments"]
+            )
+
+        if isinstance(entry_id_dct := entry_dict.get("entry_id"), dict):
+
+            _suffix = entry_id_dct.get("suffix")
+            if isinstance(_suffix, list | tuple):
+                _suffix = _suffix[0]
+
+            suffix: Enum | None = None
+            for enum_cls in (ThermoType, RunType):
+                if _suffix in enum_cls:
+                    suffix = enum_cls(_suffix)
+                elif _suffix in enum_cls.__members__:
+                    suffix = enum_cls[_suffix]
+
+                if suffix:
+                    break
+
+            entry_dict["entry_id"] = repr(
+                CompoundID(
+                    **{k: entry_id_dct.get(k) for k in ("identifier", "separator")},
+                    suffix=(suffix,),
+                )
             )
 
         return entry_cls.from_dict(entry_dict)

@@ -27,18 +27,20 @@ from emmet.core.vasp.calc_types.enums import RunType
 
 if TYPE_CHECKING:
     from typing import Literal
-    from emmet.core.types.typing import CompoundID
+    from emmet.core.types.typing import CompoundIDType
 
 
 @overload
-def validate_thermo_id(idx: str, as_components: Literal[True] = True) -> CompoundID: ...
+def validate_thermo_id(
+    idx: str, as_components: Literal[True] = True
+) -> CompoundIDType: ...
 
 
 @overload
 def validate_thermo_id(idx: str, as_components: Literal[False] = False) -> str: ...
 
 
-def validate_thermo_id(idx: str, as_components: bool = False) -> str | CompoundID:
+def validate_thermo_id(idx: str, as_components: bool = False) -> str | CompoundIDType:
     """Validate a thermo identifier."""
     return validate_compound_identifier(
         idx,

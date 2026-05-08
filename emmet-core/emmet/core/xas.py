@@ -16,13 +16,13 @@ from emmet.core.types.enums import ValueEnum, XasEdge, XasType
 from emmet.core.types.pymatgen_types.element_adapter import ElementType
 from emmet.core.types.pymatgen_types.xas_adapter import XASType
 from emmet.core.types.typing import (
-    CompoundID,
     IdentifierType,
     validate_compound_identifier,
 )
 
 if TYPE_CHECKING:
     from typing import Literal
+    from emmet.core.types.typing import CompoundIDType
 
 Type = ValueEnum("Type", [(e.name, e.value) for e in XasType])  # type: ignore[call-arg]
 """Type is deprecated and will be removed - migrate to XasType."""
@@ -34,7 +34,7 @@ Edge = ValueEnum("Edge", [(e.name, e.value) for e in XasEdge])  # type: ignore[c
 @overload
 def validate_xas_spectrum_id(
     idx: str, as_components: Literal[True] = True
-) -> CompoundID: ...
+) -> CompoundIDType: ...
 
 
 @overload
@@ -43,7 +43,9 @@ def validate_xas_spectrum_id(
 ) -> str: ...
 
 
-def validate_xas_spectrum_id(idx: str, as_components: bool = False) -> str | CompoundID:
+def validate_xas_spectrum_id(
+    idx: str, as_components: bool = False
+) -> str | CompoundIDType:
     """Validate an XAS spectrum identifier."""
     return validate_compound_identifier(
         idx,

@@ -13,7 +13,7 @@ from emmet.api.routes.materials.insertion_electrodes.utils import (
 from emmet.api.utils import STORE_PARAMS
 
 from emmet.core.electrode import validate_battery_id
-from emmet.core.types.typing import CompoundID
+from emmet.core.types.typing import CompoundIDType
 
 
 class ElectrodeFormulaQuery(QueryOperator):
@@ -135,6 +135,6 @@ class MultiBatteryIDQuery(CompoundIDQuery):
     identifier_fields: tuple[str, ...] = ("material_ids", "working_ion")
 
     @staticmethod
-    def validate_identifer(idx: str) -> CompoundID:
+    def validate_identifer(idx: str) -> CompoundIDType:
         """Validate a battery ID string."""
         return validate_battery_id(idx, as_components=True)
