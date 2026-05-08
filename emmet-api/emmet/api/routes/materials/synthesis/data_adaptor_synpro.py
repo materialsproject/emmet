@@ -48,7 +48,7 @@ def convert_conditions(cond, op_type):
     }
 
 
-all_posible_ops = set()
+all_posible_ops: set[str] = set()
 
 
 def convert_op(op):
