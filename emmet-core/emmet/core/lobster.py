@@ -45,6 +45,11 @@ except ImportError:
     Description = None
     LobsterCalcQuality = None
 
+if Analysis is None:
+    raise ImportError(
+        "`pip install lobsterpy` to use the features in `emmet.core.lobster`"
+    )
+
 
 if TYPE_CHECKING:
     from typing import Any, Literal
