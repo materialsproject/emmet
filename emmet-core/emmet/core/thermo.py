@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from functools import cached_property
 from typing import Sequence, TYPE_CHECKING, overload
 
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
@@ -141,7 +142,7 @@ class ThermoDoc(PropertyDoc):
         " The keys for this dictionary are names of various calculation types.",
     )
 
-    @computed_field
+    @cached_property
     def thermo_id(self) -> str:
         """Unique document ID which is composed of the Material ID and thermo data type."""
         if not self.material_id or not self.thermo_type:

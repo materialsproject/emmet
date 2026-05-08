@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
+from functools import cached_property
 from typing import TYPE_CHECKING, overload
 
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.apps.battery.battery_abc import AbstractElectrode
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
@@ -305,7 +306,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
         description="The Pymatgen electrode object.",
     )
 
-    @computed_field
+    @cached_property
     def battery_id(self) -> str:
         """Retrieve battery ID from other fields."""
         if not self.material_ids or not self.working_ion:

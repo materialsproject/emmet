@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import warnings
 from itertools import groupby
+from functools import cached_property
 from typing import TYPE_CHECKING, overload
 
 import numpy as np
-from pydantic import Field, computed_field
+from pydantic import Field
 from pymatgen.analysis.xas.spectrum import XAS, site_weighted_spectrum
 from pymatgen.core import Element
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
@@ -71,7 +72,7 @@ class XASDoc(SpectrumDoc):
         ..., title="Absorption Edge", description="The interaction edge for XAS."
     )
 
-    @computed_field
+    @cached_property
     def spectrum_id(self) -> str:
         """Return legacy-style spectrum_id in AlphaID format."""
         if not self.task_id:
