@@ -64,7 +64,7 @@ class PhononMethod(Enum):
     PHEASY = "pheasy"
 
 
-def parse_phonopy_born_file(file: FSPathType) -> tuple[Matrix3D, list[Matrix3D]]:
+def parse_phonopy_born_file(file: FSPathType) -> tuple[np.ndarray, np.ndarray]:
     """Parse a phonopy BORN file into static dielectric and Born charge tensors.
 
     From the phonopy manual
@@ -812,10 +812,11 @@ class PhononBSDOSTask(StructureMetadata):
             cls_config["force_constants"] = force_constant_matrix.tolist()
 
         if all(
-            fs and ".npz" in Path(fs).name for fs in (born_file, epsilon_static_file)
+            fs is not None and ".npz" in Path(fs).name
+            for fs in (born_file, epsilon_static_file)
         ):
-            cls_config["born"] = np.load(born_file)
-            cls_config["epsilon_static"] = np.load(epsilon_static_file)
+            cls_config["born"] = np.load(born_file)  # type: ignore[arg-type]
+            cls_config["epsilon_static"] = np.load(epsilon_static_file)  # type: ignore[arg-type]
 
         elif (
             epsilon_static_and_born_file
