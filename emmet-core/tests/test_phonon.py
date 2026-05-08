@@ -168,9 +168,11 @@ def test_acoustic_sum_rule_per_atom_row_sum():
     fcs = rng.standard_normal((n_atoms, n_atoms, 3, 3))
     fcs -= fcs.mean(axis=1, keepdims=True)
     doc = PhononBSDOSDoc(force_constants=fcs.tolist())
-    assert doc.acoustic_sum_rule < 1e-12
+    max_dev = np.abs(doc.acoustic_sum_rule).max()
+    assert max_dev < 1e-12
+    assert max_dev == doc.check_sum_rule_deviations.asr
 
     # Violation: all-ones FCs --> every row sum is n_atoms.
     fcs_bad = np.ones((n_atoms, n_atoms, 3, 3))
     doc_bad = PhononBSDOSDoc(force_constants=fcs_bad.tolist())
-    assert doc_bad.acoustic_sum_rule == float(n_atoms)
+    assert doc_bad.check_sum_rule_deviations.asr == float(n_atoms)

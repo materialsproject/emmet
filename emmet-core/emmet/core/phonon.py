@@ -51,6 +51,7 @@ DEFAULT_PHONON_FILES = {
     "force_constants": "FORCE_CONSTANTS",  # chosen as Phonopy default
     "born": "born.npz",
     "epsilon_static": "epsilon_static.npz",
+    "epsilon_static_and_born": "BORN",
     "phonopy_output": "phonopy.yaml",
 }
 
@@ -61,6 +62,51 @@ class PhononMethod(Enum):
     DFPT = "dfpt"
     PHONOPY = "phonopy"
     PHEASY = "pheasy"
+
+
+def parse_phonopy_born_file(file: FSPathType) -> tuple[Matrix3D, list[Matrix3D]]:
+    """Parse a phonopy BORN file into static dielectric and Born charge tensors.
+
+    From the phonopy manual
+    (https://phonopy.github.io/phonopy/input-files.html#born-optional)
+    the BORN file is structured as:
+        line 0: metadata, including maximum number of atoms
+        line 1: static dielectric tensor
+        lines 2+: Born effective charges on each atomic site
+
+    For both the dielectric tensor and Born charges, the order of
+    components is: xx, xy, xz, yx, yy, yz, zx, zy, and zz, or
+    ```py
+    [(j,i) for j in range(3) for i in range(3)]
+
+    Args:
+    file (FSPathType) : path to the BORN file.
+
+    Returns:
+    Matrix3D : The static, high-frequency limit of the dielectric tensor
+    list of Matrix3D : The Born effective charges, a 3x3 matrix for
+        each atom in the cell.
+    ```
+    """
+    natom = 0
+    iatom = 0
+    idxs = [(j, i) for j in range(3) for i in range(3)]
+    eps_inf = np.zeros((3, 3), dtype=float)
+    with open(file, "rt") as f:
+        for idx, line in enumerate(f):
+            if idx == 0:
+                natom = int(line.split()[-1])
+                bec = np.zeros((natom, 3, 3), dtype=float)
+            elif idx == 1:
+                vals = [float(x) for x in line.split()]
+                for i, ibec in enumerate(idxs):
+                    eps_inf[ibec[0], ibec[1]] = vals[i]
+            else:
+                vals = [float(x) for x in line.split()]
+                for i, ibec in enumerate(idxs):
+                    bec[iatom][ibec[0], ibec[1]] = vals[i]
+                iatom += 1
+    return eps_inf, bec
 
 
 class PhononDOS(BandTheoryBase):
@@ -516,7 +562,20 @@ class PhononBSDOSTask(StructureMetadata):
     @computed_field  # type: ignore[prop-decorator]
     @cached_property
     def charge_neutral_sum_rule(self) -> Matrix3D | None:
-        """Sum of Born effective charges over sites should be zero."""
+        r"""Sum of Born effective charges over sites should be zero.
+
+        See Eq. 46 of https://doi.org/10.1103/PhysRevB.55.10355:
+        $$
+        \sum_{i=1}^N Z_{i\alpha\beta}
+        $$
+        where $Z_{i\alpha\beta}$ is the N x 3 x 3 Born effective
+        charge tensor, $i = 1,2,...,N$ ranges up to the number of
+        atoms $N$, and $\alpha, \beta = x, y, z$ are Cartesian
+        directions.
+
+        This returns a 3 x 3 matrix. The maximum deviation
+        from the sum rule is checked by `check_sum_rule_deviations`.
+        """
         if self.born:
             bec = np.array(self.born)
             return tuple(tuple(row) for row in np.sum(bec, axis=0).tolist())
@@ -524,16 +583,26 @@ class PhononBSDOSTask(StructureMetadata):
 
     @computed_field  # type: ignore[prop-decorator]
     @cached_property
-    def acoustic_sum_rule(self) -> float | None:
-        """Largest absolute violation of the acoustic sum rule.
+    def acoustic_sum_rule(self) -> list[Matrix3D] | None:
+        r"""Determine violations of the acoustic sum rule.
 
-        Returns max_{i, alpha, beta} |sum_j Phi_ij,alpha,beta|, where Phi
-        is the force-constant tensor of shape (N_atoms, N_atoms, 3, 3).
+        The acoustic sum rule for the interatomic force constant (IFC) tensor
+        is (Eq. 44 of https://doi.org/10.1103/PhysRevB.55.10355):
+        $$
+        \sum_{j=1}^N C_{ij\alpha\beta} = 0.
+        $$
+        The IFCs are an N x N x 3 x 3 tensor, where N = number of atoms
+        in the structure (`structure.num_sites`).
+        $i, j = 1,2,3,...,N$, and $\alpha,\beta = x,y,z$ are the Cartesian
+        directions.
+
+        The maximum deviation from the sum rule is checked
+        by `check_sum_rule_deviations`.
+
         For an ASR-corrected force-constant set, this is numerically zero.
         """
         if self.force_constants:
-            fcs = np.asarray(self.force_constants)
-            return float(np.abs(fcs.sum(axis=1)).max())
+            return np.asarray(self.force_constants).sum(axis=1)
         return None
 
     @computed_field  # type: ignore[prop-decorator]
@@ -544,8 +613,8 @@ class PhononBSDOSTask(StructureMetadata):
             self.sum_rules_breaking = SumRuleChecks(
                 **{
                     k: (
-                        np.max(np.abs(getattr(self, attr)))
-                        if getattr(self, attr)
+                        np.abs(getattr(self, attr)).max()
+                        if getattr(self, attr) is not None
                         else None
                     )
                     for k, attr in {
@@ -691,6 +760,7 @@ class PhononBSDOSTask(StructureMetadata):
         force_constants_file: FSPathType | None = None,
         born_file: FSPathType | None = None,
         epsilon_static_file: FSPathType | None = None,
+        epsilon_static_and_born_file: FSPathType | None = None,
         phonopy_output_file: FSPathType | None = None,
         **kwargs,
     ) -> Self:
@@ -741,10 +811,19 @@ class PhononBSDOSTask(StructureMetadata):
                         irow += 1
             cls_config["force_constants"] = force_constant_matrix.tolist()
 
-        if born_file:
+        if all(
+            fs and ".npz" in Path(fs).name for fs in (born_file, epsilon_static_file)
+        ):
             cls_config["born"] = np.load(born_file)
-        if epsilon_static_file:
             cls_config["epsilon_static"] = np.load(epsilon_static_file)
+
+        elif (
+            epsilon_static_and_born_file
+            and "BORN" in Path(epsilon_static_and_born_file).name
+        ):
+            cls_config["epsilon_static"], cls_config["born"] = parse_phonopy_born_file(
+                epsilon_static_and_born_file
+            )
 
         if phonopy_output_file:
             with zopen(phonopy_output_file, "rt") as f:
