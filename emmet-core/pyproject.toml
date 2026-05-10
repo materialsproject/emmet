@@ -40,6 +40,7 @@ dependencies = [
     "blake3",
     "inflect",
     "pubchempy",
+    "python-ulid>=2.7",
 ]
 
 [project.urls]

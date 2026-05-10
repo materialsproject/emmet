@@ -36,6 +36,11 @@ Homepage = "https://github.com/materialsproject/emmet/tree/main/emmet-builders/"
 Documentation = "https://materialsproject.github.io/emmet/"
 
 [project.optional-dependencies]
+disorder = [
+  "smol",
+  "ase",
+  "scikit-learn",
+]
 test = [
   "pre-commit",
   "pytest",
