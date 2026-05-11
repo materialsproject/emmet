@@ -347,7 +347,7 @@ python-discovery==1.2.2
     # via virtualenv
 python-dotenv==1.2.2
     # via pydantic-settings
-python-multipart==0.0.26
+python-multipart==0.0.27
     # via starlette
 pytz==2026.1.post1
     # via mongomock
@@ -433,7 +433,7 @@ typing-inspection==0.4.2
     #   pydantic-settings
 uncertainties==3.2.3
     # via pymatgen-core
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   botocore
     #   requests
