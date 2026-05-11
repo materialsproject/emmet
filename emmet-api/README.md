@@ -6,7 +6,6 @@ pip install -e .
 ```
 2. Configure Environment Variables
 ```
-export MP_API_KEY=
 export MPMATERIALS_MONGO_HOST=
 export MPTASKS_MONGO_HOST=
 export MPMOLECULES_MONGO_HOST=
