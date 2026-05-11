@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, BeforeValidator, Field
@@ -112,7 +113,8 @@ class EOSDoc(BaseModel):
     """Fitted equations of state, and energy-volume fit data."""
 
     task_id: IdentifierType | None = Field(
-        None, description="task_id corresponding to this EOS document"
+        None,
+        description="task_id corresponding to this EOS document",
     )
     energies: list[float] | None = Field(
         None,
@@ -146,3 +148,14 @@ class EOSDoc(BaseModel):
                 for model in (models or PYMATGEN_KNOWN_EOS_MODELS)  # type: ignore[union-attr]
             ],
         )
+
+    @property
+    def material_id(self) -> str:
+        """Temporarily enable access to deprecated attr."""
+        warnings.warn(
+            "`material_id` has been renamed `task_id` in the EOS data. "
+            "Please transition to using `task_id` by 1 July, 2026.",
+            category=DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.task_id  # type: ignore[return-value]

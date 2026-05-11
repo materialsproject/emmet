@@ -1,16 +1,19 @@
+from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
+from emmet.api.query_operator import (
+    MultiMaterialIDQuery,
+    PaginationQuery,
+    SortQuery,
+    SparseFieldsQuery,
+)
 from emmet.api.resource import ReadOnlyResource
-from emmet.core.xas import XASDoc
-
-from emmet.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
-from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery
 from emmet.api.routes.materials.materials.query_operators import (
+    ChemsysQuery,
     ElementsQuery,
     FormulaQuery,
-    ChemsysQuery,
 )
-from emmet.api.core.global_header import GlobalHeaderProcessor
-from emmet.api.routes.materials.xas.query_operators import XASQuery, XASIDQuery
-from emmet.api.core.settings import MAPISettings
+from emmet.api.routes.materials.xas.query_operators import XASIDQuery, XASQuery
+from emmet.core.xas import XASDoc
 
 XAS_SORT_FIELDS = [
     "material_id",

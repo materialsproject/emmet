@@ -4,15 +4,14 @@ from collections import defaultdict
 from typing import Literal
 
 from fastapi import HTTPException, Query
-from emmet.api.query_operator import QueryOperator
-from emmet.api.utils import STORE_PARAMS, process_identifiers
 from pymatgen.analysis.magnetism.analyzer import Ordering
 from pymatgen.core.periodic_table import Element
 from pymatgen.electronic_structure.core import OrbitalType, Spin
 
+from emmet.api.query_operator import QueryOperator
+from emmet.api.utils import STORE_PARAMS
 from emmet.core.band_theory import BSPathType
 from emmet.core.electronic_structure import DOSProjectionType
-from emmet.core.mpid import MPID, AlphaID
 
 
 class ESSummaryDataQuery(QueryOperator):
@@ -44,11 +43,6 @@ class ESSummaryDataQuery(QueryOperator):
             crit["is_metal"] = is_metal
 
         return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        keys = ["band_gap", "efermi", "magnetic_ordering", "is_gap_direct", "is_metal"]
-
-        return [(key, False) for key in keys]
 
 
 class BSDataQuery(QueryOperator):
@@ -114,15 +108,6 @@ class BSDataQuery(QueryOperator):
                 crit[f"bandstructure.{path_type.value}.is_metal"] = is_metal
 
         return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        keys = ["bandstructure"]
-
-        for bs_type in BSPathType:
-            for field in ["band_gap", "efermi"]:
-                keys.append(f"bandstructure.{bs_type.value}.{field}")
-
-        return [(key, False) for key in keys]
 
 
 class DOSDataQuery(QueryOperator):
@@ -218,30 +203,3 @@ class DOSDataQuery(QueryOperator):
             crit.update({"dos.magnetic_ordering": magnetic_ordering.value})
 
         return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        keys = ["dos", "dos.magnetic_ordering"]
-
-        for proj_type in DOSProjectionType:
-            keys.append(f"dos.{proj_type.value}.$**")
-
-        return [(key, False) for key in keys]
-
-
-class ObjectQuery(QueryOperator):
-    """
-    Method to generate a query on object data by task_id.
-    """
-
-    def query(
-        self,
-        task_id: str | MPID | AlphaID = Query(
-            ...,
-            description="The calculation (task) ID associated with the data object",
-        ),
-    ) -> STORE_PARAMS:
-        return {
-            "criteria": {
-                "task_id": process_identifiers(str(task_id), use_prefix=False)[0]
-            }
-        }

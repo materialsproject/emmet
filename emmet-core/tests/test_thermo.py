@@ -3,7 +3,6 @@ from monty.serialization import loadfn
 from pydantic import TypeAdapter
 
 from emmet.core import ARROW_COMPATIBLE
-from emmet.core.mpid_ext import ThermoID
 from emmet.core.thermo import ThermoDoc
 
 if ARROW_COMPATIBLE:
@@ -56,7 +55,7 @@ def entries(
                 "@class": "ComputedStructureEntry",
                 "correction": 0.0,
                 "structure": Fe3O4_structure.as_dict(),
-                "entry_id": ThermoID(identifier="mp-1", suffix="UNKNOWN"),
+                "entry_id": "mp-1-UNKNOWN",
                 "energy": -382.146593528,
                 "composition": {"Fe": 24.0, "O": 32.0},
                 "name": "Fe3O4",
@@ -74,7 +73,7 @@ def entries(
                 "@class": "ComputedStructureEntry",
                 "correction": 0.0,
                 "structure": Fe2O3a_structure.as_dict(),
-                "entry_id": ThermoID(identifier="mp-2", suffix="UNKNOWN"),
+                "entry_id": "mp-2-UNKNOWN",
                 "energy": -270.38765404,
                 "composition": {"Fe": 16.0, "O": 24.0},
                 "name": "Fe2O3",
@@ -92,7 +91,7 @@ def entries(
                 "@class": "ComputedStructureEntry",
                 "correction": 0.0,
                 "structure": O_structure.as_dict(),
-                "entry_id": ThermoID(identifier="mp-3", suffix="UNKNOWN"),
+                "entry_id": "mp-3-UNKNOWN",
                 "energy": -92.274692568,
                 "composition": {"O": 24.0},
                 "name": "O",
@@ -110,7 +109,7 @@ def entries(
                 "@class": "ComputedStructureEntry",
                 "correction": 0.0,
                 "structure": Fe_structure.as_dict(),
-                "entry_id": ThermoID(identifier="mp-4", suffix="UNKNOWN"),
+                "entry_id": "mp-4-UNKNOWN",
                 "energy": -13.00419661,
                 "composition": {"Fe": 2.0},
                 "name": "Fe",
@@ -128,7 +127,7 @@ def entries(
                 "@class": "ComputedStructureEntry",
                 "correction": 0.0,
                 "structure": Fe2O3b_structure.as_dict(),
-                "entry_id": ThermoID(identifier="mp-5", suffix="UNKNOWN"),
+                "entry_id": "mp-5-UNKNOWN",
                 "energy": -1080.82678592,
                 "composition": {"Fe": 64.0, "O": 96.0},
                 "name": "Fe2O3",

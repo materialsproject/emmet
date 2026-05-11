@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from fastapi import Query
 from pymatgen.core.periodic_table import Element
 
 from emmet.api.query_operator import QueryOperator
-from emmet.api.query_operator.identifier import SuffixedIDQuery
+from emmet.api.query_operator.identifier import CompoundIDQuery
 from emmet.api.utils import STORE_PARAMS
-from emmet.core.mpid_ext import XasSpectrumID
-from emmet.core.xas import XasEdge, XasType
+from emmet.core.types.typing import CompoundIDType
+from emmet.core.xas import XasEdge, XasType, validate_xas_spectrum_id
 
 
 class XASQuery(QueryOperator):
@@ -29,15 +31,22 @@ class XASQuery(QueryOperator):
 
         return {"criteria": query} if len(query) > 0 else {}
 
-    def ensure_indexes(self):  # pragma: no cover
-        keys = ["edge", "absorbing_element", "spectrum_type"]
-        return [(key, False) for key in keys]
 
-
-class XASIDQuery(SuffixedIDQuery):
+@dataclass
+class XASIDQuery(CompoundIDQuery):
     """
     Method to generate a query for XAS data given a list of spectrum_ids
     """
 
-    suffix_id_class = XasSpectrumID
-    field_name = "spectrum_id"
+    field_name: str = "spectrum_id"
+    identifier_fields: tuple[str, ...] = (
+        "task_id",
+        "spectrum_type",
+        "absorbing_element",
+        "edge",
+    )
+
+    @staticmethod
+    def validate_identifer(idx: str) -> CompoundIDType:
+        """Validate an XAS spectrum ID string."""
+        return validate_xas_spectrum_id(idx, as_components=True)

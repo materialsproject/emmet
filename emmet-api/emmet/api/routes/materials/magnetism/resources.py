@@ -1,11 +1,13 @@
-from emmet.api.resource import ReadOnlyResource
-from emmet.core.magnetism import MagnetismDoc
-
-from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
-from emmet.api.routes.materials.magnetism.query_operators import MagneticQuery
-from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
+from emmet.api.query_operator import (
+    MultiMaterialIDQuery,
+    PaginationQuery,
+    SparseFieldsQuery,
+)
+from emmet.api.resource import ReadOnlyResource
+from emmet.api.routes.materials.magnetism.query_operators import MagneticQuery
+from emmet.core.magnetism import MagnetismDoc
 
 
 def magnetism_resource(magnetism_store):

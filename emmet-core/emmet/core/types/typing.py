@@ -11,9 +11,10 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
+from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any, Union
+from typing import TYPE_CHECKING, Annotated, Any, TypedDict, Union, overload
 
 import orjson
 from pydantic import BeforeValidator, Field, PlainSerializer, WrapSerializer
@@ -22,6 +23,7 @@ from emmet.core.mpid import MPID, AlphaID
 from emmet.core.utils import convert_datetime, utcnow
 
 if TYPE_CHECKING:
+    from typing import Literal
 
     from typing_extensions import TypeAlias
 
@@ -96,6 +98,87 @@ MaterialIdentifierType = _make_id_type(
     1, legacy=True, prefix=ID_PREFIX, padlen=ID_PADLEN
 )
 """MPID / AlphaID serde."""
+
+
+class CompoundIDType(TypedDict):
+    """Define layout of compound identifiers for static type analysis."""
+
+    identifier: AlphaID
+    suffix: tuple[Enum]
+    separator: str
+
+
+@overload
+def validate_compound_identifier(
+    idx: str,
+    suffixes: tuple[Enum],
+    separator: str = "_",
+    use_prefix: bool = False,
+    as_components: Literal[False] = False,
+) -> str: ...
+
+
+@overload
+def validate_compound_identifier(
+    idx: str,
+    suffixes: tuple[Enum],
+    separator: str = "_",
+    use_prefix: bool = False,
+    as_components: Literal[True] = True,
+) -> CompoundIDType: ...
+
+
+def validate_compound_identifier(
+    idx: str,
+    suffixes: tuple[Enum],
+    separator: str = "_",
+    use_prefix: bool = False,
+    as_components: bool = False,
+) -> str | CompoundIDType:
+    """Serde for compound identifier types.
+
+    Examples:
+    - Thermo: mp-149-GGA
+    - Insertion electrodes: mp-75_Li
+    - XAS: mp-67-XANES-O-K
+
+    Args:
+    idx (str) : The compound identifier
+    suffixes (tuple of Enum) : Suffixes used in the identifier.
+        Must be enums, ex.: ThermoType, RunType, pymatgen.core.periodic_table.Element
+    separator (str) : Separator between distinct ID components.
+    use_prefix (bool) : Whether to strip the prefix from the base ID component:
+        use_prefix = True  --> mp-aaaaaaft-GGA
+        use_prefix = False -->    aaaaaaft-GGA
+    as_components (bool) : Whether to serialize to a str (True),
+        or return as a dict of validated components.
+    """
+
+    for _split_method in ("split", "rsplit"):
+        try:
+            id_components = getattr(idx, _split_method)(separator, len(suffixes))
+            base_id = AlphaID(
+                int(AlphaID(id_components[0])),
+                prefix=ID_PREFIX if use_prefix else None,
+                padlen=ID_PADLEN,
+            )
+            validated_suffixes = [
+                suffix(id_components[1 + idx]) for idx, suffix in enumerate(suffixes)  # type: ignore[operator]
+            ]
+            break
+        except Exception:
+            continue
+    else:
+        raise ValueError("Could not identify components of compound ID.")
+
+    if as_components:
+        return CompoundIDType(
+            identifier=base_id,
+            suffix=tuple(validated_suffixes),
+            separator=separator,
+        )
+
+    return separator.join([str(base_id), *[sfx.value for sfx in validated_suffixes]])
 
 
 def _ser_json_like(d, default_serializer, info):

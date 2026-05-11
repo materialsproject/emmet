@@ -1,6 +1,13 @@
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
-from emmet.api.query_operator import NumericQuery, PaginationQuery, SparseFieldsQuery
+from emmet.api.query_operator import (
+    DeprecationQuery,
+    MultiMaterialIDQuery,
+    MultiTaskIDQuery,
+    NumericQuery,
+    PaginationQuery,
+    SparseFieldsQuery,
+)
 from emmet.api.resource.aggregation import AggregationResource
 from emmet.api.resource.post_resource import PostOnlyResource
 from emmet.api.resource.read_resource import ReadOnlyResource
@@ -8,14 +15,11 @@ from emmet.api.routes.materials.materials.query_operators import (
     BatchIdQuery,
     BlessedCalcsQuery,
     ChemsysQuery,
-    DeprecationQuery,
     ElementsQuery,
     FindStructureQuery,
     FormulaAutoCompleteQuery,
     FormulaQuery,
     LicenseQuery,
-    MultiMaterialIDQuery,
-    MultiTaskIDQuery,
     SymmetryQuery,
 )
 from emmet.core.find_structure import FindStructure
@@ -63,7 +67,7 @@ def blessed_tasks_resource(materials_store):
             FormulaQuery(),
             ChemsysQuery(),
             ElementsQuery(),
-            MultiTaskIDQuery(),
+            MultiTaskIDQuery(field_name="task_ids"),
             DeprecationQuery(),
             NumericQuery(model=MaterialsDoc),
             PaginationQuery(),
@@ -99,7 +103,7 @@ def materials_resource(materials_store):
             FormulaQuery(),
             ChemsysQuery(),
             ElementsQuery(),
-            MultiTaskIDQuery(),
+            MultiTaskIDQuery(field_name="task_ids"),
             SymmetryQuery(),
             DeprecationQuery(),
             NumericQuery(model=MaterialsDoc),

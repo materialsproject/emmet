@@ -1,17 +1,17 @@
-from emmet.api.resource import ReadOnlyResource
-from emmet.core.grain_boundary import GrainBoundaryDoc
+from functools import partial
 
-from emmet.api.routes.materials.grain_boundary.query_operators import (
-    GBStructureQuery,
-)
-from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery
-from emmet.api.query_operator import (
-    PaginationQuery,
-    SparseFieldsQuery,
-    NumericQuery,
-)
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
+from emmet.api.query_operator import (
+    MultiMaterialIDQuery,
+    NumericQuery,
+    PaginationQuery,
+    SparseFieldsQuery,
+)
+from emmet.api.resource import ReadOnlyResource
+from emmet.api.routes.materials.grain_boundary.query_operators import GBStructureQuery
+from emmet.api.utils import process_identifiers
+from emmet.core.grain_boundary import GrainBoundaryDoc
 
 
 def gb_resource(gb_store):
@@ -19,7 +19,9 @@ def gb_resource(gb_store):
         gb_store,
         GrainBoundaryDoc,
         query_operators=[
-            MultiMaterialIDQuery(use_prefix=False),
+            MultiMaterialIDQuery(
+                pre_processor=partial(process_identifiers, use_prefix=False)
+            ),
             NumericQuery(
                 model=GrainBoundaryDoc, excluded_fields=["rotation_axis", "gb_plane"]
             ),

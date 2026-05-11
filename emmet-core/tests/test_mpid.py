@@ -1,13 +1,37 @@
+"""Test identifier-related tools in emmet-core."""
+
+import json
+import numpy as np
+from pydantic import BaseModel
+import pytest
+
 from emmet.core.mpid import (
     MPID,
     MPculeID,
     AlphaID,
     VALID_ALPHA_SEPARATORS,
+    validate_identifier,
 )
-import pytest
 
-import json
-from pydantic import BaseModel
+
+def random_identifiers(num_idx: int = 10) -> set[str | MPID | AlphaID]:
+    randints = set()
+    c = 0
+    while len(randints) < num_idx:
+        # ensure mix of IDs which are MPID and AlphaID
+        if c % 2 == 0:
+            low = 1
+            high = AlphaID._cut_point
+        else:
+            low = AlphaID._cut_point
+            high = 1_000_000_000
+        randints.add(np.random.randint(low=low, high=high))
+        c += 1
+
+    idxs = set()
+    for idx in randints:
+        idxs.update({f"mp-{idx}", MPID(f"mvc-{idx}"), AlphaID(idx)})
+    return idxs
 
 
 def test_mpid():
@@ -262,3 +286,10 @@ def test_pydantic(id_cls):
 
     with pytest.raises(ValueError, match=f"Invalid {id_cls.__name__} Format"):
         TestClass(ID=10.0)
+
+
+def test_validate_on_mpid_alpha():
+
+    for idx in random_identifiers():
+        assert validate_identifier(idx, serialize=False) == AlphaID(idx).formatted
+        assert validate_identifier(idx, serialize=True) == str(AlphaID(idx))

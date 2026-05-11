@@ -1,18 +1,18 @@
 from itertools import permutations
-from typing import Literal, Any
+from typing import Any, Literal
 
 from fastapi import Body, HTTPException, Query
-from emmet.api.query_operator import QueryOperator
-from emmet.api.utils import STORE_PARAMS, process_identifiers
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 from pymatgen.core.composition import Composition, CompositionError
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Structure
 
+from emmet.api.query_operator import QueryOperator
 from emmet.api.routes.materials.materials.utils import (
     chemsys_to_criteria,
     formula_to_criteria,
 )
+from emmet.api.utils import STORE_PARAMS
 from emmet.core.symmetry import (
     CrystalSystem,
     _get_space_group_symbol_to_number_mapping,
@@ -45,10 +45,6 @@ A comma delimited string list of anonymous formulas or regular formulas can also
 
         return {"criteria": crit}
 
-    def ensure_indexes(self):  # pragma: no cover
-        keys = ["formula_pretty", "formula_anonymous", "composition_reduced"]
-        return [(key, False) for key in keys]
-
 
 class ChemsysQuery(QueryOperator):
     """
@@ -70,10 +66,6 @@ Wildcards for unknown elements only supported for single chemsys queries",
             crit.update(chemsys_to_criteria(chemsys))
 
         return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        keys = ["chemsys", "elements", "nelements"]
-        return [(key, False) for key in keys]
 
 
 class ElementsQuery(QueryOperator):
@@ -119,29 +111,6 @@ class ElementsQuery(QueryOperator):
 
             for el in element_list:
                 crit[f"composition_reduced.{el}"] = {"$exists": False}
-
-        return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        return [("elements", False)]
-
-
-class DeprecationQuery(QueryOperator):
-    """
-    Method to generate a deprecation state query
-    """
-
-    def query(
-        self,
-        deprecated: bool | None = Query(
-            False,
-            description="Whether the material is marked as deprecated",
-        ),
-    ) -> STORE_PARAMS:
-        crit = {}
-
-        if deprecated is not None:
-            crit.update({"deprecated": deprecated})
 
         return {"criteria": crit}
 
@@ -272,34 +241,6 @@ class SymmetryQuery(QueryOperator):
 
         return {"criteria": crit}
 
-    def ensure_indexes(self):  # pragma: no cover
-        keys = ["symmetry.crystal_system", "symmetry.number", "symmetry.symbol"]
-        return [(key, False) for key in keys]
-
-
-class MultiTaskIDQuery(QueryOperator):
-    """
-    Method to generate a query for different task_ids
-    """
-
-    def query(
-        self,
-        task_ids: str | None = Query(
-            None, description="Comma-separated list of task_ids to query on"
-        ),
-    ) -> STORE_PARAMS:
-        crit = {}
-
-        if task_ids:
-            crit.update(
-                {"task_ids": {"$in": process_identifiers(task_ids, use_prefix=False)}}
-            )
-
-        return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        return [("task_ids", False)]
-
 
 class BlessedCalcsQuery(QueryOperator):
     """
@@ -367,38 +308,6 @@ class BlessedCalcsQuery(QueryOperator):
         ]
 
         return return_data
-
-
-class MultiMaterialIDQuery(QueryOperator):
-    """
-    Method to generate a query for different root-level material_id values
-    """
-
-    def __init__(self, use_prefix: bool = True) -> None:
-        self.use_prefix = use_prefix
-
-    def query(
-        self,
-        material_ids: str | None = Query(
-            None, description="Comma-separated list of material_id values to query on"
-        ),
-    ) -> STORE_PARAMS:
-        crit = {}  # type: dict
-
-        if material_ids:
-            if (
-                len(
-                    mpids_list := process_identifiers(
-                        material_ids, use_prefix=self.use_prefix
-                    )
-                )
-                == 1
-            ):
-                crit.update({"material_id": mpids_list[0]})
-            else:
-                crit.update({"material_id": {"$in": mpids_list}})
-
-        return {"criteria": crit}
 
 
 class FindStructureQuery(QueryOperator):
@@ -490,9 +399,6 @@ class FindStructureQuery(QueryOperator):
 
         return response
 
-    def ensure_indexes(self):  # pragma: no cover
-        return [("composition_reduced", False)]
-
 
 class FormulaAutoCompleteQuery(QueryOperator):
     """
@@ -576,9 +482,6 @@ class FormulaAutoCompleteQuery(QueryOperator):
 
         return {"pipeline": pipeline}
 
-    def ensure_indexes(self):  # pragma: no cover
-        return [("formula_pretty", False)]
-
 
 class LicenseQuery(QueryOperator):
     """
@@ -645,6 +548,3 @@ class BatchIdQuery(QueryOperator):
                 crit[k] = batch_ids[0] if batch_id_eq_any else {"$ne": batch_ids[0]}
 
         return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        return [("builder_meta.batch_id", False)]

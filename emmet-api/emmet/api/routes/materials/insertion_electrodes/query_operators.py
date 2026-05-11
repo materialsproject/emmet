@@ -1,16 +1,19 @@
-from collections import defaultdict
-
+from dataclasses import dataclass
 from fastapi import HTTPException, Query
-from emmet.api.query_operator import QueryOperator
-from emmet.api.query_operator.identifier import SuffixedIDQuery
-from emmet.api.utils import STORE_PARAMS
 from pymatgen.core.periodic_table import Element
 
+from emmet.api.query_operator import QueryOperator
+from emmet.api.query_operator.identifier import CompoundIDQuery
+
+from emmet.api.query_operator import InQuery
 from emmet.api.routes.materials.insertion_electrodes.utils import (
     electrodes_chemsys_to_criteria,
     electrodes_formula_to_criteria,
 )
-from emmet.core.mpid_ext import BatteryID
+from emmet.api.utils import STORE_PARAMS
+
+from emmet.core.electrode import validate_battery_id
+from emmet.core.types.typing import CompoundIDType
 
 
 class ElectrodeFormulaQuery(QueryOperator):
@@ -33,12 +36,6 @@ A comma delimited string list of anonymous formulas or regular formulas can also
 
         return {"criteria": crit}
 
-    def ensure_indexes(self):  # pragma: no cover
-        return [
-            ("eentries_composition_summary.all_composition_reduced", False),
-            ("entries_composition_summary.all_formulas", False),
-        ]
-
 
 class ElectrodesChemsysQuery(QueryOperator):
     """
@@ -60,14 +57,6 @@ Wildcards for unknown elements only supported for single chemsys queries",
             crit.update(electrodes_chemsys_to_criteria(chemsys))
 
         return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        keys = [
-            "entries_composition_summary.all_chemsys",
-            "entries_composition_summary.all_elements",
-            "nelements",
-        ]
-        return [(key, False) for key in keys]
 
 
 class ElectrodeElementsQuery(QueryOperator):
@@ -118,10 +107,13 @@ class ElectrodeElementsQuery(QueryOperator):
         return {"criteria": crit}
 
 
-class WorkingIonQuery(QueryOperator):
+@dataclass
+class WorkingIonQuery(InQuery):
     """
     Method to generate a query for ranges of insertion electrode data values
     """
+
+    field_name: str = "working_ion"
 
     def query(
         self,
@@ -130,25 +122,19 @@ class WorkingIonQuery(QueryOperator):
             title="Element of the working ion, or comma-delimited string list of working ion elements.",
         ),
     ) -> STORE_PARAMS:
-        crit = defaultdict(dict)  # type: dict
-
-        if working_ion:
-            element_list = [element.strip() for element in working_ion.split(",")]
-            if len(element_list) == 1:
-                crit["working_ion"] = element_list[0]
-            else:
-                crit["working_ion"] = {"$in": element_list}
-
-        return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        return [("working_ion", False)]
+        return self._prepare_query(working_ion)
 
 
-class MultiBatteryIDQuery(SuffixedIDQuery):
+@dataclass
+class MultiBatteryIDQuery(CompoundIDQuery):
     """
-    Method to generate a query for different root-level battery_id values
+    Generate a query for different root-level battery_id values
     """
 
-    suffix_id_class = BatteryID
-    field_name = "battery_id"
+    field_name: str = "battery_id"
+    identifier_fields: tuple[str, ...] = ("material_ids", "working_ion")
+
+    @staticmethod
+    def validate_identifer(idx: str) -> CompoundIDType:
+        """Validate a battery ID string."""
+        return validate_battery_id(idx, as_components=True)

@@ -1,10 +1,10 @@
 from collections import defaultdict
 
 from fastapi import Query
-from emmet.api.query_operator import QueryOperator
-from emmet.api.utils import STORE_PARAMS
 from pymatgen.core.composition import Composition
 
+from emmet.api.query_operator import QueryOperator
+from emmet.api.utils import STORE_PARAMS
 from emmet.core.grain_boundary import GBTypeEnum
 
 
@@ -62,8 +62,3 @@ class GBStructureQuery(QueryOperator):
             crit["rotation_axis"] = [int(n.strip()) for n in rotation_axis.split(",")]
 
         return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        keys = [key for key in self._keys_from_query() if "_min" not in key]
-        keys.append("rotation_angle")
-        return [(key, False) for key in keys]

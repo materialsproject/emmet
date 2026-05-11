@@ -1,9 +1,12 @@
+from dataclasses import dataclass
 from fastapi import Query
-from emmet.api.query_operator import QueryOperator
-from emmet.api.query_operator.identifier import SuffixedIDQuery
-from emmet.api.utils import STORE_PARAMS
 
-from emmet.core.thermo import ThermoID
+from emmet.api.query_operator import QueryOperator
+from emmet.api.query_operator.core import InQuery
+from emmet.api.query_operator.identifier import CompoundIDQuery
+from emmet.api.utils import STORE_PARAMS
+from emmet.core.thermo import validate_thermo_id
+from emmet.core.types.typing import CompoundIDType
 
 
 class IsStableQuery(QueryOperator):
@@ -24,24 +27,29 @@ class IsStableQuery(QueryOperator):
 
         return {"criteria": crit}
 
-    def ensure_indexes(self):  # pragma: no cover
-        keys = self._keys_from_query()
-        return [(key, False) for key in keys]
 
-
-class MultiThermoIDQuery(SuffixedIDQuery):
+@dataclass
+class MultiThermoIDQuery(CompoundIDQuery):
     """
     Method to generate a query for different root-level thermo_id values
     """
 
-    suffix_id_class = ThermoID
-    field_name = "thermo_id"
+    field_name: str = "thermo_id"
+    identifier_fields: tuple[str, ...] = ("material_id", "thermo_type")
+
+    @staticmethod
+    def validate_identifer(idx: str) -> CompoundIDType:
+        """Validate a thermo ID string."""
+        return validate_thermo_id(idx, as_components=True)
 
 
-class MultiThermoTypeQuery(QueryOperator):
+@dataclass
+class MultiThermoTypeQuery(InQuery):
     """
     Method to generate a query for different root-level thermo_type values
     """
+
+    field_name: str = "thermo_type"
 
     def query(
         self,
@@ -49,25 +57,16 @@ class MultiThermoTypeQuery(QueryOperator):
             None, description="Comma-separated list of thermo_type values to query on"
         ),
     ) -> STORE_PARAMS:
-        crit = {}  # type: dict
-
-        if thermo_types:
-            thermo_type_list = [
-                thermo_type.strip() for thermo_type in thermo_types.split(",")
-            ]
-
-            if len(thermo_type_list) == 1:
-                crit.update({"thermo_type": thermo_type_list[0]})
-            else:
-                crit.update({"thermo_type": {"$in": thermo_type_list}})
-
-        return {"criteria": crit}
+        return self._prepare_query(thermo_types)
 
 
-class MultiPhaseDiagramIDQuery(QueryOperator):
+@dataclass
+class MultiPhaseDiagramIDQuery(InQuery):
     """
     Method to generate a query for different root-level phase_diagram_id values
     """
+
+    field_name: str = "phase_diagram_id"
 
     def query(
         self,
@@ -76,17 +75,4 @@ class MultiPhaseDiagramIDQuery(QueryOperator):
             description="Comma-separated list of phase_diagram_id values to query on",
         ),
     ) -> STORE_PARAMS:
-        crit = {}  # type: dict
-
-        if phase_diagram_ids:
-            phase_diagram_id_list = [
-                phase_diagram_id.strip()
-                for phase_diagram_id in phase_diagram_ids.split(",")
-            ]
-
-            if len(phase_diagram_id_list) == 1:
-                crit.update({"phase_diagram_id": phase_diagram_id_list[0]})
-            else:
-                crit.update({"phase_diagram_id": {"$in": phase_diagram_id_list}})
-
-        return {"criteria": crit}
+        return self._prepare_query(phase_diagram_ids)
