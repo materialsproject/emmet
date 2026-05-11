@@ -51,6 +51,7 @@ DEFAULT_PHONON_FILES = {
     "structure": "POSCAR",
     "phonon_bandstructure": "band.yaml",  # chosen as Phonopy default
     "phonon_dos": "total_dos.dat",  # chosen as Phonopy default
+    "projected_dos": "projected_dos.dat",  # chosen as Phonopy default
     "force_constants": "FORCE_CONSTANTS",  # chosen as Phonopy default
     "born": "born.npz",
     "epsilon_static": "epsilon_static.npz",
@@ -159,12 +160,26 @@ class PhononDOS(BandTheoryBase):
     def from_phonopy(
         cls,
         phonon_dos_file: FSPathType,
+        structure_file: FSPathType | None = None,
+        projected_dos_file: FSPathType | None = None,
+        **kwargs,
     ) -> Self:
         """Create a PhononDOS from phonopy .dat output.
+
+        Ref. for data formats used by phonopy:
+        - total_dos.dat :
+        https://phonopy.github.io/phonopy/output-files.html#total-dos-dat-and-projected-dos-dat
+        - projected_dos.dat :
+        https://phonopy.github.io/phonopy/output-files.html#file-format-of-projected-dos-dat
 
         Parameters
         -----------
         phonon_dos_file (FSPathType) : path to total_dos.dat
+        structure_file (FSPathType or None) : path to a POSCAR-like object,
+            either the base computational cell (POSCAR) or the supercell
+            used in the phonon calculation (SPOSCAR).
+        projected_dos_file (FSPathType or None) : path to projected_dos.dat
+        **kwargs : any other kwargs to pass into the PhononDOS constructor
         """
         phonopy_dos: dict[str, Any] = {
             k: []
@@ -173,19 +188,25 @@ class PhononDOS(BandTheoryBase):
                 "densities",
             )
         }
-        with zopen(phonon_dos_file, "rt") as f:
-            for line in f.read().splitlines():
-                non_comment_text = line.split("#")[0]  # type: ignore[arg-type]
-                if len(cols := non_comment_text.split()) == 2:
-                    phonopy_dos["frequencies"].append(float(cols[0]))
-                    phonopy_dos["densities"].append(float(cols[1]))
-                elif len(cols) > 2:
-                    raise ValueError(
-                        f"File {phonon_dos_file} does not have the correct "
-                        "phonopy total_dos.dat format."
-                    )
+        # can handle gzipped files
+        total_dos = np.loadtxt(phonon_dos_file)
+        phonopy_dos["frequencies"] = total_dos[:, 0].tolist()
+        phonopy_dos["densities"] = total_dos[:, 1].tolist()
 
-        return cls(**phonopy_dos)
+        if structure_file:
+            phonopy_dos["structure"] = Structure.from_file(
+                structure_file, format="poscar"
+            )
+
+        if projected_dos_file:
+            # First column are frequencies, can skip these in parsing since
+            # they should be the same as in the total DOS.
+            proj_dos = np.loadtxt(projected_dos_file)
+            phonopy_dos["projected_densities"] = [
+                proj_dos[:, i].tolist() for i in range(1, proj_dos.shape[1])
+            ]
+
+        return cls(**phonopy_dos, **kwargs)
 
 
 class ShreddedEigendisplacements(TypedDict):
@@ -257,6 +278,7 @@ class PhononBS(BandStructure):
 
         if isinstance(config["reciprocal_lattice"], dict):
             config["reciprocal_lattice"] = config["reciprocal_lattice"].get("matrix")
+
         return cls(**config)
 
     @property
@@ -302,8 +324,19 @@ class PhononBS(BandStructure):
         )
 
     @classmethod
-    def from_phonopy(cls, phonon_bandstructure_file: FSPathType):
-        """Create a PhononBS from phonopy .yaml output."""
+    def from_phonopy(
+        cls,
+        phonon_bandstructure_file: FSPathType,
+        structure_file: FSPathType | None = None,
+        **kwargs,
+    ) -> Self:
+        """Create a PhononBS from phonopy .yaml output.
+
+        Args:
+        phonon_bandstructure_file (FSPathType) : path to a band.yaml-like file.
+        structure_file (FSPathType or None) : path to a POSCAR-like structure file.
+        **kwargs : other kwargs to pass to the class constructor
+        """
         with zopen(phonon_bandstructure_file, "rt") as f:
             phonopy_bandstructure = yaml.safe_load(f.read())
 
@@ -314,7 +347,11 @@ class PhononBS(BandStructure):
                 for entry in phonopy_bandstructure["phonon"]
             ],
         )
-        return cls(**phonopy_bandstructure)
+        if structure_file:
+            phonopy_bandstructure["structure"] = Structure.from_file(
+                structure_file, fmt="poscar"
+            )
+        return cls(**phonopy_bandstructure, **kwargs)
 
 
 class SumRuleChecks(BaseModel):
@@ -756,6 +793,7 @@ class PhononBSDOSTask(StructureMetadata):
         structure_file: FSPathType,
         phonon_bandstructure_file: FSPathType | None = None,
         phonon_dos_file: FSPathType | None = None,
+        projected_dos_file: FSPathType | None = None,
         force_constants_file: FSPathType | None = None,
         born_file: FSPathType | None = None,
         epsilon_static_file: FSPathType | None = None,
@@ -775,11 +813,16 @@ class PhononBSDOSTask(StructureMetadata):
 
         if phonon_bandstructure_file:
             cls_config["phonon_bandstructure"] = PhononBS.from_phonopy(
-                phonon_bandstructure_file
+                phonon_bandstructure_file,
+                structure=cls_config["structure"],
             )
 
         if phonon_dos_file:
-            cls_config["phonon_dos"] = PhononDOS.from_phonopy(phonon_dos_file)
+            cls_config["phonon_dos"] = PhononDOS.from_phonopy(
+                phonon_dos_file,
+                projected_dos_file=projected_dos_file,
+                structure=cls_config["structure"],
+            )
 
         if force_constants_file:
             # read FORCE_CONSTANTS manually
@@ -844,12 +887,15 @@ class PhononBSDOSTask(StructureMetadata):
         Parameters
         -----------
         phonon_dir : str or Path
-        **kwargs to pass to `PhononBSDOSDoc.from_phonopy_pheasy_files`
+        **kwargs to pass to `PhononBSDOSDoc.from_phonopy_pheasy_files`.
+            The user can override the default file paths for select files
+            using this.
         """
         phonon_path = Path(phonon_dir).resolve()
         file_paths = {}
         for k, file_name in DEFAULT_PHONON_FILES.items():
-            if (file_path := Path(zpath(str(phonon_path / file_name)))).exists():
+            file_path = phonon_path / kwargs.pop(f"{k}_file", file_name)
+            if (file_path := Path(zpath(file_path))).exists():
                 file_paths[f"{k}_file"] = file_path
         return cls.from_phonopy_pheasy_files(**file_paths, **kwargs)
 

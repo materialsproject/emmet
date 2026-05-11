@@ -59,7 +59,8 @@ class BandTheoryBase(BaseModel):
     def __str__(self) -> str:
         return (
             f"{self.__class__.__name__}({self.identifier or ''}"
-            f"{': ' + self.structure.formula if self.structure else ''})"
+            f"{': ' if self.identifier else ''}"
+            f"{self.structure.formula if self.structure else ''})"
         )
 
     def __repr__(self) -> str:
@@ -477,6 +478,8 @@ def obtain_path_type(
         Structure associated with the bandstructure
     kpoints : list of tuple[float,float,float]
         A list of (all) k-points included in the bandstructure.
+    user_kpoint_labels: dict of str to Vector3D, or None = None
+        An optional dict of user-defined k-point labels
     symprecs : list[float] = [SETTINGS.SYMPREC,0.01]
         List of `symprec` values to pass to `HighSymmKpath`
     angtols : list[float] = [SETTINGS.ANGLE_TOL]
@@ -490,6 +493,7 @@ def obtain_path_type(
     -----------
     BSPathType
     """
+    found_path_types: set[BSPathType] = set()
     for path_type in (bspt for bspt in BSPathType if bspt.value != "unknown"):  # type: ignore[attr-defined]
         found_path_type = False
         for symprec, angtol in product(symprecs, angtols):
@@ -525,9 +529,10 @@ def obtain_path_type(
                 or (num_extra > 0 and _coarse_list_superset(inferred_kpath, ref_path))
             ):
                 found_path_type = True
+                found_path_types.add(path_type)
                 yield path_type, inferred_kpath, kpoint_labels
 
-    if not found_path_type:
+    if not found_path_types:
         yield BSPathType.unknown, None, {}
 
 
