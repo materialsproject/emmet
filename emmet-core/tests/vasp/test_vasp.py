@@ -113,7 +113,7 @@ def test_computed_entry(tasks):
     ids = {e.entry_id for e in entries}
     assert ids == set(
         [
-            AlphaID(id_str).string
+            f"{AlphaID(id_str)}-GGA"
             for id_str in {"mp-ddzda", "mp-dryyt", "mp-cmxxl", "mp-ft"}
         ]
     )

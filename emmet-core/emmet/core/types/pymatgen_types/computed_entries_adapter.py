@@ -112,7 +112,7 @@ class TypedCEParameterDict(TypedDict):
 
 # Used for running deserialization not dependent on
 # type of energy_adjustments
-_TypedComputedEntryDict = TypedDict(
+_TypedComputedEntryDict = TypedDict(  # type: ignore[name-match]
     "TypedComputedEntryDict",
     {
         "@module": str,
@@ -180,7 +180,7 @@ def pop_cse_empty_keys(cse: dict) -> dict[str, Any]:
 
 def entry_deserializer(entry: dict[str, Any] | ComputedEntry | ComputedStructureEntry):
     if isinstance(entry, dict):
-        entry_dict: dict[str, Any] = TypeAdapter(
+        entry_dict: dict[str, Any] = TypeAdapter(  # type: ignore[assignment]
             _TypedComputedEntryDict
         ).validate_python(entry, extra="allow")
 
