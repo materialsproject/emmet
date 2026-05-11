@@ -14,17 +14,18 @@ from datetime import datetime
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any, Union, overload, TypedDict
+from typing import TYPE_CHECKING, Annotated, Any, TypedDict, Union, overload
 
 import orjson
-from pydantic import BaseModel, BeforeValidator, Field, PlainSerializer, WrapSerializer
+from pydantic import BeforeValidator, Field, PlainSerializer, WrapSerializer
 
 from emmet.core.mpid import MPID, AlphaID
 from emmet.core.utils import convert_datetime, utcnow
 
 if TYPE_CHECKING:
     from typing import Literal
-    from typing_extensions import TypeAlias, Self
+
+    from typing_extensions import TypeAlias
 
 FSPathType: TypeAlias = Annotated[
     Union[str | Path | os.DirEntry[str] | os.PathLike[str]],
@@ -105,39 +106,6 @@ class CompoundIDType(TypedDict):
     identifier: AlphaID
     suffix: tuple[Enum]
     separator: str
-
-
-class CompoundID(BaseModel):
-    """Model validated compound identifiers."""
-
-    identifier: AlphaID
-    suffix: tuple[Enum]
-    separator: str
-
-    @classmethod
-    def from_str(cls, idx: str, suffixes: tuple[Enum], **kwargs) -> Self:
-        """Construct from a string and a set of enum types.
-
-        Args:
-        idx (str) : The compound identifier
-        suffix (tuple of Enum) : Enums which represent the suffixes
-        **kwargs : Passed to `validate_compound_identifier`
-        """
-        return cls(
-            **validate_compound_identifier(
-                idx, suffixes=suffixes, **kwargs, as_components=True
-            )
-        )
-
-    def __repr__(self) -> str:
-        """Format for display."""
-        return self.separator.join(
-            [self.identifier.string, *[suffix.value for suffix in self.suffix]]
-        )
-
-    def __str__(self) -> str:
-        """Format for standard printing."""
-        return f"CompoundID({self.__repr__()})"
 
 
 @overload

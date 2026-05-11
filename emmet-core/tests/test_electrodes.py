@@ -8,7 +8,6 @@ from pymatgen.apps.battery.insertion_battery import (
     InsertionVoltagePair,
 )
 from pymatgen.core import Composition, Element
-from pymatgen.entries.computed_entries import ComputedEntry
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.electrode import (
@@ -19,6 +18,7 @@ from emmet.core.electrode import (
 )
 from emmet.core.mpid import AlphaID
 from emmet.core.types.pymatgen_types.computed_entries_adapter import (
+    ComputedEntryType,
     ComputedStructureEntryType,
 )
 from emmet.core.types.typing import validate_compound_identifier
@@ -42,7 +42,17 @@ def insertion_elec(test_dir, entry_material_ids):
     """
     Recycle the test cases from pymatgen
     """
-    entry_Li = ComputedEntry("Li", -1.90753119, entry_id="mp-1234-UNKNOWN")
+    # entry_Li = ComputedEntry("Li", -1.90753119, entry_id="mp-1234-UNKNOWN")
+    entry_Li = TypeAdapter(ComputedEntryType).validate_python(
+        {
+            "@module": "pymatgen.entries.computed_entries",
+            "@class": "ComputedEntry",
+            "composition": {"Li": 1.0},
+            "energy": -1.90753119,
+            "correction": 0.0,
+            "entry_id": "mp-1234-UNKNOWN",
+        }
+    )
     # more cases can be added later if problems are found
     entries_LTO = loadfn(test_dir / "LiTiO2_batt.json.gz", cls=None)
 
