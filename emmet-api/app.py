@@ -1,6 +1,7 @@
 import ddtrace.auto  # noqa: F401
 
 import time
+import uvicorn
 
 start = time.perf_counter()
 import logging
@@ -35,3 +36,6 @@ if default_settings.DEBUG:
     app.add_middleware(CORSMiddleware, expose_headers=["x-consumer-id"])
 delta = time.perf_counter() - start
 logger.warning(f"Startup took {delta:.1f}s")
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
