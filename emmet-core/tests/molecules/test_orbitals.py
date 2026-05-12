@@ -13,12 +13,6 @@ def closed_shell(test_dir):
 
 
 @pytest.fixture(scope="session")
-def open_shell(test_dir):
-    task = TaskDocument(**safe_load((test_dir / "open_shell_nbo_task.json.gz")))
-    return task
-
-
-@pytest.fixture(scope="session")
 def new_closed(test_dir):
     task = TaskDocument(**safe_load((test_dir / "closed_shell_with3c.json.gz")))
     return task
@@ -30,7 +24,7 @@ def new_open(test_dir):
     return task
 
 
-def test_orbital(closed_shell, open_shell):
+def test_orbital(closed_shell, open_shell_nbo_task):
     # Test closed-shell NBO parsing
     doc = OrbitalDoc.from_task(
         closed_shell, "b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2", deprecated=False
@@ -57,12 +51,14 @@ def test_orbital(closed_shell, open_shell):
 
     # Test open-shell NBO parsing
     doc = OrbitalDoc.from_task(
-        open_shell, "b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2", deprecated=False
+        open_shell_nbo_task,
+        "b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2",
+        deprecated=False,
     )
 
     assert doc.open_shell is True
 
-    assert len(doc.nbo_population) == len(open_shell.output.initial_molecule)
+    assert len(doc.nbo_population) == len(open_shell_nbo_task.output.initial_molecule)
     assert doc.alpha_population is not None
     assert doc.beta_population is not None
     assert doc.nbo_lone_pairs is None

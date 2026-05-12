@@ -3,7 +3,6 @@ import json
 import numpy as np
 import pytest
 
-from monty.serialization import loadfn
 from pymatgen.electronic_structure.core import Spin
 from pymatgen.electronic_structure.dos import CompleteDos, Dos
 from pymatgen.io.vasp import Vasprun
@@ -187,14 +186,12 @@ def test_arrow(bs_fixture, dos_fixture):
     assert test_arrow_dos_doc == edos
 
 
-def test_obtain_path_type(test_dir):
-
-    line_band_struct = loadfn(test_dir / "electronic_structure" / "Fe_bs.json.gz")
+def test_obtain_path_type(fe_line_mode_bandstructure):
 
     path_type, kpath, _ = next(
         obtain_path_type(
-            line_band_struct.structure,
-            [x.frac_coords for x in line_band_struct.kpoints],
+            fe_line_mode_bandstructure.structure,
+            [x.frac_coords for x in fe_line_mode_bandstructure.kpoints],
         )
     )
     assert isinstance(path_type, BSPathType)
