@@ -3,13 +3,14 @@ import json
 from pathlib import Path
 import pytest
 from pydantic import TypeAdapter
-from pymatgen.analysis.phase_diagram import PhaseDiagram
-from pymatgen.apps.battery.conversion_battery import ConversionElectrode
-from pymatgen.apps.battery.insertion_battery import (
+from emmet.core.io.pymatgen import (
+    PhaseDiagram,
+    ConversionElectrode,
     InsertionElectrode,
     InsertionVoltagePair,
+    Composition,
+    Element,
 )
-from pymatgen.core import Composition, Element
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.electrode import (

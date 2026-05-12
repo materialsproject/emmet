@@ -6,8 +6,11 @@ from tempfile import NamedTemporaryFile
 import numpy as np
 import pytest
 from monty.serialization import loadfn
-from pymatgen.core import Structure
-from pymatgen.phonon.dos import CompletePhononDos, PhononDos as PmgPhononDos
+from emmet.core.io.pymatgen import (
+    Structure,
+    CompletePhononDos,
+    PhononDos as PmgPhononDos,
+)
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.phonon import PhononBSDOSDoc, PhononDOS

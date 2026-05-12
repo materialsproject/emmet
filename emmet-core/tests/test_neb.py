@@ -6,7 +6,7 @@ import shutil
 from tempfile import TemporaryDirectory
 
 from monty.serialization import loadfn
-from pymatgen.core import Structure
+from emmet.core.io.pymatgen import Structure
 
 from emmet.core.neb import (
     NebResult,

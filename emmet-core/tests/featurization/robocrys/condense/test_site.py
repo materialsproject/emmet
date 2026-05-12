@@ -1,4 +1,4 @@
-from pymatgen.analysis.local_env import CrystalNN
+from emmet.core.io.pymatgen import CrystalNN
 import pytest
 
 from emmet.core.featurization.robocrys.condense.site import (

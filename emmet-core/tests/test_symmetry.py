@@ -1,6 +1,6 @@
 """Test symmetry-related utilities."""
 
-from pymatgen.symmetry.groups import SYMM_DATA
+from emmet.core.io.pymatgen import SYMM_DATA
 import pytest
 
 from emmet.core.symmetry import (

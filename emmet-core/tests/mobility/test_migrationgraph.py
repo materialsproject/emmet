@@ -1,8 +1,7 @@
 import numpy as np
 import pytest
 from monty.serialization import loadfn
-from pymatgen.analysis.structure_matcher import StructureMatcher
-from pymatgen.entries.computed_entries import ComputedEntry
+from emmet.core.io.pymatgen import ComputedEntry, StructureMatcher
 from emmet.core.mobility.migrationgraph import MigrationGraphDoc
 
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from monty.serialization import loadfn
 import os
-from pymatgen.core import Structure
+from emmet.core.io.pymatgen import Structure
 import pytest
 from shutil import rmtree
 from tempfile import mkdtemp
@@ -13,7 +13,7 @@ from emmet.core.types.enums import VaspObject
 
 if TYPE_CHECKING:
     from pathlib import Path
-    from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
+    from emmet.core.io.pymatgen import BandStructureSymmLine
 
 
 @pytest.fixture(scope="session")

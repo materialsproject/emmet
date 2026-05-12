@@ -1,6 +1,5 @@
 import pytest
-from pymatgen.analysis.dimensionality import get_structure_components
-from pymatgen.analysis.local_env import CrystalNN
+from emmet.core.io.pymatgen import get_structure_components, CrystalNN
 
 from emmet.core.featurization.robocrys.condense.component import (
     filter_molecular_components,

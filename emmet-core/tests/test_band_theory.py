@@ -3,9 +3,7 @@ import json
 import numpy as np
 import pytest
 
-from pymatgen.electronic_structure.core import Spin
-from pymatgen.electronic_structure.dos import CompleteDos, Dos
-from pymatgen.io.vasp import Vasprun
+from emmet.core.io.pymatgen import Spin, CompleteDos, Dos, Vasprun
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.band_theory import (

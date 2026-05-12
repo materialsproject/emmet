@@ -130,9 +130,9 @@ def test_task_doc(test_dir, object_name, tmpdir):
 
     from monty.json import jsanitize
     from monty.serialization import dumpfn
-    from pymatgen.alchemy.materials import TransformedStructure
-    from pymatgen.entries.computed_entries import ComputedEntry
-    from pymatgen.transformations.standard_transformations import (
+    from emmet.core.io.pymatgen import (
+        TransformedStructure,
+        ComputedEntry,
         DeformStructureTransformation,
     )
 
@@ -253,8 +253,7 @@ def test_orig_inp_parsing(tmp_dir):
 
     from pathlib import Path
 
-    from pymatgen.core import Structure
-    from pymatgen.io.vasp import Incar, Kpoints
+    from emmet.core.io.pymatgen import Structure, Incar, Kpoints
 
     from emmet.core.tasks import _parse_orig_inputs
 

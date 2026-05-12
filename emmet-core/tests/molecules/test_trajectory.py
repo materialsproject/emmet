@@ -8,7 +8,7 @@ import numpy as np
 
 from monty.io import zopen
 
-from pymatgen.core.structure import Molecule
+from emmet.core.io.pymatgen import Molecule
 
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.trajectory import ForcesDoc, TrajectoryDoc

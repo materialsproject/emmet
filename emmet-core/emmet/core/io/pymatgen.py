@@ -122,6 +122,11 @@ _class_map: dict[str, str] = {
     "AllCoordinationGeometries": "pymatgen.analysis.chemenv.coordination_environments.coordination_geometries",
     "LocalGeometryFinder": "pymatgen.analysis.chemenv.coordination_environments.coordination_geometry_finder",
     "LightStructureEnvironments": "pymatgen.analysis.chemenv.coordination_environments.structure_environments",
+    "TransformedStructure": "pymatgen.alchemy.materials",
+    "Author": "pymatgen.util.provenance",
+    "HistoryNode": "pymatgen.util.provenance",
+    "StructureNL": "pymatgen.util.provenance",
+    "STRUCTURES_DIR": "pymatgen.util.testing",
     # pymatgen-analysis-alloys add-on
     "AlloyMember": "pymatgen.analysis.alloys.core",
     "AlloyPair": "pymatgen.analysis.alloys.core",
