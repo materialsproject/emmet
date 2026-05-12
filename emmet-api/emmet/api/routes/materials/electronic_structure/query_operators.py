@@ -149,9 +149,6 @@ class DOSDataQuery(QueryOperator):
     ) -> STORE_PARAMS:
         crit = defaultdict(dict)  # type: dict
 
-        if isinstance(spin, str):
-            spin = Spin(int(spin))
-
         if projection_type is not None:
             if spin is None:
                 raise HTTPException(
@@ -159,6 +156,7 @@ class DOSDataQuery(QueryOperator):
                     detail="Must specify a spin channel for querying dos summary data.",
                 )
             else:
+                spin_enum: Spin = Spin(int(spin)) if isinstance(spin, str) else spin
                 d = {
                     "band_gap": [band_gap_min, band_gap_max],
                     "efermi": [efermi_min, efermi_max],
@@ -166,7 +164,7 @@ class DOSDataQuery(QueryOperator):
 
                 for entry in d:
                     if projection_type.value == "total":
-                        key_prefix = f"total.{str(spin.value)}"
+                        key_prefix = f"total.{str(spin_enum.value)}"
 
                     elif projection_type.value == "orbital":
                         if orbital is None:
@@ -175,7 +173,9 @@ class DOSDataQuery(QueryOperator):
                                 detail="Must specify an orbital type for querying orbital projection data.",
                             )
 
-                        key_prefix = f"orbital.{str(orbital.name)}.{str(spin.value)}"
+                        key_prefix = (
+                            f"orbital.{str(orbital.name)}.{str(spin_enum.value)}"
+                        )
 
                     elif projection_type.value == "elemental":
                         if element is None:
@@ -185,10 +185,10 @@ class DOSDataQuery(QueryOperator):
                             )
 
                         if orbital is not None:
-                            key_prefix = f"elemental.{str(element.value)}.{str(orbital.name)}.{str(spin.value)}"
+                            key_prefix = f"elemental.{str(element.value)}.{str(orbital.name)}.{str(spin_enum.value)}"
 
                         else:
-                            key_prefix = f"elemental.{str(element.value)}.total.{str(spin.value)}"
+                            key_prefix = f"elemental.{str(element.value)}.total.{str(spin_enum.value)}"
 
                     key = f"dos.{key_prefix}.{entry}"
 
