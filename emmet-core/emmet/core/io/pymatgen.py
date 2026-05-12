@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 _BASE_PACKAGE_NAME = "pymatgen"
 
-_class_map: dict[str, str] = {
+_core_class_map: dict[str, str] = {
     "__version__": "core",
     "Element": "core.periodic_table",
     "Composition": "core.composition",
@@ -30,19 +30,16 @@ _class_map: dict[str, str] = {
     "StructureGraph": "core.graphs",
     "Molecule": "core.structure",
     "MoleculeGraph": "core.graphs",
-    "BVAnalyzer": "analysis.bond_valence",
-    "StructureMatcher": "analysis.structure_matcher",
-    "ElementComparator": "analysis.structure_matcher",
-    "AbstractComparator": "analysis.structure_matcher",
+    "BVAnalyzer": "core.bond_valence",
+    "StructureMatcher": "core.structure_matcher",
+    "ElementComparator": "core.structure_matcher",
+    "AbstractComparator": "core.structure_matcher",
     "DeformStructureTransformation": "transformations.standard_transformations",
-    "MoleculeMatcher": "analysis.molecule_matcher",
+    "MoleculeMatcher": "core.molecule_matcher",
     "Trajectory": "core.trajectory",
     "SpacegroupAnalyzer": "symmetry.analyzer",
     "PointGroupAnalyzer": "symmetry.analyzer",
     "SymmetryUndeterminedError": "symmetry.analyzer",
-    "EOS": "analysis.eos",
-    "EOSError": "analysis.eos",
-    "PiezoTensor": "analysis.piezo",
     "Tensor": "core.tensors",
     "TensorMapping": "core.tensors",
     "SYMM_DATA": "symmetry.groups",
@@ -60,16 +57,11 @@ _class_map: dict[str, str] = {
     "PhononBandStructureSymmLine": "phonon.bandstructure",
     "PhononDos": "phonon.dos",
     "CompletePhononDos": "phonon.dos",
-    "XAS": "analysis.xas.spectrum",
-    "site_weighted_spectrum": "analysis.xas.spectrum",
     "PhaseDiagram": "analysis.phase_diagram",
     "PhaseDiagramError": "analysis.phase_diagram",
     "IRDielectricTensor": "phonon.ir_spectra",
     "ComputedEntry": "core.entries",
     "ComputedStructureEntry": "core.entries",
-    "Compatibility": "analysis.compatibility",
-    "MaterialsProject2020Compatibility": "analysis.compatibility",
-    "MaterialsProjectAqueousCompatibility": "analysis.compatibility",
     "Incar": "io.vasp.inputs",
     "Kpoints": "io.vasp.inputs",
     "Poscar": "io.vasp.inputs",
@@ -86,52 +78,72 @@ _class_map: dict[str, str] = {
     "VaspInputSet": "io.vasp.sets",
     "MPStaticSet": "io.vasp.sets",
     "BalancedReaction": "analysis.reaction_calculator",
-    "DiffractionPattern": "analysis.diffraction.xrd",
-    "MaterialsProjectDFTMixingScheme": "entries.mixing_scheme",
     "GrainBoundary": "core.interface",
     "oxide_type": "core.structure_analyzer",
-    "AbstractElectrode": "apps.battery.battery_abc",
-    "ConversionElectrode": "apps.battery.conversion_battery",
-    "ConversionVoltagePair": "apps.battery.conversion_battery",
-    "InsertionElectrode": "apps.battery.insertion_battery",
-    "InsertionVoltagePair": "apps.battery.insertion_battery",
-    "WAVELENGTHS": "analysis.diffraction.xrd",
-    "XRDCalculator": "analysis.diffraction.xrd",
     "QCInput": "io.qchem.inputs",
     "QCOutput": "io.qchem.outputs",
-    "CollinearMagneticStructureAnalyzer": "analysis.magnetism",
-    "Ordering": "analysis.magnetism.analyzer",
     "BaseVolumetricData": "io.common",
     "bader_analysis_from_path": "command_line.bader_caller",
     "ChargemolAnalysis": "command_line.chargemol_caller",
     "BabelMolAdaptor": "io.babel",
-    "ElasticTensor": "analysis.elasticity",
-    "ElasticTensorExpansion": "analysis.elasticity",
-    "Deformation": "analysis.elasticity.strain",
-    "Strain": "analysis.elasticity.strain",
-    "Stress": "analysis.elasticity.stress",
-    "NearNeighbors": "analysis.local_env",
-    "CrystalNN": "analysis.local_env",
-    "OpenBabelNN": "analysis.local_env",
-    "metal_edge_extender": "analysis.local_env",
-    "LocalStructOrderParams": "analysis.local_env",
-    "CN_OPT_PARAMS": "analysis.local_env",
+    "NearNeighbors": "core.local_env",
+    "CrystalNN": "core.local_env",
+    "OpenBabelNN": "core.local_env",
+    "metal_edge_extender": "core.local_env",
+    "LocalStructOrderParams": "core.local_env",
+    "CN_OPT_PARAMS": "core.local_env",
     "get_angle": "util.coord",
-    "AflowPrototypeMatcher": "analysis.prototypes",
     "weisfeiler_lehman_graph_hash": "util.graph_hashing",
-    "get_structure_components": "analysis.dimensionality",
     "Cohp": "electronic_structure.cohp",
     "CompleteCohp": "electronic_structure.cohp",
     "LobsterCompleteDos": "electronic_structure.dos",
-    "SimplestChemenvStrategy": "analysis.chemenv.coordination_environments.chemenv_strategies",
-    "AllCoordinationGeometries": "analysis.chemenv.coordination_environments.coordination_geometries",
-    "LocalGeometryFinder": "analysis.chemenv.coordination_environments.coordination_geometry_finder",
-    "LightStructureEnvironments": "analysis.chemenv.coordination_environments.structure_environments",
     "TransformedStructure": "alchemy.materials",
     "Author": "util.provenance",
     "HistoryNode": "util.provenance",
     "StructureNL": "util.provenance",
     "STRUCTURES_DIR": "util.testing",
+}
+"""Objects which are defined in pymatgen-core.
+
+Can use aliases to avoid name collisions."""
+
+_non_core_class_map: dict[str, str] = {
+    "ElasticTensor": "analysis.elasticity",
+    "ElasticTensorExpansion": "analysis.elasticity",
+    "Deformation": "analysis.elasticity.strain",
+    "Strain": "analysis.elasticity.strain",
+    "Stress": "analysis.elasticity.stress",
+    "AbstractElectrode": "apps.battery.battery_abc",
+    "ConversionElectrode": "apps.battery.conversion_battery",
+    "ConversionVoltagePair": "apps.battery.conversion_battery",
+    "InsertionElectrode": "apps.battery.insertion_battery",
+    "InsertionVoltagePair": "apps.battery.insertion_battery",
+    "AflowPrototypeMatcher": "analysis.prototypes",
+    "CollinearMagneticStructureAnalyzer": "analysis.magnetism",
+    "Ordering": "analysis.magnetism.analyzer",
+    "Compatibility": "analysis.compatibility",
+    "MaterialsProject2020Compatibility": "analysis.compatibility",
+    "MaterialsProjectAqueousCompatibility": "analysis.compatibility",
+    "DiffractionPattern": "analysis.diffraction.xrd",
+    "EOS": "analysis.eos",
+    "EOSError": "analysis.eos",
+    "AllCoordinationGeometries": "analysis.chemenv.coordination_environments.coordination_geometries",
+    "LightStructureEnvironments": "analysis.chemenv.coordination_environments.structure_environments",
+    "SimplestChemenvStrategy": "analysis.chemenv.coordination_environments.chemenv_strategies",
+    "LocalGeometryFinder": "analysis.chemenv.coordination_environments.coordination_geometry_finder",
+    "MaterialsProjectDFTMixingScheme": "entries.mixing_scheme",
+    "PiezoTensor": "analysis.piezo",
+    "WAVELENGTHS": "analysis.diffraction.xrd",
+    "XRDCalculator": "analysis.diffraction.xrd",
+    "XAS": "analysis.xas.spectrum",
+    "site_weighted_spectrum": "analysis.xas.spectrum",
+    "get_structure_components": "analysis.dimensionality",
+}
+"""Objects which are defined only in pymatgen, and not pymatgen-core.
+
+Can use aliases to avoid name collisions."""
+
+_add_on_class_map: dict[str, str] = {
     # pymatgen-analysis-alloys add-on
     "AlloyMember": "analysis.alloys.core",
     "AlloyPair": "analysis.alloys.core",
@@ -163,9 +175,18 @@ _class_map: dict[str, str] = {
     "MadelungEnergies": "io.lobster",
     "SitePotential": "io.lobster",
 }
+"""Objects which are defined in pymatgen add-ons.
+
+Can use aliases to avoid name collisions."""
+
+_class_map: dict[str, str] = {
+    **_core_class_map,
+    **_non_core_class_map,
+    **_add_on_class_map,
+}
 """Dict of object names to their base import string.
 
-Can be an alias"""
+Can use aliases to avoid name collisions."""
 
 _name_collision_aliases: dict[str, str] = {"BaseVolumetricData": "VolumetricData"}
 """Aliases for classes to avoid name collisions."""
