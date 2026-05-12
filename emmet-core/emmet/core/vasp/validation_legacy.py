@@ -6,9 +6,7 @@ from typing import TYPE_CHECKING, Self
 
 import numpy as np
 from pydantic import BaseModel, Field, ImportString
-from pymatgen.core.structure import Structure
-from pymatgen.io.vasp.inputs import Kpoints
-from pymatgen.io.vasp.sets import VaspInputSet
+from emmet.core.io.pymatgen import Structure, Kpoints, VaspInputSet
 
 from emmet.core.base import EmmetBaseModel
 from emmet.core.settings import EmmetSettings

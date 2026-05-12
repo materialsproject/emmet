@@ -12,8 +12,7 @@ from typing import Any, TYPE_CHECKING
 from custodian.qchem.jobs import QCJob
 from monty.serialization import loadfn
 from pydantic import BaseModel, Field
-from pymatgen.core.structure import Molecule
-from pymatgen.io.qchem.inputs import QCInput
+from emmet.core.io.pymatgen import Molecule, QCInput
 
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.qchem.calculation import Calculation, CalculationInput

@@ -12,9 +12,7 @@ from typing import Any
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from pymatgen.core.structure import Molecule
-from pymatgen.io.qchem.inputs import QCInput
-from pymatgen.io.qchem.outputs import QCOutput
+from emmet.core.io.pymatgen import Molecule, QCInput, QCOutput
 
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.qchem.calc_types.calc_types import BASIS_SETS, FUNCTIONALS

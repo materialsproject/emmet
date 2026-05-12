@@ -2,7 +2,7 @@ from typing import Any, Annotated, TypeVar
 
 import numpy as np
 from pydantic import BeforeValidator, WrapSerializer
-from pymatgen.analysis.xas.spectrum import XAS
+from emmet.core.io.pymatgen import XAS
 from typing_extensions import TypedDict
 
 from emmet.core.types.pymatgen_types.structure_adapter import (

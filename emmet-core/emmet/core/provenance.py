@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Annotated, Any, Literal
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
 from pydantic import BaseModel, BeforeValidator, Field
-from pymatgen.core import Lattice, PeriodicSite, Structure
+from emmet.core.io.pymatgen import Lattice, PeriodicSite, Structure
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.math import Matrix3D

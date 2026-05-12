@@ -5,8 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, TypeVar
 
 from pydantic import BaseModel, Field
-from pymatgen.core.composition import Composition
-from pymatgen.core.structure import Molecule, Structure
+from emmet.core.io.pymatgen import Composition, Molecule, Structure
 
 from emmet.core.symmetry import PointGroupData, SymmetryData
 from emmet.core.types.pymatgen_types.composition_adapter import CompositionType

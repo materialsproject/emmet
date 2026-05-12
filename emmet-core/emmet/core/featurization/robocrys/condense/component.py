@@ -8,12 +8,16 @@ from typing import TYPE_CHECKING, Any
 import networkx as nx
 import numpy as np
 from monty.fractions import gcd
-from pymatgen.analysis.structure_matcher import StructureMatcher
-from pymatgen.core.composition import Composition
-from pymatgen.core.periodic_table import get_el_sp
-from pymatgen.core.structure import PeriodicSite, Structure
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from pymatgen.util.string import formula_double_format
+
+from emmet.core.io.pymatgen import (
+    StructureMatcher,
+    Composition,
+    get_el_sp,
+    PeriodicSite,
+    Structure,
+    SpacegroupAnalyzer,
+    formula_double_format,
+)
 
 from emmet.core.featurization.robocrys.condense.fingerprint import (
     get_structure_fingerprint,

@@ -18,12 +18,16 @@ from pydantic import (
     PlainSerializer,
     BeforeValidator,
 )
-from pymatgen.core import Lattice, Structure
-from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine, Kpoint
-from pymatgen.electronic_structure.core import Spin
-from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
-from pymatgen.phonon.dos import CompletePhononDos
-from pymatgen.phonon.dos import PhononDos as PhononDosObject
+from emmet.core.io.pymatgen import (
+    Lattice,
+    Structure,
+    BandStructureSymmLine,
+    Kpoint,
+    Spin,
+    PhononBandStructureSymmLine,
+    CompletePhononDos,
+    PhononDos as PhononDosObject,
+)
 from typing_extensions import Literal, TypedDict
 
 from emmet.core.band_theory import BandStructure, BandTheoryBase

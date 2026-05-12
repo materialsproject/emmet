@@ -10,8 +10,12 @@ import numpy as np
 from monty.dev import requires
 from monty.serialization import dumpfn
 from pydantic import BaseModel, Field, model_validator
-from pymatgen.core import Element, Molecule, Structure
-from pymatgen.core.trajectory import Trajectory as PmgTrajectory
+from emmet.core.io.pymatgen import (
+    Element,
+    Molecule,
+    Structure,
+    Trajectory as PmgTrajectory,
+)
 
 from emmet.core.math import Vector3D, Matrix3D
 from emmet.core.types.enums import ValueEnum
@@ -36,7 +40,7 @@ if TYPE_CHECKING:
 
     from typing_extensions import Self
 
-    from pymatgen.io.vasp import Vasprun
+    from emmet.core.io.pymatgen import Vasprun
 
 
 class TrajFormat(ValueEnum):

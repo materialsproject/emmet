@@ -9,14 +9,16 @@ from typing import TYPE_CHECKING, Annotated
 
 import numpy as np
 from pydantic import BaseModel, BeforeValidator, Field, computed_field
-from pymatgen.core import Lattice
-from pymatgen.electronic_structure.bandstructure import (
+from emmet.core.io.pymatgen import (
+    Lattice,
+    Kpoint,
+    Orbital,
+    Spin,
+    CompleteDos,
+    Dos,
+    HighSymmKpath,
     BandStructure as PmgBandStructure,
 )
-from pymatgen.electronic_structure.bandstructure import Kpoint
-from pymatgen.electronic_structure.core import Orbital, Spin
-from pymatgen.electronic_structure.dos import CompleteDos, Dos
-from pymatgen.symmetry.bandstructure import HighSymmKpath
 
 from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.settings import EmmetSettings
@@ -28,8 +30,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Sequence
     from typing import Any
 
-    from pymatgen.core.sites import PeriodicSite
-    from pymatgen.core.structure import Structure
+    from emmet.core.io.pymatgen import PeriodicSite, Structure
     from typing_extensions import Self
 
 BAND_GAP_TOL = 1e-4

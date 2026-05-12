@@ -21,8 +21,7 @@ import re
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
-from pymatgen.core.periodic_table import Element, Species, get_el_sp
-from pymatgen.util.string import latexify_spacegroup
+from emmet.core.io.pymatgen import Element, Species, get_el_sp, latexify_spacegroup
 
 if TYPE_CHECKING:
     from pathlib import Path

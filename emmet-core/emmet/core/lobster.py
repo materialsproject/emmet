@@ -16,10 +16,11 @@ from monty.dev import requires
 from monty.json import MontyDecoder, jsanitize
 
 from pydantic import BaseModel, Field
-from pymatgen.core import Structure
-from pymatgen.electronic_structure.cohp import Cohp, CompleteCohp
-from pymatgen.electronic_structure.dos import LobsterCompleteDos
-from pymatgen.io.lobster import (
+from emmet.core.io.pymatgen import (
+    Structure,
+    Cohp,
+    CompleteCohp,
+    LobsterCompleteDos,
     Bandoverlaps,
     Charge,
     Doscar,

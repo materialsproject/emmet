@@ -1,6 +1,6 @@
 from typing import TypeVar
 
-from pymatgen.entries.compatibility import (
+from emmet.core.io.pymatgen import (
     Compatibility,
     MaterialsProject2020Compatibility,
     MaterialsProjectAqueousCompatibility,

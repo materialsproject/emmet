@@ -6,10 +6,14 @@ from itertools import groupby
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
-from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
-from pymatgen.core.composition import Composition
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from emmet.core.io.pymatgen import (
+    ElementComparator,
+    StructureMatcher,
+    Composition,
+    ComputedEntry,
+    ComputedStructureEntry,
+    SpacegroupAnalyzer,
+)
 
 from emmet.core.mpid import AlphaID
 from emmet.core.types.typing import DateTimeType, IdentifierType

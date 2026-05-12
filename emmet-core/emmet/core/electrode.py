@@ -6,13 +6,18 @@ from functools import cached_property
 from typing import TYPE_CHECKING, overload
 
 from pydantic import BaseModel, Field
-from pymatgen.analysis.phase_diagram import PhaseDiagram
-from pymatgen.apps.battery.battery_abc import AbstractElectrode
-from pymatgen.apps.battery.conversion_battery import ConversionElectrode
-from pymatgen.apps.battery.insertion_battery import InsertionElectrode
-from pymatgen.core import Composition
-from pymatgen.core.periodic_table import DummySpecies, Element, Species
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from emmet.core.io.pymatgen import (
+    PhaseDiagram,
+    AbstractElectrode,
+    ConversionElectrode,
+    InsertionElectrode,
+    Composition,
+    DummySpecies,
+    Element,
+    Species,
+    ComputedEntry,
+    ComputedStructureEntry,
+)
 
 from emmet.core.base import EmmetBaseModel
 from emmet.core.types.enums import BatteryType

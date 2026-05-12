@@ -7,9 +7,7 @@ from io import StringIO
 from tempfile import NamedTemporaryFile
 from typing import Generator
 
-from pymatgen.core import Structure
-from pymatgen.io.cif import CifBlock, CifParser
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from emmet.core.io.pymatgen import Structure, CifBlock, CifParser, SpacegroupAnalyzer
 
 from emmet.core.settings import EmmetSettings
 

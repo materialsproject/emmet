@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from pydantic import Field
-from pymatgen.core.structure import Molecule
+from emmet.core.io.pymatgen import Molecule
 
 from emmet.core.molecules import MolPropertyOrigin
 from emmet.core.mpid import MPculeID
