@@ -1,6 +1,4 @@
-from pymatgen.analysis.magnetism.analyzer import Ordering
-from pymatgen.core.periodic_table import Element
-from pymatgen.electronic_structure.core import OrbitalType
+from emmet.core.io.pymatgen import Ordering, Element, OrbitalType
 
 from emmet.api.routes.materials.electronic_structure.query_operators import (
     BSDataQuery,

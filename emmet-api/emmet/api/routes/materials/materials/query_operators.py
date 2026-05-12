@@ -2,10 +2,14 @@ from itertools import permutations
 from typing import Any, Literal
 
 from fastapi import Body, HTTPException, Query
-from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
-from pymatgen.core.composition import Composition, CompositionError
-from pymatgen.core.periodic_table import Element
-from pymatgen.core.structure import Structure
+from emmet.core.io.pymatgen import (
+    ElementComparator,
+    StructureMatcher,
+    Composition,
+    CompositionError,
+    Element,
+    Structure,
+)
 
 from emmet.api.query_operator import QueryOperator
 from emmet.api.routes.materials.materials.utils import (

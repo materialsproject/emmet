@@ -11,6 +11,7 @@ _class_map: dict[str, str] = {
     "__version__": "pymatgen.core",
     "Element": "pymatgen.core.periodic_table",
     "Composition": "pymatgen.core.composition",
+    "CompositionError": "pymatgen.core.composition",
     "formula_double_format": "pymatgen.util.string",
     "htmlify": "pymatgen.util.string",
     "latexify": "pymatgen.util.string",

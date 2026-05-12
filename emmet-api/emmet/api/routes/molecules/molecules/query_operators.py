@@ -2,9 +2,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from fastapi import Body, HTTPException, Query
-from pymatgen.analysis.molecule_matcher import MoleculeMatcher
-from pymatgen.core.periodic_table import Element
-from pymatgen.core.structure import Molecule
+from emmet.core.io.pymatgen import MoleculeMatcher, Element, Molecule
 
 from emmet.api.query_operator import InQuery, QueryOperator
 from emmet.api.routes.materials.materials.utils import chemsys_to_criteria

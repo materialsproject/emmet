@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from fastapi import Query
-from pymatgen.core.periodic_table import Element
+from emmet.core.io.pymatgen import Element
 
 from emmet.api.query_operator import QueryOperator
 from emmet.api.query_operator.identifier import CompoundIDQuery

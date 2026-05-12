@@ -1,8 +1,7 @@
 from collections import defaultdict
 
 from fastapi import HTTPException, Query
-from pymatgen.core import Composition
-from pymatgen.core.periodic_table import Element
+from emmet.core.io.pymatgen import Composition, Element
 
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS

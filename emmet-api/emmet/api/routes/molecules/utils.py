@@ -2,8 +2,7 @@ from dataclasses import dataclass
 
 import numpy as np
 from fastapi import HTTPException, Query
-from pymatgen.core import Molecule
-from pymatgen.core.trajectory import Trajectory
+from emmet.core.io.pymatgen import Molecule, Trajectory
 
 from emmet.api.query_operator import InQuery, QueryOperator
 from emmet.api.utils import STORE_PARAMS

@@ -1,4 +1,4 @@
-from pymatgen.analysis.magnetism import Ordering
+from emmet.core.io.pymatgen import Ordering
 
 from emmet.api.routes.materials.summary.query_operators import (
     HasPropsQuery,

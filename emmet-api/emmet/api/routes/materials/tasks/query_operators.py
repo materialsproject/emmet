@@ -3,7 +3,7 @@ from typing import Any
 
 from fastapi import HTTPException, Query
 from monty.json import jsanitize
-from pymatgen.core.periodic_table import Element
+from emmet.core.io.pymatgen import Element
 
 from emmet.api.query_operator import MultiTaskIDQuery, QueryOperator
 from emmet.api.routes.materials.materials.utils import formula_to_atlas_criteria

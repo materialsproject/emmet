@@ -4,9 +4,7 @@ from collections import defaultdict
 from typing import Literal
 
 from fastapi import HTTPException, Query
-from pymatgen.analysis.magnetism.analyzer import Ordering
-from pymatgen.core.periodic_table import Element
-from pymatgen.electronic_structure.core import OrbitalType, Spin
+from emmet.core.io.pymatgen import Ordering, Element, OrbitalType, Spin
 
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS

@@ -1,4 +1,4 @@
-from pymatgen.core.periodic_table import Element
+from emmet.core.io.pymatgen import Element
 
 from emmet.api.routes.materials.xas.query_operators import XASIDQuery, XASQuery
 from emmet.core.xas import XasEdge, XasType
