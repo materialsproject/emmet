@@ -1,17 +1,11 @@
 from __future__ import annotations
 
-import json
 import os
 import sys
-from gzip import GzipFile
-from io import BytesIO
 from itertools import chain, combinations
 from typing import TYPE_CHECKING, Callable, Iterable, Iterator, Mapping, TypeVar
 
 import numpy as np
-import orjson
-from botocore.exceptions import ClientError
-from monty.serialization import MontyDecoder
 from emmet.core.io.pymatgen import (
     MigrationGraph,
     Structure,
@@ -174,7 +168,9 @@ def query_open_data(
     monty_decode: bool = True,
     s3_resource: Any = None,
 ) -> dict | None:
-    """Query a Materials Project AWS S3 Open Data bucket directly with boto3
+    """LEGACY FUNCTION - unmaintained
+
+    Query a Materials Project AWS S3 Open Data bucket directly with boto3
 
     Args:
         bucket (str): Materials project bucket name
@@ -186,6 +182,18 @@ def query_open_data(
     Returns:
         dict: MontyDecoded data or None
     """
+    import json
+    from gzip import GzipFile
+    from io import BytesIO
+
+    import orjson
+    from monty.serialization import MontyDecoder
+
+    try:
+        from botocore.exceptions import ClientError
+
+    except ImportError:
+        raise ImportError("Install botocore to use 'query_open_data' function")
 
     def decode(content, monty_decode):
         if monty_decode:
