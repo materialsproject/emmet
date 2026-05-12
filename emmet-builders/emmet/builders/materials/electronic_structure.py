@@ -5,7 +5,7 @@ from functools import update_wrapper
 from typing import Iterator
 
 from pydantic import BaseModel
-from pymatgen.analysis.magnetism.analyzer import Ordering
+from emmet.core.io.pymatgen import Ordering
 
 from emmet.builders.utils import filter_map
 from emmet.core.electronic_structure import ElectronicStructureDoc

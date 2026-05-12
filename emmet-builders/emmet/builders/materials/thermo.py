@@ -2,8 +2,11 @@ import logging
 import warnings
 
 from pydantic import BaseModel, ConfigDict, Field
-from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
-from pymatgen.entries.computed_entries import ComputedStructureEntry
+from emmet.core.io.pymatgen import (
+    PhaseDiagram,
+    PhaseDiagramError,
+    ComputedStructureEntry,
+)
 
 from emmet.builders.utils import HiddenPrints
 from emmet.core.thermo import PhaseDiagramDoc, ThermoDoc

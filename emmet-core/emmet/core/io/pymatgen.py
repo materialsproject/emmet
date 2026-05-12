@@ -60,6 +60,7 @@ _class_map: dict[str, str] = {
     "XAS": "pymatgen.analysis.xas.spectrum",
     "site_weighted_spectrum": "pymatgen.analysis.xas.spectrum",
     "PhaseDiagram": "pymatgen.analysis.phase_diagram",
+    "PhaseDiagramError": "pymatgen.analysis.phase_diagram",
     "IRDielectricTensor": "pymatgen.phonon.ir_spectra",
     "ComputedEntry": "pymatgen.core.entries",
     "ComputedStructureEntry": "pymatgen.core.entries",
@@ -95,7 +96,7 @@ _class_map: dict[str, str] = {
     "QCInput": "pymatgen.io.qchem.inputs",
     "QCOutput": "pymatgen.io.qchem.outputs",
     "CollinearMagneticStructureAnalyzer": "pymatgen.analysis.magnetism",
-    "Ordering": "pymatgen.analysis.magnetism",
+    "Ordering": "pymatgen.analysis.magnetism.analyzer",
     "BaseVolumetricData": "pymatgen.io.common",
     "bader_analysis_from_path": "pymatgen.command_line.bader_caller",
     "ChargemolAnalysis": "pymatgen.command_line.chargemol_caller",
@@ -144,6 +145,7 @@ _class_map: dict[str, str] = {
     "PotcarSummaryStats": "pymatgen.io.validation.common",
     "VaspFiles": "pymatgen.io.validation.common",
     "VaspInputSafe": "pymatgen.io.validation.common",
+    "get_kpoint_divisions_from_kspacing": "pymatgen.io.validation.check_kpoints_kspacing",
     # pymatgen-analysis-defects add-on
     "Defect": "pymatgen.analysis.defects.core",
     # pymatgen-io-lobster add-on
