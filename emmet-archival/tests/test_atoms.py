@@ -1,6 +1,6 @@
 """Test base archival features."""
 
-from pymatgen.core import Structure
+from emmet.core.io.pymatgen import Structure
 import numpy as np
 
 from emmet.archival.atoms import _RECIPROCAL, StructureArchive

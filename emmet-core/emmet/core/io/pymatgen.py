@@ -76,6 +76,7 @@ _class_map: dict[str, str] = {
     "Vasprun": "pymatgen.io.vasp.outputs",
     "BSVasprun": "pymatgen.io.vasp.outputs",
     "Locpot": "pymatgen.io.vasp.outputs",
+    "Elfcar": "pymatgen.io.vasp.outputs",
     "Oszicar": "pymatgen.io.vasp.outputs",
     "Outcar": "pymatgen.io.vasp.outputs",
     "VolumetricData": "pymatgen.io.vasp.outputs",

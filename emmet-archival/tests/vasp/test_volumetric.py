@@ -3,8 +3,7 @@
 from tempfile import NamedTemporaryFile
 import numpy as np
 
-from pymatgen.analysis.structure_matcher import StructureMatcher
-from pymatgen.io.vasp import Chgcar, Vasprun
+from emmet.core.io.pymatgen import StructureMatcher, Chgcar, Vasprun
 
 from emmet.archival.volumetric import VolumetricArchive
 from emmet.archival.vasp.volumetric import DosArchive, BandStructureArchive
