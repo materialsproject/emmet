@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from functools import cached_property
-from typing import Sequence, TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, Sequence, overload
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
@@ -28,6 +28,7 @@ from emmet.core.vasp.calc_types.enums import RunType
 
 if TYPE_CHECKING:
     from typing import Literal
+
     from emmet.core.types.typing import CompoundIDType
 
 
@@ -46,7 +47,6 @@ def validate_thermo_id(idx: str, as_components: bool = False) -> str | CompoundI
     return validate_compound_identifier(
         idx,
         suffixes=(ThermoType,),
-        separator="-",
         use_prefix=True,
         as_components=as_components,
     )

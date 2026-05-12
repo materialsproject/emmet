@@ -138,7 +138,7 @@ def validate_compound_identifier(
     """Serde for compound identifier types.
 
     Examples:
-    - Thermo: mp-149-GGA
+    - Thermo: mp-149_GGA
     - Insertion electrodes: mp-75_Li
     - XAS: mp-67-XANES-O-K
 
