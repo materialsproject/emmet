@@ -129,7 +129,7 @@ class TypedCEParameterDict(TypedDict):
 # Used for running deserialization not dependent on
 # type of energy_adjustments
 _TypedComputedEntryDict = TypedDict(  # type: ignore[name-match]
-    "TypedComputedEntryDict",
+    "_TypedComputedEntryDict",
     {
         "@module": str,
         "@class": str,
