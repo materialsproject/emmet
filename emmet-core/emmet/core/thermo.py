@@ -44,12 +44,18 @@ def validate_thermo_id(idx: str, as_components: Literal[False] = False) -> str: 
 
 def validate_thermo_id(idx: str, as_components: bool = False) -> str | CompoundIDType:
     """Validate a thermo identifier."""
-    return validate_compound_identifier(
-        idx,
-        suffixes=(ThermoType,),
-        use_prefix=True,
-        as_components=as_components,
-    )
+    for enum_cls in (ThermoType, RunType):
+        try:
+            return validate_compound_identifier(
+                idx,
+                suffixes=(enum_cls,),
+                separator="-",
+                use_prefix=True,
+                as_components=as_components,
+            )
+        except ValueError:
+            continue
+    raise ValueError("Could not validate `thermo_id`.")
 
 
 class DecompositionProduct(BaseModel):
