@@ -46,6 +46,9 @@ class EntryID(BaseModel):
         return self.separator.join([self.identifier.string, self.suffix.value])
 
     def __eq__(self, other) -> bool:
+        if other is None:
+            return False
+
         if isinstance(other, EntryID):
             return (
                 self.identifier == other.identifier
