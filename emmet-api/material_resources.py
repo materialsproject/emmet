@@ -105,7 +105,7 @@ if db_uri:
     messages_store = CollectionWithKey(consumer_db["messages"], "title")
     mpcomplete_store = CollectionWithKey(consumer_db["mpcomplete"], "submission_id")
     oxi_states_store = CollectionWithKey(suffix_db["oxidation_states"])
-    phonon_bs_store = CollectionWithKey(suffix_db["phonon"])
+    phonon_bs_store = CollectionWithKey(core_db["phonon"])
     piezoelectric_store = CollectionWithKey(suffix_db["piezoelectric"])
     provenance_store = CollectionWithKey(suffix_db["provenance"])
     robo_store = CollectionWithKey(suffix_db["robocrys"])
