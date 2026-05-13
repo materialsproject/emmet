@@ -107,6 +107,9 @@ class PotcarSpec(BaseModel):
         description="summary statistics used to ID POTCARs without hashing",
     )
 
+    def get(self, key, default=None):
+        return getattr(self, key, default)
+
     @classmethod
     def from_potcar_single(cls, potcar_single: PotcarSingle) -> Self:
         """
