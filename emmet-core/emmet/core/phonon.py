@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from enum import Enum
 from functools import cached_property
+import gzip
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
@@ -46,6 +47,10 @@ if TYPE_CHECKING:
 
     from typing_extensions import Self
 
+    try:
+        from phonopy.structure.atoms import PhonopyAtoms
+    except ImportError:
+        PhonopyAtoms = None
 
 DEFAULT_PHONON_FILES = {
     "structure": "POSCAR",
@@ -66,51 +71,6 @@ class PhononMethod(Enum):
     DFPT = "dfpt"
     PHONOPY = "phonopy"
     PHEASY = "pheasy"
-
-
-def parse_phonopy_born_file(file: FSPathType) -> tuple[np.ndarray, np.ndarray]:
-    """Parse a phonopy BORN file into static dielectric and Born charge tensors.
-
-    From the phonopy manual
-    (https://phonopy.github.io/phonopy/input-files.html#born-optional)
-    the BORN file is structured as:
-        line 0: metadata, including maximum number of atoms
-        line 1: static dielectric tensor
-        lines 2+: Born effective charges on each atomic site
-
-    For both the dielectric tensor and Born charges, the order of
-    components is: xx, xy, xz, yx, yy, yz, zx, zy, and zz, or
-    ```py
-    [(j,i) for j in range(3) for i in range(3)]
-
-    Args:
-    file (FSPathType) : path to the BORN file.
-
-    Returns:
-    Matrix3D : The static, high-frequency limit of the dielectric tensor
-    list of Matrix3D : The Born effective charges, a 3x3 matrix for
-        each atom in the cell.
-    ```
-    """
-    natom = 0
-    iatom = 0
-    idxs = [(j, i) for j in range(3) for i in range(3)]
-    eps_inf = np.zeros((3, 3), dtype=float)
-    with open(file, "rt") as f:
-        for idx, line in enumerate(f):
-            if idx == 0:
-                natom = int(line.split()[-1])
-                bec = np.zeros((natom, 3, 3), dtype=float)
-            elif idx == 1:
-                vals = [float(x) for x in line.split()]
-                for i, ibec in enumerate(idxs):
-                    eps_inf[ibec[0], ibec[1]] = vals[i]
-            else:
-                vals = [float(x) for x in line.split()]
-                for i, ibec in enumerate(idxs):
-                    bec[iatom][ibec[0], ibec[1]] = vals[i]
-                iatom += 1
-    return eps_inf, bec
 
 
 class PhononDOS(BandTheoryBase):
@@ -805,6 +765,11 @@ class PhononBSDOSTask(StructureMetadata):
         Create a PhononBSDOSDoc from a list of explicit Phonopy/Pheasy file paths.
         """
 
+        try:
+            import phonopy
+        except ImportError:
+            phonopy = None
+
         cls_config: dict[str, Any] = {
             "structure": Structure.from_file(structure_file),
         }
@@ -853,6 +818,12 @@ class PhononBSDOSTask(StructureMetadata):
                         irow += 1
             cls_config["force_constants"] = force_constant_matrix.tolist()
 
+        if phonopy_output_file:
+            with zopen(phonopy_output_file, "rt") as f:
+                phonopy_output = yaml.safe_load(f.read())
+            for k in ("primitive_matrix", "supercell_matrix"):
+                cls_config[k] = phonopy_output.get(k)
+
         if all(
             fs is not None and ".npz" in Path(fs).name
             for fs in (born_file, epsilon_static_file)
@@ -861,18 +832,30 @@ class PhononBSDOSTask(StructureMetadata):
             cls_config["epsilon_static"] = np.load(epsilon_static_file)  # type: ignore[arg-type]
 
         elif (
-            epsilon_static_and_born_file
+            phonopy_output_file
+            and epsilon_static_and_born_file
             and "BORN" in Path(epsilon_static_and_born_file).name
         ):
-            cls_config["epsilon_static"], cls_config["born"] = parse_phonopy_born_file(
-                epsilon_static_and_born_file
-            )
+            if phonopy is None:
+                raise ImportError("You must `pip install phonopy` to parse BORN.")
 
-        if phonopy_output_file:
-            with zopen(phonopy_output_file, "rt") as f:
-                phonopy_output = yaml.safe_load(f.read())
-            for k in ("primitive_matrix", "supercell_matrix"):
-                cls_config[k] = phonopy_output.get(k)
+            phonopy_calc = phonopy.load(phonopy_output_file)
+            if ".gz" in Path(epsilon_static_and_born_file).suffixes:
+                with gzip.open(epsilon_static_and_born_file, "rt") as f:
+                    born_data = phonopy.file_IO.parse_BORN_from_strings(
+                        f.read(), phonopy_calc.unitcell
+                    )
+            else:
+                born_data = phonopy.file_IO.parse_BORN(
+                    phonopy_calc.unitcell, filename=epsilon_static_and_born_file
+                )
+
+            cls_config.update(
+                {
+                    k: born_data[v]
+                    for k, v in {"epsilon_static": "dielectric", "born": "born"}.items()
+                }
+            )
 
         return cls.from_structure(cls_config["structure"], **cls_config, **kwargs)
 
