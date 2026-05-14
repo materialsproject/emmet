@@ -1,7 +1,7 @@
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import (
-    MultiMaterialIDQuery,
+    MultiTaskIDQuery,
     PaginationQuery,
     SortQuery,
     SparseFieldsQuery,
@@ -29,7 +29,7 @@ def xas_resource(xas_store):
         xas_store,
         XASDoc,
         query_operators=[
-            MultiMaterialIDQuery(),
+            MultiTaskIDQuery(),
             FormulaQuery(),
             ChemsysQuery(),
             ElementsQuery(),
@@ -39,7 +39,6 @@ def xas_resource(xas_store):
             SparseFieldsQuery(
                 XASDoc,
                 default_fields=[
-                    "xas_id",
                     "task_id",
                     "edge",
                     "absorbing_element",
