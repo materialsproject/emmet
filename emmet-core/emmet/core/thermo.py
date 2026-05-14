@@ -49,7 +49,7 @@ def validate_thermo_id(idx: str, as_components: bool = False) -> str | CompoundI
             return validate_compound_identifier(
                 idx,
                 suffixes=(enum_cls,),
-                separator="-",
+                separator="_",
                 use_prefix=True,
                 as_components=as_components,
             )
