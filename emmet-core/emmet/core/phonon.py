@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from enum import Enum
 from functools import cached_property
-import gzip
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
@@ -46,11 +45,6 @@ if TYPE_CHECKING:
     from typing import Any
 
     from typing_extensions import Self
-
-    try:
-        from phonopy.structure.atoms import PhonopyAtoms
-    except ImportError:
-        PhonopyAtoms = None
 
 DEFAULT_PHONON_FILES = {
     "structure": "POSCAR",
@@ -768,7 +762,7 @@ class PhononBSDOSTask(StructureMetadata):
         try:
             import phonopy
         except ImportError:
-            phonopy = None
+            phonopy = None  # type: ignore[assignment]
 
         cls_config: dict[str, Any] = {
             "structure": Structure.from_file(structure_file),
@@ -840,14 +834,9 @@ class PhononBSDOSTask(StructureMetadata):
                 raise ImportError("You must `pip install phonopy` to parse BORN.")
 
             phonopy_calc = phonopy.load(phonopy_output_file)
-            if ".gz" in Path(epsilon_static_and_born_file).suffixes:
-                with gzip.open(epsilon_static_and_born_file, "rt") as f:
-                    born_data = phonopy.file_IO.parse_BORN_from_strings(
-                        f.read(), phonopy_calc.unitcell
-                    )
-            else:
-                born_data = phonopy.file_IO.parse_BORN(
-                    phonopy_calc.unitcell, filename=epsilon_static_and_born_file
+            with zopen(epsilon_static_and_born_file, "rt") as f:
+                born_data = phonopy.file_IO.parse_BORN_from_strings(
+                    f.read(), phonopy_calc.unitcell
                 )
 
             cls_config.update(
