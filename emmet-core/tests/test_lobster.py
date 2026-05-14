@@ -2,10 +2,11 @@
 
 from pathlib import Path
 import pytest
-from pymatgen.core.structure import Structure
-from pymatgen.electronic_structure.cohp import Cohp, CompleteCohp
-from pymatgen.electronic_structure.dos import LobsterCompleteDos
-from pymatgen.io.lobster import (
+from emmet.core.io.pymatgen import (
+    Structure,
+    Cohp,
+    CompleteCohp,
+    LobsterCompleteDos,
     Bandoverlaps,
     Charge,
     Grosspop,

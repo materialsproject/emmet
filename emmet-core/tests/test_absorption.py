@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 from monty.serialization import loadfn
-from pymatgen.core import Structure
+from emmet.core.io.pymatgen import Structure
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.absorption import AbsorptionDoc

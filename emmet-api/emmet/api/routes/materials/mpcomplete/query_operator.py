@@ -1,5 +1,5 @@
 from fastapi import Query, Body
-from pymatgen.core.structure import Structure
+from emmet.core.io.pymatgen import Structure
 from emmet.api.utils import STORE_PARAMS
 from emmet.api.query_operator import QueryOperator
 

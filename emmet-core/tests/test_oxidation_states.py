@@ -1,6 +1,6 @@
 import pytest
 from emmet.core.oxidation_states import OxidationStateDoc, OxiStateAssigner
-from pymatgen.core import Structure
+from emmet.core.io.pymatgen import Structure
 
 from . import test_structures
 

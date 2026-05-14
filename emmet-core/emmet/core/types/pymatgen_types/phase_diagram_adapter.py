@@ -5,7 +5,7 @@ from typing import Annotated, Any, TypeVar, ValuesView
 
 import orjson
 from pydantic import BeforeValidator, TypeAdapter, WrapSerializer
-from pymatgen.analysis.phase_diagram import PhaseDiagram
+from emmet.core.io.pymatgen import PhaseDiagram
 from typing_extensions import TypedDict
 
 from emmet.core.types.pymatgen_types.computed_entries_adapter import (

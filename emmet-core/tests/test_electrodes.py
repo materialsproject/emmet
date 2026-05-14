@@ -1,13 +1,16 @@
+import gzip
+import json
+from pathlib import Path
 import pytest
-from monty.serialization import loadfn
 from pydantic import TypeAdapter
-from pymatgen.analysis.phase_diagram import PhaseDiagram
-from pymatgen.apps.battery.conversion_battery import ConversionElectrode
-from pymatgen.apps.battery.insertion_battery import (
+from emmet.core.io.pymatgen import (
+    PhaseDiagram,
+    ConversionElectrode,
     InsertionElectrode,
     InsertionVoltagePair,
+    Composition,
+    Element,
 )
-from pymatgen.core import Composition, Element
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.electrode import (
@@ -38,6 +41,12 @@ def entry_material_ids() -> list[AlphaID]:
 
 
 @pytest.fixture(scope="session")
+def entries_LCO(test_dir: Path) -> list[dict]:
+    with gzip.open(test_dir / "LiCoO2_batt.json.gz", "rt") as f:
+        return json.load(f)
+
+
+@pytest.fixture(scope="session")
 def insertion_elec(test_dir, entry_material_ids):
     """
     Recycle the test cases from pymatgen
@@ -54,7 +63,8 @@ def insertion_elec(test_dir, entry_material_ids):
         }
     )
     # more cases can be added later if problems are found
-    entries_LTO = loadfn(test_dir / "LiTiO2_batt.json.gz", cls=None)
+    with gzip.open(test_dir / "LiTiO2_batt.json.gz", "rt") as f:
+        entries_LTO = json.load(f)
 
     for i, entry in enumerate(entries_LTO):
         entries_LTO[i]["data"]["material_id"] = entry_material_ids[i].string
@@ -72,10 +82,9 @@ def insertion_elec(test_dir, entry_material_ids):
 
 
 @pytest.fixture(scope="session")
-def conversion_elec(test_dir):
+def conversion_elec(test_dir, entries_LCO):
     conversion_electrodes = {}
 
-    entries_LCO = loadfn(test_dir / "LiCoO2_batt.json.gz", cls=None)
     for entry in entries_LCO:
         entry["entry_id"] = f"{entry['entry_id']}-UNKNOWN"
 
@@ -153,9 +162,13 @@ def test_ConversionDocs_from_entries(conversion_elec):
             assert res_d[k] == pytest.approx(v, 0.01)
 
 
-def test_ConversionDocs_from_composition_and_pd(conversion_elec, test_dir):
-    entries_LCO = loadfn(test_dir / "LiCoO2_batt.json.gz")
-    pd = PhaseDiagram(entries_LCO)
+def test_ConversionDocs_from_composition_and_pd(conversion_elec, test_dir, entries_LCO):
+
+    entries = [
+        TypeAdapter(ComputedStructureEntryType).validate_python(doc)
+        for doc in entries_LCO
+    ]
+    pd = PhaseDiagram(entries)
     for k, (elec, expected) in conversion_elec.items():
         vp = ConversionElectrodeDoc.from_composition_and_pd(
             comp=Composition(k),

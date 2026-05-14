@@ -6,7 +6,7 @@ import warnings
 from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, BeforeValidator, Field
-from pymatgen.analysis.eos import EOS, EOSError
+from emmet.core.io.pymatgen import EOS, EOSError
 
 from emmet.core.types.enums import ValueEnum
 from emmet.core.types.typing import IdentifierType

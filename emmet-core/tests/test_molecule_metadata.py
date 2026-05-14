@@ -1,7 +1,5 @@
 import pytest
-from pymatgen.core import Molecule
-from pymatgen.core.composition import Composition
-from pymatgen.core.periodic_table import Element
+from emmet.core.io.pymatgen import Molecule, Composition, Element
 
 from emmet.core.structure import MoleculeMetadata
 

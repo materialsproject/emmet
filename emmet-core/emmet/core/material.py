@@ -5,8 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
-from pymatgen.core import Structure
-from pymatgen.core.structure import Molecule
+from emmet.core.io.pymatgen import Structure, Molecule
 
 from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID, MPculeID

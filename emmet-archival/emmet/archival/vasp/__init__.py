@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
-from pymatgen.io.vasp.inputs import Incar, Kpoints, Poscar
-from pymatgen.io.vasp.outputs import Chgcar, Elfcar, Locpot
-
-from pymatgen.io.validation.common import PotcarSummaryStats
+from emmet.core.io.pymatgen import (
+    Incar,
+    Kpoints,
+    Poscar,
+    Chgcar,
+    Elfcar,
+    Locpot,
+    PotcarSummaryStats,
+)
 
 PMG_OBJ = {
     "INCAR": Incar,

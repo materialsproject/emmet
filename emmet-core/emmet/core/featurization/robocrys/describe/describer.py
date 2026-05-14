@@ -11,7 +11,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import inflect
-from pymatgen.util.string import htmlify, latexify, latexify_spacegroup, unicodeify
+from emmet.core.io.pymatgen import htmlify, latexify, latexify_spacegroup, unicodeify
 
 from emmet.core.featurization.robocrys.describe.adapter import DescriptionAdapter
 from emmet.core.featurization.robocrys.util import (

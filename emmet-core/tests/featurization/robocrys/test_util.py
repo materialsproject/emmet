@@ -1,4 +1,4 @@
-from pymatgen.core.periodic_table import get_el_sp
+from emmet.core.io.pymatgen import get_el_sp
 
 from emmet.core.featurization.robocrys.util import (
     get_el,

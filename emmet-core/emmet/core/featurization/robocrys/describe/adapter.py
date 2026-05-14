@@ -8,7 +8,7 @@ from collections import defaultdict, namedtuple
 from typing import TYPE_CHECKING
 
 import numpy as np
-from pymatgen.core.periodic_table import get_el_sp
+from emmet.core.io.pymatgen import get_el_sp
 
 from emmet.core.featurization.robocrys.adapter import BaseAdapter
 

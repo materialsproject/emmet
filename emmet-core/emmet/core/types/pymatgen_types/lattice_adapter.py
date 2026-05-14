@@ -1,7 +1,7 @@
 from typing import Annotated, TypeVar
 
 from pydantic import BeforeValidator, WrapSerializer
-from pymatgen.core import Lattice
+from emmet.core.io.pymatgen import Lattice
 from typing_extensions import NotRequired, TypedDict
 
 MSONableTypedLatticeDict = TypedDict(

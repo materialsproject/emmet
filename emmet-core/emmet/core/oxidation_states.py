@@ -7,8 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from pydantic import Field
-from pymatgen.analysis.bond_valence import BVAnalyzer
-from pymatgen.core.periodic_table import Specie
+from emmet.core.io.pymatgen import BVAnalyzer, Specie
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.types.enums import ValueEnum

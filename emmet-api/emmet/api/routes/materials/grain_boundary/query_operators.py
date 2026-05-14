@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 from fastapi import Query
-from pymatgen.core.composition import Composition
+from emmet.core.io.pymatgen import Composition
 
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS

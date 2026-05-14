@@ -1,7 +1,7 @@
 from typing import Annotated, TypeVar
 
 from pydantic import BeforeValidator, WrapSerializer
-from pymatgen.analysis.reaction_calculator import BalancedReaction
+from emmet.core.io.pymatgen import BalancedReaction
 from typing_extensions import TypedDict
 
 TypedBalancedReactionDict = TypedDict(

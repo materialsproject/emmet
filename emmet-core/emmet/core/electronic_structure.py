@@ -8,14 +8,16 @@ from typing import TYPE_CHECKING, Annotated, Generator, Literal, TypeVar
 
 import numpy as np
 from pydantic import BaseModel, BeforeValidator, Field, WrapSerializer
-from pymatgen.analysis.magnetism.analyzer import (
+
+from emmet.core.io.pymatgen import (
     CollinearMagneticStructureAnalyzer,
     Ordering,
+    BandStructureSymmLine,
+    OrbitalType,
+    Spin,
+    MPStaticSet,
+    SpacegroupAnalyzer,
 )
-from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
-from pymatgen.electronic_structure.core import OrbitalType, Spin
-from pymatgen.io.vasp.sets import MPStaticSet
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.core.material import PropertyOrigin
 from emmet.core.material_property import PropertyDoc
@@ -30,7 +32,7 @@ from emmet.core.types.typing import IdentifierType
 if TYPE_CHECKING:
     from typing import Any
 
-    from pymatgen.core import Structure
+    from emmet.core.io.pymatgen import Structure
     from typing_extensions import Self
 
     from emmet.core.types.electronic_structure import BSShim, DosShim

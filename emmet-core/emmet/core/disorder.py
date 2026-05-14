@@ -3,7 +3,7 @@ from emmet.core.types.typing import IdentifierType
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.trajectory import RelaxTrajectory
 from pydantic import Field
-from pymatgen.core.structure import Structure
+from emmet.core.io.pymatgen import Structure
 from pathlib import Path
 import json
 from typing_extensions import TypedDict, Self

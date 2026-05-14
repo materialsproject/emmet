@@ -1,8 +1,7 @@
 import numpy as np
 import pytest
 from monty.serialization import loadfn
-from pymatgen.analysis.elasticity import Deformation, Strain, Stress
-from pymatgen.core.tensors import Tensor, TensorMapping
+from emmet.core.io.pymatgen import Deformation, Strain, Stress, Tensor, TensorMapping
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.elasticity import (

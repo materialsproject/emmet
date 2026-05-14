@@ -8,7 +8,7 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from pymatgen.io.common import VolumetricData as PmgVolumetricData
+from emmet.core.io.pymatgen import BaseVolumetricData as PmgVolumetricData
 
 from emmet.core.vasp.models import ChgcarLike
 

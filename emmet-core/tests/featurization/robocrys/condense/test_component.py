@@ -1,7 +1,9 @@
-from pymatgen.analysis.dimensionality import get_structure_components
-from pymatgen.analysis.local_env import CrystalNN
-from pymatgen.analysis.structure_matcher import StructureMatcher
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from emmet.core.io.pymatgen import (
+    get_structure_components,
+    CrystalNN,
+    StructureMatcher,
+    SpacegroupAnalyzer,
+)
 import pytest
 
 from emmet.core.featurization.robocrys.condense.component import (

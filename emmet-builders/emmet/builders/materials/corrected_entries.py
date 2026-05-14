@@ -2,7 +2,7 @@ import copy
 import warnings
 
 from pydantic import BaseModel, Field
-from pymatgen.entries.compatibility import Compatibility
+from emmet.core.io.pymatgen import Compatibility
 
 from emmet.builders.utils import HiddenPrints
 from emmet.core.corrected_entries import CorrectedEntriesDoc

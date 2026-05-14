@@ -6,8 +6,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from pydantic import BaseModel, Field
-from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
-from pymatgen.core.tensors import Tensor
+from emmet.core.io.pymatgen import PiezoTensor as BasePiezoTensor, Tensor
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.math import Matrix3D
@@ -17,7 +16,7 @@ from emmet.core.types.pymatgen_types.ir_dielectric_tensor_adapter import (
 )
 
 if TYPE_CHECKING:
-    from pymatgen.core.structure import Structure
+    from emmet.core.io.pymatgen import Structure
 
     from emmet.core.types.typing import IdentifierType
 

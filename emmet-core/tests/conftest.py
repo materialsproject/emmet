@@ -1,10 +1,19 @@
+from __future__ import annotations
+
+from monty.serialization import loadfn
 import os
+from emmet.core.io.pymatgen import Structure
 import pytest
-from tempfile import mkdtemp
 from shutil import rmtree
+from tempfile import mkdtemp
+from typing import TYPE_CHECKING
 
 from emmet.core.testing_utils import TEST_FILES_DIR
 from emmet.core.types.enums import VaspObject
+
+if TYPE_CHECKING:
+    from pathlib import Path
+    from emmet.core.io.pymatgen import BandStructureSymmLine
 
 
 @pytest.fixture(scope="session")
@@ -228,3 +237,16 @@ objects = {cls.__name__: cls for cls in SchemaTestData.__subclasses__()}
 def get_test_object(object_name):
     """Get the schema test data object from the class name."""
     return objects[object_name]
+
+
+@pytest.fixture(scope="session")
+def fe_line_mode_bandstructure(test_dir: Path) -> BandStructureSymmLine:
+    """
+    Fe (mp-13) line-mode band structure
+    """
+    return loadfn(test_dir / "electronic_structure/Fe_bs.json.gz")
+
+
+@pytest.fixture(scope="session")
+def mp_149_structure(test_dir: Path) -> Structure:
+    return Structure.from_file(test_dir / "Si_mp_149.cif")

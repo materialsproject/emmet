@@ -1,13 +1,8 @@
-import json
-import datetime
-
 import pytest
 
-from monty.io import zopen
 
 from emmet.core.qchem.calc_types import TaskType
 from emmet.core.qchem.molecule import MoleculeDoc
-from emmet.core.qchem.task import TaskDocument
 
 
 try:
@@ -19,26 +14,12 @@ except ImportError:
     has_eigen = False
 
 
-@pytest.fixture(scope="session")
-def test_tasks(test_dir):
-    with zopen(test_dir / "liec_tasks.json.gz", "rt") as f:
-        data = json.load(f)
-
-    for d in data:
-        d["last_updated"] = datetime.datetime.strptime(
-            d["last_updated"]["string"], "%Y-%m-%d %H:%M:%S.%f"
-        )
-
-    tasks = [TaskDocument(**t) for t in data]
-    return tasks
-
-
 @pytest.mark.skip(reason="Pymatgen OBAlign needs fix")
 @pytest.mark.skipif(
     not has_eigen, reason="OBAlign missing, presumably due to lack of Eigen"
 )
-def test_make_mol(test_tasks):
-    molecule = MoleculeDoc.from_tasks(test_tasks)
+def test_make_mol(liec_tasks):
+    molecule = MoleculeDoc.from_tasks(liec_tasks)
     assert molecule.formula_alphabetical == "C3 H4 Li1 O3"
     assert len(molecule.task_ids) == 5
     assert len(molecule.entries) == 5
@@ -46,7 +27,7 @@ def test_make_mol(test_tasks):
 
     bad_task_group = [
         task
-        for task in test_tasks
+        for task in liec_tasks
         if task.task_type
         not in [
             TaskType.Geometry_Optimization,
@@ -62,10 +43,10 @@ def test_make_mol(test_tasks):
 @pytest.mark.skipif(
     not has_eigen, reason="OBAlign missing, presumably due to lack of Eigen"
 )
-def test_make_deprecated_mol(test_tasks):
+def test_make_deprecated_mol(liec_tasks):
     bad_task_group = [
         task
-        for task in test_tasks
+        for task in liec_tasks
         if task.task_type
         not in [
             TaskType.Geometry_Optimization,

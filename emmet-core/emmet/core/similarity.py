@@ -23,7 +23,7 @@ except ImportError:
 
 if TYPE_CHECKING:
 
-    from pymatgen.core import Structure
+    from emmet.core.io.pymatgen import Structure
 
 
 class SimilarityMethod(ValueEnum):

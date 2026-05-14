@@ -1,5 +1,5 @@
 import pytest
-from pymatgen.core import Lattice, Structure
+from emmet.core.io.pymatgen import Lattice, Structure
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.polar import DielectricDoc, PiezoelectricDoc

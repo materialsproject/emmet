@@ -1,7 +1,7 @@
 from typing import Annotated, TypeVar
 
 from pydantic import BeforeValidator, WrapSerializer
-from pymatgen.analysis.structure_matcher import StructureMatcher
+from emmet.core.io.pymatgen import StructureMatcher
 from typing_extensions import TypedDict
 
 from emmet.core.types.pymatgen_types.species_adapter import MSONableTypedSpeciesDict

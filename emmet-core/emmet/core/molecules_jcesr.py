@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from pymatgen.core.periodic_table import Element
+from emmet.core.io.pymatgen import Element
 
 from emmet.core.types.pymatgen_types.structure_adapter import MoleculeType
 

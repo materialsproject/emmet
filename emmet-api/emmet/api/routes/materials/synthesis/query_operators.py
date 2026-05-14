@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import Query
 from emmet.api.query_operator import QueryOperator
-from pymatgen.core import Composition
+from emmet.core.io.pymatgen import Composition
 
 from emmet.api.routes.materials.synthesis.utils import mask_highlights, mask_paragraphs
 from emmet.core.synthesis import OperationTypeEnum, SynthesisTypeEnum

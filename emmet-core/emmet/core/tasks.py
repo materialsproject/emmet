@@ -19,10 +19,15 @@ from pydantic import (
     field_validator,
     model_validator,
 )
-from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.core.trajectory import Trajectory as PmgTrajectory
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
-from pymatgen.io.vasp import Incar, Kpoints, Poscar
+from emmet.core.io.pymatgen import (
+    oxide_type,
+    Trajectory as PmgTrajectory,
+    ComputedEntry,
+    ComputedStructureEntry,
+    Incar,
+    Kpoints,
+    Poscar,
+)
 
 from emmet.core.structure import StructureMetadata
 from emmet.core.trajectory import RelaxTrajectory, Trajectory

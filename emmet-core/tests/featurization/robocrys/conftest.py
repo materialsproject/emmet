@@ -1,7 +1,7 @@
 from monty.serialization import loadfn
 from monty.json import MontyDecoder
 from pathlib import Path
-from pymatgen.core import Structure
+from emmet.core.io.pymatgen import Structure
 import pytest
 from typing import Any
 

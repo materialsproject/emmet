@@ -35,7 +35,7 @@ def test_init():
 )
 def test_calculation_input(test_dir, object_name, task_name):
     from monty.json import MontyDecoder, jsanitize
-    from pymatgen.io.vasp import Vasprun
+    from emmet.core.io.pymatgen import Vasprun
 
     from emmet.core.vasp.calculation import CalculationInput
 
@@ -79,7 +79,7 @@ def test_calculation_input(test_dir, object_name, task_name):
 )
 def test_calculation_output(test_dir, object_name, task_name):
     from monty.json import MontyDecoder, jsanitize
-    from pymatgen.io.vasp import Outcar, Poscar, Vasprun
+    from emmet.core.io.pymatgen import Outcar, Poscar, Vasprun
 
     from emmet.core.vasp.calculation import CalculationOutput
 
@@ -105,7 +105,7 @@ def test_calculation_output(test_dir, object_name, task_name):
 
 
 def test_mag_calculation_output(test_dir):
-    from pymatgen.io.vasp import Outcar, Poscar, Vasprun
+    from emmet.core.io.pymatgen import Outcar, Poscar, Vasprun
 
     from emmet.core.vasp.calculation import CalculationOutput
 
@@ -129,7 +129,7 @@ def test_mag_calculation_output(test_dir):
 )
 def test_run_statistics(test_dir, object_name, task_name):
     from monty.json import MontyDecoder, jsanitize
-    from pymatgen.io.vasp import Outcar
+    from emmet.core.io.pymatgen import Outcar
 
     from emmet.core.vasp.calculation import RunStatistics
 
@@ -220,9 +220,7 @@ def test_calculation_run_type_metagga(test_dir, use_emmet_models):
         assert isinstance(vasp_objects["dos"], ElectronicDos)
 
     else:
-        from pymatgen.core.trajectory import Trajectory
-        from pymatgen.electronic_structure.bandstructure import BandStructure
-        from pymatgen.electronic_structure.dos import CompleteDos
+        from emmet.core.io.pymatgen import Trajectory, BandStructure, CompleteDos
 
         assert isinstance(vasp_objects["trajectory"], Trajectory)
         assert isinstance(vasp_objects["bandstructure"], BandStructure)
@@ -247,7 +245,7 @@ def test_calculation_run_type_metagga(test_dir, use_emmet_models):
 
 def test_PotcarSpec(test_dir):
     from emmet.core.vasp.calculation import PotcarSpec
-    from pymatgen.io.vasp import PotcarSingle, Potcar
+    from emmet.core.io.pymatgen import PotcarSingle, Potcar
 
     try:
         # First test, PotcarSingle object

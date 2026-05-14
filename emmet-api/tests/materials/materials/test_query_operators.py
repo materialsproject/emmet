@@ -1,7 +1,7 @@
 import os
 
 import pytest
-from pymatgen.core.structure import Structure
+from emmet.core.io.pymatgen import Structure
 
 from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import DeprecationQuery, MultiMaterialIDQuery

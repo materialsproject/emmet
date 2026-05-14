@@ -4,8 +4,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from pydantic import Field
-from pymatgen.analysis.graphs import StructureGraph
-from pymatgen.analysis.local_env import NearNeighbors
+from emmet.core.io.pymatgen import StructureGraph, NearNeighbors
 from typing_extensions import TypedDict
 
 from emmet.core.material_property import PropertyDoc
@@ -15,7 +14,7 @@ AVAILABLE_METHODS = {nn.__name__: nn for nn in NearNeighbors.__subclasses__()}
 
 if TYPE_CHECKING:
 
-    from pymatgen.core import Structure
+    from emmet.core.io.pymatgen import Structure
     from typing_extensions import Self
 
     from emmet.core.mpid import MPID

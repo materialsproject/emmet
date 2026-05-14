@@ -19,10 +19,13 @@ if TYPE_CHECKING:
 
     from collections.abc import Sequence
 
-    from pymatgen.electronic_structure.bandstructure import BandStructure
-    from pymatgen.electronic_structure.dos import CompleteDos, Dos
-    from pymatgen.io.common import VolumetricData as PmgVolumetricData
-    from pymatgen.io.vasp import Vasprun
+    from emmet.core.io.pymatgen import (
+        BandStructure,
+        CompleteDos,
+        Dos,
+        BaseVolumetricData as PmgVolumetricData,
+        Vasprun,
+    )
     from typing_extensions import Self
 
 

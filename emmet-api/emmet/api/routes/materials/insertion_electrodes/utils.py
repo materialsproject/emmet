@@ -1,6 +1,5 @@
 from fastapi import HTTPException
-from pymatgen.core import Composition
-from pymatgen.core.periodic_table import DummySpecies
+from emmet.core.io.pymatgen import Composition, DummySpecies
 
 
 def electrodes_formula_to_criteria(formulas: str) -> dict:

@@ -6,12 +6,12 @@ from itertools import chain, combinations
 from typing import TYPE_CHECKING, Callable, Iterable, Iterator, Mapping, TypeVar
 
 import numpy as np
-from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
-from pymatgen.core import Structure
-from pymatgen.io.validation.check_kpoints_kspacing import (
+from emmet.core.io.pymatgen import (
+    MigrationGraph,
+    Structure,
     get_kpoint_divisions_from_kspacing,
+    PotcarSingle,
 )
-from pymatgen.io.vasp.inputs import PotcarSingle
 
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.tasks import CoreTaskDoc

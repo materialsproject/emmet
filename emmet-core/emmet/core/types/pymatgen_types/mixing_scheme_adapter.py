@@ -1,7 +1,7 @@
 from typing import Annotated, TypeVar
 
 from pydantic import BeforeValidator, WrapSerializer
-from pymatgen.entries.mixing_scheme import MaterialsProjectDFTMixingScheme
+from emmet.core.io.pymatgen import MaterialsProjectDFTMixingScheme
 from typing_extensions import TypedDict
 
 from emmet.core.types.pymatgen_types.compatibility_adapter import (

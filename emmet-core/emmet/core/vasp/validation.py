@@ -5,15 +5,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pydantic import Field
-from pymatgen.io.validation.common import (
+from emmet.core.io.pymatgen import (
+    REQUIRED_VASP_FILES,
+    VaspValidator,
+    Incar,
     LightOutcar,
     LightVasprun,
     PotcarSummaryStats,
     VaspFiles,
     VaspInputSafe,
 )
-from pymatgen.io.validation.validation import REQUIRED_VASP_FILES, VaspValidator
-from pymatgen.io.vasp import Incar
 
 from emmet.core.base import EmmetBaseModel
 from emmet.core.types.typing import DateTimeType, IdentifierType

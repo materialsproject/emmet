@@ -10,8 +10,7 @@ import warnings
 
 from monty.serialization import loadfn
 from pubchempy import BadRequestError, get_compounds  # type:ignore[import-untyped]
-from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.io.babel import BabelMolAdaptor
+from emmet.core.io.pymatgen import MoleculeGraph, BabelMolAdaptor
 
 
 class MoleculeNamer:

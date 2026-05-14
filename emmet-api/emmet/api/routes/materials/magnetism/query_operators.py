@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 from fastapi import Query
-from pymatgen.analysis.magnetism import Ordering
+from emmet.core.io.pymatgen import Ordering
 
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS

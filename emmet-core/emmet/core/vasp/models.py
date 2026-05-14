@@ -7,9 +7,11 @@ from typing import TYPE_CHECKING
 import numpy as np
 from pydantic import BaseModel, Field
 
-from pymatgen.core import Structure
-from pymatgen.io.common import VolumetricData as PmgVolumetricData
-from pymatgen.io.vasp import Poscar
+from emmet.core.io.pymatgen import (
+    Structure,
+    BaseVolumetricData as PmgVolumetricData,
+    Poscar,
+)
 
 from emmet.core.types.enums import ValueEnum
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
