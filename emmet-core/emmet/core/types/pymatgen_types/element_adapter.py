@@ -2,7 +2,7 @@ from typing import Annotated, TypeVar
 
 from pydantic.functional_serializers import WrapSerializer
 from pydantic.functional_validators import BeforeValidator
-from pymatgen.core import Element
+from emmet.core.io.pymatgen import Element
 
 ElementTypeVar = TypeVar("ElementTypeVar", Element, str)
 

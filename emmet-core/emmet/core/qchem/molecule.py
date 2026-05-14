@@ -3,9 +3,7 @@
 from typing import Any
 
 from pydantic import Field
-from pymatgen.analysis.molecule_matcher import MoleculeMatcher
-from pymatgen.core.structure import Molecule
-from pymatgen.io.babel import BabelMolAdaptor
+from emmet.core.io.pymatgen import MoleculeMatcher, Molecule, BabelMolAdaptor
 
 from emmet.core.material import CoreMoleculeDoc
 from emmet.core.molecules import MolPropertyOrigin

@@ -3,7 +3,7 @@ from emmet.core.testing_utils import DataArchive
 
 
 def test_parsing_defect_directory(test_dir):
-    from pymatgen.analysis.defects.core import Defect
+    from emmet.core.io.pymatgen import Defect
 
     with DataArchive.extract(test_dir / "vasp/defect_run.json.gz") as temp_dir:
         defect_task = DefectTaskDoc.from_directory(temp_dir)

@@ -9,7 +9,7 @@ from pydantic import (
     WrapSerializer,
     model_validator,
 )
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from emmet.core.io.pymatgen import ComputedEntry, ComputedStructureEntry
 from typing_extensions import NotRequired, TypedDict
 
 from emmet.core.types.enums import ThermoType

@@ -1,7 +1,7 @@
 import os
 
 import pytest
-from pymatgen.core.structure import Molecule
+from emmet.core.io.pymatgen import Molecule
 
 from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import DeprecationQuery, MultiTaskIDQuery

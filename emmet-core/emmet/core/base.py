@@ -3,7 +3,7 @@
 from typing import Literal
 
 from pydantic import BaseModel, Field
-from pymatgen.core import __version__ as pmg_version
+from emmet.core.io.pymatgen import __version__ as pmg_version
 
 from emmet.core import __version__
 from emmet.core.types.typing import NullableDateTimeType

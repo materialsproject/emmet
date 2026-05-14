@@ -6,8 +6,7 @@ from datetime import datetime
 from monty.fractions import gcd
 from optimade.models import Species, StructureResourceAttributes
 from pydantic import Field
-from pymatgen.core.composition import Composition, formula_double_format
-from pymatgen.core.structure import Structure
+from emmet.core.io.pymatgen import Composition, formula_double_format, Structure
 from typing_extensions import TypedDict
 
 from emmet.core.base import EmmetBaseModel

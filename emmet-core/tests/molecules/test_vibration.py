@@ -10,20 +10,6 @@ from emmet.core.molecules.vibration import VibrationDoc
 
 
 @pytest.fixture(scope="session")
-def test_tasks(test_dir):
-    with zopen(test_dir / "liec_tasks.json.gz", "rt") as f:
-        data = json.load(f)
-
-    for d in data:
-        d["last_updated"] = datetime.datetime.strptime(
-            d["last_updated"]["string"], "%Y-%m-%d %H:%M:%S.%f"
-        )
-
-    tasks = [TaskDocument(**t) for t in data]
-    return tasks
-
-
-@pytest.fixture(scope="session")
 def raman_task(test_dir):
     with zopen(test_dir / "raman_task.json.gz", "rt") as f:
         data = json.load(f)
@@ -36,8 +22,8 @@ def raman_task(test_dir):
     return task
 
 
-def test_vibration(test_tasks):
-    task = test_tasks[0]
+def test_vibration(liec_tasks):
+    task = liec_tasks[0]
 
     vib_doc = VibrationDoc.from_task(
         task, molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2"

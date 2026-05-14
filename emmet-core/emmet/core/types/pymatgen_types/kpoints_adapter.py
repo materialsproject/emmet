@@ -1,7 +1,7 @@
 from typing import Annotated, Any, TypeAlias, TypeVar
 
 from pydantic import BeforeValidator, WrapSerializer
-from pymatgen.io.vasp.inputs import Kpoints
+from emmet.core.io.pymatgen import Kpoints
 from typing_extensions import NotRequired, TypedDict
 
 TypedKpointsDict = TypedDict(

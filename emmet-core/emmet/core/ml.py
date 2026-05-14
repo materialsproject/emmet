@@ -6,7 +6,7 @@ from pydantic import (
     Field,
     field_validator,
 )
-from pymatgen.analysis.elasticity import ElasticTensor
+from emmet.core.io.pymatgen import ElasticTensor
 
 from emmet.core.elasticity import (
     BulkModulus,

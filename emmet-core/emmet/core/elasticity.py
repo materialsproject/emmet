@@ -4,12 +4,16 @@ from typing import Any
 
 import numpy as np
 from pydantic import BaseModel, Field
-from pymatgen.analysis.elasticity.elastic import ElasticTensor, ElasticTensorExpansion
-from pymatgen.analysis.elasticity.strain import Deformation, Strain
-from pymatgen.analysis.elasticity.stress import Stress
-from pymatgen.core.structure import Structure
-from pymatgen.core.tensors import TensorMapping
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from emmet.core.io.pymatgen import (
+    ElasticTensor,
+    ElasticTensorExpansion,
+    Deformation,
+    Strain,
+    Stress,
+    Structure,
+    SpacegroupAnalyzer,
+    TensorMapping,
+)
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.math import Matrix3D, MatrixVoigt

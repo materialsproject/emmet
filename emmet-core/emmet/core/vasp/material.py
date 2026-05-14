@@ -3,8 +3,7 @@
 from typing import Mapping, Self
 
 from pydantic import BaseModel, Field
-from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer, oxide_type
-from pymatgen.analysis.structure_matcher import StructureMatcher
+from emmet.core.io.pymatgen import SpacegroupAnalyzer, oxide_type, StructureMatcher
 
 from emmet.core.base import EmmetMeta
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc

@@ -1,7 +1,5 @@
 from fastapi import HTTPException
-from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.core import Structure
-from pymatgen.entries.computed_entries import ComputedStructureEntry
+from emmet.core.io.pymatgen import oxide_type, Structure, ComputedStructureEntry
 
 from emmet.core.vasp.calculation import Calculation, get_trajectories_from_calculations
 from emmet.core.trajectory import Trajectory

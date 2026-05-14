@@ -2,8 +2,7 @@
 
 import pytest
 from monty.serialization import loadfn
-from pymatgen.analysis.xas.spectrum import XAS
-from pymatgen.core import Element
+from emmet.core.io.pymatgen import XAS, Element
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.types.enums import XasEdge, XasType

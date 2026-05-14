@@ -1,8 +1,7 @@
 from typing import Annotated, TypeVar
 
 from pydantic import BeforeValidator, WrapSerializer
-from pymatgen.core import Structure
-from pymatgen.core.structure import Molecule
+from emmet.core.io.pymatgen import Structure, Molecule
 from typing_extensions import NotRequired, TypedDict
 
 from emmet.core.types.pymatgen_types.lattice_adapter import TypedLatticeDict

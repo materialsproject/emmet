@@ -1,8 +1,7 @@
 import pytest
 
 # from matcalc.utils import get_universal_calculator
-from pymatgen.core import Structure
-from pymatgen.util.testing import STRUCTURES_DIR
+from emmet.core.io.pymatgen import Structure, STRUCTURES_DIR
 
 from emmet.core.elasticity import BulkModulus, ElasticTensorDoc, ShearModulus
 from emmet.core.ml import MLDoc

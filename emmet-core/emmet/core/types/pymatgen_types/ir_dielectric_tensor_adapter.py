@@ -1,7 +1,7 @@
 from typing import Annotated, TypeVar
 
 from pydantic import BeforeValidator, WrapSerializer
-from pymatgen.phonon.ir_spectra import IRDielectricTensor
+from emmet.core.io.pymatgen import IRDielectricTensor
 from typing_extensions import TypedDict
 
 from emmet.core.types.pymatgen_types.structure_adapter import TypedStructureDict

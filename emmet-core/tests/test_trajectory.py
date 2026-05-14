@@ -2,7 +2,7 @@ import numpy as np
 from pytest import approx, fixture
 
 from monty.serialization import loadfn
-from pymatgen.core import Element, Structure, Molecule
+from emmet.core.io.pymatgen import Element, Structure, Molecule
 from pymatgen.core.trajectory import Trajectory as PmgTraj
 
 from emmet.core.tasks import TaskDoc

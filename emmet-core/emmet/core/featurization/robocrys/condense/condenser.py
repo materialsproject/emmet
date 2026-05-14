@@ -4,10 +4,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from pymatgen.analysis.dimensionality import get_structure_components
-from pymatgen.analysis.local_env import CrystalNN, NearNeighbors
-from pymatgen.core.structure import Structure
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from emmet.core.io.pymatgen import (
+    get_structure_components,
+    CrystalNN,
+    NearNeighbors,
+    Structure,
+    SpacegroupAnalyzer,
+)
 
 from emmet.core.featurization.robocrys.condense.component import (
     components_are_vdw_heterostructure,

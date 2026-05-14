@@ -7,9 +7,12 @@ from typing import TYPE_CHECKING, overload
 
 import numpy as np
 from pydantic import Field
-from pymatgen.analysis.xas.spectrum import XAS, site_weighted_spectrum
-from pymatgen.core import Element
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from emmet.core.io.pymatgen import (
+    XAS,
+    site_weighted_spectrum,
+    Element,
+    SpacegroupAnalyzer,
+)
 
 from emmet.core.feff.task import TaskDocument
 from emmet.core.spectrum import SpectrumDoc

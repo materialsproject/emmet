@@ -4,10 +4,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from pydantic import Field, model_validator
-from pymatgen.analysis.diffraction.xrd import WAVELENGTHS, XRDCalculator
-from pymatgen.core import Structure
-from pymatgen.core.periodic_table import Element
-
+from emmet.core.io.pymatgen import WAVELENGTHS, XRDCalculator, Structure, Element
 from emmet.core.spectrum import SpectrumDoc
 from emmet.core.types.enums import ValueEnum
 

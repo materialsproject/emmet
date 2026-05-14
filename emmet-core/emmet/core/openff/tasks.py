@@ -13,7 +13,7 @@ from pydantic import (
     PlainValidator,
     WithJsonSchema,
 )
-from pymatgen.core import Structure
+from emmet.core.io.pymatgen import Structure
 from typing_extensions import Annotated
 
 from emmet.core.utils import arrow_incompatible, utcnow

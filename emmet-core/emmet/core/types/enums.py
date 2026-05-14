@@ -21,7 +21,7 @@ from itertools import product
 from typing import TYPE_CHECKING
 
 from pydantic_core import CoreSchema, core_schema
-from pymatgen.core import Element
+from emmet.core.io.pymatgen import Element
 
 if TYPE_CHECKING:
     from typing import Any

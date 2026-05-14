@@ -5,8 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from pydantic import BaseModel, Field
-from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from emmet.core.io.pymatgen import oxide_type, ComputedEntry, ComputedStructureEntry
 
 from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.structure import StructureMetadata

@@ -2,7 +2,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 
 from fastapi import Query
-from pymatgen.analysis.magnetism import Ordering
+from emmet.core.io.pymatgen import Ordering
 
 from emmet.api.query_operator import BoolQuery, QueryOperator
 from emmet.api.query_operator.core import MultiMaterialIDQuery

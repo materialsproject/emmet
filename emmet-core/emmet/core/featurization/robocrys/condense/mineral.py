@@ -8,9 +8,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
-from pymatgen.analysis.prototypes import AflowPrototypeMatcher
-from pymatgen.analysis.structure_matcher import StructureMatcher
-from pymatgen.core import Structure
+from emmet.core.io.pymatgen import AflowPrototypeMatcher, StructureMatcher, Structure
 from emmet.core.featurization.robocrys.condense.fingerprint import (
     get_fingerprint_distance,
     get_structure_fingerprint,

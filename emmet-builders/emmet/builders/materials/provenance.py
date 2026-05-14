@@ -5,8 +5,7 @@ from collections import defaultdict
 from itertools import chain, groupby
 from typing import Iterator
 
-from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
-from pymatgen.core import Structure
+from emmet.core.io.pymatgen import ElementComparator, StructureMatcher, Structure
 
 from emmet.builders.base import BaseBuilderInput
 from emmet.builders.settings import EmmetBuildSettings

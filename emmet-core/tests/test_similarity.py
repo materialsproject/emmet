@@ -2,7 +2,7 @@
 
 import pytest
 
-from pymatgen.core import Structure
+from emmet.core.io.pymatgen import Structure
 import numpy as np
 
 from emmet.core.similarity import (

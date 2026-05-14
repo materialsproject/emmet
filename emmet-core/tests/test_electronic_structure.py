@@ -19,17 +19,7 @@ def structure(test_dir):
     """
     Fe (mp-13) structure with correct magmoms
     """
-    structure = loadfn(test_dir / "electronic_structure/Fe_structure.json.gz")
-    return structure
-
-
-@pytest.fixture(scope="session")
-def bandstructure(test_dir):
-    """
-    Fe (mp-13) line-mode band structure
-    """
-    bs = loadfn(test_dir / "electronic_structure/Fe_bs.json.gz")
-    return bs
+    return loadfn(test_dir / "electronic_structure/Fe_structure.json.gz")
 
 
 @pytest.fixture(scope="session")
@@ -37,17 +27,18 @@ def dos(test_dir):
     """
     Fe (mp-13) dos
     """
-    dos = loadfn(test_dir / "electronic_structure/Fe_dos.json.gz")
-    return dos
+    return loadfn(test_dir / "electronic_structure/Fe_dos.json.gz")
 
 
-def test_from_bsdos_1(bandstructure, dos, structure):
+def test_from_bsdos_1(fe_line_mode_bandstructure, dos, structure):
     origins = [
         PropertyOrigin(name="setyawan_curtarolo", task_id="mp-1056141"),
         PropertyOrigin(name="dos", task_id="mp-1671247"),
     ]
     es_doc = ElectronicStructureDoc.from_bsdos(
-        bandstructures=BSShim(setyawan_curtarolo=("mp-1056141", bandstructure, 2)),
+        bandstructures=BSShim(
+            setyawan_curtarolo=("mp-1056141", fe_line_mode_bandstructure, 2)
+        ),
         dos=DosShim(dos=("mp-1671247", dos, 2)),
         origins=origins,
         structures={
@@ -76,14 +67,12 @@ def test_from_bsdos_1(bandstructure, dos, structure):
 
 @pytest.fixture
 def bandstructure_fs(test_dir):
-    bs = loadfn(test_dir / "electronic_structure/es_bs_objs.json.gz")
-    return bs
+    return loadfn(test_dir / "electronic_structure/es_bs_objs.json.gz")
 
 
 @pytest.fixture
 def dos_fs(test_dir):
-    dos = loadfn(test_dir / "electronic_structure/es_dos_objs.json.gz")
-    return dos
+    return loadfn(test_dir / "electronic_structure/es_dos_objs.json.gz")
 
 
 def test_from_bsdos_2(bandstructure_fs, dos_fs):

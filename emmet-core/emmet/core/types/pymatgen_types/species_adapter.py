@@ -1,7 +1,7 @@
 from typing import Annotated, TypeVar
 
 from pydantic import BeforeValidator, WrapSerializer
-from pymatgen.core.periodic_table import Species
+from emmet.core.io.pymatgen import Species
 from typing_extensions import NotRequired, TypedDict
 
 MSONableTypedSpeciesDict = TypedDict(

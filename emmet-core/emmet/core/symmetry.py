@@ -4,15 +4,15 @@ from math import isinf
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, field_validator
-from pymatgen.core import Structure
-from pymatgen.core.structure import Molecule
-from pymatgen.symmetry.analyzer import (
+from spglib import __version__ as spglib_version
+from emmet.core.io.pymatgen import (
+    Structure,
+    Molecule,
     PointGroupAnalyzer,
     SpacegroupAnalyzer,
     SymmetryUndeterminedError,
-    spglib,
+    SYMM_DATA,
 )
-from pymatgen.symmetry.groups import SYMM_DATA
 
 from emmet.core.settings import EmmetSettings
 from emmet.core.types.enums import IgnoreCaseEnum
@@ -225,7 +225,7 @@ class SymmetryData(BaseModel):
             "point_group": None,
             "crystal_system": None,
             "hall": None,
-            "version": spglib.__version__,
+            "version": spglib_version,
             "symprec": SETTINGS.SYMPREC,
             "angle_tolerance": SETTINGS.ANGLE_TOL,
         }

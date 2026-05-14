@@ -10,12 +10,15 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 
 import numpy as np
-from pymatgen.analysis.graphs import StructureGraph
-from pymatgen.core.composition import Composition
-from pymatgen.core.periodic_table import get_el_sp
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from pymatgen.util.coord import get_angle
-from pymatgen.util.string import formula_double_format
+
+from emmet.core.io.pymatgen import (
+    StructureGraph,
+    Composition,
+    get_el_sp,
+    SpacegroupAnalyzer,
+    formula_double_format,
+    get_angle,
+)
 
 from emmet.core.featurization.robocrys.condense.fingerprint import get_site_fingerprints
 from emmet.core.featurization.robocrys.util import (

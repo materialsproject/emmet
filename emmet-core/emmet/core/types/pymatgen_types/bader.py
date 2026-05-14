@@ -1,4 +1,4 @@
-"""Annotate Bader charge/spin analysis output types from pymatgen."""
+"""Annotate Bader charge/spin analysis output types used in pymatgen."""
 
 from pydantic import BaseModel
 

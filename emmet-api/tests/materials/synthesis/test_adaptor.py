@@ -2,7 +2,7 @@ import os
 from monty.io import zopen
 from json import load
 
-from pymatgen.core import Composition
+from emmet.core.io.pymatgen import Composition
 
 from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.synthesis.data_adaptor import (

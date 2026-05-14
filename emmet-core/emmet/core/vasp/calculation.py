@@ -8,22 +8,29 @@ from copy import deepcopy
 from datetime import datetime
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any, Type
+from typing import TYPE_CHECKING, Annotated, Any, Type, NotRequired, TypedDict
 
 import numpy as np
 import orjson
 from monty.io import zopen
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
-from pymatgen.command_line.bader_caller import bader_analysis_from_path
-from pymatgen.command_line.chargemol_caller import ChargemolAnalysis
-from pymatgen.core.structure import Structure
-from pymatgen.electronic_structure.core import OrbitalType
-from pymatgen.electronic_structure.dos import CompleteDos
-from pymatgen.io.vasp import BSVasprun, Kpoints, Locpot, Oszicar, Outcar, Poscar
-from pymatgen.io.vasp import Potcar as VaspPotcar
-from pymatgen.io.vasp import PotcarSingle, Vasprun, VolumetricData
-from typing_extensions import NotRequired, TypedDict
-
+from emmet.core.io.pymatgen import (
+    bader_analysis_from_path,
+    ChargemolAnalysis,
+    Structure,
+    OrbitalType,
+    CompleteDos,
+    BSVasprun,
+    Kpoints,
+    Locpot,
+    Oszicar,
+    Outcar,
+    Poscar,
+    Potcar as VaspPotcar,
+    PotcarSingle,
+    Vasprun,
+    VolumetricData,
+)
 from emmet.core.band_theory import ElectronicBS, ElectronicDos
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D, Vector6D
 from emmet.core.settings import EmmetSettings
@@ -49,8 +56,7 @@ from emmet.core.vasp.models import ChgcarLike, ElectronicStep
 SETTINGS = EmmetSettings()
 
 if TYPE_CHECKING:
-    from pymatgen.electronic_structure.bandstructure import BandStructure
-    from pymatgen.electronic_structure.dos import CompleteDos
+    from emmet.core.io.pymatgen import BandStructure, CompleteDos
     from typing_extensions import Self
 
 
@@ -1338,7 +1344,7 @@ def _get_volumetric_data(
         A dictionary mapping the VASP object data type (`VaspObject.LOCPOT`,
         `VaspObject.CHGCAR`, etc) to the volumetric data object.
     """
-    from pymatgen.io.vasp import Chgcar
+    from emmet.core.io.pymatgen import Chgcar
 
     if store_volumetric_data is None or len(store_volumetric_data) == 0:
         return {}

@@ -2,9 +2,7 @@ from hashlib import blake2b
 
 import numpy as np
 from pydantic import Field
-from pymatgen.core.periodic_table import Element
-from pymatgen.core.structure import Molecule
-from pymatgen.core.trajectory import Trajectory
+from emmet.core.io.pymatgen import Element, Molecule, Trajectory
 
 from emmet.core.molecules import MolPropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc

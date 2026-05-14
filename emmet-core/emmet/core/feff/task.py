@@ -5,8 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from pydantic import Field
-from pymatgen.analysis.xas.spectrum import XAS
-from pymatgen.core.periodic_table import Element, Species
+from emmet.core.io.pymatgen import XAS, Element, Species
 
 from emmet.core.structure import StructureMetadata
 from emmet.core.types.enums import ValueEnum

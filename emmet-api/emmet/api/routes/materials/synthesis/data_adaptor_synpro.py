@@ -9,7 +9,7 @@ import os
 import re
 import logging
 
-from pymatgen.core.composition import CompositionError, Composition
+from emmet.core.io.pymatgen import CompositionError, Composition
 from pymongo import MongoClient
 
 logger = logging.getLogger(__name__)

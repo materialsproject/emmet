@@ -1,6 +1,5 @@
 import pytest
-from pymatgen.core import Lattice, Structure
-from pymatgen.util.provenance import Author, HistoryNode, StructureNL
+from emmet.core.io.pymatgen import Lattice, Structure, Author, HistoryNode, StructureNL
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.provenance import (

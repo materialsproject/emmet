@@ -1,27 +1,9 @@
-import json
-import datetime
-
 import pytest
 
-from monty.io import zopen
 from monty.serialization import loadfn
 
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.thermo import MoleculeThermoDoc, get_free_energy
-
-
-@pytest.fixture(scope="session")
-def test_tasks(test_dir):
-    with zopen(test_dir / "liec_tasks.json.gz", "rt") as f:
-        data = json.load(f)
-
-    for d in data:
-        d["last_updated"] = datetime.datetime.strptime(
-            d["last_updated"]["string"], "%Y-%m-%d %H:%M:%S.%f"
-        )
-
-    tasks = [TaskDocument(**t) for t in data]
-    return tasks
 
 
 @pytest.fixture(scope="session")
@@ -32,7 +14,7 @@ def sp(test_dir):
     return task
 
 
-def test_thermo(test_tasks, sp):
+def test_thermo(liec_tasks, sp):
     # Just energy; no free energy information
     doc = MoleculeThermoDoc.from_task(
         task=sp,
@@ -45,7 +27,7 @@ def test_thermo(test_tasks, sp):
     assert doc.free_energy is None
 
     # With all thermodynamic information
-    task = test_tasks[0]
+    task = liec_tasks[0]
     doc = MoleculeThermoDoc.from_task(
         task,
         molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2",

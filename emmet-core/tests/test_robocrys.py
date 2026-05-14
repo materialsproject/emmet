@@ -1,5 +1,5 @@
 import pytest
-from pymatgen.core import Structure
+from emmet.core.io.pymatgen import Structure
 
 from . import test_structures
 from emmet.core import ARROW_COMPATIBLE
@@ -14,7 +14,6 @@ if ARROW_COMPATIBLE:
 @pytest.mark.parametrize("structure", test_structures.values())
 def test_robocrys(structure: Structure):
     """Very simple test to make sure this actually works"""
-    print(f"Should work : {structure.composition}")
     doc = RobocrystallogapherDoc.from_structure(
         structure=structure,
         material_id=33,
