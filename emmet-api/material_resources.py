@@ -109,7 +109,7 @@ if db_uri:
     piezoelectric_store = CollectionWithKey(suffix_db["piezoelectric"])
     provenance_store = CollectionWithKey(suffix_db["provenance"])
     robo_store = CollectionWithKey(suffix_db["robocrys"])
-    similarity_store = CollectionWithKey(core_db["similarity_crystalnn_2025_11_05"])
+    similarity_store = CollectionWithKey(core_db["similarity_crystalnn_2026_05_14"])
     substrates_store = CollectionWithKey(core_db["substrates"], "film_id")
     summary_store = CollectionWithKey(suffix_db["summary"])
     surface_props_store = CollectionWithKey(

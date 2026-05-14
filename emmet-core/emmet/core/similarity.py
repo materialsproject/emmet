@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from emmet.core.featurization import Featurizer, SiteStatsFingerprint
 from emmet.core.material_property import PropertyDoc
 from emmet.core.types.enums import ValueEnum
+from emmet.core.types.typing import MaterialIdentifierType
 
 try:
     import matgl
@@ -591,7 +592,7 @@ class SimilarityEntry(BaseModel):
     Find similar materials to a specified material based on crystal geometry.
     """
 
-    task_id: str | None = Field(
+    task_id: MaterialIdentifierType | None = Field(
         None,
         description="The Materials Project ID for the matched material. This comes in the form: mp-******.",
     )
@@ -624,7 +625,7 @@ class SimilarityDoc(PropertyDoc):
         description="List containing similar structure data for a given material.",
     )
 
-    material_id: str | None = Field(
+    material_id: MaterialIdentifierType | None = Field(
         None,
         description="The Materials Project ID for the material. This comes in the form: mp-******",
     )
