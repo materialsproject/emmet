@@ -88,7 +88,7 @@ if db_uri:
         suffix_db["conversion_electrodes"], "battery_id"
     )
     dielectric_store = CollectionWithKey(suffix_db["dielectric"])
-    doi_store = CollectionWithKey(core_db["dois"])
+    doi_store = CollectionWithKey(core_db["core_doi_metadata"])
     elasticity_store = CollectionWithKey(suffix_db["elasticity"])
     eos_store = CollectionWithKey(core_db["eos_legacy"], "task_id")
     es_store = CollectionWithKey(suffix_db["electronic_structure"])

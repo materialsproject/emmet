@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field
 
+from emmet.core.types.typing import MaterialIdentifierType
+
 
 class DOIDoc(BaseModel):
     """
@@ -11,12 +13,7 @@ class DOIDoc(BaseModel):
         description="DOI of the material.",
     )
 
-    bibtex: str | None = Field(
-        None,
-        description="Bibtex reference of the material.",
-    )
-
-    material_id: str | None = Field(
+    material_id: MaterialIdentifierType | None = Field(
         None,
         description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )
