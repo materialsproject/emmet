@@ -30,7 +30,7 @@ def test_similarity_structure_search(test_dir, method):
         "pipeline": [
             {
                 "$vectorSearch": {
-                    "index": "similarity_feature_vector",
+                    "index": "similarity_feature_vector_crystalnn",
                     "path": "feature_vector",
                     "queryVector": _vector_from_hex_and_norm(fv_hex, fv_norm),
                     "numCandidates": limit,
