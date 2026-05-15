@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 import zlib
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, TypeAdapter
 
 from emmet.core.featurization import Featurizer, SiteStatsFingerprint
 from emmet.core.material_property import PropertyDoc
@@ -320,7 +320,9 @@ class SimilarityScorer:
         nfv = feature_vectors.shape[0]
         with multiprocessing.Pool(num_procs) as pool:
             meta = pool.map(wrapped, range(nfv))
-        labels = labels or [str(idx) for idx in range(nfv)]
+        labels = labels or TypeAdapter(list[MaterialIdentifierType]).validate_python(
+            range(nfv)
+        )
         return {
             labels[idx]: {
                 "indices": [labels[idx] for idx in field[0]],
