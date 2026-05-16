@@ -11,27 +11,20 @@ import numpy as np
 import yaml  # type: ignore[import-untyped]
 from monty.io import zopen
 from monty.os.path import zpath
-from pydantic import (
-    BaseModel,
-    Field,
-    PrivateAttr,
-    PlainSerializer,
-    BeforeValidator,
-)
-from emmet.core.io.pymatgen import (
-    Lattice,
-    Structure,
-    BandStructureSymmLine,
-    Kpoint,
-    Spin,
-    PhononBandStructureSymmLine,
-    CompletePhononDos,
-    PhononDos as PhononDosObject,
-)
+from pydantic import BaseModel, BeforeValidator, Field, PlainSerializer, PrivateAttr
 from typing_extensions import Literal, TypedDict
 
 from emmet.core.band_theory import BandStructure, BandTheoryBase
 from emmet.core.base import CalcMeta
+from emmet.core.io.pymatgen import (
+    BandStructureSymmLine,
+    CompletePhononDos,
+    Kpoint,
+    Lattice,
+    PhononBandStructureSymmLine,
+)
+from emmet.core.io.pymatgen import PhononDos as PhononDosObject
+from emmet.core.io.pymatgen import Spin, Structure
 from emmet.core.math import Matrix3D, Tensor4R, Vector3D
 from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
 from emmet.core.structure import StructureMetadata
@@ -367,15 +360,15 @@ class PhononBSDOSTask(StructureMetadata):
         None, description="The method used to calculate phonon properties."
     )
 
-    phonon_bandstructure: PhononBS | None = Field(
-        None,
-        description="Phonon band structure object.",
-    )
-
-    phonon_dos: PhononDOS | None = Field(
-        None,
-        description="Phonon density of states object.",
-    )
+    # phonon_bandstructure: PhononBS | None = Field(
+    #     None,
+    #     description="Phonon band structure object.",
+    # )
+    #
+    # phonon_dos: PhononDOS | None = Field(
+    #     None,
+    #     description="Phonon density of states object.",
+    # )
 
     epsilon_static: Matrix3D | None = Field(
         None, description="The high-frequency dielectric constant."
@@ -392,9 +385,9 @@ class PhononBSDOSTask(StructureMetadata):
     )
 
     # needed, e.g. to compute Grueneisen parameter etc
-    force_constants: list[list[Matrix3D]] | None = Field(
-        None, description="Force constants between every pair of atoms in the structure"
-    )
+    # force_constants: list[list[Matrix3D]] | None = Field(
+    #     None, description="Force constants between every pair of atoms in the structure"
+    # )
 
     last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation for this Material document.",
