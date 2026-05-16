@@ -21,11 +21,11 @@ class MultiPhononIDQuery(InQuery):
 
     def query(
         self,
-        phonon_ids: str | None = Query(
+        identifiers: str | None = Query(
             None, description="Comma-separated list of phonon_ids to query on"
         ),
     ) -> STORE_PARAMS:
-        return self._prepare_query(phonon_ids)
+        return self._prepare_query(identifiers)
 
 
 class PhononMethodQuery(QueryOperator):
