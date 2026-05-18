@@ -8,8 +8,8 @@ from copy import deepcopy
 from datetime import datetime
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any, Type, NotRequired
-from typing_extensions import TypedDict
+from typing import TYPE_CHECKING, Annotated, Any, Type
+from typing_extensions import NotRequired, TypedDict
 
 import numpy as np
 import orjson
