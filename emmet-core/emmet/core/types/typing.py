@@ -14,7 +14,8 @@ from datetime import datetime
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any, TypedDict, Union, overload
+from typing import TYPE_CHECKING, Annotated, Any, Union, overload
+from typing_extensions import TypedDict
 
 import orjson
 from pydantic import BeforeValidator, Field, PlainSerializer, WrapSerializer
