@@ -265,8 +265,10 @@ def get_potcar_stats(
 
     stats: dict[str, dict] = {}  # type: ignore
 
-    if method == "stored":
+    if method in ("stored", "pymatgen"):
         from monty.serialization import loadfn
+
+    if method == "stored":
 
         if path_to_stored_stats is None:
             from importlib.resources import files
