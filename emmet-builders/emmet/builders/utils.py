@@ -11,6 +11,7 @@ from emmet.core.io.pymatgen import (
     Structure,
     get_kpoint_divisions_from_kspacing,
     PotcarSingle,
+    POTCAR_STATS_PATH,
 )
 
 from emmet.builders.settings import EmmetBuildSettings
@@ -275,6 +276,10 @@ def get_potcar_stats(
             )
         return loadfn(path_to_stored_stats)  # type: ignore
 
+    potcar_summary_stats: dict[str, Any] = {}
+    if method == "pymatgen":
+        potcar_summary_stats = loadfn(POTCAR_STATS_PATH)
+
     for (
         calc_type,
         input_set,
@@ -299,9 +304,7 @@ def get_potcar_stats(
 
             elif method == "pymatgen":
                 summary_stats = []  # type: ignore[assignment]
-                for _, entries in PotcarSingle._potcar_summary_stats[
-                    functional
-                ].items():
+                for _, entries in potcar_summary_stats[functional].items():
                     summary_stats += [  # type: ignore[operator]
                         {**entry, "titel": None, "hash": None}
                         for entry in entries
