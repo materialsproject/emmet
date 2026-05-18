@@ -663,8 +663,6 @@ ref_model_fields = {
         "post_process_settings",
         "thermal_displacement_data",
         "calc_meta",
-        "material_id",
-        "task_ids",
     ],
     "emmet.core.polar.DielectricDoc": [
         "builder_meta",

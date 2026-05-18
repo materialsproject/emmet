@@ -352,23 +352,13 @@ class ThermalDisplacementData(BaseModel):
 class PhononBSDOSTask(StructureMetadata):
     """Phonon band structures and density of states data."""
 
-    identifier: str | None = Field(
+    identifier: IdentifierType | None = Field(
         None, description="The identifier of this phonon analysis task."
     )
 
     phonon_method: PhononMethod | None = Field(
         None, description="The method used to calculate phonon properties."
     )
-
-    # phonon_bandstructure: PhononBS | None = Field(
-    #     None,
-    #     description="Phonon band structure object.",
-    # )
-    #
-    # phonon_dos: PhononDOS | None = Field(
-    #     None,
-    #     description="Phonon density of states object.",
-    # )
 
     epsilon_static: Matrix3D | None = Field(
         None, description="The high-frequency dielectric constant."
@@ -383,11 +373,6 @@ class PhononBSDOSTask(StructureMetadata):
         None,
         description="Born charges, only for symmetrically inequivalent atoms",
     )
-
-    # needed, e.g. to compute Grueneisen parameter etc
-    # force_constants: list[list[Matrix3D]] | None = Field(
-    #     None, description="Force constants between every pair of atoms in the structure"
-    # )
 
     last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation for this Material document.",
@@ -436,6 +421,88 @@ class PhononBSDOSTask(StructureMetadata):
     calc_meta: list[CalcMeta] | None = Field(
         None,
         description="Metadata for individual calculations used to build this document.",
+    )
+
+    @cached_property
+    def charge_neutral_sum_rule(self) -> Matrix3D | None:
+        r"""Sum of Born effective charges over sites should be zero.
+
+        See Eq. 46 of https://doi.org/10.1103/PhysRevB.55.10355:
+        $$
+        \sum_{i=1}^N Z_{i\alpha\beta}
+        $$
+        where $Z_{i\alpha\beta}$ is the N x 3 x 3 Born effective
+        charge tensor, $i = 1,2,...,N$ ranges up to the number of
+        atoms $N$, and $\alpha, \beta = x, y, z$ are Cartesian
+        directions.
+
+        This returns a 3 x 3 matrix. The maximum deviation
+        from the sum rule is checked by `check_sum_rule_deviations`.
+        """
+        if self.born:
+            bec = np.array(self.born)
+            return tuple(tuple(row) for row in np.sum(bec, axis=0).tolist())
+        return None
+
+    @property
+    def check_sum_rule_deviations(self) -> SumRuleChecks:
+        """Report deviations from sum rules."""
+        if not self.sum_rules_breaking:
+            self.sum_rules_breaking = SumRuleChecks(
+                **{
+                    k: (
+                        np.abs(getattr(self, attr)).max()
+                        if getattr(self, attr) is not None
+                        else None
+                    )
+                    for k, attr in {
+                        "asr": "acoustic_sum_rule",
+                        "cnsr": "charge_neutral_sum_rule",
+                    }.items()
+                }
+            )
+        return self.sum_rules_breaking
+
+    @classmethod
+    def from_phonopy_pheasy_directory(
+        cls,
+        phonon_dir: Path | str,
+        **kwargs,
+    ) -> Self:
+        """Create a PhononBSDOSDoc from a Phonopy/Pheasy directory.
+
+        Parameters
+        -----------
+        phonon_dir : str or Path
+        **kwargs to pass to `PhononBSDOSDoc.from_phonopy_pheasy_files`.
+            The user can override the default file paths for select files
+            using this.
+        """
+        phonon_path = Path(phonon_dir).resolve()
+        file_paths = {}
+        for k, file_name in DEFAULT_PHONON_FILES.items():
+            file_path = phonon_path / kwargs.pop(f"{k}_file", file_name)
+            if (file_path := Path(zpath(file_path))).exists():
+                file_paths[f"{k}_file"] = file_path
+        return cls.from_phonopy_pheasy_files(**file_paths, **kwargs)
+
+
+class PhononBSDOSDoc(PhononBSDOSTask):
+    """Built data version of PhononBSDOSTask."""
+
+    phonon_bandstructure: PhononBS | None = Field(
+        None,
+        description="Phonon band structure object.",
+    )
+
+    phonon_dos: PhononDOS | None = Field(
+        None,
+        description="Phonon density of states object.",
+    )
+
+    # needed, e.g. to compute Grueneisen parameter etc
+    force_constants: list[list[Matrix3D]] | None = Field(
+        None, description="Force constants between every pair of atoms in the structure"
     )
 
     @classmethod
@@ -529,6 +596,113 @@ class PhononBSDOSTask(StructureMetadata):
             **config,
         )
 
+    @classmethod
+    def from_phonopy_pheasy_files(
+        cls,
+        structure_file: FSPathType,
+        phonon_bandstructure_file: FSPathType | None = None,
+        phonon_dos_file: FSPathType | None = None,
+        projected_dos_file: FSPathType | None = None,
+        force_constants_file: FSPathType | None = None,
+        born_file: FSPathType | None = None,
+        epsilon_static_file: FSPathType | None = None,
+        epsilon_static_and_born_file: FSPathType | None = None,
+        phonopy_output_file: FSPathType | None = None,
+        **kwargs,
+    ) -> Self:
+        """
+        Create a PhononBSDOSTask from a list of explicit Phonopy/Pheasy file paths.
+        """
+
+        try:
+            import phonopy
+        except ImportError:
+            phonopy = None  # type: ignore[assignment]
+
+        cls_config: dict[str, Any] = {
+            "structure": Structure.from_file(structure_file),
+        }
+        if "poscar" in str(structure_file).lower():
+            cls_config["code"] = "vasp"
+
+        if phonon_bandstructure_file:
+            cls_config["phonon_bandstructure"] = PhononBS.from_phonopy(
+                phonon_bandstructure_file,
+                structure=cls_config["structure"],
+            )
+
+        if phonon_dos_file:
+            cls_config["phonon_dos"] = PhononDOS.from_phonopy(
+                phonon_dos_file,
+                projected_dos_file=projected_dos_file,
+                structure=cls_config["structure"],
+            )
+
+        if force_constants_file:
+            # read FORCE_CONSTANTS manually
+            force_constant_matrix: np.ndarray
+            idxs: tuple[int | None, int | None] = (
+                None,
+                None,
+            )
+            irow = 0
+            with zopen(force_constants_file, "rt") as f:
+                for idx, line in enumerate(f.read().splitlines()):
+                    vals = line.strip().split()
+                    if idx == 0:
+                        force_constant_matrix = np.zeros(
+                            (int(vals[0]), int(vals[1]), 3, 3)
+                        )
+                    elif len(vals) == 2:
+                        # idxs written like this for mypy
+                        idxs = (
+                            int(vals[0]) - 1,
+                            int(vals[1]) - 1,
+                        )
+                        irow = 0
+                    elif len(vals) == 3:
+                        force_constant_matrix[idxs[0], idxs[1], irow] = [
+                            float(v) for v in vals
+                        ]
+                        irow += 1
+            cls_config["force_constants"] = force_constant_matrix.tolist()
+
+        if phonopy_output_file:
+            with zopen(phonopy_output_file, "rt") as f:
+                phonopy_output = yaml.safe_load(f.read())
+            for k in ("primitive_matrix", "supercell_matrix"):
+                cls_config[k] = phonopy_output.get(k)
+
+        if all(
+            fs is not None and ".npz" in Path(fs).name
+            for fs in (born_file, epsilon_static_file)
+        ):
+            cls_config["born"] = np.load(born_file)  # type: ignore[arg-type]
+            cls_config["epsilon_static"] = np.load(epsilon_static_file)  # type: ignore[arg-type]
+
+        elif (
+            phonopy_output_file
+            and epsilon_static_and_born_file
+            and "BORN" in Path(epsilon_static_and_born_file).name
+        ):
+            if phonopy is None:
+                raise ImportError("You must `pip install phonopy` to parse BORN.")
+
+            phonopy_calc = phonopy.load(phonopy_output_file)
+            with zopen(epsilon_static_and_born_file, "rt") as f:
+                born_data = phonopy.file_IO.parse_BORN_from_strings(
+                    f.read(), phonopy_calc.unitcell
+                )
+
+            cls_config.update(
+                {
+                    k: born_data[v]
+                    for k, v in {"epsilon_static": "dielectric", "born": "born"}.items()
+                }
+            )
+
+        return cls.from_structure(cls_config["structure"], **cls_config, **kwargs)
+
     @cached_property
     def has_imaginary_modes(self) -> bool | None:
         tol: float = 1e-5
@@ -544,69 +718,6 @@ class PhononBSDOSTask(StructureMetadata):
                 )
             )
         return None
-
-    @cached_property
-    def charge_neutral_sum_rule(self) -> Matrix3D | None:
-        r"""Sum of Born effective charges over sites should be zero.
-
-        See Eq. 46 of https://doi.org/10.1103/PhysRevB.55.10355:
-        $$
-        \sum_{i=1}^N Z_{i\alpha\beta}
-        $$
-        where $Z_{i\alpha\beta}$ is the N x 3 x 3 Born effective
-        charge tensor, $i = 1,2,...,N$ ranges up to the number of
-        atoms $N$, and $\alpha, \beta = x, y, z$ are Cartesian
-        directions.
-
-        This returns a 3 x 3 matrix. The maximum deviation
-        from the sum rule is checked by `check_sum_rule_deviations`.
-        """
-        if self.born:
-            bec = np.array(self.born)
-            return tuple(tuple(row) for row in np.sum(bec, axis=0).tolist())
-        return None
-
-    @cached_property
-    def acoustic_sum_rule(self) -> list[Matrix3D] | None:
-        r"""Determine violations of the acoustic sum rule.
-
-        The acoustic sum rule for the interatomic force constant (IFC) tensor
-        is (Eq. 44 of https://doi.org/10.1103/PhysRevB.55.10355):
-        $$
-        \sum_{j=1}^N C_{ij\alpha\beta} = 0.
-        $$
-        The IFCs are an N x N x 3 x 3 tensor, where N = number of atoms
-        in the structure (`structure.num_sites`).
-        $i, j = 1,2,3,...,N$, and $\alpha,\beta = x,y,z$ are the Cartesian
-        directions.
-
-        The maximum deviation from the sum rule is checked
-        by `check_sum_rule_deviations`.
-
-        For an ASR-corrected force-constant set, this is numerically zero.
-        """
-        if self.force_constants:
-            return np.asarray(self.force_constants).sum(axis=1)
-        return None
-
-    @property
-    def check_sum_rule_deviations(self) -> SumRuleChecks:
-        """Report deviations from sum rules."""
-        if not self.sum_rules_breaking:
-            self.sum_rules_breaking = SumRuleChecks(
-                **{
-                    k: (
-                        np.abs(getattr(self, attr)).max()
-                        if getattr(self, attr) is not None
-                        else None
-                    )
-                    for k, attr in {
-                        "asr": "acoustic_sum_rule",
-                        "cnsr": "charge_neutral_sum_rule",
-                    }.items()
-                }
-            )
-        return self.sum_rules_breaking
 
     def _get_thermo_from_dos(
         self,
@@ -734,147 +845,28 @@ class PhononBSDOSTask(StructureMetadata):
         thermo_props["temperature"] = temperatures
         return thermo_props
 
-    @classmethod
-    def from_phonopy_pheasy_files(
-        cls,
-        structure_file: FSPathType,
-        phonon_bandstructure_file: FSPathType | None = None,
-        phonon_dos_file: FSPathType | None = None,
-        projected_dos_file: FSPathType | None = None,
-        force_constants_file: FSPathType | None = None,
-        born_file: FSPathType | None = None,
-        epsilon_static_file: FSPathType | None = None,
-        epsilon_static_and_born_file: FSPathType | None = None,
-        phonopy_output_file: FSPathType | None = None,
-        **kwargs,
-    ) -> Self:
+    @cached_property
+    def acoustic_sum_rule(self) -> list[Matrix3D] | None:
+        r"""Determine violations of the acoustic sum rule.
+
+        The acoustic sum rule for the interatomic force constant (IFC) tensor
+        is (Eq. 44 of https://doi.org/10.1103/PhysRevB.55.10355):
+        $$
+        \sum_{j=1}^N C_{ij\alpha\beta} = 0.
+        $$
+        The IFCs are an N x N x 3 x 3 tensor, where N = number of atoms
+        in the structure (`structure.num_sites`).
+        $i, j = 1,2,3,...,N$, and $\alpha,\beta = x,y,z$ are the Cartesian
+        directions.
+
+        The maximum deviation from the sum rule is checked
+        by `check_sum_rule_deviations`.
+
+        For an ASR-corrected force-constant set, this is numerically zero.
         """
-        Create a PhononBSDOSDoc from a list of explicit Phonopy/Pheasy file paths.
-        """
-
-        try:
-            import phonopy
-        except ImportError:
-            phonopy = None  # type: ignore[assignment]
-
-        cls_config: dict[str, Any] = {
-            "structure": Structure.from_file(structure_file),
-        }
-        if "poscar" in str(structure_file).lower():
-            cls_config["code"] = "vasp"
-
-        if phonon_bandstructure_file:
-            cls_config["phonon_bandstructure"] = PhononBS.from_phonopy(
-                phonon_bandstructure_file,
-                structure=cls_config["structure"],
-            )
-
-        if phonon_dos_file:
-            cls_config["phonon_dos"] = PhononDOS.from_phonopy(
-                phonon_dos_file,
-                projected_dos_file=projected_dos_file,
-                structure=cls_config["structure"],
-            )
-
-        if force_constants_file:
-            # read FORCE_CONSTANTS manually
-            force_constant_matrix: np.ndarray
-            idxs: tuple[int | None, int | None] = (
-                None,
-                None,
-            )
-            irow = 0
-            with zopen(force_constants_file, "rt") as f:
-                for idx, line in enumerate(f.read().splitlines()):
-                    vals = line.strip().split()
-                    if idx == 0:
-                        force_constant_matrix = np.zeros(
-                            (int(vals[0]), int(vals[1]), 3, 3)
-                        )
-                    elif len(vals) == 2:
-                        # idxs written like this for mypy
-                        idxs = (
-                            int(vals[0]) - 1,
-                            int(vals[1]) - 1,
-                        )
-                        irow = 0
-                    elif len(vals) == 3:
-                        force_constant_matrix[idxs[0], idxs[1], irow] = [
-                            float(v) for v in vals
-                        ]
-                        irow += 1
-            cls_config["force_constants"] = force_constant_matrix.tolist()
-
-        if phonopy_output_file:
-            with zopen(phonopy_output_file, "rt") as f:
-                phonopy_output = yaml.safe_load(f.read())
-            for k in ("primitive_matrix", "supercell_matrix"):
-                cls_config[k] = phonopy_output.get(k)
-
-        if all(
-            fs is not None and ".npz" in Path(fs).name
-            for fs in (born_file, epsilon_static_file)
-        ):
-            cls_config["born"] = np.load(born_file)  # type: ignore[arg-type]
-            cls_config["epsilon_static"] = np.load(epsilon_static_file)  # type: ignore[arg-type]
-
-        elif (
-            phonopy_output_file
-            and epsilon_static_and_born_file
-            and "BORN" in Path(epsilon_static_and_born_file).name
-        ):
-            if phonopy is None:
-                raise ImportError("You must `pip install phonopy` to parse BORN.")
-
-            phonopy_calc = phonopy.load(phonopy_output_file)
-            with zopen(epsilon_static_and_born_file, "rt") as f:
-                born_data = phonopy.file_IO.parse_BORN_from_strings(
-                    f.read(), phonopy_calc.unitcell
-                )
-
-            cls_config.update(
-                {
-                    k: born_data[v]
-                    for k, v in {"epsilon_static": "dielectric", "born": "born"}.items()
-                }
-            )
-
-        return cls.from_structure(cls_config["structure"], **cls_config, **kwargs)
-
-    @classmethod
-    def from_phonopy_pheasy_directory(
-        cls,
-        phonon_dir: Path | str,
-        **kwargs,
-    ) -> Self:
-        """Create a PhononBSDOSDoc from a Phonopy/Pheasy directory.
-
-        Parameters
-        -----------
-        phonon_dir : str or Path
-        **kwargs to pass to `PhononBSDOSDoc.from_phonopy_pheasy_files`.
-            The user can override the default file paths for select files
-            using this.
-        """
-        phonon_path = Path(phonon_dir).resolve()
-        file_paths = {}
-        for k, file_name in DEFAULT_PHONON_FILES.items():
-            file_path = phonon_path / kwargs.pop(f"{k}_file", file_name)
-            if (file_path := Path(zpath(file_path))).exists():
-                file_paths[f"{k}_file"] = file_path
-        return cls.from_phonopy_pheasy_files(**file_paths, **kwargs)
-
-
-class PhononBSDOSDoc(PhononBSDOSTask):
-    """Built data version of PhononBSDOSTask."""
-
-    material_id: IdentifierType | None = Field(
-        None,
-        description="The Materials Project ID of the material, of the form mp-******.",
-    )
-    task_ids: list[str] | None = Field(
-        None, description="A list of identifiers that were used to build this document."
-    )
+        if self.force_constants:
+            return np.asarray(self.force_constants).sum(axis=1)
+        return None
 
 
 class PhononWarnings(DocEnum):
