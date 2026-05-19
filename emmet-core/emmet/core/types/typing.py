@@ -73,6 +73,165 @@ def _fault_tolerant_id_serde(
 _id_base_metadata = (BeforeValidator(_fault_tolerant_id_serde),)
 
 
+ID_PADLEN: int = 8
+ID_PREFIX: str = "mp"
+
+
+def format_identifier(
+    idx: Any,
+    legacy: bool,
+    prefix: str | None = ID_PREFIX,
+    padlen: int = ID_PADLEN,
+) -> str:
+    """Render an MP identifier as either the legacy `mp-<int>` form or the padded AlphaID form.
+
+    This is the canonical display-formatting helper for MP identifiers. Use it
+    anywhere you need to switch a `material_id`, plain prefix-number id, or
+    AlphaID-form id between the two human-readable representations.
+
+    Args:
+        idx: An MPID, AlphaID, or string that parses as either. May be passed
+            in any form (legacy `mp-149`, unpadded alpha `mp-ft`, padded alpha
+            `mp-aaaaaaft`, bare int `149`, etc.); the function normalizes.
+        legacy: If True, returns the legacy form (e.g. "mp-149") for identifiers
+            below the AlphaID cutoff. Above the cutoff there is no legacy form,
+            so the alpha form is returned instead.
+            If False, returns the AlphaID form padded to `padlen` characters
+            (e.g. "mp-aaaaaaft" for value 149 with the default padlen=8).
+        prefix: The id prefix to apply on the alpha-form output. Defaults to
+            "mp"; pass None to omit the prefix entirely.
+        padlen: The minimum identifier length on the alpha-form output (the
+            identifier is left-padded with the alphabet's first letter to reach
+            this length). Defaults to 8.
+
+    Returns:
+        The formatted string. If `idx` is None or empty, it is returned
+        unchanged. If `idx` cannot be parsed as an AlphaID, it is coerced to
+        a string and returned unchanged (defensive: never raises from a
+        display helper).
+
+    Examples:
+        >>> format_identifier("mp-149", legacy=True)
+        'mp-149'
+        >>> format_identifier("mp-149", legacy=False)
+        'mp-aaaaaaft'
+        >>> format_identifier("mp-aaaaaaft", legacy=True)
+        'mp-149'
+    """
+    if idx is None or idx == "":
+        return idx
+    try:
+        alpha = AlphaID(idx)
+    except (ValueError, TypeError):
+        return str(idx)
+    if legacy:
+        return alpha.string
+    # Re-instantiate with the requested display pad length, preserving the
+    # separator from the parsed instance (defaulting to "-" if absent).
+    return str(
+        AlphaID(
+            int(alpha),
+            padlen=padlen,
+            prefix=prefix,
+            separator=alpha._separator or "-",
+        )
+    )
+
+
+# Separators used by composite MP identifiers
+# ("mp-2658_Al" for battery ids, "mp-67-XANES-O-K" for XAS spectrum ids).
+# The first segment is the canonical MPID/AlphaID; any trailing segments
+# are preserved verbatim during reformatting.
+_COMPOSITE_ID_SEPARATORS: tuple[str, ...] = ("_", "-")
+
+
+def _split_composite_identifier(
+    value: str,
+    separators: tuple[str, ...] = _COMPOSITE_ID_SEPARATORS,
+) -> tuple[str, str]:
+    """Split a composite MP identifier into ``(base_id, suffix)``.
+
+    The base_id is the longest leading substring that parses as a valid MP
+    identifier via ``AlphaID``; the suffix is everything from the splitting
+    separator onward (separator included). If no valid split exists, returns
+    ``(value, "")`` so callers can pass the value through unchanged.
+
+    Examples:
+        >>> _split_composite_identifier("mp-149")
+        ('mp-149', '')
+        >>> _split_composite_identifier("mp-2658_Al")
+        ('mp-2658', '_Al')
+    """
+    from emmet.core.mpid import validate_identifier
+
+    if not isinstance(value, str) or not value:
+        return value, ""
+
+    # If the whole thing parses, no split is needed.
+    try:
+        validate_identifier(value)
+        return value, ""
+    except ValueError:
+        pass
+
+    # Walk separators from the end of the string; the longest leading prefix
+    # that validates is the base id.
+    for i in range(len(value) - 1, 0, -1):
+        if value[i] in separators:
+            candidate = value[:i]
+            try:
+                validate_identifier(candidate)
+                return candidate, value[i:]
+            except ValueError:
+                continue
+
+    return value, ""
+
+
+def format_compound_identifier(
+    idx: Any,
+    legacy: bool,
+    prefix: str | None = ID_PREFIX,
+    padlen: int = ID_PADLEN,
+) -> str:
+    """Render a composite MP identifier in the requested format, preserving the suffix.
+
+    Composite identifiers include battery ids
+    (`mp-2658_Al`) and XAS spectrum ids (`mp-67-XANES-O-K`). The leading
+    MP identifier portion is reformatted via `format_identifier`; the
+    trailing suffix (working ion, task index, XAS components, etc.) is
+    preserved verbatim. Plain (non-composite) MP identifiers pass through
+    to `format_identifier`.
+
+    This is the fault-tolerant, suffix-agnostic counterpart of
+    `validate_compound_identifier`, which performs strict, typed validation
+    against a known suffix tuple. Use *this* function when you need to
+    reformat an id for display and don't know (or don't care to verify) the
+    specific suffix shape.
+
+    Args:
+        idx: The composite identifier string.
+        legacy: If True, the leading id is rendered in legacy form;
+            otherwise in padded AlphaID form. See `format_identifier`.
+        prefix: Forwarded to `format_identifier` for the alpha-form path.
+        padlen: Forwarded to `format_identifier` for the alpha-form path.
+
+    Returns:
+        The formatted string. Returns the input unchanged if `idx` is None,
+        empty, or cannot be parsed.
+
+    Examples:
+        >>> format_compound_identifier("mp-2658_Al", legacy=False)
+        'mp-aaaaadyg_Al'
+    """
+    if idx is None or idx == "":
+        return idx
+    base, suffix = _split_composite_identifier(str(idx))
+    if not suffix:
+        return format_identifier(base, legacy, prefix=prefix, padlen=padlen)
+    return f"{format_identifier(base, legacy, prefix=prefix, padlen=padlen)}{suffix}"
+
+
 def _make_id_type(render_order, **kwargs) -> Any:
     _order: Any
     match render_order:
@@ -92,8 +251,6 @@ def _make_id_type(render_order, **kwargs) -> Any:
     ]
 
 
-ID_PADLEN: int = 8
-ID_PREFIX: str = "mp"
 IdentifierType = _make_id_type(0, padlen=ID_PADLEN)
 MaterialIdentifierType = _make_id_type(
     1, legacy=True, prefix=ID_PREFIX, padlen=ID_PADLEN
