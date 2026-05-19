@@ -49,7 +49,7 @@ emmet-core[all]==0.86.3
     # via emmet-builders (pyproject.toml)
 fonttools==4.62.1
     # via matplotlib
-idna==3.11
+idna==3.15
     # via requests
 imageio==2.37.3
     # via scikit-image
@@ -325,7 +325,7 @@ tzdata==2026.1
     # via pandas
 uncertainties==3.2.3
     # via pymatgen-core
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   botocore
     #   requests

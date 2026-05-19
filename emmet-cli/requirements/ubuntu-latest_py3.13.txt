@@ -26,7 +26,7 @@ emmet-core==0.86.3
     # via emmet-cli (pyproject.toml)
 fonttools==4.62.1
     # via matplotlib
-idna==3.11
+idna==3.15
     # via requests
 joblib==1.5.3
     # via pymatgen-core
@@ -139,5 +139,5 @@ typing-inspection==0.4.2
     #   pydantic-settings
 uncertainties==3.2.3
     # via pymatgen-core
-urllib3==2.6.3
+urllib3==2.7.0
     # via requests
