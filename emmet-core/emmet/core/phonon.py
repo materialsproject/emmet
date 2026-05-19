@@ -463,29 +463,6 @@ class PhononBSDOSTask(StructureMetadata):
             )
         return self.sum_rules_breaking
 
-    @classmethod
-    def from_phonopy_pheasy_directory(
-        cls,
-        phonon_dir: Path | str,
-        **kwargs,
-    ) -> Self:
-        """Create a PhononBSDOSDoc from a Phonopy/Pheasy directory.
-
-        Parameters
-        -----------
-        phonon_dir : str or Path
-        **kwargs to pass to `PhononBSDOSDoc.from_phonopy_pheasy_files`.
-            The user can override the default file paths for select files
-            using this.
-        """
-        phonon_path = Path(phonon_dir).resolve()
-        file_paths = {}
-        for k, file_name in DEFAULT_PHONON_FILES.items():
-            file_path = phonon_path / kwargs.pop(f"{k}_file", file_name)
-            if (file_path := Path(zpath(file_path))).exists():
-                file_paths[f"{k}_file"] = file_path
-        return cls.from_phonopy_pheasy_files(**file_paths, **kwargs)
-
 
 class PhononBSDOSDoc(PhononBSDOSTask):
     """Built data version of PhononBSDOSTask."""
@@ -702,6 +679,29 @@ class PhononBSDOSDoc(PhononBSDOSTask):
             )
 
         return cls.from_structure(cls_config["structure"], **cls_config, **kwargs)
+
+    @classmethod
+    def from_phonopy_pheasy_directory(
+        cls,
+        phonon_dir: Path | str,
+        **kwargs,
+    ) -> Self:
+        """Create a PhononBSDOSDoc from a Phonopy/Pheasy directory.
+
+        Parameters
+        -----------
+        phonon_dir : str or Path
+        **kwargs to pass to `PhononBSDOSDoc.from_phonopy_pheasy_files`.
+            The user can override the default file paths for select files
+            using this.
+        """
+        phonon_path = Path(phonon_dir).resolve()
+        file_paths = {}
+        for k, file_name in DEFAULT_PHONON_FILES.items():
+            file_path = phonon_path / kwargs.pop(f"{k}_file", file_name)
+            if (file_path := Path(zpath(file_path))).exists():
+                file_paths[f"{k}_file"] = file_path
+        return cls.from_phonopy_pheasy_files(**file_paths, **kwargs)
 
     @cached_property
     def has_imaginary_modes(self) -> bool | None:
