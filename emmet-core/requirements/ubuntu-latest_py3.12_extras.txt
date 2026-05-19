@@ -52,7 +52,7 @@ fonttools==4.62.1
     # via matplotlib
 identify==2.6.18
     # via pre-commit
-idna==3.11
+idna==3.15
     # via requests
 imageio==2.37.3
     # via scikit-image
@@ -350,7 +350,7 @@ typing-inspection==0.4.2
     #   pydantic-settings
 uncertainties==3.2.3
     # via pymatgen-core
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   requests
     #   types-requests

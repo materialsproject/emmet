@@ -95,7 +95,7 @@ h11==0.16.0
     # via uvicorn
 h5py==3.10.0
     # via phonopy
-idna==3.7
+idna==3.15
     # via
     #   anyio
     #   requests
@@ -312,7 +312,7 @@ python-dateutil==2.8.2
     #   pandas
 python-dotenv==1.0.1
     # via pydantic-settings
-pytorch-lightning==2.4.0
+pytorch-lightning==2.6.1
     # via matgl
 pytz==2024.1
     # via pandas
@@ -424,7 +424,7 @@ typing-extensions==4.9.0
     #   uvicorn
 uncertainties==3.1.7
     # via pymatgen
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   botocore
     #   requests

@@ -56,7 +56,7 @@ htmlmin2==0.1.13
     # via mkdocs-minify-plugin
 identify==2.6.18
     # via pre-commit
-idna==3.11
+idna==3.15
     # via requests
 iniconfig==2.3.0
     # via pytest
@@ -232,7 +232,7 @@ pymatgen-io-validation==0.1.2
     # via
     #   emmet-cli (pyproject.toml)
     #   emmet-core
-pymdown-extensions==10.21.2
+pymdown-extensions==10.21.3
     # via
     #   mkdocs-material
     #   mkdocstrings
@@ -310,7 +310,7 @@ typing-inspection==0.4.2
     #   pydantic-settings
 uncertainties==3.2.3
     # via pymatgen-core
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   requests
     #   types-requests
