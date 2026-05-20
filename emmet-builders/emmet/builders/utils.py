@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from hashlib import md5
 import os
 import sys
 from itertools import chain, combinations
@@ -301,7 +302,7 @@ def get_potcar_stats(
                 # note that the potcar_spec assigns PotcarSingle.symbol to "titel"
                 # whereas the ***correct*** field is `header`
                 summary_stats["titel"] = potcar.header  # type: ignore[assignment]
-                summary_stats["hash"] = potcar.md5_header_hash  # type: ignore[assignment]
+                summary_stats["hash"] = md5(potcar.data.encode()).hexdigest()  # type: ignore[assignment]
                 summary_stats = [summary_stats]  # type: ignore[assignment]
 
             elif method == "pymatgen":

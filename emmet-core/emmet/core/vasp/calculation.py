@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from hashlib import md5
 import logging
 import os
 from copy import deepcopy
@@ -108,6 +109,12 @@ class PotcarSpec(BaseModel):
     """Document defining a VASP POTCAR specification."""
 
     titel: str | None = Field(None, description="TITEL field from POTCAR header")
+
+    # NOTE: The `hash` is no longer used for validating POTCARs.
+    # It is included here for backwards compatibility
+    # However, it is no longer included in `pymatgen-core`.
+    # Thus we must regenerate this ourselves.
+    # Recommend removing eventually.
     hash: str | None = Field(None, description="md5 hash of POTCAR file")
     summary_stats: TypedPotcarSummaryStatsDict | None = Field(
         None,
@@ -132,9 +139,12 @@ class PotcarSpec(BaseModel):
         PotcarSpec
             A potcar spec.
         """
+
+        if (potcar_hash := getattr(potcar_single, "md5_header_hash", None)) is None:
+            potcar_hash = md5(potcar_single.data.encode()).hexdigest()
         return cls(
             titel=potcar_single.TITEL,
-            hash=potcar_single.md5_header_hash,
+            hash=potcar_hash,
             summary_stats=potcar_single._summary_stats,  # type: ignore[arg-type]
         )
 

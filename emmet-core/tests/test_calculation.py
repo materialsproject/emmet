@@ -1,3 +1,4 @@
+from hashlib import md5
 import pytest
 
 from emmet.core.testing_utils import assert_schemas_equal, DataArchive
@@ -253,7 +254,9 @@ def test_PotcarSpec(test_dir):
         ps_spec = PotcarSpec.from_potcar_single(potcar_single=potcar)
 
         assert ps_spec.titel.split("")[1] == potcar.symbol
-        assert ps_spec.hash == potcar.md5_header_hash
+
+        potcar_hash = md5(potcar.data.encode()).hexdigest()
+        assert ps_spec.hash == potcar_hash
         assert ps_spec.summary_stats == potcar._summary_stats
 
         # Second test, Potcar object containing mulitple PotcarSingle obejcts
