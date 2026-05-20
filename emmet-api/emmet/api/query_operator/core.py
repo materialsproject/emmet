@@ -3,7 +3,7 @@ from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from functools import partial
-from typing import Any
+from typing import Any, Protocol
 
 from fastapi import Query
 
@@ -184,6 +184,19 @@ class MultiMaterialIDQuery(InQuery):
 _ID_FORMAT_VALUES = ("legacy", "alpha")
 
 
+class IdFormatter(Protocol):
+    """Callable signature for the formatters consumed by :class:`IdFormatQuery`.
+
+    Each registered formatter is invoked as
+    ``formatter(value, legacy=<bool>)`` against every truthy id-field value
+    on the response. ``legacy`` is passed by keyword to match the explicit
+    signatures of the canonical formatters in :mod:`emmet.core.types.typing`
+    and :mod:`emmet.core.xas`.
+    """
+
+    def __call__(self, value: Any, *, legacy: bool) -> str: ...
+
+
 @dataclass
 class IdFormatQuery(QueryOperator):
     """Optional response-side reformatting of MP identifier fields.
@@ -233,7 +246,7 @@ class IdFormatQuery(QueryOperator):
             sparse-fields projection) are silently skipped.
     """
 
-    id_fields: list[tuple[str, Callable[[Any, bool], str]]] = field(default_factory=list)
+    id_fields: list[tuple[str, IdFormatter]] = field(default_factory=list)
 
     def query(
         self,
