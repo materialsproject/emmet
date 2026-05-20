@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 from importlib import import_module
-from pydantic import BaseModel, Field, field_validator, field_serializer
+from pydantic import BaseModel, Field
 
 from typing import Literal, TYPE_CHECKING
 
 from emmet.core.atoms.base import Compound
 from emmet.core.atoms.periodic import Material
-from emmet.core.mpid_ext import ThermoID
 from emmet.core.types.enums import IgnoreCaseEnum
 from emmet.core.types.mson import MSONType
+from emmet.core.types.pymatgen_types.computed_entries_adapter import EntryID
 from emmet.core.types.typing import DateTimeType, IdentifierType, JsonDictType
+from emmet.core.utils import type_override
 from emmet.core.vasp.calc_types.enums import RunType
 from emmet.core.vasp.calculation import PotcarSpec
 
@@ -67,6 +68,7 @@ class OxideType(IgnoreCaseEnum):
         super(cls)._missing_(value)
 
 
+@type_override({"hubbards": str})
 class EntryParameters(BaseModel):
     """Schematize entry parameters."""
 
@@ -76,6 +78,7 @@ class EntryParameters(BaseModel):
     potcar_spec: list[PotcarSpec] | None = None
 
 
+@type_override({"oxidation_states": str})
 class EntryData(BaseModel):
     """Schematize entry run data."""
 
@@ -117,19 +120,11 @@ class Entry(BaseModel):
 
     energy: float | None = None
     correction: float | None = None
-    entry_id: ThermoID | None = None
+    entry_id: EntryID | None = None
 
     energy_adjustments: list[EnergyAdjustment] = Field([])
     parameters: EntryParameters | None = None
     data: EntryData | None = None
-
-    @field_validator("entry_id", mode="before")
-    def _deser_thermo_id(cls, v) -> ThermoID | None:
-        return ThermoID._deserialize(v) if v is not None else None
-
-    @field_serializer("entry_id")
-    def _ser_thermo_id(self, v: ThermoID) -> str:
-        return str(v)
 
     def to_pmg(self) -> ComputedEntry | ComputedStructureEntry:
         data = self.model_dump()

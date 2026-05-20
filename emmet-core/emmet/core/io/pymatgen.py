@@ -24,6 +24,7 @@ _core_class_map: dict[str, str] = {
     "Species": "core.periodic_table",
     "DummySpecies": "core.periodic_table",
     "get_el_sp": "core.periodic_table",
+    "Site": "core.sites",
     "PeriodicSite": "core.sites",
     "IStructure": "core.structure",
     "Structure": "core.structure",
