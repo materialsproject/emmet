@@ -18,15 +18,15 @@ bibtexparser==1.4.4
     # via pymatgen-core
 blake3==1.0.8
     # via emmet-core
-boto3==1.43.9
+boto3==1.43.11
     # via emmet-api (pyproject.toml)
-botocore==1.43.9
+botocore==1.43.11
     # via
     #   boto3
     #   s3transfer
 bytecode==0.17.0
     # via ddtrace
-certifi==2026.4.22
+certifi==2026.5.20
     # via requests
 charset-normalizer==3.4.7
     # via requests
@@ -40,7 +40,7 @@ ddtrace==4.3.0
     # via emmet-api (pyproject.toml)
 dnspython==2.8.0
     # via pymongo
-emmet-core==0.87.0rc2
+emmet-core==0.87.0rc5
     # via emmet-api (pyproject.toml)
 envier==0.6.1
     # via ddtrace
@@ -58,8 +58,6 @@ idna==3.15
     #   requests
 imageio==2.37.3
     # via scikit-image
-importlib-metadata==8.7.1
-    # via opentelemetry-api
 inflect==7.5.0
     # via emmet-core
 jmespath==1.1.0
@@ -74,7 +72,7 @@ latexcodec==3.0.1
     # via pybtex
 lazy-loader==0.5
     # via scikit-image
-lxml==6.1.0
+lxml==6.1.1
     # via pymatgen-core
 matplotlib==3.10.9
     # via pymatgen-core
@@ -94,7 +92,7 @@ networkx==3.6.1
     # via
     #   pymatgen-core
     #   scikit-image
-numpy==2.4.5
+numpy==2.4.6
     # via
     #   contourpy
     #   imageio
@@ -109,7 +107,7 @@ numpy==2.4.5
     #   shapely
     #   spglib
     #   tifffile
-opentelemetry-api==1.41.1
+opentelemetry-api==1.42.0
     # via ddtrace
 orjson==3.11.9
     # via pymatgen-core
@@ -158,7 +156,7 @@ pymatgen-analysis-alloys==0.0.9
     # via emmet-api (pyproject.toml)
 pymatgen-analysis-defects==2026.3.20
     # via emmet-api (pyproject.toml)
-pymatgen-core==2026.5.17
+pymatgen-core==2026.5.18
     # via pymatgen
 pymatgen-io-validation==0.1.2
     # via
@@ -239,5 +237,3 @@ uvicorn==0.47.0
     # via emmet-api (pyproject.toml)
 wrapt==2.1.2
     # via ddtrace
-zipp==3.23.1
-    # via importlib-metadata

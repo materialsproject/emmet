@@ -18,7 +18,7 @@ bibtexparser==1.4.4
     # via pymatgen-core
 blake3==1.0.8
     # via emmet-core (pyproject.toml)
-certifi==2026.4.22
+certifi==2026.5.20
     # via requests
 cfgv==3.5.0
     # via pre-commit
@@ -84,7 +84,7 @@ librt==0.11.0
     # via mypy
 lobsterpy==0.6.1
     # via emmet-core (pyproject.toml)
-lxml==6.1.0
+lxml==6.1.1
     # via pymatgen-core
 markdown-it-py==4.2.0
     # via
@@ -131,7 +131,7 @@ networkx==3.6.1
     #   scikit-image
 nodeenv==1.10.0
     # via pre-commit
-numpy==2.4.5
+numpy==2.4.6
     # via
     #   ase
     #   contourpy
@@ -174,7 +174,7 @@ pathspec==1.1.1
     # via mypy
 phonopy==4.0.1
     # via emmet-core (pyproject.toml)
-phonors==0.1.1
+phonors==0.1.2
     # via phonopy
 pillow==12.2.0
     # via
@@ -241,7 +241,7 @@ pymatgen-analysis-defects==2026.3.20
     # via emmet-core (pyproject.toml)
 pymatgen-analysis-diffusion==2025.11.15
     # via emmet-core (pyproject.toml)
-pymatgen-core==2026.5.17
+pymatgen-core==2026.5.18
     # via pymatgen
 pymatgen-io-validation==0.1.2
     # via emmet-core (pyproject.toml)
@@ -341,7 +341,7 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-symfc==1.7.0
+symfc==1.7.1
     # via phonopy
 sympy==1.14.0
     # via pymatgen-core

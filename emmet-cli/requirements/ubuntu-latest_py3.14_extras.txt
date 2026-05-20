@@ -16,7 +16,7 @@ blake3==1.0.8
     #   emmet-core
 bracex==2.6
     # via wcmatch
-certifi==2026.4.22
+certifi==2026.5.20
     # via requests
 cfgv==3.5.0
     # via pre-commit
@@ -82,7 +82,7 @@ librt==0.11.0
     # via mypy
 livereload==2.7.1
     # via emmet-cli (pyproject.toml)
-lxml==6.1.0
+lxml==6.1.1
     # via pymatgen-core
 markdown==3.10.2
     # via
@@ -160,7 +160,7 @@ networkx==3.6.1
     # via pymatgen-core
 nodeenv==1.10.0
     # via pre-commit
-numpy==2.4.5
+numpy==2.4.6
     # via
     #   contourpy
     #   matplotlib
@@ -234,7 +234,7 @@ pymatgen==2026.5.4
     # via
     #   emmet-core
     #   pymatgen-io-validation
-pymatgen-core==2026.5.17
+pymatgen-core==2026.5.18
     # via pymatgen
 pymatgen-io-validation==0.1.2
     # via
