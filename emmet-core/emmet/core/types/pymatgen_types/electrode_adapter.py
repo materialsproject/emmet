@@ -4,11 +4,9 @@ from typing import Annotated, Any, TypeVar
 
 import orjson
 from pydantic import BeforeValidator, TypeAdapter, WrapSerializer
-from pymatgen.apps.battery.conversion_battery import (
+from emmet.core.io.pymatgen import (
     ConversionElectrode,
     ConversionVoltagePair,
-)
-from pymatgen.apps.battery.insertion_battery import (
     InsertionElectrode,
     InsertionVoltagePair,
 )

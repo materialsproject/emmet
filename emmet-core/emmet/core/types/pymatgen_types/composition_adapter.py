@@ -1,7 +1,7 @@
 from typing import Annotated, TypeVar
 
 from pydantic import BeforeValidator, WrapSerializer
-from pymatgen.core import Composition
+from emmet.core.io.pymatgen import Composition
 
 CompositionTypeVar = TypeVar("CompositionTypeVar", Composition, dict[str, float])
 

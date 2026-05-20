@@ -55,6 +55,8 @@ all = [
     "pyarrow",
     "pymongo",
     "pycodcif",
+    "lobsterpy",
+    "phonopy>=3.0.0",
 ]
 test = [
     "pre-commit",
@@ -77,7 +79,4 @@ docs = [
     "sphinx-markdown-builder>=0.6.8",
     "sphinx-autodoc-typehints",
     "myst-parser",
-]
-bonding = [
-    "lobsterpy"
 ]

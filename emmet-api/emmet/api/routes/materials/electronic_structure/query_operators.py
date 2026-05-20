@@ -4,15 +4,12 @@ from collections import defaultdict
 from typing import Literal
 
 from fastapi import HTTPException, Query
-from emmet.api.query_operator import QueryOperator
-from emmet.api.utils import STORE_PARAMS, process_identifiers
-from pymatgen.analysis.magnetism.analyzer import Ordering
-from pymatgen.core.periodic_table import Element
-from pymatgen.electronic_structure.core import OrbitalType, Spin
+from emmet.core.io.pymatgen import Ordering, Element, OrbitalType, Spin
 
+from emmet.api.query_operator import QueryOperator
+from emmet.api.utils import STORE_PARAMS
 from emmet.core.band_theory import BSPathType
 from emmet.core.electronic_structure import DOSProjectionType
-from emmet.core.mpid import MPID, AlphaID
 
 
 class ESSummaryDataQuery(QueryOperator):
@@ -44,11 +41,6 @@ class ESSummaryDataQuery(QueryOperator):
             crit["is_metal"] = is_metal
 
         return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        keys = ["band_gap", "efermi", "magnetic_ordering", "is_gap_direct", "is_metal"]
-
-        return [(key, False) for key in keys]
 
 
 class BSDataQuery(QueryOperator):
@@ -115,15 +107,6 @@ class BSDataQuery(QueryOperator):
 
         return {"criteria": crit}
 
-    def ensure_indexes(self):  # pragma: no cover
-        keys = ["bandstructure"]
-
-        for bs_type in BSPathType:
-            for field in ["band_gap", "efermi"]:
-                keys.append(f"bandstructure.{bs_type.value}.{field}")
-
-        return [(key, False) for key in keys]
-
 
 class DOSDataQuery(QueryOperator):
     """
@@ -166,9 +149,6 @@ class DOSDataQuery(QueryOperator):
     ) -> STORE_PARAMS:
         crit = defaultdict(dict)  # type: dict
 
-        if isinstance(spin, str):
-            spin = Spin(int(spin))
-
         if projection_type is not None:
             if spin is None:
                 raise HTTPException(
@@ -176,6 +156,7 @@ class DOSDataQuery(QueryOperator):
                     detail="Must specify a spin channel for querying dos summary data.",
                 )
             else:
+                spin_enum: Spin = Spin(int(spin)) if isinstance(spin, str) else spin
                 d = {
                     "band_gap": [band_gap_min, band_gap_max],
                     "efermi": [efermi_min, efermi_max],
@@ -183,7 +164,7 @@ class DOSDataQuery(QueryOperator):
 
                 for entry in d:
                     if projection_type.value == "total":
-                        key_prefix = f"total.{str(spin.value)}"
+                        key_prefix = f"total.{str(spin_enum.value)}"
 
                     elif projection_type.value == "orbital":
                         if orbital is None:
@@ -192,7 +173,9 @@ class DOSDataQuery(QueryOperator):
                                 detail="Must specify an orbital type for querying orbital projection data.",
                             )
 
-                        key_prefix = f"orbital.{str(orbital.name)}.{str(spin.value)}"
+                        key_prefix = (
+                            f"orbital.{str(orbital.name)}.{str(spin_enum.value)}"
+                        )
 
                     elif projection_type.value == "elemental":
                         if element is None:
@@ -202,10 +185,10 @@ class DOSDataQuery(QueryOperator):
                             )
 
                         if orbital is not None:
-                            key_prefix = f"elemental.{str(element.value)}.{str(orbital.name)}.{str(spin.value)}"
+                            key_prefix = f"elemental.{str(element.value)}.{str(orbital.name)}.{str(spin_enum.value)}"
 
                         else:
-                            key_prefix = f"elemental.{str(element.value)}.total.{str(spin.value)}"
+                            key_prefix = f"elemental.{str(element.value)}.total.{str(spin_enum.value)}"
 
                     key = f"dos.{key_prefix}.{entry}"
 
@@ -218,30 +201,3 @@ class DOSDataQuery(QueryOperator):
             crit.update({"dos.magnetic_ordering": magnetic_ordering.value})
 
         return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        keys = ["dos", "dos.magnetic_ordering"]
-
-        for proj_type in DOSProjectionType:
-            keys.append(f"dos.{proj_type.value}.$**")
-
-        return [(key, False) for key in keys]
-
-
-class ObjectQuery(QueryOperator):
-    """
-    Method to generate a query on object data by task_id.
-    """
-
-    def query(
-        self,
-        task_id: str | MPID | AlphaID = Query(
-            ...,
-            description="The calculation (task) ID associated with the data object",
-        ),
-    ) -> STORE_PARAMS:
-        return {
-            "criteria": {
-                "task_id": process_identifiers(str(task_id), use_prefix=False)[0]
-            }
-        }

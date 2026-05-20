@@ -1,44 +1,19 @@
-import json
-import datetime
-
 import pytest
 
-from monty.io import zopen
-from monty.serialization import loadfn
 
-from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.bonds import MoleculeBondingDoc
 
 from tests.conftest_qchem import OPENBABEL_INSTALLED
-
-
-@pytest.fixture(scope="session")
-def test_tasks(test_dir):
-    with zopen(test_dir / "liec_tasks.json.gz", "rt") as f:
-        data = json.load(f)
-
-    for d in data:
-        d["last_updated"] = datetime.datetime.strptime(
-            d["last_updated"]["string"], "%Y-%m-%d %H:%M:%S.%f"
-        )
-
-    tasks = [TaskDocument(**t) for t in data]
-    return tasks
-
-
-@pytest.fixture(scope="session")
-def nbo_task(test_dir):
-    return TaskDocument(**loadfn(test_dir / "open_shell_nbo_task.json.gz"))
 
 
 @pytest.mark.skipif(
     not OPENBABEL_INSTALLED,
     reason="openbabel must be installed to test bonding analysis.",
 )
-def test_bonding(test_tasks, nbo_task):
+def test_bonding(liec_tasks, open_shell_nbo_task):
     # No Critic2 or NBO
     ob_mee = MoleculeBondingDoc.from_task(
-        test_tasks[0],
+        liec_tasks[0],
         molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2",
         preferred_methods=["OpenBabelNN + metal_edge_extender"],
     )
@@ -49,7 +24,7 @@ def test_bonding(test_tasks, nbo_task):
     assert set(ob_mee.bond_types.keys()) == {"C-C", "C-H", "C-O", "Li-O"}
 
     ob_critic = MoleculeBondingDoc.from_task(
-        test_tasks[3],
+        liec_tasks[3],
         molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2",
         preferred_methods=["critic2"],
     )
@@ -61,7 +36,7 @@ def test_bonding(test_tasks, nbo_task):
     assert ob_mee.molecule_graph.isomorphic_to(ob_critic.molecule_graph)
 
     nbo = MoleculeBondingDoc.from_task(
-        nbo_task,
+        open_shell_nbo_task,
         molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2",
         preferred_methods=["nbo"],
     )

@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 import numpy as np
-from pymatgen.core.structure import IStructure
+from emmet.core.io.pymatgen import IStructure
 
 from emmet.core.featurization.featurizers import (
     CrystalNNFingerprint,

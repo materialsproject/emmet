@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from hashlib import blake2b
 
 from pydantic import BaseModel, Field
-from pymatgen.core.periodic_table import Element, Species
+from emmet.core.io.pymatgen import Element, Species
 from scipy.stats import describe
 
 from emmet.core.molecules.atomic import PartialChargesDoc, PartialSpinsDoc

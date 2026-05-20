@@ -9,7 +9,7 @@ import os
 import re
 import logging
 
-from pymatgen.core.composition import CompositionError, Composition
+from emmet.core.io.pymatgen import CompositionError, Composition
 from pymongo import MongoClient
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ def convert_conditions(cond, op_type):
     }
 
 
-all_posible_ops = set()
+all_posible_ops: set[str] = set()
 
 
 def convert_op(op):

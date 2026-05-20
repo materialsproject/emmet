@@ -1,14 +1,16 @@
+import gzip
+import json
+from pathlib import Path
 import pytest
-from monty.serialization import loadfn
 from pydantic import TypeAdapter
-from pymatgen.analysis.phase_diagram import PhaseDiagram
-from pymatgen.apps.battery.conversion_battery import ConversionElectrode
-from pymatgen.apps.battery.insertion_battery import (
+from emmet.core.io.pymatgen import (
+    PhaseDiagram,
+    ConversionElectrode,
     InsertionElectrode,
     InsertionVoltagePair,
+    Composition,
+    Element,
 )
-from pymatgen.core import Composition, Element
-from pymatgen.entries.computed_entries import ComputedEntry
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.electrode import (
@@ -17,10 +19,12 @@ from emmet.core.electrode import (
     InsertionElectrodeDoc,
     get_battery_formula,
 )
-from emmet.core.mpid_ext import BatteryID, ThermoID
+from emmet.core.mpid import AlphaID
 from emmet.core.types.pymatgen_types.computed_entries_adapter import (
+    ComputedEntryType,
     ComputedStructureEntryType,
 )
+from emmet.core.types.typing import validate_compound_identifier
 
 if ARROW_COMPATIBLE:
     import pyarrow as pa
@@ -29,17 +33,42 @@ if ARROW_COMPATIBLE:
 
 
 @pytest.fixture(scope="session")
-def insertion_elec(test_dir):
+def entry_material_ids() -> list[AlphaID]:
+    return [
+        AlphaID(idx)
+        for idx in ["mp-13", "mp-595", "mvc-4", "mp-108", "mp-100001", "mvc-2"]
+    ]
+
+
+@pytest.fixture(scope="session")
+def entries_LCO(test_dir: Path) -> list[dict]:
+    with gzip.open(test_dir / "LiCoO2_batt.json.gz", "rt") as f:
+        return json.load(f)
+
+
+@pytest.fixture(scope="session")
+def insertion_elec(test_dir, entry_material_ids):
     """
     Recycle the test cases from pymatgen
     """
-    entry_Li = ComputedEntry(
-        "Li", -1.90753119, entry_id=ThermoID.from_str("mp-1234-UNKNOWN")
+    # entry_Li = ComputedEntry("Li", -1.90753119, entry_id="mp-1234-UNKNOWN")
+    entry_Li = TypeAdapter(ComputedEntryType).validate_python(
+        {
+            "@module": "pymatgen.entries.computed_entries",
+            "@class": "ComputedEntry",
+            "composition": {"Li": 1.0},
+            "energy": -1.90753119,
+            "correction": 0.0,
+            "entry_id": "mp-1234-UNKNOWN",
+        }
     )
     # more cases can be added later if problems are found
-    entries_LTO = loadfn(test_dir / "LiTiO2_batt.json.gz", cls=None)
-    for entry in entries_LTO:
-        entry["entry_id"] = ThermoID.from_str(f"{entry['entry_id']}-UNKNOWN")
+    with gzip.open(test_dir / "LiTiO2_batt.json.gz", "rt") as f:
+        entries_LTO = json.load(f)
+
+    for i, entry in enumerate(entries_LTO):
+        entries_LTO[i]["data"]["material_id"] = entry_material_ids[i].string
+        entries_LTO[i]["entry_id"] = f"{entry_material_ids[i].string}-UNKNOWN"
 
     entries_LTO = TypeAdapter(list[ComputedStructureEntryType]).validate_python(
         entries_LTO
@@ -53,12 +82,11 @@ def insertion_elec(test_dir):
 
 
 @pytest.fixture(scope="session")
-def conversion_elec(test_dir):
+def conversion_elec(test_dir, entries_LCO):
     conversion_electrodes = {}
 
-    entries_LCO = loadfn(test_dir / "LiCoO2_batt.json.gz", cls=None)
     for entry in entries_LCO:
-        entry["entry_id"] = ThermoID.from_str(f"{entry['entry_id']}-UNKNOWN")
+        entry["entry_id"] = f"{entry['entry_id']}-UNKNOWN"
 
     entries_LCO = TypeAdapter(list[ComputedStructureEntryType]).validate_python(
         entries_LCO
@@ -94,12 +122,18 @@ def test_InsertionDocs(insertion_elec):
         ie = InsertionElectrodeDoc.from_entries(
             grouped_entries=elec.stable_entries,
             working_ion_entry=wion_entry,
-            battery_id=BatteryID.from_str("mp-1234_Li"),
         )
+        assert ie.battery_id == validate_compound_identifier(
+            f"{min(mpid for mpid in ie.material_ids if not mpid.string.startswith('mvc'))}"
+            f"_{ie.working_ion}",
+            suffixes=(Element,),
+            use_prefix=True,
+        )
+
         assert ie.average_voltage == elec.get_average_voltage()
         assert len(ie.material_ids) > 2
 
-        # ThermoID breaks this, TODO for when builder is re-written
+        # Thermo ID breaks this, TODO for when builder is re-written
         # Make sure that each adjacent pair can be converted into a sub electrode
         # for sub_elec in elec.get_sub_electrodes(adjacent_only=True):
         #     vp = InsertionVoltagePairDoc.from_sub_electrode(sub_electrode=sub_elec)
@@ -120,7 +154,7 @@ def test_ConversionDocs_from_entries(conversion_elec):
             Composition(k),
             entries=elec["entries"],
             working_ion_symbol=elec["working_ion"],
-            battery_id=BatteryID.from_str("mp-1234_Li"),
+            battery_id="mp-1234_Li",
             thermo_type="GGA_GGA+U",
         )
         res_d = vp.model_dump()
@@ -128,15 +162,19 @@ def test_ConversionDocs_from_entries(conversion_elec):
             assert res_d[k] == pytest.approx(v, 0.01)
 
 
-def test_ConversionDocs_from_composition_and_pd(conversion_elec, test_dir):
-    entries_LCO = loadfn(test_dir / "LiCoO2_batt.json.gz")
-    pd = PhaseDiagram(entries_LCO)
+def test_ConversionDocs_from_composition_and_pd(conversion_elec, test_dir, entries_LCO):
+
+    entries = [
+        TypeAdapter(ComputedStructureEntryType).validate_python(doc)
+        for doc in entries_LCO
+    ]
+    pd = PhaseDiagram(entries)
     for k, (elec, expected) in conversion_elec.items():
         vp = ConversionElectrodeDoc.from_composition_and_pd(
             comp=Composition(k),
             pd=pd,
             working_ion_symbol=elec["working_ion"],
-            battery_id=BatteryID.from_str("mp-1234_Li"),
+            battery_id="mp-1234_Li",
             thermo_type="GGA_GGA+U",
         )
         res_d = vp.model_dump()
@@ -171,7 +209,12 @@ def test_arrow_insertion(insertion_elec):
     doc = InsertionElectrodeDoc.from_entries(
         grouped_entries=elec.stable_entries,
         working_ion_entry=wion_entry,
-        battery_id=BatteryID.from_str("mp-1234_Li"),
+    )
+    assert doc.battery_id == validate_compound_identifier(
+        f"{min(mpid for mpid in doc.material_ids if not mpid.string.startswith('mvc'))}"
+        f"_{doc.working_ion}",
+        suffixes=(Element,),
+        use_prefix=True,
     )
 
     arrow_struct = pa.scalar(
@@ -203,7 +246,7 @@ def test_arrow_conversion(conversion_elec):
         Composition(k),
         entries=elec["entries"],
         working_ion_symbol=elec["working_ion"],
-        battery_id=BatteryID.from_str("mp-1234_Li"),
+        battery_id="mp-1234_Li",
         thermo_type="GGA_GGA+U",
     )
 

@@ -1,7 +1,7 @@
 from typing import Annotated, TypeVar
 
 from pydantic import BeforeValidator, WrapSerializer
-from pymatgen.analysis.diffraction.xrd import DiffractionPattern
+from emmet.core.io.pymatgen import DiffractionPattern
 from typing_extensions import TypedDict
 
 

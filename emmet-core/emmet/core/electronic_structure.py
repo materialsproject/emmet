@@ -8,31 +8,31 @@ from typing import TYPE_CHECKING, Annotated, Generator, Literal, TypeVar
 
 import numpy as np
 from pydantic import BaseModel, BeforeValidator, Field, WrapSerializer
-from pymatgen.analysis.magnetism.analyzer import (
+
+from emmet.core.io.pymatgen import (
     CollinearMagneticStructureAnalyzer,
     Ordering,
+    BandStructureSymmLine,
+    OrbitalType,
+    Spin,
+    MPStaticSet,
+    SpacegroupAnalyzer,
 )
-from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
-from pymatgen.electronic_structure.core import OrbitalType, Spin
-from pymatgen.io.vasp.sets import MPStaticSet
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.core.material import PropertyOrigin
 from emmet.core.material_property import PropertyDoc
 from emmet.core.settings import EmmetSettings
 from emmet.core.types.enums import ValueEnum
 from emmet.core.types.pymatgen_types.bandstructure_symm_line_adapter import (
-    BandStructureSymmLineType,
     TypedBandDict,
 )
-from emmet.core.types.pymatgen_types.dos_adapter import CompleteDosType
 from emmet.core.types.pymatgen_types.element_adapter import ElementType
-from emmet.core.types.typing import DateTimeType, IdentifierType
+from emmet.core.types.typing import IdentifierType
 
 if TYPE_CHECKING:
     from typing import Any
 
-    from pymatgen.core import Structure
+    from emmet.core.io.pymatgen import Structure
     from typing_extensions import Self
 
     from emmet.core.types.electronic_structure import BSShim, DosShim
@@ -50,46 +50,6 @@ class DOSProjectionType(ValueEnum):
     total = "total"
     elemental = "elemental"
     orbital = "orbital"
-
-
-class BSObjectDoc(BaseModel):
-    """
-    Band object document.
-    """
-
-    task_id: IdentifierType | None = Field(
-        None,
-        description="The source calculation (task) ID that this band structure comes from. "
-        "This has the same form as a Materials Project ID.",
-    )
-
-    last_updated: DateTimeType = Field(
-        description="The timestamp when this calculation was last updated",
-    )
-
-    data: BandStructureSymmLineType | None = Field(
-        None, description="The band structure object for the given calculation ID"
-    )
-
-
-class DOSObjectDoc(BaseModel):
-    """
-    DOS object document.
-    """
-
-    task_id: IdentifierType | None = Field(
-        None,
-        description="The source calculation (task) ID that this density of states comes from. "
-        "This has the same form as a Materials Project ID.",
-    )
-
-    last_updated: DateTimeType = Field(
-        description="The timestamp when this calculation was last updated.",
-    )
-
-    data: CompleteDosType | None = Field(
-        None, description="The density of states object for the given calculation ID."
-    )
 
 
 class ElectronicStructureBaseData(BaseModel):

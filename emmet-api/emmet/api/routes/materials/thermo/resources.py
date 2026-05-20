@@ -1,24 +1,20 @@
+from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
+from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
+from emmet.api.query_operator.core import MultiMaterialIDQuery
 from emmet.api.query_operator.dynamic import NumericQuery
 from emmet.api.resource import ReadOnlyResource
-from emmet.core.thermo import ThermoDoc
-
-from emmet.api.query_operator import (
-    PaginationQuery,
-    SparseFieldsQuery,
+from emmet.api.routes.materials.materials.query_operators import (
+    ChemsysQuery,
+    FormulaQuery,
+    LicenseQuery,
 )
 from emmet.api.routes.materials.thermo.query_operators import (
     IsStableQuery,
     MultiThermoIDQuery,
     MultiThermoTypeQuery,
 )
-from emmet.api.core.global_header import GlobalHeaderProcessor
-from emmet.api.routes.materials.materials.query_operators import (
-    MultiMaterialIDQuery,
-    FormulaQuery,
-    ChemsysQuery,
-    LicenseQuery,
-)
-from emmet.api.core.settings import MAPISettings
+from emmet.core.thermo import ThermoDoc
 
 
 def thermo_resource(thermo_store):

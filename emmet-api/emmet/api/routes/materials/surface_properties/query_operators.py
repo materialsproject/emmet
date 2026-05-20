@@ -1,27 +1,25 @@
+from dataclasses import dataclass
+
 from fastapi import Query
-from emmet.api.query_operator import QueryOperator
+
+from emmet.api.query_operator import BoolQuery
 from emmet.api.utils import STORE_PARAMS
 
 
-class ReconstructedQuery(QueryOperator):
+@dataclass
+class ReconstructedQuery(BoolQuery):
     """
-    Method to generate a query on whether the entry
+    Method to generate a query on whether an entry or material
     contains a reconstructed surface.
     """
+
+    field_name: str = "has_reconstructed"
 
     def query(
         self,
         has_reconstructed: bool | None = Query(
             None,
-            description="Whether the entry has a reconstructed surface.",
+            description="Whether an entry or material has a reconstructed surface.",
         ),
     ) -> STORE_PARAMS:
-        crit = {}
-
-        if has_reconstructed is not None:
-            crit.update({"has_reconstructed": has_reconstructed})
-
-        return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        return [("has_reconstructed", False)]
+        return self._prepare_query(has_reconstructed)

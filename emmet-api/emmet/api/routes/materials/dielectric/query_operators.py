@@ -1,11 +1,13 @@
-from collections import defaultdict
+from dataclasses import dataclass
 
 from fastapi import Query
-from emmet.api.query_operator import QueryOperator
+
+from emmet.api.query_operator import RangeQuery
 from emmet.api.utils import STORE_PARAMS
 
 
-class DielectricQuery(QueryOperator):
+@dataclass
+class DielectricQuery(RangeQuery):
     """
     Method to generate a query for ranges of dielectric constant data
     """
@@ -45,29 +47,11 @@ class DielectricQuery(QueryOperator):
             description="Minimum value for the refractive index.",
         ),
     ) -> STORE_PARAMS:
-        crit = defaultdict(dict)  # type: dict
-
-        d = {
-            "e_total": [e_total_min, e_total_max],
-            "e_ionic": [e_ionic_min, e_ionic_max],
-            "e_electronic": [e_electronic_min, e_electronic_max],
-            "n": [n_min, n_max],
-        }
-
-        for entry in d:
-            if d[entry][0] is not None:
-                crit[entry]["$gte"] = d[entry][0]
-
-            if d[entry][1] is not None:
-                crit[entry]["$lte"] = d[entry][1]
-
-        return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        keys = [
-            "e_total",
-            "e_ionic",
-            "e_electronic",
-            "n",
-        ]
-        return [(key, False) for key in keys]
+        return self._prepare_query(
+            value_dict={
+                "e_total": [e_total_min, e_total_max],
+                "e_ionic": [e_ionic_min, e_ionic_max],
+                "e_electronic": [e_electronic_min, e_electronic_max],
+                "n": [n_min, n_max],
+            }
+        )

@@ -15,7 +15,7 @@ from pydantic import (
     field_validator,
     model_validator,
 )
-from pymatgen.core import Molecule, Structure
+from emmet.core.io.pymatgen import Molecule, Structure
 from scipy.interpolate import CubicSpline
 from typing_extensions import Self
 

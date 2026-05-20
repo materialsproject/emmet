@@ -3,14 +3,12 @@
 from typing import Mapping, Self
 
 from pydantic import BaseModel, Field
-from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer, oxide_type
-from pymatgen.analysis.structure_matcher import StructureMatcher
+from emmet.core.io.pymatgen import SpacegroupAnalyzer, oxide_type, StructureMatcher
 
 from emmet.core.base import EmmetMeta
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin
 from emmet.core.mpid import AlphaID
-from emmet.core.mpid_ext import ThermoID
 from emmet.core.settings import EmmetSettings
 from emmet.core.tasks import ValidationTaskDoc
 from emmet.core.types.pymatgen_types.computed_entries_adapter import (
@@ -223,7 +221,7 @@ class MaterialsDoc(CoreMaterialsDoc):
                         "task_id": best_task_doc.task_id,
                     },
                     "energy": best_task_doc.output.energy,
-                    "entry_id": ThermoID(identifier=material_id, suffix=rt),
+                    "entry_id": f"{material_id}-{rt}",
                     "parameters": {
                         "hubbards": best_task_doc.input.hubbards,
                         "is_hubbard": best_task_doc.input.is_hubbard,

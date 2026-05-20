@@ -1,20 +1,12 @@
 from collections import defaultdict
-from sys import version_info
-from typing import get_args
+from dataclasses import dataclass
 
-import numpy as np
 from fastapi import Query
-from emmet.api.query_operator import QueryOperator
-from emmet.api.utils import STORE_PARAMS, process_identifiers
-from pymatgen.analysis.magnetism import Ordering
-from scipy.stats import gaussian_kde
+from emmet.core.io.pymatgen import Ordering
 
-from emmet.core.summary import SummaryStats
-
-if version_info >= (3, 8):
-    from typing import Literal  # type: ignore
-else:
-    from typing_extensions import Literal  # type: ignore
+from emmet.api.query_operator import BoolQuery, QueryOperator
+from emmet.api.query_operator.core import MultiMaterialIDQuery
+from emmet.api.utils import STORE_PARAMS
 
 
 class HasPropsQuery(QueryOperator):
@@ -38,23 +30,11 @@ class HasPropsQuery(QueryOperator):
         return {"criteria": crit}
 
 
-class MaterialIDsSearchQuery(QueryOperator):
+@dataclass
+class MaterialIDsSearchQuery(MultiMaterialIDQuery):
     """
     Method to generate a query on search docs using multiple material_id values
     """
-
-    def query(
-        self,
-        material_ids: str | None = Query(
-            None, description="Comma-separated list of material_ids to query on"
-        ),
-    ) -> STORE_PARAMS:
-        crit = {}
-
-        if material_ids:
-            crit.update({"material_id": {"$in": process_identifiers(material_ids)}})
-
-        return {"criteria": crit}
 
     def post_process(self, docs, query):
         if not query.get("sort", None):
@@ -70,10 +50,13 @@ class MaterialIDsSearchQuery(QueryOperator):
         return docs
 
 
-class SearchIsStableQuery(QueryOperator):
+@dataclass
+class SearchIsStableQuery(BoolQuery):
     """
     Method to generate a query on whether a material is stable
     """
+
+    field_name: str = "is_stable"
 
     def query(
         self,
@@ -81,37 +64,7 @@ class SearchIsStableQuery(QueryOperator):
             None, description="Whether the material is stable."
         ),
     ):
-        crit = {}
-
-        if is_stable is not None:
-            crit["is_stable"] = is_stable
-
-        return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        return [("is_stable", False)]
-
-
-class SearchHasReconstructedQuery(QueryOperator):
-    """
-    Method to generate a query on whether a material has any reconstructed surfaces
-    """
-
-    def query(
-        self,
-        has_reconstructed: bool | None = Query(
-            None, description="Whether the material has reconstructed surfaces."
-        ),
-    ):
-        crit = {}
-
-        if has_reconstructed is not None:
-            crit["has_reconstructed"] = has_reconstructed
-
-        return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        return [("is_stable", False)]
+        return self._prepare_query(is_stable)
 
 
 class SearchMagneticQuery(QueryOperator):
@@ -132,14 +85,14 @@ class SearchMagneticQuery(QueryOperator):
 
         return {"criteria": crit}
 
-    def ensure_indexes(self):  # pragma: no cover
-        return [("ordering", False)]
 
-
-class SearchIsTheoreticalQuery(QueryOperator):
+@dataclass
+class SearchIsTheoreticalQuery(BoolQuery):
     """
     Method to generate a query on whether a material is theoretical
     """
+
+    field_name: str = "theoretical"
 
     def query(
         self,
@@ -147,15 +100,7 @@ class SearchIsTheoreticalQuery(QueryOperator):
             None, description="Whether the material is theoretical."
         ),
     ):
-        crit = {}
-
-        if theoretical is not None:
-            crit["theoretical"] = theoretical
-
-        return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        return [("theoretical", False)]
+        return self._prepare_query(theoretical)
 
 
 class SearchESQuery(QueryOperator):
@@ -181,132 +126,3 @@ class SearchESQuery(QueryOperator):
             crit["is_metal"] = is_metal
 
         return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        keys = ["is_gap_direct", "is_metal"]
-
-        return [(key, False) for key in keys]
-
-
-class SearchStatsQuery(QueryOperator):
-    """
-    Method to generate a query on search stats data
-    """
-
-    def __init__(self, search_doc):
-        valid_numeric_fields = tuple(
-            sorted(
-                k
-                for k, v in search_doc.model_fields.items()
-                if float in get_args(v.annotation)
-            )
-        )
-
-        def query(
-            field: Literal[valid_numeric_fields] = Query(  # type: ignore
-                valid_numeric_fields[0],
-                title=f"SearchDoc field to query on, must be a numerical field, "
-                f"choose from: {', '.join(valid_numeric_fields)}",
-            ),
-            num_samples: int | None = Query(
-                None,
-                title="If specified, will only sample this number of documents.",
-            ),
-            min_val: float | None = Query(
-                None,
-                title="If specified, will only consider documents with field values "
-                "greater than or equal to this minimum value.",
-            ),
-            max_val: float | None = Query(
-                None,
-                title="If specified, will only consider documents with field values "
-                "less than or equal to this minimum value.",
-            ),
-            num_points: int = Query(
-                100, title="The number of values in the returned distribution."
-            ),
-        ) -> STORE_PARAMS:
-            if min_val or max_val:
-                pipeline = [{"$match": {field: {}}}]  # type: list
-                if min_val is not None:
-                    pipeline[0]["$match"][field]["$gte"] = min_val
-                if max_val is not None:
-                    pipeline[0]["$match"][field]["$lte"] = max_val
-            else:
-                pipeline = []
-
-            if num_samples:
-                pipeline.append({"$sample": {"size": num_samples}})
-
-            pipeline.append({"$project": {field: 1, "_id": 0}})
-
-            return {"pipeline": pipeline}
-
-        self.query = query
-
-    def query(self):
-        "Stub query function for abstract class"
-        pass
-
-    def post_process(self, docs, query):
-        if docs:
-            field = list(docs[0].keys())[0]
-
-            params = query.get("pipeline", {})[0].get("$match", {})
-
-            for entry in params.values():
-                if "$gte" in entry:
-                    min_val = entry.get("$gte", None)
-                    max_val = entry.get("$lte", None)
-
-            num_points = 100
-
-            num_samples = len(docs)
-            warnings = []
-
-            values = [d[field] for d in docs if field in d]
-            if min_val is None:
-                min_val = min(values)
-            if max_val is None:
-                max_val = max(values)
-
-            if len(values) != len(docs):
-                warnings += [
-                    "Some documents have field missing.",
-                    f"Only {len(values)} of {len(docs)} ({100*len(values)/len(docs):.2f}%) have {field} field present.",
-                ]
-
-            kernel = gaussian_kde(values)
-
-            distribution = list(
-                kernel(
-                    np.arange(
-                        min_val,
-                        max_val,
-                        step=(max_val - min_val) / num_points,
-                    )  # type: ignore
-                )
-            )
-
-            median = float(np.median(values))
-            mean = float(np.mean(values))
-
-            response = SummaryStats(
-                field=field,
-                num_samples=num_samples,
-                min=min_val,
-                max=max_val,
-                distribution=distribution,
-                median=median,
-                mean=mean,
-                warnings=warnings,
-            )
-
-        return [response]
-
-
-# TODO:
-# XAS and GB sub doc query operators
-# Add weighted work function to data
-# Add dimensionality to search endpoint
-# Add "has_reconstructed" data

@@ -3,24 +3,52 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Annotated, Sequence
+from functools import cached_property
+from typing import Sequence, TYPE_CHECKING, overload
 
-from pydantic import BaseModel, BeforeValidator, Field
-from pymatgen.analysis.phase_diagram import PhaseDiagram
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from pydantic import BaseModel, Field
+from emmet.core.io.pymatgen import PhaseDiagram, ComputedEntry, ComputedStructureEntry
 
 from emmet.core.base import EmmetMeta
 from emmet.core.material import PropertyOrigin
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid_ext import ThermoID
 from emmet.core.types.enums import ThermoType
 from emmet.core.types.pymatgen_types.computed_entries_adapter import (
     ComputedStructureEntryType,
 )
 from emmet.core.types.pymatgen_types.phase_diagram_adapter import PhaseDiagramType
-from emmet.core.types.typing import DateTimeType, IdentifierType
+from emmet.core.types.typing import (
+    DateTimeType,
+    IdentifierType,
+    validate_compound_identifier,
+)
 from emmet.core.utils import type_override, utcnow
 from emmet.core.vasp.calc_types.enums import RunType
+
+if TYPE_CHECKING:
+    from typing import Literal
+    from emmet.core.types.typing import CompoundIDType
+
+
+@overload
+def validate_thermo_id(
+    idx: str, as_components: Literal[True] = True
+) -> CompoundIDType: ...
+
+
+@overload
+def validate_thermo_id(idx: str, as_components: Literal[False] = False) -> str: ...
+
+
+def validate_thermo_id(idx: str, as_components: bool = False) -> str | CompoundIDType:
+    """Validate a thermo identifier."""
+    return validate_compound_identifier(
+        idx,
+        suffixes=(ThermoType,),
+        separator="-",
+        use_prefix=True,
+        as_components=as_components,
+    )
 
 
 class DecompositionProduct(BaseModel):
@@ -53,14 +81,6 @@ class ThermoDoc(PropertyDoc):
         ...,
         description="Functional types of calculations involved in the energy mixing scheme.",
     )
-
-    thermo_id: Annotated[
-        ThermoID,
-        Field(
-            description="Unique document ID which is composed of the Material ID and thermo data type.",
-        ),
-        BeforeValidator(ThermoID._deserialize),
-    ]
 
     uncorrected_energy_per_atom: float = Field(
         ..., description="The total DFT energy of this material per atom in eV/atom."
@@ -120,6 +140,17 @@ class ThermoDoc(PropertyDoc):
         description="List of all entries that are valid for this material."
         " The keys for this dictionary are names of various calculation types.",
     )
+
+    @cached_property
+    def thermo_id(self) -> str:
+        """Unique document ID which is composed of the Material ID and thermo data type."""
+        if not self.material_id or not self.thermo_type:
+            raise ValueError(
+                "Cannot determine thermo_id: missing either `material_id` or `thermo_type`."
+            )
+        return validate_thermo_id(
+            f"{self.material_id}-{self.thermo_type}", as_components=False
+        )
 
     @classmethod
     def from_entries(
@@ -185,7 +216,7 @@ class ThermoDoc(PropertyDoc):
             builder_meta = EmmetMeta(license=blessed_entry.data.get("license"))  # type: ignore[call-arg]
 
             d = {
-                "thermo_id": ThermoID(identifier=material_id, suffix=thermo_type),
+                "thermo_id": f"{material_id}-{thermo_type}",
                 "material_id": material_id,
                 "thermo_type": thermo_type,
                 "uncorrected_energy_per_atom": blessed_entry.uncorrected_energy

@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
-from pymatgen.core.structure import Structure
+from emmet.core.io.pymatgen import Structure
 
 from emmet.core import __version__
 from emmet.core.material_property import PropertyDoc

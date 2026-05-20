@@ -1,12 +1,13 @@
-from emmet.api.resource import ReadOnlyResource
-from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
-from emmet.api.routes.materials.materials.query_operators import (
+from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
+from emmet.api.query_operator import (
     DeprecationQuery,
     MultiMaterialIDQuery,
+    PaginationQuery,
+    SparseFieldsQuery,
 )
-from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.resource import ReadOnlyResource
 from emmet.core.provenance import ProvenanceDoc
-from emmet.api.core.settings import MAPISettings
 
 
 def provenance_resource(provenance_store):

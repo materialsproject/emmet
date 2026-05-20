@@ -3,8 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pydantic import Field
-from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
-from pymatgen.core import Structure
+from emmet.core.io.pymatgen import CollinearMagneticStructureAnalyzer, Structure
 
 from emmet.core.material_property import PropertyDoc
 

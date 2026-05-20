@@ -5,7 +5,7 @@ from emmet.api.routes.materials.mpcomplete.query_operator import (
 )
 from emmet.api.core.settings import MAPISettings
 
-from pymatgen.core.structure import Structure
+from emmet.core.io.pymatgen import Structure
 
 
 def test_mpcomplete_post_query():

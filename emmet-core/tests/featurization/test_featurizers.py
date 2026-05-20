@@ -2,7 +2,6 @@ from dataclasses import dataclass
 import gzip
 import json
 import numpy as np
-from pymatgen.core import Structure
 import pytest
 
 from emmet.core.featurization.featurizers import (
@@ -18,11 +17,6 @@ from emmet.core.featurization.featurizers import (
 def fingerprint_test_data(test_dir):
     with gzip.open(test_dir / "featurizers_data.json.gz", "rb") as f:
         return json.load(f)
-
-
-@pytest.fixture
-def test_structure(test_dir):
-    return Structure.from_file(test_dir / "Si_mp_149.cif")
 
 
 @dataclass
@@ -75,7 +69,7 @@ def test_stats():
         fingerprinter.get_stat("lorem", test_arr)
 
 
-def test_fingerprinters(fingerprint_test_data, test_structure):
+def test_fingerprinters(fingerprint_test_data, mp_149_structure):
 
     assert all(
         isinstance(k, int) and all(isinstance(s, str) for s in v)
@@ -87,7 +81,7 @@ def test_fingerprinters(fingerprint_test_data, test_structure):
         assert (
             cnnf.feature_labels == fingerprint_test_data["crystal_nn"][preset]["labels"]
         )
-        assert cnnf.featurize(test_structure, 0) == pytest.approx(
+        assert cnnf.featurize(mp_149_structure, 0) == pytest.approx(
             fingerprint_test_data["crystal_nn"][preset]["features"]
         )
 
@@ -95,6 +89,6 @@ def test_fingerprinters(fingerprint_test_data, test_structure):
         assert (
             ssf.feature_labels == fingerprint_test_data["site_stats"][preset]["labels"]
         )
-        assert ssf.featurize(test_structure) == pytest.approx(
+        assert ssf.featurize(mp_149_structure) == pytest.approx(
             fingerprint_test_data["site_stats"][preset]["features"]
         )

@@ -1,6 +1,6 @@
 from emmet.api.routes.materials.magnetism.query_operators import MagneticQuery
 
-from pymatgen.analysis.magnetism import Ordering
+from emmet.core.io.pymatgen import Ordering
 
 
 def test_magnetic_query():

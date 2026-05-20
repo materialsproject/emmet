@@ -1,18 +1,50 @@
 from typing import Annotated, Any, TypeVar
 
 import orjson
-from pydantic import BeforeValidator, TypeAdapter, WrapSerializer
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    Field,
+    TypeAdapter,
+    WrapSerializer,
+    model_validator,
+)
+from emmet.core.io.pymatgen import ComputedEntry, ComputedStructureEntry
 from typing_extensions import NotRequired, TypedDict
 
-from emmet.core.mpid_ext import ThermoID
+from emmet.core.types.enums import ThermoType
 from emmet.core.types.pymatgen_types.element_adapter import ElementType
 from emmet.core.types.pymatgen_types.structure_adapter import (
     StructureType,
     pop_empty_structure_keys,
 )
 from emmet.core.types.typing import IdentifierType, MaterialIdentifierType
+from emmet.core.utils import type_override
+from emmet.core.vasp.calc_types.enums import RunType
 from emmet.core.vasp.calculation import PotcarSpec
+
+
+@type_override({"suffix": ThermoType})
+class EntryID(BaseModel):
+    identifier: MaterialIdentifierType
+    suffix: RunType | ThermoType
+    separator: str = Field(default="-")
+
+    @model_validator(mode="before")
+    def validate_string(cls, data: Any) -> Any:
+        if isinstance(data, str):
+            sep = cls.model_fields["separator"].default
+            parts = data.rsplit(sep, 1)
+            return {"identifier": parts[0], "suffix": parts[1]}
+
+        return data
+
+    def __repr__(self) -> str:
+        return f"EntryID(identifier={repr(self.identifier)}, suffix={repr(self.suffix)}, separator='{self.separator}')"
+
+    def __str__(self) -> str:
+        return self.separator.join([self.identifier.string, self.suffix.value])
+
 
 # TypedEnergyAdjustmentDict = TypedDict(
 #     "TypedEnergyAdjustmentDict",
@@ -78,25 +110,30 @@ class TypedCEParameterDict(TypedDict):
     hubbards: NotRequired[dict[str, float] | None]  # type: ignore[type-arg]
 
 
-TypedComputedEntryDict = TypedDict(
+# Used for running deserialization not dependent on
+# type of energy_adjustments
+_TypedComputedEntryDict = TypedDict(  # type: ignore[name-match]
     "TypedComputedEntryDict",
     {
         "@module": str,
         "@class": str,
         "energy": float,
         "composition": dict[ElementType, float],
-        "entry_id": ThermoID,
-        "correction": float,
-        # "energy_adjustments": list[
-        #     TypedCompositionEnergyAdjustmentDict
-        #     | TypedEnergyAdjustmentDict
-        #     | TypedTemperatureEnergyAdjustmentDict
-        # ],
-        "energy_adjustments": NotRequired[str | None],
-        "parameters": TypedCEParameterDict,
-        "data": TypedCEDataDict,
+        "entry_id": NotRequired[EntryID | None],
+        "correction": NotRequired[float | None],
+        "parameters": NotRequired[TypedCEParameterDict | None],
+        "data": NotRequired[TypedCEDataDict | None],
     },
 )
+
+
+class TypedComputedEntryDict(_TypedComputedEntryDict):
+    # energy_adjustments: list[
+    #     TypedCompositionEnergyAdjustmentDict
+    #     | TypedEnergyAdjustmentDict
+    #     | TypedTemperatureEnergyAdjustmentDict
+    # ]
+    energy_adjustments: NotRequired[str | None]
 
 
 class TypedComputedStructureEntryDict(TypedComputedEntryDict):
@@ -143,7 +180,10 @@ def pop_cse_empty_keys(cse: dict) -> dict[str, Any]:
 
 def entry_deserializer(entry: dict[str, Any] | ComputedEntry | ComputedStructureEntry):
     if isinstance(entry, dict):
-        entry_dict: dict[str, Any] = entry
+        entry_dict: dict[str, Any] = TypeAdapter(  # type: ignore[assignment]
+            _TypedComputedEntryDict
+        ).validate_python(entry, extra="allow")
+
         entry_cls: type[ComputedEntry | ComputedStructureEntry]
         entry_type: type[TypedComputedEntryDict | TypedComputedStructureEntryDict]
 

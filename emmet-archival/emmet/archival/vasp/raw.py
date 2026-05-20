@@ -12,10 +12,17 @@ import numpy as np
 import zarr
 from monty.io import zopen
 from pydantic import Field
-from pymatgen.core import Structure
-from pymatgen.io.validation.common import PotcarSummaryStats, VaspFiles
-from pymatgen.io.validation.validation import VaspValidator
-from pymatgen.io.vasp import Incar, Kpoints, Outcar, Potcar, Vasprun
+from emmet.core.io.pymatgen import (
+    Structure,
+    PotcarSummaryStats,
+    VaspFiles,
+    VaspValidator,
+    Incar,
+    Kpoints,
+    Outcar,
+    Potcar,
+    Vasprun,
+)
 
 from emmet.archival.core import walk_hierarchical_data, FileArchiveBase
 from emmet.core.tasks import TaskDoc

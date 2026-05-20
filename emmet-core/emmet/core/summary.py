@@ -48,51 +48,6 @@ class HasProps(ValueEnum):
     chemenv = "chemenv"
 
 
-class SummaryStats(BaseModel):
-    """
-    Statistics about a specified SummaryDoc field.
-    """
-
-    field: str | None = Field(
-        None,
-        title="Field",
-        description="Field name corresponding to a field in SummaryDoc.",
-    )
-    num_samples: int | None = Field(
-        None,
-        title="Sample",
-        description="The number of documents sampled to generate statistics. "
-        "If unspecified, statistics will be from entire database.",
-    )
-    min: float | None = Field(
-        None,
-        title="Minimum",
-        description="The minimum value "
-        "of the specified field used to "
-        "generate statistics.",
-    )
-    max: float | None = Field(
-        None,
-        title="Maximum",
-        description="The maximum value "
-        "of the specified field used to "
-        "generate statistics.",
-    )
-    median: float | None = Field(
-        None, title="Median", description="The median of the field values."
-    )
-    mean: float | None = Field(
-        None, title="Mean", description="The mean of the field values."
-    )
-    distribution: list[float] | None = Field(
-        None,
-        title="Distribution",
-        description="List of floats specifying a kernel density "
-        "estimator of the distribution, equally spaced "
-        "between specified minimum and maximum values.",
-    )
-
-
 class PropModel(BaseModel):
     """Check for model initialization outside of defaults."""
 

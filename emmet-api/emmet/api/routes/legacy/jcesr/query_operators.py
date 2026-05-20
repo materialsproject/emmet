@@ -1,10 +1,10 @@
 from collections import defaultdict
 
 from fastapi import HTTPException, Query
+from emmet.core.io.pymatgen import Composition, Element
+
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
-from pymatgen.core import Composition
-from pymatgen.core.periodic_table import Element
 
 
 class MoleculeElementsQuery(QueryOperator):
@@ -32,9 +32,6 @@ class MoleculeElementsQuery(QueryOperator):
             crit["elements"] = {"$all": [str(el) for el in element_list]}
 
         return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        return [("elements", False)]
 
 
 class MoleculeBaseQuery(QueryOperator):
@@ -110,15 +107,6 @@ class MoleculeBaseQuery(QueryOperator):
 
         return {"criteria": crit}
 
-    def ensure_indexes(self):  # pragma: no cover
-        keys = self._keys_from_query()
-        indexes = []
-        for key in keys:
-            if "_min" in key:
-                key = key.replace("_min", "")
-                indexes.append((key, False))
-        return indexes
-
 
 class MoleculeFormulaQuery(QueryOperator):
     """
@@ -157,6 +145,3 @@ class MoleculeFormulaQuery(QueryOperator):
                 )
 
         return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        return [("formula_pretty", False)]

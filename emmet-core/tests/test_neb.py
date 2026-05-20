@@ -6,7 +6,7 @@ import shutil
 from tempfile import TemporaryDirectory
 
 from monty.serialization import loadfn
-from pymatgen.core import Structure
+from emmet.core.io.pymatgen import Structure
 
 from emmet.core.neb import (
     NebResult,
@@ -124,9 +124,8 @@ def test_from_directories(neb_test_dir):
     )
 
 
-def test_top_level_assignment(test_dir):
+def test_top_level_assignment(test_dir, mp_149_structure):
 
-    structure = Structure.from_file(test_dir / "Si_mp_149.cif")
     fictive_doc = NebPathwayResult(
         hops={
             k: NebResult(forward_barrier=barriers[0], reverse_barrier=barriers[1])
@@ -136,7 +135,7 @@ def test_top_level_assignment(test_dir):
                 "c": (None, 0.1),
             }.items()
         },
-        host_structure=structure,
+        host_structure=mp_149_structure,
     )
     assert fictive_doc.forward_barriers == {
         "a": 1.0,
@@ -154,9 +153,9 @@ def test_top_level_assignment(test_dir):
         "c": 0.1,
     }
 
-    assert fictive_doc.host_formula == structure.formula
-    assert fictive_doc.host_formula_reduced == structure.reduced_formula
-    assert fictive_doc.host_chemsys == structure.chemical_system
+    assert fictive_doc.host_formula == mp_149_structure.formula
+    assert fictive_doc.host_formula_reduced == mp_149_structure.reduced_formula
+    assert fictive_doc.host_chemsys == mp_149_structure.chemical_system
 
     energies = {
         "0+1": [0.0, 0.5, 0.1],

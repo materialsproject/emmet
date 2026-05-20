@@ -1,5 +1,5 @@
 import pytest
-from pymatgen.core import Structure
+from emmet.core.io.pymatgen import Structure
 
 from . import test_structures
 from emmet.core import ARROW_COMPATIBLE

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
-from pymatgen.core.structure import Molecule
+from emmet.core.io.pymatgen import Molecule
 
 from emmet.core.mpid import MPID, MPculeID
 from emmet.core.qchem.calc_types import (

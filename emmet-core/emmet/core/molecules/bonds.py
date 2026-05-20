@@ -6,8 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 import networkx as nx
 from pydantic import Field
-from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.core.structure import Molecule
+from emmet.core.io.pymatgen import MoleculeGraph, Molecule
 
 from emmet.core.molecules import MolPropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc

@@ -1,7 +1,7 @@
 from typing import Annotated, TypeVar
 
 from pydantic import BeforeValidator, WrapSerializer
-from pymatgen.electronic_structure.bandstructure import Kpoint
+from emmet.core.io.pymatgen import Kpoint
 from typing_extensions import TypedDict
 
 from emmet.core.types.pymatgen_types.lattice_adapter import MSONableTypedLatticeDict

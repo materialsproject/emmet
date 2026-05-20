@@ -11,8 +11,12 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 
 import numpy as np
-from pymatgen.analysis.local_env import CrystalNN, LocalStructOrderParams, CN_OPT_PARAMS
-from pymatgen.core import Structure
+from emmet.core.io.pymatgen import (
+    CrystalNN,
+    LocalStructOrderParams,
+    CN_OPT_PARAMS,
+    Structure,
+)
 
 if TYPE_CHECKING:
     from typing import Any, Literal

@@ -9,8 +9,7 @@ import json
 import sys
 import logging
 
-from pymatgen.core import Composition
-from pymatgen.core.composition import CompositionError
+from emmet.core.io.pymatgen import Composition, CompositionError
 
 
 logger = logging.getLogger(__name__)

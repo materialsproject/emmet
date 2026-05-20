@@ -1,6 +1,5 @@
 import pytest
-from pymatgen.analysis.diffraction.xrd import WAVELENGTHS
-from pymatgen.core import Element, Lattice, Structure
+from emmet.core.io.pymatgen import WAVELENGTHS, Element, Lattice, Structure
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.utils import jsanitize

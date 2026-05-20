@@ -11,12 +11,14 @@ from pydantic import BaseModel, model_validator
 
 from emmet.core.atoms.elements import Element, ELEMENT_DATA, parse_species_str
 from emmet.core.math import Matrix3D, Vector3D
+from emmet.core.io.pymatgen import Site as PmgSite
 
 if TYPE_CHECKING:
     from typing import Any
     from typing_extensions import Self
 
-    from emmet.core.io.pymatgen import Composition, PeriodicSite, PmgMolecule, PmgSite
+    from emmet.core.io.pymatgen import Composition, PeriodicSite, PmgMolecule
+
 
 class Site(BaseModel):
     """Schematize a site in a molecule or material."""
@@ -161,7 +163,7 @@ class Compound(BaseModel):
         return cls.from_dict(comp.as_dict())
 
     def to_pmg(self) -> Composition:
-        from pymatgen.core.composition import Composition
+        from emmet.core.io.pymatgen import Composition
 
         return Composition(self.to_dict())
 
@@ -252,17 +254,19 @@ class Molecule(BaseModel):
         )
 
     def to_pmg(self) -> PmgMolecule:
-        from pymatgen.core.structure import Molecule as PmgMolecule
+        from emmet.core.io.pymatgen import Molecule as PmgMolecule
 
         return PmgMolecule.from_sites(
             [site.to_pmg(cell=self.cell) for site in self.sites]
         )
 
     @classmethod
-    def from_sites(cls, sites : list[PmgSite | Site]) -> Self:
-        from py
+    def from_sites(cls, sites: list[PmgSite | Site]) -> Self:
+        from emmet.core.io.pymatgen import Site as PmgSite
+
         return cls(
-            sites = [
-                Site.from_pmg(site) if
+            sites=[
+                Site.from_pmg(site) if isinstance(site, PmgSite) else site
+                for site in sites
             ]
         )

@@ -17,20 +17,20 @@ import numpy as np
 from monty.json import MontyDecoder, MSONable
 from pydantic import BaseModel, RootModel
 from pydantic._internal._utils import lenient_issubclass
-from pymatgen.analysis.elasticity.strain import Deformation
-from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
-from pymatgen.analysis.molecule_matcher import MoleculeMatcher
-from pymatgen.analysis.structure_matcher import (
+from emmet.core.io.pymatgen import (
+    Deformation,
+    MoleculeGraph,
+    OpenBabelNN,
+    metal_edge_extender,
+    MoleculeMatcher,
     AbstractComparator,
     ElementComparator,
     StructureMatcher,
-)
-from pymatgen.core.structure import Molecule, Structure
-from pymatgen.transformations.standard_transformations import (
+    Molecule,
+    Structure,
     DeformStructureTransformation,
+    weisfeiler_lehman_graph_hash,
 )
-from pymatgen.util.graph_hashing import weisfeiler_lehman_graph_hash
 from typing_extensions import TypedDict
 
 from emmet.core import ARROW_COMPATIBLE

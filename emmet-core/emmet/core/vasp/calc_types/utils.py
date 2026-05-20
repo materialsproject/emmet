@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from monty.serialization import loadfn
 import numpy as np
-from pymatgen.io.vasp import Kpoints
+from emmet.core.io.pymatgen import Kpoints
 
 from emmet.core.vasp.calc_types.enums import CalcType, RunType, TaskType
 

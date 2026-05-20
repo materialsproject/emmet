@@ -156,7 +156,7 @@ class ElementDatabase(dict):
 
     def _load_data(self) -> dict[Element, ElementData]:
         """Cache atom data from pymatgen."""
-        from pymatgen.core.periodic_table import Element as PmgElement
+        from emmet.core.io.pymatgen import Element as PmgElement
 
         # ignore isotopes
         type_map = {e: PmgElement(e.name) for e in Element}

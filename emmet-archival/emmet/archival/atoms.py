@@ -13,7 +13,7 @@ import pandas as pd
 import pyarrow as pa
 import zarr
 
-from pymatgen.core import Element, Lattice, Structure, Species, PeriodicSite
+from emmet.core.io.pymatgen import Element, Lattice, Structure, Species, PeriodicSite
 from emmet.core.math import Matrix3D, ListVector3D
 
 from emmet.archival.base import Archiver

@@ -1,9 +1,9 @@
 from emmet.api.routes.materials.insertion_electrodes.query_operators import (
+    ElectrodeElementsQuery,
     ElectrodeFormulaQuery,
     ElectrodesChemsysQuery,
-    ElectrodeElementsQuery,
-    WorkingIonQuery,
     MultiBatteryIDQuery,
+    WorkingIonQuery,
 )
 
 
@@ -56,31 +56,21 @@ def test_insertion_electrode_query():
         working_ion="Li",
     )
 
-    assert q == {"criteria": {"working_ion": "Li"}}
+    assert q == {"criteria": {"working_ion": {"$in": ["Li"]}}}
 
 
 def test_multi_battery_id_query():
     op = MultiBatteryIDQuery()
-    assert op.query(battery_ids="mp-149_Ca, mp-13_Li") == {
-        "pipeline": [
-            {
-                "$match": {
-                    "battery_id.identifier": {"$in": ["mp-aaaaaaan", "mp-aaaaaaft"]},
-                    "battery_id.suffix": {"$in": ["Ca", "Li"]},
-                }
-            },
-            {
-                "$addFields": {
-                    "_idcat": {
-                        "$concat": ["$battery_id.identifier", "_", "$battery_id.suffix"]
-                    }
-                }
-            },
-            {"$match": {"_idcat": {"$in": ["mp-aaaaaaft_Ca", "mp-aaaaaaan_Li"]}}},
-            {"$unset": "_idcat"},
-        ]
+    assert op.query(battery_ids="mp-149_Ca, mp-13_Li, mp-26_Ca,   mp-149_Li") == {
+        "criteria": {
+            "material_ids": {"$in": ["mp-aaaaaaan", "mp-aaaaaaba", "mp-aaaaaaft"]},
+            "working_ion": {"$in": ["Ca", "Li"]},
+        }
     }
 
     assert op.query(battery_ids="mp-149_Ca") == {
-        "criteria": {"battery_id.identifier": "mp-aaaaaaft", "battery_id.suffix": "Ca"}
+        "criteria": {
+            "material_ids": {"$in": ["mp-aaaaaaft"]},
+            "working_ion": {"$in": ["Ca"]},
+        }
     }

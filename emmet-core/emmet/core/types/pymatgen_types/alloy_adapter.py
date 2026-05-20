@@ -1,7 +1,7 @@
 from typing import Annotated, TypeVar
 
 from pydantic import BaseModel, BeforeValidator, Field, TypeAdapter, WrapSerializer
-from pymatgen.core import Element
+from emmet.core.io.pymatgen import Element
 from typing_extensions import NotRequired, TypedDict
 
 from emmet.core.types.pymatgen_types.structure_adapter import (
@@ -11,7 +11,7 @@ from emmet.core.types.pymatgen_types.structure_adapter import (
 from emmet.core.types.typing import MaterialIdentifierType
 
 try:
-    from pymatgen.analysis.alloys.core import AlloyMember, AlloyPair, AlloySystem
+    from emmet.core.io.pymatgen import AlloyMember, AlloyPair, AlloySystem
 except ImportError:
     raise ImportError(
         "Install pymatgen-analysis-alloys to use AlloyPairDoc or AlloySystemDoc"

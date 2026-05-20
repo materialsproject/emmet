@@ -2,18 +2,24 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
+from functools import cached_property
+from typing import TYPE_CHECKING, overload
 
 from pydantic import BaseModel, Field
-from pymatgen.analysis.phase_diagram import PhaseDiagram
-from pymatgen.apps.battery.battery_abc import AbstractElectrode
-from pymatgen.apps.battery.conversion_battery import ConversionElectrode
-from pymatgen.apps.battery.insertion_battery import InsertionElectrode
-from pymatgen.core import Composition
-from pymatgen.core.periodic_table import DummySpecies, Element, Species
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from emmet.core.io.pymatgen import (
+    PhaseDiagram,
+    AbstractElectrode,
+    ConversionElectrode,
+    InsertionElectrode,
+    Composition,
+    DummySpecies,
+    Element,
+    Species,
+    ComputedEntry,
+    ComputedStructureEntry,
+)
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.mpid_ext import BatteryID
 from emmet.core.types.enums import BatteryType
 from emmet.core.types.pymatgen_types.balanced_reaction_adapter import (
     BalancedReactionType,
@@ -25,8 +31,37 @@ from emmet.core.types.pymatgen_types.electrode_adapter import (
 )
 from emmet.core.types.pymatgen_types.element_adapter import ElementType
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
-from emmet.core.types.typing import DateTimeType, IdentifierType
+from emmet.core.types.typing import (
+    DateTimeType,
+    MaterialIdentifierType,
+    validate_compound_identifier,
+)
 from emmet.core.utils import type_override, utcnow
+
+if TYPE_CHECKING:
+    from typing import Literal
+    from emmet.core.types.typing import CompoundIDType
+
+
+@overload
+def validate_battery_id(
+    idx: str, as_components: Literal[True] = True
+) -> CompoundIDType: ...
+
+
+@overload
+def validate_battery_id(idx: str, as_components: Literal[False] = False) -> str: ...
+
+
+def validate_battery_id(idx: str, as_components: bool = False) -> str | CompoundIDType:
+    """Validate an insertion electode battery ID."""
+    return validate_compound_identifier(
+        idx,
+        suffixes=(Element,),
+        separator="_",
+        use_prefix=True,
+        as_components=as_components,
+    )
 
 
 class VoltagePairDoc(BaseModel):
@@ -86,7 +121,9 @@ class VoltagePairDoc(BaseModel):
         return cls(**sub_electrode.get_summary_dict(), **kwargs)
 
 
-@type_override({"id_charge": IdentifierType, "id_discharge": IdentifierType})
+@type_override(
+    {"id_charge": MaterialIdentifierType, "id_discharge": MaterialIdentifierType}
+)
 class InsertionVoltagePairDoc(VoltagePairDoc):
     """
     Features specific to insertion electrode
@@ -100,11 +137,11 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
         None, description="The energy above hull of the discharged material in eV/atom."
     )
 
-    id_charge: IdentifierType | int | None = Field(
+    id_charge: MaterialIdentifierType | int | None = Field(
         None, description="The Materials Project ID of the charged structure."
     )
 
-    id_discharge: IdentifierType | int | None = Field(
+    id_discharge: MaterialIdentifierType | int | None = Field(
         None, description="The Materials Project ID of the discharged structure."
     )
 
@@ -183,10 +220,10 @@ class BaseElectrode(EmmetBaseModel):
         None, description="The type of battery (insertion or conversion)."
     )
 
-    battery_id: BatteryID | None = Field(
+    material_ids: list[MaterialIdentifierType] | None = Field(
         None,
-        description="The id for this battery document is the numerically smallest material_id followed by "
-        "the working ion.",
+        description="The ids of all structures that matched to the present host lattice, regardless of stability. "
+        "The stable entries can be found in the adjacent pairs.",
     )
 
     thermo_type: str | None = Field(
@@ -264,12 +301,6 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
         None, description="Returns all of the voltage steps material pairs."
     )
 
-    material_ids: list[IdentifierType] | None = Field(
-        None,
-        description="The ids of all structures that matched to the present host lattice, regardless of stability. "
-        "The stable entries can be found in the adjacent pairs.",
-    )
-
     entries_composition_summary: EntriesCompositionSummary | None = Field(
         None,
         description="Composition summary data for all material in entries across all voltage pairs.",
@@ -280,12 +311,21 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
         description="The Pymatgen electrode object.",
     )
 
+    @cached_property
+    def battery_id(self) -> str:
+        """Retrieve battery ID from other fields."""
+        if not self.material_ids or not self.working_ion:
+            raise ValueError("No battery identifer could be determined.")
+        min_mpid = min(
+            idx for idx in self.material_ids if not idx.string.startswith("mvc")
+        )
+        return validate_battery_id(f"{min_mpid}_{self.working_ion}")
+
     @classmethod
     def from_entries(
         cls,
         grouped_entries: list[ComputedStructureEntry],
         working_ion_entry: ComputedEntry,
-        battery_id: BatteryID,
         strip_structures: bool = False,
     ) -> InsertionElectrodeDoc | None:
         try:
@@ -342,7 +382,6 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
 
         return cls(
             battery_type="insertion",  # type: ignore
-            battery_id=battery_id,
             host_structure=stripped_host.as_dict(),
             framework=framework,
             battery_formula=battery_formula,
@@ -436,6 +475,13 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
     Conversion electrode
     """
 
+    # TODO: Conversion electrode has no way to determine the MPID component of the ID.
+    battery_id: str | None = Field(
+        None,
+        description="The id for this battery document is the numerically smallest material_id followed by "
+        "the working ion.",
+    )
+
     initial_comp_formula: str | None = Field(
         None,
         description="The starting composition for the ConversionElectrode represented as a string/formula.",
@@ -455,7 +501,7 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
         composition: Composition,
         entries: list[ComputedEntry],
         working_ion_symbol: str,
-        battery_id: BatteryID,
+        battery_id: str,
         thermo_type: str,
     ):
         ce = ConversionElectrode.from_composition_and_entries(
@@ -472,7 +518,7 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
         comp: Composition,
         pd: PhaseDiagram,
         working_ion_symbol: str,
-        battery_id: BatteryID,
+        battery_id: str,
         thermo_type: str,
     ):
         ce = ConversionElectrode.from_composition_and_pd(

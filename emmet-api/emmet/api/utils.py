@@ -4,11 +4,7 @@ from __future__ import annotations
 
 import base64
 import inspect
-from typing import (
-    Any,
-    Literal,
-    TYPE_CHECKING,
-)
+from typing import TYPE_CHECKING, Any, Literal
 
 from bson.objectid import ObjectId
 
@@ -36,6 +32,10 @@ STORE_PARAMS = dict[
     ],
     Any,
 ]
+
+
+def split_csv(x: str) -> list[str]:
+    return [y.strip() for y in x.split(",")]
 
 
 def merge_queries(queries: list[STORE_PARAMS]) -> STORE_PARAMS:
@@ -136,8 +136,7 @@ def process_identifiers(ids: str, use_prefix: bool = True) -> list[str]:
         ids (str) : A comma-separated list of IDs, accepting
             either legacy MPID format, or new AlphaID format
         use_prefix (bool): Whether to use the prefix in the
-            returned IDs. Only `tasks` do not currently use a
-            prefix.
+            returned IDs.
 
     Returns:
         list of str

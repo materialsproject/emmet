@@ -8,7 +8,7 @@ from pydantic import Field
 from emmet.core.material_property import PropertyDoc
 
 if TYPE_CHECKING:
-    from pymatgen.core import Structure
+    from emmet.core.io.pymatgen import Structure
 
     from emmet.core.types.typing import IdentifierType
 

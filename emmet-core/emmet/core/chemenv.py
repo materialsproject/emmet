@@ -3,20 +3,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 from pydantic import Field
-from pymatgen.analysis.chemenv.coordination_environments.chemenv_strategies import (
+from emmet.core.io.pymatgen import (
+    SpacegroupAnalyzer,
+    Structure,
     SimplestChemenvStrategy,
-)
-from pymatgen.analysis.chemenv.coordination_environments.coordination_geometries import (
     AllCoordinationGeometries,
-)
-from pymatgen.analysis.chemenv.coordination_environments.coordination_geometry_finder import (
     LocalGeometryFinder,
-)
-from pymatgen.analysis.chemenv.coordination_environments.structure_environments import (
     LightStructureEnvironments,
 )
-from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
-from pymatgen.core.structure import Structure
 
 from emmet.core.atoms.base import Molecule
 from emmet.core.material_property import PropertyDoc

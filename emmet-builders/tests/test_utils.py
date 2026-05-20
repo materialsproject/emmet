@@ -1,7 +1,7 @@
 import pytest
 from monty.serialization import dumpfn, loadfn
 from numpy.testing import assert_almost_equal
-from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
+from emmet.core.io.pymatgen import MigrationGraph
 
 from emmet.builders.utils import (
     chemsys_permutations,

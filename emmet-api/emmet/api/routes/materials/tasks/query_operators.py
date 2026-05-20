@@ -2,17 +2,13 @@ from datetime import datetime
 from typing import Any
 
 from fastapi import HTTPException, Query
-from emmet.api.query_operator import QueryOperator
-from emmet.api.utils import STORE_PARAMS, process_identifiers
 from monty.json import jsanitize
-from pymatgen.core.periodic_table import Element
-from emmet.api.routes.materials.materials.utils import (
-    formula_to_atlas_criteria,
-)
-from emmet.api.routes.materials.tasks.utils import (
-    calcs_reversed_to_trajectory,
-    task_to_entry,
-)
+from emmet.core.io.pymatgen import Element
+
+from emmet.api.query_operator import MultiTaskIDQuery, QueryOperator
+from emmet.api.routes.materials.materials.utils import formula_to_atlas_criteria
+from emmet.api.routes.materials.tasks.utils import task_to_entry
+from emmet.api.utils import STORE_PARAMS
 
 
 class AtlasBatchIdQuery(QueryOperator):
@@ -192,80 +188,7 @@ class LastUpdatedQuery(QueryOperator):
         return {"criteria": crit}
 
 
-class _BaseMultiTaskIDQuery(QueryOperator):
-    """Define common query for multiple task IDs to allow for different post processing."""
-
-    def query(
-        self,
-        task_ids: str | None = Query(
-            None,
-            description="Comma-separated list of task_ids to query on",
-        ),
-    ) -> STORE_PARAMS:
-        return {
-            "criteria": (
-                {"task_id": {"$in": process_identifiers(task_ids)}} if task_ids else {}
-            )
-        }
-
-
-class MultipleTaskIDsQuery(QueryOperator):
-    """
-    Method to generate a query on search docs using multiple task_id values.
-
-    NOTE: This class uses Atlas search and cannot inherit from `_BaseMultiTaskIDQuery`.
-    """
-
-    def query(
-        self,
-        task_ids: str | None = Query(
-            None,
-            description="Comma-separated list of task_ids to query on",
-        ),
-    ) -> STORE_PARAMS:
-        return {
-            "criteria": (
-                {
-                    "in": {
-                        "path": "task_id",
-                        "value": process_identifiers(task_ids),
-                    }
-                }
-                if task_ids
-                else {}
-            )
-        }
-
-    def post_process(self, docs, query):
-        """
-        Post processing to remove unwanted fields from all task queries
-        """
-        _ = [doc.pop(k, None) for doc in docs for k in ("tags", "sbxn", "dir_name")]
-        return docs
-
-
-class TrajectoryQuery(_BaseMultiTaskIDQuery):
-    """
-    Method to generate a query on calculation trajectory data from task documents
-    """
-
-    def post_process(self, docs, query):
-        """
-        Post processing to generate trajectory data
-        """
-        return [
-            {
-                "task_id": doc["task_id"],
-                "trajectories": [
-                    traj.model_dump(mode="json")
-                    for traj in calcs_reversed_to_trajectory(doc["calcs_reversed"])
-                ],
-            }
-            for doc in docs
-        ]
-
-
-class EntryQuery(_BaseMultiTaskIDQuery):
+class EntryQuery(MultiTaskIDQuery):
     """
     Method to generate a query on calculation entry data from task documents
     """
@@ -277,35 +200,4 @@ class EntryQuery(_BaseMultiTaskIDQuery):
         return [
             {"task_id": doc["task_id"], "entry": jsanitize(task_to_entry(doc))}
             for doc in docs
-        ]
-
-
-class DeprecationQuery(QueryOperator):
-    """
-    Method to generate a query on deprecated calculation data from task documents.
-    """
-
-    def query(
-        self,
-        task_ids: str = Query(
-            ...,
-            description="Comma-separated list of task_ids to query on",
-        ),
-    ) -> STORE_PARAMS:
-        self.task_ids = process_identifiers(task_ids)
-        return {
-            "criteria": {"deprecated_tasks": {"$in": self.task_ids}} if task_ids else {}
-        }
-
-    def post_process(self, docs, query):
-        """
-        Post processing to generate deprecation data
-        """
-        return [
-            {
-                "task_id": task_id,
-                "deprecated": any(task_id in doc["deprecated_tasks"] for doc in docs),
-                "deprecation_reason": None,
-            }
-            for task_id in self.task_ids
         ]

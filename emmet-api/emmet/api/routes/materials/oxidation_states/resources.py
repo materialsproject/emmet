@@ -1,22 +1,20 @@
-from emmet.api.resource import ReadOnlyResource
-from emmet.core.oxidation_states import OxidationStateDoc
-
+from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import (
+    MultiMaterialIDQuery,
     PaginationQuery,
     SparseFieldsQuery,
 )
-
+from emmet.api.resource import ReadOnlyResource
 from emmet.api.routes.materials.materials.query_operators import (
-    FormulaQuery,
     ChemsysQuery,
-    MultiMaterialIDQuery,
+    FormulaQuery,
     LicenseQuery,
 )
 from emmet.api.routes.materials.oxidation_states.query_operators import (
     PossibleOxiStateQuery,
 )
-from emmet.api.core.global_header import GlobalHeaderProcessor
-from emmet.api.core.settings import MAPISettings
+from emmet.core.oxidation_states import OxidationStateDoc
 
 
 def oxi_states_resource(oxi_states_store):

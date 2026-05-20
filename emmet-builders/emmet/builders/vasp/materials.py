@@ -1,7 +1,7 @@
 from itertools import groupby
 from typing import Iterator
 
-from pymatgen.core import Structure
+from emmet.core.io.pymatgen import Structure
 
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.tasks import ValidationTaskDoc

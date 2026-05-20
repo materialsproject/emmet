@@ -1,25 +1,24 @@
-from emmet.api.query_operator.dynamic import NumericQuery
-from emmet.api.resource import ReadOnlyResource
-from emmet.core.electronic_structure import ElectronicStructureDoc
-from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
-
-from emmet.api.routes.materials.materials.query_operators import (
-    ElementsQuery,
-    FormulaQuery,
-    ChemsysQuery,
-    DeprecationQuery,
-    MultiMaterialIDQuery,
-)
-
-from emmet.api.routes.materials.electronic_structure.query_operators import (
-    ESSummaryDataQuery,
-    BSDataQuery,
-    DOSDataQuery,
-    ObjectQuery,
-)
-from emmet.core.electronic_structure import BSObjectDoc, DOSObjectDoc
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
+from emmet.api.query_operator import (
+    DeprecationQuery,
+    MultiMaterialIDQuery,
+    PaginationQuery,
+    SparseFieldsQuery,
+)
+from emmet.api.query_operator.dynamic import NumericQuery
+from emmet.api.resource import ReadOnlyResource
+from emmet.api.routes.materials.electronic_structure.query_operators import (
+    BSDataQuery,
+    DOSDataQuery,
+    ESSummaryDataQuery,
+)
+from emmet.api.routes.materials.materials.query_operators import (
+    ChemsysQuery,
+    ElementsQuery,
+    FormulaQuery,
+)
+from emmet.core.electronic_structure import ElectronicStructureDoc
 
 timeout = MAPISettings().TIMEOUT
 
@@ -74,24 +73,6 @@ def bs_resource(es_store):
     return resource
 
 
-def bs_obj_resource(s3_store):
-    resource = ReadOnlyResource(
-        s3_store,
-        BSObjectDoc,
-        query_operators=[
-            ObjectQuery(),
-            SparseFieldsQuery(BSObjectDoc, default_fields=["task_id", "last_updated"]),
-        ],
-        header_processor=GlobalHeaderProcessor(),
-        tags=["Materials Electronic Structure"],
-        enable_default_search=True,
-        sub_path="/electronic_structure/bandstructure/object/",
-        query_disk_use=False,
-        disable_validation=True,
-    )
-    return resource
-
-
 def dos_resource(es_store):
     resource = ReadOnlyResource(
         es_store,
@@ -112,22 +93,4 @@ def dos_resource(es_store):
         timeout=timeout,
     )
 
-    return resource
-
-
-def dos_obj_resource(s3_store):
-    resource = ReadOnlyResource(
-        s3_store,
-        DOSObjectDoc,
-        query_operators=[
-            ObjectQuery(),
-            SparseFieldsQuery(DOSObjectDoc, default_fields=["task_id", "last_updated"]),
-        ],
-        header_processor=GlobalHeaderProcessor(),
-        tags=["Materials Electronic Structure"],
-        enable_default_search=True,
-        sub_path="/electronic_structure/dos/object/",
-        query_disk_use=False,
-        disable_validation=True,
-    )
     return resource

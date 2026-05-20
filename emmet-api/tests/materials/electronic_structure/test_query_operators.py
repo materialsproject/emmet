@@ -1,17 +1,12 @@
-from pymatgen.electronic_structure.core import OrbitalType
+from emmet.core.io.pymatgen import Ordering, Element, OrbitalType
 
 from emmet.api.routes.materials.electronic_structure.query_operators import (
-    ESSummaryDataQuery,
     BSDataQuery,
     DOSDataQuery,
-    ObjectQuery,
+    ESSummaryDataQuery,
 )
-
 from emmet.core.band_theory import BSPathType
 from emmet.core.electronic_structure import DOSProjectionType
-
-from pymatgen.analysis.magnetism.analyzer import Ordering
-from pymatgen.core.periodic_table import Element
 
 
 def test_es_summary_query():
@@ -101,9 +96,3 @@ def test_dos_data_query():
         c = {field: {"$gte": 0, "$lte": 5} for field in fields}
 
         assert q == {"criteria": {"dos.magnetic_ordering": "FM", **c}}
-
-
-def test_object_query():
-    op = ObjectQuery()
-
-    assert op.query(task_id="mp-149") == {"criteria": {"task_id": "aaaaaaft"}}

@@ -1,7 +1,7 @@
 from typing import Annotated, TypeVar
 
 from pydantic import BeforeValidator, WrapSerializer
-from pymatgen.io.vasp.inputs import Poscar
+from emmet.core.io.pymatgen import Poscar
 from typing_extensions import TypedDict
 
 from emmet.core.types.pymatgen_types.structure_adapter import (

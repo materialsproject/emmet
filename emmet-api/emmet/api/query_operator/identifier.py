@@ -1,10 +1,14 @@
+from abc import abstractmethod
+from dataclasses import dataclass
+
 from emmet.api.query_operator import QueryOperator
-from emmet.api.utils import STORE_PARAMS, process_identifiers
-from emmet.core.mpid_ext import SuffixedID
+from emmet.api.utils import STORE_PARAMS
+from emmet.core.types.typing import CompoundIDType
 
 
-class SuffixedIDQuery(QueryOperator):
-    """Query a suffixed identifier field.
+@dataclass
+class CompoundIDQuery(QueryOperator):
+    """Query an identifier field that is a composition of multiple document fields.
 
     Supports querying one or multiple suffixed IDs.
 
@@ -13,72 +17,50 @@ class SuffixedIDQuery(QueryOperator):
 
     See emmet.api.routes.materials.thermo.query_operators.MultiThermoIDQuery
     for a concrete implementation.
+
+    Args:
+    field_name (str) : Name of the compound identifier field
+    identifier_fields (tuple of str) : Names of the fields which
+        compose the compound identifier. The first field is
+        assumed to be AlphaID-like. The second and any ensuing fields
+        are assumened to be Enum-like.
     """
 
-    suffix_id_class: type[SuffixedID] = SuffixedID
     field_name: str = "identifier"
+    identifier_fields: tuple[str, ...] = ("material_id",)
 
-    def query(
-        self,
-        **kwargs,
-    ) -> STORE_PARAMS:
+    @staticmethod
+    @abstractmethod
+    def validate_identifer(idx: str) -> CompoundIDType:
+        """Validate a compound ID consistent with a parent schema."""
 
-        identifiers = [
-            v.strip() for v in (kwargs.get(f"{self.field_name}s") or "").split(",")
+    @property
+    def num_suffixes(self) -> int:
+        return len(self.identifier_fields) - 1
+
+    def query(self, **kwargs) -> STORE_PARAMS:
+
+        identifiers = {
+            v.strip() for v in (kwargs.get(f"{self.field_name}s") or "").split(",") if v
+        }
+        if len(identifiers) == 0:
+            return {"criteria": {}}
+
+        identifiers_as_components = [
+            self.validate_identifer(idx) for idx in identifiers
         ]
-        sfx_ids = [self.suffix_id_class.from_str(v).model_dump() for v in identifiers]
-        for i, idx in enumerate(sfx_ids):
-            sfx_ids[i]["identifier"] = process_identifiers(idx["identifier"])[0]
-        sfx_as_str = [
-            idx["separator"].join((idx["identifier"], idx["suffix"])) for idx in sfx_ids
-        ]
-        if len(sfx_ids) == 0:
-            # Originally it was supported to query by a null value, quick return if so
-            return {}
-        elif len(sfx_ids) == 1:
-            # If only one ID specified, then just add a match to aggregation
-            return {
-                "criteria": {
-                    f"{self.field_name}.identifier": sfx_ids[0]["identifier"],
-                    f"{self.field_name}.suffix": sfx_ids[0]["suffix"],
+
+        components = {
+            self.identifier_fields[0]: {
+                str(component["identifier"]) for component in identifiers_as_components
+            },
+            **{
+                suffix: {
+                    component["suffix"][i].value
+                    for component in identifiers_as_components
                 }
-            }
-
-        # If multiple IDs specified, perform aggregation
-
-        pre_filter_q = {}
-
-        for field in ("identifier", "suffix"):
-            if len(unique := list({idx[field] for idx in sfx_ids})) == 1:
-                pre_filter_q[f"{self.field_name}.{field}"] = unique[0]
-            else:
-                pre_filter_q[f"{self.field_name}.{field}"] = {"$in": sorted(unique)}
-
-        pipeline = [
-            {
-                # pre-filter based on specified unique IDs / suffixes
-                "$match": pre_filter_q
+                for i, suffix in enumerate(self.identifier_fields[1:])
             },
-            {
-                # concatenate suffixed ID field
-                "$addFields": {
-                    "_idcat": {
-                        "$concat": [
-                            f"${self.field_name}.identifier",
-                            self.suffix_id_class.model_fields["separator"].default,
-                            f"${self.field_name}.suffix",
-                        ]
-                    }
-                }
-            },
-            {
-                # match concatenated suffix ID
-                "$match": {"_idcat": {"$in": sfx_as_str}}
-            },
-            {
-                # remove from output
-                "$unset": "_idcat"
-            },
-        ]
+        }
 
-        return {"pipeline": pipeline}
+        return {"criteria": {k: {"$in": sorted(v)} for k, v in components.items()}}

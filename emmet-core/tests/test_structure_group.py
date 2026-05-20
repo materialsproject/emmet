@@ -1,6 +1,6 @@
 import pytest
 from monty.serialization import loadfn
-from pymatgen.core import Composition
+from emmet.core.io.pymatgen import Composition
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.structure_group import StructureGroupDoc, _get_id_lexi

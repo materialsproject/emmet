@@ -19,10 +19,15 @@ from pydantic import (
     field_validator,
     model_validator,
 )
-from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.core.trajectory import Trajectory as PmgTrajectory
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
-from pymatgen.io.vasp import Incar, Kpoints, Poscar
+from emmet.core.io.pymatgen import (
+    oxide_type,
+    Trajectory as PmgTrajectory,
+    ComputedEntry,
+    ComputedStructureEntry,
+    Incar,
+    Kpoints,
+    Poscar,
+)
 
 from emmet.core.structure import StructureMetadata
 from emmet.core.trajectory import RelaxTrajectory, Trajectory
@@ -516,9 +521,7 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
             # TODO: remove after imposing TaskDoc schema on older tasks in collection
             if final_struct := calcs_reversed[0].output.structure:
                 values["structure"] = values.get("structure", final_struct)
-                values["entry"] = values.get(
-                    "entry", cls.get_entry(calcs_reversed, values.get("task_id"))
-                )
+                values["entry"] = cls.get_entry(calcs_reversed, values.get("task_id"))
 
         return values
 
@@ -740,7 +743,11 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
 
         entry_dict = {
             "correction": 0.0,
-            "entry_id": task_id,
+            "entry_id": (
+                f"{task_id}-{cr.run_type}"
+                if task_id is not None and cr.run_type is not None
+                else None
+            ),
             "composition": calc_out.structure.composition,
             "energy": calc_out.energy,
             "parameters": {
@@ -877,26 +884,6 @@ class EntryDoc(BaseModel):
     entry: ComputedStructureEntryType | None = Field(
         None,
         description="Computed structure entry for the calculation associated with the task doc.",
-    )
-
-
-class DeprecationDoc(BaseModel):
-    """Model for task deprecation data."""
-
-    task_id: str | None = Field(
-        None,
-        description="The (task) ID of this calculation, used as a universal reference across property documents."
-        "This comes in the form: mp-******.",
-    )
-
-    deprecated: bool | None = Field(
-        None,
-        description="Whether the ID corresponds to a deprecated calculation.",
-    )
-
-    deprecation_reason: str | None = Field(
-        None,
-        description="Reason for deprecation.",
     )
 
 

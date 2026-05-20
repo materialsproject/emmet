@@ -48,18 +48,10 @@ def test_run_type():
         assert run_type(params) == RunType(_type)
 
 
-@pytest.fixture(scope="session")
-def tasks(test_dir):
-    with zopen(test_dir / "test_si_tasks.json.gz", "rt") as f:
-        data = json.load(f)
+def test_legacy_validator(si_tasks):
+    validation_docs = [LegacyValidationDoc.from_task_doc(task) for task in si_tasks]
 
-    return [TaskDoc(**d) for d in data]
-
-
-def test_legacy_validator(tasks):
-    validation_docs = [LegacyValidationDoc.from_task_doc(task) for task in tasks]
-
-    assert len(validation_docs) == len(tasks)
+    assert len(validation_docs) == len(si_tasks)
     assert all([doc.valid for doc in validation_docs])
 
 
@@ -108,12 +100,12 @@ def test_validator_failed_symmetry(test_dir):
     assert any("SYMMETRY" in repr(reason) for reason in validation.reasons)
 
 
-def test_computed_entry(tasks):
-    entries = [task.entry for task in tasks]
+def test_computed_entry(si_tasks):
+    entries = [task.entry for task in si_tasks]
     ids = {e.entry_id for e in entries}
     assert ids == set(
         [
-            AlphaID(id_str).string
+            f"{AlphaID(id_str)}-GGA"
             for id_str in {"mp-ddzda", "mp-dryyt", "mp-cmxxl", "mp-ft"}
         ]
     )

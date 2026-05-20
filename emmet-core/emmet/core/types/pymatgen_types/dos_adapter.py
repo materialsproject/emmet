@@ -1,7 +1,7 @@
 from typing import Annotated, TypeVar
 
 from pydantic import BeforeValidator, WrapSerializer
-from pymatgen.electronic_structure.dos import CompleteDos
+from emmet.core.io.pymatgen import CompleteDos
 from typing_extensions import TypedDict
 
 from emmet.core.types.pymatgen_types.structure_adapter import (

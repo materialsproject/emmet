@@ -7,9 +7,10 @@ from emmet.core.similarity import (
     SimilarityDoc,
     SimilarityEntry,
     SimilarityMethod,
+    SimilarityScorer,
 )
 
-SIM_METHOD_TO_SCORER = {
+SIM_METHOD_TO_SCORER: dict[SimilarityMethod, type[SimilarityScorer]] = {
     SimilarityMethod(k): v
     for k, v in {
         "CrystalNN": CrystalNNSimilarity,
@@ -90,7 +91,7 @@ def build_similarity_docs(
             f"Multiple similarity methods found: {', '.join(str(method) for method in distinct_sim_methods)}"
         )
 
-    scorer_cls = SIM_METHOD_TO_SCORER[method := input_documents[0].similarity_method]
+    scorer_cls = SIM_METHOD_TO_SCORER[method := input_documents[0].similarity_method]  # type: ignore[attr-defined]
     material_ids, vectors, structures = np.array(
         [doc.material_id, doc.feature_vector, doc.structure] for doc in input_documents
     ).T

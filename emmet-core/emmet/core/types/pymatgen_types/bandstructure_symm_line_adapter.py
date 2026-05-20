@@ -1,7 +1,7 @@
 from typing import Annotated, TypeVar
 
 from pydantic import BeforeValidator, WrapSerializer
-from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
+from emmet.core.io.pymatgen import BandStructureSymmLine
 from typing_extensions import TypedDict
 
 from emmet.core.types.pymatgen_types.kpoint_adapter import KpointType
