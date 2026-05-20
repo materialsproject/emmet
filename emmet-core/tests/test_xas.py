@@ -147,3 +147,23 @@ def test_format_spectrum_id_unparseable_input_passes_through():
     # ValueError on malformed input; we swallow and return the input as-is.
     assert format_spectrum_id("BAD-ID!!", legacy=True) == "BAD-ID!!"
     assert format_spectrum_id("not-a-spectrum", legacy=False) == "not-a-spectrum"
+
+
+def test_format_spectrum_id_accepts_mpid_typed_input():
+    """Regression: MPID instances passed through must not trip the empty-
+    string guard.
+
+    The original guard ``spectrum_id is None or spectrum_id == ""`` triggered
+    ``MPID.__eq__("")`` which raises ValueError because ``MPID("")`` is
+    invalid. Passing an MPID-typed value used to crash the helper.
+
+    Note: AlphaID does not accept the uppercase-letter portions of a
+    spectrum_id (e.g. "XANES", "O", "K"), so composite spectrum ids that
+    flow through pydantic-typed fields arrive as ``MPID`` instances.
+    """
+    from emmet.core.mpid import MPID
+    from emmet.core.xas import format_spectrum_id
+
+    sid = MPID("mp-779827-XANES-O-K")
+    assert format_spectrum_id(sid, legacy=True) == "mp-779827-XANES-O-K"
+    assert format_spectrum_id(sid, legacy=False) == "aaabsjpj-XANES-O-K"

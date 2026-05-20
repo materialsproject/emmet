@@ -106,7 +106,12 @@ def format_spectrum_id(
         >>> format_spectrum_id("aaabsjpj-XANES-O-K", legacy=True)
         'mp-779827-XANES-O-K'
     """
-    if spectrum_id is None or spectrum_id == "":
+    # Two-step guard avoids triggering ``MPID.__eq__`` (which raises
+    # ValueError on ``MPID(...) == ""``) when ``spectrum_id`` is an
+    # MPID/AlphaID subclass instance rather than a plain string.
+    if spectrum_id is None:
+        return spectrum_id
+    if isinstance(spectrum_id, str) and not spectrum_id:
         return spectrum_id
 
     try:

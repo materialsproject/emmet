@@ -118,7 +118,13 @@ def format_identifier(
         >>> format_identifier("mp-aaaaaaft", legacy=True)
         'mp-149'
     """
-    if idx is None or idx == "":
+    # Guard against None and the empty string. The ``str``-instance check
+    # avoids triggering ``MPID.__eq__`` (which raises ValueError on
+    # ``MPID(...) == ""``) when ``idx`` is an MPID/AlphaID subclass instance
+    # rather than a plain string.
+    if idx is None:
+        return idx
+    if isinstance(idx, str) and not idx:
         return idx
     try:
         alpha = AlphaID(idx)
@@ -224,7 +230,10 @@ def format_compound_identifier(
         >>> format_compound_identifier("mp-2658_Al", legacy=False)
         'mp-aaaaadyg_Al'
     """
-    if idx is None or idx == "":
+    # See ``format_identifier`` for the rationale behind this two-step guard.
+    if idx is None:
+        return idx
+    if isinstance(idx, str) and not idx:
         return idx
     base, suffix = _split_composite_identifier(str(idx))
     if not suffix:
@@ -278,7 +287,10 @@ def format_task_id(
         >>> format_task_id("aaaaaaft", legacy=True)
         'mp-149'
     """
-    if task_id is None or task_id == "":
+    # See ``format_identifier`` for the rationale behind this two-step guard.
+    if task_id is None:
+        return task_id
+    if isinstance(task_id, str) and not task_id:
         return task_id
     try:
         value = int(AlphaID(task_id))

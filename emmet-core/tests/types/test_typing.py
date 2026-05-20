@@ -204,3 +204,31 @@ def test_format_task_id_respects_custom_prefix():
 
 def test_format_task_id_respects_custom_padlen():
     assert format_task_id("mp-149", legacy=False, padlen=4) == "aaft"
+
+
+# ---------------------------------------------------------------------------
+# Regression: MPID / AlphaID instances must be accepted as input to the
+# format helpers. The empty-string guard previously triggered
+# ``MPID.__eq__("")`` which raises ValueError, so passing an MPID-typed value
+# would crash the page that called it (see
+# RelatedMaterialsSection.update_related_materials_section in mp_web).
+# ---------------------------------------------------------------------------
+
+
+def test_format_identifier_accepts_MPID_instance():
+    assert format_identifier(MPID("mp-149"), legacy=True) == "mp-149"
+    assert format_identifier(MPID("mp-149"), legacy=False) == "mp-aaaaaaft"
+
+
+def test_format_identifier_accepts_AlphaID_instance():
+    assert format_identifier(AlphaID("mp-149"), legacy=True) == "mp-149"
+    assert format_identifier(AlphaID("mp-149"), legacy=False) == "mp-aaaaaaft"
+
+
+def test_format_compound_identifier_accepts_MPID_instance():
+    assert format_compound_identifier(MPID("mp-149"), legacy=True) == "mp-149"
+
+
+def test_format_task_id_accepts_MPID_instance():
+    assert format_task_id(MPID("mp-149"), legacy=True) == "mp-149"
+    assert format_task_id(MPID("mp-149"), legacy=False) == "aaaaaaft"
