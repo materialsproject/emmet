@@ -82,7 +82,7 @@ def format_identifier(
     legacy: bool,
     prefix: str | None = ID_PREFIX,
     padlen: int = ID_PADLEN,
-) -> str:
+) -> str | None:
     """Render an MP identifier as either the legacy `mp-<int>` form or the padded AlphaID form.
 
     This is the canonical display-formatting helper for MP identifiers. Use it
@@ -199,7 +199,7 @@ def format_compound_identifier(
     legacy: bool,
     prefix: str | None = ID_PREFIX,
     padlen: int = ID_PADLEN,
-) -> str:
+) -> str | None:
     """Render a composite MP identifier in the requested format, preserving the suffix.
 
     Composite identifiers include battery ids
@@ -246,7 +246,7 @@ def format_task_id(
     legacy: bool,
     prefix: str = ID_PREFIX,
     padlen: int = ID_PADLEN,
-) -> str:
+) -> str | None:
     """Render a calculation task id in either legacy or new alpha form.
 
     Task ids have a different shape convention than other MP identifiers:

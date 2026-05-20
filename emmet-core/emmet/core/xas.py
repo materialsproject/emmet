@@ -67,7 +67,7 @@ def format_spectrum_id(
     legacy: bool,
     prefix: str = "mp",
     padlen: int = ID_PADLEN,
-) -> str:
+) -> str | None:
     """Render an XAS spectrum id in either legacy or new alpha form.
 
     Spectrum ids are composite identifiers built at runtime from a task id
