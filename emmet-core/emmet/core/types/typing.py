@@ -232,6 +232,64 @@ def format_compound_identifier(
     return f"{format_identifier(base, legacy, prefix=prefix, padlen=padlen)}{suffix}"
 
 
+def format_task_id(
+    task_id: Any,
+    legacy: bool,
+    prefix: str = ID_PREFIX,
+    padlen: int = ID_PADLEN,
+) -> str:
+    """Render a calculation task id in either legacy or new alpha form.
+
+    Task ids have a different shape convention than other MP identifiers:
+
+    - Legacy form: ``mp-<int>`` (prefixed, same shape as a plain mpid, e.g.
+      ``mp-149``).
+    - New alpha form: bare padded alpha string with **no** prefix and no
+      suffix (e.g. ``aaaaaaft``).
+
+    This is unlike `material_id` (prefix preserved in both modes) and
+    `battery_id` (composite with a working-ion suffix). The general-purpose
+    :func:`format_identifier` / :func:`format_compound_identifier` helpers
+    do not capture this prefix-dropping rule, so task ids are rendered
+    through this dedicated helper instead.
+
+    Args:
+        task_id: A task id in either form, or any value coercible to an
+            :class:`AlphaID`. May be a bare int, a prefixed string, or an
+            :class:`AlphaID` object.
+        legacy: If True, returns the legacy form (e.g. ``mp-149``). If False,
+            returns the bare padded alpha form (e.g. ``aaaaaaft``) with no
+            prefix.
+        prefix: The id prefix used in the legacy form. Defaults to ``"mp"``.
+        padlen: The minimum identifier length on the alpha-form output.
+            Defaults to 8.
+
+    Returns:
+        The formatted string. If ``task_id`` is None or empty, it is returned
+        unchanged. If ``task_id`` cannot be parsed as an :class:`AlphaID`, it
+        is coerced to a string and returned unchanged (defensive: this helper
+        never raises from a display path).
+
+    Examples:
+        >>> format_task_id("mp-149", legacy=True)
+        'mp-149'
+        >>> format_task_id("mp-149", legacy=False)
+        'aaaaaaft'
+        >>> format_task_id("aaaaaaft", legacy=True)
+        'mp-149'
+    """
+    if task_id is None or task_id == "":
+        return task_id
+    try:
+        value = int(AlphaID(task_id))
+    except (ValueError, TypeError):
+        return str(task_id)
+    if legacy:
+        return f"{prefix}-{value}"
+    # Alpha display: bare padded identifier with no prefix.
+    return str(AlphaID(value, padlen=padlen, prefix=None))
+
+
 def _make_id_type(render_order, **kwargs) -> Any:
     _order: Any
     match render_order:

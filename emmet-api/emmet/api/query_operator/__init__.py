@@ -1,6 +1,7 @@
 from emmet.api.query_operator.core import (
     BoolQuery,
     DeprecationQuery,
+    IdFormatQuery,
     InQuery,
     MultiMaterialIDQuery,
     MultiTaskIDQuery,
@@ -27,5 +28,6 @@ __all__ = [
     "InQuery",
     "BoolQuery",
     "DeprecationQuery",
+    "IdFormatQuery",
     "RangeQuery",
 ]

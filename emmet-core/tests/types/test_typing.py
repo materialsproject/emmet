@@ -8,6 +8,7 @@ from emmet.core.types.typing import (
     MaterialIdentifierType,
     format_compound_identifier,
     format_identifier,
+    format_task_id,
 )
 
 
@@ -141,3 +142,65 @@ def test_format_compound_identifier_unparseable_input_passes_through():
     # value with characters disallowed by AlphaID's alphabet to force the
     # unparseable fallback path.
     assert format_compound_identifier("BAD-ID!!_xx", legacy=False) == "BAD-ID!!_xx"
+
+
+# ---------------------------------------------------------------------------
+# format_task_id — task-id-specific renderer
+#
+# Task ids have a different shape convention than other MP identifiers:
+#   - Legacy: `mp-149` (prefixed)
+#   - Alpha:  `aaaaaaft` (bare padded alpha, no prefix, no suffix)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "task_id",
+    ["mp-149", "aaaaaaft", "mp-aaaaaaft", "mp-ft", 149],
+    ids=["legacy", "alpha-bare", "alpha-prefixed", "alpha-unpadded", "bare-int"],
+)
+def test_format_task_id_legacy_view_always_returns_mp_prefix(task_id):
+    # Regardless of incoming shape, the legacy view is `mp-<int>`.
+    assert format_task_id(task_id, legacy=True) == "mp-149"
+
+
+@pytest.mark.parametrize(
+    "task_id",
+    ["mp-149", "aaaaaaft", "mp-aaaaaaft", "mp-ft", 149],
+    ids=["legacy", "alpha-bare", "alpha-prefixed", "alpha-unpadded", "bare-int"],
+)
+def test_format_task_id_alpha_view_drops_prefix(task_id):
+    # Regardless of incoming shape, the alpha view is the bare padded form
+    # with no `mp-` prefix.
+    assert format_task_id(task_id, legacy=False) == "aaaaaaft"
+
+
+def test_format_task_id_round_trip_alpha_to_legacy_to_alpha():
+    legacy = format_task_id("aaaaaaft", legacy=True)
+    assert format_task_id(legacy, legacy=False) == "aaaaaaft"
+
+
+def test_format_task_id_round_trip_legacy_to_alpha_to_legacy():
+    alpha = format_task_id("mp-149", legacy=False)
+    assert format_task_id(alpha, legacy=True) == "mp-149"
+
+
+@pytest.mark.parametrize("value", ["", None])
+def test_format_task_id_empty_input_passes_through(value):
+    assert format_task_id(value, legacy=True) is value
+    assert format_task_id(value, legacy=False) is value
+
+
+def test_format_task_id_unparseable_input_passes_through():
+    # Defensive: display helpers never raise.
+    assert format_task_id("BAD-ID!!", legacy=True) == "BAD-ID!!"
+    assert format_task_id("BAD-ID!!", legacy=False) == "BAD-ID!!"
+
+
+def test_format_task_id_respects_custom_prefix():
+    # The legacy prefix is configurable for callers that need a non-default
+    # prefix (e.g. a hypothetical "task-149" rendering).
+    assert format_task_id("aaaaaaft", legacy=True, prefix="task") == "task-149"
+
+
+def test_format_task_id_respects_custom_padlen():
+    assert format_task_id("mp-149", legacy=False, padlen=4) == "aaft"

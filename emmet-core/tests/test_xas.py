@@ -68,3 +68,82 @@ def test_arrow(xas_dict):
     assert jsanitize(doc.model_dump(), allow_bson=True) == jsanitize(
         test_arrow_doc.model_dump(), allow_bson=True
     )
+
+
+# ---------------------------------------------------------------------------
+# format_spectrum_id — XAS-spectrum-id-specific renderer
+#
+# Spectrum ids are composite identifiers: task id + (XasType, Element, XasEdge)
+# joined with "-". They follow the same prefix-dropping rule as task ids:
+#   - Legacy: `mp-779827-XANES-O-K`
+#   - Alpha:  `aaabsjpj-XANES-O-K` (no `mp-` prefix on the leading id portion)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "spectrum_id",
+    ["mp-779827-XANES-O-K", "aaabsjpj-XANES-O-K"],
+    ids=["legacy", "alpha"],
+)
+def test_format_spectrum_id_legacy_view_always_returns_mp_prefix(spectrum_id):
+    from emmet.core.xas import format_spectrum_id
+
+    # Regardless of incoming shape, the legacy view is `mp-<int>-<suffix>`.
+    assert format_spectrum_id(spectrum_id, legacy=True) == "mp-779827-XANES-O-K"
+
+
+@pytest.mark.parametrize(
+    "spectrum_id",
+    ["mp-779827-XANES-O-K", "aaabsjpj-XANES-O-K"],
+    ids=["legacy", "alpha"],
+)
+def test_format_spectrum_id_alpha_view_drops_prefix(spectrum_id):
+    from emmet.core.xas import format_spectrum_id
+
+    # Regardless of incoming shape, the alpha view is bare padded alpha +
+    # suffix, with no `mp-` prefix on the leading id portion.
+    assert format_spectrum_id(spectrum_id, legacy=False) == "aaabsjpj-XANES-O-K"
+
+
+def test_format_spectrum_id_round_trip_alpha_to_legacy_to_alpha():
+    from emmet.core.xas import format_spectrum_id
+
+    original = "aaabsjpj-XANES-O-K"
+    legacy = format_spectrum_id(original, legacy=True)
+    assert format_spectrum_id(legacy, legacy=False) == original
+
+
+def test_format_spectrum_id_round_trip_legacy_to_alpha_to_legacy():
+    from emmet.core.xas import format_spectrum_id
+
+    original = "mp-779827-XANES-O-K"
+    alpha = format_spectrum_id(original, legacy=False)
+    assert format_spectrum_id(alpha, legacy=True) == original
+
+
+def test_format_spectrum_id_preserves_suffix_components():
+    from emmet.core.xas import format_spectrum_id
+
+    # EXAFS spectrum type, L2 edge, different absorbing element.
+    sid = "mp-149-EXAFS-Fe-L2"
+    assert format_spectrum_id(sid, legacy=True) == sid
+    alpha = format_spectrum_id(sid, legacy=False)
+    assert alpha.endswith("-EXAFS-Fe-L2")
+    assert not alpha.startswith("mp-")
+
+
+@pytest.mark.parametrize("value", ["", None])
+def test_format_spectrum_id_empty_input_passes_through(value):
+    from emmet.core.xas import format_spectrum_id
+
+    assert format_spectrum_id(value, legacy=True) is value
+    assert format_spectrum_id(value, legacy=False) is value
+
+
+def test_format_spectrum_id_unparseable_input_passes_through():
+    from emmet.core.xas import format_spectrum_id
+
+    # Defensive: display helpers never raise. validate_xas_spectrum_id raises
+    # ValueError on malformed input; we swallow and return the input as-is.
+    assert format_spectrum_id("BAD-ID!!", legacy=True) == "BAD-ID!!"
+    assert format_spectrum_id("not-a-spectrum", legacy=False) == "not-a-spectrum"

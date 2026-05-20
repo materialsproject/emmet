@@ -176,3 +176,99 @@ class MultiMaterialIDQuery(InQuery):
         ),
     ) -> STORE_PARAMS:
         return self._prepare_query(material_ids)
+
+
+# Allowed values for the optional ``id_format`` query parameter. Anything not
+# in this set is treated as if the parameter was absent (no-op reformatting),
+# which is the safer default for backwards compatibility.
+_ID_FORMAT_VALUES = ("legacy", "alpha")
+
+
+@dataclass
+class IdFormatQuery(QueryOperator):
+    """Optional response-side reformatting of MP identifier fields.
+
+    Adds an ``id_format`` query parameter to an endpoint and, on
+    ``post_process``, rewrites the identifier fields on each returned
+    document according to the requested shape:
+
+    - ``id_format=legacy`` -> ``mp-149`` / ``mp-2658_Al`` / ``mp-779827-XANES-O-K``
+    - ``id_format=alpha``  -> ``mp-aaaaaaft`` / ``mp-aaaaadyg_Al`` / ``aaabsjpj-XANES-O-K``
+    - parameter absent (or any other value) -> documents are returned with
+      identifier fields exactly as the database stores them; no rewriting
+      is attempted.
+
+    This is purely a serialization concern: ``query()`` returns an empty
+    criteria dict so this operator never affects which documents the
+    database returns. It only mutates the response payload.
+
+    Constructor takes a list of ``(field_name, formatter)`` tuples. Each
+    formatter must be a callable with signature ``formatter(value, legacy: bool) -> str``
+    and must be fault-tolerant (i.e. return the input unchanged on parse
+    failure, never raise). The canonical formatters live in
+    :mod:`emmet.core.types.typing` (``format_identifier``,
+    ``format_compound_identifier``, ``format_task_id``) and
+    :mod:`emmet.core.xas` (``format_spectrum_id``).
+
+    Example registration:
+
+    .. code-block:: python
+
+        from emmet.core.types.typing import format_identifier, format_task_id
+        from emmet.core.xas import format_spectrum_id
+
+        # /materials/summary/
+        IdFormatQuery(id_fields=[("material_id", format_identifier)])
+
+        # /materials/xas/
+        IdFormatQuery(id_fields=[
+            ("task_id", format_task_id),
+            ("spectrum_id", format_spectrum_id),
+        ])
+
+    Attributes:
+        id_fields: A list of ``(field_name, formatter)`` tuples describing
+            which fields on each returned document to rewrite and how.
+            Fields that are absent from a given document (e.g. due to
+            sparse-fields projection) are silently skipped.
+    """
+
+    id_fields: list[tuple[str, Callable[[Any, bool], str]]] = field(default_factory=list)
+
+    def query(
+        self,
+        id_format: str | None = Query(
+            None,
+            description=(
+                "Optional. If set to 'legacy', MP identifier fields in the "
+                "response are returned in the form 'mp-149'. If set to "
+                "'alpha', they are returned in the padded AlphaID form "
+                "'mp-aaaaaaft'. If omitted (or set to any other value), "
+                "identifiers are returned in their stored form. This is a "
+                "purely cosmetic transform; query inputs accept either "
+                "shape regardless."
+            ),
+        ),
+    ) -> STORE_PARAMS:
+        # The store query is empty — this operator only affects response
+        # serialization. The ``id_format`` value is threaded through the
+        # returned ``STORE_PARAMS`` so ``post_process`` can read it back.
+        return {"criteria": {}, "id_format": id_format}
+
+    def post_process(self, docs: list[dict], query: dict) -> list[dict]:
+        fmt = query.get("id_format")
+        if fmt not in _ID_FORMAT_VALUES:
+            # Absent / invalid value -> no-op. We deliberately do not 400
+            # on a bad value: existing clients that misspell the parameter
+            # continue to receive a valid response.
+            return docs
+
+        legacy = fmt == "legacy"
+        for doc in docs:
+            if not isinstance(doc, dict):
+                continue
+            for field_name, formatter in self.id_fields:
+                value = doc.get(field_name)
+                if value:
+                    doc[field_name] = formatter(value, legacy=legacy)
+        return docs
