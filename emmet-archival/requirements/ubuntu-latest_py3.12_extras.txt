@@ -14,7 +14,7 @@ bibtexparser==1.4.4
     # via pymatgen-core
 blake3==1.0.8
     # via emmet-core
-certifi==2026.4.22
+certifi==2026.5.20
     # via requests
 cfgv==3.5.0
     # via pre-commit
@@ -62,7 +62,7 @@ latexcodec==3.0.1
     # via pybtex
 librt==0.11.0
     # via mypy
-lxml==6.1.0
+lxml==6.1.1
     # via pymatgen-core
 matplotlib==3.10.9
     # via pymatgen-core
@@ -90,7 +90,7 @@ nodeenv==1.10.0
     # via pre-commit
 numcodecs==0.16.5
     # via zarr
-numpy==2.4.5
+numpy==2.4.6
     # via
     #   contourpy
     #   h5py
@@ -164,7 +164,7 @@ pymatgen==2026.5.4
     # via
     #   emmet-core
     #   pymatgen-io-validation
-pymatgen-core==2026.5.17
+pymatgen-core==2026.5.18
     # via pymatgen
 pymatgen-io-validation==0.1.2
     # via
