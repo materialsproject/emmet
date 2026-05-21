@@ -79,7 +79,7 @@ htmlmin2==0.1.13
     # via mkdocs-minify-plugin
 identify==2.6.13
     # via pre-commit
-idna==3.10
+idna==3.15
     # via requests
 imageio==2.37.0
     # via scikit-image
@@ -284,7 +284,7 @@ pandas==2.3.2
     #   seaborn
     #   solvation-analysis
     #   statsmodels
-paramiko==4.0.0
+paramiko==5.0.0
     # via sshtunnel
 pathspec==0.12.1
     # via
@@ -292,7 +292,7 @@ pathspec==0.12.1
     #   mypy
 patsy==1.0.1
     # via statsmodels
-pillow==12.0.0
+pillow==12.2.0
     # via
     #   imageio
     #   matplotlib
@@ -367,7 +367,7 @@ pymatgen-analysis-diffusion==2024.7.15
     # via emmet-core
 pymatgen-io-validation==0.1.1
     # via emmet-builders (pyproject.toml)
-pymdown-extensions==10.16.1
+pymdown-extensions==10.21.3
     # via
     #   mkdocs-material
     #   mkdocstrings
@@ -381,7 +381,7 @@ pyparsing==3.2.3
     # via
     #   bibtexparser
     #   matplotlib
-pytest==8.4.2
+pytest==9.0.3
     # via
     #   emmet-builders (pyproject.toml)
     #   pytest-cov
@@ -398,7 +398,7 @@ python-dateutil==2.9.0.post0
     #   maggma
     #   matplotlib
     #   pandas
-python-dotenv==1.1.1
+python-dotenv==1.2.2
     # via pydantic-settings
 pytz==2025.2
     # via
@@ -494,7 +494,7 @@ tidynamics==1.1.2
     # via transport-analysis
 tifffile==2025.8.28
     # via scikit-image
-tornado==6.5.2
+tornado==6.5.5
     # via livereload
 tqdm==4.67.1
     # via
@@ -527,7 +527,7 @@ tzdata==2025.2
     # via pandas
 uncertainties==3.2.3
     # via pymatgen
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   botocore
     #   requests
