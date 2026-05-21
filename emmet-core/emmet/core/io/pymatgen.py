@@ -67,6 +67,7 @@ _core_class_map: dict[str, str] = {
     "Poscar": "io.vasp.inputs",
     "PotcarSingle": "io.vasp",
     "Potcar": "io.vasp.inputs",
+    "POTCAR_STATS_PATH": "io.vasp.inputs",
     "Vasprun": "io.vasp.outputs",
     "BSVasprun": "io.vasp.outputs",
     "Locpot": "io.vasp.outputs",

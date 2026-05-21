@@ -29,6 +29,7 @@ STORE_PARAMS = dict[
         "agg_hint",
         "update",
         "facets",
+        "id_format",
     ],
     Any,
 ]

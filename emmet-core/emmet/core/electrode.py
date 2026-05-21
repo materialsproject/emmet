@@ -6,20 +6,20 @@ from functools import cached_property
 from typing import TYPE_CHECKING, overload
 
 from pydantic import BaseModel, Field
-from emmet.core.io.pymatgen import (
-    PhaseDiagram,
-    AbstractElectrode,
-    ConversionElectrode,
-    InsertionElectrode,
-    Composition,
-    DummySpecies,
-    Element,
-    Species,
-    ComputedEntry,
-    ComputedStructureEntry,
-)
 
 from emmet.core.base import EmmetBaseModel
+from emmet.core.io.pymatgen import (
+    AbstractElectrode,
+    Composition,
+    ComputedEntry,
+    ComputedStructureEntry,
+    ConversionElectrode,
+    DummySpecies,
+    Element,
+    InsertionElectrode,
+    PhaseDiagram,
+    Species,
+)
 from emmet.core.types.enums import BatteryType
 from emmet.core.types.pymatgen_types.balanced_reaction_adapter import (
     BalancedReactionType,
@@ -40,6 +40,7 @@ from emmet.core.utils import type_override, utcnow
 
 if TYPE_CHECKING:
     from typing import Literal
+
     from emmet.core.types.typing import CompoundIDType
 
 
@@ -287,6 +288,16 @@ class BaseElectrode(EmmetBaseModel):
         None, description="Any warnings related to this electrode data."
     )
 
+    @cached_property
+    def battery_id(self) -> str:
+        """Retrieve battery ID from other fields."""
+        if not self.material_ids or not self.working_ion:
+            raise ValueError("No battery identifer could be determined.")
+        min_mpid = min(
+            idx for idx in self.material_ids if not idx.string.startswith("mvc")
+        )
+        return validate_battery_id(f"{min_mpid}_{self.working_ion}")
+
 
 class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
     """
@@ -310,16 +321,6 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
         None,
         description="The Pymatgen electrode object.",
     )
-
-    @cached_property
-    def battery_id(self) -> str:
-        """Retrieve battery ID from other fields."""
-        if not self.material_ids or not self.working_ion:
-            raise ValueError("No battery identifer could be determined.")
-        min_mpid = min(
-            idx for idx in self.material_ids if not idx.string.startswith("mvc")
-        )
-        return validate_battery_id(f"{min_mpid}_{self.working_ion}")
 
     @classmethod
     def from_entries(
@@ -474,13 +475,6 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
     """
     Conversion electrode
     """
-
-    # TODO: Conversion electrode has no way to determine the MPID component of the ID.
-    battery_id: str | None = Field(
-        None,
-        description="The id for this battery document is the numerically smallest material_id followed by "
-        "the working ion.",
-    )
 
     initial_comp_formula: str | None = Field(
         None,

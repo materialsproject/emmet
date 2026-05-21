@@ -6,7 +6,9 @@ from emmet.api.query_operator.core import InQuery
 from emmet.api.query_operator.identifier import CompoundIDQuery
 from emmet.api.utils import STORE_PARAMS
 from emmet.core.thermo import validate_thermo_id
+from emmet.core.types.enums import ThermoType
 from emmet.core.types.typing import CompoundIDType
+from emmet.core.vasp.calc_types.enums import RunType
 
 
 class IsStableQuery(QueryOperator):
@@ -40,7 +42,13 @@ class MultiThermoIDQuery(CompoundIDQuery):
     @staticmethod
     def validate_identifer(idx: str) -> CompoundIDType:
         """Validate a thermo ID string."""
-        return validate_thermo_id(idx, as_components=True)
+        tid = validate_thermo_id(idx, as_components=True)
+        # TODO: temporary workaround because `thermo_type` is a union
+        # of RunType and ThermoType, and thermo entries in blue
+        # currently all have RunType.r2SCAN, not ThermoType.R2SCAN
+        if tid["suffix"][0] == ThermoType.R2SCAN:
+            tid["suffix"] = (RunType.r2SCAN,)
+        return tid
 
 
 @dataclass

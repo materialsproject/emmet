@@ -113,7 +113,7 @@ ref_model_fields = {
         "mol_from_site_environments",
         "wyckoff_positions",
     ],
-    "emmet.core.dois.DOIDoc": ["doi", "bibtex", "material_id"],
+    "emmet.core.dois.DOIDoc": ["doi", "material_id"],
     "emmet.core.elasticity.ElasticityDoc": [
         "builder_meta",
         "nsites",
@@ -663,8 +663,6 @@ ref_model_fields = {
         "post_process_settings",
         "thermal_displacement_data",
         "calc_meta",
-        "material_id",
-        "task_ids",
     ],
     "emmet.core.polar.DielectricDoc": [
         "builder_meta",

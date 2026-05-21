@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from hashlib import md5
 import os
 import sys
 from itertools import chain, combinations
@@ -11,6 +12,7 @@ from emmet.core.io.pymatgen import (
     Structure,
     get_kpoint_divisions_from_kspacing,
     PotcarSingle,
+    POTCAR_STATS_PATH,
 )
 
 from emmet.builders.settings import EmmetBuildSettings
@@ -264,8 +266,10 @@ def get_potcar_stats(
 
     stats: dict[str, dict] = {}  # type: ignore
 
-    if method == "stored":
+    if method in ("stored", "pymatgen"):
         from monty.serialization import loadfn
+
+    if method == "stored":
 
         if path_to_stored_stats is None:
             from importlib.resources import files
@@ -274,6 +278,10 @@ def get_potcar_stats(
                 files("emmet.builders.vasp") / "mp_potcar_stats.json.gz"
             )
         return loadfn(path_to_stored_stats)  # type: ignore
+
+    potcar_summary_stats: dict[str, Any] = {}
+    if method == "pymatgen":
+        potcar_summary_stats = loadfn(POTCAR_STATS_PATH)
 
     for (
         calc_type,
@@ -294,14 +302,12 @@ def get_potcar_stats(
                 # note that the potcar_spec assigns PotcarSingle.symbol to "titel"
                 # whereas the ***correct*** field is `header`
                 summary_stats["titel"] = potcar.header  # type: ignore[assignment]
-                summary_stats["hash"] = potcar.md5_header_hash  # type: ignore[assignment]
+                summary_stats["hash"] = md5(potcar.data.encode()).hexdigest()  # type: ignore[assignment]
                 summary_stats = [summary_stats]  # type: ignore[assignment]
 
             elif method == "pymatgen":
                 summary_stats = []  # type: ignore[assignment]
-                for _, entries in PotcarSingle._potcar_summary_stats[
-                    functional
-                ].items():
+                for _, entries in potcar_summary_stats[functional].items():
                     summary_stats += [  # type: ignore[operator]
                         {**entry, "titel": None, "hash": None}
                         for entry in entries
