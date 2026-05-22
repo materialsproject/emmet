@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=emmet/emmet-builders/requirements/deployment.txt emmet/emmet-builders/setup.py python/requirements.txt
 #
-aiohttp==3.13.3
+aiohttp==3.13.4
     # via fsspec
 aioitertools==0.11.0
     # via maggma
@@ -95,7 +95,7 @@ h11==0.16.0
     # via uvicorn
 h5py==3.10.0
     # via phonopy
-idna==3.7
+idna==3.15
     # via
     #   anyio
     #   requests
@@ -247,11 +247,11 @@ pandas==1.5.3
     #   -r python/requirements.txt
     #   matminer
     #   pymatgen
-paramiko==3.4.0
+paramiko==5.0.0
     # via sshtunnel
 phonopy==2.21.0
     # via matcalc
-pillow==12.0.0
+pillow==12.2.0
     # via matplotlib
 plotly==5.18.0
     # via pymatgen
@@ -310,9 +310,9 @@ python-dateutil==2.8.2
     #   maggma
     #   matplotlib
     #   pandas
-python-dotenv==1.0.1
+python-dotenv==1.2.2
     # via pydantic-settings
-pytorch-lightning==2.4.0
+pytorch-lightning==2.6.1
     # via matgl
 pytz==2024.1
     # via pandas
@@ -424,7 +424,7 @@ typing-extensions==4.9.0
     #   uvicorn
 uncertainties==3.1.7
     # via pymatgen
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   botocore
     #   requests
