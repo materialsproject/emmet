@@ -45,6 +45,25 @@ class EntryID(BaseModel):
     def __str__(self) -> str:
         return self.separator.join([self.identifier.string, self.suffix.value])
 
+    def __eq__(self, other) -> bool:
+        if other is None:
+            return False
+
+        if isinstance(other, EntryID):
+            return (
+                self.identifier == other.identifier
+                and self.suffix == other.suffix
+                and self.separator == other.separator
+            )
+
+        if isinstance(other, str):
+            return str(self) == other
+
+        raise NotImplementedError(f"Cannot compare EntryID with {type(other)}")
+
+    def __hash__(self):
+        return hash(str(self))
+
 
 # TypedEnergyAdjustmentDict = TypedDict(
 #     "TypedEnergyAdjustmentDict",
@@ -113,7 +132,7 @@ class TypedCEParameterDict(TypedDict):
 # Used for running deserialization not dependent on
 # type of energy_adjustments
 _TypedComputedEntryDict = TypedDict(  # type: ignore[name-match]
-    "TypedComputedEntryDict",
+    "_TypedComputedEntryDict",
     {
         "@module": str,
         "@class": str,
@@ -172,7 +191,7 @@ def entry_serializer(entry, nxt, info) -> dict[str, Any]:
 def pop_cse_empty_keys(cse: dict) -> dict[str, Any]:
     if cse.get("structure"):
         cse["structure"] = pop_empty_structure_keys(cse["structure"])
-    cse["data"] = {k: v for k, v in cse["data"].items() if v}  # type: ignore[typeddict-item]
+    cse["data"] = {k: v for k, v in cse["data"].items() if v is not None}  # type: ignore[typeddict-item]
     cse["parameters"] = {k: v for k, v in cse["parameters"].items() if v}  # type: ignore[typeddict-item]
 
     return cse

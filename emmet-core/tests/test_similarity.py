@@ -1,8 +1,10 @@
 """Test structure similarity features."""
 
+from pydantic import TypeAdapter
 import pytest
 
 from emmet.core.io.pymatgen import Structure
+from emmet.core.types.typing import MaterialIdentifierType
 import numpy as np
 
 from emmet.core.similarity import (
@@ -19,17 +21,17 @@ from emmet.core.similarity import (
 
 
 structures = {
-    "fcc_cu": Structure(
+    "aaabc": Structure(
         3.5 * np.array([[0.0, 0.5, 0.5], [0.5, 0.0, 0.5], [0.5, 0.5, 0.0]]),
         ["Cu"],
         [[0.0, 0.0, 0.0]],
     ),  # fcc Cu
-    "dc_cu_cl": Structure(
+    "aaadf": Structure(
         4 * np.array([[0.0, 0.5, 0.5], [0.5, 0.0, 0.5], [0.5, 0.5, 0.0]]),
         ["Cu", "Cl"],
         [[0.0, 0.0, 0.0], [0.25, 0.25, 0.25]],
     ),  # diamond cubic CuCl
-    "hcp_mo_s": Structure(
+    "mp-13293451": Structure(
         2.8
         * np.array(
             [
@@ -81,11 +83,15 @@ def test_crystalnn_featurize():
     # source dict.
     # Also check that the number of included similarity entries
     # is the same as specified by `num_matches`
+
+    validated_idxs = TypeAdapter(dict[str, MaterialIdentifierType]).validate_python(
+        {idx: idx for idx in structures}
+    )
     assert all(
         (
             isinstance(similarity_docs[i], SimilarityDoc)
             and len(similarity_docs[i].sim) == num_matches
-            and similarity_docs[i].material_id == idx
+            and similarity_docs[i].material_id == validated_idxs[idx]
             and all(
                 isinstance(entry, SimilarityEntry) for entry in similarity_docs[i].sim
             )
@@ -101,7 +107,7 @@ def test_crystalnn_featurize():
 
     # Check that the matched similarity entries have the same
     # similarity scores as computed in `ref_matrix`
-    id_to_index = {idfr: i for i, idfr in enumerate(structures.keys())}
+    id_to_index = {validated_idxs[idfr]: i for i, idfr in enumerate(structures.keys())}
     assert all(
         all(
             100 - entry.dissimilarity

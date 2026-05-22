@@ -97,7 +97,13 @@ class ChgcarLike(BaseModel):
     ) -> dict[VolumetricLabel, list[AugChargeData]]:
         aug_data_arr: dict[VolumetricLabel, list[AugChargeData]] = {}
         for k, unfmt_data in aug_data.items():
-            if not isinstance(unfmt_data, list) or not any(
+            if isinstance(unfmt_data, dict):
+                aug_data_arr[VolumetricLabel(k)] = [
+                    AugChargeData(label=str(atom_label), data=atom_data)
+                    for atom_label, atom_data in unfmt_data.items()
+                ]
+                continue
+            if not isinstance(unfmt_data, list | np.ndarray) or not any(
                 line.strip() for line in unfmt_data
             ):
                 continue

@@ -53,7 +53,7 @@ class SimilarityFeatureVectorQuery(QueryOperator):
         )
         if method is None:
             try:
-                method = next(
+                sim_method = next(
                     method
                     for method, fvlen in SIM_METHOD_TO_FEAT_VEC_LENGTH.items()
                     if fvlen == len(feature_vector)
@@ -64,13 +64,15 @@ class SimilarityFeatureVectorQuery(QueryOperator):
                     f"length = {len(feature_vector)} matches no known embedding method."
                 )
         elif isinstance(method, str):
-            method = (
+            sim_method = (
                 SimilarityMethod[method]
                 if method in SimilarityMethod.__members__
                 else SimilarityMethod(method)
             )
+        else:
+            sim_method = method
 
-        ref_fv_len = SIM_METHOD_TO_FEAT_VEC_LENGTH[method]
+        ref_fv_len = SIM_METHOD_TO_FEAT_VEC_LENGTH[sim_method]
 
         if (
             not isinstance(feature_vector, list | tuple)
@@ -80,17 +82,12 @@ class SimilarityFeatureVectorQuery(QueryOperator):
             raise HTTPException(
                 status_code=400,
                 detail=(
-                    f"Invalid feature vector for method {method.value}: "  # type: ignore[union-attr]
+                    f"Invalid feature vector for method {sim_method.value}: "
                     f"should be a list of {ref_fv_len} floats.",
                 ),
             )
 
-        index_name = "similarity_feature_vector"
-        # because MongoDB does not permit renaming indexes,
-        # and I was not forward thinking in naming it.
-        # TODO: homogenize once we have other data built out
-        if method != SimilarityMethod.CRYSTALNN:
-            index_name += f"_{method.value.lower()}"  # type: ignore[union-attr]
+        index_name = f"similarity_feature_vector_{sim_method.value.lower()}"
 
         pipeline = [
             {

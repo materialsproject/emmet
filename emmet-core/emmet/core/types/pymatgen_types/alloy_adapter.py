@@ -1,6 +1,13 @@
-from typing import Annotated, TypeVar
+from typing import Annotated, Any, TypeVar
 
-from pydantic import BaseModel, BeforeValidator, Field, TypeAdapter, WrapSerializer
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    Field,
+    TypeAdapter,
+    WrapSerializer,
+    model_validator,
+)
 from emmet.core.io.pymatgen import Element
 from typing_extensions import NotRequired, TypedDict
 
@@ -22,6 +29,15 @@ class PairID(BaseModel):
     id_a: MaterialIdentifierType
     id_b: MaterialIdentifierType
     separator: str = Field(default="_")
+
+    @model_validator(mode="before")
+    def validate_string(cls, data: Any) -> Any:
+        if isinstance(data, str):
+            sep = cls.model_fields["separator"].default
+            parts = data.split(sep, 1)
+            return {"id_a": parts[0], "id_b": parts[1]}
+
+        return data
 
     def __str__(self) -> str:
         """Format as a string."""

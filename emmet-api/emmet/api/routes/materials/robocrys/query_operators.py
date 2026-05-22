@@ -53,7 +53,7 @@ class RoboTextSearchQuery(QueryOperator):
         return {"pipeline": pipeline}
 
     def post_process(self, docs, query):
-        self.total_doc = docs[0]["meta"]["count"]["total"]
+        self.total_doc = 0 if len(docs) == 0 else docs[0]["meta"]["count"]["total"]
         return docs
 
     def meta(self):

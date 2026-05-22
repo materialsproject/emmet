@@ -1,8 +1,9 @@
 from abc import abstractmethod
 from dataclasses import dataclass
+from fastapi import Query
+from inspect import Parameter, Signature
 
 from emmet.api.query_operator import QueryOperator
-from emmet.api.utils import STORE_PARAMS
 from emmet.core.types.typing import CompoundIDType
 
 
@@ -38,29 +39,49 @@ class CompoundIDQuery(QueryOperator):
     def num_suffixes(self) -> int:
         return len(self.identifier_fields) - 1
 
-    def query(self, **kwargs) -> STORE_PARAMS:
+    def __post_init__(self) -> None:
 
-        identifiers = {
-            v.strip() for v in (kwargs.get(f"{self.field_name}s") or "").split(",") if v
-        }
-        if len(identifiers) == 0:
-            return {"criteria": {}}
-
-        identifiers_as_components = [
-            self.validate_identifer(idx) for idx in identifiers
+        field = f"{self.field_name}s"
+        params = [
+            Parameter(
+                field,
+                Parameter.KEYWORD_ONLY,
+                default=Query(
+                    default=None,
+                    description=f"Comma-separated list of {self.field_name} values to query on.",
+                ),
+                annotation=str,
+            )
         ]
 
-        components = {
-            self.identifier_fields[0]: {
-                str(component["identifier"]) for component in identifiers_as_components
-            },
-            **{
-                suffix: {
-                    component["suffix"][i].value
-                    for component in identifiers_as_components
-                }
-                for i, suffix in enumerate(self.identifier_fields[1:])
-            },
-        }
+        def _query(**kwargs):
 
-        return {"criteria": {k: {"$in": sorted(v)} for k, v in components.items()}}
+            identifiers = {v.strip() for v in (kwargs.get(field) or "").split(",") if v}
+            if len(identifiers) == 0:
+                return {"criteria": {}}
+
+            identifiers_as_components = [
+                self.validate_identifer(idx) for idx in identifiers
+            ]
+
+            components = {
+                self.identifier_fields[0]: {
+                    str(component["identifier"])
+                    for component in identifiers_as_components
+                },
+                **{
+                    suffix: {
+                        component["suffix"][i].value
+                        for component in identifiers_as_components
+                    }
+                    for i, suffix in enumerate(self.identifier_fields[1:])
+                },
+            }
+
+            return {"criteria": {k: {"$in": sorted(v)} for k, v in components.items()}}
+
+        self.query = _query  # type: ignore
+        self.query.__signature__ = Signature(params)  # type: ignore
+
+    def query(self):
+        """Stub query function for abstract class."""

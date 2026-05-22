@@ -28,18 +28,24 @@ TypedSimplexDict = TypedDict(
     {"@module": str, "@class": str, "@version": str, "coords": list[list[float]]},
 )
 
-TypedComputedDataDict = TypedDict(
-    "TypedComputedDataDict",
+# Used for running deserialization not dependent on
+# 'shape' of el_refs
+_TypedComputedDataDict = TypedDict(
+    "_TypedComputedDataDict",
     {
-        # "el_refs": list[[str, int]],
-        "el_refs_elements": list[str],
-        "el_refs_entries": list[int],
         "facets": list[list[int]],
         "qhull_data": list[list[float]],
         "qhull_entries": list[int],
         "all_entries": list[TypedComputedStructureEntryDict],
     },
 )
+
+
+class TypedComputedDataDict(_TypedComputedDataDict):
+    # el_refs: list[[str, int]]
+    el_refs_elements: list[str]
+    el_refs_entries: list[int]
+
 
 TypedPhaseDiagramDict = TypedDict(
     "TypedPhaseDiagramDict",
@@ -106,6 +112,9 @@ def phase_diagram_serializer(phase_diagram, nxt, info) -> dict[str, Any]:
 
 def phase_diagram_deserializer(value) -> PhaseDiagram:
     if isinstance(value, dict):
+        value["computed_data"] = TypeAdapter(_TypedComputedDataDict).validate_python(
+            value["computed_data"], extra="allow"
+        )
         if all(
             key in value["computed_data"]
             for key in ["el_refs_elements", "el_refs_entries"]

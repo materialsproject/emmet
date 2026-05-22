@@ -250,7 +250,7 @@ tags_meta = [
     },
     {
         "name": "DOIs",
-        "description": "Route providing DOI and bibtex reference information for a material. \
+        "description": "Route providing DOI reference information for a material. \
             Note that this data may not be available for all materials in the Materials \
             Project database. See the `DOIDoc` schema for a full list of fields returned by this route.",
     },
