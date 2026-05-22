@@ -110,7 +110,7 @@ class Compound(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _reduce(cls, config) -> dict[str, list[str | int]]:
+    def _reduce(cls, config) -> dict[str, list[str] | list[int]]:
 
         if not all(config.get(k) for k in ("species", "coefficients")) or len(
             config["species"]
@@ -233,7 +233,7 @@ class Molecule(BaseModel):
 
     @property
     def reduced_composition(self) -> Compound:
-        return self.composition.reduced
+        return self.composition.reduced_composition
 
     def _aggregate_site_properties(self, prop: str, default: Any = None) -> np.ndarray:
         return np.array([getattr(site, prop, None) or default for site in self.sites])
