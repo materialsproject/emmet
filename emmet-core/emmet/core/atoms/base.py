@@ -110,9 +110,9 @@ class Compound(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _reduce(cls, config) -> Self:
+    def _reduce(cls, config) -> dict[str, list[str | int]]:
 
-        if not all(config.get(k) for k in cls.model_fields) or len(
+        if not all(config.get(k) for k in ("species", "coefficients")) or len(
             config["species"]
         ) != len(config["coefficients"]):
             raise ValueError(f"Invalid input specified to {cls.__name__}.")
@@ -123,10 +123,10 @@ class Compound(BaseModel):
                 base_config[spec] = 0
             base_config[spec] += config["coefficients"][idx]
         sorted_species = sorted(base_config.keys())
-        return cls(
-            species=sorted_species,
-            coefficients=[base_config[spec] for spec in sorted_species],
-        )
+        return {
+            "species": sorted_species,
+            "coefficients": [base_config[spec] for spec in sorted_species],
+        }
 
     def __str__(self) -> str:
         return (
@@ -168,10 +168,17 @@ class Compound(BaseModel):
         return Composition(self.to_dict())
 
     @property
-    def reduced(self) -> Compound:
+    def reduced_composition(self) -> Compound:
         factor = gcd(*self.coefficients)
         return Compound(
             species=self.species, coefficients=[v // factor for v in self.coefficients]
+        )
+
+    @property
+    def formula(self) -> str:
+        return " ".join(
+            f"{ele}{stoich if stoich != 1 else ''}"
+            for ele, stoich in zip(self.species, self.coefficients)
         )
 
     @cached_property
@@ -195,6 +202,15 @@ class Compound(BaseModel):
             return self.__getitem__(item)
         except KeyError:
             return default
+
+    def keys(self) -> list[str]:
+        return list(self.species)
+
+    def value(self) -> list[int]:
+        return list(self.coefficients)
+
+    def items(self) -> list[tuple[str, int]]:
+        return list(zip(self.species, self.coefficients))
 
 
 class Molecule(BaseModel):
