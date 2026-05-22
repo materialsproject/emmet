@@ -19,7 +19,7 @@ from emmet.core.vasp.calculation import PotcarSpec
 
 if TYPE_CHECKING:
     from typing_extensions import Self
-    from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+    from emmet.core.io.pymatgen import ComputedEntry, ComputedStructureEntry
 
 CORRECTION_NAME = {
     "MP GGA(+U)/r2SCAN mixing adjustment",
@@ -82,7 +82,7 @@ class EntryParameters(BaseModel):
 class EntryData(BaseModel):
     """Schematize entry run data."""
 
-    oxide_type: OxideType = OxideType.NONE
+    oxide_type: OxideType = OxideType.NONE  # type: ignore[assignment]
     aspherical: bool = False
     last_updated: DateTimeType
     task_id: IdentifierType = None
@@ -99,7 +99,7 @@ class EnergyAdjustment(BaseModel):
     adj_per_atom: float | None = None
     n_atoms: int | None = None
     uncertainty_per_atom: float | None = None
-    name: Literal[*CORRECTION_NAME] = None
+    name: Literal[*CORRECTION_NAME] = None  # type: ignore[valid-type]
     description: str | None = None
     klass: MSONType | None = Field(None, validation_alias="cls")
 

@@ -123,10 +123,10 @@ class Compound(BaseModel):
                 base_config[spec] = 0
             base_config[spec] += config["coefficients"][idx]
         sorted_species = sorted(base_config.keys())
-        return {
-            "species": sorted_species,
-            "coefficients": [base_config[spec] for spec in sorted_species],
-        }
+        return cls(
+            species=sorted_species,
+            coefficients=[base_config[spec] for spec in sorted_species],
+        )
 
     def __str__(self) -> str:
         return (
@@ -226,7 +226,7 @@ class Molecule(BaseModel):
         return sum(getattr(site, prop, None) or default for site in self.sites)
 
     @cached_property
-    def cart_coords(self) -> np.ndarray[float]:
+    def cart_coords(self) -> np.ndarray:
         return self._aggregate_site_properties("cart_coords")
 
     @cached_property
@@ -238,11 +238,11 @@ class Molecule(BaseModel):
         return self._sum_scalar_site_properties("spin")
 
     @cached_property
-    def spins(self) -> np.ndarray[float]:
+    def spins(self) -> np.ndarray:
         return self._aggregate_site_properties("spin")
 
     @cached_property
-    def degrees_of_freedom(self) -> np.ndarray[bool]:
+    def degrees_of_freedom(self) -> np.ndarray:
         return self._aggregate_site_properties(
             "degrees_of_freedom", default=(True, True, True)
         )
@@ -256,9 +256,7 @@ class Molecule(BaseModel):
     def to_pmg(self) -> PmgMolecule:
         from emmet.core.io.pymatgen import Molecule as PmgMolecule
 
-        return PmgMolecule.from_sites(
-            [site.to_pmg(cell=self.cell) for site in self.sites]
-        )
+        return PmgMolecule.from_sites([site.to_pmg(cell=None) for site in self.sites])
 
     @classmethod
     def from_sites(cls, sites: list[PmgSite | Site]) -> Self:

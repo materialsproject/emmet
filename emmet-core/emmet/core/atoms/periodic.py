@@ -19,6 +19,8 @@ if TYPE_CHECKING:
     from typing import Literal
     from typing_extensions import Self
 
+    from spglib import SpgCell
+
     from emmet.core.io.pymatgen import Structure
 
 SETTINGS = EmmetSettings()
@@ -53,27 +55,27 @@ class Cell(np.ndarray):
         return abs(np.linalg.det(self))
 
     @cached_property
-    def _reciprocal(self) -> Self:
+    def _reciprocal(self) -> Cell:
         return Cell(
             np.array([np.cross(self[(i + 1) % 3], self[(i + 2) % 3]) for i in range(3)])
             / self.volume
         )
 
     @property
-    def reciprocal(self) -> Self:
-        return 2 * np.pi * self._reciprocal
+    def reciprocal(self) -> Cell:
+        return Cell(2 * np.pi * self._reciprocal)
 
     @cached_property
-    def _vector_norms(self) -> np.ndarray[float]:
+    def _vector_norms(self) -> np.ndarray:
         return np.linalg.norm(self, axis=1)
 
     @cached_property
-    def _angles(self) -> np.ndarray:
+    def _angles(self) -> list[float]:
         return [
             180
             / np.pi
             * np.arccos(
-                np.dot(self.matrix[i], self.matrix[(i + 1) % 3])
+                np.dot(self[i], self[(i + 1) % 3])
                 / (self._vector_norms[i] * self._vector_norms[(i + 1) % 3])
             )
             for i in range(3)
@@ -106,7 +108,7 @@ class Cell(np.ndarray):
     @staticmethod
     def _get_coords(
         cell: Cell, coords: np.ndarray, to: Literal["cartesian", "direct"]
-    ) -> np.ndarray[float]:
+    ) -> np.ndarray:
         if to == "direct":
             return np.einsum("ij,ki->kj", cell._reciprocal.T, coords)
         elif to == "cartesian":
@@ -117,7 +119,7 @@ class Cell(np.ndarray):
 
     def get_coords(
         self, coords: np.ndarray, to: Literal["cartesian", "direct"]
-    ) -> np.ndarray[float]:
+    ) -> np.ndarray:
         return self._get_coords(self, coords, to=to)
 
 
@@ -135,7 +137,7 @@ class Material(Molecule):
         return self.cell.volume
 
     @cached_property
-    def frac_coords(self) -> np.ndarray[float]:
+    def frac_coords(self) -> np.ndarray:
         return self.cell.get_coords(self.cart_coords, to="direct")
 
     def density_g_cm3(self) -> float:
@@ -157,17 +159,17 @@ class Material(Molecule):
         )
 
     @cached_property
-    def _to_spglib(self) -> tuple[Cell, np.ndarray[float], np.ndarray[int]]:
+    def _to_spglib(self) -> SpgCell:
         """Create an spglib-compatible representation of the atoms."""
-        return (
+        return (  # type: ignore[return-value]
             self.cell,
             self.frac_coords,
-            [site.Z for site in self.sites],
+            np.asarray([site.Z for site in self.sites]),
         )
 
     @classmethod
     def _from_spglib(
-        cls, spglib_rep: tuple[Matrix3D, np.ndarray[float], np.ndarray[int]]
+        cls, spglib_rep: tuple[Matrix3D, np.ndarray, np.ndarray] | SpgCell
     ) -> Self:
         cell, frac_coords, atomic_numbers = spglib_rep
 
@@ -175,7 +177,7 @@ class Material(Molecule):
             z: next(ele for ele, data in ELEMENT_DATA.items() if data.Z == z)
             for z in set(atomic_numbers)
         }
-        cart_coords = Cell(cell).get_coords(frac_coords, to="cartesian")
+        cart_coords = Cell(cell).get_coords(frac_coords, to="cartesian")  # type: ignore[arg-type]
         return cls(
             lattice=cell,
             sites=[
@@ -190,8 +192,8 @@ class Material(Molecule):
     def primitive(
         self, symprec: float = SETTINGS.SYMPREC, angle_tol: float = SETTINGS.ANGLE_TOL
     ) -> Material:
-        return self._from_spglib(
-            spglib.find_primitive(
+        return self._from_spglib(  # type: ignore[arg-type]
+            spglib.find_primitive(  # type: ignore[arg-type]
                 self._to_spglib,
                 symprec=symprec,
                 angle_tolerance=angle_tol,
@@ -202,18 +204,23 @@ class Material(Molecule):
         self, symprec: float = SETTINGS.SYMPREC, angle_tol: float = SETTINGS.ANGLE_TOL
     ) -> Material:
         return self._from_spglib(
-            spglib.standardize_cell(
-                self._to_spglib, symprec=symprec, angle_tol=angle_tol
+            spglib.standardize_cell(  # type: ignore[arg-type]
+                self._to_spglib, symprec=symprec, angle_tolerance=angle_tol
             )
         )
 
     def get_space_group_info(
         self, symprec: float = SETTINGS.SYMPREC, angle_tol: float = SETTINGS.ANGLE_TOL
-    ) -> tuple[str, int]:
+    ) -> tuple[str, int] | None:
         sg_info = spglib.get_spacegroup(
             self._to_spglib, symprec=symprec, angle_tolerance=angle_tol
         )
-        return tuple(re.match(r"(.*) \((.*)\)", sg_info).groups())
+        if (
+            isinstance(sg_info, str)
+            and (matches := re.match(r"(.*) \((.*)\)", sg_info)) is not None
+        ) and len(groups := matches.groups()) >= 2:
+            return (groups[0], int(groups[1]))
+        return None
 
     @classmethod
     def from_cif(cls, cif_str: str) -> Self:

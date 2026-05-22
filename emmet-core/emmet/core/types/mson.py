@@ -23,7 +23,7 @@ class MSONType(BaseModel):
             field.validation_alias: getattr(self, k)
             for k, field in self.__class__.model_fields.items()
         }
-        return {k: v for k, v in dct.items() if v is not None}
+        return {str(k): v for k, v in dct.items() if v is not None}
 
     @classmethod
     def from_dict(cls, dct) -> Any:

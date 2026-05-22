@@ -141,6 +141,7 @@ class Element(StrEnum):
             return cls(value)
         elif value in cls.__members__:
             return cls[value]
+        return None
 
 
 class ElementData(BaseModel):
@@ -154,7 +155,7 @@ class ElementData(BaseModel):
 
 class ElementDatabase(dict):
 
-    def _load_data(self) -> dict[Element, ElementData]:
+    def _load_data(self) -> None:
         """Cache atom data from pymatgen."""
         from emmet.core.io.pymatgen import Element as PmgElement
 
