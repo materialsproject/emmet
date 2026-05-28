@@ -172,11 +172,15 @@ def _ser_eigenmode(eigenmode: _EIGENMODE_CTYPE) -> dict[str, _EIGENMODE_RTYPE]:
 
 def _deser_eigenmode(
     dct: _EIGENMODE_CTYPE | dict[str, _EIGENMODE_RTYPE],
-) -> _EIGENMODE_CTYPE:
+) -> _EIGENMODE_CTYPE | None:
     if isinstance(dct, dict):
-        real = np.array(dct["real"])
-        imag = np.array(dct["imag"])
-        return real + 1.0j * imag  # type: ignore[return-value]
+        try:
+            real = np.array(dct["real"])
+            imag = np.array(dct["imag"])
+            return real + 1.0j * imag  # type: ignore[return-value]
+        except Exception:
+            return None
+
     return dct
 
 
