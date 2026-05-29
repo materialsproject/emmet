@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from enum import Enum
 from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
@@ -28,7 +27,7 @@ from emmet.core.io.pymatgen import Spin, Structure
 from emmet.core.math import Matrix3D, Tensor4R, Vector3D
 from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
 from emmet.core.structure import StructureMetadata
-from emmet.core.types.enums import DocEnum
+from emmet.core.types.enums import DocEnum, ValueEnum
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.typing import DateTimeType, FSPathType, IdentifierType
 from emmet.core.utils import get_num_formula_units, type_override
@@ -52,7 +51,7 @@ DEFAULT_PHONON_FILES = {
 }
 
 
-class PhononMethod(Enum):
+class PhononMethod(ValueEnum):
     """Define common methods for computed phonon properties."""
 
     DFPT = "dfpt"
@@ -165,7 +164,10 @@ _EIGENMODE_CTYPE = list[list[list[tuple[complex, complex, complex]]]]
 _EIGENMODE_RTYPE = list[list[list[tuple[float, float, float]]]]
 
 
-def _ser_eigenmode(eigenmode: _EIGENMODE_CTYPE) -> dict[str, _EIGENMODE_RTYPE]:
+def _ser_eigenmode(eigenmode: _EIGENMODE_CTYPE) -> dict[str, _EIGENMODE_RTYPE] | None:
+    if not eigenmode:
+        return None
+
     eigv = np.array(eigenmode)
     return {k: getattr(eigv, k).tolist() for k in ("real", "imag")}
 
