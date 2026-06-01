@@ -922,6 +922,7 @@ ref_model_fields = {
         "deprecation_reasons",
         "last_updated",
         "origins",
+        "phonon_IDs",
         "warnings",
         "structure",
         "property_name",
