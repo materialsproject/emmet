@@ -286,7 +286,7 @@ class ProvenanceSummary(PropModel):
 
 class PhononSummary(PropModel):
     _prop: str = PrivateAttr("phonon")
-    phonon_IDs: dict[str, str] | None = Field(
+    phonon_IDs: dict[str, list[str]] | None = Field(
         None,
         description="Identfiers for phonon documents associated with this material.",
     )
