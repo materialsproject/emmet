@@ -293,13 +293,36 @@ class PhononBS(BandStructure):
         with zopen(phonon_bandstructure_file, "rt") as f:
             phonopy_bandstructure = yaml.safe_load(f.read())
 
+        phonon_entries = phonopy_bandstructure["phonon"]
+        qpoints = [entry["q-position"] for entry in phonon_entries]
+
+        # Phonopy's band.yaml stores frequencies per q-point (one entry per
+        # q-point, each containing a list of bands). The `PhononBS` schema
+        # expects the transpose: first index = band, second = q-point.
+        n_bands = len(phonon_entries[0]["band"]) if phonon_entries else 0
+        frequencies = [
+            [phonon_entries[q_idx]["band"][b_idx]["frequency"] for q_idx in range(len(phonon_entries))]
+            for b_idx in range(n_bands)
+        ]
+
+        # Phonopy emits a `label` field on q-point entries that sit on
+        # high-symmetry points (when BAND_LABELS / a labelled BAND path is
+        # configured). Collect those into `labels_dict` so downstream
+        # consumers (e.g. `PhononBandStructureSymmLine`, plotters) can
+        # render branch boundaries and tick labels.
+        labels_dict = {
+            entry["label"]: entry["q-position"]
+            for entry in phonon_entries
+            if entry.get("label") is not None
+        }
+
         phonopy_bandstructure.update(
-            qpoints=[entry["q-position"] for entry in phonopy_bandstructure["phonon"]],
-            frequencies=[
-                [branch["frequency"] for branch in entry["band"]]
-                for entry in phonopy_bandstructure["phonon"]
-            ],
+            qpoints=qpoints,
+            frequencies=frequencies,
         )
+        if labels_dict:
+            phonopy_bandstructure.setdefault("labels_dict", labels_dict)
+
         if structure_file:
             phonopy_bandstructure["structure"] = Structure.from_file(
                 structure_file, fmt="poscar"
