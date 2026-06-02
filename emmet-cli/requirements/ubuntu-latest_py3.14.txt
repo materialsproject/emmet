@@ -14,7 +14,7 @@ certifi==2026.5.20
     # via requests
 charset-normalizer==3.4.7
     # via requests
-click==8.4.0
+click==8.4.1
     # via emmet-cli (pyproject.toml)
 colorama==0.4.6
     # via emmet-cli (pyproject.toml)
@@ -26,7 +26,7 @@ emmet-core==0.86.4
     # via emmet-cli (pyproject.toml)
 fonttools==4.63.0
     # via matplotlib
-idna==3.15
+idna==3.17
     # via requests
 inflect==7.5.0
     # via emmet-core
@@ -44,11 +44,11 @@ monty==2026.5.18
     # via
     #   emmet-core
     #   pymatgen-core
-more-itertools==11.0.2
+more-itertools==11.1.0
     # via inflect
 mpmath==1.3.0
     # via sympy
-narwhals==2.21.2
+narwhals==2.22.0
     # via plotly
 networkx==3.6.1
     # via pymatgen-core
