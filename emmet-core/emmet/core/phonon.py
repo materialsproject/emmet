@@ -186,6 +186,103 @@ def _deser_eigenmode(
     return dct
 
 
+def _recover_labels_from_segments(
+    phonopy_bandstructure: dict,
+    structure_file: FSPathType | None,
+    path_convention: str,
+    tol: float = 1e-3,
+) -> dict[str, list[float]]:
+    """Reconstruct ``labels_dict`` for a phonopy band.yaml that lacks per-entry
+    ``label`` keys by matching segment-boundary q-positions to the canonical
+    high-symmetry kpoint labels of the requested path convention.
+
+    Args:
+    phonopy_bandstructure: parsed band.yaml dict; must contain ``phonon``,
+        ``segment_nqpoint``, and either an embedded structure (``lattice`` +
+        ``points``) or a separate ``structure_file``.
+    structure_file: optional path to a structure file used in preference to
+        the band.yaml's embedded structure data.
+    path_convention: kpath convention name passed to
+        ``pymatgen.symmetry.bandstructure.HighSymmKpath`` (e.g.
+        ``"latimer_munro"``, ``"setyawan_curtarolo"``, ``"hinuma"``).
+    tol: tolerance for matching a boundary q-position to a canonical kpoint
+        (in fractional reciprocal-lattice coordinates).
+
+    Returns:
+        dict[str, list[float]]: ``{label: q-position}`` for every boundary
+        that found a match within ``tol``. May be empty if no boundaries
+        match. Errors from ``HighSymmKpath`` (e.g. missing ``seekpath``
+        dependency for the ``"hinuma"`` convention) propagate.
+    """
+    from pymatgen.symmetry.bandstructure import HighSymmKpath
+
+    phonon_entries = phonopy_bandstructure["phonon"]
+    if not phonon_entries:
+        return {}
+
+    segment_nqpoint = phonopy_bandstructure.get("segment_nqpoint")
+    if not segment_nqpoint:
+        return {}
+
+    if structure_file:
+        struct = Structure.from_file(structure_file, fmt="poscar")
+    else:
+        latt_raw = phonopy_bandstructure.get("lattice")
+        pts = phonopy_bandstructure.get("points")
+        if latt_raw is None or not pts:
+            return {}
+        struct = Structure(
+            lattice=Lattice(np.asarray(latt_raw)),
+            species=[p["symbol"] for p in pts],
+            coords=[p["coordinates"] for p in pts],
+            coords_are_cartesian=False,
+        )
+
+    # Walk segment boundaries (first q-point + last q-point of each segment).
+    boundary_idxs = [0]
+    running = 0
+    for s in segment_nqpoint:
+        running += s
+        boundary_idxs.append(running - 1)
+
+    hsk = HighSymmKpath(struct, path_type=path_convention)
+    canonical = hsk.kpath.get("kpoints", {})  # {label: frac_coords}
+    if not canonical:
+        return {}
+
+    # Consider unit-cell translations when matching: phonopy may emit a
+    # q-position related to a canonical kpoint by an integer lattice shift.
+    shifts = [
+        np.array(s)
+        for s in (
+            (0, 0, 0),
+            (1, 0, 0),
+            (-1, 0, 0),
+            (0, 1, 0),
+            (0, -1, 0),
+            (0, 0, 1),
+            (0, 0, -1),
+        )
+    ]
+
+    labels_dict: dict[str, list[float]] = {}
+    for idx in boundary_idxs:
+        q = np.asarray(phonon_entries[idx]["q-position"])
+        best_label = None
+        best_dist = float("inf")
+        for label, kc in canonical.items():
+            kc_arr = np.asarray(kc)
+            for shift in shifts:
+                d = float(np.linalg.norm(q - (kc_arr + shift)))
+                if d < best_dist:
+                    best_dist = d
+                    best_label = label
+        if best_label is not None and best_dist <= tol:
+            labels_dict.setdefault(best_label, q.tolist())
+
+    return labels_dict
+
+
 @type_override({"eigendisplacements": ShreddedEigendisplacements})
 class PhononBS(BandStructure):
     """Define schema of pymatgen phonon band structure."""
@@ -281,6 +378,8 @@ class PhononBS(BandStructure):
         cls,
         phonon_bandstructure_file: FSPathType,
         structure_file: FSPathType | None = None,
+        path_convention: str | None = None,
+        label_match_tol: float = 1e-3,
         **kwargs,
     ) -> Self:
         """Create a PhononBS from phonopy .yaml output.
@@ -288,6 +387,21 @@ class PhononBS(BandStructure):
         Args:
         phonon_bandstructure_file (FSPathType) : path to a band.yaml-like file.
         structure_file (FSPathType or None) : path to a POSCAR-like structure file.
+            If provided, takes precedence over the structure embedded in the
+            band.yaml.
+        path_convention (str or None) : name of the high-symmetry path
+            convention used to generate the band.yaml (e.g.
+            ``"latimer_munro"``, ``"setyawan_curtarolo"``, ``"hinuma"``).
+            When provided AND the band.yaml does not already carry per-entry
+            ``label`` keys, `from_phonopy` reconstructs ``labels_dict`` by
+            matching segment-boundary q-positions against
+            `pymatgen.symmetry.bandstructure.HighSymmKpath` labels for the
+            requested convention. If the lookup fails for any reason (e.g.
+            missing optional `seekpath` dep for ``"hinuma"``, or no match
+            within `label_match_tol`), label recovery is skipped silently.
+        label_match_tol (float) : tolerance (in fractional reciprocal-lattice
+            coordinates) for matching boundary q-positions to canonical
+            high-symmetry kpoint labels. Defaults to 1e-3.
         **kwargs : other kwargs to pass to the class constructor
         """
         with zopen(phonon_bandstructure_file, "rt") as f:
@@ -301,20 +415,35 @@ class PhononBS(BandStructure):
         # expects the transpose: first index = band, second = q-point.
         n_bands = len(phonon_entries[0]["band"]) if phonon_entries else 0
         frequencies = [
-            [phonon_entries[q_idx]["band"][b_idx]["frequency"] for q_idx in range(len(phonon_entries))]
+            [
+                phonon_entries[q_idx]["band"][b_idx]["frequency"]
+                for q_idx in range(len(phonon_entries))
+            ]
             for b_idx in range(n_bands)
         ]
 
-        # Phonopy emits a `label` field on q-point entries that sit on
-        # high-symmetry points (when BAND_LABELS / a labelled BAND path is
-        # configured). Collect those into `labels_dict` so downstream
-        # consumers (e.g. `PhononBandStructureSymmLine`, plotters) can
-        # render branch boundaries and tick labels.
+        # Prefer per-entry labels when present (phonopy with BAND_LABELS set).
         labels_dict = {
             entry["label"]: entry["q-position"]
             for entry in phonon_entries
             if entry.get("label") is not None
         }
+
+        # Fall back to reconstructing labels via HighSymmKpath when the
+        # caller tells us which path convention was used to generate the
+        # band.yaml. Pheasy-produced band.yamls lack per-entry labels but
+        # do include segment boundary metadata, which is enough to look up
+        # canonical high-symmetry kpoint labels.
+        if not labels_dict and path_convention:
+            labels_dict = (
+                _recover_labels_from_segments(
+                    phonopy_bandstructure,
+                    structure_file=structure_file,
+                    path_convention=path_convention,
+                    tol=label_match_tol,
+                )
+                or {}
+            )
 
         phonopy_bandstructure.update(
             qpoints=qpoints,
