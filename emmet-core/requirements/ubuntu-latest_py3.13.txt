@@ -20,7 +20,7 @@ cycler==0.12.1
     # via matplotlib
 fonttools==4.63.0
     # via matplotlib
-idna==3.17
+idna==3.18
     # via requests
 inflect==7.5.0
     # via emmet-core (pyproject.toml)

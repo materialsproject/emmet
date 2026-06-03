@@ -32,7 +32,7 @@ custodian==2025.12.14
     # via emmet-core (pyproject.toml)
 cycler==0.12.1
     # via matplotlib
-distlib==0.4.0
+distlib==0.4.1
     # via virtualenv
 dnspython==2.8.0
     # via pymongo
@@ -56,7 +56,7 @@ h5py==3.16.0
     # via phonopy
 identify==2.6.19
     # via pre-commit
-idna==3.17
+idna==3.18
     # via requests
 imageio==2.37.3
     # via scikit-image
@@ -303,7 +303,7 @@ shapely==2.1.2
     # via pymatgen-analysis-alloys
 six==1.17.0
     # via python-dateutil
-snowballstemmer==3.1.0
+snowballstemmer==3.1.1
     # via
     #   pydocstyle
     #   sphinx

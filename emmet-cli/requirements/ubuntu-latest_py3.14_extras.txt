@@ -36,7 +36,7 @@ csscompressor==0.9.5
     # via mkdocs-minify-plugin
 cycler==0.12.1
     # via matplotlib
-distlib==0.4.0
+distlib==0.4.1
     # via virtualenv
 emmet-core==0.86.4
     # via emmet-cli (pyproject.toml)
@@ -58,7 +58,7 @@ htmlmin2==0.1.13
     # via mkdocs-minify-plugin
 identify==2.6.19
     # via pre-commit
-idna==3.17
+idna==3.18
     # via requests
 inflect==7.5.0
     # via emmet-core
@@ -287,7 +287,7 @@ scipy==1.17.1
     # via pymatgen-core
 six==1.17.0
     # via python-dateutil
-snowballstemmer==3.1.0
+snowballstemmer==3.1.1
     # via pydocstyle
 spglib==2.7.0
     # via pymatgen-core
