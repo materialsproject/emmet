@@ -342,12 +342,19 @@ class PhononBS(BandStructure):
     def to_pmg(self) -> PhononBandStructureSymmLine:
         """Get / cache corresponding pymatgen object."""
         rlatt = Lattice(self.reciprocal_lattice)
+
+        eigendisplacements = (
+            None
+            if self.eigendisplacements is None
+            else np.array(self.eigendisplacements)
+        )
+
         return PhononBandStructureSymmLine(
             [Kpoint(q, lattice=rlatt).frac_coords for q in self.qpoints],  # type: ignore[misc]
             np.array(self.frequencies),
             rlatt,
             has_nac=self.has_nac,
-            eigendisplacements=np.array(self.eigendisplacements),
+            eigendisplacements=eigendisplacements,
             structure=self.structure,
             labels_dict={
                 k: Kpoint(v, lattice=rlatt).frac_coords
