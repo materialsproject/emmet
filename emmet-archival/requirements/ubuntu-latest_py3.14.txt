@@ -28,7 +28,7 @@ google-crc32c==1.8.0
     # via zarr
 h5py==3.16.0
     # via emmet-archival (pyproject.toml)
-idna==3.17
+idna==3.18
     # via requests
 inflect==7.5.0
     # via emmet-core

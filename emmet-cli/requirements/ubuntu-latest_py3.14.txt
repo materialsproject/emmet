@@ -26,7 +26,7 @@ emmet-core==0.86.4
     # via emmet-cli (pyproject.toml)
 fonttools==4.63.0
     # via matplotlib
-idna==3.17
+idna==3.18
     # via requests
 inflect==7.5.0
     # via emmet-core

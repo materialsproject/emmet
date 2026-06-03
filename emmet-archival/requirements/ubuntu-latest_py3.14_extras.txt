@@ -24,7 +24,7 @@ coverage[toml]==7.14.1
     # via pytest-cov
 cycler==0.12.1
     # via matplotlib
-distlib==0.4.0
+distlib==0.4.1
     # via virtualenv
 donfig==0.8.1.post1
     # via zarr
@@ -46,7 +46,7 @@ h5py==3.16.0
     # via emmet-archival (pyproject.toml)
 identify==2.6.19
     # via pre-commit
-idna==3.17
+idna==3.18
     # via requests
 inflect==7.5.0
     # via emmet-core
@@ -204,7 +204,7 @@ scipy==1.17.1
     # via pymatgen-core
 six==1.17.0
     # via python-dateutil
-snowballstemmer==3.1.0
+snowballstemmer==3.1.1
     # via pydocstyle
 spglib==2.7.0
     # via pymatgen-core
