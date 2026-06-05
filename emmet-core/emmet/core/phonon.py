@@ -140,9 +140,7 @@ class PhononDOS(BandTheoryBase):
         phonopy_dos["densities"] = total_dos[:, 1].tolist()
 
         if structure_file:
-            phonopy_dos["structure"] = Structure.from_file(
-                structure_file, format="poscar"
-            )
+            phonopy_dos["structure"] = Structure.from_file(structure_file)
 
         if projected_dos_file:
             # First column are frequencies, can skip these in parsing since
@@ -196,6 +194,19 @@ def _recover_labels_from_segments(
     ``label`` keys by matching segment-boundary q-positions to the canonical
     high-symmetry kpoint labels of the requested path convention.
 
+    Matching tries three transformations to find an equivalence between each
+    boundary q-position and a canonical kpoint: identity, integer
+    reciprocal-lattice translations, and the structure's point group
+    operations applied to the boundary q-position. This is required because
+    band.yaml q-positions are often related to canonical labels by
+    point-group symmetry, not only by lattice translations.
+
+    When two boundaries match the same canonical label at different
+    q-positions (i.e. visit the same physical high-symmetry point along
+    different symmetry-equivalent path segments), later occurrences are
+    suffixed with primes (e.g. ``"X"`` then ``"X'"`` then ``"X''"``) so
+    every boundary in the band.yaml receives a tick on the plot.
+
     Args:
     phonopy_bandstructure: parsed band.yaml dict; must contain ``phonon``,
         ``segment_nqpoint``, and either an embedded structure (``lattice`` +
@@ -214,6 +225,7 @@ def _recover_labels_from_segments(
         match. Errors from ``HighSymmKpath`` (e.g. missing ``seekpath``
         dependency for the ``"hinuma"`` convention) propagate.
     """
+    from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
     from pymatgen.symmetry.bandstructure import HighSymmKpath
 
     phonon_entries = phonopy_bandstructure["phonon"]
@@ -225,7 +237,7 @@ def _recover_labels_from_segments(
         return {}
 
     if structure_file:
-        struct = Structure.from_file(structure_file, fmt="poscar")
+        struct = Structure.from_file(structure_file)
     else:
         latt_raw = phonopy_bandstructure.get("lattice")
         pts = phonopy_bandstructure.get("points")
@@ -265,6 +277,19 @@ def _recover_labels_from_segments(
         )
     ]
 
+    # Point-group operations on fractional reciprocal coordinates. Boundary
+    # q-positions in band.yaml are frequently equivalent to canonical labels
+    # only after applying one of these (e.g. rhombohedral cells where the
+    # path traverses symmetry-related copies of the same high-symmetry
+    # point). Falls back to identity-only matching if the SpacegroupAnalyzer
+    # fails for any reason (unusual cells, malformed structure, etc.).
+    try:
+        sym_ops = SpacegroupAnalyzer(struct).get_point_group_operations(
+            cartesian=False
+        )
+    except Exception:
+        sym_ops = []
+
     labels_dict: dict[str, list[float]] = {}
     for idx in boundary_idxs:
         q = np.asarray(phonon_entries[idx]["q-position"])
@@ -272,13 +297,29 @@ def _recover_labels_from_segments(
         best_dist = float("inf")
         for label, kc in canonical.items():
             kc_arr = np.asarray(kc)
-            for shift in shifts:
-                d = float(np.linalg.norm(q - (kc_arr + shift)))
-                if d < best_dist:
-                    best_dist = d
-                    best_label = label
-        if best_label is not None and best_dist <= tol:
-            labels_dict.setdefault(best_label, q.tolist())
+            # Try identity first, then each symmetry operation.
+            for op in (None, *sym_ops):
+                q_eff = q if op is None else op.operate(q)
+                for shift in shifts:
+                    d = float(np.linalg.norm(q_eff - (kc_arr + shift)))
+                    if d < best_dist:
+                        best_dist = d
+                        best_label = label
+        if best_label is None or best_dist > tol:
+            continue
+
+        # Disambiguate duplicate labels that come from symmetry-equivalent
+        # but distinct path points. The first occurrence keeps the canonical
+        # label; later occurrences are suffixed with primes.
+        candidate = best_label
+        suffix = 0
+        while (
+            candidate in labels_dict
+            and not np.allclose(labels_dict[candidate], q, atol=tol)
+        ):
+            suffix += 1
+            candidate = best_label + "'" * suffix
+        labels_dict.setdefault(candidate, q.tolist())
 
     return labels_dict
 
@@ -460,9 +501,7 @@ class PhononBS(BandStructure):
             phonopy_bandstructure.setdefault("labels_dict", labels_dict)
 
         if structure_file:
-            phonopy_bandstructure["structure"] = Structure.from_file(
-                structure_file, fmt="poscar"
-            )
+            phonopy_bandstructure["structure"] = Structure.from_file(structure_file)
         return cls(**phonopy_bandstructure, **kwargs)
 
 
