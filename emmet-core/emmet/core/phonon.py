@@ -284,9 +284,7 @@ def _recover_labels_from_segments(
     # point). Falls back to identity-only matching if the SpacegroupAnalyzer
     # fails for any reason (unusual cells, malformed structure, etc.).
     try:
-        sym_ops = SpacegroupAnalyzer(struct).get_point_group_operations(
-            cartesian=False
-        )
+        sym_ops = SpacegroupAnalyzer(struct).get_point_group_operations(cartesian=False)
     except Exception:
         sym_ops = []
 
@@ -313,9 +311,8 @@ def _recover_labels_from_segments(
         # label; later occurrences are suffixed with primes.
         candidate = best_label
         suffix = 0
-        while (
-            candidate in labels_dict
-            and not np.allclose(labels_dict[candidate], q, atol=tol)
+        while candidate in labels_dict and not np.allclose(
+            labels_dict[candidate], q, atol=tol
         ):
             suffix += 1
             candidate = best_label + "'" * suffix
