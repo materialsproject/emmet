@@ -22,15 +22,15 @@ bibtexparser==1.4.4
     # via pymatgen-core
 blake3==1.0.8
     # via emmet-core
-boto3==1.43.20
+boto3==1.43.23
     # via emmet-api (pyproject.toml)
-botocore==1.43.20
+botocore==1.43.23
     # via
     #   boto3
     #   s3transfer
 bracex==2.6
     # via wcmatch
-bytecode==0.17.0
+bytecode==0.18.1
     # via ddtrace
 certifi==2026.5.20
     # via
@@ -67,7 +67,7 @@ execnet==2.1.2
     # via pytest-xdist
 fastapi==0.136.3
     # via emmet-api (pyproject.toml)
-filelock==3.29.0
+filelock==3.29.1
     # via
     #   python-discovery
     #   virtualenv
@@ -185,7 +185,7 @@ mkdocstrings[python]==1.0.4
     # via
     #   emmet-api (pyproject.toml)
     #   mkdocstrings-python
-mkdocstrings-python==2.0.3
+mkdocstrings-python==2.0.4
     # via mkdocstrings
 mongomock==4.3.0
     # via emmet-api (pyproject.toml)
@@ -205,7 +205,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-api (pyproject.toml)
     #   mypy
-narwhals==2.22.0
+narwhals==2.22.1
     # via plotly
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
@@ -262,7 +262,7 @@ platformdirs==4.10.0
     #   mkdocs-get-deps
     #   python-discovery
     #   virtualenv
-plotly==6.7.0
+plotly==6.8.0
     # via pymatgen-core
 pluggy==1.6.0
     # via
@@ -347,7 +347,7 @@ python-discovery==1.4.0
     # via virtualenv
 python-dotenv==1.2.2
     # via pydantic-settings
-python-multipart==0.0.30
+python-multipart==0.0.32
     # via starlette
 pytz==2026.2
     # via mongomock
@@ -403,7 +403,7 @@ tifffile==2026.3.3
     # via scikit-image
 tornado==6.5.6
     # via livereload
-tqdm==4.67.3
+tqdm==4.68.1
     # via pymatgen-core
 typeguard==4.5.2
     # via inflect
@@ -438,7 +438,7 @@ urllib3==2.7.0
     #   botocore
     #   requests
     #   types-requests
-uvicorn==0.48.0
+uvicorn==0.49.0
     # via emmet-api (pyproject.toml)
 virtualenv==21.4.2
     # via pre-commit
