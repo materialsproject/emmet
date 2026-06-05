@@ -34,7 +34,7 @@ emmet-core==0.86.4
     # via emmet-archival (pyproject.toml)
 execnet==2.1.2
     # via pytest-xdist
-filelock==3.29.0
+filelock==3.29.1
     # via
     #   python-discovery
     #   virtualenv
@@ -82,7 +82,7 @@ mypy-extensions==1.1.0
     # via
     #   emmet-archival (pyproject.toml)
     #   mypy
-narwhals==2.22.0
+narwhals==2.22.1
     # via plotly
 networkx==3.6.1
     # via pymatgen-core
@@ -125,7 +125,7 @@ platformdirs==4.10.0
     # via
     #   python-discovery
     #   virtualenv
-plotly==6.7.0
+plotly==6.8.0
     # via pymatgen-core
 pluggy==1.6.0
     # via
@@ -214,7 +214,7 @@ sympy==1.14.0
     # via pymatgen-core
 tabulate==0.10.0
     # via pymatgen-core
-tqdm==4.67.3
+tqdm==4.68.1
     # via pymatgen-core
 typeguard==4.5.2
     # via inflect
