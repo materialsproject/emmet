@@ -32,7 +32,7 @@ latexcodec==3.0.1
     # via pybtex
 lxml==6.1.1
     # via pymatgen-core
-matplotlib==3.10.9
+matplotlib==3.11.0
     # via
     #   -r python/requirements.txt
     #   pymatgen-core
@@ -128,7 +128,7 @@ sympy==1.14.0
     # via pymatgen-core
 tabulate==0.10.0
     # via pymatgen-core
-tqdm==4.68.1
+tqdm==4.68.2
     # via pymatgen-core
 typeguard==4.5.2
     # via inflect
