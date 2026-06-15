@@ -29,7 +29,7 @@ authors = [
 ]
 license = "BSD-3-Clause-LBNL"
 dependencies = [
-  "emmet-core>=0.87.0rc2,<0.87.1",
+  "emmet-core>=0.87.0rc11,<0.87.1",
   "fastapi>=0.123.1",
   "gunicorn==24.1.1",
   "boto3",

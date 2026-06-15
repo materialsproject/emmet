@@ -9,17 +9,17 @@ from typing import TYPE_CHECKING, Annotated
 
 import numpy as np
 from pydantic import BaseModel, BeforeValidator, Field, computed_field
+
+from emmet.core.io.pymatgen import BandStructure as PmgBandStructure
 from emmet.core.io.pymatgen import (
-    Lattice,
-    Kpoint,
-    Orbital,
-    Spin,
     CompleteDos,
     Dos,
     HighSymmKpath,
-    BandStructure as PmgBandStructure,
+    Kpoint,
+    Lattice,
+    Orbital,
+    Spin,
 )
-
 from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.settings import EmmetSettings
 from emmet.core.types.enums import ValueEnum
@@ -30,8 +30,9 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Sequence
     from typing import Any
 
-    from emmet.core.io.pymatgen import PeriodicSite, Structure
     from typing_extensions import Self
+
+    from emmet.core.io.pymatgen import PeriodicSite, Structure
 
 BAND_GAP_TOL = 1e-4
 SETTINGS = EmmetSettings()  # type: ignore[call-arg]
