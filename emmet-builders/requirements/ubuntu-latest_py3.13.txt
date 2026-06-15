@@ -84,7 +84,7 @@ numpy==2.4.6
     #   shapely
     #   spglib
     #   tifffile
-orjson==3.11.9
+orjson==3.11.6
     # via pymatgen-core
 packaging==26.2
     # via
@@ -156,7 +156,7 @@ python-dotenv==1.2.2
     # via pydantic-settings
 pyyaml==6.0.3
     # via pybtex
-requests==2.34.2
+requests==2.33.0
     # via
     #   pymatgen-core
     #   pymatgen-io-validation
