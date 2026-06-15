@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Literal
 from pydantic import Field
 from emmet.core.io.pymatgen import (
     SpacegroupAnalyzer,
-    Molecule,
     Structure,
     SimplestChemenvStrategy,
     AllCoordinationGeometries,
@@ -13,13 +12,13 @@ from emmet.core.io.pymatgen import (
     LightStructureEnvironments,
 )
 
+from emmet.core.atoms.base import Molecule
 from emmet.core.material_property import PropertyDoc
 
 if TYPE_CHECKING:
     from emmet.core.types.typing import IdentifierType
 
 from emmet.core.types.pymatgen_types.structure_adapter import (
-    MoleculeType,
     StructureType,
 )
 
@@ -362,7 +361,7 @@ class ChemEnvDoc(PropertyDoc):
         description="Method used to compute chemical environments"
     )
 
-    mol_from_site_environments: list[MoleculeType | None] = Field(
+    mol_from_site_environments: list[Molecule | None] = Field(
         description="List of Molecule Objects describing the detected environment."
     )
 
