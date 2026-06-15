@@ -27,7 +27,7 @@ authors = [
 ]
 license = "BSD-3-Clause-LBNL"
 dependencies = [
-  "emmet-core[all]>=0.86.1",
+  "emmet-core[all]>=0.87.1",
   "pymatgen-io-validation>=0.1.1",
 ]
 
