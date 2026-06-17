@@ -573,12 +573,18 @@ def _fetch_summary_df(mp_ids: list[str]):
     return pd.DataFrame(rows)
 
 
-def _write_heatmap_json(df, out_path: Path, cutoffs: list[float]) -> None:
-    """Aggregate the in-memory frame into the heatmap JSON.
+def _write_heatmap_parquet(df, out_path: Path, cutoffs: list[float]) -> None:
+    """Aggregate the in-memory frame into the tidy, long-format heatmap parquet.
 
     For each (pH, V) cell, count materials with decomposition_energy <= cutoff,
     for every cutoff. Built from the frame we already have so we don't re-read
     the parquet.
+
+    Writes one row per (pH, V, cutoff) combination — columns "pH", "V",
+    "cutoff", "count". This is the on-disk format
+    ReversePourbaixDiagramComponent.load_heatmap_data (crystal_toolkit)
+    expects; it reshapes this long table into the nested ph_values/v_values/
+    grid structure the heatmap figure is built from.
     """
     count_cols = []
     for c in cutoffs:
@@ -591,22 +597,27 @@ def _write_heatmap_json(df, out_path: Path, cutoffs: list[float]) -> None:
     )
     df.drop(columns=count_cols, inplace=True)  # remove temp columns again
 
-    grid = [
-        {
-            "pH": float(r["pH"]),
-            "V": float(r["V"]),
-            "counts": {str(c): int(r[f"_le_{c}"]) for c in cutoffs},
-        }
-        for _, r in agg.iterrows()
-    ]
-    payload = {
-        "ph_values": sorted(agg["pH"].unique().tolist()),
-        "v_values": sorted(agg["V"].unique().tolist(), reverse=True),
-        "cutoffs": cutoffs,
-        "grid": grid,
-    }
-    out_path.write_text(json.dumps(payload, indent=2))
-    logger.info("Wrote %s (%d cells, %d cutoffs)", out_path, len(grid), len(cutoffs))
+    long_df = agg.melt(
+        id_vars=["pH", "V"],
+        value_vars=count_cols,
+        var_name="cutoff",
+        value_name="count",
+    )
+    long_df["pH"] = long_df["pH"].astype("float64")
+    long_df["V"] = long_df["V"].astype("float64")
+    long_df["cutoff"] = (
+        long_df["cutoff"].str.removeprefix("_le_").astype("float64")
+    )
+    long_df["count"] = long_df["count"].astype("int32")
+    long_df = long_df.sort_values(["pH", "V", "cutoff"]).reset_index(drop=True)
+    long_df = long_df[["pH", "V", "cutoff", "count"]]
+
+    table = pa.Table.from_pandas(long_df, preserve_index=False)
+    pq.write_table(table, out_path, compression="zstd")
+    logger.info(
+        "Wrote %s (%d rows, %d cells, %d cutoffs)",
+        out_path, len(long_df), len(agg), len(cutoffs),
+    )
 
 
 def build_web_assets(
@@ -615,13 +626,13 @@ def build_web_assets(
     heatmap_path: Path | None = None,
     cutoffs: list[float] | None = None,
 ) -> None:
-    """Build the enriched parquet + heatmap JSON the web app reads.
+    """Build the enriched parquet + heatmap parquet the web app reads.
     """
     import pandas as pd
 
     cutoffs = cutoffs or HEATMAP_CUTOFFS
     enriched_path = enriched_path or parquet_path.with_name(parquet_path.stem + "_enriched.parquet")
-    heatmap_path = heatmap_path or parquet_path.with_name(parquet_path.stem + "_heatmap.json")
+    heatmap_path = heatmap_path or parquet_path.with_name(parquet_path.stem + "_heatmap.parquet")
 
     logger.info("Post-processing: reading %s", parquet_path)
     df = pd.read_parquet(parquet_path)
@@ -658,8 +669,8 @@ def build_web_assets(
     )
     logger.info("  wrote %d rows, %.1f MB", len(enriched), enriched_path.stat().st_size / 1e6)
 
-    # heatmap JSON
-    _write_heatmap_json(enriched, heatmap_path, cutoffs)
+    # heatmap parquet
+    _write_heatmap_parquet(enriched, heatmap_path, cutoffs)
 
 if __name__ == "__main__":
     logging.basicConfig(
