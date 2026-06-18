@@ -28,6 +28,7 @@ sort_fields = [
     "energy_vol",
     "stability_charge",
     "stability_discharge",
+    "working_ion",
 ]
 
 
