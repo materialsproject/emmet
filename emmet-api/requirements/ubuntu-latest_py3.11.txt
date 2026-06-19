@@ -18,19 +18,19 @@ bibtexparser==1.4.4
     # via pymatgen-core
 blake3==1.0.8
     # via emmet-core
-boto3==1.43.12
+boto3==1.43.23
     # via emmet-api (pyproject.toml)
-botocore==1.43.12
+botocore==1.43.23
     # via
     #   boto3
     #   s3transfer
-bytecode==0.17.0
+bytecode==0.18.1
     # via ddtrace
 certifi==2026.5.20
     # via requests
 charset-normalizer==3.4.7
     # via requests
-click==8.4.0
+click==8.4.1
     # via uvicorn
 contourpy==1.3.3
     # via matplotlib
@@ -40,11 +40,11 @@ ddtrace==4.3.0
     # via emmet-api (pyproject.toml)
 dnspython==2.8.0
     # via pymongo
-emmet-core==0.87.0rc6
+emmet-core==0.87.0rc12
     # via emmet-api (pyproject.toml)
 envier==0.6.1
     # via ddtrace
-fastapi==0.136.1
+fastapi==0.136.3
     # via emmet-api (pyproject.toml)
 fonttools==4.63.0
     # via matplotlib
@@ -52,7 +52,7 @@ gunicorn==24.1.1
     # via emmet-api (pyproject.toml)
 h11==0.16.0
     # via uvicorn
-idna==3.15
+idna==3.18
     # via
     #   anyio
     #   requests
@@ -80,13 +80,13 @@ monty==2026.5.18
     # via
     #   emmet-core
     #   pymatgen-core
-more-itertools==11.0.2
+more-itertools==11.1.0
     # via inflect
 mp-pyrho==0.5.1
     # via pymatgen-analysis-defects
 mpmath==1.3.0
     # via sympy
-narwhals==2.21.2
+narwhals==2.22.1
     # via plotly
 networkx==3.6.1
     # via
@@ -107,7 +107,7 @@ numpy==2.4.6
     #   shapely
     #   spglib
     #   tifffile
-opentelemetry-api==1.42.0
+opentelemetry-api==1.42.1
     # via ddtrace
 orjson==3.11.9
     # via pymatgen-core
@@ -127,7 +127,7 @@ pillow==12.2.0
     #   imageio
     #   matplotlib
     #   scikit-image
-plotly==6.7.0
+plotly==6.8.0
     # via pymatgen-core
 pubchempy==1.0.5
     # via emmet-core
@@ -183,7 +183,7 @@ requests==2.34.2
     #   pymatgen-io-validation
 ruamel-yaml==0.19.1
     # via monty
-s3transfer==0.17.0
+s3transfer==0.18.0
     # via boto3
 scikit-image==0.26.0
     # via pymatgen-analysis-defects
@@ -201,7 +201,7 @@ six==1.17.0
     # via python-dateutil
 spglib==2.7.0
     # via pymatgen-core
-starlette==1.0.0
+starlette==1.2.1
     # via fastapi
 sympy==1.14.0
     # via pymatgen-core
@@ -209,7 +209,7 @@ tabulate==0.10.0
     # via pymatgen-core
 tifffile==2026.3.3
     # via scikit-image
-tqdm==4.67.3
+tqdm==4.68.1
     # via pymatgen-core
 typeguard==4.5.2
     # via inflect
@@ -237,7 +237,7 @@ urllib3==2.7.0
     # via
     #   botocore
     #   requests
-uvicorn==0.47.0
+uvicorn==0.49.0
     # via emmet-api (pyproject.toml)
-wrapt==2.1.2
+wrapt==2.2.1
     # via ddtrace

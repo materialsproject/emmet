@@ -30,7 +30,7 @@ def build_robocrys_docs(
     return filter_map(
         RobocrystallogapherDoc.from_structure,
         input_documents,
-        work_keys=["deprecated", "material_id", "structure", "origins"],
+        work_keys=["deprecated", "material_id", "structure"],
         mineral_matcher=mineral_matcher,
         robocrys_version=__version__,
         **kwargs

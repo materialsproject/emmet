@@ -29,6 +29,7 @@ def chemenv_resource(chemenv_store):
                 ChemEnvDoc,
                 default_fields=["material_id", "formula_pretty", "last_updated"],
             ),
+            LicenseQuery(),
         ],
         header_processor=GlobalHeaderProcessor(),
         query_to_configure_on_request=LicenseQuery(),
