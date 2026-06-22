@@ -286,7 +286,7 @@ pydantic==2.13.4
     #   pymatgen-io-validation
 pydantic-core==2.46.4
     # via pydantic
-pydantic-settings==2.14.1
+pydantic-settings==2.14.2
     # via
     #   emmet-core
     #   pymatgen-io-validation
@@ -391,7 +391,7 @@ snowballstemmer==3.1.1
     # via pydocstyle
 spglib==2.7.0
     # via pymatgen-core
-starlette[full]==1.2.1
+starlette[full]==1.3.1
     # via
     #   emmet-api (pyproject.toml)
     #   fastapi
@@ -401,7 +401,7 @@ tabulate==0.10.0
     # via pymatgen-core
 tifffile==2026.6.1
     # via scikit-image
-tornado==6.5.6
+tornado==6.5.7
     # via livereload
 tqdm==4.68.1
     # via pymatgen-core

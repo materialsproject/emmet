@@ -218,7 +218,7 @@ pydantic==2.13.4
     #   pymatgen-io-validation
 pydantic-core==2.46.4
     # via pydantic
-pydantic-settings==2.14.1
+pydantic-settings==2.14.2
     # via
     #   emmet-core
     #   pymatgen-io-validation
@@ -295,7 +295,7 @@ sympy==1.14.0
     # via pymatgen-core
 tabulate==0.10.0
     # via pymatgen-core
-tornado==6.5.6
+tornado==6.5.7
     # via livereload
 tqdm==4.68.1
     # via pymatgen-core
