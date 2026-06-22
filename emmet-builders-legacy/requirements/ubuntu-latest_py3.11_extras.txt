@@ -259,7 +259,7 @@ numpy==1.26.4
     #   statsmodels
     #   tidynamics
     #   tifffile
-orjson==3.11.5
+orjson==3.11.6
     # via
     #   maggma
     #   pymatgen
@@ -314,7 +314,7 @@ pre-commit==4.3.0
     # via emmet-builders (pyproject.toml)
 pubchempy==1.0.4
     # via robocrys
-pyarrow==21.0.0
+pyarrow==23.0.1
     # via emmet-core
 pybtex==0.25.1
     # via
@@ -423,7 +423,7 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.4
+requests==2.33.0
     # via
     #   matminer
     #   pymatgen
