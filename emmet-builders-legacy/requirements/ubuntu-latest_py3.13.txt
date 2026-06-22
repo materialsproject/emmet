@@ -172,7 +172,7 @@ numpy==1.26.4
     #   statsmodels
     #   symfc
     #   tifffile
-orjson==3.11.5
+orjson==3.11.6
     # via maggma
 packaging==25.0
     # via
@@ -284,7 +284,7 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.4
+requests==2.33.0
     # via
     #   matminer
     #   pymatgen

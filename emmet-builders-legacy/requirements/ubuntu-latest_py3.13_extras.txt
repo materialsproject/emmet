@@ -354,7 +354,7 @@ nvidia-nvjitlink-cu12==12.6.85
     #   torch
 nvidia-nvtx-cu12==12.6.77
     # via torch
-orjson==3.11.5
+orjson==3.11.6
     # via maggma
 packaging==25.0
     # via
@@ -515,7 +515,7 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.4
+requests==2.33.0
     # via
     #   matminer
     #   pymatgen
@@ -598,7 +598,7 @@ tidynamics==1.1.2
     # via transport-analysis
 tifffile==2025.5.10
     # via scikit-image
-torch==2.8.0
+torch==2.12.1
     # via
     #   chgnet
     #   matgl
