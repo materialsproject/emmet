@@ -66,7 +66,7 @@ class CalculationMetadata(BaseModel):
         for f in self.files:
             cached_hash = f.hash
             f.compute_hash()
-            changed_files = cached_hash != f.hash
+            changed_files |= cached_hash != f.hash
         if changed_files:
             self.calc_valid = None
             self.calc_validation_errors.clear()
