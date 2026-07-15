@@ -1,6 +1,7 @@
 from pathlib import Path
 from emmet.cli.submission import CalculationMetadata, CalculationLocator, Submission
 from emmet.cli.utils import EmmetCliError
+from emmet.core.vasp.utils import FileMetadata
 import pytest
 
 
@@ -35,6 +36,23 @@ def tmp_structure(tmp_path_factory):
         else:
             tmp_structure[calc_dir] = a_file
     return tmp_structure
+
+
+@pytest.fixture()
+def calculation_metadata(tmp_path):
+    files = []
+    for index in range(3):
+        file_path = tmp_path / f"file-{index}"
+        file_path.write_text(f"initial content {index}")
+        file_metadata = FileMetadata(name=file_path.name, path=file_path)
+        file_metadata.compute_hash()
+        files.append(file_metadata)
+
+    return CalculationMetadata(
+        files=files,
+        calc_valid=True,
+        calc_validation_errors=["cached validation error"],
+    )
 
 
 def verify_submission_calculations_against_tmp_dir_data(calculations):
@@ -147,6 +165,48 @@ def test_changed_files(sub_file):
         sub.last_pushed(), sub._create_calculations_copy(refresh=True)
     )
     assert len(changed) == 7
+
+
+@pytest.mark.parametrize("changed_index", [0, 1, 2])
+def test_refresh_invalidates_cached_validation(calculation_metadata, changed_index):
+    original_hashes = [file.hash for file in calculation_metadata.files]
+    changed_file = calculation_metadata.files[changed_index]
+    changed_file.path.write_text("changed content")
+
+    calculation_metadata.refresh()
+
+    assert changed_file.hash != original_hashes[changed_index]
+    assert calculation_metadata.calc_valid is None
+    assert calculation_metadata.calc_validation_errors == []
+
+
+def test_refresh_invalidates_cached_validation_for_multiple_changed_files(
+    calculation_metadata,
+):
+    original_hashes = [file.hash for file in calculation_metadata.files]
+    changed_indices = {0, 2}
+    for index in changed_indices:
+        calculation_metadata.files[index].path.write_text(f"changed content {index}")
+
+    calculation_metadata.refresh()
+
+    for index, file in enumerate(calculation_metadata.files):
+        if index in changed_indices:
+            assert file.hash != original_hashes[index]
+        else:
+            assert file.hash == original_hashes[index]
+    assert calculation_metadata.calc_valid is None
+    assert calculation_metadata.calc_validation_errors == []
+
+
+def test_refresh_preserves_cached_validation_for_unchanged_files(calculation_metadata):
+    original_hashes = [file.hash for file in calculation_metadata.files]
+
+    calculation_metadata.refresh()
+
+    assert [file.hash for file in calculation_metadata.files] == original_hashes
+    assert calculation_metadata.calc_valid is True
+    assert calculation_metadata.calc_validation_errors == ["cached validation error"]
 
 
 def test_validate_submission(sub_file, validation_sub_file):
