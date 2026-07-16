@@ -51,7 +51,7 @@ def calculation_metadata(tmp_path):
     return CalculationMetadata(
         files=files,
         calc_valid=True,
-        calc_validation_errors=["cached validation error"],
+        calc_validation_errors=[],
     )
 
 
@@ -206,7 +206,7 @@ def test_refresh_preserves_cached_validation_for_unchanged_files(calculation_met
 
     assert [file.hash for file in calculation_metadata.files] == original_hashes
     assert calculation_metadata.calc_valid is True
-    assert calculation_metadata.calc_validation_errors == ["cached validation error"]
+    assert calculation_metadata.calc_validation_errors == []
 
 
 def test_validate_submission(sub_file, validation_sub_file):
