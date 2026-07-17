@@ -116,6 +116,39 @@ def test_save_state_closes_descriptor_if_fdopen_fails(state_manager, monkeypatch
     assert closed_descriptors == opened_descriptors
 
 
+def test_save_state_failure_preserves_existing_state(state_manager, monkeypatch):
+    state_manager._save_state({"session": "existing"})
+    state_path = Path(state_manager.state_file)
+    original_contents = state_path.read_text()
+
+    def fail_dump(*args, **kwargs):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(json, "dump", fail_dump)
+
+    with pytest.raises(OSError, match="disk full"):
+        state_manager._save_state({"session": "replacement"})
+
+    assert state_path.read_text() == original_contents
+    assert list(state_path.parent.glob(".state.json.*.tmp")) == []
+
+
+def test_save_state_fsyncs_file_and_directory(state_manager, monkeypatch):
+    original_fsync = os.fsync
+    fsynced_modes = []
+
+    def track_fsync(descriptor):
+        fsynced_modes.append(os.fstat(descriptor).st_mode)
+        original_fsync(descriptor)
+
+    monkeypatch.setattr(os, "fsync", track_fsync)
+
+    state_manager._save_state({"session": "durable"})
+
+    assert stat.S_ISREG(fsynced_modes[0])
+    assert stat.S_ISDIR(fsynced_modes[1])
+
+
 def test_save_and_load_state(temp_state_dir):
     """Test that state is properly saved and loaded."""
     manager1 = StateManager(state_dir=temp_state_dir)

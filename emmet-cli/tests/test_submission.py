@@ -159,25 +159,6 @@ def test_remove_from(sub_file, tmp_structure):
     assert len(removed) == 9
 
 
-def test_changed_files(sub_file):
-    sub = Submission.load(Path(sub_file))
-    changed = sub.get_changed_files_per_calc_path(
-        sub.calculations, sub._create_calculations_copy(refresh=True)
-    )
-    assert len(changed) == 7
-
-    sub.calculations = sub._create_calculations_copy(refresh=True)
-
-    changed = sub.get_changed_files_per_calc_path(
-        sub.calculations, sub._create_calculations_copy(refresh=True)
-    )
-    assert len(changed) == 0
-    changed = sub.get_changed_files_per_calc_path(
-        sub.last_pushed(), sub._create_calculations_copy(refresh=True)
-    )
-    assert len(changed) == 7
-
-
 @pytest.mark.parametrize("changed_index", [0, 1, 2])
 def test_refresh_invalidates_cached_validation(calculation_metadata, changed_index):
     original_hashes = [file.hash for file in calculation_metadata.files]
@@ -296,5 +277,20 @@ def test_failed_upload_does_not_advance_history(validation_sub_file):
     with pytest.raises(EmmetCliError, match="remote failure"):
         sub.push(RecordingUploader(EmmetCliError("remote failure")))
 
+    assert sub.calc_history == []
+    assert sub.pending_calculations is not None
+
+
+def test_files_changed_after_staging_block_push(validation_sub_file):
+    sub = Submission.load(Path(validation_sub_file))
+    uploader = RecordingUploader()
+    sub.stage_for_push()
+    changed_file = sub.calculations[0][1].files[0].path
+    changed_file.write_bytes(changed_file.read_bytes() + b"changed after staging")
+
+    with pytest.raises(EmmetCliError, match="changed since staging"):
+        sub.push(uploader)
+
+    assert uploader.uploads == []
     assert sub.calc_history == []
     assert sub.pending_calculations is not None

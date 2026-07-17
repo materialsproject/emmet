@@ -432,31 +432,6 @@ class Submission(BaseModel):
             changes=changes,
         )
 
-    def get_changed_files_per_calc_path(
-        self,
-        previous: list[tuple[CalculationLocator, CalculationMetadata]] | None,
-        current: list[tuple[CalculationLocator, CalculationMetadata]],
-    ) -> dict[CalculationLocator, list[FileMetadata]]:
-        changes: dict[CalculationLocator, list[FileMetadata]] = {}
-        if not previous:
-            changes = {k: v.files for k, v in current}
-        else:
-            for loc, cm in current:
-                prev_cm = next((cm_p for loc_p, cm_p in previous if loc_p == loc), None)
-                if prev_cm is None:
-                    changes[loc] = cm.files
-                else:
-                    file_changes = []
-                    for fm in cm.files:
-                        match = next(
-                            (item for item in prev_cm.files if item == fm), None
-                        )
-                        if match is None or fm.hash != match.hash:
-                            file_changes.append(fm)
-                    if file_changes:
-                        changes[loc] = file_changes
-        return changes
-
     def push(self, uploader: SubmissionUploader) -> None:
         """Performs the push. Returns info about the push"""
         if (
