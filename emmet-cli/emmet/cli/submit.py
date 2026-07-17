@@ -168,7 +168,7 @@ def push(ctx: click.Context, submission: Path) -> None:
 
     Returns a task ID that can be used to check the status."""
     task_manager = ctx.obj["task_manager"]
-    state_dir = Path(task_manager.state_manager.state_file).parent
+    state_dir = task_manager.state_manager.state_dir
     task_id = task_manager.start_task(_push_submission, Path(submission), state_dir)
     click.echo(f"Push started. Task ID: {task_id}")
     click.echo("Use 'emmet tasks status <task_id>' to check the status")
