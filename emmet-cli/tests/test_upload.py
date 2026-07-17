@@ -40,6 +40,7 @@ class UploadService:
         self.put_attempts = []
         self.puts = {}
         self.finalize_requests = []
+        self.finalize_headers = []
 
     def __call__(self, request):
         content = request.read()
@@ -56,6 +57,7 @@ class UploadService:
         payload = json.loads(content)
         if request.url.path.endswith("/complete"):
             self.finalize_requests.append(payload)
+            self.finalize_headers.append(request.headers)
             if self.fail_finalize:
                 self.fail_finalize = False
                 return httpx.Response(500)
@@ -88,6 +90,13 @@ class UploadService:
                 ).isoformat(),
                 "uploads": uploads,
                 "completed_object_ids": list(self.puts),
+                "completed_objects": [
+                    {
+                        "object_id": object_id,
+                        "sha256": hashlib.sha256(uploaded).hexdigest(),
+                    }
+                    for object_id, uploaded in self.puts.items()
+                ],
             },
         )
 
@@ -152,6 +161,8 @@ def test_uploads_raw_archive_and_snapshot_manifest(tmp_path):
     assert manifest["calculations"][0]["change"] == "added"
     assert manifest["calculations"][0]["added_files"] == ["INCAR", "POSCAR"]
     assert len(service.finalize_requests) == 1
+    assert service.finalize_headers[0]["idempotency-key"] == manifest["snapshot_id"]
+    assert all("sha256" not in item for item in service.prepare_requests[0]["objects"])
     assert state_manager.get(UPLOAD_STATE_KEY) == {}
     assert len(submission.calc_history) == 1
     assert changes.has_changes
@@ -205,7 +216,7 @@ def test_streaming_file_read_error_is_retryable(tmp_path, monkeypatch):
     submission.stage_for_push()
     service = UploadService()
 
-    def broken_file_chunks(path):
+    def broken_file_chunks(path, digest):
         raise OSError("file disappeared")
         yield b""  # pragma: no cover
 
@@ -290,7 +301,7 @@ def test_upload_progress_uses_batched_atomic_checkpoints(tmp_path, monkeypatch):
 
     assert len(service.puts) == 25
     assert update_calls == 5  # prepare, 2 batches, final partial batch, and clear
-    assert sort_calls == 3
+    assert sort_calls == 0
 
 
 def test_expired_session_refreshes_urls_without_reuploading_completed_objects(
@@ -360,6 +371,15 @@ def test_retry_after_lost_finalize_uses_uploaded_checksums(tmp_path, monkeypatch
     submission.stage_for_push()
     state_manager = StateManager(tmp_path / "state")
     service = UploadService(fail_finalize=True)
+    original_to_archive = upload_module.RawArchive.to_archive
+    archive_writes = 0
+
+    def count_archive_writes(*args, **kwargs):
+        nonlocal archive_writes
+        archive_writes += 1
+        return original_to_archive(*args, **kwargs)
+
+    monkeypatch.setattr(upload_module.RawArchive, "to_archive", count_archive_writes)
 
     with pytest.raises(EmmetCliError, match="Finalizing upload session"):
         submission.push(_uploader(state_manager, service))
@@ -370,19 +390,12 @@ def test_retry_after_lost_finalize_uses_uploaded_checksums(tmp_path, monkeypatch
     uploaded_archive_sha256 = hashlib.sha256(
         service.puts[uploaded_archive_id]
     ).hexdigest()
+    assert archive_writes == 1
     assert len(submission.calc_history) == 0
-
-    original_file_digest = upload_module._file_digest
-
-    def rebuilt_file_digest(path):
-        if path.suffix == ".h5":
-            return "0" * 64
-        return original_file_digest(path)
-
-    monkeypatch.setattr(upload_module, "_file_digest", rebuilt_file_digest)
 
     submission.push(_uploader(state_manager, service))
 
+    assert archive_writes == 1
     assert service.put_attempts == first_put_attempts
     assert len(service.finalize_requests) == 2
     finalized_archive = next(
@@ -392,6 +405,41 @@ def test_retry_after_lost_finalize_uses_uploaded_checksums(tmp_path, monkeypatch
     )
     assert finalized_archive["sha256"] == uploaded_archive_sha256
     assert len(submission.calc_history) == 1
+
+
+def test_clear_failure_does_not_hide_successful_push(tmp_path, monkeypatch, caplog):
+    submission = _submission_with_raw_files(tmp_path)
+    changes = submission.stage_for_push()
+    state_manager = StateManager(tmp_path / "state")
+    service = UploadService()
+    original_update = state_manager.update
+    update_calls = 0
+
+    def fail_clear(key, updater):
+        nonlocal update_calls
+        update_calls += 1
+        if update_calls == 3:
+            raise OSError("disk full")
+        return original_update(key, updater)
+
+    monkeypatch.setattr(state_manager, "update", fail_clear)
+
+    submission.push(_uploader(state_manager, service))
+
+    assert len(submission.calc_history) == 1
+    assert str(submission.id) in state_manager.get(UPLOAD_STATE_KEY)
+    assert "local retry state could not be cleared" in caplog.text
+
+    monkeypatch.setattr(state_manager, "update", original_update)
+    _uploader(state_manager, service).upload(submission.id, changes)
+
+    assert len(service.put_attempts) == 2
+    assert len(service.finalize_requests) == 2
+    assert (
+        service.finalize_headers[0]["idempotency-key"]
+        == service.finalize_headers[1]["idempotency-key"]
+    )
+    assert state_manager.get(UPLOAD_STATE_KEY) == {}
 
 
 def test_removal_only_push_uploads_manifest(tmp_path):
