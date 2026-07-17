@@ -1,7 +1,9 @@
 import logging
 from pathlib import Path
 import click
-from emmet.cli.submission import Submission
+from emmet.cli.state_manager import StateManager
+from emmet.cli.submission import Submission, SubmissionUploader
+from emmet.cli.upload import HttpSubmissionUploader
 from emmet.cli.utils import EmmetCliError
 
 logger = logging.getLogger("emmet")
@@ -134,17 +136,26 @@ def validate(ctx: click.Context, submission: Path, check_all: bool) -> None:
     click.echo("Use 'emmet tasks status <task_id>' to check the status")
 
 
-def _push_submission(submission_path: Path) -> tuple[bool, str]:
+def _push_submission(
+    submission_path: Path,
+    state_dir: Path | None = None,
+    uploader: SubmissionUploader | None = None,
+) -> tuple[bool, str]:
     """Helper function to push a submission that can run in a separate process."""
     sub = Submission.load(submission_path)
-    updated_file_info = sub.stage_for_push()
-    if not updated_file_info:
+    changes = sub.stage_for_push()
+    if not changes.has_changes:
         return (
             False,
             "Files for submission have not changed since last update. Not pushing.",
         )
 
-    sub.push()
+    if uploader is None:
+        state_manager = StateManager(state_dir or Path.home() / ".emmet")
+        with HttpSubmissionUploader.from_environment(state_manager) as managed_uploader:
+            sub.push(managed_uploader)
+    else:
+        sub.push(uploader)
     sub.save(submission_path)
     return True, f"Successfully updated submission in {submission_path}"
 
@@ -157,6 +168,7 @@ def push(ctx: click.Context, submission: Path) -> None:
 
     Returns a task ID that can be used to check the status."""
     task_manager = ctx.obj["task_manager"]
-    task_id = task_manager.start_task(_push_submission, Path(submission))
+    state_dir = Path(task_manager.state_manager.state_file).parent
+    task_id = task_manager.start_task(_push_submission, Path(submission), state_dir)
     click.echo(f"Push started. Task ID: {task_id}")
     click.echo("Use 'emmet tasks status <task_id>' to check the status")
