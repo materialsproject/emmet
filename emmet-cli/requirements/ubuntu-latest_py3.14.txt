@@ -150,3 +150,23 @@ uncertainties==3.2.3
     # via pymatgen-core
 urllib3==2.7.0
     # via requests
+anyio==4.13.0
+    # via httpx
+donfig==0.8.1.post1
+    # via zarr
+google-crc32c==1.8.0
+    # via zarr
+h11==0.16.0
+    # via httpcore
+h5py==3.16.0
+    # via emmet-archival
+httpcore==1.0.9
+    # via httpx
+httpx==0.28.1
+    # via emmet-cli (pyproject.toml)
+numcodecs==0.16.5
+    # via zarr
+pyarrow==24.0.0
+    # via emmet-archival
+zarr==3.2.1
+    # via emmet-archival
