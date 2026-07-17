@@ -36,7 +36,7 @@ contourpy==1.3.3
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-ddtrace==4.3.0
+ddtrace==4.8.2
     # via emmet-api (emmet/emmet-api/pyproject.toml)
 dnspython==2.8.0
     # via pymongo

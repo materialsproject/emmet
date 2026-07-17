@@ -33,7 +33,7 @@ dependencies = [
   "fastapi>=0.123.1",
   "gunicorn==24.1.1",
   "boto3",
-  "ddtrace==4.3.0",
+  "ddtrace==4.8.2",
   "setproctitle",
   "shapely",
   "asgi-logger",

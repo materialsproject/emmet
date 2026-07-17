@@ -598,7 +598,7 @@ tidynamics==1.1.2
     # via transport-analysis
 tifffile==2025.5.10
     # via scikit-image
-torch==2.12.1
+torch==2.13.0
     # via
     #   chgnet
     #   matgl
