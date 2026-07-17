@@ -90,3 +90,24 @@ Usage: emmet submit push [OPTIONS] SUBMISSION
 Options:
   --help  Show this message and exit.
 ```
+
+#### Remote upload configuration
+
+`submit push` authenticates to the Materials Project submission service with
+the `EMMET_API_TOKEN` environment variable. It uses
+`https://api.materialsproject.org` by default; set `EMMET_API_URL` to target a
+development service. Tokens and presigned URLs are never written to submission
+metadata or logs. Active upload sessions are cached in the protected CLI state
+directory so interrupted pushes can resume.
+
+For each added or changed calculation, the CLI creates a complete RawArchive
+HDF5 object. A JSON snapshot manifest references current calculation archives
+and records removed files and calculations. The service contract is:
+
+1. `POST /submissions/{id}/upload-sessions` prepares or refreshes an
+   idempotent session and returns presigned object URLs.
+2. The CLI uploads each archive and manifest with `PUT`.
+3. `POST /submissions/{id}/upload-sessions/{session_id}/complete` confirms the
+   uploaded object identifiers and checksums.
+
+Local submission history advances only after the service confirms completion.

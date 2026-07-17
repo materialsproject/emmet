@@ -9,6 +9,7 @@ from emmet.cli.submit import (
     _remove_from_submission,
 )
 from emmet.cli.utils import EmmetCliError
+from emmet.cli.upload import HttpSubmissionUploader
 from conftest import (
     wait_for_task_completion_and_assert_success,
 )
@@ -131,9 +132,36 @@ def test_validate_failure(invalid_validation_sub_file, cli_runner, inline_task_m
     )
 
 
-@pytest.mark.skip(reason="Push coverage is deferred to issue #1486.")
-def test_push(validation_sub_file, cli_runner, task_manager):
+def test_push(
+    validation_sub_file,
+    cli_runner,
+    inline_task_manager,
+    monkeypatch,
+):
+    uploads = []
+
+    class FakeUploader:
+        def upload(self, submission_id, changes):
+            uploads.append((submission_id, changes))
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+    monkeypatch.setattr(
+        HttpSubmissionUploader,
+        "from_environment",
+        lambda state_manager: FakeUploader(),
+    )
     result = cli_runner(submit, ["push", validation_sub_file])
 
     assert result.exit_code == 0
     assert "Push started." in result.output
+    final_status = wait_for_task_completion_and_assert_success(
+        result, inline_task_manager
+    )
+    assert final_status["result"][0] is True
+    assert len(uploads) == 1
+    assert len(Submission.load(Path(validation_sub_file)).calc_history) == 1

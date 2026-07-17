@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Any, Callable, Self, TextIO
 import fcntl
@@ -38,7 +39,13 @@ class StateManager:
 
     def _ensure_state_dir(self) -> None:
         """Ensures the state directory exists."""
-        Path(self.state_file).parent.mkdir(parents=True, exist_ok=True)
+        state_dir = Path(self.state_file).parent
+        previous_umask = os.umask(0o077)
+        try:
+            state_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+        finally:
+            os.umask(previous_umask)
+        state_dir.chmod(0o700)
 
     def _load_state(self) -> dict[str, Any]:
         """Loads state from disk. Not thread safe."""
@@ -54,7 +61,10 @@ class StateManager:
 
     def _save_state(self, state: dict[str, Any]) -> None:
         """Saves current state to disk. Not thread safe."""
-        with Path(self.state_file).open("w") as f:
+        state_path = Path(self.state_file)
+        descriptor = os.open(state_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        os.fchmod(descriptor, 0o600)
+        with os.fdopen(descriptor, "w") as f:
             json.dump(state, f, indent=2)
 
     def get(self, key: str, default: Any = None) -> Any:

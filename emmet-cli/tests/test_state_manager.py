@@ -1,4 +1,6 @@
 import json
+import os
+import stat
 from pathlib import Path
 from emmet.cli.state_manager import StateManager
 
@@ -8,6 +10,17 @@ def test_init_creates_state_dir(temp_state_dir):
     StateManager(state_dir=temp_state_dir)
     assert temp_state_dir.exists()
     assert temp_state_dir.is_dir()
+
+
+def test_state_dir_is_private_with_permissive_umask(tmp_path):
+    state_dir = tmp_path / "permissive-umask"
+    previous_umask = os.umask(0)
+    try:
+        StateManager(state_dir=state_dir)
+    finally:
+        os.umask(previous_umask)
+
+    assert stat.S_IMODE(state_dir.stat().st_mode) == 0o700
 
 
 def test_load_empty_state(state_manager):
@@ -41,6 +54,7 @@ def test_set_and_get(state_manager):
         json.loads(Path(state_manager.state_file).read_text())["test_key"]
         == "test_value"
     )
+    assert stat.S_IMODE(Path(state_manager.state_file).stat().st_mode) == 0o600
 
 
 def test_update_atomically_transforms_value(state_manager, monkeypatch):
@@ -80,3 +94,29 @@ def test_save_and_load_state(temp_state_dir):
     # Create new instance to test loading
     manager2 = StateManager(state_dir=temp_state_dir)
     assert manager2.get("test_key") == "test_value"
+
+
+def test_update_reads_and_writes_state_once(state_manager, monkeypatch):
+    load_calls = 0
+    save_calls = 0
+    original_load = state_manager._load_state
+    original_save = state_manager._save_state
+
+    def load_state():
+        nonlocal load_calls
+        load_calls += 1
+        return original_load()
+
+    def save_state(state):
+        nonlocal save_calls
+        save_calls += 1
+        original_save(state)
+
+    monkeypatch.setattr(state_manager, "_load_state", load_state)
+    monkeypatch.setattr(state_manager, "_save_state", save_state)
+
+    updated = state_manager.update("items", lambda value: [*(value or []), "new"])
+
+    assert updated == ["new"]
+    assert load_calls == 1
+    assert save_calls == 1
