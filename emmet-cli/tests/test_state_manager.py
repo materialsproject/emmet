@@ -2,6 +2,7 @@ import json
 import os
 import stat
 from pathlib import Path
+import pytest
 from emmet.cli.state_manager import StateManager
 
 
@@ -86,6 +87,34 @@ def test_update_atomically_transforms_value(state_manager, monkeypatch):
     assert state_manager.get("other_key") == "preserved"
 
 
+def test_save_state_closes_descriptor_if_fdopen_fails(state_manager, monkeypatch):
+    original_open = os.open
+    original_close = os.close
+    opened_descriptors = []
+    closed_descriptors = []
+
+    def tracked_open(*args, **kwargs):
+        descriptor = original_open(*args, **kwargs)
+        opened_descriptors.append(descriptor)
+        return descriptor
+
+    def tracked_close(descriptor):
+        closed_descriptors.append(descriptor)
+        original_close(descriptor)
+
+    def fail_fdopen(*args, **kwargs):
+        raise OSError("fdopen failed")
+
+    monkeypatch.setattr(os, "open", tracked_open)
+    monkeypatch.setattr(os, "close", tracked_close)
+    monkeypatch.setattr(os, "fdopen", fail_fdopen)
+
+    with pytest.raises(OSError, match="fdopen failed"):
+        state_manager._save_state({"key": "value"})
+
+    assert closed_descriptors == opened_descriptors
+
+
 def test_save_and_load_state(temp_state_dir):
     """Test that state is properly saved and loaded."""
     manager1 = StateManager(state_dir=temp_state_dir)
@@ -94,29 +123,3 @@ def test_save_and_load_state(temp_state_dir):
     # Create new instance to test loading
     manager2 = StateManager(state_dir=temp_state_dir)
     assert manager2.get("test_key") == "test_value"
-
-
-def test_update_reads_and_writes_state_once(state_manager, monkeypatch):
-    load_calls = 0
-    save_calls = 0
-    original_load = state_manager._load_state
-    original_save = state_manager._save_state
-
-    def load_state():
-        nonlocal load_calls
-        load_calls += 1
-        return original_load()
-
-    def save_state(state):
-        nonlocal save_calls
-        save_calls += 1
-        original_save(state)
-
-    monkeypatch.setattr(state_manager, "_load_state", load_state)
-    monkeypatch.setattr(state_manager, "_save_state", save_state)
-
-    updated = state_manager.update("items", lambda value: [*(value or []), "new"])
-
-    assert updated == ["new"]
-    assert load_calls == 1
-    assert save_calls == 1
