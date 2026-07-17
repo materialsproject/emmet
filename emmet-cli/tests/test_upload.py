@@ -1,6 +1,7 @@
 import hashlib
 import json
 import traceback
+import builtins
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -206,18 +207,26 @@ def test_upload_progress_uses_batched_atomic_checkpoints(tmp_path, monkeypatch):
     )
     original_update = state_manager.update
     update_calls = 0
+    sort_calls = 0
 
     def count_update(key, updater):
         nonlocal update_calls
         update_calls += 1
         return original_update(key, updater)
 
+    def count_sorted(*args, **kwargs):
+        nonlocal sort_calls
+        sort_calls += 1
+        return builtins.sorted(*args, **kwargs)
+
     monkeypatch.setattr(state_manager, "update", count_update)
+    monkeypatch.setattr(upload_module, "sorted", count_sorted, raising=False)
 
     uploader.upload(submission.id, changes)
 
     assert len(service.puts) == 25
     assert update_calls == 5  # prepare, 2 batches, final partial batch, and clear
+    assert sort_calls == 3
 
 
 def test_expired_session_refreshes_urls_without_reuploading_completed_objects(
@@ -243,7 +252,9 @@ def test_expired_session_refreshes_urls_without_reuploading_completed_objects(
     assert service.put_attempts.count(archive_id) == 1
 
 
-def test_checkpoint_failure_recovers_from_remote_progress(tmp_path, monkeypatch):
+def test_checkpoint_failure_preserves_upload_error_and_remote_progress(
+    tmp_path, monkeypatch
+):
     submission = _submission_with_raw_files(tmp_path)
     submission.stage_for_push()
     state_manager = StateManager(tmp_path / "state")
@@ -260,7 +271,7 @@ def test_checkpoint_failure_recovers_from_remote_progress(tmp_path, monkeypatch)
 
     monkeypatch.setattr(state_manager, "update", fail_progress_checkpoint)
 
-    with pytest.raises(EmmetCliError, match="progress could not be saved"):
+    with pytest.raises(EmmetCliError, match="Uploading object"):
         submission.push(_uploader(state_manager, service))
 
     sessions = state_manager.get(UPLOAD_STATE_KEY)
