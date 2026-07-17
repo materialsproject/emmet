@@ -17,6 +17,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+from contextlib import suppress
 from datetime import datetime, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -152,19 +153,24 @@ class HttpSubmissionUploader:
                     self._put_object(object_info, upload)
                     completed.add(object_id)
                     session_objects[object_id] = self._object_metadata(object_info)
-                    session["completed_object_ids"] = sorted(completed)
-                    session["objects"] = list(session_objects.values())
                     pending_checkpoint += 1
                     if pending_checkpoint >= PROGRESS_CHECKPOINT_INTERVAL:
-                        self._checkpoint_session(submission_id, session)
+                        self._checkpoint_session(
+                            submission_id, session, completed, session_objects
+                        )
                         pending_checkpoint = 0
             except Exception:
                 if pending_checkpoint:
-                    self._checkpoint_session(submission_id, session)
+                    with suppress(Exception):
+                        self._checkpoint_session(
+                            submission_id, session, completed, session_objects
+                        )
                 raise
 
             if pending_checkpoint:
-                self._checkpoint_session(submission_id, session)
+                self._checkpoint_session(
+                    submission_id, session, completed, session_objects
+                )
             self._finalize_session(submission_id, session)
             self._clear_session(submission_id)
 
@@ -195,7 +201,7 @@ class HttpSubmissionUploader:
                     "removed_files": change.removed_files if change else [],
                 }
             )
-            if change is not None and change.status != "removed":
+            if change is not None:
                 archive_specs.append((calculation, object_id))
 
         manifest_body = {
@@ -400,7 +406,15 @@ class HttpSubmissionUploader:
 
         self.state_manager.update(UPLOAD_STATE_KEY, save)
 
-    def _checkpoint_session(self, submission_id: UUID, session: dict[str, Any]) -> None:
+    def _checkpoint_session(
+        self,
+        submission_id: UUID,
+        session: dict[str, Any],
+        completed: set[str],
+        session_objects: dict[str, dict[str, Any]],
+    ) -> None:
+        session["completed_object_ids"] = sorted(completed)
+        session["objects"] = list(session_objects.values())
         try:
             self._save_session(submission_id, session)
         except OSError:
