@@ -8,9 +8,10 @@ from emmet.cli.state_manager import StateManager
 
 def test_init_creates_state_dir(temp_state_dir):
     """Test that initialization creates the state directory."""
-    StateManager(state_dir=temp_state_dir)
+    manager = StateManager(state_dir=temp_state_dir)
     assert temp_state_dir.exists()
     assert temp_state_dir.is_dir()
+    assert manager.state_dir == temp_state_dir
 
 
 def test_state_dir_is_private_with_permissive_umask(tmp_path):

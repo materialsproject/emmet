@@ -33,15 +33,14 @@ class StateManager:
     """Manages persistent state for the CLI application."""
 
     def __init__(self, state_dir: Path | str = Path.home() / ".emmet"):
-        # Store only the state file path
-        self.state_file = str(Path(state_dir) / "state.json")
+        self.state_dir = Path(state_dir)
+        self.state_file = str(self.state_dir / "state.json")
         self._ensure_state_dir()
 
     def _ensure_state_dir(self) -> None:
         """Ensures the state directory exists."""
-        state_dir = Path(self.state_file).parent
-        state_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
-        state_dir.chmod(0o700)
+        self.state_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+        self.state_dir.chmod(0o700)
 
     def _load_state(self) -> dict[str, Any]:
         """Loads state from disk. Not thread safe."""

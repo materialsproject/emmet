@@ -133,11 +133,15 @@ class HttpSubmissionUploader:
             session = self._get_or_prepare_session(
                 submission_id, snapshot_id, manifest, objects
             )
-            uploads = {item["object_id"]: item for item in session.get("uploads", [])}
-            completed = set(session.get("completed_object_ids", []))
-            session_objects = {
-                item["object_id"]: item for item in session.get("objects", [])
-            }
+            uploads = self._session_items_by_id(
+                session, "uploads", "Upload session contains invalid upload details."
+            )
+            completed = self._completed_ids(
+                session, "Upload session contains invalid completion details."
+            )
+            session_objects = self._session_items_by_id(
+                session, "objects", "Upload session contains invalid object metadata."
+            )
             pending_checkpoint = 0
 
             try:
@@ -263,6 +267,30 @@ class HttpSubmissionUploader:
         """Return persistable metadata describing the bytes prepared for upload."""
         return {key: value for key, value in object_info.items() if key != "path"}
 
+    @staticmethod
+    def _session_items_by_id(
+        session: dict[str, Any], key: str, error: str
+    ) -> dict[str, dict[str, Any]]:
+        items = session.get(key, [])
+        if not isinstance(items, list):
+            raise EmmetCliError(error)
+
+        items_by_id = {}
+        for item in items:
+            if not isinstance(item, dict) or not isinstance(item.get("object_id"), str):
+                raise EmmetCliError(error)
+            items_by_id[item["object_id"]] = item
+        return items_by_id
+
+    @staticmethod
+    def _completed_ids(session: dict[str, Any], error: str) -> set[str]:
+        completed = session.get("completed_object_ids", [])
+        if not isinstance(completed, list) or not all(
+            isinstance(object_id, str) for object_id in completed
+        ):
+            raise EmmetCliError(error)
+        return set(completed)
+
     def _get_or_prepare_session(
         self,
         submission_id: UUID,
@@ -272,18 +300,26 @@ class HttpSubmissionUploader:
     ) -> dict[str, Any]:
         previous_session = self._load_session(submission_id)
         required_ids = {item["object_id"] for item in objects}
-        available_ids = {
-            item.get("object_id") for item in previous_session.get("uploads", [])
-        }
-        saved_object_ids = {
-            item.get("object_id") for item in previous_session.get("objects", [])
-        }
+        try:
+            previous_uploads = self._session_items_by_id(
+                previous_session, "uploads", "Cached upload session is invalid."
+            )
+            previous_objects = self._session_items_by_id(
+                previous_session, "objects", "Cached upload session is invalid."
+            )
+            previous_completed = self._completed_ids(
+                previous_session, "Cached upload session is invalid."
+            )
+        except EmmetCliError:
+            previous_session = {}
+            previous_uploads = {}
+            previous_objects = {}
+            previous_completed = set()
         if (
             previous_session.get("snapshot_id") == snapshot_id
             and _is_unexpired(previous_session.get("expires_at"))
-            and required_ids
-            <= available_ids | set(previous_session.get("completed_object_ids", []))
-            and required_ids <= saved_object_ids
+            and required_ids <= previous_uploads.keys() | previous_completed
+            and required_ids <= previous_objects.keys()
         ):
             return previous_session
 
@@ -301,29 +337,40 @@ class HttpSubmissionUploader:
         )
         try:
             session = response.json()
-            if not isinstance(session["session_id"], str) or not isinstance(
-                session["uploads"], list
+            if not isinstance(session, dict) or not isinstance(
+                session["session_id"], str
             ):
                 raise TypeError
-        except (KeyError, TypeError, ValueError) as exc:
+            self._session_items_by_id(
+                session,
+                "uploads",
+                "Upload service returned an invalid prepare response.",
+            )
+            self._completed_ids(
+                session, "Upload service returned an invalid prepare response."
+            )
+        except (KeyError, TypeError, ValueError, EmmetCliError):
             raise EmmetCliError(
                 "Upload service returned an invalid prepare response."
-            ) from exc
+            ) from None
         session["snapshot_id"] = snapshot_id
         session.setdefault("completed_object_ids", [])
         completed = set(session["completed_object_ids"])
-        previous_objects = (
-            {item["object_id"]: item for item in previous_session.get("objects", [])}
-            if previous_session.get("snapshot_id") == snapshot_id
-            else {}
-        )
+        if previous_session.get("snapshot_id") != snapshot_id:
+            previous_objects = {}
         session["objects"] = [
             previous_objects[item["object_id"]]
             if item["object_id"] in completed and item["object_id"] in previous_objects
             else self._object_metadata(item)
             for item in objects
         ]
-        self._save_session(submission_id, session)
+        try:
+            self._save_session(submission_id, session)
+        except Exception:
+            raise EmmetCliError(
+                "Upload session was prepared remotely but could not be saved locally. "
+                "Retry the push to resume or refresh the session."
+            ) from None
         return session
 
     def _put_object(self, object_info: dict[str, Any], upload: dict[str, Any]) -> None:
@@ -346,6 +393,11 @@ class HttpSubmissionUploader:
         except httpx.RequestError:
             raise EmmetCliError(
                 f"Uploading object {object_info['object_id']} failed due to a network error."
+            ) from None
+        except OSError:
+            raise EmmetCliError(
+                f"Reading object {object_info['object_id']} failed during upload. "
+                "Verify the local files are accessible and retry the push."
             ) from None
 
     def _finalize_session(
@@ -417,7 +469,7 @@ class HttpSubmissionUploader:
         session["objects"] = list(session_objects.values())
         try:
             self._save_session(submission_id, session)
-        except OSError:
+        except Exception:
             raise EmmetCliError(
                 "Remote upload progress could not be saved locally. Retry the push; "
                 "expired URLs will be refreshed and completed objects reconciled."

@@ -4,6 +4,7 @@ import traceback
 import builtins
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from uuid import uuid4
 
 import httpx
 import pytest
@@ -30,9 +31,10 @@ def _submission_with_raw_files(tmp_path):
 
 
 class UploadService:
-    def __init__(self, fail_object=None, fail_finalize=False):
+    def __init__(self, fail_object=None, fail_finalize=False, malformed_upload=False):
         self.fail_object = fail_object
         self.fail_finalize = fail_finalize
+        self.malformed_upload = malformed_upload
         self.prepare_requests = []
         self.prepare_headers = []
         self.put_attempts = []
@@ -75,6 +77,8 @@ class UploadService:
             }
             for index, item in enumerate(payload["objects"])
         ]
+        if self.malformed_upload:
+            uploads[0].pop("object_id")
         return httpx.Response(
             200,
             json={
@@ -185,6 +189,66 @@ def test_partial_upload_resumes_saved_session(tmp_path):
     assert len(service.prepare_requests) == 1
     assert len(submission.calc_history) == 1
     assert state_manager.get(UPLOAD_STATE_KEY) == {}
+
+
+def test_malformed_prepare_upload_is_wrapped(tmp_path):
+    submission = _submission_with_raw_files(tmp_path)
+    submission.stage_for_push()
+    service = UploadService(malformed_upload=True)
+
+    with pytest.raises(EmmetCliError, match="invalid prepare response"):
+        submission.push(_uploader(StateManager(tmp_path / "state"), service))
+
+
+def test_streaming_file_read_error_is_retryable(tmp_path, monkeypatch):
+    submission = _submission_with_raw_files(tmp_path)
+    submission.stage_for_push()
+    service = UploadService()
+
+    def broken_file_chunks(path):
+        raise OSError("file disappeared")
+        yield b""  # pragma: no cover
+
+    monkeypatch.setattr(upload_module, "_file_chunks", broken_file_chunks)
+
+    with pytest.raises(EmmetCliError, match="accessible and retry"):
+        submission.push(_uploader(StateManager(tmp_path / "state"), service))
+
+
+def test_prepare_state_failure_is_retryable(tmp_path, monkeypatch):
+    submission = _submission_with_raw_files(tmp_path)
+    submission.stage_for_push()
+    state_manager = StateManager(tmp_path / "state")
+    service = UploadService()
+
+    def fail_update(*args):
+        raise TypeError("not serializable")
+
+    monkeypatch.setattr(state_manager, "update", fail_update)
+
+    with pytest.raises(EmmetCliError, match="prepared remotely"):
+        submission.push(_uploader(state_manager, service))
+
+    assert len(service.prepare_requests) == 1
+    assert service.puts == {}
+
+
+def test_checkpoint_wraps_non_os_state_error(tmp_path, monkeypatch):
+    state_manager = StateManager(tmp_path / "state")
+    uploader = _uploader(state_manager, UploadService())
+
+    def fail_update(*args):
+        raise TypeError("not serializable")
+
+    monkeypatch.setattr(state_manager, "update", fail_update)
+
+    with pytest.raises(EmmetCliError, match="progress could not be saved"):
+        uploader._checkpoint_session(
+            submission_id=uuid4(),
+            session={},
+            completed=set(),
+            session_objects={},
+        )
 
 
 def test_upload_progress_uses_batched_atomic_checkpoints(tmp_path, monkeypatch):
