@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import fcntl
 import json
 import logging
 import os
 from pathlib import Path
 from typing import Any, Callable, Self, TextIO
-import fcntl
+from uuid import uuid4
 
 logger = logging.getLogger("emmet")
 
@@ -57,14 +58,31 @@ class StateManager:
     def _save_state(self, state: dict[str, Any]) -> None:
         """Saves current state to disk. Not thread safe."""
         state_path = Path(self.state_file)
-        descriptor = os.open(state_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        temporary_path = state_path.with_name(f".{state_path.name}.{uuid4().hex}.tmp")
+        descriptor = os.open(
+            temporary_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600
+        )
         try:
-            state_file = os.fdopen(descriptor, "w")
+            try:
+                state_file = os.fdopen(descriptor, "w")
+            except Exception:
+                os.close(descriptor)
+                raise
+            with state_file as f:
+                json.dump(state, f, indent=2)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(temporary_path, state_path)
+            directory_descriptor = os.open(
+                state_path.parent, os.O_RDONLY | os.O_DIRECTORY
+            )
+            try:
+                os.fsync(directory_descriptor)
+            finally:
+                os.close(directory_descriptor)
         except Exception:
-            os.close(descriptor)
+            temporary_path.unlink(missing_ok=True)
             raise
-        with state_file as f:
-            json.dump(state, f, indent=2)
 
     def get(self, key: str, default: Any = None) -> Any:
         """Gets a value from state."""
