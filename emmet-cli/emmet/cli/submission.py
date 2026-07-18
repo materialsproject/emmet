@@ -98,8 +98,7 @@ class SubmissionChangeSet(BaseModel):
 class SubmissionUploader(Protocol):
     """Upload a staged submission snapshot to a remote service."""
 
-    def upload(self, submission_id: UUID, changes: SubmissionChangeSet) -> None:
-        ...
+    def upload(self, submission_id: UUID, changes: SubmissionChangeSet) -> None: ...
 
 
 def invoke_calc_refresh(args):

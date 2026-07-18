@@ -73,13 +73,18 @@ class StateManager:
                 f.flush()
                 os.fsync(f.fileno())
             os.replace(temporary_path, state_path)
-            directory_descriptor = os.open(
-                state_path.parent, os.O_RDONLY | os.O_DIRECTORY
-            )
             try:
-                os.fsync(directory_descriptor)
-            finally:
-                os.close(directory_descriptor)
+                directory_descriptor = os.open(
+                    state_path.parent, os.O_RDONLY | os.O_DIRECTORY
+                )
+                try:
+                    os.fsync(directory_descriptor)
+                finally:
+                    os.close(directory_descriptor)
+            except OSError:
+                logger.warning(
+                    "State was saved, but its directory entry could not be synced."
+                )
         except Exception:
             temporary_path.unlink(missing_ok=True)
             raise

@@ -149,6 +149,24 @@ def test_save_state_fsyncs_file_and_directory(state_manager, monkeypatch):
     assert stat.S_ISDIR(fsynced_modes[1])
 
 
+def test_directory_fsync_failure_does_not_report_save_failure(
+    state_manager, monkeypatch, caplog
+):
+    original_fsync = os.fsync
+
+    def fail_directory_fsync(descriptor):
+        if stat.S_ISDIR(os.fstat(descriptor).st_mode):
+            raise OSError("directory sync failed")
+        original_fsync(descriptor)
+
+    monkeypatch.setattr(os, "fsync", fail_directory_fsync)
+
+    state_manager._save_state({"session": "persisted"})
+
+    assert state_manager._load_state() == {"session": "persisted"}
+    assert "directory entry could not be synced" in caplog.text
+
+
 def test_save_and_load_state(temp_state_dir):
     """Test that state is properly saved and loaded."""
     manager1 = StateManager(state_dir=temp_state_dir)
