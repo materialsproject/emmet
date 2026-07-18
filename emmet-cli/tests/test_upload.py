@@ -3,7 +3,6 @@ import json
 import traceback
 import builtins
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from uuid import uuid4
 
 import httpx
@@ -163,6 +162,10 @@ def test_uploads_raw_archive_and_snapshot_manifest(tmp_path):
     assert len(service.finalize_requests) == 1
     assert service.finalize_headers[0]["idempotency-key"] == manifest["snapshot_id"]
     assert all("sha256" not in item for item in service.prepare_requests[0]["objects"])
+    assert all(
+        isinstance(item.get("size"), int) and item["size"] > 0
+        for item in service.prepare_requests[0]["objects"]
+    )
     assert state_manager.get(UPLOAD_STATE_KEY) == {}
     assert len(submission.calc_history) == 1
     assert changes.has_changes
@@ -178,7 +181,7 @@ def test_uploads_raw_archive_and_snapshot_manifest(tmp_path):
 
 def test_partial_upload_resumes_saved_session(tmp_path):
     submission = _submission_with_raw_files(tmp_path)
-    changes = submission.stage_for_push()
+    submission.stage_for_push()
     state_manager = StateManager(tmp_path / "state")
     service = UploadService(fail_object="manifest")
 
@@ -305,12 +308,21 @@ def test_upload_progress_uses_batched_atomic_checkpoints(tmp_path, monkeypatch):
 
 
 def test_expired_session_refreshes_urls_without_reuploading_completed_objects(
-    tmp_path,
+    tmp_path, monkeypatch
 ):
     submission = _submission_with_raw_files(tmp_path)
     submission.stage_for_push()
     state_manager = StateManager(tmp_path / "state")
     service = UploadService(fail_object="manifest")
+    original_to_archive = upload_module.RawArchive.to_archive
+    archive_writes = 0
+
+    def count_archive_writes(*args, **kwargs):
+        nonlocal archive_writes
+        archive_writes += 1
+        return original_to_archive(*args, **kwargs)
+
+    monkeypatch.setattr(upload_module.RawArchive, "to_archive", count_archive_writes)
 
     with pytest.raises(EmmetCliError):
         submission.push(_uploader(state_manager, service))
@@ -325,6 +337,7 @@ def test_expired_session_refreshes_urls_without_reuploading_completed_objects(
 
     assert len(service.prepare_requests) == 2
     assert service.put_attempts.count(archive_id) == 1
+    assert archive_writes == 1
 
 
 def test_checkpoint_failure_preserves_upload_error_and_remote_progress(

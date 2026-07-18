@@ -1,5 +1,4 @@
 import os
-import pytest
 from pathlib import Path
 from emmet.cli.submission import Submission
 from emmet.cli.submit import (
