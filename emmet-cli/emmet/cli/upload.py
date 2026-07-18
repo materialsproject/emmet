@@ -50,6 +50,35 @@ class _SessionParts:
     completed_objects: dict[str, dict[str, Any]]
 
 
+@dataclass
+class _UploadObject:
+    object_id: str
+    path: Path
+    content_type: str
+    calculation_id: UUID | None = None
+    size: int | None = None
+    sha256: str | None = None
+
+    def metadata(self) -> dict[str, Any]:
+        metadata: dict[str, Any] = {
+            "object_id": self.object_id,
+            "content_type": self.content_type,
+        }
+        if self.size is not None:
+            metadata["size"] = self.size
+        if self.sha256 is not None:
+            metadata["sha256"] = self.sha256
+        return metadata
+
+
+@dataclass(frozen=True)
+class _UploadContext:
+    submission_id: UUID
+    snapshot_id: str
+    manifest: dict[str, Any]
+    calculations: dict[UUID, CalculationMetadata]
+
+
 def _canonical_json(value: Any) -> bytes:
     return json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
 
@@ -135,8 +164,17 @@ class HttpSubmissionUploader:
                 submission_id, changes, Path(directory)
             )
             snapshot_id = manifest["snapshot_id"]
+            context = _UploadContext(
+                submission_id=submission_id,
+                snapshot_id=snapshot_id,
+                manifest=manifest,
+                calculations={
+                    calculation.id: calculation
+                    for _, calculation in changes.current_calculations
+                },
+            )
             session = self._get_or_prepare_session(
-                submission_id, snapshot_id, manifest, objects
+                submission_id, snapshot_id, manifest, objects, context
             )
             session_parts = self._parse_session(
                 session, "Upload session contains invalid details."
@@ -148,7 +186,7 @@ class HttpSubmissionUploader:
 
             try:
                 for object_info in objects:
-                    object_id = object_info["object_id"]
+                    object_id = object_info.object_id
                     if object_id in completed:
                         continue
                     upload = uploads.get(object_id)
@@ -156,7 +194,7 @@ class HttpSubmissionUploader:
                         raise EmmetCliError(
                             f"Upload service did not return a URL for object {object_id}."
                         )
-                    self._put_object(object_info, upload)
+                    self._put_object(object_info, upload, context)
                     completed.add(object_id)
                     session_objects[object_id] = self._object_metadata(object_info)
                     pending_checkpoint += 1
@@ -185,7 +223,7 @@ class HttpSubmissionUploader:
         submission_id: UUID,
         changes: SubmissionChangeSet,
         directory: Path,
-    ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    ) -> tuple[list[_UploadObject], dict[str, Any]]:
         change_by_id = {change.calculation_id: change for change in changes.changes}
         calculation_entries = []
         archive_specs = []
@@ -234,12 +272,7 @@ class HttpSubmissionUploader:
                     object_id,
                     archive_path,
                     ARCHIVE_CONTENT_TYPE,
-                    calculation=calculation,
-                    archive_metadata={
-                        "submission_id": str(submission_id),
-                        "calculation_id": str(calculation.id),
-                        "snapshot_id": snapshot_id,
-                    },
+                    calculation_id=calculation.id,
                 )
             )
 
@@ -249,7 +282,6 @@ class HttpSubmissionUploader:
                 f"manifests/{snapshot_id}.json",
                 manifest_path,
                 MANIFEST_CONTENT_TYPE,
-                content=_canonical_json(manifest),
             )
         )
         return objects, manifest
@@ -259,26 +291,20 @@ class HttpSubmissionUploader:
         object_id: str,
         path: Path,
         content_type: str,
-        **build_args: Any,
-    ) -> dict[str, Any]:
-        object_info = {
-            "object_id": object_id,
-            "path": path,
-            "content_type": content_type,
-            **{f"_{key}": value for key, value in build_args.items()},
-        }
-        if path.exists():
-            object_info["size"] = path.stat().st_size
-        return object_info
+        calculation_id: UUID | None = None,
+    ) -> _UploadObject:
+        return _UploadObject(
+            object_id=object_id,
+            path=path,
+            content_type=content_type,
+            calculation_id=calculation_id,
+            size=path.stat().st_size if path.exists() else None,
+        )
 
     @staticmethod
-    def _object_metadata(object_info: dict[str, Any]) -> dict[str, Any]:
+    def _object_metadata(object_info: _UploadObject) -> dict[str, Any]:
         """Return persistable metadata describing the bytes prepared for upload."""
-        return {
-            key: value
-            for key, value in object_info.items()
-            if key != "path" and not key.startswith("_")
-        }
+        return object_info.metadata()
 
     @classmethod
     def _parse_session(cls, session: dict[str, Any], error: str) -> _SessionParts:
@@ -349,10 +375,11 @@ class HttpSubmissionUploader:
         submission_id: UUID,
         snapshot_id: str,
         manifest: dict[str, Any],
-        objects: list[dict[str, Any]],
+        objects: list[_UploadObject],
+        context: _UploadContext,
     ) -> dict[str, Any]:
         previous_session = self._load_session(submission_id)
-        required_ids = {item["object_id"] for item in objects}
+        required_ids = {item.object_id for item in objects}
         try:
             previous_parts = self._parse_session(
                 previous_session, "Cached upload session is invalid."
@@ -371,6 +398,15 @@ class HttpSubmissionUploader:
             )
         ):
             return previous_session
+
+        same_snapshot = previous_session.get("snapshot_id") == snapshot_id
+        for item in objects:
+            previous_metadata = previous_parts.objects.get(item.object_id, {})
+            previous_size = previous_metadata.get("size")
+            if same_snapshot and isinstance(previous_size, int):
+                item.size = previous_size
+            if item.size is None:
+                self._materialize_object(item, context)
 
         payload = {
             "snapshot_id": snapshot_id,
@@ -414,7 +450,7 @@ class HttpSubmissionUploader:
             )
             resolved_objects.append(metadata)
             if is_completed:
-                completed.add(item["object_id"])
+                completed.add(item.object_id)
         session["completed_object_ids"] = list(completed)
         session["objects"] = resolved_objects
         try:
@@ -427,45 +463,59 @@ class HttpSubmissionUploader:
         return session
 
     @staticmethod
-    def _materialize_object(object_info: dict[str, Any]) -> None:
-        path = object_info["path"]
+    def _materialize_object(
+        object_info: _UploadObject, context: _UploadContext
+    ) -> None:
+        path = object_info.path
         if not path.exists():
-            calculation = object_info.get("_calculation")
-            if calculation is not None:
+            if object_info.calculation_id is not None:
+                calculation = context.calculations[object_info.calculation_id]
                 RawArchive(
                     file_paths=raw_archive_hierarchy_from_files(calculation.files)
-                ).to_archive(path, metadata=object_info["_archive_metadata"])
-            elif "_content" in object_info:
-                path.write_bytes(object_info["_content"])
-        object_info["size"] = path.stat().st_size
+                ).to_archive(
+                    path,
+                    metadata={
+                        "submission_id": str(context.submission_id),
+                        "calculation_id": str(object_info.calculation_id),
+                        "snapshot_id": context.snapshot_id,
+                    },
+                )
+            else:
+                path.write_bytes(_canonical_json(context.manifest))
+        object_info.size = path.stat().st_size
 
-    def _put_object(self, object_info: dict[str, Any], upload: dict[str, Any]) -> None:
+    def _put_object(
+        self,
+        object_info: _UploadObject,
+        upload: dict[str, Any],
+        context: _UploadContext,
+    ) -> None:
         digest = hashlib.sha256()
         try:
-            self._materialize_object(object_info)
+            self._materialize_object(object_info, context)
             response = self.client.put(
                 upload["url"],
                 headers=upload.get("headers", {}),
-                content=_file_chunks(object_info["path"], digest),
+                content=_file_chunks(object_info.path, digest),
             )
             response.raise_for_status()
-            object_info["sha256"] = digest.hexdigest()
+            object_info.sha256 = digest.hexdigest()
         except (KeyError, TypeError) as exc:
             raise EmmetCliError(
-                f"Upload service returned invalid details for object {object_info['object_id']}."
+                f"Upload service returned invalid details for object {object_info.object_id}."
             ) from exc
         except httpx.HTTPStatusError as exc:
             raise EmmetCliError(
-                f"Uploading object {object_info['object_id']} failed with HTTP "
+                f"Uploading object {object_info.object_id} failed with HTTP "
                 f"{exc.response.status_code}."
             ) from None
         except httpx.RequestError:
             raise EmmetCliError(
-                f"Uploading object {object_info['object_id']} failed due to a network error."
+                f"Uploading object {object_info.object_id} failed due to a network error."
             ) from None
         except OSError:
             raise EmmetCliError(
-                f"Reading object {object_info['object_id']} failed during upload. "
+                f"Reading object {object_info.object_id} failed during upload. "
                 "Verify the local files are accessible and retry the push."
             ) from None
 
