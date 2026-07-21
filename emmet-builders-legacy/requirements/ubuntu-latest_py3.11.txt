@@ -192,7 +192,7 @@ paramiko==5.0.0
     # via sshtunnel
 patsy==1.0.1
     # via statsmodels
-pillow==12.2.0
+pillow==12.3.0
     # via
     #   imageio
     #   matplotlib

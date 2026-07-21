@@ -388,7 +388,7 @@ patsy==1.0.1
     # via statsmodels
 phonopy==2.38.2
     # via matcalc
-pillow==12.2.0
+pillow==12.3.0
     # via
     #   imageio
     #   matplotlib
@@ -598,7 +598,7 @@ tidynamics==1.1.2
     # via transport-analysis
 tifffile==2025.5.10
     # via scikit-image
-torch==2.12.1
+torch==2.13.0
     # via
     #   chgnet
     #   matgl

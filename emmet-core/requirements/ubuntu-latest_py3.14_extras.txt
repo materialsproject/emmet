@@ -176,7 +176,7 @@ phonopy==4.1.0
     # via emmet-core (pyproject.toml)
 phonors==0.2.0
     # via phonopy
-pillow==12.2.0
+pillow==12.3.0
     # via
     #   imageio
     #   matplotlib
