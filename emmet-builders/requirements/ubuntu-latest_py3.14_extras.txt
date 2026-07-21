@@ -210,7 +210,7 @@ pathspec==1.1.1
     # via
     #   mkdocs
     #   mypy
-pillow==12.2.0
+pillow==12.3.0
     # via
     #   imageio
     #   matplotlib
