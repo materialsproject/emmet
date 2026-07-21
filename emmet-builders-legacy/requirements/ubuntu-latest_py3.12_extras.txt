@@ -292,7 +292,7 @@ pathspec==0.12.1
     #   mypy
 patsy==1.0.1
     # via statsmodels
-pillow==12.2.0
+pillow==12.3.0
     # via
     #   imageio
     #   matplotlib
