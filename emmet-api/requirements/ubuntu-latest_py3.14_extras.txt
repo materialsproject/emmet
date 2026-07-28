@@ -315,7 +315,7 @@ pymatgen-io-validation==0.1.2
     # via
     #   emmet-api (pyproject.toml)
     #   emmet-core
-pymdown-extensions==10.21.3
+pymdown-extensions==11.0
     # via
     #   mkdocs-material
     #   mkdocstrings

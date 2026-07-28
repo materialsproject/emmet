@@ -367,7 +367,7 @@ pymatgen-analysis-diffusion==2024.7.15
     # via emmet-core
 pymatgen-io-validation==0.1.1
     # via emmet-builders (pyproject.toml)
-pymdown-extensions==10.21.3
+pymdown-extensions==11.0
     # via
     #   mkdocs-material
     #   mkdocstrings
