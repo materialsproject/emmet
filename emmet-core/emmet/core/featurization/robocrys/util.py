@@ -21,10 +21,12 @@ import re
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
-from emmet.core.io.pymatgen import Element, Species, get_el_sp, latexify_spacegroup
+from emmet.core.io.pymatgen import Element, Species, get_el_sp, unicodeify_spacegroup
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+__all__ = ["unicodeify_spacegroup"]
 
 
 def _get_common_formulas() -> dict[str, str]:
@@ -215,51 +217,10 @@ def superscript_number(string):
     return string
 
 
-def unicodeify_spacegroup(spacegroup_symbol: str) -> str:
-    """Formats a spacegroup using unicode symbols.
-
-    E.g. Fd-3m -> Fd̅3m
-
-    Args:
-        spacegroup_symbol: A spacegroup symbol.
-
-    Returns:
-        The unicode formatted spacegroup symbol.
-    """
-    subscript_unicode_map = {
-        0: "₀",
-        1: "₁",
-        2: "₂",
-        3: "₃",
-        4: "₄",
-        5: "₅",
-        6: "₆",
-        7: "₇",
-        8: "₈",
-        9: "₉",
-    }
-
-    symbol = latexify_spacegroup(spacegroup_symbol)
-
-    for number, unicode_number in subscript_unicode_map.items():
-        symbol = symbol.replace("$_{" + str(number) + "}$", unicode_number)
-
-    overline = "\u0305"  # u"\u0304" (macron) is also an option
-    for char, rep in {
-        "$\\overline{": overline,
-        "$": "",
-        "{": "",
-        "}": "",
-    }.items():
-        symbol = symbol.replace(char, rep)
-
-    return symbol
-
-
 def htmlify_spacegroup(spacegroup_symbol: str) -> str:
     """Formats a spacegroup using unicode symbols.
 
-    E.g. P-42_1m -> P̅42<sub>1</sub>m
+    E.g. P-42_1m -> P4̅2<sub>1</sub>m
 
     Args:
         spacegroup_symbol: A spacegroup symbol.
@@ -268,8 +229,8 @@ def htmlify_spacegroup(spacegroup_symbol: str) -> str:
         The html formatted spacegroup symbol.
     """
     overline = "\u0305"  # u"\u0304" (macron) is also an option
-    symbol = re.sub(r"_(\d+)", r"<sub>\1</sub>", spacegroup_symbol)
-    symbol = re.sub(r"-(\d)", rf"{overline}\1", symbol)
+    symbol = re.sub(r"_(\d)", r"<sub>\1</sub>", spacegroup_symbol)
+    symbol = re.sub(r"-(\d)", rf"\1{overline}", symbol)
     return symbol
 
 
