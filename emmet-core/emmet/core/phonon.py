@@ -874,8 +874,8 @@ class PhononBSDOSDoc(PhononBSDOSTask):
 
             cls_config.update(
                 {
-                    k: born_data[v]
-                    for k, v in {"epsilon_static": "dielectric", "born": "born"}.items()
+                    "epsilon_static": born_data["dielectric"],
+                    "born": born_data["born"],
                 }
             )
 
@@ -1047,7 +1047,7 @@ class PhononBSDOSDoc(PhononBSDOSTask):
         return thermo_props
 
     @cached_property
-    def acoustic_sum_rule(self) -> list[Matrix3D] | None:
+    def acoustic_sum_rule(self) -> np.ndarray | None:
         r"""Determine violations of the acoustic sum rule.
 
         The acoustic sum rule for the interatomic force constant (IFC) tensor
