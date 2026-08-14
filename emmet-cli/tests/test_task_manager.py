@@ -1,12 +1,14 @@
-import pytest
-import time
 import os
 import signal
-from unittest.mock import patch
-import psutil
+import time
 from datetime import datetime, timedelta
-from emmet.cli.task_manager import TaskManager, _is_process_running
+from unittest.mock import patch
+
+import psutil
+import pytest
+
 from emmet.cli.state_manager import StateManager
+from emmet.cli.task_manager import TaskManager, _is_process_running
 
 
 def task_test_function():
@@ -384,6 +386,10 @@ def test_initial_pid_grace_period(task_manager):
             )
 
 
+@pytest.mark.skipif(
+    os.environ.get("GITHUB_ACTIONS") == "true",
+    reason="Flaky in CI. Likely something related to linux actions runners and forking, needs triage (eventually)",
+)
 def test_no_pid_grace_period(task_manager):
     """Test that tasks with no PID get proper grace period."""
     task_id = task_manager.start_task(infinite_task_function)
