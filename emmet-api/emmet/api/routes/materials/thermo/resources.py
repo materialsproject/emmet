@@ -1,6 +1,6 @@
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
-from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
+from emmet.api.query_operator import IdFormatQuery, PaginationQuery, SparseFieldsQuery
 from emmet.api.query_operator.core import MultiMaterialIDQuery
 from emmet.api.query_operator.dynamic import NumericQuery
 from emmet.api.resource import ReadOnlyResource
@@ -15,6 +15,7 @@ from emmet.api.routes.materials.thermo.query_operators import (
     MultiThermoTypeQuery,
 )
 from emmet.core.thermo import ThermoDoc
+from emmet.core.types.typing import format_identifier
 
 
 def thermo_resource(thermo_store):
@@ -34,6 +35,7 @@ def thermo_resource(thermo_store):
                 ThermoDoc, default_fields=["thermo_id", "material_id", "last_updated"]
             ),
             LicenseQuery(),
+            IdFormatQuery([("material_id", format_identifier)]),
         ],
         header_processor=GlobalHeaderProcessor(),
         query_to_configure_on_request=LicenseQuery(),

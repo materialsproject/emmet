@@ -2,6 +2,7 @@ from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import (
     DeprecationQuery,
+    IdFormatQuery,
     MultiMaterialIDQuery,
     PaginationQuery,
     SparseFieldsQuery,
@@ -19,6 +20,7 @@ from emmet.api.routes.materials.materials.query_operators import (
     FormulaQuery,
 )
 from emmet.core.electronic_structure import ElectronicStructureDoc
+from emmet.core.types.typing import format_identifier
 
 timeout = MAPISettings().TIMEOUT
 
@@ -39,6 +41,7 @@ def es_resource(es_store):
             SparseFieldsQuery(
                 ElectronicStructureDoc, default_fields=["material_id", "last_updated"]
             ),
+            IdFormatQuery([("material_id", format_identifier)]),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Electronic Structure"],
@@ -62,6 +65,7 @@ def bs_resource(es_store):
                 ElectronicStructureDoc,
                 default_fields=["material_id", "last_updated", "bandstructure"],
             ),
+            IdFormatQuery([("material_id", format_identifier)]),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Electronic Structure"],
@@ -85,6 +89,7 @@ def dos_resource(es_store):
                 ElectronicStructureDoc,
                 default_fields=["material_id", "last_updated", "dos"],
             ),
+            IdFormatQuery([("material_id", format_identifier)]),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Electronic Structure"],

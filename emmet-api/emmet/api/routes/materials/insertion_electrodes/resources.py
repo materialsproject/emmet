@@ -1,22 +1,22 @@
+from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import (
+    IdFormatQuery,
     NumericQuery,
     PaginationQuery,
     SortQuery,
     SparseFieldsQuery,
 )
 from emmet.api.resource import ReadOnlyResource
-from emmet.core.electrode import InsertionElectrodeDoc
-from emmet.api.core.global_header import GlobalHeaderProcessor
-
 from emmet.api.routes.materials.insertion_electrodes.query_operators import (
-    ElectrodeFormulaQuery,
     ElectrodeElementsQuery,
+    ElectrodeFormulaQuery,
     ElectrodesChemsysQuery,
-    WorkingIonQuery,
     MultiBatteryIDQuery,
+    WorkingIonQuery,
 )
-
-from emmet.api.core.settings import MAPISettings
+from emmet.core.electrode import InsertionElectrodeDoc
+from emmet.core.types.typing import format_identifier
 
 sort_fields = [
     "battery_id",
@@ -49,6 +49,13 @@ def insertion_electrodes_resource(insertion_electrodes_store):
                 default_fields=["battery_id", "last_updated"],
             ),
             SortQuery(fields=sort_fields, max_num=1),
+            IdFormatQuery(
+                [
+                    ("material_ids", format_identifier),
+                    ("id_charge", format_identifier),
+                    ("id_discharge", format_identifier),
+                ]
+            ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Electrodes"],

@@ -1,6 +1,7 @@
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import (
+    IdFormatQuery,
     MultiMaterialIDQuery,
     PaginationQuery,
     SparseFieldsQuery,
@@ -11,6 +12,7 @@ from emmet.api.routes.materials.bonds.query_operators import (
     CoordinationEnvsQuery,
 )
 from emmet.core.bonds import BondingDoc
+from emmet.core.types.typing import format_identifier
 
 
 def bonds_resource(bonds_store):
@@ -26,6 +28,7 @@ def bonds_resource(bonds_store):
                 BondingDoc,
                 default_fields=["material_id", "last_updated"],
             ),
+            IdFormatQuery([("material_id", format_identifier)]),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Bonds"],
