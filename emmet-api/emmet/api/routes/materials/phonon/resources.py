@@ -1,6 +1,11 @@
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
-from emmet.api.query_operator import NumericQuery, PaginationQuery, SparseFieldsQuery
+from emmet.api.query_operator import (
+    IdFormatQuery,
+    NumericQuery,
+    PaginationQuery,
+    SparseFieldsQuery,
+)
 from emmet.api.resource import ReadOnlyResource
 from emmet.api.routes.materials.materials.query_operators import (
     ChemsysQuery,
@@ -13,6 +18,7 @@ from emmet.api.routes.materials.phonon.query_operators import (
     PhononMethodQuery,
 )
 from emmet.core.phonon import PhononBSDOSDoc
+from emmet.core.types.typing import format_task_id
 
 
 def phonon_bsdos_resource(phonon_bs_store):
@@ -31,6 +37,7 @@ def phonon_bsdos_resource(phonon_bs_store):
             SparseFieldsQuery(
                 PhononBSDOSDoc, default_fields=["identifier", "last_updated"]
             ),
+            IdFormatQuery([("identifier", format_task_id)]),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Phonon"],

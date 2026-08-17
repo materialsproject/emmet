@@ -1,6 +1,7 @@
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import (
+    IdFormatQuery,
     MultiMaterialIDQuery,
     PaginationQuery,
     SparseFieldsQuery,
@@ -11,6 +12,7 @@ from emmet.api.routes.materials.surface_properties.query_operators import (
     ReconstructedQuery,
 )
 from emmet.core.surface_properties import SurfacePropDoc
+from emmet.core.types.typing import format_identifier
 
 
 def surface_props_resource(surface_prop_store):
@@ -23,6 +25,7 @@ def surface_props_resource(surface_prop_store):
             ReconstructedQuery(),
             PaginationQuery(),
             SparseFieldsQuery(SurfacePropDoc, default_fields=["task_id"]),
+            IdFormatQuery([("material_id", format_identifier)]),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Surface Properties"],

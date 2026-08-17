@@ -2,6 +2,7 @@ from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import (
     DeprecationQuery,
+    IdFormatQuery,
     MultiMaterialIDQuery,
     MultiTaskIDQuery,
     NumericQuery,
@@ -24,6 +25,7 @@ from emmet.api.routes.materials.materials.query_operators import (
 )
 from emmet.core.find_structure import FindStructure
 from emmet.core.formula_autocomplete import FormulaAutocomplete
+from emmet.core.types.typing import format_identifier, format_task_id
 from emmet.core.vasp.material import MaterialsDoc
 
 timeout = MAPISettings().TIMEOUT  # type: ignore
@@ -114,6 +116,12 @@ def materials_resource(materials_store):
             ),
             LicenseQuery(),
             BatchIdQuery(),
+            IdFormatQuery(
+                [
+                    ("material_id", format_identifier),
+                    ("task_ids", format_task_id),
+                ]
+            ),
         ],
         header_processor=GlobalHeaderProcessor(),
         query_to_configure_on_request=LicenseQuery(),
