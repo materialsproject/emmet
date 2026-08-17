@@ -31,6 +31,7 @@ authors = [
 ]
 dependencies = [
     "pymatgen>=2024.6.10",
+    "pymatgen-core<=2026.7.27", # pymatgen-analysis-diffusion behind on deprecated functions
     "monty>=2024.2.2",
     "pydantic>=2.12",
     "pydantic-settings>=2.0",
