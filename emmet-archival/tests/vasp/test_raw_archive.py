@@ -1,13 +1,11 @@
 import h5py
 import orjson
-
 from monty.io import zopen
 
+from emmet.archival.utils import zpath
+from emmet.archival.vasp.raw import RawArchive
 from emmet.core.tasks import TaskDoc
 from emmet.core.utils import get_hash_blocked
-
-from emmet.archival.vasp.raw import RawArchive
-from emmet.archival.utils import zpath
 
 
 def test_from_directory(tmp_dir, test_dir):
@@ -60,7 +58,7 @@ def test_from_directory(tmp_dir, test_dir):
         )
         assert valid_doc.vasp_files.run_type == "relax"
         assert valid_doc.vasp_files.functional == "r2scan"
-        assert valid_doc.vasp_files.valid_input_set_name == "MPScanRelaxSet"
+        assert valid_doc.vasp_files.valid_input_set_name == "MP24RelaxSet"
 
     # Test round trip TaskDoc
     # Note that some fields (those with datetimes or with POTCAR info stripped)
