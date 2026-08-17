@@ -6,33 +6,33 @@
 #
 alabaster==1.0.0
     # via sphinx
-annotated-types==0.7.0
+annotated-types==0.8.0
     # via pydantic
-ase==3.28.0
+ase==3.29.0
     # via pymatgen-analysis-diffusion
-ast-serialize==0.5.0
+ast-serialize==0.8.0
     # via mypy
 babel==2.18.0
     # via sphinx
 bibtexparser==1.4.4
     # via pymatgen-core
-blake3==1.0.8
+blake3==1.0.9
     # via emmet-core (pyproject.toml)
-certifi==2026.5.20
+certifi==2026.7.22
     # via requests
 cfgv==3.5.0
     # via pre-commit
-charset-normalizer==3.4.7
+charset-normalizer==3.5.1
     # via requests
 contourpy==1.3.3
     # via matplotlib
-coverage[toml]==7.14.1
+coverage[toml]==7.15.4
     # via pytest-cov
 custodian==2025.12.14
     # via emmet-core (pyproject.toml)
 cycler==0.12.1
     # via matplotlib
-distlib==0.4.1
+distlib==0.4.3
     # via virtualenv
 dnspython==2.8.0
     # via pymongo
@@ -44,7 +44,7 @@ docutils==0.21.2
     #   sphinx-rtd-theme
 execnet==2.1.2
     # via pytest-xdist
-filelock==3.29.1
+filelock==3.32.3
     # via
     #   python-discovery
     #   virtualenv
@@ -58,7 +58,7 @@ identify==2.6.19
     # via pre-commit
 idna==3.18
     # via requests
-imageio==2.37.3
+imageio==2.37.4
     # via scikit-image
 imagesize==2.0.0
     # via sphinx
@@ -80,7 +80,7 @@ latexcodec==3.0.1
     # via pybtex
 lazy-loader==0.5
     # via scikit-image
-librt==0.11.0
+librt==0.15.0
     # via mypy
 lobsterpy==0.6.1
     # via emmet-core (pyproject.toml)
@@ -92,7 +92,7 @@ markdown-it-py==4.2.0
     #   myst-parser
 markupsafe==3.0.3
     # via jinja2
-matplotlib==3.10.9
+matplotlib==3.11.1
     # via
     #   ase
     #   phonopy
@@ -104,7 +104,7 @@ mdit-py-plugins==0.6.1
     # via myst-parser
 mdurl==0.1.2
     # via markdown-it-py
-monty==2026.5.18
+monty==2026.7.16
     # via
     #   custodian
     #   emmet-core (pyproject.toml)
@@ -115,7 +115,7 @@ mp-pyrho==0.5.1
     # via pymatgen-analysis-defects
 mpmath==1.3.0
     # via sympy
-mypy==2.1.0
+mypy==2.3.1
     # via emmet-core (pyproject.toml)
 mypy-extensions==1.1.0
     # via
@@ -123,7 +123,7 @@ mypy-extensions==1.1.0
     #   mypy
 myst-parser==5.1.0
     # via emmet-core (pyproject.toml)
-narwhals==2.22.1
+narwhals==2.24.0
     # via plotly
 networkx==3.6.1
     # via
@@ -131,7 +131,7 @@ networkx==3.6.1
     #   scikit-image
 nodeenv==1.10.0
     # via pre-commit
-numpy==2.4.6
+numpy==2.5.2
     # via
     #   ase
     #   contourpy
@@ -154,9 +154,9 @@ numpy==2.4.6
     #   spglib
     #   symfc
     #   tifffile
-orjson==3.11.9
+orjson==3.12.0
     # via pymatgen-core
-packaging==26.2
+packaging==26.3
     # via
     #   lazy-loader
     #   matplotlib
@@ -166,38 +166,36 @@ packaging==26.2
     #   sphinx
 palettable==3.3.3
     # via pymatgen-core
-pandas==3.0.3
+pandas==3.0.5
     # via
     #   pymatgen-core
     #   seaborn
 pathspec==1.1.1
     # via mypy
-phonopy==4.1.0
+phonopy==4.4.0
     # via emmet-core (pyproject.toml)
-phonors==0.2.0
+phonors==0.3.0
     # via phonopy
 pillow==12.3.0
     # via
     #   imageio
     #   matplotlib
     #   scikit-image
-platformdirs==4.10.0
-    # via
-    #   python-discovery
-    #   virtualenv
-plotly==6.8.0
+platformdirs==4.11.3
+    # via virtualenv
+plotly==6.9.0
     # via pymatgen-core
 pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
-pre-commit==4.6.0
+pre-commit==4.6.2
     # via emmet-core (pyproject.toml)
 psutil==7.2.2
     # via custodian
 pubchempy==1.0.5
     # via emmet-core (pyproject.toml)
-pyarrow==24.0.0
+pyarrow==25.0.1
     # via emmet-core (pyproject.toml)
 pybtex==0.26.1
     # via emmet-core (pyproject.toml)
@@ -214,7 +212,7 @@ pydantic==2.13.4
     #   pymatgen-io-validation
 pydantic-core==2.46.4
     # via pydantic
-pydantic-settings==2.14.2
+pydantic-settings==2.15.0
     # via
     #   emmet-core (pyproject.toml)
     #   pymatgen-io-validation
@@ -222,7 +220,7 @@ pydocstyle==6.3.0
     # via emmet-core (pyproject.toml)
 pyflakes==3.4.0
     # via flake8
-pygments==2.20.0
+pygments==2.21.0
     # via
     #   pytest
     #   sphinx
@@ -234,16 +232,17 @@ pymatgen==2026.5.4
     #   pymatgen-analysis-alloys
     #   pymatgen-analysis-defects
     #   pymatgen-analysis-diffusion
-    #   pymatgen-io-validation
 pymatgen-analysis-alloys==0.0.9
     # via emmet-core (pyproject.toml)
 pymatgen-analysis-defects==2026.3.20
     # via emmet-core (pyproject.toml)
 pymatgen-analysis-diffusion==2025.11.15
     # via emmet-core (pyproject.toml)
-pymatgen-core==2026.5.18
-    # via pymatgen
-pymatgen-io-validation==0.1.2
+pymatgen-core==2026.8.13
+    # via
+    #   pymatgen
+    #   pymatgen-io-validation
+pymatgen-io-validation==0.1.4
     # via emmet-core (pyproject.toml)
 pymongo==4.17.0
     # via emmet-core (pyproject.toml)
@@ -251,7 +250,7 @@ pyparsing==3.3.2
     # via
     #   bibtexparser
     #   matplotlib
-pytest==9.0.3
+pytest==9.1.1
     # via
     #   emmet-core (pyproject.toml)
     #   pytest-cov
@@ -264,9 +263,9 @@ python-dateutil==2.9.0.post0
     # via
     #   matplotlib
     #   pandas
-python-discovery==1.4.0
+python-discovery==1.5.2
     # via virtualenv
-python-dotenv==1.2.2
+python-dotenv==1.2.3
     # via pydantic-settings
 pyyaml==6.0.3
     # via
@@ -289,7 +288,7 @@ ruamel-yaml==0.19.1
     #   monty
 scikit-image==0.26.0
     # via pymatgen-analysis-defects
-scipy==1.17.1
+scipy==1.18.0
     # via
     #   ase
     #   pymatgen-core
@@ -323,7 +322,7 @@ sphinx==8.2.3
     #   sphinxcontrib-jquery
 sphinx-autodoc-typehints==3.5.2
     # via emmet-core (pyproject.toml)
-sphinx-markdown-builder==0.6.10
+sphinx-markdown-builder==0.6.11
     # via emmet-core (pyproject.toml)
 sphinx-rtd-theme==3.1.0
     # via emmet-core (pyproject.toml)
@@ -341,7 +340,7 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-symfc==1.7.2
+symfc==1.7.3
     # via phonopy
 sympy==1.14.0
     # via pymatgen-core
@@ -349,18 +348,19 @@ tabulate==0.10.0
     # via
     #   pymatgen-core
     #   sphinx-markdown-builder
-tifffile==2026.6.1
+tifffile==2026.8.16
     # via scikit-image
-tqdm==4.68.1
+tqdm==4.70.0
     # via pymatgen-core
-typeguard==4.5.2
+typeguard==4.6.0
     # via inflect
-types-requests==2.33.0.20260518
+types-requests==2.33.0.20260712
     # via emmet-core (pyproject.toml)
-types-setuptools==82.0.0.20260518
+types-setuptools==84.0.0.20260812
     # via emmet-core (pyproject.toml)
-typing-extensions==4.15.0
+typing-extensions==4.16.0
     # via
+    #   ase
     #   emmet-core (pyproject.toml)
     #   mypy
     #   pydantic
@@ -368,7 +368,7 @@ typing-extensions==4.15.0
     #   spglib
     #   typeguard
     #   typing-inspection
-typing-inspection==0.4.2
+typing-inspection==0.4.4
     # via
     #   pydantic
     #   pydantic-settings
@@ -378,7 +378,7 @@ urllib3==2.7.0
     # via
     #   requests
     #   types-requests
-virtualenv==21.4.2
+virtualenv==21.7.4
     # via pre-commit
 wincertstore==0.2.1
     # via emmet-core (pyproject.toml)
