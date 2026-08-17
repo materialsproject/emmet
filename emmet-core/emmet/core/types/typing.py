@@ -77,12 +77,30 @@ ID_PADLEN: int = 8
 ID_PREFIX: str = "mp"
 
 
+@overload
+def format_identifier(
+    idx: str | MPID | AlphaID,
+    legacy: bool,
+    prefix: str | None = ID_PREFIX,
+    padlen: int = ID_PADLEN,
+) -> str | None: ...
+
+
+@overload
+def format_identifier(
+    idx: list[str | MPID | AlphaID],
+    legacy: bool,
+    prefix: str | None = ID_PREFIX,
+    padlen: int = ID_PADLEN,
+) -> list[str | None] | None: ...
+
+
 def format_identifier(
     idx: Any,
     legacy: bool,
     prefix: str | None = ID_PREFIX,
     padlen: int = ID_PADLEN,
-) -> str | None:
+) -> str | list[str | None] | None:
     """Render an MP identifier as either the legacy `mp-<int>` form or the padded AlphaID form.
 
     This is the canonical display-formatting helper for MP identifiers. Use it
@@ -246,12 +264,30 @@ def format_compound_identifier(
     return f"{format_identifier(base, legacy, prefix=prefix, padlen=padlen)}{suffix}"
 
 
+@overload
 def format_task_id(
-    task_id: Any,
+    task_id: str | MPID | AlphaID,
     legacy: bool,
     prefix: str = ID_PREFIX,
     padlen: int = ID_PADLEN,
-) -> str | None:
+) -> str | None: ...
+
+
+@overload
+def format_task_id(
+    task_id: list[str | MPID | AlphaID],
+    legacy: bool,
+    prefix: str = ID_PREFIX,
+    padlen: int = ID_PADLEN,
+) -> list[str | None] | None: ...
+
+
+def format_task_id(
+    task_id: str | MPID | AlphaID | list[str | MPID | AlphaID],
+    legacy: bool,
+    prefix: str = ID_PREFIX,
+    padlen: int = ID_PADLEN,
+) -> str | list[str | None] | None:
     """Render a calculation task id in either legacy or new alpha form.
 
     Task ids have a different shape convention than other MP identifiers:
