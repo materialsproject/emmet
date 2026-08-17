@@ -460,7 +460,7 @@ pymatgen-analysis-defects==2024.7.19
     # via emmet-core
 pymatgen-analysis-diffusion==2024.7.15
     # via emmet-core
-pymdown-extensions==10.21.3
+pymdown-extensions==11.0.1
     # via
     #   mkdocs-material
     #   mkdocstrings
