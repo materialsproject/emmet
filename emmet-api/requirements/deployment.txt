@@ -18,9 +18,9 @@ bibtexparser==1.4.4
     # via pymatgen-core
 blake3==1.0.9
     # via emmet-core
-boto3==1.43.73
+boto3==1.43.74
     # via emmet-api (emmet/emmet-api/pyproject.toml)
-botocore==1.43.73
+botocore==1.43.74
     # via
     #   boto3
     #   s3transfer
@@ -52,7 +52,7 @@ gunicorn==24.1.1
     # via emmet-api (emmet/emmet-api/pyproject.toml)
 h11==0.16.0
     # via uvicorn
-idna==3.18
+idna==3.19
     # via
     #   anyio
     #   requests
