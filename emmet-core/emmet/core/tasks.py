@@ -19,16 +19,16 @@ from pydantic import (
     field_validator,
     model_validator,
 )
+
 from emmet.core.io.pymatgen import (
-    oxide_type,
-    Trajectory as PmgTrajectory,
     ComputedEntry,
     ComputedStructureEntry,
     Incar,
     Kpoints,
     Poscar,
 )
-
+from emmet.core.io.pymatgen import Trajectory as PmgTrajectory
+from emmet.core.io.pymatgen import oxide_type
 from emmet.core.structure import StructureMetadata
 from emmet.core.trajectory import RelaxTrajectory, Trajectory
 from emmet.core.types.enums import TaskState, VaspObject
@@ -969,7 +969,7 @@ def _parse_custodian(dir_name: Path) -> dict | None:
 
 def _parse_orig_inputs(
     dir_name: Path, suffix: str | None = ".orig"
-) -> dict[str, Kpoints | Poscar | PotcarSpec | Incar]:
+) -> CalculationInput:
     """
     Parse original input files.
 
@@ -985,8 +985,8 @@ def _parse_orig_inputs(
 
     Returns
     -------
-    dict[str, Kpoints | Poscar | PotcarSpec | Incar ]
-        The original POSCAR, KPOINTS, POTCAR, and INCAR data.
+    CalculationInput
+        The original input Structure, Kpoints, PotcarSpec, and Incar data.
     """
     orig_inputs = {}
     input_mapping: dict[str, Kpoints | Poscar | PotcarSpec | Incar] = {
@@ -1006,11 +1006,15 @@ def _parse_orig_inputs(
         for name, vasp_input in input_mapping.items():
             if f"{name}{suffix}" in str(filename):
                 file_suffix = "_spec" if name == "POTCAR" else ""
-                orig_inputs[f"{name.lower()}{file_suffix}"] = vasp_input.from_file(
-                    filename
+                _key = (
+                    "structure" if name == "POSCAR" else f"{name.lower()}{file_suffix}"
                 )
+                _value = vasp_input.from_file(filename)
+                _assign = _value.structure if _key == "structure" else _value
 
-    return orig_inputs
+                orig_inputs[_key] = _assign
+
+    return CalculationInput(**orig_inputs)
 
 
 def _parse_additional_json(dir_name: Path) -> dict[str, Any]:

@@ -32,7 +32,7 @@ authors = [
 dependencies = [
     "pymatgen>=2024.6.10",
     "monty>=2024.2.2",
-    "pydantic>=2.0",
+    "pydantic>=2.12",
     "pydantic-settings>=2.0",
     "pymatgen-io-validation>=0.1.1",
     "pybtex~=0.24",
@@ -51,6 +51,7 @@ all = [
     "seekpath>=2.0.1",
     "pymatgen-analysis-defects>=2024.7.18",
     "pymatgen-analysis-diffusion>=2024.7.15",
+    "pymatgen-core<2026.7.27", # pymatgen-analysis-diffusion behind on deprecated functions
     "pymatgen-analysis-alloys>=0.0.6",
     "pyarrow",
     "pymongo",

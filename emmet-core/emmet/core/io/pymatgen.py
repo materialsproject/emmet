@@ -18,6 +18,7 @@ _core_class_map: dict[str, str] = {
     "htmlify": "util.string",
     "latexify": "util.string",
     "latexify_spacegroup": "util.string",
+    "unicodeify_spacegroup": "util.string",
     "unicodeify": "util.string",
     "Lattice": "core.lattice",
     "Specie": "core.periodic_table",

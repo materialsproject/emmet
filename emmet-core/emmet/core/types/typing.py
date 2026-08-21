@@ -15,10 +15,10 @@ from enum import Enum
 from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any, Union, overload
-from typing_extensions import TypedDict
 
 import orjson
 from pydantic import BeforeValidator, Field, PlainSerializer, WrapSerializer
+from typing_extensions import TypedDict
 
 from emmet.core.mpid import MPID, AlphaID
 from emmet.core.utils import convert_datetime, utcnow
@@ -77,12 +77,30 @@ ID_PADLEN: int = 8
 ID_PREFIX: str = "mp"
 
 
+@overload
+def format_identifier(
+    idx: str | MPID | AlphaID,
+    legacy: bool,
+    prefix: str | None = ID_PREFIX,
+    padlen: int = ID_PADLEN,
+) -> str | None: ...
+
+
+@overload
+def format_identifier(
+    idx: list[str | MPID | AlphaID],
+    legacy: bool,
+    prefix: str | None = ID_PREFIX,
+    padlen: int = ID_PADLEN,
+) -> list[str | None] | None: ...
+
+
 def format_identifier(
     idx: Any,
     legacy: bool,
     prefix: str | None = ID_PREFIX,
     padlen: int = ID_PADLEN,
-) -> str | None:
+) -> str | list[str | None] | None:
     """Render an MP identifier as either the legacy `mp-<int>` form or the padded AlphaID form.
 
     This is the canonical display-formatting helper for MP identifiers. Use it
@@ -93,6 +111,9 @@ def format_identifier(
         idx: An MPID, AlphaID, or string that parses as either. May be passed
             in any form (legacy `mp-149`, unpadded alpha `mp-ft`, padded alpha
             `mp-aaaaaaft`, bare int `149`, etc.); the function normalizes.
+
+            Lists of ids are acceptable inputs as well (e.g., InsertionElectrodeDoc.material_ids).
+            Processes lists of ids as expected.
         legacy: If True, returns the legacy form (e.g. "mp-149") for identifiers
             below the AlphaID cutoff. Above the cutoff there is no legacy form,
             so the alpha form is returned instead.
@@ -126,6 +147,8 @@ def format_identifier(
         return idx
     if isinstance(idx, str) and not idx:
         return idx
+    if isinstance(idx, list):
+        return [format_identifier(_id, legacy, prefix, padlen) for _id in idx]
     try:
         alpha = AlphaID(idx)
     except (ValueError, TypeError):
@@ -241,12 +264,30 @@ def format_compound_identifier(
     return f"{format_identifier(base, legacy, prefix=prefix, padlen=padlen)}{suffix}"
 
 
+@overload
 def format_task_id(
-    task_id: Any,
+    task_id: str | MPID | AlphaID,
     legacy: bool,
     prefix: str = ID_PREFIX,
     padlen: int = ID_PADLEN,
-) -> str | None:
+) -> str | None: ...
+
+
+@overload
+def format_task_id(
+    task_id: list[str | MPID | AlphaID],
+    legacy: bool,
+    prefix: str = ID_PREFIX,
+    padlen: int = ID_PADLEN,
+) -> list[str | None] | None: ...
+
+
+def format_task_id(
+    task_id: str | MPID | AlphaID | list[str | MPID | AlphaID],
+    legacy: bool,
+    prefix: str = ID_PREFIX,
+    padlen: int = ID_PADLEN,
+) -> str | list[str | None] | None:
     """Render a calculation task id in either legacy or new alpha form.
 
     Task ids have a different shape convention than other MP identifiers:
@@ -266,6 +307,9 @@ def format_task_id(
         task_id: A task id in either form, or any value coercible to an
             :class:`AlphaID`. May be a bare int, a prefixed string, or an
             :class:`AlphaID` object.
+
+            Lists of task ids are acceptable inputs as well (e.g., SummaryDoc.task_ids).
+            Processes lists of tasks ids as expected.
         legacy: If True, returns the legacy form (e.g. ``mp-149``). If False,
             returns the bare padded alpha form (e.g. ``aaaaaaft``) with no
             prefix.
@@ -292,6 +336,9 @@ def format_task_id(
         return task_id
     if isinstance(task_id, str) and not task_id:
         return task_id
+    if isinstance(task_id, list):
+        return [format_task_id(tid, legacy, prefix, padlen) for tid in task_id]
+
     try:
         value = int(AlphaID(task_id))
     except (ValueError, TypeError):

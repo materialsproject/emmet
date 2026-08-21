@@ -284,6 +284,14 @@ class ProvenanceSummary(PropModel):
     )
 
 
+class PhononSummary(PropModel):
+    _prop: str = PrivateAttr("phonon")
+    phonon_IDs: dict[str, list[IdentifierType]] | None = Field(
+        None,
+        description="Identfiers for phonon documents associated with this material.",
+    )
+
+
 # -----------------------------------------------------------------------------
 # Shims for populating has_props for properties that do not add
 # values to SummaryDoc
@@ -295,11 +303,6 @@ class ChargeDensityData(PropModel):
 
 class EosData(PropModel):
     _prop: str = PrivateAttr("eos")
-    exists: bool = False
-
-
-class PhononData(PropModel):
-    _prop: str = PrivateAttr("phonon")
     exists: bool = False
 
 
@@ -338,6 +341,7 @@ class SummaryDoc(
     SurfacesSummary,
     OxiStatesSummary,
     ProvenanceSummary,
+    PhononSummary,
 ):
     """
     Summary information about materials and their properties, useful for materials
@@ -367,11 +371,11 @@ class SummaryDoc(
             | SurfacesSummary
             | OxiStatesSummary
             | ProvenanceSummary
+            | PhononSummary
         ],
         property_shim_docs: list[
             ChargeDensityData
             | EosData
-            | PhononData
             | AbsorptionData
             | ElectrodesData
             | SubstratesData

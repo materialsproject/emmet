@@ -11,14 +11,14 @@ jobs:
   check-enums:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{github.event.pull_request.head.repo.full_name}}
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -74,7 +74,7 @@ jobs:
     name: ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{github.event.pull_request.head.repo.full_name}}
@@ -121,7 +121,7 @@ jobs:
           EMMET_USE_EMMET_MODELS: true
         run: python -m pytest -n auto --cov=emmet --cov-report=xml ${{ matrix.package }}/tests
 
-      - uses: codecov/codecov-action@v6.0.0
+      - uses: codecov/codecov-action@v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml

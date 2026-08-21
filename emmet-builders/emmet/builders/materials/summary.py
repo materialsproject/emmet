@@ -18,7 +18,7 @@ from emmet.core.summary import (
     MagnetismSummary,
     MaterialsSummary,
     OxiStatesSummary,
-    PhononData,
+    PhononSummary,
     PiezoelectricSummary,
     ProvenanceSummary,
     SubstratesData,
@@ -54,11 +54,11 @@ class SummaryBuilderInputs(BaseModel):
         | SurfacesSummary
         | OxiStatesSummary
         | ProvenanceSummary
+        | PhononSummary
     ]
     property_shim_docs: list[
         ChargeDensityData
         | EosData
-        | PhononData
         | AbsorptionData
         | ElectrodesData
         | SubstratesData

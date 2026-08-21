@@ -10,7 +10,6 @@ from emmet.cli.submit import (
 )
 from emmet.cli.utils import EmmetCliError
 from conftest import (
-    wait_for_task_completion_and_assert_status,
     wait_for_task_completion_and_assert_success,
 )
 
@@ -100,29 +99,41 @@ def test_remove_from(sub_file, cli_runner, task_manager):
     assert all(str(path_to_remove) in match for match in matches)
 
 
-@pytest.mark.skip(reason="Temporary skip. Fix when resume work on CLI.")
-def test_validate(validation_sub_file, cli_runner, task_manager):
+def test_validate_success(validation_sub_file, cli_runner, inline_task_manager):
     result = cli_runner(submit, ["validate", validation_sub_file])
 
     assert result.exit_code == 0
     assert "Validation started." in result.output
-    final_status = wait_for_task_completion_and_assert_success(result, task_manager)
-    assert (
-        final_status["result"] is False
-    )  # TODO: switch this to True when fix tests to use fake POTCAR
+    final_status = wait_for_task_completion_and_assert_success(
+        result, inline_task_manager
+    )
+    assert final_status["result"] is True
 
-    # TODO: add test that fails validation when fix tests to use fake POTCAR
+    submission = Submission.load(Path(validation_sub_file))
+    assert all(cm.calc_valid is True for _, cm in submission.calculations)
+    assert all(not cm.calc_validation_errors for _, cm in submission.calculations)
 
 
-@pytest.mark.skip(reason="Temporary skip. Fix when resume work on CLI.")
+def test_validate_failure(invalid_validation_sub_file, cli_runner, inline_task_manager):
+    result = cli_runner(submit, ["validate", invalid_validation_sub_file])
+
+    assert result.exit_code == 0
+    assert "Validation started." in result.output
+    final_status = wait_for_task_completion_and_assert_success(
+        result, inline_task_manager
+    )
+    assert final_status["result"] is False
+
+    submission = Submission.load(Path(invalid_validation_sub_file))
+    assert any(
+        cm.calc_valid is False and cm.calc_validation_errors
+        for _, cm in submission.calculations
+    )
+
+
+@pytest.mark.skip(reason="Push coverage is deferred to issue #1486.")
 def test_push(validation_sub_file, cli_runner, task_manager):
     result = cli_runner(submit, ["push", validation_sub_file])
 
     assert result.exit_code == 0
     assert "Push started." in result.output
-
-    wait_for_task_completion_and_assert_status(
-        result, task_manager, "failed"
-    )  # TODO: switch to success and check result when fix tests to use fake POTCAR
-
-    # TODO: add test that for failing cases when fix tests to use fake POTCAR
