@@ -80,6 +80,21 @@ def _get_space_group_symbol_to_number_mapping() -> dict[str, int]:
     return sg_map
 
 
+def _get_number_to_space_group_symbol_mapping() -> dict[int, str]:
+    """
+    Return a dict mapping international number to its space group symbol.
+
+    Note that the mapping from international number to space group symbol is
+    one-to-many: a single international number can correspond to multiple
+    symbols (e.g., legacy, current Hermann-Mauguin notations, and abbreviations). We take only
+    the latest/current symbol from _get_space_group_symbol_to_number_mapping,
+    which is the one used by spglib. This function is used by the MP frontend stack to keep the symbol format consistent with the data.
+    """
+    symbol_to_number = _get_space_group_symbol_to_number_mapping()
+    number_to_symbol = {number: symbol for symbol, number in symbol_to_number.items()}
+    return number_to_symbol
+
+
 class PointGroupData(BaseModel):
     """
     Defines symmetry for a molecule document
