@@ -30,7 +30,8 @@ authors = [
     {name = "The Materials Project", email="feedback@materialsproject.org"},
 ]
 dependencies = [
-    "pymatgen>=2024.6.10",
+    "pymatgen",
+    "pymatgen-core>=2026.7.31",
     "monty>=2024.2.2",
     "pydantic>=2.12",
     "pydantic-settings>=2.0",
