@@ -78,7 +78,6 @@ def test_get_formatted_el():
         ("Sn2+", "(1,2)", True, True, "unicode", "Sn(1,2)²⁺"),
         ("Sn1.33-", "(3)", True, True, "unicode", "Sn(3)¹\u1427³³⁻"),
     ]:
-
         assert (
             get_formatted_el(
                 species, symm, use_oxi_state=use_oxi, use_sym_label=use_sym, fmt=fmt
@@ -87,7 +86,6 @@ def test_get_formatted_el():
         )
 
 
-@pytest.mark.xfail(reason="Requires pymatgen-core>=2026.7.31")
 def test_unicodeify_spacegroup():
     spg_symbol = unicodeify_spacegroup("P-42_1m")
     assert spg_symbol == "P4̅2₁m"
@@ -96,7 +94,6 @@ def test_unicodeify_spacegroup():
     assert spg_symbol2 == "P2₁2₁2₁"
 
 
-@pytest.mark.xfail(reason="Requires pymatgen-core>=2026.7.31")
 def test_htmlify_spacegroup():
     spg_symbol = htmlify_spacegroup("P-42_1m")
     assert spg_symbol == "P4̅2<sub>1</sub>m"
