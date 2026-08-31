@@ -7,7 +7,6 @@ from emmet.core.featurization.robocrys.util import (
     superscript_number,
     unicodeify_spacegroup,
 )
-import pytest
 
 
 def test_common_formulas():
