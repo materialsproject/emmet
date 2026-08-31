@@ -1,4 +1,5 @@
 import os
+import time
 from pathlib import Path
 from uuid import uuid4
 from click.testing import CliRunner
@@ -46,10 +47,53 @@ def temp_state_dir(tmp_path):
 @pytest.fixture
 def task_manager(state_manager, temp_state_dir):
     """Creates a TaskManager instance with a temporary state directory."""
-    return TaskManager(
+    manager = TaskManager(
         state_manager=state_manager,
-        daemon_log=temp_state_dir / "task_manager_daemon.log",
+        daemon_log=str(temp_state_dir / "task_manager_daemon.log"),
     )
+    yield manager
+
+    tasks = manager.state_manager.get("tasks", {})
+    for task_id in tasks:
+        if manager.get_task_status(task_id).get("status") == "running":
+            manager.terminate_task(task_id)
+
+
+@pytest.fixture
+def wait_for_task_state():
+    """Wait until a task state satisfies a predicate."""
+
+    def wait(task_manager, task_id, predicate, timeout=5.0, interval=0.05):
+        deadline = time.monotonic() + timeout
+        while True:
+            status = task_manager.get_task_status(task_id)
+            if predicate(status):
+                return status
+            if time.monotonic() >= deadline:
+                pytest.fail(
+                    f"Task {task_id} did not reach the expected state within "
+                    f"{timeout} seconds; last status: {status}"
+                )
+            time.sleep(interval)
+
+    return wait
+
+
+@pytest.fixture
+def wait_until():
+    """Wait until a predicate returns a truthy value."""
+
+    def wait(predicate, timeout=5.0, interval=0.05):
+        deadline = time.monotonic() + timeout
+        while True:
+            result = predicate()
+            if result:
+                return result
+            if time.monotonic() >= deadline:
+                pytest.fail(f"Condition was not met within {timeout} seconds")
+            time.sleep(interval)
+
+    return wait
 
 
 @pytest.fixture
