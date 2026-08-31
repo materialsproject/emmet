@@ -2,11 +2,12 @@ import pytest
 import time
 import os
 import signal
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
 from unittest.mock import patch
 import psutil
 from datetime import datetime, timedelta
 from emmet.cli.task_manager import TaskManager, _is_process_running
-from emmet.cli.state_manager import StateManager
 
 
 def task_test_function():
@@ -58,17 +59,6 @@ class MockDateTime:
         return datetime.fromisoformat(date_string)
 
 
-@pytest.fixture
-def task_manager(temp_state_dir):
-    """Creates a TaskManager instance with a temporary state directory."""
-    state_manager = StateManager(state_dir=temp_state_dir)
-    return TaskManager(
-        state_manager=state_manager,
-        running_status_update_interval=1,
-        daemon_log=temp_state_dir / "test_task_manager_daemon.log",
-    )
-
-
 def test_start_task(task_manager):
     """Test starting a new task."""
     task_id = task_manager.start_task(task_test_function)
@@ -79,7 +69,7 @@ def test_start_task(task_manager):
     assert "started_at" in initial_status
 
     final_status = task_manager.wait_for_task_completion(
-        task_id, timeout=1, check_interval=0.1
+        task_id, timeout=5, check_interval=0.1
     )
     assert final_status["status"] == "completed"
     assert final_status["result"] == "completed"
@@ -91,7 +81,7 @@ def test_failing_task_handling(task_manager):
     task_id = task_manager.start_task(failing_task_test_function)
 
     final_status = task_manager.wait_for_task_completion(
-        task_id, timeout=1, check_interval=0.1
+        task_id, timeout=5, check_interval=0.1
     )
     assert final_status["status"] == "failed"
     assert "Task failed" in final_status["error"]
@@ -113,12 +103,10 @@ def test_task_status_checking(task_manager):
 
     # Wait for task to complete and verify status
     final_status = task_manager.wait_for_task_completion(
-        task_id, timeout=1, check_interval=0.1
+        task_id, timeout=5, check_interval=0.1
     )
     assert final_status["status"] == "completed"
 
-    # Give some time for the process to be cleaned up
-    time.sleep(0.1)
     assert task_manager.is_task_running(task_id) is False
 
 
@@ -130,19 +118,71 @@ def test_nonexistent_task_status(task_manager):
     assert task_manager.is_task_running("nonexistent-task") is False
 
 
+def test_concurrent_task_updates_preserve_fields(task_manager):
+    """Test that concurrent process registration preserves both PIDs."""
+    task_id = "concurrent-task"
+    task_manager._store_task_result(
+        task_id,
+        {"status": "running", "started_at": datetime.now().isoformat()},
+    )
+    barrier = Barrier(3)
+
+    def store_result(result):
+        barrier.wait()
+        task_manager._store_task_result(task_id, result)
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        initial_update = executor.submit(
+            store_result, {"status": "running", "initial_pid": 12345}
+        )
+        detached_update = executor.submit(
+            store_result, {"status": "running", "detached_pid": 12346}
+        )
+        barrier.wait()
+        initial_update.result()
+        detached_update.result()
+
+    status = task_manager.get_task_status(task_id)
+    assert status["initial_pid"] == 12345
+    assert status["detached_pid"] == 12346
+
+
+@pytest.mark.parametrize("late_status", ["running", "failed", "terminated"])
+def test_late_status_update_preserves_terminal_status(task_manager, late_status):
+    """Test that a late status update cannot change a completed task."""
+    task_id = "quick-task"
+    task_manager._store_task_result(
+        task_id,
+        {
+            "status": "completed",
+            "started_at": datetime.now().isoformat(),
+            "result": "done",
+        },
+    )
+
+    task_manager._store_task_result(
+        task_id, {"status": late_status, "initial_pid": 12345}
+    )
+
+    status = task_manager.get_task_status(task_id)
+    assert status["status"] == "completed"
+    assert status["result"] == "done"
+    assert status["initial_pid"] == 12345
+
+
 def test_sequential_tasks(task_manager):
     """Test handling multiple tasks sequentially."""
     # Start and complete first task
     task_id1 = task_manager.start_task(task_test_function)
     status1 = task_manager.wait_for_task_completion(
-        task_id1, timeout=2, check_interval=0.1
+        task_id1, timeout=5, check_interval=0.1
     )
     assert status1["status"] == "completed"
 
     # Start and complete second task
     task_id2 = task_manager.start_task(task_test_function)
     status2 = task_manager.wait_for_task_completion(
-        task_id2, timeout=2, check_interval=0.1
+        task_id2, timeout=5, check_interval=0.1
     )
     assert status2["status"] == "completed"
 
@@ -151,7 +191,7 @@ def test_sequential_tasks(task_manager):
     assert task_manager.get_task_status(task_id2)["status"] == "completed"
 
 
-def test_task_pid_storage(task_manager):
+def test_task_pid_storage(task_manager, wait_for_task_state):
     """Test that task PIDs are properly stored."""
     # Start a task
     task_id = task_manager.start_task(long_task_test_function)
@@ -162,11 +202,9 @@ def test_task_pid_storage(task_manager):
     assert isinstance(initial_status["initial_pid"], int)
     assert initial_status["initial_pid"] > 0
 
-    # Wait a bit for the detached process to start and store its PID
-    time.sleep(0.5)
-
-    # Check detached status
-    detached_status = task_manager.get_task_status(task_id)
+    detached_status = wait_for_task_state(
+        task_manager, task_id, lambda status: "detached_pid" in status
+    )
     assert "detached_pid" in detached_status
     assert isinstance(detached_status["detached_pid"], int)
     assert detached_status["detached_pid"] > 0
@@ -183,7 +221,7 @@ def test_task_pid_storage(task_manager):
     assert final_status["detached_pid"] == detached_status["detached_pid"]
 
 
-def test_failing_task_pid_storage(task_manager):
+def test_failing_task_pid_storage(task_manager, wait_for_task_state):
     """Test that PIDs are properly stored even for failing tasks."""
     # Start a failing task
     task_id = task_manager.start_task(failing_task_test_function)
@@ -193,11 +231,9 @@ def test_failing_task_pid_storage(task_manager):
     assert "initial_pid" in initial_status
     assert isinstance(initial_status["initial_pid"], int)
 
-    # Wait a bit for the detached process to start and store its PID
-    time.sleep(0.5)
-
-    # Check detached status
-    detached_status = task_manager.get_task_status(task_id)
+    detached_status = wait_for_task_state(
+        task_manager, task_id, lambda status: "detached_pid" in status
+    )
     assert "detached_pid" in detached_status
     assert isinstance(detached_status["detached_pid"], int)
 
@@ -210,17 +246,14 @@ def test_failing_task_pid_storage(task_manager):
     assert final_status["detached_pid"] == detached_status["detached_pid"]
 
 
-def test_terminated_task_detection(task_manager):
+def test_terminated_task_detection(task_manager, wait_for_task_state, wait_until):
     """Test detection of terminated tasks."""
     # Start a long-running task
     task_id = task_manager.start_task(infinite_task_function)
 
-    # Wait for the detached process to start
-    time.sleep(0.5)
-
-    # Get the detached PID
-    status = task_manager.get_task_status(task_id)
-    assert "detached_pid" in status
+    status = wait_for_task_state(
+        task_manager, task_id, lambda task_status: "detached_pid" in task_status
+    )
     pid = status["detached_pid"]
 
     # Verify the process is running
@@ -230,8 +263,7 @@ def test_terminated_task_detection(task_manager):
     # Terminate the process
     os.kill(pid, signal.SIGTERM)
 
-    # Give some time for the termination to be processed
-    time.sleep(0.1)
+    wait_until(lambda: not _is_process_running(pid))
 
     # Verify the task is detected as terminated
     assert not task_manager.is_task_running(task_id)
@@ -244,10 +276,17 @@ def test_terminated_task_detection(task_manager):
 
 def test_terminated_task_wait_completion(task_manager):
     """Test that wait_for_task_completion properly handles terminated tasks."""
-    task_id = task_manager.start_task(infinite_task_function)
-
-    # Wait for the detached process to start
-    time.sleep(0.5)
+    task_id = "terminated-task"
+    task_manager.state_manager.set(
+        "tasks",
+        {
+            task_id: {
+                "status": "running",
+                "started_at": datetime.now().isoformat(),
+                "detached_pid": 12345,
+            }
+        },
+    )
 
     # Mock the process as not running
     mock_dead = MockProcess(is_running=False, status=psutil.STATUS_DEAD)
@@ -256,7 +295,7 @@ def test_terminated_task_wait_completion(task_manager):
         # First check should mark it as terminated
         assert not task_manager.is_task_running(task_id)
         # Now wait_for_task_completion should see the terminated status
-        final_status = task_manager.wait_for_task_completion(task_id, timeout=1)
+        final_status = task_manager.wait_for_task_completion(task_id, timeout=5)
         assert final_status["status"] == "terminated"
         assert "completed_at" in final_status
         assert "error" in final_status
@@ -294,10 +333,17 @@ def test_no_such_process():
 
 def test_zombie_process_task_status(task_manager):
     """Test that tasks with zombie processes are marked as terminated."""
-    task_id = task_manager.start_task(infinite_task_function)
-
-    # Wait for the detached process to start
-    time.sleep(0.5)
+    task_id = "zombie-task"
+    task_manager.state_manager.set(
+        "tasks",
+        {
+            task_id: {
+                "status": "running",
+                "started_at": datetime.now().isoformat(),
+                "detached_pid": 12345,
+            }
+        },
+    )
 
     # Mock the process as a zombie
     mock_zombie = MockProcess(is_running=True, status=psutil.STATUS_ZOMBIE)
@@ -313,10 +359,17 @@ def test_zombie_process_task_status(task_manager):
 
 def test_permission_denied_task_status(task_manager):
     """Test task status handling when process check permission is denied."""
-    task_id = task_manager.start_task(infinite_task_function)
-
-    # Wait for the detached process to start
-    time.sleep(0.5)
+    task_id = "inaccessible-task"
+    task_manager.state_manager.set(
+        "tasks",
+        {
+            task_id: {
+                "status": "running",
+                "started_at": datetime.now().isoformat(),
+                "detached_pid": 12345,
+            }
+        },
+    )
 
     def mock_process(*args):
         raise psutil.AccessDenied()
@@ -350,10 +403,18 @@ def test_various_process_states(process_status):
 
 def test_initial_pid_grace_period(task_manager):
     """Test that tasks with only initial PID get proper grace period."""
-    task_id = task_manager.start_task(infinite_task_function)
-
-    # Set up our initial time just after task start
+    task_id = "initializing-task"
     start_time = datetime.now()
+    task_manager.state_manager.set(
+        "tasks",
+        {
+            task_id: {
+                "status": "running",
+                "started_at": start_time.isoformat(),
+                "initial_pid": 12345,
+            }
+        },
+    )
 
     # Within grace period - process should appear running
     within_grace = TaskManager.DETACH_GRACE_PERIOD * 0.6
@@ -378,23 +439,17 @@ def test_initial_pid_grace_period(task_manager):
             assert not task_manager.is_task_running(task_id)
             status = task_manager.get_task_status(task_id)
             assert status["status"] == "terminated"
-            assert (
-                "failed to detach" in status["error"].lower()
-                or "process was terminated unexpectedly" in status["error"].lower()
-            )
+            assert "failed to detach" in status["error"].lower()
 
 
 def test_no_pid_grace_period(task_manager):
     """Test that tasks with no PID get proper grace period."""
-    task_id = task_manager.start_task(infinite_task_function)
-
-    # Simulate a task that hasn't registered any PID yet
-    tasks = task_manager.state_manager.get("tasks", {})
-    tasks[task_id] = {"status": "running", "started_at": datetime.now().isoformat()}
-    task_manager.state_manager.set("tasks", tasks)
-
-    # Set up our initial time just after task start
+    task_id = "initializing-task"
     start_time = datetime.now()
+    task_manager.state_manager.set(
+        "tasks",
+        {task_id: {"status": "running", "started_at": start_time.isoformat()}},
+    )
 
     # Test within grace period (at 50% of grace period)
     within_grace = TaskManager.INIT_GRACE_PERIOD * 0.5
@@ -418,12 +473,10 @@ def test_no_pid_grace_period(task_manager):
 
 def test_missing_start_time(task_manager):
     """Test handling of tasks with missing start time."""
-    task_id = task_manager.start_task(infinite_task_function)
-
-    # Simulate a task with no start time
-    tasks = task_manager.state_manager.get("tasks", {})
-    tasks[task_id] = {"status": "running", "initial_pid": 12345}  # Some dummy PID
-    task_manager.state_manager.set("tasks", tasks)
+    task_id = "task-without-start-time"
+    task_manager.state_manager.set(
+        "tasks", {task_id: {"status": "running", "initial_pid": 12345}}
+    )
 
     # Should be marked as terminated immediately
     assert not task_manager.is_task_running(task_id)
@@ -442,13 +495,12 @@ def test_missing_start_time(task_manager):
 )
 def test_no_pid_various_times(task_manager, time_factor, expected_running):
     """Test task status at various times when no PID is registered."""
-    task_id = task_manager.start_task(infinite_task_function)
-
-    # Simulate a task that hasn't registered any PID yet
+    task_id = "initializing-task"
     start_time = datetime.now()
-    tasks = task_manager.state_manager.get("tasks", {})
-    tasks[task_id] = {"status": "running", "started_at": start_time.isoformat()}
-    task_manager.state_manager.set("tasks", tasks)
+    task_manager.state_manager.set(
+        "tasks",
+        {task_id: {"status": "running", "started_at": start_time.isoformat()}},
+    )
 
     # Test at the specified time
     elapsed_time = TaskManager.INIT_GRACE_PERIOD * time_factor
@@ -460,15 +512,13 @@ def test_no_pid_various_times(task_manager, time_factor, expected_running):
             assert status["status"] == "terminated"
 
 
-def test_terminate_running_task(task_manager):
+def test_terminate_running_task(task_manager, wait_for_task_state):
     """Test terminating a running task."""
     task_id = task_manager.start_task(infinite_task_function)
 
-    # Wait for the detached process to start
-    time.sleep(0.5)
-
-    # Get initial status
-    status = task_manager.get_task_status(task_id)
+    status = wait_for_task_state(
+        task_manager, task_id, lambda task_status: "detached_pid" in task_status
+    )
     assert status["status"] == "running"
     assert "detached_pid" in status
 
@@ -494,7 +544,7 @@ def test_terminate_completed_task(task_manager):
     task_id = task_manager.start_task(task_test_function)
 
     # Wait for task to complete
-    task_manager.wait_for_task_completion(task_id, timeout=1)
+    task_manager.wait_for_task_completion(task_id, timeout=5)
 
     # Try to terminate the completed task
     status = task_manager.terminate_task(task_id)
@@ -508,7 +558,7 @@ def test_terminate_failed_task(task_manager):
     task_id = task_manager.start_task(failing_task_test_function)
 
     # Wait for task to fail
-    task_manager.wait_for_task_completion(task_id, timeout=1)
+    task_manager.wait_for_task_completion(task_id, timeout=5)
 
     # Try to terminate the failed task
     status = task_manager.terminate_task(task_id)
@@ -517,12 +567,13 @@ def test_terminate_failed_task(task_manager):
     assert "Task failed" in status["error"]
 
 
-def test_terminate_already_terminated_task(task_manager):
+def test_terminate_already_terminated_task(task_manager, wait_for_task_state):
     """Test attempting to terminate an already terminated task."""
     task_id = task_manager.start_task(infinite_task_function)
 
-    # Wait for the detached process to start
-    time.sleep(0.5)
+    wait_for_task_state(
+        task_manager, task_id, lambda task_status: "detached_pid" in task_status
+    )
 
     # Terminate the task first time
     first_status = task_manager.terminate_task(task_id)
@@ -536,10 +587,24 @@ def test_terminate_already_terminated_task(task_manager):
 
 def test_terminate_task_with_only_initial_pid(task_manager):
     """Test terminating a task that only has initial PID."""
-    task_id = task_manager.start_task(infinite_task_function)
+    task_id = "initial-process-task"
+    task_manager.state_manager.set(
+        "tasks",
+        {
+            task_id: {
+                "status": "running",
+                "started_at": datetime.now().isoformat(),
+                "initial_pid": 12345,
+            }
+        },
+    )
 
-    # Immediately try to terminate before detached PID is set
-    status = task_manager.terminate_task(task_id)
+    with patch.object(
+        task_manager, "_try_terminate_process", return_value=True
+    ) as terminate:
+        status = task_manager.terminate_task(task_id)
+
+    terminate.assert_called_once_with(12345)
     assert status["status"] == "terminated"
     assert "error" in status
     assert "terminated by user request" in status["error"].lower()
@@ -558,10 +623,17 @@ def test_terminate_task_with_only_initial_pid(task_manager):
 )
 def test_terminate_task_with_process_errors(task_manager, exception_class):
     """Test terminating a task when process operations raise exceptions."""
-    task_id = task_manager.start_task(infinite_task_function)
-
-    # Wait for the detached process to start
-    time.sleep(0.5)
+    task_id = "process-error-task"
+    task_manager.state_manager.set(
+        "tasks",
+        {
+            task_id: {
+                "status": "running",
+                "started_at": datetime.now().isoformat(),
+                "detached_pid": 12345,
+            }
+        },
+    )
 
     def mock_process(*args):
         pid = args[0]  # Get the actual PID being passed
@@ -576,18 +648,22 @@ def test_terminate_task_with_process_errors(task_manager, exception_class):
         assert "terminated by user request" in status["error"].lower()
 
 
-def test_sequential_task_termination(task_manager):
+def test_sequential_task_termination(task_manager, wait_for_task_state):
     """Test terminating tasks in sequence."""
     # Start and terminate first task
     task_id1 = task_manager.start_task(infinite_task_function)
-    time.sleep(0.5)  # Wait for task to start
+    wait_for_task_state(
+        task_manager, task_id1, lambda task_status: "detached_pid" in task_status
+    )
     status1 = task_manager.terminate_task(task_id1)
     assert status1["status"] == "terminated"
     assert "terminated by user request" in status1["error"].lower()
 
     # Start and terminate second task
     task_id2 = task_manager.start_task(infinite_task_function)
-    time.sleep(0.5)  # Wait for task to start
+    wait_for_task_state(
+        task_manager, task_id2, lambda task_status: "detached_pid" in task_status
+    )
     status2 = task_manager.terminate_task(task_id2)
     assert status2["status"] == "terminated"
     assert "terminated by user request" in status2["error"].lower()
@@ -597,19 +673,23 @@ def test_sequential_task_termination(task_manager):
     assert task_manager.get_task_status(task_id2)["status"] == "terminated"
 
 
-def test_terminate_mixed_tasks(task_manager):
+def test_terminate_mixed_tasks(task_manager, wait_for_task_state):
     """Test terminating a mix of running, completed, and failed tasks."""
     # Start a task that will complete
     completed_task_id = task_manager.start_task(task_test_function)
-    task_manager.wait_for_task_completion(completed_task_id, timeout=2)
+    task_manager.wait_for_task_completion(completed_task_id, timeout=5)
 
     # Start a task that will fail
     failed_task_id = task_manager.start_task(failing_task_test_function)
-    task_manager.wait_for_task_completion(failed_task_id, timeout=2)
+    task_manager.wait_for_task_completion(failed_task_id, timeout=5)
 
     # Start a task that will be terminated
     running_task_id = task_manager.start_task(infinite_task_function)
-    time.sleep(0.5)  # Wait for task to start
+    wait_for_task_state(
+        task_manager,
+        running_task_id,
+        lambda task_status: "detached_pid" in task_status,
+    )
 
     # Try to terminate all tasks
     completed_status = task_manager.terminate_task(completed_task_id)
@@ -629,15 +709,13 @@ def test_terminate_mixed_tasks(task_manager):
     assert "terminated by user request" in running_status["error"].lower()
 
 
-def test_terminate_task_cleanup(task_manager):
+def test_terminate_task_cleanup(task_manager, wait_for_task_state):
     """Test that terminated tasks are properly cleaned up."""
     # Start and terminate a task
     task_id = task_manager.start_task(infinite_task_function)
-    time.sleep(0.5)  # Wait for task to start
-
-    # Get the PID before termination
-    status = task_manager.get_task_status(task_id)
-    assert "detached_pid" in status
+    status = wait_for_task_state(
+        task_manager, task_id, lambda task_status: "detached_pid" in task_status
+    )
     pid = status["detached_pid"]
 
     # Terminate the task
