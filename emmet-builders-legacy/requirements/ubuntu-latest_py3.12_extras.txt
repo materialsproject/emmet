@@ -494,7 +494,7 @@ tidynamics==1.1.2
     # via transport-analysis
 tifffile==2025.8.28
     # via scikit-image
-tornado==6.5.7
+tornado==6.5.8
     # via livereload
 tqdm==4.67.1
     # via
