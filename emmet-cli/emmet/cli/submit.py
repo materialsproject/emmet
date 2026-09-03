@@ -1,5 +1,7 @@
 import logging
 from pathlib import Path
+from uuid import UUID
+
 import click
 from emmet.cli.state_manager import StateManager
 from emmet.cli.submission import Submission, SubmissionUploader
@@ -172,3 +174,53 @@ def push(ctx: click.Context, submission: Path) -> None:
     task_id = task_manager.start_task(_push_submission, Path(submission), state_dir)
     click.echo(f"Push started. Task ID: {task_id}")
     click.echo("Use 'emmet tasks status <task_id>' to check the status")
+
+
+def _submission_id_from_target(target: str) -> UUID:
+    """Resolve a submission metadata path or UUID to a submission ID."""
+    target_path = Path(target)
+    if target_path.exists():
+        if not target_path.is_file():
+            raise EmmetCliError(f"Submission target is not a file: {target}")
+        try:
+            return Submission.load(target_path).id
+        except (OSError, ValueError):
+            raise EmmetCliError(
+                f"Could not load submission metadata from {target}."
+            ) from None
+    try:
+        return UUID(target)
+    except ValueError:
+        raise EmmetCliError(
+            f"Submission target must be an existing metadata file or UUID: {target}"
+        ) from None
+
+
+def _echo_object_ids(label: str, object_ids: list[str]) -> None:
+    click.echo(f"{label}: {len(object_ids)}")
+    for object_id in object_ids:
+        click.echo(f"  {object_id}")
+
+
+@submit.command("contributor-status")
+@click.pass_context
+def contributor_status(ctx: click.Context) -> None:
+    """Checks whether the current user can contribute submissions."""
+    state_manager = ctx.obj["task_manager"].state_manager
+    with HttpSubmissionUploader.from_environment(state_manager) as client:
+        status = client.contributor_status()
+    click.echo(f"Contributor status: {status}")
+
+
+@submit.command("status")
+@click.argument("target", nargs=1, type=str)
+@click.pass_context
+def submission_status(ctx: click.Context, target: str) -> None:
+    """Checks remote status using a submission metadata file or UUID."""
+    submission_id = _submission_id_from_target(target)
+    state_manager = ctx.obj["task_manager"].state_manager
+    with HttpSubmissionUploader.from_environment(state_manager) as client:
+        status = client.submission_status(submission_id)
+    click.echo(f"Submission {status['submission_id']}: {status['status']}")
+    _echo_object_ids("Completed objects", status["completed_object_ids"])
+    _echo_object_ids("In-progress objects", status["in_progress_object_ids"])
