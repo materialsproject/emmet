@@ -86,7 +86,7 @@ def _canonical_json(value: Any) -> bytes:
 def _calculation_digest(calculation: CalculationMetadata) -> str:
     files = sorted(
         ({"name": file.name, "hash": file.hash} for file in calculation.files),
-        key=lambda file: file["name"],
+        key=lambda file: file["name"] or "",
     )
     return hashlib.sha256(_canonical_json(files)).hexdigest()
 
@@ -120,16 +120,16 @@ class HttpSubmissionUploader:
     def __init__(
         self,
         state_manager: StateManager,
-        token: str,
+        api_key: str,
         api_url: str = DEFAULT_API_URL,
         client: httpx.Client | None = None,
     ) -> None:
-        if not token:
+        if not api_key:
             raise EmmetCliError(
-                "EMMET_API_TOKEN must be set before pushing a submission."
+                "MP_API_KEY must be set before contacting the submission service."
             )
         self.state_manager = state_manager
-        self.token = token
+        self.api_key = api_key
         self.api_url = api_url.rstrip("/")
         self.client = client or httpx.Client(timeout=60.0)
         self._owns_client = client is None
@@ -139,12 +139,68 @@ class HttpSubmissionUploader:
         cls, state_manager: StateManager, client: httpx.Client | None = None
     ) -> HttpSubmissionUploader:
         """Create an uploader using the CLI's supported environment settings."""
+        api_key = os.environ.get("MP_API_KEY", "")
+        if not api_key:
+            api_key = os.environ.get("EMMET_API_TOKEN", "")
+            if api_key:
+                logger.warning("EMMET_API_TOKEN is deprecated; set MP_API_KEY instead.")
         return cls(
             state_manager=state_manager,
-            token=os.environ.get("EMMET_API_TOKEN", ""),
+            api_key=api_key,
             api_url=os.environ.get("EMMET_API_URL", DEFAULT_API_URL),
             client=client,
         )
+
+    def contributor_status(self) -> str:
+        """Return the authenticated user's contributor status."""
+        response = self._control_request(
+            "GET",
+            "/submissions/contributor-status",
+            action="Checking contributor status",
+        )
+        try:
+            payload = response.json()
+            contributor_status = payload["status"]
+            if contributor_status not in {"active", "inactive", "expired"}:
+                raise ValueError
+        except (KeyError, TypeError, ValueError):
+            raise EmmetCliError(
+                "Submission service returned an invalid contributor status response."
+            ) from None
+        return contributor_status
+
+    def submission_status(self, submission_id: UUID) -> dict[str, Any]:
+        """Return remote upload status for a submission."""
+        response = self._control_request(
+            "POST",
+            f"/submissions/{submission_id}/status",
+            action="Checking submission status",
+        )
+        try:
+            payload = response.json()
+            response_submission_id = UUID(payload["submission_id"])
+            submission_state = payload["status"]
+            completed = payload["completed_object_ids"]
+            in_progress = payload["in_progress_object_ids"]
+            if (
+                response_submission_id != submission_id
+                or submission_state not in {"complete", "incomplete"}
+                or not isinstance(completed, list)
+                or not all(isinstance(object_id, str) for object_id in completed)
+                or not isinstance(in_progress, list)
+                or not all(isinstance(object_id, str) for object_id in in_progress)
+            ):
+                raise ValueError
+        except (KeyError, TypeError, ValueError):
+            raise EmmetCliError(
+                "Submission service returned an invalid submission status response."
+            ) from None
+        return {
+            "submission_id": str(response_submission_id),
+            "status": submission_state,
+            "completed_object_ids": completed,
+            "in_progress_object_ids": in_progress,
+        }
 
     def close(self) -> None:
         """Close the internally-created HTTP client, if any."""
@@ -307,8 +363,18 @@ class HttpSubmissionUploader:
         return object_info.metadata()
 
     @classmethod
-    def _parse_session(cls, session: dict[str, Any], error: str) -> _SessionParts:
-        def items_by_id(key: str, require_checksum: bool = False):
+    def _parse_session(
+        cls,
+        session: dict[str, Any],
+        error: str,
+        *,
+        require_completed_objects: bool = False,
+    ) -> _SessionParts:
+        def items_by_id(
+            key: str, require_checksum: bool = False, required: bool = False
+        ):
+            if required and key not in session:
+                raise EmmetCliError(error)
             items = session.get(key, [])
             if not isinstance(items, list):
                 raise EmmetCliError(error)
@@ -332,7 +398,11 @@ class HttpSubmissionUploader:
             uploads=items_by_id("uploads"),
             objects=items_by_id("objects"),
             completed_ids=set(completed_ids),
-            completed_objects=items_by_id("completed_objects", require_checksum=True),
+            completed_objects=items_by_id(
+                "completed_objects",
+                require_checksum=True,
+                required=require_completed_objects,
+            ),
         )
 
     @staticmethod
@@ -427,7 +497,9 @@ class HttpSubmissionUploader:
             ):
                 raise TypeError
             service_parts = self._parse_session(
-                session, "Upload service returned an invalid prepare response."
+                session,
+                "Upload service returned an invalid prepare response.",
+                require_completed_objects=True,
             )
         except (KeyError, TypeError, ValueError, EmmetCliError):
             raise EmmetCliError(
@@ -538,13 +610,25 @@ class HttpSubmissionUploader:
                 "Upload session is missing object checksums required for finalization. "
                 "Retry the push to reconcile remote upload progress."
             ) from None
-        self._control_request(
+        response = self._control_request(
             "POST",
             f"/submissions/{submission_id}/upload-sessions/{session_id}/complete",
             json=payload,
             headers={"Idempotency-Key": session["snapshot_id"]},
             action="Finalizing upload session",
         )
+        try:
+            result = response.json()
+            response_submission_id = UUID(result["submission_id"])
+            if (
+                response_submission_id != submission_id
+                or result["session_state"] != "complete"
+            ):
+                raise ValueError
+        except (KeyError, TypeError, ValueError):
+            raise EmmetCliError(
+                "Upload service returned an invalid finalization response."
+            ) from None
 
     def _control_request(
         self,
@@ -552,17 +636,17 @@ class HttpSubmissionUploader:
         path: str,
         *,
         action: str,
-        json: dict[str, Any],
+        json: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
     ) -> httpx.Response:
-        request_headers = {"Authorization": f"Bearer {self.token}"}
+        request_headers = {"X-API-KEY": self.api_key}
         request_headers.update(headers or {})
         try:
+            request_kwargs: dict[str, Any] = {"headers": request_headers}
+            if json is not None:
+                request_kwargs["json"] = json
             response = self.client.request(
-                method,
-                f"{self.api_url}{path}",
-                headers=request_headers,
-                json=json,
+                method, f"{self.api_url}{path}", **request_kwargs
             )
             response.raise_for_status()
             return response
