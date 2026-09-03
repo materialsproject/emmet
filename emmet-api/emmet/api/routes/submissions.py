@@ -92,7 +92,7 @@ class UploadResponse(BaseModel):
     expires_at: DateTimeType
     uploads: list[UploadURLs]
     completed_object_ids: list[str]
-    comleted_objects: list[Object]
+    completed_objects: list[Object]
 
 
 class FinalizeSessionRequest(BaseModel):
@@ -160,7 +160,7 @@ def create_submission(
         expires_at="2027-01-01",
         uploads=[],
         completed_object_ids=[],
-        comleted_objects=[],
+        completed_objects=[],
     )
 
 
