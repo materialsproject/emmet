@@ -11,14 +11,14 @@ router = APIRouter()
 GROUP_HEADER_NAME = "x-authenticated-groups"
 
 
-class ContributerState(str, Enum):
+class ContributorState(str, Enum):
     ACTIVE = "active"
     INACTIVE = "inactive"
     EXPIRED = "expired"
 
 
-class ContributerStatus(BaseModel):
-    status: ContributerState
+class ContributorStatus(BaseModel):
+    status: ContributorState
     model_config = ConfigDict({"use_enum_values": True})
 
 
@@ -111,26 +111,26 @@ class FinalizeSessionResponse(BaseModel):
     session_state: SessionState
 
 
-def validate_contributer(x_authenticated_groups: Annotated[str, Header()]):
+def validate_contributor(x_authenticated_groups: Annotated[str, Header()]):
     if not "core:contributions=writer" in x_authenticated_groups.split(","):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
 
-@router.get("/submissions/contributer-status")
-def check_contributer_status(
+@router.get("/submissions/contributor-status")
+def check_contributor_status(
     x_consumer_id: Annotated[str, Header()],
-    _authenticated_groups: Annotated[str, Depends(validate_contributer)],
-) -> ContributerStatus:
+    _authenticated_groups: Annotated[str, Depends(validate_contributor)],
+) -> ContributorStatus:
     # TODO: query w/ consumer_id
 
-    return ContributerStatus(status=ContributerState.ACTIVE)
+    return ContributorStatus(status=ContributorState.ACTIVE)
 
 
 @router.post("/submissions/{submission_id}/status")
 def submission_status(
     x_consumer_id: Annotated[str, Header()],
     submission_id: UUID,
-    _authenticated_groups: Annotated[str, Depends(validate_contributer)],
+    _authenticated_groups: Annotated[str, Depends(validate_contributor)],
 ):
     # TODO: verify submission_id belongs to consumer_id
     # TODO: query w/ consumer_id + submission_id
@@ -148,7 +148,7 @@ def create_submission(
     x_consumer_id: Annotated[str, Header()],
     submission_id: UUID,
     upload_request: UploadRequest,
-    _authenticated_groups: Annotated[str, Depends(validate_contributer)],
+    _authenticated_groups: Annotated[str, Depends(validate_contributor)],
 ) -> UploadResponse:
     # TODO: verify submission_id belongs to consumer_id
     # TODO: query w/ consumer_id + submission_id
@@ -170,7 +170,7 @@ def complete_submission(
     session_id: UUID,
     finalize_session_request: FinalizeSessionRequest,
     x_consumer_id: Annotated[str, Header()],
-    _authenticated_groups: Annotated[str, Depends(validate_contributer)],
+    _authenticated_groups: Annotated[str, Depends(validate_contributor)],
 ) -> FinalizeSessionResponse:
     # TODO: verify submission_id belongs to consumer_id
     # TODO: query w/ consumer_id + submission_id + session_id
