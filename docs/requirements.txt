@@ -56,7 +56,7 @@ mkdocs-awesome-pages-plugin==2.8.0
     # via -r requirements.in
 mkdocs-markdownextradata-plugin==0.2.5
     # via -r requirements.in
-mkdocs-material==8.2.16
+mkdocs-material==9.7.7
     # via -r requirements.in
 mkdocs-material-extensions==1.1
     # via
