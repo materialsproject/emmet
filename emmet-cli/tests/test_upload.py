@@ -30,10 +30,19 @@ def _submission_with_raw_files(tmp_path):
 
 
 class UploadService:
-    def __init__(self, fail_object=None, fail_finalize=False, malformed_upload=False):
+    def __init__(
+        self,
+        fail_object=None,
+        fail_finalize=False,
+        malformed_upload=False,
+        omit_completed_objects=False,
+        finalize_state="complete",
+    ):
         self.fail_object = fail_object
         self.fail_finalize = fail_finalize
         self.malformed_upload = malformed_upload
+        self.omit_completed_objects = omit_completed_objects
+        self.finalize_state = finalize_state
         self.prepare_requests = []
         self.prepare_headers = []
         self.put_attempts = []
@@ -66,7 +75,14 @@ class UploadService:
                 ).hexdigest()
                 if item["sha256"] != uploaded_sha256:
                     return httpx.Response(422)
-            return httpx.Response(200, json={"status": "complete"})
+            response_submission_id = request.url.path.split("/")[2]
+            return httpx.Response(
+                200,
+                json={
+                    "submission_id": response_submission_id,
+                    "session_state": self.finalize_state,
+                },
+            )
 
         self.prepare_requests.append(payload)
         self.prepare_headers.append(request.headers)
@@ -80,47 +96,66 @@ class UploadService:
         ]
         if self.malformed_upload:
             uploads[0].pop("object_id")
-        return httpx.Response(
-            200,
-            json={
-                "session_id": "session-1",
-                "expires_at": (
-                    datetime.now(timezone.utc) + timedelta(hours=1)
-                ).isoformat(),
-                "uploads": uploads,
-                "completed_object_ids": list(self.puts),
-                "completed_objects": [
-                    {
-                        "object_id": object_id,
-                        "sha256": hashlib.sha256(uploaded).hexdigest(),
-                    }
-                    for object_id, uploaded in self.puts.items()
-                ],
-            },
-        )
+        response_payload = {
+            "session_id": "session-1",
+            "expires_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
+            "uploads": uploads,
+            "completed_object_ids": list(self.puts),
+        }
+        if not self.omit_completed_objects:
+            response_payload["completed_objects"] = [
+                {
+                    "object_id": object_id,
+                    "sha256": hashlib.sha256(uploaded).hexdigest(),
+                }
+                for object_id, uploaded in self.puts.items()
+            ]
+        return httpx.Response(200, json=response_payload)
 
 
 def _uploader(state_manager, service):
     client = httpx.Client(transport=httpx.MockTransport(service))
     return HttpSubmissionUploader(
         state_manager=state_manager,
-        token="secret-token",
+        api_key="secret-token",
         api_url="https://api.test",
         client=client,
     )
 
 
 def test_environment_configuration_requires_token(tmp_path, monkeypatch):
+    monkeypatch.delenv("MP_API_KEY", raising=False)
     monkeypatch.delenv("EMMET_API_TOKEN", raising=False)
 
-    with pytest.raises(EmmetCliError, match="EMMET_API_TOKEN"):
+    with pytest.raises(EmmetCliError, match="MP_API_KEY"):
         HttpSubmissionUploader.from_environment(StateManager(tmp_path / "state"))
+
+
+def test_environment_prefers_mp_api_key(tmp_path, monkeypatch):
+    monkeypatch.setenv("MP_API_KEY", "current-key")
+    monkeypatch.setenv("EMMET_API_TOKEN", "legacy-key")
+
+    with HttpSubmissionUploader.from_environment(
+        StateManager(tmp_path / "state")
+    ) as uploader:
+        assert uploader.api_key == "current-key"
+
+
+def test_environment_supports_deprecated_token(tmp_path, monkeypatch, caplog):
+    monkeypatch.delenv("MP_API_KEY", raising=False)
+    monkeypatch.setenv("EMMET_API_TOKEN", "legacy-key")
+
+    with HttpSubmissionUploader.from_environment(
+        StateManager(tmp_path / "state")
+    ) as uploader:
+        assert uploader.api_key == "legacy-key"
+    assert "deprecated" in caplog.text
 
 
 def test_context_manager_closes_owned_client(tmp_path):
     uploader = HttpSubmissionUploader(
         state_manager=StateManager(tmp_path / "state"),
-        token="secret-token",
+        api_key="secret-token",
     )
     client = uploader.client
 
@@ -128,6 +163,58 @@ def test_context_manager_closes_owned_client(tmp_path):
         assert not client.is_closed
 
     assert client.is_closed
+
+
+def test_contributor_status_matches_server_route(tmp_path):
+    def service(request):
+        assert request.method == "GET"
+        assert request.url.path == "/submissions/contributor-status"
+        assert request.headers["x-api-key"] == "secret-token"
+        assert request.content == b""
+        return httpx.Response(200, json={"status": "active"})
+
+    client = httpx.Client(transport=httpx.MockTransport(service))
+    uploader = HttpSubmissionUploader(
+        state_manager=StateManager(tmp_path / "state"),
+        api_key="secret-token",
+        api_url="https://api.test",
+        client=client,
+    )
+
+    assert uploader.contributor_status() == "active"
+
+
+def test_submission_status_matches_server_route(tmp_path):
+    submission_id = uuid4()
+
+    def service(request):
+        assert request.method == "POST"
+        assert request.url.path == f"/submissions/{submission_id}/status"
+        assert request.content == b""
+        return httpx.Response(
+            200,
+            json={
+                "submission_id": str(submission_id),
+                "status": "incomplete",
+                "completed_object_ids": ["completed-object"],
+                "in_progress_object_ids": ["pending-object"],
+            },
+        )
+
+    client = httpx.Client(transport=httpx.MockTransport(service))
+    uploader = HttpSubmissionUploader(
+        state_manager=StateManager(tmp_path / "state"),
+        api_key="secret-token",
+        api_url="https://api.test",
+        client=client,
+    )
+
+    assert uploader.submission_status(submission_id) == {
+        "submission_id": str(submission_id),
+        "status": "incomplete",
+        "completed_object_ids": ["completed-object"],
+        "in_progress_object_ids": ["pending-object"],
+    }
 
 
 def test_uploads_raw_archive_and_snapshot_manifest(tmp_path):
@@ -140,7 +227,8 @@ def test_uploads_raw_archive_and_snapshot_manifest(tmp_path):
     submission.push(uploader)
 
     assert len(service.prepare_requests) == 1
-    assert service.prepare_headers[0]["authorization"] == "Bearer secret-token"
+    assert service.prepare_headers[0]["x-api-key"] == "secret-token"
+    assert "authorization" not in service.prepare_headers[0]
     assert len(service.puts) == 2
     archive = next(
         content
@@ -212,6 +300,26 @@ def test_malformed_prepare_upload_is_wrapped(tmp_path):
 
     with pytest.raises(EmmetCliError, match="invalid prepare response"):
         submission.push(_uploader(StateManager(tmp_path / "state"), service))
+
+
+def test_prepare_requires_completed_objects_field(tmp_path):
+    submission = _submission_with_raw_files(tmp_path)
+    submission.stage_for_push()
+    service = UploadService(omit_completed_objects=True)
+
+    with pytest.raises(EmmetCliError, match="invalid prepare response"):
+        submission.push(_uploader(StateManager(tmp_path / "state"), service))
+
+
+def test_finalize_requires_complete_session_state(tmp_path):
+    submission = _submission_with_raw_files(tmp_path)
+    submission.stage_for_push()
+    service = UploadService(finalize_state="in_progress")
+
+    with pytest.raises(EmmetCliError, match="invalid finalization response"):
+        submission.push(_uploader(StateManager(tmp_path / "state"), service))
+
+    assert len(submission.calc_history) == 0
 
 
 def test_streaming_file_read_error_is_retryable(tmp_path, monkeypatch):
