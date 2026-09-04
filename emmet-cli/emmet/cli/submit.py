@@ -1,7 +1,11 @@
 import logging
 from pathlib import Path
+from uuid import UUID
+
 import click
-from emmet.cli.submission import Submission
+from emmet.cli.state_manager import StateManager
+from emmet.cli.submission import Submission, SubmissionUploader
+from emmet.cli.upload import HttpSubmissionUploader
 from emmet.cli.utils import EmmetCliError
 
 logger = logging.getLogger("emmet")
@@ -134,17 +138,26 @@ def validate(ctx: click.Context, submission: Path, check_all: bool) -> None:
     click.echo("Use 'emmet tasks status <task_id>' to check the status")
 
 
-def _push_submission(submission_path: Path) -> tuple[bool, str]:
+def _push_submission(
+    submission_path: Path,
+    state_dir: Path | None = None,
+    uploader: SubmissionUploader | None = None,
+) -> tuple[bool, str]:
     """Helper function to push a submission that can run in a separate process."""
     sub = Submission.load(submission_path)
-    updated_file_info = sub.stage_for_push()
-    if not updated_file_info:
+    changes = sub.stage_for_push()
+    if not changes.has_changes:
         return (
             False,
             "Files for submission have not changed since last update. Not pushing.",
         )
 
-    sub.push()
+    if uploader is None:
+        state_manager = StateManager(state_dir or Path.home() / ".emmet")
+        with HttpSubmissionUploader.from_environment(state_manager) as managed_uploader:
+            sub.push(managed_uploader)
+    else:
+        sub.push(uploader)
     sub.save(submission_path)
     return True, f"Successfully updated submission in {submission_path}"
 
@@ -157,6 +170,57 @@ def push(ctx: click.Context, submission: Path) -> None:
 
     Returns a task ID that can be used to check the status."""
     task_manager = ctx.obj["task_manager"]
-    task_id = task_manager.start_task(_push_submission, Path(submission))
+    state_dir = task_manager.state_manager.state_dir
+    task_id = task_manager.start_task(_push_submission, Path(submission), state_dir)
     click.echo(f"Push started. Task ID: {task_id}")
     click.echo("Use 'emmet tasks status <task_id>' to check the status")
+
+
+def _submission_id_from_target(target: str) -> UUID:
+    """Resolve a submission metadata path or UUID to a submission ID."""
+    target_path = Path(target)
+    if target_path.exists():
+        if not target_path.is_file():
+            raise EmmetCliError(f"Submission target is not a file: {target}")
+        try:
+            return Submission.load(target_path).id
+        except (OSError, ValueError):
+            raise EmmetCliError(
+                f"Could not load submission metadata from {target}."
+            ) from None
+    try:
+        return UUID(target)
+    except ValueError:
+        raise EmmetCliError(
+            f"Submission target must be an existing metadata file or UUID: {target}"
+        ) from None
+
+
+def _echo_object_ids(label: str, object_ids: list[str]) -> None:
+    click.echo(f"{label}: {len(object_ids)}")
+    for object_id in object_ids:
+        click.echo(f"  {object_id}")
+
+
+@submit.command("contributor-status")
+@click.pass_context
+def contributor_status(ctx: click.Context) -> None:
+    """Checks whether the current user can contribute submissions."""
+    state_manager = ctx.obj["task_manager"].state_manager
+    with HttpSubmissionUploader.from_environment(state_manager) as client:
+        status = client.contributor_status()
+    click.echo(f"Contributor status: {status}")
+
+
+@submit.command("status")
+@click.argument("target", nargs=1, type=str)
+@click.pass_context
+def submission_status(ctx: click.Context, target: str) -> None:
+    """Checks remote status using a submission metadata file or UUID."""
+    submission_id = _submission_id_from_target(target)
+    state_manager = ctx.obj["task_manager"].state_manager
+    with HttpSubmissionUploader.from_environment(state_manager) as client:
+        status = client.submission_status(submission_id)
+    click.echo(f"Submission {status['submission_id']}: {status['status']}")
+    _echo_object_ids("Completed objects", status["completed_object_ids"])
+    _echo_object_ids("In-progress objects", status["in_progress_object_ids"])

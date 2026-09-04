@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import fcntl
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Any, Callable, Self, TextIO
-import fcntl
+from uuid import uuid4
 
 logger = logging.getLogger("emmet")
 
@@ -32,13 +34,14 @@ class StateManager:
     """Manages persistent state for the CLI application."""
 
     def __init__(self, state_dir: Path | str = Path.home() / ".emmet"):
-        # Store only the state file path
-        self.state_file = str(Path(state_dir) / "state.json")
+        self.state_dir = Path(state_dir)
+        self.state_file = str(self.state_dir / "state.json")
         self._ensure_state_dir()
 
     def _ensure_state_dir(self) -> None:
         """Ensures the state directory exists."""
-        Path(self.state_file).parent.mkdir(parents=True, exist_ok=True)
+        self.state_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+        self.state_dir.chmod(0o700)
 
     def _load_state(self) -> dict[str, Any]:
         """Loads state from disk. Not thread safe."""
@@ -54,8 +57,37 @@ class StateManager:
 
     def _save_state(self, state: dict[str, Any]) -> None:
         """Saves current state to disk. Not thread safe."""
-        with Path(self.state_file).open("w") as f:
-            json.dump(state, f, indent=2)
+        state_path = Path(self.state_file)
+        temporary_path = state_path.with_name(f".{state_path.name}.{uuid4().hex}.tmp")
+        descriptor = os.open(
+            temporary_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600
+        )
+        try:
+            try:
+                state_file = os.fdopen(descriptor, "w")
+            except Exception:
+                os.close(descriptor)
+                raise
+            with state_file as f:
+                json.dump(state, f, indent=2)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(temporary_path, state_path)
+            try:
+                directory_descriptor = os.open(
+                    state_path.parent, os.O_RDONLY | os.O_DIRECTORY
+                )
+                try:
+                    os.fsync(directory_descriptor)
+                finally:
+                    os.close(directory_descriptor)
+            except OSError:
+                logger.warning(
+                    "State was saved, but its directory entry could not be synced."
+                )
+        except Exception:
+            temporary_path.unlink(missing_ok=True)
+            raise
 
     def get(self, key: str, default: Any = None) -> Any:
         """Gets a value from state."""

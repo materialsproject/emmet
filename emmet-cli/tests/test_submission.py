@@ -5,6 +5,17 @@ from emmet.core.vasp.utils import FileMetadata
 import pytest
 
 
+class RecordingUploader:
+    def __init__(self, error=None):
+        self.error = error
+        self.uploads = []
+
+    def upload(self, submission_id, changes):
+        if self.error:
+            raise self.error
+        self.uploads.append((submission_id, changes))
+
+
 @pytest.fixture(scope="session")
 def tmp_structure(tmp_path_factory):
     directory_structure = {
@@ -148,25 +159,6 @@ def test_remove_from(sub_file, tmp_structure):
     assert len(removed) == 9
 
 
-def test_changed_files(sub_file):
-    sub = Submission.load(Path(sub_file))
-    changed = sub.get_changed_files_per_calc_path(
-        sub.calculations, sub._create_calculations_copy(refresh=True)
-    )
-    assert len(changed) == 7
-
-    sub.calculations = sub._create_calculations_copy(refresh=True)
-
-    changed = sub.get_changed_files_per_calc_path(
-        sub.calculations, sub._create_calculations_copy(refresh=True)
-    )
-    assert len(changed) == 0
-    changed = sub.get_changed_files_per_calc_path(
-        sub.last_pushed(), sub._create_calculations_copy(refresh=True)
-    )
-    assert len(changed) == 7
-
-
 @pytest.mark.parametrize("changed_index", [0, 1, 2])
 def test_refresh_invalidates_cached_validation(calculation_metadata, changed_index):
     original_hashes = [file.hash for file in calculation_metadata.files]
@@ -234,19 +226,71 @@ def test_validate_submission(sub_file, validation_sub_file):
 
 def test_changed_files_to_push(validation_sub_file):
     sub = Submission.load(Path(validation_sub_file))
+    uploader = RecordingUploader()
 
     with pytest.raises(EmmetCliError) as ex_info:
-        sub.push()
+        sub.push(uploader)
 
     assert "Nothing is staged" in str(ex_info.value)
 
     changed = sub.stage_for_push()
-    assert len(changed) == 10
+    assert changed.has_changes
+    assert sum(len(change.added_files) for change in changed.changes) == 10
     changed = sub.stage_for_push()
-    assert len(changed) == 10
+    assert changed.has_changes
 
-    sub.push()
+    sub.push(uploader)
+    assert len(uploader.uploads) == 1
     changed = sub.stage_for_push()
-    assert len(changed) == 0
+    assert not changed.has_changes
 
-    # check that if file changed after stage then push raises exception
+
+def test_submission_changes_include_file_and_calculation_removals(
+    calculation_metadata,
+):
+    locator = CalculationLocator(path=Path("/calculation"), modifier="standard")
+    second = calculation_metadata.model_copy(deep=True)
+    second.id = calculation_metadata.id
+    submission = Submission(calculations=[(locator, calculation_metadata)])
+    submission.calc_history.append([(locator, second)])
+
+    removed_file = calculation_metadata.files.pop()
+    changes = submission.get_submission_changes(
+        submission.last_pushed(), submission.calculations
+    )
+
+    assert changes.has_changes
+    assert changes.changes[0].status == "changed"
+    assert changes.changes[0].removed_files == [removed_file.name]
+
+    removed_calculation_changes = submission.get_submission_changes(
+        submission.calculations, []
+    )
+    assert removed_calculation_changes.changes[0].status == "removed"
+    assert removed_calculation_changes.changes[0].calculation is None
+
+
+def test_failed_upload_does_not_advance_history(validation_sub_file):
+    sub = Submission.load(Path(validation_sub_file))
+    sub.stage_for_push()
+
+    with pytest.raises(EmmetCliError, match="remote failure"):
+        sub.push(RecordingUploader(EmmetCliError("remote failure")))
+
+    assert sub.calc_history == []
+    assert sub.pending_calculations is not None
+
+
+def test_files_changed_after_staging_block_push(validation_sub_file):
+    sub = Submission.load(Path(validation_sub_file))
+    uploader = RecordingUploader()
+    sub.stage_for_push()
+    changed_file = sub.calculations[0][1].files[0].path
+    changed_file.write_bytes(changed_file.read_bytes() + b"changed after staging")
+
+    with pytest.raises(EmmetCliError, match="changed since staging"):
+        sub.push(uploader)
+
+    assert uploader.uploads == []
+    assert sub.calc_history == []
+    assert sub.pending_calculations is not None

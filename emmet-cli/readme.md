@@ -23,9 +23,11 @@ Options:
 
 Commands:
   add-to       Adds more files to the submission.
+  contributor-status  Checks whether the current user can contribute submissions.
   create       Creates a new MP data submission.
   push         Pushes the latest version of an MP data submission.
   remove-from  Removes files from the submission.
+  status       Checks the remote status of a submission.
   validate     Locally validates the latest version of an MP data...
 ```
 ### create
@@ -90,3 +92,30 @@ Usage: emmet submit push [OPTIONS] SUBMISSION
 Options:
   --help  Show this message and exit.
 ```
+
+#### Remote upload configuration
+
+Remote submission commands authenticate to the Materials Project submission service
+with the `MP_API_KEY` environment variable. The legacy `EMMET_API_TOKEN` variable
+is accepted with a deprecation warning. The CLI uses
+`https://api.materialsproject.org` by default; set `EMMET_API_URL` to target a
+development service. Tokens and presigned URLs are never written to submission
+metadata or logs. Active upload sessions are cached in the protected CLI state
+directory so interrupted pushes can resume.
+
+Use `emmet submit contributor-status` to check whether the authenticated user can
+contribute submissions. Use `emmet submit status TARGET` to inspect remote upload
+progress, where `TARGET` is either a local submission metadata file or a submission
+UUID.
+
+For each added or changed calculation, the CLI creates a complete RawArchive
+HDF5 object. A JSON snapshot manifest references current calculation archives
+and records removed files and calculations. The service contract is:
+
+1. `POST /submissions/{id}/upload-sessions` prepares or refreshes an
+   idempotent session and returns presigned object URLs.
+2. The CLI uploads each archive and manifest with `PUT`.
+3. `POST /submissions/{id}/upload-sessions/{session_id}/complete` confirms the
+   uploaded object identifiers and checksums.
+
+Local submission history advances only after the service confirms completion.

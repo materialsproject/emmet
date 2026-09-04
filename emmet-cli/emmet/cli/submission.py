@@ -7,7 +7,7 @@ from collections import defaultdict
 from multiprocessing import get_context
 from os import PathLike, cpu_count
 from pathlib import Path
-from typing import ClassVar, Iterable
+from typing import ClassVar, Iterable, Literal, Protocol
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, PrivateAttr
@@ -72,6 +72,35 @@ class CalculationMetadata(BaseModel):
             self.calc_validation_errors.clear()
 
 
+class CalculationChange(BaseModel):
+    """A calculation-level change included in a submission snapshot."""
+
+    calculation_id: UUID
+    status: Literal["added", "changed", "removed"]
+    locator: CalculationLocator
+    calculation: CalculationMetadata | None = None
+    added_files: list[str] = Field(default_factory=list)
+    changed_files: list[str] = Field(default_factory=list)
+    removed_files: list[str] = Field(default_factory=list)
+
+
+class SubmissionChangeSet(BaseModel):
+    """The complete set of changes between two submission snapshots."""
+
+    current_calculations: list[tuple[CalculationLocator, CalculationMetadata]]
+    changes: list[CalculationChange]
+
+    @property
+    def has_changes(self) -> bool:
+        return bool(self.changes)
+
+
+class SubmissionUploader(Protocol):
+    """Upload a staged submission snapshot to a remote service."""
+
+    def upload(self, submission_id: UUID, changes: SubmissionChangeSet) -> None: ...
+
+
 def invoke_calc_refresh(args):
     path, cm = args
     cm.refresh()
@@ -110,9 +139,7 @@ class Submission(BaseModel):
         default=None,
     )
 
-    _pending_push: dict[CalculationLocator, FileMetadata] | None = PrivateAttr(
-        default=None
-    )
+    _pending_push: SubmissionChangeSet | None = PrivateAttr(default=None)
 
     def last_pushed(
         self,
@@ -315,8 +342,8 @@ class Submission(BaseModel):
                     cm.refresh()
         return pending_calculations
 
-    def stage_for_push(self) -> list[FileMetadata]:
-        """Stages submission for push. Returns the list of files that will need to be (re)pushed."""
+    def stage_for_push(self) -> SubmissionChangeSet:
+        """Stage and validate the current snapshot for a remote push."""
         self.pending_calculations = self._create_calculations_copy()
 
         if not self.validate_submission():
@@ -327,46 +354,94 @@ class Submission(BaseModel):
                 "Submission does not pass validation. Please fix validation errors prior to staging."
             )
 
-        changes = self.get_changed_files_per_calc_path(
+        self._pending_push = self.get_submission_changes(
             self.last_pushed(), self.pending_calculations
         )
-        self._pending_push = changes  # type: ignore[assignment]
+        return self._pending_push
 
-        return [item for sublist in changes.values() for item in sublist]
-
-    def get_changed_files_per_calc_path(
+    def get_submission_changes(
         self,
         previous: list[tuple[CalculationLocator, CalculationMetadata]] | None,
         current: list[tuple[CalculationLocator, CalculationMetadata]],
-    ) -> dict[CalculationLocator, list[FileMetadata]]:
-        changes: dict[CalculationLocator, list[FileMetadata]] = {}
-        if not previous:
-            changes = {k: v.files for k, v in current}
-        else:
-            for loc, cm in current:
-                prev_cm = next((cm_p for loc_p, cm_p in previous if loc_p == loc), None)
-                if prev_cm is None:
-                    changes[loc] = cm.files
-                else:
-                    file_changes = []
-                    for fm in cm.files:
-                        match = next(
-                            (item for item in prev_cm.files if item == fm), None
-                        )
-                        if match is None or fm.hash != match.hash:
-                            file_changes.append(fm)
-                    if file_changes:
-                        changes[loc] = file_changes
-        return changes
+    ) -> SubmissionChangeSet:
+        """Return added, changed, and removed calculations and files."""
+        previous_by_id = {
+            calculation.id: (locator, calculation)
+            for locator, calculation in (previous or [])
+        }
+        current_by_id = {
+            calculation.id: (locator, calculation) for locator, calculation in current
+        }
+        changes = []
 
-    def push(self) -> None:
+        for calculation_id in sorted(current_by_id, key=str):
+            locator, calculation = current_by_id[calculation_id]
+            previous_entry = previous_by_id.get(calculation_id)
+            current_files = {file.name: file for file in calculation.files}
+
+            if previous_entry is None:
+                changes.append(
+                    CalculationChange(
+                        calculation_id=calculation_id,
+                        status="added",
+                        locator=locator,
+                        calculation=calculation,
+                        added_files=sorted(current_files),
+                    )
+                )
+                continue
+
+            _, previous_calculation = previous_entry
+            previous_files = {file.name: file for file in previous_calculation.files}
+            added_files = sorted(current_files.keys() - previous_files.keys())
+            removed_files = sorted(previous_files.keys() - current_files.keys())
+            changed_files = sorted(
+                name
+                for name in current_files.keys() & previous_files.keys()
+                if current_files[name].hash != previous_files[name].hash
+            )
+            if added_files or changed_files or removed_files:
+                changes.append(
+                    CalculationChange(
+                        calculation_id=calculation_id,
+                        status="changed",
+                        locator=locator,
+                        calculation=calculation,
+                        added_files=added_files,
+                        changed_files=changed_files,
+                        removed_files=removed_files,
+                    )
+                )
+
+        for calculation_id in sorted(
+            previous_by_id.keys() - current_by_id.keys(), key=str
+        ):
+            locator, calculation = previous_by_id[calculation_id]
+            changes.append(
+                CalculationChange(
+                    calculation_id=calculation_id,
+                    status="removed",
+                    locator=locator,
+                    removed_files=sorted(file.name for file in calculation.files),
+                )
+            )
+
+        return SubmissionChangeSet(
+            current_calculations=current,
+            changes=changes,
+        )
+
+    def push(self, uploader: SubmissionUploader) -> None:
         """Performs the push. Returns info about the push"""
-        if not self.pending_calculations or not self._pending_push:
+        if (
+            self.pending_calculations is None
+            or self._pending_push is None
+            or not self._pending_push.has_changes
+        ):
             raise EmmetCliError("Nothing is staged. Please stage before pushing.")
 
-        if self.get_changed_files_per_calc_path(
-            self.pending_calculations, self._create_calculations_copy(refresh=True)
-        ):
+        current = self._create_calculations_copy(refresh=True)
+        if self.get_submission_changes(self.pending_calculations, current).has_changes:
             raise EmmetCliError(
                 "Files for submission have changed since staging. Please re-stage before pushing."
             )
@@ -378,12 +453,7 @@ class Submission(BaseModel):
                 "Submission does not pass validation. Please fix validation errors and re-stage."
             )
 
-        # TODO: do push
-        for k, _ in self._pending_push.items():
-            # call RawArchive static method to create file_paths from list of FileMetadata for the pending_calc[k]
-            # construct a RawArchive file for writing
-            # push that file to S3
-            pass
+        uploader.upload(self.id, self._pending_push)
 
         # do bookkeeping
         self.calc_history.append(self.pending_calculations)
