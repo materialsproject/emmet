@@ -1,4 +1,8 @@
+import logging
 from importlib.metadata import PackageNotFoundError, version
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 try:
     __version__ = version("emmet-builders")

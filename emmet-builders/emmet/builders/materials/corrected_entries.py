@@ -1,4 +1,5 @@
 import copy
+import logging
 import warnings
 
 from pydantic import BaseModel, Field
@@ -10,6 +11,8 @@ from emmet.core.thermo import ThermoType
 from emmet.core.types.pymatgen_types.computed_entries_adapter import (
     ComputedStructureEntryType,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class CorrectedEntriesBuilderInput(BaseModel):
@@ -95,9 +98,8 @@ def build_corrected_entries_doc(
 
         else:
             if len(all_entry_types) > 1:
-                # TODO: logging over raising
                 raise ValueError(
-                    "More than one functional type has been provided without a mixing scheme!"
+                    f"More than one functional type has been provided without a mixing scheme for chemsys: {chemsys}"
                 )
             else:
                 thermo_type = all_entry_types.pop()
