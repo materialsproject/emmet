@@ -38,12 +38,12 @@ def build_bonding_docs(
                 structure,
                 _log_extra=_log_extra,
             ),
-            **kwargs
+            **kwargs,
         )
 
-    return filter_map(
+    yield from filter_map(
         _build,
         input_documents,
         work_keys=["deprecated", "material_id", "structure"],
-        **kwargs
+        **kwargs,
     )

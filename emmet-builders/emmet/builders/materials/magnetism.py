@@ -31,7 +31,7 @@ def build_magnetism_docs(
         Iterator[MagnetismDoc]
     """
 
-    return filter_map(
+    yield from filter_map(
         MagnetismDoc.from_structure,
         input_documents,
         work_keys=[
@@ -41,5 +41,5 @@ def build_magnetism_docs(
             "origins",
             "total_magnetization",
         ],
-        **kwargs
+        **kwargs,
     )

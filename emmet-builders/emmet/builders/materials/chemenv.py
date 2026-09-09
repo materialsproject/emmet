@@ -25,9 +25,9 @@ def build_chemenv_docs(
         Iterator[ChemEnvDoc]
     """
 
-    return filter_map(
+    yield from filter_map(
         ChemEnvDoc.from_structure,
         input_documents,
         work_keys=["deprecated", "material_id", "structure", "builder_meta"],
-        **kwargs
+        **kwargs,
     )
