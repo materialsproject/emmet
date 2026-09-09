@@ -1,8 +1,3 @@
-"""
-Core module exposes the document interfaces
-These will be ingested via Drones, built by Builders, and served via the API
-"""
-
 import logging
 from importlib.metadata import PackageNotFoundError, version
 
@@ -10,7 +5,7 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 try:
-    __version__ = version("emmet-api")
+    __version__ = version("emmet-archival")
 except PackageNotFoundError:  # pragma: no cover
     # package is not installed
     pass

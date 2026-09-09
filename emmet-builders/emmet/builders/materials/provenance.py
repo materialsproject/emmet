@@ -15,6 +15,8 @@ from emmet.core.connectors.icsd.client import IcsdClient
 from emmet.core.connectors.icsd.enums import IcsdSubset
 from emmet.core.provenance import DatabaseSNL, ProvenanceDoc
 
+logger = logging.getLogger(__name__)
+
 SETTINGS = EmmetBuildSettings()
 structure_matcher = StructureMatcher(
     ltol=SETTINGS.LTOL,
@@ -26,9 +28,6 @@ structure_matcher = StructureMatcher(
     attempt_supercell=False,
     allow_subset=False,
 )
-
-
-logger = logging.getLogger(__name__)
 
 
 def _get_snl_from_cif(cif_str: str, **kwargs) -> DatabaseSNL | None:

@@ -16,6 +16,8 @@ from emmet.core.types.pymatgen_types.computed_entries_adapter import (
 )
 from emmet.core.vasp.calc_types.enums import RunType
 
+logger = logging.getLogger(__name__)
+
 
 class ThermoBuilderInput(BaseModel):
     """
@@ -48,8 +50,6 @@ class ThermoBuilderOutput(BaseModel):
 
 
 ThermoPDPair = tuple[list[ThermoDoc] | None, PhaseDiagramDoc | None]
-
-logger = logging.getLogger(__name__)
 
 
 def build_thermo_docs_and_phase_diagram_docs(
