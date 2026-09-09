@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import logging
 from hashlib import md5
+import inspect
 import os
 import sys
 from itertools import chain, combinations
@@ -270,7 +272,6 @@ def get_potcar_stats(
         from monty.serialization import loadfn
 
     if method == "stored":
-
         if path_to_stored_stats is None:
             from importlib.resources import files
 
@@ -355,6 +356,7 @@ def try_call(
     *args: Any,
     _default: S | None = None,
     _safe: bool = True,
+    _log_extra: dict[str, str] | None = None,
     **kwargs: Any,
 ) -> T | S | None:
     """Attempt to call a function, returning a _default value if an exception is raised.
@@ -366,6 +368,8 @@ def try_call(
             Defaults to ``None``.
         _safe: Override behavior of ``try_call`` — propagate exceptions when
             ``fn`` raises. Useful for debugging.
+        _log_extra: Any logging details to pass to ``extra`` in
+            logger.exception when failures happen and _safe=True.
         **kwargs: Keyword arguments to forward to ``fn``.
 
     Returns:
@@ -377,6 +381,13 @@ def try_call(
     try:
         return fn(*args, **kwargs)
     except Exception:
+        logger = logging.getLogger(inspect.getmodule(fn).__name__)
+        logger.exception(
+            "Error during execution of %s",
+            getattr(fn, "__qualname__", repr(fn)),
+            stack_info=logger.isEnabledFor(logging.DEBUG),
+            extra=_log_extra or {},
+        )
         return _default
 
 
@@ -386,6 +397,7 @@ def filter_map(
     /,
     *args: Any,
     work_keys: list[str] | None = None,
+    log_extra: dict[str, str] | None = None,
     **kwargs: Any,
 ) -> Iterator[T]:
     """Apply a function to each item in an iterable, yielding non-None results.
@@ -405,6 +417,8 @@ def filter_map(
         *args: Additional positional arguments to forward to ``fn``.
         work_keys: If provided, a list of keys/attributes to extract from
             each item in ``work`` and pass as keyword arguments to ``fn``.
+        log_extra: Any logging details to pass on to ``_log_extra`` in
+            ``try_call`` when failures happen.
         **kwargs: Additional keyword arguments to forward to ``fn``.
 
     Yields:
@@ -424,8 +438,15 @@ def filter_map(
                 lambda x: try_call(
                     fn,
                     *args,
+                    _log_extra=log_extra,
                     **{
-                        **try_call(_extract_kwargs, x, work_keys, _default={}),  # type: ignore[dict-item]
+                        **try_call(
+                            _extract_kwargs,
+                            x,
+                            work_keys,
+                            _default={},
+                            _log_extra=log_extra,
+                        ),  # type: ignore[dict-item]
                         **kwargs,
                     },
                 ),
@@ -436,7 +457,13 @@ def filter_map(
         yield from filter(
             lambda y: y is not None,
             map(
-                lambda x: try_call(fn, x, *args, **kwargs),
+                lambda x: try_call(
+                    fn,
+                    x,
+                    *args,
+                    _log_extra=log_extra,
+                    **kwargs,
+                ),
                 work,
             ),
         )
