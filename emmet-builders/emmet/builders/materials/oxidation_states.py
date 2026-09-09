@@ -24,7 +24,7 @@ def build_oxidation_states_docs(
     Returns:
         Iterator[OxidationStateDoc]
     """
-    return filter_map(
+    yield from filter_map(
         OxidationStateDoc.from_structure,
         input_documents,
         work_keys=[
@@ -33,5 +33,5 @@ def build_oxidation_states_docs(
             "structure",
             "builder_meta",
         ],
-        **kwargs
+        **kwargs,
     )
