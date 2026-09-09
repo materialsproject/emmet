@@ -41,7 +41,7 @@ def build_absorption_docs(
     Returns:
        Iterator[AbsorbtionDoc]
     """
-    return filter_map(
+    yield from filter_map(
         AbsorptionDoc.from_structure,
         input_documents,
         work_keys=[
@@ -58,7 +58,7 @@ def build_absorption_docs(
             "material_id",
             "structure",
         ],
-        **kwargs
+        **kwargs,
     )
 
 
