@@ -123,7 +123,7 @@ livereload==2.7.1
     # via emmet-builders (pyproject.toml)
 maggma==0.72.0
     # via emmet-builders (pyproject.toml)
-markdown==3.8.2
+markdown==3.8.1
     # via
     #   mkdocs
     #   mkdocs-autorefs
@@ -345,7 +345,7 @@ pydocstyle==6.3.0
     # via emmet-builders (pyproject.toml)
 pyflakes==3.4.0
     # via flake8
-pygments==2.19.2
+pygments==2.20.0
     # via
     #   mkdocs-material
     #   pytest
@@ -375,7 +375,7 @@ pymongo==4.10.1
     # via
     #   maggma
     #   matminer
-pynacl==1.5.0
+pynacl==1.6.2
     # via paramiko
 pyparsing==3.2.3
     # via

@@ -95,7 +95,7 @@ httpcore2==2.10.0
     # via httpx2
 httpx==0.28.1
     # via starlette
-httpx2==2.10.0
+httpx2==2.12.0
     # via starlette
 identify==2.6.19
     # via pre-commit

@@ -300,7 +300,7 @@ pymongo==4.6.3
     #   maggma
     #   matminer
     #   mongogrant
-pynacl==1.5.0
+pynacl==1.6.2
     # via paramiko
 pyparsing==3.1.1
     # via matplotlib
