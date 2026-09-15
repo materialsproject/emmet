@@ -1,6 +1,7 @@
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import (
+    IdFormatQuery,
     MultiMaterialIDQuery,
     PaginationQuery,
     SparseFieldsQuery,
@@ -15,6 +16,7 @@ from emmet.api.routes.materials.oxidation_states.query_operators import (
     PossibleOxiStateQuery,
 )
 from emmet.core.oxidation_states import OxidationStateDoc
+from emmet.core.types.typing import format_identifier
 
 
 def oxi_states_resource(oxi_states_store):
@@ -31,6 +33,7 @@ def oxi_states_resource(oxi_states_store):
                 OxidationStateDoc, default_fields=["material_id", "last_updated"]
             ),
             LicenseQuery(),
+            IdFormatQuery([("material_id", format_identifier)]),
         ],
         header_processor=GlobalHeaderProcessor(),
         query_to_configure_on_request=LicenseQuery(),

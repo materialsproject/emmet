@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Any, Self, TextIO
+from typing import Any, Callable, Self, TextIO
 import fcntl
 
 logger = logging.getLogger("emmet")
@@ -69,6 +69,15 @@ class StateManager:
             state = self._load_state()
             state[key] = value
             self._save_state(state)
+
+    def update(self, key: str, updater: Callable[[Any], Any]) -> Any:
+        """Atomically update one top-level state value and return the new value."""
+        with self._state_lock():
+            state = self._load_state()
+            value = updater(state.get(key))
+            state[key] = value
+            self._save_state(state)
+            return value
 
     def _state_lock(self) -> FileLock:
         """Context manager for file locking."""

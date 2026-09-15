@@ -1,6 +1,7 @@
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import (
+    IdFormatQuery,
     MultiMaterialIDQuery,
     NumericQuery,
     PaginationQuery,
@@ -8,6 +9,7 @@ from emmet.api.query_operator import (
 )
 from emmet.api.resource import ReadOnlyResource
 from emmet.core.absorption import AbsorptionDoc
+from emmet.core.types.typing import format_identifier
 
 
 def absorption_resource(absorption_store):
@@ -32,6 +34,7 @@ def absorption_resource(absorption_store):
                 AbsorptionDoc,
                 default_fields=["material_id", "last_updated"],
             ),
+            IdFormatQuery([("material_id", format_identifier)]),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Absorption"],

@@ -37,7 +37,7 @@ from emmet.api.routes.materials.surface_properties.query_operators import (
     ReconstructedQuery,
 )
 from emmet.core.summary import SummaryDoc
-from emmet.core.types.typing import format_identifier
+from emmet.core.types.typing import format_identifier, format_task_id
 
 settings = MAPISettings()  # type: ignore
 timeout = settings.TIMEOUT
@@ -73,7 +73,12 @@ def summary_resource(summary_store):
             # Optional response-side reformatting of the material_id field
             # based on the user's preferred display format. No-op when the
             # `id_format` query parameter is absent.
-            IdFormatQuery(id_fields=[("material_id", format_identifier)]),
+            IdFormatQuery(
+                id_fields=[
+                    ("material_id", format_identifier),
+                    ("task_ids", format_task_id),
+                ]
+            ),
         ],
         hint_scheme=SummaryHintScheme(),
         header_processor=GlobalHeaderProcessor(),

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import numpy as np
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
 import orjson
 from monty.os.path import zpath
 from pydantic import (
@@ -15,24 +15,22 @@ from pydantic import (
     field_validator,
     model_validator,
 )
-from emmet.core.io.pymatgen import Molecule, Structure
 from scipy.interpolate import CubicSpline
 from typing_extensions import Self
 
+from emmet.core.io.pymatgen import Molecule, Structure
 from emmet.core.tasks import (
     _VOLUMETRIC_FILES,
     CustodianDoc,
-    InputDoc,
-    OrigInputs,
     _find_vasp_files,
     _parse_custodian,
     _parse_orig_inputs,
 )
 from emmet.core.types.enums import ValueEnum, VaspObject
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
-from emmet.core.utils import arrow_incompatible, type_override
 from emmet.core.types.typing import DateTimeType, NullableDateTimeType
-from emmet.core.vasp.calculation import Calculation
+from emmet.core.utils import arrow_incompatible, type_override
+from emmet.core.vasp.calculation import Calculation, CalculationInput
 from emmet.core.vasp.task_valid import TaskState
 
 if TYPE_CHECKING:
@@ -300,7 +298,7 @@ class NebIntermediateImagesDoc(BaseModel):
         None, description="The NEB method used for this calculation."
     )
 
-    orig_inputs: OrigInputs | None = Field(
+    orig_inputs: CalculationInput | None = Field(
         None,
         description="The exact set of input parameters used to generate the current task document.",
     )
@@ -309,7 +307,7 @@ class NebIntermediateImagesDoc(BaseModel):
         None, description="VASP objects for each image calculation."
     )
 
-    inputs: InputDoc | None = Field(
+    inputs: CalculationInput | None = Field(
         None, description="Inputs used in this calculation."
     )
 
@@ -394,26 +392,12 @@ class NebIntermediateImagesDoc(BaseModel):
             else TaskState.FAILED
         )
 
-        inputs = {}
-        for suffix in (None, ".orig"):
-            vis = {
-                k.lower(): v
-                for k, v in _parse_orig_inputs(dir_name, suffix=suffix).items()
-            }
-            if (potcar_spec := vis.get("potcar")) is not None:
-                vis["potcar_spec"] = potcar_spec
-                vis["potcar"] = [spec.titel for spec in potcar_spec]
-
-            if suffix is None:
-                inputs["inputs"] = InputDoc(
-                    **vis, magnetic_moments=vis.get("incar", {}).get("MAGMOM")
-                )
-            else:
-                inputs["orig_inputs"] = OrigInputs(**vis)
+        orig_inputs = _parse_orig_inputs(dir_name, suffix=".orig")
+        inputs = _parse_orig_inputs(dir_name, suffix=None)
 
         neb_method = (
             NebMethod.CLIMBING_IMAGE
-            if inputs["inputs"].incar.get("LCLIMB", False)
+            if inputs.incar.get("LCLIMB", False)
             else NebMethod.STANDARD
         )
 
@@ -423,8 +407,8 @@ class NebIntermediateImagesDoc(BaseModel):
             initial_images=initial_structures,
             dir_name=str(dir_name),
             directories=[str(img_dir) for img_dir in image_directories],
-            orig_inputs=inputs["orig_inputs"],
-            inputs=inputs["inputs"],
+            orig_inputs=orig_inputs,
+            inputs=inputs,
             objects=image_objects,
             neb_method=neb_method,  # type: ignore[arg-type]
             state=task_state,

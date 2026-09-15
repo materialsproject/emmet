@@ -130,10 +130,11 @@ def test_task_doc(test_dir, object_name, tmpdir):
 
     from monty.json import jsanitize
     from monty.serialization import dumpfn
+
     from emmet.core.io.pymatgen import (
-        TransformedStructure,
         ComputedEntry,
         DeformStructureTransformation,
+        TransformedStructure,
     )
 
     test_object = get_test_object(object_name)
@@ -253,8 +254,7 @@ def test_orig_inp_parsing(tmp_dir):
 
     from pathlib import Path
 
-    from emmet.core.io.pymatgen import Structure, Incar, Kpoints
-
+    from emmet.core.io.pymatgen import Incar, Kpoints, Poscar, Structure
     from emmet.core.tasks import _parse_orig_inputs
 
     # demo simple cubic Copper structure
@@ -278,8 +278,13 @@ def test_orig_inp_parsing(tmp_dir):
         kpoints.write_file(f"KPOINTS{suffix}")
 
         vi = _parse_orig_inputs(Path("."), suffix=suffix)
-        assert all(k in vi for k in ("incar", "kpoints", "poscar"))
-        assert len(vi) == 3
+        assert all(
+            getattr(vi, k) is not None for k in ("incar", "kpoints", "structure")
+        )
+        assert isinstance(vi.poscar, Poscar)
+        assert isinstance(vi.poscar.structure, Structure)
+
+        assert len(vi.model_dump(exclude_defaults=True, exclude_none=True)) == 3
 
 
 @pytest.mark.parametrize(

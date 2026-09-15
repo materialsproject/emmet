@@ -1,6 +1,7 @@
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import (
+    IdFormatQuery,
     MultiMaterialIDQuery,
     NumericQuery,
     PaginationQuery,
@@ -9,6 +10,7 @@ from emmet.api.query_operator import (
 from emmet.api.resource import ReadOnlyResource
 from emmet.api.routes.materials.grain_boundary.query_operators import GBStructureQuery
 from emmet.core.grain_boundary import GrainBoundaryDoc
+from emmet.core.types.typing import format_identifier
 
 
 def gb_resource(gb_store):
@@ -25,6 +27,7 @@ def gb_resource(gb_store):
             SparseFieldsQuery(
                 GrainBoundaryDoc, default_fields=["task_id", "last_updated"]
             ),
+            IdFormatQuery([("material_id", format_identifier)]),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Grain Boundaries"],

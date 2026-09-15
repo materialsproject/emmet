@@ -1,8 +1,10 @@
 import os
+import time
 from pathlib import Path
+from uuid import uuid4
 from click.testing import CliRunner
 from emmet.cli.state_manager import StateManager
-from emmet.cli.submission import CalculationMetadata, Submission
+from emmet.cli.submission import Submission
 from emmet.cli.submit import _create_submission
 from emmet.cli.task_manager import TaskManager
 from emmet.core.vasp.validation import ValidationDoc
@@ -26,7 +28,7 @@ def cli_runner(task_manager):
 
 def wait_for_task_completion_and_assert_status(result, task_manager, status):
     task_id = result.output.split("\n")[0].split()[-1]
-    final_status = task_manager.wait_for_task_completion(task_id)
+    final_status = task_manager.wait_for_task_completion(task_id, timeout=10)
     assert final_status["status"] == status
     return final_status
 
@@ -45,10 +47,76 @@ def temp_state_dir(tmp_path):
 @pytest.fixture
 def task_manager(state_manager, temp_state_dir):
     """Creates a TaskManager instance with a temporary state directory."""
-    return TaskManager(
+    manager = TaskManager(
         state_manager=state_manager,
-        daemon_log=temp_state_dir / "task_manager_daemon.log",
+        daemon_log=str(temp_state_dir / "task_manager_daemon.log"),
     )
+    yield manager
+
+    tasks = manager.state_manager.get("tasks", {})
+    for task_id in tasks:
+        if manager.get_task_status(task_id).get("status") == "running":
+            manager.terminate_task(task_id)
+
+
+@pytest.fixture
+def wait_for_task_state():
+    """Wait until a task state satisfies a predicate."""
+
+    def wait(task_manager, task_id, predicate, timeout=5.0, interval=0.05):
+        deadline = time.monotonic() + timeout
+        while True:
+            status = task_manager.get_task_status(task_id)
+            if predicate(status):
+                return status
+            if time.monotonic() >= deadline:
+                pytest.fail(
+                    f"Task {task_id} did not reach the expected state within "
+                    f"{timeout} seconds; last status: {status}"
+                )
+            time.sleep(interval)
+
+    return wait
+
+
+@pytest.fixture
+def wait_until():
+    """Wait until a predicate returns a truthy value."""
+
+    def wait(predicate, timeout=5.0, interval=0.05):
+        deadline = time.monotonic() + timeout
+        while True:
+            result = predicate()
+            if result:
+                return result
+            if time.monotonic() >= deadline:
+                pytest.fail(f"Condition was not met within {timeout} seconds")
+            time.sleep(interval)
+
+    return wait
+
+
+@pytest.fixture
+def inline_task_manager(task_manager, monkeypatch):
+    """Run task bodies inline while preserving task status transitions."""
+
+    def start_task(func, *args, **kwargs):
+        task_id = str(uuid4())
+        task_manager._update_task_status(
+            task_id,
+            "running",
+            additional_data={"started_at": task_manager._get_current_timestamp()},
+        )
+        try:
+            result = func(*args, **kwargs)
+        except Exception as exc:
+            task_manager._update_task_status(task_id, "failed", error=str(exc))
+        else:
+            task_manager._update_task_status(task_id, "completed", result=result)
+        return task_id
+
+    monkeypatch.setattr(task_manager, "start_task", start_task)
+    return task_manager
 
 
 @pytest.fixture
@@ -135,9 +203,7 @@ def validation_test_path():
 
 
 @pytest.fixture()
-def validation_sub_file(
-    validation_test_path, cli_runner, tmp_path_factory, task_manager
-):
+def validation_sub_file(validation_test_path, tmp_path_factory):
     with DataArchive.extract(validation_test_path) as dir_name:
         result = _create_submission(paths=[str(dir_name)])
         matches = result[1]
@@ -153,24 +219,29 @@ def validation_sub_file(
         yield str(output_file)
 
 
-# TODO: remove this when monkeypatch tests to use fake POTCARs rather than skipping them
-@pytest.fixture(autouse=True)
-def patch_validate_calc(monkeypatch):
-    def validate_without_checking_potcar(self, locator):
-        try:
-            self.refresh()
-            if self.calc_valid is None:
-                validator = ValidationDoc.from_file_metadata(
-                    file_meta=self.files, fast=True, check_potcar=False
-                )
-                self.calc_valid = validator.valid
-                self.calc_validation_errors = validator.reasons
-        except Exception as e:
-            self.calc_valid = False
-            self.calc_validation_errors.append(f"Error validating calculation: {e}")
-        return self.calc_valid
+@pytest.fixture()
+def invalid_validation_sub_file(tmp_path):
+    calc_dir = tmp_path / "invalid_calc"
+    calc_dir.mkdir()
+    for file_name in ("INCAR", "POSCAR", "POTCAR", "CONTCAR", "OUTCAR", "vasprun.xml"):
+        (calc_dir / file_name).touch()
 
-    # Bind it onto the class under test
+    submission = Submission.from_paths(paths=[calc_dir])
+    output_file = tmp_path / "invalid_validation_sub.json"
+    submission.save(output_file)
+    return str(output_file)
+
+
+@pytest.fixture(autouse=True)
+def disable_potcar_validation(monkeypatch):
+    original = ValidationDoc.from_file_metadata.__func__
+
+    def from_file_metadata_without_potcar(cls, file_meta, **kwargs):
+        kwargs["check_potcar"] = False
+        return original(cls, file_meta, **kwargs)
+
     monkeypatch.setattr(
-        CalculationMetadata, "validate_calculation", validate_without_checking_potcar
+        ValidationDoc,
+        "from_file_metadata",
+        classmethod(from_file_metadata_without_potcar),
     )

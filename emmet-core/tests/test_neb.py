@@ -1,25 +1,23 @@
 """Test NEB document class."""
 
-from pathlib import Path
-import pytest
 import shutil
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import pytest
 from monty.serialization import loadfn
-from emmet.core.io.pymatgen import Structure
 
+from emmet.core.io.pymatgen import Structure
 from emmet.core.neb import (
-    NebResult,
-    NebTaskDoc,
-    NebMethod,
-    NebPathwayResult,
     BarrierAnalysis,
     NebIntermediateImagesDoc,
+    NebMethod,
+    NebPathwayResult,
+    NebResult,
+    NebTaskDoc,
 )
-from emmet.core.tasks import InputDoc, OrigInputs
-from emmet.core.vasp.calculation import Calculation, CalculationInput
-
 from emmet.core.testing_utils import assert_schemas_equal
+from emmet.core.vasp.calculation import Calculation, CalculationInput
 
 
 @pytest.fixture(scope="module")
@@ -35,8 +33,8 @@ def test_neb_task_doc(neb_test_dir, from_dir: bool):
             neb_doc = NebIntermediateImagesDoc.from_directory(Path(tmpdir) / "neb")
         num_images = 3
         intermed_idxs = (0, 1, 2)
-        assert isinstance(neb_doc.orig_inputs, OrigInputs)
-        assert isinstance(neb_doc.inputs, InputDoc)
+        assert isinstance(neb_doc.orig_inputs, CalculationInput)
+        assert isinstance(neb_doc.inputs, CalculationInput)
     else:
         neb_doc = NebTaskDoc(**loadfn(neb_test_dir / "Si_neb_doc.json.bz2"))
         num_images = 5

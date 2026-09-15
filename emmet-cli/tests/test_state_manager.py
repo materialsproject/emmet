@@ -43,6 +43,35 @@ def test_set_and_get(state_manager):
     )
 
 
+def test_update_atomically_transforms_value(state_manager, monkeypatch):
+    state_manager.set("other_key", "preserved")
+    load_calls = 0
+    save_calls = 0
+    original_load = state_manager._load_state
+    original_save = state_manager._save_state
+
+    def load_state():
+        nonlocal load_calls
+        load_calls += 1
+        return original_load()
+
+    def save_state(state):
+        nonlocal save_calls
+        save_calls += 1
+        original_save(state)
+
+    monkeypatch.setattr(state_manager, "_load_state", load_state)
+    monkeypatch.setattr(state_manager, "_save_state", save_state)
+
+    updated = state_manager.update("items", lambda value: [*(value or []), "new"])
+
+    assert updated == ["new"]
+    assert load_calls == 1
+    assert save_calls == 1
+    assert state_manager.get("items") == ["new"]
+    assert state_manager.get("other_key") == "preserved"
+
+
 def test_save_and_load_state(temp_state_dir):
     """Test that state is properly saved and loaded."""
     manager1 = StateManager(state_dir=temp_state_dir)

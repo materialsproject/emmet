@@ -1,6 +1,5 @@
 from emmet.cli.tasks import tasks
 from emmet.cli.utils import EmmetCliError
-import time
 
 
 def mock_task_function():
@@ -123,10 +122,10 @@ def test_clean_command(cli_runner, task_manager):
     assert len(tasks_after) == 0
 
 
-def test_terminate_command_running_task(cli_runner, task_manager):
+def test_terminate_command_running_task(cli_runner, task_manager, wait_for_task_state):
     """Test terminate command for a running task."""
     task_id = task_manager.start_task(slow_task_function)
-    time.sleep(0.5)  # Wait for task to start
+    wait_for_task_state(task_manager, task_id, lambda status: "detached_pid" in status)
 
     # Test with force flag to skip confirmation
     result = cli_runner(tasks, ["terminate", task_id, "--force"])
@@ -168,10 +167,12 @@ def test_terminate_command_nonexistent_task(cli_runner, task_manager):
     assert "Invalid task ID" in str(result.exception)
 
 
-def test_terminate_command_confirmation(cli_runner, task_manager, monkeypatch):
+def test_terminate_command_confirmation(
+    cli_runner, task_manager, monkeypatch, wait_for_task_state
+):
     """Test terminate command with user confirmation."""
     task_id = task_manager.start_task(slow_task_function)
-    time.sleep(0.5)  # Wait for task to start
+    wait_for_task_state(task_manager, task_id, lambda status: "detached_pid" in status)
 
     # Test with 'y' confirmation
     result = cli_runner(tasks, ["terminate", task_id], input="y\n")
@@ -180,7 +181,7 @@ def test_terminate_command_confirmation(cli_runner, task_manager, monkeypatch):
 
     # Start another task
     task_id = task_manager.start_task(slow_task_function)
-    time.sleep(0.5)  # Wait for task to start
+    wait_for_task_state(task_manager, task_id, lambda status: "detached_pid" in status)
 
     # Test with 'n' confirmation
     result = cli_runner(tasks, ["terminate", task_id], input="n\n")

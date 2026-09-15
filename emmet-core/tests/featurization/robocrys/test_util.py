@@ -77,7 +77,6 @@ def test_get_formatted_el():
         ("Sn2+", "(1,2)", True, True, "unicode", "Sn(1,2)²⁺"),
         ("Sn1.33-", "(3)", True, True, "unicode", "Sn(3)¹\u1427³³⁻"),
     ]:
-
         assert (
             get_formatted_el(
                 species, symm, use_oxi_state=use_oxi, use_sym_label=use_sym, fmt=fmt
@@ -88,12 +87,18 @@ def test_get_formatted_el():
 
 def test_unicodeify_spacegroup():
     spg_symbol = unicodeify_spacegroup("P-42_1m")
-    assert spg_symbol == "P̅42₁m"
+    assert spg_symbol == "P4̅2₁m"
+
+    spg_symbol2 = unicodeify_spacegroup("P2_12_12_1")
+    assert spg_symbol2 == "P2₁2₁2₁"
 
 
 def test_htmlify_spacegroup():
     spg_symbol = htmlify_spacegroup("P-42_1m")
-    assert spg_symbol == "P̅42<sub>1</sub>m"
+    assert spg_symbol == "P4̅2<sub>1</sub>m"
+
+    spg_symbol2 = htmlify_spacegroup("P2_12_12_1")
+    assert spg_symbol2 == "P2<sub>1</sub>2<sub>1</sub>2<sub>1</sub>"
 
 
 def test_load_condense_structure_json(test_condensed_structures):

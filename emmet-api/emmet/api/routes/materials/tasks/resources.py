@@ -2,6 +2,7 @@ from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import (
     AtlasPaginationQuery,
+    IdFormatQuery,
     MultiTaskIDQuery,
     PaginationQuery,
     SparseFieldsQuery,
@@ -15,6 +16,7 @@ from emmet.api.routes.materials.tasks.query_operators import (
     LastUpdatedQuery,
 )
 from emmet.core.tasks import CoreTaskDoc, EntryDoc
+from emmet.core.types.typing import format_task_id
 
 timeout = MAPISettings().TIMEOUT
 
@@ -34,6 +36,7 @@ def task_resource(task_store):
                 CoreTaskDoc,
                 default_fields=["task_id", "formula_pretty", "last_updated"],
             ),
+            IdFormatQuery([("task_id", format_task_id)]),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Tasks"],

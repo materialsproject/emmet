@@ -1,4 +1,4 @@
-FROM materialsproject/devops:python-3.1113.1 AS base
+FROM materialsproject/devops:python-3.1213.2 AS base
 RUN apt-get update && apt-get install -y --no-install-recommends libopenblas-dev libjpeg62 curl && apt-get clean
 
 FROM base AS builder
@@ -20,7 +20,7 @@ RUN wget -q https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-
 FROM base
 ARG BUILDARCH
 ENV BUILDARCH=x86_64
-COPY --from=builder /root/.local/lib/python3.11/site-packages /root/.local/lib/python3.11/site-packages
+COPY --from=builder /root/.local/lib/python3.12/site-packages /root/.local/lib/python3.12/site-packages
 COPY --from=builder /root/.local/bin /root/.local/bin
 COPY --from=builder /usr/lib/$BUILDARCH-linux-gnu/libsnappy* /usr/lib/$BUILDARCH-linux-gnu/
 COPY --from=builder /emmet-api /emmet-api

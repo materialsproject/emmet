@@ -161,11 +161,21 @@ class TaskManager:
 
     def _store_task_result(self, task_id: str, result: dict[str, Any]) -> None:
         """Store the task result in the state manager."""
-        tasks = self.state_manager.get("tasks", {})
-        if task_id not in tasks:
-            tasks[task_id] = {}
-        tasks[task_id].update(result)
-        self.state_manager.set("tasks", tasks)
+        terminal_statuses = {"completed", "failed", "terminated"}
+
+        def update_task(tasks: dict[str, Any] | None) -> dict[str, Any]:
+            tasks = tasks or {}
+            task = tasks.setdefault(task_id, {})
+            current_status = task.get("status")
+            updated_result = result
+            if current_status in terminal_statuses and result.get("status") is not None:
+                updated_result = {
+                    key: value for key, value in result.items() if key != "status"
+                }
+            task.update(updated_result)
+            return tasks
+
+        self.state_manager.update("tasks", update_task)
 
     def start_task(self, func: Callable[..., Any], *args: Any, **kwargs: Any) -> str:
         """Start a new task in a separate, fully detached process."""
@@ -291,9 +301,16 @@ class TaskManager:
         finished_tasks = [
             task_id for task_id in tasks.keys() if not self.is_task_running(task_id)
         ]
-        for task_id in finished_tasks:
-            del tasks[task_id]
-        self.state_manager.set("tasks", tasks)
+
+        def remove_finished_tasks(
+            current_tasks: dict[str, Any] | None,
+        ) -> dict[str, Any]:
+            current_tasks = current_tasks or {}
+            for task_id in finished_tasks:
+                current_tasks.pop(task_id, None)
+            return current_tasks
+
+        self.state_manager.update("tasks", remove_finished_tasks)
 
     def terminate_task(self, task_id: str) -> dict[str, Any]:
         """Terminate a running task."""

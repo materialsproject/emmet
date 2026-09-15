@@ -2,38 +2,41 @@
 
 from __future__ import annotations
 
-from hashlib import md5
 import logging
 import os
 from copy import deepcopy
 from datetime import datetime
 from functools import cached_property
+from hashlib import md5
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any, Type
-from typing_extensions import NotRequired, TypedDict
 
 import numpy as np
 import orjson
 from monty.io import zopen
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
+from typing_extensions import NotRequired, TypedDict
+
+from emmet.core.band_theory import ElectronicBS, ElectronicDos
 from emmet.core.io.pymatgen import (
-    bader_analysis_from_path,
-    ChargemolAnalysis,
-    Structure,
-    OrbitalType,
-    CompleteDos,
     BSVasprun,
+    ChargemolAnalysis,
+    CompleteDos,
     Kpoints,
     Locpot,
+    OrbitalType,
     Oszicar,
     Outcar,
     Poscar,
-    Potcar as VaspPotcar,
+)
+from emmet.core.io.pymatgen import Potcar as VaspPotcar
+from emmet.core.io.pymatgen import (
     PotcarSingle,
+    Structure,
     Vasprun,
     VolumetricData,
+    bader_analysis_from_path,
 )
-from emmet.core.band_theory import ElectronicBS, ElectronicDos
 from emmet.core.math import ListMatrix3D, Matrix3D, Vector3D, Vector6D
 from emmet.core.settings import EmmetSettings
 from emmet.core.trajectory import RelaxTrajectory, Trajectory
@@ -58,8 +61,9 @@ from emmet.core.vasp.models import ChgcarLike, ElectronicStep
 SETTINGS = EmmetSettings()
 
 if TYPE_CHECKING:
-    from emmet.core.io.pymatgen import BandStructure, CompleteDos
     from typing_extensions import Self
+
+    from emmet.core.io.pymatgen import BandStructure, CompleteDos
 
 
 logger = logging.getLogger(__name__)
@@ -378,7 +382,7 @@ class CalculationInput(CalculationBaseModel):
     @property
     def magnetic_moments(self) -> list[float] | None:
         """Report initial magnetic moments assigned to each atom."""
-        return (self.parameters or {}).get("MAGMOM", None)
+        return (self.parameters or self.incar or {}).get("MAGMOM", None)
 
     @classmethod
     def from_vasprun(

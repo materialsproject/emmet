@@ -28,7 +28,7 @@ jsmin==3.0.1
     # via mkdocs-minify-plugin
 livereload==2.6.3
     # via -r requirements.in
-markdown==3.3.7
+markdown==3.8.1
     # via
     #   mkdocs
     #   mkdocs-autorefs
@@ -56,7 +56,7 @@ mkdocs-awesome-pages-plugin==2.8.0
     # via -r requirements.in
 mkdocs-markdownextradata-plugin==0.2.5
     # via -r requirements.in
-mkdocs-material==8.2.16
+mkdocs-material==9.7.7
     # via -r requirements.in
 mkdocs-material-extensions==1.1
     # via
@@ -70,9 +70,9 @@ natsort==8.2.0
     # via mkdocs-awesome-pages-plugin
 packaging==21.3
     # via mkdocs
-pygments==2.13.0
+pygments==2.20.0
     # via mkdocs-material
-pymdown-extensions==10.21.3
+pymdown-extensions==11.0.1
     # via
     #   mkdocs-material
     #   mkdocstrings
@@ -91,7 +91,7 @@ six==1.16.0
     # via
     #   livereload
     #   python-dateutil
-tornado==6.5.6
+tornado==6.5.8
     # via livereload
 watchdog==2.1.9
     # via mkdocs

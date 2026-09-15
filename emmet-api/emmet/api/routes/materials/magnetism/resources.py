@@ -1,6 +1,7 @@
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import (
+    IdFormatQuery,
     MultiMaterialIDQuery,
     PaginationQuery,
     SparseFieldsQuery,
@@ -8,6 +9,7 @@ from emmet.api.query_operator import (
 from emmet.api.resource import ReadOnlyResource
 from emmet.api.routes.materials.magnetism.query_operators import MagneticQuery
 from emmet.core.magnetism import MagnetismDoc
+from emmet.core.types.typing import format_identifier
 
 
 def magnetism_resource(magnetism_store):
@@ -21,6 +23,7 @@ def magnetism_resource(magnetism_store):
             SparseFieldsQuery(
                 MagnetismDoc, default_fields=["material_id", "last_updated"]
             ),
+            IdFormatQuery([("material_id", format_identifier)]),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Magnetism"],

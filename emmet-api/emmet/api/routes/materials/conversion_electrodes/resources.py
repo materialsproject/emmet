@@ -1,15 +1,14 @@
+from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
+from emmet.api.query_operator import IdFormatQuery, PaginationQuery, SparseFieldsQuery
 from emmet.api.query_operator.dynamic import NumericQuery
 from emmet.api.resource import ReadOnlyResource
-from emmet.core.electrode import ConversionElectrodeDoc
-from emmet.api.core.global_header import GlobalHeaderProcessor
-
-from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
 from emmet.api.routes.materials.insertion_electrodes.query_operators import (
-    WorkingIonQuery,
     MultiBatteryIDQuery,
+    WorkingIonQuery,
 )
-
-from emmet.api.core.settings import MAPISettings
+from emmet.core.electrode import ConversionElectrodeDoc
+from emmet.core.types.typing import format_identifier
 
 
 def conversion_electrodes_resource(conversion_electrodes_store):
@@ -25,6 +24,7 @@ def conversion_electrodes_resource(conversion_electrodes_store):
                 ConversionElectrodeDoc,
                 default_fields=["battery_id", "last_updated"],
             ),
+            IdFormatQuery([("material_ids", format_identifier)]),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Electrodes"],
