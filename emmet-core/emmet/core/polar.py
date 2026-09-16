@@ -33,13 +33,11 @@ class DielectricDoc(PropertyDoc):
     """
 
     property_name: str = "dielectric"
-
     total: Matrix3D = Field(description="Total dielectric tensor.")
     ionic: Matrix3D = Field(description="Ionic contribution to dielectric tensor.")
     electronic: Matrix3D = Field(
         description="Electronic contribution to dielectric tensor."
     )
-
     e_total: float = Field(description="Total electric permittivity.")
     e_ionic: float = Field(
         description="Electric permittivity from atomic rearrangement."
@@ -47,7 +45,6 @@ class DielectricDoc(PropertyDoc):
     e_electronic: float = Field(
         description="Electric permittivity due to electrons rearrangement."
     )
-
     n: float = Field(description="Refractive index.")
 
     @classmethod
@@ -86,7 +83,6 @@ class PiezoelectricDoc(PropertyDoc):
     """
 
     property_name: str = "piezoelectric"
-
     total: PiezoTensor = Field(description="Total piezoelectric tensor in C/m²")
     ionic: PiezoTensor = Field(
         description="Ionic contribution to piezoelectric tensor in C/m²"
@@ -94,7 +90,6 @@ class PiezoelectricDoc(PropertyDoc):
     electronic: PiezoTensor = Field(
         description="Electronic contribution to piezoelectric tensor in C/m²"
     )
-
     e_ij_max: float = Field(description="Piezoelectric modulus")
     max_direction: list[int] = Field(
         description="Miller direction for maximum piezo response"
@@ -154,13 +149,11 @@ class BornEffectiveCharges(BaseModel):
     value: list[Matrix3D] | None = Field(
         None, description="Value of the Born effective charges."
     )
-
     symmetrized_value: list[Matrix3D] | None = Field(
         None,
         description="Value of the Born effective charges after symmetrization to obey the"
         "charge neutrality sum rule.",
     )
-
     cnsr_break: float | None = Field(
         None,
         description="The maximum breaking of the charge neutrality sum "
