@@ -260,7 +260,7 @@ def get_potcar_stats(
         path_to_stored_stats : FSPathType or None
             If FSPathType, the path to the stored summary stats file.
             If None, defaults to
-              `importlib.resources.file("emmet.builders.vasp") / "mp_potcar_stats.json.gz"`
+              `importlib.resources.file("emmet.builders.vasp").joinpath("mp_potcar_stats.json.gz")`
     Returns:
         dict, of POTCAR summary stats.
     """
@@ -274,9 +274,10 @@ def get_potcar_stats(
     if method == "stored":
         if path_to_stored_stats is None:
             from importlib.resources import files
+            from importlib.resources.abc import Traversable
 
-            path_to_stored_stats = str(
-                files("emmet.builders.vasp") / "mp_potcar_stats.json.gz"
+            path_to_stored_stats: Traversable = files("emmet.builders.vasp").joinpath(
+                "mp_potcar_stats.json.gz"
             )
         return loadfn(path_to_stored_stats)  # type: ignore
 
