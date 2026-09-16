@@ -13,6 +13,7 @@ Attributes:
 """
 
 from __future__ import annotations
+from importlib.resources import files
 
 import gzip
 import orjson
@@ -31,10 +32,15 @@ __all__ = ["unicodeify_spacegroup"]
 
 def _get_common_formulas() -> dict[str, str]:
     """Retrieve common formula information from stored data."""
-    with gzip.open(
-        (Path(__file__).parent / "condense" / "formula_aliases.json.gz").resolve(), "rb"
-    ) as f:
-        all_aliases = orjson.loads(f.read())
+
+    with (
+        files("emmet.core.featurization.robocrys.condense")
+        .joinpath("formula_aliases.json.gz")
+        .open(mode="rb") as file_in
+    ):
+        with gzip.open(file_in) as f:
+            all_aliases = orjson.loads(f.read())
+
     return {
         k: all_aliases["alias"][i] if all_aliases["alias"][i] is not None else k
         for i, k in enumerate(all_aliases["name"])
