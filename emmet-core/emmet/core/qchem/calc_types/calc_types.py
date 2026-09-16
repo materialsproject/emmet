@@ -1,13 +1,12 @@
 """Task types and level of theory components for Q-Chem calculations"""
 
-from importlib.resources import files as import_resource_files
-from monty.serialization import loadfn
+import yaml
+from importlib.resources import files
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
-_calc_type_config = loadfn(
-    str(import_resource_files("emmet.core.qchem.calc_types") / "calc_types.yaml")
-)
+with files("emmet.core.qchem.calc_types").joinpath("calc_types.yaml").open() as f:
+    _calc_type_config = yaml.safe_load(f)
 
 # NB: this would be easier with setattr but the following is less opaque
 FUNCTIONAL_CLASSES = _calc_type_config.get("FUNCTIONAL_CLASSES")

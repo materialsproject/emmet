@@ -1,18 +1,15 @@
 """Module to define various calculation types as Enums for VASP."""
 
 from __future__ import annotations
-from importlib.resources import files as import_resource_files
+from importlib.resources import files
 from itertools import product
 
-from ruamel.yaml import YAML
+import yaml
 
 _BASE_ENUM_PATH = {
-    "vasp": import_resource_files("emmet.core.vasp"),
-    "qchem": import_resource_files("emmet.core.qchem"),
+    "vasp": files("emmet.core.vasp.calc_types"),
+    "qchem": files("emmet.core.qchem.calc_types"),
 }
-
-for code_base in _BASE_ENUM_PATH:
-    _BASE_ENUM_PATH[code_base] /= "calc_types"
 
 
 def get_enum_source(
@@ -71,8 +68,8 @@ def generate_vasp_enums_file(enum_file_name: str | None = None) -> None:
         Defaults to _BASE_ENUM_PATH / vasp_enums.json.gz
     """
 
-    with open(_BASE_ENUM_PATH["vasp"] / "calc_types.yaml", "r") as config:
-        _RUN_TASK_TYPE_DATA = YAML().load(config)
+    with _BASE_ENUM_PATH["vasp"].joinpath("calc_types.yaml").open() as config:
+        _RUN_TASK_TYPE_DATA = yaml.safe_load(config)
 
     _TASK_TYPES = _RUN_TASK_TYPE_DATA.get("TASK_TYPES")
 
@@ -90,7 +87,7 @@ def generate_vasp_enums_file(enum_file_name: str | None = None) -> None:
         },
         "TaskType": {"_".join(tt.split()): tt for tt in _TASK_TYPES},
         "CalcType": {
-            f"{'_'.join(rt.split()).replace('+','_').replace('-','_')}"
+            f"{'_'.join(rt.split()).replace('+', '_').replace('-', '_')}"
             f"_{'_'.join(tt.split())}": f"{rt} {tt}"
             for rt, tt in product(_RUN_TYPES, _TASK_TYPES)
         },
@@ -103,7 +100,7 @@ def generate_vasp_enums_file(enum_file_name: str | None = None) -> None:
             rtc_type += " "
         docstr[enum_name] = f"VASP calculation {rtc_type}types."
 
-    enum_file_name = enum_file_name or str(_BASE_ENUM_PATH["vasp"] / "enums.py")
+    enum_file_name = enum_file_name or str(_BASE_ENUM_PATH["vasp"].joinpath("enums.py"))
     with open(enum_file_name, "w+") as f:
         f.write(
             """\"\"\"
@@ -155,8 +152,8 @@ def generate_qchem_enum_file(enum_file_name: str | None = None) -> None:
         Defaults to _BASE_ENUM_PATH / qchem_enums.json.gz
     """
 
-    with open(_BASE_ENUM_PATH["qchem"] / "calc_types.yaml", "r") as config:
-        _calc_type_meta = YAML().load(config)
+    with _BASE_ENUM_PATH["qchem"].joinpath("calc_types.yaml").open() as config:
+        _calc_type_meta = yaml.safe_load(config)
 
     _calc_type_meta["FUNCTIONALS"] = [
         rt
@@ -204,7 +201,9 @@ def generate_qchem_enum_file(enum_file_name: str | None = None) -> None:
         "CalcType": "Calculation types (LOT + task type) for Q-Chem.",
     }
 
-    enum_file_name = enum_file_name or str(_BASE_ENUM_PATH["qchem"] / "enums.py")
+    enum_file_name = enum_file_name or str(
+        _BASE_ENUM_PATH["qchem"].joinpath("enums.py")
+    )
 
     with open(enum_file_name, "w+") as f:
         f.write(
