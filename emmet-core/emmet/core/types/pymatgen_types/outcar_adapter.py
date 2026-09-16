@@ -1,6 +1,6 @@
 from typing_extensions import TypedDict, NotRequired
 
-from emmet.core.math import Matrix3D
+from emmet.core.math import Matrix3D, Vector6D
 
 
 class TypedPerIonProps(TypedDict):
@@ -25,6 +25,13 @@ TypedOutcarDict = TypedDict(
         "ngf": NotRequired[list[int] | None],
         "sampling_radii": NotRequired[list[float] | None],
         "electrostatic_potential": NotRequired[list[float] | None],
+        "dielectric_ionic_tensor": NotRequired[Matrix3D | None],
+        "dielectric_tensor": NotRequired[Matrix3D | None],
+        "internal_strain_tensor": NotRequired[
+            list[tuple[Vector6D, Vector6D, Vector6D]] | None
+        ],
+        "piezo_ionic_tensor": NotRequired[tuple[Vector6D, Vector6D, Vector6D] | None],
+        "piezo_tensor": NotRequired[tuple[Vector6D, Vector6D, Vector6D] | None],
         # `zval_dict` and `p_elec` are only required for ferroelectric stuff in atomate2
         "zval_dict": NotRequired[dict[str, float] | None],
         "p_elec": NotRequired[tuple[float, float, float] | None],
