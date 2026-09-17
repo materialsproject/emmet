@@ -20,9 +20,9 @@ contourpy==1.3.3
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-fonttools==4.64.0
+fonttools==4.65.0
     # via matplotlib
-idna==3.19
+idna==3.20
     # via requests
 inflect==7.5.0
     # via emmet-core (emmet/emmet-core/pyproject.toml)
@@ -32,9 +32,9 @@ kiwisolver==1.5.1
     # via matplotlib
 latexcodec==3.0.1
     # via pybtex
-lxml==6.1.2
+lxml==6.1.3
     # via pymatgen-core
-matplotlib==3.11.1
+matplotlib==3.11.2
     # via
     #   -r python/requirements.txt
     #   pymatgen-core
@@ -46,7 +46,7 @@ more-itertools==11.1.0
     # via inflect
 mpmath==1.3.0
     # via sympy
-narwhals==2.25.0
+narwhals==2.26.0
     # via plotly
 networkx==3.6.1
     # via pymatgen-core
@@ -69,13 +69,13 @@ packaging==26.3
     #   plotly
 palettable==3.3.3
     # via pymatgen-core
-pandas==3.0.5
+pandas==2.3.3
     # via
     #   -r python/requirements.txt
     #   pymatgen-core
 pillow==12.3.0
     # via matplotlib
-plotly==7.0.0
+plotly==7.1.0
     # via pymatgen-core
 pubchempy==1.0.5
     # via emmet-core (emmet/emmet-core/pyproject.toml)
@@ -111,6 +111,8 @@ python-dateutil==2.9.0.post0
     #   pandas
 python-dotenv==1.2.3
     # via pydantic-settings
+pytz==2026.3.post1
+    # via pandas
 pyyaml==6.0.3
     # via pybtex
 requests==2.34.2
@@ -131,7 +133,7 @@ sympy==1.14.0
     # via pymatgen-core
 tabulate==0.10.0
     # via pymatgen-core
-tqdm==4.70.0
+tqdm==4.70.1
     # via pymatgen-core
 typeguard==4.6.0
     # via inflect
@@ -148,7 +150,9 @@ typing-inspection==0.4.4
     # via
     #   pydantic
     #   pydantic-settings
+tzdata==2026.4
+    # via pandas
 uncertainties==3.2.3
     # via pymatgen-core
-urllib3==2.7.0
+urllib3==2.8.0
     # via requests
