@@ -17,15 +17,11 @@ from importlib.resources import files
 
 import gzip
 import orjson
-from pathlib import Path
 import re
 from collections import defaultdict
-from typing import TYPE_CHECKING
 
 from emmet.core.io.pymatgen import Element, Species, get_el_sp, unicodeify_spacegroup
 
-if TYPE_CHECKING:
-    from pathlib import Path
 
 __all__ = ["unicodeify_spacegroup"]
 
