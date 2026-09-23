@@ -28,7 +28,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install --upgrade pip pip-tools black ruamel.yaml
+          pip install --upgrade pip pip-tools black pyyaml
+          pip install --user `grep numpy emmet-core/requirements/ubuntu-latest_py3.12_extras.txt`
+          pip install --user -r emmet-core/requirements/ubuntu-latest_py3.12_extras.txt
           pip install --user --no-deps -e ./emmet-core
 
       - name: Generate enums and check output
