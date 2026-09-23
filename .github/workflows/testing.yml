@@ -64,13 +64,22 @@ jobs:
       matrix:
         os: ["ubuntu-latest"]
         package:
-          [
-            "emmet-core",
-            "emmet-builders",
-            "emmet-api",
-            "emmet-archival",
-            "emmet-cli",
-          ]
+          - emmet-core
+          - emmet-builders
+          - emmet-api
+          - emmet-cli
+          - emmet-archival
+        include:
+          - package: emmet-core
+            module: emmet.core
+          - package: emmet-builders
+            module: emmet.builders
+          - package: emmet-api
+            module: emmet.api
+          - package: emmet-cli
+            module: emmet.cli
+          - package: emmet-archival
+            module: emmet.archival
         python-version: ["3.12", "3.13", "3.14"]
 
     name: ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }})
@@ -114,7 +123,7 @@ jobs:
 
       - name: Lint with mypy
         shell: bash -l {0}
-        run: python -m mypy --config-file .mypy.ini ${{ matrix.package }}/emmet
+        run: python -m mypy --config-file .mypy.ini -p ${{ matrix.module }}
 
       - name: Test with pytest
         if: always() # run tests even if linting failed

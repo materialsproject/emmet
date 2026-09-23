@@ -7,7 +7,6 @@ from emmet.core.utils import dynamic_import
 
 
 class SparseFieldsQuery(QueryOperator):
-
     def __init__(self, model: type[BaseModel], default_fields: list[str] | None = None):
         """
         Args:
@@ -57,8 +56,8 @@ class SparseFieldsQuery(QueryOperator):
         """
         Special as_dict implemented to convert pydantic models into strings.
         """
-        d = super().as_dict()  # Ensures sub-classes serialize correctly
-        d["model"] = f"{self.model.__module__}.{self.model.__name__}"  # type: ignore
+        d = vars(self)
+        d["model"] = f"{self.model.__module__}.{self.model.__name__}"
         return d
 
     @classmethod

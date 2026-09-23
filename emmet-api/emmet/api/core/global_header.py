@@ -15,7 +15,6 @@ def _get_header_key(headers, key: str, default: Any = None) -> Any:
 
 
 class GlobalHeaderProcessor(HeaderProcessor):
-
     def process_header(self, response: Response, request: Request) -> None:
         if (
             groups := _get_header_key(request.headers, "x-authenticated-groups")
@@ -32,7 +31,10 @@ class GlobalHeaderProcessor(HeaderProcessor):
             response.headers["Content-Type"] = "application/json"
 
     def configure_query_on_request(
-        self, request: Request, query_operator: LicenseQuery
+        self,
+        request: Request,
+        query_operator: LicenseQuery,  # type: ignore[override]
+        # need to handle the types here^ eventually, narrowing is incorrect
     ) -> STORE_PARAMS:
 
         if not (

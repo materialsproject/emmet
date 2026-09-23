@@ -147,10 +147,15 @@ class FileArchiveBase(Archiver):
 
     def _compress(self, data: str | bytes) -> bytes:
         """Compress string or byte data if needed."""
-        if isinstance(data, bytes) and (
-            (not self.compression) or data.startswith(self.compression.value)
-        ):
+        if self.compression is None:
+            return data if isinstance(data, bytes) else data.encode()
+
+        if self.compression == CompressionType.AUTO_DETECT:
+            raise ValueError("AUTO_DETECT is only valid for decompression")
+
+        if isinstance(data, bytes) and data.startswith(self.compression.value):
             return data
+
         return _get_compress_lib(self.compression).compress(
             data.encode() if isinstance(data, str) else data
         )
@@ -161,12 +166,12 @@ class FileArchiveBase(Archiver):
     ) -> bytes:
         """Decompress byte data if needed."""
 
-        try_compress = []
+        try_compress: list[CompressionType] = []
         if compression == CompressionType.AUTO_DETECT:
             try_compress.extend(
                 [v for v in CompressionType if v != CompressionType.AUTO_DETECT]
             )
-        elif compression in CompressionType:
+        elif compression is not None:
             try_compress.append(compression)
 
         for compress_method in [v for v in try_compress if data.startswith(v.value)]:

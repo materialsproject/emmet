@@ -1,6 +1,6 @@
 """Core definition of a Materials Document"""
 
-from typing import Mapping, Self
+from typing import Mapping, Self, cast
 
 from pydantic import BaseModel, Field
 from emmet.core.io.pymatgen import SpacegroupAnalyzer, oxide_type, StructureMatcher
@@ -73,10 +73,21 @@ class MaterialsDoc(CoreMaterialsDoc):
         """
         if len(task_group) == 0:
             raise Exception("Must have more than one task in the group.")
+        for task in task_group:
+            assert task.task_id is not None
+            assert task.completed_at is not None
+            assert task.input is not None
+            assert task.output is not None
+            assert task.output.structure is not None
+            assert task.run_type is not None
+            assert task.task_type is not None
+            assert task.calc_type is not None
 
         # Metadata
         last_updated = max(task.last_updated for task in task_group)
-        created_at = min(task.completed_at for task in task_group)
+        created_at = min(
+            task.completed_at for task in task_group if task.completed_at is not None
+        )
         task_ids = list({task.task_id for task in task_group})
 
         deprecated_tasks = {task.task_id for task in task_group if not task.is_valid}
@@ -104,7 +115,7 @@ class MaterialsDoc(CoreMaterialsDoc):
         if use_statics:
             possible_mat_ids += [task.task_id for task in statics]
 
-        material_id = AlphaID(min(possible_mat_ids), prefix="mp")
+        material_id = AlphaID(min(cast(list[str], possible_mat_ids)), prefix="mp")
 
         # Always prefer a static over a structure opt
         structure_task_quality_scores = {"Structure Optimization": 1, "Static": 2}
@@ -118,6 +129,8 @@ class MaterialsDoc(CoreMaterialsDoc):
             - Energy
             """
 
+            assert task.input is not None and task.output is not None
+            assert task.run_type is not None and task.task_type is not None
             task_run_type = task.run_type
             _SPECIAL_TAGS = ["LASPH", "ISPIN"]
             special_tags = sum(
@@ -138,10 +151,14 @@ class MaterialsDoc(CoreMaterialsDoc):
             )
 
         best_structure_calc = sorted(structure_calcs, key=_structure_eval)[0]
+        assert best_structure_calc.output is not None
         structure = best_structure_calc.output.structure
+        assert structure is not None
 
         # Initial Structures
-        initial_structures = [task.input.structure for task in task_group]
+        initial_structures = [
+            task.input.structure for task in task_group if task.input is not None
+        ]
         sm = StructureMatcher(
             ltol=0.1, stol=0.1, angle_tol=0.1, scale=False, attempt_supercell=False
         )
@@ -176,6 +193,8 @@ class MaterialsDoc(CoreMaterialsDoc):
             - Energy
             """
 
+            assert task.input is not None and task.output is not None
+            assert task.task_type is not None
             _SPECIAL_TAGS = ["LASPH", "ISPIN"]
             special_tags = sum(
                 (
@@ -206,13 +225,16 @@ class MaterialsDoc(CoreMaterialsDoc):
 
             if relevant_calcs:
                 best_task_doc = relevant_calcs[0]
+                assert best_task_doc.input is not None
+                assert best_task_doc.output is not None
+                assert best_task_doc.output.structure is not None
                 entry = {
                     "@class": "ComputedStructureEntry",
                     "@module": "pymatgen.entries.computed_entries",
                     "composition": best_task_doc.output.structure.composition,
                     "correction": 0.0,
                     "data": {
-                        "aspherical": best_task_doc.input.parameters.get(
+                        "aspherical": (best_task_doc.input.parameters or {}).get(
                             "LASPH", False
                         ),
                         "last_updated": str(utcnow()),
@@ -279,10 +301,17 @@ class MaterialsDoc(CoreMaterialsDoc):
         """
         if len(task_group) == 0:
             raise Exception("Must have more than one task in the group.")
+        for task in task_group:
+            assert task.task_id is not None
+            assert task.completed_at is not None
+            assert task.output is not None
+            assert task.output.structure is not None
 
         # Metadata
         last_updated = max(task.last_updated for task in task_group)
-        created_at = min(task.completed_at for task in task_group)
+        created_at = min(
+            task.completed_at for task in task_group if task.completed_at is not None
+        )
         task_ids = list({task.task_id for task in task_group})
 
         deprecated_tasks = {task.task_id for task in task_group}
@@ -291,11 +320,11 @@ class MaterialsDoc(CoreMaterialsDoc):
         calc_types = {task.task_id: task.calc_type for task in task_group}
 
         # Material ID
-        material_id = min([task.task_id for task in task_group])
+        material_id = min(cast(list[str], [task.task_id for task in task_group]))
 
         # Choose any random structure for metadata
         structure = SpacegroupAnalyzer(
-            task_group[0].output.structure, symprec=0.1
+            task_group[0].output.structure, symprec=0.1  # type: ignore[union-attr]
         ).get_conventional_standard_structure()
 
         origins = [

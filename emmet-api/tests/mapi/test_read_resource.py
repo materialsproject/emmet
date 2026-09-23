@@ -1,4 +1,3 @@
-import inspect
 from datetime import datetime
 from random import randint
 from urllib.parse import urlencode
@@ -131,8 +130,6 @@ async def search_helper(
     app.include_router(endpoint.router)
 
     client = TestClient(app)
-
-    print(inspect.signature(NumericQuery(model=Owner).query))
 
     url = base + urlencode(payload)
     if debug:

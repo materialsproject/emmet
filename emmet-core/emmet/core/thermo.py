@@ -45,7 +45,7 @@ def validate_thermo_id(idx: str, as_components: bool = False) -> str | CompoundI
     """Validate a thermo identifier."""
     for enum_cls in (ThermoType, RunType):
         try:
-            return validate_compound_identifier(
+            return validate_compound_identifier(  # type: ignore[call-overload]
                 idx,
                 suffixes=(enum_cls,),
                 separator="_",

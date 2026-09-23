@@ -1203,7 +1203,7 @@ class Calculation(CalculationBaseModel):
                 if this_task_type == TaskType.Molecular_Dynamics
                 else RelaxTrajectory
             )
-            vasp_objects[VaspObject.TRAJECTORY] = traj_class.from_vasprun(  # type: ignore[index]
+            vasp_objects[VaspObject.TRAJECTORY] = traj_class.from_vasprun(  # type: ignore[index,assignment]
                 vasprun,
                 store_electronic_steps=(store_trajectory == StoreTrajectoryOption.FULL),
                 temperature=temperatures,
@@ -1239,9 +1239,9 @@ class Calculation(CalculationBaseModel):
                 },
                 bader=bader,
                 ddec6=ddec6,
-                run_type=run_type(input_doc.parameters),
+                run_type=run_type(input_doc.parameters or {}),
                 task_type=this_task_type,
-                calc_type=calc_type(input_doc.model_dump(), input_doc.parameters),
+                calc_type=calc_type(input_doc.model_dump(), input_doc.parameters or {}),
             ),
             vasp_objects,
         )
@@ -1305,9 +1305,9 @@ class Calculation(CalculationBaseModel):
             input=input_doc,
             output=output_doc,
             output_file_paths={},
-            run_type=run_type(input_doc.parameters),
+            run_type=run_type(input_doc.parameters or {}),
             task_type=task_type(input_doc.model_dump()),
-            calc_type=calc_type(input_doc.model_dump(), input_doc.parameters),
+            calc_type=calc_type(input_doc.model_dump(), input_doc.parameters or {}),
         )
 
 
@@ -1495,8 +1495,10 @@ def _get_band_props(
 
 def _calculation_to_trajectory_dict(
     calc: Calculation,
-    traj_class: RelaxTrajectory | Trajectory = RelaxTrajectory,
-) -> tuple[dict[str, list[Any]], RunType, TaskType, CalcType, float | None]:
+    traj_class: Type[RelaxTrajectory] | Type[Trajectory] = RelaxTrajectory,
+) -> tuple[
+    dict[str, list[Any]], RunType | None, TaskType | None, CalcType | None, float | None
+]:
     """Convert a single VASP calculation to Trajectory._from_dict compatible dict.
 
     Parameters

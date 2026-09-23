@@ -202,7 +202,7 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
 
     @property
     def calc_type(self) -> CalcType:
-        return calc_type(self.special_run_type, self.orig)
+        return calc_type(self.special_run_type, self.orig)  # type: ignore[arg-type]
 
     @property
     def entry(self) -> dict[str, Any]:

@@ -193,4 +193,4 @@ def obtain_blessed_linear_builder_input(
         **best_task,
     }
 
-    return target(**doc)
+    return target.model_validate(doc)

@@ -8,7 +8,7 @@ import warnings
 from collections import OrderedDict
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -319,7 +319,7 @@ class Calculation(BaseModel):
         None,
         description="Paths (relative to dir_name) of the QChem output files associated with this calculation",
     )
-    level_of_theory: LevelOfTheory | str = Field(
+    level_of_theory: LevelOfTheory | str | None = Field(
         None,
         description="Levels of theory used for the QChem calculation: For instance, B97-D/6-31g*",
     )
@@ -509,7 +509,7 @@ def _find_qchem_files(
 
 def level_of_theory(
     parameters: CalculationInput, validate_lot: bool = True
-) -> LevelOfTheory:
+) -> LevelOfTheory | str:
     """
 
     Returns the level of theory for a calculation,
@@ -608,9 +608,9 @@ def solvent(
     """
     lot = level_of_theory(parameters, validate_lot=validate_lot)
     if validate_lot:
-        solvation = lot.value.split("/")[-1]
+        solvation = cast(LevelOfTheory, lot).value.split("/")[-1]
     else:
-        solvation = lot.split("/")[-1]
+        solvation = str(lot).split("/")[-1]
 
     if solvation == "PCM":
         # dielectric = float(parameters.get("solvent", {}).get("dielectric", 78.39))
@@ -678,9 +678,11 @@ def lot_solvent_string(
         non-standard solvent
     """
     if validate_lot:
-        lot = level_of_theory(parameters, validate_lot=validate_lot).value
+        lot = cast(
+            LevelOfTheory, level_of_theory(parameters, validate_lot=validate_lot)
+        ).value
     else:
-        lot = level_of_theory(parameters, validate_lot=validate_lot)
+        lot = str(level_of_theory(parameters, validate_lot=validate_lot))
     solv = solvent(parameters, custom_smd=custom_smd, validate_lot=validate_lot)
     return f"{lot}({solv})"
 
@@ -711,7 +713,7 @@ def calc_type(
     parameters: CalculationInput,
     validate_lot: bool = True,
     special_run_type: str | None = None,
-) -> CalcType:
+) -> CalcType | str:
     """
     Determines the calc type
 
@@ -720,8 +722,10 @@ def calc_type(
     """
     tt = task_type(parameters, special_run_type=special_run_type).value
     if validate_lot:
-        rt = level_of_theory(parameters, validate_lot=validate_lot).value
+        rt = cast(
+            LevelOfTheory, level_of_theory(parameters, validate_lot=validate_lot)
+        ).value
         return CalcType(f"{rt} {tt}")
     else:
-        rt = level_of_theory(parameters, validate_lot=validate_lot)
+        rt = str(level_of_theory(parameters, validate_lot=validate_lot))
         return str(f"{rt} {tt}")

@@ -135,7 +135,7 @@ def _match_against_snls(
 
                     if snl.about:
                         authors.append(snl.about.authors or [])
-                        history.append(snl.about.history or [])
+                        history.append(snl.about.history or [])  # type: ignore
                         # `SNLAbout` uses string for `references`,
                         # `ProvenanceDoc` uses list of str
                         if snl.about.references:
