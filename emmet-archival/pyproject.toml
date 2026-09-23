@@ -19,12 +19,13 @@ include = [
 [project]
 name = "emmet-archival"
 dynamic = ["version"]
+requires-python = ">=3.12"
 authors = [
   { name = "The Materials Project", email = "feedback@materialsproject.org" },
 ]
 
 classifiers = [
-  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Development Status :: 4 - Beta",
   "Intended Audience :: Science/Research",
   "Operating System :: OS Independent",
@@ -47,7 +48,6 @@ dependencies = [
 description = "Emmet Archival library"
 keywords = ["data storage", "dft", "vasp"]
 license = "BSD-3-Clause-LBNL"
-requires-python = '>=3.11'
 
 [project.optional-dependencies]
 tests = [
