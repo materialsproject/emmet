@@ -60,8 +60,6 @@ test = [
   "types-setuptools",
   "types-requests",
   "starlette[full]",
-  "wincertstore",
-  "pymongo==4.10.1",
   "mongomock",
 ]
 docs = [
