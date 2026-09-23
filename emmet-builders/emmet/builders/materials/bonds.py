@@ -1,4 +1,4 @@
-from typing import Iterator
+from typing import Iterator, cast
 
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
@@ -41,9 +41,12 @@ def build_bonding_docs(
             **kwargs,
         )
 
-    yield from filter_map(
-        _build,
-        input_documents,
-        work_keys=["deprecated", "material_id", "structure"],
-        **kwargs,
+    yield from cast(
+        Iterator[BondingDoc],
+        filter_map(
+            _build,
+            input_documents,
+            work_keys=["deprecated", "material_id", "structure"],
+            **kwargs,
+        ),
     )

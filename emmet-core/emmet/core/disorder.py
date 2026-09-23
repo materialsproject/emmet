@@ -90,7 +90,7 @@ class DisorderedTaskDoc(CoreTaskDoc):
     )
 
     @classmethod
-    def from_directory(
+    def from_directory(  # type: ignore[override]
         cls,
         dir_name: Path | str,
         volumetric_files: tuple[str, ...] = _VOLUMETRIC_FILES,

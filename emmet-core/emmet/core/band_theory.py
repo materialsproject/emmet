@@ -73,7 +73,7 @@ def _deser_lattice(lattice: Lattice | dict | Matrix3D) -> Matrix3D:
     if isinstance(lattice, Lattice):
         return lattice.matrix
     elif isinstance(lattice, dict):
-        return lattice.get("lattice")
+        return lattice["lattice"]
     return lattice
 
 

@@ -94,7 +94,7 @@ class MLDoc(ElasticityDoc):
     # all inherited from ElasticityDoc
 
     @field_validator("elastic_tensor", mode="before")
-    def elastic_tensor(cls, val) -> ElasticTensorDoc:
+    def validate_elastic_tensor(cls, val) -> ElasticTensorDoc:
         """ElasticTensorDoc from MSONable dict of ElasticTensor, or list (specifying the Voigt array)
         or the ElasticTensor class itself.
         """

@@ -49,7 +49,7 @@ class DefectTaskDoc(DefectInfo, TaskDoc):
     """
 
     @classmethod
-    def from_directory(
+    def from_directory(  # type: ignore[override]
         cls,
         dir_name: Path | str,
         volumetric_files: tuple[str, ...] = _VOLUMETRIC_FILES,
@@ -112,6 +112,7 @@ class DefectTaskDoc(DefectInfo, TaskDoc):
         Returns:
             DefectTaskDoc
         """
+        assert taskdoc.additional_json is not None
         additional_info = taskdoc.additional_json[defect_info_key]
         defect = additional_info["defect"]
         charge_state = additional_info["charge_state"]

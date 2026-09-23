@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import orjson
@@ -365,18 +365,23 @@ class NebIntermediateImagesDoc(BaseModel):
         image_objects = []
         for iimage, image_dir in enumerate(image_directories):
             vasp_files = _find_vasp_files(image_dir, volumetric_files=volumetric_files)
+            standard_files = cast(dict[str, Any], vasp_files["standard"])
 
             calc, objects = Calculation.from_vasp_files(
                 dir_name=image_dir,
                 task_name=f"NEB image {iimage + 1}",
-                vasprun_file=vasp_files["standard"]["vasprun_file"],
-                outcar_file=vasp_files["standard"]["outcar_file"],
-                contcar_file=vasp_files["standard"]["contcar_file"],
-                volumetric_files=vasp_files["standard"].get("volumetric_files", []),
-                oszicar_file=vasp_files["standard"].get("oszicar_file", None),
+                vasprun_file=standard_files["vasprun_file"],
+                outcar_file=standard_files["outcar_file"],
+                contcar_file=standard_files["contcar_file"],
+                volumetric_files=standard_files.get("volumetric_files", []),
+                oszicar_file=standard_files.get("oszicar_file", None),
                 vasprun_kwargs={
                     "parse_potcar_file": False,
                 },
+            )
+            assert calc.input is not None and calc.output is not None
+            assert (
+                calc.input.structure is not None and calc.output.structure is not None
             )
             image_calculations.append(calc)
             image_structures.append(calc.output.structure)
@@ -397,7 +402,7 @@ class NebIntermediateImagesDoc(BaseModel):
 
         neb_method = (
             NebMethod.CLIMBING_IMAGE
-            if inputs.incar.get("LCLIMB", False)
+            if (inputs.incar or {}).get("LCLIMB", False)
             else NebMethod.STANDARD
         )
 
@@ -412,9 +417,17 @@ class NebIntermediateImagesDoc(BaseModel):
             objects=image_objects,
             neb_method=neb_method,  # type: ignore[arg-type]
             state=task_state,
-            energies=[calc.output.energy for calc in image_calculations],
+            energies=[
+                calc.output.energy
+                for calc in image_calculations
+                if calc.output is not None
+            ],
             custodian=_parse_custodian(dir_name),
-            completed_at=max(calc.completed_at for calc in image_calculations),
+            completed_at=max(
+                calc.completed_at
+                for calc in image_calculations
+                if calc.completed_at is not None
+            ),
             **kwargs,
         )
 
@@ -486,17 +499,15 @@ class NebTaskDoc(NebResult):
                 )
                 ep_key = f"relax{max_rel_idx}"
 
-            (
-                endpoint_calculations[idx],
-                endpoint_objects[idx],
-            ) = Calculation.from_vasp_files(
+            ep_files = cast(dict[str, Any], vasp_files[ep_key])
+            endpoint_calculations[idx], endpoint_objects[idx] = Calculation.from_vasp_files(  # type: ignore[call-overload]
                 dir_name=endpoint_dir,
                 task_name=f"NEB endpoint {idx + 1}",
-                vasprun_file=vasp_files[ep_key]["vasprun_file"],
-                outcar_file=vasp_files[ep_key]["outcar_file"],
-                contcar_file=vasp_files[ep_key]["contcar_file"],
-                volumetric_files=vasp_files[ep_key].get("volumetric_files", []),
-                oszicar_file=vasp_files[ep_key].get("oszicar_file", None),
+                vasprun_file=ep_files["vasprun_file"],
+                outcar_file=ep_files["outcar_file"],
+                contcar_file=ep_files["contcar_file"],
+                volumetric_files=ep_files.get("volumetric_files", []),
+                oszicar_file=ep_files.get("oszicar_file", None),
                 vasprun_kwargs={
                     "parse_potcar_file": False,
                 },
@@ -513,6 +524,9 @@ class NebTaskDoc(NebResult):
                     zpath(f"{ep_dirs[idx]}/POSCAR")
                 )
             else:
+                assert (
+                    ep_calc.output is not None and ep_calc.output.structure is not None
+                )
                 endpoint_structures[idx] = ep_calc.output.structure
                 endpoint_energies[idx] = ep_calc.output.energy
 

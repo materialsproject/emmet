@@ -11,7 +11,7 @@ class ChgcarTaskIDQuery(MultiTaskIDQuery):
 
     def query(
         self,
-        task_ids: str = Query(
+        task_ids: str | None = Query(
             None,
             description="Comma-separated list of calculation (task) IDs to query on",
         ),

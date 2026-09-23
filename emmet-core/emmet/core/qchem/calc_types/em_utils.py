@@ -35,15 +35,16 @@ def level_of_theory(parameters: CalculationInput) -> LevelOfTheory:
 
     """
 
-    funct_raw = parameters.rem.get("method")
-    basis_raw = parameters.rem.get("basis")
+    rem = parameters.rem or {}
+    funct_raw = rem.get("method")
+    basis_raw = rem.get("basis")
 
     if funct_raw is None or basis_raw is None:
         raise ValueError(
             'Method and basis must be included in "rem" section ' "of parameters!"
         )
 
-    disp_corr = parameters.rem.get("dft_d")
+    disp_corr = rem.get("dft_d")
 
     if disp_corr is None:
         funct_lower = funct_raw.lower()
@@ -69,7 +70,7 @@ def level_of_theory(parameters: CalculationInput) -> LevelOfTheory:
 
     basis = basis[0]
 
-    solvent_method = parameters.rem.get("solvent_method", "").lower()
+    solvent_method = rem.get("solvent_method", "").lower()
     if solvent_method == "":
         solvation = "VACUUM"
     elif solvent_method in ["pcm", "cosmo"]:
@@ -104,7 +105,7 @@ def solvent(parameters: CalculationInput, custom_smd: str | None = None) -> str:
     solvation = lot.value.split("/")[-1]
 
     if solvation == "PCM":
-        dielectric = float(parameters.get("solvent", {}).get("dielectric", 78.39))
+        dielectric = float((parameters.solvent or {}).get("dielectric", 78.39))
         dielectric_string = f"{dielectric:.2f}".replace(".", ",")
         return f"DIELECTRIC={dielectric_string}"
     # TODO: Add this once added into pymatgen and atomate
@@ -132,7 +133,7 @@ def solvent(parameters: CalculationInput, custom_smd: str | None = None) -> str:
     #         string += "," + piecestring
     #     return string
     elif solvation == "SMD":
-        solvent = parameters.get("smx", {}).get("solvent", "water")
+        solvent = (parameters.smx or {}).get("solvent", "water")
         if solvent == "other":
             if custom_smd is None:
                 raise ValueError(

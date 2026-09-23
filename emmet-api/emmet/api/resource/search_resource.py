@@ -2,6 +2,7 @@ from inspect import signature
 from typing import Any
 
 import orjson
+from fastapi.encoders import jsonable_encoder
 from fastapi import HTTPException, Request, Response
 from pymongo.errors import NetworkTimeout, PyMongoError
 
@@ -121,18 +122,24 @@ class SearchResource(CollectionResource):
             else:
                 meta = Meta(total_doc=0)
 
-            response = {"data": data if data else [], "meta": {**meta.dict(), **operator_meta}}  # type: ignore
+            response_payload = {
+                "data": data if data else [],
+                "meta": {**meta.model_dump(), **operator_meta},
+            }
 
             if self.disable_validation:
-                response = Response(orjson.dumps(response, default=serialization_helper))  # type: ignore
+                response = Response(
+                    orjson.dumps(response_payload, default=serialization_helper)
+                )
+
+                if self.header_processor is not None:
+                    self.header_processor.process_header(response, request)
+                return response
 
             if self.header_processor is not None:
-                if self.disable_validation:
-                    self.header_processor.process_header(response, request)
-                else:
-                    self.header_processor.process_header(temp_response, request)
+                self.header_processor.process_header(temp_response, request)
 
-            return response
+            return jsonable_encoder(response_payload)
 
         self.router.get(
             self.sub_path,

@@ -56,7 +56,7 @@ class BondingDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_structure(
+    def from_structure(  # type: ignore[override]
         cls,
         structure: Structure,
         material_id: str | MPID,
