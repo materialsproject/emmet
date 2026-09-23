@@ -11,7 +11,7 @@ import multiprocessing
 import os
 import re
 from time import time
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Self, cast
 
 import numpy as np
 import requests
@@ -41,8 +41,8 @@ logger = logging.getLogger(__name__)
 class IcsdClient(BaseModel):
     """Query data via the ICSD API."""
 
-    username: str = Field(SETTINGS.USERNAME)
-    password: str = Field(SETTINGS.PASSWORD)
+    username: str = Field(SETTINGS.USERNAME or "")
+    password: str = Field(SETTINGS.PASSWORD or "")
 
     max_retries: int = Field(SETTINGS.MAX_RETRIES)
     timeout: float = Field(SETTINGS.TIMEOUT)
@@ -101,7 +101,7 @@ class IcsdClient(BaseModel):
             )
 
         self._session = requests.Session()
-        self._session.headers = {"ICSD-Auth-Token": self._auth_token}
+        self._session.headers.update({"ICSD-Auth-Token": self._auth_token})
         retry = Retry(
             total=self.max_retries,
             read=self.max_retries,
@@ -141,14 +141,14 @@ class IcsdClient(BaseModel):
     def __del__(self) -> None:
         self.logout()
 
-    def _get(self, *args, **kwargs) -> requests.Response:
+    def _get(self, url: str, **kwargs) -> requests.Response:
         self.refresh_session()
         assert self._session is not None
 
         params = tuple(
             list(kwargs.pop("params", [])) + [("windowsclient", self._is_windows)]
         )
-        resp = self._session.get(*args, **kwargs, params=params)
+        resp = self._session.get(url, params=params, **kwargs)
         if resp.status_code != 200:
             logger.warning(
                 f"{self.__module__}.{self.__class__.__name__} "
@@ -212,7 +212,7 @@ class IcsdClient(BaseModel):
                 data.extend(
                     self._search(
                         batch,
-                        properties=search_props,
+                        properties=properties,
                         include_cif=include_cif,
                         include_metadata=include_metadata,
                         _data=_data,
@@ -250,7 +250,7 @@ class IcsdClient(BaseModel):
                     for row in csv_data[1:]
                 ]
             else:
-                if "Authentication not successful" in response.content:
+                if "Authentication not successful" in response.content.decode():
                     raise ValueError(
                         "Failed to authenticate ICSD client. Please check your credentials"
                     )
@@ -344,5 +344,5 @@ class IcsdClient(BaseModel):
                 data[i]["subset"] = subset
 
         if self.use_document_model:
-            data = [IcsdPropertyDoc(**props) for props in data]
+            data = cast(list, [IcsdPropertyDoc(**props) for props in data])
         return data

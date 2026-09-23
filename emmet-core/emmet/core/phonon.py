@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, cast
 
 import numpy as np
 import yaml  # type: ignore[import-untyped]
@@ -449,7 +449,7 @@ class PhononBS(BandStructure):
             high-symmetry kpoint labels. Defaults to 1e-3.
         **kwargs : other kwargs to pass to the class constructor
         """
-        with zopen(phonon_bandstructure_file, "rt") as f:
+        with zopen(Path(phonon_bandstructure_file), "rt") as f:
             phonopy_bandstructure = yaml.safe_load(f.read())
 
         phonon_entries = phonopy_bandstructure["phonon"]
@@ -642,7 +642,9 @@ class PhononBSDOSTask(StructureMetadata):
         """
         if self.born:
             bec = np.array(self.born)
-            return tuple(tuple(row) for row in np.sum(bec, axis=0).tolist())
+            return cast(
+                Matrix3D, tuple(tuple(row) for row in np.sum(bec, axis=0).tolist())
+            )
         return None
 
     @property
@@ -824,7 +826,7 @@ class PhononBSDOSDoc(PhononBSDOSTask):
                 None,
             )
             irow = 0
-            with zopen(force_constants_file, "rt") as f:
+            with zopen(Path(force_constants_file), "rt") as f:
                 for idx, line in enumerate(f.read().splitlines()):
                     vals = line.strip().split()
                     if idx == 0:
@@ -846,7 +848,7 @@ class PhononBSDOSDoc(PhononBSDOSTask):
             cls_config["force_constants"] = force_constant_matrix.tolist()
 
         if phonopy_output_file:
-            with zopen(phonopy_output_file, "rt") as f:
+            with zopen(Path(phonopy_output_file), "rt") as f:
                 phonopy_output = yaml.safe_load(f.read())
             for k in ("primitive_matrix", "supercell_matrix"):
                 cls_config[k] = phonopy_output.get(k)
@@ -866,8 +868,8 @@ class PhononBSDOSDoc(PhononBSDOSTask):
             if phonopy is None:
                 raise ImportError("You must `pip install phonopy` to parse BORN.")
 
-            phonopy_calc = phonopy.load(phonopy_output_file)
-            with zopen(epsilon_static_and_born_file, "rt") as f:
+            phonopy_calc = phonopy.load(Path(phonopy_output_file))
+            with zopen(Path(epsilon_static_and_born_file), "rt") as f:
                 born_data = phonopy.file_IO.parse_BORN_from_strings(
                     f.read(), phonopy_calc.unitcell
                 )

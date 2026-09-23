@@ -184,7 +184,7 @@ class Archiver(BaseModel):
     @classmethod
     def extract(
         cls,
-        archive_path: str | Path,
+        archive_path: FSPathType,
         zarr_store: MutableMapping | None = None,
         *args,
         **kwargs,

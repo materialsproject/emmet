@@ -410,7 +410,7 @@ class SummaryDoc(
             chain(aggregate_struct["origins"], prop_origins)
         )
 
-        return SummaryDoc(
+        return cls(
             has_props=has_props,
             **{**aggregate_struct, **kwargs},
         )

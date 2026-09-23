@@ -16,7 +16,7 @@ from emmet.archival.base import Archiver
 from emmet.archival.atoms import CrystalArchive
 
 if TYPE_CHECKING:
-    from pathlib import Path
+    from emmet.core.types.typing import FSPathType
 
 
 class VolumetricArchive(Archiver, ChgcarLike):
@@ -72,6 +72,8 @@ class VolumetricArchive(Archiver, ChgcarLike):
     @classmethod
     def _extract_from_parquet(
         cls,
-        archive_path: str | Path,
+        archive_path: FSPathType,
+        *args,
+        **kwargs,
     ) -> PmgVolumetricData:
         return cls.from_arrow(pq.read_table(archive_path))

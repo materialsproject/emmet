@@ -47,7 +47,7 @@ class OxidationStateDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_structure(
+    def from_structure(  # type: ignore[override]
         cls,
         structure: StructureType,
         material_id: MaterialIdentifierType | None = None,

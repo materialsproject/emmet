@@ -53,7 +53,7 @@ def validate_xas_spectrum_id(
     idx: str, as_components: bool = False
 ) -> str | CompoundIDType:
     """Validate an XAS spectrum identifier."""
-    return validate_compound_identifier(
+    return validate_compound_identifier(  # type: ignore[call-overload]
         idx,
         suffixes=(XasType, Element, XasEdge),
         separator="-",

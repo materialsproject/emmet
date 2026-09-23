@@ -6,7 +6,7 @@ import logging
 import re
 import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any, cast
 
 import numpy as np
 from monty.json import MontyDecoder
@@ -157,25 +157,29 @@ class OutputDoc(BaseModel):
         """
         forces = None
         stress = None
-        if calc_doc.output.ionic_steps:
-            forces = calc_doc.output.ionic_steps[-1].forces
-            stress = calc_doc.output.ionic_steps[-1].stress
+        output = calc_doc.output
+        assert output is not None
+        assert output.structure is not None
+        if output.ionic_steps:
+            forces = output.ionic_steps[-1].forces
+            stress = output.ionic_steps[-1].stress
         elif trajectory:
             if isinstance(trajectory, PmgTrajectory):
                 forces = trajectory.frame_properties[-1]["forces"]  # type: ignore[index]
                 stress = trajectory.frame_properties[-1]["stress"]  # type: ignore[index]
             else:
+                assert trajectory.forces is not None and trajectory.stress is not None
                 forces = trajectory.forces[-1]
                 stress = trajectory.stress[-1]
         else:
             raise RuntimeError("Unable to find ionic steps.")
 
         return cls(
-            structure=calc_doc.output.structure,
-            density=calc_doc.output.structure.density,
-            energy=calc_doc.output.energy,
-            energy_per_atom=calc_doc.output.energy_per_atom,
-            bandgap=calc_doc.output.bandgap,
+            structure=output.structure,
+            density=output.structure.density,
+            energy=output.energy,
+            energy_per_atom=output.energy_per_atom,
+            bandgap=output.bandgap,
             forces=forces,
             stress=stress,
         )
@@ -246,8 +250,14 @@ class AnalysisDoc(BaseModel):
         AnalysisDoc
             The relaxation analysis.
         """
-        initial_vol = calcs_reversed[-1].input.structure.lattice.volume
-        final_vol = calcs_reversed[0].output.structure.lattice.volume
+        initial_input = calcs_reversed[-1].input
+        final_output = calcs_reversed[0].output
+        assert initial_input is not None and final_output is not None
+        assert (
+            initial_input.structure is not None and final_output.structure is not None
+        )
+        initial_vol = initial_input.structure.lattice.volume
+        final_vol = final_output.structure.lattice.volume
         delta_vol = final_vol - initial_vol
         percent_delta_vol = 100 * delta_vol / initial_vol
         warnings = []
@@ -259,10 +269,12 @@ class AnalysisDoc(BaseModel):
         final_calc = calcs_reversed[0]
         max_force = None
         if final_calc.has_vasp_completed == TaskState.SUCCESS:
+            assert final_calc.input is not None and final_calc.output is not None
             # max force and valid structure checks
             structure = final_calc.output.structure
+            assert structure is not None
             # do not check max force for MD run
-            if calcs_reversed[0].input.parameters.get("IBRION", -1) != 0:
+            if (final_calc.input.parameters or {}).get("IBRION", -1) != 0:
                 max_force = _get_max_force(final_calc)
             warnings.extend(_get_drift_warnings(final_calc))
             if not structure.is_valid():
@@ -397,8 +409,13 @@ class CoreTaskDoc(StructureMetadata):
         task_files = _find_vasp_files(dir_name, volumetric_files=volumetric_files)
 
         calc_doc, vasp_objects = Calculation.from_vasp_files(
-            dir_name, "standard", **task_files["standard"], **vasp_calculation_kwargs
+            dir_name,
+            "standard",
+            **cast(dict[str, Any], task_files["standard"]),
+            **vasp_calculation_kwargs,
         )
+        assert calc_doc.input is not None and calc_doc.output is not None
+        assert calc_doc.output.structure is not None
         transformations, icsd_id, transformation_tags, author = _parse_transformations(
             dir_name
         )
@@ -471,7 +488,7 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
         None, description="List of VASP objects included with this task document"
     )
 
-    output: OutputDoc | None = Field(
+    output: OutputDoc | None = Field(  # type: ignore[assignment]
         None,
         description="The exact set of output parameters used to generate the current task document.",
     )
@@ -526,7 +543,7 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
         return values
 
     @classmethod
-    def from_directory(
+    def from_directory(  # type: ignore[override]
         cls,
         dir_name: Path | str,
         volumetric_files: tuple[str, ...] = _VOLUMETRIC_FILES,
@@ -582,8 +599,13 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
         all_vasp_objects = []
         for task_name in sorted(task_files):
             calc_doc, vasp_objects = Calculation.from_vasp_files(
-                dir_name, task_name, **task_files[task_name], **vasp_calculation_kwargs
+                dir_name,
+                task_name,
+                **cast(dict[str, Any], task_files[task_name]),
+                **vasp_calculation_kwargs,
             )
+            assert calc_doc.input is not None and calc_doc.output is not None
+            assert calc_doc.output.structure is not None
             calcs_reversed.append(calc_doc)
             all_vasp_objects.append(vasp_objects)
 
@@ -613,11 +635,13 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
         included_objects = None
         if vasp_objects:
             included_objects = list(vasp_objects.keys())
+        final_output = calcs_reversed[0].output
+        assert final_output is not None and final_output.structure is not None
 
         doc = cls.from_structure(
             batch_id=batch_id,
-            structure=calcs_reversed[0].output.structure,
-            meta_structure=calcs_reversed[0].output.structure,
+            structure=final_output.structure,
+            meta_structure=final_output.structure,
             dir_name=dir_name,
             calcs_reversed=calcs_reversed,
             analysis=analysis,
@@ -682,7 +706,10 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
         dir_name = path.resolve().parent
 
         calc = Calculation.from_vasprun(path, **vasp_calculation_kwargs)
+        assert calc.input is not None and calc.output is not None
+        assert calc.output.structure is not None
         calcs_reversed = [calc]
+        final_output = calc.output
 
         analysis = AnalysisDoc.from_vasp_calc_docs(
             calcs_reversed, volume_change_warning_tol=volume_change_warning_tol
@@ -697,8 +724,8 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
         )
 
         doc = cls.from_structure(
-            structure=calcs_reversed[0].output.structure,
-            meta_structure=calcs_reversed[0].output.structure,
+            structure=final_output.structure,
+            meta_structure=final_output.structure,
             dir_name=get_uri(dir_name),
             calcs_reversed=calcs_reversed,
             analysis=analysis,
@@ -740,6 +767,8 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
             cr = Calculation(**cr)
         calc_inp = cr.input
         calc_out = cr.output
+        assert calc_inp is not None and calc_out is not None
+        assert calc_out.structure is not None
 
         entry_dict = {
             "correction": 0.0,
@@ -765,7 +794,7 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
             },
             "data": {
                 "oxide_type": oxide_type(calc_out.structure),
-                "aspherical": calc_inp.parameters.get("LASPH", False),
+                "aspherical": (calc_inp.parameters or {}).get("LASPH", False),
                 "last_updated": str(utcnow()),
             },
         }
@@ -784,14 +813,17 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
         """
         if isinstance(calcs_reversed[0], Calculation):
             cr_inp = calcs_reversed[0].input
-            params = cr_inp.parameters
-            incar = cr_inp.incar
+            assert cr_inp is not None
+            params = cr_inp.parameters or {}
+            incar = cr_inp.incar or {}
         else:
             cr_inp = calcs_reversed[0].get("input", {})
             params = cr_inp.get("parameters", {})
             incar = cr_inp.get("incar", {})
 
-        inputs = cr_inp if len(calcs_reversed) > 0 else orig_inputs
+        inputs = (
+            cr_inp.model_dump() if len(calcs_reversed) > 0 else orig_inputs.model_dump()
+        )
         return calc_type(inputs, {**params, **incar})
 
     @staticmethod
@@ -804,8 +836,10 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
             The type of calculation.
         """
         if isinstance(calcs_reversed[0], Calculation):
-            params = calcs_reversed[0].input.parameters
-            incar = calcs_reversed[0].input.incar
+            cr_inp = calcs_reversed[0].input
+            assert cr_inp is not None
+            params = cr_inp.parameters or {}
+            incar = cr_inp.incar or {}
         else:
             cr_inp = calcs_reversed[0].get("input", {})
             params = cr_inp.get("parameters", {})
@@ -839,7 +873,7 @@ class TaskDoc(CoreTaskDoc, extra="allow"):
         )
 
     @property
-    def trajectories(self) -> list[Trajectory] | None:
+    def trajectories(self) -> list[Trajectory] | list[RelaxTrajectory] | None:
         """Get Trajectory objects representing calcs_reversed.
 
         Note that the Trajectory objects represent the proper
@@ -1010,7 +1044,11 @@ def _parse_orig_inputs(
                     "structure" if name == "POSCAR" else f"{name.lower()}{file_suffix}"
                 )
                 _value = vasp_input.from_file(filename)
-                _assign = _value.structure if _key == "structure" else _value
+                _assign = (
+                    getattr(_value, "structure", _value)
+                    if _key == "structure"
+                    else _value
+                )
 
                 orig_inputs[_key] = _assign
 
@@ -1033,12 +1071,14 @@ def _parse_additional_json(dir_name: Path) -> dict[str, Any]:
 
 def _get_max_force(calc_doc: Calculation) -> float | None:
     """Get max force acting on atoms from a calculation document."""
+    assert calc_doc.output is not None
     if calc_doc.output.ionic_steps:
         forces: np.ndarray | list | None = None
         if calc_doc.output.ionic_steps:
             forces = calc_doc.output.ionic_steps[-1].forces
 
         structure = calc_doc.output.structure
+        assert structure is not None
         if forces:
             forces = np.array(forces)
             sdyn = structure.site_properties.get("selective_dynamics")
@@ -1051,10 +1091,13 @@ def _get_max_force(calc_doc: Calculation) -> float | None:
 def _get_drift_warnings(calc_doc: Calculation) -> list[str]:
     """Get warnings of whether the drift on atoms is too large."""
     warnings = []
-    if calc_doc.input.parameters.get("NSW", 0) > 0:
-        drift = calc_doc.output.outcar.get("drift", [[0, 0, 0]])
+    assert calc_doc.input is not None and calc_doc.output is not None
+    if (calc_doc.input.parameters or {}).get("NSW", 0) > 0:
+        parameters = calc_doc.input.parameters or {}
+        outcar = cast(dict[str, Any], calc_doc.output.outcar or {})
+        drift = outcar.get("drift") or [[0, 0, 0]]
         max_drift = max(np.linalg.norm(d) for d in drift)  # type: ignore[type-var]
-        ediffg = calc_doc.input.parameters.get("EDIFFG", None)
+        ediffg = parameters.get("EDIFFG", None)
         max_force = -float(ediffg) if ediffg and float(ediffg) < 0 else np.inf
         if max_drift > max_force:
             warnings.append(
@@ -1090,6 +1133,8 @@ def _get_run_stats(calcs_reversed: list[Calculation]) -> dict[str, RunStatistics
         cores=0,
     )
     for calc_doc in calcs_reversed:
+        assert calc_doc.output is not None and calc_doc.output.run_stats is not None
+        assert calc_doc.task_name is not None
         stats = calc_doc.output.run_stats
         run_stats[calc_doc.task_name] = stats
         total["average_memory"] = max(total["average_memory"], stats.average_memory)
@@ -1146,7 +1191,7 @@ def _find_vasp_files(
     """
     base_path = Path(path)
     volumetric_files = volumetric_files or _VOLUMETRIC_FILES
-    task_names = task_names or TASK_NAMES
+    task_names = list(task_names or TASK_NAMES)
 
     task_files: dict[str, dict[str, Path | list[Path]]] = discover_and_sort_vasp_files(
         base_path

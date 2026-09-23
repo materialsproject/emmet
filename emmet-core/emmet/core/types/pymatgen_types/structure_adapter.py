@@ -1,4 +1,4 @@
-from typing import Annotated, TypeVar
+from typing import Annotated, Any, TypeVar, cast
 
 from pydantic import BeforeValidator, WrapSerializer
 from emmet.core.io.pymatgen import Structure, Molecule
@@ -42,32 +42,33 @@ def pop_empty_structure_keys(
     inp: StructureTypeVar | MoleculeTypeVar, serialize: bool = True
 ):
     if isinstance(inp, dict):
+        raw_inp = cast(dict[str, Any], inp)
         target_cls = None
         if serialize:
-            target_cls = Structure if inp["@class"] == "Structure" else Molecule
+            target_cls = Structure if raw_inp["@class"] == "Structure" else Molecule
 
-        if inp.get("properties"):
-            for prop, val in list(inp["properties"].items()):  # type: ignore[union-attr]
+        if properties := raw_inp.get("properties"):
+            for prop, val in list(properties.items()):
                 if val is None:
-                    del inp["properties"][prop]  # type: ignore[union-attr]
+                    del properties[prop]
 
-        for site in inp["sites"]:
+        for site in raw_inp["sites"]:
             if "name" in site:
                 if not site["name"]:
                     del site["name"]
 
-            if site.get("properties"):
-                for prop, val in list(site["properties"].items()):
+            if properties := site.get("properties"):
+                for prop, val in list(properties.items()):
                     if val is None:
-                        del site["properties"][prop]
+                        del properties[prop]
 
-            for species in site["species"]:
+            for species in site.get("species") or []:
                 for prop, val in list(species.items()):
                     if val is None:
                         del species[prop]
 
         if target_cls:
-            return target_cls.from_dict(inp)  # type: ignore[arg-type]
+            return target_cls.from_dict(raw_inp)  # type: ignore[arg-type]
 
     return inp
 

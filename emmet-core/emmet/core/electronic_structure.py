@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from math import isnan
-from typing import TYPE_CHECKING, Annotated, Generator, Literal, TypeVar
+from typing import TYPE_CHECKING, Annotated, Generator, Literal, TypeVar, cast
 
 import numpy as np
 from pydantic import BaseModel, BeforeValidator, Field, WrapSerializer
@@ -89,11 +89,11 @@ class BandStructureSummaryData(ElectronicStructureSummary):
     )
     nbands: float = Field(..., description="Number of bands.")
     direct_gap: float = Field(..., description="Direct gap energy in eV.")
-    cbm: Annotated[TypedBandDict | None, BeforeValidator(_deser_cbm_vbm)] | None = (
-        Field(None, description="Conduction band minimum data.")
+    cbm: Annotated[TypedBandDict | None, BeforeValidator(_deser_cbm_vbm)] | None = Field(  # type: ignore[assignment]
+        None, description="Conduction band minimum data."
     )
-    vbm: Annotated[TypedBandDict | None, BeforeValidator(_deser_cbm_vbm)] | None = (
-        Field(None, description="Valence band maximum data.")
+    vbm: Annotated[TypedBandDict | None, BeforeValidator(_deser_cbm_vbm)] | None = Field(  # type: ignore[assignment]
+        None, description="Valence band maximum data."
     )
 
 
@@ -234,21 +234,24 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         bs_data = _generate_bs_data(bandstructures, origins, structures)
         origins = [origin for origin in origins] + [bs_data["es_origins_from_bs"]]
 
-        return bs_checks(
-            cls.from_structure(
-                band_gap=bs_data["band_gap"],
-                cbm=bs_data["cbm"],
-                vbm=bs_data["vbm"],
-                efermi=bs_data["efermi"],
-                is_gap_direct=bs_data["is_gap_direct"],
-                is_metal=bs_data["is_metal"],
-                magnetic_ordering=bs_data["bs_magnetic_ordering"],
-                bandstructure=bs_data["bandstructure"],
-                origins=origins,
-                **kwargs,
+        return cast(
+            "Self",
+            bs_checks(
+                cls.from_structure(
+                    band_gap=bs_data["band_gap"],
+                    cbm=bs_data["cbm"],
+                    vbm=bs_data["vbm"],
+                    efermi=bs_data["efermi"],
+                    is_gap_direct=bs_data["is_gap_direct"],
+                    is_metal=bs_data["is_metal"],
+                    magnetic_ordering=bs_data["bs_magnetic_ordering"],
+                    bandstructure=bs_data["bandstructure"],
+                    origins=origins,
+                    **kwargs,
+                ),
+                structures,
+                bandstructures,
             ),
-            structures,
-            bandstructures,
         )
 
     @classmethod
@@ -275,21 +278,24 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         dos_data = _generate_dos_data(dos, origins, structures)
         origins = [origin for origin in origins] + [dos_data["es_origins_from_dos"]]
 
-        return dos_checks(
-            cls.from_structure(
-                band_gap=dos_data["band_gap"],
-                cbm=dos_data["cbm"],
-                vbm=dos_data["vbm"],
-                efermi=dos_data["efermi"],
-                is_gap_direct=is_gap_direct,
-                is_metal=dos_data["is_metal"],
-                magnetic_ordering=dos_data["dos_magnetic_ordering"],
-                dos=dos_data["dos_entry"],
-                origins=origins,
-                **kwargs,
+        return cast(
+            "Self",
+            dos_checks(
+                cls.from_structure(
+                    band_gap=dos_data["band_gap"],
+                    cbm=dos_data["cbm"],
+                    vbm=dos_data["vbm"],
+                    efermi=dos_data["efermi"],
+                    is_gap_direct=is_gap_direct,
+                    is_metal=dos_data["is_metal"],
+                    magnetic_ordering=dos_data["dos_magnetic_ordering"],
+                    dos=dos_data["dos_entry"],
+                    origins=origins,
+                    **kwargs,
+                ),
+                structures,
+                dos,
             ),
-            structures,
-            dos,
         )
 
     @classmethod
@@ -321,23 +327,26 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         origins = [origin for origin in origins] + [bs_data["es_origins_from_bs"]]
         magnetic_ordering = bs_data["bs_magnetic_ordering"]
 
-        return bsdos_checks(
-            cls.from_structure(
-                band_gap=bs_data["band_gap"],
-                cbm=bs_data["cbm"],
-                vbm=bs_data["vbm"],
-                efermi=bs_data["efermi"],
-                is_gap_direct=bs_data["is_gap_direct"],
-                is_metal=bs_data["is_metal"],
-                magnetic_ordering=magnetic_ordering,
-                bandstructure=bs_data["bandstructure"],
-                dos=dos_data["dos_entry"],
-                origins=origins,
-                **kwargs,
+        return cast(
+            "Self",
+            bsdos_checks(
+                cls.from_structure(
+                    band_gap=bs_data["band_gap"],
+                    cbm=bs_data["cbm"],
+                    vbm=bs_data["vbm"],
+                    efermi=bs_data["efermi"],
+                    is_gap_direct=bs_data["is_gap_direct"],
+                    is_metal=bs_data["is_metal"],
+                    magnetic_ordering=magnetic_ordering,
+                    bandstructure=bs_data["bandstructure"],
+                    dos=dos_data["dos_entry"],
+                    origins=origins,
+                    **kwargs,
+                ),
+                structures,
+                bandstructures,
+                dos,
             ),
-            structures,
-            bandstructures,
-            dos,
         )
 
 
@@ -353,13 +362,13 @@ def _generate_bs_data(
     }
 
     bs_type: str
-    bs_input: tuple[IdentifierType, BandStructureSymmLine, int]
+    bs_input: tuple[IdentifierType, BandStructureSymmLine, int] | None
     bs_task_id: IdentifierType
     bs: BandStructureSymmLine
 
     for bs_type, bs_input in bs_data.items():
         if bs_input is not None:
-            bs_task_id, bs, _ = bs_input
+            bs_task_id, bs, _ = bs_input  # type: ignore[misc]
             bs_mag_ordering = CollinearMagneticStructureAnalyzer(
                 structures[bs_task_id]
             ).ordering

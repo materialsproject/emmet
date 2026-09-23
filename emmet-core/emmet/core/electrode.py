@@ -56,7 +56,7 @@ def validate_battery_id(idx: str, as_components: Literal[False] = False) -> str:
 
 def validate_battery_id(idx: str, as_components: bool = False) -> str | CompoundIDType:
     """Validate an insertion electode battery ID."""
-    return validate_compound_identifier(
+    return validate_compound_identifier(  # type: ignore[call-overload]
         idx,
         suffixes=(Element,),
         separator="_",
@@ -296,7 +296,9 @@ class BaseElectrode(EmmetBaseModel):
         min_mpid = min(
             idx for idx in self.material_ids if not idx.string.startswith("mvc")
         )
-        return validate_battery_id(f"{min_mpid}_{self.working_ion}")
+        return validate_battery_id(
+            f"{min_mpid}_{self.working_ion}", as_components=False
+        )
 
 
 class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):

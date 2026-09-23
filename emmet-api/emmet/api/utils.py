@@ -30,6 +30,8 @@ STORE_PARAMS = dict[
         "update",
         "facets",
         "id_format",
+        "forward",
+        "pagination_token",
     ],
     Any,
 ]

@@ -207,7 +207,7 @@ class MoleculeDoc(CoreMoleculeDoc):
         description="Collection of all unique combinations of level of theory and solvent used for this molecule",
     )
 
-    origins: list[MolPropertyOrigin] | None = Field(
+    origins: list[MolPropertyOrigin] | None = Field(  # type: ignore[assignment]
         None,
         description="List of property origins for tracking the provenance of properties",
     )
@@ -273,13 +273,16 @@ class MoleculeDoc(CoreMoleculeDoc):
         unique_task_types = list(set(task_types.values()))
         unique_calc_types = list(set(calc_types.values()))
 
+        for task in task_group:
+            assert task.output is not None
         mols = [task.output.initial_molecule for task in task_group]
 
         # If we're dealing with single-atoms, process is much different
-        if all([len(m) == 1 for m in mols]):
+        if all(m is not None and len(m) == 1 for m in mols):
             sorted_tasks = sorted(task_group, key=evaluate_task)
 
             molecule = sorted_tasks[0].output.initial_molecule
+            assert molecule is not None
             species = [e.symbol for e in molecule.species]
 
             molecule_id = get_molecule_id(molecule, node_attr="coords")
@@ -336,6 +339,7 @@ class MoleculeDoc(CoreMoleculeDoc):
             except IndexError:
                 raise Exception("No geometry optimization calculations available!")
             molecule = best_molecule_calc.output.optimized_molecule
+            assert molecule is not None
             species = [e.symbol for e in molecule.species]
             molecule_id = get_molecule_id(molecule, node_attr="coords")
 
@@ -454,9 +458,10 @@ class MoleculeDoc(CoreMoleculeDoc):
         unique_calc_types = list(set(calc_types.values()))
 
         # Arbitrarily choose task with lowest ID
-        molecule = sorted(task_group, key=lambda x: x.task_id)[
+        molecule = sorted(task_group, key=lambda x: str(x.task_id))[
             0
         ].output.initial_molecule
+        assert molecule is not None
         species = [e.symbol for e in molecule.species]
 
         # Molecule ID

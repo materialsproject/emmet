@@ -185,6 +185,8 @@ class RedoxDoc(PropertyDoc):
 
         # Adiabatic reduction properties
         if red_doc is not None:
+            assert red_doc.electronic_energy is not None
+            assert base_thermo_doc.electronic_energy is not None
             red_molecule_id = red_doc.molecule_id
             red_property_id = red_doc.property_id
 
@@ -210,6 +212,8 @@ class RedoxDoc(PropertyDoc):
 
         # Adiabatic oxidation properties
         if ox_doc is not None:
+            assert ox_doc.electronic_energy is not None
+            assert base_thermo_doc.electronic_energy is not None
             ox_molecule_id = ox_doc.molecule_id
             ox_property_id = ox_doc.property_id
 
@@ -233,6 +237,7 @@ class RedoxDoc(PropertyDoc):
 
         # Electron affinity
         if ea_doc is not None:
+            assert base_thermo_doc.electronic_energy is not None
             ea_task_id = ea_doc.task_id
             id_string += f"-{ea_task_id}"
             origins.append(
@@ -249,6 +254,7 @@ class RedoxDoc(PropertyDoc):
 
         # Ionization energy
         if ie_doc is not None:
+            assert base_thermo_doc.electronic_energy is not None
             ie_task_id = ie_doc.task_id
             id_string += f"-{ie_task_id}"
             origins.append(

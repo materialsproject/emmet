@@ -1,4 +1,4 @@
-from typing import Annotated, TypeVar
+from typing import Annotated, Any, TypeVar, cast
 
 from pydantic import BeforeValidator, WrapSerializer
 from emmet.core.io.pymatgen import GrainBoundary
@@ -36,26 +36,28 @@ GrainBoundaryTypeVar = TypeVar(
 
 def pop_empty_gb_keys(gb: GrainBoundaryTypeVar) -> GrainBoundary:
     if isinstance(gb, dict):
+        raw_gb = cast(dict[str, Any], gb)
         for key in ["init_cell", "oriented_unit_cell"]:
-            gb[key] = pop_empty_structure_keys(gb[key], serialize=False)  # type: ignore[literal-required]
+            raw_gb[key] = pop_empty_structure_keys(raw_gb[key], serialize=False)
 
-        for site in gb["sites"]:
+        for site in raw_gb["sites"]:
             if "name" in site and not site["name"]:
                 del site["name"]
 
             for key in [
                 "properties",
             ]:
-                for prop, val in list(site.get(key, {}).items()):
+                properties = site.get(key) or {}
+                for prop, val in list(properties.items()):
                     if val is None:
-                        del site[key][prop]
+                        del properties[prop]
 
-            for idx, species_dct in enumerate(site["species"]):
+            for idx, species_dct in enumerate(site.get("species") or []):
                 keys_to_delete = [k for k, v in species_dct.items() if v is None]
                 for key in keys_to_delete:
                     del site["species"][idx][key]
 
-        return GrainBoundary.from_dict(gb)  # type: ignore[arg-type]
+        return GrainBoundary.from_dict(raw_gb)  # type: ignore[arg-type]
 
     return gb
 

@@ -111,7 +111,7 @@ class RangeQuery(QueryOperator):
     ``_prepare_query`` to build their predicate.
     """
 
-    def _prepare_query(self, value_dict: dict[str, list[float]]) -> STORE_PARAMS:
+    def _prepare_query(self, value_dict: dict[str, list[float | None]]) -> STORE_PARAMS:
         crit = defaultdict(dict)  # type: dict
 
         for entry in value_dict:
@@ -234,10 +234,12 @@ class IdFormatQuery(QueryOperator):
         IdFormatQuery(id_fields=[("material_id", format_identifier)])
 
         # /materials/xas/
-        IdFormatQuery(id_fields=[
-            ("task_id", format_task_id),
-            ("spectrum_id", format_spectrum_id),
-        ])
+        IdFormatQuery(
+            id_fields=[
+                ("task_id", format_task_id),
+                ("spectrum_id", format_spectrum_id),
+            ]
+        )
 
     Attributes:
         id_fields: A list of ``(field_name, formatter)`` tuples describing

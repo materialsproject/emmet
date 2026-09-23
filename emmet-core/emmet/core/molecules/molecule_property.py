@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pydantic import Field
 from emmet.core.io.pymatgen import Molecule
@@ -80,15 +80,21 @@ class PropertyDoc(MoleculeMetadata):
 
     @classmethod
     def from_molecule(  # type: ignore[override]
-        cls: Self,
+        cls,
         meta_molecule: Molecule,
-        property_id: str,
-        molecule_id: MPculeID,
-        **kwargs,
+        *args: Any,
+        property_id: str | None = None,
+        molecule_id: MPculeID | None = None,
+        **kwargs: Any,
     ) -> Self:
         """
         Builds a molecule document using the minimal amount of information
         """
+
+        if property_id is None and args:
+            property_id = args[0]
+        if molecule_id is None and len(args) > 1:
+            molecule_id = args[1]
 
         return super().from_molecule(
             meta_molecule=meta_molecule,

@@ -498,7 +498,7 @@ class MoleculeSummaryDoc(PropertyDoc):
         property_id = h.hexdigest()
         doc["property_id"] = property_id
 
-        return MoleculeSummaryDoc(molecule_id=molecule_id, **doc)
+        return cls(molecule_id=molecule_id, **doc)
 
 
 # Key mapping

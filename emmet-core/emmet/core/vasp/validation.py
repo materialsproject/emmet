@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from pydantic import Field
 from emmet.core.io.pymatgen import (
@@ -75,17 +75,22 @@ class ValidationDoc(EmmetBaseModel, VaspValidator):
         if isinstance(task_doc, TaskDocument):
             final_calc = Calculation(**task_doc.calcs_reversed[0])
         else:
+            assert task_doc.calcs_reversed is not None
             final_calc = task_doc.calcs_reversed[0]
+        assert final_calc.input is not None and final_calc.output is not None
+        assert final_calc.vasp_version is not None
+        assert task_doc.output is not None
 
         potcar_stats = None
         if final_calc.input.potcar_spec:
+            potcar_type = final_calc.input.potcar_type or []
             potcar_stats = [
                 PotcarSummaryStats(
                     titel=ps.titel,
                     keywords=ps.summary_stats["keywords"] if ps.summary_stats else None,
                     stats=ps.summary_stats["stats"] if ps.summary_stats else None,
                     lexch=(
-                        "pe" if final_calc.input.potcar_type[0] == "PAW_PBE" else "ca"
+                        "pe" if potcar_type and potcar_type[0] == "PAW_PBE" else "ca"
                     ),
                 )
                 for ps in final_calc.input.potcar_spec
@@ -105,7 +110,7 @@ class ValidationDoc(EmmetBaseModel, VaspValidator):
             ),
             outcar=LightOutcar(
                 **{
-                    k: final_calc.output.outcar.get(k)
+                    k: cast(dict[str, Any], final_calc.output.outcar or {}).get(k)
                     for k in ("drift", "magnetization")
                 }
             ),
@@ -113,7 +118,7 @@ class ValidationDoc(EmmetBaseModel, VaspValidator):
                 vasp_version=vasp_version,  # type: ignore[arg-type]
                 ionic_steps=[
                     ionic_step.model_dump()
-                    for ionic_step in final_calc.output.ionic_steps
+                    for ionic_step in (final_calc.output.ionic_steps or [])
                 ],
                 final_energy=task_doc.output.energy,
                 final_structure=task_doc.output.structure,

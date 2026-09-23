@@ -276,7 +276,7 @@ def get_potcar_stats(
             from importlib.resources import files
             from importlib.resources.abc import Traversable
 
-            path_to_stored_stats: Traversable = files("emmet.builders.vasp").joinpath(
+            path_to_stored_stats: Traversable = files("emmet.builders.vasp").joinpath(  # type: ignore[no-redef]
                 "mp_potcar_stats.json.gz"
             )
         return loadfn(path_to_stored_stats)  # type: ignore
@@ -382,7 +382,8 @@ def try_call(
     try:
         return fn(*args, **kwargs)
     except Exception:
-        logger = logging.getLogger(inspect.getmodule(fn).__name__)
+        module = inspect.getmodule(fn)
+        logger = logging.getLogger(getattr(module, "__name__", __name__))
         logger.exception(
             "Error during execution of %s",
             getattr(fn, "__qualname__", repr(fn)),

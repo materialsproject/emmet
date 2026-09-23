@@ -43,7 +43,7 @@ def get_site_fingerprints(
             "ops",
             cation_anion=False,
         ),
-        stats=None,
+        stats=[],
     )
 
     # transpose fingerprint from [op_type][site] to [site][op_type]
@@ -85,11 +85,12 @@ def get_structure_fingerprint(
             CrystalNNFingerprint.from_preset(
                 "ops", cation_anion=False, distance_cutoffs=None, x_diff_weight=None
             ),
-            stats=stats,
+            stats=list(stats or []),
         )
     else:
         ssf = SiteStatsFingerprint(
-            CrystalNNFingerprint.from_preset("ops", cation_anion=False), stats=stats
+            CrystalNNFingerprint.from_preset("ops", cation_anion=False),
+            stats=list(stats or []),
         )
     return np.array(ssf.featurize(structure))
 

@@ -370,10 +370,10 @@ class ChemEnvDoc(PropertyDoc):
         description="List of Wyckoff positions for unique (cationic) species in structure."
     )
 
-    warnings: str | None = Field(None, description="Warning")
+    warnings: list[str] = Field([], description="Warnings")
 
     @classmethod
-    def from_structure(
+    def from_structure(  # type: ignore[override]
         cls,
         structure: Structure,
         material_id: IdentifierType | None = None,
@@ -401,7 +401,7 @@ class ChemEnvDoc(PropertyDoc):
             "mol_from_site_environments": [],
             "wyckoff_positions": [],
             "method": None,
-            "warnings": None,
+            "warnings": [],
             # "structure_environment": None,
         }  # type: dict
 
@@ -457,7 +457,9 @@ class ChemEnvDoc(PropertyDoc):
         else:
             d.update(
                 {
-                    "warnings": "No oxidation states available. Cation-anion bonds cannot be identified."
+                    "warnings": [
+                        "No oxidation states available. Cation-anion bonds cannot be identified."
+                    ]
                 }
             )
             return super().from_structure(
