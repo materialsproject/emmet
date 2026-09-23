@@ -51,7 +51,6 @@ test = [
   "mypy-extensions",
   "types-setuptools",
   "types-requests",
-  "wincertstore",
   "blake3",
 ]
 docs = [
