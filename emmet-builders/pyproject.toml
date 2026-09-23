@@ -19,7 +19,7 @@ include = [
 [project]
 name = "emmet-builders"
 dynamic = ["version"]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 description = "Builders for the Emmet Library"
 authors = [
   { name = "The Materials Project", email = "feedback@materialsproject.org" },

@@ -19,7 +19,7 @@ include = [
 [project]
 name = "emmet-core"
 dynamic = ["version"]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 description="Core Emmet Library"
 license = "BSD-3-Clause-LBNL"
 authors = [
