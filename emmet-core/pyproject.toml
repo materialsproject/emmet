@@ -67,7 +67,6 @@ test = [
   "mypy-extensions",
   "types-setuptools",
   "types-requests",
-  "wincertstore",
   "custodian",
 ]
 docs = [
