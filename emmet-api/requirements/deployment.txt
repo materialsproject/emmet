@@ -18,9 +18,9 @@ bibtexparser==1.4.4
     # via pymatgen-core
 blake3==1.0.9
     # via emmet-core
-boto3==1.43.99
+boto3==1.43.103
     # via emmet-api (emmet/emmet-api/pyproject.toml)
-botocore==1.43.99
+botocore==1.43.103
     # via
     #   boto3
     #   s3transfer
@@ -48,7 +48,7 @@ envier==0.6.1
     # via ddtrace
 fastapi==0.141.1
     # via emmet-api (emmet/emmet-api/pyproject.toml)
-fonttools==4.65.0
+fonttools==4.66.0
     # via matplotlib
 gunicorn==24.1.1
     # via emmet-api (emmet/emmet-api/pyproject.toml)
@@ -112,7 +112,7 @@ numpy==2.4.6
     #   shapely
     #   spglib
     #   tifffile
-opentelemetry-api==1.44.0
+opentelemetry-api==1.45.0
     # via ddtrace
 orjson==3.12.0
     # via pymatgen-core
@@ -152,7 +152,7 @@ pydantic-settings==2.15.0
     # via
     #   emmet-core
     #   pymatgen-io-validation
-pymatgen==2026.5.4
+pymatgen==2026.9.24
     # via
     #   emmet-core
     #   mp-pyrho
@@ -162,7 +162,7 @@ pymatgen-analysis-alloys==0.0.9
     # via emmet-api (emmet/emmet-api/pyproject.toml)
 pymatgen-analysis-defects==2026.3.20
     # via emmet-api (emmet/emmet-api/pyproject.toml)
-pymatgen-core==2026.8.30
+pymatgen-core==2026.9.23
     # via
     #   pymatgen
     #   pymatgen-io-validation
@@ -210,7 +210,7 @@ six==1.17.0
     # via python-dateutil
 spglib==2.7.0
     # via pymatgen-core
-starlette==1.6.0
+starlette==1.7.0
     # via fastapi
 sympy==1.14.0
     # via pymatgen-core
@@ -246,7 +246,7 @@ urllib3==2.8.0
     # via
     #   botocore
     #   requests
-uvicorn==0.53.0
+uvicorn==0.54.0
     # via emmet-api (emmet/emmet-api/pyproject.toml)
 wrapt==2.4.1
     # via ddtrace
