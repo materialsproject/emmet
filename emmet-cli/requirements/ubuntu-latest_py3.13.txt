@@ -148,11 +148,11 @@ typing-inspection==0.4.4
     #   pydantic-settings
 uncertainties==3.2.3
     # via pymatgen-core
-urllib3==2.7.0
+urllib3==2.8.0
     # via requests
 backports-zstd==1.5.0 ; python_version < "3.14"
     # via emmet-archival
-anyio==4.13.0
+anyio==4.14.2
     # via httpx
 donfig==0.8.1.post1
     # via zarr
