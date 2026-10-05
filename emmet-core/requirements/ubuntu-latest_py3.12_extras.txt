@@ -375,11 +375,11 @@ typing-inspection==0.4.4
     #   pydantic-settings
 uncertainties==3.2.3
     # via pymatgen-core
-urllib3==2.7.0
+urllib3==2.8.0
     # via
     #   requests
     #   types-requests
-virtualenv==21.7.4
+virtualenv==21.7.13
     # via pre-commit
 wincertstore==0.2.1
     # via emmet-core (pyproject.toml)
