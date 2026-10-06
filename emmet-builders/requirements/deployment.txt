@@ -83,7 +83,7 @@ frozenlist==1.4.1
     # via
     #   aiohttp
     #   aiosignal
-fsspec[http]==2024.2.0
+fsspec[http]==2026.6.0
     # via
     #   pytorch-lightning
     #   torch
@@ -295,7 +295,7 @@ pymatgen-analysis-alloys==0.0.6
     # via emmet-core
 pymatgen-analysis-diffusion==2023.8.15
     # via emmet-core
-pymongo==4.6.3
+pymongo==4.18.2
     # via
     #   maggma
     #   matminer
@@ -430,7 +430,7 @@ urllib3==2.7.0
     #   requests
 uvicorn==0.27.0.post1
     # via maggma
-werkzeug==3.1.6
+werkzeug==3.1.9
     # via flask
 yarl==1.9.4
     # via aiohttp

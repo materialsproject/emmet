@@ -371,7 +371,7 @@ pymdown-extensions==11.0.1
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.10.1
+pymongo==4.18.2
     # via
     #   maggma
     #   matminer

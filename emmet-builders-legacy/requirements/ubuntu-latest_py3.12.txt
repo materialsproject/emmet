@@ -249,7 +249,7 @@ pymatgen-analysis-diffusion==2024.7.15
     # via emmet-core
 pymatgen-io-validation==0.1.1
     # via emmet-builders (pyproject.toml)
-pymongo==4.10.1
+pymongo==4.18.2
     # via
     #   maggma
     #   matminer

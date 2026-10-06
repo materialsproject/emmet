@@ -49,7 +49,7 @@ filelock==3.20.3
     # via mdanalysis
 fonttools==4.60.2
     # via matplotlib
-fsspec==2025.3.2
+fsspec==2026.6.0
     # via matcalc
 griddataformats==1.0.2
     # via mdanalysis
@@ -250,7 +250,7 @@ pymatgen-analysis-defects==2024.7.19
     # via emmet-core
 pymatgen-analysis-diffusion==2024.7.15
     # via emmet-core
-pymongo==4.10.1
+pymongo==4.18.2
     # via
     #   maggma
     #   matminer
