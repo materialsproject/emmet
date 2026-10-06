@@ -494,7 +494,7 @@ tidynamics==1.1.2
     # via transport-analysis
 tifffile==2025.8.28
     # via scikit-image
-tornado==6.5.9
+tornado==6.5.10
     # via livereload
 tqdm==4.67.1
     # via
@@ -532,7 +532,7 @@ urllib3==2.8.0
     #   botocore
     #   requests
     #   types-requests
-virtualenv==21.7.13
+virtualenv==21.14.5
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
