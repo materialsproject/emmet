@@ -372,7 +372,7 @@ tabulate==0.10.0
     # via pymatgen-core
 tifffile==2026.3.3
     # via scikit-image
-tornado==6.5.8
+tornado==6.5.9
     # via livereload
 tqdm==4.70.0
     # via pymatgen-core
@@ -399,11 +399,11 @@ typing-inspection==0.4.4
     #   pydantic-settings
 uncertainties==3.2.3
     # via pymatgen-core
-urllib3==2.7.0
+urllib3==2.8.0
     # via
     #   requests
     #   types-requests
-virtualenv==21.7.4
+virtualenv==21.7.13
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
