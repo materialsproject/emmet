@@ -163,7 +163,7 @@ pymatgen-io-validation==0.1.4
     # via
     #   emmet-api (pyproject.toml)
     #   emmet-core
-pymongo==4.17.0
+pymongo==4.18.2
     # via emmet-api (pyproject.toml)
 pyparsing==3.3.2
     # via
