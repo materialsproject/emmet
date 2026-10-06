@@ -494,7 +494,7 @@ tidynamics==1.1.2
     # via transport-analysis
 tifffile==2025.8.28
     # via scikit-image
-tornado==6.5.8
+tornado==6.5.9
     # via livereload
 tqdm==4.67.1
     # via
@@ -527,12 +527,12 @@ tzdata==2025.2
     # via pandas
 uncertainties==3.2.3
     # via pymatgen
-urllib3==2.7.0
+urllib3==2.8.0
     # via
     #   botocore
     #   requests
     #   types-requests
-virtualenv==20.36.1
+virtualenv==21.7.13
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs

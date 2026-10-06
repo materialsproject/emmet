@@ -41,7 +41,7 @@ dependencies = [
   "pymatgen-analysis-defects>=2024.10.22",
   "pymatgen-io-validation>=0.1.1",
   "uvicorn>=0.18.3",
-  "pymongo>=4.10.1,<4.18.0", #https://github.com/DataDog/dd-trace-py/issues/20119
+  "pymongo>=4.10.1,<4.19.0", #https://github.com/DataDog/dd-trace-py/issues/20119
 ]
 
 [project.urls]
@@ -64,7 +64,7 @@ test = [
   "types-requests",
   "starlette[full]",
   "wincertstore",
-  "pymongo==4.10.1",
+  "pymongo==4.18.2",
   "mongomock",
 ]
 docs = [
