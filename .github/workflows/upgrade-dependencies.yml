@@ -16,8 +16,6 @@ jobs:
             "emmet-core",
             "emmet-builders",
             "emmet-api",
-            "emmet-archival",
-            "emmet-cli",
           ]
         python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:

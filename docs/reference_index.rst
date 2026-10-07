@@ -14,5 +14,3 @@ This section gives an overview of the API for the emmet namespace packages.
 
     core
     builders
-    cli
-    archival
