@@ -23,7 +23,7 @@ reference_index
 
 ## What is Emmet?
 
-Emmet is a toolkit of packages designed to build the Materials API. The Materials API is the specification of the Materials Project (MP) for defining and dissemenating "materials documents". The core document definitions live in `emmet-core`. The data pipelines that build these documents live in `emmet-builders`. A specialized multi-functional CLI to manage the orchestration of calculation ingestion, backup, and parsing is in `emmet-cli-legacy`. Emmet has been developed by the Materials Project team at Lawrence Berkeley Labs.
+Emmet is a toolkit of packages designed to build the Materials API. The Materials API is the specification of the Materials Project (MP) for defining and dissemenating "materials documents". The core document definitions live in `emmet-core`. The functions that transform raw calculation data into these documents live in `emmet-builders`, and the API server that serves them lives in `emmet-api`. Emmet has been developed by the Materials Project team at Lawrence Berkeley Labs.
 
 Emmet is written in [Python](http://docs.python-guide.org/en/latest/) and supports Python 3.12+.
 
@@ -31,22 +31,21 @@ Emmet fully supports [Optimade API](https://optimade.org) and allows your MP inf
 
 ## Installation from PyPI
 
-Emmet is a toolkit. Due to a refactoring, `emmet` is in alpha status with no published metapackage. Only `emmet-core` is published on the [Python Package Index](https://pypi.org/project/emmet-core/). The preferred tool for installing
-packages from _PyPi_ is **pip**. This tool is provided with all modern
-versions of Python.
+Emmet is a toolkit with no published metapackage. Each component is published separately on the Python Package Index: [`emmet-core`](https://pypi.org/project/emmet-core/), [`emmet-builders`](https://pypi.org/project/emmet-builders/), and [`emmet-api`](https://pypi.org/project/emmet-api/). The preferred tool for installing packages from _PyPI_ is **pip**. This tool is provided with all modern versions of Python.
 
-Open your terminal and run the following command.
+Open your terminal and install the packages you need, for example:
 
 ```shell
-pip install --upgrade emmet-core
+pip install --upgrade emmet-core emmet-builders
 ```
 
 ## Installation from source
 
-You can install Maggma directly from a clone of the [Git repository](https://github.com/materialsproject/maggma). This can be done either by cloning the repo and installing from the local clone, or simply installing directly via **git**.
+You can install Emmet directly from a clone of the [Git repository](https://github.com/materialsproject/emmet). Each package lives in its own subdirectory and is installed individually.
 
-```shell tab="Local Clone"
+```shell
 git clone https://github.com/materialsproject/emmet
 cd emmet
 pip install -e emmet-core/
+pip install -e emmet-builders/
 ```
