@@ -11,7 +11,7 @@ from enum import Enum
 from importlib import import_module
 from itertools import groupby
 from math import gcd
-from typing import TYPE_CHECKING, get_args
+from typing import TYPE_CHECKING, get_args, TypedDict
 
 import numpy as np
 from monty.json import MontyDecoder, MSONable
@@ -31,7 +31,6 @@ from emmet.core.io.pymatgen import (
     DeformStructureTransformation,
     weisfeiler_lehman_graph_hash,
 )
-from typing_extensions import TypedDict
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.mpid import MPculeID
@@ -465,7 +464,7 @@ def jsanitize(obj, strict=False, allow_bson=False):
 
 def utcnow() -> datetime.datetime:
     """Get UTC time right now."""
-    return datetime.datetime.now(datetime.timezone.utc)
+    return datetime.datetime.now(datetime.UTC)
 
 
 def convert_datetime(
@@ -488,18 +487,18 @@ def convert_datetime(
         if v.get("$date"):
             dt = datetime.datetime.fromisoformat(v["$date"])
             if not dt.tzinfo:
-                dt = dt.replace(tzinfo=datetime.timezone.utc)
+                dt = dt.replace(tzinfo=datetime.UTC)
             return dt
 
     if isinstance(v, str):
         dt = datetime.datetime.fromisoformat(v)
         if not dt.tzinfo:
-            dt = dt.replace(tzinfo=datetime.timezone.utc)
+            dt = dt.replace(tzinfo=datetime.UTC)
         return dt
 
     v = MontyDecoder().process_decoded(v)
     if isinstance(v, datetime.datetime) and not v.tzinfo:
-        v = v.replace(tzinfo=datetime.timezone.utc)
+        v = v.replace(tzinfo=datetime.UTC)
     return v  # type: ignore[return-value]
 
 

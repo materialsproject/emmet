@@ -7,7 +7,8 @@ import resource
 import sys
 import time
 from datetime import datetime
-from typing import Any, Callable, cast, Literal
+from typing import Any, cast, Literal
+from collections.abc import Callable
 from uuid import uuid4
 import psutil
 

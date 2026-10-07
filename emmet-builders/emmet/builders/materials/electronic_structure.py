@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, auto
 from functools import update_wrapper
-from typing import Iterator
+from collections.abc import Iterator
 
 from pydantic import BaseModel
 from emmet.core.io.pymatgen import Ordering

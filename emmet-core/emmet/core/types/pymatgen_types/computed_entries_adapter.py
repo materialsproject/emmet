@@ -1,4 +1,4 @@
-from typing import Annotated, Any, TypeVar
+from typing import Annotated, Any, TypeVar, NotRequired, TypedDict
 
 import orjson
 from pydantic import (
@@ -10,7 +10,6 @@ from pydantic import (
     model_validator,
 )
 from emmet.core.io.pymatgen import ComputedEntry, ComputedStructureEntry
-from typing_extensions import NotRequired, TypedDict
 
 from emmet.core.types.enums import ThermoType
 from emmet.core.types.pymatgen_types.element_adapter import ElementType

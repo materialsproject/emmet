@@ -20,10 +20,11 @@ import logging
 import os
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Iterator
+from typing import Any
+from collections.abc import Iterator
 from uuid import UUID
 
 import httpx
@@ -106,8 +107,8 @@ def _is_unexpired(expires_at: str | None) -> bool:
     except ValueError:
         return False
     if expiry.tzinfo is None:
-        expiry = expiry.replace(tzinfo=timezone.utc)
-    return expiry > datetime.now(timezone.utc)
+        expiry = expiry.replace(tzinfo=UTC)
+    return expiry > datetime.now(UTC)
 
 
 class HttpSubmissionUploader:

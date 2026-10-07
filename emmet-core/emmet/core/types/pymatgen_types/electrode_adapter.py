@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from itertools import chain
-from typing import Annotated, Any, TypeVar
+from typing import Annotated, Any, TypeVar, TypedDict
 
 import orjson
 from pydantic import BeforeValidator, TypeAdapter, WrapSerializer
@@ -10,7 +10,6 @@ from emmet.core.io.pymatgen import (
     InsertionElectrode,
     InsertionVoltagePair,
 )
-from typing_extensions import TypedDict
 
 from emmet.core.types.enums import BatteryType
 from emmet.core.types.pymatgen_types.balanced_reaction_adapter import (

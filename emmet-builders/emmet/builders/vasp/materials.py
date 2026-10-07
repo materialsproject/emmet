@@ -1,5 +1,5 @@
 from itertools import groupby
-from typing import Iterator
+from collections.abc import Iterator
 
 from emmet.core.io.pymatgen import Structure
 

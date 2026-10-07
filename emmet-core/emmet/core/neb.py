@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, Self
 
 import numpy as np
 import orjson
@@ -16,7 +16,6 @@ from pydantic import (
     model_validator,
 )
 from scipy.interpolate import CubicSpline
-from typing_extensions import Self
 
 from emmet.core.io.pymatgen import Molecule, Structure
 from emmet.core.tasks import (

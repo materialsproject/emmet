@@ -2,7 +2,7 @@ import hashlib
 import json
 import traceback
 import builtins
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from uuid import uuid4
 
 import httpx
@@ -98,7 +98,7 @@ class UploadService:
             uploads[0].pop("object_id")
         response_payload = {
             "session_id": "session-1",
-            "expires_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
+            "expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
             "uploads": uploads,
             "completed_object_ids": list(self.puts),
         }

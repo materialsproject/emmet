@@ -1,8 +1,7 @@
-from typing import Annotated, Any, TypeVar, cast
+from typing import Annotated, Any, TypeVar, cast, TypedDict
 
 from pydantic import BeforeValidator, WrapSerializer
 from emmet.core.io.pymatgen import GrainBoundary
-from typing_extensions import TypedDict
 
 from emmet.core.types.pymatgen_types.lattice_adapter import TypedLatticeDict
 from emmet.core.types.pymatgen_types.sites_adapter import TypedSiteDict

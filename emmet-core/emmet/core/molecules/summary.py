@@ -14,9 +14,8 @@ from emmet.core.types.pymatgen_types.structure_adapter import MoleculeType
 from emmet.core.utils import arrow_incompatible
 
 if TYPE_CHECKING:
-    from typing import Any
+    from typing import Any, Self
 
-    from typing_extensions import Self
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 

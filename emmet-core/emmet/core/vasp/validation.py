@@ -27,7 +27,7 @@ from emmet.core.vasp.utils import FileMetadata, discover_vasp_files
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from typing_extensions import Self
+    from typing import Self
 
     from emmet.core.tasks import TaskDoc
 

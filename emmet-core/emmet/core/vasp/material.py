@@ -1,6 +1,7 @@
 """Core definition of a Materials Document"""
 
-from typing import Mapping, Self, cast
+from typing import Self, cast
+from collections.abc import Mapping
 
 from pydantic import BaseModel, Field
 from emmet.core.io.pymatgen import SpacegroupAnalyzer, oxide_type, StructureMatcher

@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from typing import Union
 
 import pytest
 from bson import ObjectId
@@ -34,7 +33,7 @@ class AnotherPet(BaseModel):
 
 class AnotherOwner(BaseModel):
     name: str = Field(..., description="Owner name")
-    weight_or_pet: Union[float, AnotherPet] = Field(..., title="Owners weight or Pet")
+    weight_or_pet: float | AnotherPet = Field(..., title="Owners weight or Pet")
 
 
 class Owner(BaseModel):

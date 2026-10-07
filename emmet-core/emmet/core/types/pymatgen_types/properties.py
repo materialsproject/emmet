@@ -1,4 +1,4 @@
-from typing_extensions import NotRequired, TypedDict
+from typing import NotRequired, TypedDict
 
 from emmet.core.math import Vector3D
 

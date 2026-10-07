@@ -9,13 +9,12 @@ from datetime import datetime
 from functools import cached_property
 from hashlib import md5
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any, Type
+from typing import TYPE_CHECKING, Annotated, Any, NotRequired, TypedDict
 
 import numpy as np
 import orjson
 from monty.io import zopen
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
-from typing_extensions import NotRequired, TypedDict
 
 from emmet.core.band_theory import ElectronicBS, ElectronicDos
 from emmet.core.io.pymatgen import (
@@ -61,7 +60,7 @@ from emmet.core.vasp.models import ChgcarLike, ElectronicStep
 SETTINGS = EmmetSettings()
 
 if TYPE_CHECKING:
-    from typing_extensions import Self
+    from typing import Self
 
     from emmet.core.io.pymatgen import BandStructure, CompleteDos
 
@@ -1495,7 +1494,7 @@ def _get_band_props(
 
 def _calculation_to_trajectory_dict(
     calc: Calculation,
-    traj_class: Type[RelaxTrajectory] | Type[Trajectory] = RelaxTrajectory,
+    traj_class: type[RelaxTrajectory] | type[Trajectory] = RelaxTrajectory,
 ) -> tuple[
     dict[str, list[Any]], RunType | None, TaskType | None, CalcType | None, float | None
 ]:
@@ -1560,7 +1559,7 @@ def _calculation_to_trajectory_dict(
 def get_trajectories_from_calculations(
     calculations: list[Calculation],
     separate: bool = True,
-    traj_class: Type[RelaxTrajectory] = RelaxTrajectory,
+    traj_class: type[RelaxTrajectory] = RelaxTrajectory,
     **kwargs,
 ) -> list[RelaxTrajectory]:
     """

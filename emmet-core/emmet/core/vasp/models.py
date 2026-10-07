@@ -18,7 +18,7 @@ from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from typing_extensions import Self
+    from typing import Self
 
 
 class ElectronicStep(BaseModel):

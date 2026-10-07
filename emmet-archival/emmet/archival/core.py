@@ -18,7 +18,7 @@ from emmet.archival.utils import CompressionType
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from os import PathLike
-    from typing_extensions import Self
+    from typing import Self
     from types import ModuleType
 
 DEFAULT_RAW_ARCHIVE_NAME = Path("calc_archive")

@@ -17,7 +17,7 @@ from emmet.core.structure import MoleculeMetadata
 from emmet.core.utils import utcnow
 
 if TYPE_CHECKING:
-    from typing_extensions import Self
+    from typing import Self
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 

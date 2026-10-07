@@ -4,14 +4,13 @@ from __future__ import annotations
 
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, cast
+from typing import TYPE_CHECKING, Annotated, cast, Literal, TypedDict
 
 import numpy as np
 import yaml  # type: ignore[import-untyped]
 from monty.io import zopen
 from monty.os.path import zpath
 from pydantic import BaseModel, BeforeValidator, Field, PlainSerializer, PrivateAttr
-from typing_extensions import Literal, TypedDict
 
 from emmet.core.band_theory import BandStructure, BandTheoryBase
 from emmet.core.base import CalcMeta
@@ -34,9 +33,8 @@ from emmet.core.utils import get_num_formula_units, type_override
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
-    from typing import Any
+    from typing import Any, Self
 
-    from typing_extensions import Self
 
 DEFAULT_PHONON_FILES = {
     "structure": "POSCAR",

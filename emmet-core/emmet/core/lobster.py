@@ -7,7 +7,7 @@ import time
 import json
 import orjson
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 import numpy as np
 from monty.os.path import zpath
@@ -31,7 +31,6 @@ from emmet.core.io.pymatgen import (
     MadelungEnergies,
     SitePotential,
 )
-from typing_extensions import Self
 
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import arrow_incompatible

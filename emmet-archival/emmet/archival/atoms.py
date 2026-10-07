@@ -20,8 +20,7 @@ from emmet.archival.base import Archiver
 
 if TYPE_CHECKING:
     from collections.abc import MutableMapping
-    from typing import Any
-    from typing_extensions import Self
+    from typing import Any, Self
     from pandas.core.dtypes.dtypes import ExtensionDtype
 
 _CARTESIAN = ("x", "y", "z")

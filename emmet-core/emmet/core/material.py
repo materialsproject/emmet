@@ -19,7 +19,7 @@ from emmet.core.types.typing import DateTimeType, IdentifierType, MaterialIdenti
 
 if TYPE_CHECKING:
 
-    from typing_extensions import Self
+    from typing import Self
 
 
 class PropertyOrigin(BaseModel):

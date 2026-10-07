@@ -1,8 +1,7 @@
-from typing import Annotated, TypeVar
+from typing import Annotated, TypeVar, TypedDict
 
 from pydantic import BeforeValidator, WrapSerializer
 from emmet.core.io.pymatgen import Trajectory
-from typing_extensions import TypedDict
 
 from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.types.pymatgen_types.properties import TypedAggregateProperitesDict

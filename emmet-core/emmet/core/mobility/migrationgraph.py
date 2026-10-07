@@ -35,9 +35,7 @@ except ImportError:
     )
 
 if TYPE_CHECKING:
-    from typing import Any
-
-    from typing_extensions import Self
+    from typing import Any, Self
 
 
 class HopState(ValueEnum):

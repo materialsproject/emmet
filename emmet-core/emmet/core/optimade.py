@@ -7,7 +7,7 @@ from monty.fractions import gcd
 from optimade.models import Species, StructureResourceAttributes
 from pydantic import Field
 from emmet.core.io.pymatgen import Composition, formula_double_format, Structure
-from typing_extensions import TypedDict
+from typing import TypedDict
 
 from emmet.core.base import EmmetBaseModel
 from emmet.core.types.typing import IdentifierType

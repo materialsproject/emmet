@@ -1,12 +1,12 @@
 from collections.abc import Callable
 from enum import Enum, auto
 from itertools import chain
-from typing import Annotated, Any, TypeVar, ValuesView
+from typing import Annotated, Any, TypeVar, TypedDict
+from collections.abc import ValuesView
 
 import orjson
 from pydantic import BeforeValidator, TypeAdapter, WrapSerializer
 from emmet.core.io.pymatgen import PhaseDiagram
-from typing_extensions import TypedDict
 
 from emmet.core.types.pymatgen_types.computed_entries_adapter import (
     TypedCEDataDict,

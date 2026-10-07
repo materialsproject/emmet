@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import Iterator, Literal, TypeVar
+from typing import Literal, TypeVar
+from collections.abc import Iterator
 
 from emmet.builders.base import BaseBuilderInput
 from emmet.builders.utils import _parse_kpoints, filter_map

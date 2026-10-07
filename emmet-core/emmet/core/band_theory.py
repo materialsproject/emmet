@@ -28,9 +28,7 @@ from emmet.core.vasp.calc_types import RunType
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Sequence
-    from typing import Any
-
-    from typing_extensions import Self
+    from typing import Any, Self
 
     from emmet.core.io.pymatgen import PeriodicSite, Structure
 

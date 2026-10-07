@@ -1,9 +1,8 @@
-from typing import Any, Annotated, TypeVar
+from typing import Any, Annotated, TypeVar, TypedDict
 
 import numpy as np
 from pydantic import BeforeValidator, WrapSerializer
 from emmet.core.io.pymatgen import XAS
-from typing_extensions import TypedDict
 
 from emmet.core.types.pymatgen_types.structure_adapter import (
     TypedStructureDict,

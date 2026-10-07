@@ -1,8 +1,7 @@
-from typing import Annotated, TypeVar
+from typing import Annotated, TypeVar, TypedDict
 
 from pydantic import BeforeValidator
 from emmet.core.io.pymatgen import PhononBandStructureSymmLine, PhononDos
-from typing_extensions import TypedDict
 
 from emmet.core.types.pymatgen_types.lattice_adapter import MSONableTypedLatticeDict
 from emmet.core.types.pymatgen_types.structure_adapter import (

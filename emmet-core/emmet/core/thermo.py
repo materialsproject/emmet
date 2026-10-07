@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from collections import defaultdict
 from functools import cached_property
-from typing import TYPE_CHECKING, Sequence, overload
+from typing import TYPE_CHECKING, overload
+from collections.abc import Sequence
 
 from pydantic import BaseModel, Field
 from emmet.core.io.pymatgen import PhaseDiagram, ComputedEntry, ComputedStructureEntry

@@ -63,8 +63,8 @@ def test_arrowize_succeeds():
         dtype == pa.int64()
         for dtype in [
             arrowize(int | None),
-            arrowize(Optional[int]),
-            arrowize(Union[int | None]),
+            arrowize(Optional[int]),  # noqa: UP045
+            arrowize(Union[int | None]),  # noqa: UP007
         ]
     )
 

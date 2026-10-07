@@ -6,7 +6,8 @@ import inspect
 import os
 import sys
 from itertools import chain, combinations
-from typing import TYPE_CHECKING, Callable, Iterable, Iterator, Mapping, TypeVar
+from typing import TYPE_CHECKING, TypeVar
+from collections.abc import Callable, Iterable, Iterator, Mapping
 
 import numpy as np
 from emmet.core.io.pymatgen import (

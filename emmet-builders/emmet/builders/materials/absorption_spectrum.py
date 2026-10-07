@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Iterator
+from collections.abc import Iterator
 
 from emmet.builders.base import BaseBuilderInput
 from emmet.builders.utils import _parse_kpoints, filter_map

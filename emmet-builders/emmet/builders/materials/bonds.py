@@ -1,4 +1,5 @@
-from typing import Iterator, cast
+from typing import cast
+from collections.abc import Iterator
 
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 

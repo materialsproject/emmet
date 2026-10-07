@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 
 import pytest
@@ -92,7 +92,7 @@ def status_enum():
 
 def test_submission_functionality(status_enum):
     op = SubmissionQuery(status_enum)
-    dt = datetime.utcnow()
+    dt = datetime.now(UTC).replace(tzinfo=None)
 
     assert op.query(state=status_enum.state_A, last_updated=dt) == {
         "criteria": {

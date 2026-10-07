@@ -1,8 +1,7 @@
-from typing import Annotated, TypeVar
+from typing import Annotated, TypeVar, NotRequired, TypedDict
 
 from pydantic import BeforeValidator, WrapSerializer
 from emmet.core.io.pymatgen import MoleculeGraph, StructureGraph
-from typing_extensions import NotRequired, TypedDict
 
 from emmet.core.types.pymatgen_types.structure_adapter import (
     TypedMoleculeDict,

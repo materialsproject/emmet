@@ -14,7 +14,7 @@ from pydantic import (
     WithJsonSchema,
 )
 from emmet.core.io.pymatgen import Structure
-from typing_extensions import Annotated
+from typing import Annotated
 
 from emmet.core.utils import arrow_incompatible, utcnow
 from emmet.core.vasp.task_valid import TaskState

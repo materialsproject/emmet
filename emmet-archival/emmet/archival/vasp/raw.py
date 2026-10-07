@@ -32,9 +32,7 @@ from emmet.core.vasp.utils import VASP_RAW_DATA_ORG, FileMetadata, discover_vasp
 if TYPE_CHECKING:
     from collections.abc import MutableMapping, Sequence
     from os import PathLike
-    from typing import Any
-
-    from typing_extensions import Self
+    from typing import Any, Self
 
 
 def raw_archive_hierarchy_from_files(

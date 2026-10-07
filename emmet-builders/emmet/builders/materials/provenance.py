@@ -3,7 +3,7 @@
 import logging
 from collections import defaultdict
 from itertools import chain, groupby
-from typing import Iterator
+from collections.abc import Iterator
 
 from emmet.core.io.pymatgen import ElementComparator, StructureMatcher, Structure
 

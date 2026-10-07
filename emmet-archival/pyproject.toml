@@ -71,7 +71,7 @@ repository = "https://github.com/materialsproject/emmet/tree/main/emmet-archival
 extend-ignore = "E203, Wv503, E501, F401, RST21"
 max-line-length = 120
 max-doc-length = 120
-min-python-version = "3.8.0"
+min-python-version = "3.12.0"
 rst-roles = "class, func, ref, obj"
 select = "C, E, F, W, B, B950"
 

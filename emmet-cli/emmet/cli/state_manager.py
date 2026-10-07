@@ -5,7 +5,8 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Any, Callable, Self, TextIO
+from typing import Any, Self, TextIO
+from collections.abc import Callable
 from uuid import uuid4
 
 logger = logging.getLogger("emmet")

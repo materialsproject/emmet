@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from fastapi import Body, Query
 from emmet.api.query_operator import QueryOperator
@@ -29,7 +29,7 @@ class MessagesPostQuery(QueryOperator):
             title="Message type",
         ),
         last_updated: datetime = Body(
-            datetime.utcnow(),
+            datetime.now(UTC).replace(tzinfo=None),
             title="Message last update datetime",
         ),
     ) -> STORE_PARAMS:

@@ -1,5 +1,5 @@
 # test_utils/async_mongomock.py
-from typing import Any, Dict, List
+from typing import Any
 import mongomock
 from pymongo import ReturnDocument
 
@@ -77,7 +77,7 @@ class AsyncMongomockCollection:
     async def find_one_and_delete(self, filter):
         return self.collection.find_one_and_delete(filter)
 
-    async def aggregate(self, pipeline: List[Dict[str, Any]], **kwargs):
+    async def aggregate(self, pipeline: list[dict[str, Any]], **kwargs):
         # Filter out async-specific kwargs that mongomock doesn't support
         filtered_kwargs = {k: v for k, v in kwargs.items() if k not in ["maxTimeMS"]}
         cursor = self.collection.aggregate(pipeline, **filtered_kwargs)

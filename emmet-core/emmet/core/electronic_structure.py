@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from collections import defaultdict
 from math import isnan
-from typing import TYPE_CHECKING, Annotated, Generator, Literal, TypeVar, cast
+from typing import TYPE_CHECKING, Annotated, Literal, TypeVar, cast
+from collections.abc import Generator
 
 import numpy as np
 from pydantic import BaseModel, BeforeValidator, Field, WrapSerializer
@@ -30,10 +31,9 @@ from emmet.core.types.pymatgen_types.element_adapter import ElementType
 from emmet.core.types.typing import IdentifierType
 
 if TYPE_CHECKING:
-    from typing import Any
+    from typing import Any, Self
 
     from emmet.core.io.pymatgen import Structure
-    from typing_extensions import Self
 
     from emmet.core.types.electronic_structure import BSShim, DosShim
 

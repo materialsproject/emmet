@@ -5,7 +5,7 @@ from __future__ import annotations
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from io import StringIO
 from tempfile import NamedTemporaryFile
-from typing import Generator
+from collections.abc import Generator
 
 from emmet.core.io.pymatgen import Structure, CifBlock, CifParser, SpacegroupAnalyzer
 

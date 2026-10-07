@@ -18,11 +18,10 @@ else:
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from typing import Any
+    from typing import Any, Self
 
     from pydantic import GetJsonSchemaHandler
     from pydantic.json_schema import JsonSchemaValue
-    from typing_extensions import Self
 
 # matches "mp-1234" or "1234" followed by and optional "-(Alphanumeric)"
 MPID_REGEX_PATTERN = r"^([A-Za-z]+-)?(\d+)(-[A-Za-z0-9]+)*$"
@@ -301,7 +300,7 @@ class AlphaID(str):
         import them:
         ```
         from pathlib import Path
-        from importlib_resources import files as import_resource_file
+        from importlib.resources import files as import_resource_file
         if (Path(import_resource_file("emmet.core")) / "_forbidden_alpha_id.py").exists():
             from emmet.core._forbidden_alpha_id import FORBIDDEN_ALPHA_ID_VALUES
         else:

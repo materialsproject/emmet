@@ -68,7 +68,7 @@ from emmet.core.vasp.utils import TASK_NAMES, discover_and_sort_vasp_files
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from typing_extensions import Self
+    from typing import Self
 
 
 monty_decoder = MontyDecoder()

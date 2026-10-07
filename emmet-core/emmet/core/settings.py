@@ -14,8 +14,7 @@ from pydantic import Field, ImportString, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 if TYPE_CHECKING:
-    from typing import Any
-    from typing_extensions import Self
+    from typing import Any, Self
 
 DEFAULT_CONFIG_FILE_PATH = str(Path("~/.emmet.json").expanduser())
 

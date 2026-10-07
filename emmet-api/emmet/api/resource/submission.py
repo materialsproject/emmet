@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from inspect import signature
 from typing import Any
@@ -287,7 +287,7 @@ class SubmissionResource(CollectionResource):
 
             if self.state_enum is not None:
                 query["criteria"]["state"] = [self.default_state]
-                query["criteria"]["updated"] = [datetime.utcnow()]
+                query["criteria"]["updated"] = [datetime.now(UTC).replace(tzinfo=None)]
 
             try:
                 # TODO: verify that this is only used to insert new data and one item at a time
@@ -363,7 +363,7 @@ class SubmissionResource(CollectionResource):
 
             if self.state_enum is not None:
                 query["criteria"]["state"] = [self.default_state]
-                query["criteria"]["updated"] = [datetime.utcnow()]
+                query["criteria"]["updated"] = [datetime.now(UTC).replace(tzinfo=None)]
 
             if query.get("update"):
                 try:

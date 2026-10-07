@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Type
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pyarrow as pa
@@ -47,7 +47,7 @@ class VolumetricArchive(Archiver, ChgcarLike):
 
     @classmethod
     def from_arrow(
-        cls, table: pa.Table, pmg_cls: Type[PmgVolumetricData] = PmgVolumetricData
+        cls, table: pa.Table, pmg_cls: type[PmgVolumetricData] = PmgVolumetricData
     ) -> PmgVolumetricData:
         cls_config: dict[str, dict[str, np.ndarray]] = {
             k: {} for k in ("data", "data_aug")
