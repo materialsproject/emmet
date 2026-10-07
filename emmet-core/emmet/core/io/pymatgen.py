@@ -205,10 +205,9 @@ def __getattr__(name: str) -> Any:
 
 
 def __dir__() -> Sequence[str]:
-    """List available interfaces to pymatgen objects."""
-    return sorted(
-        ".".join(
-            (_BASE_PACKAGE_NAME, base_import, _name_collision_aliases.get(name, name))
-        )
-        for name, base_import in _class_map.items()
-    )
+    """List module attributes, including the lazily-loaded pymatgen objects.
+
+    Per the ``dir()`` protocol, every returned name must be resolvable via
+    ``getattr(module, name)``.
+    """
+    return sorted(set(globals()) | set(_class_map))
