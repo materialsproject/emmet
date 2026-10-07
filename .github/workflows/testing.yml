@@ -67,8 +67,6 @@ jobs:
           - emmet-core
           - emmet-builders
           - emmet-api
-          - emmet-cli
-          - emmet-archival
         include:
           - package: emmet-core
             module: emmet.core
@@ -76,10 +74,6 @@ jobs:
             module: emmet.builders
           - package: emmet-api
             module: emmet.api
-          - package: emmet-cli
-            module: emmet.cli
-          - package: emmet-archival
-            module: emmet.archival
         python-version: ["3.12", "3.13", "3.14"]
 
     name: ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }})
@@ -116,11 +110,6 @@ jobs:
         shell: bash -l {0}
         if: matrix.package != 'emmet-core'
         run: python -m pip install --user --no-deps ./emmet-core
-
-      - name: Install editable emmet-archival for emmet-cli
-        shell: bash -l {0}
-        if: matrix.package == 'emmet-cli'
-        run: python -m pip install --user --no-deps ./emmet-archival
 
       - name: Install ${{ matrix.package }}
         shell: bash -l {0}

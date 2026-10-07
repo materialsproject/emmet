@@ -31,8 +31,6 @@ jobs:
           python${{ matrix.python-version }} -m pip install --upgrade pip
           python${{ matrix.python-version }} -m pip install -e "./emmet-core[docs]"
           python${{ matrix.python-version }} -m pip install -e "./emmet-builders"
-          python${{ matrix.python-version }} -m pip install -e "./emmet-cli"
-          python${{ matrix.python-version }} -m pip install -e "./emmet-archival"
 
       # TODO: To install graphiz and therefore use erdantic to draw pydantic models:
       # - name: Install graphviz
