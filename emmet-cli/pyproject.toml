@@ -31,7 +31,7 @@ dependencies = [
   "colorama",
   "emmet-archival",
   "emmet-core>=0.85.1",
-  "httpx",
+  "httpx2",
   "pymatgen-io-validation>=0.1.1",
   "psutil>=5.9.0",
 ]

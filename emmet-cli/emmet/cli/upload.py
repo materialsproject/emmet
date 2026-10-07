@@ -27,7 +27,7 @@ from typing import Any
 from collections.abc import Iterator
 from uuid import UUID
 
-import httpx
+import httpx2
 
 from emmet.archival.vasp.raw import RawArchive, raw_archive_hierarchy_from_files
 from emmet.cli.state_manager import StateManager
@@ -123,7 +123,7 @@ class HttpSubmissionUploader:
         state_manager: StateManager,
         api_key: str,
         api_url: str = DEFAULT_API_URL,
-        client: httpx.Client | None = None,
+        client: httpx2.Client | None = None,
     ) -> None:
         if not api_key:
             raise EmmetCliError(
@@ -132,12 +132,12 @@ class HttpSubmissionUploader:
         self.state_manager = state_manager
         self.api_key = api_key
         self.api_url = api_url.rstrip("/")
-        self.client = client or httpx.Client(timeout=60.0)
+        self.client = client or httpx2.Client(timeout=60.0)
         self._owns_client = client is None
 
     @classmethod
     def from_environment(
-        cls, state_manager: StateManager, client: httpx.Client | None = None
+        cls, state_manager: StateManager, client: httpx2.Client | None = None
     ) -> HttpSubmissionUploader:
         """Create an uploader using the CLI's supported environment settings."""
         api_key = os.environ.get("MP_API_KEY", "")
@@ -577,12 +577,12 @@ class HttpSubmissionUploader:
             raise EmmetCliError(
                 f"Upload service returned invalid details for object {object_info.object_id}."
             ) from exc
-        except httpx.HTTPStatusError as exc:
+        except httpx2.HTTPStatusError as exc:
             raise EmmetCliError(
                 f"Uploading object {object_info.object_id} failed with HTTP "
                 f"{exc.response.status_code}."
             ) from None
-        except httpx.RequestError:
+        except httpx2.RequestError:
             raise EmmetCliError(
                 f"Uploading object {object_info.object_id} failed due to a network error."
             ) from None
@@ -639,7 +639,7 @@ class HttpSubmissionUploader:
         action: str,
         json: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
-    ) -> httpx.Response:
+    ) -> httpx2.Response:
         request_headers = {"X-API-KEY": self.api_key}
         request_headers.update(headers or {})
         try:
@@ -651,11 +651,11 @@ class HttpSubmissionUploader:
             )
             response.raise_for_status()
             return response
-        except httpx.HTTPStatusError as exc:
+        except httpx2.HTTPStatusError as exc:
             raise EmmetCliError(
                 f"{action} failed with HTTP {exc.response.status_code}."
             ) from None
-        except httpx.RequestError:
+        except httpx2.RequestError:
             raise EmmetCliError(f"{action} failed due to a network error.") from None
 
     def _load_session(self, submission_id: UUID) -> dict[str, Any]:
