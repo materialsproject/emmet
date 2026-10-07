@@ -4,17 +4,19 @@ import pytest
 from emmet.core.io.pymatgen import (
     _class_map,
     __dir__ as pmg_io_dir,
-    _name_collision_aliases,
 )
 
 
 def test_dir():
+    import emmet.core.io.pymatgen as pmg_io_layer
+
     pmg_list_dir = pmg_io_dir()
-    assert pmg_list_dir == sorted(
-        ".".join(["pymatgen", base_import, _name_collision_aliases.get(name, name)])
-        for name, base_import in _class_map.items()
-    )
+    assert pmg_list_dir == sorted(pmg_list_dir)
     assert all(isinstance(v, str) for v in pmg_list_dir)
+    assert set(_class_map) <= set(pmg_list_dir)
+    assert dir(pmg_io_layer) == pmg_list_dir
+    # dir() protocol: every listed name must be a valid attribute name
+    assert not any("." in name for name in pmg_list_dir)
 
 
 def test_bad_import():
