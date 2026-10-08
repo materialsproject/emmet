@@ -177,7 +177,7 @@ def entry_serializer(entry, nxt, info) -> dict[str, Any]:
     # need to beat pmg serialization to get correct (material/task/entry)_id serialization
     entry.data = TypeAdapter(TypedCEDataDict).dump_python(entry.data)
 
-    default_serialized_object = nxt(entry.as_dict(), info)
+    default_serialized_object = nxt(entry.as_dict())
 
     format = info.context.get("format") if info.context else None
     if format == "arrow":

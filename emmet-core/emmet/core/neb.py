@@ -326,7 +326,7 @@ class NebIntermediateImagesDoc(BaseModel):
 
     @field_serializer("objects", mode="wrap")
     def objects_serializer(self, d, default_serializer, info):
-        default_serialized_object = default_serializer(d, info)
+        default_serialized_object = default_serializer(d)
 
         format = info.context.get("format") if info.context else None
         if format == "arrow":
