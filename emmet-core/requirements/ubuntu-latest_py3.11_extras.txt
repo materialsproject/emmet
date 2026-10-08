@@ -17,9 +17,7 @@ babel==2.18.0
 bibtexparser==1.4.4
     # via pymatgen-core
 blake3==1.0.11
-    # via
-    #   emmet-core
-    #   emmet-core (pyproject.toml)
+    # via emmet-core (pyproject.toml)
 certifi==2026.7.22
     # via requests
 cfgv==3.5.0
@@ -50,8 +48,6 @@ docutils==0.21.2
     #   sphinx-rtd-theme
 email-validator==2.3.0
     # via pydantic
-emmet-core[optimade] @ file:///home/runner/work/emmet/emmet/emmet-core
-    # via emmet-core (pyproject.toml)
 execnet==2.1.2
     # via pytest-xdist
 filelock==4.0.12
@@ -75,9 +71,7 @@ imageio==2.38.1
 imagesize==2.0.1
     # via sphinx
 inflect==7.5.0
-    # via
-    #   emmet-core
-    #   emmet-core (pyproject.toml)
+    # via emmet-core (pyproject.toml)
 iniconfig==2.3.1
     # via pytest
 jinja2==3.1.6
@@ -123,7 +117,6 @@ mdurl==0.1.2
 monty==2026.7.16
     # via
     #   custodian
-    #   emmet-core
     #   emmet-core (pyproject.toml)
     #   pymatgen-core
 more-itertools==11.1.0
@@ -172,9 +165,7 @@ numpy==2.4.6
     #   symfc
     #   tifffile
 optimade==1.5.0
-    # via
-    #   emmet-core
-    #   emmet-core (pyproject.toml)
+    # via emmet-core (pyproject.toml)
 orjson==3.13.0
     # via pymatgen-core
 packaging==26.3
@@ -217,15 +208,11 @@ pre-commit==4.6.2
 psutil==7.2.2
     # via custodian
 pubchempy==1.0.5
-    # via
-    #   emmet-core
-    #   emmet-core (pyproject.toml)
+    # via emmet-core (pyproject.toml)
 pyarrow==25.0.1
     # via emmet-core (pyproject.toml)
 pybtex==0.26.1
-    # via
-    #   emmet-core
-    #   emmet-core (pyproject.toml)
+    # via emmet-core (pyproject.toml)
 pycodcif==3.0.1
     # via emmet-core (pyproject.toml)
 pycodestyle==2.15.0
@@ -234,7 +221,6 @@ pycodestyle==2.15.0
     #   flake8
 pydantic[email]==2.14.0
     # via
-    #   emmet-core
     #   emmet-core (pyproject.toml)
     #   optimade
     #   pydantic-settings
@@ -243,7 +229,6 @@ pydantic-core==2.50.0
     # via pydantic
 pydantic-settings==2.15.0
     # via
-    #   emmet-core
     #   emmet-core (pyproject.toml)
     #   optimade
     #   pymatgen-io-validation
@@ -257,7 +242,6 @@ pygments==2.21.0
     #   sphinx
 pymatgen==2026.9.24
     # via
-    #   emmet-core
     #   emmet-core (pyproject.toml)
     #   lobsterpy
     #   mp-pyrho
@@ -272,15 +256,12 @@ pymatgen-analysis-diffusion==2026.9.23
     # via emmet-core (pyproject.toml)
 pymatgen-core==2026.10.2
     # via
-    #   emmet-core
     #   emmet-core (pyproject.toml)
     #   pymatgen
     #   pymatgen-io-validation
 pymatgen-io-validation==0.1.4
-    # via
-    #   emmet-core
-    #   emmet-core (pyproject.toml)
-pymongo==4.18.2
+    # via emmet-core (pyproject.toml)
+pymongo==4.18.3
     # via emmet-core (pyproject.toml)
 pyparsing==3.3.3
     # via
@@ -400,7 +381,6 @@ typing-extensions==4.16.0
     # via
     #   ase
     #   blake3
-    #   emmet-core
     #   emmet-core (pyproject.toml)
     #   mypy
     #   pydantic
