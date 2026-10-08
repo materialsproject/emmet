@@ -59,7 +59,7 @@ all = [
   "lobsterpy",
   "phonopy>=3.0.0",
   "custodian",
-  "emmet-core[optimade]",
+  "optimade",
 ]
 optimade = [
   "optimade",
