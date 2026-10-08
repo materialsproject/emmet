@@ -8,11 +8,11 @@ annotated-types==0.8.0
     # via pydantic
 bibtexparser==1.4.4
     # via pymatgen-core
-blake3==1.0.9
+blake3==1.0.11
     # via emmet-core (pyproject.toml)
 certifi==2026.7.22
     # via requests
-charset-normalizer==3.5.1
+charset-normalizer==3.5.2
     # via requests
 cloudpickle==3.1.2
     # via joblib
@@ -20,7 +20,7 @@ contourpy==1.4.0
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-fonttools==4.66.0
+fonttools==4.66.1
     # via matplotlib
 idna==3.20
     # via requests
@@ -58,7 +58,7 @@ numpy==2.5.3
     #   pymatgen-io-validation
     #   scipy
     #   spglib
-orjson==3.12.0
+orjson==3.13.0
     # via pymatgen-core
 packaging==26.3
     # via
@@ -76,12 +76,12 @@ pubchempy==1.0.5
     # via emmet-core (pyproject.toml)
 pybtex==0.26.1
     # via emmet-core (pyproject.toml)
-pydantic==2.13.5
+pydantic==2.14.0
     # via
     #   emmet-core (pyproject.toml)
     #   pydantic-settings
     #   pymatgen-io-validation
-pydantic-core==2.46.5
+pydantic-core==2.50.0
     # via pydantic
 pydantic-settings==2.15.0
     # via
@@ -89,7 +89,7 @@ pydantic-settings==2.15.0
     #   pymatgen-io-validation
 pymatgen==2026.9.24
     # via emmet-core (pyproject.toml)
-pymatgen-core==2026.9.23
+pymatgen-core==2026.10.2
     # via
     #   emmet-core (pyproject.toml)
     #   pymatgen
@@ -104,7 +104,7 @@ python-dateutil==2.9.0.post0
     # via
     #   matplotlib
     #   pandas
-python-dotenv==1.2.3
+python-dotenv==1.2.4
     # via pydantic-settings
 pyyaml==6.0.3
     # via pybtex

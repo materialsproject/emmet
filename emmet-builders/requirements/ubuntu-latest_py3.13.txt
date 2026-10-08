@@ -10,11 +10,11 @@ ase==3.29.0
     # via pymatgen-analysis-diffusion
 bibtexparser==1.4.4
     # via pymatgen-core
-blake3==1.0.9
+blake3==1.0.11
     # via emmet-core
 certifi==2026.7.22
     # via requests
-charset-normalizer==3.5.1
+charset-normalizer==3.5.2
     # via requests
 cloudpickle==3.1.2
     # via joblib
@@ -26,13 +26,13 @@ dnspython==2.8.0
     # via pymongo
 emmet-core[all]==0.87.1
     # via emmet-builders (pyproject.toml)
-fonttools==4.66.0
+fonttools==4.66.1
     # via matplotlib
 h5py==3.16.0
     # via phonopy
 idna==3.20
     # via requests
-imageio==2.37.4
+imageio==2.38.1
     # via scikit-image
 inflect==7.5.0
     # via emmet-core
@@ -95,7 +95,7 @@ numpy==2.5.3
     #   spglib
     #   symfc
     #   tifffile
-orjson==3.12.0
+orjson==3.13.0
     # via pymatgen-core
 packaging==26.3
     # via
@@ -103,15 +103,16 @@ packaging==26.3
     #   matplotlib
     #   plotly
     #   scikit-image
+    #   seekpath
 palettable==3.3.3
     # via pymatgen-core
 pandas==3.0.6
     # via
     #   pymatgen-core
     #   seaborn
-phonopy==4.5.0
+phonopy==4.8.1
     # via emmet-core
-phonors==0.3.0
+phonors==0.6.0
     # via phonopy
 pillow==12.3.0
     # via
@@ -128,12 +129,12 @@ pybtex==0.26.1
     # via emmet-core
 pycodcif==3.0.1
     # via emmet-core
-pydantic==2.13.5
+pydantic==2.14.0
     # via
     #   emmet-core
     #   pydantic-settings
     #   pymatgen-io-validation
-pydantic-core==2.46.5
+pydantic-core==2.50.0
     # via pydantic
 pydantic-settings==2.15.0
     # via
@@ -154,17 +155,13 @@ pymatgen-analysis-defects==2026.3.20
     # via emmet-core
 pymatgen-analysis-diffusion==2026.9.23
     # via emmet-core
-pymatgen-core==2026.9.23
+pymatgen-core==2026.10.2
     # via
     #   pymatgen
     #   pymatgen-io-validation
 pymatgen-io-validation==0.1.4
-    # via
-    #   emmet-builders (pyproject.toml)
-    #   emmet-core
-pymongo==4.18.2
     # via emmet-core
-pymongo==4.18.1
+pymongo==4.18.3
     # via emmet-core
 pyparsing==3.3.3
     # via
@@ -174,7 +171,7 @@ python-dateutil==2.9.0.post0
     # via
     #   matplotlib
     #   pandas
-python-dotenv==1.2.3
+python-dotenv==1.2.4
     # via pydantic-settings
 pyyaml==6.0.3
     # via
@@ -196,9 +193,9 @@ scipy==1.18.1
     #   symfc
 seaborn==0.13.2
     # via pymatgen-analysis-diffusion
-seekpath==2.2.1
+seekpath==2.2.2
     # via emmet-core
-shapely==2.1.2
+shapely==2.2.0
     # via pymatgen-analysis-alloys
 six==1.17.0
     # via python-dateutil

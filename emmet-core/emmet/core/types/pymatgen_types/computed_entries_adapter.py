@@ -220,10 +220,13 @@ def entry_deserializer(entry: dict[str, Any] | ComputedEntry | ComputedStructure
                 for _type in (str, bytes)
             ]
         ):
-            entry_dict = TypeAdapter(entry_type).validate_python(entry_dict)
-            entry_dict["energy_adjustments"] = orjson.loads(
-                entry_dict["energy_adjustments"]
+            validated_entry: dict[str, Any] = dict(
+                TypeAdapter(entry_type).validate_python(entry_dict)
             )
+            validated_entry["energy_adjustments"] = orjson.loads(
+                validated_entry["energy_adjustments"]
+            )
+            entry_dict = validated_entry
 
         return entry_cls.from_dict(entry_dict)
 
