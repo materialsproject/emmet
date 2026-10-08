@@ -189,7 +189,7 @@ def electrode_object_serializer(electrode_object, nxt, info) -> dict[str, Any]:
     # need to beat pmg serialization to get correct (material/task/entry)_id serialization
     electrode_object = _serialize_entry_data_field(electrode_object, battery_type)
 
-    default_serialized_object = nxt(electrode_object.as_dict(), info)
+    default_serialized_object = nxt(electrode_object.as_dict())
 
     format = info.context.get("format") if info.context else None
     if format == "arrow":
