@@ -99,7 +99,7 @@ def phase_diagram_serializer(phase_diagram, nxt, info) -> dict[str, Any]:
     ):
         entry.data = TypeAdapter(TypedCEDataDict).dump_python(entry.data)
 
-    default_serialized_object = nxt(phase_diagram.as_dict(), info)
+    default_serialized_object = nxt(phase_diagram.as_dict())
 
     format = info.context.get("format") if info.context else None
     if format == "arrow":

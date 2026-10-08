@@ -456,7 +456,7 @@ def validate_compound_identifier(
 
 def _ser_json_like(d, default_serializer, info):
     """Serialize a generic JSON-like object to a str for arrow, and a dict otherwise."""
-    default_serialized_object = default_serializer(d, info)
+    default_serialized_object = default_serializer(d)
 
     format = info.context.get("format") if info.context else None
     if format == "arrow" and default_serialized_object is not None:
