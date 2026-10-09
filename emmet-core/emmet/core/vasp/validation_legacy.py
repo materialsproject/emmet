@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Any, Self, cast
 
 import numpy as np
 from pydantic import BaseModel, Field, ImportString
@@ -87,6 +87,7 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
                 0.4 if task_doc.tags and "mp_production_old" in task_doc.tags else 0.9
             )
 
+        assert task_doc.input is not None and task_doc.output is not None
         bandgap = task_doc.output.bandgap
         calc_type = task_doc.calc_type
         task_type = task_doc.task_type
@@ -95,6 +96,7 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
 
         if isinstance(task_doc, (TaskDoc, TaskDocument)):
             inputs = task_doc.orig_inputs
+            assert task_doc.calcs_reversed is not None
             calcs_reversed = [
                 calc if not hasattr(calc, "model_dump") else calc.model_dump()
                 for calc in task_doc.calcs_reversed
@@ -108,6 +110,8 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
             inputs = task_doc.input
             calcs_reversed = None
             structure = task_doc.input.structure or task_doc.output.structure
+        assert inputs is not None and structure is not None
+        inputs_dict = inputs if isinstance(inputs, dict) else inputs.model_dump()
 
         if isinstance(structure, dict):
             structure = Structure.from_dict(structure)
@@ -161,7 +165,7 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
                     if valid_input_set.kpoints is not None:
                         if _kpoint_check(
                             valid_input_set,
-                            inputs,
+                            inputs_dict,
                             calcs_reversed,
                             data,
                             kpts_tolerance,
@@ -171,12 +175,16 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
                     else:
                         # warnings
                         _kspacing_warnings(
-                            valid_input_set, inputs, data, warnings, kspacing_tolerance
+                            valid_input_set,
+                            inputs_dict,
+                            data,
+                            warnings,
+                            kspacing_tolerance,
                         )
 
                 # warn, but don't invalidate if wrong ISMEAR
                 valid_ismear = valid_input_set.incar.get("ISMEAR", 1)
-                incar = inputs.get("incar", {})
+                incar = inputs_dict.get("incar", {}) or {}
                 curr_ismear = incar.get("ISMEAR", 1)
                 if curr_ismear != valid_ismear:
                     warnings.append(
@@ -198,7 +206,11 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
                 if calcs_reversed:
                     # Check the max upwards SCF step
                     if _scf_upward_check(
-                        calcs_reversed, inputs, data, max_allowed_scf_gradient, warnings
+                        calcs_reversed,
+                        inputs_dict,
+                        data,
+                        max_allowed_scf_gradient,
+                        warnings,
                     ):
                         reasons.append(DeprecationMessage.MAX_SCF)
 
@@ -209,7 +221,10 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
 
                 # Check for magmom anomalies for specific elements
                 if _magmom_check(
-                    calcs_reversed or task_doc.output,
+                    cast(
+                        list[Any] | CoreCalculationOutput,
+                        calcs_reversed or task_doc.output,
+                    ),
                     structure,
                     max_magmoms=max_magmoms,
                 ):
@@ -233,7 +248,7 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
             warnings=warnings,
         )
 
-        return doc
+        return cast(Self, doc)
 
 
 def _get_input_set(
@@ -461,7 +476,10 @@ def _magmom_check(
     else:
         outcar = calc[0]["output"]["outcar"]
 
-    if outcar and (mag_info := outcar.get("magnetization", [])):
+    mag_info: list[dict[str, float]] = (
+        cast(list[dict[str, float]], outcar.get("magnetization", [])) if outcar else []
+    )
+    if mag_info:
         return any(
             abs(mag_info[isite].get("tot", 0.0))
             > abs(max_magmoms.get(site.label, np.inf))

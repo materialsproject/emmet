@@ -2,7 +2,7 @@
 
 from mp_api.client import MPRester
 import json
-from importlib_resources import files
+from importlib.resources import files
 from pathlib import Path
 
 test_file = Path(

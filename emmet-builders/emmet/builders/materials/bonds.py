@@ -1,4 +1,5 @@
-from typing import Iterator
+from typing import cast
+from collections.abc import Iterator
 
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
@@ -28,7 +29,7 @@ def build_bonding_docs(
     """
 
     def _build(
-        deprecated: bool, material_id: str, structure, **kwargs
+        deprecated: bool, material_id: str, structure, _log_extra=None, **kwargs
     ) -> BondingDoc | None:
         return BondingDoc.from_structure(
             deprecated=deprecated,
@@ -36,13 +37,17 @@ def build_bonding_docs(
             structure=try_call(
                 lambda s: SpacegroupAnalyzer(s).get_conventional_standard_structure(),
                 structure,
+                _log_extra=_log_extra,
             ),
-            **kwargs
+            **kwargs,
         )
 
-    return filter_map(
-        _build,
-        input_documents,
-        work_keys=["deprecated", "material_id", "structure"],
-        **kwargs
+    yield from cast(
+        Iterator[BondingDoc],
+        filter_map(
+            _build,
+            input_documents,
+            work_keys=["deprecated", "material_id", "structure"],
+            **kwargs,
+        ),
     )

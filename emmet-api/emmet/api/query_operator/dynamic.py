@@ -1,6 +1,7 @@
 import inspect
 from abc import abstractmethod
-from typing import Any, Callable
+from typing import Any
+from collections.abc import Callable
 
 from fastapi.params import Query
 from monty.json import MontyDecoder
@@ -105,8 +106,8 @@ class DynamicQueryOperator(QueryOperator):
         """
         Special as_dict implemented to convert pydantic models into strings.
         """
-        d = super().as_dict()  # Ensures sub-classes serialize correctly
-        d["model"] = f"{self.model.__module__}.{self.model.__name__}"  # type: ignore
+        d = vars(self)
+        d["model"] = f"{self.model.__module__}.{self.model.__name__}"
         return d
 
 

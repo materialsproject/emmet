@@ -13,7 +13,7 @@ from emmet.core.types.pymatgen_types.element_adapter import ElementType
 from emmet.core.utils import get_graph_hash
 
 if TYPE_CHECKING:
-    from typing_extensions import Self
+    from typing import Self
 
 T = TypeVar("T", bound="StructureMetadata")
 S = TypeVar("S", bound="MoleculeMetadata")

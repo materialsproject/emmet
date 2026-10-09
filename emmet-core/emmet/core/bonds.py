@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 import numpy as np
 from pydantic import Field
 from emmet.core.io.pymatgen import StructureGraph, NearNeighbors
-from typing_extensions import TypedDict
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.types.pymatgen_types.structure_graph_adapter import StructureGraphType
@@ -15,7 +14,7 @@ AVAILABLE_METHODS = {nn.__name__: nn for nn in NearNeighbors.__subclasses__()}
 if TYPE_CHECKING:
 
     from emmet.core.io.pymatgen import Structure
-    from typing_extensions import Self
+    from typing import Self
 
     from emmet.core.mpid import MPID
 
@@ -56,7 +55,7 @@ class BondingDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_structure(
+    def from_structure(  # type: ignore[override]
         cls,
         structure: Structure,
         material_id: str | MPID,

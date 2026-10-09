@@ -1,4 +1,4 @@
-from typing import Iterator
+from collections.abc import Iterator
 
 from emmet.builders.base import BaseBuilderInput
 from emmet.builders.utils import filter_map
@@ -27,11 +27,11 @@ def build_robocrys_docs(
         Iterator[RobocrystallogapherDoc]
     """
     mineral_matcher = MineralMatcher()
-    return filter_map(
+    yield from filter_map(
         RobocrystallogapherDoc.from_structure,
         input_documents,
         work_keys=["deprecated", "material_id", "structure"],
         mineral_matcher=mineral_matcher,
         robocrys_version=__version__,
-        **kwargs
+        **kwargs,
     )

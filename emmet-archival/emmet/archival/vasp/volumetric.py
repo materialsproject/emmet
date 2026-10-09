@@ -26,7 +26,7 @@ if TYPE_CHECKING:
         BaseVolumetricData as PmgVolumetricData,
         Vasprun,
     )
-    from typing_extensions import Self
+    from typing import Self
 
 
 class DosArchive(Archiver):

@@ -24,10 +24,9 @@ from pydantic_core import CoreSchema, core_schema
 from emmet.core.io.pymatgen import Element
 
 if TYPE_CHECKING:
-    from typing import Any
+    from typing import Any, Self
 
     from pydantic import GetCoreSchemaHandler, GetJsonSchemaHandler
-    from typing_extensions import Self
 
 
 class ValueEnum(Enum):

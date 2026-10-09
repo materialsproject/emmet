@@ -319,32 +319,25 @@ class ChemEnvDoc(PropertyDoc):
     """
 
     property_name: str = "coord_environment"
-
     structure: StructureType | None = Field(
         ...,
         description="The structure used in the generation of the chemical environment data",
     )
-
     valences: list[float] = Field(
         description="List of valences for each site in this material to determine cations"
     )
-
     species: list[str] = Field(
         description="List of unique (cationic) species in structure."
     )
-
     chemenv_symbol: list[COORDINATION_GEOMETRIES] = Field(
         description="List of ChemEnv symbols for unique (cationic) species in structure"
     )
-
     chemenv_iupac: list[COORDINATION_GEOMETRIES_IUPAC] = Field(
         description="List of symbols for unique (cationic) species in structure in IUPAC format"
     )
-
     chemenv_iucr: list[COORDINATION_GEOMETRIES_IUCR] = Field(
         description="List of symbols for unique (cationic) species in structure in IUCR format"
     )
-
     chemenv_name: list[COORDINATION_GEOMETRIES_NAMES] = Field(
         description="List of text description of coordination environment for unique (cationic) species in structure."
     )
@@ -353,27 +346,21 @@ class ChemEnvDoc(PropertyDoc):
     ] = Field(
         description="List of text description of coordination environment including alternative descriptions for unique (cationic) species in structure."  # noqa: E501
     )
-
     csm: list[float | None] = Field(
         description="Saves the continous symmetry measures for unique (cationic) species in structure"
     )
-
     method: str | None = Field(
         description="Method used to compute chemical environments"
     )
-
     mol_from_site_environments: list[MoleculeType | None] = Field(
         description="List of Molecule Objects describing the detected environment."
     )
-
     wyckoff_positions: list[str] = Field(
         description="List of Wyckoff positions for unique (cationic) species in structure."
     )
 
-    warnings: str | None = Field(None, description="Warning")
-
     @classmethod
-    def from_structure(
+    def from_structure(  # type: ignore[override]
         cls,
         structure: Structure,
         material_id: IdentifierType | None = None,
@@ -401,7 +388,7 @@ class ChemEnvDoc(PropertyDoc):
             "mol_from_site_environments": [],
             "wyckoff_positions": [],
             "method": None,
-            "warnings": None,
+            "warnings": [],
             # "structure_environment": None,
         }  # type: dict
 
@@ -453,12 +440,9 @@ class ChemEnvDoc(PropertyDoc):
             lse = LightStructureEnvironments.from_structure_environments(
                 strategy=method, structure_environments=se
             )
-            warnings = None
         else:
-            d.update(
-                {
-                    "warnings": "No oxidation states available. Cation-anion bonds cannot be identified."
-                }
+            d["warnings"].append(
+                "No oxidation states available. Cation-anion bonds cannot be identified."
             )
             return super().from_structure(
                 meta_structure=structure,
@@ -519,7 +503,6 @@ class ChemEnvDoc(PropertyDoc):
                     "wyckoff_positions": list_wyckoff,
                     # "structure_environment": se.as_dict(),
                     "method": METHODS_DESCRIPTION[method_description],
-                    "warnings": warnings,
                 }
             )
 

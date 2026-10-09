@@ -14,22 +14,20 @@ from datetime import datetime
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any, Union, overload
+from typing import TYPE_CHECKING, Annotated, Any, overload, TypedDict
 
 import orjson
 from pydantic import BeforeValidator, Field, PlainSerializer, WrapSerializer
-from typing_extensions import TypedDict
 
 from emmet.core.mpid import MPID, AlphaID
 from emmet.core.utils import convert_datetime, utcnow
 
 if TYPE_CHECKING:
-    from typing import Literal
+    from typing import Literal, TypeAlias
 
-    from typing_extensions import TypeAlias
 
 FSPathType: TypeAlias = Annotated[
-    Union[str | Path | os.DirEntry[str] | os.PathLike[str]],
+    str | Path | os.DirEntry[str] | os.PathLike[str],
     PlainSerializer(lambda x: str(x), return_type=str),
 ]
 """Type of a generic path-like object"""
@@ -353,9 +351,9 @@ def _make_id_type(render_order, **kwargs) -> Any:
     _order: Any
     match render_order:
         case 0:
-            _order = Union[AlphaID, MPID]
+            _order = AlphaID | MPID
         case 1:
-            _order = Union[MPID, AlphaID]
+            _order = MPID | AlphaID
         case _:
             raise NotImplementedError(
                 f"No implementation for render_order: {render_order}"

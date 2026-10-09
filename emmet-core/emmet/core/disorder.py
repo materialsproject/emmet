@@ -6,8 +6,7 @@ from pydantic import Field
 from emmet.core.io.pymatgen import Structure
 from pathlib import Path
 import json
-from typing_extensions import TypedDict, Self
-from typing import Any
+from typing import TypedDict, Self, Any
 
 REQUIRED_METADATA_KEYS: tuple[str, ...] = (
     "ordered_task_id",
@@ -90,7 +89,7 @@ class DisorderedTaskDoc(CoreTaskDoc):
     )
 
     @classmethod
-    def from_directory(
+    def from_directory(  # type: ignore[override]
         cls,
         dir_name: Path | str,
         volumetric_files: tuple[str, ...] = _VOLUMETRIC_FILES,

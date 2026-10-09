@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, auto
 from functools import update_wrapper
-from typing import Iterator
+from collections.abc import Iterator
 
 from pydantic import BaseModel
 from emmet.core.io.pymatgen import Ordering
@@ -140,7 +140,7 @@ def build_electronic_structure_docs(
 
 @build_electronic_structure_docs.register(Variant.STRUCTURE)
 def _(inputs: ESBuilderInput, **kwargs) -> Iterator[ElectronicStructureDoc]:
-    return filter_map(
+    yield from filter_map(
         ElectronicStructureDoc.from_structure,
         inputs.data,
         work_keys=[
@@ -163,7 +163,7 @@ def _(inputs: ESBuilderInput, **kwargs) -> Iterator[ElectronicStructureDoc]:
 
 @build_electronic_structure_docs.register(Variant.BS)
 def _(inputs: ESBuilderInput, **kwargs) -> Iterator[ElectronicStructureDoc]:
-    return filter_map(
+    yield from filter_map(
         ElectronicStructureDoc.from_bs,
         inputs.data,
         work_keys=[
@@ -181,7 +181,7 @@ def _(inputs: ESBuilderInput, **kwargs) -> Iterator[ElectronicStructureDoc]:
 
 @build_electronic_structure_docs.register(Variant.DOS)
 def _(inputs: ESBuilderInput, **kwargs) -> Iterator[ElectronicStructureDoc]:
-    return filter_map(
+    yield from filter_map(
         ElectronicStructureDoc.from_dos,
         inputs.data,
         work_keys=[
@@ -200,7 +200,7 @@ def _(inputs: ESBuilderInput, **kwargs) -> Iterator[ElectronicStructureDoc]:
 
 @build_electronic_structure_docs.register(Variant.BS_DOS)
 def _(inputs: ESBuilderInput, **kwargs) -> Iterator[ElectronicStructureDoc]:
-    return filter_map(
+    yield from filter_map(
         ElectronicStructureDoc.from_bsdos,
         inputs.data,
         work_keys=[

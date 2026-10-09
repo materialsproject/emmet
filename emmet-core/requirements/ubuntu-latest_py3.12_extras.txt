@@ -380,7 +380,6 @@ types-setuptools==84.0.0.20261006
 typing-extensions==4.16.0
     # via
     #   ase
-    #   emmet-core (pyproject.toml)
     #   mypy
     #   pydantic
     #   pydantic-core
@@ -399,5 +398,3 @@ urllib3==2.8.0
     #   types-requests
 virtualenv==21.14.6
     # via pre-commit
-wincertstore==0.2.1
-    # via emmet-core (pyproject.toml)

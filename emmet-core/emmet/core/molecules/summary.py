@@ -14,9 +14,8 @@ from emmet.core.types.pymatgen_types.structure_adapter import MoleculeType
 from emmet.core.utils import arrow_incompatible
 
 if TYPE_CHECKING:
-    from typing import Any
+    from typing import Any, Self
 
-    from typing_extensions import Self
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
@@ -498,7 +497,7 @@ class MoleculeSummaryDoc(PropertyDoc):
         property_id = h.hexdigest()
         doc["property_id"] = property_id
 
-        return MoleculeSummaryDoc(molecule_id=molecule_id, **doc)
+        return cls(molecule_id=molecule_id, **doc)
 
 
 # Key mapping

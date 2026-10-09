@@ -1,4 +1,4 @@
-from typing import Iterator
+from collections.abc import Iterator
 
 from pydantic import BaseModel
 
@@ -87,9 +87,9 @@ def build_summary_docs(
     Returns:
         Iterator[SummaryDoc]
     """
-    return filter_map(
+    yield from filter_map(
         SummaryDoc.from_docs,
         input_documents,
         work_keys=["property_summary_docs", "property_shim_docs"],
-        **kwargs
+        **kwargs,
     )

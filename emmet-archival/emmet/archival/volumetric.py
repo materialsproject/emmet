@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Type
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pyarrow as pa
@@ -16,7 +16,7 @@ from emmet.archival.base import Archiver
 from emmet.archival.atoms import CrystalArchive
 
 if TYPE_CHECKING:
-    from pathlib import Path
+    from emmet.core.types.typing import FSPathType
 
 
 class VolumetricArchive(Archiver, ChgcarLike):
@@ -47,7 +47,7 @@ class VolumetricArchive(Archiver, ChgcarLike):
 
     @classmethod
     def from_arrow(
-        cls, table: pa.Table, pmg_cls: Type[PmgVolumetricData] = PmgVolumetricData
+        cls, table: pa.Table, pmg_cls: type[PmgVolumetricData] = PmgVolumetricData
     ) -> PmgVolumetricData:
         cls_config: dict[str, dict[str, np.ndarray]] = {
             k: {} for k in ("data", "data_aug")
@@ -72,6 +72,8 @@ class VolumetricArchive(Archiver, ChgcarLike):
     @classmethod
     def _extract_from_parquet(
         cls,
-        archive_path: str | Path,
+        archive_path: FSPathType,
+        *args,
+        **kwargs,
     ) -> PmgVolumetricData:
         return cls.from_arrow(pq.read_table(archive_path))

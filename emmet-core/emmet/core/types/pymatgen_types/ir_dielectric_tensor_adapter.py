@@ -1,8 +1,7 @@
-from typing import Annotated, TypeVar
+from typing import Annotated, TypeVar, TypedDict
 
 from pydantic import BeforeValidator, WrapSerializer
 from emmet.core.io.pymatgen import IRDielectricTensor
-from typing_extensions import TypedDict
 
 from emmet.core.types.pymatgen_types.structure_adapter import TypedStructureDict
 

@@ -1,11 +1,10 @@
-from typing import TypeVar
+from typing import TypeVar, TypedDict
 
 from emmet.core.io.pymatgen import (
     Compatibility,
     MaterialsProject2020Compatibility,
     MaterialsProjectAqueousCompatibility,
 )
-from typing_extensions import TypedDict
 
 TypedCompatibilityDict = TypedDict(
     "TypedCompatibilityDict",

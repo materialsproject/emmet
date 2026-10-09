@@ -7,7 +7,7 @@ import time
 import json
 import orjson
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 import numpy as np
 from monty.os.path import zpath
@@ -31,7 +31,6 @@ from emmet.core.io.pymatgen import (
     MadelungEnergies,
     SitePotential,
 )
-from typing_extensions import Self
 
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import arrow_incompatible
@@ -956,7 +955,7 @@ class LobsterTaskDocument(StructureMetadata):
                         f"{doc.lobsterpy_data_cation_anion.which_bonds.replace('-', '_')}_bonds": {
                             "lobsterpy_data": doc.lobsterpy_data_cation_anion,
                             "lobsterpy_text": [
-                                "".join(doc.lobsterpy_text_cation_anion)
+                                "".join(doc.lobsterpy_text_cation_anion or [])
                             ],
                             "strongest_bonds": doc.strongest_bonds_cation_anion,
                         }
@@ -968,16 +967,16 @@ class LobsterTaskDocument(StructureMetadata):
             data.extend(
                 [
                     {
-                        f"{doc.lobsterpy_data.which_bonds}_bonds": {
+                        f"{doc.lobsterpy_data.which_bonds if doc.lobsterpy_data else 'all'}_bonds": {
                             "lobsterpy_data": doc.lobsterpy_data,
-                            "lobsterpy_text": ["".join(doc.lobsterpy_text)],
+                            "lobsterpy_text": ["".join(doc.lobsterpy_text or [])],
                             "strongest_bonds": doc.strongest_bonds,
                         }
                     },
                     {"madelung_energies": doc.madelung_energies},
                     {"charges": doc.charges},
                     {"calc_quality_summary": doc.calc_quality_summary},
-                    {"calc_quality_text": ["".join(doc.calc_quality_text)]},
+                    {"calc_quality_text": ["".join(doc.calc_quality_text or [])]},
                     {"dos": doc.dos},
                     {"lso_dos": doc.lso_dos},
                 ]

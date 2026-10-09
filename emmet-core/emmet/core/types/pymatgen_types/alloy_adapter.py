@@ -1,4 +1,4 @@
-from typing import Annotated, Any, TypeVar
+from typing import Annotated, Any, TypeVar, NotRequired, TypedDict
 
 from pydantic import (
     BaseModel,
@@ -9,7 +9,6 @@ from pydantic import (
     model_validator,
 )
 from emmet.core.io.pymatgen import Element
-from typing_extensions import NotRequired, TypedDict
 
 from emmet.core.types.pymatgen_types.structure_adapter import (
     TypedStructureDict,

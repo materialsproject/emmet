@@ -6,13 +6,12 @@ from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from types import UnionType
+from typing import NotRequired
 
 import pyarrow as pa
-import typing_extensions
 from monty.json import MSONable
 from pydantic._internal._model_construction import ModelMetaclass
 from pydantic.types import ImportString
-from typing_extensions import NotRequired
 
 RED = "\033[31m"
 BLUE = "\033[34m"
@@ -75,10 +74,10 @@ def arrowize(obj) -> pa.DataType:
         tuple,
         set,
         dict,
-        typing.Dict,
-        typing.List,
-        typing.Set,
-        typing.Tuple,
+        typing.Dict,  # noqa: UP006
+        typing.List,  # noqa: UP006
+        typing.Set,  # noqa: UP006
+        typing.Tuple,  # noqa: UP006
     ), f"Cannot construct arrow type from container of type {RED}{obj}{RESET} without typed arguments"
 
     assert (
@@ -193,7 +192,14 @@ def arrowize(obj) -> pa.DataType:
     if any(obj is str_like for str_like in (ImportString, Path)):
         return PY_PRIMITIVES_TO_ARROW[str]
 
-    if isinstance(obj, typing._TypedDictMeta | typing_extensions._TypedDictMeta):  # type: ignore[attr-defined]
+    # Duck-typed so TypedDicts from third-party code still built with
+    # typing_extensions (which uses its own metaclass on python < 3.13) also match
+    if typing.is_typeddict(obj) or (
+        isinstance(obj, type)
+        and issubclass(obj, dict)
+        and hasattr(obj, "__required_keys__")
+        and hasattr(obj, "__optional_keys__")
+    ):
         return pa.struct(
             [
                 pa.field(field_name, arrowize(value))

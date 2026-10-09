@@ -40,7 +40,7 @@ class AggregationResource(CollectionResource):
     def build_dynamic_model_search(self):
         model_name = self.model.__name__
 
-        async def search(**queries: dict[str, STORE_PARAMS]) -> dict:
+        async def search(**queries: dict[str, STORE_PARAMS]) -> Response:
             request: Request = queries.pop("request")  # type: ignore
             queries.pop("temp_response")  # type: ignore
 
@@ -67,8 +67,14 @@ class AggregationResource(CollectionResource):
             operator_meta = self.pipeline_query_operator.meta()
 
             meta = Meta(total_doc=count)
-            response = {"data": data, "meta": {**meta.dict(), **operator_meta}}
-            response = Response(orjson.dumps(response, default=serialization_helper))  # type: ignore
+            response_payload = {
+                "data": data,
+                "meta": {**meta.model_dump(), **operator_meta},
+            }
+            response = Response(
+                orjson.dumps(response_payload, default=serialization_helper),
+                media_type="application/json",
+            )
 
             if self.header_processor is not None:
                 self.header_processor.process_header(response, request)
@@ -79,7 +85,7 @@ class AggregationResource(CollectionResource):
             self.sub_path,
             tags=self.tags,
             summary=f"Get {model_name} documents",
-            response_model=self.response_model,
+            response_model=None,
             response_description=f"Get {model_name} data",
             response_model_exclude_unset=True,
         )(attach_query_ops(search, [self.pipeline_query_operator]))

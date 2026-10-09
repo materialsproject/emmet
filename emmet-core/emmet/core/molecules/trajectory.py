@@ -93,6 +93,7 @@ class ForcesDoc(PropertyDoc):
         if precise_forces is not None:
             magnitudes = [np.linalg.norm(np.asarray(f)) for f in precise_forces]
         else:
+            assert forces is not None
             magnitudes = [np.linalg.norm(np.asarray(f)) for f in forces]
 
         average_force_magnitude = np.mean(magnitudes)
@@ -355,7 +356,9 @@ class TrajectoryDoc(PropertyDoc):
             if this_geometries is None or this_energies is None:
                 # No valid geometry optimization found
                 valid_trajectory = False
-            elif len(this_energies) != len(this_total_gradients):
+            elif this_total_gradients is None or len(this_energies) != len(
+                this_total_gradients
+            ):
                 # Energies and forces cannot be trivially mapped
                 valid_trajectory = False
             elif len(this_geometries) != len(this_energies):

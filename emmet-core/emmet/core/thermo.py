@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from collections import defaultdict
 from functools import cached_property
-from typing import TYPE_CHECKING, Sequence, overload
+from typing import TYPE_CHECKING, overload
+from collections.abc import Sequence
 
 from pydantic import BaseModel, Field
 from emmet.core.io.pymatgen import PhaseDiagram, ComputedEntry, ComputedStructureEntry
@@ -45,7 +46,7 @@ def validate_thermo_id(idx: str, as_components: bool = False) -> str | CompoundI
     """Validate a thermo identifier."""
     for enum_cls in (ThermoType, RunType):
         try:
-            return validate_compound_identifier(
+            return validate_compound_identifier(  # type: ignore[call-overload]
                 idx,
                 suffixes=(enum_cls,),
                 separator="_",

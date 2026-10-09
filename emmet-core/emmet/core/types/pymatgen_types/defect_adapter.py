@@ -1,9 +1,8 @@
-from typing import Annotated, TypeVar
+from typing import Annotated, TypeVar, TypedDict
 
 from monty.json import MontyDecoder
 from pydantic import BeforeValidator, WrapSerializer
 from emmet.core.io.pymatgen import Defect
-from typing_extensions import TypedDict
 
 from emmet.core.types.pymatgen_types.sites_adapter import MSONableTypedSiteDict
 from emmet.core.types.pymatgen_types.structure_adapter import (

@@ -2,10 +2,10 @@ import hashlib
 import json
 import traceback
 import builtins
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from uuid import uuid4
 
-import httpx
+import httpx2
 import pytest
 
 import emmet.cli.upload as upload_module
@@ -58,9 +58,9 @@ class UploadService:
             if object_id == self.fail_object or (
                 self.fail_object == "manifest" and object_id.endswith(".json")
             ):
-                return httpx.Response(500)
+                return httpx2.Response(500)
             self.puts[object_id] = content
-            return httpx.Response(200)
+            return httpx2.Response(200)
 
         payload = json.loads(content)
         if request.url.path.endswith("/complete"):
@@ -68,15 +68,15 @@ class UploadService:
             self.finalize_headers.append(request.headers)
             if self.fail_finalize:
                 self.fail_finalize = False
-                return httpx.Response(500)
+                return httpx2.Response(500)
             for item in payload["objects"]:
                 uploaded_sha256 = hashlib.sha256(
                     self.puts[item["object_id"]]
                 ).hexdigest()
                 if item["sha256"] != uploaded_sha256:
-                    return httpx.Response(422)
+                    return httpx2.Response(422)
             response_submission_id = request.url.path.split("/")[2]
-            return httpx.Response(
+            return httpx2.Response(
                 200,
                 json={
                     "submission_id": response_submission_id,
@@ -98,7 +98,7 @@ class UploadService:
             uploads[0].pop("object_id")
         response_payload = {
             "session_id": "session-1",
-            "expires_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
+            "expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
             "uploads": uploads,
             "completed_object_ids": list(self.puts),
         }
@@ -110,11 +110,11 @@ class UploadService:
                 }
                 for object_id, uploaded in self.puts.items()
             ]
-        return httpx.Response(200, json=response_payload)
+        return httpx2.Response(200, json=response_payload)
 
 
 def _uploader(state_manager, service):
-    client = httpx.Client(transport=httpx.MockTransport(service))
+    client = httpx2.Client(transport=httpx2.MockTransport(service))
     return HttpSubmissionUploader(
         state_manager=state_manager,
         api_key="secret-token",
@@ -171,9 +171,9 @@ def test_contributor_status_matches_server_route(tmp_path):
         assert request.url.path == "/submissions/contributor-status"
         assert request.headers["x-api-key"] == "secret-token"
         assert request.content == b""
-        return httpx.Response(200, json={"status": "active"})
+        return httpx2.Response(200, json={"status": "active"})
 
-    client = httpx.Client(transport=httpx.MockTransport(service))
+    client = httpx2.Client(transport=httpx2.MockTransport(service))
     uploader = HttpSubmissionUploader(
         state_manager=StateManager(tmp_path / "state"),
         api_key="secret-token",
@@ -191,7 +191,7 @@ def test_submission_status_matches_server_route(tmp_path):
         assert request.method == "POST"
         assert request.url.path == f"/submissions/{submission_id}/status"
         assert request.content == b""
-        return httpx.Response(
+        return httpx2.Response(
             200,
             json={
                 "submission_id": str(submission_id),
@@ -201,7 +201,7 @@ def test_submission_status_matches_server_route(tmp_path):
             },
         )
 
-    client = httpx.Client(transport=httpx.MockTransport(service))
+    client = httpx2.Client(transport=httpx2.MockTransport(service))
     uploader = HttpSubmissionUploader(
         state_manager=StateManager(tmp_path / "state"),
         api_key="secret-token",

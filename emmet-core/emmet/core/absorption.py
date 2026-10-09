@@ -52,7 +52,7 @@ class AbsorptionDoc(PropertyDoc):
         return a
 
     @classmethod
-    def from_structure(
+    def from_structure(  # type: ignore[override]
         cls,
         energies: list,
         real_d: list[np.ndarray],

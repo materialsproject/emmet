@@ -9,13 +9,12 @@ from datetime import datetime
 from functools import cached_property
 from hashlib import md5
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any, Type
+from typing import TYPE_CHECKING, Annotated, Any, NotRequired, TypedDict
 
 import numpy as np
 import orjson
 from monty.io import zopen
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
-from typing_extensions import NotRequired, TypedDict
 
 from emmet.core.band_theory import ElectronicBS, ElectronicDos
 from emmet.core.io.pymatgen import (
@@ -61,7 +60,7 @@ from emmet.core.vasp.models import ChgcarLike, ElectronicStep
 SETTINGS = EmmetSettings()
 
 if TYPE_CHECKING:
-    from typing_extensions import Self
+    from typing import Self
 
     from emmet.core.io.pymatgen import BandStructure, CompleteDos
 
@@ -1203,7 +1202,7 @@ class Calculation(CalculationBaseModel):
                 if this_task_type == TaskType.Molecular_Dynamics
                 else RelaxTrajectory
             )
-            vasp_objects[VaspObject.TRAJECTORY] = traj_class.from_vasprun(  # type: ignore[index]
+            vasp_objects[VaspObject.TRAJECTORY] = traj_class.from_vasprun(  # type: ignore[index,assignment]
                 vasprun,
                 store_electronic_steps=(store_trajectory == StoreTrajectoryOption.FULL),
                 temperature=temperatures,
@@ -1239,9 +1238,9 @@ class Calculation(CalculationBaseModel):
                 },
                 bader=bader,
                 ddec6=ddec6,
-                run_type=run_type(input_doc.parameters),
+                run_type=run_type(input_doc.parameters or {}),
                 task_type=this_task_type,
-                calc_type=calc_type(input_doc.model_dump(), input_doc.parameters),
+                calc_type=calc_type(input_doc.model_dump(), input_doc.parameters or {}),
             ),
             vasp_objects,
         )
@@ -1305,9 +1304,9 @@ class Calculation(CalculationBaseModel):
             input=input_doc,
             output=output_doc,
             output_file_paths={},
-            run_type=run_type(input_doc.parameters),
+            run_type=run_type(input_doc.parameters or {}),
             task_type=task_type(input_doc.model_dump()),
-            calc_type=calc_type(input_doc.model_dump(), input_doc.parameters),
+            calc_type=calc_type(input_doc.model_dump(), input_doc.parameters or {}),
         )
 
 
@@ -1495,8 +1494,10 @@ def _get_band_props(
 
 def _calculation_to_trajectory_dict(
     calc: Calculation,
-    traj_class: RelaxTrajectory | Trajectory = RelaxTrajectory,
-) -> tuple[dict[str, list[Any]], RunType, TaskType, CalcType, float | None]:
+    traj_class: type[RelaxTrajectory] | type[Trajectory] = RelaxTrajectory,
+) -> tuple[
+    dict[str, list[Any]], RunType | None, TaskType | None, CalcType | None, float | None
+]:
     """Convert a single VASP calculation to Trajectory._from_dict compatible dict.
 
     Parameters
@@ -1558,7 +1559,7 @@ def _calculation_to_trajectory_dict(
 def get_trajectories_from_calculations(
     calculations: list[Calculation],
     separate: bool = True,
-    traj_class: Type[RelaxTrajectory] = RelaxTrajectory,
+    traj_class: type[RelaxTrajectory] = RelaxTrajectory,
     **kwargs,
 ) -> list[RelaxTrajectory]:
     """

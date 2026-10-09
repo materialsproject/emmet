@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from inspect import signature
 from typing import Any
@@ -55,7 +55,9 @@ class SubmissionResource(CollectionResource):
             patch_sub_path: PATCH sub-URL path for the resource.
             post_sub_path: POST sub-URL path for the resource.
         """
-        if isinstance(state_enum, Enum) and default_state not in [entry.value for entry in state_enum]:  # type: ignore
+        if isinstance(state_enum, Enum) and default_state not in [
+            entry.value for entry in list(state_enum)  # type: ignore
+        ]:
             raise RuntimeError(
                 "If data is stateful a state enum and valid default value must be provided"
             )
@@ -65,7 +67,8 @@ class SubmissionResource(CollectionResource):
         self.duplicate_fields_check = duplicate_fields_check
         self.enable_default_search = enable_default_search
         self.get_query_operators = (
-            [op for op in get_query_operators if op is not None] + [SubmissionQuery(state_enum)]  # type: ignore
+            [op for op in get_query_operators if op is not None]
+            + [SubmissionQuery(state_enum)]
             if state_enum is not None
             else get_query_operators
         )
@@ -158,8 +161,8 @@ class SubmissionResource(CollectionResource):
                     detail=f"Item with submission ID = {key} not found",
                 )
 
-            for operator in self.get_query_operators:  # type: ignore
-                item = operator.post_process(item, {})
+            for operator in self.get_query_operators:
+                item = operator.post_process(item, {})  # type: ignore
 
             return {"data": item}
 
@@ -183,13 +186,13 @@ class SubmissionResource(CollectionResource):
 
         async def search(**queries: STORE_PARAMS):
             request: Request = queries.pop("request")  # type: ignore
-            queries.pop("temp_response")  # type: ignore
+            queries.pop("temp_response")
 
             query: STORE_PARAMS = merge_queries(list(queries.values()))
 
             query_params = [
                 entry
-                for _, i in enumerate(self.get_query_operators)  # type: ignore
+                for _, i in enumerate(self.get_query_operators)
                 for entry in signature(i.query).parameters
             ]
 
@@ -284,7 +287,7 @@ class SubmissionResource(CollectionResource):
 
             if self.state_enum is not None:
                 query["criteria"]["state"] = [self.default_state]
-                query["criteria"]["updated"] = [datetime.utcnow()]
+                query["criteria"]["updated"] = [datetime.now(UTC).replace(tzinfo=None)]
 
             try:
                 # TODO: verify that this is only used to insert new data and one item at a time
@@ -360,7 +363,7 @@ class SubmissionResource(CollectionResource):
 
             if self.state_enum is not None:
                 query["criteria"]["state"] = [self.default_state]
-                query["criteria"]["updated"] = [datetime.utcnow()]
+                query["criteria"]["updated"] = [datetime.now(UTC).replace(tzinfo=None)]
 
             if query.get("update"):
                 try:

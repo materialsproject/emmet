@@ -19,8 +19,7 @@ from emmet.core.io.pymatgen import (
 )
 
 if TYPE_CHECKING:
-    from typing import Any, Literal
-    from typing_extensions import Self
+    from typing import Any, Literal, Self
 
 
 class FeatureStats(StrEnum):

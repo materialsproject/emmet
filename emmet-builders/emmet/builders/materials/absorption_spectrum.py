@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Iterator
+from collections.abc import Iterator
 
 from emmet.builders.base import BaseBuilderInput
 from emmet.builders.utils import _parse_kpoints, filter_map
@@ -41,7 +41,7 @@ def build_absorption_docs(
     Returns:
        Iterator[AbsorbtionDoc]
     """
-    return filter_map(
+    yield from filter_map(
         AbsorptionDoc.from_structure,
         input_documents,
         work_keys=[
@@ -58,7 +58,7 @@ def build_absorption_docs(
             "material_id",
             "structure",
         ],
-        **kwargs
+        **kwargs,
     )
 
 

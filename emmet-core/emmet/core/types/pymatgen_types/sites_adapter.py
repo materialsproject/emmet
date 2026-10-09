@@ -1,4 +1,4 @@
-from typing_extensions import NotRequired, TypedDict
+from typing import NotRequired, TypedDict
 
 from emmet.core.types.pymatgen_types.properties import TypedSiteProperitesDict
 from emmet.core.types.pymatgen_types.species_adapter import TypedSpeciesDict

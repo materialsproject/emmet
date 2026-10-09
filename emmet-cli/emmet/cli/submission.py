@@ -7,7 +7,8 @@ from collections import defaultdict
 from multiprocessing import get_context
 from os import PathLike, cpu_count
 from pathlib import Path
-from typing import ClassVar, Iterable, Literal, Protocol
+from typing import ClassVar, Literal, Protocol, Self
+from collections.abc import Iterable
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, PrivateAttr
@@ -151,27 +152,19 @@ class Submission(BaseModel):
         path.write_text(self.model_dump_json(indent=4))
 
     @classmethod
-    def load(
-        cls, path: Path
-    ) -> (
-        "Submission"
-    ):  # change this to use TypeVar (or self if min Python >= 3.11) if ever create subclasses
+    def load(cls, path: Path) -> Self:
         """Load a submission from a JSON file."""
         content = path.read_text()
         data = json.loads(content)
         return cls.model_validate(data)
 
     @classmethod
-    def from_paths(
-        cls, paths: Iterable[Path]
-    ) -> (
-        "Submission"
-    ):  # change this to use TypeVar (or self if min Python >= 3.11) if ever create subclasses
+    def from_paths(cls, paths: Iterable[Path]) -> Self:
         """Create Submission from all calculations in the provided paths"""
         all_calculations = find_all_calculations(paths)
         logger.debug(f"found all calculations for {paths}:\n{all_calculations}")
 
-        return Submission(calculations=all_calculations)
+        return cls(calculations=all_calculations)
 
     def _merge_calculations(
         self, cm: list[tuple[CalculationLocator, CalculationMetadata]]

@@ -19,7 +19,7 @@ from emmet.core.types.typing import DateTimeType, IdentifierType, MaterialIdenti
 
 if TYPE_CHECKING:
 
-    from typing_extensions import Self
+    from typing import Self
 
 
 class PropertyOrigin(BaseModel):
@@ -91,7 +91,6 @@ class BasePropertyMetadata(StructureMetadata, EmmetBaseModel):
         Note that structure is stored as a private attr, and will not
         be included in `PropertyDoc().model_dump()`
         """
-
         return super().from_structure(
             meta_structure=meta_structure,
             structure=meta_structure,
@@ -189,7 +188,7 @@ class CoreMoleculeDoc(MoleculeMetadata, EmmetBaseModel):
     warnings: list[str] = Field([], description="Any warnings related to this molecule")
 
     @classmethod
-    def from_molecule(
+    def from_molecule(  # type: ignore[override]
         cls, molecule: Molecule, molecule_id: MPculeID, **kwargs
     ) -> Self:  # type: ignore[override]
         """

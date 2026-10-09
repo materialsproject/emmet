@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import Iterator, Literal, TypeVar
+from typing import Literal, TypeVar
+from collections.abc import Iterator
 
 from emmet.builders.base import BaseBuilderInput
 from emmet.builders.utils import _parse_kpoints, filter_map
@@ -30,7 +31,7 @@ class PiezoelectricBuilderInput(BaseLinearResponseInput):
 def build_dielectric_docs(
     linear_resp_input: list[DielectricBuilderInput], **kwargs
 ) -> Iterator[DielectricDoc]:
-    return filter_map(
+    yield from filter_map(
         DielectricDoc.from_ionic_and_electronic,
         linear_resp_input,
         work_keys=[
@@ -50,7 +51,7 @@ def build_piezo_docs(
     linear_resp_input: list[PiezoelectricBuilderInput],
     **kwargs,
 ) -> Iterator[PiezoelectricDoc]:
-    return filter_map(
+    yield from filter_map(
         PiezoelectricDoc.from_ionic_and_electronic,
         linear_resp_input,
         work_keys=[
@@ -193,4 +194,4 @@ def obtain_blessed_linear_builder_input(
         **best_task,
     }
 
-    return target(**doc)
+    return target.model_validate(doc)

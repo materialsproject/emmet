@@ -65,12 +65,14 @@ class CalculationsDoc(BaseModel):
         return CalculationsDoc(
             task_names=[calc.task_name for calc in calcs],
             calc_types=[calc.calc_type for calc in calcs],
-            elapsed_times=[calc.output.elapsed_time for calc in calcs],
-            steps=[calc.input.n_steps for calc in calcs],
-            step_sizes=[calc.input.step_size for calc in calcs],
-            temperatures=[calc.input.temperature for calc in calcs],
-            pressures=[calc.input.pressure for calc in calcs],
-            friction_coefficients=[calc.input.friction_coefficient for calc in calcs],
+            elapsed_times=[calc.output.elapsed_time for calc in calcs if calc.output],
+            steps=[calc.input.n_steps for calc in calcs if calc.input],
+            step_sizes=[calc.input.step_size for calc in calcs if calc.input],
+            temperatures=[calc.input.temperature for calc in calcs if calc.input],
+            pressures=[calc.input.pressure for calc in calcs if calc.input],
+            friction_coefficients=[
+                calc.input.friction_coefficient for calc in calcs if calc.input
+            ],
             completed_at=calcs[-1].completed_at,
             job_uuid=job_uuid,
             flow_uuid=flow_uuid,

@@ -42,7 +42,7 @@ ddtrace==4.8.2
     # via emmet-api (pyproject.toml)
 dnspython==2.8.0
     # via pymongo
-emmet-core==0.87.2
+emmet-core==0.87.3
     # via emmet-api (pyproject.toml)
 envier==0.6.1
     # via ddtrace
@@ -161,6 +161,7 @@ pymatgen-analysis-defects==2026.3.20
     # via emmet-api (pyproject.toml)
 pymatgen-core==2026.10.2
     # via
+    #   emmet-core
     #   pymatgen
     #   pymatgen-io-validation
 pymatgen-io-validation==0.1.4

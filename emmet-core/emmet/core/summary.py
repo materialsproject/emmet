@@ -17,7 +17,7 @@ from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.types.typing import IdentifierType
 
 if TYPE_CHECKING:
-    from typing_extensions import Self
+    from typing import Self
 
 
 class HasProps(ValueEnum):
@@ -410,7 +410,7 @@ class SummaryDoc(
             chain(aggregate_struct["origins"], prop_origins)
         )
 
-        return SummaryDoc(
+        return cls(
             has_props=has_props,
             **{**aggregate_struct, **kwargs},
         )

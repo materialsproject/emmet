@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from importlib.resources import files
 from typing import TYPE_CHECKING
 
-from monty.serialization import loadfn
+import yaml
 import numpy as np
 from emmet.core.io.pymatgen import Kpoints
 
@@ -14,9 +14,8 @@ from emmet.core.vasp.calc_types.enums import CalcType, RunType, TaskType
 if TYPE_CHECKING:
     from typing import Any
 
-_RUN_TYPE_DATA = loadfn(
-    str(Path(__file__).parent.joinpath("calc_types.yaml").resolve())
-)["RUN_TYPES"]
+with files("emmet.core.vasp.calc_types").joinpath("calc_types.yaml").open() as f:
+    _RUN_TYPE_DATA = yaml.safe_load(f)["RUN_TYPES"]
 
 __all__ = ["run_type", "task_type", "calc_type"]
 
