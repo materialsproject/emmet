@@ -7,13 +7,15 @@ ENV PATH /root/.local/bin:$PATH
 WORKDIR /emmet-api
 ENV PIP_FLAGS "--user --no-cache-dir --compile"
 COPY requirements/deployment.txt ./requirements.txt
-RUN pip install $PIP_FLAGS --upgrade "pip<25.3" pip-tools setuptools-scm && \
+RUN pip install $PIP_FLAGS --upgrade "pip<25.3" pip-tools && \
   pip-sync requirements.txt --pip-args "$PIP_FLAGS"
 
 COPY emmet emmet
 COPY pyproject.toml .
-ARG API_VERSION
-RUN SETUPTOOLS_SCM_PRETEND_VERSION=${API_VERSION} pip install $PIP_FLAGS --no-deps .
+# No .git in the build context, so uv-dynamic-versioning can't derive the version
+# from tags; supply it explicitly. Defaults to 0.0.0 if API_VERSION isn't passed.
+ARG API_VERSION=0.0.0
+RUN UV_DYNAMIC_VERSIONING_BYPASS=${API_VERSION} pip install $PIP_FLAGS --no-deps .
 RUN wget -q https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && \
   chmod +x wait-for-it.sh && mv wait-for-it.sh /root/.local/bin/
 
