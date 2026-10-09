@@ -42,7 +42,7 @@ ddtrace==4.8.2
     # via emmet-api (emmet/emmet-api/pyproject.toml)
 dnspython==2.9.0
     # via pymongo
-emmet-core==0.87.3
+emmet-core==0.88.0rc0
     # via emmet-api (emmet/emmet-api/pyproject.toml)
 envier==0.6.1
     # via ddtrace
@@ -228,7 +228,6 @@ typeguard==4.6.0
 typing-extensions==4.16.0
     # via
     #   anyio
-    #   emmet-core
     #   fastapi
     #   opentelemetry-api
     #   pydantic
