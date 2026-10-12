@@ -97,7 +97,7 @@ class IcsdClient(BaseModel):
             raise ValueError(
                 f"{self.__module__}.{self.__class__.__name__} "
                 "failed to fetch auth token with status code "
-                f"{response.status_code}: {response.content!r}"
+                f"{response.status_code}: {repr(response.content)}"
             )
 
         self._session = requests.Session()
@@ -153,7 +153,7 @@ class IcsdClient(BaseModel):
             logger.warning(
                 f"{self.__module__}.{self.__class__.__name__} "
                 "failed to fetch content with status code "
-                f"{resp.status_code}: {resp.content!r}"
+                f"{resp.status_code}: {repr(resp.content)}"
             )
         return resp
 
@@ -257,7 +257,7 @@ class IcsdClient(BaseModel):
                 logger.warning(
                     f"{self.__module__}.{self.__class__.__name__} "
                     "csv search failed with status code "
-                    f"{response.status_code}: {response.content!r}"
+                    f"{response.status_code}: {repr(response.content)}"
                 )
 
         if include_cif:

@@ -105,7 +105,7 @@ def variant_dispatch(func):
     def wrapper(inputs, **kwargs):
         variant = inputs.variant
         if variant not in registry:
-            raise NotImplementedError(f"No handler registered for {variant!r}")
+            raise NotImplementedError(f"No handler registered for {repr(variant)}")
         return registry[variant](inputs, **kwargs)
 
     wrapper.register = register
