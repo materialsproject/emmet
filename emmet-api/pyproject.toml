@@ -33,7 +33,6 @@ dependencies = [
   "ddtrace==4.8.2",
   "setproctitle",
   "shapely",
-  "asgi-logger",
   "pymatgen-analysis-alloys>=0.0.3",
   "pymatgen-analysis-defects>=2024.10.22",
   "pymatgen-io-validation>=0.1.1",

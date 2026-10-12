@@ -50,9 +50,11 @@ COPY material_resources.py .
 COPY molecule_resources.py .
 COPY start.sh .
 COPY healthcheck.sh .
+COPY gunicorn.conf.py .
+COPY mp_logging mp_logging
 RUN chmod +x start.sh healthcheck.sh
 
-LABEL com.datadoghq.ad.logs='[{"source": "gunicorn", "service": "next-gen-api"}]'
+LABEL com.datadoghq.ad.logs='[{"source": "mp-backend", "service": "next-gen-api"}]'
 
 EXPOSE 10001 20001
 CMD ./start.sh
