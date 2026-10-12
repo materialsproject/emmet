@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from functools import partial
 from typing import Any, Protocol
 
-from fastapi import Query
+from fastapi import HTTPException, Query
 
 from emmet.api.utils import STORE_PARAMS, process_identifiers, split_csv
 
@@ -86,7 +86,10 @@ class InQuery(QueryOperator):
         crit: dict[str, Any] = {}
 
         if query_str:
-            processed_ids = self.pre_processor(query_str)
+            try:
+                processed_ids = self.pre_processor(query_str)
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
             crit = (
                 {"in": {"path": self.field_name, "value": processed_ids}}
                 if self.atlas_search

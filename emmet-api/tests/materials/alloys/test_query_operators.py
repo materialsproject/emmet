@@ -1,5 +1,8 @@
 # Test alloy query operators
 
+import pytest
+from fastapi import HTTPException
+
 from emmet.api.utils import process_identifiers
 
 from emmet.api.routes.materials.alloys.query_operators import (
@@ -65,3 +68,9 @@ def test_formula_query():
             ]
         }
     }
+
+
+def test_material_id_query_invalid_input_is_400():
+    with pytest.raises(HTTPException) as exc_info:
+        MaterialIDsSearchQuery().query(material_ids="mp-70, mp-149-GGA")
+    assert exc_info.value.status_code == 400

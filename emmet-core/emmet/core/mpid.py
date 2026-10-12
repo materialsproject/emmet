@@ -17,7 +17,7 @@ else:
     FORBIDDEN_ALPHA_ID_VALUES = set()
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Iterable
     from typing import Any, Self
 
     from pydantic import GetJsonSchemaHandler
@@ -41,6 +41,13 @@ VALID_ALPHA_SEPARATORS: set[str] = {
     ":",
     "_",
 }
+
+STRICT_ID_PREFIXES: frozenset[str] = frozenset({"mp"})
+"""Identifier prefixes accepted when validating identifiers in strict mode."""
+
+# Strict identifier: optional "<prefix>-" followed by a body that is either all
+# digits (legacy MPID integer) or all lowercase letters (AlphaID).
+_strict_id_regex = re.compile(r"^(?:(?P<prefix>[^-]*)-)?(?P<body>\d+|[a-z]+)$")
 
 
 class MPID(str):
@@ -301,7 +308,10 @@ class AlphaID(str):
         ```
         from pathlib import Path
         from importlib.resources import files as import_resource_file
-        if (Path(import_resource_file("emmet.core")) / "_forbidden_alpha_id.py").exists():
+
+        if (
+            Path(import_resource_file("emmet.core")) / "_forbidden_alpha_id.py"
+        ).exists():
             from emmet.core._forbidden_alpha_id import FORBIDDEN_ALPHA_ID_VALUES
         else:
             FORBIDDEN_ALPHA_ID_VALUES = set()
@@ -716,8 +726,77 @@ def _next_safe_alpha_id(
     return start_id
 
 
+def check_strict_identifier(
+    idx: str | MPID | AlphaID,
+    allowed_prefixes: Iterable[str] = STRICT_ID_PREFIXES,
+) -> None:
+    """Check that an identifier is well-formed, without coercing it.
+
+    A strict identifier is either:
+        - a bare identifier: all digits (``"149"``) or all lowercase
+          letters (``"ft"``, ``"aaaaaaft"``), or
+        - a prefixed identifier ``"<prefix>-<body>"``, where ``<prefix>`` is in
+          ``allowed_prefixes``, the separator is ``"-"``, and ``<body>`` is as above
+          (``"mp-149"``, ``"mp-ft"``, ``"mp-aaaaaaft"``).
+
+    Only strings, MPIDs and AlphaIDs are accepted; other types (including
+    integers) are rejected.
+
+    Parameters
+    -----------
+    idx : str, MPID, AlphaID
+        The identifier to check.
+    allowed_prefixes : Iterable[str] = STRICT_ID_PREFIXES
+        Prefixes permitted on a prefixed identifier.
+
+    Raises
+    -----------
+    ValueError
+        If the identifier is not strictly valid. The message includes the reason.
+    """
+    allowed = set(allowed_prefixes)
+
+    if not isinstance(idx, str | MPID | AlphaID):
+        raise ValueError(
+            f"Invalid identifier {repr(idx)}: expected a string, MPID or AlphaID."
+        )
+
+    if isinstance(idx, AlphaID):
+        prefix, separator = idx._prefix, idx._separator
+        if prefix and separator != "-":
+            raise ValueError(
+                f"Invalid identifier {repr(str(idx))}: separator must be '-', not {repr(separator)}."
+            )
+        if prefix and prefix not in allowed:
+            raise ValueError(
+                f"Invalid identifier {repr(str(idx))}: prefix {repr(prefix)} is not one of "
+                f"{', '.join(sorted(allowed)) or '(none)'}."
+            )
+        return
+
+    value = idx.string if isinstance(idx, MPID) else idx
+
+    match = _strict_id_regex.fullmatch(value)
+    if match is None:
+        raise ValueError(
+            f"Invalid identifier {repr(value)}: must be '<prefix>-<id>' or a bare id, where "
+            "<id> is all digits or all lowercase letters."
+        )
+
+    prefix = match.group("prefix")
+    if prefix is not None and prefix not in allowed:
+        raise ValueError(
+            f"Invalid identifier {repr(value)}: prefix {repr(prefix)} is not one of "
+            f"{', '.join(sorted(allowed)) or '(none)'}."
+        )
+
+
 def validate_identifier(
-    idx: str | MPID | AlphaID, serialize: bool = False
+    idx: str | MPID | AlphaID,
+    serialize: bool = False,
+    *,
+    strict: bool = False,
+    allowed_prefixes: Iterable[str] = STRICT_ID_PREFIXES,
 ) -> str | MPID | AlphaID:
     """Format an input string or identifier as a valid Materials Project format identifier.
 
@@ -729,7 +808,17 @@ def validate_identifier(
     serialize : bool = False
         If True, returns the string representation of the identifier object.
         If False, returns the object.
+    strict : bool = False
+        If False (default), any input that `AlphaID` can parse is accepted,
+        e.g. "fake-149" -> AlphaID("fake-ft").
+        If True, the input must also pass `check_strict_identifier`: a bare id
+        ("149", "ft") or "<prefix>-<id>" with a prefix in `allowed_prefixes`.
+        Inputs such as "fake-149", "mp_ft" or "mp-" raise a ValueError.
+    allowed_prefixes : Iterable[str] = STRICT_ID_PREFIXES
+        Prefixes permitted in strict mode. Ignored when `strict` is False.
     """
+    if strict:
+        check_strict_identifier(idx, allowed_prefixes=allowed_prefixes)
 
     try:
         parsed_idx = AlphaID(idx)

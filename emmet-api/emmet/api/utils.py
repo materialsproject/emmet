@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from bson.objectid import ObjectId
 
-from emmet.core.mpid import AlphaID
+from emmet.core.mpid import STRICT_ID_PREFIXES, AlphaID, check_strict_identifier
 from emmet.core.types.typing import ID_PADLEN, ID_PREFIX
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Iterable
 
 
 QUERY_PARAMS = ["criteria", "properties", "skip", "limit"]
@@ -129,7 +129,13 @@ def serialization_helper(obj):
     raise TypeError
 
 
-def process_identifiers(ids: str, use_prefix: bool = True) -> list[str]:
+def process_identifiers(
+    ids: str,
+    use_prefix: bool = True,
+    *,
+    strict: bool = False,
+    allowed_prefixes: Iterable[str] = STRICT_ID_PREFIXES,
+) -> list[str]:
     """Process a comma-separated string of identifiers.
 
     This function ensures backwards compatibility of the API
@@ -140,27 +146,50 @@ def process_identifiers(ids: str, use_prefix: bool = True) -> list[str]:
             either legacy MPID format, or new AlphaID format
         use_prefix (bool): Whether to use the prefix in the
             returned IDs.
+        strict (bool): If False (default), each ID is coerced as leniently as
+            possible: any prefix is discarded, so "fake-149" -> "mp-aaaaaaft".
+            If True, each ID (after trimming surrounding whitespace) must be a
+            bare ID ("149", "ft") or "<prefix>-<id>" with a prefix in
+            `allowed_prefixes`; otherwise a ValueError listing every invalid ID
+            is raised. See `emmet.core.mpid.check_strict_identifier`.
+        allowed_prefixes (Iterable[str]): Prefixes permitted in strict mode.
+            Ignored when `strict` is False.
 
     Returns:
         list of str
+
+    Raises:
+        ValueError: if `strict` is True and any ID is invalid.
 
     Example:
         ```py
         process_identifiers('mp-149, mp-aft,994')
         >>> ['mp-aaaaaaft', 'mp-aaaaaaft', 'mp-aaaaabmg']
+
+        process_identifiers('mp-149, fake-149', strict=True)
+        >>> ValueError: Invalid identifier 'fake-149': prefix 'fake' is not one of mp.
         ```
     """
-    return (
-        [
-            str(
-                AlphaID(
-                    idx.split("-", 1)[-1].strip(),
-                    prefix=ID_PREFIX if use_prefix else None,
-                    padlen=ID_PADLEN,
-                )
+    if not ids:
+        return []
+
+    if strict:
+        errors: list[str] = []
+        for idx in ids.split(","):
+            try:
+                check_strict_identifier(idx.strip(), allowed_prefixes=allowed_prefixes)
+            except ValueError as exc:
+                errors.append(str(exc))
+        if errors:
+            raise ValueError("; ".join(errors))
+
+    return [
+        str(
+            AlphaID(
+                idx.split("-", 1)[-1].strip(),
+                prefix=ID_PREFIX if use_prefix else None,
+                padlen=ID_PADLEN,
             )
-            for idx in ids.split(",")
-        ]
-        if ids
-        else []
-    )
+        )
+        for idx in ids.split(",")
+    ]

@@ -1,4 +1,4 @@
-from fastapi import Query
+from fastapi import HTTPException, Query
 
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS, process_identifiers
@@ -18,7 +18,10 @@ class MaterialIDsSearchQuery(QueryOperator):
         crit = {}
 
         if material_ids:
-            ids = process_identifiers(material_ids)
+            try:
+                ids = process_identifiers(material_ids)
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
 
             crit.update(
                 {

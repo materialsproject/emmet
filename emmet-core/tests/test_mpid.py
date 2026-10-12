@@ -9,7 +9,9 @@ from emmet.core.mpid import (
     MPID,
     MPculeID,
     AlphaID,
+    STRICT_ID_PREFIXES,
     VALID_ALPHA_SEPARATORS,
+    check_strict_identifier,
     validate_identifier,
 )
 
@@ -293,3 +295,104 @@ def test_validate_on_mpid_alpha():
     for idx in random_identifiers():
         assert validate_identifier(idx, serialize=False) == AlphaID(idx).formatted
         assert validate_identifier(idx, serialize=True) == str(AlphaID(idx))
+
+
+STRICT_VALID_IDS = [
+    "149",
+    "ft",
+    "aaaaaaft",
+    "mp-149",
+    "mp-ft",
+    "mp-aaaaaaft",
+    "0",
+    "mp-0",
+    "a",
+    "mpft",  # a bare, letters-only id; valid even though it resembles "mp-ft"
+]
+
+STRICT_REJECTED_BUT_LENIENT_OK = [
+    "fake-149",
+    "fake-ft",
+    "mvc-149",
+    "task-1",
+    "mp_ft",
+    "mp:ft",
+]
+
+STRICT_INVALID_IDS = STRICT_REJECTED_BUT_LENIENT_OK + [
+    "mp-",
+    "-ft",
+    "-",
+    "",
+    "MP-149",
+    "mp-FT",
+    "mp-1a2",
+    "149ft",
+    "mp-149-GGA",
+    " mp-149",
+    "mp-149 ",
+    "mp--149",
+]
+
+
+@pytest.mark.parametrize("idx", STRICT_VALID_IDS)
+def test_validate_identifier_strict_accepts(idx):
+    # strict mode returns exactly what lenient mode returns for valid input
+    assert validate_identifier(idx, strict=True) == validate_identifier(idx)
+    assert validate_identifier(idx, serialize=True, strict=True) == (
+        validate_identifier(idx, serialize=True)
+    )
+
+
+@pytest.mark.parametrize("idx", STRICT_INVALID_IDS)
+def test_validate_identifier_strict_rejects(idx):
+    with pytest.raises(ValueError, match="Invalid identifier"):
+        validate_identifier(idx, strict=True)
+
+
+@pytest.mark.parametrize("idx", STRICT_REJECTED_BUT_LENIENT_OK)
+def test_validate_identifier_lenient_unchanged(idx):
+    assert validate_identifier(idx) == AlphaID(idx)
+    assert validate_identifier(idx, strict=False) == AlphaID(idx)
+
+
+def test_validate_identifier_strict_objects():
+    for idx in (
+        MPID("mp-149"),
+        MPID("149"),
+        AlphaID(149),
+        AlphaID(149, prefix="mp", padlen=8),
+        AlphaID("mp-ft"),
+    ):
+        assert validate_identifier(idx, strict=True) == validate_identifier(idx)
+
+    for idx in (MPID("fake-149"), AlphaID("fake-ft"), AlphaID("mp_ft")):
+        with pytest.raises(ValueError, match="Invalid identifier"):
+            validate_identifier(idx, strict=True)
+
+    # Non-string types are rejected in strict mode, including ints and bools
+    # (bool is a subclass of int), even though lenient mode coerces them.
+    for idx in (149, 0, True, False):
+        assert validate_identifier(idx)  # type: ignore[arg-type]
+        with pytest.raises(ValueError, match="expected a string, MPID or AlphaID"):
+            validate_identifier(idx, strict=True)  # type: ignore[arg-type]
+
+
+def test_validate_identifier_strict_allowed_prefixes():
+    assert STRICT_ID_PREFIXES == {"mp"}
+
+    assert validate_identifier("mvc-149", strict=True, allowed_prefixes={"mp", "mvc"})
+    assert validate_identifier("149", strict=True, allowed_prefixes=())
+    with pytest.raises(ValueError, match="prefix 'mp' is not one of"):
+        validate_identifier("mp-149", strict=True, allowed_prefixes=())
+    assert validate_identifier("fake-149", allowed_prefixes=()) == AlphaID("fake-ft")
+
+
+def test_check_strict_identifier_messages():
+    with pytest.raises(ValueError, match="prefix 'fake' is not one of mp"):
+        check_strict_identifier("fake-149")
+    with pytest.raises(ValueError, match="separator must be '-'"):
+        check_strict_identifier(AlphaID("mp_ft"))
+    for bad in (149, -1, 1.0, None, True):
+        with pytest.raises(ValueError, match="expected a string, MPID or AlphaID"):
+            check_strict_identifier(bad)  # type: ignore[arg-type]
