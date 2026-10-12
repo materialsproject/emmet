@@ -8,11 +8,12 @@ STATS_ARG=""
 SERVER_APP="app:app"
 BIND_ARG="-b 0.0.0.0:$PORT"
 WORKER_ARGS="-k uvicorn.workers.UvicornWorker -w $NUM_WORKERS"
-LOG_ARGS="--access-logfile - --error-logfile - $RELOAD"
+# Logging (structured JSON) is configured in gunicorn.conf.py and app.py;
+# the access log is written by the app's LoggingMiddleware (see mp_logging)
+CONFIG_ARGS="-c gunicorn.conf.py $RELOAD"
 REQS_ARGS="--max-requests $MAX_REQUESTS --max-requests-jitter $MAX_REQUESTS_JITTER"
 OTHER_ARGS="--timeout 120"
-MAIN_ARGS="$BIND_ARG $WORKER_ARGS $LOG_ARGS $REQS_ARGS $OTHER_ARGS"
-ACCESS_LOG_FORMAT=(--access-logformat '%(h)s %(t)s %(m)s %(U)s?%(q)s %(H)s %(s)s %(b)s "%(f)s" "%(a)s" %(D)s %(p)s %({x-consumer-id}i)s %({x-callback-name}o)s %({x-consumer-groups}o)s')
+MAIN_ARGS="$BIND_ARG $WORKER_ARGS $CONFIG_ARGS $REQS_ARGS $OTHER_ARGS"
 
 set -x
 
@@ -21,4 +22,4 @@ if [[ -n "$DD_TRACE_HOST" ]]; then
 fi
 
 [[ -n "$STATS_ARG" ]] && CMD="ddtrace-run gunicorn $STATS_ARG" || CMD="gunicorn"
-exec $CMD $MAIN_ARGS "${ACCESS_LOG_FORMAT[@]}" $SERVER_APP
+exec $CMD $MAIN_ARGS $SERVER_APP
