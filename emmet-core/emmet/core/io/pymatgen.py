@@ -201,7 +201,7 @@ def __getattr__(name: str) -> Any:
             import_module(f"{_BASE_PACKAGE_NAME}.{_class_map[name]}"),
             _name_collision_aliases.get(name, name),
         )
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    raise AttributeError(f"module {repr(__name__)} has no attribute {repr(name)}")
 
 
 def __dir__() -> Sequence[str]:

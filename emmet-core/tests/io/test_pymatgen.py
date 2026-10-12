@@ -33,4 +33,4 @@ def test_imports(object_name: str):
         getattr(pmg_io_layer, object_name)
     except (ImportError, AttributeError) as exc:
         import_str = ".".join(["pymatgen", object_name, _class_map[object_name]])
-        pytest.fail(f"Import of {import_str!r} failed with exception {exc}")
+        pytest.fail(f"Import of {repr(import_str)} failed with exception {exc}")
