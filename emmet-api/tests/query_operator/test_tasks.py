@@ -2,6 +2,7 @@ from functools import partial
 from itertools import product
 
 import pytest
+from fastapi import HTTPException
 
 from emmet.api.query_operator import MultiTaskIDQuery
 from emmet.api.utils import process_identifiers, split_csv
@@ -42,3 +43,20 @@ def test_multi_task_id(use_plural: bool, use_prefix: bool):
             }
         }
     }
+
+
+def test_multi_task_id_invalid_input_is_400():
+    op = MultiTaskIDQuery(
+        pre_processor=partial(process_identifiers, use_prefix=False, strict=True)
+    )
+    assert op.query(task_ids="mp-149, 13") == {
+        "criteria": {"task_id": {"$in": ["aaaaaaft", "aaaaaaan"]}}
+    }
+    with pytest.raises(HTTPException) as exc_info:
+        op.query(task_ids="mp-149, fake-149")
+    assert exc_info.value.status_code == 400
+    assert "fake-149" in exc_info.value.detail
+
+    with pytest.raises(HTTPException) as exc_info:
+        MultiTaskIDQuery().query(task_ids="mp-149-GGA")
+    assert exc_info.value.status_code == 400

@@ -248,3 +248,43 @@ async def test_configure_query_on_request(mock_database):
         payload=payload, base="/?", debug=True, mock_database=mock_database
     )
     assert res.status_code == 200
+
+
+class Material(BaseModel):
+    material_id: str = Field(..., title="Material ID")
+
+
+@pytest.mark.asyncio
+async def test_invalid_identifier_query_returns_400(mock_database):
+    """A ValueError raised while pre-processing ids is returned as HTTP 400."""
+    from functools import partial
+
+    from emmet.api.query_operator import MultiMaterialIDQuery
+    from emmet.api.utils import process_identifiers
+
+    collection = mock_database["materials"]
+    await collection.insert_many(
+        [{"material_id": "mp-aaaaaaft"}, {"material_id": "mp-aaaaaaan"}]
+    )
+    endpoint = ReadOnlyResource(
+        CollectionWithKey(collection=collection, key="material_id"),
+        Material,
+        query_operators=[
+            MultiMaterialIDQuery(
+                pre_processor=partial(process_identifiers, strict=True)
+            ),
+            SparseFieldsQuery(model=Material, default_fields=["material_id"]),
+        ],
+        disable_validation=True,
+    )
+    app = FastAPI()
+    app.include_router(endpoint.router)
+    client = TestClient(app)
+
+    res = client.get("/?" + urlencode({"material_ids": "mp-149, ft"}))
+    assert res.status_code == 200
+    assert [d["material_id"] for d in res.json()["data"]] == ["mp-aaaaaaft"]
+
+    res = client.get("/?" + urlencode({"material_ids": "mp-149, fake-149"}))
+    assert res.status_code == 400
+    assert "fake-149" in res.json()["detail"]
