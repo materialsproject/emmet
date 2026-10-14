@@ -23,7 +23,7 @@ from .context import (
     request_fields,
     reset_request_context,
 )
-from .formatters import ASGI_ACCESS_LOGGER
+from .formatters import ASGI_ACCESS_LOGGER, ROUTE_ATOM
 
 Scope = MutableMapping[str, Any]
 Message = MutableMapping[str, Any]
@@ -41,6 +41,24 @@ def _decode_headers(raw: Any) -> dict[str, str]:
         name.decode("latin1").lower(): value.decode("latin1")
         for name, value in raw or ()
     }
+
+
+def _route_template(scope: Scope) -> str | None:
+    """The full path template of the route that handled the request.
+
+    FastAPI (>= 0.139) keeps routes of included routers un-prefixed in
+    `scope["route"]` and records the effective route, with the router
+    prefixes, in its own scope entry; prefer that. Plain Starlette: the route
+    in the scope (its router stores it in the shared scope once matched).
+    """
+    context = (scope.get("fastapi") or {}).get("effective_route_context")
+    path = getattr(context, "path", None)
+    if not isinstance(path, str) or not path:
+        path = getattr(scope.get("route"), "path", None)
+    if not isinstance(path, str) or not path:
+        return None
+    # Mounted sub-apps: the mount prefix is in root_path
+    return scope.get("root_path", "") + path
 
 
 class _Atoms(dict):
@@ -72,6 +90,9 @@ def _atoms(
             "a": request_headers.get("user-agent", "-"),
             "D": int(duration_s * 1_000_000),
             "p": f"<{os.getpid()}>",
+            # Matched route template; Starlette's router stores the route in
+            # the (shared) scope, so it's there once the app has run
+            ROUTE_ATOM: _route_template(scope) or "-",
         }
     )
     atoms.update({f"{{{k}}}i": v for k, v in request_headers.items()})
