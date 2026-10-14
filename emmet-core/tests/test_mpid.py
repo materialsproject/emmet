@@ -379,7 +379,7 @@ def test_validate_identifier_strict_objects():
 
 
 def test_validate_identifier_strict_allowed_prefixes():
-    assert STRICT_ID_PREFIXES == {"mp"}
+    assert STRICT_ID_PREFIXES == {"mp", "mol"}
 
     assert validate_identifier("mvc-149", strict=True, allowed_prefixes={"mp", "mvc"})
     assert validate_identifier("149", strict=True, allowed_prefixes=())
@@ -389,7 +389,7 @@ def test_validate_identifier_strict_allowed_prefixes():
 
 
 def test_check_strict_identifier_messages():
-    with pytest.raises(ValueError, match="prefix 'fake' is not one of mp"):
+    with pytest.raises(ValueError, match="prefix 'fake' is not one of mol, mp"):
         check_strict_identifier("fake-149")
     with pytest.raises(ValueError, match="separator must be '-'"):
         check_strict_identifier(AlphaID("mp_ft"))
