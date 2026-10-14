@@ -42,7 +42,7 @@ VALID_ALPHA_SEPARATORS: set[str] = {
     "_",
 }
 
-STRICT_ID_PREFIXES: frozenset[str] = frozenset({"mp"})
+STRICT_ID_PREFIXES: frozenset[str] = frozenset({"mp", "mol"})
 """Identifier prefixes accepted when validating identifiers in strict mode."""
 
 # Strict identifier: optional "<prefix>-" followed by a body that is either all
