@@ -1,6 +1,6 @@
 """Per-request logging context, independent of the web framework.
 
-Framework glue (`flask_ext`, `django_ext`, `asgi`) binds the current
+Framework glue (`asgi`) binds the current
 request's fields with `bind_request_context` at the start of a request and
 resets them at the end. `RequestContextFilter` adds them to every record
 logged meanwhile, including records from libraries.
@@ -16,7 +16,7 @@ from collections.abc import Mapping
 from contextvars import ContextVar, Token
 from typing import Any
 
-from .formatters import path_fields, process_name
+from .formatters import process_name
 
 _REQUEST_CONTEXT: ContextVar[Mapping[str, Any] | None] = ContextVar(
     "mp_logging_request_context", default=None
@@ -32,7 +32,10 @@ def _header(headers: Mapping[str, str], name: str) -> str | None:
 
 
 def request_fields(
-    method: str | None, path: str | None, headers: Mapping[str, str]
+    method: str | None,
+    path: str | None,
+    headers: Mapping[str, str],
+    route: str | None = None,
 ) -> dict[str, Any]:
     """Fields describing a request, from its method, path and headers.
 
@@ -42,7 +45,7 @@ def request_fields(
     fields = {
         "http.method": method,
         "http.url_details.path": path,
-        **path_fields(path),
+        "http.route": route,
         "usr.id": _header(headers, "X-Consumer-Id"),
         "http.request_id": _header(headers, "X-Request-Id")
         or _header(headers, "Kong-Request-Id"),
@@ -64,6 +67,14 @@ def reset_request_context(token: Token | None) -> None:
     except (ValueError, RuntimeError):
         # Token from another context (e.g. teardown ran elsewhere): just clear
         _REQUEST_CONTEXT.set(None)
+
+
+def update_request_context(fields: Mapping[str, Any]) -> None:
+    """Add fields to the current request's context (e.g. the route, once matched)."""
+    context = _REQUEST_CONTEXT.get()
+    if context is None:
+        return
+    _REQUEST_CONTEXT.set({**context, **{k: v for k, v in fields.items() if v}})
 
 
 def get_request_context() -> Mapping[str, Any] | None:

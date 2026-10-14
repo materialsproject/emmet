@@ -13,6 +13,7 @@ from .context import (
     get_request_context,
     request_fields,
     reset_request_context,
+    update_request_context,
 )
 from .formatters import (
     LOG_RECORD_BUILTIN_ATTRS,
@@ -36,4 +37,5 @@ __all__ = [
     "gunicorn_logconfig_dict",
     "request_fields",
     "reset_request_context",
+    "update_request_context",
 ]

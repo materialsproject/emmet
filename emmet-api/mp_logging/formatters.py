@@ -25,6 +25,7 @@ import os
 import re
 from collections.abc import Mapping
 from typing import Any
+from urllib.parse import parse_qsl, urlsplit
 
 # Attributes every LogRecord has. Anything else on a record is a structured field.
 # These names also can't be used as `extra=` keys (logging raises KeyError).
@@ -62,26 +63,89 @@ TORNADO_ACCESS_LOGGER = "tornado.access"
 # Loggers whose records carry gunicorn-style access atoms
 ATOM_ACCESS_LOGGERS = frozenset({GUNICORN_ACCESS_LOGGER, ASGI_ACCESS_LOGGER})
 
-# Same patterns as the "Parse URL Path root" / "First two elements from URL
-# Path" grok parsers of the previous Datadog pipeline, so facets keep their values:
-#   /materials/summary/mp-149 -> path_root "/materials", path_first_two "/materials/summary"
-_PATH_ROOT = re.compile(r"([^/]*/){1}[^/]+")
-_PATH_FIRST_TWO = re.compile(r"([^/]*/){2}[^/]+")
+# The matched route template (e.g. `/materials/summary/{material_id}/`), set by
+# the framework glue: an atom of the ASGI middleware, or a WSGI environ entry
+# for gunicorn (environ entries are lowercased `{<key>}e` atoms)
+ROUTE_ATOM = "http.route"
+ENVIRON_ROUTE = "mp_logging.http.route"
+_ENVIRON_ROUTE_ATOM = "{mp_logging.http.route}e"
+
+# Caps on URL-derived fields: query keys are client-controlled and every one
+# becomes an attribute (and potential facet) in Datadog
+MAX_URL_LENGTH = 1024
+MAX_QUERY_PARAMS = 20
+MAX_QUERY_KEY_LENGTH = 64
+MAX_QUERY_VALUE_LENGTH = 256
 
 # tornado.web.RequestHandler._request_summary(): "GET /api/kernels (127.0.0.1)"
 _TORNADO_SUMMARY = re.compile(r"^(?P<method>\S+) (?P<uri>\S+) \((?P<ip>[^)]*)\)$")
 
 
-def path_fields(path: str | None) -> dict[str, str]:
-    """`http.url_details.path_root` / `path_first_two` for a URL path (if they exist)."""
-    fields: dict[str, str] = {}
+def _cap(value: str, limit: int) -> tuple[str, bool]:
+    return (value[:limit], True) if len(value) > limit else (value, False)
+
+
+def url_field(path: str | None, query: str | None) -> str | None:
+    """`http.url`: path and query string, capped at `MAX_URL_LENGTH`."""
     if not path:
-        return fields
-    if match := _PATH_ROOT.match(path):
-        fields["http.url_details.path_root"] = match.group(0)
-    if match := _PATH_FIRST_TWO.match(path):
-        fields["http.url_details.path_first_two"] = match.group(0)
+        return None
+    url = f"{path}?{query}" if query else path
+    return url[:MAX_URL_LENGTH]
+
+
+def query_fields(query: str | None) -> dict[str, Any]:
+    """`http.url_details.queryString`: the decoded query parameters.
+
+    Values are URL-decoded (`%2C` -> `,`); a repeated key gives a list. At
+    most `MAX_QUERY_PARAMS` parameters, keys capped at `MAX_QUERY_KEY_LENGTH`
+    and values at `MAX_QUERY_VALUE_LENGTH` characters; if anything was cut,
+    `http.url_details.queryString_truncated` is true.
+    """
+    if not query:
+        return {}
+    try:
+        pairs = parse_qsl(query, keep_blank_values=True)
+    except ValueError:
+        return {}
+    params: dict[str, Any] = {}
+    truncated = False
+    for key, value in pairs:
+        key, cut_key = _cap(key, MAX_QUERY_KEY_LENGTH)
+        value, cut_value = _cap(value, MAX_QUERY_VALUE_LENGTH)
+        truncated = truncated or cut_key or cut_value
+        if key in params:
+            existing = params[key]
+            params[key] = (
+                [*existing, value] if isinstance(existing, list) else [existing, value]
+            )
+        elif len(params) < MAX_QUERY_PARAMS:
+            params[key] = value
+        else:
+            truncated = True
+    fields: dict[str, Any] = {}
+    if params:
+        fields["http.url_details.queryString"] = params
+    if truncated:
+        fields["http.url_details.queryString_truncated"] = True
     return fields
+
+
+def referer_fields(referer: str | None) -> dict[str, Any]:
+    """`http.referer_details.{scheme,host,port,path}` from the Referer header."""
+    if not referer:
+        return {}
+    try:
+        parts = urlsplit(referer)
+        port = parts.port
+    except ValueError:
+        return {}
+    fields = {
+        "http.referer_details.scheme": parts.scheme or None,
+        "http.referer_details.host": parts.hostname or None,
+        "http.referer_details.port": port,
+        "http.referer_details.path": parts.path[:MAX_URL_LENGTH] or None,
+    }
+    return {k: v for k, v in fields.items() if v is not None}
 
 
 def status_category(status: int | None) -> str | None:
@@ -133,6 +197,7 @@ def _http_fields(
     method: Any,
     path: Any,
     query: Any,
+    route: Any,
     status: int | None,
     duration_ns: int | None,
 ) -> dict[str, Any]:
@@ -142,11 +207,10 @@ def _http_fields(
         # responses show as warnings/errors
         "level": _ACCESS_LEVELS.get(category) if category else None,
         "http.method": method,
-        # Full URL for a Datadog URL parser, which fills `http.url_details`
-        # (including `queryString` as an object of parameters)
-        "http.url": f"{path}?{query}" if query else path,
+        "http.url": url_field(path, query),
         "http.url_details.path": path,
-        **path_fields(path),
+        **query_fields(query),
+        "http.route": route,
         "http.status_code": status,
         "http.status_category": category,
         # Datadog's standard duration attribute is in nanoseconds
@@ -166,11 +230,13 @@ def _atom_access_fields(atoms: Mapping[str, Any]) -> dict[str, Any]:
             method=method,
             path=path,
             query=_atom(atoms, "q"),
+            route=_atom(atoms, ROUTE_ATOM) or _atom(atoms, _ENVIRON_ROUTE_ATOM),
             status=status,
             duration_ns=duration_us * 1000 if duration_us is not None else None,
         ),
         "http.version": _atom(atoms, "H"),
         "http.referer": _atom(atoms, "f"),
+        **referer_fields(_atom(atoms, "f")),
         "http.useragent": _atom(atoms, "a"),
         "http.request_id": _atom(atoms, "{x-request-id}i")
         or _atom(atoms, "{kong-request-id}i"),
@@ -207,6 +273,7 @@ def _tornado_access_fields(args: tuple[Any, ...]) -> dict[str, Any] | None:
             method=method,
             path=path,
             query=query,
+            route=None,
             status=status,
             duration_ns=duration_ns,
         ),
