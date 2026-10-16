@@ -42,7 +42,7 @@ emmet-core==0.88.0rc3
     # via emmet-api (emmet/emmet-api/pyproject.toml)
 envier==0.6.1
     # via ddtrace
-fastapi==0.143.1
+fastapi==0.143.3
     # via emmet-api (emmet/emmet-api/pyproject.toml)
 fonttools==4.67.0
     # via matplotlib
@@ -130,7 +130,7 @@ pandas==3.0.6
     #   -r python/requirements.txt
     #   pymatgen-analysis-defects
     #   pymatgen-core
-pillow==12.3.0
+pillow==13.0.0
     # via
     #   imageio
     #   matplotlib
@@ -162,7 +162,7 @@ pymatgen==2026.9.24
     #   pymatgen-analysis-alloys
 pymatgen-analysis-alloys==0.0.9
     # via emmet-api (emmet/emmet-api/pyproject.toml)
-pymatgen-analysis-defects==2026.10.14
+pymatgen-analysis-defects==2026.10.16
     # via emmet-api (emmet/emmet-api/pyproject.toml)
 pymatgen-core==2026.10.2
     # via
@@ -221,7 +221,7 @@ sympy==1.14.0
     # via pymatgen-core
 tabulate==0.10.0
     # via pymatgen-core
-tifffile==2026.9.20
+tifffile==2026.10.15
     # via scikit-image
 tqdm==4.70.1
     # via pymatgen-core

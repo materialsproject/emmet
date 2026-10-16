@@ -73,7 +73,7 @@ pandas==3.0.6
     # via
     #   -r python/requirements.txt
     #   pymatgen-core
-pillow==12.3.0
+pillow==13.0.0
     # via matplotlib
 plotly==7.1.0
     # via pymatgen-core
