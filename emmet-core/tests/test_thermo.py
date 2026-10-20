@@ -1,9 +1,10 @@
 import pytest
 from monty.serialization import loadfn
 from pydantic import TypeAdapter
+from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 from emmet.core import ARROW_COMPATIBLE
-from emmet.core.thermo import ThermoDoc
+from emmet.core.thermo import ThermoDoc, ThermoType
 
 if ARROW_COMPATIBLE:
     import pyarrow as pa
@@ -153,6 +154,40 @@ def test_from_entries(entries):
     unstable_doc = next(d for d in docs if d.material_id == "mp-5")
     assert unstable_doc.is_stable is False
     assert all([d.is_stable for d in docs if d != unstable_doc])
+
+
+@pytest.mark.parametrize(
+    "data_run_type, run_type", [("GGA", "GGA"), ("GGA_U", "GGA+U")]
+)
+def test_from_entries_prefers_r2scan(
+    entries, Fe2O3a_structure, data_run_type, run_type
+):
+    mp2 = next(e for e in entries if e.data["material_id"] == "mp-2")
+    duplicates = [
+        ComputedStructureEntry(
+            Fe2O3a_structure,
+            mp2.energy,
+            parameters={"run_type": "r2SCAN"},
+            data={"material_id": "mp-2", "run_type": "R2SCAN", "task_id": "mp-21"},
+            entry_id="mp-2-r2SCAN",
+        ),
+        ComputedStructureEntry(  # lower in total energy, though not per atom
+            Fe2O3a_structure * (1, 1, 2),
+            2 * mp2.energy + 0.8,
+            parameters={"run_type": run_type},
+            data={"material_id": "mp-2", "run_type": data_run_type, "task_id": "mp-22"},
+            entry_id=f"mp-2-{run_type}",
+        ),
+    ]
+    docs = ThermoDoc.from_entries(
+        [e for e in entries if e is not mp2] + duplicates,
+        thermo_type=ThermoType.GGA_GGA_U_R2SCAN,
+        deprecated=False,
+    )
+
+    doc = next(d for d in docs if d.material_id == "mp-2")
+    assert doc.energy_type == "r2SCAN"
+    assert doc.is_stable
 
 
 @pytest.mark.skipif(
