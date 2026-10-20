@@ -124,6 +124,34 @@ def test_solvent():
         == "DIELECTRIC=4,900;N=1,558;ALPHA=0,000;BETA=0,576;GAMMA=49,940;PHI=0,667;PSI=0,000"
     )
 
+    # SMD - custom solvent defined in the $smx section of the input
+    custom_smx = {
+        "solvent": "other",
+        "epsilon": "18.5",
+        "soln": "1.415",
+        "sola": "0.00",
+        "solb": "0.735",
+        "solg": "20.2",
+        "solc": "0.00",
+        "solh": "0.00",
+    }
+    custom_smd_params = {
+        "rem": {
+            "method": "wb97mv",
+            "basis": "def2-svpd",
+            "solvent_method": "smd",
+        },
+        "smx": custom_smx,
+    }
+    assert (
+        solvent(custom_smd_params)
+        == "DIELECTRIC=18,500;N=1,415;ALPHA=0,000;BETA=0,735;GAMMA=20,200;PHI=0,000;PSI=0,000"
+    )
+    # an explicit custom_smd takes precedence over the $smx section
+    assert solvent(
+        custom_smd_params, custom_smd="4.9,1.558,0.0,0.576,49.94,0.667,0.0"
+    ).startswith("DIELECTRIC=4,900;")
+
     # SMD - missing custom_solvent
     with pytest.raises(ValueError):
         solvent(
@@ -225,3 +253,23 @@ def test_computed_entry(tasks):
         }
     }
     assert ids == expected
+
+
+def test_custom_smd_from_smx():
+    from emmet.core.qchem.calc_types.utils import custom_smd_from_smx
+
+    smx = {
+        "solvent": "other",
+        "epsilon": "18.5",
+        "soln": "1.415",
+        "sola": "0.00",
+        "solb": "0.735",
+        "solg": "20.2",
+        "solc": "0.00",
+        "solh": "0.00",
+    }
+    assert custom_smd_from_smx(smx) == "18.5,1.415,0.00,0.735,20.2,0.00,0.00"
+    # not a custom solvent, or incomplete descriptors
+    assert custom_smd_from_smx({"solvent": "water"}) is None
+    assert custom_smd_from_smx({"solvent": "other", "epsilon": "18.5"}) is None
+    assert custom_smd_from_smx(None) is None
