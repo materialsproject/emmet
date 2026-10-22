@@ -27,7 +27,7 @@ botocore==1.40.23
     #   s3transfer
 bracex==2.6
     # via wcmatch
-certifi==2025.8.3
+certifi==2026.10.19
     # via requests
 cffi==1.17.1
     # via
@@ -532,7 +532,7 @@ urllib3==2.8.0
     #   botocore
     #   requests
     #   types-requests
-virtualenv==21.14.9
+virtualenv==21.14.12
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
