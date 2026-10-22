@@ -292,7 +292,7 @@ pathspec==0.12.1
     #   mypy
 patsy==1.0.1
     # via statsmodels
-pillow==12.3.0
+pillow==13.0.0
     # via
     #   imageio
     #   matplotlib
@@ -532,7 +532,7 @@ urllib3==2.8.0
     #   botocore
     #   requests
     #   types-requests
-virtualenv==21.14.5
+virtualenv==21.14.9
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
