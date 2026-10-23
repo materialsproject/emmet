@@ -76,7 +76,7 @@ dnspython==2.7.0
     #   pymongo
 emmet-core[all,ml]==0.84.6
     # via emmet-builders (setup.py)
-filelock==3.20.3
+filelock==4.2.4
     # via
     #   mdanalysis
     #   torch
@@ -651,7 +651,7 @@ urllib3==2.8.0
     #   botocore
     #   requests
     #   types-requests
-virtualenv==21.14.9
+virtualenv==21.14.13
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs

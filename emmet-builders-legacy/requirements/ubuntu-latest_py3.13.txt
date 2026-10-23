@@ -45,7 +45,7 @@ dnspython==2.7.0
     #   pymongo
 emmet-core[all]==0.84.6
     # via emmet-builders (setup.py)
-filelock==3.20.3
+filelock==4.2.4
     # via mdanalysis
 fonttools==4.60.2
     # via matplotlib
