@@ -466,7 +466,7 @@ urllib3==2.8.0
     #   types-requests
 uvicorn==0.54.0
     # via emmet-api (pyproject.toml)
-virtualenv==21.14.12
+virtualenv==21.14.13
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs

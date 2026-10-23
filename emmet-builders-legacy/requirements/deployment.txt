@@ -71,7 +71,7 @@ exceptiongroup==1.2.0
     # via anyio
 fastapi==0.109.2
     # via maggma
-filelock==3.20.3
+filelock==4.2.4
     # via
     #   torch
     #   triton

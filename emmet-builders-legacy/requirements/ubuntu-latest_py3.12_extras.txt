@@ -61,7 +61,7 @@ emmet-core[all]==0.84.9
     # via emmet-builders (pyproject.toml)
 execnet==2.1.1
     # via pytest-xdist
-filelock==3.20.3
+filelock==4.2.4
     # via
     #   mdanalysis
     #   virtualenv
@@ -532,7 +532,7 @@ urllib3==2.8.0
     #   botocore
     #   requests
     #   types-requests
-virtualenv==21.14.9
+virtualenv==21.14.13
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
