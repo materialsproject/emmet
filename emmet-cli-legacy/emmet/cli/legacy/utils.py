@@ -4,8 +4,7 @@ import multiprocessing
 import os
 import shutil
 import stat
-from collections import defaultdict
-from datetime import datetime
+from collections import abc, defaultdict
 from enum import Enum
 from fnmatch import fnmatch
 from glob import glob
@@ -13,20 +12,18 @@ from pathlib import Path
 
 import click
 import mgzip
-from atomate.vasp.database import VaspCalcDb
-from atomate.vasp.drones import VaspDrone
 from botocore.exceptions import EndpointConnectionError
 from dotty_dict import dotty
 from fireworks.fw_config import FW_BLOCK_FORMAT
-from mongogrant.client import Client
 from pymatgen.core import Structure
 from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 from pymatgen.util.provenance import StructureNL
 from pymongo.errors import DocumentTooLarge
 
 from emmet.cli.legacy import SETTINGS
-from emmet.core.utils import group_structures
-from emmet.core.vasp.task_valid import TaskDocument
+from emmet.cli.legacy.db import StorageGateway
+from emmet.core.tasks import TaskDoc
+from emmet.core.utils import group_structures, jsanitize, utcnow
 from emmet.core.vasp.validation import ValidationDoc
 
 logger = logging.getLogger("emmet")
@@ -35,6 +32,35 @@ perms = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP
 
 class EmmetCliError(Exception):
     pass
+
+
+def recurse_list(seq):
+    for item in seq:
+        if isinstance(item, abc.Mapping):
+            recurse_dict(item)
+        elif isinstance(item, list):
+            recurse_list(item)
+
+
+def recurse_dict(nested):
+    for key, value in nested.items():
+        if isinstance(value, abc.Mapping):
+            if not value:
+                nested[key] = None
+            else:
+                recurse_dict(value)
+        elif isinstance(value, str):
+            if value == "None" or value == "":
+                nested[key] = None
+        elif isinstance(value, list):
+            if len(value) == 0:
+                nested[key] = None
+            else:
+                recurse_list(value)
+
+
+def scrub_dict(entry):
+    recurse_dict(entry)
 
 
 class ReturnCodes(Enum):
@@ -61,27 +87,6 @@ def ensure_indexes(indexes, colls):
     if created:
         indexes = ", ".join(created[coll.full_name])
         logger.debug(f"Created the following index(es) on {coll.full_name}:\n{indexes}")
-
-
-def calcdb_from_mgrant(spec_or_dbfile):
-    if os.path.exists(spec_or_dbfile):
-        return VaspCalcDb.from_db_file(spec_or_dbfile)
-
-    client = Client()
-    role = "rw"  # NOTE need write access to source to ensure indexes
-    host, dbname_or_alias = spec_or_dbfile.split("/", 1)
-    auth = client.get_auth(host, dbname_or_alias, role)
-    if auth is None:
-        raise Exception("No valid auth credentials available!")
-    return VaspCalcDb(
-        auth["host"],
-        27017,
-        auth["db"],
-        "tasks",
-        auth["username"],
-        auth["password"],
-        authSource=auth["db"],
-    )
 
 
 def get_meta_from_structure(struct):
@@ -111,7 +116,7 @@ def aggregate_by_formula(coll, q, key=None):
                 f"could not find one of the aggregation keys {SETTINGS.aggregation_keys} in {coll.full_name}!"
             )
 
-    push = {k.split(".")[-1]: f"${k}" for k in SETTINGS.structure_keys[nested]}
+    push = {k.split(".")[-1]: f"${k}" for k in structure_keys[nested]}
     return coll.aggregate(
         [
             {"$match": query},
@@ -149,7 +154,7 @@ def get_subdir(dn):
 
 
 def get_timestamp_dir(prefix="launcher"):
-    time_now = datetime.utcnow().strftime(FW_BLOCK_FORMAT)
+    time_now = utcnow().strftime(FW_BLOCK_FORMAT)
     return "_".join([prefix, time_now])
 
 
@@ -326,7 +331,7 @@ def get_vasp_dirs():
                 create_orig_inputs(vasp_dir)
 
             dirs[:] = []  # don't descend further (i.e. ignore relax1/2)
-            # logger.log(logging.INFO if gzipped else logging.DEBUG, vasp_dir)
+            logger.log(logging.INFO if gzipped else logging.DEBUG, vasp_dir)
             yield vasp_dir
             counter += 1
 
@@ -371,25 +376,16 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
     chunk_idx = int(name.rsplit("-")[1]) - 1
     logger.info(f"{name} starting.")
     tags = [tag, SETTINGS.year_tags[-1]]
+
     ctx = click.get_current_context()
-    spec_or_dbfile = ctx.parent.parent.params["spec_or_dbfile"]
-    target = calcdb_from_mgrant(spec_or_dbfile)
-    snl_collection = target.db.snls_user
-    sbxn = list(filter(None, target.collection.distinct("sbxn")))
-    logger.info(f"Using sandboxes {sbxn}.")
-    no_dupe_check = ctx.parent.parent.params["no_dupe_check"]
     run = ctx.parent.parent.params["run"]
+    spec_or_dbfile = ctx.parent.parent.params["spec_or_dbfile"]
+    no_dupe_check = ctx.parent.parent.params["no_dupe_check"]
+
+    storage_gateway = StorageGateway.from_db_file(spec_or_dbfile)
+    snl_collection = storage_gateway.db.snls_user
     projection = {"tags": 1, "task_id": 1}
-    # projection = {"tags": 1, "task_id": 1, "calcs_reversed": 1}
     count = 0
-    drone = VaspDrone(
-        additional_fields={"tags": tags},
-        store_volumetric_data=ctx.params["store_volumetric_data"],
-        runs=ctx.params["runs"],
-    )
-    # fs_keys = ["bandstructure", "dos", "chgcar", "locpot", "elfcar"]
-    # for i in range(3):
-    #    fs_keys.append(f"aeccar{i}")
 
     for vaspdir in vaspdirs:
         logger.info(f"{name} VaspDir: {vaspdir}")
@@ -397,7 +393,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
         query = {"dir_name": {"$regex": launcher}}
         manual_taskid = isinstance(task_ids, dict)
         docs = list(
-            target.collection.find(query, projection).sort([("_id", -1)]).limit(1)
+            storage_gateway._coll.find(query, projection).sort([("_id", -1)]).limit(1)
         )
 
         if docs:
@@ -413,13 +409,6 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                     logger.warning(f"{name} {launcher} already parsed -> would remove.")
                 continue
 
-        try:
-            task_doc = drone.assimilate(vaspdir)
-        except Exception as ex:
-            logger.error(f"Failed to assimilate {vaspdir}: {ex}")
-            continue
-
-        task_doc["sbxn"] = sbxn
         snl_metas_avail = isinstance(snl_metas, dict)
         task_id = (
             task_ids.get(launcher) if manual_taskid else task_ids[chunk_idx][count]
@@ -429,25 +418,32 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
             logger.error(f"Unable to determine task_id for {launcher}")
             continue
 
-        task_doc["task_id"] = task_id
         logger.info(f"Using {task_id} for {launcher}.")
 
         if docs:
-            # make sure that task gets the same tags as the previously parsed task
-            # (run through set to implicitly remove duplicate tags)
             if docs[0]["tags"]:
                 existing_tags = list(set(docs[0]["tags"]))
-                task_doc["tags"] += existing_tags
+                tags += existing_tags
                 logger.info(f"Adding existing tags {existing_tags} to {tags}.")
 
         try:
-            task_document = TaskDocument(**task_doc)
-        except Exception as exc:
-            logger.error(f"Unable to construct a valid TaskDocument: {exc}")
+            task_doc = TaskDoc.from_directory(
+                dir_name=vaspdir,
+                volumetric_files=ctx.params["store_volumetric_data"],
+                task_names=ctx.params["runs"],
+                store_additional_json=False,
+            )
+
+            task_doc.task_id = task_id
+            task_doc.tags = tags
+            task_doc.batch_id = tag
+
+        except Exception as ex:
+            logger.error(f"Failed to build a TaskDoc from {vaspdir}: {ex}")
             continue
 
         try:
-            validation_doc = ValidationDoc.from_task_doc(task_document)
+            validation_doc = ValidationDoc.from_task_doc(task_doc)
         except Exception as exc:
             logger.error(f"Unable to construct a valid ValidationDoc: {exc}")
             continue
@@ -460,8 +456,8 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
             logger.warn(validation_doc.warnings)
 
         try:
-            MaterialsProject2020Compatibility().process_entry(
-                task_document.structure_entry
+            entry = MaterialsProject2020Compatibility().process_entry(
+                task_doc.structure_entry
             )
         except Exception as exc:
             logger.error(f"Unable to apply corrections: {exc}")
@@ -479,7 +475,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                 if references:
                     kwargs["references"] = references
 
-                struct = Structure.from_dict(task_doc["input"]["structure"])
+                struct = task_doc.input.structure
                 snl = StructureNL(struct, authors, **kwargs)
                 snl_dct = snl.as_dict()
                 snl_dct.update(get_meta_from_structure(struct))
@@ -488,39 +484,36 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                 logger.info(f"Created SNL object for {snl_id}.")
 
         if run:
-            if task_doc["state"] == "successful":
+            if task_doc.state == "successful":
                 if docs and no_dupe_check:
-                    # new_calc = task_doc["calcs_reversed"][0]
-                    # existing_calc = docs[0]["calcs_reversed"][0]
-                    # print(existing_calc.keys())
-
-                    # for fs_key in fs_keys:
-                    #    print(fs_key)
-                    #    fs_id_key = f"{fs_key}_fs_id"
-                    #    if fs_id_key in existing_calc:
-                    #        if fs_id_key in new_calc:
-                    #            # NOTE the duplicate fs_id / s3 object has already been
-                    #            # created in the drone though
-                    #            raise NotImplementedError(
-                    #                f"Missing duplicate check to decide on overwriting {key}_fs_id"
-                    #            )
-
-                    #        for k in [fs_id_key, f"{key}_compression"]:
-                    #            new_calc[k] = existing_calc[k]
-
-                    #        print(fs_id_key, task_doc["calcs_reversed"][0][fs_id_key])  # TODO CHECK
-                    target.collection.delete_one({"task_id": task_id})
+                    storage_gateway._coll.delete_one({"task_id": task_id})
                     logger.warning(f"Removed previously parsed task {task_id}!")
 
-                # return count  # TODO remove
-
                 try:
-                    target.insert_task(task_doc, use_gridfs=True)
+                    td = jsanitize(
+                        task_doc.model_dump(
+                            include=set(TaskDoc.model_fields),
+                            exclude={
+                                "additional_json",
+                                "author",
+                                "builder_meta",
+                                "custodian",
+                                "entry",
+                                "included_objects",
+                                "run_stats",
+                                "state",
+                                "task_label",
+                            },
+                        )
+                    )
+                    scrub_dict(td)
+                    storage_gateway.insert(td)
+
                 except EndpointConnectionError as exc:
                     logger.error(f"Connection failed for {task_id}: {exc}")
                     continue
                 except DocumentTooLarge:
-                    output = dotty(task_doc["calcs_reversed"][0]["output"])
+                    output = dotty(task_doc.calcs_reversed[0].output.as_dict())
                     pop_keys = [
                         "normalmode_eigenvecs",
                         "force_constants",
@@ -534,7 +527,24 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                         logger.warning(f"{name} Remove {k} and retry ...")
                         output.pop(k)
                         try:
-                            target.insert_task(task_doc, use_gridfs=True)
+                            td = jsanitize(
+                                task_doc.model_dump(
+                                    include=set(TaskDoc.model_fields),
+                                    exclude={
+                                        "additional_json",
+                                        "author",
+                                        "builder_meta",
+                                        "custodian",
+                                        "entry",
+                                        "included_objects",
+                                        "run_stats",
+                                        "state",
+                                        "task_label",
+                                    },
+                                )
+                            )
+                            scrub_dict(td)
+                            storage_gateway.insert(td)
                             break
                         except DocumentTooLarge:
                             continue
@@ -545,7 +555,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                     logger.error(f"{name} failed to insert: {ex}")
                     continue
 
-                if target.collection.count_documents(query):
+                if storage_gateway._coll.count_documents(query):
                     if snl_dct:
                         result = snl_collection.insert_one(snl_dct)
                         logger.info(

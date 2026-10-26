@@ -16,8 +16,8 @@ from pymatgen.util.provenance import Author, StructureNL
 from emmet.cli.legacy import SETTINGS
 from emmet.cli.legacy.utils import (
     EmmetCliError,
+    StorageGateway,
     aggregate_by_formula,
-    calcdb_from_mgrant,
     get_meta_from_structure,
     load_structure,
     structures_match,
@@ -91,7 +91,7 @@ def save_logs(ctx):
 def insert_snls(ctx, snls):
     if ctx.obj["RUN"] and snls:
         logger.info(f"add {len(snls)} SNLs ...")
-        result = ctx.obj["CLIENT"].db.snls.insert_many(snls)
+        result = ctx.obj["GATEWAY"].db.snls.insert_many(snls)
         logger.info(
             click.style(f"#SNLs inserted: {len(result.inserted_ids)}", fg="green")
         )
@@ -138,20 +138,20 @@ def count_file_documents(file_obj):
 @click.pass_context
 def calc(ctx, specs, nmax, skip):
     """Set up calculations to optimize structures using VASP"""
-    if "CLIENT" not in ctx.obj:
+    if "GATEWAY" not in ctx.obj:
         raise EmmetCliError("--spec option required with calc sub-command!")
 
     collections = {}
-    for coll in [ctx.obj["CLIENT"].db.snls, ctx.obj["CLIENT"].db.tasks]:
+    for coll in [ctx.obj["GATEWAY"].db.snls, ctx.obj["GATEWAY"].db.tasks]:
         collections[coll.full_name] = coll  # user collections
 
     for spec in specs:
-        client = calcdb_from_mgrant(spec)
-        names = client.db.list_collection_names(
+        storage_gateway = StorageGateway.from_db_file(spec)
+        names = storage_gateway.db.list_collection_names(
             filter={"name": {"$regex": r"(snl|tasks)"}}
         )
         for name in names:
-            collections[client.db[name].full_name] = client.db[name]
+            collections[storage_gateway.db[name].full_name] = storage_gateway.db[name]
 
     for full_name, coll in collections.items():
         logger.debug(f"{coll.count()} docs in {full_name}")
@@ -177,7 +177,7 @@ def prep(ctx, archive, authors):  # noqa: C901
     """prep structures from an archive for submission"""
     run = ctx.obj["RUN"]
     collections = ctx.obj["COLLECTIONS"]
-    snl_collection = ctx.obj["CLIENT"].db.snls
+    snl_collection = ctx.obj["GATEWAY"].database.snls
     handler = ctx.obj["MONGO_HANDLER"]
     nmax = ctx.obj["NMAX"]
     skip = ctx.obj["SKIP"]
@@ -217,7 +217,7 @@ def prep(ctx, archive, authors):  # noqa: C901
                 if l in elements:
                     logger.log(
                         logging.ERROR if run else logging.INFO,
-                        f'Skip structure {doc["db_id"]}: unsupported element {l}!',
+                        f"Skip structure {doc['db_id']}: unsupported element {l}!",
                         extra={"tags": [tag], "source_id": doc["db_id"]},
                     )
                     break

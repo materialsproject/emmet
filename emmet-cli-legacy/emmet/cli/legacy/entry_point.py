@@ -9,7 +9,7 @@ from github3.session import GitHubSession
 from emmet.cli.legacy.admin import admin
 from emmet.cli.legacy.calc import calc
 from emmet.cli.legacy.tasks import tasks
-from emmet.cli.legacy.utils import EmmetCliError, calcdb_from_mgrant
+from emmet.cli.legacy.utils import EmmetCliError, StorageGateway
 
 logger = logging.getLogger("")
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
@@ -51,22 +51,8 @@ def emmet_legacy(
         raise EmmetCliError("Burst buffer only available in SBatch mode (--sbatch).")
 
     if spec_or_dbfile:
-        client = calcdb_from_mgrant(spec_or_dbfile)
-        ctx.obj["CLIENT"] = client
-        # ctx.obj["MONGO_HANDLER"] = BufferedMongoHandler(
-        #    host=client.host,
-        #    port=client.port,
-        #    database_name=client.db_name,
-        #    username=client.user,
-        #    password=client.password,
-        #    level=logging.WARNING,
-        #    authentication_db=client.db_name,
-        #    collection="emmet_logs",
-        #    buffer_periodical_flush_timing=False,  # flush manually
-        # )
-        # logger.addHandler(ctx.obj["MONGO_HANDLER"])
-        # coll = ctx.obj["MONGO_HANDLER"].collection
-        # ensure_indexes(SETTINGS.log_fields, [coll])
+        gateway = StorageGateway.from_db_file(spec_or_dbfile)
+        ctx.obj["GATEWAY"] = gateway
 
     if run:
         if not issue:
