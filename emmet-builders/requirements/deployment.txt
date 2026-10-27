@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=emmet/emmet-builders/requirements/deployment.txt emmet/emmet-builders/setup.py python/requirements.txt
 #
-aiohttp==3.14.3
+aiohttp==3.14.4
     # via fsspec
 aioitertools==0.11.0
     # via maggma
@@ -251,7 +251,7 @@ paramiko==5.0.0
     # via sshtunnel
 phonopy==2.21.0
     # via matcalc
-pillow==12.3.0
+pillow==13.0.0
     # via matplotlib
 plotly==5.18.0
     # via pymatgen
